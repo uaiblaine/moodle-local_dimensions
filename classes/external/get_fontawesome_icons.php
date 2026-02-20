@@ -24,15 +24,12 @@
 
 namespace local_dimensions\external;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once("$CFG->libdir/externallib.php");
-
-use external_api;
-use external_function_parameters;
-use external_value;
-use external_single_structure;
-use external_multiple_structure;
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_value;
+use core_external\external_single_structure;
+use core_external\external_multiple_structure;
+use core\context\system as context_system;
 
 /**
  * External API to get FontAwesome icons.
@@ -71,7 +68,7 @@ class get_fontawesome_icons extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), ['query' => $query]);
         $query = clean_param($params['query'], PARAM_TEXT);
 
-        $systemcontext = \context_system::instance();
+        $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
         $PAGE->set_context($systemcontext);
 

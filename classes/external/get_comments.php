@@ -24,20 +24,12 @@
 
 namespace local_dimensions\external;
 
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("$CFG->libdir/externallib.php");
-require_once("$CFG->dirroot/comment/lib.php");
-
-use external_api;
-use external_function_parameters;
-use external_value;
-use external_single_structure;
-use external_multiple_structure;
-use comment;
-use context_system;
-use context_user;
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_value;
+use core_external\external_single_structure;
+use core_external\external_multiple_structure;
+use core_comment\manager as comment;
 
 /**
  * External function to get comments for a user competency.
@@ -85,7 +77,7 @@ class get_comments extends external_api {
         ]);
 
         // Get context from ID.
-        $context = \context::instance_by_id($params['contextid'], MUST_EXIST);
+        $context = \core\context::instance_by_id($params['contextid'], MUST_EXIST);
         self::validate_context($context);
 
         // Check basic capability.

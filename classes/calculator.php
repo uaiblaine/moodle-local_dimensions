@@ -24,10 +24,6 @@
 
 namespace local_dimensions;
 
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once($CFG->libdir . '/completionlib.php');
 
 /**
  * Calculator class for course progress calculations.
@@ -90,7 +86,7 @@ class calculator {
         $locked = self::is_locked($course, $USER->id);
 
         // Keep enrollment check for activity loop (extra security, though locked already covers it).
-        $coursecontext = \context_course::instance($course->id);
+        $coursecontext = \core\context\course::instance($course->id);
         $isenrolled = is_enrolled($coursecontext, $USER->id, '', true);
 
         // Requested format: %d/%m/%Y.
@@ -258,7 +254,7 @@ class calculator {
      * @return bool True if locked
      */
     public static function is_locked($course, $userid) {
-        $coursecontext = \context_course::instance($course->id);
+        $coursecontext = \core\context\course::instance($course->id);
 
         // 1. Check active enrollment.
         if (!is_enrolled($coursecontext, $userid, '', true)) {
@@ -346,7 +342,7 @@ class calculator {
 
         $filtered = [];
         foreach ($courses as $key => $course) {
-            $coursecontext = \context_course::instance($course->id);
+            $coursecontext = \core\context\course::instance($course->id);
             if (is_enrolled($coursecontext, $userid, '', $onlyactive)) {
                 $filtered[$key] = $course;
             }

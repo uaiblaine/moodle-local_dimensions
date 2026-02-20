@@ -25,7 +25,6 @@
 namespace local_dimensions;
 
 use core\hook\output\before_footer_html_generation;
-use local_dimensions\helper;
 
 /**
  * Hook callbacks for local_dimensions.
@@ -140,10 +139,10 @@ class hook_callbacks {
 
         // Check page context.
         $context = $PAGE->context;
-        if ($context instanceof \context_course) {
+        if ($context instanceof \core\context\course) {
             return (int) $context->instanceid;
         }
-        if ($context instanceof \context_module) {
+        if ($context instanceof \core\context\module) {
             // Get the course from the module context.
             $coursecontext = $context->get_course_context(false);
             if ($coursecontext) {

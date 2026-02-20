@@ -24,17 +24,13 @@
 
 namespace local_dimensions\external;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once("$CFG->libdir/externallib.php");
-require_once("$CFG->dirroot/local/dimensions/classes/calculator.php"); // Calculator class.
-
-use external_api;
-use external_function_parameters;
-use external_value;
-use external_single_structure;
-use external_multiple_structure;
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_value;
+use core_external\external_single_structure;
+use core_external\external_multiple_structure;
 use local_dimensions\calculator;
+use core\context\system as context_system;
 
 /**
  * External API to get course progress.
@@ -67,7 +63,7 @@ class get_course_progress extends external_api {
         // Capability check (system context is enough to start,
         // but we will check enrollment/access inside the loop or calculator if necessary,
         // but for consistency, we verify general capability here).
-        $systemcontext = \context_system::instance();
+        $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
         require_capability('local/dimensions:view', $systemcontext);
 

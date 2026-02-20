@@ -27,7 +27,7 @@
 
 namespace local_dimensions;
 
-use context_system;
+use core\context\system as context_system;
 use moodle_url;
 use MoodleQuickForm;
 use stdClass;

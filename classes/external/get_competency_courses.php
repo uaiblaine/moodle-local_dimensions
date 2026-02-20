@@ -28,16 +28,13 @@
 
 namespace local_dimensions\external;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once("$CFG->libdir/externallib.php");
-
-use external_api;
-use external_function_parameters;
-use external_value;
-use external_single_structure;
-use external_multiple_structure;
-use core_competency\api;
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_value;
+use core_external\external_single_structure;
+use core_external\external_multiple_structure;
+use core\context\system as context_system;
+use core\context\course as context_course;
 
 /**
  * External API to get courses linked to a competency with enrollment filter.
@@ -74,7 +71,7 @@ class get_competency_courses extends external_api {
         $competencyid = $params['competencyid'];
 
         // Context validation.
-        $systemcontext = \context_system::instance();
+        $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
         require_capability('local/dimensions:view', $systemcontext);
 
@@ -100,7 +97,7 @@ class get_competency_courses extends external_api {
         // Build the response with course image and progress.
         $result = [];
         foreach ($courses as $course) {
-            $coursecontext = \context_course::instance($course->id);
+            $coursecontext = context_course::instance($course->id);
 
             // Get course image URL.
             $courseimage = '';

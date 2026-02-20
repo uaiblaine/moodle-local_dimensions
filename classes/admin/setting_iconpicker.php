@@ -46,16 +46,7 @@ class setting_iconpicker extends \admin_setting_configtext {
      * @return string HTML output
      */
     public function output_html($data, $query = '') {
-        global $OUTPUT, $PAGE;
-
         $default = $this->get_defaultsetting();
-        $context = (object) [
-            'id' => $this->get_id(),
-            'name' => $this->get_full_name(),
-            'size' => $this->size ?? 30,
-            'value' => s($data),
-            'forceltr' => $this->get_force_ltr(),
-        ];
 
         // Build the icon map for the valuehtmlcallback equivalent.
         $currenthtml = '';

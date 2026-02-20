@@ -40,14 +40,10 @@
 
 namespace local_dimensions\external;
 
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("$CFG->libdir/externallib.php");
-
-use external_api;
-use external_function_parameters;
-use external_value;
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_value;
+use core\context\system as context_system;
 
 /**
  * Wrapper for tool_lp_data_for_user_competency_summary_in_plan.
@@ -93,7 +89,7 @@ class get_user_competency_summary_in_plan extends external_api {
         // Set context BEFORE any code that might trigger theme/string loading.
         // This is the key fix: the context is available when the core API
         // internally uses exporters and renderers.
-        $context = \context_system::instance();
+        $context = context_system::instance();
         self::validate_context($context);
         require_capability('local/dimensions:view', $context);
 

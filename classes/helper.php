@@ -25,7 +25,6 @@
 namespace local_dimensions;
 
 use core_customfield\field_controller;
-use core_customfield\data_controller;
 use core_customfield\handler;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\customfield\competency_handler;

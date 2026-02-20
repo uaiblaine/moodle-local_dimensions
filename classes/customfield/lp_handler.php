@@ -25,8 +25,9 @@
 namespace local_dimensions\customfield;
 
 use core_customfield\handler;
-use core_customfield\api;
 use local_dimensions\picture_manager;
+use core\context;
+use core\context\system as context_system;
 
 /**
  * Learning Plan Template custom field handler.
@@ -57,10 +58,10 @@ class lp_handler extends handler {
     /**
      * Run setup for the handler.
      *
-     * @return \context
+     * @return context
      */
-    public function get_configuration_context(): \context {
-        return \context_system::instance();
+    public function get_configuration_context(): context {
+        return context_system::instance();
     }
 
     /**
@@ -77,10 +78,10 @@ class lp_handler extends handler {
      * Returns the context for the data instance.
      *
      * @param int $instanceid
-     * @return \context
+     * @return context
      */
-    public function get_instance_context(int $instanceid = 0): \context {
-        return \context_system::instance();
+    public function get_instance_context(int $instanceid = 0): context {
+        return context_system::instance();
     }
 
     /**
@@ -89,7 +90,7 @@ class lp_handler extends handler {
      * @return bool
      */
     public function can_configure(): bool {
-        return has_capability('moodle/site:config', \context_system::instance());
+        return has_capability('moodle/site:config', context_system::instance());
     }
 
     /**
@@ -111,7 +112,7 @@ class lp_handler extends handler {
      * @return bool
      */
     public function can_edit(\core_customfield\field_controller $field, int $instanceid = 0): bool {
-        return has_capability('moodle/competency:templatemanage', \context_system::instance());
+        return has_capability('moodle/competency:templatemanage', context_system::instance());
     }
 
     /**
