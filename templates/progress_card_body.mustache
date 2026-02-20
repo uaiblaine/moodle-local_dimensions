@@ -1,0 +1,165 @@
+{{!
+    @template local_dimensions/progress_card_body
+
+    Progress timeline component for course cards.
+    Shows section completion status with visual indicators.
+
+    Context variables required:
+    * enabled (bool) - Whether completion tracking is enabled
+    * locked (bool) - Whether the course is locked for the user
+    * formatted_start_date (string) - When the course becomes available
+    * is_enrolment_start (bool) - Whether the date is an enrolment start date
+    * islearnmore (bool) - Whether to show "Learn More" button instead of "Locked Content"
+    * showlockeddate (bool) - Whether to show the availability date
+    * customicon (string) - CSS class for custom locked icon (empty = default lock SVG)
+    * courseurl (string) - URL to the course page (for "Learn More" button)
+    * learnmorebuttoncolor (string) - Hex color for the "Learn More" button background
+    * sections (array) - Array of section objects with progress data
+
+    Example context (json):
+    {
+        "enabled": true,
+        "locked": false,
+        "formatted_start_date": "01/02/2026",
+        "is_enrolment_start": false,
+        "islearnmore": false,
+        "showlockeddate": true,
+        "customicon": "",
+        "courseurl": "/course/view.php?id=42",
+        "sections": [
+            {
+                "name": "Section 1",
+                "percentage": 100,
+                "has_activities": true,
+                "url": "/course/section.php?id=1",
+                "is_completed": true,
+                "is_started": false,
+                "locked": false
+            }
+        ]
+    }
+}}
+<div style="position: relative; height: 100%;">
+    {{#locked}}
+    <div class="dims-locked-overlay">
+        {{! Icon: custom FA icon or default lock SVG }}
+        <div class="dims-locked-icon">
+            {{#customicon}}
+                <i class="{{customicon}}" aria-hidden="true"></i>
+            {{/customicon}}
+            {{^customicon}}
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            {{/customicon}}
+        </div>
+        {{! Message: "Learn More" button or "Locked Content" text }}
+        {{#islearnmore}}
+            <a href="{{courseurl}}" class="dims-learnmore-btn" style="background: {{learnmorebuttoncolor}};">{{#str}}learn_more, local_dimensions{{/str}}</a>
+        {{/islearnmore}}
+        {{^islearnmore}}
+            <div class="dims-locked-message">{{#str}}locked_content, local_dimensions{{/str}}</div>
+        {{/islearnmore}}
+        {{! Date: conditionally shown based on showlockeddate setting }}
+        {{#showlockeddate}}
+            <div class="dims-locked-date">
+                {{#is_enrolment_start}}
+                    {{#str}}enrolment_starts, local_dimensions, {{formatted_start_date}}{{/str}}
+                {{/is_enrolment_start}}
+                {{^is_enrolment_start}}
+                    {{#str}}available_at, local_dimensions, {{formatted_start_date}}{{/str}}
+                {{/is_enrolment_start}}
+            </div>
+        {{/showlockeddate}}
+    </div>
+    {{/locked}}
+
+    {{^enabled}}
+        <div class="p-3 text-muted text-center small">
+            {{#str}}completion_disabled, local_dimensions{{/str}}
+        </div>
+    {{/enabled}}
+    
+    {{#enabled}}
+    <div class="dims-timeline">
+        {{#sections}}
+        <div class="dims-timeline-item {{#is_completed}}completed{{/is_completed}} {{#is_started}}started{{/is_started}} {{#locked}}locked{{/locked}}">
+            <div class="dims-timeline-marker">
+                {{! Priority order: locked > is_completed > is_started > empty/info }}
+                {{! Using Feather Icons (inline SVG) for consistent sizing and proportions }}
+                {{#locked}}
+                    <svg class="dims-icon dims-icon-lock" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                {{/locked}}
+                
+                {{^locked}}
+                    {{#is_completed}}
+                        {{! Bootstrap Icons - check-circle-fill (solid) }}
+                        <svg class="dims-icon dims-icon-check" width="24" height="24" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                        </svg>
+                    {{/is_completed}}
+                    
+                    {{^is_completed}}
+                        {{#is_started}}
+                             <div class="dims-progress-ring-container" role="progressbar" aria-valuenow="{{percentage}}" aria-valuemin="0" aria-valuemax="100" aria-label="{{#str}}aria_completion_percentage, local_dimensions, {{percentage}}{{/str}}">
+                                <svg class="dims-progress-ring" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+                                   <!-- Background circle (gray) -->
+                                   <circle class="dims-progress-ring__bg" cx="16" cy="16" r="12" />
+                                   <!-- Progress circle (green) -->
+                                   <circle class="dims-progress-ring__progress" cx="16" cy="16" r="12" 
+                                   style="stroke-dasharray: {{dasharray}} 75.4; stroke-dashoffset: 0;" />
+                                </svg>
+                                <span class="dims-progress-text" aria-hidden="true">{{percentage}}</span>
+                            </div>
+                        {{/is_started}}
+                        
+                        {{^is_started}}
+                            {{#has_activities}}
+                                <svg class="dims-icon dims-icon-circle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                </svg>
+                            {{/has_activities}}
+                            {{^has_activities}}
+                                <svg class="dims-icon dims-icon-info" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" title="{{#str}}no_completion_tracking, local_dimensions{{/str}}">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            {{/has_activities}}
+                        {{/is_started}}
+                    {{/is_completed}}
+                {{/locked}}
+            </div>
+            
+            <div class="dims-timeline-content">
+                {{#locked}}
+                    {{#url}}
+                        <a href="{{url}}" class="text-muted" aria-label="{{#str}}view_section, local_dimensions, {{name}}{{/str}}">{{{name}}}</a>
+                    {{/url}}
+                    {{^url}}
+                        <span class="text-muted">{{{name}}}</span>
+                    {{/url}}
+                {{/locked}}
+                
+                {{^locked}}
+                    {{#url}}
+                    <a href="{{url}}" aria-label="{{#str}}view_section, local_dimensions, {{name}}{{/str}}">{{{name}}}</a>
+                    {{/url}}
+                    {{^url}}
+                    <span>{{{name}}}</span>
+                    {{/url}}
+                {{/locked}}
+            </div>
+        </div>
+        {{/sections}}
+    </div>
+    {{/enabled}}
+
+    {{#error}}
+     <div class="alert alert-danger m-2">{{error}}</div>
+    {{/error}}
+</div>

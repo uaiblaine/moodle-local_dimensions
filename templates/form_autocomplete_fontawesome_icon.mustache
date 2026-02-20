@@ -1,0 +1,21 @@
+{{!
+    @template local_dimensions/form_autocomplete_fontawesome_icon
+
+    Template for displaying icons in the icon picker autocomplete dropdown.
+
+    Context variables required:
+    * class - The Font Awesome icon class
+    * name - The name/description of the icon
+    * source - The source of the icon
+    * sourcecolor - The bootstrap color class for the source badge
+
+    Example context (json):
+    {
+        "class": "fa-user-lock",
+        "name": "core:i/permissions",
+        "source": "Moodle core",
+        "sourcecolor": "bg-warning text-dark"
+    }
+}}
+
+<span class="d-inline-block align-top"><i class="fa fa-fw mx-1 {{class}} align-middle" aria-hidden="true"></i></span>&nbsp;<small class="d-inline-block text-break" style="max-width: 200px;">{{name}}</small>{{#source}}<span class="badge {{{sourcecolor}}} float-end ms-2">{{{source}}}</span>{{/source}}

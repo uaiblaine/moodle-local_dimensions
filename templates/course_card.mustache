@@ -1,0 +1,39 @@
+{{!
+    @template local_dimensions/course_card
+
+    Course card component for displaying a single course in the grid.
+
+    Context variables required:
+    * courseid (int) - The course ID for AJAX loading
+    * fullname (string) - The course full name (formatted)
+    * courseurl (string) - URL to the course view page
+    * viewcoursestr (string) - Accessible label for the course link
+    * locked (bool) - Whether the course is locked for the user
+
+    Example context (json):
+    {
+        "courseid": 42,
+        "fullname": "Introduction to Programming",
+        "courseurl": "/course/view.php?id=42",
+        "viewcoursestr": "View course: Introduction to Programming",
+        "locked": false
+    }
+}}
+<div class="col-md-6 col-lg-4 mb-4">
+    <div class="card h-100 {{^locked}}shadow-sm{{/locked}} {{#locked}}dims-card-locked{{/locked}}">
+        <h3 class="card-header font-weight-bold">
+            {{#locked}}
+                <span class="text-muted">{{{fullname}}}</span>
+            {{/locked}}
+            {{^locked}}
+                <a href="{{courseurl}}" aria-label="{{viewcoursestr}}">{{{fullname}}}</a>
+            {{/locked}}
+        </h3>
+        <div class="dims-progress-container" data-courseid="{{courseid}}">
+            <div class="text-center p-3">
+                <i class="fa fa-spinner fa-spin fa-2x text-primary" aria-hidden="true"></i>
+                <p class="text-muted small mt-2">{{#str}}loading_progress, local_dimensions{{/str}}</p>
+            </div>
+        </div>
+    </div>
+</div>

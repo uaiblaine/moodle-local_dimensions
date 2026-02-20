@@ -1,0 +1,148 @@
+{{!
+    @template local_dimensions/view_plan_summary
+
+    Plan summary view with competencies in accordion.
+    Displays when view-plan.php is accessed with only plan ID.
+
+    Context variables required:
+    * hasplan (bool) - Whether we have a valid plan
+    * planid (int) - Plan ID
+    * userid (int) - User ID
+    * planname (string) - Plan name
+    * hero (object) - Hero header data
+    * hascompetencies (bool) - Whether there are competencies
+    * competencies (array) - Array of competency objects with:
+        - id, shortname, isproficient, rating, hasrating
+        - viewurl, index, isfirst, islast
+    * competencycount (int) - Total competencies
+}}
+{{! Percentage mode styles }}
+<style>
+/* Percentage display mode styles */
+.percentagemode-fixed .dims-progress-ring-container .dims-progress-text {
+    opacity: 1 !important;
+}
+.percentagemode-hidden .dims-progress-ring-container .dims-progress-text {
+    display: none !important;
+}
+</style>
+
+{{! Custom SCSS compiled CSS from template }}
+{{#hascustomcss}}
+<style>{{{customcss}}}</style>
+{{/hascustomcss}}
+
+{{! Hero header with plan/template info }}
+{{#hero}}
+<style>
+:root {
+    {{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}
+    {{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}
+}
+</style>
+{{> local_dimensions/hero_header}}
+{{/hero}}
+
+<div class="percentagemode-{{percentagemode}}">
+    {{#hascompetencies}}
+    <div class="dims-plan-summary mt-4"
+         data-planid="{{planid}}">
+
+        {{! Filter bar: tabs + search }}
+        <div class="dims-filter-bar">
+            <div class="dims-filter-tabs" role="tablist" aria-label="{{#str}}filter_competencies, local_dimensions{{/str}}">
+                <button class="dims-filter-tab active" data-filter="incomplete" role="tab" aria-selected="true" type="button">
+                    {{#str}}filter_not_completed, local_dimensions{{/str}}
+                    <span class="dims-filter-count" data-count="incomplete">{{incompletecount}}</span>
+                </button>
+                <button class="dims-filter-tab" data-filter="all" role="tab" aria-selected="false" type="button">
+                    {{#str}}filter_all, local_dimensions{{/str}}
+                    <span class="dims-filter-count" data-count="all">{{competencycount}}</span>
+                </button>
+            </div>
+            <div class="dims-search-wrapper">
+                <i class="fa fa-search dims-search-icon" aria-hidden="true"></i>
+                <input type="text"
+                       class="dims-search-input"
+                       placeholder="{{#str}}search_competencies, local_dimensions{{/str}}"
+                       aria-label="{{#str}}search_competencies, local_dimensions{{/str}}"
+                       autocomplete="off" />
+                <button type="button" class="dims-search-clear" aria-label="{{#str}}clear, core{{/str}}" style="display:none;">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+        {{! Competency accordion }}
+        <div class="dims-competency-accordion" role="list" aria-label="{{#str}}plan_competencies, local_dimensions{{/str}}">
+            {{#competencies}}
+            <div class="dims-accordion-item {{#isproficient}}completed{{/isproficient}} {{#hasrating}}{{^isproficient}}rated{{/isproficient}}{{/hasrating}}" 
+                 role="listitem"
+                 data-competency-id="{{id}}">
+
+                {{! Accordion content }}
+                <div class="dims-accordion-wrapper flex-grow-1">
+                    <button class="dims-accordion-toggle" 
+                            type="button"
+                            aria-expanded="false"
+                            aria-controls="competency-content-{{id}}"
+                            id="competency-header-{{id}}">
+                        <div class="dims-accordion-header-content">
+                            <span class="dims-accordion-title">{{shortname}}</span>
+                            {{#hasrating}}
+                            <span class="dims-grade-badge {{#isproficient}}badge-proficient{{/isproficient}}{{^isproficient}}badge-not-proficient{{/isproficient}}">
+                                {{#isproficient}}
+                                <svg class="dims-grade-badge-icon" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                                </svg>
+                                {{/isproficient}}
+                                {{^isproficient}}
+                                <svg class="dims-grade-badge-icon" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                                </svg>
+                                {{/isproficient}}
+                                {{rating}}
+                            </span>
+                            {{/hasrating}}
+                            {{^hasrating}}
+                            <span class="dims-grade-badge badge-todo">
+                                {{#str}}todo, local_dimensions{{/str}}
+                            </span>
+                            {{/hasrating}}
+                        </div>
+                        <i class="dims-accordion-icon fa fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="dims-accordion-content" 
+                         id="competency-content-{{id}}"
+                         aria-labelledby="competency-header-{{id}}"
+                         hidden>
+                        <div class="dims-accordion-body">
+                            {{! Loading placeholder - content loaded via AJAX }}
+                            <div class="dims-competency-summary-loading text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="sr-only">{{#str}}loading_competency_summary, local_dimensions{{/str}}</span>
+                                </div>
+                                <span class="ml-2">{{#str}}loading_competency_summary, local_dimensions{{/str}}</span>
+                            </div>
+                            {{! AJAX loaded content will be inserted here }}
+                            <div class="dims-competency-summary-content" style="display: none;"></div>
+                            {{! Error message }}
+                            <div class="dims-competency-summary-error alert alert-danger" style="display: none;">
+                                {{#str}}error_loading_summary, local_dimensions{{/str}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/competencies}}
+        </div>
+    </div>
+    {{/hascompetencies}}
+
+    {{^hascompetencies}}
+    <div class="alert alert-info mt-4">
+        {{#str}}no_competencies_in_plan, local_dimensions{{/str}}
+    </div>
+    {{/hascompetencies}}
+</div>

@@ -1,0 +1,124 @@
+{{!
+    @template local_dimensions/return_button
+
+    Floating Action Button (FAB) for returning to learning plan view.
+
+    Context variables required:
+    * returnurl (string) - The URL to return to
+    * label (string) - Button label text
+
+    Features:
+    - Detects if running inside an iframe (H5P, etc.) and hides itself
+    - Only shows in the main window
+}}
+<a href="{{returnurl}}" 
+   class="local-dimensions-return-fab" 
+   id="local-dimensions-return-fab"
+   title="{{label}}"
+   aria-label="{{label}}"
+   style="display: none; --dims-fab-color: {{buttoncolor}};">
+    <i class="fa fa-arrow-left" aria-hidden="true"></i>
+    <span class="fab-label">{{label}}</span>
+</a>
+
+<script>
+(function() {
+    // Only show the FAB in the main window, not in iframes (H5P, etc.)
+    var fab = document.getElementById('local-dimensions-return-fab');
+    if (fab && window === window.parent) {
+        fab.style.display = 'flex';
+    }
+})();
+</script>
+
+<style>
+.local-dimensions-return-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--dims-fab-color, #667eea);
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 50px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    font-size: 0.95rem;
+    font-weight: 600;
+    z-index: 9999;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.local-dimensions-return-fab:hover,
+.local-dimensions-return-fab:focus {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.local-dimensions-return-fab:active {
+    transform: translateY(-1px);
+}
+
+.local-dimensions-return-fab i {
+    font-size: 1.1rem;
+}
+
+.local-dimensions-return-fab .fab-label {
+    white-space: nowrap;
+}
+
+/* Responsive: Show only icon on small screens */
+@media (max-width: 576px) {
+    .local-dimensions-return-fab {
+        padding: 14px;
+        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        justify-content: center;
+    }
+    
+    .local-dimensions-return-fab .fab-label {
+        display: none;
+    }
+}
+
+/* Animation on appear */
+@keyframes dimensions-fab-appear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.local-dimensions-return-fab[style*="flex"] {
+    animation: dimensions-fab-appear 0.4s ease-out;
+}
+
+/* Dark mode support */
+.theme-dark .local-dimensions-return-fab,
+body.dark .local-dimensions-return-fab {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .local-dimensions-return-fab {
+        border: 2px solid #ffffff;
+    }
+}
+
+/* Print: hide FAB */
+@media print {
+    .local-dimensions-return-fab {
+        display: none !important;
+    }
+}
+</style>

@@ -1,0 +1,49 @@
+{{!
+    @template local_dimensions/manage_templates
+
+    Manage learning plan templates page.
+
+    Context variables required:
+    * hastemplates (bool) - Whether there are templates
+    * templates (array) - Array of template objects with:
+        - id, shortname, description, editurl
+        - visible (bool), hidden (bool - inverse of visible)
+
+    Example context (json):
+    {
+        "hastemplates": true,
+        "templates": [{"id": 1, "shortname": "Template 1", "visible": true}]
+    }
+}}
+{{#hastemplates}}
+<div class="card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="fa fa-file-text-o mr-2" aria-hidden="true"></i>{{#str}}learningplantemplates, local_dimensions{{/str}}</h5>
+    </div>
+    <div class="card-body">
+        <ul class="list-unstyled mb-0">
+            {{#templates}}
+            <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fa fa-file-text-o mr-2" aria-hidden="true"></i>
+                    <strong>{{shortname}}</strong>
+                    {{#hidden}}
+                    <span class="badge badge-secondary">{{#str}}hidden{{/str}}</span>
+                    {{/hidden}}
+                    {{#hasdescription}}
+                    <span class="text-muted small d-block ml-4">{{description}}</span>
+                    {{/hasdescription}}
+                </div>
+                <a href="{{editurl}}" class="btn btn-sm btn-outline-primary">
+                    <i class="fa fa-pencil mr-1" aria-hidden="true"></i>{{#str}}edit{{/str}}
+                </a>
+            </li>
+            {{/templates}}
+        </ul>
+    </div>
+</div>
+{{/hastemplates}}
+
+{{^hastemplates}}
+<div class="alert alert-info">{{#str}}notemplates, local_dimensions{{/str}}</div>
+{{/hastemplates}}

@@ -1,0 +1,114 @@
+{{!
+    @template local_dimensions/evidence_detail_modal
+
+    Evidence detail modal body content.
+    Displays full details of a single evidence item including note, URL, grade and author info.
+    Used inside a Moodle core/modal via Templates.render().
+
+    Context variables required:
+    * typelabel (string) - Evidence type label (e.g., "Manual rating")
+    * typeicon (string) - FontAwesome icon class (e.g., "fa-pencil")
+    * colorclass (string) - CSS class for type color (e.g., "dims-evidence-manual")
+    * description (string) - Evidence description (HTML from server)
+    * hasnote (bool) - Whether there is a note/annotation
+    * note (string) - Note text
+    * hasurl (bool) - Whether there is a related URL
+    * url (string) - Related activity/resource URL
+    * urllabel (string) - Display label for the URL
+    * hasgrade (bool) - Whether there is a grade
+    * gradename (string) - Grade/rating name
+    * hasactionuser (bool) - Whether there is an action user
+    * actionusername (string) - Full name of the action user
+    * actionuserprofileurl (string) - Profile URL of the action user
+    * actionuseravatar (string) - Avatar URL of the action user
+    * datestring (string) - Pre-formatted date string from the server
+    * strnote (string) - Localized "Note" label
+    * strlink (string) - Localized "Related activity" label
+    * strgrade (string) - Localized "Rating" label
+    * strauthor (string) - Localized "Registered by" label
+    * strdate (string) - Localized "Date" label
+    * stropenlink (string) - Localized "Open activity" label
+}}
+<div class="dims-ev-modal-body">
+    {{! Evidence type badge }}
+    <div class="dims-ev-modal-type">
+        <span class="dims-ev-modal-type-badge {{colorclass}}">
+            <i class="fa {{typeicon}}" aria-hidden="true"></i>
+            {{typelabel}}
+        </span>
+    </div>
+
+    {{! Description }}
+    {{#description}}
+    <div class="dims-ev-modal-section">
+        <div class="dims-ev-modal-value dims-ev-modal-description">{{{description}}}</div>
+    </div>
+    {{/description}}
+
+    {{! Note / Annotation }}
+    {{#hasnote}}
+    <div class="dims-ev-modal-section">
+        <div class="dims-ev-modal-label">
+            <i class="fa fa-sticky-note-o" aria-hidden="true"></i>
+            {{strnote}}
+        </div>
+        <div class="dims-ev-modal-note">
+            {{note}}
+        </div>
+    </div>
+    {{/hasnote}}
+
+    {{! Related activity link }}
+    {{#hasurl}}
+    <div class="dims-ev-modal-section">
+        <div class="dims-ev-modal-label">
+            <i class="fa fa-link" aria-hidden="true"></i>
+            {{strlink}}
+        </div>
+        <div class="dims-ev-modal-link">
+            <a href="{{url}}" target="_blank" rel="noopener noreferrer">
+                <i class="fa fa-external-link" aria-hidden="true"></i>
+                {{stropenlink}}
+            </a>
+        </div>
+    </div>
+    {{/hasurl}}
+
+    {{! Grade / Rating }}
+    {{#hasgrade}}
+    <div class="dims-ev-modal-section">
+        <div class="dims-ev-modal-label">
+            <i class="fa fa-star" aria-hidden="true"></i>
+            {{strgrade}}
+        </div>
+        <div class="dims-ev-modal-value">
+            <span class="dims-ev-modal-grade-badge{{#gradeproficient}} dims-ev-modal-grade-proficient{{/gradeproficient}}">{{gradename}}</span>
+        </div>
+    </div>
+    {{/hasgrade}}
+
+    {{! Author }}
+    {{#hasactionuser}}
+    <div class="dims-ev-modal-section">
+        <div class="dims-ev-modal-label">
+            <i class="fa fa-user" aria-hidden="true"></i>
+            {{strauthor}}
+        </div>
+        <div class="dims-ev-modal-author">
+            <img class="dims-ev-modal-avatar" src="{{actionuseravatar}}" alt="" aria-hidden="true" />
+            <a href="{{actionuserprofileurl}}" target="_blank" rel="noopener noreferrer">{{actionusername}}</a>
+        </div>
+    </div>
+    {{/hasactionuser}}
+
+    {{! Date }}
+    {{#datestring}}
+    <div class="dims-ev-modal-section">
+        <div class="dims-ev-modal-label">
+            <i class="fa fa-calendar" aria-hidden="true"></i>
+            {{strdate}}
+        </div>
+        <div class="dims-ev-modal-value">{{datestring}}</div>
+    </div>
+    {{/datestring}}
+</div>

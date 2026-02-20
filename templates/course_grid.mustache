@@ -1,0 +1,26 @@
+{{!
+    @template local_dimensions/course_grid
+
+    Grid container for course cards.
+
+    Context variables required:
+    * courses (array) - Array of course objects to render
+
+    Example context (json):
+    {
+        "courses": [
+            {
+                "courseid": 42,
+                "fullname": "Course 1",
+                "courseurl": "/course/view.php?id=42",
+                "viewcoursestr": "View course: Course 1",
+                "locked": false
+            }
+        ]
+    }
+}}
+<div class="row mt-4">
+    {{#courses}}
+        {{> local_dimensions/course_card}}
+    {{/courses}}
+</div>

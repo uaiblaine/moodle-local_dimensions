@@ -1,0 +1,36 @@
+{{!
+    @template local_dimensions/competency_tree
+
+    Recursive competency tree display.
+
+    Context variables required:
+    * competencies (array) - Array of competency objects with:
+        - id, shortname, idnumber, editurl
+        - haschildren (bool), children (array - recursive)
+        - depth (int) - Nesting level
+}}
+<ul class="list-unstyled{{#isfirst}}{{/isfirst}}{{^isfirst}} ml-4{{/isfirst}}">
+    {{#competencies}}
+    <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+        <div>
+            {{#depth}}
+            <span class="mr-2" style="padding-left: calc({{depth}} * 1.5rem);"></span>
+            {{/depth}}
+            {{#haschildren}}
+            <i class="fa fa-folder-o mr-2" aria-hidden="true"></i>
+            {{/haschildren}}
+            {{^haschildren}}
+            <i class="fa fa-file-o mr-2" aria-hidden="true"></i>
+            {{/haschildren}}
+            <strong>{{shortname}}</strong>
+            <span class="text-muted small">({{idnumber}})</span>
+        </div>
+        <a href="{{editurl}}" class="btn btn-sm btn-outline-primary">
+            <i class="fa fa-pencil mr-1" aria-hidden="true"></i>{{#str}}edit{{/str}}
+        </a>
+    </li>
+    {{#haschildren}}
+    {{> local_dimensions/competency_tree_children}}
+    {{/haschildren}}
+    {{/competencies}}
+</ul>

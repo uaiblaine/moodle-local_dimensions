@@ -1,0 +1,76 @@
+{{!
+    @template local_dimensions/view_plan
+
+    Main template for the view plan page.
+    Renders the hero header and course grid based on context.
+
+    Context variables required:
+    * hascompetency (bool) - Whether a competency is selected
+    * hascourses (bool) - Whether there are courses to display
+    * hero (object) - Hero header data (title, description, hasdescription, bgcolor, hasbgcolor)
+    * courses (array) - Array of course objects
+    * hascustomcss (bool) - Whether there is custom CSS to inject
+    * customcss (string) - Compiled CSS from competency SCSS custom field
+
+    Example context (json):
+    {
+        "hascompetency": true,
+        "hascourses": true,
+        "hero": {
+            "title": "Communication Skills",
+            "description": "<p>Description here</p>",
+            "hasdescription": true,
+            "bgcolor": "#3498db",
+            "hasbgcolor": true
+        },
+        "courses": []
+    }
+}}
+{{! Define CSS custom properties for dimension colors when available }}
+{{#hero}}
+<style>
+:root {
+    {{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}
+    {{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}
+}
+</style>
+{{/hero}}
+<style>
+/* Percentage display mode styles */
+.percentagemode-fixed .dims-progress-ring-container .dims-progress-text {
+    opacity: 1 !important;
+}
+.percentagemode-hidden .dims-progress-ring-container .dims-progress-text {
+    display: none !important;
+}
+</style>
+{{#hascustomcss}}
+<style>{{{customcss}}}</style>
+{{/hascustomcss}}
+<div class="percentagemode-{{percentagemode}}">
+
+{{#hascompetency}}
+    {{#hero}}
+        {{> local_dimensions/hero_header}}
+    {{/hero}}
+{{/hascompetency}}
+
+{{#hascourses}}
+    {{> local_dimensions/course_grid}}
+{{/hascourses}}
+
+{{^hascourses}}
+    {{#hascompetency}}
+        <div class="alert alert-info mt-4">
+            {{#str}}no_courses_linked, local_dimensions{{/str}}
+        </div>
+    {{/hascompetency}}
+{{/hascourses}}
+
+{{^hascompetency}}
+    <div class="alert alert-warning mt-4">
+        {{#str}}competency_id_missing, local_dimensions{{/str}}
+    </div>
+{{/hascompetency}}
+
+</div>

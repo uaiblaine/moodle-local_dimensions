@@ -1,0 +1,58 @@
+{{!
+    @template local_dimensions/manage_competencies
+
+    Manage competencies page with framework selector and competency tree.
+
+    Context variables required:
+    * hasframeworks (bool) - Whether there are frameworks
+    * frameworks (array) - Array of framework options {id, name, selected}
+    * selectedframeworkid (int) - Currently selected framework ID
+    * hascompetencies (bool) - Whether there are competencies
+    * competencies (array) - Competency tree data
+    * pagecontextid (int) - Page context ID for edit links
+
+    Example context (json):
+    {
+        "hasframeworks": true,
+        "frameworks": [{"id": 1, "name": "Framework 1", "selected": true}],
+        "hascompetencies": true,
+        "competencies": []
+    }
+}}
+<form method="get" action="" class="mb-4">
+    <div class="form-group row">
+        <label for="frameworkid" class="col-sm-2 col-form-label font-weight-bold">
+            {{#str}}competencyframework, tool_lp{{/str}}
+        </label>
+        <div class="col-sm-6">
+            <select name="frameworkid" id="frameworkid" class="form-control" onchange="this.form.submit()">
+                {{^hasframeworks}}
+                <option value="0">{{#str}}noframeworks, local_dimensions{{/str}}</option>
+                {{/hasframeworks}}
+                {{#frameworks}}
+                <option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}</option>
+                {{/frameworks}}
+            </select>
+        </div>
+    </div>
+</form>
+
+{{#hascompetencies}}
+<div class="card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="fa fa-sitemap mr-2"></i>{{#str}}competencies, core_competency{{/str}}</h5>
+    </div>
+    <div class="card-body">
+        {{> local_dimensions/competency_tree}}
+    </div>
+</div>
+{{/hascompetencies}}
+
+{{^hascompetencies}}
+{{#selectedframeworkid}}
+<div class="alert alert-info">{{#str}}nocompetencies, local_dimensions{{/str}}</div>
+{{/selectedframeworkid}}
+{{^selectedframeworkid}}
+<div class="alert alert-info">{{#str}}selectframework, local_dimensions{{/str}}</div>
+{{/selectedframeworkid}}
+{{/hascompetencies}}
