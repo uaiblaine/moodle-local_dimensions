@@ -70,6 +70,7 @@ class get_fontawesome_icons extends external_api {
 
         $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
+        require_capability('local/dimensions:view', $systemcontext);
         $PAGE->set_context($systemcontext);
 
         // Build the icon map.

@@ -39,6 +39,8 @@ use local_dimensions\picture_manager;
  * @return bool false if the file not found, otherwise serve the file
  */
 function local_dimensions_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
+    require_login();
+
     // Only serve files from our known file areas.
     $validareas = [
         picture_manager::FILEAREA_COMPETENCY,

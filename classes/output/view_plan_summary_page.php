@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * View plan summary page renderable.
+ * View full plan overview page renderable.
  *
  * Displays plan with competencies in accordion timeline when
  * view-plan.php is accessed with only plan ID (no competency ID).
@@ -36,7 +36,7 @@ use local_dimensions\picture_manager;
 use local_dimensions\scss_manager;
 
 /**
- * Renderable class for the plan summary view.
+ * Renderable class for the full plan overview.
  *
  * Shows all competencies in a plan with proficiency status,
  * rating and details in an accordion layout.

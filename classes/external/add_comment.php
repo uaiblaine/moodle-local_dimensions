@@ -149,6 +149,7 @@ class add_comment extends external_api {
                 ];
             }
         } catch (\Exception $e) {
+            debugging('add_comment error: ' . $e->getMessage(), DEBUG_DEVELOPER);
             return [
                 'success' => false,
                 'commentid' => 0,
@@ -157,7 +158,7 @@ class add_comment extends external_api {
                 'userid' => 0,
                 'profileimageurl' => '',
                 'timecreated' => '',
-                'error' => $e->getMessage(),
+                'error' => get_string('erroraddingcomment', 'local_dimensions'),
             ];
         }
 

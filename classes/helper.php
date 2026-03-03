@@ -239,7 +239,12 @@ class helper {
             'text',
             $area,
             new \lang_string('custombgcolor', 'local_dimensions'),
-            [],
+            [
+                'displaysize' => 50,
+                'maxlength' => 255,
+                'ispassword' => 0,
+                'link' => '',
+            ],
             '' // Description removed to avoid fixed-language issue.
         );
     }
@@ -263,7 +268,12 @@ class helper {
             'text',
             $area,
             new \lang_string('customtextcolor', 'local_dimensions'),
-            [],
+            [
+                'displaysize' => 50,
+                'maxlength' => 255,
+                'ispassword' => 0,
+                'link' => '',
+            ],
             '' // Description removed to avoid fixed-language issue.
         );
     }

@@ -84,7 +84,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         $imagehandleroptions
     ));
 
-    // Enable custom SCSS for all modes (Plan Summary and Competency View).
+    // Enable custom SCSS for all modes (Full Plan Overview and Competency Tracker).
     $settings->add(new admin_setting_configcheckbox(
         'local_dimensions/enablecustomscss',
         get_string('enablecustomscss', 'local_dimensions'),
@@ -93,7 +93,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
     ));
 
     // -----------------------------------------------------------------------
-    // 2. Competency View Mode.
+    // 2. Competency Tracker Mode.
     // -----------------------------------------------------------------------
     $settings->add(new admin_setting_heading(
         'local_dimensions/competencyviewheading',
@@ -174,7 +174,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
     ));
 
     // -----------------------------------------------------------------------
-    // 3. Plan Summary Mode - Expanded Content Display.
+    // 3. Full Plan Overview Mode - Expanded Content Display.
     // -----------------------------------------------------------------------
     $settings->add(new admin_setting_heading(
         'local_dimensions/plansummaryheading',
@@ -182,7 +182,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         get_string('plansummaryheading_desc', 'local_dimensions')
     ));
 
-    // Enrollment filter for plan summary accordion.
+    // Enrollment filter for full plan overview accordion.
     $settings->add(new admin_setting_configselect(
         'local_dimensions/summaryenrollmentfilter',
         get_string('summaryenrollmentfilter', 'local_dimensions'),
@@ -216,6 +216,14 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         'local_dimensions/showrelated',
         get_string('showrelated', 'local_dimensions'),
         get_string('showrelated_desc', 'local_dimensions'),
+        0
+    ));
+
+    // Link related competencies to their detail page.
+    $settings->add(new admin_setting_configcheckbox(
+        'local_dimensions/showrelatedlink',
+        get_string('showrelatedlink', 'local_dimensions'),
+        get_string('showrelatedlink_desc', 'local_dimensions'),
         0
     ));
 

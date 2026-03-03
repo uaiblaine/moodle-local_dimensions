@@ -18,7 +18,7 @@
  * Calculator class for course progress and section calculations.
  *
  * @package    local_dimensions
- * @copyright  2024 Your Name
+ * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,7 +29,7 @@ namespace local_dimensions;
  * Calculator class for course progress calculations.
  *
  * @package    local_dimensions
- * @copyright  2024 Your Name
+ * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class calculator {

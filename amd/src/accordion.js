@@ -1,5 +1,5 @@
 /**
- * Accordion functionality for plan summary view with AJAX loading.
+ * Accordion functionality for full plan overview with AJAX loading.
  *
  * @module     local_dimensions/accordion
  * @copyright  2026 Anderson Blaine
@@ -17,6 +17,8 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
         showdescription: true,
         showpath: false,
         showrelated: false,
+        showrelatedlink: false,
+        viewplanurl: '',
         showevidence: true,
         showcomments: false
     };
@@ -89,7 +91,7 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
             }
 
             // Render the summary content (including course cards).
-            renderCompetencySummary(contentEl, summaryResponse, coursesResponse);
+            renderCompetencySummary(contentEl, summaryResponse, coursesResponse, planId);
         }).catch(function (error) {
             // Hide loading, show error.
             if (loadingEl) {
@@ -108,9 +110,10 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
      * @param {HTMLElement} contentEl The content container element
      * @param {Object} data The data from the webservice
      * @param {Array} courses The courses list from tool_lp_list_courses_using_competency
+     * @param {number} planId The plan ID (used for related competency links)
      * @return {Promise} Promise that resolves when rendering is complete
      */
-    function renderCompetencySummary(contentEl, data, courses) {
+    function renderCompetencySummary(contentEl, data, courses, planId) {
         if (!contentEl) {
             return Promise.resolve();
         }
@@ -283,7 +286,7 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
 
                     // Related competencies.
                     if (hasRelated) {
-                        html += renderRelatedCompetencies(competencyData, strMap);
+                        html += renderRelatedCompetencies(competencyData, strMap, planId);
                     }
 
                     html += '</div>';
@@ -327,7 +330,11 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
 
 
             // Initialize evidence slider(s) — pass evidence data, strings, and scale config for modal.
-            var scaleConfig = comp ? (comp.scaleconfiguration || null) : null;
+            // Competency-level scaleconfiguration is null when it inherits from the framework.
+            // Fall back to the resolved scaleconfiguration on the competency tree data object.
+            var scaleConfig = (comp && comp.scaleconfiguration)
+                || (competencyData && competencyData.scaleconfiguration)
+                || null;
             initSliders(contentEl, ucs ? ucs.evidence : [], strMap, scaleConfig);
 
             // Initialize course scroll navigation.
@@ -568,7 +575,9 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
             actionuseravatar: hasActionUser
                 ? (ev.actionuser.profileimageurlsmall || '')
                 : '',
-            datestring: ev.userdate || '',
+            // Prefer server-formatted userdate (already localized by Moodle);
+            // fall back to client-side formatting when absent.
+            datestring: ev.userdate || formatTimestamp(ev.timecreated, strMap.dateFormat),
             strnote: strMap.evidenceNote,
             strlink: strMap.evidenceLink,
             strgrade: strMap.evidenceGrade,
@@ -1315,14 +1324,17 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
      *
      * @param {Object} data The competency data
      * @param {Object} strMap Language strings map
+     * @param {number} planId The plan ID (used to build links when showrelatedlink is enabled)
      * @return {string} HTML for related competencies
      */
-    function renderRelatedCompetencies(data, strMap) {
+    function renderRelatedCompetencies(data, strMap, planId) {
         let html = '';
 
         if (!data.relatedcompetencies || data.relatedcompetencies.length === 0) {
             return html;
         }
+
+        const useLink = displaySettings.showrelatedlink && displaySettings.viewplanurl && planId;
 
         html += '<section class="dims-section dims-related-section">';
         html += '<h3 class="dims-related-header">';
@@ -1331,7 +1343,13 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
         html += '<div class="dims-related-pills">';
 
         data.relatedcompetencies.forEach(function (related) {
-            html += '<span class="dims-related-pill-v2">' + escapeHtml(related.shortname) + '</span>';
+            if (useLink && related.id) {
+                const href = displaySettings.viewplanurl + '?id=' + planId + '&competencyid=' + related.id;
+                html += '<a href="' + href + '" class="dims-related-pill-v2 dims-related-pill-link">'
+                    + escapeHtml(related.shortname) + '</a>';
+            } else {
+                html += '<span class="dims-related-pill-v2">' + escapeHtml(related.shortname) + '</span>';
+            }
         });
 
         html += '</div>';
@@ -1348,11 +1366,58 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
      * @return {Object} Type info with icon, label, colorClass
      */
     function getEvidenceTypeInfo(evidence, strMap) {
-        // Evidence action constants from Moodle core_competency.
-        // 0 = EVIDENCE_ACTION_LOG, 1 = EVIDENCE_ACTION_SUGGEST, 2 = EVIDENCE_ACTION_COMPLETE, 3 = EVIDENCE_ACTION_OVERRIDE.
-        const action = evidence.action || 0;
+        // Use descidentifier (exported by core_competency evidence_exporter) as the primary
+        // type selector. This field directly maps to the Moodle evidence type string identifiers
+        // and is reliable across all Moodle versions.
+        const descidentifier = evidence.descidentifier || '';
 
-        // Determine type based on action and description patterns.
+        if (descidentifier === 'evidence_coursemodulecompleted') {
+            return {
+                icon: 'fa-check-circle',
+                label: strMap.evidenceTypeActivity,
+                colorClass: 'dims-evidence-activity'
+            };
+        }
+
+        if (descidentifier === 'evidence_coursecompleted') {
+            return {
+                icon: 'fa-graduation-cap',
+                label: strMap.evidenceTypeCoursegrade,
+                colorClass: 'dims-evidence-grade'
+            };
+        }
+
+        if (descidentifier === 'evidence_manualoverride' || descidentifier === 'evidence_manualoverrideinplan') {
+            return {
+                icon: 'fa-pencil',
+                label: strMap.evidenceTypeManual,
+                colorClass: 'dims-evidence-manual'
+            };
+        }
+
+        if (descidentifier === 'evidence_evidenceofpriorlearninglinked') {
+            // Sub-check: if desca references a file, use file icon; otherwise prior learning.
+            if (evidence.desca && evidence.desca.indexOf('file') !== -1) {
+                return {
+                    icon: 'fa-paperclip',
+                    label: strMap.evidenceTypeFile,
+                    colorClass: 'dims-evidence-file'
+                };
+            }
+            return {
+                icon: 'fa-trophy',
+                label: strMap.evidenceTypePrior,
+                colorClass: 'dims-evidence-prior'
+            };
+        }
+
+        // Fallback heuristics for backward compatibility when descidentifier is absent.
+        // Evidence action constants from Moodle core_competency:
+        // 0 = EVIDENCE_ACTION_LOG, 1 = EVIDENCE_ACTION_SUGGEST,
+        // 2 = EVIDENCE_ACTION_COMPLETE, 3 = EVIDENCE_ACTION_OVERRIDE.
+        // JSON-encoded responses return numeric fields as strings; coerce to integer.
+        const action = parseInt(evidence.action, 10) || 0;
+
         if (evidence.url && evidence.url.indexOf('/mod/') !== -1) {
             return {
                 icon: 'fa-check-circle',
@@ -1867,8 +1932,11 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
         // Rating cell.
         html += '<div class="dims-status-cell">';
         html += '<p class="dims-status-label">' + escapeHtml(strMap.ratingLabel) + '</p>';
+        // JSON-encoded responses return numeric fields as strings; coerce to integer for safe comparison.
+        var isProficient = parseInt(uc.proficiency, 10) === 1;
+
         if (uc.grade && uc.gradename) {
-            if (uc.proficiency) {
+            if (isProficient) {
                 html += '<span class="dims-status-badge">';
                 html += '<i class="fa fa-check-circle" aria-hidden="true"></i> ';
             } else {
@@ -1884,14 +1952,13 @@ define(['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/mo
         // Proficiency cell.
         html += '<div class="dims-status-cell">';
         html += '<p class="dims-status-label">' + escapeHtml(strMap.proficiencyLabel) + '</p>';
-        if (uc.proficiency) {
+        if (isProficient) {
             html += '<div class="dims-status-value dims-status-success">';
             html += '<i class="fa fa-check-circle" aria-hidden="true"></i> ';
             html += escapeHtml(strMap.yesStr);
             html += '</div>';
         } else {
             html += '<div class="dims-status-value dims-status-pending">';
-            html += '<i class="fa fa-clock-o" aria-hidden="true"></i> ';
             html += escapeHtml(strMap.noStr);
             html += '</div>';
         }

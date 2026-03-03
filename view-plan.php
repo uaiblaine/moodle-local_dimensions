@@ -18,15 +18,15 @@
  * View Plan Page
  *
  * Two modes:
- * 1. Plan Summary Mode (only plan ID) - Shows all competencies in accordion timeline
- * 2. Competency View Mode (plan ID + competency ID) - Shows courses for a competency
+ * 1. Full Plan Overview Mode (only plan ID) - Shows all competencies in accordion timeline
+ * 2. Competency Tracker Mode (plan ID + competency ID) - Shows courses for a competency
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require('../../config.php');
+require_once('../../config.php');
 
 use local_dimensions\output\view_plan_page;
 use local_dimensions\output\view_plan_summary_page;
@@ -52,7 +52,7 @@ $PAGE->add_body_class('local-dimensions-viewplan');
 
 // Detect mode based on competencyid parameter.
 if ($competencyid) {
-    // COMPETENCY VIEW MODE.
+    // COMPETENCY TRACKER MODE.
     // Shows courses linked to a competency.
 
     $competency = $DB->get_record('competency', ['id' => $competencyid]);
@@ -136,7 +136,7 @@ if ($competencyid) {
         $PAGE->requires->js_call_amd('local_dimensions/ui', 'init', [$uisettings]);
     }
 } else {
-    // PLAN SUMMARY MODE.
+    // FULL PLAN OVERVIEW MODE.
     // Shows all competencies in accordion.
 
     // Get the plan using competency API.
@@ -173,6 +173,8 @@ if ($competencyid) {
         'showdescription' => (bool) get_config('local_dimensions', 'showdescription'),
         'showpath' => (bool) get_config('local_dimensions', 'showpath'),
         'showrelated' => (bool) get_config('local_dimensions', 'showrelated'),
+        'showrelatedlink' => (bool) get_config('local_dimensions', 'showrelatedlink'),
+        'viewplanurl' => (new \moodle_url('/local/dimensions/view-plan.php'))->out(false),
         'showevidence' => (bool) get_config('local_dimensions', 'showevidence'),
         'showcomments' => (bool) get_config('local_dimensions', 'showcomments'),
         'summaryenrollmentfilter' => $summaryenrollmentfilter,
@@ -181,7 +183,7 @@ if ($competencyid) {
     // Start HTML Output.
     echo $OUTPUT->header();
 
-    // Render plan summary using Mustache template.
+    // Render full plan overview using Mustache template.
     $page = new view_plan_summary_page($plan, $USER->id);
     echo $OUTPUT->render_from_template('local_dimensions/view_plan_summary', $page->export_for_template($OUTPUT));
 
