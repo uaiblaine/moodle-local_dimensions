@@ -3,17 +3,17 @@
    Hide empty default header on view-plan page
    ============================================ */
 .local-dimensions-viewplan #page-header {
-  display: none !important;
+  display: none;
 }
 
 .local-dimensions-viewplan header.header:empty,
 .local-dimensions-viewplan #page-header:empty {
-  display: none !important;
+  display: none;
 }
 
 /* Remove top padding when hero is present */
 .local-dimensions-viewplan #page-content {
-  padding-top: 0 !important;
+  padding-top: 0;
 }
 
 .local-dimensions-viewplan #region-main {
@@ -72,7 +72,7 @@
 
 /* Title - uses custom text color from template/competency custom field */
 .dims-hero-title {
-  color: var(--dimension-customtextcolor, rgba(255, 255, 255, 1)) !important;
+  color: var(--dimension-customtextcolor, rgba(255, 255, 255, 1));
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 0.75rem 0;
@@ -81,7 +81,7 @@
 
 /* Description - uses custom text color with slight opacity fallback */
 .dims-hero-description {
-  color: var(--dimension-customtextcolor, rgba(255, 255, 255, 0.85)) !important;
+  color: var(--dimension-customtextcolor, rgba(255, 255, 255, 0.85));
   font-size: 1rem;
   line-height: 1.6;
   max-width: 800px;
@@ -89,7 +89,7 @@
 
 .dims-hero-description p {
   margin: 0;
-  color: inherit !important;
+  color: inherit;
 }
 
 /* Due Date Card - Horizontal glass-style card */
@@ -168,7 +168,7 @@
   .dims-hero-title,
   .dims-hero-description,
   .dims-hero-description p {
-    color: #fff !important;
+    color: #fff;
   }
 }
 
@@ -193,7 +193,8 @@
   bottom: 0;
   z-index: 0;
   /* Desktop: Radial gradient circle at top-left, fading to transparent */
-  background: radial-gradient(circle at 0% 0%,
+  background:
+    radial-gradient(circle at 0% 0%,
       var(--hero-overlay-color, rgba(0, 0, 0, 0.8)) 0%,
       var(--hero-overlay-color, rgba(0, 0, 0, 0.8)) 40%,
       transparent 100%);
@@ -203,7 +204,7 @@
 .dims-hero-wrapper.dims-hero-has-image .dims-hero {
   position: relative;
   z-index: 1;
-  background-color: transparent !important;
+  background-color: transparent;
   /* Override inline style background */
 }
 
@@ -211,7 +212,8 @@
 @media (max-width: 768px) {
   .dims-hero-wrapper.dims-hero-has-image::before {
     /* Mobile: Linear gradient top-down, more aggressive for contrast */
-    background: linear-gradient(to bottom,
+    background:
+      linear-gradient(to bottom,
         var(--hero-overlay-color, rgba(0, 0, 0, 0.9)) 0%,
         var(--hero-overlay-color, rgba(0, 0, 0, 0.8)) 60%,
         transparent 100%);
@@ -227,13 +229,13 @@
    CARD STYLES
    ============================================ */
 .local-dimensions-viewplan .card-header {
-  background-color: #F9FAFB !important;
-  border: 0px !important;
+  background-color: #f9fafb;
+  border: 0px;
 }
 
 .local-dimensions-viewplan .card-header a {
-  font-size: 20px !important;
-  color: #212121 !important;
+  font-size: 20px;
+  color: #212121;
 }
 
 /* Text muted inside card headers - larger font size */
@@ -242,7 +244,7 @@
 }
 
 .local-dimensions-viewplan .card {
-  background-color: #F9FAFB !important;
+  background-color: #f9fafb;
 }
 
 .dims-progress-container {
@@ -254,9 +256,9 @@
 }
 
 /* Locked Card - External dashed border using pseudo-element */
-.dims-card-locked {
-  border: none !important;
-  box-shadow: none !important;
+.card.dims-card-locked {
+  border: none;
+  box-shadow: none;
   position: relative;
   border-radius: 0.375rem;
 }
@@ -286,8 +288,8 @@
 }
 
 .dims-card-locked .card-header {
-  background-color: transparent !important;
-  border-bottom: none !important;
+  background-color: transparent;
+  border-bottom: none;
 }
 
 /* Locked Overlay - Covers entire card including header */
@@ -614,9 +616,9 @@
   margin-bottom: 25px;
   border-radius: 0.75rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  border-top: 1px solid #E5E0E0;
-  border-right: 1px solid #E5E0E0;
-  border-bottom: 1px solid #E5E0E0;
+  border-top: 1px solid #e5e0e0;
+  border-right: 1px solid #e5e0e0;
+  border-bottom: 1px solid #e5e0e0;
   overflow: hidden;
 }
 
@@ -1971,7 +1973,8 @@ body.dark .dims-course-access-btn:hover {
   background: #fff;
   border-radius: 0.75rem;
   border: none;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -2px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
@@ -2057,13 +2060,15 @@ body.dark .dims-course-access-btn:hover {
   border-radius: 0.75rem;
   overflow: hidden;
   border: none;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -2px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.2s ease;
 }
 
 .dims-course-card-lg:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
@@ -2180,7 +2185,7 @@ body.dark .dims-course-access-btn:hover {
 
 .dims-accordion-item.rated .dims-status-cell {
   background: rgba(255, 238, 186, 0.20);
-  border: 1px solid #FFEEBA;
+  border: 1px solid #ffeeba;
 }
 
 .dims-status-label {
@@ -2289,12 +2294,15 @@ body.dark .dims-course-access-btn:hover {
   background: #fff;
   border-radius: 0.75rem;
   border: none;
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  box-shadow:
+    rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
+    rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
   transition: box-shadow 0.2s ease;
 }
 
 .dims-ev-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
@@ -2730,7 +2738,8 @@ body.dark .dims-course-access-btn:hover {
 .theme-dark .dims-shadow-card,
 body.dark .dims-shadow-card {
   background: #343a40;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
     0 2px 4px -2px rgba(0, 0, 0, 0.3);
 }
 
@@ -2758,7 +2767,8 @@ body.dark .dims-path-bar-sep {
 .theme-dark .dims-course-card-lg,
 body.dark .dims-course-card-lg {
   background: #343a40;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
     0 2px 4px -2px rgba(0, 0, 0, 0.3);
 }
 
@@ -2820,7 +2830,8 @@ body.dark .dims-show-more:hover {
 .theme-dark .dims-ev-card,
 body.dark .dims-ev-card {
   background: #343a40;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3),
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.3),
     0 1px 2px -1px rgba(0, 0, 0, 0.3);
 }
 
@@ -3601,5 +3612,5 @@ body.dark .dims-cm-trigger-label {
    The value is forced to FORMAT_PLAIN server-side. */
 #fitem_id_customfield_customscss_editorformat,
 #fgroup_id_customfield_customscss_editorformat {
-  display: none !important;
+  display: none;
 }

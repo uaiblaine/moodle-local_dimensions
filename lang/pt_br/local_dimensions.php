@@ -84,6 +84,7 @@ $string['customscss_js_unbalancedparentheses'] = 'Erro de validação SCSS: os p
 $string['customtextcolor'] = 'Cor do Texto';
 $string['customtextcolor_desc'] = 'Cor do texto personalizada em formato hex (ex: #ffffff)';
 $string['description_label'] = 'Descrição';
+$string['dimensions'] = 'Dimensões de Competência';
 $string['dimensions:view'] = 'Visualizar Dimensões';
 $string['displaymode'] = 'Formato de Exibição';
 $string['displaymode_competencies'] = 'Trilha da Competência';

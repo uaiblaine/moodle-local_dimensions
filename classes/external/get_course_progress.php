@@ -53,7 +53,10 @@ class get_course_progress extends external_api {
     }
 
     /**
-     * The main function that executes logic
+     * The main function that executes logic.
+     *
+     * @param array $courseids List of course IDs to calculate progress for.
+     * @return array List of course progress results.
      */
     public static function execute($courseids) {
         // Automatic parameter validation.

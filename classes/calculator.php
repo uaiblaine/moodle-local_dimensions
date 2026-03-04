@@ -212,7 +212,13 @@ class calculator {
     }
 
     /**
-     * Collects all CMs (Course Modules) of a section and its descendants recursively
+     * Collects all CMs (Course Modules) of a section and its descendants recursively.
+     *
+     * @param int $sectionid The section ID to collect CMs from.
+     * @param array $childrenmap Map of parent section IDs to arrays of child section IDs.
+     * @param array $sectionbyid Map of section IDs to section_info objects.
+     * @param \course_modinfo $modinfo The course module info object.
+     * @return \cm_info[] Array of course module info objects.
      */
     private static function get_section_cms_recursive($sectionid, $childrenmap, $sectionbyid, $modinfo) {
         $cms = [];

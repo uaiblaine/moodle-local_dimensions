@@ -31,13 +31,13 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
     // Parent category for our pages (under competencies).
     $parentname = 'competencies';
 
-    // Create a subcategory for Local Dimensions under competencies.
+    // Create a subcategory for Competency Dimensions under competencies.
     $ADMIN->add($parentname, new admin_category(
         'local_dimensions',
-        get_string('pluginsettings', 'local_dimensions')
+        get_string('dimensions', 'local_dimensions')
     ));
 
-    // Settings page for Local Dimensions.
+    // Settings page for Competency Dimensions.
     $settings = new admin_settingpage(
         'local_dimensions_settings',
         get_string('pluginsettings', 'local_dimensions')
@@ -247,7 +247,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
 
     $ADMIN->add('local_dimensions', $settings);
 
-    // Competency Custom Fields configuration.
+    // Competency custom fields configuration.
     $ADMIN->add('local_dimensions', new admin_externalpage(
         'local_dimensions_customfield',
         get_string('customfields', 'local_dimensions'),
@@ -263,7 +263,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         'moodle/competency:competencymanage'
     ));
 
-    // Learning Plan Template custom fields configuration.
+    // Learning plan template custom fields configuration.
     $ADMIN->add('local_dimensions', new admin_externalpage(
         'local_dimensions_customfield_template',
         get_string('templatecustomfields', 'local_dimensions'),

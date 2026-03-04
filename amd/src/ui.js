@@ -35,7 +35,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
                 args: { courseids: courseIds }
             }])[0].done(function (results) {
 
-                    // 3. Process each result.
+                // 3. Process each result.
                 $.each(results, function (i, data) {
                     var container = $('.dims-progress-container[data-courseid="' + data.courseid + '"]');
 
@@ -84,8 +84,9 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
 
             }).fail(function (ex) {
                 // General request failure.
-                console.error(ex);
-                containers.html('<div class="text-danger small p-2">' + M.util.get_string('connection_error', 'local_dimensions') + '</div>');
+                Notification.exception(ex);
+                var errorMsg = M.util.get_string('connection_error', 'local_dimensions');
+                containers.html('<div class="text-danger small p-2">' + errorMsg + '</div>');
             });
         }
     };
