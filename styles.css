@@ -194,10 +194,12 @@
   z-index: 0;
   /* Desktop: Radial gradient circle at top-left, fading to transparent */
   background:
-    radial-gradient(circle at 0% 0%,
+    radial-gradient(
+      circle at 0% 0%,
       var(--hero-overlay-color, rgba(0, 0, 0, 0.8)) 0%,
       var(--hero-overlay-color, rgba(0, 0, 0, 0.8)) 40%,
-      transparent 100%);
+      transparent 100%
+      );
 }
 
 /* Ensure content is above the overlay */
@@ -213,10 +215,12 @@
   .dims-hero-wrapper.dims-hero-has-image::before {
     /* Mobile: Linear gradient top-down, more aggressive for contrast */
     background:
-      linear-gradient(to bottom,
+      linear-gradient(
+        to bottom,
         var(--hero-overlay-color, rgba(0, 0, 0, 0.9)) 0%,
         var(--hero-overlay-color, rgba(0, 0, 0, 0.8)) 60%,
-        transparent 100%);
+        transparent 100%
+        );
   }
 
   /* Ensure padding adjusts for mobile reading */
@@ -273,18 +277,8 @@
   bottom: -4px;
   border-radius: 0.5rem;
   pointer-events: none;
-  z-index: 20;
-  /* Above the blur overlay (z-index: 10) */
-
-  /* Custom dash pattern (8px dash, 8px gap) */
-  background-image:
-    repeating-linear-gradient(0deg, #c4c7ca, #c4c7ca 8px, transparent 8px, transparent 16px),
-    repeating-linear-gradient(90deg, #c4c7ca, #c4c7ca 8px, transparent 8px, transparent 16px),
-    repeating-linear-gradient(180deg, #c4c7ca, #c4c7ca 8px, transparent 8px, transparent 16px),
-    repeating-linear-gradient(270deg, #c4c7ca, #c4c7ca 8px, transparent 8px, transparent 16px);
-  background-size: 2px 100%, 100% 2px, 2px 100%, 100% 2px;
-  background-position: 0 0, 0 0, 100% 0, 0 100%;
-  background-repeat: no-repeat;
+  z-index: 20;  
+  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='8' ry='8' stroke='%23c4c7ca' stroke-width='4' stroke-dasharray='8%2c 8'/%3e%3c/svg%3e");
 }
 
 .dims-card-locked .card-header {
