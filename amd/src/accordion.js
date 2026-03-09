@@ -107,6 +107,52 @@ define(
         }
 
         /**
+         * Resolve taxonomy names for a competency based on its framework configuration.
+         *
+         * Each competency framework defines up to 6 taxonomy levels (e.g. domain, competency, skill).
+         * This function determines the correct taxonomy label for the current competency (singular)
+         * and its children (plural) based on the competency's depth in the hierarchy.
+         *
+         * @param {Object} competencyData The competency summary data (contains .competency, .framework, .compparents)
+         * @param {Object} strMap Language strings map (must include .taxonomyMap)
+         * @return {Object} Taxonomy info: { parentKey, childKey, singular, plural }
+         */
+        function resolveTaxonomy(competencyData, strMap) {
+            var defaultTax = 'competency';
+            var map = strMap.taxonomyMap || {};
+            var fallback = map[defaultTax] || { singular: defaultTax, plural: defaultTax };
+
+            if (!competencyData || !competencyData.framework) {
+                return {
+                    parentKey: defaultTax,
+                    childKey: defaultTax,
+                    singular: fallback.singular,
+                    plural: fallback.plural
+                };
+            }
+
+            var taxonomies = (competencyData.framework.taxonomies || defaultTax).split(',');
+            var depth = (competencyData.compparents && Array.isArray(competencyData.compparents))
+                ? competencyData.compparents.length : 0;
+
+            var parentIdx = Math.min(Math.max(0, depth), taxonomies.length - 1);
+            var childIdx = Math.min(parentIdx + 1, taxonomies.length - 1);
+
+            var parentKey = (taxonomies[parentIdx] || defaultTax).trim();
+            var childKey = (taxonomies[childIdx] || defaultTax).trim();
+
+            var parentEntry = map[parentKey] || fallback;
+            var childEntry = map[childKey] || fallback;
+
+            return {
+                parentKey: parentKey,
+                childKey: childKey,
+                singular: parentEntry.singular,
+                plural: childEntry.plural
+            };
+        }
+
+        /**
          * Render the competency summary content.
          *
          * @param {HTMLElement} contentEl The content container element
@@ -185,7 +231,29 @@ define(
                 { key: 'rules_sr_proficient', component: 'local_dimensions' },
                 { key: 'rules_sr_inprogress', component: 'local_dimensions' },
                 { key: 'rules_sr_todo', component: 'local_dimensions' },
-                { key: 'rules_sr_progress', component: 'local_dimensions' }
+                { key: 'rules_sr_progress', component: 'local_dimensions' },
+                { key: 'taxonomy_behaviour_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_behaviour_plural', component: 'local_dimensions' },
+                { key: 'taxonomy_competency_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_competency_plural', component: 'local_dimensions' },
+                { key: 'taxonomy_concept_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_concept_plural', component: 'local_dimensions' },
+                { key: 'taxonomy_domain_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_domain_plural', component: 'local_dimensions' },
+                { key: 'taxonomy_indicator_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_indicator_plural', component: 'local_dimensions' },
+                { key: 'taxonomy_level_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_level_plural', component: 'local_dimensions' },
+                { key: 'taxonomy_outcome_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_outcome_plural', component: 'local_dimensions' },
+                { key: 'taxonomy_practice_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_practice_plural', component: 'local_dimensions' },
+                { key: 'taxonomy_proficiency_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_proficiency_plural', component: 'local_dimensions' },
+                { key: 'taxonomy_skill_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_skill_plural', component: 'local_dimensions' },
+                { key: 'taxonomy_value_singular', component: 'local_dimensions' },
+                { key: 'taxonomy_value_plural', component: 'local_dimensions' }
             ]).then(function (strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -251,13 +319,29 @@ define(
                     rulesSrProficient: strings[60],
                     rulesSrInprogress: strings[61],
                     rulesSrTodo: strings[62],
-                    rulesSrProgress: strings[63]
+                    rulesSrProgress: strings[63],
+                    taxonomyMap: {
+                        behaviour:   { singular: strings[64],  plural: strings[65] },
+                        competency:  { singular: strings[66],  plural: strings[67] },
+                        concept:     { singular: strings[68],  plural: strings[69] },
+                        domain:      { singular: strings[70],  plural: strings[71] },
+                        indicator:   { singular: strings[72],  plural: strings[73] },
+                        level:       { singular: strings[74],  plural: strings[75] },
+                        outcome:     { singular: strings[76],  plural: strings[77] },
+                        practice:    { singular: strings[78],  plural: strings[79] },
+                        proficiency: { singular: strings[80],  plural: strings[81] },
+                        skill:       { singular: strings[82],  plural: strings[83] },
+                        value:       { singular: strings[84],  plural: strings[85] }
+                    }
                 };
 
                 // Build HTML for the summary.
                 const ucs = data.usercompetencysummary;
                 const competencyData = ucs ? ucs.competency : null;
                 const comp = competencyData ? competencyData.competency : null;
+
+                // Resolve taxonomy names from the framework configuration.
+                var taxonomyInfo = resolveTaxonomy(competencyData, strMap);
 
                 // Filter visible courses.
                 const visibleCourses = (courses || []).filter(function (course) {
@@ -340,7 +424,7 @@ define(
 
                         // Related competencies.
                         if (hasRelated) {
-                            html += renderRelatedCompetencies(competencyData, strMap, planId);
+                            html += renderRelatedCompetencies(competencyData, strMap, planId, taxonomyInfo);
                         }
 
                         html += '</div>';
@@ -363,7 +447,9 @@ define(
                         html += ' id="dims-tabpane-rules-' + comp.id + '" data-tab="rules"';
                         html += ' role="tabpanel" aria-labelledby="dims-tab-rules-' + comp.id + '"';
                         html += ' data-competency-id="' + comp.id + '"';
-                        html += ' data-plan-id="' + planId + '">';
+                        html += ' data-plan-id="' + planId + '"';
+                        html += ' data-parent-taxonomy="' + escapeHtml(taxonomyInfo.parentKey) + '"';
+                        html += ' data-child-taxonomy="' + escapeHtml(taxonomyInfo.childKey) + '">';
                         html += '<div class="dims-rules-loading" role="status" aria-live="polite">';
                         html += '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
                         html += '<span class="sr-only">' + escapeHtml(strMap.rulesTab) + '</span>';
@@ -571,6 +657,17 @@ define(
                 return;
             }
 
+            // Resolve taxonomy names from data attributes set during summary rendering.
+            var defaultTax = 'competency';
+            var map = strMap.taxonomyMap || {};
+            var fallback = map[defaultTax] || { singular: defaultTax, plural: defaultTax };
+            var parentKey = (pane.dataset.parentTaxonomy || defaultTax).trim();
+            var childKey = (pane.dataset.childTaxonomy || defaultTax).trim();
+            var rulesTaxonomy = {
+                singular: (map[parentKey] || fallback).singular,
+                plural: (map[childKey] || fallback).plural
+            };
+
             Ajax.call([{
                 methodname: 'local_dimensions_get_competency_rule_data',
                 args: {
@@ -584,7 +681,7 @@ define(
                     loadingEl.style.display = 'none';
                 }
                 if (contentEl) {
-                    contentEl.innerHTML = renderRulesSection(data, strMap, planId);
+                    contentEl.innerHTML = renderRulesSection(data, strMap, planId, rulesTaxonomy);
                     contentEl.style.display = 'block';
                 }
             }).catch(function (error) {
@@ -602,9 +699,10 @@ define(
          * @param {Object} data The rule data from the webservice
          * @param {Object} strMap Language strings map
          * @param {number} planId The plan ID for building child links
+         * @param {Object} taxonomy Taxonomy info: { singular, plural }
          * @return {string} HTML for the rules section
          */
-        function renderRulesSection(data, strMap, planId) {
+        function renderRulesSection(data, strMap, planId, taxonomy) {
             if (!data || !data.hasrule) {
                 return '';
             }
@@ -647,7 +745,9 @@ define(
             html += '</div>';
 
             // === Competency count ===
-            var countText = strMap.rulesTotalCompetencies.replace('{$a}', data.childcount || 0);
+            var countText = strMap.rulesTotalCompetencies
+                .replace('{$a->count}', data.childcount || 0)
+                .replace('{$a->taxonomy}', taxonomy ? taxonomy.plural : '');
             html += '<div class="dims-rules-count text-muted">' + countText + '</div>';
 
             // === Children list ===
@@ -661,7 +761,7 @@ define(
             }
 
             // === Rule info box ===
-            html += renderRuleInfoBox(data, strMap);
+            html += renderRuleInfoBox(data, strMap, taxonomy);
 
             // === Submit evidence button ===
             if (data.enableevidencebutton && data.userid) {
@@ -770,13 +870,16 @@ define(
          *
          * @param {Object} data The rule data
          * @param {Object} strMap Language strings map
+         * @param {Object} taxonomy Taxonomy info: { singular, plural }
          * @return {string} HTML for the info box
          */
-        function renderRuleInfoBox(data, strMap) {
+        function renderRuleInfoBox(data, strMap, taxonomy) {
             // Determine rule text based on ruletype + ruleoutcome.
             // Outcomes: 1 = attach, 2 = complete, 3 = recommend.
             var ruleText = '';
             var outcome = parseInt(data.ruleoutcome, 10);
+            var taxSingular = taxonomy ? taxonomy.singular : '';
+            var taxPlural = taxonomy ? taxonomy.plural : '';
 
             if (data.ruletype === 'points') {
                 if (outcome === 1) {
@@ -800,6 +903,9 @@ define(
                 return '';
             }
 
+            // Substitute taxonomy placeholder in outcome text (singular = parent taxonomy).
+            ruleText = ruleText.replace('{$a}', taxSingular);
+
             var html = '<div class="dims-rules-info-box" role="note">';
             html += '<div class="dims-rules-info-icon">';
             html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">';
@@ -811,7 +917,9 @@ define(
             html += '<div class="dims-rules-info-text">';
             html += '<strong>' + escapeHtml(strMap.rulesLabel) + '</strong> ' + escapeHtml(ruleText);
             if (data.hasrequired) {
-                html += ' <strong>' + escapeHtml(strMap.rulesRequiredWarning) + '</strong>';
+                // Substitute taxonomy placeholder in required warning (plural = child taxonomy).
+                var reqWarning = strMap.rulesRequiredWarning.replace('{$a}', taxPlural);
+                html += ' <strong>' + escapeHtml(reqWarning) + '</strong>';
             }
             html += '</div>';
             html += '</div>';
@@ -1816,9 +1924,10 @@ define(
          * @param {Object} data The competency data
          * @param {Object} strMap Language strings map
          * @param {number} planId The plan ID (used to build links when showrelatedlink is enabled)
+         * @param {Object} taxonomyInfo Taxonomy info from resolveTaxonomy
          * @return {string} HTML for related competencies
          */
-        function renderRelatedCompetencies(data, strMap, planId) {
+        function renderRelatedCompetencies(data, strMap, planId, taxonomyInfo) {
             let html = '';
 
             if (!data.relatedcompetencies || data.relatedcompetencies.length === 0) {
@@ -1826,10 +1935,11 @@ define(
             }
 
             const useLink = displaySettings.showrelatedlink && displaySettings.viewplanurl && planId;
+            var relatedLabel = strMap.relatedLabel.replace('{$a}', taxonomyInfo ? taxonomyInfo.plural : '');
 
             html += '<section class="dims-section dims-related-section">';
             html += '<h3 class="dims-related-header">';
-            html += escapeHtml(strMap.relatedLabel);
+            html += escapeHtml(relatedLabel);
             html += '</h3>';
             html += '<div class="dims-related-pills">';
 

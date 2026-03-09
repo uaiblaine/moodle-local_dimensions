@@ -55,18 +55,20 @@ Shows linked courses for a single competency as a responsive grid of course card
 Shows all competencies in the plan as an expandable accordion. Each accordion panel loads via AJAX and can display:
 - Competency description
 - Hierarchy path (framework → parent → competency)
-- Related competencies (optionally clickable)
+- Related competencies (optionally clickable, label adapts to framework taxonomy)
 - Competency completion rules (rule type, rule outcome, sub-competency progress and proficiency status)
 - Evidence cards with detail modals
 - Comments section with reply functionality
 - Linked course cards with section progress
+
+All labels adapt automatically to the competency framework's taxonomy configuration (e.g. "competency", "domain", "skill", "indicator"), so the UI reflects the vocabulary defined by the framework author.
 
 #### Competency completion rules
 
 When a competency has a completion rule configured in Moodle's core competency framework, a **Rules** tab is displayed in the accordion panel. It shows:
 
 - **Rule type**: "All" (all linked sub-competencies must be rated as proficient) or "Points" (sum of points from sub-competencies must reach a threshold)
-- **Rule outcome**: What happens when the rule is met — evidence is attached automatically, the competency is marked as complete, or the competency is recommended for review
+- **Rule outcome**: What happens when the rule is met — evidence is attached automatically, the competency is marked as complete, or the competency is recommended for review. Outcome descriptions use taxonomy-aware language matching the framework configuration
 - **Progress indicator**: A progress bar showing earned points (or completed count) versus the total required
 - **Sub-competency list**: Each child competency with its current rating, proficiency status (proficient, graded but not proficient, or not yet evaluated), and whether it is marked as required
 - **Submit evidence**: Optional button (configurable in admin settings) linking to the prior learning evidence page
@@ -307,10 +309,11 @@ Accessibility
 
 This plugin follows WCAG guidelines with:
 - Semantic HTML structure
-- ARIA labels and roles for screen readers
+- ARIA labels and roles for screen readers (including `aria-labelledby` on tab panels)
 - Sufficient colour contrast for progress indicators
-- Keyboard navigation support
+- Full keyboard navigation for tabs following the WAI-ARIA Tabs pattern (arrow keys, Home/End, roving `tabindex`)
 - SVG-based progress circles with `aria-label` for completion percentages
+- Screen reader labels for competency proficiency status icons in the Rules tab
 
 
 Theme support
