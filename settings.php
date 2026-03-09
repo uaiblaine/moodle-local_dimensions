@@ -243,7 +243,13 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         0
     ));
 
-
+    // Enable "Submit Evidence" button in the Rules tab.
+    $settings->add(new admin_setting_configcheckbox(
+        'local_dimensions/enableevidencesubmitbutton',
+        get_string('enableevidencesubmitbutton', 'local_dimensions'),
+        get_string('enableevidencesubmitbutton_desc', 'local_dimensions'),
+        0
+    ));
 
     $ADMIN->add('local_dimensions', $settings);
 

@@ -18,13 +18,17 @@ Requirements
 Motivation for this plugin
 --------------------------
 
-Moodle's core competency system provides excellent competency management but lacks detailed progress visualisation at the course section level. This plugin was created to:
+Moodle’s competency framework is one of the most sophisticated learning-outcome management systems available in a learning platform. However, for the system to reach its full potential, additional presentation layers and complementary resources are needed to clearly express its rules, relationships, and graphical representations of progress.
 
-1. Extend competencies and learning plan templates with custom fields (card images, background colours, tags, icons, SCSS styling)
-2. Provide real-time course section progress tracking, including recursive subsection support (Flexsections)
-3. Offer a modern, accessible learning plan visualisation with two distinct modes
-4. Support enrolment-aware filtering and locked content detection
+This plugin was designed to explore that perspective: enhancing the way competencies and learning plans are visualised and interpreted without changing Moodle’s underlying model. By enriching the presentation layer and providing clearer structural feedback, the goal is to make competency-based learning easier to understand and apply in practice.
 
+Specifically, the plugin aims to:
+	1.	Extend competencies and learning plan templates with custom fields (card images, background colours, tags, icons, and SCSS styling)
+	2.	Provide real-time course section progress tracking, including recursive subsection support
+	3.	Offer a modern and accessible learning plan visualisation with two distinct display modes
+	4.	Support enrolment-aware filtering and locked content detection
+
+While the competency system has been part of Moodle for many years, its conceptual depth often makes it underutilised in practice. By improving the visual and structural representation of competency relationships and progress, this project seeks to highlight the expressive power already present in the framework and make it more approachable for everyday instructional design.
 
 Installation
 ------------
@@ -52,9 +56,20 @@ Shows all competencies in the plan as an expandable accordion. Each accordion pa
 - Competency description
 - Hierarchy path (framework → parent → competency)
 - Related competencies (optionally clickable)
+- Competency completion rules (rule type, rule outcome, sub-competency progress and proficiency status)
 - Evidence cards with detail modals
 - Comments section with reply functionality
 - Linked course cards with section progress
+
+#### Competency completion rules
+
+When a competency has a completion rule configured in Moodle's core competency framework, a **Rules** tab is displayed in the accordion panel. It shows:
+
+- **Rule type**: "All" (all linked sub-competencies must be rated as proficient) or "Points" (sum of points from sub-competencies must reach a threshold)
+- **Rule outcome**: What happens when the rule is met — evidence is attached automatically, the competency is marked as complete, or the competency is recommended for review
+- **Progress indicator**: A progress bar showing earned points (or completed count) versus the total required
+- **Sub-competency list**: Each child competency with its current rating, proficiency status (proficient, graded but not proficient, or not yet evaluated), and whether it is marked as required
+- **Submit evidence**: Optional button (configurable in admin settings) linking to the prior learning evidence page
 
 
 Admin settings
@@ -94,6 +109,7 @@ All settings are under **Site administration → Competencies → Competency Dim
 | Link related competencies | Make related competency names clickable | Disabled |
 | Show evidence | Display evidence cards with icons | Enabled |
 | Show comments | Display comments section with reply functionality | Disabled |
+| Enable "Submit Evidence" button | Show a button in the Rules tab linking to the prior learning evidence page | Disabled |
 
 
 Admin pages
@@ -179,6 +195,16 @@ Add a comment to a user competency.
 - `component` (string), `area` (string), `itemid` (int), `contextid` (int), `content` (string)
 
 **Returns:** The new comment data or an error message.
+
+### local_dimensions_get_competency_rule_data
+
+Get competency completion rule data including children, points, required status, and proficiency for the Rules tab.
+
+**Parameters:**
+- `competencyid` (int): The parent competency ID
+- `planid` (int): The learning plan ID
+
+**Returns:** JSON object with rule type, rule outcome, total required, earned points, child competencies (with grade name, proficiency, points, and required status), and whether the evidence submission button is enabled.
 
 ### local_dimensions_get_fontawesome_icons
 
@@ -291,6 +317,14 @@ Theme support
 -------------
 
 This plugin is developed and tested on Moodle Core's Boost theme. It should also work with Boost child themes, including Moodle Core's Classic theme. FontAwesome icon support is enhanced when using Boost Union. However, we can't support any other theme than Boost.
+
+
+Companion plugin
+-----------------
+
+**Dimensions Block** (`block_dimensions`) is a companion block plugin that displays competency and learning plan cards directly on the Moodle dashboard or any page where blocks are allowed. It provides quick-access cards for plans and competencies styled with the same custom fields managed by this plugin.
+
+Repository: https://github.com/uaiblaine/moodle-block_dimensions
 
 
 Plugin repositories

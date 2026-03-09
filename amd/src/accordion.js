@@ -163,7 +163,29 @@ define(
                 { key: 'evidence_author', component: 'local_dimensions' },
                 { key: 'evidence_date', component: 'local_dimensions' },
                 { key: 'evidence_view_details', component: 'local_dimensions' },
-                { key: 'evidence_open_link', component: 'local_dimensions' }
+                { key: 'evidence_open_link', component: 'local_dimensions' },
+                { key: 'rules_tab', component: 'local_dimensions' },
+                { key: 'rules_progress', component: 'local_dimensions' },
+                { key: 'rules_total_competencies', component: 'local_dimensions' },
+                { key: 'rules_required_tag', component: 'local_dimensions' },
+                { key: 'rules_assessment_prefix', component: 'local_dimensions' },
+                { key: 'rules_pts', component: 'local_dimensions' },
+                { key: 'rules_no_points', component: 'local_dimensions' },
+                { key: 'rules_submit_evidence', component: 'local_dimensions' },
+                { key: 'rules_points_outcome_attach', component: 'local_dimensions' },
+                { key: 'rules_points_outcome_complete', component: 'local_dimensions' },
+                { key: 'rules_points_outcome_recommend', component: 'local_dimensions' },
+                { key: 'rules_all_outcome_attach', component: 'local_dimensions' },
+                { key: 'rules_all_outcome_complete', component: 'local_dimensions' },
+                { key: 'rules_all_outcome_recommend', component: 'local_dimensions' },
+                { key: 'rules_required_warning', component: 'local_dimensions' },
+                { key: 'rules_todo', component: 'local_dimensions' },
+                { key: 'rules_completed_count', component: 'local_dimensions' },
+                { key: 'rules_label', component: 'local_dimensions' },
+                { key: 'rules_sr_proficient', component: 'local_dimensions' },
+                { key: 'rules_sr_inprogress', component: 'local_dimensions' },
+                { key: 'rules_sr_todo', component: 'local_dimensions' },
+                { key: 'rules_sr_progress', component: 'local_dimensions' }
             ]).then(function (strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -207,7 +229,29 @@ define(
                     evidenceAuthor: strings[38],
                     evidenceDate: strings[39],
                     evidenceViewDetails: strings[40],
-                    evidenceOpenLink: strings[41]
+                    evidenceOpenLink: strings[41],
+                    rulesTab: strings[42],
+                    rulesProgress: strings[43],
+                    rulesTotalCompetencies: strings[44],
+                    rulesRequiredTag: strings[45],
+                    rulesAssessmentPrefix: strings[46],
+                    rulesPts: strings[47],
+                    rulesNoPoints: strings[48],
+                    rulesSubmitEvidence: strings[49],
+                    rulesPointsOutcomeAttach: strings[50],
+                    rulesPointsOutcomeComplete: strings[51],
+                    rulesPointsOutcomeRecommend: strings[52],
+                    rulesAllOutcomeAttach: strings[53],
+                    rulesAllOutcomeComplete: strings[54],
+                    rulesAllOutcomeRecommend: strings[55],
+                    rulesRequiredWarning: strings[56],
+                    rulesTodo: strings[57],
+                    rulesCompletedCount: strings[58],
+                    rulesLabel: strings[59],
+                    rulesSrProficient: strings[60],
+                    rulesSrInprogress: strings[61],
+                    rulesSrTodo: strings[62],
+                    rulesSrProgress: strings[63]
                 };
 
                 // Build HTML for the summary.
@@ -230,6 +274,7 @@ define(
                 const hasRelated = comp && displaySettings.showrelated && competencyData.relatedcompetencies
                     && competencyData.relatedcompetencies.length > 0;
                 const hasEvidence = ucs && displaySettings.showevidence;
+                const hasRules = comp && comp.ruleoutcome && parseInt(comp.ruleoutcome, 10) !== 0 && comp.ruletype;
                 const tabs = [];
 
                 if (hasStatus) {
@@ -241,6 +286,9 @@ define(
                 if (hasEvidence) {
                     tabs.push({ id: 'evidence', label: strMap.evidenceLabel, icon: 'fa-check-square-o' });
                 }
+                if (hasRules) {
+                    tabs.push({ id: 'rules', label: strMap.rulesTab, icon: 'fa-gavel' });
+                }
 
                 if (tabs.length > 0) {
                     html += '<div class="dims-tabs-wrapper">';
@@ -250,8 +298,10 @@ define(
                         const isActive = idx === 0;
                         html += '<button type="button" class="dims-tab-btn' + (isActive ? ' active' : '') + '"';
                         html += ' role="tab"';
+                        html += ' id="dims-tab-' + tab.id + '-' + comp.id + '"';
                         html += ' aria-selected="' + (isActive ? 'true' : 'false') + '"';
-                        html += ' aria-controls="dims-tabpane-' + tab.id + '"';
+                        html += ' aria-controls="dims-tabpane-' + tab.id + '-' + comp.id + '"';
+                        html += ' tabindex="' + (isActive ? '0' : '-1') + '"';
                         html += ' data-tab="' + tab.id + '">';
                         html += escapeHtml(tab.label);
                         html += '</button>';
@@ -265,7 +315,8 @@ define(
                     if (hasStatus) {
                         const isFirst = tabs[0].id === 'status';
                         html += '<div class="dims-tab-pane dims-tab-pane-status' + (isFirst ? ' active' : '') + '"';
-                        html += ' id="dims-tabpane-status" role="tabpanel">';
+                        html += ' id="dims-tabpane-status-' + comp.id + '" data-tab="status"';
+                        html += ' role="tabpanel" aria-labelledby="dims-tab-status-' + comp.id + '">';
                         html += renderStatusSection(ucs, strMap);
                         html += '</div>';
                     }
@@ -274,7 +325,8 @@ define(
                     if (hasDesc || hasPath || hasRelated) {
                         const isFirst = tabs[0].id === 'description';
                         html += '<div class="dims-tab-pane dims-tab-pane-description' + (isFirst ? ' active' : '') + '"';
-                        html += ' id="dims-tabpane-description" role="tabpanel">';
+                        html += ' id="dims-tabpane-description-' + comp.id + '" data-tab="description"';
+                        html += ' role="tabpanel" aria-labelledby="dims-tab-description-' + comp.id + '">';
 
                         // Description text with "Ver mais".
                         if (hasDesc) {
@@ -298,8 +350,25 @@ define(
                     if (hasEvidence) {
                         const isFirst = tabs[0].id === 'evidence';
                         html += '<div class="dims-tab-pane dims-tab-pane-evidence' + (isFirst ? ' active' : '') + '"';
-                        html += ' id="dims-tabpane-evidence" role="tabpanel">';
+                        html += ' id="dims-tabpane-evidence-' + comp.id + '" data-tab="evidence"';
+                        html += ' role="tabpanel" aria-labelledby="dims-tab-evidence-' + comp.id + '">';
                         html += renderEvidenceSlider(ucs.evidence, strMap);
+                        html += '</div>';
+                    }
+
+                    // Rules tab pane (lazy-loaded via AJAX on first activation).
+                    if (hasRules) {
+                        const isFirst = tabs[0].id === 'rules';
+                        html += '<div class="dims-tab-pane dims-tab-pane-rules' + (isFirst ? ' active' : '') + '"';
+                        html += ' id="dims-tabpane-rules-' + comp.id + '" data-tab="rules"';
+                        html += ' role="tabpanel" aria-labelledby="dims-tab-rules-' + comp.id + '"';
+                        html += ' data-competency-id="' + comp.id + '"';
+                        html += ' data-plan-id="' + planId + '">';
+                        html += '<div class="dims-rules-loading" role="status" aria-live="polite">';
+                        html += '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
+                        html += '<span class="sr-only">' + escapeHtml(strMap.rulesTab) + '</span>';
+                        html += '</div>';
+                        html += '<div class="dims-rules-content" style="display:none;"></div>';
                         html += '</div>';
                     }
 
@@ -324,7 +393,7 @@ define(
                 contentEl.style.display = 'block';
 
                 // Attach tab listeners.
-                attachTabListeners(contentEl);
+                attachTabListeners(contentEl, strMap);
 
                 // Attach "Ver mais" toggle listeners.
                 attachShowMoreListeners(contentEl, strMap);
@@ -347,6 +416,12 @@ define(
                     attachCommentsToggleListeners(contentEl, strMap);
                 }
 
+                // If the Rules tab is currently active (first tab), trigger lazy load immediately.
+                var activeRulesPane = contentEl.querySelector('.dims-tab-pane-rules.active');
+                if (activeRulesPane) {
+                    loadRulesTabIfNeeded(activeRulesPane, strMap);
+                }
+
                 return Promise.resolve();
             });
         }
@@ -355,38 +430,86 @@ define(
          * Attach tab click listeners for switching between panes.
          *
          * @param {HTMLElement} contentEl The content container element
+         * @param {Object} strMap Language strings map
          */
-        function attachTabListeners(contentEl) {
+        function attachTabListeners(contentEl, strMap) {
             const tabBtns = contentEl.querySelectorAll('.dims-tab-btn');
+
+            /**
+             * Activate a specific tab and its corresponding pane.
+             *
+             * @param {HTMLElement} btn The tab button to activate
+             * @param {boolean} setFocus Whether to move focus to the tab
+             */
+            function activateTab(btn, setFocus) {
+                var tabId = btn.dataset.tab;
+                var wrapper = btn.closest('.dims-tabs-wrapper');
+                if (!wrapper) {
+                    return;
+                }
+
+                // Deactivate all tabs in this wrapper.
+                wrapper.querySelectorAll('.dims-tab-btn').forEach(function (b) {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-selected', 'false');
+                    b.setAttribute('tabindex', '-1');
+                });
+
+                // Deactivate all panes.
+                wrapper.querySelectorAll('.dims-tab-pane').forEach(function (p) {
+                    p.classList.remove('active');
+                });
+
+                // Activate clicked tab.
+                btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
+                btn.setAttribute('tabindex', '0');
+
+                if (setFocus) {
+                    btn.focus();
+                }
+
+                // Activate corresponding pane.
+                var pane = wrapper.querySelector('.dims-tab-pane[data-tab="' + tabId + '"]');
+                if (pane) {
+                    pane.classList.add('active');
+                    refreshScrollableControls(pane);
+
+                    // Lazy-load Rules tab content on first activation.
+                    if (tabId === 'rules' && strMap) {
+                        loadRulesTabIfNeeded(pane, strMap);
+                    }
+                }
+            }
 
             tabBtns.forEach(function (btn) {
                 btn.addEventListener('click', function () {
-                    const tabId = this.dataset.tab;
-                    const wrapper = this.closest('.dims-tabs-wrapper');
+                    activateTab(this, false);
+                });
+
+                // Keyboard navigation: Arrow Left/Right, Home, End (ARIA Authoring Practices).
+                btn.addEventListener('keydown', function (e) {
+                    var wrapper = this.closest('.dims-tabs-wrapper');
                     if (!wrapper) {
                         return;
                     }
+                    var tabs = Array.from(wrapper.querySelectorAll('.dims-tab-btn'));
+                    var idx = tabs.indexOf(this);
+                    var newIdx = -1;
 
-                    // Deactivate all tabs in this wrapper.
-                    wrapper.querySelectorAll('.dims-tab-btn').forEach(function (b) {
-                        b.classList.remove('active');
-                        b.setAttribute('aria-selected', 'false');
-                    });
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                        newIdx = (idx + 1) % tabs.length;
+                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                        newIdx = (idx - 1 + tabs.length) % tabs.length;
+                    } else if (e.key === 'Home') {
+                        newIdx = 0;
+                    } else if (e.key === 'End') {
+                        newIdx = tabs.length - 1;
+                    }
 
-                    // Deactivate all panes.
-                    wrapper.querySelectorAll('.dims-tab-pane').forEach(function (p) {
-                        p.classList.remove('active');
-                    });
-
-                    // Activate clicked tab.
-                    this.classList.add('active');
-                    this.setAttribute('aria-selected', 'true');
-
-                    // Activate corresponding pane.
-                    var pane = wrapper.querySelector('#dims-tabpane-' + tabId);
-                    if (pane) {
-                        pane.classList.add('active');
-                        refreshScrollableControls(pane);
+                    if (newIdx >= 0) {
+                        e.preventDefault();
+                        activateTab(tabs[newIdx], true);
                     }
                 });
             });
@@ -418,6 +541,282 @@ define(
 
             // Secondary pass to catch late layout updates (fonts/images).
             setTimeout(refresh, 120);
+        }
+
+        // Cache for loaded Rules tab panes to avoid re-fetching.
+        const loadedRulesPanes = new Set();
+
+        /**
+         * Load Rules tab data via AJAX if not already loaded.
+         *
+         * @param {HTMLElement} pane The rules tab pane element
+         * @param {Object} strMap Language strings map
+         */
+        function loadRulesTabIfNeeded(pane, strMap) {
+            var competencyId = parseInt(pane.dataset.competencyId, 10);
+            var cacheKey = competencyId + '-' + parseInt(pane.dataset.planId, 10);
+            if (loadedRulesPanes.has(cacheKey)) {
+                return;
+            }
+            loadedRulesPanes.add(cacheKey);
+
+            var planId = parseInt(pane.dataset.planId, 10);
+            var loadingEl = pane.querySelector('.dims-rules-loading');
+            var contentEl = pane.querySelector('.dims-rules-content');
+
+            if (!competencyId || !planId) {
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                }
+                return;
+            }
+
+            Ajax.call([{
+                methodname: 'local_dimensions_get_competency_rule_data',
+                args: {
+                    competencyid: competencyId,
+                    planid: planId
+                }
+            }])[0].then(function (response) {
+                var data = JSON.parse(response);
+
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                }
+                if (contentEl) {
+                    contentEl.innerHTML = renderRulesSection(data, strMap, planId);
+                    contentEl.style.display = 'block';
+                }
+            }).catch(function (error) {
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                }
+                loadedRulesPanes.delete(cacheKey);
+                Notification.exception(error);
+            });
+        }
+
+        /**
+         * Render the full Rules tab content.
+         *
+         * @param {Object} data The rule data from the webservice
+         * @param {Object} strMap Language strings map
+         * @param {number} planId The plan ID for building child links
+         * @return {string} HTML for the rules section
+         */
+        function renderRulesSection(data, strMap, planId) {
+            if (!data || !data.hasrule) {
+                return '';
+            }
+
+            var isPoints = data.ruletype === 'points';
+            var html = '<div class="dims-rules-section">';
+
+            // === Progress header ===
+            html += '<div class="dims-rules-progress-header">';
+            html += '<span class="dims-rules-progress-label">' + escapeHtml(strMap.rulesProgress) + '</span>';
+            if (isPoints) {
+                var earnedClass = data.earnedpoints > 0 ? ' dims-rules-earned-highlight' : '';
+                html += '<span class="dims-rules-progress-score">';
+                html += '<span class="dims-rules-earned' + earnedClass + '">' + data.earnedpoints + '</span>';
+                html += ' / ' + data.totalrequired + ' pts';
+                html += '</span>';
+            } else {
+                html += '<span class="dims-rules-progress-score">';
+                html += '<span class="dims-rules-earned">' + data.earnedpoints + '</span>';
+                html += ' / ' + data.totalrequired;
+                html += '</span>';
+            }
+            html += '</div>';
+
+            // === Progress bar ===
+            var pct = data.totalrequired > 0
+                ? Math.min(100, Math.round((data.earnedpoints / data.totalrequired) * 100))
+                : 0;
+            var srProgressText = strMap.rulesSrProgress
+                .replace('{$a->earned}', data.earnedpoints)
+                .replace('{$a->total}', data.totalrequired);
+            html += '<div class="dims-rules-progress-bar">';
+            html += '<div class="dims-rules-progress-track" role="progressbar"';
+            html += ' aria-valuenow="' + data.earnedpoints + '"';
+            html += ' aria-valuemin="0"';
+            html += ' aria-valuemax="' + data.totalrequired + '"';
+            html += ' aria-label="' + escapeHtml(srProgressText) + '">';
+            html += '<div class="dims-rules-progress-fill" style="width: ' + pct + '%;"></div>';
+            html += '</div>';
+            html += '</div>';
+
+            // === Competency count ===
+            var countText = strMap.rulesTotalCompetencies.replace('{$a}', data.childcount || 0);
+            html += '<div class="dims-rules-count text-muted">' + countText + '</div>';
+
+            // === Children list ===
+            // Children list as accessible list.
+            if (data.children && data.children.length > 0) {
+                html += '<ul class="dims-rules-child-list" role="list">';
+                data.children.forEach(function (child) {
+                    html += renderRulesChild(child, strMap, planId, isPoints);
+                });
+                html += '</ul>';
+            }
+
+            // === Rule info box ===
+            html += renderRuleInfoBox(data, strMap);
+
+            // === Submit evidence button ===
+            if (data.enableevidencebutton && data.userid) {
+                var evidenceUrl = M.cfg.wwwroot + '/admin/tool/lp/user_evidence_list.php?userid=' + data.userid;
+                html += '<div class="dims-rules-submit-wrapper">';
+                html += '<a href="' + escapeHtml(evidenceUrl) + '" class="dims-rules-submit-btn">';
+                html += escapeHtml(strMap.rulesSubmitEvidence);
+                html += '</a>';
+                html += '</div>';
+            }
+
+            html += '</div>'; // End dims-rules-section.
+            return html;
+        }
+
+        /**
+         * Render a single child competency card in the Rules tab.
+         *
+         * @param {Object} child The child competency data
+         * @param {Object} strMap Language strings map
+         * @param {number} planId The plan ID
+         * @param {boolean} isPoints Whether this is a points-based rule
+         * @return {string} HTML for the child card
+         */
+        function renderRulesChild(child, strMap, planId, isPoints) {
+            var html = '<li class="dims-rules-child-card">';
+
+            // Status icon with sr-only label.
+            html += '<div class="dims-rules-child-icon-wrapper">';
+            if (child.isproficient) {
+                // Green check circle.
+                html += '<div class="dims-rules-child-icon dims-rules-icon-proficient">';
+                html += '<svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"';
+                html += ' focusable="false">';
+                html += '<circle cx="20" cy="20" r="20" fill="#28a745"/>';
+                html += '<path d="M12 20l5.5 5.5L28 14" stroke="#fff" stroke-width="3" ';
+                html += 'stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+                html += '</svg>';
+                html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrProficient) + '</span>';
+                html += '</div>';
+            } else if (child.hasgrade) {
+                // Orange circle (graded but not proficient).
+                html += '<div class="dims-rules-child-icon dims-rules-icon-inprogress">';
+                html += '<svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"';
+                html += ' focusable="false">';
+                html += '<circle cx="20" cy="20" r="18" stroke="#e8590c" stroke-width="3" fill="none"/>';
+                html += '</svg>';
+                html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrInprogress) + '</span>';
+                html += '</div>';
+            } else {
+                // Grey dots circle (not evaluated).
+                html += '<div class="dims-rules-child-icon dims-rules-icon-todo">';
+                html += '<svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"';
+                html += ' focusable="false">';
+                html += '<circle cx="20" cy="20" r="18" stroke="#868e96" stroke-width="2" fill="#f8f9fa"/>';
+                html += '<circle cx="13" cy="20" r="2.5" fill="#868e96"/>';
+                html += '<circle cx="20" cy="20" r="2.5" fill="#868e96"/>';
+                html += '<circle cx="27" cy="20" r="2.5" fill="#868e96"/>';
+                html += '</svg>';
+                html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrTodo) + '</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+
+            // Content.
+            html += '<div class="dims-rules-child-body">';
+            var childUrl = M.cfg.wwwroot + '/local/dimensions/view-plan.php?id=' + planId + '&competencyid=' + child.id;
+            html += '<a href="' + escapeHtml(childUrl) + '" class="dims-rules-child-name">';
+            html += escapeHtml(child.shortname);
+            html += '</a>';
+
+            // Required tag.
+            if (child.required) {
+                html += ' <span class="dims-rules-required-tag">' + escapeHtml(strMap.rulesRequiredTag) + '</span>';
+            }
+
+            // Assessment line.
+            html += '<div class="dims-rules-child-assessment text-muted">';
+            html += escapeHtml(strMap.rulesAssessmentPrefix) + ' ';
+            if (child.hasgrade) {
+                html += escapeHtml(child.gradename);
+            } else {
+                html += escapeHtml(strMap.rulesTodo);
+            }
+            html += '</div>';
+            html += '</div>';
+
+            // Points (only for points-based rules).
+            if (isPoints) {
+                html += '<div class="dims-rules-child-points">';
+                if (child.isproficient) {
+                    html += '<span class="dims-rules-points-value">' + child.points + '</span>';
+                } else {
+                    html += '<span class="dims-rules-points-value dims-rules-points-pending">' + child.points + '</span>';
+                }
+                html += ' <span class="dims-rules-points-unit">' + escapeHtml(strMap.rulesPts) + '</span>';
+                html += '</div>';
+            }
+
+            html += '</li>'; // End dims-rules-child-card.
+            return html;
+        }
+
+        /**
+         * Render the rule description info box.
+         *
+         * @param {Object} data The rule data
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML for the info box
+         */
+        function renderRuleInfoBox(data, strMap) {
+            // Determine rule text based on ruletype + ruleoutcome.
+            // Outcomes: 1 = attach, 2 = complete, 3 = recommend.
+            var ruleText = '';
+            var outcome = parseInt(data.ruleoutcome, 10);
+
+            if (data.ruletype === 'points') {
+                if (outcome === 1) {
+                    ruleText = strMap.rulesPointsOutcomeAttach;
+                } else if (outcome === 2) {
+                    ruleText = strMap.rulesPointsOutcomeComplete;
+                } else if (outcome === 3) {
+                    ruleText = strMap.rulesPointsOutcomeRecommend;
+                }
+            } else {
+                if (outcome === 1) {
+                    ruleText = strMap.rulesAllOutcomeAttach;
+                } else if (outcome === 2) {
+                    ruleText = strMap.rulesAllOutcomeComplete;
+                } else if (outcome === 3) {
+                    ruleText = strMap.rulesAllOutcomeRecommend;
+                }
+            }
+
+            if (!ruleText) {
+                return '';
+            }
+
+            var html = '<div class="dims-rules-info-box" role="note">';
+            html += '<div class="dims-rules-info-icon">';
+            html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">';
+            html += '<circle cx="12" cy="12" r="12" fill="#fd7e14" opacity="0.15"/>';
+            html += '<path d="M9 12l2 2 4-4" stroke="#fd7e14" stroke-width="2" ';
+            html += 'stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+            html += '</svg>';
+            html += '</div>';
+            html += '<div class="dims-rules-info-text">';
+            html += '<strong>' + escapeHtml(strMap.rulesLabel) + '</strong> ' + escapeHtml(ruleText);
+            if (data.hasrequired) {
+                html += ' <strong>' + escapeHtml(strMap.rulesRequiredWarning) + '</strong>';
+            }
+            html += '</div>';
+            html += '</div>';
+
+            return html;
         }
 
         /**

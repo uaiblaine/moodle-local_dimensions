@@ -178,6 +178,7 @@ if ($competencyid) {
         'showevidence' => (bool) get_config('local_dimensions', 'showevidence'),
         'showcomments' => (bool) get_config('local_dimensions', 'showcomments'),
         'summaryenrollmentfilter' => $summaryenrollmentfilter,
+        'enableevidencesubmitbutton' => (bool) get_config('local_dimensions', 'enableevidencesubmitbutton'),
     ];
 
     // Start HTML Output.
@@ -228,6 +229,26 @@ if ($competencyid) {
     $PAGE->requires->string_for_js('comment_by', 'local_dimensions');
     $PAGE->requires->string_for_js('reply_sent', 'local_dimensions');
     $PAGE->requires->string_for_js('reply_error', 'local_dimensions');
+
+    // Rules tab strings.
+    $PAGE->requires->string_for_js('rules_tab', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_progress', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_total_competencies', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_required_tag', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_assessment_prefix', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_pts', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_no_points', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_submit_evidence', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_points_outcome_attach', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_points_outcome_complete', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_points_outcome_recommend', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_all_outcome_attach', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_all_outcome_complete', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_all_outcome_recommend', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_required_warning', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_todo', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_completed_count', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_label', 'local_dimensions');
 
     $PAGE->requires->js_call_amd('local_dimensions/accordion', 'init', [$accordionsettings]);
 }

@@ -73,4 +73,12 @@ $functions = [
         'type' => 'read',
         'ajax' => true,
     ],
+    'local_dimensions_get_competency_rule_data' => [
+        'classname' => 'local_dimensions\external\get_competency_rule_data',
+        'methodname' => 'execute',
+        'classpath' => 'local/dimensions/classes/external/get_competency_rule_data.php',
+        'description' => 'Get competency rule data (children, points, required status) for the Rules tab.',
+        'type' => 'read',
+        'ajax' => true,
+    ],
 ];

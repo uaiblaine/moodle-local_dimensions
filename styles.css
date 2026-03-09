@@ -3608,3 +3608,234 @@ body.dark .dims-cm-trigger-label {
 #fgroup_id_customfield_customscss_editorformat {
   display: none;
 }
+
+/* ============================================================
+   RULES TAB — Progress, children list, info box, submit button
+   ============================================================ */
+
+/* Loading spinner */
+.dims-rules-loading {
+  text-align: center;
+  padding: 32px 0;
+  color: #6c757d;
+  font-size: 1.5rem;
+}
+
+/* Progress header: label left, score right */
+.dims-rules-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.dims-rules-progress-label {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #212529;
+}
+
+.dims-rules-progress-score {
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+.dims-rules-earned {
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #6c757d;
+}
+
+.dims-rules-earned-highlight {
+  color: #fd7e14;
+}
+
+/* Progress bar */
+.dims-rules-progress-bar {
+  margin-bottom: 12px;
+}
+
+.dims-rules-progress-track {
+  height: 10px;
+  background: #e9ecef;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.dims-rules-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #fd7e14, #ff922b);
+  border-radius: 5px;
+  transition: width 0.6s ease;
+}
+
+/* Competency count */
+.dims-rules-count {
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+}
+
+/* Children list */
+.dims-rules-child-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  list-style: none;
+  padding: 0;
+}
+
+/* Child card */
+.dims-rules-child-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  background: #fff;
+  transition: box-shadow 0.15s ease;
+}
+
+.dims-rules-child-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Status icon wrapper */
+.dims-rules-child-icon-wrapper {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.dims-rules-child-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Body: name + assessment */
+.dims-rules-child-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dims-rules-child-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #212529;
+  text-decoration: none;
+  display: inline;
+}
+
+.dims-rules-child-name:hover {
+  text-decoration: underline;
+  color: #fd7e14;
+}
+
+.dims-rules-child-assessment {
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+/* Required tag */
+.dims-rules-required-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #fff;
+  background: #fd7e14;
+  border-radius: 12px;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+/* Points column */
+.dims-rules-child-points {
+  flex-shrink: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.dims-rules-points-value {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #212529;
+}
+
+.dims-rules-points-pending {
+  color: #adb5bd;
+}
+
+.dims-rules-points-unit {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6c757d;
+  letter-spacing: 0.04em;
+}
+
+/* Rule info box */
+.dims-rules-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(253, 126, 20, 0.08);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.dims-rules-info-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.dims-rules-info-text {
+  font-size: 0.875rem;
+  color: #495057;
+  line-height: 1.5;
+}
+
+/* Submit evidence button */
+.dims-rules-submit-wrapper {
+  margin-top: 4px;
+}
+
+.dims-rules-submit-btn {
+  display: inline-block;
+  padding: 10px 28px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #fff;
+  background: #fd7e14;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dims-rules-submit-btn:hover {
+  background: #e8590c;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(253, 126, 20, 0.3);
+}
+
+/* Responsive: stack points below on small screens */
+@media (max-width: 575.98px) {
+  .dims-rules-child-card {
+    flex-wrap: wrap;
+  }
+
+  .dims-rules-child-points {
+    width: 100%;
+    text-align: left;
+    padding-left: 54px;
+    margin-top: 4px;
+  }
+}
