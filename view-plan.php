@@ -171,6 +171,7 @@ if ($competencyid) {
 
     $accordionsettings = [
         'showdescription' => (bool) get_config('local_dimensions', 'showdescription'),
+        'showtaxonomycard' => (bool) get_config('local_dimensions', 'showtaxonomycard'),
         'showpath' => (bool) get_config('local_dimensions', 'showpath'),
         'showrelated' => (bool) get_config('local_dimensions', 'showrelated'),
         'showrelatedlink' => (bool) get_config('local_dimensions', 'showrelatedlink'),
@@ -199,12 +200,12 @@ if ($competencyid) {
     // Tab strings.
     $PAGE->requires->string_for_js('assessment_status', 'local_dimensions');
     $PAGE->requires->string_for_js('description_label', 'local_dimensions');
+    $PAGE->requires->string_for_js('taxonomycard_label', 'local_dimensions');
 
     // Competency path and related strings.
     $PAGE->requires->string_for_js('competency_path', 'local_dimensions');
     $PAGE->requires->string_for_js('in_framework', 'local_dimensions');
-    $PAGE->requires->string_for_js('related_competencies', 'local_dimensions');
-    $PAGE->requires->string_for_js('no_related', 'local_dimensions');
+    $PAGE->requires->string_for_js('related_dimensions', 'local_dimensions');
     $PAGE->requires->string_for_js('path', 'tool_lp');
 
     // Evidence strings.
@@ -239,16 +240,14 @@ if ($competencyid) {
     $PAGE->requires->string_for_js('rules_pts', 'local_dimensions');
     $PAGE->requires->string_for_js('rules_no_points', 'local_dimensions');
     $PAGE->requires->string_for_js('rules_submit_evidence', 'local_dimensions');
-    $PAGE->requires->string_for_js('rules_points_outcome_attach', 'local_dimensions');
-    $PAGE->requires->string_for_js('rules_points_outcome_complete', 'local_dimensions');
-    $PAGE->requires->string_for_js('rules_points_outcome_recommend', 'local_dimensions');
-    $PAGE->requires->string_for_js('rules_all_outcome_attach', 'local_dimensions');
-    $PAGE->requires->string_for_js('rules_all_outcome_complete', 'local_dimensions');
-    $PAGE->requires->string_for_js('rules_all_outcome_recommend', 'local_dimensions');
-    $PAGE->requires->string_for_js('rules_required_warning', 'local_dimensions');
     $PAGE->requires->string_for_js('rules_todo', 'local_dimensions');
     $PAGE->requires->string_for_js('rules_completed_count', 'local_dimensions');
-    $PAGE->requires->string_for_js('rules_label', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_info_title', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_missing_mandatory_notice', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_filter_label', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_filter_all', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_filter_required', 'local_dimensions');
+    $PAGE->requires->string_for_js('rules_sr_alert', 'local_dimensions');
 
     $PAGE->requires->js_call_amd('local_dimensions/accordion', 'init', [$accordionsettings]);
 }

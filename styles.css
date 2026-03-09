@@ -107,8 +107,10 @@
 }
 
 .dims-duedate-icon {
+  display: block;
   flex-shrink: 0;
-  color: var(--dimension-customtextcolor, rgba(255, 255, 255, 0.9));
+  width: 20px;
+  height: 20px;
 }
 
 .dims-duedate-content {
@@ -448,6 +450,9 @@
 .dims-icon {
   display: block;
   flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 .dims-icon-check {
@@ -456,8 +461,8 @@
 
 .dims-icon-lock {
   stroke: #6c757d;
-  width: 20px;
-  height: 20px;
+  width: 40px;
+  height: 40px;
 }
 
 .dims-icon-circle {
@@ -717,7 +722,10 @@
 }
 
 .dims-grade-badge-icon {
+  display: block;
   flex-shrink: 0;
+  width: 12px;
+  height: 12px;
 }
 
 .dims-grade-badge.badge-proficient .dims-grade-badge-icon {
@@ -3064,6 +3072,23 @@ body.dark .dims-related-pill-v2:hover {
   margin-bottom: 0.75rem;
 }
 
+.dims-desc-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dims-desc-layout-has-taxonomy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(205px, 200px);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.dims-desc-main {
+  min-width: 0;
+}
+
 .dims-desc-tab-content .dims-path-bar {
   margin-top: 1rem;
   margin-bottom: 0.75rem;
@@ -3071,6 +3096,52 @@ body.dark .dims-related-pill-v2:hover {
 
 .dims-desc-tab-content .dims-related-section {
   margin-top: 1rem;
+}
+
+.dims-taxonomy-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 96px;
+  padding: 1.5rem 1.35rem;
+  background: #ffffff;
+  border: 1px solid #dfe3e8;
+  border-radius: 1rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+  text-align: center;
+}
+
+.dims-taxonomy-card-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #356df3;
+}
+
+.dims-taxonomy-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.dims-taxonomy-card-icon-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.dims-taxonomy-card-title {
+  max-width: 12ch;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #273240;
 }
 
 /* ============================================
@@ -3629,10 +3700,24 @@ body.dark .dims-cm-trigger-label {
   margin-bottom: 8px;
 }
 
+.dims-rules-progress-label-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .dims-rules-progress-label {
   font-weight: 700;
   font-size: 1rem;
   color: #212529;
+}
+
+.dims-rules-progress-alert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fd7e14;
+  font-size: 0.95rem;
 }
 
 .dims-rules-progress-score {
@@ -3669,10 +3754,44 @@ body.dark .dims-cm-trigger-label {
   transition: width 0.6s ease;
 }
 
+.dims-rules-progress-fill-striped {
+  background-color: #fd7e14;
+  background-image:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.25) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 75%, transparent 75%, transparent),
+    linear-gradient(90deg, #fd7e14, #ff922b);
+  background-size: 1rem 1rem, 100% 100%;
+}
+
+.dims-rules-progress-context {
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+}
+
+.dims-rules-progress-context-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #e8590c;
+  font-weight: 600;
+}
+
 /* Competency count */
 .dims-rules-count {
   font-size: 0.8rem;
   margin-bottom: 16px;
+}
+
+.dims-rules-filter-wrapper {
+  margin-bottom: 16px;
+}
+
+.dims-rules-filter-tabs {
+  display: inline-flex;
+  max-width: 100%;
+}
+
+.dims-rules-filter-tab {
+  white-space: nowrap;
 }
 
 /* Children list */
@@ -3701,19 +3820,34 @@ body.dark .dims-cm-trigger-label {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+.dims-rules-child-card-required {
+  border-color: rgba(253, 126, 20, 0.22);
+}
+
+.dims-rules-child-card[hidden] {
+  display: none !important;
+}
+
 /* Status icon wrapper */
 .dims-rules-child-icon-wrapper {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 40px;
+  height: 40px;
 }
 
 .dims-rules-child-icon {
-  width: 20px;
-  height: 20px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.dims-rules-child-icon-image {
+  display: block;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 /* Body: name + assessment */
@@ -3793,12 +3927,28 @@ body.dark .dims-cm-trigger-label {
 .dims-rules-info-icon {
   flex-shrink: 0;
   margin-top: 2px;
+  color: #fd7e14;
+  font-size: 1.125rem;
 }
 
 .dims-rules-info-text {
   font-size: 0.875rem;
   color: #495057;
   line-height: 1.5;
+}
+
+.dims-rules-info-title {
+  font-weight: 700;
+  color: #fd7e14;
+  margin-bottom: 0.15rem;
+}
+
+.dims-rules-info-description {
+  color: #343a40;
+}
+
+.dims-rules-info-note {
+  margin-top: 0.5rem;
 }
 
 /* Submit evidence button */
@@ -3828,6 +3978,38 @@ body.dark .dims-cm-trigger-label {
 
 /* Responsive: stack points below on small screens */
 @media (max-width: 575.98px) {
+  .dims-desc-layout-has-taxonomy {
+    grid-template-columns: 1fr;
+  }
+
+  .dims-taxonomy-card {
+    min-height: 150px;
+    padding: 1.35rem 1.1rem;
+  }
+
+  .dims-taxonomy-card-icon {
+    font-size: 1.9rem;
+  }
+
+  .dims-taxonomy-card-title {
+    font-size: 1.25rem;
+  }
+
+  .dims-rules-progress-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .dims-rules-filter-tabs {
+    width: 100%;
+  }
+
+  .dims-rules-filter-tab {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
   .dims-rules-child-card {
     flex-wrap: wrap;
   }

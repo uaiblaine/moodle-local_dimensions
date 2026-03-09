@@ -436,4 +436,106 @@ class helper {
 
         return constants::DISPLAYMODE_COMPETENCIES;
     }
+
+    /**
+     * Return the localized taxonomy metadata for a framework level.
+     *
+     * Mirrors Moodle core's competency_summary_exporter logic:
+     * competency level -> framework taxonomy constant -> localized lang string.
+     *
+     * @param \core_competency\competency_framework $framework The framework
+     * @param int $level The framework level
+     * @return array<string, mixed>
+     */
+    public static function get_taxonomy_at_level(\core_competency\competency_framework $framework, int $level): array {
+        $taxonomykey = $framework->get_taxonomy($level);
+        $taxonomies = \core_competency\competency_framework::get_taxonomies_list();
+        $taxonomyterm = isset($taxonomies[$taxonomykey]) ? (string) $taxonomies[$taxonomykey] : '';
+
+        return [
+            'level' => $level,
+            'key' => $taxonomykey,
+            'term' => $taxonomyterm,
+        ];
+    }
+
+    /**
+     * Return the localized taxonomy mapping for a framework.
+     *
+     * @param \core_competency\competency_framework $framework The framework
+     * @return array<int, array<string, mixed>>
+     */
+    public static function get_framework_taxonomy_map(\core_competency\competency_framework $framework): array {
+        $configuredlevels = array_filter(explode(',', (string) $framework->get('taxonomies')));
+        $maxlevel = max(1, count($configuredlevels), (int) $framework->get_depth());
+        $map = [];
+
+        for ($level = 1; $level <= $maxlevel; $level++) {
+            $map[$level] = self::get_taxonomy_at_level($framework, $level);
+        }
+
+        return $map;
+    }
+
+    /**
+     * Return taxonomy metadata for a competency and its direct children.
+     *
+     * @param \core_competency\competency $competency The competency
+     * @param \core_competency\competency_framework|null $framework Optional framework
+     * @return array<string, mixed>
+     */
+    public static function get_competency_taxonomy_data(
+        \core_competency\competency $competency,
+        ?\core_competency\competency_framework $framework = null
+    ): array {
+        if (!$framework) {
+            $framework = \core_competency\api::read_framework($competency->get('competencyframeworkid'));
+        }
+
+        $currentlevel = (int) $competency->get_level();
+        $current = self::get_taxonomy_at_level($framework, $currentlevel);
+        $children = self::get_taxonomy_at_level($framework, $currentlevel + 1);
+
+        return [
+            'currentlevel' => $currentlevel,
+            'current' => $current,
+            'children' => $children,
+            'bylevel' => self::get_framework_taxonomy_map($framework),
+        ];
+    }
+
+    /**
+     * Return the localized rule outcome text for a competency.
+     *
+     * @param string $ruletype Simplified rule type: points|all
+     * @param int $ruleoutcome Outcome id: 1|2|3
+     * @param \core_competency\competency $competency The competency
+     * @param \core_competency\competency_framework|null $framework Optional framework
+     * @return string
+     */
+    public static function get_rule_outcome_text(
+        string $ruletype,
+        int $ruleoutcome,
+        \core_competency\competency $competency,
+        ?\core_competency\competency_framework $framework = null
+    ): string {
+        $taxonomydata = self::get_competency_taxonomy_data($competency, $framework);
+        $taxonomyterm = $taxonomydata['current']['term'] ?? '';
+        $prefix = $ruletype === 'points' ? 'rules_points_outcome_' : 'rules_all_outcome_';
+        $suffix = '';
+
+        if ($ruleoutcome === 1) {
+            $suffix = 'attach';
+        } else if ($ruleoutcome === 2) {
+            $suffix = 'complete';
+        } else if ($ruleoutcome === 3) {
+            $suffix = 'recommend';
+        }
+
+        if ($suffix === '') {
+            return '';
+        }
+
+        return get_string($prefix . $suffix, 'local_dimensions', $taxonomyterm);
+    }
 }

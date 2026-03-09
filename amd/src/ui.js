@@ -7,6 +7,12 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
             var showlockeddate = settings.showlockeddate !== undefined ? settings.showlockeddate : true;
             var cardicon = settings.cardicon || '';
             var learnmorebuttoncolor = settings.learnmorebuttoncolor || '#667eea';
+            var iconurls = {
+                lock: M.util.image_url('status/lock', 'local_dimensions'),
+                checkcircle: M.util.image_url('status/check-circle-fill', 'local_dimensions'),
+                circle: M.util.image_url('status/circle-outline', 'local_dimensions'),
+                info: M.util.image_url('status/info-circle', 'local_dimensions')
+            };
 
             // Resolve the card icon CSS class from the stored identifier.
             var cardiconclass = '';
@@ -55,6 +61,10 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
                             // Pre-calculate stroke-dasharray for SVG progress ring.
                             // Firefox does not support calc() in SVG inline styles.
                             section.dasharray = (section.percentage * 0.754).toFixed(2);
+                            section.lockiconurl = iconurls.lock || '';
+                            section.checkiconurl = iconurls.checkcircle || '';
+                            section.circleiconurl = iconurls.circle || '';
+                            section.infoiconurl = iconurls.info || '';
                         });
                     }
 
@@ -62,6 +72,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
                     data.islearnmore = (lockedcardmode === 'learnmore');
                     data.showlockeddate = showlockeddate;
                     data.customicon = cardiconclass;
+                    data.lockiconurl = iconurls.lock || '';
                     data.courseurl = data.course_url || '';
                     data.learnmorebuttoncolor = learnmorebuttoncolor;
 

@@ -33,6 +33,7 @@ use core_external\external_function_parameters;
 use core_external\external_value;
 use core\context\system as context_system;
 use core_competency\api;
+use local_dimensions\helper;
 
 /**
  * Returns rule data for a competency within a learning plan.
@@ -62,8 +63,6 @@ class get_competency_rule_data extends external_api {
      * @return string JSON-encoded rule data
      */
     public static function execute($competencyid, $planid) {
-        global $USER;
-
         $params = self::validate_parameters(self::execute_parameters(), [
             'competencyid' => $competencyid,
             'planid' => $planid,
@@ -87,89 +86,41 @@ class get_competency_rule_data extends external_api {
             return json_encode(['hasrule' => false]);
         }
 
-        // Determine simplified rule type.
-        $simpleruletype = 'all';
-        if (strpos($ruletype, 'competency_rule_points') !== false) {
-            $simpleruletype = 'points';
-        }
-
-        // Parse rule config.
-        $ruleconfig = $competency->get('ruleconfig');
-        $config = !empty($ruleconfig) ? json_decode($ruleconfig, true) : null;
+        $simpleruletype = self::get_simplified_rule_type($ruletype);
+        $config = self::decode_rule_config($competency->get('ruleconfig'));
 
         // Resolve scale for grade names.
         $scale = self::get_competency_scale($competency);
+        $framework = api::read_framework($competency->get('competencyframeworkid'));
+        $taxonomydata = helper::get_competency_taxonomy_data($competency, $framework);
 
-        // Build children data.
-        $children = [];
-        $earnedpoints = 0;
-        $totalrequired = 0;
-        $hasrequired = false;
-
-        if ($simpleruletype === 'points' && $config) {
-            $totalrequired = isset($config['base']['points']) ? (int) $config['base']['points'] : 0;
-            $childconfigs = isset($config['competencies']) ? $config['competencies'] : [];
-
-            foreach ($childconfigs as $childconfig) {
-                $childid = (int) $childconfig['id'];
-                $childpoints = isset($childconfig['points']) ? (int) $childconfig['points'] : 0;
-                $childrequired = !empty($childconfig['required']);
-                if ($childrequired) {
-                    $hasrequired = true;
-                }
-
-                $childdata = self::get_child_data($childid, $userid, $params['planid'], $scale);
-                $childdata['points'] = $childpoints;
-                $childdata['required'] = $childrequired;
-
-                // Earned points: count if proficient.
-                if ($childdata['isproficient']) {
-                    $earnedpoints += $childpoints;
-                }
-
-                $children[] = $childdata;
-            }
-        } else {
-            // Rule_all: get direct children of this competency.
-            $childcomps = api::list_competencies([
-                'parentid' => $params['competencyid'],
-                'competencyframeworkid' => $competency->get('competencyframeworkid'),
-            ]);
-
-            $completedcount = 0;
-            foreach ($childcomps as $childcomp) {
-                $childdata = self::get_child_data(
-                    $childcomp->get('id'),
-                    $userid,
-                    $params['planid'],
-                    $scale
-                );
-                $childdata['points'] = 0;
-                $childdata['required'] = false;
-
-                if ($childdata['isproficient']) {
-                    $completedcount++;
-                }
-
-                $children[] = $childdata;
-            }
-
-            $totalrequired = count($children);
-            $earnedpoints = $completedcount;
-        }
+        $ruledata = $simpleruletype === 'points'
+            ? self::build_points_rule_data($config, $userid, $params['planid'], $scale)
+            : self::build_all_rule_data($competency, $userid, $params['planid'], $scale);
 
         // Enable evidence button setting.
         $enableevidencebtn = (bool) get_config('local_dimensions', 'enableevidencesubmitbutton');
+
+        $hasmissingmandatory = $ruledata['earnedpoints'] >= $ruledata['totalrequired']
+            && $ruledata['pendingmandatorycount'] > 0;
+        $outcometext = helper::get_rule_outcome_text($simpleruletype, $ruleoutcome, $competency, $framework);
+        $requiredwarningtext = get_string('rules_required_warning', 'local_dimensions');
 
         $result = [
             'hasrule' => true,
             'ruletype' => $simpleruletype,
             'ruleoutcome' => $ruleoutcome,
-            'totalrequired' => $totalrequired,
-            'earnedpoints' => $earnedpoints,
-            'hasrequired' => $hasrequired,
-            'children' => $children,
-            'childcount' => count($children),
+            'taxonomy' => $taxonomydata,
+            'outcometext' => $outcometext,
+            'requiredwarningtext' => $requiredwarningtext,
+            'totalrequired' => $ruledata['totalrequired'],
+            'earnedpoints' => $ruledata['earnedpoints'],
+            'hasrequired' => $ruledata['hasrequired'],
+            'mandatorycount' => $ruledata['mandatorycount'],
+            'pendingmandatorycount' => $ruledata['pendingmandatorycount'],
+            'hasmissingmandatory' => $hasmissingmandatory,
+            'children' => $ruledata['children'],
+            'childcount' => count($ruledata['children']),
             'enableevidencebutton' => $enableevidencebtn,
             'userid' => $userid,
         ];
@@ -190,50 +141,17 @@ class get_competency_rule_data extends external_api {
         $childcomp = api::read_competency($childid);
 
         // Try to get user_competency_plan first, then fall back to user_competency.
-        $grade = null;
-        $gradename = '';
-        $isproficient = false;
-
-        // For completed plans, grades are frozen in user_competency_plan.
-        $uc = \core_competency\user_competency_plan::get_record([
-            'userid' => $userid,
-            'competencyid' => $childid,
-            'planid' => $planid,
-        ]);
-        if ($uc && $uc->get('grade')) {
-            $grade = $uc->get('grade');
-            $isproficient = (bool) $uc->get('proficiency');
-        } else {
-            // Active plans: grades are in user_competency (live ratings).
-            $uc = \core_competency\user_competency::get_record([
-                'userid' => $userid,
-                'competencyid' => $childid,
-            ]);
-            if ($uc && $uc->get('grade')) {
-                $grade = $uc->get('grade');
-                $isproficient = (bool) $uc->get('proficiency');
-            }
-        }
+        $usercompetency = self::get_user_competency_record($childid, $userid, $planid);
+        $grade = $usercompetency ? $usercompetency->get('grade') : null;
+        $isproficient = $usercompetency ? (bool) $usercompetency->get('proficiency') : false;
 
         // Resolve grade name from scale.
-        if ($grade && $scale) {
-            $scaleitems = $scale->load_items();
-            $idx = ((int) $grade) - 1;
-            if (isset($scaleitems[$idx])) {
-                $gradename = $scaleitems[$idx];
-            }
-        }
+        $gradename = self::get_grade_name_from_scale($scale, $grade);
 
         // Resolve child-specific scale if different from parent.
         if ($grade && empty($gradename)) {
             $childscale = self::get_competency_scale($childcomp);
-            if ($childscale) {
-                $scaleitems = $childscale->load_items();
-                $idx = ((int) $grade) - 1;
-                if (isset($scaleitems[$idx])) {
-                    $gradename = $scaleitems[$idx];
-                }
-            }
+            $gradename = self::get_grade_name_from_scale($childscale, $grade);
         }
 
         $hasgrade = !empty($grade) && !empty($gradename);
@@ -271,6 +189,172 @@ class get_competency_rule_data extends external_api {
 
         $scale = \grade_scale::fetch(['id' => $scaleid]);
         return $scale ?: null;
+    }
+
+    /**
+     * Resolve the simplified rule type used by the frontend.
+     *
+     * @param string $ruletype Raw Moodle rule type
+     * @return string
+     */
+    private static function get_simplified_rule_type(string $ruletype): string {
+        if (strpos($ruletype, 'competency_rule_points') !== false) {
+            return 'points';
+        }
+
+        return 'all';
+    }
+
+    /**
+     * Decode the stored rule configuration.
+     *
+     * @param string|null $ruleconfig Raw JSON config
+     * @return array|null
+     */
+    private static function decode_rule_config(?string $ruleconfig): ?array {
+        if (empty($ruleconfig)) {
+            return null;
+        }
+
+        return json_decode($ruleconfig, true);
+    }
+
+    /**
+     * Build the response data for points-based rules.
+     *
+     * @param array|null $config Rule config
+     * @param int $userid User ID
+     * @param int $planid Plan ID
+     * @param \grade_scale|null $scale Parent scale
+     * @return array
+     */
+    private static function build_points_rule_data(?array $config, int $userid, int $planid, $scale): array {
+        $children = [];
+        $earnedpoints = 0;
+        $hasrequired = false;
+        $mandatorycount = 0;
+        $pendingmandatorycount = 0;
+        $totalrequired = isset($config['base']['points']) ? (int) $config['base']['points'] : 0;
+        $childconfigs = $config['competencies'] ?? [];
+
+        foreach ($childconfigs as $childconfig) {
+            $childpoints = isset($childconfig['points']) ? (int) $childconfig['points'] : 0;
+            $childrequired = !empty($childconfig['required']);
+            $childdata = self::get_child_data((int) $childconfig['id'], $userid, $planid, $scale);
+            $childdata['points'] = $childpoints;
+            $childdata['required'] = $childrequired;
+
+            if ($childrequired) {
+                $hasrequired = true;
+                $mandatorycount++;
+                if (empty($childdata['isproficient'])) {
+                    $pendingmandatorycount++;
+                }
+            }
+
+            if ($childdata['isproficient']) {
+                $earnedpoints += $childpoints;
+            }
+
+            $children[] = $childdata;
+        }
+
+        return [
+            'children' => $children,
+            'earnedpoints' => $earnedpoints,
+            'totalrequired' => $totalrequired,
+            'hasrequired' => $hasrequired,
+            'mandatorycount' => $mandatorycount,
+            'pendingmandatorycount' => $pendingmandatorycount,
+        ];
+    }
+
+    /**
+     * Build the response data for all-or-nothing rules.
+     *
+     * @param \core_competency\competency $competency Parent competency
+     * @param int $userid User ID
+     * @param int $planid Plan ID
+     * @param \grade_scale|null $scale Parent scale
+     * @return array
+     */
+    private static function build_all_rule_data($competency, int $userid, int $planid, $scale): array {
+        $children = [];
+        $completedcount = 0;
+        $childcompetencies = api::list_competencies([
+            'parentid' => $competency->get('id'),
+            'competencyframeworkid' => $competency->get('competencyframeworkid'),
+        ]);
+
+        foreach ($childcompetencies as $childcomp) {
+            $childdata = self::get_child_data($childcomp->get('id'), $userid, $planid, $scale);
+            $childdata['points'] = 0;
+            $childdata['required'] = false;
+
+            if ($childdata['isproficient']) {
+                $completedcount++;
+            }
+
+            $children[] = $childdata;
+        }
+
+        return [
+            'children' => $children,
+            'earnedpoints' => $completedcount,
+            'totalrequired' => count($children),
+            'hasrequired' => false,
+            'mandatorycount' => 0,
+            'pendingmandatorycount' => 0,
+        ];
+    }
+
+    /**
+     * Return the available user competency record for this plan/competency pair.
+     *
+     * @param int $childid Child competency ID
+     * @param int $userid User ID
+     * @param int $planid Plan ID
+     * @return \core_competency\user_competency|\core_competency\user_competency_plan|null
+     */
+    private static function get_user_competency_record(int $childid, int $userid, int $planid) {
+        $planrecord = \core_competency\user_competency_plan::get_record([
+            'userid' => $userid,
+            'competencyid' => $childid,
+            'planid' => $planid,
+        ]);
+
+        if ($planrecord && $planrecord->get('grade')) {
+            return $planrecord;
+        }
+
+        $liverecord = \core_competency\user_competency::get_record([
+            'userid' => $userid,
+            'competencyid' => $childid,
+        ]);
+
+        if ($liverecord && $liverecord->get('grade')) {
+            return $liverecord;
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve a grade name from a Moodle scale.
+     *
+     * @param \grade_scale|null $scale Scale object
+     * @param mixed $grade Numeric grade value
+     * @return string
+     */
+    private static function get_grade_name_from_scale($scale, $grade): string {
+        if (!$grade || !$scale) {
+            return '';
+        }
+
+        $scaleitems = $scale->load_items();
+        $index = ((int) $grade) - 1;
+
+        return isset($scaleitems[$index]) ? $scaleitems[$index] : '';
     }
 
     /**

@@ -44,6 +44,8 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_value;
 use core\context\system as context_system;
+use core_competency\api;
+use local_dimensions\helper;
 
 /**
  * Wrapper for tool_lp_data_for_user_competency_summary_in_plan.
@@ -102,6 +104,15 @@ class get_user_competency_summary_in_plan extends external_api {
             $params['competencyid'],
             $params['planid']
         );
+
+        $competency = api::read_competency($params['competencyid']);
+        $framework = api::read_framework($competency->get('competencyframeworkid'));
+        $taxonomydata = helper::get_competency_taxonomy_data($competency, $framework);
+
+        if (!empty($result->usercompetencysummary) && !empty($result->usercompetencysummary->competency)) {
+            $result->usercompetencysummary->competency->taxonomy = (object) $taxonomydata;
+            $result->usercompetencysummary->competency->taxonomyterm = $taxonomydata['current']['term'];
+        }
 
         return json_encode($result);
     }

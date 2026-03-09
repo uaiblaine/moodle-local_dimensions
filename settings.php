@@ -203,6 +203,14 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         1
     ));
 
+    // Show main taxonomy card in the Description tab.
+    $settings->add(new admin_setting_configcheckbox(
+        'local_dimensions/showtaxonomycard',
+        get_string('showtaxonomycard', 'local_dimensions'),
+        get_string('showtaxonomycard_desc', 'local_dimensions'),
+        0
+    ));
+
     // Show competency path/hierarchy.
     $settings->add(new admin_setting_configcheckbox(
         'local_dimensions/showpath',

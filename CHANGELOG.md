@@ -7,24 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
-- **Rules tab** in the Full plan overview accordion, showing competency completion rules with:
-  - Progress bar with earned/required points display.
-  - Child competency cards with proficiency status icons (proficient, in-progress, to-do).
-  - Rule type and outcome description info box (points-based and all-based rules).
-  - "Submit prior learning evidence" button (configurable via admin setting `enableevidencesubmitbutton`).
-  - Lazy loading via AJAX on first tab activation.
-- New web service `local_dimensions_get_competency_rule_data` for retrieving competency rule data (children, points, required status).
-- Admin setting to enable/disable the "Submit Evidence" button in the Rules tab.
-- 22 language strings for the Rules tab (progress, outcomes, assessments, screen reader labels).
+- Admin setting `showtaxonomycard` to display the main taxonomy card in the Description tab.
+- Backend taxonomy helpers to expose current, child, and per-level taxonomy metadata for a competency.
+- Taxonomy card UI with dedicated taxonomy icon assets in `pix/taxonomy`.
+- New status icon assets in `pix/status` for due dates, locked cards, progress cards, summary badges, and Rules tab states.
+- Rules tab enhancements:
+  - Required-only filter pills for child items.
+  - Warning state when the minimum score is reached but mandatory children are still pending.
+  - Localised outcome and required-warning text returned by the backend.
+  - Optional "Submit prior learning evidence" button in the Rules tab.
 
 ### Changed
-- **Taxonomy-aware labels**: competency labels now adapt dynamically to the framework's taxonomy configuration (e.g. "domain", "skill", "indicator") instead of hardcoded "competencies".
-  - New `resolveTaxonomy()` function reads the framework's taxonomy levels and maps them to the correct depth.
-  - Language strings for rule outcomes, related competencies, and required warnings now use `{$a}` placeholders for taxonomy names.
-  - 22 new taxonomy language strings (11 types × singular/plural) in English and Brazilian Portuguese.
-- Tab and pane IDs are now unique per competency (`dims-tab-{type}-{id}`, `dims-tabpane-{type}-{id}`), fixing conflicts when multiple accordions are open simultaneously.
-- Improved keyboard navigation: tabs now support arrow-key cycling, `Home`/`End` keys, and proper `tabindex` management following WAI-ARIA Tabs pattern.
-- Tab panes now include `aria-labelledby` attributes linking back to their corresponding tab buttons.
+- Taxonomy rendering in the accordion now uses backend-provided payload data instead of client-side taxonomy inference.
+- The Description tab can now show the current competency taxonomy beside the descriptive content.
+- Related competency wording was simplified to "Related dimensions" in both language packs.
+- Rules tab rendering now uses backend-provided outcome text, required-warning text, and mandatory counters.
+- Locked cards, due-date badges, summary status badges, and Rules icons now use plugin image assets instead of inline SVG markup.
+- English and Brazilian Portuguese strings were streamlined to match the new taxonomy card and Rules tab behaviour.
 
 ## [1.0] - 2026-03-08
 

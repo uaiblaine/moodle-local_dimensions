@@ -103,6 +103,7 @@ class view_plan_page implements renderable, templatable {
                 'hastextcolor' => !empty($textcolor),
                 'bgimage' => $this->get_custom_field_image_url($this->competency->id, 'custombgimage', 'competency'),
                 'hasbgimage' => !empty($this->get_custom_field_image_url($this->competency->id, 'custombgimage', 'competency')),
+                'duedateiconurl' => $output->image_url('status/calendar-light', 'local_dimensions')->out(false),
             ];
         }
 

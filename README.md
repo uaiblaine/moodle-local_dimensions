@@ -1,8 +1,6 @@
 moodle-local_dimensions
 =======================
 
-[![Moodle Plugin CI](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/moodle-plugin-ci.yml/badge.svg?branch=main)](https://github.com/uaiblaine/moodle-local_dimensions/actions?query=workflow%3A%22Moodle+Plugin+CI%22+branch%3Amain)
-
 See your learning path in a new dimension.
 
 A Moodle local plugin that extends the core competency system with custom fields, course section progress tracking, and a visual learning plan interface. It provides two display modes — **Competency tracker** and **Full plan overview** — with rich customisation options for colours, images, icons, tags, and SCSS.
@@ -54,23 +52,26 @@ Shows linked courses for a single competency as a responsive grid of course card
 
 Shows all competencies in the plan as an expandable accordion. Each accordion panel loads via AJAX and can display:
 - Competency description
+- Main taxonomy card for the current competency (optional)
 - Hierarchy path (framework → parent → competency)
-- Related competencies (optionally clickable, label adapts to framework taxonomy)
-- Competency completion rules (rule type, rule outcome, sub-competency progress and proficiency status)
+- Related dimensions (optionally clickable)
+- Competency completion rules (rule type, outcome text, sub-competency progress, required-item alerts, and proficiency status)
 - Evidence cards with detail modals
 - Comments section with reply functionality
 - Linked course cards with section progress
 
-All labels adapt automatically to the competency framework's taxonomy configuration (e.g. "competency", "domain", "skill", "indicator"), so the UI reflects the vocabulary defined by the framework author.
+Taxonomy metadata is resolved on the backend and included in the AJAX payload, so the frontend renders the current competency taxonomy and rule outcome text without inferring framework labels client-side.
 
 #### Competency completion rules
 
 When a competency has a completion rule configured in Moodle's core competency framework, a **Rules** tab is displayed in the accordion panel. It shows:
 
 - **Rule type**: "All" (all linked sub-competencies must be rated as proficient) or "Points" (sum of points from sub-competencies must reach a threshold)
-- **Rule outcome**: What happens when the rule is met — evidence is attached automatically, the competency is marked as complete, or the competency is recommended for review. Outcome descriptions use taxonomy-aware language matching the framework configuration
+- **Rule outcome**: What happens when the rule is met — evidence is attached automatically, the competency is marked as complete, or the competency is recommended for review. Outcome descriptions are returned already localised by the backend
 - **Progress indicator**: A progress bar showing earned points (or completed count) versus the total required
+- **Required-item alert**: Highlights when the minimum score was reached but mandatory child items are still pending
 - **Sub-competency list**: Each child competency with its current rating, proficiency status (proficient, graded but not proficient, or not yet evaluated), and whether it is marked as required
+- **Local filters**: Quick toggle between all child items and only required ones when the rule includes mandatory children
 - **Submit evidence**: Optional button (configurable in admin settings) linking to the prior learning evidence page
 
 
@@ -106,6 +107,7 @@ All settings are under **Site administration → Competencies → Competency Dim
 |---|---|---|
 | Enrolment filter | Filter courses in accordion by enrolment status | All |
 | Show competency description | Display the full description text | Enabled |
+| Show main taxonomy card | Display the current competency taxonomy as a dedicated card in the Description tab | Disabled |
 | Show competency path | Display the hierarchy path (framework → parent) | Disabled |
 | Show related competencies | Display linked related competencies | Disabled |
 | Link related competencies | Make related competency names clickable | Disabled |
@@ -178,7 +180,7 @@ Wrapper for `tool_lp_data_for_user_competency_summary_in_plan` that avoids conte
 - `competencyid` (int): The competency ID
 - `planid` (int): The plan ID
 
-**Returns:** JSON-encoded competency summary data.
+**Returns:** JSON-encoded competency summary data enriched with taxonomy metadata for the current competency (`taxonomy.current`, `taxonomy.children`, `taxonomy.bylevel`) and a ready-to-render `taxonomyterm`.
 
 ### local_dimensions_get_comments
 
@@ -206,7 +208,7 @@ Get competency completion rule data including children, points, required status,
 - `competencyid` (int): The parent competency ID
 - `planid` (int): The learning plan ID
 
-**Returns:** JSON object with rule type, rule outcome, total required, earned points, child competencies (with grade name, proficiency, points, and required status), and whether the evidence submission button is enabled.
+**Returns:** JSON object with rule type, localised outcome text, total required, earned points, mandatory counts, missing-mandatory alert state, child competencies (with grade name, proficiency, points, and required status), taxonomy metadata, and whether the evidence submission button is enabled.
 
 ### local_dimensions_get_fontawesome_icons
 
@@ -301,6 +303,7 @@ When enabled, per-template and per-competency SCSS code is:
 The plugin includes:
 - **13 Mustache templates** for responsive layouts (hero header, course cards, accordion panels, evidence modals, etc.)
 - **4 AMD JavaScript modules**: `accordion.js` (lazy-loaded accordion panels), `ui.js` (progress loading and hero positioning), `fontawesome_icon_selector.js` (AJAX icon picker), `scss_validation.js` (client-side SCSS validation)
+- **Plugin icon assets** under `pix/status` and `pix/taxonomy` for hero badges, locked cards, rule states, and taxonomy cards
 - **CSS styles** with properly namespaced selectors (`.local-dimensions-*`, `.dims-*`, `#dimensions-*`)
 
 

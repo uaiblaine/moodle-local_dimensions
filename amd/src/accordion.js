@@ -7,8 +7,8 @@
  */
 
 define(
-    ['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/modal'],
-    function (Ajax, Templates, Notification, Str, Modal) {
+    ['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/modal', 'core/log'],
+    function (Ajax, Templates, Notification, Str, Modal, Log) {
         'use strict';
 
         // Cache for loaded competency summaries to avoid reloading.
@@ -17,6 +17,7 @@ define(
         // Display settings (loaded from page).
         let displaySettings = {
             showdescription: true,
+            showtaxonomycard: false,
             showpath: false,
             showrelated: false,
             showrelatedlink: false,
@@ -68,8 +69,8 @@ define(
             });
 
             // Use custom webservice when enrollment filter is configured, otherwise use core.
-            var coursesMethodName = 'tool_lp_list_courses_using_competency';
-            var coursesArgs = { id: competencyId };
+            let coursesMethodName = 'tool_lp_list_courses_using_competency';
+            let coursesArgs = { id: competencyId };
             if (displaySettings.summaryenrollmentfilter && displaySettings.summaryenrollmentfilter !== 'all') {
                 coursesMethodName = 'local_dimensions_get_competency_courses';
                 coursesArgs = { competencyid: competencyId };
@@ -107,52 +108,6 @@ define(
         }
 
         /**
-         * Resolve taxonomy names for a competency based on its framework configuration.
-         *
-         * Each competency framework defines up to 6 taxonomy levels (e.g. domain, competency, skill).
-         * This function determines the correct taxonomy label for the current competency (singular)
-         * and its children (plural) based on the competency's depth in the hierarchy.
-         *
-         * @param {Object} competencyData The competency summary data (contains .competency, .framework, .compparents)
-         * @param {Object} strMap Language strings map (must include .taxonomyMap)
-         * @return {Object} Taxonomy info: { parentKey, childKey, singular, plural }
-         */
-        function resolveTaxonomy(competencyData, strMap) {
-            var defaultTax = 'competency';
-            var map = strMap.taxonomyMap || {};
-            var fallback = map[defaultTax] || { singular: defaultTax, plural: defaultTax };
-
-            if (!competencyData || !competencyData.framework) {
-                return {
-                    parentKey: defaultTax,
-                    childKey: defaultTax,
-                    singular: fallback.singular,
-                    plural: fallback.plural
-                };
-            }
-
-            var taxonomies = (competencyData.framework.taxonomies || defaultTax).split(',');
-            var depth = (competencyData.compparents && Array.isArray(competencyData.compparents))
-                ? competencyData.compparents.length : 0;
-
-            var parentIdx = Math.min(Math.max(0, depth), taxonomies.length - 1);
-            var childIdx = Math.min(parentIdx + 1, taxonomies.length - 1);
-
-            var parentKey = (taxonomies[parentIdx] || defaultTax).trim();
-            var childKey = (taxonomies[childIdx] || defaultTax).trim();
-
-            var parentEntry = map[parentKey] || fallback;
-            var childEntry = map[childKey] || fallback;
-
-            return {
-                parentKey: parentKey,
-                childKey: childKey,
-                singular: parentEntry.singular,
-                plural: childEntry.plural
-            };
-        }
-
-        /**
          * Render the competency summary content.
          *
          * @param {HTMLElement} contentEl The content container element
@@ -163,7 +118,7 @@ define(
          */
         function renderCompetencySummary(contentEl, data, courses, planId) {
             if (!contentEl) {
-                return Promise.resolve();
+                return Promise.resolve(null);
             }
 
             // Fetch all required language strings first.
@@ -175,8 +130,7 @@ define(
                 { key: 'no', component: 'local_dimensions' },
                 { key: 'competency_path', component: 'local_dimensions' },
                 { key: 'in_framework', component: 'local_dimensions' },
-                { key: 'related_competencies', component: 'local_dimensions' },
-                { key: 'no_related', component: 'local_dimensions' },
+                { key: 'related_dimensions', component: 'local_dimensions' },
                 { key: 'evidence_type_file', component: 'local_dimensions' },
                 { key: 'evidence_type_manual', component: 'local_dimensions' },
                 { key: 'evidence_type_activity', component: 'local_dimensions' },
@@ -194,6 +148,7 @@ define(
                 { key: 'linked_courses', component: 'local_dimensions' },
                 { key: 'assessment_status', component: 'local_dimensions' },
                 { key: 'description_label', component: 'local_dimensions' },
+                { key: 'taxonomycard_label', component: 'local_dimensions' },
                 { key: 'show_more', component: 'local_dimensions' },
                 { key: 'show_less', component: 'local_dimensions' },
                 { key: 'proficiency', component: 'local_dimensions' },
@@ -218,42 +173,18 @@ define(
                 { key: 'rules_pts', component: 'local_dimensions' },
                 { key: 'rules_no_points', component: 'local_dimensions' },
                 { key: 'rules_submit_evidence', component: 'local_dimensions' },
-                { key: 'rules_points_outcome_attach', component: 'local_dimensions' },
-                { key: 'rules_points_outcome_complete', component: 'local_dimensions' },
-                { key: 'rules_points_outcome_recommend', component: 'local_dimensions' },
-                { key: 'rules_all_outcome_attach', component: 'local_dimensions' },
-                { key: 'rules_all_outcome_complete', component: 'local_dimensions' },
-                { key: 'rules_all_outcome_recommend', component: 'local_dimensions' },
-                { key: 'rules_required_warning', component: 'local_dimensions' },
                 { key: 'rules_todo', component: 'local_dimensions' },
                 { key: 'rules_completed_count', component: 'local_dimensions' },
-                { key: 'rules_label', component: 'local_dimensions' },
+                { key: 'rules_info_title', component: 'local_dimensions' },
+                { key: 'rules_missing_mandatory_notice', component: 'local_dimensions' },
+                { key: 'rules_filter_label', component: 'local_dimensions' },
+                { key: 'rules_filter_all', component: 'local_dimensions' },
+                { key: 'rules_filter_required', component: 'local_dimensions' },
+                { key: 'rules_sr_alert', component: 'local_dimensions' },
                 { key: 'rules_sr_proficient', component: 'local_dimensions' },
                 { key: 'rules_sr_inprogress', component: 'local_dimensions' },
                 { key: 'rules_sr_todo', component: 'local_dimensions' },
-                { key: 'rules_sr_progress', component: 'local_dimensions' },
-                { key: 'taxonomy_behaviour_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_behaviour_plural', component: 'local_dimensions' },
-                { key: 'taxonomy_competency_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_competency_plural', component: 'local_dimensions' },
-                { key: 'taxonomy_concept_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_concept_plural', component: 'local_dimensions' },
-                { key: 'taxonomy_domain_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_domain_plural', component: 'local_dimensions' },
-                { key: 'taxonomy_indicator_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_indicator_plural', component: 'local_dimensions' },
-                { key: 'taxonomy_level_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_level_plural', component: 'local_dimensions' },
-                { key: 'taxonomy_outcome_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_outcome_plural', component: 'local_dimensions' },
-                { key: 'taxonomy_practice_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_practice_plural', component: 'local_dimensions' },
-                { key: 'taxonomy_proficiency_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_proficiency_plural', component: 'local_dimensions' },
-                { key: 'taxonomy_skill_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_skill_plural', component: 'local_dimensions' },
-                { key: 'taxonomy_value_singular', component: 'local_dimensions' },
-                { key: 'taxonomy_value_plural', component: 'local_dimensions' }
+                { key: 'rules_sr_progress', component: 'local_dimensions' }
             ]).then(function (strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -263,25 +194,25 @@ define(
                     noStr: strings[4],
                     pathLabel: strings[5],
                     inFramework: strings[6],
-                    relatedLabel: strings[7],
-                    noRelated: strings[8],
-                    evidenceTypeFile: strings[9],
-                    evidenceTypeManual: strings[10],
-                    evidenceTypeActivity: strings[11],
-                    evidenceTypeCoursegrade: strings[12],
-                    evidenceTypePrior: strings[13],
-                    evidenceTypeOther: strings[14],
-                    evidenceBy: strings[15],
-                    noEvidence: strings[16],
-                    commentsSection: strings[17],
-                    noComments: strings[18],
-                    addComment: strings[19],
-                    commentPlaceholder: strings[20],
-                    commentBy: strings[21],
-                    accessCourse: strings[22],
-                    linkedCourses: strings[23],
-                    assessmentStatus: strings[24],
-                    descriptionLabel: strings[25],
+                    relatedDimensions: strings[7],
+                    evidenceTypeFile: strings[8],
+                    evidenceTypeManual: strings[9],
+                    evidenceTypeActivity: strings[10],
+                    evidenceTypeCoursegrade: strings[11],
+                    evidenceTypePrior: strings[12],
+                    evidenceTypeOther: strings[13],
+                    evidenceBy: strings[14],
+                    noEvidence: strings[15],
+                    commentsSection: strings[16],
+                    noComments: strings[17],
+                    addComment: strings[18],
+                    commentPlaceholder: strings[19],
+                    commentBy: strings[20],
+                    accessCourse: strings[21],
+                    linkedCourses: strings[22],
+                    assessmentStatus: strings[23],
+                    descriptionLabel: strings[24],
+                    taxonomyCardLabel: strings[25],
                     showMore: strings[26],
                     showLess: strings[27],
                     proficiencyLabel: strings[28],
@@ -306,170 +237,30 @@ define(
                     rulesPts: strings[47],
                     rulesNoPoints: strings[48],
                     rulesSubmitEvidence: strings[49],
-                    rulesPointsOutcomeAttach: strings[50],
-                    rulesPointsOutcomeComplete: strings[51],
-                    rulesPointsOutcomeRecommend: strings[52],
-                    rulesAllOutcomeAttach: strings[53],
-                    rulesAllOutcomeComplete: strings[54],
-                    rulesAllOutcomeRecommend: strings[55],
-                    rulesRequiredWarning: strings[56],
-                    rulesTodo: strings[57],
-                    rulesCompletedCount: strings[58],
-                    rulesLabel: strings[59],
-                    rulesSrProficient: strings[60],
-                    rulesSrInprogress: strings[61],
-                    rulesSrTodo: strings[62],
-                    rulesSrProgress: strings[63],
-                    taxonomyMap: {
-                        behaviour:   { singular: strings[64],  plural: strings[65] },
-                        competency:  { singular: strings[66],  plural: strings[67] },
-                        concept:     { singular: strings[68],  plural: strings[69] },
-                        domain:      { singular: strings[70],  plural: strings[71] },
-                        indicator:   { singular: strings[72],  plural: strings[73] },
-                        level:       { singular: strings[74],  plural: strings[75] },
-                        outcome:     { singular: strings[76],  plural: strings[77] },
-                        practice:    { singular: strings[78],  plural: strings[79] },
-                        proficiency: { singular: strings[80],  plural: strings[81] },
-                        skill:       { singular: strings[82],  plural: strings[83] },
-                        value:       { singular: strings[84],  plural: strings[85] }
-                    }
+                    rulesTodo: strings[50],
+                    rulesCompletedCount: strings[51],
+                    rulesInfoTitle: strings[52],
+                    rulesMissingMandatoryNotice: strings[53],
+                    rulesFilterLabel: strings[54],
+                    rulesFilterAll: strings[55],
+                    rulesFilterRequired: strings[56],
+                    rulesSrAlert: strings[57],
+                    rulesSrProficient: strings[58],
+                    rulesSrInprogress: strings[59],
+                    rulesSrTodo: strings[60],
+                    rulesSrProgress: strings[61]
                 };
 
-                // Build HTML for the summary.
-                const ucs = data.usercompetencysummary;
-                const competencyData = ucs ? ucs.competency : null;
-                const comp = competencyData ? competencyData.competency : null;
-
-                // Resolve taxonomy names from the framework configuration.
-                var taxonomyInfo = resolveTaxonomy(competencyData, strMap);
-
-                // Filter visible courses.
-                const visibleCourses = (courses || []).filter(function (course) {
-                    return course.visible == 1;
-                });
-
+                const summaryState = getSummaryState(data, courses);
                 let html = '<div class="dims-competency-detail">';
+                html += renderSummaryTabs(summaryState, strMap, planId);
 
-                // === SECTION 1: TABS (Status | Description | Evidence) ===
-                // Determine which tabs to show.
-                const hasStatus = ucs && (ucs.usercompetency || ucs.usercompetencyplan);
-                const hasDesc = comp && displaySettings.showdescription && comp.description;
-                const hasPath = comp && displaySettings.showpath;
-                const hasRelated = comp && displaySettings.showrelated && competencyData.relatedcompetencies
-                    && competencyData.relatedcompetencies.length > 0;
-                const hasEvidence = ucs && displaySettings.showevidence;
-                const hasRules = comp && comp.ruleoutcome && parseInt(comp.ruleoutcome, 10) !== 0 && comp.ruletype;
-                const tabs = [];
-
-                if (hasStatus) {
-                    tabs.push({ id: 'status', label: strMap.assessmentStatus, icon: 'fa-star' });
-                }
-                if (hasDesc || hasPath || hasRelated) {
-                    tabs.push({ id: 'description', label: strMap.descriptionLabel, icon: 'fa-file-text-o' });
-                }
-                if (hasEvidence) {
-                    tabs.push({ id: 'evidence', label: strMap.evidenceLabel, icon: 'fa-check-square-o' });
-                }
-                if (hasRules) {
-                    tabs.push({ id: 'rules', label: strMap.rulesTab, icon: 'fa-gavel' });
+                if (summaryState.visibleCourses.length > 0) {
+                    html += renderCourseCardsScrollable(summaryState.visibleCourses, strMap);
                 }
 
-                if (tabs.length > 0) {
-                    html += '<div class="dims-tabs-wrapper">';
-                    // Tab navigation — underline style.
-                    html += '<div class="dims-tabs-nav" role="tablist">';
-                    tabs.forEach(function (tab, idx) {
-                        const isActive = idx === 0;
-                        html += '<button type="button" class="dims-tab-btn' + (isActive ? ' active' : '') + '"';
-                        html += ' role="tab"';
-                        html += ' id="dims-tab-' + tab.id + '-' + comp.id + '"';
-                        html += ' aria-selected="' + (isActive ? 'true' : 'false') + '"';
-                        html += ' aria-controls="dims-tabpane-' + tab.id + '-' + comp.id + '"';
-                        html += ' tabindex="' + (isActive ? '0' : '-1') + '"';
-                        html += ' data-tab="' + tab.id + '">';
-                        html += escapeHtml(tab.label);
-                        html += '</button>';
-                    });
-                    html += '</div>'; // End dims-tabs-nav.
-
-                    // Tab panes.
-                    html += '<div class="dims-tabs-content">';
-
-                    // Status tab pane.
-                    if (hasStatus) {
-                        const isFirst = tabs[0].id === 'status';
-                        html += '<div class="dims-tab-pane dims-tab-pane-status' + (isFirst ? ' active' : '') + '"';
-                        html += ' id="dims-tabpane-status-' + comp.id + '" data-tab="status"';
-                        html += ' role="tabpanel" aria-labelledby="dims-tab-status-' + comp.id + '">';
-                        html += renderStatusSection(ucs, strMap);
-                        html += '</div>';
-                    }
-
-                    // Description tab pane.
-                    if (hasDesc || hasPath || hasRelated) {
-                        const isFirst = tabs[0].id === 'description';
-                        html += '<div class="dims-tab-pane dims-tab-pane-description' + (isFirst ? ' active' : '') + '"';
-                        html += ' id="dims-tabpane-description-' + comp.id + '" data-tab="description"';
-                        html += ' role="tabpanel" aria-labelledby="dims-tab-description-' + comp.id + '">';
-
-                        // Description text with "Ver mais".
-                        if (hasDesc) {
-                            html += renderDescriptionSection(comp.description, strMap);
-                        }
-
-                        // Path breadcrumb.
-                        if (hasPath) {
-                            html += renderCompetencyPath(competencyData, strMap);
-                        }
-
-                        // Related competencies.
-                        if (hasRelated) {
-                            html += renderRelatedCompetencies(competencyData, strMap, planId, taxonomyInfo);
-                        }
-
-                        html += '</div>';
-                    }
-
-                    // Evidence tab pane.
-                    if (hasEvidence) {
-                        const isFirst = tabs[0].id === 'evidence';
-                        html += '<div class="dims-tab-pane dims-tab-pane-evidence' + (isFirst ? ' active' : '') + '"';
-                        html += ' id="dims-tabpane-evidence-' + comp.id + '" data-tab="evidence"';
-                        html += ' role="tabpanel" aria-labelledby="dims-tab-evidence-' + comp.id + '">';
-                        html += renderEvidenceSlider(ucs.evidence, strMap);
-                        html += '</div>';
-                    }
-
-                    // Rules tab pane (lazy-loaded via AJAX on first activation).
-                    if (hasRules) {
-                        const isFirst = tabs[0].id === 'rules';
-                        html += '<div class="dims-tab-pane dims-tab-pane-rules' + (isFirst ? ' active' : '') + '"';
-                        html += ' id="dims-tabpane-rules-' + comp.id + '" data-tab="rules"';
-                        html += ' role="tabpanel" aria-labelledby="dims-tab-rules-' + comp.id + '"';
-                        html += ' data-competency-id="' + comp.id + '"';
-                        html += ' data-plan-id="' + planId + '"';
-                        html += ' data-parent-taxonomy="' + escapeHtml(taxonomyInfo.parentKey) + '"';
-                        html += ' data-child-taxonomy="' + escapeHtml(taxonomyInfo.childKey) + '">';
-                        html += '<div class="dims-rules-loading" role="status" aria-live="polite">';
-                        html += '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
-                        html += '<span class="sr-only">' + escapeHtml(strMap.rulesTab) + '</span>';
-                        html += '</div>';
-                        html += '<div class="dims-rules-content" style="display:none;"></div>';
-                        html += '</div>';
-                    }
-
-                    html += '</div>'; // End dims-tabs-content.
-                    html += '</div>'; // End dims-tabs-wrapper.
-                }
-
-                // === SECTION 2: LINKED COURSES (scrollable) ===
-                if (visibleCourses.length > 0) {
-                    html += renderCourseCardsScrollable(visibleCourses, strMap);
-                }
-
-                // === SECTION 3: COMMENTS (unchanged) ===
-                if (displaySettings.showcomments && ucs && ucs.commentarea && ucs.commentarea.count > 0) {
-                    html += renderCommentsSection(ucs.commentarea, strMap);
+                if (displaySettings.showcomments && summaryState.ucs?.commentarea?.count > 0) {
+                    html += renderCommentsSection(summaryState.ucs.commentarea, strMap);
                 }
 
                 html += '</div>';
@@ -489,27 +280,275 @@ define(
                 // Initialize evidence slider(s) — pass evidence data, strings, and scale config for modal.
                 // Competency-level scaleconfiguration is null when it inherits from the framework.
                 // Fall back to the resolved scaleconfiguration on the competency tree data object.
-                var scaleConfig = (comp && comp.scaleconfiguration)
-                    || (competencyData && competencyData.scaleconfiguration)
+                const scaleConfig = summaryState.comp?.scaleconfiguration
+                    || summaryState.competencyData?.scaleconfiguration
                     || null;
-                initSliders(contentEl, ucs ? ucs.evidence : [], strMap, scaleConfig);
+                initSliders(contentEl, summaryState.ucs ? summaryState.ucs.evidence : [], strMap, scaleConfig);
 
                 // Initialize course scroll navigation.
                 initCourseScroll(contentEl);
 
                 // Attach event listeners for comments toggle button (lazy loading).
-                if (displaySettings.showcomments && ucs && ucs.commentarea) {
+                if (displaySettings.showcomments && summaryState.ucs?.commentarea) {
                     attachCommentsToggleListeners(contentEl, strMap);
                 }
 
                 // If the Rules tab is currently active (first tab), trigger lazy load immediately.
-                var activeRulesPane = contentEl.querySelector('.dims-tab-pane-rules.active');
+                const activeRulesPane = contentEl.querySelector('.dims-tab-pane-rules.active');
                 if (activeRulesPane) {
                     loadRulesTabIfNeeded(activeRulesPane, strMap);
                 }
 
-                return Promise.resolve();
+                return null;
             });
+        }
+
+        /**
+         * Build the render state used by the summary tabs.
+         *
+         * @param {Object} data The competency summary payload
+         * @param {Array} courses Course list
+         * @return {Object} Normalized summary state
+         */
+        function getSummaryState(data, courses) {
+            const ucs = data.usercompetencysummary;
+            const competencyData = ucs ? ucs.competency : null;
+            const comp = competencyData ? competencyData.competency : null;
+            const visibleCourses = (courses || []).filter(function (course) {
+                return course.visible == 1;
+            });
+            const primaryTaxonomy = getPrimaryTaxonomy(competencyData);
+            const hasStatus = !!(ucs && (ucs.usercompetency || ucs.usercompetencyplan));
+            const hasDesc = !!(comp && displaySettings.showdescription && comp.description);
+            const hasTaxonomyCard = !!(displaySettings.showtaxonomycard && primaryTaxonomy?.term);
+            const hasPath = !!(comp && displaySettings.showpath);
+            const hasRelated = !!(
+                comp && displaySettings.showrelated && competencyData?.relatedcompetencies
+                && competencyData.relatedcompetencies.length > 0
+            );
+            const hasEvidence = !!(ucs && displaySettings.showevidence);
+            const hasRules = !!(
+                comp?.ruleoutcome && Number.parseInt(comp.ruleoutcome, 10) !== 0 && comp.ruletype
+            );
+
+            return {
+                ucs: ucs,
+                competencyData: competencyData,
+                comp: comp,
+                visibleCourses: visibleCourses,
+                primaryTaxonomy: primaryTaxonomy,
+                hasStatus: hasStatus,
+                hasDesc: hasDesc,
+                hasTaxonomyCard: hasTaxonomyCard,
+                hasPath: hasPath,
+                hasRelated: hasRelated,
+                hasEvidence: hasEvidence,
+                hasRules: hasRules
+            };
+        }
+
+        /**
+         * Return the visible tabs for the summary.
+         *
+         * @param {Object} summaryState Normalized summary state
+         * @param {Object} strMap Language strings map
+         * @return {Array} Visible tabs
+         */
+        function buildSummaryTabs(summaryState, strMap) {
+            const tabs = [];
+
+            if (summaryState.hasStatus) {
+                tabs.push({ id: 'status', label: strMap.assessmentStatus, icon: 'fa-star' });
+            }
+            if (summaryState.hasDesc || summaryState.hasTaxonomyCard || summaryState.hasPath || summaryState.hasRelated) {
+                tabs.push({ id: 'description', label: strMap.descriptionLabel, icon: 'fa-file-text-o' });
+            }
+            if (summaryState.hasEvidence) {
+                tabs.push({ id: 'evidence', label: strMap.evidenceLabel, icon: 'fa-check-square-o' });
+            }
+            if (summaryState.hasRules) {
+                tabs.push({ id: 'rules', label: strMap.rulesTab, icon: 'fa-gavel' });
+            }
+
+            return tabs;
+        }
+
+        /**
+         * Render the full tabs wrapper for the summary.
+         *
+         * @param {Object} summaryState Normalized summary state
+         * @param {Object} strMap Language strings map
+         * @param {number} planId Plan ID
+         * @return {string} HTML
+         */
+        function renderSummaryTabs(summaryState, strMap, planId) {
+            const tabs = buildSummaryTabs(summaryState, strMap);
+
+            if (tabs.length === 0 || !summaryState.comp) {
+                return '';
+            }
+
+            let html = '<div class="dims-tabs-wrapper">';
+            html += renderSummaryTabNavigation(tabs, summaryState.comp.id);
+            html += renderSummaryTabPanes(summaryState, tabs, strMap, planId);
+            html += '</div>';
+
+            return html;
+        }
+
+        /**
+         * Render the summary tab buttons.
+         *
+         * @param {Array} tabs Visible tabs
+         * @param {number} competencyId Competency ID
+         * @return {string} HTML
+         */
+        function renderSummaryTabNavigation(tabs, competencyId) {
+            let html = '<div class="dims-tabs-nav" role="tablist">';
+
+            tabs.forEach(function (tab, idx) {
+                const isActive = idx === 0;
+                html += '<button type="button" class="dims-tab-btn' + (isActive ? ' active' : '') + '"';
+                html += ' role="tab"';
+                html += ' id="dims-tab-' + tab.id + '-' + competencyId + '"';
+                html += ' aria-selected="' + (isActive ? 'true' : 'false') + '"';
+                html += ' aria-controls="dims-tabpane-' + tab.id + '-' + competencyId + '"';
+                html += ' tabindex="' + (isActive ? '0' : '-1') + '"';
+                html += ' data-tab="' + tab.id + '">';
+                html += escapeHtml(tab.label);
+                html += '</button>';
+            });
+
+            html += '</div>';
+            return html;
+        }
+
+        /**
+         * Render the summary tab panes.
+         *
+         * @param {Object} summaryState Normalized summary state
+         * @param {Array} tabs Visible tabs
+         * @param {Object} strMap Language strings map
+         * @param {number} planId Plan ID
+         * @return {string} HTML
+         */
+        function renderSummaryTabPanes(summaryState, tabs, strMap, planId) {
+            let html = '<div class="dims-tabs-content">';
+
+            if (summaryState.hasStatus) {
+                html += renderStatusPane(summaryState, tabs, strMap);
+            }
+            if (summaryState.hasDesc || summaryState.hasTaxonomyCard || summaryState.hasPath || summaryState.hasRelated) {
+                html += renderDescriptionPane(summaryState, tabs, strMap, planId);
+            }
+            if (summaryState.hasEvidence) {
+                html += renderEvidencePane(summaryState, tabs, strMap);
+            }
+            if (summaryState.hasRules) {
+                html += renderRulesPane(summaryState, tabs, strMap, planId);
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        /**
+         * Render the status tab pane.
+         *
+         * @param {Object} summaryState Normalized summary state
+         * @param {Array} tabs Visible tabs
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML
+         */
+        function renderStatusPane(summaryState, tabs, strMap) {
+            const isFirst = tabs[0].id === 'status';
+            let html = '<div class="dims-tab-pane dims-tab-pane-status' + (isFirst ? ' active' : '') + '"';
+            html += ' id="dims-tabpane-status-' + summaryState.comp.id + '" data-tab="status"';
+            html += ' role="tabpanel" aria-labelledby="dims-tab-status-' + summaryState.comp.id + '">';
+            html += renderStatusSection(summaryState.ucs, strMap);
+            html += '</div>';
+            return html;
+        }
+
+        /**
+         * Render the description tab pane.
+         *
+         * @param {Object} summaryState Normalized summary state
+         * @param {Array} tabs Visible tabs
+         * @param {Object} strMap Language strings map
+         * @param {number} planId Plan ID
+         * @return {string} HTML
+         */
+        function renderDescriptionPane(summaryState, tabs, strMap, planId) {
+            const isFirst = tabs[0].id === 'description';
+            let html = '<div class="dims-tab-pane dims-tab-pane-description' + (isFirst ? ' active' : '') + '"';
+            html += ' id="dims-tabpane-description-' + summaryState.comp.id + '" data-tab="description"';
+            html += ' role="tabpanel" aria-labelledby="dims-tab-description-' + summaryState.comp.id + '">';
+            html += '<div class="dims-desc-layout' + (summaryState.hasTaxonomyCard ? ' dims-desc-layout-has-taxonomy' : '') + '">';
+            html += '<div class="dims-desc-main">';
+
+            if (summaryState.hasDesc) {
+                html += renderDescriptionSection(summaryState.comp.description, strMap);
+            }
+            if (summaryState.hasPath) {
+                html += renderCompetencyPath(summaryState.competencyData, strMap);
+            }
+            if (summaryState.hasRelated) {
+                html += renderRelatedCompetencies(summaryState.competencyData, strMap, planId);
+            }
+
+            html += '</div>';
+
+            if (summaryState.hasTaxonomyCard) {
+                html += renderTaxonomyCard(summaryState.primaryTaxonomy, strMap);
+            }
+
+            html += '</div>';
+            html += '</div>';
+            return html;
+        }
+
+        /**
+         * Render the evidence tab pane.
+         *
+         * @param {Object} summaryState Normalized summary state
+         * @param {Array} tabs Visible tabs
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML
+         */
+        function renderEvidencePane(summaryState, tabs, strMap) {
+            const isFirst = tabs[0].id === 'evidence';
+            let html = '<div class="dims-tab-pane dims-tab-pane-evidence' + (isFirst ? ' active' : '') + '"';
+            html += ' id="dims-tabpane-evidence-' + summaryState.comp.id + '" data-tab="evidence"';
+            html += ' role="tabpanel" aria-labelledby="dims-tab-evidence-' + summaryState.comp.id + '">';
+            html += renderEvidenceSlider(summaryState.ucs.evidence, strMap);
+            html += '</div>';
+            return html;
+        }
+
+        /**
+         * Render the lazy-loaded rules tab pane.
+         *
+         * @param {Object} summaryState Normalized summary state
+         * @param {Array} tabs Visible tabs
+         * @param {Object} strMap Language strings map
+         * @param {number} planId Plan ID
+         * @return {string} HTML
+         */
+        function renderRulesPane(summaryState, tabs, strMap, planId) {
+            const isFirst = tabs[0].id === 'rules';
+            let html = '<div class="dims-tab-pane dims-tab-pane-rules' + (isFirst ? ' active' : '') + '"';
+            html += ' id="dims-tabpane-rules-' + summaryState.comp.id + '" data-tab="rules"';
+            html += ' role="tabpanel" aria-labelledby="dims-tab-rules-' + summaryState.comp.id + '"';
+            html += ' data-competency-id="' + summaryState.comp.id + '"';
+            html += ' data-plan-id="' + planId + '">';
+            html += '<div class="dims-rules-loading" role="status" aria-live="polite">';
+            html += '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
+            html += '<span class="sr-only">' + escapeHtml(strMap.rulesTab) + '</span>';
+            html += '</div>';
+            html += '<div class="dims-rules-content" style="display:none;"></div>';
+            html += '</div>';
+            return html;
         }
 
         /**
@@ -528,8 +567,8 @@ define(
              * @param {boolean} setFocus Whether to move focus to the tab
              */
             function activateTab(btn, setFocus) {
-                var tabId = btn.dataset.tab;
-                var wrapper = btn.closest('.dims-tabs-wrapper');
+                const tabId = btn.dataset.tab;
+                const wrapper = btn.closest('.dims-tabs-wrapper');
                 if (!wrapper) {
                     return;
                 }
@@ -556,7 +595,7 @@ define(
                 }
 
                 // Activate corresponding pane.
-                var pane = wrapper.querySelector('.dims-tab-pane[data-tab="' + tabId + '"]');
+                const pane = wrapper.querySelector('.dims-tab-pane[data-tab="' + tabId + '"]');
                 if (pane) {
                     pane.classList.add('active');
                     refreshScrollableControls(pane);
@@ -575,13 +614,13 @@ define(
 
                 // Keyboard navigation: Arrow Left/Right, Home, End (ARIA Authoring Practices).
                 btn.addEventListener('keydown', function (e) {
-                    var wrapper = this.closest('.dims-tabs-wrapper');
+                    const wrapper = this.closest('.dims-tabs-wrapper');
                     if (!wrapper) {
                         return;
                     }
-                    var tabs = Array.from(wrapper.querySelectorAll('.dims-tab-btn'));
-                    var idx = tabs.indexOf(this);
-                    var newIdx = -1;
+                    const tabs = Array.from(wrapper.querySelectorAll('.dims-tab-btn'));
+                    const idx = tabs.indexOf(this);
+                    let newIdx = -1;
 
                     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                         newIdx = (idx + 1) % tabs.length;
@@ -611,7 +650,7 @@ define(
                 return;
             }
 
-            var refresh = function () {
+            const refresh = function () {
                 container.querySelectorAll('.dims-ev-slider-wrapper, .dims-courses-scroll-wrapper').forEach(function (wrapper) {
                     if (typeof wrapper._dimsUpdateArrows === 'function') {
                         wrapper._dimsUpdateArrows();
@@ -619,8 +658,8 @@ define(
                 });
             };
 
-            if (window.requestAnimationFrame) {
-                window.requestAnimationFrame(refresh);
+            if (globalThis.requestAnimationFrame) {
+                globalThis.requestAnimationFrame(refresh);
             } else {
                 refresh();
             }
@@ -639,16 +678,16 @@ define(
          * @param {Object} strMap Language strings map
          */
         function loadRulesTabIfNeeded(pane, strMap) {
-            var competencyId = parseInt(pane.dataset.competencyId, 10);
-            var cacheKey = competencyId + '-' + parseInt(pane.dataset.planId, 10);
+            const competencyId = Number.parseInt(pane.dataset.competencyId, 10);
+            const cacheKey = competencyId + '-' + Number.parseInt(pane.dataset.planId, 10);
             if (loadedRulesPanes.has(cacheKey)) {
                 return;
             }
             loadedRulesPanes.add(cacheKey);
 
-            var planId = parseInt(pane.dataset.planId, 10);
-            var loadingEl = pane.querySelector('.dims-rules-loading');
-            var contentEl = pane.querySelector('.dims-rules-content');
+            const planId = Number.parseInt(pane.dataset.planId, 10);
+            const loadingEl = pane.querySelector('.dims-rules-loading');
+            const contentEl = pane.querySelector('.dims-rules-content');
 
             if (!competencyId || !planId) {
                 if (loadingEl) {
@@ -657,17 +696,6 @@ define(
                 return;
             }
 
-            // Resolve taxonomy names from data attributes set during summary rendering.
-            var defaultTax = 'competency';
-            var map = strMap.taxonomyMap || {};
-            var fallback = map[defaultTax] || { singular: defaultTax, plural: defaultTax };
-            var parentKey = (pane.dataset.parentTaxonomy || defaultTax).trim();
-            var childKey = (pane.dataset.childTaxonomy || defaultTax).trim();
-            var rulesTaxonomy = {
-                singular: (map[parentKey] || fallback).singular,
-                plural: (map[childKey] || fallback).plural
-            };
-
             Ajax.call([{
                 methodname: 'local_dimensions_get_competency_rule_data',
                 args: {
@@ -675,14 +703,15 @@ define(
                     planid: planId
                 }
             }])[0].then(function (response) {
-                var data = JSON.parse(response);
+                const data = JSON.parse(response);
 
                 if (loadingEl) {
                     loadingEl.style.display = 'none';
                 }
                 if (contentEl) {
-                    contentEl.innerHTML = renderRulesSection(data, strMap, planId, rulesTaxonomy);
+                    contentEl.innerHTML = renderRulesSection(data, strMap, planId);
                     contentEl.style.display = 'block';
+                    initRulesFilters(contentEl);
                 }
             }).catch(function (error) {
                 if (loadingEl) {
@@ -699,22 +728,33 @@ define(
          * @param {Object} data The rule data from the webservice
          * @param {Object} strMap Language strings map
          * @param {number} planId The plan ID for building child links
-         * @param {Object} taxonomy Taxonomy info: { singular, plural }
          * @return {string} HTML for the rules section
          */
-        function renderRulesSection(data, strMap, planId, taxonomy) {
-            if (!data || !data.hasrule) {
+        function renderRulesSection(data, strMap, planId) {
+            if (!data?.hasrule) {
                 return '';
             }
 
-            var isPoints = data.ruletype === 'points';
-            var html = '<div class="dims-rules-section">';
+            const isPoints = data.ruletype === 'points';
+            const hasMissingMandatory = !!data.hasmissingmandatory;
+            const totalCount = Number.parseInt(data.childcount, 10) || 0;
+            const mandatoryCount = Number.parseInt(data.mandatorycount, 10) || 0;
+            let html = '<div class="dims-rules-section">';
+
+            html += renderRuleInfoBox(data, strMap);
 
             // === Progress header ===
             html += '<div class="dims-rules-progress-header">';
+            html += '<span class="dims-rules-progress-label-wrap">';
             html += '<span class="dims-rules-progress-label">' + escapeHtml(strMap.rulesProgress) + '</span>';
+            if (hasMissingMandatory) {
+                html += '<span class="dims-rules-progress-alert" aria-label="' + escapeHtml(strMap.rulesSrAlert) + '">';
+                html += '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>';
+                html += '</span>';
+            }
+            html += '</span>';
             if (isPoints) {
-                var earnedClass = data.earnedpoints > 0 ? ' dims-rules-earned-highlight' : '';
+                const earnedClass = data.earnedpoints > 0 ? ' dims-rules-earned-highlight' : '';
                 html += '<span class="dims-rules-progress-score">';
                 html += '<span class="dims-rules-earned' + earnedClass + '">' + data.earnedpoints + '</span>';
                 html += ' / ' + data.totalrequired + ' pts';
@@ -728,10 +768,10 @@ define(
             html += '</div>';
 
             // === Progress bar ===
-            var pct = data.totalrequired > 0
+            const pct = data.totalrequired > 0
                 ? Math.min(100, Math.round((data.earnedpoints / data.totalrequired) * 100))
                 : 0;
-            var srProgressText = strMap.rulesSrProgress
+            const srProgressText = strMap.rulesSrProgress
                 .replace('{$a->earned}', data.earnedpoints)
                 .replace('{$a->total}', data.totalrequired);
             html += '<div class="dims-rules-progress-bar">';
@@ -740,15 +780,22 @@ define(
             html += ' aria-valuemin="0"';
             html += ' aria-valuemax="' + data.totalrequired + '"';
             html += ' aria-label="' + escapeHtml(srProgressText) + '">';
-            html += '<div class="dims-rules-progress-fill" style="width: ' + pct + '%;"></div>';
+            html += '<div class="dims-rules-progress-fill' +
+                (hasMissingMandatory ? ' dims-rules-progress-fill-striped progress-bar-striped' : '') +
+                '" style="width: ' + pct + '%;"></div>';
             html += '</div>';
             html += '</div>';
 
-            // === Competency count ===
-            var countText = strMap.rulesTotalCompetencies
-                .replace('{$a->count}', data.childcount || 0)
-                .replace('{$a->taxonomy}', taxonomy ? taxonomy.plural : '');
-            html += '<div class="dims-rules-count text-muted">' + countText + '</div>';
+            // === Progress context ===
+            const countText = strMap.rulesTotalCompetencies.replace('{$a}', data.childcount || 0);
+            html += '<div class="dims-rules-progress-context' +
+                (hasMissingMandatory ? ' dims-rules-progress-context-alert' : ' text-muted') + '">';
+            html += escapeHtml(hasMissingMandatory ? strMap.rulesMissingMandatoryNotice : countText);
+            html += '</div>';
+
+            if (mandatoryCount > 0) {
+                html += renderRulesFilterTabs(strMap, totalCount, mandatoryCount);
+            }
 
             // === Children list ===
             // Children list as accessible list.
@@ -760,12 +807,9 @@ define(
                 html += '</ul>';
             }
 
-            // === Rule info box ===
-            html += renderRuleInfoBox(data, strMap, taxonomy);
-
             // === Submit evidence button ===
             if (data.enableevidencebutton && data.userid) {
-                var evidenceUrl = M.cfg.wwwroot + '/admin/tool/lp/user_evidence_list.php?userid=' + data.userid;
+                const evidenceUrl = M.cfg.wwwroot + '/admin/tool/lp/user_evidence_list.php?userid=' + data.userid;
                 html += '<div class="dims-rules-submit-wrapper">';
                 html += '<a href="' + escapeHtml(evidenceUrl) + '" class="dims-rules-submit-btn">';
                 html += escapeHtml(strMap.rulesSubmitEvidence);
@@ -787,40 +831,32 @@ define(
          * @return {string} HTML for the child card
          */
         function renderRulesChild(child, strMap, planId, isPoints) {
-            var html = '<li class="dims-rules-child-card">';
+            let cardClasses = 'dims-rules-child-card';
+            if (child.required) {
+                cardClasses += ' dims-rules-child-card-required';
+            }
+            let html = '<li class="' + cardClasses + '" data-required="' + (child.required ? 'true' : 'false') + '">';
 
             // Status icon with sr-only label.
             html += '<div class="dims-rules-child-icon-wrapper">';
+            const rulesIconUrls = {
+                proficient: M.util.image_url('status/rules-proficient', 'local_dimensions'),
+                inprogress: M.util.image_url('status/rules-inprogress', 'local_dimensions'),
+                todo: M.util.image_url('status/rules-todo', 'local_dimensions')
+            };
             if (child.isproficient) {
-                // Green check circle.
                 html += '<div class="dims-rules-child-icon dims-rules-icon-proficient">';
-                html += '<svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"';
-                html += ' focusable="false">';
-                html += '<circle cx="20" cy="20" r="20" fill="#28a745"/>';
-                html += '<path d="M12 20l5.5 5.5L28 14" stroke="#fff" stroke-width="3" ';
-                html += 'stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
-                html += '</svg>';
+                html += '<img class="dims-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.proficient || '') + '" alt="" aria-hidden="true">';
                 html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrProficient) + '</span>';
                 html += '</div>';
             } else if (child.hasgrade) {
-                // Orange circle (graded but not proficient).
                 html += '<div class="dims-rules-child-icon dims-rules-icon-inprogress">';
-                html += '<svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"';
-                html += ' focusable="false">';
-                html += '<circle cx="20" cy="20" r="18" stroke="#e8590c" stroke-width="3" fill="none"/>';
-                html += '</svg>';
+                html += '<img class="dims-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.inprogress || '') + '" alt="" aria-hidden="true">';
                 html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrInprogress) + '</span>';
                 html += '</div>';
             } else {
-                // Grey dots circle (not evaluated).
                 html += '<div class="dims-rules-child-icon dims-rules-icon-todo">';
-                html += '<svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"';
-                html += ' focusable="false">';
-                html += '<circle cx="20" cy="20" r="18" stroke="#868e96" stroke-width="2" fill="#f8f9fa"/>';
-                html += '<circle cx="13" cy="20" r="2.5" fill="#868e96"/>';
-                html += '<circle cx="20" cy="20" r="2.5" fill="#868e96"/>';
-                html += '<circle cx="27" cy="20" r="2.5" fill="#868e96"/>';
-                html += '</svg>';
+                html += '<img class="dims-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.todo || '') + '" alt="" aria-hidden="true">';
                 html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrTodo) + '</span>';
                 html += '</div>';
             }
@@ -828,7 +864,7 @@ define(
 
             // Content.
             html += '<div class="dims-rules-child-body">';
-            var childUrl = M.cfg.wwwroot + '/local/dimensions/view-plan.php?id=' + planId + '&competencyid=' + child.id;
+            const childUrl = M.cfg.wwwroot + '/local/dimensions/view-plan.php?id=' + planId + '&competencyid=' + child.id;
             html += '<a href="' + escapeHtml(childUrl) + '" class="dims-rules-child-name">';
             html += escapeHtml(child.shortname);
             html += '</a>';
@@ -870,61 +906,122 @@ define(
          *
          * @param {Object} data The rule data
          * @param {Object} strMap Language strings map
-         * @param {Object} taxonomy Taxonomy info: { singular, plural }
          * @return {string} HTML for the info box
          */
-        function renderRuleInfoBox(data, strMap, taxonomy) {
-            // Determine rule text based on ruletype + ruleoutcome.
-            // Outcomes: 1 = attach, 2 = complete, 3 = recommend.
-            var ruleText = '';
-            var outcome = parseInt(data.ruleoutcome, 10);
-            var taxSingular = taxonomy ? taxonomy.singular : '';
-            var taxPlural = taxonomy ? taxonomy.plural : '';
-
-            if (data.ruletype === 'points') {
-                if (outcome === 1) {
-                    ruleText = strMap.rulesPointsOutcomeAttach;
-                } else if (outcome === 2) {
-                    ruleText = strMap.rulesPointsOutcomeComplete;
-                } else if (outcome === 3) {
-                    ruleText = strMap.rulesPointsOutcomeRecommend;
-                }
-            } else {
-                if (outcome === 1) {
-                    ruleText = strMap.rulesAllOutcomeAttach;
-                } else if (outcome === 2) {
-                    ruleText = strMap.rulesAllOutcomeComplete;
-                } else if (outcome === 3) {
-                    ruleText = strMap.rulesAllOutcomeRecommend;
-                }
-            }
+        function renderRuleInfoBox(data, strMap) {
+            const ruleText = data.outcometext || '';
 
             if (!ruleText) {
                 return '';
             }
 
-            // Substitute taxonomy placeholder in outcome text (singular = parent taxonomy).
-            ruleText = ruleText.replace('{$a}', taxSingular);
-
-            var html = '<div class="dims-rules-info-box" role="note">';
+            let html = '<div class="dims-rules-info-box" role="note">';
             html += '<div class="dims-rules-info-icon">';
-            html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">';
-            html += '<circle cx="12" cy="12" r="12" fill="#fd7e14" opacity="0.15"/>';
-            html += '<path d="M9 12l2 2 4-4" stroke="#fd7e14" stroke-width="2" ';
-            html += 'stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
-            html += '</svg>';
+            html += '<i class="fa fa-info-circle" aria-hidden="true"></i>';
             html += '</div>';
             html += '<div class="dims-rules-info-text">';
-            html += '<strong>' + escapeHtml(strMap.rulesLabel) + '</strong> ' + escapeHtml(ruleText);
-            if (data.hasrequired) {
-                // Substitute taxonomy placeholder in required warning (plural = child taxonomy).
-                var reqWarning = strMap.rulesRequiredWarning.replace('{$a}', taxPlural);
-                html += ' <strong>' + escapeHtml(reqWarning) + '</strong>';
+            html += '<div class="dims-rules-info-title">' + escapeHtml(strMap.rulesInfoTitle) + '</div>';
+            html += '<div class="dims-rules-info-description">' + escapeHtml(ruleText) + '</div>';
+            if (data.hasrequired && data.requiredwarningtext) {
+                html += '<div class="dims-rules-info-note"><strong>' + escapeHtml(data.requiredwarningtext) + '</strong></div>';
             }
             html += '</div>';
             html += '</div>';
 
             return html;
+        }
+
+        /**
+         * Render local pills to filter rule items.
+         *
+         * @param {Object} strMap Language strings map
+         * @param {number} totalCount Total item count
+         * @param {number} mandatoryCount Required item count
+         * @return {string} HTML for filter tabs
+         */
+        function renderRulesFilterTabs(strMap, totalCount, mandatoryCount) {
+            let html = '<div class="dims-rules-filter-wrapper">';
+            html += '<div class="dims-rules-filter-tabs dims-filter-tabs" role="tablist"';
+            html += ' aria-label="' + escapeHtml(strMap.rulesFilterLabel) + '">';
+            html += '<button type="button" class="dims-rules-filter-tab dims-filter-tab active"';
+            html += ' data-filter="all" role="tab" aria-selected="true">';
+            html += escapeHtml(strMap.rulesFilterAll);
+            html += '<span class="dims-filter-count">' + totalCount + '</span>';
+            html += '</button>';
+            html += '<button type="button" class="dims-rules-filter-tab dims-filter-tab"';
+            html += ' data-filter="required" role="tab" aria-selected="false">';
+            html += escapeHtml(strMap.rulesFilterRequired);
+            html += '<span class="dims-filter-count">' + mandatoryCount + '</span>';
+            html += '</button>';
+            html += '</div>';
+            html += '</div>';
+
+            return html;
+        }
+
+        /**
+         * Attach local filter listeners to a loaded Rules pane.
+         *
+         * @param {HTMLElement} container Rules pane content container
+         */
+        function initRulesFilters(container) {
+            if (!container) {
+                return;
+            }
+
+            container.querySelectorAll('.dims-rules-filter-tabs').forEach(function (tablist) {
+                const buttons = Array.from(tablist.querySelectorAll('.dims-rules-filter-tab'));
+                const section = tablist.closest('.dims-rules-section');
+                if (!section || buttons.length === 0) {
+                    return;
+                }
+
+                const cards = Array.from(section.querySelectorAll('.dims-rules-child-card'));
+
+                const applyFilter = function (filter, focusButton) {
+                    buttons.forEach(function (button) {
+                        const isActive = button.dataset.filter === filter;
+                        button.classList.toggle('active', isActive);
+                        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                        if (focusButton && isActive) {
+                            button.focus();
+                        }
+                    });
+
+                    cards.forEach(function (card) {
+                        const showCard = filter === 'all' || card.dataset.required === 'true';
+                        card.hidden = !showCard;
+                    });
+                };
+
+                buttons.forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        applyFilter(this.dataset.filter, false);
+                    });
+
+                    button.addEventListener('keydown', function (e) {
+                        const index = buttons.indexOf(this);
+                        let nextIndex = -1;
+
+                        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                            nextIndex = (index + 1) % buttons.length;
+                        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                            nextIndex = (index - 1 + buttons.length) % buttons.length;
+                        } else if (e.key === 'Home') {
+                            nextIndex = 0;
+                        } else if (e.key === 'End') {
+                            nextIndex = buttons.length - 1;
+                        }
+
+                        if (nextIndex >= 0) {
+                            e.preventDefault();
+                            applyFilter(buttons[nextIndex].dataset.filter, true);
+                        }
+                    });
+                });
+
+                applyFilter('all', false);
+            });
         }
 
         /**
@@ -948,8 +1045,8 @@ define(
             html += '<div class="dims-ev-slider-track">';
 
             evidence.forEach(function (ev, index) {
-                var typeInfo = getEvidenceTypeInfo(ev, strMap);
-                var hasExtraDetails = ev.note || ev.url || (ev.grade && ev.gradename && ev.gradename !== '-');
+                const typeInfo = getEvidenceTypeInfo(ev, strMap);
+                const hasExtraDetails = ev.note || ev.url || (ev.grade && ev.gradename && ev.gradename !== '-');
 
                 html += '<div class="dims-ev-card" data-evidence-index="' + index + '">';
 
@@ -967,10 +1064,10 @@ define(
                 }
 
                 // Author + date (hidden for manual override evidence — details available in modal).
-                var isManualOverride = typeInfo.colorClass === 'dims-evidence-manual';
+                const isManualOverride = typeInfo.colorClass === 'dims-evidence-manual';
                 if (!isManualOverride && ev.usermodified && ev.actionuser) {
-                    var authorName = escapeHtml(ev.actionuser.fullname || '');
-                    var authorProfileUrl = M.cfg.wwwroot + '/user/profile.php?id=' + ev.usermodified;
+                    const authorName = escapeHtml(ev.actionuser.fullname || '');
+                    const authorProfileUrl = M.cfg.wwwroot + '/user/profile.php?id=' + ev.usermodified;
                     html += '<div class="dims-ev-meta">';
                     html += '<i class="fa fa-user" aria-hidden="true"></i> ';
                     html += '<a href="' + escapeHtml(authorProfileUrl) + '" target="_blank">';
@@ -1028,17 +1125,18 @@ define(
          */
         function isGradeProficient(gradeValue, scaleConfig) {
             try {
-                var config = JSON.parse(scaleConfig);
+                const config = JSON.parse(scaleConfig);
                 if (!Array.isArray(config)) {
                     return false;
                 }
                 // gradeValue is 1-based, array is 0-based.
-                var index = parseInt(gradeValue, 10) - 1;
+                const index = Number.parseInt(gradeValue, 10) - 1;
                 if (index >= 0 && index < config.length) {
-                    return !!(config[index].proficient && parseInt(config[index].proficient, 10) === 1);
+                    return !!(config[index].proficient && Number.parseInt(config[index].proficient, 10) === 1);
                 }
             } catch (e) {
-                // Invalid JSON — fall back to not proficient.
+                Log.warn('[local_dimensions] Invalid scale configuration JSON.');
+                return false;
             }
             return false;
         }
@@ -1051,19 +1149,19 @@ define(
          * @param {string|null} scaleConfig The scale configuration JSON string from the competency
          */
         function openEvidenceDetailModal(ev, strMap, scaleConfig) {
-            var typeInfo = getEvidenceTypeInfo(ev, strMap);
-            var hasNote = !!(ev.note && ev.note.trim());
-            var hasUrl = !!ev.url;
-            var hasGrade = !!(ev.grade && ev.gradename && ev.gradename !== '-');
-            var hasActionUser = !!(ev.actionuser && ev.actionuser.fullname);
+            const typeInfo = getEvidenceTypeInfo(ev, strMap);
+            const hasNote = !!ev.note?.trim();
+            const hasUrl = !!ev.url;
+            const hasGrade = !!(ev.grade && ev.gradename && ev.gradename !== '-');
+            const hasActionUser = !!ev.actionuser?.fullname;
 
             // Determine if the grade value is considered proficient using the scale configuration.
-            var gradeProficient = false;
+            let gradeProficient = false;
             if (hasGrade && scaleConfig) {
                 gradeProficient = isGradeProficient(ev.grade, scaleConfig);
             }
 
-            var context = {
+            const context = {
                 typelabel: typeInfo.label,
                 typeicon: typeInfo.icon,
                 colorclass: typeInfo.colorClass,
@@ -1107,6 +1205,299 @@ define(
         }
 
         /**
+         * Return whether a horizontal track should expose scroll controls.
+         *
+         * @param {number} itemCount Number of visible cards in the track
+         * @return {boolean}
+         */
+        function shouldShowScrollableControls(itemCount) {
+            const isMobile = !!globalThis.matchMedia?.('(max-width: 575.98px)')?.matches;
+            if (itemCount <= 1) {
+                return false;
+            }
+            return itemCount > 2 || isMobile;
+        }
+
+        /**
+         * Get the scroll offset of a card relative to its track.
+         *
+         * @param {HTMLElement} track Scroll track element
+         * @param {HTMLElement} card Card element
+         * @return {number}
+         */
+        function getTrackCardOffset(track, card) {
+            const trackRect = track.getBoundingClientRect();
+            const cardRect = card.getBoundingClientRect();
+            return (cardRect.left - trackRect.left) + track.scrollLeft;
+        }
+
+        /**
+         * Return all card offsets for a scroll track.
+         *
+         * @param {HTMLElement} track Scroll track element
+         * @param {string} cardSelector Selector for cards inside the track
+         * @return {number[]}
+         */
+        function getTrackCardOffsets(track, cardSelector) {
+            return Array.prototype.map.call(track.querySelectorAll(cardSelector), function (card) {
+                return getTrackCardOffset(track, card);
+            });
+        }
+
+        /**
+         * Cubic ease-in-out timing function.
+         *
+         * @param {number} progress Value between 0 and 1
+         * @return {number}
+         */
+        function easeInOutCubic(progress) {
+            if (progress < 0.5) {
+                return 4 * progress * progress * progress;
+            }
+            return 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        }
+
+        /**
+         * Animate a track to a target scroll position.
+         *
+         * @param {HTMLElement} track Scroll track element
+         * @param {number} targetLeft Target scrollLeft value
+         * @param {Function} onComplete Callback after scroll settles
+         */
+        function animateTrackScroll(track, targetLeft, onComplete) {
+            if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+                track.classList.remove('dims-animating');
+                track.scrollLeft = targetLeft;
+                onComplete();
+                return;
+            }
+
+            const startLeft = track.scrollLeft;
+            const distance = targetLeft - startLeft;
+            if (Math.abs(distance) < 1) {
+                track.classList.remove('dims-animating');
+                track.scrollLeft = targetLeft;
+                onComplete();
+                return;
+            }
+
+            track.classList.add('dims-animating');
+
+            if (track._dimsAnimFrame && globalThis.cancelAnimationFrame) {
+                globalThis.cancelAnimationFrame(track._dimsAnimFrame);
+            }
+
+            const duration = Math.min(520, Math.max(300, Math.abs(distance) * 1.2));
+            let startedAt = null;
+
+            const step = function (timestamp) {
+                if (startedAt === null) {
+                    startedAt = timestamp;
+                }
+                const elapsed = timestamp - startedAt;
+                const progress = Math.min(1, elapsed / duration);
+                const eased = easeInOutCubic(progress);
+                track.scrollLeft = startLeft + (distance * eased);
+
+                if (progress < 1) {
+                    track._dimsAnimFrame = globalThis.requestAnimationFrame(step);
+                    return;
+                }
+
+                track.scrollLeft = targetLeft;
+                track._dimsAnimFrame = null;
+                if (globalThis.requestAnimationFrame) {
+                    globalThis.requestAnimationFrame(function () {
+                        track.classList.remove('dims-animating');
+                    });
+                } else {
+                    track.classList.remove('dims-animating');
+                }
+                onComplete();
+            };
+
+            if (globalThis.requestAnimationFrame) {
+                track._dimsAnimFrame = globalThis.requestAnimationFrame(step);
+            } else {
+                track.scrollLeft = targetLeft;
+                track.classList.remove('dims-animating');
+                onComplete();
+            }
+        }
+
+        /**
+         * Scroll one card into view when needed.
+         *
+         * @param {HTMLElement} track Scroll track element
+         * @param {HTMLElement} card Card element
+         * @param {number} edgeThreshold Edge tolerance in pixels
+         * @param {Function} onComplete Callback after scrolling
+         */
+        function scrollTrackCardIntoView(track, card, edgeThreshold, onComplete) {
+            const cardStart = getTrackCardOffset(track, card);
+            const cardEnd = cardStart + card.offsetWidth;
+            const viewStart = track.scrollLeft;
+            const viewEnd = viewStart + track.clientWidth;
+
+            if (cardStart >= viewStart + edgeThreshold && cardEnd <= viewEnd - edgeThreshold) {
+                return;
+            }
+
+            const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+            const targetLeft = Math.min(maxScroll, Math.max(0, cardStart));
+            animateTrackScroll(track, targetLeft, onComplete);
+        }
+
+        /**
+         * Scroll to the next or previous card in a track.
+         *
+         * @param {HTMLElement} track Scroll track element
+         * @param {string} cardSelector Selector for cards inside the track
+         * @param {number} edgeThreshold Edge tolerance in pixels
+         * @param {number} direction Positive for next, negative for previous
+         * @param {Function} onComplete Callback after scrolling
+         */
+        function scrollToTrackAdjacentCard(track, cardSelector, edgeThreshold, direction, onComplete) {
+            const offsets = getTrackCardOffsets(track, cardSelector);
+            if (!offsets.length) {
+                return;
+            }
+
+            const current = track.scrollLeft;
+            let target = current;
+
+            if (direction > 0) {
+                for (const offset of offsets) {
+                    if (offset > current + edgeThreshold) {
+                        target = offset;
+                        break;
+                    }
+                }
+                if (target === current) {
+                    target = offsets.at(-1);
+                }
+            } else {
+                target = 0;
+                for (let index = offsets.length - 1; index >= 0; index--) {
+                    if (offsets[index] < current - edgeThreshold) {
+                        target = offsets[index];
+                        break;
+                    }
+                }
+            }
+
+            const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+            const targetLeft = Math.min(maxScroll, Math.max(0, target));
+            animateTrackScroll(track, targetLeft, onComplete);
+        }
+
+        /**
+         * Update scroll arrows and wrapper state for a horizontal track.
+         *
+         * @param {HTMLElement} wrapper Scroll wrapper
+         * @param {HTMLElement} track Scroll track
+         * @param {HTMLElement|null} prevBtn Previous button
+         * @param {HTMLElement|null} nextBtn Next button
+         * @param {number} edgeThreshold Edge tolerance in pixels
+         * @param {boolean} showControls Whether controls should be shown
+         */
+        function updateScrollableArrows(wrapper, track, prevBtn, nextBtn, edgeThreshold, showControls) {
+            const scrollLeft = track.scrollLeft;
+            const maxScroll = track.scrollWidth - track.clientWidth;
+
+            if (!showControls) {
+                wrapper.classList.add('dims-controls-hidden');
+                if (prevBtn) {
+                    prevBtn.style.display = 'none';
+                }
+                if (nextBtn) {
+                    nextBtn.style.display = 'none';
+                }
+                return;
+            }
+
+            wrapper.classList.remove('dims-controls-hidden');
+
+            const atStart = scrollLeft <= edgeThreshold;
+            const atEnd = scrollLeft >= maxScroll - edgeThreshold;
+            const fits = maxScroll <= edgeThreshold;
+
+            if (prevBtn) {
+                prevBtn.style.display = '';
+                prevBtn.classList.toggle('disabled', fits || atStart);
+            }
+
+            if (nextBtn) {
+                nextBtn.style.display = '';
+                nextBtn.classList.toggle('disabled', fits || atEnd);
+            }
+        }
+
+        /**
+         * Initialize a reusable horizontal scroll track.
+         *
+         * @param {Object} config Track configuration
+         */
+        function initScrollableTrack(config) {
+            const wrapper = config.wrapper;
+            const track = config.track;
+            const prevBtn = config.prevBtn;
+            const nextBtn = config.nextBtn;
+            const cardSelector = config.cardSelector;
+            const itemCount = config.itemCount;
+            const edgeThreshold = config.edgeThreshold || 2;
+            const updateArrows = function () {
+                updateScrollableArrows(
+                    wrapper,
+                    track,
+                    prevBtn,
+                    nextBtn,
+                    edgeThreshold,
+                    shouldShowScrollableControls(itemCount)
+                );
+            };
+
+            wrapper.classList.add('dims-controls-hidden');
+            if (prevBtn) {
+                prevBtn.style.display = 'none';
+                prevBtn.addEventListener('click', function () {
+                    scrollToTrackAdjacentCard(track, cardSelector, edgeThreshold, -1, updateArrows);
+                });
+            }
+            if (nextBtn) {
+                nextBtn.style.display = 'none';
+                nextBtn.addEventListener('click', function () {
+                    scrollToTrackAdjacentCard(track, cardSelector, edgeThreshold, 1, updateArrows);
+                });
+            }
+
+            track.querySelectorAll(cardSelector).forEach(function (card) {
+                card.addEventListener('click', function (event) {
+                    if (event.target.closest('a, button')) {
+                        return;
+                    }
+                    scrollTrackCardIntoView(track, card, edgeThreshold, updateArrows);
+                });
+            });
+
+            track.addEventListener('scroll', updateArrows);
+            wrapper._dimsUpdateArrows = updateArrows;
+            updateArrows();
+
+            if (globalThis.requestAnimationFrame) {
+                globalThis.requestAnimationFrame(updateArrows);
+            }
+            setTimeout(updateArrows, 120);
+
+            if (typeof ResizeObserver === 'function') {
+                const resizeObserver = new ResizeObserver(updateArrows);
+                resizeObserver.observe(track);
+            }
+
+            enableDragScroll(track);
+        }
+
+        /**
          * Initialize evidence slider scroll and arrow logic.
          *
          * @param {HTMLElement} contentEl The content container element
@@ -1115,306 +1506,37 @@ define(
          * @param {string|null} scaleConfig The scale configuration JSON string from the competency
          */
         function initSliders(contentEl, evidenceData, strMap, scaleConfig) {
-            var sliders = contentEl.querySelectorAll('.dims-ev-slider-wrapper');
+            const sliders = contentEl.querySelectorAll('.dims-ev-slider-wrapper');
 
             sliders.forEach(function (wrapper) {
-                var track = wrapper.querySelector('.dims-ev-slider-track');
-                var prevBtn = wrapper.querySelector('.dims-ev-slider-prev');
-                var nextBtn = wrapper.querySelector('.dims-ev-slider-next');
+                const track = wrapper.querySelector('.dims-ev-slider-track');
+                const prevBtn = wrapper.querySelector('.dims-ev-slider-prev');
+                const nextBtn = wrapper.querySelector('.dims-ev-slider-next');
 
                 if (!track) {
                     return;
                 }
 
-                var evidenceCount = parseInt(wrapper.dataset.evidenceCount, 10)
+                const evidenceCount = Number.parseInt(wrapper.dataset.evidenceCount, 10)
                     || track.querySelectorAll('.dims-ev-card').length;
-                var edgeThreshold = 2;
-                wrapper.classList.add('dims-controls-hidden');
-                if (prevBtn) {
-                    prevBtn.style.display = 'none';
-                }
-                if (nextBtn) {
-                    nextBtn.style.display = 'none';
-                }
-
-                /**
-                 * Determine whether slider controls should be visible.
-                 *
-                 * @return {boolean} True if controls should be shown.
-                 */
-                function shouldShowControls() {
-                    var isMobile = window.matchMedia && window.matchMedia('(max-width: 575.98px)').matches;
-                    if (evidenceCount <= 1) {
-                        return false;
-                    }
-                    return evidenceCount > 2 || isMobile;
-                }
-
-                /**
-                 * Get the scroll offset of a card relative to the track.
-                 *
-                 * @param {HTMLElement} card The card element.
-                 * @return {number} The offset in pixels.
-                 */
-                function getCardOffset(card) {
-                    var trackRect = track.getBoundingClientRect();
-                    var cardRect = card.getBoundingClientRect();
-                    return (cardRect.left - trackRect.left) + track.scrollLeft;
-                }
-
-                /**
-                 * Get scroll offsets for all evidence cards.
-                 *
-                 * @return {number[]} Array of card offsets.
-                 */
-                function getCardOffsets() {
-                    return Array.prototype.map.call(track.querySelectorAll('.dims-ev-card'), function (card) {
-                        return getCardOffset(card);
-                    });
-                }
-
-                /**
-                 * Cubic ease-in-out timing function.
-                 *
-                 * @param {number} progress Value between 0 and 1.
-                 * @return {number} Eased value.
-                 */
-                function easeInOutCubic(progress) {
-                    if (progress < 0.5) {
-                        return 4 * progress * progress * progress;
-                    }
-                    return 1 - Math.pow(-2 * progress + 2, 3) / 2;
-                }
-
-                /**
-                 * Animate the slider track scroll to a target position.
-                 *
-                 * @param {number} targetLeft Target scrollLeft value.
-                 */
-                function animateTrackScroll(targetLeft) {
-                    // Respect reduced-motion users.
-                    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                        track.classList.remove('dims-animating');
-                        track.scrollLeft = targetLeft;
-                        return;
-                    }
-
-                    var startLeft = track.scrollLeft;
-                    var distance = targetLeft - startLeft;
-                    if (Math.abs(distance) < 1) {
-                        track.classList.remove('dims-animating');
-                        track.scrollLeft = targetLeft;
-                        return;
-                    }
-
-                    track.classList.add('dims-animating');
-
-                    if (track._dimsAnimFrame && window.cancelAnimationFrame) {
-                        window.cancelAnimationFrame(track._dimsAnimFrame);
-                    }
-
-                    var duration = Math.min(520, Math.max(300, Math.abs(distance) * 1.2));
-                    var startedAt = null;
-
-                    /**
-                     * Animation frame step callback.
-                     *
-                     * @param {number} timestamp The current animation timestamp.
-                     */
-                    function step(timestamp) {
-                        if (startedAt === null) {
-                            startedAt = timestamp;
-                        }
-                        var elapsed = timestamp - startedAt;
-                        var progress = Math.min(1, elapsed / duration);
-                        var eased = easeInOutCubic(progress);
-                        track.scrollLeft = startLeft + (distance * eased);
-
-                        if (progress < 1) {
-                            track._dimsAnimFrame = window.requestAnimationFrame(step);
-                        } else {
-                            track.scrollLeft = targetLeft;
-                            track._dimsAnimFrame = null;
-                            if (window.requestAnimationFrame) {
-                                window.requestAnimationFrame(function () {
-                                    track.classList.remove('dims-animating');
-                                });
-                            } else {
-                                track.classList.remove('dims-animating');
-                            }
-                            updateArrows();
-                        }
-                    }
-
-                    if (window.requestAnimationFrame) {
-                        track._dimsAnimFrame = window.requestAnimationFrame(step);
-                    } else {
-                        track.scrollLeft = targetLeft;
-                        track.classList.remove('dims-animating');
-                    }
-                }
-
-                /**
-                 * Scroll a card into view if it is not fully visible.
-                 *
-                 * @param {HTMLElement} card The card element.
-                 */
-                function scrollCardIntoView(card) {
-                    var cardStart = getCardOffset(card);
-                    var cardEnd = cardStart + card.offsetWidth;
-                    var viewStart = track.scrollLeft;
-                    var viewEnd = viewStart + track.clientWidth;
-
-                    if (cardStart >= viewStart + edgeThreshold && cardEnd <= viewEnd - edgeThreshold) {
-                        return;
-                    }
-
-                    var maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
-                    var targetLeft = Math.min(maxScroll, Math.max(0, cardStart));
-                    animateTrackScroll(targetLeft);
-                }
-
-                /**
-                 * Scroll to the next or previous card.
-                 *
-                 * @param {number} direction Positive for next, negative for previous.
-                 */
-                function scrollToAdjacentCard(direction) {
-                    var offsets = getCardOffsets();
-                    if (!offsets.length) {
-                        return;
-                    }
-
-                    var current = track.scrollLeft;
-                    var target = current;
-
-                    if (direction > 0) {
-                        for (var i = 0; i < offsets.length; i++) {
-                            if (offsets[i] > current + edgeThreshold) {
-                                target = offsets[i];
-                                break;
-                            }
-                        }
-                        if (target === current) {
-                            target = offsets[offsets.length - 1];
-                        }
-                    } else {
-                        target = 0;
-                        for (var j = offsets.length - 1; j >= 0; j--) {
-                            if (offsets[j] < current - edgeThreshold) {
-                                target = offsets[j];
-                                break;
-                            }
-                        }
-                    }
-
-                    var maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
-                    var targetLeft = Math.min(maxScroll, Math.max(0, target));
-                    animateTrackScroll(targetLeft);
-                }
-
-                /**
-                 * Update the visibility and state of slider arrow buttons.
-                 */
-                function updateArrows() {
-                    var scrollLeft = track.scrollLeft;
-                    var maxScroll = track.scrollWidth - track.clientWidth;
-
-                    if (!shouldShowControls()) {
-                        wrapper.classList.add('dims-controls-hidden');
-                        if (prevBtn) {
-                            prevBtn.style.display = 'none';
-                        }
-                        if (nextBtn) {
-                            nextBtn.style.display = 'none';
-                        }
-                        return;
-                    }
-                    wrapper.classList.remove('dims-controls-hidden');
-
-                    // If all content fits, hide both arrows entirely.
-                    if (maxScroll <= edgeThreshold) {
-                        if (prevBtn) {
-                            prevBtn.style.display = '';
-                            prevBtn.classList.add('disabled');
-                        }
-                        if (nextBtn) {
-                            nextBtn.style.display = '';
-                            nextBtn.classList.add('disabled');
-                        }
-                        return;
-                    }
-
-                    if (prevBtn) {
-                        prevBtn.style.display = '';
-                        if (scrollLeft <= edgeThreshold) {
-                            prevBtn.classList.add('disabled');
-                        } else {
-                            prevBtn.classList.remove('disabled');
-                        }
-                    }
-
-                    if (nextBtn) {
-                        nextBtn.style.display = '';
-                        if (scrollLeft >= maxScroll - edgeThreshold) {
-                            nextBtn.classList.add('disabled');
-                        } else {
-                            nextBtn.classList.remove('disabled');
-                        }
-                    }
-                }
-
-                // Expose updater so tabs can refresh controls after showing hidden panes.
-                wrapper._dimsUpdateArrows = updateArrows;
-
-                if (prevBtn) {
-                    prevBtn.addEventListener('click', function () {
-                        scrollToAdjacentCard(-1);
-                    });
-                }
-
-                if (nextBtn) {
-                    nextBtn.addEventListener('click', function () {
-                        scrollToAdjacentCard(1);
-                    });
-                }
-
-                track.querySelectorAll('.dims-ev-card').forEach(function (card) {
-                    card.addEventListener('click', function (event) {
-                        if (event.target.closest('a, button')) {
-                            return;
-                        }
-                        scrollCardIntoView(card);
-                    });
+                initScrollableTrack({
+                    wrapper: wrapper,
+                    track: track,
+                    prevBtn: prevBtn,
+                    nextBtn: nextBtn,
+                    cardSelector: '.dims-ev-card',
+                    itemCount: evidenceCount
                 });
-
-                track.addEventListener('scroll', updateArrows);
-
-                // Initial checks: immediate + next frame + delayed safety pass.
-                updateArrows();
-                if (window.requestAnimationFrame) {
-                    window.requestAnimationFrame(updateArrows);
-                }
-                setTimeout(updateArrows, 120);
-
-                // Recalculate when size changes (e.g., tab becomes visible).
-                if (typeof ResizeObserver === 'function') {
-                    var resizeObserver = new ResizeObserver(updateArrows);
-                    resizeObserver.observe(track);
-                }
-
-                // Enable drag scrolling.
-                enableDragScroll(track);
 
                 // Evidence detail button handler — opens modal with full evidence info.
                 wrapper.addEventListener('click', function (e) {
-                    var btn = e.target.closest('.dims-ev-detail-btn');
+                    const btn = e.target.closest('.dims-ev-detail-btn');
                     if (!btn) {
                         return;
                     }
                     e.stopPropagation();
-                    var idx = parseInt(btn.dataset.evidenceIndex, 10);
-                    if (!isNaN(idx) && evidenceData && evidenceData[idx]) {
+                    const idx = Number.parseInt(btn.dataset.evidenceIndex, 10);
+                    if (!Number.isNaN(idx) && evidenceData?.[idx]) {
                         openEvidenceDetailModal(evidenceData[idx], strMap, scaleConfig);
                     }
                 });
@@ -1427,12 +1549,12 @@ define(
          * @param {HTMLElement} el The element to enable drag scrolling on
          */
         function enableDragScroll(el) {
-            var isDown = false;
-            var startX;
-            var scrollLeft;
-            var hasDragged = false;
-            var suppressNextClick = false;
-            var dragThreshold = 6;
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+            let hasDragged = false;
+            let suppressNextClick = false;
+            const dragThreshold = 6;
 
             el.addEventListener('mousedown', function (e) {
                 // Ignore clicks on links/buttons.
@@ -1468,8 +1590,8 @@ define(
                 if (!isDown) {
                     return;
                 }
-                var x = e.pageX - el.offsetLeft;
-                var delta = x - startX;
+                const x = e.pageX - el.offsetLeft;
+                const delta = x - startX;
                 if (Math.abs(delta) > dragThreshold) {
                     hasDragged = true;
                 }
@@ -1477,7 +1599,7 @@ define(
                     return;
                 }
                 e.preventDefault();
-                var walk = delta * 1.5;
+                const walk = delta * 1.5;
                 el.scrollLeft = scrollLeft - walk;
             });
 
@@ -1515,7 +1637,7 @@ define(
             courses.forEach(function (course) {
                 const courseUrl = M.cfg.wwwroot + '/course/view.php?id=' + course.id;
                 const courseName = course.fullname || course.shortname || '';
-                const progress = parseInt(course.progress, 10) || 0;
+                const progress = Number.parseInt(course.progress, 10) || 0;
                 const hasImage = course.courseimage && course.courseimage.trim() !== '';
 
                 html += '<div class="dims-course-card-lg">';
@@ -1527,7 +1649,7 @@ define(
                     html += '</div>';
                 } else {
                     // Gradient placeholder with initials.
-                    var initials = getInitials(courseName);
+                    const initials = getInitials(courseName);
                     html += '<div class="dims-course-img dims-course-img-placeholder">';
                     html += '<span>' + escapeHtml(initials) + '</span>';
                     html += '</div>';
@@ -1581,291 +1703,27 @@ define(
          * @param {HTMLElement} contentEl The content container element
          */
         function initCourseScroll(contentEl) {
-            var wrappers = contentEl.querySelectorAll('.dims-courses-scroll-wrapper');
+            const wrappers = contentEl.querySelectorAll('.dims-courses-scroll-wrapper');
 
             wrappers.forEach(function (wrapper) {
-                var track = wrapper.querySelector('.dims-courses-scroll');
-                var prevBtn = wrapper.querySelector('.dims-scroll-prev');
-                var nextBtn = wrapper.querySelector('.dims-scroll-next');
+                const track = wrapper.querySelector('.dims-courses-scroll');
+                const prevBtn = wrapper.querySelector('.dims-scroll-prev');
+                const nextBtn = wrapper.querySelector('.dims-scroll-next');
 
                 if (!track) {
                     return;
                 }
 
-                var courseCount = parseInt(wrapper.dataset.courseCount, 10)
+                const courseCount = Number.parseInt(wrapper.dataset.courseCount, 10)
                     || track.querySelectorAll('.dims-course-card-lg').length;
-                var edgeThreshold = 2;
-                wrapper.classList.add('dims-controls-hidden');
-                if (prevBtn) {
-                    prevBtn.style.display = 'none';
-                }
-                if (nextBtn) {
-                    nextBtn.style.display = 'none';
-                }
-
-                /**
-                 * Determine whether course scroll controls should be visible.
-                 *
-                 * @return {boolean} True if controls should be shown.
-                 */
-                function shouldShowControls() {
-                    var isMobile = window.matchMedia && window.matchMedia('(max-width: 575.98px)').matches;
-                    if (courseCount <= 1) {
-                        return false;
-                    }
-                    return courseCount > 2 || isMobile;
-                }
-
-                /**
-                 * Get the scroll offset of a course card relative to the track.
-                 *
-                 * @param {HTMLElement} card The card element.
-                 * @return {number} The offset in pixels.
-                 */
-                function getCardOffset(card) {
-                    var trackRect = track.getBoundingClientRect();
-                    var cardRect = card.getBoundingClientRect();
-                    return (cardRect.left - trackRect.left) + track.scrollLeft;
-                }
-
-                /**
-                 * Get scroll offsets for all course cards.
-                 *
-                 * @return {number[]} Array of card offsets.
-                 */
-                function getCardOffsets() {
-                    return Array.prototype.map.call(track.querySelectorAll('.dims-course-card-lg'), function (card) {
-                        return getCardOffset(card);
-                    });
-                }
-
-                /**
-                 * Cubic ease-in-out timing function for course scroll.
-                 *
-                 * @param {number} progress Value between 0 and 1.
-                 * @return {number} Eased value.
-                 */
-                function easeInOutCubic(progress) {
-                    if (progress < 0.5) {
-                        return 4 * progress * progress * progress;
-                    }
-                    return 1 - Math.pow(-2 * progress + 2, 3) / 2;
-                }
-
-                /**
-                 * Animate the course track scroll to a target position.
-                 *
-                 * @param {number} targetLeft Target scrollLeft value.
-                 */
-                function animateTrackScroll(targetLeft) {
-                    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                        track.classList.remove('dims-animating');
-                        track.scrollLeft = targetLeft;
-                        return;
-                    }
-
-                    var startLeft = track.scrollLeft;
-                    var distance = targetLeft - startLeft;
-                    if (Math.abs(distance) < 1) {
-                        track.classList.remove('dims-animating');
-                        track.scrollLeft = targetLeft;
-                        return;
-                    }
-
-                    track.classList.add('dims-animating');
-
-                    if (track._dimsAnimFrame && window.cancelAnimationFrame) {
-                        window.cancelAnimationFrame(track._dimsAnimFrame);
-                    }
-
-                    var duration = Math.min(520, Math.max(300, Math.abs(distance) * 1.2));
-                    var startedAt = null;
-
-                    /**
-                     * Animation frame step callback.
-                     *
-                     * @param {number} timestamp The current animation timestamp.
-                     */
-                    function step(timestamp) {
-                        if (startedAt === null) {
-                            startedAt = timestamp;
-                        }
-                        var elapsed = timestamp - startedAt;
-                        var progress = Math.min(1, elapsed / duration);
-                        var eased = easeInOutCubic(progress);
-                        track.scrollLeft = startLeft + (distance * eased);
-
-                        if (progress < 1) {
-                            track._dimsAnimFrame = window.requestAnimationFrame(step);
-                        } else {
-                            track.scrollLeft = targetLeft;
-                            track._dimsAnimFrame = null;
-                            if (window.requestAnimationFrame) {
-                                window.requestAnimationFrame(function () {
-                                    track.classList.remove('dims-animating');
-                                });
-                            } else {
-                                track.classList.remove('dims-animating');
-                            }
-                            updateArrows();
-                        }
-                    }
-
-                    if (window.requestAnimationFrame) {
-                        track._dimsAnimFrame = window.requestAnimationFrame(step);
-                    } else {
-                        track.scrollLeft = targetLeft;
-                        track.classList.remove('dims-animating');
-                    }
-                }
-
-                /**
-                 * Scroll to the next or previous course card.
-                 *
-                 * @param {number} direction Positive for next, negative for previous.
-                 */
-                function scrollToAdjacentCard(direction) {
-                    var offsets = getCardOffsets();
-                    if (!offsets.length) {
-                        return;
-                    }
-
-                    var current = track.scrollLeft;
-                    var target = current;
-
-                    if (direction > 0) {
-                        for (var i = 0; i < offsets.length; i++) {
-                            if (offsets[i] > current + edgeThreshold) {
-                                target = offsets[i];
-                                break;
-                            }
-                        }
-                        if (target === current) {
-                            target = offsets[offsets.length - 1];
-                        }
-                    } else {
-                        target = 0;
-                        for (var j = offsets.length - 1; j >= 0; j--) {
-                            if (offsets[j] < current - edgeThreshold) {
-                                target = offsets[j];
-                                break;
-                            }
-                        }
-                    }
-
-                    var maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
-                    var targetLeft = Math.min(maxScroll, Math.max(0, target));
-                    animateTrackScroll(targetLeft);
-                }
-
-                /**
-                 * Update the visibility and state of course scroll arrow buttons.
-                 */
-                function updateArrows() {
-                    var scrollLeft = track.scrollLeft;
-                    var maxScroll = track.scrollWidth - track.clientWidth;
-
-                    if (!shouldShowControls()) {
-                        wrapper.classList.add('dims-controls-hidden');
-                        if (prevBtn) {
-                            prevBtn.style.display = 'none';
-                        }
-                        if (nextBtn) {
-                            nextBtn.style.display = 'none';
-                        }
-                        return;
-                    }
-                    wrapper.classList.remove('dims-controls-hidden');
-
-                    // If all content fits, keep buttons muted.
-                    if (maxScroll <= edgeThreshold) {
-                        if (prevBtn) {
-                            prevBtn.style.display = '';
-                            prevBtn.classList.add('disabled');
-                        }
-                        if (nextBtn) {
-                            nextBtn.style.display = '';
-                            nextBtn.classList.add('disabled');
-                        }
-                        return;
-                    }
-
-                    if (prevBtn) {
-                        prevBtn.style.display = '';
-                        if (scrollLeft <= edgeThreshold) {
-                            prevBtn.classList.add('disabled');
-                        } else {
-                            prevBtn.classList.remove('disabled');
-                        }
-                    }
-
-                    if (nextBtn) {
-                        nextBtn.style.display = '';
-                        if (scrollLeft >= maxScroll - edgeThreshold) {
-                            nextBtn.classList.add('disabled');
-                        } else {
-                            nextBtn.classList.remove('disabled');
-                        }
-                    }
-                }
-
-                wrapper._dimsUpdateArrows = updateArrows;
-
-                if (prevBtn) {
-                    prevBtn.addEventListener('click', function () {
-                        scrollToAdjacentCard(-1);
-                    });
-                }
-
-                if (nextBtn) {
-                    nextBtn.addEventListener('click', function () {
-                        scrollToAdjacentCard(1);
-                    });
-                }
-
-                // Click on a course card scrolls it into view (like evidence cards).
-                /**
-                 * Scroll a course card into view if it is not fully visible.
-                 *
-                 * @param {HTMLElement} card The card element.
-                 */
-                function scrollCardIntoView(card) {
-                    var cardStart = getCardOffset(card);
-                    var cardEnd = cardStart + card.offsetWidth;
-                    var viewStart = track.scrollLeft;
-                    var viewEnd = viewStart + track.clientWidth;
-
-                    if (cardStart >= viewStart + edgeThreshold && cardEnd <= viewEnd - edgeThreshold) {
-                        return;
-                    }
-
-                    var maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
-                    var targetLeft = Math.min(maxScroll, Math.max(0, cardStart));
-                    animateTrackScroll(targetLeft);
-                }
-
-                track.querySelectorAll('.dims-course-card-lg').forEach(function (card) {
-                    card.addEventListener('click', function (event) {
-                        if (event.target.closest('a, button')) {
-                            return;
-                        }
-                        scrollCardIntoView(card);
-                    });
+                initScrollableTrack({
+                    wrapper: wrapper,
+                    track: track,
+                    prevBtn: prevBtn,
+                    nextBtn: nextBtn,
+                    cardSelector: '.dims-course-card-lg',
+                    itemCount: courseCount
                 });
-
-                track.addEventListener('scroll', updateArrows);
-                updateArrows();
-                if (window.requestAnimationFrame) {
-                    window.requestAnimationFrame(updateArrows);
-                }
-                setTimeout(updateArrows, 120);
-
-                if (typeof ResizeObserver === 'function') {
-                    var resizeObserver = new ResizeObserver(updateArrows);
-                    resizeObserver.observe(track);
-                }
-
-                enableDragScroll(track);
             });
         }
 
@@ -1886,7 +1744,7 @@ define(
             let pathParts = [];
 
             // Framework name.
-            if (data.framework && data.framework.shortname) {
+            if (data.framework?.shortname) {
                 pathParts.push(escapeHtml(data.framework.shortname));
             }
 
@@ -1924,10 +1782,9 @@ define(
          * @param {Object} data The competency data
          * @param {Object} strMap Language strings map
          * @param {number} planId The plan ID (used to build links when showrelatedlink is enabled)
-         * @param {Object} taxonomyInfo Taxonomy info from resolveTaxonomy
          * @return {string} HTML for related competencies
          */
-        function renderRelatedCompetencies(data, strMap, planId, taxonomyInfo) {
+        function renderRelatedCompetencies(data, strMap, planId) {
             let html = '';
 
             if (!data.relatedcompetencies || data.relatedcompetencies.length === 0) {
@@ -1935,18 +1792,17 @@ define(
             }
 
             const useLink = displaySettings.showrelatedlink && displaySettings.viewplanurl && planId;
-            var relatedLabel = strMap.relatedLabel.replace('{$a}', taxonomyInfo ? taxonomyInfo.plural : '');
 
             html += '<section class="dims-section dims-related-section">';
             html += '<h3 class="dims-related-header">';
-            html += escapeHtml(relatedLabel);
+            html += escapeHtml(strMap.relatedDimensions);
             html += '</h3>';
             html += '<div class="dims-related-pills">';
 
             data.relatedcompetencies.forEach(function (related) {
                 if (useLink && related.id) {
                     const href = displaySettings.viewplanurl + '?id=' + planId + '&competencyid=' + related.id;
-                    html += '<a href="' + href + '" class="dims-related-pill-v2 dims-related-pill-link">'
+                    html += '<a href="' + escapeHtml(href) + '" class="dims-related-pill-v2 dims-related-pill-link">' 
                         + escapeHtml(related.shortname) + '</a>';
                 } else {
                     html += '<span class="dims-related-pill-v2">' + escapeHtml(related.shortname) + '</span>';
@@ -1955,6 +1811,94 @@ define(
 
             html += '</div>';
             html += '</section>';
+
+            return html;
+        }
+
+        /**
+         * Return the main taxonomy already present in the payload.
+         *
+         * @param {Object} competencyData The competency summary data
+         * @return {?Object} Taxonomy metadata
+         */
+        function getPrimaryTaxonomy(competencyData) {
+            if (!competencyData?.taxonomy?.current) {
+                return null;
+            }
+
+            const taxonomy = competencyData.taxonomy.current;
+            if (!taxonomy.term) {
+                return null;
+            }
+
+            return taxonomy;
+        }
+
+        /**
+         * Return icon metadata for a taxonomy card.
+         *
+         * @param {string} taxonomyKey Taxonomy key from the payload
+         * @return {Object} Icon metadata
+         */
+        function getTaxonomyCardMeta(taxonomyKey) {
+            const key = (taxonomyKey || '').toLowerCase();
+            const taxonomyIcons = {
+                behaviour: M.util.image_url('taxonomy/behaviour', 'local_dimensions'),
+                behavior: M.util.image_url('taxonomy/behaviour', 'local_dimensions'),
+                competency: M.util.image_url('taxonomy/competency', 'local_dimensions'),
+                concept: M.util.image_url('taxonomy/concept', 'local_dimensions'),
+                domain: M.util.image_url('taxonomy/domain', 'local_dimensions'),
+                indicator: M.util.image_url('taxonomy/indicator', 'local_dimensions'),
+                level: M.util.image_url('taxonomy/level', 'local_dimensions'),
+                outcome: M.util.image_url('taxonomy/outcome', 'local_dimensions'),
+                practice: M.util.image_url('taxonomy/practice', 'local_dimensions'),
+                proficiency: M.util.image_url('taxonomy/proficiency', 'local_dimensions'),
+                skill: M.util.image_url('taxonomy/skill', 'local_dimensions'),
+                value: M.util.image_url('taxonomy/value', 'local_dimensions')
+            };
+            const meta = {
+                iconurl: taxonomyIcons[key] || '',
+                accentClass: 'dims-taxonomy-card-neutral'
+            };
+
+            const mapping = {
+                behaviour: { iconurl: taxonomyIcons.behaviour || '', accentClass: 'dims-taxonomy-card-behaviour' },
+                behavior: { iconurl: taxonomyIcons.behavior || taxonomyIcons.behaviour || '', accentClass: 'dims-taxonomy-card-behaviour' },
+                competency: { iconurl: taxonomyIcons.competency || '', accentClass: 'dims-taxonomy-card-competency' },
+                concept: { iconurl: taxonomyIcons.concept || '', accentClass: 'dims-taxonomy-card-concept' },
+                domain: { iconurl: taxonomyIcons.domain || '', accentClass: 'dims-taxonomy-card-domain' },
+                indicator: { iconurl: taxonomyIcons.indicator || '', accentClass: 'dims-taxonomy-card-indicator' },
+                level: { iconurl: taxonomyIcons.level || '', accentClass: 'dims-taxonomy-card-level' },
+                outcome: { iconurl: taxonomyIcons.outcome || '', accentClass: 'dims-taxonomy-card-outcome' },
+                practice: { iconurl: taxonomyIcons.practice || '', accentClass: 'dims-taxonomy-card-practice' },
+                proficiency: { iconurl: taxonomyIcons.proficiency || '', accentClass: 'dims-taxonomy-card-proficiency' },
+                skill: { iconurl: taxonomyIcons.skill || '', accentClass: 'dims-taxonomy-card-skill' },
+                value: { iconurl: taxonomyIcons.value || '', accentClass: 'dims-taxonomy-card-value' }
+            };
+
+            return mapping[key] || meta;
+        }
+
+        /**
+         * Render the main taxonomy card.
+         *
+         * @param {Object} taxonomy Taxonomy metadata from the payload
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML for taxonomy card
+         */
+        function renderTaxonomyCard(taxonomy, strMap) {
+            const meta = getTaxonomyCardMeta(taxonomy.key);
+            let html = '<aside class="dims-taxonomy-card ' + meta.accentClass + '" aria-label="' +
+                escapeHtml(taxonomy.term) + '">';
+
+            html += '<div class="dims-taxonomy-card-label">' + escapeHtml(strMap.taxonomyCardLabel) + '</div>';
+            html += '<div class="dims-taxonomy-card-icon">';
+            if (meta.iconurl) {
+                html += '<img class="dims-taxonomy-card-icon-image" src="' + escapeHtml(meta.iconurl) + '" alt="" aria-hidden="true">';
+            }
+            html += '</div>';
+            html += '<div class="dims-taxonomy-card-title">' + escapeHtml(taxonomy.term) + '</div>';
+            html += '</aside>';
 
             return html;
         }
@@ -1998,7 +1942,7 @@ define(
 
             if (descidentifier === 'evidence_evidenceofpriorlearninglinked') {
                 // Sub-check: if desca references a file, use file icon; otherwise prior learning.
-                if (evidence.desca && evidence.desca.indexOf('file') !== -1) {
+                if (evidence.desca?.includes('file')) {
                     return {
                         icon: 'fa-paperclip',
                         label: strMap.evidenceTypeFile,
@@ -2017,9 +1961,9 @@ define(
             // 0 = EVIDENCE_ACTION_LOG, 1 = EVIDENCE_ACTION_SUGGEST,
             // 2 = EVIDENCE_ACTION_COMPLETE, 3 = EVIDENCE_ACTION_OVERRIDE.
             // JSON-encoded responses return numeric fields as strings; coerce to integer.
-            const action = parseInt(evidence.action, 10) || 0;
+            const action = Number.parseInt(evidence.action, 10) || 0;
 
-            if (evidence.url && evidence.url.indexOf('/mod/') !== -1) {
+            if (evidence.url?.includes('/mod/')) {
                 return {
                     icon: 'fa-check-circle',
                     label: strMap.evidenceTypeActivity,
@@ -2027,7 +1971,7 @@ define(
                 };
             }
 
-            if (evidence.url && evidence.url.indexOf('/grade/') !== -1) {
+            if (evidence.url?.includes('/grade/')) {
                 return {
                     icon: 'fa-graduation-cap',
                     label: strMap.evidenceTypeCoursegrade,
@@ -2043,7 +1987,7 @@ define(
                 };
             }
 
-            if (evidence.desca && evidence.desca.indexOf('file') !== -1) {
+            if (evidence.desca?.includes('file')) {
                 return {
                     icon: 'fa-paperclip',
                     label: strMap.evidenceTypeFile,
@@ -2197,7 +2141,7 @@ define(
 
                 // Attach event listener for the single comment form.
                 if (canPost) {
-                    var commentareaCtx = {
+                    const commentareaCtx = {
                         component: params.component,
                         commentarea: params.area,
                         itemid: params.itemid,
@@ -2207,7 +2151,7 @@ define(
                     attachSingleCommentFormListener(container, commentareaCtx, strMap);
                 }
 
-                return Promise.resolve();
+                return null;
             }).catch(function (error) {
                 // Hide loading, show error.
                 if (loadingEl) {
@@ -2217,7 +2161,7 @@ define(
                     errorEl.style.display = 'block';
                 }
                 Notification.exception(error);
-                return Promise.reject(error);
+                throw error;
             });
         }
 
@@ -2280,7 +2224,7 @@ define(
             }
             const parts = fullname.trim().split(/\s+/);
             if (parts.length >= 2) {
-                return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+                return (parts[0].charAt(0) + parts.at(-1).charAt(0)).toUpperCase();
             }
             return parts[0].charAt(0).toUpperCase();
         }
@@ -2325,9 +2269,9 @@ define(
                             const params = {
                                 component: this.dataset.component,
                                 area: this.dataset.area,
-                                itemid: parseInt(this.dataset.itemid, 10),
-                                contextid: parseInt(this.dataset.contextid, 10),
-                                courseid: parseInt(this.dataset.courseid, 10)
+                                itemid: Number.parseInt(this.dataset.itemid, 10),
+                                contextid: Number.parseInt(this.dataset.contextid, 10),
+                                courseid: Number.parseInt(this.dataset.courseid, 10)
                             };
 
                             loadCommentsAjax(container, params, strMap);
@@ -2368,7 +2312,7 @@ define(
 
                 // Disable button during request.
                 sendBtn.disabled = true;
-                var originalHTML = sendBtn.innerHTML;
+                const originalHTML = sendBtn.innerHTML;
                 sendBtn.innerHTML = '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
 
                 postComment(commentarea, content, sendBtn, originalHTML, textarea, container, strMap);
@@ -2395,7 +2339,7 @@ define(
          * @param {Object} strMap Language strings map
          */
         function postComment(commentarea, content, sendBtn, originalBtnHTML, textarea, container, strMap) {
-            if (!commentarea || !commentarea.component || !commentarea.itemid) {
+            if (!commentarea?.component || !commentarea?.itemid) {
                 sendBtn.disabled = false;
                 sendBtn.innerHTML = originalBtnHTML;
                 return;
@@ -2414,27 +2358,27 @@ define(
                 sendBtn.disabled = false;
                 sendBtn.innerHTML = originalBtnHTML;
 
-                if (result && result.success) {
+                if (result?.success) {
                     // Clear textarea.
                     textarea.value = '';
 
                     // Build new comment HTML.
-                    var newCommentHtml = renderLoadedComment({
+                    const newCommentHtml = renderLoadedComment({
                         id: result.commentid,
                         fullname: result.fullname,
                         userid: result.userid,
                         profileimageurl: result.profileimageurl || '',
                         content: result.content,
                         timecreated: result.timecreated
-                    }, strMap, 0);
+                    });
 
                     // Find or create the comments list.
-                    var contentEl = container.querySelector('.dims-comments-content');
-                    var commentsList = contentEl.querySelector('.dims-comments-list');
+                    const contentEl = container.querySelector('.dims-comments-content');
+                    let commentsList = contentEl.querySelector('.dims-comments-list');
 
                     if (!commentsList) {
                         // Remove "no comments" placeholder if present.
-                        var noComments = contentEl.querySelector('.dims-no-comments');
+                        const noComments = contentEl.querySelector('.dims-no-comments');
                         if (noComments) {
                             noComments.remove();
                         }
@@ -2445,9 +2389,9 @@ define(
                     }
 
                     // Prepend new comment (newest first).
-                    var tempDiv = document.createElement('div');
+                    const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = newCommentHtml;
-                    var newEl = tempDiv.firstElementChild;
+                    const newEl = tempDiv.firstElementChild;
                     if (newEl) {
                         if (commentsList.firstChild) {
                             commentsList.insertBefore(newEl, commentsList.firstChild);
@@ -2455,7 +2399,7 @@ define(
                             commentsList.appendChild(newEl);
                         }
                     }
-                } else if (result && result.error) {
+                } else if (result?.error) {
                     Notification.alert('Error', result.error);
                 }
             }).catch(function (error) {
@@ -2474,12 +2418,12 @@ define(
          * @return {string} HTML for the status section
          */
         function renderStatusSection(ucs, strMap) {
-            var uc = ucs.usercompetency || ucs.usercompetencyplan;
+            const uc = ucs.usercompetency || ucs.usercompetencyplan;
             if (!uc) {
                 return '';
             }
 
-            var html = '<div class="dims-status-tab-content">';
+            let html = '<div class="dims-status-tab-content">';
 
             // 2-column grid.
             html += '<div class="dims-status-grid">';
@@ -2488,7 +2432,7 @@ define(
             html += '<div class="dims-status-cell">';
             html += '<p class="dims-status-label">' + escapeHtml(strMap.ratingLabel) + '</p>';
             // JSON-encoded responses return numeric fields as strings; coerce to integer for safe comparison.
-            var isProficient = parseInt(uc.proficiency, 10) === 1;
+            const isProficient = Number.parseInt(uc.proficiency, 10) === 1;
 
             if (uc.grade && uc.gradename) {
                 if (isProficient) {
@@ -2534,7 +2478,7 @@ define(
          * @return {string} HTML for the description section
          */
         function renderDescriptionSection(description, strMap) {
-            var html = '<div class="dims-desc-tab-content">';
+            let html = '<div class="dims-desc-tab-content">';
 
             // Description text (always start collapsed, JS will check if truncation is needed).
             html += '<div class="dims-desc-content dims-desc-collapsed">';
@@ -2559,10 +2503,10 @@ define(
          * @param {Object} strMap Language strings map
          */
         function attachShowMoreListeners(contentEl, strMap) {
-            var toggleBtns = contentEl.querySelectorAll('.dims-show-more');
+            const toggleBtns = contentEl.querySelectorAll('.dims-show-more');
 
             toggleBtns.forEach(function (btn) {
-                var descContent = btn.previousElementSibling;
+                const descContent = btn.previousElementSibling;
 
                 // Check if the content is actually truncated by comparing heights.
                 if (descContent && descContent.scrollHeight <= descContent.clientHeight) {
@@ -2573,18 +2517,18 @@ define(
                 }
 
                 btn.addEventListener('click', function () {
-                    var isCollapsed = this.getAttribute('data-collapsed') === 'true';
+                    const isCollapsed = this.dataset.collapsed === 'true';
 
                     if (isCollapsed) {
                         // Expand.
                         descContent.classList.remove('dims-desc-collapsed');
-                        this.setAttribute('data-collapsed', 'false');
+                        this.dataset.collapsed = 'false';
                         this.innerHTML = escapeHtml(strMap.showLess)
                             + ' <i class="fa fa-chevron-down" aria-hidden="true"></i>';
                     } else {
                         // Collapse.
                         descContent.classList.add('dims-desc-collapsed');
-                        this.setAttribute('data-collapsed', 'true');
+                        this.dataset.collapsed = 'true';
                         this.innerHTML = escapeHtml(strMap.showMore)
                             + ' <i class="fa fa-chevron-right" aria-hidden="true"></i>';
                     }
@@ -2604,17 +2548,17 @@ define(
             if (!timestamp) {
                 return '';
             }
-            var date = new Date(timestamp * 1000);
-            var lang = document.documentElement.lang || 'en';
+            const date = new Date(timestamp * 1000);
+            let lang = document.documentElement.lang || 'en';
             lang = lang.replace('_', '-');
 
             try {
-                var day = date.getDate();
-                var monthLong = date.toLocaleDateString(lang, { month: 'long' });
-                var monthShort = date.toLocaleDateString(lang, { month: 'short' });
-                var year = date.getFullYear();
-                var weekdayLong = date.toLocaleDateString(lang, { weekday: 'long' });
-                var weekdayShort = date.toLocaleDateString(lang, { weekday: 'short' });
+                const day = date.getDate();
+                const monthLong = date.toLocaleDateString(lang, { month: 'long' });
+                const monthShort = date.toLocaleDateString(lang, { month: 'short' });
+                const year = date.getFullYear();
+                const weekdayLong = date.toLocaleDateString(lang, { weekday: 'long' });
+                const weekdayShort = date.toLocaleDateString(lang, { weekday: 'short' });
 
                 return formatStr
                     .replace('%A', weekdayLong)
@@ -2625,6 +2569,7 @@ define(
                     .replace('%Y', year)
                     .replace('%m', ('0' + (date.getMonth() + 1)).slice(-2));
             } catch (e) {
+                Log.warn('[local_dimensions] Falling back to default locale date formatting.');
                 return date.toLocaleDateString(lang);
             }
         }
@@ -2663,7 +2608,7 @@ define(
             }
 
             // Get plan ID from data attribute.
-            const planId = parseInt(summaryContainer.dataset.planid, 10);
+            const planId = Number.parseInt(summaryContainer.dataset.planid, 10);
 
             const toggleButtons = document.querySelectorAll('.dims-accordion-toggle');
 
@@ -2673,7 +2618,7 @@ define(
                     const contentId = this.getAttribute('aria-controls');
                     const content = document.getElementById(contentId);
                     const accordionItem = this.closest('.dims-accordion-item');
-                    const competencyId = accordionItem ? parseInt(accordionItem.dataset.competencyId, 10) : null;
+                    const competencyId = accordionItem ? Number.parseInt(accordionItem.dataset.competencyId, 10) : null;
 
                     if (!content) {
                         return;
@@ -2688,8 +2633,8 @@ define(
                         // Close all other accordion items first.
                         toggleButtons.forEach(function (otherBtn) {
                             if (otherBtn !== button) {
-                                var otherId = otherBtn.getAttribute('aria-controls');
-                                var otherContent = document.getElementById(otherId);
+                                const otherId = otherBtn.getAttribute('aria-controls');
+                                const otherContent = document.getElementById(otherId);
                                 otherBtn.setAttribute('aria-expanded', 'false');
                                 if (otherContent) {
                                     otherContent.hidden = true;
@@ -2739,7 +2684,7 @@ define(
          * @return {string}
          */
         function normalizeText(str) {
-            return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            return str.normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').toLowerCase();
         }
 
         /**
@@ -2748,7 +2693,7 @@ define(
          * @return {string}
          */
         function getActiveFilter() {
-            var active = document.querySelector('.dims-filter-tab.active');
+            const active = document.querySelector('.dims-filter-tab.active');
             return active ? active.dataset.filter : 'incomplete';
         }
 
@@ -2758,7 +2703,7 @@ define(
          * @return {string}
          */
         function getSearchQuery() {
-            var input = document.querySelector('.dims-search-input');
+            const input = document.querySelector('.dims-search-input');
             return input ? normalizeText(input.value.trim()) : '';
         }
 
@@ -2796,13 +2741,13 @@ define(
          * Initialize competency search input.
          */
         function initSearch() {
-            var input = document.querySelector('.dims-search-input');
-            var clearBtn = document.querySelector('.dims-search-clear');
+            const input = document.querySelector('.dims-search-input');
+            const clearBtn = document.querySelector('.dims-search-clear');
             if (!input) {
                 return;
             }
 
-            var debounceTimer = null;
+            let debounceTimer = null;
 
             input.addEventListener('input', function () {
                 // Show/hide clear button.
@@ -2830,25 +2775,25 @@ define(
          * Apply combined tab filter + search query to accordion items.
          */
         function applyFilter() {
-            var filter = getActiveFilter();
-            var query = getSearchQuery();
-            var accordionItems = document.querySelectorAll('.dims-accordion-item');
+            const filter = getActiveFilter();
+            const query = getSearchQuery();
+            const accordionItems = document.querySelectorAll('.dims-accordion-item');
 
             accordionItems.forEach(function (item) {
-                var isCompleted = item.classList.contains('completed');
+                const isCompleted = item.classList.contains('completed');
 
                 // Tab filter.
-                var passesTab = true;
+                let passesTab = true;
                 if (filter === 'incomplete' && isCompleted) {
                     passesTab = false;
                 }
 
                 // Search filter.
-                var passesSearch = true;
+                let passesSearch = true;
                 if (query.length > 0) {
-                    var title = item.querySelector('.dims-accordion-title');
+                    const title = item.querySelector('.dims-accordion-title');
                     if (title) {
-                        passesSearch = normalizeText(title.textContent).indexOf(query) !== -1;
+                        passesSearch = normalizeText(title.textContent).includes(query);
                     }
                 }
 

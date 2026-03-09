@@ -11,7 +11,11 @@
     * is_enrolment_start (bool) - Whether the date is an enrolment start date
     * islearnmore (bool) - Whether to show "Learn More" button instead of "Locked Content"
     * showlockeddate (bool) - Whether to show the availability date
-    * customicon (string) - CSS class for custom locked icon (empty = default lock SVG)
+    * customicon (string) - CSS class for custom locked icon (empty = default lock icon from pix)
+    * lockiconurl (string) - URL do fallback do cadeado
+    * checkiconurl (string) - URL do ícone de concluído
+    * circleiconurl (string) - URL do ícone neutro com atividades
+    * infoiconurl (string) - URL do ícone de informação sem rastreamento
     * courseurl (string) - URL to the course page (for "Learn More" button)
     * learnmorebuttoncolor (string) - Hex color for the "Learn More" button background
     * sections (array) - Array of section objects with progress data
@@ -48,10 +52,7 @@
                 <i class="{{customicon}}" aria-hidden="true"></i>
             {{/customicon}}
             {{^customicon}}
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
+                <img class="dims-icon dims-icon-lock dims-locked-icon-image" src="{{lockiconurl}}" alt="" aria-hidden="true">
             {{/customicon}}
         </div>
         {{! Message: "Learn More" button or "Locked Content" text }}
@@ -87,20 +88,13 @@
         <div class="dims-timeline-item {{#is_completed}}completed{{/is_completed}} {{#is_started}}started{{/is_started}} {{#locked}}locked{{/locked}}">
             <div class="dims-timeline-marker">
                 {{! Priority order: locked > is_completed > is_started > empty/info }}
-                {{! Using Feather Icons (inline SVG) for consistent sizing and proportions }}
                 {{#locked}}
-                    <svg class="dims-icon dims-icon-lock" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
+                    <img class="dims-icon dims-icon-lock" src="{{lockiconurl}}" alt="" aria-hidden="true">
                 {{/locked}}
                 
                 {{^locked}}
                     {{#is_completed}}
-                        {{! Bootstrap Icons - check-circle-fill (solid) }}
-                        <svg class="dims-icon dims-icon-check" width="24" height="24" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
-                        </svg>
+                        <img class="dims-icon dims-icon-check" src="{{checkiconurl}}" alt="" aria-hidden="true">
                     {{/is_completed}}
                     
                     {{^is_completed}}
@@ -119,16 +113,10 @@
                         
                         {{^is_started}}
                             {{#has_activities}}
-                                <svg class="dims-icon dims-icon-circle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                </svg>
+                                <img class="dims-icon dims-icon-circle" src="{{circleiconurl}}" alt="" aria-hidden="true">
                             {{/has_activities}}
                             {{^has_activities}}
-                                <svg class="dims-icon dims-icon-info" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" title="{{#str}}no_completion_tracking, local_dimensions{{/str}}">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="16" x2="12" y2="12"></line>
-                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                </svg>
+                                <img class="dims-icon dims-icon-info" src="{{infoiconurl}}" alt="" aria-hidden="true" title="{{#str}}no_completion_tracking, local_dimensions{{/str}}">
                             {{/has_activities}}
                         {{/is_started}}
                     {{/is_completed}}
