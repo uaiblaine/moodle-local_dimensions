@@ -126,6 +126,7 @@ if ($competencyid) {
             'showlockeddate' => $showlockeddate,
             'cardicon' => $cardicon ? (string) $cardicon : '',
             'learnmorebuttoncolor' => $learnmorebuttoncolor,
+            'animatelockedborder' => (bool) get_config('local_dimensions', 'animatelockedborder'),
         ];
 
         $PAGE->requires->string_for_js('connection_error', 'local_dimensions');

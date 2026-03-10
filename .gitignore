@@ -1,0 +1,13 @@
+# OS files
+.DS_Store
+
+# IDE / Editor
+.vscode/
+
+# Node.js (build tooling only - not part of the plugin)
+node_modules/
+package.json
+package-lock.json
+
+# Linter config
+.stylelintrc.json

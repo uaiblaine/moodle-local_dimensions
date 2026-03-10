@@ -142,6 +142,14 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         1
     ));
 
+    // Animate locked card dashed border.
+    $settings->add(new admin_setting_configcheckbox(
+        'local_dimensions/animatelockedborder',
+        get_string('animatelockedborder', 'local_dimensions'),
+        get_string('animatelockedborder_desc', 'local_dimensions'),
+        0
+    ));
+
     // Locked card icon (icon picker with AJAX search).
     require_once(__DIR__ . '/classes/admin/setting_iconpicker.php');
     $settings->add(new \local_dimensions\admin\setting_iconpicker(

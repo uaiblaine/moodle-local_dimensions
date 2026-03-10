@@ -7,6 +7,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
             var showlockeddate = settings.showlockeddate !== undefined ? settings.showlockeddate : true;
             var cardicon = settings.cardicon || '';
             var learnmorebuttoncolor = settings.learnmorebuttoncolor || '#667eea';
+            var animatelockedborder = !!settings.animatelockedborder;
             var iconurls = {
                 lock: M.util.image_url('status/lock', 'local_dimensions'),
                 checkcircle: M.util.image_url('status/check-circle-fill', 'local_dimensions'),
@@ -87,6 +88,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
                                 var overlay = container.find('.dims-locked-overlay');
                                 if (card.length && overlay.length) {
                                     overlay.appendTo(card);
+                                    injectAnimatedBorder(card[0], overlay[0], animatelockedborder);
                                 }
                             }
                         })
@@ -101,6 +103,72 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
             });
         }
     };
+
+    /**
+     * Injects an SVG with an animated dashed <rect> inside the locked overlay.
+     *
+     * The SVG is absolutely positioned to fill the overlay and uses
+     * pointer-events: none so it never blocks interaction.
+     * A ResizeObserver keeps the SVG viewBox and rect dimensions
+     * synchronised with the card's actual pixel size.
+     *
+     * @param {HTMLElement} card  The .card element (size source)
+     * @param {HTMLElement} overlay  The .dims-locked-overlay element
+     * @param {boolean} animate  Whether to animate the dash offset
+     */
+    function injectAnimatedBorder(card, overlay, animate) {
+        var SVG_NS = 'http://www.w3.org/2000/svg';
+        var STROKE_WIDTH = 2;
+        var DASH_ARRAY = '8 8';
+        var BORDER_RADIUS = 6; // matches 0.375rem at 16px base
+
+        var svg = document.createElementNS(SVG_NS, 'svg');
+        svg.setAttribute('class', 'dims-locked-border-svg');
+        svg.setAttribute('aria-hidden', 'true');
+
+        var rect = document.createElementNS(SVG_NS, 'rect');
+        rect.setAttribute('fill', 'none');
+        rect.setAttribute('stroke', '#ddd');
+        rect.setAttribute('stroke-width', STROKE_WIDTH);
+        rect.setAttribute('stroke-dasharray', DASH_ARRAY);
+        rect.setAttribute('rx', BORDER_RADIUS);
+        rect.setAttribute('ry', BORDER_RADIUS);
+        if (animate) {
+            rect.style.animation = 'dims-dashoffset-move 2s linear infinite';
+        }
+
+        svg.appendChild(rect);
+        overlay.insertBefore(svg, overlay.firstChild);
+
+        /**
+         * Updates SVG and rect dimensions to match the card.
+         */
+        function updateSize() {
+            var w = card.offsetWidth;
+            var h = card.offsetHeight;
+            if (w === 0 || h === 0) {
+                return;
+            }
+            svg.setAttribute('width', w);
+            svg.setAttribute('height', h);
+            svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+
+            var half = STROKE_WIDTH / 2;
+            rect.setAttribute('x', half);
+            rect.setAttribute('y', half);
+            rect.setAttribute('width', w - STROKE_WIDTH);
+            rect.setAttribute('height', h - STROKE_WIDTH);
+        }
+
+        // Initial sizing.
+        updateSize();
+
+        // Keep in sync on resize.
+        if (typeof ResizeObserver !== 'undefined') {
+            var ro = new ResizeObserver(updateSize);
+            ro.observe(card);
+        }
+    }
 
     /**
      * Resolves a stored icon identifier to its full CSS class string.

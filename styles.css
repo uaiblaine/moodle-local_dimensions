@@ -41,6 +41,7 @@
   position: relative;
   width: 100%;
   margin-bottom: 1.5rem;
+
   /* Pull the hero up to overlap any remaining spacing */
   margin-top: -1rem;
 }
@@ -72,16 +73,16 @@
 
 /* Title - uses custom text color from template/competency custom field */
 .dims-hero-title {
-  color: var(--dimension-customtextcolor, rgba(255, 255, 255, 1));
+  color: var(--dimension-customtextcolor, rgb(255 255 255 / 100%));
   font-size: 2rem;
   font-weight: 700;
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.75rem;
   line-height: 1.2;
 }
 
 /* Description - uses custom text color with slight opacity fallback */
 .dims-hero-description {
-  color: var(--dimension-customtextcolor, rgba(255, 255, 255, 0.85));
+  color: var(--dimension-customtextcolor, rgb(255 255 255 / 85%));
   font-size: 1rem;
   line-height: 1.6;
   max-width: 800px;
@@ -99,10 +100,9 @@
   gap: 0.75rem;
   margin-top: 1.25rem;
   padding: 0.75rem 1.25rem;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgb(255 255 255 / 15%);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgb(255 255 255 / 25%);
   border-radius: 0.5rem;
 }
 
@@ -123,17 +123,17 @@
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.05em;
-  color: var(--dimension-customtextcolor, rgba(255, 255, 255, 0.7));
+  color: var(--dimension-customtextcolor, rgb(255 255 255 / 70%));
 }
 
 .dims-duedate-value {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--dimension-customtextcolor, rgba(255, 255, 255, 1));
+  color: var(--dimension-customtextcolor, rgb(255 255 255 / 100%));
 }
 
 /* Responsive adjustments */
-@media (max-width: 991.98px) {
+@media (width <=991.98px) {
   .dims-hero {
     min-height: 180px;
   }
@@ -143,13 +143,13 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (width <=768px) {
   #page-local-dimensions-view-plan .dims-hero-content {
     padding: 2rem;
   }
 }
 
-@media (max-width: 575.98px) {
+@media (width <=575.98px) {
   .dims-hero {
     min-height: 160px;
     padding: 1.5rem 0;
@@ -189,19 +189,15 @@
 .dims-hero-wrapper.dims-hero-has-image::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 0;
+
   /* Desktop: Radial gradient circle at top-left, fading to transparent */
   background:
-    radial-gradient(
-      circle at 0% 0%,
-      var(--hero-overlay-color, rgba(0, 0, 0, 0.8)) 0%,
-      var(--hero-overlay-color, rgba(0, 0, 0, 0.8)) 40%,
-      transparent 100%
-      );
+    radial-gradient(circle at 0% 0%,
+      var(--hero-overlay-color, rgb(0 0 0 / 80%)) 0%,
+      var(--hero-overlay-color, rgb(0 0 0 / 80%)) 40%,
+      transparent 100%);
 }
 
 /* Ensure content is above the overlay */
@@ -209,20 +205,19 @@
   position: relative;
   z-index: 1;
   background-color: transparent;
+
   /* Override inline style background */
 }
 
 /* Mobile Gradient - Linear from top to bottom */
-@media (max-width: 768px) {
+@media (width <=768px) {
   .dims-hero-wrapper.dims-hero-has-image::before {
     /* Mobile: Linear gradient top-down, more aggressive for contrast */
     background:
-      linear-gradient(
-        to bottom,
-        var(--hero-overlay-color, rgba(0, 0, 0, 0.9)) 0%,
-        var(--hero-overlay-color, rgba(0, 0, 0, 0.8)) 60%,
-        transparent 100%
-        );
+      linear-gradient(to bottom,
+        var(--hero-overlay-color, rgb(0 0 0 / 90%)) 0%,
+        var(--hero-overlay-color, rgb(0 0 0 / 80%)) 60%,
+        transparent 100%);
   }
 
   /* Ensure padding adjusts for mobile reading */
@@ -236,7 +231,7 @@
    ============================================ */
 .local-dimensions-viewplan .card-header {
   background-color: #f9fafb;
-  border: 0px;
+  border: 0;
 }
 
 .local-dimensions-viewplan .card-header a {
@@ -255,8 +250,10 @@
 
 .dims-progress-container {
   position: relative;
+
   /* Base for absolute positioning */
   min-height: 100px;
+
   /* Ensure there is some height for the overlay */
   padding: 30px 30px 30px 10px;
 }
@@ -269,20 +266,6 @@
   border-radius: 0.375rem;
 }
 
-/* Dashed border as pseudo-element - positioned outside and above blur */
-.dims-card-locked::before {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  border-radius: 0.5rem;
-  pointer-events: none;
-  z-index: 20;  
-  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='8' ry='8' stroke='%23c4c7ca' stroke-width='4' stroke-dasharray='8%2c 8'/%3e%3c/svg%3e");
-}
-
 .dims-card-locked .card-header {
   background-color: transparent;
   border-bottom: none;
@@ -291,28 +274,44 @@
 /* Locked Overlay - Covers entire card including header */
 .dims-card-locked .dims-locked-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 10;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: rgba(255, 255, 255, 0.65);
+  background: rgb(255 255 255 / 65%);
   backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
   border-radius: inherit;
+}
+
+/* SVG animated dashed border - sits behind overlay content */
+.dims-locked-border-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Overlay content sits above the SVG */
+.dims-card-locked .dims-locked-overlay > *:not(.dims-locked-border-svg) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dash marching-ants animation */
+@keyframes dims-dashoffset-move {
+  to {
+    stroke-dashoffset: -16;
+  }
 }
 
 /* Locked Overlay within progress container (fallback) */
 .dims-locked-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 10;
   display: flex;
   flex-direction: column;
@@ -321,7 +320,6 @@
 
   /* Backdrop Filter for Blur */
   backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
 }
 
 /* Lock icon container */
@@ -344,7 +342,7 @@
   color: #333;
   margin-bottom: 0.5rem;
   padding: 5px 20px;
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  box-shadow: rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;
   background-color: white;
   border-radius: 10px;
 }
@@ -355,7 +353,7 @@
   background: #fff;
   padding: 4px 12px;
   border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
 }
 
 /* "Learn More" button for locked cards */
@@ -367,7 +365,7 @@
   padding: 8px 24px;
   border-radius: 10px;
   text-decoration: none;
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  box-shadow: rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;
   transition: filter 0.2s ease, transform 0.15s ease;
   margin-bottom: 0.5rem;
 }
@@ -408,10 +406,13 @@
   content: '';
   position: absolute;
   left: 11px;
+
   /* Center of the 24px marker */
   top: 24px;
+
   /* Start below the marker */
   bottom: -4px;
+
   /* Extend to the next marker */
   width: 2px;
   background-color: #e9ecef;
@@ -496,6 +497,7 @@
   position: relative;
   width: 32px;
   height: 32px;
+
   /* Negative margin to center the larger ring on the 24px marker */
   margin: -4px;
   display: flex;
@@ -614,7 +616,7 @@
   display: block;
   margin-bottom: 25px;
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 6%), 0 1px 2px rgb(0 0 0 / 4%);
   border-top: 1px solid #e5e0e0;
   border-right: 1px solid #e5e0e0;
   border-bottom: 1px solid #e5e0e0;
@@ -630,7 +632,7 @@
   border-left: 4px solid #e5a100;
 }
 
-.dims-accordion-item:not(.completed):not(.rated) {
+.dims-accordion-item:not(.completed, .rated) {
   border-left: 4px solid #dee2e6;
 }
 
@@ -796,7 +798,7 @@
 }
 
 /* Responsive — Mobile adjustments */
-@media (max-width: 767.98px) {
+@media (width <=767.98px) {
 
   /* Center filter tabs */
   .dims-filter-tabs-wrapper {
@@ -819,7 +821,7 @@
 /* Dark mode support */
 .theme-dark .dims-accordion-item,
 body.dark .dims-accordion-item {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
 }
 
 .theme-dark .dims-accordion-toggle,
@@ -894,6 +896,7 @@ body.dark .dims-grade-badge.badge-todo {
 .dims-summary-left {
   flex: 1 1 300px;
   min-width: 0;
+
   /* Prevent flex blowout */
 }
 
@@ -1006,7 +1009,7 @@ body.dark .dims-grade-badge.badge-todo {
 }
 
 /* Mobile responsive: stack columns */
-@media (max-width: 767.98px) {
+@media (width <=767.98px) {
   .dims-summary-columns {
     flex-direction: column;
     gap: 1rem;
@@ -1057,7 +1060,7 @@ body.dark .dims-grade-badge.badge-todo {
 }
 
 .dims-filter-tab:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgb(0 0 0 / 4%);
 }
 
 .dims-filter-tab:focus {
@@ -1068,7 +1071,7 @@ body.dark .dims-grade-badge.badge-todo {
 .dims-filter-tab.active {
   background: #fff;
   color: #1a73e8;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
 }
 
 .dims-filter-count {
@@ -1129,7 +1132,7 @@ body.dark .dims-grade-badge.badge-todo {
 .dims-search-input:focus {
   border-color: #1a73e8;
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+  box-shadow: 0 0 0 3px rgb(26 115 232 / 15%);
 }
 
 .dims-search-clear {
@@ -1150,7 +1153,7 @@ body.dark .dims-grade-badge.badge-todo {
 }
 
 .dims-search-clear:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgb(0 0 0 / 6%);
 }
 
 .dims-search-clear .fa {
@@ -1158,7 +1161,7 @@ body.dark .dims-grade-badge.badge-todo {
 }
 
 /* Responsive — stack on mobile */
-@media (max-width: 575.98px) {
+@media (width <=575.98px) {
   .dims-filter-bar {
     flex-direction: column;
     align-items: center;
@@ -1192,7 +1195,7 @@ body.dark .dims-filter-tab {
 
 .theme-dark .dims-filter-tab:hover,
 body.dark .dims-filter-tab:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(255 255 255 / 8%);
 }
 
 .theme-dark .dims-filter-tab.active,
@@ -1229,7 +1232,7 @@ body.dark .dims-search-input::placeholder {
 body.dark .dims-search-input:focus {
   background: #292a2d;
   border-color: #8ab4f8;
-  box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.2);
+  box-shadow: 0 0 0 3px rgb(138 180 248 / 20%);
 }
 
 .theme-dark .dims-search-icon,
@@ -1244,7 +1247,7 @@ body.dark .dims-search-clear {
 
 .theme-dark .dims-search-clear:hover,
 body.dark .dims-search-clear:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(255 255 255 / 8%);
 }
 
 /* ============================================
@@ -1498,7 +1501,7 @@ body.dark .dims-evidence-desc {
   background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
   border-color: #adb5bd;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 8%);
 }
 
 .dims-comments-toggle:focus {
@@ -1523,7 +1526,7 @@ body.dark .dims-evidence-desc {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgb(255 255 255 / 15%);
   border-radius: 50%;
   font-size: 0.875rem;
   transition: all 0.25s ease;
@@ -1551,12 +1554,12 @@ body.dark .dims-evidence-desc {
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: 999px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 10%);
   transition: all 0.25s ease;
 }
 
 .dims-comments-toggle[aria-expanded="true"] .dims-comments-badge {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgb(255 255 255 / 25%);
   color: #fff;
   box-shadow: none;
 }
@@ -1775,7 +1778,7 @@ a.dims-comment-author:hover {
 }
 
 /* Responsive */
-@media (max-width: 575.98px) {
+@media (width <=575.98px) {
   .dims-comment-body {
     padding-left: 0;
   }
@@ -1949,7 +1952,7 @@ body.dark .dims-course-access-btn:hover {
   font-size: 0.9375rem;
   font-weight: 600;
   color: #212529;
-  margin: 0rem 0 0.75rem 0;
+  margin: 0 0 0.75rem;
   line-height: 1.2;
 }
 
@@ -1976,8 +1979,8 @@ body.dark .dims-course-access-btn:hover {
   border-radius: 0.75rem;
   border: none;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    0 4px 6px -1px rgb(0 0 0 / 10%),
+    0 2px 4px -2px rgb(0 0 0 / 10%);
   overflow: hidden;
 }
 
@@ -2063,15 +2066,15 @@ body.dark .dims-course-access-btn:hover {
   overflow: hidden;
   border: none;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    0 4px 6px -1px rgb(0 0 0 / 10%),
+    0 2px 4px -2px rgb(0 0 0 / 10%);
   transition: box-shadow 0.2s ease;
 }
 
 .dims-course-card-lg:hover {
   box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    0 10px 15px -3px rgb(0 0 0 / 10%),
+    0 4px 6px -4px rgb(0 0 0 / 10%);
 }
 
 /* Course image area */
@@ -2109,7 +2112,7 @@ body.dark .dims-course-access-btn:hover {
   font-size: 0.9375rem;
   font-weight: 600;
   color: #212529;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -2177,7 +2180,7 @@ body.dark .dims-course-access-btn:hover {
   border-radius: 0.5rem;
   padding: 1rem;
   text-align: center;
-  border: 1px solid rgb(241, 243, 245);
+  border: 1px solid rgb(241 243 245);
 }
 
 .dims-accordion-item.completed .dims-status-cell {
@@ -2186,14 +2189,14 @@ body.dark .dims-course-access-btn:hover {
 }
 
 .dims-accordion-item.rated .dims-status-cell {
-  background: rgba(255, 238, 186, 0.20);
+  background: rgb(255 238 186 / 20%);
   border: 1px solid #ffeeba;
 }
 
 .dims-status-label {
   font-size: 0.75rem;
   color: #6c757d;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
 }
 
 .dims-status-badge {
@@ -2242,7 +2245,7 @@ body.dark .dims-course-access-btn:hover {
 .dims-desc-content {
   font-size: 0.875rem;
   line-height: 1.6;
-  color: rgba(33, 37, 41, 0.8);
+  color: rgb(33 37 41 / 80%);
 }
 
 .dims-desc-content p {
@@ -2297,15 +2300,15 @@ body.dark .dims-course-access-btn:hover {
   border-radius: 0.75rem;
   border: none;
   box-shadow:
-    rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
-    rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+    rgb(50 50 93 / 25%) 0 2px 5px -1px,
+    rgb(0 0 0 / 30%) 0 1px 3px -1px;
   transition: box-shadow 0.2s ease;
 }
 
 .dims-ev-card:hover {
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    0 4px 6px -1px rgb(0 0 0 / 10%),
+    0 2px 4px -2px rgb(0 0 0 / 10%);
 }
 
 .dims-ev-icon {
@@ -2361,7 +2364,7 @@ body.dark .dims-course-access-btn:hover {
   font-size: 0.875rem;
   font-weight: 600;
   color: #212529;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.25rem;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   line-clamp: 1;
@@ -2375,7 +2378,7 @@ body.dark .dims-course-access-btn:hover {
   font-size: 0.75rem;
   color: #6c757d;
   line-height: 1.4;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.25rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -2439,7 +2442,7 @@ body.dark .dims-course-access-btn:hover {
 .dims-ev-detail-btn:hover {
   color: #0d6efd;
   border-color: #0d6efd;
-  background: rgba(13, 110, 253, 0.04);
+  background: rgb(13 110 253 / 4%);
 }
 
 .dims-ev-detail-btn:focus-visible {
@@ -2512,7 +2515,7 @@ body.dark .dims-course-access-btn:hover {
 }
 
 .dims-ev-modal-description p {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
 }
 
 .dims-ev-modal-description p:last-child {
@@ -2708,7 +2711,7 @@ body.dark .dims-course-access-btn:hover {
 /* ============================================
    RESPONSIVE - Redesigned sections
    ============================================ */
-@media (max-width: 575.98px) {
+@media (width <=575.98px) {
   .dims-courses-grid {
     grid-template-columns: 1fr;
   }
@@ -2741,8 +2744,8 @@ body.dark .dims-course-access-btn:hover {
 body.dark .dims-shadow-card {
   background: #343a40;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.3),
-    0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    0 4px 6px -1px rgb(0 0 0 / 30%),
+    0 2px 4px -2px rgb(0 0 0 / 30%);
 }
 
 .theme-dark .dims-section-title,
@@ -2770,8 +2773,8 @@ body.dark .dims-path-bar-sep {
 body.dark .dims-course-card-lg {
   background: #343a40;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.3),
-    0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    0 4px 6px -1px rgb(0 0 0 / 30%),
+    0 2px 4px -2px rgb(0 0 0 / 30%);
 }
 
 .theme-dark .dims-course-img,
@@ -2801,7 +2804,7 @@ body.dark .dims-course-progress-pct-lg {
 
 .theme-dark .dims-status-cell,
 body.dark .dims-status-cell {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(255 255 255 / 8%);
 }
 
 .theme-dark .dims-status-label,
@@ -2816,7 +2819,7 @@ body.dark .dims-status-value-muted {
 
 .theme-dark .dims-desc-content,
 body.dark .dims-desc-content {
-  color: rgba(232, 234, 237, 0.8);
+  color: rgb(232 234 237 / 80%);
 }
 
 .theme-dark .dims-show-more,
@@ -2833,8 +2836,8 @@ body.dark .dims-show-more:hover {
 body.dark .dims-ev-card {
   background: #343a40;
   box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.3),
-    0 1px 2px -1px rgba(0, 0, 0, 0.3);
+    0 1px 3px 0 rgb(0 0 0 / 30%),
+    0 1px 2px -1px rgb(0 0 0 / 30%);
 }
 
 .theme-dark .dims-ev-title,
@@ -2868,7 +2871,7 @@ body.dark .dims-ev-detail-btn {
 body.dark .dims-ev-detail-btn:hover {
   color: #8ab4f8;
   border-color: #8ab4f8;
-  background: rgba(138, 180, 248, 0.08);
+  background: rgb(138 180 248 / 8%);
 }
 
 /* Evidence modal dark mode */
@@ -2894,7 +2897,7 @@ body.dark .dims-ev-modal-section {
 
 .theme-dark .dims-ev-modal-note,
 body.dark .dims-ev-modal-note {
-  background: rgba(254, 249, 195, 0.1);
+  background: rgb(254 249 195 / 10%);
   color: #fde047;
   border-left-color: #eab308;
 }
@@ -2911,13 +2914,13 @@ body.dark .dims-ev-modal-link a:hover {
 
 .theme-dark .dims-ev-modal-grade-badge,
 body.dark .dims-ev-modal-grade-badge {
-  background: rgba(233, 236, 239, 0.15);
+  background: rgb(233 236 239 / 15%);
   color: #9aa0a6;
 }
 
 .theme-dark .dims-ev-modal-grade-badge.dims-ev-modal-grade-proficient,
 body.dark .dims-ev-modal-grade-badge.dims-ev-modal-grade-proficient {
-  background: rgba(209, 231, 221, 0.15);
+  background: rgb(209 231 221 / 15%);
   color: #81c995;
 }
 
@@ -2933,7 +2936,7 @@ body.dark .dims-ev-modal-author a:hover {
 
 .theme-dark .dims-cm-trigger:hover,
 body.dark .dims-cm-trigger:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgb(255 255 255 / 5%);
 }
 
 .theme-dark .dims-cm-trigger-label,
@@ -2964,7 +2967,7 @@ body.dark .dims-related-pill-v2 {
 
 .theme-dark .dims-related-pill-v2:hover,
 body.dark .dims-related-pill-v2:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(255 255 255 / 8%);
 }
 
 /* ============================================
@@ -3106,10 +3109,10 @@ body.dark .dims-related-pill-v2:hover {
   gap: 0.5rem;
   min-height: 96px;
   padding: 1.5rem 1.35rem;
-  background: #ffffff;
+  background: #fff;
   border: 1px solid #dfe3e8;
   border-radius: 1rem;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 6px 18px rgb(15 23 42 / 4%);
   text-align: center;
 }
 
@@ -3166,15 +3169,17 @@ body.dark .dims-related-pill-v2:hover {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+
   /* Firefox */
   min-width: 0;
   max-width: 100%;
-  padding: 0.25rem 0 1rem 0;
+  padding: 0.25rem 0 1rem;
   cursor: grab;
 }
 
 .dims-ev-slider-track::-webkit-scrollbar {
   display: none;
+
   /* Chrome, Safari */
 }
 
@@ -3206,12 +3211,12 @@ body.dark .dims-related-pill-v2:hover {
   border-radius: 999px;
   overflow: hidden;
   background: #fff;
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  box-shadow: rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;
   z-index: 3;
 }
 
 .dims-ev-slider-controls .dims-ev-slider-btn+.dims-ev-slider-btn {
-  border-left: 1px solid rgba(17, 24, 39, 0.08);
+  border-left: 1px solid rgb(17 24 39 / 8%);
 }
 
 /* Slider arrow buttons */
@@ -3230,7 +3235,7 @@ body.dark .dims-related-pill-v2:hover {
 }
 
 .dims-ev-slider-btn:hover {
-  background: rgba(255, 255, 255, 0.38);
+  background: rgb(255 255 255 / 38%);
   color: #1d2125;
 }
 
@@ -3307,12 +3312,12 @@ body.dark .dims-related-pill-v2:hover {
   border-radius: 999px;
   overflow: hidden;
   background: #fff;
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  box-shadow: rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;
   z-index: 3;
 }
 
 .dims-courses-scroll-controls .dims-scroll-btn+.dims-scroll-btn {
-  border-left: 1px solid rgba(17, 24, 39, 0.08);
+  border-left: 1px solid rgb(17 24 39 / 8%);
 }
 
 /* Scroll arrow buttons (reuse slider button style) */
@@ -3331,7 +3336,7 @@ body.dark .dims-related-pill-v2:hover {
 }
 
 .dims-scroll-btn:hover {
-  background: rgba(255, 255, 255, 0.38);
+  background: rgb(255 255 255 / 38%);
   color: #1d2125;
 }
 
@@ -3374,7 +3379,7 @@ body.dark .dims-related-pill-v2:hover {
 }
 
 /* Mobile: keep horizontal behavior for 2-course scenarios (avoid stacking). */
-@media (max-width: 575.98px) {
+@media (width <=575.98px) {
   .dims-courses-no-scroll {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -3400,7 +3405,7 @@ body.dark .dims-related-pill-v2:hover {
 /* ============================================
    RESPONSIVE - Tabs, slider, courses scroll
    ============================================ */
-@media (max-width: 575.98px) {
+@media (width <=575.98px) {
   .dims-tab-btn {
     padding: 0.375rem 0.75rem;
     font-size: 0.75rem;
@@ -3505,12 +3510,12 @@ body.dark .dims-courses-scroll-controls {
 
 .theme-dark .dims-ev-slider-controls .dims-ev-slider-btn+.dims-ev-slider-btn,
 body.dark .dims-ev-slider-controls .dims-ev-slider-btn+.dims-ev-slider-btn {
-  border-left-color: rgba(255, 255, 255, 0.12);
+  border-left-color: rgb(255 255 255 / 12%);
 }
 
 .theme-dark .dims-courses-scroll-controls .dims-scroll-btn+.dims-scroll-btn,
 body.dark .dims-courses-scroll-controls .dims-scroll-btn+.dims-scroll-btn {
-  border-left-color: rgba(255, 255, 255, 0.12);
+  border-left-color: rgb(255 255 255 / 12%);
 }
 
 .theme-dark .dims-ev-slider-btn,
@@ -3531,7 +3536,7 @@ body.dark .dims-scroll-btn {
 body.dark .dims-ev-slider-btn:hover,
 .theme-dark .dims-scroll-btn:hover,
 body.dark .dims-scroll-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgb(255 255 255 / 10%);
 }
 
 .theme-dark .dims-ev-slider-btn.disabled,
@@ -3651,7 +3656,7 @@ body.dark .dims-cm-trigger-label {
    ============================================ */
 .fitem [data-fieldtype="textarea"] textarea[name*="customscss"],
 #id_customfield_customscss {
-  font-family: 'SFMono-Regular', 'SF Mono', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+  font-family: SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.5;
   min-height: 200px;
@@ -3670,7 +3675,7 @@ body.dark .dims-cm-trigger-label {
   background-color: #1e1e2e;
   color: #cdd6f4;
   border-color: #89b4fa;
-  box-shadow: 0 0 0 0.2rem rgba(137, 180, 250, 0.25);
+  box-shadow: 0 0 0 0.2rem rgb(137 180 250 / 25%);
 }
 
 /* Hide the editor format selector for the custom SCSS field.
@@ -3757,7 +3762,7 @@ body.dark .dims-cm-trigger-label {
 .dims-rules-progress-fill-striped {
   background-color: #fd7e14;
   background-image:
-    linear-gradient(45deg, rgba(255, 255, 255, 0.25) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 75%, transparent 75%, transparent),
+    linear-gradient(45deg, rgb(255 255 255 / 25%) 25%, transparent 25%, transparent 50%, rgb(255 255 255 / 25%) 50%, rgb(255 255 255 / 25%) 75%, transparent 75%, transparent),
     linear-gradient(90deg, #fd7e14, #ff922b);
   background-size: 1rem 1rem, 100% 100%;
 }
@@ -3817,11 +3822,11 @@ body.dark .dims-cm-trigger-label {
 }
 
 .dims-rules-child-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
 }
 
 .dims-rules-child-card-required {
-  border-color: rgba(253, 126, 20, 0.22);
+  border-color: rgb(253 126 20 / 22%);
 }
 
 .dims-rules-child-card[hidden] {
@@ -3919,7 +3924,7 @@ body.dark .dims-cm-trigger-label {
   align-items: flex-start;
   gap: 12px;
   padding: 16px 20px;
-  background: rgba(253, 126, 20, 0.08);
+  background: rgb(253 126 20 / 8%);
   border-radius: 10px;
   margin-bottom: 20px;
 }
@@ -3973,11 +3978,11 @@ body.dark .dims-cm-trigger-label {
   background: #e8590c;
   color: #fff;
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba(253, 126, 20, 0.3);
+  box-shadow: 0 2px 8px rgb(253 126 20 / 30%);
 }
 
 /* Responsive: stack points below on small screens */
-@media (max-width: 575.98px) {
+@media (width <=575.98px) {
   .dims-desc-layout-has-taxonomy {
     grid-template-columns: 1fr;
   }
