@@ -1,0 +1,60 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/setting_iconpicker
+
+    Icon picker autocomplete widget for admin settings.
+
+    Context variables required:
+    * elementid (string) - Base element ID for the widget
+    * fullname (string) - Full setting name for the hidden input
+    * id (string) - ID for the hidden input
+    * value (string) - Current stored value (escaped)
+    * hasvalue (bool) - Whether a value is currently set
+    * currenthtml (string) - HTML preview of the current icon
+    * placeholder (string) - Placeholder text for the search input
+    * browseall_title (string) - Title for the browse-all button
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="form-autocomplete-container" id="{{elementid}}-container">
+    <input type="hidden" name="{{fullname}}" id="{{id}}" value="{{value}}" />
+    <div class="d-flex align-items-center">
+        {{#hasvalue}}
+        <span class="mr-2 me-2" id="{{elementid}}-preview">{{{currenthtml}}}</span>
+        {{/hasvalue}}
+        {{^hasvalue}}
+        <span class="mr-2 me-2" id="{{elementid}}-preview"></span>
+        {{/hasvalue}}
+        <div class="d-inline-flex align-items-center position-relative" style="max-width: 400px; flex: 1;">
+            <input type="text" class="form-control" id="{{elementid}}-search"
+                   placeholder="{{placeholder}}"
+                   value="{{value}}"
+                   autocomplete="off"
+                   style="padding-right: 32px;" />
+            <button type="button" class="btn p-0 border-0 position-absolute" id="{{elementid}}-downarrow"
+                    style="right: 8px; top: 50%; transform: translateY(-50%); background: none; line-height: 1;"
+                    title="{{browseall_title}}">
+                <i class="fa fa-chevron-down text-muted" aria-hidden="true"></i>
+            </button>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary ml-2 ms-2" id="{{elementid}}-clear"
+                title="Clear">&times;</button>
+    </div>
+    <div class="local-dimensions-icon-dropdown" id="{{elementid}}-dropdown"></div>
+</div>

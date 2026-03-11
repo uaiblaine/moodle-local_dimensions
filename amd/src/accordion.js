@@ -1,3 +1,18 @@
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Accordion functionality for full plan overview with AJAX loading.
  *
@@ -23,7 +38,7 @@ define(
             showrelatedlink: false,
             viewplanurl: '',
             showevidence: true,
-            showcomments: false
+            enableevidencesubmitbutton: false
         };
 
         /**
@@ -34,9 +49,9 @@ define(
          * @param {number} planId The plan ID
          */
         function loadCompetencySummary(contentElement, competencyId, planId) {
-            const loadingEl = contentElement.querySelector('.dims-competency-summary-loading');
-            const contentEl = contentElement.querySelector('.dims-competency-summary-content');
-            const errorEl = contentElement.querySelector('.dims-competency-summary-error');
+            const loadingEl = contentElement.querySelector('.local-dimensions-competency-summary-loading');
+            const contentEl = contentElement.querySelector('.local-dimensions-competency-summary-content');
+            const errorEl = contentElement.querySelector('.local-dimensions-competency-summary-error');
 
             // Check if already loaded.
             if (loadedCompetencies.has(competencyId)) {
@@ -139,11 +154,6 @@ define(
                 { key: 'evidence_type_other', component: 'local_dimensions' },
                 { key: 'evidence_by', component: 'local_dimensions' },
                 { key: 'no_evidence', component: 'local_dimensions' },
-                { key: 'comments_section', component: 'local_dimensions' },
-                { key: 'no_comments', component: 'local_dimensions' },
-                { key: 'add_comment', component: 'local_dimensions' },
-                { key: 'comment_placeholder', component: 'local_dimensions' },
-                { key: 'comment_by', component: 'local_dimensions' },
                 { key: 'access_course', component: 'local_dimensions' },
                 { key: 'linked_courses', component: 'local_dimensions' },
                 { key: 'assessment_status', component: 'local_dimensions' },
@@ -172,7 +182,7 @@ define(
                 { key: 'rules_assessment_prefix', component: 'local_dimensions' },
                 { key: 'rules_pts', component: 'local_dimensions' },
                 { key: 'rules_no_points', component: 'local_dimensions' },
-                { key: 'rules_submit_evidence', component: 'local_dimensions' },
+                { key: 'evidence_submit', component: 'local_dimensions' },
                 { key: 'rules_todo', component: 'local_dimensions' },
                 { key: 'rules_completed_count', component: 'local_dimensions' },
                 { key: 'rules_info_title', component: 'local_dimensions' },
@@ -203,64 +213,55 @@ define(
                     evidenceTypeOther: strings[13],
                     evidenceBy: strings[14],
                     noEvidence: strings[15],
-                    commentsSection: strings[16],
-                    noComments: strings[17],
-                    addComment: strings[18],
-                    commentPlaceholder: strings[19],
-                    commentBy: strings[20],
-                    accessCourse: strings[21],
-                    linkedCourses: strings[22],
-                    assessmentStatus: strings[23],
-                    descriptionLabel: strings[24],
-                    taxonomyCardLabel: strings[25],
-                    showMore: strings[26],
-                    showLess: strings[27],
-                    proficiencyLabel: strings[28],
-                    accessLabel: strings[29],
-                    dateFormat: strings[30],
-                    sliderPrev: strings[31],
-                    sliderNext: strings[32],
-                    pathBreadcrumbLabel: strings[33],
-                    evidenceDetails: strings[34],
-                    evidenceNote: strings[35],
-                    evidenceLink: strings[36],
-                    evidenceGrade: strings[37],
-                    evidenceAuthor: strings[38],
-                    evidenceDate: strings[39],
-                    evidenceViewDetails: strings[40],
-                    evidenceOpenLink: strings[41],
-                    rulesTab: strings[42],
-                    rulesProgress: strings[43],
-                    rulesTotalCompetencies: strings[44],
-                    rulesRequiredTag: strings[45],
-                    rulesAssessmentPrefix: strings[46],
-                    rulesPts: strings[47],
-                    rulesNoPoints: strings[48],
-                    rulesSubmitEvidence: strings[49],
-                    rulesTodo: strings[50],
-                    rulesCompletedCount: strings[51],
-                    rulesInfoTitle: strings[52],
-                    rulesMissingMandatoryNotice: strings[53],
-                    rulesFilterLabel: strings[54],
-                    rulesFilterAll: strings[55],
-                    rulesFilterRequired: strings[56],
-                    rulesSrAlert: strings[57],
-                    rulesSrProficient: strings[58],
-                    rulesSrInprogress: strings[59],
-                    rulesSrTodo: strings[60],
-                    rulesSrProgress: strings[61]
+                    accessCourse: strings[16],
+                    linkedCourses: strings[17],
+                    assessmentStatus: strings[18],
+                    descriptionLabel: strings[19],
+                    taxonomyCardLabel: strings[20],
+                    showMore: strings[21],
+                    showLess: strings[22],
+                    proficiencyLabel: strings[23],
+                    accessLabel: strings[24],
+                    dateFormat: strings[25],
+                    sliderPrev: strings[26],
+                    sliderNext: strings[27],
+                    pathBreadcrumbLabel: strings[28],
+                    evidenceDetails: strings[29],
+                    evidenceNote: strings[30],
+                    evidenceLink: strings[31],
+                    evidenceGrade: strings[32],
+                    evidenceAuthor: strings[33],
+                    evidenceDate: strings[34],
+                    evidenceViewDetails: strings[35],
+                    evidenceOpenLink: strings[36],
+                    rulesTab: strings[37],
+                    rulesProgress: strings[38],
+                    rulesTotalCompetencies: strings[39],
+                    rulesRequiredTag: strings[40],
+                    rulesAssessmentPrefix: strings[41],
+                    rulesPts: strings[42],
+                    rulesNoPoints: strings[43],
+                    evidenceSubmit: strings[44],
+                    rulesTodo: strings[45],
+                    rulesCompletedCount: strings[46],
+                    rulesInfoTitle: strings[47],
+                    rulesMissingMandatoryNotice: strings[48],
+                    rulesFilterLabel: strings[49],
+                    rulesFilterAll: strings[50],
+                    rulesFilterRequired: strings[51],
+                    rulesSrAlert: strings[52],
+                    rulesSrProficient: strings[53],
+                    rulesSrInprogress: strings[54],
+                    rulesSrTodo: strings[55],
+                    rulesSrProgress: strings[56]
                 };
 
                 const summaryState = getSummaryState(data, courses);
-                let html = '<div class="dims-competency-detail">';
+                let html = '<div class="local-dimensions-competency-detail">';
                 html += renderSummaryTabs(summaryState, strMap, planId);
 
                 if (summaryState.visibleCourses.length > 0) {
                     html += renderCourseCardsScrollable(summaryState.visibleCourses, strMap);
-                }
-
-                if (displaySettings.showcomments && summaryState.ucs?.commentarea?.count > 0) {
-                    html += renderCommentsSection(summaryState.ucs.commentarea, strMap);
                 }
 
                 html += '</div>';
@@ -288,13 +289,8 @@ define(
                 // Initialize course scroll navigation.
                 initCourseScroll(contentEl);
 
-                // Attach event listeners for comments toggle button (lazy loading).
-                if (displaySettings.showcomments && summaryState.ucs?.commentarea) {
-                    attachCommentsToggleListeners(contentEl, strMap);
-                }
-
                 // If the Rules tab is currently active (first tab), trigger lazy load immediately.
-                const activeRulesPane = contentEl.querySelector('.dims-tab-pane-rules.active');
+                const activeRulesPane = contentEl.querySelector('.local-dimensions-tab-pane-rules.active');
                 if (activeRulesPane) {
                     loadRulesTabIfNeeded(activeRulesPane, strMap);
                 }
@@ -388,7 +384,7 @@ define(
                 return '';
             }
 
-            let html = '<div class="dims-tabs-wrapper">';
+            let html = '<div class="local-dimensions-tabs-wrapper">';
             html += renderSummaryTabNavigation(tabs, summaryState.comp.id);
             html += renderSummaryTabPanes(summaryState, tabs, strMap, planId);
             html += '</div>';
@@ -404,15 +400,15 @@ define(
          * @return {string} HTML
          */
         function renderSummaryTabNavigation(tabs, competencyId) {
-            let html = '<div class="dims-tabs-nav" role="tablist">';
+            let html = '<div class="local-dimensions-tabs-nav" role="tablist">';
 
             tabs.forEach(function (tab, idx) {
                 const isActive = idx === 0;
-                html += '<button type="button" class="dims-tab-btn' + (isActive ? ' active' : '') + '"';
+                html += '<button type="button" class="local-dimensions-tab-btn' + (isActive ? ' active' : '') + '"';
                 html += ' role="tab"';
-                html += ' id="dims-tab-' + tab.id + '-' + competencyId + '"';
+                html += ' id="local-dimensions-tab-' + tab.id + '-' + competencyId + '"';
                 html += ' aria-selected="' + (isActive ? 'true' : 'false') + '"';
-                html += ' aria-controls="dims-tabpane-' + tab.id + '-' + competencyId + '"';
+                html += ' aria-controls="local-dimensions-tabpane-' + tab.id + '-' + competencyId + '"';
                 html += ' tabindex="' + (isActive ? '0' : '-1') + '"';
                 html += ' data-tab="' + tab.id + '">';
                 html += escapeHtml(tab.label);
@@ -433,7 +429,7 @@ define(
          * @return {string} HTML
          */
         function renderSummaryTabPanes(summaryState, tabs, strMap, planId) {
-            let html = '<div class="dims-tabs-content">';
+            let html = '<div class="local-dimensions-tabs-content">';
 
             if (summaryState.hasStatus) {
                 html += renderStatusPane(summaryState, tabs, strMap);
@@ -462,9 +458,9 @@ define(
          */
         function renderStatusPane(summaryState, tabs, strMap) {
             const isFirst = tabs[0].id === 'status';
-            let html = '<div class="dims-tab-pane dims-tab-pane-status' + (isFirst ? ' active' : '') + '"';
-            html += ' id="dims-tabpane-status-' + summaryState.comp.id + '" data-tab="status"';
-            html += ' role="tabpanel" aria-labelledby="dims-tab-status-' + summaryState.comp.id + '">';
+            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-status' + (isFirst ? ' active' : '') + '"';
+            html += ' id="local-dimensions-tabpane-status-' + summaryState.comp.id + '" data-tab="status"';
+            html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-status-' + summaryState.comp.id + '">';
             html += renderStatusSection(summaryState.ucs, strMap);
             html += '</div>';
             return html;
@@ -481,11 +477,11 @@ define(
          */
         function renderDescriptionPane(summaryState, tabs, strMap, planId) {
             const isFirst = tabs[0].id === 'description';
-            let html = '<div class="dims-tab-pane dims-tab-pane-description' + (isFirst ? ' active' : '') + '"';
-            html += ' id="dims-tabpane-description-' + summaryState.comp.id + '" data-tab="description"';
-            html += ' role="tabpanel" aria-labelledby="dims-tab-description-' + summaryState.comp.id + '">';
-            html += '<div class="dims-desc-layout' + (summaryState.hasTaxonomyCard ? ' dims-desc-layout-has-taxonomy' : '') + '">';
-            html += '<div class="dims-desc-main">';
+            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-description' + (isFirst ? ' active' : '') + '"';
+            html += ' id="local-dimensions-tabpane-description-' + summaryState.comp.id + '" data-tab="description"';
+            html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-description-' + summaryState.comp.id + '">';
+            html += '<div class="local-dimensions-desc-layout' + (summaryState.hasTaxonomyCard ? ' local-dimensions-desc-layout-has-taxonomy' : '') + '">';
+            html += '<div class="local-dimensions-desc-main">';
 
             if (summaryState.hasDesc) {
                 html += renderDescriptionSection(summaryState.comp.description, strMap);
@@ -518,10 +514,24 @@ define(
          */
         function renderEvidencePane(summaryState, tabs, strMap) {
             const isFirst = tabs[0].id === 'evidence';
-            let html = '<div class="dims-tab-pane dims-tab-pane-evidence' + (isFirst ? ' active' : '') + '"';
-            html += ' id="dims-tabpane-evidence-' + summaryState.comp.id + '" data-tab="evidence"';
-            html += ' role="tabpanel" aria-labelledby="dims-tab-evidence-' + summaryState.comp.id + '">';
+            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-evidence' + (isFirst ? ' active' : '') + '"';
+            html += ' id="local-dimensions-tabpane-evidence-' + summaryState.comp.id + '" data-tab="evidence"';
+            html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-evidence-' + summaryState.comp.id + '">';
             html += renderEvidenceSlider(summaryState.ucs.evidence, strMap);
+
+            // Submit evidence button (if enabled by admin + user has capability).
+            if (displaySettings.enableevidencesubmitbutton) {
+                const uc = summaryState.ucs.usercompetency || summaryState.ucs.usercompetencyplan;
+                if (uc && uc.userid) {
+                    const evidenceUrl = M.cfg.wwwroot + '/admin/tool/lp/user_evidence_list.php?userid=' + uc.userid;
+                    html += '<div class="local-dimensions-evidence-submit-wrapper">';
+                    html += '<a href="' + escapeHtml(evidenceUrl) + '" class="local-dimensions-evidence-submit-btn">';
+                    html += escapeHtml(strMap.evidenceSubmit);
+                    html += '</a>';
+                    html += '</div>';
+                }
+            }
+
             html += '</div>';
             return html;
         }
@@ -537,16 +547,16 @@ define(
          */
         function renderRulesPane(summaryState, tabs, strMap, planId) {
             const isFirst = tabs[0].id === 'rules';
-            let html = '<div class="dims-tab-pane dims-tab-pane-rules' + (isFirst ? ' active' : '') + '"';
-            html += ' id="dims-tabpane-rules-' + summaryState.comp.id + '" data-tab="rules"';
-            html += ' role="tabpanel" aria-labelledby="dims-tab-rules-' + summaryState.comp.id + '"';
+            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-rules' + (isFirst ? ' active' : '') + '"';
+            html += ' id="local-dimensions-tabpane-rules-' + summaryState.comp.id + '" data-tab="rules"';
+            html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-rules-' + summaryState.comp.id + '"';
             html += ' data-competency-id="' + summaryState.comp.id + '"';
             html += ' data-plan-id="' + planId + '">';
-            html += '<div class="dims-rules-loading" role="status" aria-live="polite">';
+            html += '<div class="local-dimensions-rules-loading" role="status" aria-live="polite">';
             html += '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
             html += '<span class="sr-only">' + escapeHtml(strMap.rulesTab) + '</span>';
             html += '</div>';
-            html += '<div class="dims-rules-content" style="display:none;"></div>';
+            html += '<div class="local-dimensions-rules-content" style="display:none;"></div>';
             html += '</div>';
             return html;
         }
@@ -558,7 +568,7 @@ define(
          * @param {Object} strMap Language strings map
          */
         function attachTabListeners(contentEl, strMap) {
-            const tabBtns = contentEl.querySelectorAll('.dims-tab-btn');
+            const tabBtns = contentEl.querySelectorAll('.local-dimensions-tab-btn');
 
             /**
              * Activate a specific tab and its corresponding pane.
@@ -568,20 +578,20 @@ define(
              */
             function activateTab(btn, setFocus) {
                 const tabId = btn.dataset.tab;
-                const wrapper = btn.closest('.dims-tabs-wrapper');
+                const wrapper = btn.closest('.local-dimensions-tabs-wrapper');
                 if (!wrapper) {
                     return;
                 }
 
                 // Deactivate all tabs in this wrapper.
-                wrapper.querySelectorAll('.dims-tab-btn').forEach(function (b) {
+                wrapper.querySelectorAll('.local-dimensions-tab-btn').forEach(function (b) {
                     b.classList.remove('active');
                     b.setAttribute('aria-selected', 'false');
                     b.setAttribute('tabindex', '-1');
                 });
 
                 // Deactivate all panes.
-                wrapper.querySelectorAll('.dims-tab-pane').forEach(function (p) {
+                wrapper.querySelectorAll('.local-dimensions-tab-pane').forEach(function (p) {
                     p.classList.remove('active');
                 });
 
@@ -595,7 +605,7 @@ define(
                 }
 
                 // Activate corresponding pane.
-                const pane = wrapper.querySelector('.dims-tab-pane[data-tab="' + tabId + '"]');
+                const pane = wrapper.querySelector('.local-dimensions-tab-pane[data-tab="' + tabId + '"]');
                 if (pane) {
                     pane.classList.add('active');
                     refreshScrollableControls(pane);
@@ -614,11 +624,11 @@ define(
 
                 // Keyboard navigation: Arrow Left/Right, Home, End (ARIA Authoring Practices).
                 btn.addEventListener('keydown', function (e) {
-                    const wrapper = this.closest('.dims-tabs-wrapper');
+                    const wrapper = this.closest('.local-dimensions-tabs-wrapper');
                     if (!wrapper) {
                         return;
                     }
-                    const tabs = Array.from(wrapper.querySelectorAll('.dims-tab-btn'));
+                    const tabs = Array.from(wrapper.querySelectorAll('.local-dimensions-tab-btn'));
                     const idx = tabs.indexOf(this);
                     let newIdx = -1;
 
@@ -651,7 +661,7 @@ define(
             }
 
             const refresh = function () {
-                container.querySelectorAll('.dims-ev-slider-wrapper, .dims-courses-scroll-wrapper').forEach(function (wrapper) {
+                container.querySelectorAll('.local-dimensions-ev-slider-wrapper, .local-dimensions-courses-scroll-wrapper').forEach(function (wrapper) {
                     if (typeof wrapper._dimsUpdateArrows === 'function') {
                         wrapper._dimsUpdateArrows();
                     }
@@ -686,8 +696,8 @@ define(
             loadedRulesPanes.add(cacheKey);
 
             const planId = Number.parseInt(pane.dataset.planId, 10);
-            const loadingEl = pane.querySelector('.dims-rules-loading');
-            const contentEl = pane.querySelector('.dims-rules-content');
+            const loadingEl = pane.querySelector('.local-dimensions-rules-loading');
+            const contentEl = pane.querySelector('.local-dimensions-rules-content');
 
             if (!competencyId || !planId) {
                 if (loadingEl) {
@@ -739,29 +749,29 @@ define(
             const hasMissingMandatory = !!data.hasmissingmandatory;
             const totalCount = Number.parseInt(data.childcount, 10) || 0;
             const mandatoryCount = Number.parseInt(data.mandatorycount, 10) || 0;
-            let html = '<div class="dims-rules-section">';
+            let html = '<div class="local-dimensions-rules-section">';
 
             html += renderRuleInfoBox(data, strMap);
 
             // === Progress header ===
-            html += '<div class="dims-rules-progress-header">';
-            html += '<span class="dims-rules-progress-label-wrap">';
-            html += '<span class="dims-rules-progress-label">' + escapeHtml(strMap.rulesProgress) + '</span>';
+            html += '<div class="local-dimensions-rules-progress-header">';
+            html += '<span class="local-dimensions-rules-progress-label-wrap">';
+            html += '<span class="local-dimensions-rules-progress-label">' + escapeHtml(strMap.rulesProgress) + '</span>';
             if (hasMissingMandatory) {
-                html += '<span class="dims-rules-progress-alert" aria-label="' + escapeHtml(strMap.rulesSrAlert) + '">';
+                html += '<span class="local-dimensions-rules-progress-alert" aria-label="' + escapeHtml(strMap.rulesSrAlert) + '">';
                 html += '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>';
                 html += '</span>';
             }
             html += '</span>';
             if (isPoints) {
-                const earnedClass = data.earnedpoints > 0 ? ' dims-rules-earned-highlight' : '';
-                html += '<span class="dims-rules-progress-score">';
-                html += '<span class="dims-rules-earned' + earnedClass + '">' + data.earnedpoints + '</span>';
+                const earnedClass = data.earnedpoints > 0 ? ' local-dimensions-rules-earned-highlight' : '';
+                html += '<span class="local-dimensions-rules-progress-score">';
+                html += '<span class="local-dimensions-rules-earned' + earnedClass + '">' + data.earnedpoints + '</span>';
                 html += ' / ' + data.totalrequired + ' pts';
                 html += '</span>';
             } else {
-                html += '<span class="dims-rules-progress-score">';
-                html += '<span class="dims-rules-earned">' + data.earnedpoints + '</span>';
+                html += '<span class="local-dimensions-rules-progress-score">';
+                html += '<span class="local-dimensions-rules-earned">' + data.earnedpoints + '</span>';
                 html += ' / ' + data.totalrequired;
                 html += '</span>';
             }
@@ -774,22 +784,22 @@ define(
             const srProgressText = strMap.rulesSrProgress
                 .replace('{$a->earned}', data.earnedpoints)
                 .replace('{$a->total}', data.totalrequired);
-            html += '<div class="dims-rules-progress-bar">';
-            html += '<div class="dims-rules-progress-track" role="progressbar"';
+            html += '<div class="local-dimensions-rules-progress-bar">';
+            html += '<div class="local-dimensions-rules-progress-track" role="progressbar"';
             html += ' aria-valuenow="' + data.earnedpoints + '"';
             html += ' aria-valuemin="0"';
             html += ' aria-valuemax="' + data.totalrequired + '"';
             html += ' aria-label="' + escapeHtml(srProgressText) + '">';
-            html += '<div class="dims-rules-progress-fill' +
-                (hasMissingMandatory ? ' dims-rules-progress-fill-striped progress-bar-striped' : '') +
+            html += '<div class="local-dimensions-rules-progress-fill' +
+                (hasMissingMandatory ? ' local-dimensions-rules-progress-fill-striped progress-bar-striped' : '') +
                 '" style="width: ' + pct + '%;"></div>';
             html += '</div>';
             html += '</div>';
 
             // === Progress context ===
             const countText = strMap.rulesTotalCompetencies.replace('{$a}', data.childcount || 0);
-            html += '<div class="dims-rules-progress-context' +
-                (hasMissingMandatory ? ' dims-rules-progress-context-alert' : ' text-muted') + '">';
+            html += '<div class="local-dimensions-rules-progress-context' +
+                (hasMissingMandatory ? ' local-dimensions-rules-progress-context-alert' : ' text-muted') + '">';
             html += escapeHtml(hasMissingMandatory ? strMap.rulesMissingMandatoryNotice : countText);
             html += '</div>';
 
@@ -800,24 +810,14 @@ define(
             // === Children list ===
             // Children list as accessible list.
             if (data.children && data.children.length > 0) {
-                html += '<ul class="dims-rules-child-list" role="list">';
+                html += '<ul class="local-dimensions-rules-child-list" role="list">';
                 data.children.forEach(function (child) {
                     html += renderRulesChild(child, strMap, planId, isPoints);
                 });
                 html += '</ul>';
             }
 
-            // === Submit evidence button ===
-            if (data.enableevidencebutton && data.userid) {
-                const evidenceUrl = M.cfg.wwwroot + '/admin/tool/lp/user_evidence_list.php?userid=' + data.userid;
-                html += '<div class="dims-rules-submit-wrapper">';
-                html += '<a href="' + escapeHtml(evidenceUrl) + '" class="dims-rules-submit-btn">';
-                html += escapeHtml(strMap.rulesSubmitEvidence);
-                html += '</a>';
-                html += '</div>';
-            }
-
-            html += '</div>'; // End dims-rules-section.
+            html += '</div>'; // End local-dimensions-rules-section.
             return html;
         }
 
@@ -831,51 +831,51 @@ define(
          * @return {string} HTML for the child card
          */
         function renderRulesChild(child, strMap, planId, isPoints) {
-            let cardClasses = 'dims-rules-child-card';
+            let cardClasses = 'local-dimensions-rules-child-card';
             if (child.required) {
-                cardClasses += ' dims-rules-child-card-required';
+                cardClasses += ' local-dimensions-rules-child-card-required';
             }
             let html = '<li class="' + cardClasses + '" data-required="' + (child.required ? 'true' : 'false') + '">';
 
             // Status icon with sr-only label.
-            html += '<div class="dims-rules-child-icon-wrapper">';
+            html += '<div class="local-dimensions-rules-child-icon-wrapper">';
             const rulesIconUrls = {
                 proficient: M.util.image_url('status/rules-proficient', 'local_dimensions'),
                 inprogress: M.util.image_url('status/rules-inprogress', 'local_dimensions'),
                 todo: M.util.image_url('status/rules-todo', 'local_dimensions')
             };
             if (child.isproficient) {
-                html += '<div class="dims-rules-child-icon dims-rules-icon-proficient">';
-                html += '<img class="dims-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.proficient || '') + '" alt="" aria-hidden="true">';
+                html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-proficient">';
+                html += '<img class="local-dimensions-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.proficient || '') + '" alt="" aria-hidden="true">';
                 html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrProficient) + '</span>';
                 html += '</div>';
             } else if (child.hasgrade) {
-                html += '<div class="dims-rules-child-icon dims-rules-icon-inprogress">';
-                html += '<img class="dims-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.inprogress || '') + '" alt="" aria-hidden="true">';
+                html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-inprogress">';
+                html += '<img class="local-dimensions-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.inprogress || '') + '" alt="" aria-hidden="true">';
                 html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrInprogress) + '</span>';
                 html += '</div>';
             } else {
-                html += '<div class="dims-rules-child-icon dims-rules-icon-todo">';
-                html += '<img class="dims-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.todo || '') + '" alt="" aria-hidden="true">';
+                html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-todo">';
+                html += '<img class="local-dimensions-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.todo || '') + '" alt="" aria-hidden="true">';
                 html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrTodo) + '</span>';
                 html += '</div>';
             }
             html += '</div>';
 
             // Content.
-            html += '<div class="dims-rules-child-body">';
+            html += '<div class="local-dimensions-rules-child-body">';
             const childUrl = M.cfg.wwwroot + '/local/dimensions/view-plan.php?id=' + planId + '&competencyid=' + child.id;
-            html += '<a href="' + escapeHtml(childUrl) + '" class="dims-rules-child-name">';
+            html += '<a href="' + escapeHtml(childUrl) + '" class="local-dimensions-rules-child-name">';
             html += escapeHtml(child.shortname);
             html += '</a>';
 
             // Required tag.
             if (child.required) {
-                html += ' <span class="dims-rules-required-tag">' + escapeHtml(strMap.rulesRequiredTag) + '</span>';
+                html += ' <span class="local-dimensions-rules-required-tag">' + escapeHtml(strMap.rulesRequiredTag) + '</span>';
             }
 
             // Assessment line.
-            html += '<div class="dims-rules-child-assessment text-muted">';
+            html += '<div class="local-dimensions-rules-child-assessment text-muted">';
             html += escapeHtml(strMap.rulesAssessmentPrefix) + ' ';
             if (child.hasgrade) {
                 html += escapeHtml(child.gradename);
@@ -887,17 +887,17 @@ define(
 
             // Points (only for points-based rules).
             if (isPoints) {
-                html += '<div class="dims-rules-child-points">';
+                html += '<div class="local-dimensions-rules-child-points">';
                 if (child.isproficient) {
-                    html += '<span class="dims-rules-points-value">' + child.points + '</span>';
+                    html += '<span class="local-dimensions-rules-points-value">' + child.points + '</span>';
                 } else {
-                    html += '<span class="dims-rules-points-value dims-rules-points-pending">' + child.points + '</span>';
+                    html += '<span class="local-dimensions-rules-points-value local-dimensions-rules-points-pending">' + child.points + '</span>';
                 }
-                html += ' <span class="dims-rules-points-unit">' + escapeHtml(strMap.rulesPts) + '</span>';
+                html += ' <span class="local-dimensions-rules-points-unit">' + escapeHtml(strMap.rulesPts) + '</span>';
                 html += '</div>';
             }
 
-            html += '</li>'; // End dims-rules-child-card.
+            html += '</li>'; // End local-dimensions-rules-child-card.
             return html;
         }
 
@@ -915,15 +915,15 @@ define(
                 return '';
             }
 
-            let html = '<div class="dims-rules-info-box" role="note">';
-            html += '<div class="dims-rules-info-icon">';
+            let html = '<div class="local-dimensions-rules-info-box" role="note">';
+            html += '<div class="local-dimensions-rules-info-icon">';
             html += '<i class="fa fa-info-circle" aria-hidden="true"></i>';
             html += '</div>';
-            html += '<div class="dims-rules-info-text">';
-            html += '<div class="dims-rules-info-title">' + escapeHtml(strMap.rulesInfoTitle) + '</div>';
-            html += '<div class="dims-rules-info-description">' + escapeHtml(ruleText) + '</div>';
+            html += '<div class="local-dimensions-rules-info-text">';
+            html += '<div class="local-dimensions-rules-info-title">' + escapeHtml(strMap.rulesInfoTitle) + '</div>';
+            html += '<div class="local-dimensions-rules-info-description">' + escapeHtml(ruleText) + '</div>';
             if (data.hasrequired && data.requiredwarningtext) {
-                html += '<div class="dims-rules-info-note"><strong>' + escapeHtml(data.requiredwarningtext) + '</strong></div>';
+                html += '<div class="local-dimensions-rules-info-note"><strong>' + escapeHtml(data.requiredwarningtext) + '</strong></div>';
             }
             html += '</div>';
             html += '</div>';
@@ -940,18 +940,18 @@ define(
          * @return {string} HTML for filter tabs
          */
         function renderRulesFilterTabs(strMap, totalCount, mandatoryCount) {
-            let html = '<div class="dims-rules-filter-wrapper">';
-            html += '<div class="dims-rules-filter-tabs dims-filter-tabs" role="tablist"';
+            let html = '<div class="local-dimensions-rules-filter-wrapper">';
+            html += '<div class="local-dimensions-rules-filter-tabs local-dimensions-filter-tabs" role="tablist"';
             html += ' aria-label="' + escapeHtml(strMap.rulesFilterLabel) + '">';
-            html += '<button type="button" class="dims-rules-filter-tab dims-filter-tab active"';
+            html += '<button type="button" class="local-dimensions-rules-filter-tab local-dimensions-filter-tab active"';
             html += ' data-filter="all" role="tab" aria-selected="true">';
             html += escapeHtml(strMap.rulesFilterAll);
-            html += '<span class="dims-filter-count">' + totalCount + '</span>';
+            html += '<span class="local-dimensions-filter-count">' + totalCount + '</span>';
             html += '</button>';
-            html += '<button type="button" class="dims-rules-filter-tab dims-filter-tab"';
+            html += '<button type="button" class="local-dimensions-rules-filter-tab local-dimensions-filter-tab"';
             html += ' data-filter="required" role="tab" aria-selected="false">';
             html += escapeHtml(strMap.rulesFilterRequired);
-            html += '<span class="dims-filter-count">' + mandatoryCount + '</span>';
+            html += '<span class="local-dimensions-filter-count">' + mandatoryCount + '</span>';
             html += '</button>';
             html += '</div>';
             html += '</div>';
@@ -969,14 +969,14 @@ define(
                 return;
             }
 
-            container.querySelectorAll('.dims-rules-filter-tabs').forEach(function (tablist) {
-                const buttons = Array.from(tablist.querySelectorAll('.dims-rules-filter-tab'));
-                const section = tablist.closest('.dims-rules-section');
+            container.querySelectorAll('.local-dimensions-rules-filter-tabs').forEach(function (tablist) {
+                const buttons = Array.from(tablist.querySelectorAll('.local-dimensions-rules-filter-tab'));
+                const section = tablist.closest('.local-dimensions-rules-section');
                 if (!section || buttons.length === 0) {
                     return;
                 }
 
-                const cards = Array.from(section.querySelectorAll('.dims-rules-child-card'));
+                const cards = Array.from(section.querySelectorAll('.local-dimensions-rules-child-card'));
 
                 const applyFilter = function (filter, focusButton) {
                     buttons.forEach(function (button) {
@@ -1039,41 +1039,41 @@ define(
                 return html;
             }
 
-            html += '<div class="dims-ev-slider-wrapper" data-evidence-count="' + evidence.length + '">';
+            html += '<div class="local-dimensions-ev-slider-wrapper" data-evidence-count="' + evidence.length + '">';
 
             // Slider track.
-            html += '<div class="dims-ev-slider-track">';
+            html += '<div class="local-dimensions-ev-slider-track">';
 
             evidence.forEach(function (ev, index) {
                 const typeInfo = getEvidenceTypeInfo(ev, strMap);
                 const hasExtraDetails = ev.note || ev.url || (ev.grade && ev.gradename && ev.gradename !== '-');
 
-                html += '<div class="dims-ev-card" data-evidence-index="' + index + '">';
+                html += '<div class="local-dimensions-ev-card" data-evidence-index="' + index + '">';
 
                 // Icon.
-                html += '<div class="dims-ev-icon ' + typeInfo.colorClass + '">';
+                html += '<div class="local-dimensions-ev-icon ' + typeInfo.colorClass + '">';
                 html += '<i class="fa ' + typeInfo.icon + '" aria-hidden="true"></i>';
                 html += '</div>';
 
                 // Content.
-                html += '<div class="dims-ev-content">';
-                html += '<h3 class="dims-ev-title">' + escapeHtml(typeInfo.label) + '</h3>';
+                html += '<div class="local-dimensions-ev-content">';
+                html += '<h3 class="local-dimensions-ev-title">' + escapeHtml(typeInfo.label) + '</h3>';
 
                 if (ev.description) {
-                    html += '<p class="dims-ev-desc">' + ev.description + '</p>';
+                    html += '<p class="local-dimensions-ev-desc">' + ev.description + '</p>';
                 }
 
                 // Author + date (hidden for manual override evidence — details available in modal).
-                const isManualOverride = typeInfo.colorClass === 'dims-evidence-manual';
+                const isManualOverride = typeInfo.colorClass === 'local-dimensions-evidence-manual';
                 if (!isManualOverride && ev.usermodified && ev.actionuser) {
                     const authorName = escapeHtml(ev.actionuser.fullname || '');
                     const authorProfileUrl = M.cfg.wwwroot + '/user/profile.php?id=' + ev.usermodified;
-                    html += '<div class="dims-ev-meta">';
+                    html += '<div class="local-dimensions-ev-meta">';
                     html += '<i class="fa fa-user" aria-hidden="true"></i> ';
                     html += '<a href="' + escapeHtml(authorProfileUrl) + '" target="_blank">';
                     html += authorName + '</a>';
                     if (ev.timecreated) {
-                        html += ' <span class="dims-ev-meta-sep">&middot;</span> ';
+                        html += ' <span class="local-dimensions-ev-meta-sep">&middot;</span> ';
                         html += '<span>' + formatTimestamp(ev.timecreated, strMap.dateFormat) + '</span>';
                     }
                     html += '</div>';
@@ -1081,32 +1081,32 @@ define(
 
                 // Detail button — shown when extra info is available.
                 if (hasExtraDetails) {
-                    html += '<button type="button" class="dims-ev-detail-btn" data-evidence-index="' + index + '"';
+                    html += '<button type="button" class="local-dimensions-ev-detail-btn" data-evidence-index="' + index + '"';
                     html += ' aria-label="' + escapeHtml(strMap.evidenceViewDetails) + ': ' + escapeHtml(typeInfo.label) + '">';
                     html += '<i class="fa fa-expand" aria-hidden="true"></i> ';
                     html += '<span>' + escapeHtml(strMap.evidenceViewDetails) + '</span>';
                     html += '</button>';
                 }
 
-                html += '</div>'; // End dims-ev-content.
-                html += '</div>'; // End dims-ev-card.
+                html += '</div>'; // End local-dimensions-ev-content.
+                html += '</div>'; // End local-dimensions-ev-card.
             });
 
-            html += '</div>'; // End dims-ev-slider-track.
+            html += '</div>'; // End local-dimensions-ev-slider-track.
 
             // Controls block (bottom-right).
-            html += '<div class="dims-ev-slider-controls" role="group" aria-label="' + escapeHtml(strMap.evidenceLabel) + '">';
-            html += '<button type="button" class="dims-ev-slider-btn dims-ev-slider-prev disabled"';
+            html += '<div class="local-dimensions-ev-slider-controls" role="group" aria-label="' + escapeHtml(strMap.evidenceLabel) + '">';
+            html += '<button type="button" class="local-dimensions-ev-slider-btn local-dimensions-ev-slider-prev disabled"';
             html += ' aria-label="' + escapeHtml(strMap.sliderPrev) + '">';
             html += '<i class="fa fa-chevron-left" aria-hidden="true"></i>';
             html += '</button>';
-            html += '<button type="button" class="dims-ev-slider-btn dims-ev-slider-next"';
+            html += '<button type="button" class="local-dimensions-ev-slider-btn local-dimensions-ev-slider-next"';
             html += ' aria-label="' + escapeHtml(strMap.sliderNext) + '">';
             html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
             html += '</button>';
-            html += '</div>'; // End dims-ev-slider-controls.
+            html += '</div>'; // End local-dimensions-ev-slider-controls.
 
-            html += '</div>'; // End dims-ev-slider-wrapper.
+            html += '</div>'; // End local-dimensions-ev-slider-wrapper.
 
             return html;
         }
@@ -1266,7 +1266,7 @@ define(
          */
         function animateTrackScroll(track, targetLeft, onComplete) {
             if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
-                track.classList.remove('dims-animating');
+                track.classList.remove('local-dimensions-animating');
                 track.scrollLeft = targetLeft;
                 onComplete();
                 return;
@@ -1275,13 +1275,13 @@ define(
             const startLeft = track.scrollLeft;
             const distance = targetLeft - startLeft;
             if (Math.abs(distance) < 1) {
-                track.classList.remove('dims-animating');
+                track.classList.remove('local-dimensions-animating');
                 track.scrollLeft = targetLeft;
                 onComplete();
                 return;
             }
 
-            track.classList.add('dims-animating');
+            track.classList.add('local-dimensions-animating');
 
             if (track._dimsAnimFrame && globalThis.cancelAnimationFrame) {
                 globalThis.cancelAnimationFrame(track._dimsAnimFrame);
@@ -1308,10 +1308,10 @@ define(
                 track._dimsAnimFrame = null;
                 if (globalThis.requestAnimationFrame) {
                     globalThis.requestAnimationFrame(function () {
-                        track.classList.remove('dims-animating');
+                        track.classList.remove('local-dimensions-animating');
                     });
                 } else {
-                    track.classList.remove('dims-animating');
+                    track.classList.remove('local-dimensions-animating');
                 }
                 onComplete();
             };
@@ -1320,7 +1320,7 @@ define(
                 track._dimsAnimFrame = globalThis.requestAnimationFrame(step);
             } else {
                 track.scrollLeft = targetLeft;
-                track.classList.remove('dims-animating');
+                track.classList.remove('local-dimensions-animating');
                 onComplete();
             }
         }
@@ -1406,7 +1406,7 @@ define(
             const maxScroll = track.scrollWidth - track.clientWidth;
 
             if (!showControls) {
-                wrapper.classList.add('dims-controls-hidden');
+                wrapper.classList.add('local-dimensions-controls-hidden');
                 if (prevBtn) {
                     prevBtn.style.display = 'none';
                 }
@@ -1416,7 +1416,7 @@ define(
                 return;
             }
 
-            wrapper.classList.remove('dims-controls-hidden');
+            wrapper.classList.remove('local-dimensions-controls-hidden');
 
             const atStart = scrollLeft <= edgeThreshold;
             const atEnd = scrollLeft >= maxScroll - edgeThreshold;
@@ -1457,7 +1457,7 @@ define(
                 );
             };
 
-            wrapper.classList.add('dims-controls-hidden');
+            wrapper.classList.add('local-dimensions-controls-hidden');
             if (prevBtn) {
                 prevBtn.style.display = 'none';
                 prevBtn.addEventListener('click', function () {
@@ -1506,31 +1506,31 @@ define(
          * @param {string|null} scaleConfig The scale configuration JSON string from the competency
          */
         function initSliders(contentEl, evidenceData, strMap, scaleConfig) {
-            const sliders = contentEl.querySelectorAll('.dims-ev-slider-wrapper');
+            const sliders = contentEl.querySelectorAll('.local-dimensions-ev-slider-wrapper');
 
             sliders.forEach(function (wrapper) {
-                const track = wrapper.querySelector('.dims-ev-slider-track');
-                const prevBtn = wrapper.querySelector('.dims-ev-slider-prev');
-                const nextBtn = wrapper.querySelector('.dims-ev-slider-next');
+                const track = wrapper.querySelector('.local-dimensions-ev-slider-track');
+                const prevBtn = wrapper.querySelector('.local-dimensions-ev-slider-prev');
+                const nextBtn = wrapper.querySelector('.local-dimensions-ev-slider-next');
 
                 if (!track) {
                     return;
                 }
 
                 const evidenceCount = Number.parseInt(wrapper.dataset.evidenceCount, 10)
-                    || track.querySelectorAll('.dims-ev-card').length;
+                    || track.querySelectorAll('.local-dimensions-ev-card').length;
                 initScrollableTrack({
                     wrapper: wrapper,
                     track: track,
                     prevBtn: prevBtn,
                     nextBtn: nextBtn,
-                    cardSelector: '.dims-ev-card',
+                    cardSelector: '.local-dimensions-ev-card',
                     itemCount: evidenceCount
                 });
 
                 // Evidence detail button handler — opens modal with full evidence info.
                 wrapper.addEventListener('click', function (e) {
-                    const btn = e.target.closest('.dims-ev-detail-btn');
+                    const btn = e.target.closest('.local-dimensions-ev-detail-btn');
                     if (!btn) {
                         return;
                     }
@@ -1563,7 +1563,7 @@ define(
                 }
                 isDown = true;
                 hasDragged = false;
-                el.classList.add('dims-dragging');
+                el.classList.add('local-dimensions-dragging');
                 startX = e.pageX - el.offsetLeft;
                 scrollLeft = el.scrollLeft;
             });
@@ -1574,7 +1574,7 @@ define(
                 }
                 isDown = false;
                 hasDragged = false;
-                el.classList.remove('dims-dragging');
+                el.classList.remove('local-dimensions-dragging');
             });
 
             el.addEventListener('mouseup', function () {
@@ -1583,7 +1583,7 @@ define(
                 }
                 isDown = false;
                 hasDragged = false;
-                el.classList.remove('dims-dragging');
+                el.classList.remove('local-dimensions-dragging');
             });
 
             el.addEventListener('mousemove', function (e) {
@@ -1623,16 +1623,16 @@ define(
          */
         function renderCourseCardsScrollable(courses, strMap) {
             const hasManyCourses = courses.length > 2;
-            let html = '<section class="dims-section dims-courses-section">';
+            let html = '<section class="local-dimensions-section local-dimensions-courses-section">';
 
             // Section title.
-            html += '<h2 class="dims-section-title">';
+            html += '<h2 class="local-dimensions-section-title">';
             html += escapeHtml(strMap.linkedCourses);
-            html += ' <span class="dims-section-badge">' + courses.length + '</span>';
+            html += ' <span class="local-dimensions-section-badge">' + courses.length + '</span>';
             html += '</h2>';
 
-            html += '<div class="dims-courses-scroll-wrapper" data-course-count="' + courses.length + '">';
-            html += '<div class="dims-courses-scroll' + (hasManyCourses ? '' : ' dims-courses-no-scroll') + '">';
+            html += '<div class="local-dimensions-courses-scroll-wrapper" data-course-count="' + courses.length + '">';
+            html += '<div class="local-dimensions-courses-scroll' + (hasManyCourses ? '' : ' local-dimensions-courses-no-scroll') + '">';
 
             courses.forEach(function (course) {
                 const courseUrl = M.cfg.wwwroot + '/course/view.php?id=' + course.id;
@@ -1640,58 +1640,58 @@ define(
                 const progress = Number.parseInt(course.progress, 10) || 0;
                 const hasImage = course.courseimage && course.courseimage.trim() !== '';
 
-                html += '<div class="dims-course-card-lg">';
+                html += '<div class="local-dimensions-course-card-lg">';
 
                 // Course image.
                 if (hasImage) {
-                    html += '<div class="dims-course-img">';
+                    html += '<div class="local-dimensions-course-img">';
                     html += '<img src="' + escapeHtml(course.courseimage) + '" alt="" loading="lazy">';
                     html += '</div>';
                 } else {
                     // Gradient placeholder with initials.
                     const initials = getInitials(courseName);
-                    html += '<div class="dims-course-img dims-course-img-placeholder">';
+                    html += '<div class="local-dimensions-course-img local-dimensions-course-img-placeholder">';
                     html += '<span>' + escapeHtml(initials) + '</span>';
                     html += '</div>';
                 }
 
                 // Course body.
-                html += '<div class="dims-course-body">';
-                html += '<h3 class="dims-course-name-lg">' + escapeHtml(courseName) + '</h3>';
+                html += '<div class="local-dimensions-course-body">';
+                html += '<h3 class="local-dimensions-course-name-lg">' + escapeHtml(courseName) + '</h3>';
 
                 // Progress bar.
-                html += '<div class="dims-course-progress-lg">';
-                html += '<div class="dims-course-progress-track">';
-                html += '<div class="dims-course-progress-fill-lg" style="width: ' + progress + '%;"></div>';
+                html += '<div class="local-dimensions-course-progress-lg">';
+                html += '<div class="local-dimensions-course-progress-track">';
+                html += '<div class="local-dimensions-course-progress-fill-lg" style="width: ' + progress + '%;"></div>';
                 html += '</div>';
-                html += '<span class="dims-course-progress-pct-lg">' + progress + '%</span>';
+                html += '<span class="local-dimensions-course-progress-pct-lg">' + progress + '%</span>';
                 if (progress >= 100) {
-                    html += '<i class="fa fa-check-circle dims-course-check" aria-hidden="true"></i>';
+                    html += '<i class="fa fa-check-circle local-dimensions-course-check" aria-hidden="true"></i>';
                 }
                 html += '</div>';
 
                 // Access button (full width).
-                html += '<a href="' + escapeHtml(courseUrl) + '" class="btn btn-secondary dims-course-btn">';
+                html += '<a href="' + escapeHtml(courseUrl) + '" class="btn btn-secondary local-dimensions-course-btn">';
                 html += escapeHtml(strMap.accessLabel);
                 html += '</a>';
 
-                html += '</div>'; // End dims-course-body.
-                html += '</div>'; // End dims-course-card-lg.
+                html += '</div>'; // End local-dimensions-course-body.
+                html += '</div>'; // End local-dimensions-course-card-lg.
             });
 
-            html += '</div>'; // End dims-courses-scroll.
-            html += '<div class="dims-courses-scroll-controls" role="group" aria-label="' + escapeHtml(strMap.linkedCourses) + '">';
-            html += '<button type="button" class="dims-scroll-btn dims-scroll-prev disabled"';
+            html += '</div>'; // End local-dimensions-courses-scroll.
+            html += '<div class="local-dimensions-courses-scroll-controls" role="group" aria-label="' + escapeHtml(strMap.linkedCourses) + '">';
+            html += '<button type="button" class="local-dimensions-scroll-btn local-dimensions-scroll-prev disabled"';
             html += ' aria-label="' + escapeHtml(strMap.sliderPrev) + '">';
             html += '<i class="fa fa-chevron-left" aria-hidden="true"></i>';
             html += '</button>';
-            html += '<button type="button" class="dims-scroll-btn dims-scroll-next"';
+            html += '<button type="button" class="local-dimensions-scroll-btn local-dimensions-scroll-next"';
             html += ' aria-label="' + escapeHtml(strMap.sliderNext) + '">';
             html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
             html += '</button>';
-            html += '</div>'; // End dims-courses-scroll-controls.
+            html += '</div>'; // End local-dimensions-courses-scroll-controls.
 
-            html += '</div>'; // End dims-courses-scroll-wrapper.
+            html += '</div>'; // End local-dimensions-courses-scroll-wrapper.
             html += '</section>';
 
             return html;
@@ -1703,25 +1703,25 @@ define(
          * @param {HTMLElement} contentEl The content container element
          */
         function initCourseScroll(contentEl) {
-            const wrappers = contentEl.querySelectorAll('.dims-courses-scroll-wrapper');
+            const wrappers = contentEl.querySelectorAll('.local-dimensions-courses-scroll-wrapper');
 
             wrappers.forEach(function (wrapper) {
-                const track = wrapper.querySelector('.dims-courses-scroll');
-                const prevBtn = wrapper.querySelector('.dims-scroll-prev');
-                const nextBtn = wrapper.querySelector('.dims-scroll-next');
+                const track = wrapper.querySelector('.local-dimensions-courses-scroll');
+                const prevBtn = wrapper.querySelector('.local-dimensions-scroll-prev');
+                const nextBtn = wrapper.querySelector('.local-dimensions-scroll-next');
 
                 if (!track) {
                     return;
                 }
 
                 const courseCount = Number.parseInt(wrapper.dataset.courseCount, 10)
-                    || track.querySelectorAll('.dims-course-card-lg').length;
+                    || track.querySelectorAll('.local-dimensions-course-card-lg').length;
                 initScrollableTrack({
                     wrapper: wrapper,
                     track: track,
                     prevBtn: prevBtn,
                     nextBtn: nextBtn,
-                    cardSelector: '.dims-course-card-lg',
+                    cardSelector: '.local-dimensions-course-card-lg',
                     itemCount: courseCount
                 });
             });
@@ -1758,13 +1758,13 @@ define(
             }
 
             if (pathParts.length > 0) {
-                html += '<nav class="dims-path-bar" aria-label="' + escapeHtml(strMap.pathBreadcrumbLabel) + '">';
-                html += '<span class="dims-path-label">' + escapeHtml(strMap.pathBreadcrumbLabel) + ':</span>';
-                html += '<ol class="dims-path-breadcrumb">';
+                html += '<nav class="local-dimensions-path-bar" aria-label="' + escapeHtml(strMap.pathBreadcrumbLabel) + '">';
+                html += '<span class="local-dimensions-path-label">' + escapeHtml(strMap.pathBreadcrumbLabel) + ':</span>';
+                html += '<ol class="local-dimensions-path-breadcrumb">';
                 pathParts.forEach(function (part, idx) {
                     html += '<li>';
                     if (idx > 0) {
-                        html += '<i class="fa fa-chevron-right dims-path-bar-sep" aria-hidden="true"></i>';
+                        html += '<i class="fa fa-chevron-right local-dimensions-path-bar-sep" aria-hidden="true"></i>';
                     }
                     html += part;
                     html += '</li>';
@@ -1793,19 +1793,19 @@ define(
 
             const useLink = displaySettings.showrelatedlink && displaySettings.viewplanurl && planId;
 
-            html += '<section class="dims-section dims-related-section">';
-            html += '<h3 class="dims-related-header">';
+            html += '<section class="local-dimensions-section local-dimensions-related-section">';
+            html += '<h3 class="local-dimensions-related-header">';
             html += escapeHtml(strMap.relatedDimensions);
             html += '</h3>';
-            html += '<div class="dims-related-pills">';
+            html += '<div class="local-dimensions-related-pills">';
 
             data.relatedcompetencies.forEach(function (related) {
                 if (useLink && related.id) {
                     const href = displaySettings.viewplanurl + '?id=' + planId + '&competencyid=' + related.id;
-                    html += '<a href="' + escapeHtml(href) + '" class="dims-related-pill-v2 dims-related-pill-link">' 
+                    html += '<a href="' + escapeHtml(href) + '" class="local-dimensions-related-pill-v2 local-dimensions-related-pill-link">' 
                         + escapeHtml(related.shortname) + '</a>';
                 } else {
-                    html += '<span class="dims-related-pill-v2">' + escapeHtml(related.shortname) + '</span>';
+                    html += '<span class="local-dimensions-related-pill-v2">' + escapeHtml(related.shortname) + '</span>';
                 }
             });
 
@@ -1858,22 +1858,22 @@ define(
             };
             const meta = {
                 iconurl: taxonomyIcons[key] || '',
-                accentClass: 'dims-taxonomy-card-neutral'
+                accentClass: 'local-dimensions-taxonomy-card-neutral'
             };
 
             const mapping = {
-                behaviour: { iconurl: taxonomyIcons.behaviour || '', accentClass: 'dims-taxonomy-card-behaviour' },
-                behavior: { iconurl: taxonomyIcons.behavior || taxonomyIcons.behaviour || '', accentClass: 'dims-taxonomy-card-behaviour' },
-                competency: { iconurl: taxonomyIcons.competency || '', accentClass: 'dims-taxonomy-card-competency' },
-                concept: { iconurl: taxonomyIcons.concept || '', accentClass: 'dims-taxonomy-card-concept' },
-                domain: { iconurl: taxonomyIcons.domain || '', accentClass: 'dims-taxonomy-card-domain' },
-                indicator: { iconurl: taxonomyIcons.indicator || '', accentClass: 'dims-taxonomy-card-indicator' },
-                level: { iconurl: taxonomyIcons.level || '', accentClass: 'dims-taxonomy-card-level' },
-                outcome: { iconurl: taxonomyIcons.outcome || '', accentClass: 'dims-taxonomy-card-outcome' },
-                practice: { iconurl: taxonomyIcons.practice || '', accentClass: 'dims-taxonomy-card-practice' },
-                proficiency: { iconurl: taxonomyIcons.proficiency || '', accentClass: 'dims-taxonomy-card-proficiency' },
-                skill: { iconurl: taxonomyIcons.skill || '', accentClass: 'dims-taxonomy-card-skill' },
-                value: { iconurl: taxonomyIcons.value || '', accentClass: 'dims-taxonomy-card-value' }
+                behaviour: { iconurl: taxonomyIcons.behaviour || '', accentClass: 'local-dimensions-taxonomy-card-behaviour' },
+                behavior: { iconurl: taxonomyIcons.behavior || taxonomyIcons.behaviour || '', accentClass: 'local-dimensions-taxonomy-card-behaviour' },
+                competency: { iconurl: taxonomyIcons.competency || '', accentClass: 'local-dimensions-taxonomy-card-competency' },
+                concept: { iconurl: taxonomyIcons.concept || '', accentClass: 'local-dimensions-taxonomy-card-concept' },
+                domain: { iconurl: taxonomyIcons.domain || '', accentClass: 'local-dimensions-taxonomy-card-domain' },
+                indicator: { iconurl: taxonomyIcons.indicator || '', accentClass: 'local-dimensions-taxonomy-card-indicator' },
+                level: { iconurl: taxonomyIcons.level || '', accentClass: 'local-dimensions-taxonomy-card-level' },
+                outcome: { iconurl: taxonomyIcons.outcome || '', accentClass: 'local-dimensions-taxonomy-card-outcome' },
+                practice: { iconurl: taxonomyIcons.practice || '', accentClass: 'local-dimensions-taxonomy-card-practice' },
+                proficiency: { iconurl: taxonomyIcons.proficiency || '', accentClass: 'local-dimensions-taxonomy-card-proficiency' },
+                skill: { iconurl: taxonomyIcons.skill || '', accentClass: 'local-dimensions-taxonomy-card-skill' },
+                value: { iconurl: taxonomyIcons.value || '', accentClass: 'local-dimensions-taxonomy-card-value' }
             };
 
             return mapping[key] || meta;
@@ -1888,16 +1888,16 @@ define(
          */
         function renderTaxonomyCard(taxonomy, strMap) {
             const meta = getTaxonomyCardMeta(taxonomy.key);
-            let html = '<aside class="dims-taxonomy-card ' + meta.accentClass + '" aria-label="' +
+            let html = '<aside class="local-dimensions-taxonomy-card ' + meta.accentClass + '" aria-label="' +
                 escapeHtml(taxonomy.term) + '">';
 
-            html += '<div class="dims-taxonomy-card-label">' + escapeHtml(strMap.taxonomyCardLabel) + '</div>';
-            html += '<div class="dims-taxonomy-card-icon">';
+            html += '<div class="local-dimensions-taxonomy-card-label">' + escapeHtml(strMap.taxonomyCardLabel) + '</div>';
+            html += '<div class="local-dimensions-taxonomy-card-icon">';
             if (meta.iconurl) {
-                html += '<img class="dims-taxonomy-card-icon-image" src="' + escapeHtml(meta.iconurl) + '" alt="" aria-hidden="true">';
+                html += '<img class="local-dimensions-taxonomy-card-icon-image" src="' + escapeHtml(meta.iconurl) + '" alt="" aria-hidden="true">';
             }
             html += '</div>';
-            html += '<div class="dims-taxonomy-card-title">' + escapeHtml(taxonomy.term) + '</div>';
+            html += '<div class="local-dimensions-taxonomy-card-title">' + escapeHtml(taxonomy.term) + '</div>';
             html += '</aside>';
 
             return html;
@@ -1920,7 +1920,7 @@ define(
                 return {
                     icon: 'fa-check-circle',
                     label: strMap.evidenceTypeActivity,
-                    colorClass: 'dims-evidence-activity'
+                    colorClass: 'local-dimensions-evidence-activity'
                 };
             }
 
@@ -1928,7 +1928,7 @@ define(
                 return {
                     icon: 'fa-graduation-cap',
                     label: strMap.evidenceTypeCoursegrade,
-                    colorClass: 'dims-evidence-grade'
+                    colorClass: 'local-dimensions-evidence-grade'
                 };
             }
 
@@ -1936,7 +1936,7 @@ define(
                 return {
                     icon: 'fa-pencil',
                     label: strMap.evidenceTypeManual,
-                    colorClass: 'dims-evidence-manual'
+                    colorClass: 'local-dimensions-evidence-manual'
                 };
             }
 
@@ -1946,13 +1946,13 @@ define(
                     return {
                         icon: 'fa-paperclip',
                         label: strMap.evidenceTypeFile,
-                        colorClass: 'dims-evidence-file'
+                        colorClass: 'local-dimensions-evidence-file'
                     };
                 }
                 return {
                     icon: 'fa-trophy',
                     label: strMap.evidenceTypePrior,
-                    colorClass: 'dims-evidence-prior'
+                    colorClass: 'local-dimensions-evidence-prior'
                 };
             }
 
@@ -1967,7 +1967,7 @@ define(
                 return {
                     icon: 'fa-check-circle',
                     label: strMap.evidenceTypeActivity,
-                    colorClass: 'dims-evidence-activity'
+                    colorClass: 'local-dimensions-evidence-activity'
                 };
             }
 
@@ -1975,7 +1975,7 @@ define(
                 return {
                     icon: 'fa-graduation-cap',
                     label: strMap.evidenceTypeCoursegrade,
-                    colorClass: 'dims-evidence-grade'
+                    colorClass: 'local-dimensions-evidence-grade'
                 };
             }
 
@@ -1983,7 +1983,7 @@ define(
                 return {
                     icon: 'fa-pencil',
                     label: strMap.evidenceTypeManual,
-                    colorClass: 'dims-evidence-manual'
+                    colorClass: 'local-dimensions-evidence-manual'
                 };
             }
 
@@ -1991,7 +1991,7 @@ define(
                 return {
                     icon: 'fa-paperclip',
                     label: strMap.evidenceTypeFile,
-                    colorClass: 'dims-evidence-file'
+                    colorClass: 'local-dimensions-evidence-file'
                 };
             }
 
@@ -1999,7 +1999,7 @@ define(
                 return {
                     icon: 'fa-trophy',
                     label: strMap.evidenceTypePrior,
-                    colorClass: 'dims-evidence-prior'
+                    colorClass: 'local-dimensions-evidence-prior'
                 };
             }
 
@@ -2007,406 +2007,8 @@ define(
             return {
                 icon: 'fa-info-circle',
                 label: strMap.evidenceTypeOther,
-                colorClass: 'dims-evidence-other'
+                colorClass: 'local-dimensions-evidence-other'
             };
-        }
-
-        /**
-         * Render comments section with lazy loading.
-         * Shows a toggle button that loads comments via AJAX when clicked.
-         *
-         * @param {Object} commentarea The comment area object with metadata
-         * @param {Object} strMap Language strings map
-         * @return {string} HTML for comments section
-         */
-        function renderCommentsSection(commentarea, strMap) {
-            const count = commentarea.count || 0;
-
-            // Create unique container ID for this commentarea.
-            const containerId = 'dims-comments-container-' + (commentarea.itemid || Date.now());
-
-            let html = '<section class="dims-section">';
-
-            // Card wrapper without shadow (simple border-top section).
-            html += '<div class="dims-cm-card">';
-
-            // Accordion trigger (styled as card header).
-            html += '<button type="button" class="dims-cm-trigger" ';
-            html += 'data-container-id="' + containerId + '" ';
-            html += 'data-component="' + escapeHtml(commentarea.component || 'competency') + '" ';
-            html += 'data-area="' + escapeHtml(commentarea.commentarea || 'user_competency') + '" ';
-            html += 'data-itemid="' + (commentarea.itemid || 0) + '" ';
-            html += 'data-contextid="' + (commentarea.contextid || 1) + '" ';
-            html += 'data-courseid="' + (commentarea.courseid || 1) + '" ';
-            html += 'aria-expanded="false" ';
-            html += 'aria-controls="' + containerId + '">';
-
-            html += '<div class="dims-cm-trigger-label">';
-            html += '<i class="fa fa-comments" aria-hidden="true"></i> ';
-            html += '<span>' + escapeHtml(strMap.commentsSection) + '</span>';
-            if (count > 0) {
-                html += ' <span class="dims-section-badge">' + count + '</span>';
-            }
-            html += '</div>';
-
-            html += '<i class="fa fa-chevron-down dims-cm-chevron" aria-hidden="true"></i>';
-            html += '</button>';
-
-            // Collapsible container (hidden by default) - keeps current timeline format.
-            html += '<div id="' + containerId + '" class="dims-comments-container" hidden>';
-            html += '<div class="dims-comments-loading">';
-            html += '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> ';
-            html += '</div>';
-            html += '<div class="dims-comments-content"></div>';
-            html += '<div class="dims-comments-error" style="display: none;">';
-            html += '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> ';
-            html += '</div>';
-            html += '</div>';
-
-            html += '</div>'; // End dims-shadow-card.
-            html += '</section>';
-
-            return html;
-        }
-
-        /**
-         * Load comments via AJAX for a specific comment area.
-         *
-         * @param {HTMLElement} container The comments container element
-         * @param {Object} params Parameters for the AJAX call
-         * @param {Object} strMap Language strings map
-         * @return {Promise} Promise that resolves when comments are loaded
-         */
-        function loadCommentsAjax(container, params, strMap) {
-            const loadingEl = container.querySelector('.dims-comments-loading');
-            const contentEl = container.querySelector('.dims-comments-content');
-            const errorEl = container.querySelector('.dims-comments-error');
-
-            // Show loading state.
-            if (loadingEl) {
-                loadingEl.style.display = 'block';
-            }
-            if (contentEl) {
-                contentEl.style.display = 'none';
-            }
-            if (errorEl) {
-                errorEl.style.display = 'none';
-            }
-
-            // Use local_dimensions_get_comments webservice.
-            return Ajax.call([{
-                methodname: 'local_dimensions_get_comments',
-                args: {
-                    component: params.component,
-                    area: params.area,
-                    itemid: params.itemid,
-                    contextid: params.contextid,
-                    page: 0
-                }
-            }])[0].then(function (response) {
-                // Hide loading.
-                if (loadingEl) {
-                    loadingEl.style.display = 'none';
-                }
-
-                const comments = response.comments || [];
-                const canPost = response.canpost || false;
-                let html = '';
-
-                // Single comment input form at the top (only if user can post).
-                if (canPost) {
-                    html += '<div class="dims-comment-form">';
-                    html += '<textarea class="dims-comment-textarea form-control"';
-                    html += ' placeholder="' + escapeHtml(strMap.commentPlaceholder) + '"';
-                    html += ' rows="2"></textarea>';
-                    html += '<button type="button" class="dims-comment-send-btn btn btn-primary btn-sm">';
-                    html += '<i class="fa fa-paper-plane" aria-hidden="true"></i> ';
-                    html += escapeHtml(strMap.addComment);
-                    html += '</button>';
-                    html += '</div>';
-                }
-
-                if (comments.length === 0) {
-                    html += '<p class="dims-no-comments text-muted">' + escapeHtml(strMap.noComments) + '</p>';
-                } else {
-                    html += '<div class="dims-comments-list">';
-                    comments.forEach(function (comment) {
-                        html += renderLoadedComment(comment);
-                    });
-                    html += '</div>';
-                }
-
-                contentEl.innerHTML = html;
-                contentEl.style.display = 'block';
-
-                // Attach event listener for the single comment form.
-                if (canPost) {
-                    const commentareaCtx = {
-                        component: params.component,
-                        commentarea: params.area,
-                        itemid: params.itemid,
-                        contextid: params.contextid,
-                        courseid: params.courseid
-                    };
-                    attachSingleCommentFormListener(container, commentareaCtx, strMap);
-                }
-
-                return null;
-            }).catch(function (error) {
-                // Hide loading, show error.
-                if (loadingEl) {
-                    loadingEl.style.display = 'none';
-                }
-                if (errorEl) {
-                    errorEl.style.display = 'block';
-                }
-                Notification.exception(error);
-                throw error;
-            });
-        }
-
-        /**
-         * Render a loaded comment from the AJAX response.
-         * Read-only card: initials, author, timestamp, content.
-         *
-         * @param {Object} comment The comment object from core_comment_get_comments
-         * @return {string} HTML for the comment
-         */
-        function renderLoadedComment(comment) {
-            const fullname = comment.fullname || comment.userfullname || '';
-            const initials = getInitials(fullname || 'U');
-            const timeFormatted = comment.timecreated || '';
-            const userid = comment.userid || 0;
-            const profileUrl = userid ? (M.cfg.wwwroot + '/user/profile.php?id=' + userid) : '';
-            const profileImageUrl = comment.profileimageurl || '';
-
-            let html = '<div class="dims-comment" data-comment-id="' + comment.id + '">';
-
-            // Comment header with avatar and author info.
-            html += '<div class="dims-comment-header">';
-            if (profileImageUrl) {
-                html += '<img class="dims-comment-avatar" src="' + escapeHtml(profileImageUrl) + '"';
-                html += ' alt="" aria-hidden="true" />';
-            } else {
-                html += '<div class="dims-comment-initials">' + escapeHtml(initials) + '</div>';
-            }
-            html += '<div class="dims-comment-meta">';
-            if (profileUrl) {
-                html += '<a href="' + escapeHtml(profileUrl) + '" target="_blank" class="dims-comment-author">';
-                html += escapeHtml(fullname) + '</a>';
-            } else {
-                html += '<span class="dims-comment-author">' + escapeHtml(fullname) + '</span>';
-            }
-            if (timeFormatted) {
-                html += '<span class="dims-comment-time text-muted">' + escapeHtml(timeFormatted) + '</span>';
-            }
-            html += '</div>';
-            html += '</div>';
-
-            // Comment content.
-            html += '<div class="dims-comment-body">' + (comment.content || '') + '</div>';
-
-            html += '</div>';
-
-            return html;
-        }
-
-
-        /**
-         * Get initials from a full name.
-         *
-         * @param {string} fullname The full name
-         * @return {string} Initials (up to 2 characters)
-         */
-        function getInitials(fullname) {
-            if (!fullname) {
-                return 'U';
-            }
-            const parts = fullname.trim().split(/\s+/);
-            if (parts.length >= 2) {
-                return (parts[0].charAt(0) + parts.at(-1).charAt(0)).toUpperCase();
-            }
-            return parts[0].charAt(0).toUpperCase();
-        }
-
-        // Cache for loaded comments containers to avoid reloading.
-        const loadedCommentsContainers = new Set();
-
-        /**
-         * Attach event listeners for comments toggle buttons.
-         * Handles lazy loading of comments when the toggle button is clicked.
-         *
-         * @param {HTMLElement} contentEl The content container element
-         * @param {Object} strMap Language strings map
-         */
-        function attachCommentsToggleListeners(contentEl, strMap) {
-            const toggleBtns = contentEl.querySelectorAll('.dims-cm-trigger');
-
-            toggleBtns.forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const containerId = this.dataset.containerId;
-                    const container = document.getElementById(containerId);
-
-                    if (!container) {
-                        return;
-                    }
-
-                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
-
-                    if (isExpanded) {
-                        // Collapse.
-                        this.setAttribute('aria-expanded', 'false');
-                        container.hidden = true;
-                    } else {
-                        // Expand.
-                        this.setAttribute('aria-expanded', 'true');
-                        container.hidden = false;
-
-                        // Load comments if not already loaded.
-                        if (!loadedCommentsContainers.has(containerId)) {
-                            loadedCommentsContainers.add(containerId);
-
-                            const params = {
-                                component: this.dataset.component,
-                                area: this.dataset.area,
-                                itemid: Number.parseInt(this.dataset.itemid, 10),
-                                contextid: Number.parseInt(this.dataset.contextid, 10),
-                                courseid: Number.parseInt(this.dataset.courseid, 10)
-                            };
-
-                            loadCommentsAjax(container, params, strMap);
-                        }
-                    }
-                });
-
-                // Keyboard support.
-                btn.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        this.click();
-                    }
-                });
-            });
-        }
-
-        /**
-         * Attach event listener for the single comment form.
-         *
-         * @param {HTMLElement} container The comments container element
-         * @param {Object} commentarea The comment area context
-         * @param {Object} strMap Language strings map
-         */
-        function attachSingleCommentFormListener(container, commentarea, strMap) {
-            const sendBtn = container.querySelector('.dims-comment-send-btn');
-            const textarea = container.querySelector('.dims-comment-textarea');
-
-            if (!sendBtn || !textarea) {
-                return;
-            }
-
-            sendBtn.addEventListener('click', function () {
-                const content = textarea.value.trim();
-                if (!content) {
-                    return;
-                }
-
-                // Disable button during request.
-                sendBtn.disabled = true;
-                const originalHTML = sendBtn.innerHTML;
-                sendBtn.innerHTML = '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
-
-                postComment(commentarea, content, sendBtn, originalHTML, textarea, container, strMap);
-            });
-
-            // Allow Ctrl+Enter / Cmd+Enter to send.
-            textarea.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    sendBtn.click();
-                }
-            });
-        }
-
-        /**
-         * Post a comment via AJAX.
-         *
-         * @param {Object} commentarea The comment area context
-         * @param {string} content The comment content
-         * @param {HTMLElement} sendBtn The send button element
-         * @param {string} originalBtnHTML The original button inner HTML
-         * @param {HTMLElement} textarea The textarea element
-         * @param {HTMLElement} container The comments container element
-         * @param {Object} strMap Language strings map
-         */
-        function postComment(commentarea, content, sendBtn, originalBtnHTML, textarea, container, strMap) {
-            if (!commentarea?.component || !commentarea?.itemid) {
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = originalBtnHTML;
-                return;
-            }
-
-            Ajax.call([{
-                methodname: 'local_dimensions_add_comment',
-                args: {
-                    component: commentarea.component,
-                    area: commentarea.commentarea || commentarea.area || 'user_competency',
-                    itemid: commentarea.itemid,
-                    contextid: commentarea.contextid || 1,
-                    content: content
-                }
-            }])[0].then(function (result) {
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = originalBtnHTML;
-
-                if (result?.success) {
-                    // Clear textarea.
-                    textarea.value = '';
-
-                    // Build new comment HTML.
-                    const newCommentHtml = renderLoadedComment({
-                        id: result.commentid,
-                        fullname: result.fullname,
-                        userid: result.userid,
-                        profileimageurl: result.profileimageurl || '',
-                        content: result.content,
-                        timecreated: result.timecreated
-                    });
-
-                    // Find or create the comments list.
-                    const contentEl = container.querySelector('.dims-comments-content');
-                    let commentsList = contentEl.querySelector('.dims-comments-list');
-
-                    if (!commentsList) {
-                        // Remove "no comments" placeholder if present.
-                        const noComments = contentEl.querySelector('.dims-no-comments');
-                        if (noComments) {
-                            noComments.remove();
-                        }
-                        // Create the list.
-                        commentsList = document.createElement('div');
-                        commentsList.className = 'dims-comments-list';
-                        contentEl.appendChild(commentsList);
-                    }
-
-                    // Prepend new comment (newest first).
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = newCommentHtml;
-                    const newEl = tempDiv.firstElementChild;
-                    if (newEl) {
-                        if (commentsList.firstChild) {
-                            commentsList.insertBefore(newEl, commentsList.firstChild);
-                        } else {
-                            commentsList.appendChild(newEl);
-                        }
-                    }
-                } else if (result?.error) {
-                    Notification.alert('Error', result.error);
-                }
-            }).catch(function (error) {
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = originalBtnHTML;
-                Notification.exception(error);
-            });
         }
 
         /**
@@ -2423,48 +2025,48 @@ define(
                 return '';
             }
 
-            let html = '<div class="dims-status-tab-content">';
+            let html = '<div class="local-dimensions-status-tab-content">';
 
             // 2-column grid.
-            html += '<div class="dims-status-grid">';
+            html += '<div class="local-dimensions-status-grid">';
 
             // Rating cell.
-            html += '<div class="dims-status-cell">';
-            html += '<p class="dims-status-label">' + escapeHtml(strMap.ratingLabel) + '</p>';
+            html += '<div class="local-dimensions-status-cell">';
+            html += '<p class="local-dimensions-status-label">' + escapeHtml(strMap.ratingLabel) + '</p>';
             // JSON-encoded responses return numeric fields as strings; coerce to integer for safe comparison.
             const isProficient = Number.parseInt(uc.proficiency, 10) === 1;
 
             if (uc.grade && uc.gradename) {
                 if (isProficient) {
-                    html += '<span class="dims-status-badge">';
+                    html += '<span class="local-dimensions-status-badge">';
                     html += '<i class="fa fa-check-circle" aria-hidden="true"></i> ';
                 } else {
-                    html += '<span class="dims-status-badge dims-status-badge-muted">';
+                    html += '<span class="local-dimensions-status-badge local-dimensions-status-badge-muted">';
                 }
                 html += escapeHtml(uc.gradename);
                 html += '</span>';
             } else {
-                html += '<span class="dims-status-value-muted">-</span>';
+                html += '<span class="local-dimensions-status-value-muted">-</span>';
             }
             html += '</div>';
 
             // Proficiency cell.
-            html += '<div class="dims-status-cell">';
-            html += '<p class="dims-status-label">' + escapeHtml(strMap.proficiencyLabel) + '</p>';
+            html += '<div class="local-dimensions-status-cell">';
+            html += '<p class="local-dimensions-status-label">' + escapeHtml(strMap.proficiencyLabel) + '</p>';
             if (isProficient) {
-                html += '<div class="dims-status-value dims-status-success">';
+                html += '<div class="local-dimensions-status-value local-dimensions-status-success">';
                 html += '<i class="fa fa-check-circle" aria-hidden="true"></i> ';
                 html += escapeHtml(strMap.yesStr);
                 html += '</div>';
             } else {
-                html += '<div class="dims-status-value dims-status-pending">';
+                html += '<div class="local-dimensions-status-value local-dimensions-status-pending">';
                 html += escapeHtml(strMap.noStr);
                 html += '</div>';
             }
             html += '</div>';
 
-            html += '</div>'; // End dims-status-grid.
-            html += '</div>'; // End dims-status-tab-content.
+            html += '</div>'; // End local-dimensions-status-grid.
+            html += '</div>'; // End local-dimensions-status-tab-content.
 
             return html;
         }
@@ -2478,20 +2080,20 @@ define(
          * @return {string} HTML for the description section
          */
         function renderDescriptionSection(description, strMap) {
-            let html = '<div class="dims-desc-tab-content">';
+            let html = '<div class="local-dimensions-desc-tab-content">';
 
             // Description text (always start collapsed, JS will check if truncation is needed).
-            html += '<div class="dims-desc-content dims-desc-collapsed">';
+            html += '<div class="local-dimensions-desc-content local-dimensions-desc-collapsed">';
             html += description;
             html += '</div>';
 
             // Toggle button (always rendered, JS will hide if content fits).
-            html += '<button type="button" class="dims-show-more" data-collapsed="true">';
+            html += '<button type="button" class="local-dimensions-show-more" data-collapsed="true">';
             html += escapeHtml(strMap.showMore);
             html += ' <i class="fa fa-chevron-right" aria-hidden="true"></i>';
             html += '</button>';
 
-            html += '</div>'; // End dims-desc-tab-content.
+            html += '</div>'; // End local-dimensions-desc-tab-content.
 
             return html;
         }
@@ -2503,7 +2105,7 @@ define(
          * @param {Object} strMap Language strings map
          */
         function attachShowMoreListeners(contentEl, strMap) {
-            const toggleBtns = contentEl.querySelectorAll('.dims-show-more');
+            const toggleBtns = contentEl.querySelectorAll('.local-dimensions-show-more');
 
             toggleBtns.forEach(function (btn) {
                 const descContent = btn.previousElementSibling;
@@ -2511,7 +2113,7 @@ define(
                 // Check if the content is actually truncated by comparing heights.
                 if (descContent && descContent.scrollHeight <= descContent.clientHeight) {
                     // Content fits without truncation - remove collapsed class and hide button.
-                    descContent.classList.remove('dims-desc-collapsed');
+                    descContent.classList.remove('local-dimensions-desc-collapsed');
                     btn.style.display = 'none';
                     return;
                 }
@@ -2521,13 +2123,13 @@ define(
 
                     if (isCollapsed) {
                         // Expand.
-                        descContent.classList.remove('dims-desc-collapsed');
+                        descContent.classList.remove('local-dimensions-desc-collapsed');
                         this.dataset.collapsed = 'false';
                         this.innerHTML = escapeHtml(strMap.showLess)
                             + ' <i class="fa fa-chevron-down" aria-hidden="true"></i>';
                     } else {
                         // Collapse.
-                        descContent.classList.add('dims-desc-collapsed');
+                        descContent.classList.add('local-dimensions-desc-collapsed');
                         this.dataset.collapsed = 'true';
                         this.innerHTML = escapeHtml(strMap.showMore)
                             + ' <i class="fa fa-chevron-right" aria-hidden="true"></i>';
@@ -2602,7 +2204,7 @@ define(
                 displaySettings = Object.assign(displaySettings, settings);
             }
 
-            const summaryContainer = document.querySelector('.dims-plan-summary');
+            const summaryContainer = document.querySelector('.local-dimensions-plan-summary');
             if (!summaryContainer) {
                 return;
             }
@@ -2610,14 +2212,14 @@ define(
             // Get plan ID from data attribute.
             const planId = Number.parseInt(summaryContainer.dataset.planid, 10);
 
-            const toggleButtons = document.querySelectorAll('.dims-accordion-toggle');
+            const toggleButtons = document.querySelectorAll('.local-dimensions-accordion-toggle');
 
             toggleButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     const expanded = this.getAttribute('aria-expanded') === 'true';
                     const contentId = this.getAttribute('aria-controls');
                     const content = document.getElementById(contentId);
-                    const accordionItem = this.closest('.dims-accordion-item');
+                    const accordionItem = this.closest('.local-dimensions-accordion-item');
                     const competencyId = accordionItem ? Number.parseInt(accordionItem.dataset.competencyId, 10) : null;
 
                     if (!content) {
@@ -2670,9 +2272,9 @@ define(
             applyFilter();
 
             // Mark as initialized to enable CSS transitions (prevents flickering).
-            const accordionContainer = document.querySelector('.dims-competency-accordion');
+            const accordionContainer = document.querySelector('.local-dimensions-competency-accordion');
             if (accordionContainer) {
-                accordionContainer.classList.add('dims-filter-initialized');
+                accordionContainer.classList.add('local-dimensions-filter-initialized');
             }
         }
 
@@ -2693,7 +2295,7 @@ define(
          * @return {string}
          */
         function getActiveFilter() {
-            const active = document.querySelector('.dims-filter-tab.active');
+            const active = document.querySelector('.local-dimensions-filter-tab.active');
             return active ? active.dataset.filter : 'incomplete';
         }
 
@@ -2703,7 +2305,7 @@ define(
          * @return {string}
          */
         function getSearchQuery() {
-            const input = document.querySelector('.dims-search-input');
+            const input = document.querySelector('.local-dimensions-search-input');
             return input ? normalizeText(input.value.trim()) : '';
         }
 
@@ -2711,7 +2313,7 @@ define(
          * Initialize filter tabs click handlers.
          */
         function initFilterTabs() {
-            const filterTabs = document.querySelectorAll('.dims-filter-tab');
+            const filterTabs = document.querySelectorAll('.local-dimensions-filter-tab');
 
             filterTabs.forEach(function (tab) {
                 tab.addEventListener('click', function () {
@@ -2741,8 +2343,8 @@ define(
          * Initialize competency search input.
          */
         function initSearch() {
-            const input = document.querySelector('.dims-search-input');
-            const clearBtn = document.querySelector('.dims-search-clear');
+            const input = document.querySelector('.local-dimensions-search-input');
+            const clearBtn = document.querySelector('.local-dimensions-search-clear');
             if (!input) {
                 return;
             }
@@ -2777,7 +2379,7 @@ define(
         function applyFilter() {
             const filter = getActiveFilter();
             const query = getSearchQuery();
-            const accordionItems = document.querySelectorAll('.dims-accordion-item');
+            const accordionItems = document.querySelectorAll('.local-dimensions-accordion-item');
 
             accordionItems.forEach(function (item) {
                 const isCompleted = item.classList.contains('completed');
@@ -2791,7 +2393,7 @@ define(
                 // Search filter.
                 let passesSearch = true;
                 if (query.length > 0) {
-                    const title = item.querySelector('.dims-accordion-title');
+                    const title = item.querySelector('.local-dimensions-accordion-title');
                     if (title) {
                         passesSearch = normalizeText(title.textContent).includes(query);
                     }
@@ -2799,10 +2401,10 @@ define(
 
                 if (passesTab && passesSearch) {
                     item.style.display = '';
-                    item.classList.remove('dims-hidden');
+                    item.classList.remove('local-dimensions-hidden');
                 } else {
                     item.style.display = 'none';
-                    item.classList.add('dims-hidden');
+                    item.classList.add('local-dimensions-hidden');
                 }
             });
         }

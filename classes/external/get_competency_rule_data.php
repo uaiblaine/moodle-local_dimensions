@@ -98,9 +98,6 @@ class get_competency_rule_data extends external_api {
             ? self::build_points_rule_data($config, $userid, $params['planid'], $scale)
             : self::build_all_rule_data($competency, $userid, $params['planid'], $scale);
 
-        // Enable evidence button setting.
-        $enableevidencebtn = (bool) get_config('local_dimensions', 'enableevidencesubmitbutton');
-
         $hasmissingmandatory = $ruledata['earnedpoints'] >= $ruledata['totalrequired']
             && $ruledata['pendingmandatorycount'] > 0;
         $outcometext = helper::get_rule_outcome_text($simpleruletype, $ruleoutcome, $competency, $framework);
@@ -121,8 +118,6 @@ class get_competency_rule_data extends external_api {
             'hasmissingmandatory' => $hasmissingmandatory,
             'children' => $ruledata['children'],
             'childcount' => count($ruledata['children']),
-            'enableevidencebutton' => $enableevidencebtn,
-            'userid' => $userid,
         ];
 
         return json_encode($result);

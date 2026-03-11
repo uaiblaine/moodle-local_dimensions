@@ -1,3 +1,25 @@
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * UI interactions for the view plan page.
+ *
+ * @module     local_dimensions/ui
+ * @copyright  2026 Anderson Blaine
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function ($, Ajax, Templates, Notification) {
 
     return {
@@ -21,7 +43,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
                 cardiconclass = resolveIconClass(cardicon);
             }
 
-            var containers = $('.dims-progress-container');
+            var containers = $('.local-dimensions-progress-container');
             var courseIds = [];
 
             // 1. Collect IDs.
@@ -44,7 +66,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
 
                 // 3. Process each result.
                 $.each(results, function (i, data) {
-                    var container = $('.dims-progress-container[data-courseid="' + data.courseid + '"]');
+                    var container = $('.local-dimensions-progress-container[data-courseid="' + data.courseid + '"]');
 
                     if (data.enabled && data.sections) {
 
@@ -85,7 +107,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
                             // If locked, move the overlay to card level so it covers the header too.
                             if (data.locked) {
                                 var card = container.closest('.card');
-                                var overlay = container.find('.dims-locked-overlay');
+                                var overlay = container.find('.local-dimensions-locked-overlay');
                                 if (card.length && overlay.length) {
                                     overlay.appendTo(card);
                                     injectAnimatedBorder(card[0], overlay[0], animatelockedborder);
@@ -113,7 +135,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
      * synchronised with the card's actual pixel size.
      *
      * @param {HTMLElement} card  The .card element (size source)
-     * @param {HTMLElement} overlay  The .dims-locked-overlay element
+     * @param {HTMLElement} overlay  The .local-dimensions-locked-overlay element
      * @param {boolean} animate  Whether to animate the dash offset
      */
     function injectAnimatedBorder(card, overlay, animate) {
@@ -123,7 +145,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
         var BORDER_RADIUS = 6; // matches 0.375rem at 16px base
 
         var svg = document.createElementNS(SVG_NS, 'svg');
-        svg.setAttribute('class', 'dims-locked-border-svg');
+        svg.setAttribute('class', 'local-dimensions-locked-border-svg');
         svg.setAttribute('aria-hidden', 'true');
 
         var rect = document.createElementNS(SVG_NS, 'rect');
@@ -134,7 +156,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function 
         rect.setAttribute('rx', BORDER_RADIUS);
         rect.setAttribute('ry', BORDER_RADIUS);
         if (animate) {
-            rect.style.animation = 'dims-dashoffset-move 2s linear infinite';
+            rect.style.animation = 'local-dimensions-dashoffset-move 2s linear infinite';
         }
 
         svg.appendChild(rect);

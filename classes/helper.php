@@ -26,6 +26,8 @@ namespace local_dimensions;
 
 use core_customfield\field_controller;
 use core_customfield\handler;
+use cache;
+use moodle_url;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\customfield\competency_handler;
 
@@ -537,5 +539,41 @@ class helper {
         }
 
         return get_string($prefix . $suffix, 'local_dimensions', $taxonomyterm);
+    }
+
+    /**
+     * Store the return URL and valid course IDs in session cache.
+     *
+     * @param moodle_url $url The URL to store as return destination.
+     * @param array $validcourseids Array of course IDs where the button should appear.
+     */
+    public static function set_return_context(moodle_url $url, array $validcourseids = []): void {
+        $cache = cache::make('local_dimensions', 'returncontext');
+        $cache->set('data', [
+            'url' => $url->out(false),
+            'courses' => $validcourseids,
+        ]);
+    }
+
+    /**
+     * Get the stored return context from session cache.
+     *
+     * @return array|null Array with 'url' and 'courses' keys, or null if not set.
+     */
+    public static function get_return_context(): ?array {
+        $cache = cache::make('local_dimensions', 'returncontext');
+        $data = $cache->get('data');
+        if (empty($data) || empty($data['url'])) {
+            return null;
+        }
+        return $data;
+    }
+
+    /**
+     * Clear the return context from session cache.
+     */
+    public static function clear_return_context(): void {
+        $cache = cache::make('local_dimensions', 'returncontext');
+        $cache->delete('data');
     }
 }

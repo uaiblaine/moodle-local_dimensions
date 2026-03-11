@@ -57,7 +57,6 @@ Shows all competencies in the plan as an expandable accordion. Each accordion pa
 - Related dimensions (optionally clickable)
 - Competency completion rules (rule type, outcome text, sub-competency progress, required-item alerts, and proficiency status)
 - Evidence cards with detail modals
-- Comments section with reply functionality
 - Linked course cards with section progress
 
 Taxonomy metadata is resolved on the backend and included in the AJAX payload, so the frontend renders the current competency taxonomy and rule outcome text without inferring framework labels client-side.
@@ -112,7 +111,6 @@ All settings are under **Site administration → Competencies → Competency Dim
 | Show related competencies | Display linked related competencies | Disabled |
 | Link related competencies | Make related competency names clickable | Disabled |
 | Show evidence | Display evidence cards with icons | Enabled |
-| Show comments | Display comments section with reply functionality | Disabled |
 | Enable "Submit Evidence" button | Show a button in the Rules tab linking to the prior learning evidence page | Disabled |
 
 
@@ -181,24 +179,6 @@ Wrapper for `tool_lp_data_for_user_competency_summary_in_plan` that avoids conte
 - `planid` (int): The plan ID
 
 **Returns:** JSON-encoded competency summary data enriched with taxonomy metadata for the current competency (`taxonomy.current`, `taxonomy.children`, `taxonomy.bylevel`) and a ready-to-render `taxonomyterm`.
-
-### local_dimensions_get_comments
-
-Get comments for a user competency.
-
-**Parameters:**
-- `component` (string), `area` (string), `itemid` (int), `contextid` (int), `page` (int)
-
-**Returns:** Paginated comment list with user names and profile images.
-
-### local_dimensions_add_comment
-
-Add a comment to a user competency.
-
-**Parameters:**
-- `component` (string), `area` (string), `itemid` (int), `contextid` (int), `content` (string)
-
-**Returns:** The new comment data or an error message.
 
 ### local_dimensions_get_competency_rule_data
 

@@ -86,7 +86,6 @@ class get_competency_courses extends external_api {
         // Apply enrollment filter from admin settings.
         $filtermode = get_config('local_dimensions', 'summaryenrollmentfilter');
         if (!empty($filtermode) && $filtermode !== 'all') {
-            require_once(__DIR__ . '/../calculator.php');
             $courses = \local_dimensions\calculator::filter_courses_by_enrollment(
                 $courses,
                 $USER->id,

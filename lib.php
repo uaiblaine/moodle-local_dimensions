@@ -24,6 +24,7 @@
 
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\customfield\lp_handler;
+use local_dimensions\helper;
 use local_dimensions\picture_manager;
 
 /**
@@ -112,41 +113,30 @@ function local_dimensions_customfield_get_handler(string $component, string $are
 }
 
 /**
- * Store the return URL and valid course IDs in session.
+ * Store the return URL and valid course IDs in session cache.
  *
  * @param moodle_url $url The URL to store as return destination.
  * @param array $validcourseids Array of course IDs where the button should appear.
  */
 function local_dimensions_set_return_context(moodle_url $url, array $validcourseids = []): void {
-    global $SESSION;
-    $SESSION->local_dimensions_return_url = $url->out(false);
-    $SESSION->local_dimensions_valid_courses = $validcourseids;
+    helper::set_return_context($url, $validcourseids);
 }
 
 /**
- * Get the stored return context from session.
+ * Get the stored return context from session cache.
  *
  * @return array|null Array with 'url' and 'courses' keys, or null if not set.
  */
 function local_dimensions_get_return_context(): ?array {
-    global $SESSION;
-    if (empty($SESSION->local_dimensions_return_url)) {
-        return null;
-    }
-    return [
-        'url' => $SESSION->local_dimensions_return_url,
-        'courses' => $SESSION->local_dimensions_valid_courses ?? [],
-    ];
+    return helper::get_return_context();
 }
 
 /**
- * Clear the return context from session.
+ * Clear the return context from session cache.
  *
  */
 function local_dimensions_clear_return_context(): void {
-    global $SESSION;
-    unset($SESSION->local_dimensions_return_url);
-    unset($SESSION->local_dimensions_valid_courses);
+    helper::clear_return_context();
 }
 
 /**

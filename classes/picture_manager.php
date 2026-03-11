@@ -56,16 +56,16 @@ class picture_manager {
     const FILEAREA_TEMPLATE_CARD = 'template_cardimage';
 
     /** @var string Form element name for competency background images. */
-    const FORM_ELEMENT_COMPETENCY = 'dims_bgimage_competency';
+    const FORM_ELEMENT_COMPETENCY = 'local_dimensions_bgimage_competency';
 
     /** @var string Form element name for template background images. */
-    const FORM_ELEMENT_TEMPLATE = 'dims_bgimage_template';
+    const FORM_ELEMENT_TEMPLATE = 'local_dimensions_bgimage_template';
 
     /** @var string Form element name for competency card images. */
-    const FORM_ELEMENT_COMPETENCY_CARD = 'dims_cardimage_competency';
+    const FORM_ELEMENT_COMPETENCY_CARD = 'local_dimensions_cardimage_competency';
 
     /** @var string Form element name for template card images. */
-    const FORM_ELEMENT_TEMPLATE_CARD = 'dims_cardimage_template';
+    const FORM_ELEMENT_TEMPLATE_CARD = 'local_dimensions_cardimage_template';
 
     /**
      * Check if the built-in image handler is active.

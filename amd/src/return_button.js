@@ -1,4 +1,3 @@
-<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,18 +14,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other metadata.
+ * Return button (FAB) iframe detection and visibility control.
  *
- * @package    local_dimensions
+ * Shows the floating action button only in the main window,
+ * hiding it when rendered inside iframes (e.g. H5P activities).
+ *
+ * @module     local_dimensions/return_button
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+define([], function() {
+    'use strict';
 
-$plugin->component = 'local_dimensions';
-$plugin->version = 2026031101;
-$plugin->requires = 2024100700;
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = 'v1.0';
-$plugin->supported = [405, 502];
+    return {
+        /**
+         * Initialise the return button visibility.
+         */
+        init: function() {
+            var fab = document.getElementById('local-dimensions-return-fab');
+            if (fab && window === window.parent) {
+                fab.style.display = 'flex';
+            }
+        }
+    };
+});

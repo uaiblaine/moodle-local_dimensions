@@ -36,25 +36,25 @@ class constants {
     const CFIELD_DISPLAYMODE = 'local_dimensions_displaymode';
 
     /** @var string Custom field shortname for card image */
-    const CFIELD_CUSTOMCARD = 'customcard';
+    const CFIELD_CUSTOMCARD = 'local_dimensions_customcard';
 
     /** @var string Custom field shortname for background image */
-    const CFIELD_CUSTOMBGIMAGE = 'custombgimage';
+    const CFIELD_CUSTOMBGIMAGE = 'local_dimensions_custombgimage';
 
     /** @var string Custom field shortname for background color */
-    const CFIELD_CUSTOMBGCOLOR = 'custombgcolor';
+    const CFIELD_CUSTOMBGCOLOR = 'local_dimensions_custombgcolor';
 
     /** @var string Custom field shortname for text color */
-    const CFIELD_CUSTOMTEXTCOLOR = 'customtextcolor';
+    const CFIELD_CUSTOMTEXTCOLOR = 'local_dimensions_customtextcolor';
 
     /** @var string Custom field shortname for tag1 (Year/Ano) */
-    const CFIELD_TAG1 = 'tag1';
+    const CFIELD_TAG1 = 'local_dimensions_tag1';
 
     /** @var string Custom field shortname for tag2 (Category/Categoria) */
-    const CFIELD_TAG2 = 'tag2';
+    const CFIELD_TAG2 = 'local_dimensions_tag2';
 
     /** @var string Custom field shortname for custom SCSS code */
-    const CFIELD_CUSTOMSCSS = 'customscss';
+    const CFIELD_CUSTOMSCSS = 'local_dimensions_customscss';
 
     /** @var int Display competencies as cards (default) */
     const DISPLAYMODE_COMPETENCIES = 1;

@@ -32,6 +32,7 @@ use templatable;
 use renderer_base;
 use core_competency\api;
 use core_competency\plan;
+use local_dimensions\constants;
 use local_dimensions\picture_manager;
 use local_dimensions\scss_manager;
 
@@ -93,8 +94,8 @@ class view_plan_summary_page implements renderable, templatable {
         $bgcolor = null;
         $textcolor = null;
         if ($template) {
-            $bgcolor = $this->get_template_custom_field($template->get('id'), 'custombgcolor');
-            $textcolor = $this->get_template_custom_field($template->get('id'), 'customtextcolor');
+            $bgcolor = $this->get_template_custom_field($template->get('id'), constants::CFIELD_CUSTOMBGCOLOR);
+            $textcolor = $this->get_template_custom_field($template->get('id'), constants::CFIELD_CUSTOMTEXTCOLOR);
         }
 
         // Get due date if set.
@@ -120,8 +121,8 @@ class view_plan_summary_page implements renderable, templatable {
                 'hastextcolor' => !empty($textcolor),
                 'duedate' => $duedateformatted,
                 'hasduedate' => !empty($duedateformatted),
-                'bgimage' => $template ? $this->get_custom_field_image_url($template->get('id'), 'custombgimage', 'lp') : null,
-                'hasbgimage' => $template && !empty($this->get_custom_field_image_url($template->get('id'), 'custombgimage', 'lp')),
+                'bgimage' => $template ? $this->get_custom_field_image_url($template->get('id'), constants::CFIELD_CUSTOMBGIMAGE, 'lp') : null,
+                'hasbgimage' => $template && !empty($this->get_custom_field_image_url($template->get('id'), constants::CFIELD_CUSTOMBGIMAGE, 'lp')),
                 'duedateiconurl' => $output->image_url('status/calendar-light', 'local_dimensions')->out(false),
             ],
             'competencies' => [],
@@ -267,7 +268,7 @@ class view_plan_summary_page implements renderable, templatable {
     protected function get_custom_field_image_url(int $instanceid, string $shortname, string $area): ?string {
         // Built-in mode: try picture_manager first, fall back to external storage.
         if (picture_manager::is_builtin_mode()) {
-            $type = ($shortname === 'customcard') ? 'cardimage' : 'bgimage';
+            $type = ($shortname === constants::CFIELD_CUSTOMCARD) ? 'cardimage' : 'bgimage';
             $url = picture_manager::get_image_url($area, $instanceid, $type);
             if ($url) {
                 return $url;

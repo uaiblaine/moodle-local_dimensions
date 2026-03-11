@@ -29,6 +29,7 @@ use templatable;
 use renderer_base;
 use moodle_url;
 use local_dimensions\calculator;
+use local_dimensions\constants;
 use local_dimensions\picture_manager;
 use local_dimensions\scss_manager;
 
@@ -87,8 +88,8 @@ class view_plan_page implements renderable, templatable {
 
         // Prepare hero header data.
         if ($this->competency) {
-            $bgcolor = $this->get_competency_custom_field($this->competency->id, 'custombgcolor');
-            $textcolor = $this->get_competency_custom_field($this->competency->id, 'customtextcolor');
+            $bgcolor = $this->get_competency_custom_field($this->competency->id, constants::CFIELD_CUSTOMBGCOLOR);
+            $textcolor = $this->get_competency_custom_field($this->competency->id, constants::CFIELD_CUSTOMTEXTCOLOR);
 
             $data['hero'] = [
                 'title' => format_string($this->competency->shortname),
@@ -101,8 +102,8 @@ class view_plan_page implements renderable, templatable {
                 'hasbgcolor' => !empty($bgcolor),
                 'textcolor' => $textcolor,
                 'hastextcolor' => !empty($textcolor),
-                'bgimage' => $this->get_custom_field_image_url($this->competency->id, 'custombgimage', 'competency'),
-                'hasbgimage' => !empty($this->get_custom_field_image_url($this->competency->id, 'custombgimage', 'competency')),
+                'bgimage' => $this->get_custom_field_image_url($this->competency->id, constants::CFIELD_CUSTOMBGIMAGE, 'competency'),
+                'hasbgimage' => !empty($this->get_custom_field_image_url($this->competency->id, constants::CFIELD_CUSTOMBGIMAGE, 'competency')),
                 'duedateiconurl' => $output->image_url('status/calendar-light', 'local_dimensions')->out(false),
             ];
         }
@@ -194,7 +195,7 @@ class view_plan_page implements renderable, templatable {
     protected function get_custom_field_image_url(int $instanceid, string $shortname, string $area): ?string {
         // Built-in mode: try picture_manager first, fall back to external storage.
         if (picture_manager::is_builtin_mode()) {
-            $type = ($shortname === 'customcard') ? 'cardimage' : 'bgimage';
+            $type = ($shortname === constants::CFIELD_CUSTOMCARD) ? 'cardimage' : 'bgimage';
             $url = picture_manager::get_image_url($area, $instanceid, $type);
             if ($url) {
                 return $url;

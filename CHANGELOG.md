@@ -25,6 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Locked cards, due-date badges, summary status badges, and Rules icons now use plugin image assets instead of inline SVG markup.
 - English and Brazilian Portuguese strings were streamlined to match the new taxonomy card and Rules tab behaviour.
 
+### Removed
+- Comments section with reply functionality in accordion panels (`showcomments` setting, external services, JS, CSS, and language strings).
+
 ## [1.0] - 2026-03-08
 
 ### Added
@@ -34,7 +37,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Real-time course section progress calculation with recursive subsection support (Flexsections, `mod_subsection`).
 - Competency completion rules display (Rules tab) in Full plan overview, showing rule type, rule outcome, sub-competency progress, proficiency status, and required flags.
 - Evidence cards with detail modals in accordion panels.
-- Comments section with reply functionality in accordion panels.
 - Related competencies display (optionally clickable) in accordion panels.
 - Competency hierarchy path display (framework → parent → competency).
 - Floating "Return to plan" button with configurable colour.
@@ -47,7 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Optional "Submit prior learning evidence" button in the Rules tab.
 - Moodle Privacy API implementation (`null_provider`).
 - Application-level MUC caches for template courses, template SCSS, and competency SCSS.
-- Seven AJAX web services: course progress, competency courses, user competency summary, comments (read/write), FontAwesome icons, and competency rule data.
+- Five AJAX web services: course progress, competency courses, user competency summary, FontAwesome icons, and competency rule data.
 - Custom capability `local/dimensions:view` for controlling access.
 - Event observers for `competency_created` and `competency_updated`.
 - Hook callbacks for injecting custom fields into core competency forms and rendering the return button.

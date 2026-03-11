@@ -85,7 +85,7 @@ $pagecontextid = $currentframework ? $currentframework->get_context()->id : cont
  * @param int $depth
  * @return array
  */
-function build_competency_tree_data($competencies, $frameworkid, $pagecontextid, $depth = 0) {
+function local_dimensions_build_competency_tree_data($competencies, $frameworkid, $pagecontextid, $depth = 0) {
     $result = [];
 
     foreach ($competencies as $comp) {
@@ -106,7 +106,7 @@ function build_competency_tree_data($competencies, $frameworkid, $pagecontextid,
         ];
 
         if (!empty($comp['children'])) {
-            $item['children'] = build_competency_tree_data($comp['children'], $frameworkid, $pagecontextid, $depth + 1);
+            $item['children'] = local_dimensions_build_competency_tree_data($comp['children'], $frameworkid, $pagecontextid, $depth + 1);
         }
 
         $result[] = $item;
@@ -149,7 +149,7 @@ $templatedata = [
     'frameworks' => $frameworkoptions,
     'selectedframeworkid' => $frameworkid,
     'hascompetencies' => !empty($competencytree),
-    'competencies' => build_competency_tree_data($competencytree, $frameworkid, $pagecontextid),
+    'competencies' => local_dimensions_build_competency_tree_data($competencytree, $frameworkid, $pagecontextid),
     'isfirst' => true,
 ];
 

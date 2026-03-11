@@ -91,9 +91,8 @@ if ($competencyid) {
 
     // Store the return URL and valid course IDs for the "Return to Plan" button feature.
     if (get_config('local_dimensions', 'enablereturnbutton')) {
-        require_once(__DIR__ . '/lib.php');
         $validcourseids = array_keys($courses);
-        local_dimensions_set_return_context($PAGE->url, $validcourseids);
+        \local_dimensions\helper::set_return_context($PAGE->url, $validcourseids);
     }
 
     // Start HTML Output.
@@ -156,11 +155,10 @@ if ($competencyid) {
     // Store the return URL and valid course IDs using cached template data.
     // This uses a single cache entry per template to serve all students efficiently.
     if (get_config('local_dimensions', 'enablereturnbutton')) {
-        require_once(__DIR__ . '/lib.php');
 
         // Get valid courses from cache (one entry per template serves all students).
         $validcourseids = \local_dimensions\template_course_cache::get_courses_for_plan($plan);
-        local_dimensions_set_return_context($PAGE->url, $validcourseids);
+        \local_dimensions\helper::set_return_context($PAGE->url, $validcourseids);
     }
 
     // Prepare accordion display settings from admin config.
@@ -178,9 +176,10 @@ if ($competencyid) {
         'showrelatedlink' => (bool) get_config('local_dimensions', 'showrelatedlink'),
         'viewplanurl' => (new \moodle_url('/local/dimensions/view-plan.php'))->out(false),
         'showevidence' => (bool) get_config('local_dimensions', 'showevidence'),
-        'showcomments' => (bool) get_config('local_dimensions', 'showcomments'),
         'summaryenrollmentfilter' => $summaryenrollmentfilter,
-        'enableevidencesubmitbutton' => (bool) get_config('local_dimensions', 'enableevidencesubmitbutton'),
+        'enableevidencesubmitbutton' => (bool) get_config('local_dimensions', 'enableevidencesubmitbutton')
+            && has_capability('moodle/competency:userevidencemanageown',
+                \context_user::instance($plan->get('userid')), $plan->get('userid')),
     ];
 
     // Start HTML Output.
@@ -221,17 +220,6 @@ if ($competencyid) {
     $PAGE->requires->string_for_js('evidence_slider_prev', 'local_dimensions');
     $PAGE->requires->string_for_js('evidence_slider_next', 'local_dimensions');
 
-    // Comments strings.
-    $PAGE->requires->string_for_js('comments_section', 'local_dimensions');
-    $PAGE->requires->string_for_js('no_comments', 'local_dimensions');
-    $PAGE->requires->string_for_js('reply', 'local_dimensions');
-    $PAGE->requires->string_for_js('send_reply', 'local_dimensions');
-    $PAGE->requires->string_for_js('cancel_reply', 'local_dimensions');
-    $PAGE->requires->string_for_js('reply_placeholder', 'local_dimensions');
-    $PAGE->requires->string_for_js('comment_by', 'local_dimensions');
-    $PAGE->requires->string_for_js('reply_sent', 'local_dimensions');
-    $PAGE->requires->string_for_js('reply_error', 'local_dimensions');
-
     // Rules tab strings.
     $PAGE->requires->string_for_js('rules_tab', 'local_dimensions');
     $PAGE->requires->string_for_js('rules_progress', 'local_dimensions');
@@ -240,7 +228,7 @@ if ($competencyid) {
     $PAGE->requires->string_for_js('rules_assessment_prefix', 'local_dimensions');
     $PAGE->requires->string_for_js('rules_pts', 'local_dimensions');
     $PAGE->requires->string_for_js('rules_no_points', 'local_dimensions');
-    $PAGE->requires->string_for_js('rules_submit_evidence', 'local_dimensions');
+    $PAGE->requires->string_for_js('evidence_submit', 'local_dimensions');
     $PAGE->requires->string_for_js('rules_todo', 'local_dimensions');
     $PAGE->requires->string_for_js('rules_completed_count', 'local_dimensions');
     $PAGE->requires->string_for_js('rules_info_title', 'local_dimensions');

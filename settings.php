@@ -151,7 +151,6 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
     ));
 
     // Locked card icon (icon picker with AJAX search).
-    require_once(__DIR__ . '/classes/admin/setting_iconpicker.php');
     $settings->add(new \local_dimensions\admin\setting_iconpicker(
         'local_dimensions/cardicon',
         get_string('cardicon', 'local_dimensions'),
@@ -251,15 +250,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         1
     ));
 
-    // Show comments section.
-    $settings->add(new admin_setting_configcheckbox(
-        'local_dimensions/showcomments',
-        get_string('showcomments', 'local_dimensions'),
-        get_string('showcomments_desc', 'local_dimensions'),
-        0
-    ));
-
-    // Enable "Submit Evidence" button in the Rules tab.
+    // Enable "Submit Evidence" button in the Evidence tab.
     $settings->add(new admin_setting_configcheckbox(
         'local_dimensions/enableevidencesubmitbutton',
         get_string('enableevidencesubmitbutton', 'local_dimensions'),

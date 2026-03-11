@@ -99,29 +99,20 @@ class hook_callbacks {
     }
 
     /**
-     * Get the stored return context from session.
+     * Get the stored return context from session cache.
      *
      * @return array|null Array with 'url' and 'courses' keys, or null if not set.
      */
     private static function get_return_context(): ?array {
-        global $SESSION;
-        if (empty($SESSION->local_dimensions_return_url)) {
-            return null;
-        }
-        return [
-            'url' => $SESSION->local_dimensions_return_url,
-            'courses' => $SESSION->local_dimensions_valid_courses ?? [],
-        ];
+        return helper::get_return_context();
     }
 
     /**
-     * Clear the return context from session.
+     * Clear the return context from session cache.
      *
      */
     private static function clear_return_context(): void {
-        global $SESSION;
-        unset($SESSION->local_dimensions_return_url);
-        unset($SESSION->local_dimensions_valid_courses);
+        helper::clear_return_context();
     }
 
     /**

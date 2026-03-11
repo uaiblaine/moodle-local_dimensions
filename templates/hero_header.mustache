@@ -1,4 +1,20 @@
 {{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
     @template local_dimensions/hero_header
 
     Hero Header template for competency display.
@@ -26,24 +42,27 @@
         "duedate": "31 Jan 2026",
         "hasduedate": true
     }
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 }}
-<div class="dims-hero-wrapper {{#hasbgimage}}dims-hero-has-image{{/hasbgimage}}" id="dimensions-hero"
+<div class="local-dimensions-hero-wrapper {{#hasbgimage}}local-dimensions-hero-has-image{{/hasbgimage}}" id="local-dimensions-hero"
      {{#hasbgimage}}style="--hero-bg-image: url('{{bgimage}}'); {{#hasbgcolor}}--hero-overlay-color: {{bgcolor}};{{/hasbgcolor}}"{{/hasbgimage}}>
-    <div class="dims-hero {{^hasbgcolor}}{{^hasbgimage}}bg-primary{{/hasbgimage}}{{/hasbgcolor}}" 
+    <div class="local-dimensions-hero {{^hasbgcolor}}{{^hasbgimage}}bg-primary{{/hasbgimage}}{{/hasbgcolor}}" 
          style="{{#hasbgcolor}}background-color: var(--dimension-custombgcolor);{{/hasbgcolor}}{{#hastextcolor}} color: var(--dimension-customtextcolor);{{/hastextcolor}}">
-        <div class="dims-hero-content">
-            <h1 class="dims-hero-title">{{{title}}}</h1>
+        <div class="local-dimensions-hero-content">
+            <h1 class="local-dimensions-hero-title">{{{title}}}</h1>
             {{#hasdescription}}
-                <div class="dims-hero-description">
+                <div class="local-dimensions-hero-description">
                     {{{description}}}
                 </div>
             {{/hasdescription}}
             {{#hasduedate}}
-            <div class="dims-duedate-card">
-                <img class="dims-duedate-icon" src="{{duedateiconurl}}" alt="" aria-hidden="true">
-                <div class="dims-duedate-content">
-                    <span class="dims-duedate-label">{{#str}}duedate, local_dimensions{{/str}}</span>
-                    <span class="dims-duedate-value">{{duedate}}</span>
+            <div class="local-dimensions-duedate-card">
+                <img class="local-dimensions-duedate-icon" src="{{duedateiconurl}}" alt="" aria-hidden="true">
+                <div class="local-dimensions-duedate-content">
+                    <span class="local-dimensions-duedate-label">{{#str}}duedate, local_dimensions{{/str}}</span>
+                    <span class="local-dimensions-duedate-value">{{duedate}}</span>
                 </div>
             </div>
             {{/hasduedate}}

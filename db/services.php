@@ -33,22 +33,7 @@ $functions = [
         'type' => 'read',
         'ajax' => true,
     ],
-    'local_dimensions_get_comments' => [
-        'classname' => 'local_dimensions\external\get_comments',
-        'methodname' => 'execute',
-        'classpath' => 'local/dimensions/classes/external/get_comments.php',
-        'description' => 'Get comments for a user competency.',
-        'type' => 'read',
-        'ajax' => true,
-    ],
-    'local_dimensions_add_comment' => [
-        'classname' => 'local_dimensions\external\add_comment',
-        'methodname' => 'execute',
-        'classpath' => 'local/dimensions/classes/external/add_comment.php',
-        'description' => 'Add a comment to a user competency.',
-        'type' => 'write',
-        'ajax' => true,
-    ],
+
     'local_dimensions_get_fontawesome_icons' => [
         'classname' => 'local_dimensions\external\get_fontawesome_icons',
         'methodname' => 'execute',

@@ -60,4 +60,13 @@ $definitions = [
         'staticacceleration' => true,
         'staticaccelerationsize' => 20,
     ],
+
+    // Session cache for the "Return to Plan" button context.
+    // Key: 'returncontext'
+    // Value: serialised array with return URL and valid course IDs.
+    'returncontext' => [
+        'mode' => cache_store::MODE_SESSION,
+        'simplekeys' => true,
+        'simpledata' => true,
+    ],
 ];
