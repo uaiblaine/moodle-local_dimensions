@@ -486,6 +486,12 @@
   height: 40px;
 }
 
+.local-dimensions-icon-lock-sm {
+  stroke: #6c757d;
+  width: 20px;
+  height: 20px;
+}
+
 .local-dimensions-icon-circle {
   stroke: #dee2e6;
 }
