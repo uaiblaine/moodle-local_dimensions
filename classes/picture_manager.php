@@ -238,6 +238,10 @@ class picture_manager {
     public static function save_all_from_form(stdClass $data, string $area, int $instanceid): void {
         self::save_from_form($data, $area, $instanceid, 'bgimage');
         self::save_from_form($data, $area, $instanceid, 'cardimage');
+
+        if ($area === 'lp') {
+            template_metadata_cache::invalidate_template($instanceid);
+        }
     }
 
     /**

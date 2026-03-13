@@ -37,6 +37,19 @@ $definitions = [
         'ttl' => 3600, // 1 hour TTL.
     ],
 
+    // Cache for template metadata consumed by block cards.
+    // Key: templateid
+    // Value: type, tag1, tag2, bgcolor, textcolor, templatecardimageurl, timemodified.
+    // Invalidated when template metadata or card image is updated.
+    'template_metadata' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 100,
+        'ttl' => 1800, // 30 minutes defensive TTL.
+    ],
+
     // Cache for compiled CSS from template SCSS custom fields.
     // Key: css_{templateid}
     // Value: compiled CSS string.

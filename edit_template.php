@@ -121,6 +121,9 @@ if ($data = $form->get_data()) {
         $data->id = $id;
         $handler->instance_form_save_with_image($data, $id);
 
+        // Invalidate cached template metadata after custom field/image updates.
+        \local_dimensions\template_metadata_cache::invalidate_template($id);
+
         // Invalidate compiled SCSS cache for this template.
         if (get_config('local_dimensions', 'enablecustomscss')) {
             \local_dimensions\scss_manager::invalidate_cache($id);
