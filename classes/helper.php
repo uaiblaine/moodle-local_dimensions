@@ -333,6 +333,32 @@ class helper {
     }
 
     /**
+     * Get or create the type (select) field.
+     *
+     * @param string $area The area (lp or competency)
+     * @return field_controller|null
+     */
+    public static function get_type_field(string $area): ?field_controller {
+        $shortname = constants::CFIELD_TYPE;
+        $field = self::find_field_by_shortname($shortname, $area);
+
+        if ($field) {
+            return $field;
+        }
+
+        return self::create_custom_field(
+            $shortname,
+            'select',
+            $area,
+            new \lang_string('type', 'local_dimensions'),
+            [
+                'options' => get_string('type_options', 'local_dimensions'),
+            ],
+            '' // Description removed to avoid fixed-language issue.
+        );
+    }
+
+    /**
      * Get or create the customscss (textarea) field.
      *
      * @param string $area The area (lp or competency)
@@ -384,6 +410,7 @@ class helper {
         self::get_customtextcolor_field($area);
         self::get_tag1_field($area);
         self::get_tag2_field($area);
+        self::get_type_field($area);
 
         // Custom SCSS field for templates and competencies.
         if (get_config('local_dimensions', 'enablecustomscss')) {

@@ -53,6 +53,9 @@ class constants {
     /** @var string Custom field shortname for tag2 (Category/Categoria) */
     const CFIELD_TAG2 = 'local_dimensions_tag2';
 
+    /** @var string Custom field shortname for type (e.g., unidade, modulo, etapa) */
+    const CFIELD_TYPE = 'local_dimensions_type';
+
     /** @var string Custom field shortname for custom SCSS code */
     const CFIELD_CUSTOMSCSS = 'local_dimensions_customscss';
 
