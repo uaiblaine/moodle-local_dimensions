@@ -34,6 +34,7 @@ namespace local_dimensions;
  * - bgcolor
  * - textcolor
  * - templatecardimageurl
+ * - displaymode
  * - timemodified
  *
  * @package    local_dimensions
@@ -111,6 +112,7 @@ class template_metadata_cache {
             'bgcolor' => null,
             'textcolor' => null,
             'templatecardimageurl' => null,
+            'displaymode' => constants::DISPLAYMODE_COMPETENCIES,
             'timemodified' => 0,
         ];
 
@@ -124,6 +126,7 @@ class template_metadata_cache {
             constants::CFIELD_CUSTOMBGCOLOR,
             constants::CFIELD_CUSTOMTEXTCOLOR,
             constants::CFIELD_CUSTOMCARD,
+            constants::CFIELD_DISPLAYMODE,
         ];
 
         [$insql, $inparams] = $DB->get_in_or_equal($shortnames, SQL_PARAMS_NAMED);
@@ -157,6 +160,7 @@ class template_metadata_cache {
         $payload['tag2'] = self::get_select_value($byshortname, constants::CFIELD_TAG2);
         $payload['bgcolor'] = self::get_color_value($byshortname, constants::CFIELD_CUSTOMBGCOLOR);
         $payload['textcolor'] = self::get_color_value($byshortname, constants::CFIELD_CUSTOMTEXTCOLOR);
+        $payload['displaymode'] = self::get_displaymode_value($byshortname);
 
         // Built-in mode first, then legacy external customfield_picture fallback.
         if (picture_manager::is_builtin_mode()) {
@@ -201,6 +205,51 @@ class template_metadata_cache {
 
         $value = trim($options[$optionindex]);
         return $value !== '' ? $value : null;
+    }
+
+    /**
+     * Get display mode int value from the select field.
+     *
+     * The displaymode select field stores options as "1|Label\n2|Label".
+     * The intvalue is the 1-based index into the options list, and the
+     * option key (before the pipe) is the actual display mode constant.
+     *
+     * @param array<string, object> $records Records keyed by shortname.
+     * @return int Display mode constant.
+     */
+    private static function get_displaymode_value(array $records): int {
+        $shortname = constants::CFIELD_DISPLAYMODE;
+        if (empty($records[$shortname])) {
+            return constants::DISPLAYMODE_COMPETENCIES;
+        }
+
+        $record = $records[$shortname];
+        $selectedindex = isset($record->intvalue) ? (int)$record->intvalue : 0;
+        if ($selectedindex <= 0 || empty($record->configdata)) {
+            return constants::DISPLAYMODE_COMPETENCIES;
+        }
+
+        $config = json_decode($record->configdata, true);
+        if (!is_array($config) || empty($config['options'])) {
+            return constants::DISPLAYMODE_COMPETENCIES;
+        }
+
+        $options = explode("\n", $config['options']);
+        $optionindex = $selectedindex - 1;
+        if (!isset($options[$optionindex])) {
+            return constants::DISPLAYMODE_COMPETENCIES;
+        }
+
+        // Options are stored as "key|label"; extract the key.
+        $option = trim($options[$optionindex]);
+        $parts = explode('|', $option, 2);
+        $value = (int)$parts[0];
+
+        if (array_key_exists($value, constants::display_mode_options())) {
+            return $value;
+        }
+
+        return constants::DISPLAYMODE_COMPETENCIES;
     }
 
     /**
@@ -283,6 +332,7 @@ class template_metadata_cache {
             'bgcolor' => $payload['bgcolor'] ?? null,
             'textcolor' => $payload['textcolor'] ?? null,
             'templatecardimageurl' => $payload['templatecardimageurl'] ?? null,
+            'displaymode' => (int)($payload['displaymode'] ?? constants::DISPLAYMODE_COMPETENCIES),
             'timemodified' => isset($payload['timemodified']) ? (int)$payload['timemodified'] : 0,
         ];
     }

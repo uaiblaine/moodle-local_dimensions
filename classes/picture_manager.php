@@ -242,6 +242,9 @@ class picture_manager {
         if ($area === 'lp') {
             template_metadata_cache::invalidate_template($instanceid);
         }
+        if ($area === 'competency') {
+            competency_metadata_cache::invalidate_competency($instanceid);
+        }
     }
 
     /**

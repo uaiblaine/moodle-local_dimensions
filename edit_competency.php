@@ -143,6 +143,9 @@ if ($data = $form->get_data()) {
         $data->id = $competencyid;
         $handler->instance_form_save_with_image($data, $id <= 0, $competencyid);
 
+        // Invalidate competency metadata cache.
+        \local_dimensions\competency_metadata_cache::invalidate_competency($competencyid);
+
         // Invalidate compiled SCSS cache for this competency.
         if (get_config('local_dimensions', 'enablecustomscss')) {
             \local_dimensions\scss_manager::invalidate_cache($competencyid, 'competency');

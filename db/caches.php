@@ -50,6 +50,19 @@ $definitions = [
         'ttl' => 1800, // 30 minutes defensive TTL.
     ],
 
+    // Cache for competency metadata consumed by block cards.
+    // Key: competencyid
+    // Value: tag1, tag2, bgcolor, textcolor, cardimageurl, timemodified.
+    // Invalidated when competency metadata or card image is updated.
+    'competency_metadata' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 200,
+        'ttl' => 1800, // 30 minutes defensive TTL.
+    ],
+
     // Cache for compiled CSS from template SCSS custom fields.
     // Key: css_{templateid}
     // Value: compiled CSS string.
@@ -81,5 +94,16 @@ $definitions = [
         'mode' => cache_store::MODE_SESSION,
         'simplekeys' => true,
         'simpledata' => true,
+    ],
+
+    // Session cache for plan trail data (competency id, shortname, proficiency).
+    // Key: planid_userid
+    // Value: array with total count and competency trail rows.
+    // Invalidated when user competency proficiency changes.
+    'plan_trail' => [
+        'mode' => cache_store::MODE_SESSION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'ttl' => 300, // 5 minutes defensive TTL.
     ],
 ];

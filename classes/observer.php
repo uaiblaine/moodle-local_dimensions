@@ -29,6 +29,7 @@
 namespace local_dimensions;
 
 use local_dimensions\customfield\competency_handler;
+use local_dimensions\plan_trail_cache;
 
 /**
  * Event observer.
@@ -76,5 +77,45 @@ class observer {
         $instanceid = $event->objectid;
 
         $handler->instance_form_save($formdata, $instanceid);
+    }
+
+    /**
+     * Observer for user competency rated event.
+     * Invalidates all plan trail caches for the affected user.
+     *
+     * @param \core\event\base $event
+     */
+    public static function user_competency_rated(\core\event\base $event) {
+        $userid = $event->relateduserid;
+        if ($userid) {
+            plan_trail_cache::invalidate_user((int)$userid);
+        }
+    }
+
+    /**
+     * Observer for user competency rated in plan event.
+     * Invalidates the specific plan trail cache.
+     *
+     * @param \core\event\base $event
+     */
+    public static function user_competency_rated_in_plan(\core\event\base $event) {
+        $other = $event->other;
+        $userid = $event->relateduserid;
+        if ($userid && !empty($other['planid'])) {
+            plan_trail_cache::invalidate_plan((int)$other['planid'], (int)$userid);
+        }
+    }
+
+    /**
+     * Observer for evidence created event.
+     * Invalidates all plan trail caches for the affected user (catch-all).
+     *
+     * @param \core\event\base $event
+     */
+    public static function evidence_created(\core\event\base $event) {
+        $userid = $event->relateduserid;
+        if ($userid) {
+            plan_trail_cache::invalidate_user((int)$userid);
+        }
     }
 }

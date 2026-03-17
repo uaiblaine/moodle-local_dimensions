@@ -33,4 +33,16 @@ $observers = [
         'eventname' => '\core_competency\event\competency_updated',
         'callback' => 'local_dimensions\observer::competency_updated',
     ],
+    [
+        'eventname' => '\core\event\competency_user_competency_rated',
+        'callback' => 'local_dimensions\observer::user_competency_rated',
+    ],
+    [
+        'eventname' => '\core\event\competency_user_competency_rated_in_plan',
+        'callback' => 'local_dimensions\observer::user_competency_rated_in_plan',
+    ],
+    [
+        'eventname' => '\core\event\competency_evidence_created',
+        'callback' => 'local_dimensions\observer::evidence_created',
+    ],
 ];
