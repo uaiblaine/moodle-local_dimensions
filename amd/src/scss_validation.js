@@ -19,40 +19,62 @@
  * Validates SCSS syntax client-side before form submission:
  * - Detects unmatched closing braces/parentheses.
  * - Detects unbalanced brace/parenthesis pairs.
- * - Warns about likely missing semicolons (with user confirmation).
+ * - Warns about likely missing semicolons (with user confirmation via Moodle modal).
  *
  * Also hides the editor format dropdown for the SCSS custom field,
  * since the value is forced to FORMAT_PLAIN on the server side.
+ *
+ * Selectors are built dynamically from the field shortname passed by PHP,
+ * so they automatically follow Frankenstyle renames.
  *
  * @module     local_dimensions/scss_validation
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define([], function() {
+define(['core/notification'], function(Notification) {
 
     /** @var {Object} Language strings for validation messages. */
     var strings = {};
 
     /** @var {string[]} Textarea selectors for the SCSS custom field. */
-    var TEXTAREA_SELECTORS = [
-        'textarea[name="customfield_customscss_editor[text]"]',
-        'textarea[name="customfield_customscss[text]"]',
-        'textarea[name="customfield_customscss"]'
-    ];
+    var TEXTAREA_SELECTORS = [];
 
     /** @var {string[]} ID selectors for dedicated format form-items (rendered as separate rows). */
-    var FORMAT_FITEM_SELECTORS = [
-        '#fitem_id_customfield_customscss_editorformat',
-        '#fgroup_id_customfield_customscss_editorformat'
-    ];
+    var FORMAT_FITEM_SELECTORS = [];
 
     /** @var {string[]} Selectors for the format <select> itself (may live inside the editor fitem). */
-    var FORMAT_SELECT_SELECTORS = [
-        '#menucustomfield_customscss_editorformat',
-        '#id_customfield_customscss_editorformat',
-        'select[name="customfield_customscss_editor[format]"]',
-        'select[name="customfield_customscss[format]"]'
-    ];
+    var FORMAT_SELECT_SELECTORS = [];
+
+    /**
+     * Build all DOM selectors from the custom field shortname.
+     *
+     * Moodle generates form element names by prefixing "customfield_" to the
+     * field shortname. For example, shortname "local_dimensions_customscss"
+     * produces names like "customfield_local_dimensions_customscss_editor[text]".
+     *
+     * @param {string} fieldname The custom field shortname (e.g. "local_dimensions_customscss").
+     */
+    var buildSelectors = function(fieldname) {
+        var cf = 'customfield_' + fieldname;
+
+        TEXTAREA_SELECTORS = [
+            'textarea[name="' + cf + '_editor[text]"]',
+            'textarea[name="' + cf + '[text]"]',
+            'textarea[name="' + cf + '"]'
+        ];
+
+        FORMAT_FITEM_SELECTORS = [
+            '#fitem_id_' + cf + '_editorformat',
+            '#fgroup_id_' + cf + '_editorformat'
+        ];
+
+        FORMAT_SELECT_SELECTORS = [
+            '#menu' + cf + '_editorformat',
+            '#id_' + cf + '_editorformat',
+            'select[name="' + cf + '_editor[format]"]',
+            'select[name="' + cf + '[format]"]'
+        ];
+    };
 
     /**
      * Hide the editor format dropdown for the SCSS field.
@@ -94,6 +116,21 @@ define([], function() {
     };
 
     /**
+     * Find the SCSS textarea element in the DOM.
+     *
+     * @return {HTMLTextAreaElement|null}
+     */
+    var findTextarea = function() {
+        for (var i = 0; i < TEXTAREA_SELECTORS.length; i++) {
+            var textarea = document.querySelector(TEXTAREA_SELECTORS[i]);
+            if (textarea) {
+                return textarea;
+            }
+        }
+        return null;
+    };
+
+    /**
      * Get raw SCSS text from the textarea.
      *
      * Triggers TinyMCE global save (if present) so the textarea is in sync,
@@ -114,14 +151,7 @@ define([], function() {
             // TinyMCE may not be loaded or initialized — safe to ignore.
         }
 
-        var textarea = null;
-        for (var i = 0; i < TEXTAREA_SELECTORS.length; i++) {
-            textarea = document.querySelector(TEXTAREA_SELECTORS[i]);
-            if (textarea) {
-                break;
-            }
-        }
-
+        var textarea = findTextarea();
         if (!textarea) {
             return '';
         }
@@ -136,6 +166,39 @@ define([], function() {
         }
 
         return value;
+    };
+
+    /**
+     * Add the Moodle 'is-invalid' visual indicator to the SCSS field container.
+     */
+    var highlightScssField = function() {
+        var textarea = findTextarea();
+        if (!textarea) {
+            return;
+        }
+        // Walk up to the nearest .fitem container and mark it invalid.
+        var fitem = textarea.closest('.fitem');
+        if (fitem) {
+            fitem.classList.add('has-danger');
+            fitem.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }
+        textarea.classList.add('is-invalid');
+        textarea.focus();
+    };
+
+    /**
+     * Remove the visual error indicator from the SCSS field container.
+     */
+    var clearScssHighlight = function() {
+        var textarea = findTextarea();
+        if (!textarea) {
+            return;
+        }
+        textarea.classList.remove('is-invalid');
+        var fitem = textarea.closest('.fitem');
+        if (fitem) {
+            fitem.classList.remove('has-danger');
+        }
     };
 
     /**
@@ -223,10 +286,22 @@ define([], function() {
         /**
          * Initialize SCSS validation on the current page form.
          *
-         * @param {Object} config Language strings keyed by identifier.
+         * @param {Object} config Configuration with language strings and field metadata.
+         * @param {string} config.fieldname Custom field shortname (e.g. "local_dimensions_customscss").
+         * @param {string} config.closingbracewithoutopen Error string.
+         * @param {string} config.closingparenwithoutopen Error string.
+         * @param {string} config.unbalancedbraces Error string.
+         * @param {string} config.unbalancedparentheses Error string.
+         * @param {string} config.punctuationwarning Warning string with {$a} placeholder.
+         * @param {string} [config.errortitle] Optional modal title for errors.
+         * @param {string} [config.warningtitle] Optional modal title for warnings.
          */
         init: function(config) {
-            strings = config || {};
+            config = config || {};
+            strings = config;
+
+            // Build DOM selectors from the field shortname.
+            buildSelectors(config.fieldname || 'local_dimensions_customscss');
 
             // Hide format selector — retry to handle deferred DOM rendering.
             hideFormatSelector();
@@ -240,6 +315,9 @@ define([], function() {
             }
 
             form.addEventListener('submit', function(e) {
+                // Clear any previous error highlight.
+                clearScssHighlight();
+
                 var content = getScssContent();
                 if (!content) {
                     return;
@@ -249,20 +327,54 @@ define([], function() {
                 if (error) {
                     e.preventDefault();
                     e.stopPropagation();
-                    window.alert(error);
+                    highlightScssField();
+                    Notification.alert(
+                        strings.errortitle || 'SCSS',
+                        error
+                    );
                     return;
                 }
 
                 var warnings = getPunctuationWarnings(content);
                 if (warnings.length) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    highlightScssField();
+
                     var lineList = warnings.join(', ');
                     var message = (strings.punctuationwarning || '').replace('{$a}', lineList);
-                    if (!window.confirm(message)) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
+
+                    Notification.confirm(
+                        strings.warningtitle || 'SCSS',
+                        message,
+                        strings.saveanyway || 'Save anyway',
+                        strings.goback || 'Go back',
+                        function() {
+                            // User chose Save anyway — clear highlight and resubmit.
+                            clearScssHighlight();
+                            // Temporarily remove this listener to avoid re-triggering.
+                            form.setAttribute('data-scss-bypass', '1');
+                            form.submit();
+                        },
+                        function() {
+                            // User chose Go back — keep highlight, focus textarea.
+                            var textarea = findTextarea();
+                            if (textarea) {
+                                textarea.focus();
+                            }
+                        }
+                    );
                 }
             });
+
+            // Install a secondary listener that checks the bypass flag.
+            form.addEventListener('submit', function(e) {
+                if (form.getAttribute('data-scss-bypass') === '1') {
+                    form.removeAttribute('data-scss-bypass');
+                    // Allow submission to proceed.
+                    return;
+                }
+            }, true); // Capture phase so it runs first on re-submit.
         }
     };
 });

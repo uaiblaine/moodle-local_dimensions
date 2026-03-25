@@ -31,6 +31,7 @@ require_once($CFG->libdir . '/formslib.php');
 use moodleform;
 use core_competency\competency;
 use core_competency\competency_framework;
+use local_dimensions\constants;
 use local_dimensions\customfield\competency_handler;
 
 /**
@@ -125,11 +126,16 @@ class competency_form extends moodleform {
             global $PAGE;
             $PAGE->requires->js_call_amd('local_dimensions/scss_validation', 'init', [
                 [
+                    'fieldname' => constants::CFIELD_CUSTOMSCSS,
                     'closingbracewithoutopen' => get_string('customscss_js_closingbracewithoutopen', 'local_dimensions'),
                     'closingparenwithoutopen' => get_string('customscss_js_closingparenwithoutopen', 'local_dimensions'),
                     'unbalancedbraces' => get_string('customscss_js_unbalancedbraces', 'local_dimensions'),
                     'unbalancedparentheses' => get_string('customscss_js_unbalancedparentheses', 'local_dimensions'),
                     'punctuationwarning' => get_string('customscss_js_punctuationwarning', 'local_dimensions'),
+                    'errortitle' => get_string('customscss_js_errortitle', 'local_dimensions'),
+                    'warningtitle' => get_string('customscss_js_warningtitle', 'local_dimensions'),
+                    'saveanyway' => get_string('customscss_js_saveanyway', 'local_dimensions'),
+                    'goback' => get_string('customscss_js_goback', 'local_dimensions'),
                 ],
             ]);
         }
@@ -204,14 +210,16 @@ class competency_form extends moodleform {
 
         if ($data) {
             // Keep custom SCSS in plain format to avoid accidental editor format changes.
-            if (isset($data->customfield_customscss_editor) && is_array($data->customfield_customscss_editor)) {
-                $data->customfield_customscss_editor['format'] = FORMAT_PLAIN;
-            } else if (isset($data->customfield_customscss_editor) && is_object($data->customfield_customscss_editor)) {
-                $data->customfield_customscss_editor->format = FORMAT_PLAIN;
-            } else if (isset($data->customfield_customscss) && is_array($data->customfield_customscss)) {
-                $data->customfield_customscss['format'] = FORMAT_PLAIN;
-            } else if (isset($data->customfield_customscss) && is_object($data->customfield_customscss)) {
-                $data->customfield_customscss->format = FORMAT_PLAIN;
+            $editorprop = 'customfield_' . constants::CFIELD_CUSTOMSCSS . '_editor';
+            $plainprop  = 'customfield_' . constants::CFIELD_CUSTOMSCSS;
+            if (isset($data->$editorprop) && is_array($data->$editorprop)) {
+                $data->{$editorprop}['format'] = FORMAT_PLAIN;
+            } else if (isset($data->$editorprop) && is_object($data->$editorprop)) {
+                $data->$editorprop->format = FORMAT_PLAIN;
+            } else if (isset($data->$plainprop) && is_array($data->$plainprop)) {
+                $data->{$plainprop}['format'] = FORMAT_PLAIN;
+            } else if (isset($data->$plainprop) && is_object($data->$plainprop)) {
+                $data->$plainprop->format = FORMAT_PLAIN;
             }
 
             // Process custom field data.
@@ -230,8 +238,8 @@ class competency_form extends moodleform {
      */
     protected static function extract_submitted_scss(array $data): array {
         $fieldcandidates = [
-            'customfield_customscss_editor',
-            'customfield_customscss',
+            'customfield_' . constants::CFIELD_CUSTOMSCSS . '_editor',
+            'customfield_' . constants::CFIELD_CUSTOMSCSS,
         ];
 
         foreach ($fieldcandidates as $fieldname) {
