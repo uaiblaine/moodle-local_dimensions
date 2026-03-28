@@ -26,6 +26,9 @@
     * viewcoursestr (string) - Accessible label for the course link
     * locked (bool) - Whether the course is locked for the user
 
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
     Example context (json):
     {
         "courseid": 42,
@@ -34,9 +37,6 @@
         "viewcoursestr": "View course: Introduction to Programming",
         "locked": false
     }
-
-    @copyright  2026 Anderson Blaine
-    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 }}
 <div class="col-md-6 col-lg-4 mb-4">
     <div class="card h-100 {{^locked}}shadow-sm{{/locked}} {{#locked}}local-dimensions-card-locked{{/locked}}">

@@ -2139,6 +2139,29 @@ define(
         }
 
         /**
+         * Build initials from a course name for image placeholders.
+         *
+         * @param {string} name Course name
+         * @return {string} Initials
+         */
+        function getInitials(name) {
+            if (!name || typeof name !== 'string') {
+                return '';
+            }
+
+            const parts = name.trim().split(/\s+/).filter(Boolean);
+            if (parts.length === 0) {
+                return '';
+            }
+
+            if (parts.length === 1) {
+                return parts[0].slice(0, 2).toUpperCase();
+            }
+
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+
+        /**
          * Format a Unix timestamp using the Moodle strftimedaydate format.
          * Uses Intl.DateTimeFormat for localized month names.
          *
@@ -2175,8 +2198,6 @@ define(
                 return date.toLocaleDateString(lang);
             }
         }
-
-
 
         /**
          * Escape HTML special characters.

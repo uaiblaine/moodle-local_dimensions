@@ -155,7 +155,6 @@ if ($competencyid) {
     // Store the return URL and valid course IDs using cached template data.
     // This uses a single cache entry per template to serve all students efficiently.
     if (get_config('local_dimensions', 'enablereturnbutton')) {
-
         // Get valid courses from cache (one entry per template serves all students).
         $validcourseids = \local_dimensions\template_course_cache::get_courses_for_plan($plan);
         \local_dimensions\helper::set_return_context($PAGE->url, $validcourseids);
@@ -178,8 +177,11 @@ if ($competencyid) {
         'showevidence' => (bool) get_config('local_dimensions', 'showevidence'),
         'summaryenrollmentfilter' => $summaryenrollmentfilter,
         'enableevidencesubmitbutton' => (bool) get_config('local_dimensions', 'enableevidencesubmitbutton')
-            && has_capability('moodle/competency:userevidencemanageown',
-                \context_user::instance($plan->get('userid')), $plan->get('userid')),
+            && has_capability(
+                'moodle/competency:userevidencemanageown',
+                \context_user::instance($plan->get('userid')),
+                $plan->get('userid')
+            ),
     ];
 
     // Start HTML Output.
