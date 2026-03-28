@@ -63,9 +63,9 @@
         <a href="{{editurl}}" class="btn btn-sm btn-outline-primary">
             <i class="fa fa-pencil mr-1" aria-hidden="true"></i>{{#str}}edit{{/str}}
         </a>
+        {{#haschildren}}
+        {{> local_dimensions/competency_tree_children}}
+        {{/haschildren}}
     </li>
-    {{#haschildren}}
-    {{> local_dimensions/competency_tree_children}}
-    {{/haschildren}}
     {{/competencies}}
 </ul>

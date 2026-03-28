@@ -223,10 +223,12 @@
 
     /* Desktop: Radial gradient circle at top-left, fading to transparent */
     background:
-        radial-gradient(circle at 0% 0%,
+        radial-gradient(
+            circle at 0% 0%,
             var(--hero-overlay-color, rgb(0 0 0 / 80%)) 0%,
             var(--hero-overlay-color, rgb(0 0 0 / 80%)) 40%,
-            transparent 100%);
+            transparent 100%
+        );
 }
 
 /* Ensure content is above the overlay */
@@ -243,10 +245,12 @@
     .local-dimensions-hero-wrapper.local-dimensions-hero-has-image::before {
         /* Mobile: Linear gradient top-down, more aggressive for contrast */
         background:
-            linear-gradient(to bottom,
+            linear-gradient(
+                to bottom,
                 var(--hero-overlay-color, rgb(0 0 0 / 90%)) 0%,
                 var(--hero-overlay-color, rgb(0 0 0 / 80%)) 60%,
-                transparent 100%);
+                transparent 100%
+            );
     }
 
     /* Ensure padding adjusts for mobile reading */
@@ -809,7 +813,7 @@
     padding: 0.5rem 0;
 }
 
-.local-dimensions-detail-row+.local-dimensions-detail-row {
+.local-dimensions-detail-row + .local-dimensions-detail-row {
     border-top: 1px solid #f1f3f4;
 }
 
@@ -2776,7 +2780,7 @@ body.dark .local-dimensions-related-pill-v2:hover {
     z-index: 3;
 }
 
-.local-dimensions-ev-slider-controls .local-dimensions-ev-slider-btn+.local-dimensions-ev-slider-btn {
+.local-dimensions-ev-slider-controls .local-dimensions-ev-slider-btn + .local-dimensions-ev-slider-btn {
     border-left: 1px solid rgb(17 24 39 / 8%);
 }
 
@@ -2877,7 +2881,7 @@ body.dark .local-dimensions-related-pill-v2:hover {
     z-index: 3;
 }
 
-.local-dimensions-courses-scroll-controls .local-dimensions-scroll-btn+.local-dimensions-scroll-btn {
+.local-dimensions-courses-scroll-controls .local-dimensions-scroll-btn + .local-dimensions-scroll-btn {
     border-left: 1px solid rgb(17 24 39 / 8%);
 }
 
@@ -2957,8 +2961,8 @@ body.dark .local-dimensions-related-pill-v2:hover {
 }
 
 /* Remove bottom margin from the last section in accordion body */
-.local-dimensions-accordion-body>.local-dimensions-competency-detail>.local-dimensions-section:last-child,
-.local-dimensions-accordion-body>.local-dimensions-competency-detail>.local-dimensions-tabs-wrapper:last-child {
+.local-dimensions-accordion-body > .local-dimensions-competency-detail > .local-dimensions-section:last-child,
+.local-dimensions-accordion-body > .local-dimensions-competency-detail > .local-dimensions-tabs-wrapper:last-child {
     margin-bottom: 0;
 }
 
@@ -3069,13 +3073,13 @@ body.dark .local-dimensions-courses-scroll-controls {
     background: #3c4043;
 }
 
-.theme-dark .local-dimensions-ev-slider-controls .local-dimensions-ev-slider-btn+.local-dimensions-ev-slider-btn,
-body.dark .local-dimensions-ev-slider-controls .local-dimensions-ev-slider-btn+.local-dimensions-ev-slider-btn {
+.theme-dark .local-dimensions-ev-slider-controls .local-dimensions-ev-slider-btn + .local-dimensions-ev-slider-btn,
+body.dark .local-dimensions-ev-slider-controls .local-dimensions-ev-slider-btn + .local-dimensions-ev-slider-btn {
     border-left-color: rgb(255 255 255 / 12%);
 }
 
-.theme-dark .local-dimensions-courses-scroll-controls .local-dimensions-scroll-btn+.local-dimensions-scroll-btn,
-body.dark .local-dimensions-courses-scroll-controls .local-dimensions-scroll-btn+.local-dimensions-scroll-btn {
+.theme-dark .local-dimensions-courses-scroll-controls .local-dimensions-scroll-btn + .local-dimensions-scroll-btn,
+body.dark .local-dimensions-courses-scroll-controls .local-dimensions-scroll-btn + .local-dimensions-scroll-btn {
     border-left-color: rgb(255 255 255 / 12%);
 }
 
@@ -3131,8 +3135,8 @@ body.dark .local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimens
 }
 
 /* Expanded content border dark mode */
-.theme-dark .local-dimensions-accordion-toggle[aria-expanded="true"]+.local-dimensions-accordion-content,
-body.dark .local-dimensions-accordion-toggle[aria-expanded="true"]+.local-dimensions-accordion-content {
+.theme-dark .local-dimensions-accordion-toggle[aria-expanded="true"] + .local-dimensions-accordion-content,
+body.dark .local-dimensions-accordion-toggle[aria-expanded="true"] + .local-dimensions-accordion-content {
     border-color: var(--dimension-custombgcolor, var(--primary, #667eea));
 }
 
@@ -3310,7 +3314,16 @@ body.dark .local-dimensions-section-title {
 .local-dimensions-rules-progress-fill-striped {
     background-color: #fd7e14;
     background-image:
-        linear-gradient(45deg, rgb(255 255 255 / 25%) 25%, transparent 25%, transparent 50%, rgb(255 255 255 / 25%) 50%, rgb(255 255 255 / 25%) 75%, transparent 75%, transparent),
+        linear-gradient(
+            45deg,
+            rgb(255 255 255 / 25%) 25%,
+            transparent 25%,
+            transparent 50%,
+            rgb(255 255 255 / 25%) 50%,
+            rgb(255 255 255 / 25%) 75%,
+            transparent 75%,
+            transparent
+        ),
         linear-gradient(90deg, #fd7e14, #ff922b);
     background-size: 1rem 1rem, 100% 100%;
 }
