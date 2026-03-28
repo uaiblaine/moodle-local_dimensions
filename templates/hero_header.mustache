@@ -29,6 +29,7 @@
     * hastextcolor (bool) - Whether custom textcolor exists
     * duedate (string) - Formatted due date (optional)
     * hasduedate (bool) - Whether due date exists
+    * duedateiconurl (string) - URL for due date icon
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -43,13 +44,14 @@
         "textcolor": "#ffffff",
         "hastextcolor": true,
         "duedate": "31 Jan 2026",
-        "hasduedate": true
+        "hasduedate": true,
+        "duedateiconurl": "/pluginfile.php/1/local_dimensions/status/calendar-light.svg"
     }
 }}
 <div class="local-dimensions-hero-wrapper {{#hasbgimage}}local-dimensions-hero-has-image{{/hasbgimage}}" id="local-dimensions-hero"
      {{#hasbgimage}}style="--hero-bg-image: url('{{bgimage}}'); {{#hasbgcolor}}--hero-overlay-color: {{bgcolor}};{{/hasbgcolor}}"{{/hasbgimage}}>
-    <div class="local-dimensions-hero {{^hasbgcolor}}{{^hasbgimage}}bg-primary{{/hasbgimage}}{{/hasbgcolor}}" 
-         style="{{#hasbgcolor}}{{^hasbgimage}}background-color: var(--dimension-custombgcolor);{{/hasbgimage}}{{/hasbgcolor}}{{#hastextcolor}} color: var(--dimension-customtextcolor);{{/hastextcolor}}">
+    <div class="local-dimensions-hero {{^hasbgcolor}}{{^hasbgimage}}bg-primary{{/hasbgimage}}{{/hasbgcolor}}"
+         style="{{#hasbgcolor}}{{^hasbgimage}}background-color: {{bgcolor}};{{/hasbgimage}}{{/hasbgcolor}}{{#hastextcolor}} color: {{textcolor}};{{/hastextcolor}}">
         <div class="local-dimensions-hero-content">
             <h1 class="local-dimensions-hero-title">{{{title}}}</h1>
             {{#hasdescription}}

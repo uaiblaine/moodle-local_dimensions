@@ -49,6 +49,10 @@
         "showlockeddate": true,
         "customicon": "",
         "courseurl": "/course/view.php?id=42",
+        "lockiconurl": "/local/dimensions/pix/status/lock.svg",
+        "checkiconurl": "/local/dimensions/pix/status/check.svg",
+        "circleiconurl": "/local/dimensions/pix/status/circle.svg",
+        "infoiconurl": "/local/dimensions/pix/status/info.svg",
         "sections": [
             {
                 "name": "Section 1",
@@ -100,7 +104,7 @@
             {{#str}}completion_disabled, local_dimensions{{/str}}
         </div>
     {{/enabled}}
-    
+
     {{#enabled}}
     <div class="local-dimensions-timeline">
         {{#sections}}
@@ -110,12 +114,12 @@
                 {{#locked}}
                     <img class="local-dimensions-icon local-dimensions-icon-lock-sm" src="{{lockiconurl}}" alt="" aria-hidden="true">
                 {{/locked}}
-                
+
                 {{^locked}}
                     {{#is_completed}}
                         <img class="local-dimensions-icon local-dimensions-icon-check" src="{{checkiconurl}}" alt="" aria-hidden="true">
                     {{/is_completed}}
-                    
+
                     {{^is_completed}}
                         {{#is_started}}
                              <div class="local-dimensions-progress-ring-container" role="progressbar" aria-valuenow="{{percentage}}" aria-valuemin="0" aria-valuemax="100" aria-label="{{#str}}aria_completion_percentage, local_dimensions, {{percentage}}{{/str}}">
@@ -123,13 +127,13 @@
                                    <!-- Background circle (gray) -->
                                    <circle class="local-dimensions-progress-ring__bg" cx="16" cy="16" r="12" />
                                    <!-- Progress circle (green) -->
-                                   <circle class="local-dimensions-progress-ring__progress" cx="16" cy="16" r="12" 
+                                   <circle class="local-dimensions-progress-ring__progress" cx="16" cy="16" r="12"
                                    style="stroke-dasharray: {{dasharray}} 75.4; stroke-dashoffset: 0;" />
                                 </svg>
                                 <span class="local-dimensions-progress-text" aria-hidden="true">{{percentage}}</span>
                             </div>
                         {{/is_started}}
-                        
+
                         {{^is_started}}
                             {{#has_activities}}
                                 <img class="local-dimensions-icon local-dimensions-icon-circle" src="{{circleiconurl}}" alt="" aria-hidden="true">
@@ -141,7 +145,7 @@
                     {{/is_completed}}
                 {{/locked}}
             </div>
-            
+
             <div class="local-dimensions-timeline-content">
                 {{#locked}}
                     {{#url}}
@@ -151,7 +155,7 @@
                         <span class="text-muted">{{{name}}}</span>
                     {{/url}}
                 {{/locked}}
-                
+
                 {{^locked}}
                     {{#url}}
                     <a href="{{url}}" aria-label="{{#str}}view_section, local_dimensions, {{name}}{{/str}}">{{{name}}}</a>

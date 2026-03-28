@@ -27,6 +27,22 @@
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "isfirst": true,
+        "competencies": [
+            {
+                "id": 1,
+                "shortname": "Competency A",
+                "idnumber": "COMP-A",
+                "editurl": "/local/dimensions/edit_competency.php?id=1",
+                "haschildren": false,
+                "children": [],
+                "depth": 0
+            }
+        ]
+    }
 }}
 <ul class="list-unstyled{{#isfirst}}{{/isfirst}}{{^isfirst}} ml-4{{/isfirst}}">
     {{#competencies}}
