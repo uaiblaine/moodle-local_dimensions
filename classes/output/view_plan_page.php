@@ -90,6 +90,11 @@ class view_plan_page implements renderable, templatable {
         if ($this->competency) {
             $bgcolor = $this->get_competency_custom_field($this->competency->id, constants::CFIELD_CUSTOMBGCOLOR);
             $textcolor = $this->get_competency_custom_field($this->competency->id, constants::CFIELD_CUSTOMTEXTCOLOR);
+            $bgimage = $this->get_custom_field_image_url(
+                $this->competency->id,
+                constants::CFIELD_CUSTOMBGIMAGE,
+                'competency'
+            );
 
             $data['hero'] = [
                 'title' => format_string($this->competency->shortname),
@@ -102,8 +107,8 @@ class view_plan_page implements renderable, templatable {
                 'hasbgcolor' => !empty($bgcolor),
                 'textcolor' => $textcolor,
                 'hastextcolor' => !empty($textcolor),
-                'bgimage' => $this->get_custom_field_image_url($this->competency->id, constants::CFIELD_CUSTOMBGIMAGE, 'competency'),
-                'hasbgimage' => !empty($this->get_custom_field_image_url($this->competency->id, constants::CFIELD_CUSTOMBGIMAGE, 'competency')),
+                'bgimage' => $bgimage,
+                'hasbgimage' => !empty($bgimage),
                 'duedateiconurl' => $output->image_url('status/calendar-light', 'local_dimensions')->out(false),
             ];
         }

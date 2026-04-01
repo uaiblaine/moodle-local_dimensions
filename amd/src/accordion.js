@@ -477,10 +477,12 @@ define(
          */
         function renderDescriptionPane(summaryState, tabs, strMap, planId) {
             const isFirst = tabs[0].id === 'description';
-            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-description' + (isFirst ? ' active' : '') + '"';
+            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-description' +
+                (isFirst ? ' active' : '') + '"';
             html += ' id="local-dimensions-tabpane-description-' + summaryState.comp.id + '" data-tab="description"';
             html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-description-' + summaryState.comp.id + '">';
-            html += '<div class="local-dimensions-desc-layout' + (summaryState.hasTaxonomyCard ? ' local-dimensions-desc-layout-has-taxonomy' : '') + '">';
+            html += '<div class="local-dimensions-desc-layout' +
+                (summaryState.hasTaxonomyCard ? ' local-dimensions-desc-layout-has-taxonomy' : '') + '">';
             html += '<div class="local-dimensions-desc-main">';
 
             if (summaryState.hasDesc) {
@@ -514,7 +516,8 @@ define(
          */
         function renderEvidencePane(summaryState, tabs, strMap) {
             const isFirst = tabs[0].id === 'evidence';
-            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-evidence' + (isFirst ? ' active' : '') + '"';
+            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-evidence' +
+                (isFirst ? ' active' : '') + '"';
             html += ' id="local-dimensions-tabpane-evidence-' + summaryState.comp.id + '" data-tab="evidence"';
             html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-evidence-' + summaryState.comp.id + '">';
             html += renderEvidenceSlider(summaryState.ucs.evidence, strMap);
@@ -661,11 +664,13 @@ define(
             }
 
             const refresh = function () {
-                container.querySelectorAll('.local-dimensions-ev-slider-wrapper, .local-dimensions-courses-scroll-wrapper').forEach(function (wrapper) {
-                    if (typeof wrapper._dimsUpdateArrows === 'function') {
-                        wrapper._dimsUpdateArrows();
-                    }
-                });
+                container
+                    .querySelectorAll('.local-dimensions-ev-slider-wrapper, .local-dimensions-courses-scroll-wrapper')
+                    .forEach(function (wrapper) {
+                        if (typeof wrapper._dimsUpdateArrows === 'function') {
+                            wrapper._dimsUpdateArrows();
+                        }
+                    });
             };
 
             if (globalThis.requestAnimationFrame) {
@@ -846,17 +851,20 @@ define(
             };
             if (child.isproficient) {
                 html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-proficient">';
-                html += '<img class="local-dimensions-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.proficient || '') + '" alt="" aria-hidden="true">';
+                html += '<img class="local-dimensions-rules-child-icon-image" src="' +
+                    escapeHtml(rulesIconUrls.proficient || '') + '" alt="" aria-hidden="true">';
                 html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrProficient) + '</span>';
                 html += '</div>';
             } else if (child.hasgrade) {
                 html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-inprogress">';
-                html += '<img class="local-dimensions-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.inprogress || '') + '" alt="" aria-hidden="true">';
+                html += '<img class="local-dimensions-rules-child-icon-image" src="' +
+                    escapeHtml(rulesIconUrls.inprogress || '') + '" alt="" aria-hidden="true">';
                 html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrInprogress) + '</span>';
                 html += '</div>';
             } else {
                 html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-todo">';
-                html += '<img class="local-dimensions-rules-child-icon-image" src="' + escapeHtml(rulesIconUrls.todo || '') + '" alt="" aria-hidden="true">';
+                html += '<img class="local-dimensions-rules-child-icon-image" src="' +
+                    escapeHtml(rulesIconUrls.todo || '') + '" alt="" aria-hidden="true">';
                 html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrTodo) + '</span>';
                 html += '</div>';
             }
@@ -891,7 +899,8 @@ define(
                 if (child.isproficient) {
                     html += '<span class="local-dimensions-rules-points-value">' + child.points + '</span>';
                 } else {
-                    html += '<span class="local-dimensions-rules-points-value local-dimensions-rules-points-pending">' + child.points + '</span>';
+                    html += '<span class="local-dimensions-rules-points-value local-dimensions-rules-points-pending">' +
+                        child.points + '</span>';
                 }
                 html += ' <span class="local-dimensions-rules-points-unit">' + escapeHtml(strMap.rulesPts) + '</span>';
                 html += '</div>';
@@ -923,7 +932,8 @@ define(
             html += '<div class="local-dimensions-rules-info-title">' + escapeHtml(strMap.rulesInfoTitle) + '</div>';
             html += '<div class="local-dimensions-rules-info-description">' + escapeHtml(ruleText) + '</div>';
             if (data.hasrequired && data.requiredwarningtext) {
-                html += '<div class="local-dimensions-rules-info-note"><strong>' + escapeHtml(data.requiredwarningtext) + '</strong></div>';
+                html += '<div class="local-dimensions-rules-info-note"><strong>' +
+                    escapeHtml(data.requiredwarningtext) + '</strong></div>';
             }
             html += '</div>';
             html += '</div>';
@@ -1095,7 +1105,8 @@ define(
             html += '</div>'; // End local-dimensions-ev-slider-track.
 
             // Controls block (bottom-right).
-            html += '<div class="local-dimensions-ev-slider-controls" role="group" aria-label="' + escapeHtml(strMap.evidenceLabel) + '">';
+            html += '<div class="local-dimensions-ev-slider-controls" role="group" aria-label="' +
+                escapeHtml(strMap.evidenceLabel) + '">';
             html += '<button type="button" class="local-dimensions-ev-slider-btn local-dimensions-ev-slider-prev disabled"';
             html += ' aria-label="' + escapeHtml(strMap.sliderPrev) + '">';
             html += '<i class="fa fa-chevron-left" aria-hidden="true"></i>';
@@ -1632,7 +1643,8 @@ define(
             html += '</h2>';
 
             html += '<div class="local-dimensions-courses-scroll-wrapper" data-course-count="' + courses.length + '">';
-            html += '<div class="local-dimensions-courses-scroll' + (hasManyCourses ? '' : ' local-dimensions-courses-no-scroll') + '">';
+            html += '<div class="local-dimensions-courses-scroll' +
+                (hasManyCourses ? '' : ' local-dimensions-courses-no-scroll') + '">';
 
             courses.forEach(function (course) {
                 const courseUrl = M.cfg.wwwroot + '/course/view.php?id=' + course.id;
@@ -1680,7 +1692,8 @@ define(
             });
 
             html += '</div>'; // End local-dimensions-courses-scroll.
-            html += '<div class="local-dimensions-courses-scroll-controls" role="group" aria-label="' + escapeHtml(strMap.linkedCourses) + '">';
+            html += '<div class="local-dimensions-courses-scroll-controls" role="group" aria-label="' +
+                escapeHtml(strMap.linkedCourses) + '">';
             html += '<button type="button" class="local-dimensions-scroll-btn local-dimensions-scroll-prev disabled"';
             html += ' aria-label="' + escapeHtml(strMap.sliderPrev) + '">';
             html += '<i class="fa fa-chevron-left" aria-hidden="true"></i>';
@@ -1802,7 +1815,8 @@ define(
             data.relatedcompetencies.forEach(function (related) {
                 if (useLink && related.id) {
                     const href = displaySettings.viewplanurl + '?id=' + planId + '&competencyid=' + related.id;
-                    html += '<a href="' + escapeHtml(href) + '" class="local-dimensions-related-pill-v2 local-dimensions-related-pill-link">' 
+                    html += '<a href="' + escapeHtml(href) +
+                        '" class="local-dimensions-related-pill-v2 local-dimensions-related-pill-link">'
                         + escapeHtml(related.shortname) + '</a>';
                 } else {
                     html += '<span class="local-dimensions-related-pill-v2">' + escapeHtml(related.shortname) + '</span>';
@@ -1863,7 +1877,10 @@ define(
 
             const mapping = {
                 behaviour: { iconurl: taxonomyIcons.behaviour || '', accentClass: 'local-dimensions-taxonomy-card-behaviour' },
-                behavior: { iconurl: taxonomyIcons.behavior || taxonomyIcons.behaviour || '', accentClass: 'local-dimensions-taxonomy-card-behaviour' },
+                behavior: {
+                    iconurl: taxonomyIcons.behavior || taxonomyIcons.behaviour || '',
+                    accentClass: 'local-dimensions-taxonomy-card-behaviour'
+                },
                 competency: { iconurl: taxonomyIcons.competency || '', accentClass: 'local-dimensions-taxonomy-card-competency' },
                 concept: { iconurl: taxonomyIcons.concept || '', accentClass: 'local-dimensions-taxonomy-card-concept' },
                 domain: { iconurl: taxonomyIcons.domain || '', accentClass: 'local-dimensions-taxonomy-card-domain' },
@@ -1871,7 +1888,10 @@ define(
                 level: { iconurl: taxonomyIcons.level || '', accentClass: 'local-dimensions-taxonomy-card-level' },
                 outcome: { iconurl: taxonomyIcons.outcome || '', accentClass: 'local-dimensions-taxonomy-card-outcome' },
                 practice: { iconurl: taxonomyIcons.practice || '', accentClass: 'local-dimensions-taxonomy-card-practice' },
-                proficiency: { iconurl: taxonomyIcons.proficiency || '', accentClass: 'local-dimensions-taxonomy-card-proficiency' },
+                proficiency: {
+                    iconurl: taxonomyIcons.proficiency || '',
+                    accentClass: 'local-dimensions-taxonomy-card-proficiency'
+                },
                 skill: { iconurl: taxonomyIcons.skill || '', accentClass: 'local-dimensions-taxonomy-card-skill' },
                 value: { iconurl: taxonomyIcons.value || '', accentClass: 'local-dimensions-taxonomy-card-value' }
             };
@@ -1894,7 +1914,8 @@ define(
             html += '<div class="local-dimensions-taxonomy-card-label">' + escapeHtml(strMap.taxonomyCardLabel) + '</div>';
             html += '<div class="local-dimensions-taxonomy-card-icon">';
             if (meta.iconurl) {
-                html += '<img class="local-dimensions-taxonomy-card-icon-image" src="' + escapeHtml(meta.iconurl) + '" alt="" aria-hidden="true">';
+                html += '<img class="local-dimensions-taxonomy-card-icon-image" src="' +
+                    escapeHtml(meta.iconurl) + '" alt="" aria-hidden="true">';
             }
             html += '</div>';
             html += '<div class="local-dimensions-taxonomy-card-title">' + escapeHtml(taxonomy.term) + '</div>';
@@ -2139,6 +2160,29 @@ define(
         }
 
         /**
+         * Build initials from a course name for image placeholders.
+         *
+         * @param {string} name Course name
+         * @return {string} Initials
+         */
+        function getInitials(name) {
+            if (!name || typeof name !== 'string') {
+                return '';
+            }
+
+            const parts = name.trim().split(/\s+/).filter(Boolean);
+            if (parts.length === 0) {
+                return '';
+            }
+
+            if (parts.length === 1) {
+                return parts[0].slice(0, 2).toUpperCase();
+            }
+
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+
+        /**
          * Format a Unix timestamp using the Moodle strftimedaydate format.
          * Uses Intl.DateTimeFormat for localized month names.
          *
@@ -2175,8 +2219,6 @@ define(
                 return date.toLocaleDateString(lang);
             }
         }
-
-
 
         /**
          * Escape HTML special characters.

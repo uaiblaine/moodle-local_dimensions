@@ -106,7 +106,12 @@ function local_dimensions_build_competency_tree_data($competencies, $frameworkid
         ];
 
         if (!empty($comp['children'])) {
-            $item['children'] = local_dimensions_build_competency_tree_data($comp['children'], $frameworkid, $pagecontextid, $depth + 1);
+            $item['children'] = local_dimensions_build_competency_tree_data(
+                $comp['children'],
+                $frameworkid,
+                $pagecontextid,
+                $depth + 1
+            );
         }
 
         $result[] = $item;

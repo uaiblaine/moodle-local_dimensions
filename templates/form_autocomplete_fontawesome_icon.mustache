@@ -25,6 +25,9 @@
     * source - The source of the icon
     * sourcecolor - The bootstrap color class for the source badge
 
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
     Example context (json):
     {
         "class": "fa-user-lock",
@@ -32,9 +35,6 @@
         "source": "Moodle core",
         "sourcecolor": "bg-warning text-dark"
     }
-
-    @copyright  2026 Anderson Blaine
-    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 }}
 
 <span class="d-inline-block align-top"><i class="fa fa-fw mx-1 {{class}} align-middle" aria-hidden="true"></i></span>&nbsp;<small class="d-inline-block text-break" style="max-width: 200px;">{{name}}</small>{{#source}}<span class="badge {{{sourcecolor}}} float-end ms-2">{{{source}}}</span>{{/source}}

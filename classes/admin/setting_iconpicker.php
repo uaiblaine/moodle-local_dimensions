@@ -185,5 +185,4 @@ class setting_iconpicker extends \admin_setting_configtext {
 
         return '';
     }
-
 }
