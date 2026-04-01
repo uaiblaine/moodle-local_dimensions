@@ -82,7 +82,7 @@ class competency_metadata_cache {
      * Uses MUC get_many/set_many for efficiency. Missing entries are
      * fetched from the database in a single bulk query.
      *
-     * @param array<int> $competencyids Competency IDs.
+     * @param int[] $competencyids Competency IDs.
      * @return array<int, array<string, mixed>> Keyed by competency ID.
      */
     public static function get_many(array $competencyids): array {
@@ -186,7 +186,7 @@ class competency_metadata_cache {
     /**
      * Fetch metadata for multiple competencies in a single bulk query.
      *
-     * @param array<int> $competencyids Competency IDs.
+     * @param int[] $competencyids Competency IDs.
      * @return array<int, array<string, mixed>> Keyed by competency ID.
      */
     private static function fetch_many(array $competencyids): array {
@@ -249,8 +249,8 @@ class competency_metadata_cache {
      * Build the payload array from custom field records.
      *
      * @param int $competencyid Competency ID.
-     * @param array<string, object> $byshortname Records keyed by shortname.
-     * @param array<string, mixed> $payload Base payload to populate.
+     * @param array $byshortname Records keyed by shortname.
+     * @param array $payload Base payload to populate.
      * @return array<string, mixed>
      */
     private static function build_payload_from_records(int $competencyid, array $byshortname, array $payload): array {
@@ -305,7 +305,7 @@ class competency_metadata_cache {
     /**
      * Get select field label for a shortname.
      *
-     * @param array<string, object> $records Records keyed by shortname.
+     * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname.
      * @return string|null
      */
@@ -338,7 +338,7 @@ class competency_metadata_cache {
     /**
      * Get normalized hex color for a shortname.
      *
-     * @param array<string, object> $records Records keyed by shortname.
+     * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname.
      * @return string|null
      */
@@ -362,7 +362,7 @@ class competency_metadata_cache {
     /**
      * Get card image URL from legacy customfield_picture storage.
      *
-     * @param array<string, object> $records Records keyed by shortname.
+     * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname.
      * @return string|null
      */
@@ -404,7 +404,7 @@ class competency_metadata_cache {
     /**
      * Ensure payload has the expected keys.
      *
-     * @param array<string, mixed> $payload Raw payload.
+     * @param array $payload Raw payload.
      * @return array<string, mixed>
      */
     private static function normalise_payload(array $payload): array {

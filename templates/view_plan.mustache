@@ -28,6 +28,9 @@
     * hascustomcss (bool) - Whether there is custom CSS to inject
     * customcss (string) - Compiled CSS from competency SCSS custom field
 
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
     Example context (json):
     {
         "hascompetency": true,
@@ -41,30 +44,9 @@
         },
         "courses": []
     }
-
-    @copyright  2026 Anderson Blaine
-    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 }}
-{{! Define CSS custom properties for dimension colors when available }}
-{{#hero}}
-<style>
-:root {
-    {{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}
-    {{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}
-}
-</style>
-{{/hero}}
-<style>
-/* Percentage display mode styles */
-.percentagemode-fixed .local-dimensions-progress-ring-container .local-dimensions-progress-text {
-    opacity: 1 !important;
-}
-.percentagemode-hidden .local-dimensions-progress-ring-container .local-dimensions-progress-text {
-    display: none !important;
-}
-</style>
 {{#hascustomcss}}
-<style>{{{customcss}}}</style>
+<script type="text/plain" id="local-dimensions-customcss-source-viewplan">{{{customcss}}}</script>
 {{/hascustomcss}}
 <div class="percentagemode-{{percentagemode}}">
 
@@ -93,3 +75,15 @@
 {{/hascompetency}}
 
 </div>
+{{#js}}
+(function() {
+    var source = document.getElementById('local-dimensions-customcss-source-viewplan');
+    if (!source || !source.textContent.trim()) {
+        return;
+    }
+    var style = document.createElement('style');
+    style.textContent = source.textContent;
+    document.head.appendChild(style);
+    source.remove();
+})();
+{{/js}}

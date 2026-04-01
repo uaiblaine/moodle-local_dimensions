@@ -177,7 +177,7 @@ class template_metadata_cache {
     /**
      * Get select field label for a shortname.
      *
-     * @param array<string, object> $records Records keyed by shortname.
+     * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname.
      * @return string|null
      */
@@ -214,7 +214,7 @@ class template_metadata_cache {
      * The intvalue is the 1-based index into the options list, and the
      * option key (before the pipe) is the actual display mode constant.
      *
-     * @param array<string, object> $records Records keyed by shortname.
+     * @param array $records Records keyed by shortname.
      * @return int Display mode constant.
      */
     private static function get_displaymode_value(array $records): int {
@@ -255,7 +255,7 @@ class template_metadata_cache {
     /**
      * Get normalized hex color for a shortname.
      *
-     * @param array<string, object> $records Records keyed by shortname.
+     * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname.
      * @return string|null
      */
@@ -279,7 +279,7 @@ class template_metadata_cache {
     /**
      * Get card image URL from legacy customfield_picture storage.
      *
-     * @param array<string, object> $records Records keyed by shortname.
+     * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname.
      * @return string|null
      */
@@ -321,7 +321,7 @@ class template_metadata_cache {
     /**
      * Ensure payload has the expected keys.
      *
-     * @param array<string, mixed> $payload Raw payload.
+     * @param array $payload Raw payload.
      * @return array<string, mixed>
      */
     private static function normalise_payload(array $payload): array {

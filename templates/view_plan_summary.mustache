@@ -34,31 +34,36 @@
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-}}
-{{! Percentage mode styles }}
-<style>
-/* Percentage display mode styles */
-.percentagemode-fixed .local-dimensions-progress-ring-container .local-dimensions-progress-text {
-    opacity: 1 !important;
-}
-.percentagemode-hidden .local-dimensions-progress-ring-container .local-dimensions-progress-text {
-    display: none !important;
-}
-</style>
 
+    Example context (json):
+    {
+        "hasplan": true,
+        "planid": 10,
+        "userid": 5,
+        "planname": "Plan Example",
+        "percentagemode": "hover",
+        "hero": {
+            "title": "Plan Hero",
+            "description": "<p>Description</p>",
+            "hasdescription": true,
+            "hasbgcolor": true,
+            "bgcolor": "#2c3e50",
+            "hastextcolor": true,
+            "textcolor": "#ffffff"
+        },
+        "hascompetencies": false,
+        "competencies": [],
+        "competencycount": 0,
+        "incompletecount": 0
+    }
+}}
 {{! Custom SCSS compiled CSS from template }}
 {{#hascustomcss}}
-<style>{{{customcss}}}</style>
+<script type="text/plain" id="local-dimensions-customcss-source-summary">{{{customcss}}}</script>
 {{/hascustomcss}}
 
 {{! Hero header with plan/template info }}
 {{#hero}}
-<style>
-:root {
-    {{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{/hasbgcolor}}
-    {{#hastextcolor}}--dimension-customtextcolor: {{textcolor}};{{/hastextcolor}}
-}
-</style>
 {{> local_dimensions/hero_header}}
 {{/hero}}
 
@@ -96,13 +101,13 @@
         {{! Competency accordion }}
         <div class="local-dimensions-competency-accordion" role="list" aria-label="{{#str}}plan_competencies, local_dimensions{{/str}}">
             {{#competencies}}
-            <div class="local-dimensions-accordion-item {{#isproficient}}completed{{/isproficient}} {{#hasrating}}{{^isproficient}}rated{{/isproficient}}{{/hasrating}}" 
+            <div class="local-dimensions-accordion-item {{#isproficient}}completed{{/isproficient}} {{#hasrating}}{{^isproficient}}rated{{/isproficient}}{{/hasrating}}"
                  role="listitem"
                  data-competency-id="{{id}}">
 
                 {{! Accordion content }}
                 <div class="local-dimensions-accordion-wrapper flex-grow-1">
-                    <button class="local-dimensions-accordion-toggle" 
+                    <button class="local-dimensions-accordion-toggle"
                             type="button"
                             aria-expanded="false"
                             aria-controls="competency-content-{{id}}"
@@ -129,7 +134,7 @@
                         <i class="local-dimensions-accordion-icon fa fa-chevron-down" aria-hidden="true"></i>
                     </button>
 
-                    <div class="local-dimensions-accordion-content" 
+                    <div class="local-dimensions-accordion-content"
                          id="competency-content-{{id}}"
                          aria-labelledby="competency-header-{{id}}"
                          hidden>
@@ -162,3 +167,15 @@
     </div>
     {{/hascompetencies}}
 </div>
+{{#js}}
+(function() {
+    var source = document.getElementById('local-dimensions-customcss-source-summary');
+    if (!source || !source.textContent.trim()) {
+        return;
+    }
+    var style = document.createElement('style');
+    style.textContent = source.textContent;
+    document.head.appendChild(style);
+    source.remove();
+})();
+{{/js}}

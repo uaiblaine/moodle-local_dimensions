@@ -26,23 +26,23 @@ defined('MOODLE_INTERNAL') || die();
 
 $observers = [
     [
-        'eventname' => '\core_competency\event\competency_created',
-        'callback' => 'local_dimensions\observer::competency_created',
+        'eventname' => \core_competency\event\competency_created::class,
+        'callback' => \local_dimensions\observer::class . '::competency_created',
     ],
     [
-        'eventname' => '\core_competency\event\competency_updated',
-        'callback' => 'local_dimensions\observer::competency_updated',
+        'eventname' => \core_competency\event\competency_updated::class,
+        'callback' => \local_dimensions\observer::class . '::competency_updated',
     ],
     [
-        'eventname' => '\core\event\competency_user_competency_rated',
-        'callback' => 'local_dimensions\observer::user_competency_rated',
+        'eventname' => \core\event\competency_user_competency_rated::class,
+        'callback' => \local_dimensions\observer::class . '::user_competency_rated',
     ],
     [
-        'eventname' => '\core\event\competency_user_competency_rated_in_plan',
-        'callback' => 'local_dimensions\observer::user_competency_rated_in_plan',
+        'eventname' => \core\event\competency_user_competency_rated_in_plan::class,
+        'callback' => \local_dimensions\observer::class . '::user_competency_rated_in_plan',
     ],
     [
-        'eventname' => '\core\event\competency_evidence_created',
-        'callback' => 'local_dimensions\observer::evidence_created',
+        'eventname' => \core\event\competency_evidence_created::class,
+        'callback' => \local_dimensions\observer::class . '::evidence_created',
     ],
 ];

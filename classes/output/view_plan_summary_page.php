@@ -105,6 +105,12 @@ class view_plan_summary_page implements renderable, templatable {
             $duedateformatted = userdate($duedate, get_string('strftimedaydatetime', 'langconfig'));
         }
 
+        $bgimage = $template ? $this->get_custom_field_image_url(
+            $template->get('id'),
+            constants::CFIELD_CUSTOMBGIMAGE,
+            'lp'
+        ) : null;
+
         $data = [
             'hasplan' => true,
             'planid' => $this->plan->get('id'),
@@ -121,8 +127,8 @@ class view_plan_summary_page implements renderable, templatable {
                 'hastextcolor' => !empty($textcolor),
                 'duedate' => $duedateformatted,
                 'hasduedate' => !empty($duedateformatted),
-                'bgimage' => $template ? $this->get_custom_field_image_url($template->get('id'), constants::CFIELD_CUSTOMBGIMAGE, 'lp') : null,
-                'hasbgimage' => $template && !empty($this->get_custom_field_image_url($template->get('id'), constants::CFIELD_CUSTOMBGIMAGE, 'lp')),
+                'bgimage' => $bgimage,
+                'hasbgimage' => !empty($bgimage),
                 'duedateiconurl' => $output->image_url('status/calendar-light', 'local_dimensions')->out(false),
             ],
             'competencies' => [],

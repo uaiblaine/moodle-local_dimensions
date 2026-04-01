@@ -29,13 +29,20 @@
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "returnurl": "/local/dimensions/view-plan.php?id=10",
+        "label": "Back to plan",
+        "buttoncolor": "#667eea"
+    }
 }}
-<a href="{{returnurl}}" 
-   class="local-dimensions-return-fab" 
+<a href="{{returnurl}}"
+   class="local-dimensions-return-fab"
    id="local-dimensions-return-fab"
    title="{{label}}"
    aria-label="{{label}}"
-   style="display: none; --local-dimensions-fab-color: {{buttoncolor}};">
+   style="display: none; --local-dimensions-fab-color: {{buttoncolor}}{{^buttoncolor}}#667eea{{/buttoncolor}};">
     <i class="fa fa-arrow-left" aria-hidden="true"></i>
     <span class="fab-label">{{label}}</span>
 </a>

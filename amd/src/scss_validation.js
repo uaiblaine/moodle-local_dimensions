@@ -368,7 +368,7 @@ define(['core/notification'], function(Notification) {
             });
 
             // Install a secondary listener that checks the bypass flag.
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', function() {
                 if (form.getAttribute('data-scss-bypass') === '1') {
                     form.removeAttribute('data-scss-bypass');
                     // Allow submission to proceed.
