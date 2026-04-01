@@ -8,9 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - Admin setting `showtaxonomycard` to display the main taxonomy card in the Description tab.
+- Admin setting `animatelockedborder` to control the locked-card dashed-border animation.
 - Backend taxonomy helpers to expose current, child, and per-level taxonomy metadata for a competency.
 - Taxonomy card UI with dedicated taxonomy icon assets in `pix/taxonomy`.
 - New status icon assets in `pix/status` for due dates, locked cards, progress cards, summary badges, and Rules tab states.
+- Additional MUC cache definitions for template metadata, competency metadata, return context, and plan trail data.
+- Event observers for competency rating/evidence events to invalidate stale plan trail session cache entries.
 - Rules tab enhancements:
   - Required-only filter pills for child items.
   - Warning state when the minimum score is reached but mandatory children are still pending.
@@ -24,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Rules tab rendering now uses backend-provided outcome text, required-warning text, and mandatory counters.
 - Locked cards, due-date badges, summary status badges, and Rules icons now use plugin image assets instead of inline SVG markup.
 - English and Brazilian Portuguese strings were streamlined to match the new taxonomy card and Rules tab behaviour.
+- Documentation audit: `README.md` now matches current implementation for custom field shortnames/provisioning, admin settings, cache map, event observers, and frontend asset counts.
 
 ### Removed
 - Comments section with reply functionality in accordion panels (`showcomments` setting, external services, JS, CSS, and language strings).
