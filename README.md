@@ -96,6 +96,7 @@ All settings are under **Site administration → Competencies → Competency Dim
 | Locked card display mode | "Locked content" message or "Learn More" button | Locked content |
 | "Learn More" button colour | Colour for the learn more button on locked cards | `#667eea` |
 | Show availability date | Show the availability date on locked cards | Enabled |
+| Animate locked border | Enable marching-ants animation on the locked-card dashed border | Disabled |
 | Locked card icon | Custom FontAwesome icon for locked cards (searchable picker) | Default lock |
 | Enrolment filter | Show all courses, enrolled only, or active enrolments only | All |
 | Single course redirect | Skip the competency tracker if the user has only one active enrolment | Disabled |
@@ -117,7 +118,7 @@ All settings are under **Site administration → Competencies → Competency Dim
 Admin pages
 -----------
 
-The plugin provides four admin pages under **Site administration → Competencies → Competency Dimensions settings**:
+The plugin provides five admin pages under **Site administration → Competencies → Competency Dimensions settings**:
 
 | Page | Path | Capability required |
 |---|---|---|
@@ -131,20 +132,21 @@ The plugin provides four admin pages under **Site administration → Competencie
 Custom fields
 -------------
 
-The plugin automatically creates the following custom fields for both competencies and learning plan templates:
+The plugin auto-provisions custom fields on first admin access. Non-image fields are created for both competencies and learning plan templates; image fields are created only when the external `customfield_picture` handler is active.
 
 | Shortname | Type | Description |
 |---|---|---|
-| `customcard` | picture | Card image for visual representation |
-| `custombgimage` | picture | Background image for the hero header |
-| `custombgcolor` | text | Background colour in hex format |
-| `customtextcolor` | text | Text colour in hex format |
-| `tag1` | select | Year/period classification |
-| `tag2` | select | Category/type classification |
-| `customscss` | textarea | Custom SCSS code (when enabled) |
+| `local_dimensions_customcard` | picture | Card image for visual representation (external image handler mode only) |
+| `local_dimensions_custombgimage` | picture | Background image for the hero header (external image handler mode only) |
+| `local_dimensions_custombgcolor` | text | Background colour in hex format |
+| `local_dimensions_customtextcolor` | text | Text colour in hex format |
+| `local_dimensions_tag1` | select | Year/period classification (example only; values can be adjusted as needed)|
+| `local_dimensions_tag2` | select | Category/type classification (example only; values can be adjusted as needed)|
+| `local_dimensions_type` | select | Competency/category type label |
+| `local_dimensions_customscss` | textarea | Custom SCSS code (when enabled) |
 | `local_dimensions_displaymode` | select | Display mode (templates only) |
 
-Fields are automatically provisioned on first admin login when competencies are enabled.
+In built-in image mode, card/background images are stored in plugin file areas (`competency_card`, `template_card`, `competency_bg`, `template_bg`) instead of custom field records.
 
 
 Web services
@@ -213,15 +215,19 @@ Allows viewing the Dimensions learning plan pages and accessing AJAX web service
 Performance and caching
 -----------------------
 
-The plugin uses three application-level MUC caches to minimise database queries:
+The plugin uses application and session-level MUC caches to minimise database queries and avoid repeated computation:
 
-| Cache | Key | Purpose | TTL |
-|---|---|---|---|
-| `template_courses` | `template_id` | Stores valid course IDs per template | 1 hour |
-| `template_scss` | `css_{templateid}` | Compiled CSS from template SCSS | Manual invalidation |
-| `competency_scss` | `css_{competencyid}` | Compiled CSS from competency SCSS | Manual invalidation |
+| Cache | Mode | Key | Purpose | TTL |
+|---|---|---|---|---|
+| `template_courses` | application | `template_id` | Stores valid course IDs per template | 1 hour |
+| `template_metadata` | application | `templateid` | Caches template metadata for card rendering (type, tags, colours, card image URL) | 30 minutes |
+| `competency_metadata` | application | `competencyid` | Caches competency metadata for card rendering (tags, colours, card image URL) | 30 minutes |
+| `template_scss` | application | `css_{templateid}` | Compiled CSS from template SCSS | Manual invalidation |
+| `competency_scss` | application | `css_{competencyid}` | Compiled CSS from competency SCSS | Manual invalidation |
+| `returncontext` | session | `returncontext` | Stores return URL and allowed course IDs for the floating "Return to plan" button | Session lifetime |
+| `plan_trail` | session | `planid_userid` | Stores lightweight plan competency trail data for summary/status rendering | 5 minutes |
 
-Compiled SCSS caches are automatically invalidated when the SCSS field is saved. The template courses cache uses static acceleration with a pool size of 50 entries.
+Compiled SCSS caches are automatically invalidated when the SCSS field is saved. Metadata caches are invalidated when related metadata/images change. The template courses cache uses static acceleration with a pool size of 50 entries.
 
 Additionally:
 - Custom field provisioning runs only once per admin session (session flag)
@@ -235,8 +241,11 @@ Event observers
 
 | Event | Handler | Purpose |
 |---|---|---|
-| `competency_created` | `observer::competency_created` | Save custom field data when competencies are created via core forms |
-| `competency_updated` | `observer::competency_updated` | Save custom field data when competencies are updated via core forms |
+| `core_competency\event\competency_created` | `observer::competency_created` | Save custom field data when competencies are created via core forms |
+| `core_competency\event\competency_updated` | `observer::competency_updated` | Save custom field data when competencies are updated via core forms |
+| `core\event\competency_user_competency_rated` | `observer::user_competency_rated` | Invalidate the affected user's plan trail session cache |
+| `core\event\competency_user_competency_rated_in_plan` | `observer::user_competency_rated_in_plan` | Invalidate the specific plan trail cache entry for the affected user |
+| `core\event\competency_evidence_created` | `observer::evidence_created` | Invalidate the affected user's plan trail cache after new evidence is created |
 
 
 Hook callbacks
@@ -281,8 +290,8 @@ When enabled, per-template and per-competency SCSS code is:
 ### Frontend architecture
 
 The plugin includes:
-- **13 Mustache templates** for responsive layouts (hero header, course cards, accordion panels, evidence modals, etc.)
-- **4 AMD JavaScript modules**: `accordion.js` (lazy-loaded accordion panels), `ui.js` (progress loading and hero positioning), `fontawesome_icon_selector.js` (AJAX icon picker), `scss_validation.js` (client-side SCSS validation)
+- **14 Mustache templates** for responsive layouts (hero header, course cards, accordion panels, evidence modals, settings widgets, etc.)
+- **7 AMD JavaScript modules**: `accordion.js`, `ui.js`, `manage_competencies.js`, `return_button.js`, `fontawesome_icon_selector.js`, `setting_iconpicker.js`, and `scss_validation.js`
 - **Plugin icon assets** under `pix/status` and `pix/taxonomy` for hero badges, locked cards, rule states, and taxonomy cards
 - **CSS styles** with properly namespaced selectors (`.local-dimensions-*`, `.dims-*`, `#dimensions-*`)
 
@@ -369,7 +378,7 @@ If you want to use this plugin with a RTL language and it doesn't work as-is, yo
 Privacy
 -------
 
-This plugin does not store any personal user data. Custom field data is associated with competencies and learning plan templates, not with individual users. Course progress calculation is performed in real-time and no personal data is stored beyond what is already handled by Moodle's core completion and comment systems.
+This plugin does not store persistent personal profile data. Custom field data is associated with competencies and learning plan templates, not with individual users. Course progress calculation is performed in real-time, and temporary session cache entries (`returncontext`, `plan_trail`) are used only to support navigation and rendering during active sessions.
 
 The plugin implements the Moodle Privacy API (`null_provider`).
 
