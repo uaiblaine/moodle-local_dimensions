@@ -161,4 +161,5 @@ $templatedata = [
 // Output.
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_dimensions/manage_competencies', $templatedata);
+$PAGE->requires->js_call_amd('local_dimensions/manage_competencies', 'init');
 echo $OUTPUT->footer();

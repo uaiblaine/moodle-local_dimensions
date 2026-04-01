@@ -100,7 +100,17 @@ if ($competencyid) {
 
     // Render page content using Mustache template.
     $page = new view_plan_page($competency, $courses, $USER->id);
-    echo $OUTPUT->render_from_template('local_dimensions/view_plan', $page->export_for_template($OUTPUT));
+    $templatedata = $page->export_for_template($OUTPUT);
+    echo $OUTPUT->render_from_template('local_dimensions/view_plan', $templatedata);
+
+    // Inject compiled custom CSS via AMD (no inline template JS).
+    if (!empty($templatedata['hascustomcss'])) {
+        $PAGE->requires->js_call_amd(
+            'local_dimensions/customcss_injector',
+            'init',
+            ['local-dimensions-customcss-source-viewplan']
+        );
+    }
 
     // Load AMD module for hero repositioning and progress loading.
     if ($competency) {
@@ -189,7 +199,17 @@ if ($competencyid) {
 
     // Render full plan overview using Mustache template.
     $page = new view_plan_summary_page($plan, $USER->id);
-    echo $OUTPUT->render_from_template('local_dimensions/view_plan_summary', $page->export_for_template($OUTPUT));
+    $templatedata = $page->export_for_template($OUTPUT);
+    echo $OUTPUT->render_from_template('local_dimensions/view_plan_summary', $templatedata);
+
+    // Inject compiled custom CSS via AMD (no inline template JS).
+    if (!empty($templatedata['hascustomcss'])) {
+        $PAGE->requires->js_call_amd(
+            'local_dimensions/customcss_injector',
+            'init',
+            ['local-dimensions-customcss-source-summary']
+        );
+    }
 
     // Core strings for accordion.
     $PAGE->requires->string_for_js('access_course', 'local_dimensions');
