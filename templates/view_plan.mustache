@@ -46,7 +46,7 @@
     }
 }}
 {{#hascustomcss}}
-<script type="text/plain" id="local-dimensions-customcss-source-viewplan">{{{customcss}}}</script>
+<textarea hidden id="local-dimensions-customcss-source-viewplan">{{customcss}}</textarea>
 {{/hascustomcss}}
 <div class="percentagemode-{{percentagemode}}">
 
@@ -75,15 +75,3 @@
 {{/hascompetency}}
 
 </div>
-{{#js}}
-(function() {
-    var source = document.getElementById('local-dimensions-customcss-source-viewplan');
-    if (!source || !source.textContent.trim()) {
-        return;
-    }
-    var style = document.createElement('style');
-    style.textContent = source.textContent;
-    document.head.appendChild(style);
-    source.remove();
-})();
-{{/js}}

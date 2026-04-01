@@ -96,6 +96,9 @@ class hook_callbacks {
             'buttoncolor' => $buttoncolor,
         ]);
         $hook->add_html($html);
+
+        // Initialise FAB visibility logic via AMD (main window only).
+        $PAGE->requires->js_call_amd('local_dimensions/return_button', 'init');
     }
 
     /**

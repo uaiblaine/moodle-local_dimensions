@@ -59,7 +59,7 @@
 }}
 {{! Custom SCSS compiled CSS from template }}
 {{#hascustomcss}}
-<script type="text/plain" id="local-dimensions-customcss-source-summary">{{{customcss}}}</script>
+<textarea hidden id="local-dimensions-customcss-source-summary">{{customcss}}</textarea>
 {{/hascustomcss}}
 
 {{! Hero header with plan/template info }}
@@ -167,15 +167,3 @@
     </div>
     {{/hascompetencies}}
 </div>
-{{#js}}
-(function() {
-    var source = document.getElementById('local-dimensions-customcss-source-summary');
-    if (!source || !source.textContent.trim()) {
-        return;
-    }
-    var style = document.createElement('style');
-    style.textContent = source.textContent;
-    document.head.appendChild(style);
-    source.remove();
-})();
-{{/js}}
