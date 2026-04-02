@@ -355,9 +355,17 @@ https://github.com/uaiblaine/moodle-local_dimensions/pulls
 Moodle release support
 ----------------------
 
-Due to limited resources, this plugin is only maintained for the most recent major release of Moodle as well as the most recent LTS release of Moodle. Bugfixes are backported to the LTS release. However, new features and improvements are not necessarily backported to the LTS release.
+This plugin uses a **branch-per-version** strategy. Each Moodle major version has its own stable branch that receives bug fixes and security patches independently. New features are committed to `main` first and backported selectively.
 
-Apart from these maintained releases, previous versions of this plugin which work in legacy major releases of Moodle are still available as-is without any further updates in the Moodle Plugins repository.
+| Branch | Moodle version | PHP versions | Status |
+|---|---|---|---|
+| `MOODLE_405_STABLE` | 4.5 (LTS) | 8.1 – 8.3 | Maintained – bug fixes and security patches |
+| `MOODLE_500_STABLE` | 5.0 | 8.2 – 8.3 | Maintained – bug fixes |
+| `MOODLE_501_STABLE` | 5.1 | 8.2 – 8.4 | Maintained – active |
+| `MOODLE_502_STABLE` | 5.2 | 8.2 – 8.4 | Maintained – active (latest) |
+| `main` | Development (next) | 8.3 – 8.4 | Development branch – not for production use |
+
+**Tag format:** `v{MAJOR}.{MINOR}-r{RELEASE}` per stable branch, with independent release counters (e.g. `v4.5-r1` on `MOODLE_405_STABLE`, `v5.1-r3` on `MOODLE_501_STABLE`).
 
 There may be several weeks after a new major release of Moodle has been published until we can do a compatibility check and fix problems if necessary. If you encounter problems with a new major release of Moodle - or can confirm that this plugin still works with a new major release - please let us know on Github.
 
