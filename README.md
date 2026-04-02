@@ -1,6 +1,11 @@
 moodle-local_dimensions
 =======================
 
+[![ci](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml/badge.svg?branch=MOODLE_405_STABLE)](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml?query=branch%3AMOODLE_405_STABLE)
+[![ci](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml/badge.svg?branch=MOODLE_500_STABLE)](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml?query=branch%3AMOODLE_500_STABLE)
+[![ci](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml/badge.svg?branch=MOODLE_501_STABLE)](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml?query=branch%3AMOODLE_501_STABLE)
+[![ci](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml/badge.svg?branch=MOODLE_502_STABLE)](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml?query=branch%3AMOODLE_502_STABLE)
+
 See your learning path in a new dimension.
 
 A Moodle local plugin that extends the core competency system with custom fields, course section progress tracking, and a visual learning plan interface. It provides two display modes — **Competency tracker** and **Full plan overview** — with rich customisation options for colours, images, icons, tags, and SCSS.
