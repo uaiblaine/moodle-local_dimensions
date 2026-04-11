@@ -26,11 +26,11 @@ defined('MOODLE_INTERNAL') || die();
 
 $observers = [
     [
-        'eventname' => \core_competency\event\competency_created::class,
+        'eventname' => \core\event\competency_created::class,
         'callback' => \local_dimensions\observer::class . '::competency_created',
     ],
     [
-        'eventname' => \core_competency\event\competency_updated::class,
+        'eventname' => \core\event\competency_updated::class,
         'callback' => \local_dimensions\observer::class . '::competency_updated',
     ],
     [

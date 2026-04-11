@@ -73,23 +73,6 @@ function local_dimensions_pluginfile($course, $cm, $context, $filearea, $args, $
 }
 
 /**
- * Extend the competency form to include custom fields.
- *
- * @param MoodleQuickForm $form The form object.
- */
-function local_dimensions_extend_form($form) {
-    if ($form instanceof \tool_lp\form\competency) {
-        $handler = competency_handler::create();
-        $id = $form->_form->getElementValue('id') ?? 0;
-        if (is_array($id)) {
-            $id = reset($id);
-        }
-        $id = (int) $id;
-        $handler->instance_form_definition($form->_form, $id);
-    }
-}
-
-/**
  * Returns the custom field handler for the given component and area.
  *
  * @param string $component The component name.
