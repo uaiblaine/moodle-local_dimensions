@@ -26,10 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $callbacks = [
     [
-        'hook' => \core_form\hook\after_definition::class,
-        'callback' => \local_dimensions\hook\form_extension::class . '::callback',
-    ],
-    [
         'hook' => \core\hook\output\before_footer_html_generation::class,
         'callback' => \local_dimensions\hook_callbacks::class . '::before_footer_html_generation',
         'priority' => 0,

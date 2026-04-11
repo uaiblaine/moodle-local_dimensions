@@ -90,7 +90,7 @@ class get_fontawesome_icons extends external_api {
                     stripos($key, $query) !== false ||
                     (isset($icon['class']) && stripos($icon['class'], $query) !== false)
                 ) {
-                    if ($count <= self::MAX_RESULTS) {
+                    if ($count < self::MAX_RESULTS) {
                         $results[$key] = $icon;
                         $count++;
                     } else {
