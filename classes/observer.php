@@ -167,24 +167,24 @@ class observer {
         string $skipscript,
         bool $isnew
     ): void {
-        // (1) Skip if the submit was handled by the plugin's own edit form.
+        // 1. Skip if the submit was handled by the plugin's own edit form.
         $script = qualified_me();
         if ($script !== false && strpos($script, $skipscript) !== false) {
             return;
         }
 
-        // (2) Only act on real form submissions with a valid sesskey.
+        // 2. Only act on real form submissions with a valid sesskey.
         $formdata = data_submitted();
         if (!$formdata || !confirm_sesskey()) {
             return;
         }
 
-        // (3) Short-circuit when the payload carries no customfield_* keys.
+        // 3. Short-circuit when the payload carries no customfield_* keys.
         if (!preg_grep('/^customfield_/', array_keys((array) $formdata))) {
             return;
         }
 
-        // (4) Use the event objectid as the authoritative instance id.
+        // 4. Use the event objectid as the authoritative instance id.
         $instanceid = (int) $event->objectid;
         if ($instanceid <= 0) {
             return;

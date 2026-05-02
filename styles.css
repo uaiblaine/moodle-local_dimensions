@@ -176,7 +176,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    width: min(22rem, 100%);
+    width: 100%;
+    max-width: 22rem;
     margin: 0;
     padding: 0.45rem 0.7rem;
     border: 1px solid var(--local-dimensions-manage-border);
@@ -315,8 +316,8 @@
     overflow: hidden;
 }
 
-.local-dimensions-manage[data-view="table"] .local-dimensions-manage-tree-pane,
-.local-dimensions-manage[data-view="tree"] .local-dimensions-manage-table-pane {
+.local-dimensions-manage[data-view='table'] .local-dimensions-manage-tree-pane,
+.local-dimensions-manage[data-view='tree'] .local-dimensions-manage-table-pane {
     display: none;
 }
 
@@ -335,7 +336,7 @@
 }
 
 .local-dimensions-details-resizer::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 50%;
     left: 50%;
@@ -354,7 +355,7 @@
 
 .local-dimensions-manage.resizing-details,
 .local-dimensions-manage.resizing-details * {
-    cursor: col-resize !important;
+    cursor: col-resize;
     user-select: none;
 }
 
@@ -497,7 +498,7 @@
 
 .local-dimensions-manage-depth-pad {
     display: inline-block;
-    width: var(--local-dimensions-manage-indent, 0px);
+    width: var(--local-dimensions-manage-indent, 0);
 }
 
 .local-dimensions-manage-actions-col {
@@ -545,7 +546,7 @@
     min-width: 0;
 }
 
-.local-dimensions-details-list [data-region="details-description"] {
+.local-dimensions-details-list [data-region='details-description'] {
     max-height: 9rem;
     overflow-y: auto;
     padding-right: 0.25rem;
@@ -564,13 +565,14 @@
     margin-bottom: 0.25rem;
 }
 
-body.local-dimensions-manage-page [data-region="competencymovetree"] [data-enhance="movetree"] li[aria-selected="true"] > span {
+body.local-dimensions-manage-page [data-region='competencymovetree'] [data-enhance='movetree'] li[aria-selected='true'] > span {
     background: var(--local-dimensions-manage-accent-soft, #eaf4ff);
     outline: 2px solid var(--local-dimensions-manage-accent, #0f6cbf);
     outline-offset: 2px;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) .moodle-dialogue-wrap {
+/* stylelint-disable max-line-length */
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) .moodle-dialogue-wrap {
     display: flex;
     flex-direction: column;
     max-height: 90vh;
@@ -580,7 +582,7 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
     overflow: hidden;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) .moodle-dialogue-hd {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) .moodle-dialogue-hd {
     padding: 1.1rem 1.4rem;
     border-bottom: 1px solid #e4e7ec;
     background: #fff;
@@ -590,7 +592,7 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
     line-height: 1.25;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) .moodle-dialogue-bd {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) .moodle-dialogue-bd {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
@@ -602,15 +604,15 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
     color: #1f2933;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) .moodle-dialogue-bd label,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] h3 {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) .moodle-dialogue-bd label,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] h3 {
     margin-bottom: 0.5rem;
     color: #1f2933;
     font-weight: 600;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] [data-enhance="movetree"],
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] [data-enhance="linktree"] {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencymovetree'] [data-enhance='movetree'],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] [data-enhance='linktree'] {
     flex: 1 1 auto;
     min-height: 9rem;
     max-height: none;
@@ -622,34 +624,34 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
     background: #fbfcfe;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"],
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"],
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencymovetree'],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencyruleconfig'] {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
     min-height: 0;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] ul,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] ul,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencymovetree'] ul,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] ul,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencymovetree'] li,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] li {
     list-style: none;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li::marker,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li::marker {
-    content: "";
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencymovetree'] li::marker,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] li::marker {
+    content: '';
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencymovetree'] li,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] li {
     margin: 0.15rem 0;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li > span,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li > span {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencymovetree'] li > span,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] li > span {
     display: inline-flex;
     align-items: center;
     min-height: 2rem;
@@ -657,34 +659,34 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
     border-radius: 0.35rem;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li > span:hover,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li > span:hover,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li[aria-selected="true"] > span,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li[aria-selected="true"] > span {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencymovetree'] li > span:hover,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] li > span:hover,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencymovetree'] li[aria-selected='true'] > span,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] li[aria-selected='true'] > span {
     background: #eaf4ff;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li[tabindex="0"] > span,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li[tabindex="0"] > span {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencymovetree'] li[tabindex='0'] > span,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] li[tabindex='0'] > span {
     outline: 2px solid #0f6cbf;
     outline-offset: 1px;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] form {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] form {
     flex: 0 0 auto;
     margin-bottom: 0.5rem;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] form .mb-3 {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] form .mb-3 {
     gap: 0.4rem;
     margin-bottom: 0;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] input[type="text"] {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencylinktree'] input[type='text'] {
     min-width: 14rem;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] [data-region="rule-base"] {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencyruleconfig'] [data-region='rule-base'] {
     display: grid;
     grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
     gap: 0.75rem 1rem;
@@ -692,18 +694,18 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
     margin-bottom: 1rem;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] [data-region="rule-base"] .mb-3 {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencyruleconfig'] [data-region='rule-base'] .mb-3 {
     display: contents;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] select,
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] input[type="text"],
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] input[type="number"] {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencyruleconfig'] select,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencyruleconfig'] input[type='text'],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencyruleconfig'] input[type='number'] {
     width: 100%;
     max-width: 100%;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] [data-region="rule-config"] {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencyruleconfig'] [data-region='rule-config'] {
     flex: 1 1 auto;
     min-height: 0;
     max-height: none;
@@ -711,30 +713,31 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
     border-top: 1px solid #e4e7ec;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] [data-region="content"] {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencyruleconfig'] [data-region='content'] {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
     min-height: 0;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] table {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='competencyruleconfig'] table {
     margin-bottom: 0;
 }
 
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="move-buttons"],
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="link-buttons"],
-body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="footer"] {
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='move-buttons'],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='link-buttons'],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='competencymovetree']),:has([data-region='competencylinktree']),:has([data-region='competencyruleconfig'])) [data-region='footer'] {
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
     flex: 0 0 auto;
-    float: none !important;
+    float: none;
     margin-top: 1rem;
     padding-top: 0.75rem;
     border-top: 1px solid #e4e7ec;
     background: #fff;
 }
+/* stylelint-enable max-line-length */
 
 .local-dimensions-manage-empty-state,
 .local-dimensions-manage-no-results {
@@ -832,7 +835,7 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
 }
 
 .local-dimensions-edit-back::before {
-    content: "\2190";
+    content: '\2190';
 }
 
 .local-dimensions-edit-back:hover {
@@ -1050,8 +1053,8 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
     font-weight: 600;
 }
 
-.local-dimensions-edit input[type="text"],
-.local-dimensions-edit input[type="number"],
+.local-dimensions-edit input[type='text'],
+.local-dimensions-edit input[type='number'],
 .local-dimensions-edit select,
 .local-dimensions-edit textarea {
     max-width: 100%;
@@ -1060,17 +1063,19 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
     font-size: 0.85rem;
 }
 
-.local-dimensions-edit-section-fields .felement > input[type="text"],
-.local-dimensions-edit-section-fields .felement > input[type="number"],
+/* stylelint-disable selector-class-pattern */
+.local-dimensions-edit-section-fields .felement > input[type='text'],
+.local-dimensions-edit-section-fields .felement > input[type='number'],
 .local-dimensions-edit-section-fields .felement > select,
 .local-dimensions-edit-section-fields .felement > textarea,
 .local-dimensions-edit-section-fields .felement .editor_atto,
 .local-dimensions-edit-section-fields .felement .tox-tinymce {
     width: 100%;
 }
+/* stylelint-enable selector-class-pattern */
 
-.local-dimensions-edit input[type="text"]:focus,
-.local-dimensions-edit input[type="number"]:focus,
+.local-dimensions-edit input[type='text']:focus,
+.local-dimensions-edit input[type='number']:focus,
 .local-dimensions-edit select:focus,
 .local-dimensions-edit textarea:focus {
     border-color: var(--local-dimensions-edit-accent);
@@ -1145,7 +1150,11 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
         linear-gradient(-45deg, #eef1f5 25%, transparent 25%),
         linear-gradient(45deg, transparent 75%, #eef1f5 75%),
         linear-gradient(-45deg, transparent 75%, #eef1f5 75%);
-    background-position: 0 0, 0 0.5rem, 0.5rem -0.5rem, -0.5rem 0;
+    background-position:
+        0 0,
+        0 0.5rem,
+        0.5rem -0.5rem,
+        -0.5rem 0;
     background-size: 1rem 1rem;
 }
 
@@ -1157,6 +1166,7 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
     background-image: none;
 }
 
+/* stylelint-disable selector-class-pattern */
 .local-dimensions-edit .fitem_actionbuttons {
     position: sticky;
     bottom: 0;
@@ -1181,13 +1191,14 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="comp
 }
 
 .local-dimensions-edit .fitem_actionbuttons .btn,
-.local-dimensions-edit .fitem_actionbuttons input[type="submit"],
-.local-dimensions-edit .fitem_actionbuttons input[type="button"] {
+.local-dimensions-edit .fitem_actionbuttons input[type='submit'],
+.local-dimensions-edit .fitem_actionbuttons input[type='button'] {
     width: auto;
     margin: 0;
 }
+/* stylelint-enable selector-class-pattern */
 
-body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) .moodle-dialogue-wrap,
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region='competencyruleconfig'])) .moodle-dialogue-wrap,
 body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule .moodle-dialogue-wrap {
     display: flex;
     flex-direction: column;
@@ -1198,7 +1209,7 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule .mood
     overflow: hidden;
 }
 
-body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) .moodle-dialogue-bd,
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region='competencyruleconfig'])) .moodle-dialogue-bd,
 body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule .moodle-dialogue-bd {
     display: flex;
     flex: 1 1 auto;
@@ -1207,16 +1218,17 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule .mood
     overflow: auto;
 }
 
-body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"],
-body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region="competencyruleconfig"] {
+/* stylelint-disable max-line-length */
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region='competencyruleconfig'])) [data-region='competencyruleconfig'],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region='competencyruleconfig'] {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
     min-height: 0;
 }
 
-body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) [data-region="rule-base"],
-body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region="rule-base"] {
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region='competencyruleconfig'])) [data-region='rule-base'],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region='rule-base'] {
     display: grid;
     grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
     gap: 0.75rem 1rem;
@@ -1224,13 +1236,13 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data
     margin-bottom: 1rem;
 }
 
-body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) [data-region="rule-base"] .mb-3,
-body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region="rule-base"] .mb-3 {
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region='competencyruleconfig'])) [data-region='rule-base'] .mb-3,
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region='rule-base'] .mb-3 {
     display: contents;
 }
 
-body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) [data-region="rule-config"],
-body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region="rule-config"] {
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region='competencyruleconfig'])) [data-region='rule-config'],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region='rule-config'] {
     flex: 1 1 auto;
     min-height: 0;
     max-height: none;
@@ -1238,20 +1250,21 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data
     border-top: 1px solid var(--local-dimensions-edit-border, #dfe3e8);
 }
 
-body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) [data-region="content"],
-body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region="content"] {
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region='competencyruleconfig'])) [data-region='content'],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region='content'] {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
     min-height: 0;
 }
+/* stylelint-enable max-line-length */
 
-body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) select,
-body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) input[type="text"],
-body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) input[type="number"],
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region='competencyruleconfig'])) select,
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region='competencyruleconfig'])) input[type='text'],
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region='competencyruleconfig'])) input[type='number'],
 body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule select,
-body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input[type="text"],
-body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input[type="number"] {
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input[type='text'],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input[type='number'] {
     width: 100%;
     max-width: 100%;
 }
@@ -1306,13 +1319,15 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
         grid-template-columns: 1fr;
     }
 
+    /* stylelint-disable selector-class-pattern */
     .local-dimensions-edit .fitem_actionbuttons .felement,
     .local-dimensions-edit .fitem_actionbuttons .form-inline,
     .local-dimensions-edit .fitem_actionbuttons .btn,
-    .local-dimensions-edit .fitem_actionbuttons input[type="submit"],
-    .local-dimensions-edit .fitem_actionbuttons input[type="button"] {
+    .local-dimensions-edit .fitem_actionbuttons input[type='submit'],
+    .local-dimensions-edit .fitem_actionbuttons input[type='button'] {
         width: 100%;
     }
+    /* stylelint-enable selector-class-pattern */
 }
 
 /* Percentage display mode styles */
@@ -1826,6 +1841,7 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     display: block;
 }
 
+/* stylelint-disable selector-class-pattern */
 /* Background circle - light gray track */
 .local-dimensions-progress-ring__bg {
     fill: transparent;
@@ -1877,6 +1893,7 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
         font-weight: 800;
     }
 }
+/* stylelint-enable selector-class-pattern */
 
 /* Content Text */
 .local-dimensions-timeline-content {
@@ -1982,11 +1999,11 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
 }
 
 /* No colored background on expand */
-.local-dimensions-accordion-toggle[aria-expanded="true"] {
+.local-dimensions-accordion-toggle[aria-expanded='true'] {
     background: #fff;
 }
 
-.local-dimensions-accordion-toggle[aria-expanded="true"]:hover {
+.local-dimensions-accordion-toggle[aria-expanded='true']:hover {
     background: #f8f9fa;
 }
 
@@ -2007,7 +2024,7 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
 }
 
 /* No color override on expand */
-.local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimensions-accordion-title {
+.local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-title {
     color: #212529;
 }
 
@@ -2061,7 +2078,7 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     transition: transform 0.2s ease;
 }
 
-.local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimensions-accordion-icon {
+.local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-icon {
     transform: rotate(180deg);
     color: #6c757d;
 }
@@ -2149,8 +2166,8 @@ body.dark .local-dimensions-accordion-toggle:hover {
     background: #3d444b;
 }
 
-.theme-dark .local-dimensions-accordion-toggle[aria-expanded="true"],
-body.dark .local-dimensions-accordion-toggle[aria-expanded="true"] {
+.theme-dark .local-dimensions-accordion-toggle[aria-expanded='true'],
+body.dark .local-dimensions-accordion-toggle[aria-expanded='true'] {
     background: #343a40;
 }
 
@@ -2159,8 +2176,8 @@ body.dark .local-dimensions-accordion-title {
     color: #f8f9fa;
 }
 
-.theme-dark .local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimensions-accordion-title,
-body.dark .local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimensions-accordion-title {
+.theme-dark .local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-title,
+body.dark .local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-title {
     color: #f8f9fa;
 }
 
@@ -4394,26 +4411,26 @@ body.dark .local-dimensions-scroll-btn.disabled {
 }
 
 /* Expanded toggle dark mode */
-.theme-dark .local-dimensions-accordion-toggle[aria-expanded="true"],
-body.dark .local-dimensions-accordion-toggle[aria-expanded="true"] {
+.theme-dark .local-dimensions-accordion-toggle[aria-expanded='true'],
+body.dark .local-dimensions-accordion-toggle[aria-expanded='true'] {
     background-color: var(--dimension-custombgcolor, var(--primary, #667eea));
     color: var(--dimension-customtextcolor, #fff);
     border-color: transparent;
 }
 
-.theme-dark .local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimensions-accordion-title,
-body.dark .local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimensions-accordion-title {
+.theme-dark .local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-title,
+body.dark .local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-title {
     color: var(--dimension-customtextcolor, #fff);
 }
 
-.theme-dark .local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimensions-accordion-icon,
-body.dark .local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimensions-accordion-icon {
+.theme-dark .local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-icon,
+body.dark .local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-icon {
     color: var(--dimension-customtextcolor, #fff);
 }
 
 /* Expanded content border dark mode */
-.theme-dark .local-dimensions-accordion-toggle[aria-expanded="true"] + .local-dimensions-accordion-content,
-body.dark .local-dimensions-accordion-toggle[aria-expanded="true"] + .local-dimensions-accordion-content {
+.theme-dark .local-dimensions-accordion-toggle[aria-expanded='true'] + .local-dimensions-accordion-content,
+body.dark .local-dimensions-accordion-toggle[aria-expanded='true'] + .local-dimensions-accordion-content {
     border-color: var(--dimension-custombgcolor, var(--primary, #667eea));
 }
 
@@ -4483,7 +4500,7 @@ body.dark .local-dimensions-section-title {
 /* ============================================
       CUSTOM SCSS TEXTAREA - Template edit form
       ============================================ */
-.fitem [data-fieldtype="textarea"] textarea[name*="customscss"],
+.fitem [data-fieldtype='textarea'] textarea[name*='customscss'],
 #id_customfield_customscss {
     font-family: SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     font-size: 13px;
@@ -4932,7 +4949,7 @@ body.dark .local-dimensions-section-title {
     }
 }
 
-.local-dimensions-return-fab[style*="flex"] {
+.local-dimensions-return-fab[style*='flex'] {
     animation: dimensions-fab-appear 0.4s ease-out;
 }
 
@@ -5011,13 +5028,14 @@ body.dark .local-dimensions-return-fab {
     bottom: 2.25rem;
     height: 3rem;
     pointer-events: none;
-    background: linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0) 0%,
-        var(--collapsible-fade-color) 100%
-    );
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0) 0%,
+            var(--collapsible-fade-color) 100%
+        );
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 200ms ease;
 }
 
 .local-dimensions-collapsible.has-overflow:not(.is-expanded) .local-dimensions-collapsible-fade {
@@ -5048,7 +5066,7 @@ body.dark .local-dimensions-return-fab {
 
 .local-dimensions-collapsible-toggle .fa {
     font-size: 0.7rem;
-    transition: transform 0.2s ease;
+    transition: transform 200ms ease;
 }
 
 /* Hero variant: dark overlay so the fade blends with the hero background. */
@@ -5057,11 +5075,12 @@ body.dark .local-dimensions-return-fab {
 }
 
 .local-dimensions-hero .local-dimensions-collapsible-fade {
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0) 0%,
-        var(--collapsible-fade-color) 100%
-    );
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0) 0%,
+            var(--collapsible-fade-color) 100%
+        );
 }
 
 /* ============================================
@@ -5070,7 +5089,7 @@ body.dark .local-dimensions-return-fab {
    tag) is hidden because the same information is surfaced inside the
    description tab.
    ============================================ */
-.local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimensions-grade-badge {
+.local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-grade-badge {
     display: none;
 }
 
@@ -5125,16 +5144,18 @@ body.dark .local-dimensions-return-fab {
     --local-dimensions-tabs-scroll-duration: 320ms;
     --local-dimensions-tabs-indicator-duration: 320ms;
     --local-dimensions-tabs-mask-gradient-width: 22px;
-    --local-dimensions-tabs-paddle-width: calc(
-        var(--local-dimensions-tabs-inner-height) + var(--local-dimensions-tabs-platter-padding)
-    );
-    --local-dimensions-tabs-mask-opaque-width: calc(
-        var(--local-dimensions-tabs-paddle-width) - var(--local-dimensions-tabs-platter-padding)
-    );
+    --local-dimensions-tabs-paddle-width:
+        calc(
+            var(--local-dimensions-tabs-inner-height) + var(--local-dimensions-tabs-platter-padding)
+        );
+    --local-dimensions-tabs-mask-opaque-width:
+        calc(
+            var(--local-dimensions-tabs-paddle-width) - var(--local-dimensions-tabs-platter-padding)
+        );
     --local-dimensions-tabs-mask-color-left: transparent;
     --local-dimensions-tabs-mask-color-right: transparent;
     --local-dimensions-tabs-indicator-start: var(--local-dimensions-tabs-platter-padding);
-    --local-dimensions-tabs-indicator-width: 0px;
+    --local-dimensions-tabs-indicator-width: 0;
 
     position: relative;
     display: inline-flex;
@@ -5148,21 +5169,17 @@ body.dark .local-dimensions-return-fab {
     box-sizing: border-box;
 }
 
-.local-dimensions-filter-tabs:has(
-    .local-dimensions-filter-tabs-paddle-left.local-dimensions-filter-tabs-paddle-hidden
-) {
+.local-dimensions-filter-tabs:has(.local-dimensions-filter-tabs-paddle-left.local-dimensions-filter-tabs-paddle-hidden) {
     --local-dimensions-tabs-mask-color-left: black;
 }
 
-.local-dimensions-filter-tabs:has(
-    .local-dimensions-filter-tabs-paddle-right.local-dimensions-filter-tabs-paddle-hidden
-) {
+.local-dimensions-filter-tabs:has(.local-dimensions-filter-tabs-paddle-right.local-dimensions-filter-tabs-paddle-hidden) {
     --local-dimensions-tabs-mask-color-right: black;
 }
 
 .local-dimensions-filter-tabs.local-dimensions-filter-tabs-no-transition,
 .local-dimensions-filter-tabs.local-dimensions-filter-tabs-no-transition * {
-    transition: none !important;
+    transition: none;
 }
 
 /* --- Mask: clipping layer with edge fade gradients --- */
@@ -5263,7 +5280,7 @@ body.dark .local-dimensions-return-fab {
     outline: none;
 }
 
-.local-dimensions-filter-tab[aria-pressed="true"] {
+.local-dimensions-filter-tab[aria-pressed='true'] {
     background: transparent;
     color: var(--local-dimensions-tabs-item-color-active, #1a73e8);
     opacity: 1;
@@ -5314,8 +5331,8 @@ body.dark .local-dimensions-return-fab {
     padding: 0;
     transition:
         color 100ms ease-in-out,
-        opacity 80ms ease-out 40ms,
-        visibility 80ms step-start 40ms;
+        opacity 100ms ease-out 100ms,
+        visibility 100ms step-start 100ms;
 }
 
 .local-dimensions-filter-tabs-paddle:hover {
@@ -5346,8 +5363,8 @@ body.dark .local-dimensions-return-fab {
     visibility: hidden;
     pointer-events: none;
     transition:
-        opacity 80ms ease-out 200ms,
-        visibility 80ms step-end 200ms;
+        opacity 100ms ease-out 200ms,
+        visibility 100ms step-end 200ms;
 }
 
 .local-dimensions-filter-tabs-paddle:disabled:not(.local-dimensions-filter-tabs-paddle-hidden) svg {

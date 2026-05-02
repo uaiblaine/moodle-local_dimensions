@@ -363,7 +363,7 @@ if ($selectedframework) {
     $allcompetencies = competency::get_records(['competencyframeworkid' => $frameworkid], 'path, sortorder');
     $competencycount = count($allcompetencies);
     $hascompetencies = $competencycount > 0;
-    $coursecounts = local_dimensions_manage_course_counts(array_map(static function(competency $competencyrecord): int {
+    $coursecounts = local_dimensions_manage_course_counts(array_map(static function (competency $competencyrecord): int {
         return (int)$competencyrecord->get('id');
     }, $allcompetencies));
     $childrenbyparent = [];
