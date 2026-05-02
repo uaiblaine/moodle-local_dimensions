@@ -119,7 +119,10 @@ class view_plan_summary_page implements renderable, templatable {
             'percentagemode' => $percentagemode,
             'hero' => [
                 'title' => $templatename,
-                'description' => $templatedesc,
+                'description' => [
+                    'html' => $templatedesc,
+                    'id' => 'local-dimensions-plan-' . (int) $this->plan->get('id') . '-desc',
+                ],
                 'hasdescription' => !empty($templatedesc),
                 'bgcolor' => $bgcolor,
                 'hasbgcolor' => !empty($bgcolor),
@@ -138,6 +141,25 @@ class view_plan_summary_page implements renderable, templatable {
         // Determine which property to use based on plan status.
         $iscompleted = $this->plan->get('status') == plan::STATUS_COMPLETE;
         $ucproperty = $iscompleted ? 'usercompetencyplan' : 'usercompetency';
+
+        // Resolve the configured accordion subline source for this template.
+        // Individual plans (no template) keep the legacy "status" behaviour.
+        $sublinesource = $template
+            ? \local_dimensions\helper::get_template_subline_source($template->get('id'))
+            : constants::SUBLINE_STATUS;
+        $data['sublinesource'] = $sublinesource;
+        $data['subline_is_status'] = ($sublinesource === constants::SUBLINE_STATUS);
+        $data['subline_is_rating'] = ($sublinesource === constants::SUBLINE_RATING);
+        $data['subline_is_text'] = in_array(
+            $sublinesource,
+            [constants::SUBLINE_TAG1, constants::SUBLINE_TAG2],
+            true
+        );
+
+        // Configured chip-filter shortnames for this view (competency area).
+        $filtershortnames = \local_dimensions\chip_filters::parse_shortnames(
+            (string) get_config('local_dimensions', 'viewplan_filter_fields')
+        );
 
         // Get all competencies in the plan with user data.
         try {
@@ -171,10 +193,44 @@ class view_plan_summary_page implements renderable, templatable {
             }
 
             // Build view URL for competency courses.
-            $viewurl = new \moodle_url('/local/dimensions/view-plan.php', [
+            $viewurl = new \moodle_url('/local/dimensions/view-competency.php', [
                 'id' => $this->plan->get('id'),
                 'competencyid' => $comp->get('id'),
             ]);
+
+            // Resolve the dynamic subline shown in the accordion header.
+            // The legacy behaviour (rating badge / "to do" pill) lives under
+            // the "status" source; other sources surface a configurable
+            // custom-field value.
+            $sublinetext = '';
+            switch ($sublinesource) {
+                case constants::SUBLINE_RATING:
+                    $sublinetext = $hasrating ? $ratingtext : '';
+                    break;
+                case constants::SUBLINE_TAG1:
+                    $sublinetext = (string) ($this->get_competency_custom_field(
+                        $comp->get('id'),
+                        constants::CFIELD_TAG1
+                    ) ?? '');
+                    break;
+                case constants::SUBLINE_TAG2:
+                    $sublinetext = (string) ($this->get_competency_custom_field(
+                        $comp->get('id'),
+                        constants::CFIELD_TAG2
+                    ) ?? '');
+                    break;
+                case constants::SUBLINE_NONE:
+                case constants::SUBLINE_STATUS:
+                default:
+                    // STATUS uses the existing rating/todo template block;
+                    // NONE is rendered as no subline at all.
+                    break;
+            }
+
+            // Read configured chip-filter values for this competency.
+            $filtervalues = !empty($filtershortnames)
+                ? \local_dimensions\chip_filters::get_competency_values($comp->get('id'), $filtershortnames)
+                : [];
 
             $data['competencies'][] = [
                 'id' => $comp->get('id'),
@@ -189,6 +245,9 @@ class view_plan_summary_page implements renderable, templatable {
                 'index' => $index,
                 'isfirst' => ($index === 0),
                 'islast' => ($index === count($pclist) - 1),
+                'sublinetext' => $sublinetext,
+                'hassublinetext' => ($sublinetext !== ''),
+                'filtervaluesjson' => json_encode((object) $filtervalues),
             ];
             $index++;
         }
@@ -200,6 +259,27 @@ class view_plan_summary_page implements renderable, templatable {
         $data['incompletecount'] = count(array_filter($data['competencies'], function ($c) {
             return !$c['isproficient'];
         }));
+
+        // Build chip-filter groups from the per-competency values collected above.
+        $instancevalues = [];
+        foreach ($data['competencies'] as $c) {
+            $vals = json_decode($c['filtervaluesjson'], true);
+            $instancevalues[$c['id']] = is_array($vals) ? $vals : [];
+        }
+        $fieldlabels = \local_dimensions\chip_filters::get_field_labels('competency', $filtershortnames);
+        $chipgroups = \local_dimensions\chip_filters::build_filterfields_payload(
+            $filtershortnames,
+            $instancevalues,
+            $fieldlabels
+        );
+        $data['chipfilters'] = [
+            'id' => 'local-dimensions-viewplan-chip-filters',
+            'controlsid' => 'local-dimensions-viewplan-accordion',
+            'hasgroups' => !empty($chipgroups),
+            'groups' => $chipgroups,
+            'clearlabel' => get_string('filter_chip_clear', 'local_dimensions'),
+        ];
+        $data['haschipfilters'] = !empty($chipgroups);
 
         // Get compiled custom CSS from template SCSS if feature is enabled.
         if (get_config('local_dimensions', 'enablecustomscss') && $template) {

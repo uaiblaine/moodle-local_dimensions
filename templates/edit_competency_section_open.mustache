@@ -15,36 +15,21 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template local_dimensions/course_grid
+    @template local_dimensions/edit_competency_section_open
 
-    Grid container for course cards.
+    Opening markup for a visual competency edit form section.
 
     Context variables required:
-    * courses (array) - Array of course objects to render
+    * id - Section anchor ID.
+    * title - Section title.
+    * description - Section description.
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-
-    Example context (json):
-    {
-        "courses": [
-            {
-                "courseid": 42,
-                "fullname": "Course 1",
-                "courseurl": "/course/view.php?id=42",
-                "viewcoursestr": "View course: Course 1",
-                "locked": false
-            }
-        ]
-    }
 }}
-<div id="local-dimensions-viewcompetency-grid"
-     class="row mt-4"
-     role="region"
-     aria-label="{{#str}}view_courses, local_dimensions{{/str}}"
-     aria-live="polite"
-     aria-relevant="additions text">
-    {{#courses}}
-        {{> local_dimensions/course_card}}
-    {{/courses}}
-</div>
+<section id="{{id}}" class="local-dimensions-edit-section" data-region="edit-section">
+    <div class="local-dimensions-edit-section-head">
+        <h2>{{title}}</h2>
+        <span class="local-dimensions-edit-section-meta">{{description}}</span>
+    </div>
+    <div class="local-dimensions-edit-section-fields">

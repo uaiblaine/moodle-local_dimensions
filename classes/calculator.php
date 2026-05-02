@@ -133,6 +133,11 @@ class calculator {
             if (trim($sectionname) === '') {
                 $sectionname = get_section_name($course, $section);
             }
+            $sectionname = format_string(
+                $sectionname,
+                true,
+                ['context' => \core\context\course::instance($course->id)]
+            );
 
             $percentage = null;
             $hasactivities = false;

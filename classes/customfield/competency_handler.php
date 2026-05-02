@@ -157,7 +157,15 @@ class competency_handler extends handler {
         ?string $headerlangidentifier = null,
         ?string $headerlangcomponent = null
     ) {
-        $mform->addElement('html', '<h2 class="mt-4 mb-3">' . get_string('customfields', 'local_dimensions') . '</h2>');
+        global $OUTPUT;
+
+        if ($headerlangidentifier !== '') {
+            $headerlangidentifier = $headerlangidentifier ?? 'customfields';
+            $headerlangcomponent = $headerlangcomponent ?? 'local_dimensions';
+            $mform->addElement('html', $OUTPUT->render_from_template('local_dimensions/customfield_header', [
+                'title' => get_string($headerlangidentifier, $headerlangcomponent),
+            ]));
+        }
         parent::instance_form_definition($mform, $instanceid, $headerlangidentifier, $headerlangcomponent);
 
         // In built-in mode, add filemanagers for background and card images.

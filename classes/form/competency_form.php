@@ -54,11 +54,16 @@ class competency_form extends moodleform {
     /** @var int Page context ID */
     protected $pagecontextid = 0;
 
+    /** @var array Rule section display data */
+    protected $rulecontext = [];
+
     /**
      * Form definition.
      *
      */
     public function definition() {
+        global $OUTPUT, $PAGE;
+
         $mform = $this->_form;
 
         // Get custom data.
@@ -66,6 +71,7 @@ class competency_form extends moodleform {
         $this->framework = $this->_customdata['framework'];
         $this->parent = $this->_customdata['parent'] ?? null;
         $this->pagecontextid = $this->_customdata['pagecontextid'] ?? 0;
+        $this->rulecontext = $this->_customdata['rulecontext'] ?? [];
 
         // Hidden fields.
         $mform->addElement('hidden', 'competencyframeworkid');
@@ -76,10 +82,55 @@ class competency_form extends moodleform {
         $mform->setType('id', PARAM_INT);
         $mform->setDefault('id', $this->competency ? $this->competency->get('id') : 0);
 
-        if ($this->parent) {
-            $mform->addElement('hidden', 'parentid');
-            $mform->setType('parentid', PARAM_INT);
-            $mform->setDefault('parentid', $this->parent->get('id'));
+        $this->add_section_open(
+            $mform,
+            'sec-basic',
+            get_string('editcompetency_section_basic', 'local_dimensions'),
+            get_string('editcompetency_section_basic_desc', 'local_dimensions')
+        );
+
+        $mform->addElement('static', 'frameworkdesc', get_string('competencyframework', 'tool_lp'),
+            s($this->framework->get('shortname')));
+
+        $mform->addElement('hidden', 'parentid', '', ['id' => 'tool_lp_parentcompetency']);
+        $mform->setType('parentid', PARAM_INT);
+        $mform->setDefault('parentid', $this->parent ? $this->parent->get('id') : 0);
+
+        $parentlevel = $this->parent ? $this->parent->get_level() : 0;
+        $parentname = $this->parent ? $this->parent->get('shortname') : get_string('competencyframeworkroot', 'tool_lp');
+        if ($this->competency) {
+            $taxonomy = $this->framework->get_taxonomy($parentlevel);
+            $parentlabel = get_string('taxonomy_parent_' . $taxonomy, 'tool_lp');
+        } else {
+            $parentlabel = get_string('parentcompetency', 'tool_lp');
+        }
+
+        $editaction = '';
+        if (!$this->competency) {
+            $icon = $OUTPUT->pix_icon('t/editinline', get_string('parentcompetency_edit', 'tool_lp'));
+            $editaction = $OUTPUT->action_link('#', $icon, null, ['id' => 'id_parentcompetencybutton']);
+        }
+        $mform->addElement('static', 'parentdesc', $parentlabel,
+            $OUTPUT->render_from_template('local_dimensions/edit_competency_parent', [
+                'parentname' => $parentname,
+                'editaction' => $editaction,
+                'haseditaction' => $editaction !== '',
+            ]));
+
+        $currentlevel = $this->competency ? $this->competency->get_level() : $parentlevel + 1;
+        $taxonomy = $this->framework->get_taxonomy($currentlevel);
+        $taxonomylabel = get_string('taxonomy_' . $taxonomy, 'core_competency');
+        $mform->addElement('static', 'taxonomydesc', get_string('editcompetency_taxonomy', 'local_dimensions'),
+            s($taxonomylabel));
+
+        if (!$this->competency) {
+            $PAGE->requires->js_call_amd('tool_lp/parentcompetency_form', 'init', [
+                '#id_parentcompetencybutton',
+                '#tool_lp_parentcompetency',
+                '#id_parentdesc',
+                $this->framework->get('id'),
+                $this->pagecontextid,
+            ]);
         }
 
         // Short name.
@@ -98,32 +149,64 @@ class competency_form extends moodleform {
         $mform->addElement('editor', 'description', get_string('description'), ['rows' => 4]);
         $mform->setType('description', PARAM_CLEANHTML);
 
-        // Scale configuration (if framework allows).
-        $scaleid = $this->framework->get('scaleid');
-        if ($scaleid) {
-            $scale = \grade_scale::fetch(['id' => $scaleid]);
-            if ($scale) {
-                $scaleitems = $scale->load_items();
-                $scaleconfig = [];
-                $scaleconfig[0] = get_string('inheritfromframework', 'tool_lp');
-                foreach ($scaleitems as $key => $item) {
-                    $scaleconfig[$key + 1] = $item;
-                }
-                $mform->addElement('select', 'scaleid', get_string('scale'), [
-                    0 => get_string('inheritfromframework', 'tool_lp'),
-                ]);
-                $mform->setDefault('scaleid', 0);
-            }
+        $this->add_section_close($mform);
+
+        $this->add_section_open(
+            $mform,
+            'sec-eval',
+            get_string('editcompetency_section_evaluation', 'local_dimensions'),
+            get_string('editcompetency_section_evaluation_desc', 'local_dimensions')
+        );
+
+        $scales = [null => get_string('inheritfromframework', 'tool_lp')] + \get_scales_menu();
+        $scaleid = $mform->addElement('select', 'scaleid', get_string('scale', 'tool_lp'), $scales);
+        $mform->setType('scaleid', PARAM_INT);
+        $mform->addHelpButton('scaleid', 'scale', 'tool_lp');
+
+        $mform->addElement('hidden', 'scaleconfiguration', '', ['id' => 'tool_lp_scaleconfiguration']);
+        $mform->setType('scaleconfiguration', PARAM_RAW);
+        $mform->addElement('button', 'scaleconfigbutton', get_string('configurescale', 'tool_lp'));
+        $PAGE->requires->js_call_amd('tool_lp/scaleconfig', 'init', [
+            '#id_scaleid',
+            '#tool_lp_scaleconfiguration',
+            '#id_scaleconfigbutton',
+        ]);
+
+        if ($this->competency && $this->competency->has_user_competencies()) {
+            $scaleid->updateAttributes(['disabled' => 'disabled']);
+            $mform->setConstant('scaleid', $this->competency->get('scaleid'));
         }
+
+        $this->add_section_close($mform);
+
+        $this->add_section_open(
+            $mform,
+            'sec-rule',
+            get_string('editcompetency_section_rule', 'local_dimensions'),
+            get_string('editcompetency_section_rule_desc', 'local_dimensions')
+        );
+        $this->add_rule_summary($mform);
+        $this->add_section_close($mform);
+
+        $this->add_section_open(
+            $mform,
+            'sec-fields',
+            get_string('customfields', 'local_dimensions'),
+            get_string('editcompetency_section_fields_desc', 'local_dimensions')
+        );
 
         // Custom fields section.
         $handler = competency_handler::create();
         $instanceid = $this->competency ? $this->competency->get('id') : 0;
-        $handler->instance_form_definition($mform, $instanceid);
+        $handler->instance_form_definition($mform, $instanceid, '');
+
+        $mform->addElement('html', $OUTPUT->render_from_template('local_dimensions/edit_competency_section_note', [
+            'content' => get_string('editcompetency_customfields_note', 'local_dimensions'),
+        ]));
+        $this->add_section_close($mform);
 
         // Add SCSS frontend validation and hide format selector.
         if (get_config('local_dimensions', 'enablecustomscss')) {
-            global $PAGE;
             $PAGE->requires->js_call_amd('local_dimensions/scss_validation', 'init', [
                 [
                     'fieldname' => constants::CFIELD_CUSTOMSCSS,
@@ -154,12 +237,67 @@ class competency_form extends moodleform {
                 'format' => $this->competency->get('descriptionformat'),
             ];
             $defaultdata->competencyframeworkid = $this->competency->get('competencyframeworkid');
+            $defaultdata->parentid = $this->competency->get('parentid');
+            $defaultdata->scaleid = $this->competency->get('scaleid');
+            $defaultdata->scaleconfiguration = $this->competency->get('scaleconfiguration');
 
             // Load custom field data.
             $handler->instance_form_before_set_data_with_image($defaultdata);
 
             $this->set_data($defaultdata);
         }
+    }
+
+    /**
+     * Open a visual form section.
+     *
+     * @param \MoodleQuickForm $mform The form object.
+     * @param string $id Section anchor id.
+     * @param string $title Section title.
+     * @param string $description Section description.
+     */
+    protected function add_section_open(\MoodleQuickForm $mform, string $id, string $title, string $description): void {
+        global $OUTPUT;
+
+        $mform->addElement('html', $OUTPUT->render_from_template('local_dimensions/edit_competency_section_open', [
+            'id' => $id,
+            'title' => $title,
+            'description' => $description,
+        ]));
+    }
+
+    /**
+     * Close a visual form section.
+     *
+     * @param \MoodleQuickForm $mform The form object.
+     */
+    protected function add_section_close(\MoodleQuickForm $mform): void {
+        global $OUTPUT;
+
+        $mform->addElement('html', $OUTPUT->render_from_template('local_dimensions/edit_competency_section_close', []));
+    }
+
+    /**
+     * Add the native rule summary and action area.
+     *
+     * @param \MoodleQuickForm $mform The form object.
+     */
+    protected function add_rule_summary(\MoodleQuickForm $mform): void {
+        global $OUTPUT;
+
+        $status = $this->rulecontext['status'] ?? get_string('managecompetencies_norule', 'local_dimensions');
+        $summary = $this->rulecontext['summary'] ?? get_string('editcompetency_rule_new_summary', 'local_dimensions');
+        $detail = $this->rulecontext['detail'] ?? '';
+        $canconfigure = !empty($this->rulecontext['canconfigure']);
+
+        $mform->addElement('html', $OUTPUT->render_from_template('local_dimensions/edit_competency_rule_summary', [
+            'status' => $status,
+            'summary' => $summary,
+            'detail' => $detail,
+            'hasdetail' => $detail !== '',
+            'canconfigure' => $canconfigure,
+            'competencyid' => (int)($this->rulecontext['competencyid'] ?? 0),
+        ]));
     }
 
     /**
@@ -209,6 +347,11 @@ class competency_form extends moodleform {
         $data = parent::get_data();
 
         if ($data) {
+            if (empty($data->scaleid)) {
+                $data->scaleid = null;
+                $data->scaleconfiguration = null;
+            }
+
             // Keep custom SCSS in plain format to avoid accidental editor format changes.
             $editorprop = 'customfield_' . constants::CFIELD_CUSTOMSCSS . '_editor';
             $plainprop  = 'customfield_' . constants::CFIELD_CUSTOMSCSS;

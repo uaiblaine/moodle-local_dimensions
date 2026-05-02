@@ -396,6 +396,7 @@ class helper {
         // Display mode only for templates.
         if ($area === self::AREA_LP) {
             self::get_display_mode_field();
+            self::get_subline_source_field();
         }
 
         // Image fields: only create if using external customfield_picture plugin.
@@ -467,6 +468,79 @@ class helper {
     }
 
     /**
+     * Get or create the per-template "subline source" select field (lp area).
+     *
+     * The selected value drives which piece of information is shown beneath the
+     * competency name in the view-plan accordion header.
+     *
+     * @return field_controller|null
+     */
+    public static function get_subline_source_field(): ?field_controller {
+        $shortname = constants::CFIELD_SUBLINE_SOURCE;
+        $field = self::find_field_by_shortname($shortname, self::AREA_LP);
+
+        if ($field) {
+            return $field;
+        }
+
+        $options = constants::subline_source_options();
+        $optionstext = [];
+        foreach ($options as $key => $langstring) {
+            $optionstext[] = $key . '|' . (string) $langstring;
+        }
+
+        return self::create_custom_field(
+            $shortname,
+            'select',
+            self::AREA_LP,
+            new \lang_string('subline_source', 'local_dimensions'),
+            [
+                'options' => join("\n", $optionstext),
+                'defaultvalue' => constants::SUBLINE_STATUS,
+            ],
+            ''
+        );
+    }
+
+    /**
+     * Resolve the configured subline source for a learning plan template.
+     *
+     * Falls back to {@see constants::SUBLINE_STATUS} when no value is set, which
+     * preserves the legacy behaviour (rating badge or "to do" pill).
+     *
+     * @param int $templateid Learning plan template ID
+     * @return string One of the constants::SUBLINE_* values
+     */
+    public static function get_template_subline_source(int $templateid): string {
+        $field = self::get_subline_source_field();
+        if (!$field) {
+            return constants::SUBLINE_STATUS;
+        }
+
+        $allowed = array_keys(constants::subline_source_options());
+
+        $fields = \core_customfield\api::get_instance_fields_data([$field->get('id') => $field], $templateid);
+        foreach ($fields as $data) {
+            // Select fields store the option key as intvalue, but its
+            // representation depends on the field type configuration. Try both
+            // value and intvalue to be defensive.
+            $value = $data->get_value();
+            if (is_int($value)) {
+                $optionkeys = array_keys(constants::subline_source_options());
+                if (isset($optionkeys[$value - 1])) {
+                    $value = $optionkeys[$value - 1];
+                }
+            }
+            $value = (string) $value;
+            if ($value !== '' && in_array($value, $allowed, true)) {
+                return $value;
+            }
+        }
+
+        return constants::SUBLINE_STATUS;
+    }
+
+    /**
      * Return the localized taxonomy metadata for a framework level.
      *
      * Mirrors Moodle core's competency_summary_exporter logic:
@@ -495,7 +569,7 @@ class helper {
      * @return array<int, array<string, mixed>>
      */
     public static function get_framework_taxonomy_map(\core_competency\competency_framework $framework): array {
-        $configuredlevels = array_filter(explode(',', (string) $framework->get('taxonomies')));
+        $configuredlevels = array_filter((array) $framework->get('taxonomies'));
         $maxlevel = max(1, count($configuredlevels), (int) $framework->get_depth());
         $map = [];
 
@@ -530,6 +604,111 @@ class helper {
             'current' => $current,
             'children' => $children,
             'bylevel' => self::get_framework_taxonomy_map($framework),
+        ];
+    }
+
+    /**
+     * Return the native tool_lp competency rule modules this plugin can display.
+     *
+     * @return array<int, array<string, string>> Rule module descriptors.
+     */
+    public static function get_competency_rule_modules(): array {
+        $rulesmodules = [];
+        $rules = \core_competency\competency::get_available_rules();
+
+        foreach ($rules as $type => $rulename) {
+            $amd = null;
+            if ($type === 'core_competency\\competency_rule_all') {
+                $amd = 'tool_lp/competency_rule_all';
+            } else if ($type === 'core_competency\\competency_rule_points') {
+                $amd = 'tool_lp/competency_rule_points';
+            } else {
+                continue;
+            }
+
+            $rulesmodules[] = [
+                'name' => (string)$rulename,
+                'type' => $type,
+                'amd' => $amd,
+            ];
+        }
+
+        return $rulesmodules;
+    }
+
+    /**
+     * Return a localized rule type label.
+     *
+     * @param string|null $ruletype Native rule class name.
+     * @return string
+     */
+    public static function get_competency_rule_label(?string $ruletype): string {
+        if (empty($ruletype)) {
+            return get_string('managecompetencies_norule', 'local_dimensions');
+        }
+
+        $rules = \core_competency\competency::get_available_rules();
+        if (isset($rules[$ruletype])) {
+            return (string)$rules[$ruletype];
+        }
+
+        return get_string('competencyrule', 'tool_lp');
+    }
+
+    /**
+     * Return a localized rule outcome label.
+     *
+     * @param int $ruleoutcome Native rule outcome id.
+     * @return string
+     */
+    public static function get_competency_rule_outcome_label(int $ruleoutcome): string {
+        if ($ruleoutcome === \core_competency\competency::OUTCOME_EVIDENCE) {
+            return get_string('competencyoutcome_evidence', 'tool_lp');
+        } else if ($ruleoutcome === \core_competency\competency::OUTCOME_COMPLETE) {
+            return get_string('competencyoutcome_complete', 'tool_lp');
+        } else if ($ruleoutcome === \core_competency\competency::OUTCOME_RECOMMEND) {
+            return get_string('competencyoutcome_recommend', 'tool_lp');
+        }
+
+        return get_string('competencyoutcome_none', 'tool_lp');
+    }
+
+    /**
+     * Build a compact tree model for the native tool_lp rule configuration widget.
+     *
+     * @param \core_competency\competency $competency The target competency.
+     * @return array<int, array<string, mixed>> Target competency followed by direct children.
+     */
+    public static function get_competency_rule_model(\core_competency\competency $competency): array {
+        $models = [self::export_competency_rule_model($competency)];
+        $children = \core_competency\competency::get_records(
+            ['parentid' => $competency->get('id')],
+            'sortorder'
+        );
+
+        foreach ($children as $child) {
+            $models[] = self::export_competency_rule_model($child);
+        }
+
+        return $models;
+    }
+
+    /**
+     * Export a competency record for the native rule JS model.
+     *
+     * @param \core_competency\competency $competency The competency.
+     * @return array<string, mixed>
+     */
+    protected static function export_competency_rule_model(\core_competency\competency $competency): array {
+        return [
+            'id' => (int)$competency->get('id'),
+            'parentid' => (int)$competency->get('parentid'),
+            'competencyframeworkid' => (int)$competency->get('competencyframeworkid'),
+            'shortname' => $competency->get('shortname'),
+            'path' => $competency->get('path'),
+            'ruletype' => $competency->get('ruletype'),
+            'ruleoutcome' => (int)$competency->get('ruleoutcome'),
+            'ruleconfig' => $competency->get('ruleconfig'),
         ];
     }
 

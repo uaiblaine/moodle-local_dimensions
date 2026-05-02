@@ -66,5 +66,13 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026031101, 'local', 'dimensions');
     }
 
+    // Provision the new "subline source" custom field for learning plan
+    // templates so admins do not need to wait for an admin session refresh.
+    if ($oldversion < 2026043002) {
+        \local_dimensions\helper::get_subline_source_field();
+
+        upgrade_plugin_savepoint(true, 2026043002, 'local', 'dimensions');
+    }
+
     return true;
 }

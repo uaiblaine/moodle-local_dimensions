@@ -34,6 +34,15 @@ $functions = [
         'ajax' => true,
     ],
 
+    'local_dimensions_get_courses_completion_status' => [
+        'classname' => 'local_dimensions\external\get_courses_completion_status',
+        'methodname' => 'execute',
+        'classpath' => 'local/dimensions/classes/external/get_courses_completion_status.php',
+        'description' => 'Lightweight batch lookup of completion + lock status for many courses.',
+        'type' => 'read',
+        'ajax' => true,
+    ],
+
     'local_dimensions_get_fontawesome_icons' => [
         'classname' => 'local_dimensions\external\get_fontawesome_icons',
         'methodname' => 'execute',

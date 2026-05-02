@@ -1,0 +1,73 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/chip_filters
+
+    Renders one chip group per configured custom field. The
+    local_dimensions/chip_filters AMD module wires the click handlers and
+    delegates the actual filtering to a host-page callback.
+
+    Context variables required:
+    * id (string) - DOM id used by host code to scope queries.
+    * groups (array) - Array of {shortname, label, values: [{value}]}.
+    * hasgroups (bool) - True when at least one chip group is rendered.
+    * clearlabel (string) - Localised "clear filters" label.
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "id": "viewplan-chip-filters",
+        "hasgroups": true,
+        "clearlabel": "Clear filters",
+        "groups": [
+            {
+                "shortname": "local_dimensions_tag1",
+                "label": "Year",
+                "values": [{"value": "2024"}, {"value": "2025"}]
+            }
+        ]
+    }
+}}
+{{#hasgroups}}
+<div id="{{id}}" class="local-dimensions-chip-filters" data-chip-filters {{#controlsid}}aria-controls="{{controlsid}}"{{/controlsid}}>
+    {{#groups}}
+    <div class="local-dimensions-filter-tabs-wrapper" data-chip-field="{{shortname}}">
+        <span class="local-dimensions-chip-group-label" id="local-dimensions-chip-label-{{groupid}}">{{label}}</span>
+        <div class="local-dimensions-filter-tabs" role="group" aria-labelledby="local-dimensions-chip-label-{{groupid}}">
+            {{#values}}
+            <button type="button"
+                    class="local-dimensions-filter-tab"
+                    data-chip-value="{{value}}"
+                    aria-pressed="false">
+                {{value}}
+            </button>
+            {{/values}}
+        </div>
+    </div>
+    {{/groups}}
+    <button type="button"
+            class="local-dimensions-chip-clear"
+            data-chip-clear
+            aria-label="{{clearlabel}}"
+            hidden>
+        <i class="fa fa-times" aria-hidden="true"></i>
+        <span>{{clearlabel}}</span>
+    </button>
+</div>
+{{/hasgroups}}

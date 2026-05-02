@@ -258,6 +258,42 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         0
     ));
 
+    // -----------------------------------------------------------------------
+    // 4. Custom-field driven chip filters (view-plan + view-competency).
+    // CSV of custom field shortnames the admin wants to expose as chip
+    // filters in each view. Defaults reuse the tag1/tag2 fields the plugin
+    // already provisions.
+    // -----------------------------------------------------------------------
+    $settings->add(new admin_setting_heading(
+        'local_dimensions/chipfilterheading',
+        get_string('chipfilterheading', 'local_dimensions'),
+        get_string('chipfilterheading_desc', 'local_dimensions')
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_dimensions/viewplan_filter_fields',
+        get_string('viewplan_filter_fields', 'local_dimensions'),
+        get_string('viewplan_filter_fields_desc', 'local_dimensions'),
+        \local_dimensions\constants::CFIELD_TAG1 . ',' . \local_dimensions\constants::CFIELD_TAG2,
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_dimensions/viewcompetency_filter_fields_competency',
+        get_string('viewcompetency_filter_fields_competency', 'local_dimensions'),
+        get_string('viewcompetency_filter_fields_competency_desc', 'local_dimensions'),
+        \local_dimensions\constants::CFIELD_TAG1 . ',' . \local_dimensions\constants::CFIELD_TAG2,
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_dimensions/viewcompetency_filter_fields_course',
+        get_string('viewcompetency_filter_fields_course', 'local_dimensions'),
+        get_string('viewcompetency_filter_fields_course_desc', 'local_dimensions'),
+        '',
+        PARAM_TEXT
+    ));
+
     $ADMIN->add('local_dimensions', $settings);
 
     // Competency custom fields configuration.

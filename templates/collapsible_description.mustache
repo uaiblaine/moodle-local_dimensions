@@ -1,0 +1,57 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/collapsible_description
+
+    Reusable collapsible container for long descriptions or embedded media.
+
+    Caps the visible height at 30% of the viewport (overridable via the
+    --collapsible-max-vh CSS variable) and exposes an accessible toggle
+    button. The local_dimensions/collapsible_description AMD module measures
+    overflow and only shows the toggle when content exceeds the limit.
+
+    Context variables required:
+    * html (string) - The raw HTML content (already sanitized via format_text)
+    * id (string) - Unique id used for aria-controls / aria-labelledby
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "html": "<p>A long description with embedded media...</p>",
+        "id": "comp-42-desc"
+    }
+}}
+<div class="local-dimensions-collapsible" data-collapsible-description>
+    <div id="{{id}}-content"
+         class="local-dimensions-collapsible-content"
+         aria-hidden="false">
+        {{{html}}}
+    </div>
+    <div class="local-dimensions-collapsible-fade" aria-hidden="true"></div>
+    <button type="button"
+            class="local-dimensions-collapsible-toggle"
+            aria-expanded="false"
+            aria-controls="{{id}}-content"
+            data-label-show="{{#str}}show_more, local_dimensions{{/str}}"
+            data-label-hide="{{#str}}show_less, local_dimensions{{/str}}"
+            hidden>
+        <span class="local-dimensions-collapsible-toggle-label">{{#str}}show_more, local_dimensions{{/str}}</span>
+        <i class="fa fa-chevron-down" aria-hidden="true"></i>
+    </button>
+</div>
