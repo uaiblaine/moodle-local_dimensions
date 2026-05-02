@@ -43,7 +43,6 @@ use local_dimensions\customfield\lp_handler;
  * @covers \local_dimensions\observer
  */
 final class observer_test extends \advanced_testcase {
-
     /**
      * Set up: enable competency framework and reset DB after each test.
      */

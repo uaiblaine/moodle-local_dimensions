@@ -27,6 +27,26 @@
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "heading": "Edit competency",
+        "frameworkname": "Digital skills",
+        "taxonomy": "Competency",
+        "hasidnumber": true,
+        "idnumber": "DIGI-001",
+        "returnurl": "https://example.com/local/dimensions/manage_competencies.php",
+        "competencymodeljson": "{}",
+        "rulesmodulesjson": "[]",
+        "sections": [
+            {
+                "id": "sec-basic",
+                "label": "Basic",
+                "active": true
+            }
+        ],
+        "formhtml": "<form><div>Form fields</div></form>"
+    }
 }}
 <div class="local-dimensions-edit" data-region="local-dimensions-edit">
     <script type="application/json" data-region="competency-model">{{{competencymodeljson}}}</script>

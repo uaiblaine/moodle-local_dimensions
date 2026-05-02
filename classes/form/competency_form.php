@@ -89,8 +89,12 @@ class competency_form extends moodleform {
             get_string('editcompetency_section_basic_desc', 'local_dimensions')
         );
 
-        $mform->addElement('static', 'frameworkdesc', get_string('competencyframework', 'tool_lp'),
-            s($this->framework->get('shortname')));
+        $mform->addElement(
+            'static',
+            'frameworkdesc',
+            get_string('competencyframework', 'tool_lp'),
+            s($this->framework->get('shortname'))
+        );
 
         $mform->addElement('hidden', 'parentid', '', ['id' => 'tool_lp_parentcompetency']);
         $mform->setType('parentid', PARAM_INT);
@@ -110,18 +114,26 @@ class competency_form extends moodleform {
             $icon = $OUTPUT->pix_icon('t/editinline', get_string('parentcompetency_edit', 'tool_lp'));
             $editaction = $OUTPUT->action_link('#', $icon, null, ['id' => 'id_parentcompetencybutton']);
         }
-        $mform->addElement('static', 'parentdesc', $parentlabel,
+        $mform->addElement(
+            'static',
+            'parentdesc',
+            $parentlabel,
             $OUTPUT->render_from_template('local_dimensions/edit_competency_parent', [
                 'parentname' => $parentname,
                 'editaction' => $editaction,
                 'haseditaction' => $editaction !== '',
-            ]));
+            ])
+        );
 
         $currentlevel = $this->competency ? $this->competency->get_level() : $parentlevel + 1;
         $taxonomy = $this->framework->get_taxonomy($currentlevel);
         $taxonomylabel = get_string('taxonomy_' . $taxonomy, 'core_competency');
-        $mform->addElement('static', 'taxonomydesc', get_string('editcompetency_taxonomy', 'local_dimensions'),
-            s($taxonomylabel));
+        $mform->addElement(
+            'static',
+            'taxonomydesc',
+            get_string('editcompetency_taxonomy', 'local_dimensions'),
+            s($taxonomylabel)
+        );
 
         if (!$this->competency) {
             $PAGE->requires->js_call_amd('tool_lp/parentcompetency_form', 'init', [
@@ -257,13 +269,18 @@ class competency_form extends moodleform {
      * @param string $description Section description.
      */
     protected function add_section_open(\MoodleQuickForm $mform, string $id, string $title, string $description): void {
-        global $OUTPUT;
-
-        $mform->addElement('html', $OUTPUT->render_from_template('local_dimensions/edit_competency_section_open', [
+        $html = \html_writer::start_tag('section', [
             'id' => $id,
-            'title' => $title,
-            'description' => $description,
-        ]));
+            'class' => 'local-dimensions-edit-section',
+            'data-region' => 'edit-section',
+        ]);
+        $html .= \html_writer::start_div('local-dimensions-edit-section-head');
+        $html .= \html_writer::tag('h2', s($title));
+        $html .= \html_writer::tag('span', s($description), ['class' => 'local-dimensions-edit-section-meta']);
+        $html .= \html_writer::end_div();
+        $html .= \html_writer::start_div('local-dimensions-edit-section-fields');
+
+        $mform->addElement('html', $html);
     }
 
     /**
@@ -272,9 +289,7 @@ class competency_form extends moodleform {
      * @param \MoodleQuickForm $mform The form object.
      */
     protected function add_section_close(\MoodleQuickForm $mform): void {
-        global $OUTPUT;
-
-        $mform->addElement('html', $OUTPUT->render_from_template('local_dimensions/edit_competency_section_close', []));
+        $mform->addElement('html', \html_writer::end_div() . \html_writer::end_tag('section'));
     }
 
     /**
