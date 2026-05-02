@@ -38,40 +38,201 @@
         "competencies": []
     }
 }}
-<form method="get" class="mb-4">
-    <div class="form-group row">
-        <label for="frameworkid" class="col-sm-2 col-form-label font-weight-bold">
-            {{#str}}competencyframework, tool_lp{{/str}}
-        </label>
-        <div class="col-sm-6">
-            <select name="frameworkid" id="frameworkid" class="form-control">
-                {{^hasframeworks}}
-                <option value="0">{{#str}}noframeworks, local_dimensions{{/str}}</option>
-                {{/hasframeworks}}
-                {{#frameworks}}
-                <option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}</option>
-                {{/frameworks}}
-            </select>
+<div class="local-dimensions-manage" data-region="local-dimensions-manage" data-view="{{#viewtable}}table{{/viewtable}}{{#viewtree}}tree{{/viewtree}}" data-framework-id="{{selectedframeworkid}}" data-page-context-id="{{pagecontextid}}">
+    <script type="application/json" data-region="competency-model">{{{competenciesjson}}}</script>
+    <script type="application/json" data-region="rules-modules">{{{rulesmodulesjson}}}</script>
+    <div class="local-dimensions-manage-header">
+        <div>
+            <div class="local-dimensions-manage-kicker">{{#str}}competencyframeworks, tool_lp{{/str}}</div>
+            <h2 class="local-dimensions-manage-title">{{#str}}managecompetencies, local_dimensions{{/str}}</h2>
+            <p class="local-dimensions-manage-subtitle">{{#str}}managecompetencies_intro, local_dimensions{{/str}}</p>
+        </div>
+        <div class="local-dimensions-manage-header-actions">
+            <a class="btn btn-secondary" href="{{importurl}}">{{#str}}import, tool_lpimportcsv{{/str}}</a>
+            <a class="btn btn-secondary" href="{{exporturl}}">{{#str}}export, tool_lpimportcsv{{/str}}</a>
         </div>
     </div>
-</form>
 
-{{#hascompetencies}}
-<div class="card">
-    <div class="card-header bg-light">
-        <h5 class="mb-0"><i class="fa fa-sitemap mr-2"></i>{{#str}}competencies, core_competency{{/str}}</h5>
+    <form method="get" class="local-dimensions-manage-toolbar" data-region="manage-form">
+        <input type="hidden" name="view" value="{{#viewtable}}table{{/viewtable}}{{#viewtree}}tree{{/viewtree}}" data-region="view-input">
+        <div class="local-dimensions-manage-toolbar-main">
+            <label class="local-dimensions-manage-field local-dimensions-manage-framework-field" for="frameworkid">
+                <span>{{#str}}competencyframework, tool_lp{{/str}}</span>
+                <select name="frameworkid" id="frameworkid" class="form-control" data-region="framework-select">
+                    {{^hasframeworks}}
+                    <option value="0">{{#str}}noframeworks, local_dimensions{{/str}}</option>
+                    {{/hasframeworks}}
+                    {{#frameworks}}
+                    <option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}{{#hidden}} · {{#str}}hidden{{/str}}{{/hidden}}</option>
+                    {{/frameworks}}
+                </select>
+            </label>
+            {{#hashiddenframeworks}}
+            <label class="local-dimensions-manage-check">
+                <input type="checkbox" name="showhidden" value="1" data-region="show-hidden-frameworks"{{#showhidden}} checked{{/showhidden}}>
+                <span>{{#str}}managecompetencies_showhiddenframeworks, local_dimensions{{/str}}</span>
+            </label>
+            {{/hashiddenframeworks}}
+        </div>
+
+        <div class="local-dimensions-manage-toolbar-tools">
+            <label class="local-dimensions-manage-search" for="local-dimensions-competency-search">
+                <span class="sr-only">{{#str}}search_competencies, local_dimensions{{/str}}</span>
+                <i class="fa fa-search" aria-hidden="true"></i>
+                <input id="local-dimensions-competency-search" type="search" name="search" value="{{search}}" placeholder="{{#str}}managecompetencies_searchplaceholder, local_dimensions{{/str}}" data-region="competency-search">
+            </label>
+            <div class="local-dimensions-manage-segmented" role="group" aria-label="{{#str}}managecompetencies_layout, local_dimensions{{/str}}">
+                <button type="button" class="local-dimensions-manage-segment {{#viewtree}}active{{/viewtree}}" data-action="view" data-view="tree">
+                    <i class="fa fa-sitemap" aria-hidden="true"></i>
+                    <span>{{#str}}managecompetencies_tree, local_dimensions{{/str}}</span>
+                </button>
+                <button type="button" class="local-dimensions-manage-segment {{#viewtable}}active{{/viewtable}}" data-action="view" data-view="table">
+                    <i class="fa fa-table" aria-hidden="true"></i>
+                    <span>{{#str}}managecompetencies_table, local_dimensions{{/str}}</span>
+                </button>
+            </div>
+            <label class="local-dimensions-manage-check">
+                <input type="checkbox" data-region="show-ids" checked>
+                <span>{{#str}}managecompetencies_showids, local_dimensions{{/str}}</span>
+            </label>
+        </div>
+    </form>
+
+    {{#hasselectedframework}}
+    <div class="local-dimensions-manage-framework-summary">
+        <div>
+            <div class="local-dimensions-manage-kicker">{{#str}}competencyframework, tool_lp{{/str}}</div>
+            <h3>{{selectedframeworkname}}</h3>
+            {{#selectedframeworkidnumber}}<div class="local-dimensions-manage-mono">{{selectedframeworkidnumber}}</div>{{/selectedframeworkidnumber}}
+            {{#selectedframeworkhidden}}<span class="local-dimensions-manage-chip">{{#str}}hidden{{/str}}</span>{{/selectedframeworkhidden}}
+            {{#selectedframeworkdescription}}<div class="local-dimensions-manage-framework-description">{{{selectedframeworkdescription}}}</div>{{/selectedframeworkdescription}}
+        </div>
+        <div class="local-dimensions-manage-summary-actions">
+            <div class="local-dimensions-manage-stat"><strong>{{competencycount}}</strong><span>{{#str}}managecompetencies_items, local_dimensions{{/str}}</span></div>
+            {{#canmanage}}
+            <a class="btn btn-primary local-dimensions-manage-primary-add" href="{{rootaddurl}}" data-region="primary-add" data-root-url="{{rootaddurl}}" data-root-label="{{#str}}managecompetencies_addroot, local_dimensions{{/str}}" data-child-label-template="{{#str}}managecompetencies_addchildof, local_dimensions, __NAME__{{/str}}">
+                <i class="fa fa-plus" aria-hidden="true"></i>
+                <span data-region="primary-add-label">{{#str}}managecompetencies_addroot, local_dimensions{{/str}}</span>
+            </a>
+            <a class="btn btn-secondary" href="{{editframeworkurl}}">
+                <i class="fa fa-cog" aria-hidden="true"></i>
+                {{#str}}editcompetencyframework, tool_lp{{/str}}
+            </a>
+            {{/canmanage}}
+        </div>
     </div>
-    <div class="card-body">
-        {{> local_dimensions/competency_tree}}
+    {{/hasselectedframework}}
+
+    {{#hascompetencies}}
+    <div class="local-dimensions-manage-body">
+        {{#viewtree}}
+        <section class="local-dimensions-manage-tree-pane" data-region="tree-pane">
+            <div class="local-dimensions-manage-pane-head">
+                <h3>{{#str}}managecompetencies_structure, local_dimensions{{/str}}</h3>
+                <div class="local-dimensions-manage-pane-actions">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="expand-all">{{#str}}managecompetencies_expandall, local_dimensions{{/str}}</button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="collapse-all">{{#str}}managecompetencies_collapseall, local_dimensions{{/str}}</button>
+                </div>
+            </div>
+            <div class="local-dimensions-manage-tree" data-region="competency-tree">
+                {{> local_dimensions/competency_tree}}
+            </div>
+        </section>
+        {{/viewtree}}
+
+        {{#viewtable}}
+        <section class="local-dimensions-manage-table-pane" data-region="table-pane">
+            <div class="local-dimensions-manage-table-wrap">
+                <table class="generaltable local-dimensions-manage-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">{{#str}}competency, core_competency{{/str}}</th>
+                            <th scope="col">{{#str}}idnumber{{/str}}</th>
+                            <th scope="col">{{#str}}taxonomy, tool_lpimportcsv{{/str}}</th>
+                            <th scope="col">{{#str}}scale, tool_lp{{/str}}</th>
+                            <th scope="col">{{#str}}competencyrule, tool_lp{{/str}}</th>
+                            <th scope="col">{{#str}}linkedcourses, tool_lp{{/str}}</th>
+                            {{#canmanage}}<th scope="col" class="local-dimensions-manage-actions-col">{{#str}}actions{{/str}}</th>{{/canmanage}}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#flatcompetencies}}
+                        <tr class="local-dimensions-manage-table-row" data-region="competency-row" data-competency-id="{{id}}" data-depth="{{depth}}" data-search="{{shortname}} {{idnumber}}" data-shortname="{{shortname}}" data-idnumber="{{idnumber}}" data-taxonomy="{{taxonomy}}" data-path="{{pathlabel}}" data-scale="{{scale}}" data-rule="{{rule}}" data-description="{{descriptionplain}}" data-coursecount="{{coursecount}}" data-edit-url="{{editurl}}" data-add-url="{{addchildurl}}">
+                            <td><span class="local-dimensions-manage-depth-pad" style="--local-dimensions-manage-indent: {{indent}}px"></span><strong>{{shortname}}</strong></td>
+                            <td class="local-dimensions-manage-id-cell"><span class="local-dimensions-manage-mono">{{idnumber}}</span></td>
+                            <td><span class="local-dimensions-manage-taxonomy">{{taxonomy}}</span></td>
+                            <td>{{scale}}</td>
+                            <td>{{#hasrule}}<span class="local-dimensions-manage-chip local-dimensions-manage-chip-rule">{{rule}}</span>{{/hasrule}}{{^hasrule}}<span class="text-muted">{{rule}}</span>{{/hasrule}}</td>
+                            <td>{{coursecount}}</td>
+                            {{#canmanage}}
+                            <td class="local-dimensions-manage-row-actions">
+                                <a class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" href="{{editurl}}" aria-label="{{#str}}edit{{/str}}" title="{{#str}}edit{{/str}}">{{#pix}}t/edit, core, {{#str}}edit{{/str}}{{/pix}}</a>
+                                <button type="button" class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" data-action="moveparent" data-id="{{id}}" aria-label="{{#str}}movetonewparent, tool_lp{{/str}}" title="{{#str}}movetonewparent, tool_lp{{/str}}">{{#pix}}t/move, core, {{#str}}movetonewparent, tool_lp{{/str}}{{/pix}}</button>
+                                <button type="button" class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" data-action="relatedcompetencies" data-id="{{id}}" aria-label="{{#str}}addcrossreferencedcompetency, tool_lp{{/str}}" title="{{#str}}addcrossreferencedcompetency, tool_lp{{/str}}">{{#pix}}i/competencies, core, {{#str}}addcrossreferencedcompetency, tool_lp{{/str}}{{/pix}}</button>
+                                <button type="button" class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" data-action="competencyrules" data-id="{{id}}" aria-label="{{#str}}competencyrule, tool_lp{{/str}}" title="{{#str}}competencyrule, tool_lp{{/str}}">{{#pix}}t/preferences, core, {{#str}}competencyrule, tool_lp{{/str}}{{/pix}}</button>
+                                <button type="button" class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" data-action="moveup" data-id="{{id}}" aria-label="{{#str}}moveup{{/str}}" title="{{#str}}moveup{{/str}}">{{#pix}}t/up, core, {{#str}}moveup{{/str}}{{/pix}}</button>
+                                <button type="button" class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" data-action="movedown" data-id="{{id}}" aria-label="{{#str}}movedown{{/str}}" title="{{#str}}movedown{{/str}}">{{#pix}}t/down, core, {{#str}}movedown{{/str}}{{/pix}}</button>
+                                <button type="button" class="btn btn-sm btn-danger local-dimensions-manage-icon-action" data-action="delete" data-id="{{id}}" data-name="{{shortname}}" aria-label="{{#str}}delete{{/str}}" title="{{#str}}delete{{/str}}">{{#pix}}t/delete, core, {{#str}}delete{{/str}}{{/pix}}</button>
+                            </td>
+                            {{/canmanage}}
+                        </tr>
+                        {{/flatcompetencies}}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {{/viewtable}}
+
+        <div class="local-dimensions-details-resizer" data-region="details-resizer" role="separator" aria-orientation="vertical" aria-label="{{#str}}managecompetencies_details, local_dimensions{{/str}}" tabindex="0"></div>
+
+        <aside class="local-dimensions-details" data-region="details-pane">
+            <div data-region="details-empty">
+                <div class="local-dimensions-details-empty-icon"><i class="fa fa-info-circle" aria-hidden="true"></i></div>
+                <h3>{{#str}}managecompetencies_details, local_dimensions{{/str}}</h3>
+                <p>{{#str}}managecompetencies_selectdetails, local_dimensions{{/str}}</p>
+            </div>
+            <div data-region="details-content" hidden>
+                <div class="local-dimensions-manage-kicker" data-region="details-taxonomy"></div>
+                <h3 data-region="details-title"></h3>
+                <div class="local-dimensions-manage-mono" data-region="details-idnumber"></div>
+                <dl class="local-dimensions-details-list">
+                    <dt>{{#str}}path, tool_lp{{/str}}</dt>
+                    <dd data-region="details-path"></dd>
+                    <dt>{{#str}}scale, tool_lp{{/str}}</dt>
+                    <dd data-region="details-scale"></dd>
+                    <dt>{{#str}}competencyrule, tool_lp{{/str}}</dt>
+                    <dd data-region="details-rule"></dd>
+                    <dt>{{#str}}linkedcourses, tool_lp{{/str}}</dt>
+                    <dd data-region="details-courses"></dd>
+                    <dt>{{#str}}description{{/str}}</dt>
+                    <dd data-region="details-description"></dd>
+                </dl>
+                <div class="local-dimensions-details-related" data-region="details-related"></div>
+                <div class="local-dimensions-details-actions">
+                    <a class="btn btn-primary" data-region="details-edit" href="#">{{#str}}edit{{/str}}</a>
+                    {{#canmanage}}<a class="btn btn-secondary" data-region="details-add" href="#">{{#str}}managecompetencies_addchild, local_dimensions{{/str}}</a>{{/canmanage}}
+                    {{#canmanage}}<button type="button" class="btn btn-secondary" data-action="moveparent" data-region="details-move" data-id="0">{{#str}}movetonewparent, tool_lp{{/str}}</button>{{/canmanage}}
+                    {{#canmanage}}<button type="button" class="btn btn-secondary" data-action="relatedcompetencies" data-region="details-related-action" data-id="0">{{#str}}addcrossreferencedcompetency, tool_lp{{/str}}</button>{{/canmanage}}
+                    {{#canmanage}}<button type="button" class="btn btn-secondary" data-action="competencyrules" data-region="details-rules" data-id="0">{{#str}}competencyrule, tool_lp{{/str}}</button>{{/canmanage}}
+                    <button type="button" class="btn btn-secondary" data-action="linkedcourses" data-id="0">{{#str}}linkedcourses, tool_lp{{/str}}</button>
+                </div>
+            </div>
+        </aside>
     </div>
+    <div class="local-dimensions-manage-no-results" data-region="no-results" hidden>{{#str}}managecompetencies_noresults, local_dimensions{{/str}}</div>
+    {{/hascompetencies}}
+
+    {{^hascompetencies}}
+    <div class="local-dimensions-manage-empty-state">
+        {{#selectedframeworkid}}
+        <h3>{{#str}}nocompetencies, local_dimensions{{/str}}</h3>
+        <p>{{#str}}managecompetencies_emptyframework, local_dimensions{{/str}}</p>
+        {{#canmanage}}<a class="btn btn-primary" href="{{rootaddurl}}"><i class="fa fa-plus" aria-hidden="true"></i>{{#str}}managecompetencies_addroot, local_dimensions{{/str}}</a>{{/canmanage}}
+        {{/selectedframeworkid}}
+        {{^selectedframeworkid}}
+        <h3>{{#str}}selectframework, local_dimensions{{/str}}</h3>
+        <p>{{#str}}managecompetencies_selectframework_help, local_dimensions{{/str}}</p>
+        {{/selectedframeworkid}}
+    </div>
+    {{/hascompetencies}}
 </div>
-{{/hascompetencies}}
-
-{{^hascompetencies}}
-{{#selectedframeworkid}}
-<div class="alert alert-info">{{#str}}nocompetencies, local_dimensions{{/str}}</div>
-{{/selectedframeworkid}}
-{{^selectedframeworkid}}
-<div class="alert alert-info">{{#str}}selectframework, local_dimensions{{/str}}</div>
-{{/selectedframeworkid}}
-{{/hascompetencies}}

@@ -15,9 +15,9 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template local_dimensions/view_plan
+    @template local_dimensions/view_competency
 
-    Main template for the view plan page.
+    Main template for the view competency page (Competency Tracker Mode).
     Renders the hero header and course grid based on context.
 
     Context variables required:
@@ -46,7 +46,7 @@
     }
 }}
 {{#hascustomcss}}
-<textarea hidden id="local-dimensions-customcss-source-viewplan">{{customcss}}</textarea>
+<textarea hidden id="local-dimensions-customcss-source-viewcompetency">{{customcss}}</textarea>
 {{/hascustomcss}}
 <div class="percentagemode-{{percentagemode}}">
 
@@ -55,6 +55,12 @@
         {{> local_dimensions/hero_header}}
     {{/hero}}
 {{/hascompetency}}
+
+{{#haschipfilters}}
+    {{#chipfilters}}
+        {{> local_dimensions/chip_filters }}
+    {{/chipfilters}}
+{{/haschipfilters}}
 
 {{#hascourses}}
     {{> local_dimensions/course_grid}}

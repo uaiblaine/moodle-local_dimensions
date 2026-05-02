@@ -149,19 +149,19 @@
             <div class="local-dimensions-timeline-content">
                 {{#locked}}
                     {{#url}}
-                        <a href="{{url}}" class="text-muted" aria-label="{{#str}}view_section, local_dimensions, {{name}}{{/str}}">{{{name}}}</a>
+                        <a href="{{url}}" class="text-muted" aria-label="{{#str}}view_section, local_dimensions, {{name}}{{/str}}">{{name}}</a>
                     {{/url}}
                     {{^url}}
-                        <span class="text-muted">{{{name}}}</span>
+                        <span class="text-muted">{{name}}</span>
                     {{/url}}
                 {{/locked}}
 
                 {{^locked}}
                     {{#url}}
-                    <a href="{{url}}" aria-label="{{#str}}view_section, local_dimensions, {{name}}{{/str}}">{{{name}}}</a>
+                    <a href="{{url}}" aria-label="{{#str}}view_section, local_dimensions, {{name}}{{/str}}">{{name}}</a>
                     {{/url}}
                     {{^url}}
-                    <span>{{{name}}}</span>
+                    <span>{{name}}</span>
                     {{/url}}
                 {{/locked}}
             </div>

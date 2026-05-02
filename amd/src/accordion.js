@@ -22,8 +22,9 @@
  */
 
 define(
-    ['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/modal', 'core/log'],
-    function (Ajax, Templates, Notification, Str, Modal, Log) {
+    ['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/modal', 'core/log',
+        'local_dimensions/collapsible_description', 'local_dimensions/chip_filters'],
+    function (Ajax, Templates, Notification, Str, Modal, Log, CollapsibleDescription, ChipFilters) {
         'use strict';
 
         // Cache for loaded competency summaries to avoid reloading.
@@ -36,7 +37,7 @@ define(
             showpath: false,
             showrelated: false,
             showrelatedlink: false,
-            viewplanurl: '',
+            viewcompetencyurl: '',
             showevidence: true,
             enableevidencesubmitbutton: false
         };
@@ -273,8 +274,8 @@ define(
                 // Attach tab listeners.
                 attachTabListeners(contentEl, strMap);
 
-                // Attach "Ver mais" toggle listeners.
-                attachShowMoreListeners(contentEl, strMap);
+                // Activate collapsible description wrappers (30vh max-height + toggle).
+                CollapsibleDescription.refresh(contentEl);
 
 
 
@@ -486,7 +487,7 @@ define(
             html += '<div class="local-dimensions-desc-main">';
 
             if (summaryState.hasDesc) {
-                html += renderDescriptionSection(summaryState.comp.description, strMap);
+                html += renderDescriptionSection(summaryState.comp.description, strMap, summaryState.comp.id);
             }
             if (summaryState.hasPath) {
                 html += renderCompetencyPath(summaryState.competencyData, strMap);
@@ -872,7 +873,8 @@ define(
 
             // Content.
             html += '<div class="local-dimensions-rules-child-body">';
-            const childUrl = M.cfg.wwwroot + '/local/dimensions/view-plan.php?id=' + planId + '&competencyid=' + child.id;
+            const baseUrl = displaySettings.viewcompetencyurl || (M.cfg.wwwroot + '/local/dimensions/view-competency.php');
+            const childUrl = baseUrl + '?id=' + planId + '&competencyid=' + child.id;
             html += '<a href="' + escapeHtml(childUrl) + '" class="local-dimensions-rules-child-name">';
             html += escapeHtml(child.shortname);
             html += '</a>';
@@ -1804,7 +1806,7 @@ define(
                 return html;
             }
 
-            const useLink = displaySettings.showrelatedlink && displaySettings.viewplanurl && planId;
+            const useLink = displaySettings.showrelatedlink && displaySettings.viewcompetencyurl && planId;
 
             html += '<section class="local-dimensions-section local-dimensions-related-section">';
             html += '<h3 class="local-dimensions-related-header">';
@@ -1814,7 +1816,7 @@ define(
 
             data.relatedcompetencies.forEach(function (related) {
                 if (useLink && related.id) {
-                    const href = displaySettings.viewplanurl + '?id=' + planId + '&competencyid=' + related.id;
+                    const href = displaySettings.viewcompetencyurl + '?id=' + planId + '&competencyid=' + related.id;
                     html += '<a href="' + escapeHtml(href) +
                         '" class="local-dimensions-related-pill-v2 local-dimensions-related-pill-link">'
                         + escapeHtml(related.shortname) + '</a>';
@@ -2098,65 +2100,34 @@ define(
          *
          * @param {string} description The competency description HTML
          * @param {Object} strMap Language strings map
+         * @param {number} competencyId The competency identifier (used to build unique DOM ids)
          * @return {string} HTML for the description section
          */
-        function renderDescriptionSection(description, strMap) {
+        function renderDescriptionSection(description, strMap, competencyId) {
+            const descId = 'local-dimensions-acc-desc-' + competencyId;
             let html = '<div class="local-dimensions-desc-tab-content">';
 
-            // Description text (always start collapsed, JS will check if truncation is needed).
-            html += '<div class="local-dimensions-desc-content local-dimensions-desc-collapsed">';
+            // Reusable collapsible wrapper (max-height 30vh) — matches the
+            // local_dimensions/collapsible_description Mustache partial. The
+            // local_dimensions/collapsible_description AMD module activates
+            // it after this markup is inserted into the DOM.
+            html += '<div class="local-dimensions-collapsible" data-collapsible-description>';
+            html += '<div id="' + descId + '-content" class="local-dimensions-collapsible-content" aria-hidden="false">';
             html += description;
             html += '</div>';
-
-            // Toggle button (always rendered, JS will hide if content fits).
-            html += '<button type="button" class="local-dimensions-show-more" data-collapsed="true">';
-            html += escapeHtml(strMap.showMore);
-            html += ' <i class="fa fa-chevron-right" aria-hidden="true"></i>';
+            html += '<div class="local-dimensions-collapsible-fade" aria-hidden="true"></div>';
+            html += '<button type="button" class="local-dimensions-collapsible-toggle" aria-expanded="false"';
+            html += ' aria-controls="' + descId + '-content"';
+            html += ' data-label-show="' + escapeHtml(strMap.showMore) + '"';
+            html += ' data-label-hide="' + escapeHtml(strMap.showLess) + '" hidden>';
+            html += '<span class="local-dimensions-collapsible-toggle-label">' + escapeHtml(strMap.showMore) + '</span>';
+            html += ' <i class="fa fa-chevron-down" aria-hidden="true"></i>';
             html += '</button>';
+            html += '</div>';
 
             html += '</div>'; // End local-dimensions-desc-tab-content.
 
             return html;
-        }
-
-        /**
-         * Attach event listeners for "Ver mais" toggle buttons.
-         *
-         * @param {HTMLElement} contentEl The content container element
-         * @param {Object} strMap Language strings map
-         */
-        function attachShowMoreListeners(contentEl, strMap) {
-            const toggleBtns = contentEl.querySelectorAll('.local-dimensions-show-more');
-
-            toggleBtns.forEach(function (btn) {
-                const descContent = btn.previousElementSibling;
-
-                // Check if the content is actually truncated by comparing heights.
-                if (descContent && descContent.scrollHeight <= descContent.clientHeight) {
-                    // Content fits without truncation - remove collapsed class and hide button.
-                    descContent.classList.remove('local-dimensions-desc-collapsed');
-                    btn.style.display = 'none';
-                    return;
-                }
-
-                btn.addEventListener('click', function () {
-                    const isCollapsed = this.dataset.collapsed === 'true';
-
-                    if (isCollapsed) {
-                        // Expand.
-                        descContent.classList.remove('local-dimensions-desc-collapsed');
-                        this.dataset.collapsed = 'false';
-                        this.innerHTML = escapeHtml(strMap.showLess)
-                            + ' <i class="fa fa-chevron-down" aria-hidden="true"></i>';
-                    } else {
-                        // Collapse.
-                        descContent.classList.add('local-dimensions-desc-collapsed');
-                        this.dataset.collapsed = 'true';
-                        this.innerHTML = escapeHtml(strMap.showMore)
-                            + ' <i class="fa fa-chevron-right" aria-hidden="true"></i>';
-                    }
-                });
-            });
         }
 
         /**
@@ -2310,6 +2281,12 @@ define(
             initFilterTabs();
             initSearch();
 
+            // Wire up custom-field chip filters (no-op when none rendered).
+            ChipFilters.init('local-dimensions-viewplan-chip-filters', function (selection) {
+                activeChipSelection = selection || {};
+                applyFilter();
+            });
+
             // Apply initial filter (show incomplete only by default).
             applyFilter();
 
@@ -2319,6 +2296,9 @@ define(
                 accordionContainer.classList.add('local-dimensions-filter-initialized');
             }
         }
+
+        // Active chip filter selection (shortname => string[]).
+        let activeChipSelection = {};
 
         /**
          * Normalize text for accent-insensitive comparison.
@@ -2441,7 +2421,19 @@ define(
                     }
                 }
 
-                if (passesTab && passesSearch) {
+                // Chip filter (custom-field driven).
+                let passesChips = true;
+                if (item.dataset.filtervalues) {
+                    let parsed = null;
+                    try {
+                        parsed = JSON.parse(item.dataset.filtervalues);
+                    } catch (e) {
+                        parsed = null;
+                    }
+                    passesChips = ChipFilters.matchesSelection(activeChipSelection, parsed || {});
+                }
+
+                if (passesTab && passesSearch && passesChips) {
                     item.style.display = '';
                     item.classList.remove('local-dimensions-hidden');
                 } else {

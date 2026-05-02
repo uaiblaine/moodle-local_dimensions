@@ -21,24 +21,1298 @@
 
 /* ============================================
       PAGE-SPECIFIC OVERRIDES
-      Hide empty default header on view-plan page
+      Hide empty default header on view-plan / view-competency pages
       ============================================ */
-.local-dimensions-viewplan #page-header {
+.local-dimensions-viewplan #page-header,
+.local-dimensions-viewcompetency #page-header {
     display: none;
 }
 
 .local-dimensions-viewplan header.header:empty,
-.local-dimensions-viewplan #page-header:empty {
+.local-dimensions-viewplan #page-header:empty,
+.local-dimensions-viewcompetency header.header:empty,
+.local-dimensions-viewcompetency #page-header:empty {
     display: none;
 }
 
 /* Remove top padding when hero is present */
-.local-dimensions-viewplan #page-content {
+.local-dimensions-viewplan #page-content,
+.local-dimensions-viewcompetency #page-content {
     padding-top: 0;
 }
 
-.local-dimensions-viewplan #region-main {
+.local-dimensions-viewplan #region-main,
+.local-dimensions-viewcompetency #region-main {
     padding-top: 0;
+}
+
+/* ============================================
+   COMPETENCY MANAGEMENT UI
+   ============================================ */
+
+.local-dimensions-manage {
+    --local-dimensions-manage-surface: #fff;
+    --local-dimensions-manage-surface-soft: #f7f8fa;
+    --local-dimensions-manage-border: #dfe3e8;
+    --local-dimensions-manage-border-strong: #c7ced6;
+    --local-dimensions-manage-text: #1f2933;
+    --local-dimensions-manage-muted: #667085;
+    --local-dimensions-manage-accent: #0f6cbf;
+    --local-dimensions-manage-accent-soft: #eaf4ff;
+    --local-dimensions-manage-danger-soft: #fff1f0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    color: var(--local-dimensions-manage-text);
+}
+
+.local-dimensions-manage * {
+    box-sizing: border-box;
+}
+
+.local-dimensions-manage-header,
+.local-dimensions-manage-framework-summary,
+.local-dimensions-manage-toolbar,
+.local-dimensions-manage-body,
+.local-dimensions-manage-empty-state,
+.local-dimensions-manage-no-results {
+    border: 1px solid var(--local-dimensions-manage-border);
+    border-radius: 0.5rem;
+    background: var(--local-dimensions-manage-surface);
+}
+
+.local-dimensions-manage-header,
+.local-dimensions-manage-framework-summary,
+.local-dimensions-manage-toolbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.local-dimensions-manage-header-actions,
+.local-dimensions-manage-summary-actions,
+.local-dimensions-manage-toolbar-main,
+.local-dimensions-manage-toolbar-tools,
+.local-dimensions-manage-pane-actions,
+.local-dimensions-details-actions,
+.local-dimensions-manage-row-actions,
+.local-dimensions-manage-tree-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.local-dimensions-manage-title,
+.local-dimensions-manage-header h2,
+.local-dimensions-manage-framework-summary h3,
+.local-dimensions-manage-pane-head h3,
+.local-dimensions-details h3,
+.local-dimensions-manage-empty-state h3 {
+    margin: 0;
+}
+
+.local-dimensions-manage-title {
+    font-size: 1.65rem;
+    font-weight: 600;
+}
+
+.local-dimensions-manage-subtitle,
+.local-dimensions-manage-empty-state p,
+.local-dimensions-details p {
+    margin: 0.25rem 0 0;
+    color: var(--local-dimensions-manage-muted);
+}
+
+.local-dimensions-manage-kicker {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--local-dimensions-manage-muted);
+}
+
+.local-dimensions-manage-toolbar {
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.local-dimensions-manage-toolbar-main,
+.local-dimensions-manage-toolbar-tools {
+    min-width: 0;
+}
+
+.local-dimensions-manage-toolbar-tools {
+    margin-left: auto;
+}
+
+.local-dimensions-manage-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--local-dimensions-manage-muted);
+}
+
+.local-dimensions-manage-framework-field select {
+    min-width: 18rem;
+}
+
+.local-dimensions-manage-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    color: var(--local-dimensions-manage-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.local-dimensions-manage-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: min(22rem, 100%);
+    margin: 0;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--local-dimensions-manage-border);
+    border-radius: 0.5rem;
+    background: var(--local-dimensions-manage-surface);
+    color: var(--local-dimensions-manage-muted);
+}
+
+.local-dimensions-manage-search:focus-within {
+    border-color: var(--local-dimensions-manage-accent);
+    box-shadow: 0 0 0 0.2rem rgb(15 108 191 / 15%);
+}
+
+.local-dimensions-manage-search input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--local-dimensions-manage-text);
+}
+
+.local-dimensions-manage-segmented {
+    display: inline-flex;
+    padding: 0.2rem;
+    border: 1px solid var(--local-dimensions-manage-border);
+    border-radius: 0.5rem;
+    background: var(--local-dimensions-manage-surface-soft);
+}
+
+.local-dimensions-manage-segment {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    border: 0;
+    border-radius: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    background: transparent;
+    color: var(--local-dimensions-manage-muted);
+    font: inherit;
+    cursor: pointer;
+}
+
+.local-dimensions-manage-segment.active {
+    background: var(--local-dimensions-manage-surface);
+    color: var(--local-dimensions-manage-accent);
+    box-shadow: 0 1px 2px rgb(16 24 40 / 8%);
+}
+
+.local-dimensions-manage-segment i,
+.local-dimensions-manage-header-actions .btn i,
+.local-dimensions-manage-summary-actions .btn i,
+.local-dimensions-details-actions .btn i,
+.local-dimensions-manage-empty-state .btn i {
+    line-height: 1;
+}
+
+.local-dimensions-manage-header-actions .btn,
+.local-dimensions-manage-summary-actions .btn,
+.local-dimensions-manage-pane-actions .btn,
+.local-dimensions-details-actions .btn,
+.local-dimensions-manage-row-actions .btn,
+.local-dimensions-manage-tree-actions .btn,
+.local-dimensions-manage-empty-state .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.25rem;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.local-dimensions-manage-tree-actions .btn-sm,
+.local-dimensions-manage-row-actions .btn-sm {
+    min-height: 2rem;
+}
+
+.local-dimensions-manage-row-actions,
+.local-dimensions-manage-tree-actions {
+    gap: 0.25rem;
+    flex-wrap: nowrap;
+}
+
+.local-dimensions-manage-icon-action {
+    width: 2rem;
+    min-width: 2rem;
+    padding-right: 0.35rem;
+    padding-left: 0.35rem;
+}
+
+.local-dimensions-manage-row-actions .icon,
+.local-dimensions-manage-tree-actions .icon {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+}
+
+.local-dimensions-manage-primary-add span {
+    max-width: 28rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-manage-framework-description {
+    max-width: 52rem;
+    margin-top: 0.5rem;
+    color: var(--local-dimensions-manage-muted);
+}
+
+.local-dimensions-manage-stat {
+    min-width: 5rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--local-dimensions-manage-border);
+    border-radius: 0.5rem;
+    background: var(--local-dimensions-manage-surface-soft);
+    text-align: center;
+}
+
+.local-dimensions-manage-stat strong {
+    display: block;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.local-dimensions-manage-stat span {
+    color: var(--local-dimensions-manage-muted);
+    font-size: 0.75rem;
+}
+
+.local-dimensions-manage-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-details-width, clamp(18rem, 24vw, 24rem));
+    overflow: hidden;
+}
+
+.local-dimensions-manage[data-view="table"] .local-dimensions-manage-tree-pane,
+.local-dimensions-manage[data-view="tree"] .local-dimensions-manage-table-pane {
+    display: none;
+}
+
+.local-dimensions-manage-tree-pane,
+.local-dimensions-manage-table-pane {
+    min-width: 0;
+}
+
+.local-dimensions-details-resizer {
+    position: relative;
+    width: 0.5rem;
+    cursor: col-resize;
+    background: var(--local-dimensions-manage-surface);
+    border-right: 1px solid var(--local-dimensions-manage-border);
+    border-left: 1px solid var(--local-dimensions-manage-border);
+}
+
+.local-dimensions-details-resizer::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 3rem;
+    border-radius: 999px;
+    background: var(--local-dimensions-manage-border-strong);
+    transform: translate(-50%, -50%);
+}
+
+.local-dimensions-details-resizer:hover,
+.local-dimensions-details-resizer:focus {
+    background: var(--local-dimensions-manage-accent-soft);
+    outline: none;
+}
+
+.local-dimensions-manage.resizing-details,
+.local-dimensions-manage.resizing-details * {
+    cursor: col-resize !important;
+    user-select: none;
+}
+
+.local-dimensions-manage-pane-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--local-dimensions-manage-border);
+    background: var(--local-dimensions-manage-surface-soft);
+}
+
+.local-dimensions-manage-tree {
+    max-height: calc(100vh - 19rem);
+    overflow: auto;
+    padding: 0.25rem 0;
+}
+
+.local-dimensions-manage-tree-node.collapsed > .local-dimensions-manage-tree-children {
+    display: none;
+}
+
+.local-dimensions-manage-tree-node.collapsed > .local-dimensions-manage-tree-row .local-dimensions-manage-tree-toggle i {
+    transform: rotate(0deg);
+}
+
+.local-dimensions-manage-tree-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.4rem;
+    padding: 0.25rem 0.75rem 0.25rem calc(0.75rem + var(--local-dimensions-manage-indent, 0px));
+    border-left: 3px solid transparent;
+    cursor: pointer;
+}
+
+.local-dimensions-manage-tree-row:hover,
+.local-dimensions-manage-table-row:hover {
+    background: var(--local-dimensions-manage-surface-soft);
+}
+
+.local-dimensions-manage-tree-row.selected,
+.local-dimensions-manage-table-row.selected {
+    background: var(--local-dimensions-manage-accent-soft);
+    border-left-color: var(--local-dimensions-manage-accent);
+}
+
+.local-dimensions-manage-tree-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 0;
+    background: transparent;
+    color: var(--local-dimensions-manage-muted);
+}
+
+.local-dimensions-manage-tree-toggle i {
+    transform: rotate(90deg);
+    transition: transform 120ms ease;
+}
+
+.local-dimensions-manage-tree-toggle:disabled {
+    opacity: 0;
+    cursor: default;
+}
+
+.local-dimensions-manage-taxonomy,
+.local-dimensions-manage-chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    border: 1px solid var(--local-dimensions-manage-border);
+    border-radius: 0.35rem;
+    padding: 0.15rem 0.45rem;
+    background: var(--local-dimensions-manage-surface-soft);
+    color: var(--local-dimensions-manage-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.local-dimensions-manage-chip-rule {
+    border-color: #f1d08a;
+    background: #fff8e6;
+    color: #7a5200;
+}
+
+.local-dimensions-manage-tree-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.local-dimensions-manage-mono,
+.local-dimensions-manage-tree-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--local-dimensions-manage-muted);
+}
+
+.local-dimensions-manage-tree-actions {
+    margin-left: auto;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.local-dimensions-manage-tree-row:hover .local-dimensions-manage-tree-actions,
+.local-dimensions-manage-tree-row.selected .local-dimensions-manage-tree-actions,
+.local-dimensions-manage-tree-actions:focus-within {
+    opacity: 1;
+}
+
+.local-dimensions-manage-table-wrap {
+    max-height: calc(100vh - 19rem);
+    overflow: auto;
+}
+
+.local-dimensions-manage-table {
+    margin: 0;
+}
+
+.local-dimensions-manage-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    border-bottom: 1px solid var(--local-dimensions-manage-border-strong);
+    background: var(--local-dimensions-manage-surface);
+    box-shadow: 0 1px 0 rgb(16 24 40 / 6%);
+}
+
+.local-dimensions-manage-table-row {
+    cursor: pointer;
+}
+
+.local-dimensions-manage-depth-pad {
+    display: inline-block;
+    width: var(--local-dimensions-manage-indent, 0px);
+}
+
+.local-dimensions-manage-actions-col {
+    width: 16rem;
+    min-width: 16rem;
+}
+
+.local-dimensions-manage-row-actions {
+    justify-content: flex-end;
+}
+
+.local-dimensions-details {
+    min-width: 0;
+    padding: 1rem;
+    background: var(--local-dimensions-manage-surface);
+}
+
+.local-dimensions-details-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: 0.75rem;
+    border-radius: 50%;
+    background: var(--local-dimensions-manage-accent-soft);
+    color: var(--local-dimensions-manage-accent);
+}
+
+.local-dimensions-details-list {
+    display: grid;
+    grid-template-columns: minmax(6rem, max-content) minmax(0, 1fr);
+    gap: 0.6rem 0.9rem;
+    margin: 1rem 0;
+}
+
+.local-dimensions-details-list dt {
+    color: var(--local-dimensions-manage-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.local-dimensions-details-list dd {
+    margin: 0;
+    min-width: 0;
+}
+
+.local-dimensions-details-list [data-region="details-description"] {
+    max-height: 9rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.local-dimensions-details-related {
+    margin: 0.75rem 0 1rem;
+}
+
+.local-dimensions-details-related ul {
+    margin: 0;
+    padding-left: 1rem;
+}
+
+.local-dimensions-details-related p {
+    margin-bottom: 0.25rem;
+}
+
+body.local-dimensions-manage-page [data-region="competencymovetree"] [data-enhance="movetree"] li[aria-selected="true"] > span {
+    background: var(--local-dimensions-manage-accent-soft, #eaf4ff);
+    outline: 2px solid var(--local-dimensions-manage-accent, #0f6cbf);
+    outline-offset: 2px;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) .moodle-dialogue-wrap {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    border: 1px solid #dfe3e8;
+    border-radius: 0.5rem;
+    box-shadow: 0 1rem 2.5rem rgb(16 24 40 / 24%);
+    overflow: hidden;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) .moodle-dialogue-hd {
+    padding: 1.1rem 1.4rem;
+    border-bottom: 1px solid #e4e7ec;
+    background: #fff;
+    color: #1f2933;
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) .moodle-dialogue-bd {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    max-height: calc(90vh - 5.25rem);
+    padding: 1rem 1.4rem 1.2rem;
+    overflow: hidden;
+    background: #fff;
+    color: #1f2933;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) .moodle-dialogue-bd label,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] h3 {
+    margin-bottom: 0.5rem;
+    color: #1f2933;
+    font-weight: 600;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] [data-enhance="movetree"],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] [data-enhance="linktree"] {
+    flex: 1 1 auto;
+    min-height: 9rem;
+    max-height: none;
+    margin: 0.75rem 0 1rem;
+    padding: 0.75rem;
+    overflow: auto;
+    border: 1px solid #e4e7ec;
+    border-radius: 0.5rem;
+    background: #fbfcfe;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] ul,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] ul,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li {
+    list-style: none;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li::marker,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li::marker {
+    content: "";
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li {
+    margin: 0.15rem 0;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li > span,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li > span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.18rem 0.35rem;
+    border-radius: 0.35rem;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li > span:hover,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li > span:hover,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li[aria-selected="true"] > span,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li[aria-selected="true"] > span {
+    background: #eaf4ff;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencymovetree"] li[tabindex="0"] > span,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] li[tabindex="0"] > span {
+    outline: 2px solid #0f6cbf;
+    outline-offset: 1px;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] form {
+    flex: 0 0 auto;
+    margin-bottom: 0.5rem;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] form .mb-3 {
+    gap: 0.4rem;
+    margin-bottom: 0;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencylinktree"] input[type="text"] {
+    min-width: 14rem;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] [data-region="rule-base"] {
+    display: grid;
+    grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
+    gap: 0.75rem 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] [data-region="rule-base"] .mb-3 {
+    display: contents;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] select,
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] input[type="text"],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] input[type="number"] {
+    width: 100%;
+    max-width: 100%;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] [data-region="rule-config"] {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow: auto;
+    border-top: 1px solid #e4e7ec;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] [data-region="content"] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"] table {
+    margin-bottom: 0;
+}
+
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="move-buttons"],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="link-buttons"],
+body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region="competencymovetree"]),:has([data-region="competencylinktree"]),:has([data-region="competencyruleconfig"])) [data-region="footer"] {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    float: none !important;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e4e7ec;
+    background: #fff;
+}
+
+.local-dimensions-manage-empty-state,
+.local-dimensions-manage-no-results {
+    padding: 2rem;
+    text-align: center;
+}
+
+.local-dimensions-manage-hide-ids .local-dimensions-manage-tree-id,
+.local-dimensions-manage-hide-ids .local-dimensions-manage-id-cell {
+    display: none;
+}
+
+@media (max-width: 991.98px) {
+    .local-dimensions-manage-header,
+    .local-dimensions-manage-framework-summary,
+    .local-dimensions-manage-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .local-dimensions-manage-toolbar-tools {
+        margin-left: 0;
+    }
+
+    .local-dimensions-manage-body {
+        grid-template-columns: 1fr;
+    }
+
+    .local-dimensions-details-resizer {
+        display: none;
+    }
+
+    .local-dimensions-manage-tree-pane,
+    .local-dimensions-manage-table-pane {
+        border-right: 0;
+        border-bottom: 1px solid var(--local-dimensions-manage-border);
+    }
+
+    .local-dimensions-details {
+        border-top: 1px solid var(--local-dimensions-manage-border);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .local-dimensions-manage-framework-field select,
+    .local-dimensions-manage-search {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .local-dimensions-manage-toolbar-main,
+    .local-dimensions-manage-toolbar-tools,
+    .local-dimensions-manage-header-actions,
+    .local-dimensions-manage-summary-actions {
+        width: 100%;
+    }
+
+    .local-dimensions-manage-tree-actions,
+    .local-dimensions-manage-row-actions {
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   COMPETENCY EDIT UI
+   ============================================ */
+
+.local-dimensions-edit {
+    --local-dimensions-edit-surface: #fff;
+    --local-dimensions-edit-surface-soft: #f7f8fa;
+    --local-dimensions-edit-border: #dfe3e8;
+    --local-dimensions-edit-border-strong: #c7ced6;
+    --local-dimensions-edit-text: #1f2933;
+    --local-dimensions-edit-muted: #667085;
+    --local-dimensions-edit-accent: #0f6cbf;
+    --local-dimensions-edit-accent-soft: #eaf4ff;
+    --local-dimensions-edit-accent-text: #084b8a;
+    max-width: 68rem;
+    margin: 0 auto;
+    color: var(--local-dimensions-edit-text);
+}
+
+.local-dimensions-edit * {
+    box-sizing: border-box;
+}
+
+.local-dimensions-edit-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+    color: var(--local-dimensions-edit-muted);
+    font-size: 0.82rem;
+    text-decoration: none;
+}
+
+.local-dimensions-edit-back::before {
+    content: "\2190";
+}
+
+.local-dimensions-edit-back:hover {
+    color: var(--local-dimensions-edit-text);
+    text-decoration: none;
+}
+
+.local-dimensions-edit-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid var(--local-dimensions-edit-border);
+}
+
+.local-dimensions-edit-head-main {
+    min-width: 0;
+}
+
+.local-dimensions-edit-title {
+    margin: 0.15rem 0 0.45rem;
+    font-size: 1.55rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.local-dimensions-edit-subtitle,
+.local-dimensions-edit-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    color: var(--local-dimensions-edit-muted);
+    font-size: 0.82rem;
+}
+
+.local-dimensions-edit-chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 0.12rem 0.5rem;
+    border: 1px solid var(--local-dimensions-edit-border);
+    border-radius: 0.25rem;
+    background: var(--local-dimensions-edit-surface-soft);
+    color: var(--local-dimensions-edit-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.local-dimensions-edit-code {
+    color: var(--local-dimensions-edit-muted);
+    font-size: 0.78rem;
+}
+
+.local-dimensions-edit-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.5rem;
+}
+
+.local-dimensions-edit-grid {
+    display: grid;
+    grid-template-columns: 13.75rem minmax(0, 1fr);
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.local-dimensions-edit-nav {
+    position: sticky;
+    top: 4.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.local-dimensions-edit-nav a {
+    display: block;
+    padding: 0.45rem 0.65rem;
+    border-left: 2px solid transparent;
+    border-radius: 0.3rem;
+    color: var(--local-dimensions-edit-muted);
+    font-size: 0.82rem;
+    text-decoration: none;
+}
+
+.local-dimensions-edit-nav a:hover {
+    background: var(--local-dimensions-edit-surface-soft);
+    color: var(--local-dimensions-edit-text);
+    text-decoration: none;
+}
+
+.local-dimensions-edit-nav a.active {
+    border-left-color: var(--local-dimensions-edit-accent);
+    background: var(--local-dimensions-edit-accent-soft);
+    color: var(--local-dimensions-edit-accent-text);
+    font-weight: 600;
+}
+
+.local-dimensions-edit-main .mform {
+    margin: 0;
+}
+
+.local-dimensions-edit-section {
+    margin-bottom: 1.1rem;
+    padding: 1.25rem 1.35rem;
+    scroll-margin-top: 1.5rem;
+    border: 1px solid var(--local-dimensions-edit-border);
+    border-radius: 0.5rem;
+    background: var(--local-dimensions-edit-surface);
+}
+
+.local-dimensions-edit-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.local-dimensions-edit-section-head h2 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.local-dimensions-edit-section-meta,
+.local-dimensions-edit-section-note {
+    color: var(--local-dimensions-edit-muted);
+    font-size: 0.78rem;
+}
+
+.local-dimensions-edit-section-note {
+    grid-column: 1 / -1;
+    margin: 0.25rem 0 0;
+}
+
+.local-dimensions-edit-section-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem 1rem;
+}
+
+.local-dimensions-edit-section-fields > .fitem,
+.local-dimensions-edit-section-fields > .mb-3,
+.local-dimensions-edit-section-fields > fieldset {
+    min-width: 0;
+    margin: 0;
+}
+
+.local-dimensions-edit-section-fields > .fitem,
+.local-dimensions-edit-section-fields > .mb-3 {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.local-dimensions-edit-section-fields > .fitem.row,
+.local-dimensions-edit-section-fields > .mb-3.row {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.local-dimensions-edit-section-fields > .fitem > .col-form-label,
+.local-dimensions-edit-section-fields > .mb-3 > .col-form-label,
+.local-dimensions-edit-section-fields > .fitem > .fitemtitle,
+.local-dimensions-edit-section-fields > .mb-3 > .fitemtitle,
+.local-dimensions-edit-section-fields > .fitem > .felement,
+.local-dimensions-edit-section-fields > .mb-3 > .felement {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+}
+
+.local-dimensions-edit-section-fields > .fitem > .col-form-label,
+.local-dimensions-edit-section-fields > .mb-3 > .col-form-label,
+.local-dimensions-edit-section-fields > .fitem > .fitemtitle,
+.local-dimensions-edit-section-fields > .mb-3 > .fitemtitle {
+    align-items: center;
+    min-height: 0;
+    line-height: 1.35;
+}
+
+.local-dimensions-edit-section-fields > .fitem > .felement,
+.local-dimensions-edit-section-fields > .mb-3 > .felement {
+    display: block;
+}
+
+.local-dimensions-edit-section-fields > .fitem > .felement.form-inline,
+.local-dimensions-edit-section-fields > .mb-3 > .felement.form-inline {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.local-dimensions-edit-section-fields > fieldset,
+#sec-basic #fitem_id_shortname,
+#sec-basic #fitem_id_idnumber,
+#sec-basic #fitem_id_description,
+#sec-fields .local-dimensions-edit-section-fields > .fitem:has(textarea),
+#sec-fields .local-dimensions-edit-section-fields > .fitem:has(.form-filemanager),
+#sec-fields .local-dimensions-edit-section-fields > .mb-3:has(textarea),
+#sec-fields .local-dimensions-edit-section-fields > .mb-3:has(.form-filemanager) {
+    grid-column: 1 / -1;
+}
+
+.local-dimensions-edit .fitem .col-form-label,
+.local-dimensions-edit .fitemtitle,
+.local-dimensions-edit label {
+    color: var(--local-dimensions-edit-text);
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.local-dimensions-edit input[type="text"],
+.local-dimensions-edit input[type="number"],
+.local-dimensions-edit select,
+.local-dimensions-edit textarea {
+    max-width: 100%;
+    border-color: var(--local-dimensions-edit-border);
+    border-radius: 0.4rem;
+    font-size: 0.85rem;
+}
+
+.local-dimensions-edit-section-fields .felement > input[type="text"],
+.local-dimensions-edit-section-fields .felement > input[type="number"],
+.local-dimensions-edit-section-fields .felement > select,
+.local-dimensions-edit-section-fields .felement > textarea,
+.local-dimensions-edit-section-fields .felement .editor_atto,
+.local-dimensions-edit-section-fields .felement .tox-tinymce {
+    width: 100%;
+}
+
+.local-dimensions-edit input[type="text"]:focus,
+.local-dimensions-edit input[type="number"]:focus,
+.local-dimensions-edit select:focus,
+.local-dimensions-edit textarea:focus {
+    border-color: var(--local-dimensions-edit-accent);
+    box-shadow: 0 0 0 0.2rem rgb(15 108 191 / 15%);
+}
+
+.local-dimensions-edit .form-filemanager,
+.local-dimensions-edit .filemanager-container {
+    border-color: var(--local-dimensions-edit-border);
+    border-radius: 0.5rem;
+    background: var(--local-dimensions-edit-surface-soft);
+}
+
+.local-dimensions-edit-rule-card {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--local-dimensions-edit-border);
+    border-radius: 0.5rem;
+    background: var(--local-dimensions-edit-surface-soft);
+}
+
+.local-dimensions-edit-rule-copy {
+    min-width: 0;
+}
+
+.local-dimensions-edit-rule-status {
+    display: inline-flex;
+    width: fit-content;
+    margin-bottom: 0.45rem;
+    padding: 0.12rem 0.55rem;
+    border: 1px solid var(--local-dimensions-edit-border);
+    border-radius: 999px;
+    background: var(--local-dimensions-edit-surface);
+    color: var(--local-dimensions-edit-accent-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.local-dimensions-edit-rule-summary,
+.local-dimensions-edit-rule-detail {
+    margin: 0;
+    font-size: 0.84rem;
+}
+
+.local-dimensions-edit-rule-detail {
+    margin-top: 0.25rem;
+    color: var(--local-dimensions-edit-muted);
+}
+
+.local-dimensions-edit-colour-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.local-dimensions-edit-colour-row input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.local-dimensions-edit-colour-swatch {
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--local-dimensions-edit-border-strong);
+    border-radius: 0.4rem;
+    background-image: linear-gradient(45deg, #eef1f5 25%, transparent 25%),
+        linear-gradient(-45deg, #eef1f5 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eef1f5 75%),
+        linear-gradient(-45deg, transparent 75%, #eef1f5 75%);
+    background-position: 0 0, 0 0.5rem, 0.5rem -0.5rem, -0.5rem 0;
+    background-size: 1rem 1rem;
+}
+
+.local-dimensions-edit-colour-swatch.empty {
+    background-color: transparent;
+}
+
+.local-dimensions-edit-colour-swatch:not(.empty) {
+    background-image: none;
+}
+
+.local-dimensions-edit .fitem_actionbuttons {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin-top: 1.1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--local-dimensions-edit-border);
+    border-radius: 0.5rem;
+    background: var(--local-dimensions-edit-surface);
+    box-shadow: 0 -0.25rem 1rem rgb(16 24 40 / 6%);
+}
+
+.local-dimensions-edit .fitem_actionbuttons .felement,
+.local-dimensions-edit .fitem_actionbuttons .form-inline {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.local-dimensions-edit .fitem_actionbuttons .btn,
+.local-dimensions-edit .fitem_actionbuttons input[type="submit"],
+.local-dimensions-edit .fitem_actionbuttons input[type="button"] {
+    width: auto;
+    margin: 0;
+}
+
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) .moodle-dialogue-wrap,
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule .moodle-dialogue-wrap {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    border: 1px solid var(--local-dimensions-edit-border, #dfe3e8);
+    border-radius: 0.5rem;
+    box-shadow: 0 1rem 2.5rem rgb(16 24 40 / 24%);
+    overflow: hidden;
+}
+
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) .moodle-dialogue-bd,
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule .moodle-dialogue-bd {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    max-height: calc(90vh - 5.25rem);
+    overflow: auto;
+}
+
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) [data-region="competencyruleconfig"],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region="competencyruleconfig"] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) [data-region="rule-base"],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region="rule-base"] {
+    display: grid;
+    grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
+    gap: 0.75rem 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) [data-region="rule-base"] .mb-3,
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region="rule-base"] .mb-3 {
+    display: contents;
+}
+
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) [data-region="rule-config"],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region="rule-config"] {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow: auto;
+    border-top: 1px solid var(--local-dimensions-edit-border, #dfe3e8);
+}
+
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) [data-region="content"],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule [data-region="content"] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) select,
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) input[type="text"],
+body.local-dimensions-edit-competency-page .moodle-dialogue:where(:has([data-region="competencyruleconfig"])) input[type="number"],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule select,
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input[type="text"],
+body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input[type="number"] {
+    width: 100%;
+    max-width: 100%;
+}
+
+@media (max-width: 991.98px) {
+    .local-dimensions-edit-head,
+    .local-dimensions-edit-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .local-dimensions-edit-nav {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .local-dimensions-edit-nav a {
+        border: 1px solid var(--local-dimensions-edit-border);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .local-dimensions-edit {
+        max-width: 100%;
+    }
+
+    .local-dimensions-edit-head {
+        gap: 1rem;
+    }
+
+    .local-dimensions-edit-actions,
+    .local-dimensions-edit-actions .btn {
+        width: 100%;
+    }
+
+    .local-dimensions-edit-actions {
+        flex-direction: column;
+    }
+
+    .local-dimensions-edit-section {
+        padding: 1rem;
+    }
+
+    .local-dimensions-edit-section-head,
+    .local-dimensions-edit-rule-card {
+        flex-direction: column;
+    }
+
+    .local-dimensions-edit-section-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .local-dimensions-edit .fitem_actionbuttons .felement,
+    .local-dimensions-edit .fitem_actionbuttons .form-inline,
+    .local-dimensions-edit .fitem_actionbuttons .btn,
+    .local-dimensions-edit .fitem_actionbuttons input[type="submit"],
+    .local-dimensions-edit .fitem_actionbuttons input[type="button"] {
+        width: 100%;
+    }
 }
 
 /* Percentage display mode styles */
@@ -94,7 +1368,8 @@
     padding: 5rem;
 }
 
-#page-local-dimensions-view-plan .local-dimensions-hero-content {
+#page-local-dimensions-view-plan .local-dimensions-hero-content,
+#page-local-dimensions-view-competency .local-dimensions-hero-content {
     /* Page-specific override for higher specificity */
     max-width: fit-content;
     padding: 5rem;
@@ -174,7 +1449,8 @@
 }
 
 @media (width <= 768px) {
-    #page-local-dimensions-view-plan .local-dimensions-hero-content {
+    #page-local-dimensions-view-plan .local-dimensions-hero-content,
+    #page-local-dimensions-view-competency .local-dimensions-hero-content {
         padding: 2rem;
     }
 }
@@ -261,23 +1537,24 @@
 
 /* ============================================
       CARD STYLES
+      Cards now live exclusively on the view-competency page.
       ============================================ */
-.local-dimensions-viewplan .card-header {
+.local-dimensions-viewcompetency .card-header {
     background-color: #f9fafb;
     border: 0;
 }
 
-.local-dimensions-viewplan .card-header a {
+.local-dimensions-viewcompetency .card-header a {
     font-size: 20px;
     color: #212121;
 }
 
 /* Text muted inside card headers - larger font size */
-#page-local-dimensions-view-plan .card-header .text-muted {
+#page-local-dimensions-view-competency .card-header .text-muted {
     font-size: 20px;
 }
 
-.local-dimensions-viewplan .card {
+.local-dimensions-viewcompetency .card {
     background-color: #f9fafb;
 }
 
@@ -3702,4 +4979,401 @@ body.dark .local-dimensions-return-fab {
 
 .local-dimensions-icon-dropdown-item:hover {
     background: #f0f0f0;
+}
+
+/* ============================================
+   COLLAPSIBLE DESCRIPTION (view-plan / view-competency)
+   Caps long descriptions/embedded media to 30vh (configurable via
+   --collapsible-max-vh). The local_dimensions/collapsible_description AMD
+   module adds .has-overflow when content exceeds the limit and toggles
+   .is-expanded on click.
+   ============================================ */
+.local-dimensions-collapsible {
+    --collapsible-max-vh: 30vh;
+    --collapsible-fade-color: rgba(255, 255, 255, 0.95);
+    position: relative;
+}
+
+.local-dimensions-collapsible-content {
+    max-height: var(--collapsible-max-vh);
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.local-dimensions-collapsible.is-expanded .local-dimensions-collapsible-content {
+    max-height: none;
+}
+
+.local-dimensions-collapsible-fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 2.25rem;
+    height: 3rem;
+    pointer-events: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        var(--collapsible-fade-color) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.local-dimensions-collapsible.has-overflow:not(.is-expanded) .local-dimensions-collapsible-fade {
+    opacity: 1;
+}
+
+.local-dimensions-collapsible-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0;
+    border: none;
+    background: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: inherit;
+    opacity: 0.85;
+    cursor: pointer;
+}
+
+.local-dimensions-collapsible-toggle:hover,
+.local-dimensions-collapsible-toggle:focus {
+    opacity: 1;
+    text-decoration: underline;
+    outline: none;
+}
+
+.local-dimensions-collapsible-toggle .fa {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+}
+
+/* Hero variant: dark overlay so the fade blends with the hero background. */
+.local-dimensions-hero .local-dimensions-collapsible {
+    --collapsible-fade-color: rgba(0, 0, 0, 0.55);
+}
+
+.local-dimensions-hero .local-dimensions-collapsible-fade {
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        var(--collapsible-fade-color) 100%
+    );
+}
+
+/* ============================================
+   DYNAMIC ACCORDION SUBLINE
+   When the accordion item is expanded, the subline pill (rating / status /
+   tag) is hidden because the same information is surfaced inside the
+   description tab.
+   ============================================ */
+.local-dimensions-accordion-toggle[aria-expanded="true"] .local-dimensions-grade-badge {
+    display: none;
+}
+
+.local-dimensions-grade-badge.badge-cfield {
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+/* ============================================
+   CHIP FILTERS (view-plan + view-competency)
+   Pill-style scrollable tab navigation. Adapted from the
+   block_dimensions filter pills so both UIs match visually.
+   ============================================ */
+.local-dimensions-chip-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    align-items: center;
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+}
+
+/* --- Wrapper around one pill group (label + tabs platter) --- */
+.local-dimensions-filter-tabs-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.local-dimensions-chip-group-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #495057;
+    white-space: nowrap;
+}
+
+/* --- Platter: rounded pill shell with grey background --- */
+.local-dimensions-filter-tabs {
+    --local-dimensions-tabs-height: 36px;
+    --local-dimensions-tabs-inner-height: 28px;
+    --local-dimensions-tabs-platter-padding: 4px;
+    --local-dimensions-tabs-platter-bg: #f1f3f4;
+    --local-dimensions-tabs-indicator-bg: #fff;
+    --local-dimensions-tabs-indicator-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --local-dimensions-tabs-item-color: #5f6368;
+    --local-dimensions-tabs-item-color-active: #1a73e8;
+    --local-dimensions-tabs-paddle-color: rgba(0, 0, 0, 0.56);
+    --local-dimensions-tabs-paddle-color-hover: rgba(0, 0, 0, 0.72);
+    --local-dimensions-tabs-paddle-icon-opacity-disabled: 0.42;
+    --local-dimensions-tabs-scroll-duration: 320ms;
+    --local-dimensions-tabs-indicator-duration: 320ms;
+    --local-dimensions-tabs-mask-gradient-width: 22px;
+    --local-dimensions-tabs-paddle-width: calc(
+        var(--local-dimensions-tabs-inner-height) + var(--local-dimensions-tabs-platter-padding)
+    );
+    --local-dimensions-tabs-mask-opaque-width: calc(
+        var(--local-dimensions-tabs-paddle-width) - var(--local-dimensions-tabs-platter-padding)
+    );
+    --local-dimensions-tabs-mask-color-left: transparent;
+    --local-dimensions-tabs-mask-color-right: transparent;
+    --local-dimensions-tabs-indicator-start: var(--local-dimensions-tabs-platter-padding);
+    --local-dimensions-tabs-indicator-width: 0px;
+
+    position: relative;
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    height: var(--local-dimensions-tabs-height);
+    padding: var(--local-dimensions-tabs-platter-padding);
+    background: var(--local-dimensions-tabs-platter-bg);
+    border-radius: 999px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.local-dimensions-filter-tabs:has(
+    .local-dimensions-filter-tabs-paddle-left.local-dimensions-filter-tabs-paddle-hidden
+) {
+    --local-dimensions-tabs-mask-color-left: black;
+}
+
+.local-dimensions-filter-tabs:has(
+    .local-dimensions-filter-tabs-paddle-right.local-dimensions-filter-tabs-paddle-hidden
+) {
+    --local-dimensions-tabs-mask-color-right: black;
+}
+
+.local-dimensions-filter-tabs.local-dimensions-filter-tabs-no-transition,
+.local-dimensions-filter-tabs.local-dimensions-filter-tabs-no-transition * {
+    transition: none !important;
+}
+
+/* --- Mask: clipping layer with edge fade gradients --- */
+.local-dimensions-filter-tabs-mask {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow-x: hidden;
+    overscroll-behavior: none;
+    -webkit-mask-image:
+        linear-gradient(
+            90deg,
+            var(--local-dimensions-tabs-mask-color-left) 0,
+            var(--local-dimensions-tabs-mask-color-left) var(--local-dimensions-tabs-mask-opaque-width),
+            black calc(
+                var(--local-dimensions-tabs-mask-opaque-width)
+                + var(--local-dimensions-tabs-mask-gradient-width)
+            ),
+            black calc(
+                100%
+                - var(--local-dimensions-tabs-mask-opaque-width)
+                - var(--local-dimensions-tabs-mask-gradient-width)
+            ),
+            var(--local-dimensions-tabs-mask-color-right) calc(100% - var(--local-dimensions-tabs-mask-opaque-width)),
+            var(--local-dimensions-tabs-mask-color-right)
+        );
+    mask-image:
+        linear-gradient(
+            90deg,
+            var(--local-dimensions-tabs-mask-color-left) 0,
+            var(--local-dimensions-tabs-mask-color-left) var(--local-dimensions-tabs-mask-opaque-width),
+            black calc(
+                var(--local-dimensions-tabs-mask-opaque-width)
+                + var(--local-dimensions-tabs-mask-gradient-width)
+            ),
+            black calc(
+                100%
+                - var(--local-dimensions-tabs-mask-opaque-width)
+                - var(--local-dimensions-tabs-mask-gradient-width)
+            ),
+            var(--local-dimensions-tabs-mask-color-right) calc(100% - var(--local-dimensions-tabs-mask-opaque-width)),
+            var(--local-dimensions-tabs-mask-color-right)
+        );
+}
+
+.local-dimensions-filter-tabs-mask.local-dimensions-filter-tabs-mask-noscroll {
+    display: contents;
+    -webkit-mask-image: none;
+    mask-image: none;
+}
+
+/* --- Items row --- */
+.local-dimensions-filter-tabs-items {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Tab pill button (a chip) --- */
+.local-dimensions-filter-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    border: none;
+    background: transparent;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--local-dimensions-tabs-item-color, #5f6368);
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    z-index: 2;
+    transition: color 120ms ease-out, opacity 100ms ease-in-out;
+    opacity: 0.85;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.local-dimensions-filter-tab:hover {
+    opacity: 1;
+}
+
+.local-dimensions-filter-tab:focus {
+    outline: none;
+}
+
+.local-dimensions-filter-tab:focus-visible {
+    box-shadow: inset 0 0 0 2px #1a73e8;
+    outline: none;
+}
+
+.local-dimensions-filter-tab[aria-pressed="true"] {
+    background: transparent;
+    color: var(--local-dimensions-tabs-item-color-active, #1a73e8);
+    opacity: 1;
+}
+
+/* --- Indicator: animated white pill behind active chip --- */
+.local-dimensions-filter-tabs-indicator {
+    position: absolute;
+    top: var(--local-dimensions-tabs-platter-padding);
+    left: var(--local-dimensions-tabs-indicator-start);
+    bottom: var(--local-dimensions-tabs-platter-padding);
+    width: var(--local-dimensions-tabs-indicator-width);
+    height: calc(100% - var(--local-dimensions-tabs-platter-padding) * 2);
+    border-radius: 999px;
+    background-color: var(--local-dimensions-tabs-indicator-bg, #fff);
+    box-shadow: var(--local-dimensions-tabs-indicator-shadow);
+    pointer-events: none;
+    z-index: 0;
+    transition:
+        left var(--local-dimensions-tabs-indicator-duration) ease-out,
+        width var(--local-dimensions-tabs-indicator-duration) ease-out,
+        opacity 160ms ease-out;
+}
+
+/* --- Paddles --- */
+.local-dimensions-filter-tabs-paddles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.local-dimensions-filter-tabs-paddle {
+    position: absolute;
+    top: var(--local-dimensions-tabs-platter-padding);
+    bottom: var(--local-dimensions-tabs-platter-padding);
+    width: var(--local-dimensions-tabs-paddle-width);
+    min-height: var(--local-dimensions-tabs-inner-height);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--local-dimensions-tabs-paddle-color);
+    cursor: pointer;
+    pointer-events: auto;
+    padding: 0;
+    transition:
+        color 100ms ease-in-out,
+        opacity 80ms ease-out 40ms,
+        visibility 80ms step-start 40ms;
+}
+
+.local-dimensions-filter-tabs-paddle:hover {
+    color: var(--local-dimensions-tabs-paddle-color-hover);
+}
+
+.local-dimensions-filter-tabs-paddle:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: -2px;
+}
+
+.local-dimensions-filter-tabs-paddle svg {
+    pointer-events: none;
+    width: 8px;
+    height: 14px;
+}
+
+.local-dimensions-filter-tabs-paddle-left {
+    left: 0;
+}
+
+.local-dimensions-filter-tabs-paddle-right {
+    right: 0;
+}
+
+.local-dimensions-filter-tabs-paddle.local-dimensions-filter-tabs-paddle-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 80ms ease-out 200ms,
+        visibility 80ms step-end 200ms;
+}
+
+.local-dimensions-filter-tabs-paddle:disabled:not(.local-dimensions-filter-tabs-paddle-hidden) svg {
+    opacity: var(--local-dimensions-tabs-paddle-icon-opacity-disabled, 0.42);
+}
+
+/* --- Clear button (resets every chip) --- */
+.local-dimensions-chip-clear {
+    border: none;
+    background: none;
+    color: #6c757d;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.local-dimensions-chip-clear:hover {
+    color: #dc3545;
+    text-decoration: underline;
+}
+
+.local-dimensions-chip-clear:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+    border-radius: 4px;
 }

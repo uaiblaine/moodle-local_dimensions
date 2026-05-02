@@ -106,4 +106,18 @@ $definitions = [
         'simpledata' => true,
         'ttl' => 300, // 5 minutes defensive TTL.
     ],
+
+    // Cache for course-level custom field values consumed by chip filters.
+    // Key: courseid
+    // Value: array<shortname, value> of all course custom fields for the course.
+    // Defensive TTL keeps the cache fresh enough between admin edits without
+    // requiring an explicit invalidation hook.
+    'course_customfields' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 200,
+        'ttl' => 600, // 10 minutes defensive TTL.
+    ],
 ];

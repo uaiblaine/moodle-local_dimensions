@@ -38,7 +38,12 @@
         ]
     }
 }}
-<div class="row mt-4">
+<div id="local-dimensions-viewcompetency-grid"
+     class="row mt-4"
+     role="region"
+     aria-label="{{#str}}view_courses, local_dimensions{{/str}}"
+     aria-live="polite"
+     aria-relevant="additions text">
     {{#courses}}
         {{> local_dimensions/course_card}}
     {{/courses}}

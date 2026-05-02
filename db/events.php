@@ -34,6 +34,22 @@ $observers = [
         'callback' => \local_dimensions\observer::class . '::competency_updated',
     ],
     [
+        'eventname' => \core\event\competency_deleted::class,
+        'callback' => \local_dimensions\observer::class . '::competency_deleted',
+    ],
+    [
+        'eventname' => \core\event\competency_template_created::class,
+        'callback' => \local_dimensions\observer::class . '::template_created',
+    ],
+    [
+        'eventname' => \core\event\competency_template_updated::class,
+        'callback' => \local_dimensions\observer::class . '::template_updated',
+    ],
+    [
+        'eventname' => \core\event\competency_template_deleted::class,
+        'callback' => \local_dimensions\observer::class . '::template_deleted',
+    ],
+    [
         'eventname' => \core\event\competency_user_competency_rated::class,
         'callback' => \local_dimensions\observer::class . '::user_competency_rated',
     ],

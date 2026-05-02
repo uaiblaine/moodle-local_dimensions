@@ -98,12 +98,24 @@
             </div>
         </div>
 
+        {{#haschipfilters}}
+            {{#chipfilters}}
+                {{> local_dimensions/chip_filters }}
+            {{/chipfilters}}
+        {{/haschipfilters}}
+
         {{! Competency accordion }}
-        <div class="local-dimensions-competency-accordion" role="list" aria-label="{{#str}}plan_competencies, local_dimensions{{/str}}">
+        <div id="local-dimensions-viewplan-accordion"
+             class="local-dimensions-competency-accordion"
+             role="list"
+             aria-label="{{#str}}plan_competencies, local_dimensions{{/str}}"
+             aria-live="polite"
+             aria-relevant="additions removals">
             {{#competencies}}
             <div class="local-dimensions-accordion-item {{#isproficient}}completed{{/isproficient}} {{#hasrating}}{{^isproficient}}rated{{/isproficient}}{{/hasrating}}"
                  role="listitem"
-                 data-competency-id="{{id}}">
+                 data-competency-id="{{id}}"
+                 data-filtervalues="{{filtervaluesjson}}">
 
                 {{! Accordion content }}
                 <div class="local-dimensions-accordion-wrapper flex-grow-1">
@@ -114,22 +126,38 @@
                             id="competency-header-{{id}}">
                         <div class="local-dimensions-accordion-header-content">
                             <span class="local-dimensions-accordion-title">{{shortname}}</span>
-                            {{#hasrating}}
-                            <span class="local-dimensions-grade-badge {{#isproficient}}badge-proficient{{/isproficient}}{{^isproficient}}badge-not-proficient{{/isproficient}}">
-                                {{#isproficient}}
-                                <img class="local-dimensions-grade-badge-icon" src="{{badgeproficienticonurl}}" alt="" aria-hidden="true">
-                                {{/isproficient}}
-                                {{^isproficient}}
-                                <img class="local-dimensions-grade-badge-icon" src="{{badgewarningiconurl}}" alt="" aria-hidden="true">
-                                {{/isproficient}}
-                                {{rating}}
-                            </span>
-                            {{/hasrating}}
-                            {{^hasrating}}
-                            <span class="local-dimensions-grade-badge badge-todo">
-                                {{#str}}todo, local_dimensions{{/str}}
-                            </span>
-                            {{/hasrating}}
+                            {{#subline_is_status}}
+                                {{#hasrating}}
+                                <span class="local-dimensions-grade-badge {{#isproficient}}badge-proficient{{/isproficient}}{{^isproficient}}badge-not-proficient{{/isproficient}}">
+                                    {{#isproficient}}
+                                    <img class="local-dimensions-grade-badge-icon" src="{{badgeproficienticonurl}}" alt="" aria-hidden="true">
+                                    {{/isproficient}}
+                                    {{^isproficient}}
+                                    <img class="local-dimensions-grade-badge-icon" src="{{badgewarningiconurl}}" alt="" aria-hidden="true">
+                                    {{/isproficient}}
+                                    {{rating}}
+                                </span>
+                                {{/hasrating}}
+                                {{^hasrating}}
+                                <span class="local-dimensions-grade-badge badge-todo">
+                                    {{#str}}todo, local_dimensions{{/str}}
+                                </span>
+                                {{/hasrating}}
+                            {{/subline_is_status}}
+                            {{#subline_is_rating}}
+                                {{#hasrating}}
+                                <span class="local-dimensions-grade-badge {{#isproficient}}badge-proficient{{/isproficient}}{{^isproficient}}badge-not-proficient{{/isproficient}}">
+                                    {{rating}}
+                                </span>
+                                {{/hasrating}}
+                            {{/subline_is_rating}}
+                            {{#subline_is_text}}
+                                {{#hassublinetext}}
+                                <span class="local-dimensions-grade-badge badge-cfield">
+                                    {{sublinetext}}
+                                </span>
+                                {{/hassublinetext}}
+                            {{/subline_is_text}}
                         </div>
                         <i class="local-dimensions-accordion-icon fa fa-chevron-down" aria-hidden="true"></i>
                     </button>

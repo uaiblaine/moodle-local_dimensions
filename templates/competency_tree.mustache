@@ -44,28 +44,36 @@
         ]
     }
 }}
-<ul class="list-unstyled{{#isfirst}}{{/isfirst}}{{^isfirst}} ml-4{{/isfirst}}">
+<div class="local-dimensions-manage-tree-root">
     {{#competencies}}
-    <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
-        <div>
-            {{#depth}}
-            <span class="mr-2" style="padding-left: calc({{depth}} * 1.5rem);"></span>
-            {{/depth}}
-            {{#haschildren}}
-            <i class="fa fa-folder-o mr-2" aria-hidden="true"></i>
-            {{/haschildren}}
-            {{^haschildren}}
-            <i class="fa fa-file-o mr-2" aria-hidden="true"></i>
-            {{/haschildren}}
-            <strong>{{shortname}}</strong>
-            <span class="text-muted small">({{idnumber}})</span>
+    <div class="local-dimensions-manage-tree-node" data-region="tree-node" data-depth="{{depth}}">
+        <div class="local-dimensions-manage-tree-row" data-region="competency-row" data-competency-id="{{id}}" data-depth="{{depth}}" data-search="{{shortname}} {{idnumber}}" data-shortname="{{shortname}}" data-idnumber="{{idnumber}}" data-taxonomy="{{taxonomy}}" data-path="{{pathlabel}}" data-scale="{{scale}}" data-rule="{{rule}}" data-description="{{descriptionplain}}" data-coursecount="{{coursecount}}" data-edit-url="{{editurl}}" data-add-url="{{addchildurl}}" style="--local-dimensions-manage-indent: {{indent}}px">
+            <button type="button" class="local-dimensions-manage-tree-toggle" data-action="toggle" aria-label="{{#str}}show_more, local_dimensions{{/str}}"{{^haschildren}} disabled{{/haschildren}}>
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+            </button>
+            <span class="local-dimensions-manage-taxonomy">{{taxonomy}}</span>
+            <span class="local-dimensions-manage-tree-name">{{shortname}}</span>
+            <span class="local-dimensions-manage-tree-id local-dimensions-manage-mono">{{idnumber}}</span>
+            {{#hascourses}}<span class="local-dimensions-manage-chip">{{coursecount}} {{#str}}linkedcourses, tool_lp{{/str}}</span>{{/hascourses}}
+            {{#hasrule}}<span class="local-dimensions-manage-chip local-dimensions-manage-chip-rule">{{#str}}competencyrule, tool_lp{{/str}}</span>{{/hasrule}}
+            {{#canmanage}}
+            <span class="local-dimensions-manage-tree-actions">
+                <a class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" href="{{editurl}}" aria-label="{{#str}}edit{{/str}}" title="{{#str}}edit{{/str}}">{{#pix}}t/edit, core, {{#str}}edit{{/str}}{{/pix}}</a>
+                <a class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" href="{{addchildurl}}" aria-label="{{#str}}managecompetencies_addchild, local_dimensions{{/str}}" title="{{#str}}managecompetencies_addchild, local_dimensions{{/str}}">{{#pix}}t/add, core, {{#str}}managecompetencies_addchild, local_dimensions{{/str}}{{/pix}}</a>
+                <button type="button" class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" data-action="moveparent" data-id="{{id}}" aria-label="{{#str}}movetonewparent, tool_lp{{/str}}" title="{{#str}}movetonewparent, tool_lp{{/str}}">{{#pix}}t/move, core, {{#str}}movetonewparent, tool_lp{{/str}}{{/pix}}</button>
+                <button type="button" class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" data-action="relatedcompetencies" data-id="{{id}}" aria-label="{{#str}}addcrossreferencedcompetency, tool_lp{{/str}}" title="{{#str}}addcrossreferencedcompetency, tool_lp{{/str}}">{{#pix}}i/competencies, core, {{#str}}addcrossreferencedcompetency, tool_lp{{/str}}{{/pix}}</button>
+                <button type="button" class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" data-action="competencyrules" data-id="{{id}}" aria-label="{{#str}}competencyrule, tool_lp{{/str}}" title="{{#str}}competencyrule, tool_lp{{/str}}">{{#pix}}t/preferences, core, {{#str}}competencyrule, tool_lp{{/str}}{{/pix}}</button>
+                <button type="button" class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" data-action="moveup" data-id="{{id}}" aria-label="{{#str}}moveup{{/str}}" title="{{#str}}moveup{{/str}}">{{#pix}}t/up, core, {{#str}}moveup{{/str}}{{/pix}}</button>
+                <button type="button" class="btn btn-sm btn-secondary local-dimensions-manage-icon-action" data-action="movedown" data-id="{{id}}" aria-label="{{#str}}movedown{{/str}}" title="{{#str}}movedown{{/str}}">{{#pix}}t/down, core, {{#str}}movedown{{/str}}{{/pix}}</button>
+                <button type="button" class="btn btn-sm btn-danger local-dimensions-manage-icon-action" data-action="delete" data-id="{{id}}" data-name="{{shortname}}" aria-label="{{#str}}delete{{/str}}" title="{{#str}}delete{{/str}}">{{#pix}}t/delete, core, {{#str}}delete{{/str}}{{/pix}}</button>
+            </span>
+            {{/canmanage}}
         </div>
-        <a href="{{editurl}}" class="btn btn-sm btn-outline-primary">
-            <i class="fa fa-pencil mr-1" aria-hidden="true"></i>{{#str}}edit{{/str}}
-        </a>
         {{#haschildren}}
-        {{> local_dimensions/competency_tree_children}}
+        <div class="local-dimensions-manage-tree-children" data-region="tree-children">
+            {{> local_dimensions/competency_tree_children}}
+        </div>
         {{/haschildren}}
-    </li>
+    </div>
     {{/competencies}}
-</ul>
+</div>

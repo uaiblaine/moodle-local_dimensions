@@ -56,7 +56,9 @@
             <h1 class="local-dimensions-hero-title">{{{title}}}</h1>
             {{#hasdescription}}
                 <div class="local-dimensions-hero-description">
-                    {{{description}}}
+                    {{#description}}
+                        {{> local_dimensions/collapsible_description }}
+                    {{/description}}
                 </div>
             {{/hasdescription}}
             {{#hasduedate}}

@@ -30,6 +30,7 @@ use core_competency\competency;
 use core_competency\competency_framework;
 use local_dimensions\form\competency_form;
 use local_dimensions\customfield\competency_handler;
+use local_dimensions\helper;
 
 // Parameters.
 $id = optional_param('id', 0, PARAM_INT);
@@ -66,7 +67,9 @@ if ($id > 0) {
 
 // Load parent if specified.
 $parent = null;
-if ($parentid > 0) {
+if ($competency) {
+    $parent = $competency->get_parent();
+} else if ($parentid > 0) {
     $parent = competency::get_record(['id' => $parentid]);
 }
 
@@ -81,6 +84,7 @@ $url = new moodle_url('/local/dimensions/edit_competency.php', [
 $PAGE->set_url($url);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('admin');
+$PAGE->add_body_class('local-dimensions-edit-competency-page');
 
 $title = $id > 0
     ? get_string('editcompetency', 'tool_lp')
@@ -89,6 +93,10 @@ $title = $id > 0
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 
+$returnurl = new moodle_url('/local/dimensions/manage_competencies.php', [
+    'frameworkid' => $frameworkid,
+]);
+
 // Navbar.
 $PAGE->navbar->add(get_string('competencies', 'core_competency'), new moodle_url('/admin/tool/lp/competencyframeworks.php'));
 $PAGE->navbar->add($framework->get('shortname'), new moodle_url('/admin/tool/lp/competencies.php', [
@@ -96,20 +104,62 @@ $PAGE->navbar->add($framework->get('shortname'), new moodle_url('/admin/tool/lp/
 ]));
 $PAGE->navbar->add($title);
 
+$rulemodels = [];
+$rulesmodules = [];
+$rulecontext = [
+    'competencyid' => 0,
+    'canconfigure' => false,
+    'status' => get_string('managecompetencies_norule', 'local_dimensions'),
+    'summary' => get_string('editcompetency_rule_new_summary', 'local_dimensions'),
+    'detail' => '',
+];
+
+if ($competency) {
+    $rulemodels = helper::get_competency_rule_model($competency);
+    $childcount = max(0, count($rulemodels) - 1);
+    $rulesmodules = helper::get_competency_rule_modules();
+    $ruletype = $competency->get('ruletype');
+    $ruleoutcome = (int)$competency->get('ruleoutcome');
+    $hasrule = !empty($ruletype) && $ruleoutcome > 0;
+    $simpleruletype = strpos((string)$ruletype, 'competency_rule_points') !== false ? 'points' : 'all';
+    $outcomedetail = $hasrule ? helper::get_rule_outcome_text($simpleruletype, $ruleoutcome, $competency, $framework) : '';
+
+    $rulecontext = [
+        'competencyid' => (int)$competency->get('id'),
+        'canconfigure' => $childcount > 0 && !empty($rulesmodules),
+        'status' => $hasrule ? helper::get_competency_rule_label($ruletype)
+            : get_string('managecompetencies_norule', 'local_dimensions'),
+        'summary' => $hasrule ? get_string(
+            'editcompetency_rule_active_summary',
+            'local_dimensions',
+            helper::get_competency_rule_outcome_label($ruleoutcome)
+        ) : get_string('editcompetency_rule_none_summary', 'local_dimensions'),
+        'detail' => $outcomedetail !== '' ? $outcomedetail : get_string(
+            $childcount > 0 ? 'editcompetency_rule_configurable_help' : 'editcompetency_rule_nochildren_help',
+            'local_dimensions'
+        ),
+    ];
+}
+
 // Create form.
 $customdata = [
     'competency' => $competency,
     'framework' => $framework,
     'parent' => $parent,
     'pagecontextid' => $pagecontextid,
+    'rulecontext' => $rulecontext,
 ];
 $form = new competency_form($url, $customdata);
 
+$PAGE->requires->js_call_amd('local_dimensions/edit_competency', 'init', [[
+    'competencyId' => $competency ? (int)$competency->get('id') : 0,
+    'backgroundColourField' => \local_dimensions\constants::CFIELD_CUSTOMBGCOLOR,
+    'textColourField' => \local_dimensions\constants::CFIELD_CUSTOMTEXTCOLOR,
+]]);
+
 // Handle form submission.
 if ($form->is_cancelled()) {
-    redirect(new moodle_url('/local/dimensions/manage_competencies.php', [
-        'frameworkid' => $frameworkid,
-    ]));
+    redirect($returnurl);
 }
 
 if ($data = $form->get_data()) {
@@ -120,10 +170,9 @@ if ($data = $form->get_data()) {
     $record->description = $data->description['text'];
     $record->descriptionformat = $data->description['format'];
     $record->competencyframeworkid = $data->competencyframeworkid;
-
-    if (!empty($data->parentid)) {
-        $record->parentid = $data->parentid;
-    }
+    $record->parentid = (int)($data->parentid ?? 0);
+    $record->scaleid = $data->scaleid ?? null;
+    $record->scaleconfiguration = $data->scaleconfiguration ?? null;
 
     try {
         if ($id > 0) {
@@ -165,10 +214,47 @@ if ($data = $form->get_data()) {
     }
 }
 
+$level = $competency ? $competency->get_level() : ($parent ? $parent->get_level() + 1 : 1);
+$taxonomydata = helper::get_taxonomy_at_level($framework, $level);
+$jsonoptions = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
+
 // Output.
 echo $OUTPUT->header();
-echo $OUTPUT->heading($title);
 
+ob_start();
 $form->display();
+$formhtml = ob_get_clean();
+
+echo $OUTPUT->render_from_template('local_dimensions/edit_competency', [
+    'title' => $title,
+    'heading' => $competency ? format_string($competency->get('shortname')) : $title,
+    'frameworkname' => format_string($framework->get('shortname')),
+    'taxonomy' => $taxonomydata['term'] ?? '',
+    'idnumber' => $competency ? $competency->get('idnumber') : '',
+    'hasidnumber' => $competency && $competency->get('idnumber') !== '',
+    'returnurl' => $returnurl->out(false),
+    'formhtml' => $formhtml,
+    'competencymodeljson' => json_encode($rulemodels, $jsonoptions),
+    'rulesmodulesjson' => json_encode($rulesmodules, $jsonoptions),
+    'sections' => [
+        [
+            'id' => 'sec-basic',
+            'label' => get_string('editcompetency_section_basic', 'local_dimensions'),
+            'active' => true,
+        ],
+        [
+            'id' => 'sec-eval',
+            'label' => get_string('editcompetency_section_evaluation', 'local_dimensions'),
+        ],
+        [
+            'id' => 'sec-rule',
+            'label' => get_string('editcompetency_section_rule', 'local_dimensions'),
+        ],
+        [
+            'id' => 'sec-fields',
+            'label' => get_string('customfields', 'local_dimensions'),
+        ],
+    ],
+]);
 
 echo $OUTPUT->footer();

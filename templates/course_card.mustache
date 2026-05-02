@@ -38,7 +38,9 @@
         "locked": false
     }
 }}
-<div class="col-md-6 col-lg-4 mb-4">
+<div class="col-md-6 col-lg-4 mb-4 local-dimensions-course-card-wrapper"
+     data-courseid="{{courseid}}"
+     data-filtervalues="{{filtervaluesjson}}">
     <div class="card h-100 {{^locked}}shadow-sm{{/locked}} {{#locked}}local-dimensions-card-locked{{/locked}}">
         <h3 class="card-header font-weight-bold">
             {{#locked}}
