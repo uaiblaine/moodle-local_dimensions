@@ -36,43 +36,113 @@ $frameworkid = optional_param('frameworkid', 0, PARAM_INT);
 $showhidden = optional_param('showhidden', 0, PARAM_BOOL);
 $view = optional_param('view', 'tree', PARAM_ALPHA);
 $search = optional_param('search', '', PARAM_RAW_TRIMMED);
+$contexttype = optional_param('contexttype', 'system', PARAM_ALPHA);
+$categoryid = optional_param('categoryid', 0, PARAM_INT);
+$pagecontextid = optional_param('pagecontextid', 0, PARAM_INT);
 
 if (!in_array($view, ['tree', 'table'], true)) {
     $view = 'tree';
 }
 
-// Admin page setup.
-admin_externalpage_setup('local_dimensions_manage');
+if (!in_array($contexttype, ['system', 'coursecat'], true)) {
+    $contexttype = 'system';
+}
+
+if ($pagecontextid > 0 && $contexttype === 'system') {
+    $pagecontext = context::instance_by_id($pagecontextid, IGNORE_MISSING);
+    if ($pagecontext && $pagecontext->contextlevel === CONTEXT_COURSECAT) {
+        $contexttype = 'coursecat';
+        $categoryid = (int)$pagecontext->instanceid;
+    }
+}
+
+require_login(null, false);
 api::require_enabled();
 
-$PAGE->set_url(new moodle_url('/local/dimensions/manage_competencies.php', [
-    'frameworkid' => $frameworkid,
+// Build readable course category options for the context selector.
+$categoryoptions = [];
+foreach (core_course_category::make_categories_list() as $optioncategoryid => $categoryname) {
+    try {
+        $categorycontext = context_coursecat::instance((int)$optioncategoryid);
+        if (!competency_framework::can_read_context($categorycontext)) {
+            continue;
+        }
+        $categoryoptions[(int)$optioncategoryid] = $categoryname;
+    } catch (Throwable $exception) {
+        continue;
+    }
+}
+
+if ($contexttype === 'system') {
+    $categoryid = 0;
+} else if ($categoryid > 0 && !array_key_exists($categoryid, $categoryoptions)) {
+    $categoryid = 0;
+}
+
+$iscoursecatcontext = $contexttype === 'coursecat';
+$needscategoryselection = $iscoursecatcontext && $categoryid <= 0;
+$pagecontext = context_system::instance();
+$selectedcategoryname = '';
+
+if ($iscoursecatcontext && $categoryid > 0) {
+    $pagecontext = context_coursecat::instance($categoryid);
+    $selectedcategoryname = $categoryoptions[$categoryid] ?? '';
+}
+
+if (!$needscategoryselection && !competency_framework::can_read_context($pagecontext)) {
+    throw new required_capability_exception($pagecontext, 'moodle/competency:competencyview', 'nopermissions', '');
+}
+
+$pagecontextid = $pagecontext->id;
+$stateparams = [
+    'contexttype' => $contexttype,
+    'categoryid' => $categoryid,
     'showhidden' => $showhidden,
     'view' => $view,
     'search' => $search,
-]));
+];
+
+$urlparams = $stateparams + ['frameworkid' => $frameworkid];
+$url = new moodle_url('/local/dimensions/manage_competencies.php', $urlparams);
+
+$PAGE->set_context($pagecontext);
+$PAGE->set_pagelayout('admin');
+$PAGE->set_url($url);
 $PAGE->set_title(get_string('managecompetencies', 'local_dimensions'));
 $PAGE->set_heading(get_string('managecompetencies', 'local_dimensions'));
 $PAGE->add_body_class('local-dimensions-manage-page');
 
+if ($pagecontext->contextlevel === CONTEXT_COURSECAT) {
+    core_course_category::page_setup();
+    if ($competencyframeworksnode = $PAGE->settingsnav->find('competencyframeworks', navigation_node::TYPE_SETTING)) {
+        $competencyframeworksnode->make_active();
+    }
+}
+
 // Get frameworks, optionally including hidden structures.
-$allframeworks = competency_framework::get_records([], 'shortname');
 $frameworks = [];
 $hashiddenframeworks = false;
-foreach ($allframeworks as $frameworkrecord) {
-    $isvisible = (bool)$frameworkrecord->get('visible');
-    if (!$isvisible) {
-        $hashiddenframeworks = true;
-    }
-    if (!$isvisible && !$showhidden) {
-        continue;
-    }
+if (!$needscategoryselection) {
+    $allframeworks = api::list_frameworks('shortname', 'ASC', 0, 0, $pagecontext, 'self', false);
+    foreach ($allframeworks as $frameworkrecord) {
+        $isvisible = (bool)$frameworkrecord->get('visible');
+        if (!$isvisible) {
+            $hashiddenframeworks = true;
+        }
+        if (!$isvisible && !$showhidden) {
+            continue;
+        }
 
-    if (!competency_framework::can_read_context($frameworkrecord->get_context())) {
-        continue;
-    }
+        if (!competency_framework::can_read_context($frameworkrecord->get_context())) {
+            continue;
+        }
 
-    $frameworks[(int)$frameworkrecord->get('id')] = $frameworkrecord;
+        $frameworks[(int)$frameworkrecord->get('id')] = $frameworkrecord;
+    }
+}
+
+if ($frameworkid > 0 && !array_key_exists($frameworkid, $frameworks)) {
+    $frameworkid = 0;
 }
 
 // If no framework selected, use the first readable framework.
@@ -109,11 +179,9 @@ foreach ($frameworks as $frameworkrecord) {
 }
 
 // Get page context for links.
-$pagecontext = $selectedframework ? $selectedframework->get_context() : context_system::instance();
-$pagecontextid = $pagecontext->id;
-$canmanage = $selectedframework && has_capability('moodle/competency:competencymanage', $pagecontext);
-
-$PAGE->set_context($pagecontext);
+$frameworkcontext = $selectedframework ? $selectedframework->get_context() : $pagecontext;
+$canmanage = $selectedframework && competency_framework::can_manage_context($frameworkcontext);
+$canaddframework = !$needscategoryselection && competency_framework::can_manage_context($pagecontext);
 
 /**
  * Return the taxonomy label at a zero-based depth.
@@ -241,6 +309,7 @@ function local_dimensions_manage_rules_modules(): array {
  * @param competency_framework $framework Competency framework.
  * @param int $pagecontextid Page context ID.
  * @param bool $canmanage Whether the user can manage competencies.
+ * @param array $stateparams Page state parameters to preserve in edit links.
  * @param array $coursecounts Course counts indexed by competency ID.
  * @param array $ancestorlabels Parent labels.
  * @param array $flatrows Flat row accumulator.
@@ -254,6 +323,7 @@ function local_dimensions_build_competency_tree_data(
     competency_framework $framework,
     int $pagecontextid,
     bool $canmanage,
+    array $stateparams,
     array $coursecounts,
     array $ancestorlabels,
     array &$flatrows,
@@ -283,12 +353,12 @@ function local_dimensions_build_competency_tree_data(
             'competencyframeworkid' => $frameworkid,
             'parentid' => (int)$competencyrecord->get('parentid'),
             'pagecontextid' => $pagecontextid,
-        ]);
+        ] + $stateparams);
         $addchildurl = new moodle_url('/local/dimensions/edit_competency.php', [
             'competencyframeworkid' => $frameworkid,
             'parentid' => $competencyid,
             'pagecontextid' => $pagecontextid,
-        ]);
+        ] + $stateparams);
 
         $item = [
             'id' => $competencyid,
@@ -338,6 +408,7 @@ function local_dimensions_build_competency_tree_data(
                 $framework,
                 $pagecontextid,
                 $canmanage,
+                $stateparams,
                 $coursecounts,
                 $pathlabels,
                 $flatrows,
@@ -381,6 +452,7 @@ if ($selectedframework) {
         $selectedframework,
         $pagecontextid,
         $canmanage,
+        $stateparams,
         $coursecounts,
         [],
         $flatcompetencies,
@@ -391,20 +463,38 @@ if ($selectedframework) {
 $rootaddurl = $selectedframework ? new moodle_url('/local/dimensions/edit_competency.php', [
     'competencyframeworkid' => $frameworkid,
     'pagecontextid' => $pagecontextid,
-]) : null;
+] + $stateparams) : null;
 $editframeworkurl = $selectedframework ? new moodle_url('/local/dimensions/edit_competency_framework.php', [
     'id' => $frameworkid,
     'pagecontextid' => $pagecontextid,
-    'showhidden' => $showhidden,
-    'view' => $view,
-    'search' => $search,
-]) : null;
+] + $stateparams) : null;
+$newframeworkurl = $canaddframework ? new moodle_url('/local/dimensions/edit_competency_framework.php', [
+    'id' => 0,
+    'pagecontextid' => $pagecontextid,
+] + $stateparams) : null;
 $importurl = new moodle_url('/admin/tool/lpimportcsv/index.php');
 $exporturl = new moodle_url('/admin/tool/lpimportcsv/export.php');
 $jsonoptions = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 
 // Build template data.
 $templatedata = [
+    'contexttype' => $contexttype,
+    'issystemcontext' => $contexttype === 'system',
+    'iscoursecatcontext' => $iscoursecatcontext,
+    'needscategoryselection' => $needscategoryselection,
+    'categoryoptions' => array_map(static function (int $optioncategoryid, string $categoryname) use ($categoryid): array {
+        return [
+            'id' => $optioncategoryid,
+            'name' => $categoryname,
+            'selected' => $optioncategoryid === $categoryid,
+        ];
+    }, array_keys($categoryoptions), array_values($categoryoptions)),
+    'hascategoryoptions' => !empty($categoryoptions),
+    'selectedcategoryid' => $categoryid,
+    'selectedcategoryname' => $selectedcategoryname,
+    'selectedcontextname' => $iscoursecatcontext ? $selectedcategoryname : get_string('managecompetencies_context_system', 'local_dimensions'),
+    'hascategoryselected' => $iscoursecatcontext && $categoryid > 0,
+    'canselectframework' => !$needscategoryselection,
     'hasframeworks' => !empty($frameworkoptions),
     'hashiddenframeworks' => $hashiddenframeworks,
     'showhidden' => $showhidden,
@@ -426,8 +516,10 @@ $templatedata = [
     'competenciesjson' => json_encode(array_values($competencymodels), $jsonoptions),
     'rulesmodulesjson' => json_encode($canmanage ? local_dimensions_manage_rules_modules() : [], $jsonoptions),
     'canmanage' => $canmanage,
+    'canaddframework' => $canaddframework,
     'rootaddurl' => $rootaddurl ? $rootaddurl->out(false) : '',
     'editframeworkurl' => $editframeworkurl ? $editframeworkurl->out(false) : '',
+    'newframeworkurl' => $newframeworkurl ? $newframeworkurl->out(false) : '',
     'importurl' => $importurl->out(false),
     'exporturl' => $exporturl->out(false),
     'viewtree' => $view === 'tree',
