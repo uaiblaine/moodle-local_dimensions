@@ -20,6 +20,8 @@
     Manage competencies page with framework selector and competency tree.
 
     Context variables required:
+    * contexttype (string) - Current context selector value
+    * categoryoptions (array) - Course category options {id, name, selected}
     * hasframeworks (bool) - Whether there are frameworks
     * frameworks (array) - Array of framework options {id, name, selected}
     * selectedframeworkid (int) - Currently selected framework ID
@@ -50,21 +52,54 @@
         <div class="local-dimensions-manage-header-actions">
             <a class="btn btn-secondary" href="{{importurl}}">{{#str}}import, tool_lpimportcsv{{/str}}</a>
             <a class="btn btn-secondary" href="{{exporturl}}">{{#str}}export, tool_lpimportcsv{{/str}}</a>
+            {{#canaddframework}}
+            <a class="btn btn-primary" href="{{newframeworkurl}}"><i class="fa fa-plus" aria-hidden="true"></i>{{#str}}addnewcompetencyframework, tool_lp{{/str}}</a>
+            {{/canaddframework}}
         </div>
     </div>
 
     <form method="get" class="local-dimensions-manage-toolbar" data-region="manage-form">
+        <input type="hidden" name="contexttype" value="{{contexttype}}" data-region="context-type-input">
         <input type="hidden" name="view" value="{{#viewtable}}table{{/viewtable}}{{#viewtree}}tree{{/viewtree}}" data-region="view-input">
         <div class="local-dimensions-manage-toolbar-main">
+            <div class="local-dimensions-manage-field local-dimensions-manage-context-field">
+                <span>{{#str}}managecompetencies_context, local_dimensions{{/str}}</span>
+                <div class="local-dimensions-manage-segmented local-dimensions-manage-context-switch" role="group" aria-label="{{#str}}managecompetencies_context, local_dimensions{{/str}}">
+                    <button type="button" class="local-dimensions-manage-segment {{#issystemcontext}}active{{/issystemcontext}}" data-action="context" data-context-type="system">
+                        <i class="fa fa-globe" aria-hidden="true"></i>
+                        <span>{{#str}}managecompetencies_context_system, local_dimensions{{/str}}</span>
+                    </button>
+                    <button type="button" class="local-dimensions-manage-segment {{#iscoursecatcontext}}active{{/iscoursecatcontext}}" data-action="context" data-context-type="coursecat">
+                        <i class="fa fa-folder-open" aria-hidden="true"></i>
+                        <span>{{#str}}managecompetencies_context_coursecat, local_dimensions{{/str}}</span>
+                    </button>
+                </div>
+            </div>
+            {{#iscoursecatcontext}}
+            <label class="local-dimensions-manage-field local-dimensions-manage-category-field" for="categoryid">
+                <span>{{#str}}managecompetencies_category, local_dimensions{{/str}}</span>
+                <select name="categoryid" id="categoryid" class="form-control" data-region="category-select" data-placeholder="{{#str}}managecompetencies_category_placeholder, local_dimensions{{/str}}" data-no-selection="{{#str}}managecompetencies_category_noselection, local_dimensions{{/str}}">
+                    <option value="0">{{#str}}managecompetencies_category_placeholder, local_dimensions{{/str}}</option>
+                    {{#categoryoptions}}
+                    <option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}</option>
+                    {{/categoryoptions}}
+                </select>
+            </label>
+            {{/iscoursecatcontext}}
             <label class="local-dimensions-manage-field local-dimensions-manage-framework-field" for="frameworkid">
                 <span>{{#str}}competencyframework, tool_lp{{/str}}</span>
-                <select name="frameworkid" id="frameworkid" class="form-control" data-region="framework-select">
+                <select name="frameworkid" id="frameworkid" class="form-control" data-region="framework-select"{{^canselectframework}} disabled{{/canselectframework}}>
+                    {{#needscategoryselection}}
+                    <option value="0">{{#str}}managecompetencies_selectcategoryfirst, local_dimensions{{/str}}</option>
+                    {{/needscategoryselection}}
+                    {{^needscategoryselection}}
                     {{^hasframeworks}}
                     <option value="0">{{#str}}noframeworks, local_dimensions{{/str}}</option>
                     {{/hasframeworks}}
                     {{#frameworks}}
                     <option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}{{#hidden}} · {{#str}}hidden{{/str}}{{/hidden}}</option>
                     {{/frameworks}}
+                    {{/needscategoryselection}}
                 </select>
             </label>
             {{#hashiddenframeworks}}
@@ -224,15 +259,32 @@
 
     {{^hascompetencies}}
     <div class="local-dimensions-manage-empty-state">
+        {{#needscategoryselection}}
+        <h3>{{#str}}managecompetencies_selectcategory_title, local_dimensions{{/str}}</h3>
+        <p>{{#str}}managecompetencies_selectcategory_help, local_dimensions{{/str}}</p>
+        {{/needscategoryselection}}
+        {{^needscategoryselection}}
         {{#selectedframeworkid}}
         <h3>{{#str}}nocompetencies, local_dimensions{{/str}}</h3>
         <p>{{#str}}managecompetencies_emptyframework, local_dimensions{{/str}}</p>
         {{#canmanage}}<a class="btn btn-primary" href="{{rootaddurl}}"><i class="fa fa-plus" aria-hidden="true"></i>{{#str}}managecompetencies_addroot, local_dimensions{{/str}}</a>{{/canmanage}}
         {{/selectedframeworkid}}
         {{^selectedframeworkid}}
+        {{^hasframeworks}}
+        <h3>{{#str}}managecompetencies_noframeworks_context_title, local_dimensions{{/str}}</h3>
+        <p>{{#str}}managecompetencies_noframeworks_context_help, local_dimensions, {{selectedcontextname}}{{/str}}</p>
+        {{#canaddframework}}
+        <div class="local-dimensions-manage-empty-actions">
+            <a class="btn btn-primary" href="{{newframeworkurl}}"><i class="fa fa-plus" aria-hidden="true"></i>{{#str}}addnewcompetencyframework, tool_lp{{/str}}</a>
+        </div>
+        {{/canaddframework}}
+        {{/hasframeworks}}
+        {{#hasframeworks}}
         <h3>{{#str}}selectframework, local_dimensions{{/str}}</h3>
         <p>{{#str}}managecompetencies_selectframework_help, local_dimensions{{/str}}</p>
+        {{/hasframeworks}}
         {{/selectedframeworkid}}
+        {{/needscategoryselection}}
     </div>
     {{/hascompetencies}}
 </div>

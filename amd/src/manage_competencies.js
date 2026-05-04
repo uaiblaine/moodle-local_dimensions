@@ -26,6 +26,7 @@ define([
     'core/ajax',
     'core/notification',
     'core/str',
+    'core/form-autocomplete',
     'core/templates',
     'tool_lp/dialogue',
     'tool_lp/tree',
@@ -33,7 +34,7 @@ define([
     'tool_lp/competencyruleconfig',
     'tool_lp/competency_outcomes',
     'core/pending'
-], function($, Ajax, Notification, Str, Templates, Dialogue, Ariatree, Picker, RuleConfig, Outcomes, Pending) {
+], function($, Ajax, Notification, Str, Autocomplete, Templates, Dialogue, Ariatree, Picker, RuleConfig, Outcomes, Pending) {
     'use strict';
 
     var moveSource = null;
@@ -72,6 +73,59 @@ define([
         } catch (error) {
             return fallback;
         }
+    }
+
+    /**
+     * Submit the toolbar form.
+     *
+     * @param {HTMLFormElement} form Toolbar form.
+     */
+    function submitForm(form) {
+        if (!form) {
+            return;
+        }
+
+        form.submit();
+    }
+
+    /**
+     * Clear the selected framework before changing page context.
+     *
+     * @param {HTMLElement} root Root element.
+     */
+    function clearSelectedFramework(root) {
+        var frameworkSelect = root.querySelector('[data-region="framework-select"]');
+        if (frameworkSelect) {
+            frameworkSelect.value = '0';
+        }
+    }
+
+    /**
+     * Enhance the course category selector with Moodle autocomplete.
+     *
+     * @param {HTMLElement} root Root element.
+     */
+    function initCategorySelect(root) {
+        var categorySelect = root.querySelector('[data-region="category-select"]');
+        if (!categorySelect) {
+            return;
+        }
+
+        Autocomplete.enhance(
+            '#' + categorySelect.id,
+            false,
+            false,
+            categorySelect.dataset.placeholder || '',
+            false,
+            true,
+            categorySelect.dataset.noSelection || '',
+            true
+        );
+
+        categorySelect.addEventListener('change', function() {
+            clearSelectedFramework(root);
+            submitForm(this.form);
+        });
     }
 
     /**
@@ -971,14 +1025,16 @@ define([
             var select = root.querySelector('[data-region="framework-select"]');
             if (select) {
                 select.addEventListener('change', function() {
-                    this.form.submit();
+                    submitForm(this.form);
                 });
             }
+
+            initCategorySelect(root);
 
             var showHidden = root.querySelector('[data-region="show-hidden-frameworks"]');
             if (showHidden) {
                 showHidden.addEventListener('change', function() {
-                    this.form.submit();
+                    submitForm(this.form);
                 });
             }
 
@@ -1017,8 +1073,28 @@ define([
                         }
                         var form = root.querySelector('[data-region="manage-form"]');
                         if (form && root.dataset.view !== actionTarget.dataset.view) {
-                            form.submit();
+                            submitForm(form);
                         }
+                        return;
+                    }
+
+                    if (action === 'context') {
+                        event.preventDefault();
+                        var contextInput = root.querySelector('[data-region="context-type-input"]');
+                        var contextType = actionTarget.dataset.contextType;
+                        if (!contextInput || contextInput.value === contextType) {
+                            return;
+                        }
+
+                        contextInput.value = contextType;
+                        clearSelectedFramework(root);
+
+                        var categorySelect = root.querySelector('[data-region="category-select"]');
+                        if (categorySelect) {
+                            categorySelect.value = '0';
+                        }
+
+                        submitForm(root.querySelector('[data-region="manage-form"]'));
                         return;
                     }
 

@@ -37,6 +37,19 @@ $id = optional_param('id', 0, PARAM_INT);
 $frameworkid = required_param('competencyframeworkid', PARAM_INT);
 $parentid = optional_param('parentid', 0, PARAM_INT);
 $pagecontextid = optional_param('pagecontextid', 0, PARAM_INT);
+$contexttype = optional_param('contexttype', 'system', PARAM_ALPHA);
+$categoryid = optional_param('categoryid', 0, PARAM_INT);
+$showhidden = optional_param('showhidden', 0, PARAM_BOOL);
+$view = optional_param('view', 'tree', PARAM_ALPHA);
+$search = optional_param('search', '', PARAM_RAW_TRIMMED);
+
+if (!in_array($contexttype, ['system', 'coursecat'], true)) {
+    $contexttype = 'system';
+}
+
+if (!in_array($view, ['tree', 'table'], true)) {
+    $view = 'tree';
+}
 
 // Require login.
 require_login(0, false);
@@ -52,6 +65,24 @@ $context = $framework->get_context();
 if (!$pagecontextid) {
     $pagecontextid = $context->id;
 }
+
+$pagecontext = context::instance_by_id($pagecontextid, IGNORE_MISSING);
+if ($pagecontext && $pagecontext->contextlevel === CONTEXT_COURSECAT && $contexttype === 'system') {
+    $contexttype = 'coursecat';
+    $categoryid = (int)$pagecontext->instanceid;
+}
+if ($contexttype === 'system') {
+    $categoryid = 0;
+}
+
+$returnparams = [
+    'frameworkid' => $frameworkid,
+    'contexttype' => $contexttype,
+    'categoryid' => $categoryid,
+    'showhidden' => $showhidden,
+    'view' => $view,
+    'search' => $search,
+];
 
 // Check capabilities.
 require_capability('moodle/competency:competencymanage', $context);
@@ -79,7 +110,7 @@ $url = new moodle_url('/local/dimensions/edit_competency.php', [
     'competencyframeworkid' => $frameworkid,
     'parentid' => $parentid,
     'pagecontextid' => $pagecontextid,
-]);
+] + $returnparams);
 
 $PAGE->set_url($url);
 $PAGE->set_context($context);
@@ -93,9 +124,7 @@ $title = $id > 0
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 
-$returnurl = new moodle_url('/local/dimensions/manage_competencies.php', [
-    'frameworkid' => $frameworkid,
-]);
+$returnurl = new moodle_url('/local/dimensions/manage_competencies.php', $returnparams);
 
 // Navbar.
 $PAGE->navbar->add(get_string('competencies', 'core_competency'), new moodle_url('/admin/tool/lp/competencyframeworks.php'));
@@ -202,9 +231,7 @@ if ($data = $form->get_data()) {
 
         // Redirect on success.
         redirect(
-            new moodle_url('/local/dimensions/manage_competencies.php', [
-                'frameworkid' => $frameworkid,
-            ]),
+            $returnurl,
             get_string('changessaved'),
             null,
             \core\output\notification::NOTIFY_SUCCESS

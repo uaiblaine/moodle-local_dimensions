@@ -30,9 +30,15 @@ use core_competency\competency_framework;
 
 $id = optional_param('id', 0, PARAM_INT);
 $pagecontextid = required_param('pagecontextid', PARAM_INT);
+$contexttype = optional_param('contexttype', 'system', PARAM_ALPHA);
+$categoryid = optional_param('categoryid', 0, PARAM_INT);
 $showhidden = optional_param('showhidden', 0, PARAM_BOOL);
 $view = optional_param('view', 'tree', PARAM_ALPHA);
 $search = optional_param('search', '', PARAM_RAW_TRIMMED);
+
+if (!in_array($contexttype, ['system', 'coursecat'], true)) {
+    $contexttype = 'system';
+}
 
 if (!in_array($view, ['tree', 'table'], true)) {
     $view = 'tree';
@@ -46,24 +52,34 @@ if ($id > 0) {
     $context = context::instance_by_id($pagecontextid);
 }
 
+$pagecontext = context::instance_by_id($pagecontextid, IGNORE_MISSING);
+if ($pagecontext && $pagecontext->contextlevel === CONTEXT_COURSECAT && $contexttype === 'system') {
+    $contexttype = 'coursecat';
+    $categoryid = (int)$pagecontext->instanceid;
+}
+if ($contexttype === 'system') {
+    $categoryid = 0;
+}
+
+$returnparams = [
+    'frameworkid' => $id,
+    'contexttype' => $contexttype,
+    'categoryid' => $categoryid,
+    'showhidden' => $showhidden,
+    'view' => $view,
+    'search' => $search,
+];
+
 require_login(null, false);
 api::require_enabled();
 require_capability('moodle/competency:competencymanage', $context);
 
-$returnurl = new moodle_url('/local/dimensions/manage_competencies.php', [
-    'frameworkid' => $id,
-    'showhidden' => $showhidden,
-    'view' => $view,
-    'search' => $search,
-]);
+$returnurl = new moodle_url('/local/dimensions/manage_competencies.php', $returnparams);
 
 $url = new moodle_url('/local/dimensions/edit_competency_framework.php', [
     'id' => $id,
     'pagecontextid' => $pagecontextid,
-    'showhidden' => $showhidden,
-    'view' => $view,
-    'search' => $search,
-]);
+] + $returnparams);
 
 $PAGE->set_url($url);
 $PAGE->set_context($context);

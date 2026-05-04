@@ -135,17 +135,28 @@
 }
 
 .local-dimensions-manage-toolbar {
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
 }
 
 .local-dimensions-manage-toolbar-main,
 .local-dimensions-manage-toolbar-tools {
+    width: 100%;
     min-width: 0;
 }
 
+.local-dimensions-manage-toolbar-main {
+    display: grid;
+    grid-template-columns: minmax(max-content, 0.75fr) minmax(18rem, 1.25fr) minmax(18rem, 1fr);
+    align-items: start;
+    gap: 1.5rem;
+}
+
 .local-dimensions-manage-toolbar-tools {
-    margin-left: auto;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    border-top: 1px solid var(--local-dimensions-manage-border);
 }
 
 .local-dimensions-manage-field {
@@ -158,8 +169,36 @@
     color: var(--local-dimensions-manage-muted);
 }
 
+.local-dimensions-manage-context-field {
+    flex: 0 0 auto;
+    width: fit-content;
+}
+
+.local-dimensions-manage-category-field {
+    min-width: 0;
+}
+
+.local-dimensions-manage-category-field select,
+.local-dimensions-manage-category-field .form-autocomplete-selection {
+    width: 100%;
+}
+
+.local-dimensions-manage-category-field .form-autocomplete-suggestions {
+    max-width: 26rem;
+}
+
+.local-dimensions-manage-category-field .form-autocomplete-selection {
+    min-height: calc(1.5em + 0.75rem + 2px);
+}
+
 .local-dimensions-manage-framework-field select {
+    width: 100%;
     min-width: 18rem;
+}
+
+.local-dimensions-manage-framework-field select:disabled {
+    color: var(--local-dimensions-manage-muted);
+    background-color: var(--local-dimensions-manage-surface-soft);
 }
 
 .local-dimensions-manage-check {
@@ -226,6 +265,10 @@
     background: var(--local-dimensions-manage-surface);
     color: var(--local-dimensions-manage-accent);
     box-shadow: 0 1px 2px rgb(16 24 40 / 8%);
+}
+
+.local-dimensions-manage-context-switch .local-dimensions-manage-segment {
+    min-width: 7.5rem;
 }
 
 .local-dimensions-manage-segment i,
@@ -745,6 +788,12 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='comp
     text-align: center;
 }
 
+.local-dimensions-manage-empty-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
 .local-dimensions-manage-hide-ids .local-dimensions-manage-tree-id,
 .local-dimensions-manage-hide-ids .local-dimensions-manage-id-cell {
     display: none;
@@ -760,6 +809,11 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='comp
 
     .local-dimensions-manage-toolbar-tools {
         margin-left: 0;
+    }
+
+    .local-dimensions-manage-toolbar-main {
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .local-dimensions-manage-body {
@@ -782,9 +836,21 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='comp
 }
 
 @media (max-width: 575.98px) {
+    .local-dimensions-manage-category-field,
     .local-dimensions-manage-framework-field select,
     .local-dimensions-manage-search {
         width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .local-dimensions-manage-context-field,
+    .local-dimensions-manage-context-switch {
+        width: 100%;
+    }
+
+    .local-dimensions-manage-context-switch .local-dimensions-manage-segment {
+        flex: 1 1 0;
         min-width: 0;
     }
 
