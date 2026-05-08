@@ -39,8 +39,8 @@ class hook_callbacks {
      *
      * This displays a FAB button when:
      * 1. The feature is enabled in settings
-     * 2. User has a return context stored in session (came from view-plan.php)
-     * 3. User is currently on a course or activity page that is in the valid courses list
+     * 2. User is currently on a course or activity page
+     * 3. There is a stored return context for the current course (came from a plan view)
      * 4. Not running inside an iframe (H5P, etc.)
      *
      * @param before_footer_html_generation $hook
@@ -58,12 +58,6 @@ class hook_callbacks {
             return;
         }
 
-        // Check if we have a stored return context.
-        $context = self::get_return_context();
-        if (empty($context) || empty($context['url'])) {
-            return;
-        }
-
         // Don't show for guests or not logged in.
         if (!isloggedin() || isguestuser()) {
             return;
@@ -72,16 +66,12 @@ class hook_callbacks {
         // Check if we're on a valid course/activity page.
         $currentcourseid = self::get_current_course_id();
         if ($currentcourseid === null) {
-            // Not on a course or activity page.
             return;
         }
 
-        // Check if current course is in the valid courses list.
-        // If no valid courses stored (legacy), allow any course.
-        if (!empty($context['courses']) && !in_array($currentcourseid, $context['courses'])) {
-            // User navigated to a course not linked to the competency.
-            // Clear the session and don't show the button.
-            self::clear_return_context();
+        // Look up return context for this specific course.
+        $context = helper::get_return_context_for_course($currentcourseid);
+        if (empty($context) || empty($context['url'])) {
             return;
         }
 
@@ -99,23 +89,6 @@ class hook_callbacks {
 
         // Initialise FAB visibility logic via AMD (main window only).
         $PAGE->requires->js_call_amd('local_dimensions/return_button', 'init');
-    }
-
-    /**
-     * Get the stored return context from session cache.
-     *
-     * @return array|null Array with 'url' and 'courses' keys, or null if not set.
-     */
-    private static function get_return_context(): ?array {
-        return helper::get_return_context();
-    }
-
-    /**
-     * Clear the return context from session cache.
-     *
-     */
-    private static function clear_return_context(): void {
-        helper::clear_return_context();
     }
 
     /**

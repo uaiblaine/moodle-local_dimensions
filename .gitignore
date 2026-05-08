@@ -3,6 +3,8 @@
 
 # IDE / Editor
 .vscode/
+.claude/
+.idea/
 
 # Node.js (build tooling only - not part of the plugin)
 node_modules/

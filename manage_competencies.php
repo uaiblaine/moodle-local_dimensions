@@ -214,7 +214,7 @@ function local_dimensions_manage_scale_label(?int $scaleid): string {
 
     if (!array_key_exists($scaleid, $scales)) {
         $scale = \grade_scale::fetch(['id' => $scaleid]);
-        $scales[$scaleid] = $scale ? format_string($scale->name) : get_string('unknown');
+        $scales[$scaleid] = $scale ? format_string($scale->name) : get_string('unknownscale', 'local_dimensions');
     }
 
     return $scales[$scaleid];

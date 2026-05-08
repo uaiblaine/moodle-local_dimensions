@@ -213,6 +213,7 @@ $string['managecompetencies_selectcategory_help'] = 'Escolha primeiro a categori
 $string['managecompetencies_selectcategory_title'] = 'Selecione uma categoria de curso';
 $string['managecompetencies_selectcategoryfirst'] = 'Selecione primeiro uma categoria de curso';
 $string['managecompetencies_selectdetails'] = 'Selecione uma linha na árvore ou na tabela para ver caminho, escala, regras e cursos vinculados.';
+$string['unknownscale'] = 'Escala desconhecida';
 $string['managecompetencies_selectframework_help'] = 'Escolha uma estrutura de competências legível para gerenciar sua estrutura.';
 $string['managecompetencies_showhiddenframeworks'] = 'Mostrar estruturas ocultas';
 $string['managecompetencies_showids'] = 'Mostrar identificadores';

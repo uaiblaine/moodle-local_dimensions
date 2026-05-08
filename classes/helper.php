@@ -748,27 +748,46 @@ class helper {
     }
 
     /**
-     * Store the return URL and valid course IDs in session cache.
+     * Store a per-course return URL in session cache.
+     *
+     * Each course ID gets its own cache entry keyed as 'course_{id}'.
+     * This avoids key collisions when the same course belongs to multiple
+     * plans or is accessed from different views (view-competency / view-plan).
      *
      * @param moodle_url $url The URL to store as return destination.
      * @param array $validcourseids Array of course IDs where the button should appear.
      */
     public static function set_return_context(moodle_url $url, array $validcourseids = []): void {
         $cache = cache::make('local_dimensions', 'returncontext');
-        $cache->set('data', [
-            'url' => $url->out(false),
-            'courses' => $validcourseids,
-        ]);
+        $returnurl = $url->out(false);
+        foreach ($validcourseids as $courseid) {
+            $cache->set('course_' . (int) $courseid, ['url' => $returnurl]);
+        }
     }
 
     /**
-     * Get the stored return context from session cache.
+     * Store a return URL for a single course in session cache.
      *
-     * @return array|null Array with 'url' and 'courses' keys, or null if not set.
+     * Convenience wrapper used by block_dimensions and other external callers
+     * that already know the specific course being navigated to.
+     *
+     * @param int $courseid The course ID.
+     * @param moodle_url $returnurl The URL to return to (typically a plan view page).
      */
-    public static function get_return_context(): ?array {
+    public static function set_return_context_for_course(int $courseid, moodle_url $returnurl): void {
         $cache = cache::make('local_dimensions', 'returncontext');
-        $data = $cache->get('data');
+        $cache->set('course_' . $courseid, ['url' => $returnurl->out(false)]);
+    }
+
+    /**
+     * Get the stored return context for a specific course.
+     *
+     * @param int $courseid The course ID to look up.
+     * @return array|null Array with 'url' key, or null if not set.
+     */
+    public static function get_return_context_for_course(int $courseid): ?array {
+        $cache = cache::make('local_dimensions', 'returncontext');
+        $data = $cache->get('course_' . $courseid);
         if (empty($data) || empty($data['url'])) {
             return null;
         }
@@ -776,10 +795,28 @@ class helper {
     }
 
     /**
+     * Get the stored return context from session cache.
+     *
+     * @deprecated Since v1.1. Use {@see get_return_context_for_course()} instead.
+     * @return array|null Array with 'url' and 'courses' keys, or null if not set.
+     */
+    public static function get_return_context(): ?array {
+        debugging(
+            'helper::get_return_context() is deprecated. Use get_return_context_for_course() instead.',
+            DEBUG_DEVELOPER
+        );
+        return null;
+    }
+
+    /**
      * Clear the return context from session cache.
+     *
+     * @deprecated Since v1.1. Per-course entries expire naturally with the session.
      */
     public static function clear_return_context(): void {
-        $cache = cache::make('local_dimensions', 'returncontext');
-        $cache->delete('data');
+        debugging(
+            'helper::clear_return_context() is deprecated. Per-course entries expire with the session.',
+            DEBUG_DEVELOPER
+        );
     }
 }
