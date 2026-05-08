@@ -70,6 +70,14 @@ if ($competency) {
         $courses = calculator::filter_courses_by_enrollment($courses, $USER->id, $enrollmentfilter);
     }
 
+    // Store the return URL and valid course IDs for the "Return to Plan" button feature.
+    // This MUST run before the singlecourseredirect check below, because redirect()
+    // aborts execution and the context would never be stored.
+    if (get_config('local_dimensions', 'enablereturnbutton')) {
+        $validcourseids = array_keys($courses);
+        \local_dimensions\helper::set_return_context($PAGE->url, $validcourseids);
+    }
+
     // Redirect directly to course if only one active enrolment and setting is enabled.
     if (
         $enrollmentfilter === 'active'
@@ -79,12 +87,6 @@ if ($competency) {
         $singlecourse = reset($courses);
         redirect(new moodle_url('/course/view.php', ['id' => $singlecourse->id]));
     }
-}
-
-// Store the return URL and valid course IDs for the "Return to Plan" button feature.
-if (get_config('local_dimensions', 'enablereturnbutton')) {
-    $validcourseids = array_keys($courses);
-    \local_dimensions\helper::set_return_context($PAGE->url, $validcourseids);
 }
 
 // Start HTML Output.

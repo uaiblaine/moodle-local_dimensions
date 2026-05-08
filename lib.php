@@ -96,7 +96,7 @@ function local_dimensions_customfield_get_handler(string $component, string $are
 }
 
 /**
- * Store the return URL and valid course IDs in session cache.
+ * Store per-course return URLs in session cache.
  *
  * @param moodle_url $url The URL to store as return destination.
  * @param array $validcourseids Array of course IDs where the button should appear.
@@ -106,8 +106,32 @@ function local_dimensions_set_return_context(moodle_url $url, array $validcourse
 }
 
 /**
+ * Store return context for a single course.
+ *
+ * Used by block_dimensions and other external callers that already know
+ * the specific course being navigated to.
+ *
+ * @param int $courseid The course ID.
+ * @param moodle_url $returnurl The URL to return to (typically a plan view page).
+ */
+function local_dimensions_set_return_context_for_course(int $courseid, moodle_url $returnurl): void {
+    helper::set_return_context_for_course($courseid, $returnurl);
+}
+
+/**
+ * Get the stored return context for a specific course.
+ *
+ * @param int $courseid The course ID to look up.
+ * @return array|null Array with 'url' key, or null if not set.
+ */
+function local_dimensions_get_return_context_for_course(int $courseid): ?array {
+    return helper::get_return_context_for_course($courseid);
+}
+
+/**
  * Get the stored return context from session cache.
  *
+ * @deprecated Since v1.1. Use local_dimensions_get_return_context_for_course() instead.
  * @return array|null Array with 'url' and 'courses' keys, or null if not set.
  */
 function local_dimensions_get_return_context(): ?array {
@@ -117,6 +141,7 @@ function local_dimensions_get_return_context(): ?array {
 /**
  * Clear the return context from session cache.
  *
+ * @deprecated Since v1.1. Per-course entries expire naturally with the session.
  */
 function local_dimensions_clear_return_context(): void {
     helper::clear_return_context();

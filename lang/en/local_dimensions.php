@@ -213,6 +213,7 @@ $string['managecompetencies_selectcategory_help'] = 'Choose the course category 
 $string['managecompetencies_selectcategory_title'] = 'Select a course category';
 $string['managecompetencies_selectcategoryfirst'] = 'Select a course category first';
 $string['managecompetencies_selectdetails'] = 'Select a row in the tree or table to see its path, scale, rules and linked course count.';
+$string['unknownscale'] = 'Unknown scale';
 $string['managecompetencies_selectframework_help'] = 'Choose a readable competency framework to manage its structure.';
 $string['managecompetencies_showhiddenframeworks'] = 'Show hidden frameworks';
 $string['managecompetencies_showids'] = 'Show identifiers';
