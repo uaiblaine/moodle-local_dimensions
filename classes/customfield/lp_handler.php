@@ -112,6 +112,9 @@ class lp_handler extends handler {
      * @return bool
      */
     public function can_edit(\core_customfield\field_controller $field, int $instanceid = 0): bool {
+        if ($field->get('shortname') === \local_dimensions\constants::CFIELD_CUSTOMSCSS) {
+            return has_capability('local/dimensions:editcustomscss', context_system::instance());
+        }
         return has_capability('moodle/competency:templatemanage', context_system::instance());
     }
 

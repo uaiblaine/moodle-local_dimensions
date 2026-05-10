@@ -101,6 +101,107 @@ define([
     }
 
     /**
+     * Decorate the autocomplete suggestion list and selection chip with a
+     * framework count badge for each category that has at least one framework.
+     *
+     * @param {HTMLSelectElement} originalSelect The original select element.
+     */
+    function decorateCategoryAutocomplete(originalSelect) {
+        var counts = {};
+        Array.prototype.forEach.call(originalSelect.options, function(opt) {
+            var c = parseInt(opt.dataset.frameworkcount || '0', 10);
+            if (c > 0) {
+                counts[opt.value] = c;
+            }
+        });
+        if (!Object.keys(counts).length) {
+            return;
+        }
+
+        var container = originalSelect.parentNode;
+        if (!container) {
+            return;
+        }
+        var BADGE_CLASS = 'local-dimensions-category-count-badge';
+        var SELECTION_CLASS = BADGE_CLASS + '-selection';
+
+        /**
+         * Build a count badge element.
+         *
+         * @param {Number} count Count value.
+         * @param {String} [extraClass] Optional extra CSS class.
+         * @return {HTMLElement} Badge element.
+         */
+        function buildBadge(count, extraClass) {
+            var badge = document.createElement('span');
+            badge.className = extraClass ? BADGE_CLASS + ' ' + extraClass : BADGE_CLASS;
+            badge.textContent = String(count);
+            return badge;
+        }
+
+        /**
+         * Apply count badges to suggestion list items (idempotent).
+         */
+        function applyToListbox() {
+            var listbox = container.querySelector('ul.form-autocomplete-suggestions');
+            if (!listbox) {
+                return;
+            }
+            listbox.querySelectorAll('li[role="option"][data-value]').forEach(function(li) {
+                var count = counts[li.dataset.value];
+                var existing = li.querySelector('.' + BADGE_CLASS);
+                if (count) {
+                    if (!existing) {
+                        li.appendChild(buildBadge(count));
+                    } else if (existing.textContent !== String(count)) {
+                        existing.textContent = String(count);
+                    }
+                } else if (existing) {
+                    existing.remove();
+                }
+            });
+        }
+
+        /**
+         * Apply count badge to the selected category chip (idempotent).
+         */
+        function applyToSelection() {
+            var selection = container.querySelector('.form-autocomplete-selection');
+            if (!selection) {
+                return;
+            }
+            selection.querySelectorAll('[role="option"][data-value]').forEach(function(item) {
+                var count = counts[item.dataset.value];
+                var existing = item.querySelector('.' + BADGE_CLASS);
+                if (count) {
+                    if (!existing) {
+                        item.appendChild(buildBadge(count, SELECTION_CLASS));
+                    } else if (existing.textContent !== String(count)) {
+                        existing.textContent = String(count);
+                    }
+                } else if (existing) {
+                    existing.remove();
+                }
+            });
+        }
+
+        /**
+         * Apply badges to both listbox and selection.
+         */
+        function applyAll() {
+            applyToListbox();
+            applyToSelection();
+        }
+
+        applyAll();
+
+        // form-autocomplete replaces the <ul> on every filter and re-renders the
+        // selection chip on every change; observe the whole container and reapply.
+        // Idempotent application keeps the observer from looping on its own writes.
+        new MutationObserver(applyAll).observe(container, {childList: true, subtree: true});
+    }
+
+    /**
      * Enhance the course category selector with Moodle autocomplete.
      *
      * @param {HTMLElement} root Root element.
@@ -121,6 +222,8 @@ define([
             categorySelect.dataset.noSelection || '',
             true
         );
+
+        decorateCategoryAutocomplete(categorySelect);
 
         categorySelect.addEventListener('change', function() {
             clearSelectedFramework(root);
@@ -508,6 +611,7 @@ define([
             '[data-region="details-move"]',
             '[data-region="details-related-action"]',
             '[data-region="details-rules"]',
+            '[data-region="details-delete"]',
             '[data-action="linkedcourses"]'
         ].forEach(function(selector) {
             var button = content ? content.querySelector(selector) : null;
@@ -515,6 +619,11 @@ define([
                 button.dataset.id = row.dataset.competencyId;
             }
         });
+
+        var deleteBtn = content ? content.querySelector('[data-region="details-delete"]') : null;
+        if (deleteBtn) {
+            deleteBtn.dataset.name = row.dataset.shortname || '';
+        }
 
         renderRelatedCompetencies(root, Number(row.dataset.competencyId));
 

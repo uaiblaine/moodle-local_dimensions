@@ -74,5 +74,63 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026043002, 'local', 'dimensions');
     }
 
+    // Provision the new template identifier custom field (templates have no
+    // native idnumber column; this customfield fills the gap so the manage
+    // templates page can search and label by identifier).
+    if ($oldversion < 2026050902) {
+        \local_dimensions\helper::get_template_idnumber_field();
+        // Existing cached payloads were built before the idnumber key existed;
+        // purge so the next render rebuilds them via the extended SELECT.
+        \local_dimensions\template_metadata_cache::purge_all();
+
+        upgrade_plugin_savepoint(true, 2026050902, 'local', 'dimensions');
+    }
+
+    // Force lang + AMD revision bumps so newly added strings (edittemplate_*)
+    // and rebuilt JS modules (edit_template, edit_competency) are served fresh
+    // to admin sessions still holding the previous revision.
+    if ($oldversion < 2026050903) {
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026050903, 'local', 'dimensions');
+    }
+
+    // Manage competencies aside gained icons + a delete-competency button;
+    // bump the JS revision so browsers fetch the rebuilt manage_competencies.min.js
+    // instead of serving the cached version that lacked the new aside markup.
+    if ($oldversion < 2026051001) {
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026051001, 'local', 'dimensions');
+    }
+
+    // Wave 1 of post-revamp improvements: admin_externalpage gating,
+    // aria-labelledby in form sections, empty-state no-permission hint,
+    // native action-selector delete dialog. New strings added; bump JS rev.
+    if ($oldversion < 2026051002) {
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026051002, 'local', 'dimensions');
+    }
+
+    // Wave 2: SQL-side hidden filtering, batch template_metadata_cache fetch,
+    // README/CHANGELOG documentation. Purge MUC so the next manage_templates
+    // render seeds the cache via the new batch path with the correct payload
+    // shape (timemodified is now stored alongside the customfield-derived
+    // values regardless of how the entry was hydrated).
+    if ($oldversion < 2026051003) {
+        \local_dimensions\template_metadata_cache::purge_all();
+
+        upgrade_plugin_savepoint(true, 2026051003, 'local', 'dimensions');
+    }
+
+    // Security/quality review fixes: new local/dimensions:editcustomscss capability
+    // gates editing of the SCSS field on competencies and templates. Capabilities
+    // are reloaded automatically by the upgrade pipeline; the savepoint here only
+    // marks the version transition.
+    if ($oldversion < 2026051101) {
+        upgrade_plugin_savepoint(true, 2026051101, 'local', 'dimensions');
+    }
+
     return true;
 }

@@ -65,7 +65,7 @@ class helper {
      * @param string $area The area (lp or competency)
      * @return field_controller|null
      */
-    protected static function find_field_by_shortname(string $shortname, string $area = self::AREA_LP): ?field_controller {
+    public static function find_field_by_shortname(string $shortname, string $area = self::AREA_LP): ?field_controller {
         $handler = self::get_handler($area);
         $categories = $handler->get_categories_with_fields();
         foreach ($categories as $category) {
@@ -359,6 +359,38 @@ class helper {
     }
 
     /**
+     * Get or create the template identifier (text) field.
+     *
+     * Templates only — there is no native idnumber column on competency_template,
+     * so this custom field fills the same role the framework's idnumber plays for
+     * competency frameworks (search/lookup hint shown next to the short name).
+     *
+     * @return field_controller|null
+     */
+    public static function get_template_idnumber_field(): ?field_controller {
+        $shortname = constants::CFIELD_TEMPLATE_IDNUMBER;
+        $field = self::find_field_by_shortname($shortname, self::AREA_LP);
+
+        if ($field) {
+            return $field;
+        }
+
+        return self::create_custom_field(
+            $shortname,
+            'text',
+            self::AREA_LP,
+            new \lang_string('templateidnumber', 'local_dimensions'),
+            [
+                'displaysize' => 50,
+                'maxlength' => 100,
+                'ispassword' => 0,
+                'link' => '',
+            ],
+            ''
+        );
+    }
+
+    /**
      * Get or create the customscss (textarea) field.
      *
      * @param string $area The area (lp or competency)
@@ -397,6 +429,7 @@ class helper {
         if ($area === self::AREA_LP) {
             self::get_display_mode_field();
             self::get_subline_source_field();
+            self::get_template_idnumber_field();
         }
 
         // Image fields: only create if using external customfield_picture plugin.
@@ -818,5 +851,140 @@ class helper {
             'helper::clear_return_context() is deprecated. Per-course entries expire with the session.',
             DEBUG_DEVELOPER
         );
+    }
+
+    /**
+     * Count visible competency frameworks per course category context.
+     *
+     * Single aggregate query (chunked only as a placeholder-limit safeguard).
+     * Categories with no visible frameworks are absent from the result; the
+     * caller treats missing entries as zero.
+     *
+     * @param int[] $categoryids Course category IDs.
+     * @return array<int, int> categoryid => visible framework count
+     */
+    public static function count_frameworks_by_category(array $categoryids): array {
+        global $DB;
+
+        $categoryids = array_values(array_unique(array_filter(array_map('intval', $categoryids))));
+        if (empty($categoryids)) {
+            return [];
+        }
+
+        $counts = [];
+        foreach (array_chunk($categoryids, 1000) as $chunk) {
+            [$insql, $params] = $DB->get_in_or_equal($chunk, SQL_PARAMS_NAMED, 'cat');
+            $params['ctxlevel'] = CONTEXT_COURSECAT;
+            $params['visible'] = 1;
+            $sql = "SELECT ctx.instanceid AS categoryid, COUNT(cf.id) AS cnt
+                      FROM {context} ctx
+                      JOIN {competency_framework} cf ON cf.contextid = ctx.id
+                     WHERE ctx.contextlevel = :ctxlevel
+                       AND cf.visible = :visible
+                       AND ctx.instanceid $insql
+                  GROUP BY ctx.instanceid";
+            foreach ($DB->get_records_sql($sql, $params) as $row) {
+                $counts[(int)$row->categoryid] = (int)$row->cnt;
+            }
+        }
+        return $counts;
+    }
+
+    /**
+     * Count visible learning plan templates per course category context.
+     *
+     * Single aggregate query (chunked only as a placeholder-limit safeguard).
+     * Categories with no visible templates are absent from the result.
+     *
+     * @param int[] $categoryids Course category IDs.
+     * @return array<int, int> categoryid => visible template count
+     */
+    public static function count_templates_by_category(array $categoryids): array {
+        global $DB;
+
+        $categoryids = array_values(array_unique(array_filter(array_map('intval', $categoryids))));
+        if (empty($categoryids)) {
+            return [];
+        }
+
+        $counts = [];
+        foreach (array_chunk($categoryids, 1000) as $chunk) {
+            [$insql, $params] = $DB->get_in_or_equal($chunk, SQL_PARAMS_NAMED, 'cat');
+            $params['ctxlevel'] = CONTEXT_COURSECAT;
+            $params['visible'] = 1;
+            $sql = "SELECT ctx.instanceid AS categoryid, COUNT(ct.id) AS cnt
+                      FROM {context} ctx
+                      JOIN {competency_template} ct ON ct.contextid = ctx.id
+                     WHERE ctx.contextlevel = :ctxlevel
+                       AND ct.visible = :visible
+                       AND ctx.instanceid $insql
+                  GROUP BY ctx.instanceid";
+            foreach ($DB->get_records_sql($sql, $params) as $row) {
+                $counts[(int)$row->categoryid] = (int)$row->cnt;
+            }
+        }
+        return $counts;
+    }
+
+    /**
+     * Count learning plans per template.
+     *
+     * Single aggregate query (chunked only as a placeholder-limit safeguard).
+     * Templates with no plans are absent from the result.
+     *
+     * @param int[] $templateids Template IDs.
+     * @return array<int, int> templateid => plan count
+     */
+    public static function count_plans_by_template(array $templateids): array {
+        global $DB;
+
+        $templateids = array_values(array_unique(array_filter(array_map('intval', $templateids))));
+        if (empty($templateids)) {
+            return [];
+        }
+
+        $counts = [];
+        foreach (array_chunk($templateids, 1000) as $chunk) {
+            [$insql, $params] = $DB->get_in_or_equal($chunk, SQL_PARAMS_NAMED, 'tpl');
+            $sql = "SELECT templateid, COUNT(id) AS cnt
+                      FROM {competency_plan}
+                     WHERE templateid $insql
+                  GROUP BY templateid";
+            foreach ($DB->get_records_sql($sql, $params) as $row) {
+                $counts[(int)$row->templateid] = (int)$row->cnt;
+            }
+        }
+        return $counts;
+    }
+
+    /**
+     * Count cohorts linked to each template.
+     *
+     * Single aggregate query (chunked only as a placeholder-limit safeguard).
+     * Templates with no linked cohorts are absent from the result.
+     *
+     * @param int[] $templateids Template IDs.
+     * @return array<int, int> templateid => linked cohort count
+     */
+    public static function count_cohorts_by_template(array $templateids): array {
+        global $DB;
+
+        $templateids = array_values(array_unique(array_filter(array_map('intval', $templateids))));
+        if (empty($templateids)) {
+            return [];
+        }
+
+        $counts = [];
+        foreach (array_chunk($templateids, 1000) as $chunk) {
+            [$insql, $params] = $DB->get_in_or_equal($chunk, SQL_PARAMS_NAMED, 'tpl');
+            $sql = "SELECT templateid, COUNT(id) AS cnt
+                      FROM {competency_templatecohort}
+                     WHERE templateid $insql
+                  GROUP BY templateid";
+            foreach ($DB->get_records_sql($sql, $params) as $row) {
+                $counts[(int)$row->templateid] = (int)$row->cnt;
+            }
+        }
+        return $counts;
     }
 }

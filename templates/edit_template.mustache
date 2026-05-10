@@ -15,52 +15,52 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template local_dimensions/edit_competency
+    @template local_dimensions/edit_template
 
-    Edit competency page shell.
+    Edit learning plan template page shell.
 
     Context variables required:
-    * heading - Page heading.
-    * frameworkname - Competency framework name.
-    * taxonomy - Current taxonomy label.
-    * formhtml - Rendered Moodle form HTML.
+    * heading (string) - Page heading (template short name).
+    * contextname (string) - Owning context name (system or category).
+    * hasidnumber (bool)
+    * idnumber (string)
+    * hidden (bool) - Whether the template is hidden.
+    * hasduedate (bool)
+    * duedateformatted (string)
+    * returnurl (string)
+    * formhtml (string) - Rendered Moodle form HTML.
+    * sections (array) - {id, label, active}
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 
     Example context (json):
     {
-        "heading": "Edit competency",
-        "frameworkname": "Digital skills",
-        "taxonomy": "Competency",
+        "heading": "Onboarding plan",
+        "contextname": "System",
         "hasidnumber": true,
-        "idnumber": "DIGI-001",
-        "returnurl": "https://example.com/local/dimensions/manage_competencies.php",
-        "competencymodeljson": "{}",
-        "rulesmodulesjson": "[]",
+        "idnumber": "TPL-001",
+        "hidden": false,
+        "hasduedate": true,
+        "duedateformatted": "31 Jan 2026",
+        "returnurl": "https://example.com/local/dimensions/manage_templates.php",
         "sections": [
-            {
-                "id": "sec-basic",
-                "label": "Basic",
-                "active": true
-            }
+            {"id": "sec-basic", "label": "Basic", "active": true}
         ],
         "formhtml": "<form><div>Form fields</div></form>"
     }
 }}
-<div class="local-dimensions-edit" data-region="local-dimensions-edit">
-    <script type="application/json" data-region="competency-model">{{{competencymodeljson}}}</script>
-    <script type="application/json" data-region="rules-modules">{{{rulesmodulesjson}}}</script>
-
-    <a class="local-dimensions-edit-back" href="{{returnurl}}">{{#str}}editcompetency_back, local_dimensions{{/str}}</a>
+<div class="local-dimensions-edit" data-region="local-dimensions-edit-template">
+    <a class="local-dimensions-edit-back" href="{{returnurl}}">{{#str}}edittemplate_back, local_dimensions{{/str}}</a>
 
     <header class="local-dimensions-edit-head">
         <div class="local-dimensions-edit-head-main">
-            <div class="local-dimensions-edit-subtitle">{{frameworkname}}</div>
+            <div class="local-dimensions-edit-subtitle">{{contextname}}</div>
             <h1 class="local-dimensions-edit-title">{{heading}}</h1>
             <div class="local-dimensions-edit-meta">
-                {{#taxonomy}}<span class="local-dimensions-edit-chip">{{taxonomy}}</span>{{/taxonomy}}
+                {{#hidden}}<span class="local-dimensions-edit-chip">{{#str}}hidden, tool_lp{{/str}}</span>{{/hidden}}
                 {{#hasidnumber}}<code class="local-dimensions-edit-code">{{idnumber}}</code>{{/hasidnumber}}
+                {{#hasduedate}}<span class="local-dimensions-edit-chip"><i class="fa fa-calendar" aria-hidden="true"></i> {{duedateformatted}}</span>{{/hasduedate}}
             </div>
         </div>
         <div class="local-dimensions-edit-actions">
@@ -72,7 +72,7 @@
     </header>
 
     <div class="local-dimensions-edit-grid">
-        <nav class="local-dimensions-edit-nav" aria-label="{{#str}}editcompetency_sections_nav, local_dimensions{{/str}}">
+        <nav class="local-dimensions-edit-nav" aria-label="{{#str}}edittemplate_sections_nav, local_dimensions{{/str}}">
             {{#sections}}
             <a href="#{{id}}" {{#active}}class="active" aria-current="page"{{/active}} data-section-link="{{id}}">{{label}}</a>
             {{/sections}}

@@ -269,13 +269,15 @@ class competency_form extends moodleform {
      * @param string $description Section description.
      */
     protected function add_section_open(\MoodleQuickForm $mform, string $id, string $title, string $description): void {
+        $titleid = $id . '-title';
         $html = \html_writer::start_tag('section', [
             'id' => $id,
             'class' => 'local-dimensions-edit-section',
             'data-region' => 'edit-section',
+            'aria-labelledby' => $titleid,
         ]);
         $html .= \html_writer::start_div('local-dimensions-edit-section-head');
-        $html .= \html_writer::tag('h2', s($title));
+        $html .= \html_writer::tag('h2', s($title), ['id' => $titleid]);
         $html .= \html_writer::tag('span', s($description), ['class' => 'local-dimensions-edit-section-meta']);
         $html .= \html_writer::end_div();
         $html .= \html_writer::start_div('local-dimensions-edit-section-fields');

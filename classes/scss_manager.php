@@ -46,6 +46,10 @@ class scss_manager {
     public static function get_scss(int $instanceid, string $area = 'lp'): ?string {
         global $DB;
 
+        // NOTE: direct query against core {customfield_*} tables — intentional to
+        // skip controller hydration on a per-instance cache miss path. If core
+        // changes the customfield schema (already changed once between 4.x and
+        // 5.x), re-validate this query before upgrading.
         $sql = "SELECT d.id, d.value
                   FROM {customfield_data} d
                   JOIN {customfield_field} f ON f.id = d.fieldid
