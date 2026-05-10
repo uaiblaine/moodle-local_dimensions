@@ -49,6 +49,37 @@
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "id": 1,
+        "shortname": "Core skills",
+        "idnumber": "core-skills",
+        "hasidnumber": true,
+        "descriptionplain": "Core competency framework for all staff.",
+        "hasdescription": true,
+        "hidden": false,
+        "plancount": 12,
+        "cohortcount": 3,
+        "hasduedate": true,
+        "duedateformatted": "31 Dec 2026",
+        "editurl": "/admin/tool/lp/edittemplate.php?id=1",
+        "cohortsurl": "/admin/tool/lp/templatecohorts.php?templateid=1",
+        "plansurl": "/admin/tool/lp/plans.php?templateid=1",
+        "cardimageurl": null,
+        "hascardimage": false,
+        "bgcolor": "#e8f4fd",
+        "hasbgcolor": true,
+        "textcolor": "#1a3a5c",
+        "hastextcolor": true,
+        "type": "Mandatory",
+        "hastype": true,
+        "tag1": "Leadership",
+        "hastag1": true,
+        "tag2": "Technical",
+        "hastag2": true,
+        "hastags": true
+    }
 }}
 <article class="local-dimensions-template-card" data-region="template-row" data-template-id="{{id}}" data-search="{{shortname}} {{idnumber}}" tabindex="0">
     <div class="local-dimensions-template-card-banner{{#hascardimage}} local-dimensions-template-card-banner-image{{/hascardimage}}"
@@ -58,7 +89,7 @@
     </div>
     <div class="local-dimensions-template-card-body">
         <div class="local-dimensions-template-card-title">
-            <strong>{{shortname}}</strong>
+            <h3 class="local-dimensions-template-card-heading">{{shortname}}</h3>
             {{#hasidnumber}}<span class="local-dimensions-manage-mono local-dimensions-template-card-idnumber">{{idnumber}}</span>{{/hasidnumber}}
         </div>
         {{#hasdescription}}<p class="local-dimensions-template-card-desc">{{descriptionplain}}</p>{{/hasdescription}}

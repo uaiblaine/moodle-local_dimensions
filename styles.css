@@ -5583,6 +5583,14 @@ body.dark .local-dimensions-return-fab {
     color: #1f2933;
 }
 
+.local-dimensions-template-card-heading {
+    font-size: inherit;
+    font-weight: 600;
+    line-height: inherit;
+    color: inherit;
+    margin: 0;
+}
+
 .local-dimensions-template-card-idnumber {
     font-size: 0.7rem;
     color: var(--local-dimensions-manage-muted, #5f6368);

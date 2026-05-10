@@ -50,6 +50,51 @@
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "contexttype": "system",
+        "issystemcontext": true,
+        "iscoursecatcontext": false,
+        "needscategoryselection": false,
+        "categoryoptions": [],
+        "hascategoryoptions": false,
+        "selectedcategoryid": 0,
+        "selectedcategoryname": "",
+        "selectedcontextname": "System",
+        "hastemplates": true,
+        "templates": [
+            {
+                "id": 1,
+                "shortname": "Core skills",
+                "idnumber": "core-skills",
+                "hasidnumber": true,
+                "descriptionplain": "Core competency framework for all staff.",
+                "hasdescription": true,
+                "hidden": false,
+                "plancount": 12,
+                "cohortcount": 3,
+                "hasduedate": false,
+                "duedateformatted": "",
+                "editurl": "/admin/tool/lp/edittemplate.php?id=1",
+                "cohortsurl": "/admin/tool/lp/templatecohorts.php?templateid=1",
+                "plansurl": "/admin/tool/lp/plans.php?templateid=1"
+            }
+        ],
+        "templatesjson": "[]",
+        "templatecount": 1,
+        "hashiddentemplates": false,
+        "showhidden": false,
+        "search": "",
+        "view": "cards",
+        "viewcards": true,
+        "viewtable": false,
+        "canmanage": true,
+        "canaddtemplate": true,
+        "newtemplateurl": "/admin/tool/lp/edittemplate.php?id=0&pagecontextid=1",
+        "nativetemplatesurl": "/admin/tool/lp/managetemplates.php",
+        "pagecontextid": 1
+    }
 }}
 <div class="local-dimensions-manage" data-region="local-dimensions-manage-templates" data-view="{{view}}" data-page-context-id="{{pagecontextid}}" data-string-hidden="{{#str}}hidden, tool_lp{{/str}}">
     <script type="application/json" data-region="templates-model">{{{templatesjson}}}</script>
@@ -184,7 +229,7 @@
             </div>
             <div data-region="details-content" hidden>
                 <div class="local-dimensions-manage-kicker" data-region="details-kicker">{{#str}}learningplantemplates, local_dimensions{{/str}}</div>
-                <h3 data-region="details-title"></h3>
+                <h3 data-region="details-title">{{#str}}managetemplates_details, local_dimensions{{/str}}</h3>
                 <div class="local-dimensions-manage-mono" data-region="details-idnumber"></div>
                 <div class="local-dimensions-details-chips" data-region="details-chips"></div>
                 <dl class="local-dimensions-details-list">
