@@ -62,6 +62,9 @@ class constants {
     /** @var string Custom field shortname for the dynamic accordion subline source (lp area) */
     const CFIELD_SUBLINE_SOURCE = 'local_dimensions_subline_source';
 
+    /** @var string Custom field shortname for the template identifier (lp area only — analogue of competency framework idnumber) */
+    const CFIELD_TEMPLATE_IDNUMBER = 'local_dimensions_template_idnumber';
+
     /** @var string Subline source: hide the subline */
     const SUBLINE_NONE = 'none';
 

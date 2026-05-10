@@ -34,4 +34,11 @@ $capabilities = [
             'user' => CAP_ALLOW,
         ],
     ],
+
+    'local/dimensions:editcustomscss' => [
+        'riskbitmask' => RISK_XSS | RISK_CONFIG,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [],
+    ],
 ];

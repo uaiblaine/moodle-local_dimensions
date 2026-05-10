@@ -161,6 +161,11 @@ class competency_metadata_cache {
             'area' => 'competency',
         ] + $inparams;
 
+        // NOTE: direct query against core {customfield_*} tables — intentional for
+        // batch shape (single round-trip pulling shortname + value + intvalue +
+        // configdata in one go). The customfield API does not expose this
+        // join shape. If core changes the customfield schema (already changed
+        // once between 4.x and 5.x), re-validate this query before upgrading.
         $sql = "SELECT f.shortname,
                        f.configdata,
                        d.id AS dataid,
@@ -206,6 +211,10 @@ class competency_metadata_cache {
         [$shortsql, $shortparams] = $DB->get_in_or_equal($shortnames, SQL_PARAMS_NAMED, 'sn');
         [$instsql, $instparams] = $DB->get_in_or_equal($competencyids, SQL_PARAMS_NAMED, 'inst');
 
+        // NOTE: direct query against core {customfield_*} tables — intentional for
+        // bulk shape (one round-trip resolves all shortnames for many instances).
+        // If core changes the customfield schema (already changed once between
+        // 4.x and 5.x), re-validate this query before upgrading.
         $sql = "SELECT d.id AS dataid,
                        d.instanceid,
                        f.shortname,

@@ -296,9 +296,34 @@ When enabled, per-template and per-competency SCSS code is:
 
 The plugin includes:
 - **14 Mustache templates** for responsive layouts (hero header, course cards, accordion panels, evidence modals, settings widgets, etc.)
-- **7 AMD JavaScript modules**: `accordion.js`, `ui.js`, `manage_competencies.js`, `return_button.js`, `fontawesome_icon_selector.js`, `setting_iconpicker.js`, and `scss_validation.js`
+- **AMD JavaScript modules**: `accordion`, `chip_filters`, `collapsible_description`, `competency_view`, `customcss_injector`, `edit_competency`, `edit_template`, `filter_tabs_nav`, `fontawesome_icon_selector`, `manage_competencies`, `manage_templates`, `return_button`, `setting_iconpicker`, `scss_validation`, `ui`
 - **Plugin icon assets** under `pix/status` and `pix/taxonomy` for hero badges, locked cards, rule states, and taxonomy cards
 - **CSS styles** with properly namespaced selectors (`.local-dimensions-*`, `.dims-*`, `#dimensions-*`)
+
+### Building JavaScript assets
+
+The plugin's AMD modules in `amd/src/*.js` must be compiled to `amd/build/*.min.js` using Moodle's grunt task. The mirror path differs by Moodle major version:
+
+| Moodle version | Mirror path inside the Moodle root | Grunt invocation |
+| -------------- | ---------------------------------- | ---------------- |
+| 4.5 (legacy)   | `local/dimensions`                 | `grunt --root=local/dimensions amd` |
+| 5.0+           | `public/local/dimensions`          | `grunt --root=public/local/dimensions amd` |
+
+A symlink at the mirror path **breaks** `grunt --root` because the Gruntfile resolves real paths. Always use `rsync` (or a real copy) for the mirror, then copy `amd/build/*.min.js` and `*.map` back to the plugin source tree.
+
+Example workflow on Moodle 5+:
+
+```sh
+cd <moodle-root>
+rsync -a --exclude=node_modules --exclude=.git \
+  /path/to/moodle-local_dimensions/ public/local/dimensions/
+./node_modules/.bin/grunt --root=public/local/dimensions amd
+cp public/local/dimensions/amd/build/*.min.js \
+   public/local/dimensions/amd/build/*.map \
+   /path/to/moodle-local_dimensions/amd/build/
+```
+
+Avoid the plugin's local `npm run build` (if any) — the canonical artefacts are produced by Moodle's own Gruntfile so that AMD module-name annotations, source maps, and minification match what Moodle expects.
 
 
 Accessibility

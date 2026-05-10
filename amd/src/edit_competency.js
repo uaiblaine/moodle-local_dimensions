@@ -271,7 +271,13 @@ define([
      */
     function activateSection(root, id) {
         root.querySelectorAll('[data-section-link]').forEach(function(link) {
-            link.classList.toggle('active', link.dataset.sectionLink === id);
+            var active = link.dataset.sectionLink === id;
+            link.classList.toggle('active', active);
+            if (active) {
+                link.setAttribute('aria-current', 'page');
+            } else {
+                link.removeAttribute('aria-current');
+            }
         });
     }
 
@@ -331,7 +337,7 @@ define([
         }
 
         var input = document.querySelector('[name="customfield_' + fieldname + '"]');
-        if (!input || input.dataset.localDimensionsSwatch === '1') {
+        if (!input || !input.parentNode || input.dataset.localDimensionsSwatch === '1') {
             return;
         }
 

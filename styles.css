@@ -2987,6 +2987,27 @@ body.dark .local-dimensions-course-access-btn:hover {
     font-weight: 600;
 }
 
+/* Framework count badge in the category-of-course autocomplete. */
+.local-dimensions-category-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    margin-left: 8px;
+    padding: 0 7px;
+    background: #eef2ff;
+    color: #3949ab;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.local-dimensions-category-count-badge-selection {
+    margin-left: 6px;
+}
+
 /* ============================================
       SHADOW CARD - Elevated card with shadow
       ============================================ */
@@ -5460,4 +5481,202 @@ body.dark .local-dimensions-return-fab {
     outline: 2px solid #1a73e8;
     outline-offset: 2px;
     border-radius: 4px;
+}
+
+/* ============================================
+   Manage learning plan templates — cards view
+   ============================================ */
+.local-dimensions-manage-stat-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--local-dimensions-manage-muted, #5f6368);
+    font-size: 0.82rem;
+    line-height: 1;
+}
+
+.local-dimensions-template-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding: 0.25rem 0 0.5rem;
+}
+
+.local-dimensions-template-card {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--local-dimensions-manage-border, #e0e3e7);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: box-shadow 120ms ease, transform 120ms ease, border-color 120ms ease;
+    cursor: pointer;
+    outline: none;
+}
+
+.local-dimensions-template-card:hover {
+    box-shadow: 0 4px 14px -8px rgb(0 0 0 / 18%);
+    transform: translateY(-1px);
+}
+
+.local-dimensions-template-card:focus-visible,
+.local-dimensions-template-card.selected {
+    border-color: var(--local-dimensions-manage-accent, #1a73e8);
+    box-shadow: 0 0 0 2px var(--local-dimensions-manage-accent-soft, rgb(26 115 232 / 18%));
+}
+
+.local-dimensions-template-card-banner {
+    position: relative;
+    min-height: 92px;
+    background: linear-gradient(135deg, #6c8eef 0%, #4a6ed8 100%);
+    color: #fff;
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.local-dimensions-template-card-banner-image {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.local-dimensions-template-card-banner-image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(0 0 0 / 0%) 35%, rgb(0 0 0 / 35%) 100%);
+    pointer-events: none;
+}
+
+.local-dimensions-template-card-banner > * {
+    position: relative;
+    z-index: 1;
+}
+
+.local-dimensions-template-card-chip-hidden,
+.local-dimensions-template-card-chip-type {
+    background: rgb(255 255 255 / 88%);
+    color: #1f2933;
+    border: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.local-dimensions-template-card-body {
+    padding: 0.85rem 0.95rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.local-dimensions-template-card-title {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    line-height: 1.25;
+    color: #1f2933;
+}
+
+.local-dimensions-template-card-idnumber {
+    font-size: 0.7rem;
+    color: var(--local-dimensions-manage-muted, #5f6368);
+    background: var(--local-dimensions-manage-surface-soft, #f1f3f5);
+    border-radius: 999px;
+    padding: 1px 8px;
+}
+
+.local-dimensions-template-card-desc {
+    font-size: 0.83rem;
+    color: var(--local-dimensions-manage-muted, #5f6368);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.local-dimensions-template-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.local-dimensions-template-card-tags {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.local-dimensions-template-card-chip-tag {
+    background: var(--local-dimensions-manage-surface-soft, #f1f3f5);
+    color: var(--local-dimensions-manage-muted, #5f6368);
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.local-dimensions-template-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.95rem 0.85rem;
+    border-top: 1px solid var(--local-dimensions-manage-border, #eef0f3);
+    flex-wrap: wrap;
+}
+
+.local-dimensions-template-card-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.78rem;
+}
+
+.local-dimensions-template-card-actions .btn span {
+    line-height: 1;
+}
+
+/* When show-identifiers is OFF, hide the idnumber chips on cards too. */
+.local-dimensions-manage-hide-ids .local-dimensions-template-card-idnumber {
+    display: none;
+}
+
+/* Templates table tweaks (mostly inherits from generic manage table). */
+.local-dimensions-manage-templates-table .local-dimensions-manage-row-actions {
+    white-space: nowrap;
+}
+
+/* Details aside chip strip for selected template (status / type / tags). */
+.local-dimensions-details-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.4rem 0 0.6rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    .local-dimensions-template-card {
+        background: #1f2630;
+        border-color: #2a3340;
+    }
+
+    .local-dimensions-template-card-title {
+        color: #e8ecf2;
+    }
+
+    .local-dimensions-template-card-actions {
+        border-top-color: #2a3340;
+    }
+
+    .local-dimensions-template-card-idnumber,
+    .local-dimensions-template-card-chip-tag {
+        background: #2a3340;
+        color: #c5cdd9;
+    }
 }

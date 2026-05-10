@@ -36,8 +36,8 @@ use local_dimensions\customfield\lp_handler;
 /**
  * Learning plan template form with native fields and custom fields support.
  *
- * This form combines the native template fields from tool_lp with custom fields
- * from local_dimensions, allowing full template editing in a single form.
+ * Combines native template fields from tool_lp with custom fields from
+ * local_dimensions, mirroring the visual sectioning used by competency_form.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -55,7 +55,7 @@ class template_form extends moodleform {
      *
      */
     public function definition() {
-        global $CFG;
+        global $OUTPUT, $PAGE;
 
         $mform = $this->_form;
 
@@ -63,51 +63,86 @@ class template_form extends moodleform {
         $this->template = $this->_customdata['template'];
         $this->context = $this->_customdata['context'] ?? $this->template->get_context();
 
-        // Hidden field for template ID.
+        // Hidden fields.
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
         $mform->setDefault('id', $this->template->get('id'));
 
-        // Hidden field for context ID.
         $mform->addElement('hidden', 'contextid');
         $mform->setType('contextid', PARAM_INT);
         $mform->setDefault('contextid', $this->context->id);
 
-        // General section - native template fields.
-        $mform->addElement('header', 'generalhdr', get_string('general'));
+        // Basic information section.
+        $this->add_section_open(
+            $mform,
+            'sec-basic',
+            get_string('edittemplate_section_basic', 'local_dimensions'),
+            get_string('edittemplate_section_basic_desc', 'local_dimensions')
+        );
 
-        // Short name (editable).
-        $mform->addElement('text', 'shortname', get_string('shortname', 'tool_lp'), 'maxlength="100"');
+        $mform->addElement(
+            'static',
+            'contextdisplay',
+            get_string('category', 'tool_lp'),
+            s($this->context->get_context_name(false))
+        );
+
+        $mform->addElement('text', 'shortname', get_string('shortname', 'tool_lp'), ['maxlength' => 100]);
         $mform->setType('shortname', PARAM_TEXT);
         $mform->addRule('shortname', null, 'required', null, 'client');
         $mform->addRule('shortname', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
         $mform->setDefault('shortname', $this->template->get('shortname'));
 
-        // Description (editable).
         $mform->addElement('editor', 'description', get_string('description', 'tool_lp'), ['rows' => 4]);
         $mform->setType('description', PARAM_CLEANHTML);
 
-        // Visible (editable).
+        $this->add_section_close($mform);
+
+        // Publishing section.
+        $this->add_section_open(
+            $mform,
+            'sec-publish',
+            get_string('edittemplate_section_publish', 'local_dimensions'),
+            get_string('edittemplate_section_publish_desc', 'local_dimensions')
+        );
+
         $mform->addElement('selectyesno', 'visible', get_string('visible', 'tool_lp'));
         $mform->setDefault('visible', $this->template->get('visible'));
         $mform->addHelpButton('visible', 'visible', 'tool_lp');
 
-        // Due date (editable).
         $mform->addElement('date_time_selector', 'duedate', get_string('duedate', 'tool_lp'), ['optional' => true]);
         $mform->addHelpButton('duedate', 'duedate', 'tool_lp');
 
-        // Context display (read-only).
-        $mform->addElement('static', 'contextdisplay', get_string('category', 'tool_lp'));
-        $mform->setDefault('contextdisplay', $this->context->get_context_name(false));
+        $this->add_section_close($mform);
 
         // Custom fields section.
+        $this->add_section_open(
+            $mform,
+            'sec-fields',
+            get_string('customfields', 'local_dimensions'),
+            get_string('edittemplate_section_fields_desc', 'local_dimensions')
+        );
+
+        // Custom fields rendered by the lp_handler — including the
+        // local_dimensions_template_idnumber text field that mirrors the role of a
+        // framework idnumber for templates. Ideally this idnumber would render in
+        // the Basic section (next to the short name) for consistency with
+        // edit_competency, but the customfield handler renders all category fields
+        // as a block; surgically moving one field requires duplicating handler
+        // logic (see task D1 in project_post_revamp_improvements.md). Left in the
+        // Custom fields section for now.
         $handler = lp_handler::create();
         $instanceid = $this->template->get('id');
         $handler->instance_form_definition($mform, $instanceid);
 
-        // Add SCSS frontend validation and hide format selector.
+        $mform->addElement('html', $OUTPUT->render_from_template('local_dimensions/edit_competency_section_note', [
+            'content' => get_string('edittemplate_customfields_note', 'local_dimensions'),
+        ]));
+
+        $this->add_section_close($mform);
+
+        // SCSS frontend validation (only when feature is enabled).
         if (get_config('local_dimensions', 'enablecustomscss')) {
-            global $PAGE;
             $PAGE->requires->js_call_amd('local_dimensions/scss_validation', 'init', [
                 [
                     'fieldname' => constants::CFIELD_CUSTOMSCSS,
@@ -124,43 +159,59 @@ class template_form extends moodleform {
             ]);
         }
 
-        // Action buttons.
         $this->add_action_buttons(true, get_string('savechanges'));
+
+        // Populate the form with the existing template's data, including the editor
+        // payload as a {text, format} array so the rich-text editor (TinyMCE) can
+        // initialise correctly. Setting the description via setDefault() in
+        // definition_after_data does not reach the editor's format slot, which is
+        // what made TinyMCE bail out on this page.
+        $defaultdata = new \stdClass();
+        $defaultdata->id = $this->template->get('id');
+        $defaultdata->shortname = $this->template->get('shortname');
+        $defaultdata->visible = $this->template->get('visible');
+        $defaultdata->duedate = (int)$this->template->get('duedate');
+        $defaultdata->description = [
+            'text' => $this->template->get('description'),
+            'format' => $this->template->get('descriptionformat'),
+        ];
+
+        $handler->instance_form_before_set_data_with_image($defaultdata);
+        $this->set_data($defaultdata);
     }
 
     /**
-     * Form definition after data.
+     * Open a visual form section.
      *
+     * @param \MoodleQuickForm $mform The form object.
+     * @param string $id Section anchor id.
+     * @param string $title Section title.
+     * @param string $description Section description.
      */
-    public function definition_after_data() {
-        $mform = $this->_form;
-
-        // Set description default value with format.
-        $description = $this->template->get('description');
-        $descriptionformat = $this->template->get('descriptionformat');
-        $mform->setDefault('description', [
-            'text' => $description,
-            'format' => $descriptionformat,
+    protected function add_section_open(\MoodleQuickForm $mform, string $id, string $title, string $description): void {
+        $titleid = $id . '-title';
+        $html = \html_writer::start_tag('section', [
+            'id' => $id,
+            'class' => 'local-dimensions-edit-section',
+            'data-region' => 'edit-section',
+            'aria-labelledby' => $titleid,
         ]);
+        $html .= \html_writer::start_div('local-dimensions-edit-section-head');
+        $html .= \html_writer::tag('h2', s($title), ['id' => $titleid]);
+        $html .= \html_writer::tag('span', s($description), ['class' => 'local-dimensions-edit-section-meta']);
+        $html .= \html_writer::end_div();
+        $html .= \html_writer::start_div('local-dimensions-edit-section-fields');
 
-        // Set due date.
-        $duedate = $this->template->get('duedate');
-        if ($duedate) {
-            $mform->setDefault('duedate', $duedate);
-        }
+        $mform->addElement('html', $html);
+    }
 
-        // Load custom field data.
-        $handler = lp_handler::create();
-        $defaultdata = new \stdClass();
-        $defaultdata->id = $this->template->get('id');
-        $handler->instance_form_before_set_data_with_image($defaultdata);
-
-        // Apply custom field defaults.
-        foreach ((array) $defaultdata as $key => $value) {
-            if ($key !== 'id' && $mform->elementExists($key)) {
-                $mform->setDefault($key, $value);
-            }
-        }
+    /**
+     * Close a visual form section.
+     *
+     * @param \MoodleQuickForm $mform The form object.
+     */
+    protected function add_section_close(\MoodleQuickForm $mform): void {
+        $mform->addElement('html', \html_writer::end_div() . \html_writer::end_tag('section'));
     }
 
     /**

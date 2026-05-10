@@ -45,175 +45,174 @@ class calculator {
         // Load the course ensuring all properties.
         $course = $DB->get_record('course', ['id' => $courseid], '*', \MUST_EXIST);
 
-        // Define temporary global context.
+        // Define temporary global context. Restore is unconditional via the
+        // try/finally below so an exception in any of the helpers called
+        // between here and the bottom return cannot leak the wrong $COURSE
+        // into the rest of the request (the external service calls this in
+        // a per-course loop, so a single failure must not poison siblings).
         global $COURSE;
-        $savedcourse = isset($COURSE) ? $COURSE : null;
+        $savedcourse = $COURSE ?? null;
         $COURSE = $course;
+        try {
+            $modinfo = get_fast_modinfo($course);
+            $sections = $modinfo->get_section_info_all();
+            $completion = new \completion_info($course);
 
-        $modinfo = get_fast_modinfo($course);
-        $sections = $modinfo->get_section_info_all();
-        $completion = new \completion_info($course);
-
-        if (!$completion->is_enabled()) {
-            if ($savedcourse) {
-                $COURSE = $savedcourse;
+            if (!$completion->is_enabled()) {
+                return ['enabled' => false];
             }
-            return ['enabled' => false];
-        }
 
-        // Map hierarchy (Subsections).
-        // Parent section ID maps to child section IDs.
-        $childrenmap = [];
-        $sectionbyid = [];
+            // Map hierarchy (Subsections).
+            // Parent section ID maps to child section IDs.
+            $childrenmap = [];
+            $sectionbyid = [];
 
-        foreach ($sections as $s) {
-            $sectionbyid[$s->id] = $s;
-        }
+            foreach ($sections as $s) {
+                $sectionbyid[$s->id] = $s;
+            }
 
-        // Build children_map by finding subsection activities and their delegated sections.
-        foreach ($modinfo->cms as $cm) {
-            if ($cm->modname === 'subsection') {
-                $delegated = $cm->get_delegated_section_info();
-                if ($delegated) {
-                    // The subsection CM is in section $cm->section.
-                    // It delegates to section $delegated->id.
-                    $childrenmap[$cm->section][] = $delegated->id;
+            // Build children_map by finding subsection activities and their delegated sections.
+            foreach ($modinfo->cms as $cm) {
+                if ($cm->modname === 'subsection') {
+                    $delegated = $cm->get_delegated_section_info();
+                    if ($delegated) {
+                        // The subsection CM is in section $cm->section.
+                        // It delegates to section $delegated->id.
+                        $childrenmap[$cm->section][] = $delegated->id;
+                    }
                 }
             }
-        }
 
-        // Check centralized lock status.
-        $locked = self::is_locked($course, $USER->id);
+            // Check centralized lock status.
+            $locked = self::is_locked($course, $USER->id);
 
-        // Keep enrollment check for activity loop (extra security, though locked already covers it).
-        $coursecontext = \core\context\course::instance($course->id);
-        $isenrolled = is_enrolled($coursecontext, $USER->id, '', true);
+            // Keep enrollment check for activity loop (extra security, though locked already covers it).
+            $coursecontext = \core\context\course::instance($course->id);
+            $isenrolled = is_enrolled($coursecontext, $USER->id, '', true);
 
-        // Requested format: %d/%m/%Y.
-        // Use enrollment start date if the user is enrolled with a future timestart.
-        $availabilitydate = self::get_availability_date($course, $USER->id);
-        $formattedstartdate = userdate($availabilitydate, '%d/%m/%Y');
+            // Requested format: %d/%m/%Y.
+            // Use enrollment start date if the user is enrolled with a future timestart.
+            $availabilitydate = self::get_availability_date($course, $USER->id);
+            $formattedstartdate = userdate($availabilitydate, '%d/%m/%Y');
 
-        // Determine if this is an enrollment start date (user enrolled but not yet active).
-        $isenrolmentstart = false;
-        if ($locked) {
-            $enrolstartdate = self::get_enrolment_start_date($course, $USER->id);
-            $isenrolmentstart = ($enrolstartdate !== null);
-        }
-
-        $results = [];
-
-        foreach ($sections as $section) {
-            // Skip delegated sections (subsections) at the root loop - we only want the main ones.
-            // Subsections will be calculated recursively within main ones.
-            if (!empty($section->component)) {
-                continue;
+            // Determine if this is an enrollment start date (user enrolled but not yet active).
+            $isenrolmentstart = false;
+            if ($locked) {
+                $enrolstartdate = self::get_enrolment_start_date($course, $USER->id);
+                $isenrolmentstart = ($enrolstartdate !== null);
             }
 
-            // 1. Filter by visibility (Eye icon).
-            if (!$section->visible) {
-                continue;
-            }
+            $results = [];
 
-            // 2. Check Availability / Restrictions.
-            $sectionlocked = false;
-
-            // If the user cannot access the section (uservisible is false).
-            if (!$section->uservisible) {
-                // If it is set to "Hide entirely" (availableinfo is empty), skip it.
-                if (empty($section->availableinfo)) {
+            foreach ($sections as $section) {
+                // Skip delegated sections (subsections) at the root loop - we only want the main ones.
+                // Subsections will be calculated recursively within main ones.
+                if (!empty($section->component)) {
                     continue;
                 }
 
-                // Otherwise ("Show restricted" - has availableinfo), mark as locked and skip calculation.
-                $sectionlocked = true;
-            }
+                // 1. Filter by visibility (Eye icon).
+                if (!$section->visible) {
+                    continue;
+                }
 
-            $sectionname = $section->name;
-            if (trim($sectionname) === '') {
-                $sectionname = get_section_name($course, $section);
-            }
-            $sectionname = format_string(
-                $sectionname,
-                true,
-                ['context' => \core\context\course::instance($course->id)]
-            );
+                // 2. Check Availability / Restrictions.
+                $sectionlocked = false;
 
-            $percentage = null;
-            $hasactivities = false;
-            // The existing course-level lock overrides everything, but if course is unlocked, we check section lock.
-            // However, verify if we should calculate progress for a locked section?
-            // The requirement says: "instead of showing the percentage, show a lock icon" -> no progress calculation.
-
-            $calculateprogress = !$locked && $isenrolled && !$sectionlocked;
-
-            if ($calculateprogress) {
-                // Recursive collection of all activities in this section AND its children.
-                $allcms = self::get_section_cms_recursive($section->id, $childrenmap, $sectionbyid, $modinfo);
-
-                $total = 0;
-                $completed = 0;
-
-                foreach ($allcms as $cm) {
-                    if ($cm->modname === 'subsection') {
-                        // Do not count the 'subsection' activity itself, only its content.
+                // If the user cannot access the section (uservisible is false).
+                if (!$section->uservisible) {
+                    // If it is set to "Hide entirely" (availableinfo is empty), skip it.
+                    if (empty($section->availableinfo)) {
                         continue;
                     }
 
-                    if ($cm->completion != \COMPLETION_TRACKING_NONE && $cm->uservisible) {
-                        $total++;
-                        $cmdata = $completion->get_data($cm, true, $USER->id);
-                        if (
-                            $cmdata->completionstate == \COMPLETION_COMPLETE
-                            || $cmdata->completionstate == \COMPLETION_COMPLETE_PASS
-                        ) {
-                            $completed++;
+                    // Otherwise ("Show restricted" - has availableinfo), mark as locked and skip calculation.
+                    $sectionlocked = true;
+                }
+
+                $sectionname = $section->name;
+                if (trim($sectionname) === '') {
+                    $sectionname = get_section_name($course, $section);
+                }
+                $sectionname = format_string(
+                    $sectionname,
+                    true,
+                    ['context' => \core\context\course::instance($course->id)]
+                );
+
+                $percentage = null;
+                $hasactivities = false;
+                // The existing course-level lock overrides everything, but if course is unlocked, we check section lock.
+                // However, verify if we should calculate progress for a locked section?
+                // The requirement says: "instead of showing the percentage, show a lock icon" -> no progress calculation.
+
+                $calculateprogress = !$locked && $isenrolled && !$sectionlocked;
+
+                if ($calculateprogress) {
+                    // Recursive collection of all activities in this section AND its children.
+                    $allcms = self::get_section_cms_recursive($section->id, $childrenmap, $sectionbyid, $modinfo);
+
+                    $total = 0;
+                    $completed = 0;
+
+                    foreach ($allcms as $cm) {
+                        if ($cm->modname === 'subsection') {
+                            // Do not count the 'subsection' activity itself, only its content.
+                            continue;
                         }
+
+                        if ($cm->completion != \COMPLETION_TRACKING_NONE && $cm->uservisible) {
+                            $total++;
+                            $cmdata = $completion->get_data($cm, true, $USER->id);
+                            if (
+                                $cmdata->completionstate == \COMPLETION_COMPLETE
+                                || $cmdata->completionstate == \COMPLETION_COMPLETE_PASS
+                            ) {
+                                $completed++;
+                            }
+                        }
+                    }
+
+                    if ($total > 0) {
+                        $percentage = round(($completed / $total) * 100);
+                        $hasactivities = true;
                     }
                 }
 
-                if ($total > 0) {
-                    $percentage = round(($completed / $total) * 100);
-                    $hasactivities = true;
+                // Define URL: if locked, go to Course Page. Else, Section anchor.
+                if ($sectionlocked) {
+                    // Link to course page to see restriction details.
+                    $url = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
+                } else {
+                    $url = (new \moodle_url('/course/section.php', ['id' => $section->id]))->out(false);
                 }
+
+                // FINAL OVERRIDE: If Course is Locked (non-enrolled), remove link and icon.
+                if ($locked) {
+                    $url = ''; // No link.
+                    $sectionlocked = false; // No lock icon (overlay handles it).
+                }
+
+                $results[] = [
+                    'name' => $sectionname,
+                    'percentage' => $percentage,
+                    'has_activities' => $hasactivities, // True when percentage is not null.
+                    'url' => $url,
+                    'locked' => $sectionlocked,
+                ];
             }
 
-            // Define URL: if locked, go to Course Page. Else, Section anchor.
-            if ($sectionlocked) {
-                // Link to course page to see restriction details.
-                $url = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
-            } else {
-                $url = (new \moodle_url('/course/section.php', ['id' => $section->id]))->out(false);
-            }
-
-            // FINAL OVERRIDE: If Course is Locked (non-enrolled), remove link and icon.
-            if ($locked) {
-                $url = ''; // No link.
-                $sectionlocked = false; // No lock icon (overlay handles it).
-            }
-
-            $results[] = [
-                'name' => $sectionname,
-                'percentage' => $percentage,
-                'has_activities' => $hasactivities, // True when percentage is not null.
-                'url' => $url,
-                'locked' => $sectionlocked,
+            return [
+                'enabled' => true,
+                'locked' => $locked,
+                'formatted_start_date' => $formattedstartdate,
+                'is_enrolment_start' => $isenrolmentstart,
+                'course_url' => (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false),
+                'sections' => $results,
             ];
-        }
-
-        // Restore original global context if present.
-        if ($savedcourse) {
+        } finally {
             $COURSE = $savedcourse;
         }
-
-        return [
-            'enabled' => true,
-            'locked' => $locked,
-            'formatted_start_date' => $formattedstartdate,
-            'is_enrolment_start' => $isenrolmentstart,
-            'course_url' => (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false),
-            'sections' => $results,
-        ];
     }
 
     /**

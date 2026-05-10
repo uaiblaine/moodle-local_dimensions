@@ -168,6 +168,10 @@ class chip_filters {
 
         [$insql, $inparams] = $DB->get_in_or_equal($shortnames, SQL_PARAMS_NAMED, 'sn');
 
+        // NOTE: direct query against core {customfield_*} tables — intentional for
+        // batch shape (one round-trip resolves the configured shortnames for a
+        // single instance). If core changes the customfield schema (already
+        // changed once between 4.x and 5.x), re-validate before upgrading.
         $sql = "SELECT f.shortname, d.value
                   FROM {customfield_field} f
                   JOIN {customfield_category} c ON c.id = f.categoryid
@@ -240,6 +244,11 @@ class chip_filters {
             $cfarea = $area;
         }
 
+        // NOTE: direct query against core {customfield_*} tables — intentional
+        // because this also resolves labels for the core_course area (component
+        // = core_course), which the local_dimensions handlers do not own.
+        // If core changes the customfield schema (already changed once between
+        // 4.x and 5.x), re-validate this query before upgrading.
         $sql = "SELECT f.shortname, f.name
                   FROM {customfield_field} f
                   JOIN {customfield_category} c ON c.id = f.categoryid

@@ -56,7 +56,16 @@ if ($pagecontextid > 0 && $contexttype === 'system') {
     }
 }
 
-require_login(null, false);
+// In system context route through admin_externalpage_setup so the capability
+// registered in settings.php (moodle/competency:competencymanage) becomes the
+// real gate, not just a menu filter. The coursecat path keeps the lighter
+// require_login + per-context check below to avoid blocking users who only
+// hold competencyview on a category.
+if ($contexttype === 'system') {
+    admin_externalpage_setup('local_dimensions_manage');
+} else {
+    require_login(null, false);
+}
 api::require_enabled();
 
 // Build readable course category options for the context selector.
@@ -123,20 +132,20 @@ if ($pagecontext->contextlevel === CONTEXT_COURSECAT) {
 $frameworks = [];
 $hashiddenframeworks = false;
 if (!$needscategoryselection) {
-    $allframeworks = api::list_frameworks('shortname', 'ASC', 0, 0, $pagecontext, 'self', false);
-    foreach ($allframeworks as $frameworkrecord) {
-        $isvisible = (bool)$frameworkrecord->get('visible');
-        if (!$isvisible) {
-            $hashiddenframeworks = true;
-        }
-        if (!$isvisible && !$showhidden) {
-            continue;
-        }
+    // Single SELECT for the toggle visibility flag — independent of how many
+    // visible frameworks the listing returns.
+    $hashiddenframeworks = competency_framework::record_exists_select(
+        'contextid = :ctx AND visible = 0',
+        ['ctx' => $pagecontext->id]
+    );
 
+    // Push the visibility filter to SQL (`$onlyvisible=true`) when the user is
+    // not asking for hidden frameworks, so we don't load+discard them in PHP.
+    $allframeworks = api::list_frameworks('shortname', 'ASC', 0, 0, $pagecontext, 'self', !$showhidden);
+    foreach ($allframeworks as $frameworkrecord) {
         if (!competency_framework::can_read_context($frameworkrecord->get_context())) {
             continue;
         }
-
         $frameworks[(int)$frameworkrecord->get('id')] = $frameworkrecord;
     }
 }
@@ -482,20 +491,29 @@ $templatedata = [
     'issystemcontext' => $contexttype === 'system',
     'iscoursecatcontext' => $iscoursecatcontext,
     'needscategoryselection' => $needscategoryselection,
-    'categoryoptions' => array_map(static function (int $optioncategoryid, string $categoryname) use ($categoryid): array {
-        return [
-            'id' => $optioncategoryid,
-            'name' => $categoryname,
-            'selected' => $optioncategoryid === $categoryid,
-        ];
-    }, array_keys($categoryoptions), array_values($categoryoptions)),
+    'categoryoptions' => (static function () use ($categoryoptions, $categoryid): array {
+        $counts = helper::count_frameworks_by_category(array_keys($categoryoptions));
+        return array_map(static function (int $optioncategoryid, string $categoryname) use ($categoryid, $counts): array {
+            $count = $counts[$optioncategoryid] ?? 0;
+            return [
+                'id' => $optioncategoryid,
+                'name' => $categoryname,
+                'selected' => $optioncategoryid === $categoryid,
+                'frameworkcount' => $count,
+                'hasframeworks' => $count > 0,
+            ];
+        }, array_keys($categoryoptions), array_values($categoryoptions));
+    })(),
     'hascategoryoptions' => !empty($categoryoptions),
     'selectedcategoryid' => $categoryid,
     'selectedcategoryname' => $selectedcategoryname,
-    'selectedcontextname' => $iscoursecatcontext ? $selectedcategoryname : get_string('managecompetencies_context_system', 'local_dimensions'),
+    'selectedcontextname' => $iscoursecatcontext
+        ? $selectedcategoryname
+        : get_string('managecompetencies_context_system', 'local_dimensions'),
     'hascategoryselected' => $iscoursecatcontext && $categoryid > 0,
     'canselectframework' => !$needscategoryselection,
     'hasframeworks' => !empty($frameworkoptions),
+    'noaddpermission' => empty($frameworkoptions) && !$canaddframework && $search === '' && !$needscategoryselection,
     'hashiddenframeworks' => $hashiddenframeworks,
     'showhidden' => $showhidden,
     'frameworks' => $frameworkoptions,

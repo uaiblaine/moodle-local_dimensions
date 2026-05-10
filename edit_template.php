@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Edit learning plan template page with full form support.
+ * Edit learning plan template page with hero, sticky section nav and custom field support.
  *
- * This page allows editing both native template fields and custom fields
- * in a single unified form, similar to tool_lp/edittemplate.php but with
- * custom field integration from local_dimensions.
+ * Mirrors the UX of edit_competency.php: a Mustache shell wraps the moodleform output
+ * with a context-aware header, action bar and section navigation. Custom fields are
+ * still rendered by the customfield handler inside the form.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -33,42 +33,68 @@ use core_competency\template;
 use core_competency\api;
 use local_dimensions\form\template_form;
 use local_dimensions\customfield\lp_handler;
+use local_dimensions\template_metadata_cache;
 
 // Parameters.
 $id = required_param('id', PARAM_INT);
 $pagecontextid = optional_param('pagecontextid', 0, PARAM_INT);
 
-// Require login.
-require_login(0, false);
-\core_competency\api::require_enabled();
+// State parameters preserved on the return URL so manage_templates resumes where the user left off.
+$contexttype = optional_param('contexttype', 'system', PARAM_ALPHA);
+$categoryid = optional_param('categoryid', 0, PARAM_INT);
+$showhidden = optional_param('showhidden', 0, PARAM_BOOL);
+$view = optional_param('view', 'cards', PARAM_ALPHA);
+$search = optional_param('search', '', PARAM_RAW_TRIMMED);
 
-// Load the template.
+if (!in_array($contexttype, ['system', 'coursecat'], true)) {
+    $contexttype = 'system';
+}
+if (!in_array($view, ['cards', 'table'], true)) {
+    $view = 'cards';
+}
+
+require_login(0, false);
+api::require_enabled();
+
 $template = template::get_record(['id' => $id]);
 if (!$template) {
     throw new moodle_exception('invalidrecord', 'error');
 }
 
-// Determine context.
 $context = $template->get_context();
 if (!$pagecontextid) {
     $pagecontextid = $context->id;
 }
 
-// Check capabilities.
+if ($context->contextlevel === CONTEXT_COURSECAT && $contexttype === 'system') {
+    $contexttype = 'coursecat';
+    $categoryid = (int)$context->instanceid;
+}
+if ($contexttype === 'system') {
+    $categoryid = 0;
+}
+
 require_capability('moodle/competency:templatemanage', $context);
 
-// Page setup.
+$returnparams = [
+    'contexttype' => $contexttype,
+    'categoryid' => $categoryid,
+    'showhidden' => $showhidden,
+    'view' => $view,
+    'search' => $search,
+];
+
 $url = new moodle_url('/local/dimensions/edit_template.php', [
     'id' => $id,
     'pagecontextid' => $pagecontextid,
-]);
+] + $returnparams);
 
 $PAGE->set_url($url);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('admin');
+$PAGE->add_body_class('local-dimensions-edit-template-page');
 
 $title = get_string('edittemplate', 'local_dimensions');
-
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 
@@ -80,31 +106,35 @@ $PAGE->navbar->add(
 );
 $PAGE->navbar->add($title);
 
-// Return URL.
-$returnurl = new moodle_url('/local/dimensions/manage_templates.php');
+$returnurl = new moodle_url('/local/dimensions/manage_templates.php', $returnparams);
 
-// Create form.
+// Form.
 $customdata = [
     'template' => $template,
     'context' => $context,
 ];
 $form = new template_form($url, $customdata);
 
-// Handle form submission.
+// Wire AMD module: section navigation, action-bar submit, colour swatches.
+$PAGE->requires->js_call_amd('local_dimensions/edit_template', 'init', [[
+    'templateId' => (int)$template->get('id'),
+    'backgroundColourField' => \local_dimensions\constants::CFIELD_CUSTOMBGCOLOR,
+    'textColourField' => \local_dimensions\constants::CFIELD_CUSTOMTEXTCOLOR,
+]]);
+
+// Handle form lifecycle.
 if ($form->is_cancelled()) {
     redirect($returnurl);
 }
 
 if ($data = $form->get_data()) {
     try {
-        // Prepare template data for update.
         $templatedata = new stdClass();
         $templatedata->id = $id;
         $templatedata->shortname = $data->shortname;
         $templatedata->visible = $data->visible;
         $templatedata->duedate = $data->duedate;
 
-        // Handle description editor field.
         if (isset($data->description) && is_array($data->description)) {
             $templatedata->description = $data->description['text'];
             $templatedata->descriptionformat = $data->description['format'];
@@ -113,23 +143,18 @@ if ($data = $form->get_data()) {
             $templatedata->descriptionformat = FORMAT_HTML;
         }
 
-        // Update the template via competency API.
         api::update_template($templatedata);
 
-        // Save custom field data (and built-in image if applicable).
         $handler = lp_handler::create();
         $data->id = $id;
         $handler->instance_form_save_with_image($data, $id);
 
-        // Invalidate cached template metadata after custom field/image updates.
-        \local_dimensions\template_metadata_cache::invalidate_template($id);
+        template_metadata_cache::invalidate_template($id);
 
-        // Invalidate compiled SCSS cache for this template.
         if (get_config('local_dimensions', 'enablecustomscss')) {
             \local_dimensions\scss_manager::invalidate_cache($id);
         }
 
-        // Redirect on success.
         redirect(
             $returnurl,
             get_string('changessaved'),
@@ -141,10 +166,46 @@ if ($data = $form->get_data()) {
     }
 }
 
-// Output.
-echo $OUTPUT->header();
-echo $OUTPUT->heading($title . ': ' . format_string($template->get('shortname')));
+// Render the shell with the form HTML buffered inside.
+$metadata = template_metadata_cache::get_template_metadata($id);
+$idnumber = (string)($metadata['idnumber'] ?? '');
+$duedate = (int)$template->get('duedate');
+$contextname = $context->contextlevel === CONTEXT_SYSTEM
+    ? get_string('managetemplates_context_system', 'local_dimensions')
+    : $context->get_context_name(false);
 
+ob_start();
 $form->display();
+$formhtml = ob_get_clean();
 
+echo $OUTPUT->header();
+echo $OUTPUT->render_from_template('local_dimensions/edit_template', [
+    'title' => $title,
+    'heading' => format_string($template->get('shortname')),
+    'contextname' => $contextname,
+    'hasidnumber' => $idnumber !== '',
+    'idnumber' => s($idnumber),
+    'hidden' => !(bool)$template->get('visible'),
+    'hasduedate' => $duedate > 0,
+    'duedateformatted' => $duedate > 0
+        ? userdate($duedate, get_string('strftimedate', 'core_langconfig'))
+        : '',
+    'returnurl' => $returnurl->out(false),
+    'formhtml' => $formhtml,
+    'sections' => [
+        [
+            'id' => 'sec-basic',
+            'label' => get_string('edittemplate_section_basic', 'local_dimensions'),
+            'active' => true,
+        ],
+        [
+            'id' => 'sec-publish',
+            'label' => get_string('edittemplate_section_publish', 'local_dimensions'),
+        ],
+        [
+            'id' => 'sec-fields',
+            'label' => get_string('customfields', 'local_dimensions'),
+        ],
+    ],
+]);
 echo $OUTPUT->footer();

@@ -33,6 +33,7 @@ use renderer_base;
 use core_competency\api;
 use core_competency\plan;
 use local_dimensions\constants;
+use local_dimensions\helper;
 use local_dimensions\picture_manager;
 use local_dimensions\scss_manager;
 
@@ -54,6 +55,14 @@ class view_plan_summary_page implements renderable, templatable {
     private $userid;
 
     /**
+     * Memoised cache of resolved custom-field controllers, keyed by "{area}|{shortname}".
+     * Avoids repeating the handler walk inside per-competency loops.
+     *
+     * @var array<string, \core_customfield\field_controller|false>
+     */
+    private $fieldcache = [];
+
+    /**
      * Constructor.
      *
      * @param plan $plan The learning plan
@@ -62,6 +71,48 @@ class view_plan_summary_page implements renderable, templatable {
     public function __construct(plan $plan, int $userid) {
         $this->plan = $plan;
         $this->userid = $userid;
+    }
+
+    /**
+     * Resolve a custom field controller by shortname, memoised per render.
+     *
+     * @param string $shortname Custom field shortname.
+     * @param string $area Custom field area ('lp' or 'competency').
+     * @return \core_customfield\field_controller|null
+     */
+    private function get_field(string $shortname, string $area): ?\core_customfield\field_controller {
+        $key = $area . '|' . $shortname;
+        if (!array_key_exists($key, $this->fieldcache)) {
+            $this->fieldcache[$key] = helper::find_field_by_shortname($shortname, $area) ?? false;
+        }
+        return $this->fieldcache[$key] ?: null;
+    }
+
+    /**
+     * Fetch the data_controller for a given field/instance pair.
+     *
+     * Returns null when the customfield_data row does not exist (the API
+     * synthesises a default controller in that case; we discriminate by
+     * checking the persisted id).
+     *
+     * @param \core_customfield\field_controller $field
+     * @param int $instanceid
+     * @return \core_customfield\data_controller|null
+     */
+    private function get_field_data(
+        \core_customfield\field_controller $field,
+        int $instanceid
+    ): ?\core_customfield\data_controller {
+        $datas = \core_customfield\api::get_instance_fields_data(
+            [$field->get('id') => $field],
+            $instanceid
+        );
+        foreach ($datas as $data) {
+            if ((int) $data->get('id') > 0) {
+                return $data;
+            }
+        }
+        return null;
     }
 
     /**
@@ -301,38 +352,22 @@ class view_plan_summary_page implements renderable, templatable {
      * @return string|null The field value or null if not found.
      */
     protected function get_template_custom_field(int $templateid, string $shortname): ?string {
-        global $DB;
-
-        // Get the field definition.
-        $sql = "SELECT f.id
-                  FROM {customfield_field} f
-                  JOIN {customfield_category} c ON c.id = f.categoryid
-                 WHERE f.shortname = :shortname
-                   AND c.component = :component
-                   AND c.area = :area";
-
-        $field = $DB->get_record_sql($sql, [
-            'shortname' => $shortname,
-            'component' => 'local_dimensions',
-            'area' => 'lp',
-        ]);
-
+        $field = $this->get_field($shortname, 'lp');
         if (!$field) {
             return null;
         }
 
-        // Get the data for this instance.
-        $data = $DB->get_record('customfield_data', [
-            'fieldid' => $field->id,
-            'instanceid' => $templateid,
-        ]);
+        $data = $this->get_field_data($field, $templateid);
+        if (!$data) {
+            return null;
+        }
 
-        if (!$data || empty($data->value)) {
+        $value = trim((string) $data->get('value'));
+        if ($value === '') {
             return null;
         }
 
         // Validate hex color.
-        $value = trim($data->value);
         if (preg_match('/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $value)) {
             if ($value[0] !== '#') {
                 $value = '#' . $value;
@@ -363,32 +398,12 @@ class view_plan_summary_page implements renderable, templatable {
         }
 
         // External mode: use customfield_picture component.
-        global $DB;
-
-        // Get the field definition.
-        $sql = "SELECT f.id
-                  FROM {customfield_field} f
-                  JOIN {customfield_category} c ON c.id = f.categoryid
-                 WHERE f.shortname = :shortname
-                   AND c.component = :component
-                   AND c.area = :area";
-
-        $field = $DB->get_record_sql($sql, [
-            'shortname' => $shortname,
-            'component' => 'local_dimensions',
-            'area' => $area,
-        ]);
-
+        $field = $this->get_field($shortname, $area);
         if (!$field) {
             return null;
         }
 
-        // Get the data for this instance.
-        $data = $DB->get_record('customfield_data', [
-            'fieldid' => $field->id,
-            'instanceid' => $instanceid,
-        ]);
-
+        $data = $this->get_field_data($field, $instanceid);
         if (!$data) {
             return null;
         }
@@ -396,10 +411,10 @@ class view_plan_summary_page implements renderable, templatable {
         // Get the file from storage (using customfield_picture component).
         $fs = get_file_storage();
         $files = $fs->get_area_files(
-            $data->contextid,
+            (int) $data->get('contextid'),
             'customfield_picture',
             'file',
-            $data->id,
+            (int) $data->get('id'),
             '',
             false
         );
@@ -427,38 +442,25 @@ class view_plan_summary_page implements renderable, templatable {
      * @return string|null The field value or null if not found.
      */
     protected function get_competency_custom_field(int $competencyid, string $shortname): ?string {
-        global $DB;
-
-        // Get the field definition from competency area.
-        $sql = "SELECT f.id
-                  FROM {customfield_field} f
-                  JOIN {customfield_category} c ON c.id = f.categoryid
-                 WHERE f.shortname = :shortname
-                   AND c.component = :component
-                   AND c.area = :area";
-
-        $field = $DB->get_record_sql($sql, [
-            'shortname' => $shortname,
-            'component' => 'local_dimensions',
-            'area' => 'competency',
-        ]);
-
+        // Field controller is memoised across calls, so the per-shortname lookup
+        // happens once for the whole render even though this method runs inside
+        // the foreach competency loop in export_for_template().
+        $field = $this->get_field($shortname, 'competency');
         if (!$field) {
             return null;
         }
 
-        // Get the data for this instance.
-        $data = $DB->get_record('customfield_data', [
-            'fieldid' => $field->id,
-            'instanceid' => $competencyid,
-        ]);
+        $data = $this->get_field_data($field, $competencyid);
+        if (!$data) {
+            return null;
+        }
 
-        if (!$data || empty($data->value)) {
+        $value = trim((string) $data->get('value'));
+        if ($value === '') {
             return null;
         }
 
         // Validate hex color.
-        $value = trim($data->value);
         if (preg_match('/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $value)) {
             if ($value[0] !== '#') {
                 $value = "#$value";
