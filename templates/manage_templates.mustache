@@ -209,7 +209,8 @@
                             <td class="local-dimensions-manage-row-actions">
                                 <a class="btn btn-sm btn-secondary" href="{{cohortsurl}}" title="{{#str}}managetemplates_cohorts_action, local_dimensions{{/str}}" aria-label="{{#str}}managetemplates_cohorts_action, local_dimensions{{/str}}"><i class="fa fa-users" aria-hidden="true"></i></a>
                                 <a class="btn btn-sm btn-secondary" href="{{plansurl}}" title="{{#str}}managetemplates_plans_action, local_dimensions{{/str}}" aria-label="{{#str}}managetemplates_plans_action, local_dimensions{{/str}}"><i class="fa fa-graduation-cap" aria-hidden="true"></i></a>
-                                <a class="btn btn-sm btn-primary" href="{{editurl}}" title="{{#str}}edit{{/str}}" aria-label="{{#str}}edit{{/str}}"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+                                <a class="btn btn-sm btn-secondary" href="{{editcompetenciesurl}}" title="{{#str}}managetemplates_editcompetencies_action, local_dimensions{{/str}}" aria-label="{{#str}}managetemplates_editcompetencies_action, local_dimensions{{/str}}"><i class="fa fa-list-check" aria-hidden="true"></i></a>
+                                <a class="btn btn-sm btn-primary" href="{{editurl}}" title="{{#str}}managetemplates_editplan_action, local_dimensions{{/str}}" aria-label="{{#str}}managetemplates_editplan_action, local_dimensions{{/str}}"><i class="fa fa-pencil" aria-hidden="true"></i></a>
                             </td>
                         </tr>
                         {{/templates}}
@@ -243,9 +244,10 @@
                     <dd data-region="details-description"></dd>
                 </dl>
                 <div class="local-dimensions-details-actions">
-                    <a class="btn btn-primary" data-region="details-edit" href="#"><i class="fa fa-pencil" aria-hidden="true"></i> {{#str}}edit{{/str}}</a>
                     <a class="btn btn-secondary" data-region="details-cohorts-action" href="#"><i class="fa fa-users" aria-hidden="true"></i> {{#str}}managetemplates_cohorts_action, local_dimensions{{/str}}</a>
                     <a class="btn btn-secondary" data-region="details-plans-action" href="#"><i class="fa fa-graduation-cap" aria-hidden="true"></i> {{#str}}managetemplates_plans_action, local_dimensions{{/str}}</a>
+                    <a class="btn btn-secondary" data-region="details-editcompetencies-action" href="#"><i class="fa fa-list-check" aria-hidden="true"></i> {{#str}}managetemplates_editcompetencies_action, local_dimensions{{/str}}</a>
+                    <a class="btn btn-primary" data-region="details-edit" href="#"><i class="fa fa-pencil" aria-hidden="true"></i> {{#str}}managetemplates_editplan_action, local_dimensions{{/str}}</a>
                     {{#canmanage}}
                     <button type="button" class="btn btn-secondary" data-action="duplicate" data-region="details-duplicate" data-id="0"><i class="fa fa-copy" aria-hidden="true"></i> {{#str}}managetemplates_duplicate, local_dimensions{{/str}}</button>
                     <button type="button" class="btn btn-danger" data-action="delete" data-region="details-delete" data-id="0" data-name=""><i class="fa fa-trash" aria-hidden="true"></i> {{#str}}managetemplates_delete, local_dimensions{{/str}}</button>

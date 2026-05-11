@@ -284,21 +284,4 @@ class picture_manager {
         )->out();
     }
 
-    /**
-     * Delete all images for a given instance.
-     *
-     * @param string $area 'competency' or 'lp'.
-     * @param int $instanceid The competency or template ID.
-     */
-    public static function delete_image(string $area, int $instanceid): void {
-        $filearea = self::get_filearea($area);
-        $context = context_system::instance();
-
-        get_file_storage()->delete_area_files(
-            $context->id,
-            self::COMPONENT,
-            $filearea,
-            $instanceid
-        );
-    }
 }

@@ -185,6 +185,10 @@ foreach ($templates as $tplrecord) {
         'id' => $id,
         'pagecontextid' => $tplcontextid,
     ]);
+    $editcompetenciesurl = new moodle_url('/admin/tool/lp/templatecompetencies.php', [
+        'templateid' => $id,
+        'pagecontextid' => $tplcontextid,
+    ]);
 
     $metadata = $metadatamap[$id] ?? template_metadata_cache::get_template_metadata($id);
     $bgcolor = $metadata['bgcolor'] ?? null;
@@ -218,6 +222,7 @@ foreach ($templates as $tplrecord) {
         'editurl' => $editurl->out(false),
         'cohortsurl' => $cohortsurl->out(false),
         'plansurl' => $plansurl->out(false),
+        'editcompetenciesurl' => $editcompetenciesurl->out(false),
         'pagecontextid' => $tplcontextid,
         'cardimageurl' => $cardimageurl,
         'hascardimage' => !empty($cardimageurl),
@@ -276,6 +281,7 @@ $templatemodels = array_map(static function (array $row): array {
         'editurl' => $row['editurl'],
         'cohortsurl' => $row['cohortsurl'],
         'plansurl' => $row['plansurl'],
+        'editcompetenciesurl' => $row['editcompetenciesurl'],
     ];
 }, $templateoptions);
 

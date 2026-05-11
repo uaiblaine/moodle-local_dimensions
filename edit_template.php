@@ -35,8 +35,8 @@ use local_dimensions\form\template_form;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\template_metadata_cache;
 
-// Parameters.
-$id = required_param('id', PARAM_INT);
+// Parameters. `id` is optional: 0 means "create new template", any positive value means "edit".
+$id = optional_param('id', 0, PARAM_INT);
 $pagecontextid = optional_param('pagecontextid', 0, PARAM_INT);
 
 // State parameters preserved on the return URL so manage_templates resumes where the user left off.
@@ -56,14 +56,23 @@ if (!in_array($view, ['cards', 'table'], true)) {
 require_login(0, false);
 api::require_enabled();
 
-$template = template::get_record(['id' => $id]);
-if (!$template) {
-    throw new moodle_exception('invalidrecord', 'error');
-}
-
-$context = $template->get_context();
-if (!$pagecontextid) {
-    $pagecontextid = $context->id;
+$template = null;
+if ($id > 0) {
+    $template = template::get_record(['id' => $id]);
+    if (!$template) {
+        throw new moodle_exception('invalidrecord', 'error');
+    }
+    $context = $template->get_context();
+    if (!$pagecontextid) {
+        $pagecontextid = $context->id;
+    }
+} else {
+    // Create flow — context derives from the URL-provided page context (manage_templates passes the
+    // current pagecontextid). Fall back to system for safety if the link was hand-built without it.
+    if (!$pagecontextid) {
+        $pagecontextid = context_system::instance()->id;
+    }
+    $context = context::instance_by_id($pagecontextid, MUST_EXIST);
 }
 
 if ($context->contextlevel === CONTEXT_COURSECAT && $contexttype === 'system') {
@@ -94,7 +103,9 @@ $PAGE->set_context($context);
 $PAGE->set_pagelayout('admin');
 $PAGE->add_body_class('local-dimensions-edit-template-page');
 
-$title = get_string('edittemplate', 'local_dimensions');
+$title = $template
+    ? get_string('edittemplate', 'local_dimensions')
+    : get_string('addnewtemplate', 'tool_lp');
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 
@@ -117,7 +128,7 @@ $form = new template_form($url, $customdata);
 
 // Wire AMD module: section navigation, action-bar submit, colour swatches.
 $PAGE->requires->js_call_amd('local_dimensions/edit_template', 'init', [[
-    'templateId' => (int)$template->get('id'),
+    'templateId' => $id,
     'backgroundColourField' => \local_dimensions\constants::CFIELD_CUSTOMBGCOLOR,
     'textColourField' => \local_dimensions\constants::CFIELD_CUSTOMTEXTCOLOR,
 ]]);
@@ -130,7 +141,6 @@ if ($form->is_cancelled()) {
 if ($data = $form->get_data()) {
     try {
         $templatedata = new stdClass();
-        $templatedata->id = $id;
         $templatedata->shortname = $data->shortname;
         $templatedata->visible = $data->visible;
         $templatedata->duedate = $data->duedate;
@@ -143,7 +153,14 @@ if ($data = $form->get_data()) {
             $templatedata->descriptionformat = FORMAT_HTML;
         }
 
-        api::update_template($templatedata);
+        if ($id > 0) {
+            $templatedata->id = $id;
+            api::update_template($templatedata);
+        } else {
+            $templatedata->contextid = $context->id;
+            $newtemplate = api::create_template($templatedata);
+            $id = (int)$newtemplate->get('id');
+        }
 
         $handler = lp_handler::create();
         $data->id = $id;
@@ -167,9 +184,17 @@ if ($data = $form->get_data()) {
 }
 
 // Render the shell with the form HTML buffered inside.
-$metadata = template_metadata_cache::get_template_metadata($id);
-$idnumber = (string)($metadata['idnumber'] ?? '');
-$duedate = (int)$template->get('duedate');
+$idnumber = '';
+$duedate = 0;
+$hidden = false;
+$heading = $title;
+if ($template) {
+    $metadata = template_metadata_cache::get_template_metadata($id);
+    $idnumber = (string)($metadata['idnumber'] ?? '');
+    $duedate = (int)$template->get('duedate');
+    $hidden = !(bool)$template->get('visible');
+    $heading = format_string($template->get('shortname'));
+}
 $contextname = $context->contextlevel === CONTEXT_SYSTEM
     ? get_string('managetemplates_context_system', 'local_dimensions')
     : $context->get_context_name(false);
@@ -181,11 +206,11 @@ $formhtml = ob_get_clean();
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_dimensions/edit_template', [
     'title' => $title,
-    'heading' => format_string($template->get('shortname')),
+    'heading' => $heading,
     'contextname' => $contextname,
     'hasidnumber' => $idnumber !== '',
     'idnumber' => s($idnumber),
-    'hidden' => !(bool)$template->get('visible'),
+    'hidden' => $hidden,
     'hasduedate' => $duedate > 0,
     'duedateformatted' => $duedate > 0
         ? userdate($duedate, get_string('strftimedate', 'core_langconfig'))

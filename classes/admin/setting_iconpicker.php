@@ -69,6 +69,7 @@ class setting_iconpicker extends \admin_setting_configtext {
             'currenthtml' => $currenthtml,
             'placeholder' => get_string('cardicon_placeholder', 'local_dimensions'),
             'browseall_title' => get_string('cardicon_browseall', 'local_dimensions'),
+            'clear_title' => get_string('iconpicker_clear', 'local_dimensions'),
         ];
 
         // Render the template.

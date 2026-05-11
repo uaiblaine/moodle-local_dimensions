@@ -430,6 +430,8 @@ class helper {
             self::get_display_mode_field();
             self::get_subline_source_field();
             self::get_template_idnumber_field();
+            self::get_enrollmentfilter_field();
+            self::get_singlecourseredirect_field();
         }
 
         // Image fields: only create if using external customfield_picture plugin.
@@ -571,6 +573,171 @@ class helper {
         }
 
         return constants::SUBLINE_STATUS;
+    }
+
+    /**
+     * Get or create the per-template enrollment filter select field (lp area).
+     *
+     * Storage: select customfield, options "key|label". Default option is
+     * `inherit`, which resolves to the site-wide
+     * `local_dimensions/enrollmentfilter` setting at read time.
+     *
+     * @return field_controller|null
+     */
+    public static function get_enrollmentfilter_field(): ?field_controller {
+        $shortname = constants::CFIELD_ENROLLMENTFILTER;
+        $field = self::find_field_by_shortname($shortname, self::AREA_LP);
+
+        if ($field) {
+            return $field;
+        }
+
+        $options = constants::enrollmentfilter_options();
+        $optionstext = [];
+        foreach ($options as $key => $langstring) {
+            $optionstext[] = $key . '|' . (string) $langstring;
+        }
+
+        return self::create_custom_field(
+            $shortname,
+            'select',
+            self::AREA_LP,
+            new \lang_string('enrollmentfilter', 'local_dimensions'),
+            [
+                'options' => join("\n", $optionstext),
+                'defaultvalue' => constants::ENROLLMENTFILTER_INHERIT,
+            ],
+            ''
+        );
+    }
+
+    /**
+     * Get or create the per-template single-course redirect select field (lp area).
+     *
+     * Storage: select customfield, options "key|label". Default option is
+     * `inherit`, which resolves to the site-wide
+     * `local_dimensions/singlecourseredirect` setting at read time.
+     *
+     * @return field_controller|null
+     */
+    public static function get_singlecourseredirect_field(): ?field_controller {
+        $shortname = constants::CFIELD_SINGLECOURSEREDIRECT;
+        $field = self::find_field_by_shortname($shortname, self::AREA_LP);
+
+        if ($field) {
+            return $field;
+        }
+
+        $options = constants::singlecourseredirect_options();
+        $optionstext = [];
+        foreach ($options as $key => $langstring) {
+            $optionstext[] = $key . '|' . (string) $langstring;
+        }
+
+        return self::create_custom_field(
+            $shortname,
+            'select',
+            self::AREA_LP,
+            new \lang_string('singlecourseredirect', 'local_dimensions'),
+            [
+                'options' => join("\n", $optionstext),
+                'defaultvalue' => constants::SINGLECOURSEREDIRECT_INHERIT,
+            ],
+            ''
+        );
+    }
+
+    /**
+     * Resolve the effective enrollment filter for a learning plan template.
+     *
+     * Returns one of `all` / `enrolled` / `active`. When the template stores
+     * `inherit` (or no row exists), falls back to the global
+     * `local_dimensions/enrollmentfilter` setting, defaulting to `all`.
+     *
+     * @param int $templateid Learning plan template ID
+     * @return string One of constants::ENROLLMENTFILTER_ALL|ENROLLED|ACTIVE
+     */
+    public static function get_template_enrollmentfilter(int $templateid): string {
+        $global = (string) (get_config('local_dimensions', 'enrollmentfilter') ?: constants::ENROLLMENTFILTER_ALL);
+
+        if ($templateid <= 0) {
+            return $global;
+        }
+
+        $field = self::get_enrollmentfilter_field();
+        if (!$field) {
+            return $global;
+        }
+
+        $allowed = array_keys(constants::enrollmentfilter_options());
+        $resolved = constants::ENROLLMENTFILTER_INHERIT;
+
+        $fields = \core_customfield\api::get_instance_fields_data([$field->get('id') => $field], $templateid);
+        foreach ($fields as $data) {
+            $value = $data->get_value();
+            if (is_int($value)) {
+                if (isset($allowed[$value - 1])) {
+                    $value = $allowed[$value - 1];
+                }
+            }
+            $value = (string) $value;
+            if ($value !== '' && in_array($value, $allowed, true)) {
+                $resolved = $value;
+                break;
+            }
+        }
+
+        if ($resolved === constants::ENROLLMENTFILTER_INHERIT) {
+            return $global;
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * Resolve the effective single-course redirect flag for a learning plan template.
+     *
+     * Returns a bool. When the template stores `inherit` (or no row exists),
+     * falls back to the global `local_dimensions/singlecourseredirect`.
+     *
+     * @param int $templateid Learning plan template ID
+     * @return bool true to redirect when single active enrolment matches
+     */
+    public static function get_template_singlecourseredirect(int $templateid): bool {
+        $global = (bool) get_config('local_dimensions', 'singlecourseredirect');
+
+        if ($templateid <= 0) {
+            return $global;
+        }
+
+        $field = self::get_singlecourseredirect_field();
+        if (!$field) {
+            return $global;
+        }
+
+        $allowed = array_keys(constants::singlecourseredirect_options());
+        $resolved = constants::SINGLECOURSEREDIRECT_INHERIT;
+
+        $fields = \core_customfield\api::get_instance_fields_data([$field->get('id') => $field], $templateid);
+        foreach ($fields as $data) {
+            $value = $data->get_value();
+            if (is_int($value)) {
+                if (isset($allowed[$value - 1])) {
+                    $value = $allowed[$value - 1];
+                }
+            }
+            $value = (string) $value;
+            if ($value !== '' && in_array($value, $allowed, true)) {
+                $resolved = $value;
+                break;
+            }
+        }
+
+        if ($resolved === constants::SINGLECOURSEREDIRECT_INHERIT) {
+            return $global;
+        }
+
+        return $resolved === constants::SINGLECOURSEREDIRECT_YES;
     }
 
     /**
@@ -825,32 +992,6 @@ class helper {
             return null;
         }
         return $data;
-    }
-
-    /**
-     * Get the stored return context from session cache.
-     *
-     * @deprecated Since v1.1. Use {@see get_return_context_for_course()} instead.
-     * @return array|null Array with 'url' and 'courses' keys, or null if not set.
-     */
-    public static function get_return_context(): ?array {
-        debugging(
-            'helper::get_return_context() is deprecated. Use get_return_context_for_course() instead.',
-            DEBUG_DEVELOPER
-        );
-        return null;
-    }
-
-    /**
-     * Clear the return context from session cache.
-     *
-     * @deprecated Since v1.1. Per-course entries expire naturally with the session.
-     */
-    public static function clear_return_context(): void {
-        debugging(
-            'helper::clear_return_context() is deprecated. Per-course entries expire with the session.',
-            DEBUG_DEVELOPER
-        );
     }
 
     /**
