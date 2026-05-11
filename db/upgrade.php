@@ -132,5 +132,16 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026051101, 'local', 'dimensions');
     }
 
+    // Per-template overrides for enrollmentfilter / singlecourseredirect. Provision
+    // the two new lp-area select customfields and purge metadata cache so that
+    // existing entries are rebuilt with the new payload keys.
+    if ($oldversion < 2026051102) {
+        \local_dimensions\helper::get_enrollmentfilter_field();
+        \local_dimensions\helper::get_singlecourseredirect_field();
+        \local_dimensions\template_metadata_cache::purge_all();
+
+        upgrade_plugin_savepoint(true, 2026051102, 'local', 'dimensions');
+    }
+
     return true;
 }

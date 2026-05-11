@@ -24,8 +24,20 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['core/ajax'], function(Ajax) {
+define(['core/ajax', 'core/str'], function(Ajax, Str) {
     'use strict';
+
+    // Default to English literals so any handler firing before the get_strings
+    // promise resolves still shows usable text (matches pre-i18n behaviour).
+    var strings = {
+        errorLoading: 'Error loading icons.',
+        tooManyResults: 'Too many results. Please refine your search.',
+        noResults: 'No icons found.',
+        sourceCore: 'Core',
+        sourceFasolid: 'FA Solid',
+        sourceFabrand: 'FA Brand',
+        sourceFablank: 'FA'
+    };
 
     /**
      * Escape HTML entities in a string.
@@ -69,6 +81,30 @@ define(['core/ajax'], function(Ajax) {
         init: function(config) {
             var elementId = config.elementId;
             var hiddenId = config.hiddenId;
+
+            // Resolve localised strings; English defaults remain as fallback if
+            // this fails or fires after a handler. No retry needed — the user
+            // can re-trigger a search and the cached promise will hit instantly.
+            Str.get_strings([
+                {key: 'iconpicker_error_loading', component: 'local_dimensions'},
+                {key: 'iconpicker_too_many_results', component: 'local_dimensions'},
+                {key: 'iconpicker_no_results', component: 'local_dimensions'},
+                {key: 'cardicon_sourcecore', component: 'local_dimensions'},
+                {key: 'cardicon_sourcefasolid', component: 'local_dimensions'},
+                {key: 'cardicon_sourcefabrand', component: 'local_dimensions'},
+                {key: 'cardicon_sourcefablank', component: 'local_dimensions'}
+            ]).then(function(results) {
+                strings.errorLoading = results[0];
+                strings.tooManyResults = results[1];
+                strings.noResults = results[2];
+                strings.sourceCore = results[3];
+                strings.sourceFasolid = results[4];
+                strings.sourceFabrand = results[5];
+                strings.sourceFablank = results[6];
+                return null;
+            }).catch(function(err) {
+                window.console.error('Icon picker string load failed:', err);
+            });
 
             var searchInput = document.getElementById(elementId + '-search');
             var hiddenInput = document.getElementById(hiddenId);
@@ -147,7 +183,7 @@ define(['core/ajax'], function(Ajax) {
                     renderResults(response);
                 }).fail(function(err) {
                     window.console.error('Icon search failed:', err);
-                    dropdown.innerHTML = '<div class="p-2 text-danger">Error loading icons</div>';
+                    dropdown.innerHTML = '<div class="p-2 text-danger">' + escapeHtml(strings.errorLoading) + '</div>';
                     dropdown.style.display = 'block';
                 });
             }
@@ -161,13 +197,13 @@ define(['core/ajax'], function(Ajax) {
                 dropdown.innerHTML = '';
 
                 if (response.overflow) {
-                    dropdown.innerHTML = '<div class="p-2 text-muted">Too many results. Please refine your search.</div>';
+                    dropdown.innerHTML = '<div class="p-2 text-muted">' + escapeHtml(strings.tooManyResults) + '</div>';
                     dropdown.style.display = 'block';
                     return;
                 }
 
                 if (!response.icons || response.icons.length === 0) {
-                    dropdown.innerHTML = '<div class="p-2 text-muted">No icons found.</div>';
+                    dropdown.innerHTML = '<div class="p-2 text-muted">' + escapeHtml(strings.noResults) + '</div>';
                     dropdown.style.display = 'block';
                     return;
                 }
@@ -177,14 +213,14 @@ define(['core/ajax'], function(Ajax) {
                     item.className = 'local-dimensions-icon-dropdown-item';
 
                     var iconClass = resolveClass(icon);
-                    var sourceLabel = icon.source === 'core' ? 'Core'
-                        : (icon.source === 'fasolid' ? 'FA'
-                            : (icon.source === 'fabrand' ? 'Brand' : 'FA'));
+                    var sourceLabel = icon.source === 'core' ? strings.sourceCore
+                        : (icon.source === 'fasolid' ? strings.sourceFasolid
+                            : (icon.source === 'fabrand' ? strings.sourceFabrand : strings.sourceFablank));
                     var sourceColor = icon.source === 'core' ? 'bg-warning text-dark' : 'bg-success';
 
                     item.innerHTML = '<i class="' + iconClass + ' fa-fw" aria-hidden="true"></i>' +
                         '<small style="flex:1; word-break:break-all;">' + escapeHtml(icon.name) + '</small>' +
-                        '<span class="badge ' + sourceColor + '">' + sourceLabel + '</span>';
+                        '<span class="badge ' + sourceColor + '">' + escapeHtml(sourceLabel) + '</span>';
 
                     item.addEventListener('click', function() {
                         var storedValue = (icon.source === 'core') ? icon.class : icon.name;

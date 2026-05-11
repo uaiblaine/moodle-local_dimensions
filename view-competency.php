@@ -28,6 +28,8 @@ require_once('../../config.php');
 
 use local_dimensions\output\view_competency_page;
 use local_dimensions\calculator;
+use local_dimensions\constants;
+use local_dimensions\template_metadata_cache;
 
 // Parameters received via URL.
 $planid = required_param('id', PARAM_INT);
@@ -45,6 +47,38 @@ $PAGE->set_url(new moodle_url('/local/dimensions/view-competency.php', [
 ]));
 $PAGE->set_context($context);
 $PAGE->add_body_class('local-dimensions-viewcompetency');
+
+// Authorization gate: read_plan() throws if the user cannot access the plan.
+// Rethrowing as moodle_exception mirrors the pattern used by view-plan.php and
+// blocks an authenticated user from rendering any plan/competency by guessing IDs.
+try {
+    $plan = \core_competency\api::read_plan($planid);
+} catch (\Exception $e) {
+    throw new \moodle_exception('invalidplan', 'local_dimensions');
+}
+$templateid = (int) $plan->get('templateid');
+
+// Defense in depth: the competency must belong to this plan. Template-based
+// plans use competency_templatecomp; manual plans use competency_plancomp
+// (same split used by plan_trail_cache::fetch_trail_data).
+if ($templateid > 0) {
+    $competencyinplan = $DB->record_exists(
+        'competency_templatecomp',
+        ['templateid' => $templateid, 'competencyid' => $competencyid]
+    );
+} else {
+    $competencyinplan = $DB->record_exists(
+        'competency_plancomp',
+        ['planid' => $planid, 'competencyid' => $competencyid]
+    );
+}
+if (!$competencyinplan) {
+    throw new \moodle_exception('invalidcompetencyforplan', 'local_dimensions');
+}
+
+// Per-template overrides for enrollmentfilter / singlecourseredirect; falls
+// back to site-wide settings when the plan has no template (manual plan).
+$tplmeta = ($templateid > 0) ? template_metadata_cache::get_template_metadata($templateid) : null;
 
 // Load the competency.
 $competency = $DB->get_record('competency', ['id' => $competencyid]);
@@ -64,9 +98,10 @@ if ($competency) {
 
     $courses = $DB->get_records_sql($sql, ['competencyid' => $competencyid]);
 
-    // Apply enrollment filter setting.
-    $enrollmentfilter = get_config('local_dimensions', 'enrollmentfilter');
-    if (!empty($enrollmentfilter) && $enrollmentfilter !== 'all') {
+    // Apply enrollment filter (per-template override falls back to site setting).
+    $enrollmentfilter = $tplmeta['enrollmentfilter']
+        ?? ((string)(get_config('local_dimensions', 'enrollmentfilter') ?: constants::ENROLLMENTFILTER_ALL));
+    if ($enrollmentfilter !== constants::ENROLLMENTFILTER_ALL) {
         $courses = calculator::filter_courses_by_enrollment($courses, $USER->id, $enrollmentfilter);
     }
 
@@ -78,10 +113,13 @@ if ($competency) {
         \local_dimensions\helper::set_return_context($PAGE->url, $validcourseids);
     }
 
-    // Redirect directly to course if only one active enrolment and setting is enabled.
+    // Redirect directly to course if only one active enrolment and the (per-template
+    // or global) singlecourseredirect flag is enabled.
+    $singlecourseredirect = $tplmeta['singlecourseredirect']
+        ?? (bool) get_config('local_dimensions', 'singlecourseredirect');
     if (
-        $enrollmentfilter === 'active'
-        && !empty(get_config('local_dimensions', 'singlecourseredirect'))
+        $enrollmentfilter === constants::ENROLLMENTFILTER_ACTIVE
+        && $singlecourseredirect
         && count($courses) === 1
     ) {
         $singlecourse = reset($courses);

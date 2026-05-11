@@ -35,6 +35,11 @@ namespace local_dimensions;
  * - textcolor
  * - templatecardimageurl
  * - displaymode
+ * - idnumber
+ * - enrollmentfilter_raw   (stored option key: inherit|all|enrolled|active)
+ * - enrollmentfilter       (resolved at read time: all|enrolled|active)
+ * - singlecourseredirect_raw (stored option key: inherit|yes|no)
+ * - singlecourseredirect   (resolved at read time: bool)
  * - timemodified
  *
  * @package    local_dimensions
@@ -128,6 +133,8 @@ class template_metadata_cache {
             constants::CFIELD_CUSTOMCARD,
             constants::CFIELD_DISPLAYMODE,
             constants::CFIELD_TEMPLATE_IDNUMBER,
+            constants::CFIELD_ENROLLMENTFILTER,
+            constants::CFIELD_SINGLECOURSEREDIRECT,
         ];
 
         // Records keyed by [templateid][shortname]; chunked to keep IN-clause
@@ -188,6 +195,18 @@ class template_metadata_cache {
                 'textcolor' => self::get_color_value($byshortname, constants::CFIELD_CUSTOMTEXTCOLOR),
                 'displaymode' => self::get_displaymode_value($byshortname),
                 'idnumber' => self::get_text_value($byshortname, constants::CFIELD_TEMPLATE_IDNUMBER),
+                'enrollmentfilter_raw' => self::get_string_select_key(
+                    $byshortname,
+                    constants::CFIELD_ENROLLMENTFILTER,
+                    array_keys(constants::enrollmentfilter_options()),
+                    constants::ENROLLMENTFILTER_INHERIT
+                ),
+                'singlecourseredirect_raw' => self::get_string_select_key(
+                    $byshortname,
+                    constants::CFIELD_SINGLECOURSEREDIRECT,
+                    array_keys(constants::singlecourseredirect_options()),
+                    constants::SINGLECOURSEREDIRECT_INHERIT
+                ),
                 'templatecardimageurl' => null,
                 'timemodified' => $timemodifiedmap[$id],
             ];
@@ -246,6 +265,8 @@ class template_metadata_cache {
             'templatecardimageurl' => null,
             'displaymode' => constants::DISPLAYMODE_COMPETENCIES,
             'idnumber' => '',
+            'enrollmentfilter_raw' => constants::ENROLLMENTFILTER_INHERIT,
+            'singlecourseredirect_raw' => constants::SINGLECOURSEREDIRECT_INHERIT,
             'timemodified' => 0,
         ];
 
@@ -261,6 +282,8 @@ class template_metadata_cache {
             constants::CFIELD_CUSTOMCARD,
             constants::CFIELD_DISPLAYMODE,
             constants::CFIELD_TEMPLATE_IDNUMBER,
+            constants::CFIELD_ENROLLMENTFILTER,
+            constants::CFIELD_SINGLECOURSEREDIRECT,
         ];
 
         [$insql, $inparams] = $DB->get_in_or_equal($shortnames, SQL_PARAMS_NAMED);
@@ -301,6 +324,18 @@ class template_metadata_cache {
         $payload['textcolor'] = self::get_color_value($byshortname, constants::CFIELD_CUSTOMTEXTCOLOR);
         $payload['displaymode'] = self::get_displaymode_value($byshortname);
         $payload['idnumber'] = self::get_text_value($byshortname, constants::CFIELD_TEMPLATE_IDNUMBER);
+        $payload['enrollmentfilter_raw'] = self::get_string_select_key(
+            $byshortname,
+            constants::CFIELD_ENROLLMENTFILTER,
+            array_keys(constants::enrollmentfilter_options()),
+            constants::ENROLLMENTFILTER_INHERIT
+        );
+        $payload['singlecourseredirect_raw'] = self::get_string_select_key(
+            $byshortname,
+            constants::CFIELD_SINGLECOURSEREDIRECT,
+            array_keys(constants::singlecourseredirect_options()),
+            constants::SINGLECOURSEREDIRECT_INHERIT
+        );
 
         // Built-in mode first, then legacy external customfield_picture fallback.
         if (picture_manager::is_builtin_mode()) {
@@ -393,6 +428,53 @@ class template_metadata_cache {
     }
 
     /**
+     * Decode a select customfield's stored option key (the part before "|").
+     *
+     * Select customfields store options as "key|label\nkey|label" and persist a
+     * 1-based intvalue pointing at the chosen line. This helper returns the key
+     * (validated against $allowed) rather than the joined "key|label" string
+     * that get_select_value() returns.
+     *
+     * @param array $records Records keyed by shortname.
+     * @param string $shortname Field shortname to decode.
+     * @param string[] $allowed Allowed option keys; values outside fall back to $default.
+     * @param string $default Default key when no row, invalid configdata, or out-of-range index.
+     * @return string Option key from $allowed, or $default.
+     */
+    private static function get_string_select_key(
+        array $records,
+        string $shortname,
+        array $allowed,
+        string $default
+    ): string {
+        if (empty($records[$shortname])) {
+            return $default;
+        }
+
+        $record = $records[$shortname];
+        $selectedindex = isset($record->intvalue) ? (int)$record->intvalue : 0;
+        if ($selectedindex <= 0 || empty($record->configdata)) {
+            return $default;
+        }
+
+        $config = json_decode($record->configdata, true);
+        if (!is_array($config) || empty($config['options'])) {
+            return $default;
+        }
+
+        $options = explode("\n", $config['options']);
+        $optionindex = $selectedindex - 1;
+        if (!isset($options[$optionindex])) {
+            return $default;
+        }
+
+        $parts = explode('|', trim($options[$optionindex]), 2);
+        $key = trim((string)($parts[0] ?? ''));
+
+        return in_array($key, $allowed, true) ? $key : $default;
+    }
+
+    /**
      * Get normalized hex color for a shortname.
      *
      * @param array $records Records keyed by shortname.
@@ -479,6 +561,25 @@ class template_metadata_cache {
      * @return array<string, mixed>
      */
     private static function normalise_payload(array $payload): array {
+        $rawef = (string)($payload['enrollmentfilter_raw'] ?? constants::ENROLLMENTFILTER_INHERIT);
+        $rawsc = (string)($payload['singlecourseredirect_raw'] ?? constants::SINGLECOURSEREDIRECT_INHERIT);
+
+        $allowedef = array_keys(constants::enrollmentfilter_options());
+        $allowedsc = array_keys(constants::singlecourseredirect_options());
+        if (!in_array($rawef, $allowedef, true)) {
+            $rawef = constants::ENROLLMENTFILTER_INHERIT;
+        }
+        if (!in_array($rawsc, $allowedsc, true)) {
+            $rawsc = constants::SINGLECOURSEREDIRECT_INHERIT;
+        }
+
+        $resolvedef = ($rawef === constants::ENROLLMENTFILTER_INHERIT)
+            ? ((string)(get_config('local_dimensions', 'enrollmentfilter') ?: constants::ENROLLMENTFILTER_ALL))
+            : $rawef;
+        $resolvedsc = ($rawsc === constants::SINGLECOURSEREDIRECT_INHERIT)
+            ? (bool) get_config('local_dimensions', 'singlecourseredirect')
+            : ($rawsc === constants::SINGLECOURSEREDIRECT_YES);
+
         return [
             'type' => $payload['type'] ?? null,
             'tag1' => $payload['tag1'] ?? null,
@@ -488,6 +589,10 @@ class template_metadata_cache {
             'templatecardimageurl' => $payload['templatecardimageurl'] ?? null,
             'displaymode' => (int)($payload['displaymode'] ?? constants::DISPLAYMODE_COMPETENCIES),
             'idnumber' => isset($payload['idnumber']) ? (string)$payload['idnumber'] : '',
+            'enrollmentfilter_raw' => $rawef,
+            'enrollmentfilter' => $resolvedef,
+            'singlecourseredirect_raw' => $rawsc,
+            'singlecourseredirect' => $resolvedsc,
             'timemodified' => isset($payload['timemodified']) ? (int)$payload['timemodified'] : 0,
         ];
     }

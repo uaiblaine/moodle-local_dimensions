@@ -375,6 +375,10 @@ define([
         if (plansLink) {
             plansLink.href = template.plansurl;
         }
+        var editCompetenciesLink = content.querySelector('[data-region="details-editcompetencies-action"]');
+        if (editCompetenciesLink) {
+            editCompetenciesLink.href = template.editcompetenciesurl;
+        }
         var duplicateBtn = content.querySelector('[data-region="details-duplicate"]');
         if (duplicateBtn) {
             duplicateBtn.dataset.id = String(template.id);

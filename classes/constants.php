@@ -65,6 +65,33 @@ class constants {
     /** @var string Custom field shortname for the template identifier (lp area only — analogue of competency framework idnumber) */
     const CFIELD_TEMPLATE_IDNUMBER = 'local_dimensions_template_idnumber';
 
+    /** @var string Custom field shortname for per-template enrollment filter (lp area only) */
+    const CFIELD_ENROLLMENTFILTER = 'local_dimensions_enrollmentfilter';
+
+    /** @var string Custom field shortname for per-template single-course redirect (lp area only) */
+    const CFIELD_SINGLECOURSEREDIRECT = 'local_dimensions_singlecourseredirect';
+
+    /** @var string Enrollment filter: inherit the global setting */
+    const ENROLLMENTFILTER_INHERIT = 'inherit';
+
+    /** @var string Enrollment filter: show all linked courses */
+    const ENROLLMENTFILTER_ALL = 'all';
+
+    /** @var string Enrollment filter: show only courses where user is enrolled */
+    const ENROLLMENTFILTER_ENROLLED = 'enrolled';
+
+    /** @var string Enrollment filter: show only courses with active enrollments */
+    const ENROLLMENTFILTER_ACTIVE = 'active';
+
+    /** @var string Single-course redirect: inherit the global setting */
+    const SINGLECOURSEREDIRECT_INHERIT = 'inherit';
+
+    /** @var string Single-course redirect: enable for this template */
+    const SINGLECOURSEREDIRECT_YES = 'yes';
+
+    /** @var string Single-course redirect: disable for this template */
+    const SINGLECOURSEREDIRECT_NO = 'no';
+
     /** @var string Subline source: hide the subline */
     const SUBLINE_NONE = 'none';
 
@@ -110,6 +137,39 @@ class constants {
             self::SUBLINE_TAG1 => new \lang_string('subline_source_tag1', 'local_dimensions'),
             self::SUBLINE_TAG2 => new \lang_string('subline_source_tag2', 'local_dimensions'),
             self::SUBLINE_NONE => new \lang_string('subline_source_none', 'local_dimensions'),
+        ];
+    }
+
+    /**
+     * Localized options for the per-template enrollment filter select.
+     *
+     * The leading "inherit" option resolves to the site-wide
+     * `local_dimensions/enrollmentfilter` setting at read time.
+     *
+     * @return array<string, \lang_string> keyed by option identifier
+     */
+    public static function enrollmentfilter_options(): array {
+        return [
+            self::ENROLLMENTFILTER_INHERIT => new \lang_string('enrollmentfilter_inherit', 'local_dimensions'),
+            self::ENROLLMENTFILTER_ALL => new \lang_string('enrollmentfilter_all', 'local_dimensions'),
+            self::ENROLLMENTFILTER_ENROLLED => new \lang_string('enrollmentfilter_enrolled', 'local_dimensions'),
+            self::ENROLLMENTFILTER_ACTIVE => new \lang_string('enrollmentfilter_active', 'local_dimensions'),
+        ];
+    }
+
+    /**
+     * Localized options for the per-template single-course redirect select.
+     *
+     * The leading "inherit" option resolves to the site-wide
+     * `local_dimensions/singlecourseredirect` setting at read time.
+     *
+     * @return array<string, \lang_string> keyed by option identifier
+     */
+    public static function singlecourseredirect_options(): array {
+        return [
+            self::SINGLECOURSEREDIRECT_INHERIT => new \lang_string('singlecourseredirect_inherit', 'local_dimensions'),
+            self::SINGLECOURSEREDIRECT_YES => new \lang_string('singlecourseredirect_yes', 'local_dimensions'),
+            self::SINGLECOURSEREDIRECT_NO => new \lang_string('singlecourseredirect_no', 'local_dimensions'),
         ];
     }
 }

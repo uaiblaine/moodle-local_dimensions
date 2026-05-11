@@ -44,7 +44,7 @@ use local_dimensions\customfield\lp_handler;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class template_form extends moodleform {
-    /** @var template The template being edited */
+    /** @var template|null The template being edited, or null when creating a new one. */
     protected $template = null;
 
     /** @var \context The context */
@@ -59,14 +59,15 @@ class template_form extends moodleform {
 
         $mform = $this->_form;
 
-        // Get custom data.
-        $this->template = $this->_customdata['template'];
-        $this->context = $this->_customdata['context'] ?? $this->template->get_context();
+        // Get custom data. `template` is null on the create flow; `context` is always provided
+        // by the caller (either the loaded template's context or the resolved page context).
+        $this->template = $this->_customdata['template'] ?? null;
+        $this->context = $this->_customdata['context'];
 
         // Hidden fields.
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
-        $mform->setDefault('id', $this->template->get('id'));
+        $mform->setDefault('id', $this->template ? $this->template->get('id') : 0);
 
         $mform->addElement('hidden', 'contextid');
         $mform->setType('contextid', PARAM_INT);
@@ -91,7 +92,7 @@ class template_form extends moodleform {
         $mform->setType('shortname', PARAM_TEXT);
         $mform->addRule('shortname', null, 'required', null, 'client');
         $mform->addRule('shortname', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
-        $mform->setDefault('shortname', $this->template->get('shortname'));
+        $mform->setDefault('shortname', $this->template ? $this->template->get('shortname') : '');
 
         $mform->addElement('editor', 'description', get_string('description', 'tool_lp'), ['rows' => 4]);
         $mform->setType('description', PARAM_CLEANHTML);
@@ -107,7 +108,7 @@ class template_form extends moodleform {
         );
 
         $mform->addElement('selectyesno', 'visible', get_string('visible', 'tool_lp'));
-        $mform->setDefault('visible', $this->template->get('visible'));
+        $mform->setDefault('visible', $this->template ? $this->template->get('visible') : 1);
         $mform->addHelpButton('visible', 'visible', 'tool_lp');
 
         $mform->addElement('date_time_selector', 'duedate', get_string('duedate', 'tool_lp'), ['optional' => true]);
@@ -132,7 +133,7 @@ class template_form extends moodleform {
         // logic (see task D1 in project_post_revamp_improvements.md). Left in the
         // Custom fields section for now.
         $handler = lp_handler::create();
-        $instanceid = $this->template->get('id');
+        $instanceid = $this->template ? $this->template->get('id') : 0;
         $handler->instance_form_definition($mform, $instanceid);
 
         $mform->addElement('html', $OUTPUT->render_from_template('local_dimensions/edit_competency_section_note', [
@@ -159,25 +160,28 @@ class template_form extends moodleform {
             ]);
         }
 
-        $this->add_action_buttons(true, get_string('savechanges'));
+        $this->add_action_buttons(true, $this->template ? get_string('savechanges') : get_string('add'));
 
         // Populate the form with the existing template's data, including the editor
         // payload as a {text, format} array so the rich-text editor (TinyMCE) can
         // initialise correctly. Setting the description via setDefault() in
         // definition_after_data does not reach the editor's format slot, which is
-        // what made TinyMCE bail out on this page.
-        $defaultdata = new \stdClass();
-        $defaultdata->id = $this->template->get('id');
-        $defaultdata->shortname = $this->template->get('shortname');
-        $defaultdata->visible = $this->template->get('visible');
-        $defaultdata->duedate = (int)$this->template->get('duedate');
-        $defaultdata->description = [
-            'text' => $this->template->get('description'),
-            'format' => $this->template->get('descriptionformat'),
-        ];
+        // what made TinyMCE bail out on this page. Skipped in create mode — defaults
+        // come from setDefault() above and the customfield handler.
+        if ($this->template) {
+            $defaultdata = new \stdClass();
+            $defaultdata->id = $this->template->get('id');
+            $defaultdata->shortname = $this->template->get('shortname');
+            $defaultdata->visible = $this->template->get('visible');
+            $defaultdata->duedate = (int)$this->template->get('duedate');
+            $defaultdata->description = [
+                'text' => $this->template->get('description'),
+                'format' => $this->template->get('descriptionformat'),
+            ];
 
-        $handler->instance_form_before_set_data_with_image($defaultdata);
-        $this->set_data($defaultdata);
+            $handler->instance_form_before_set_data_with_image($defaultdata);
+            $this->set_data($defaultdata);
+        }
     }
 
     /**
