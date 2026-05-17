@@ -76,21 +76,25 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
     if (\local_dimensions\picture_manager::is_external_plugin_available()) {
         $imagehandleroptions['customfield_picture'] = get_string('imagehandler_external', 'local_dimensions');
     }
-    $settings->add(new admin_setting_configselect(
+    $imagehandlersetting = new admin_setting_configselect(
         'local_dimensions/imagehandler',
         get_string('imagehandler', 'local_dimensions'),
         get_string('imagehandler_desc', 'local_dimensions'),
         'builtin',
         $imagehandleroptions
-    ));
+    );
+    $imagehandlersetting->set_updatedcallback('local_dimensions\helper::ensure_custom_fields_on_setting_change');
+    $settings->add($imagehandlersetting);
 
     // Enable custom SCSS for all modes (Full Plan Overview and Competency Tracker).
-    $settings->add(new admin_setting_configcheckbox(
+    $enablecustomscsssetting = new admin_setting_configcheckbox(
         'local_dimensions/enablecustomscss',
         get_string('enablecustomscss', 'local_dimensions'),
         get_string('enablecustomscss_desc', 'local_dimensions'),
         0
-    ));
+    );
+    $enablecustomscsssetting->set_updatedcallback('local_dimensions\helper::ensure_custom_fields_on_setting_change');
+    $settings->add($enablecustomscsssetting);
 
     // -----------------------------------------------------------------------
     // 2. Competency Tracker Mode.

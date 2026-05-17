@@ -249,6 +249,14 @@ if ($search !== '') {
     }));
 }
 
+// Deterministic blue/orange/green variant cycle for the default card banner
+// gradient. Custom `bgcolor` and `cardimageurl` still win via inline style.
+$cardvariants = ['blue', 'orange', 'green'];
+foreach ($templateoptions as $idx => &$row) {
+    $row['variant'] = $cardvariants[$idx % 3];
+}
+unset($row);
+
 $newtemplateurl = $canaddtemplate ? new moodle_url('/local/dimensions/edit_template.php', [
     'id' => 0,
     'pagecontextid' => $pagecontextid,

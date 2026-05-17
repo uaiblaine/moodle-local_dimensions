@@ -283,5 +283,4 @@ class picture_manager {
             $file->get_filename()
         )->out();
     }
-
 }
