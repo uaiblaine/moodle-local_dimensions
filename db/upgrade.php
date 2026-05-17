@@ -143,5 +143,24 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026051102, 'local', 'dimensions');
     }
 
+    // Per-competency overrides for enrollmentfilter / singlecourseredirect.
+    // Provisions the two select customfields in the competency area so the
+    // cascade competency -> template -> global has a place to read the
+    // competency layer from. view-competency.php now consults this field first.
+    if ($oldversion < 2026051201) {
+        \local_dimensions\helper::get_enrollmentfilter_field(\local_dimensions\helper::AREA_COMPETENCY);
+        \local_dimensions\helper::get_singlecourseredirect_field(\local_dimensions\helper::AREA_COMPETENCY);
+
+        upgrade_plugin_savepoint(true, 2026051201, 'local', 'dimensions');
+    }
+
+    // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
+    // new customfield in the future only needs a version bump plus a new getter
+    // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
+    // block is required for field provisioning. Each getter short-circuits via
+    // find_field_by_shortname(), so this is idempotent.
+    \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_LP);
+    \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_COMPETENCY);
+
     return true;
 }

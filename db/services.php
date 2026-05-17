@@ -75,4 +75,56 @@ $functions = [
         'type' => 'read',
         'ajax' => true,
     ],
+
+    // Competency template CRUD with local_dimensions customfield support.
+    'local_dimensions_create_template' => [
+        'classname' => 'local_dimensions\external\create_template',
+        'methodname' => 'execute',
+        'description' => 'Create a learning plan template, including local_dimensions custom fields.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_update_template' => [
+        'classname' => 'local_dimensions\external\update_template',
+        'methodname' => 'execute',
+        'description' => 'Update a learning plan template, including local_dimensions custom fields.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_read_template' => [
+        'classname' => 'local_dimensions\external\read_template',
+        'methodname' => 'execute',
+        'description' => 'Read a learning plan template, including local_dimensions custom fields.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:templateview',
+        'ajax' => true,
+    ],
+
+    // Competency CRUD with local_dimensions customfield support.
+    'local_dimensions_create_competency' => [
+        'classname' => 'local_dimensions\external\create_competency',
+        'methodname' => 'execute',
+        'description' => 'Create a competency, including local_dimensions custom fields.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:competencymanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_update_competency' => [
+        'classname' => 'local_dimensions\external\update_competency',
+        'methodname' => 'execute',
+        'description' => 'Update a competency, including local_dimensions custom fields.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:competencymanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_read_competency' => [
+        'classname' => 'local_dimensions\external\read_competency',
+        'methodname' => 'execute',
+        'description' => 'Read a competency, including local_dimensions custom fields.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+    ],
 ];

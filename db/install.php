@@ -15,18 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other metadata.
+ * Code to be executed after the plugin's database scheme has been installed.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Provision the plugin's customfields synchronously on install.
+ *
+ * The runtime hook fallback only fires for logged-in admins; calling the
+ * provisioner here guarantees fields exist after CLI installs too.
+ *
+ * @return bool
+ */
+function xmldb_local_dimensions_install() {
+    \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_LP);
+    \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_COMPETENCY);
 
-$plugin->component = 'local_dimensions';
-$plugin->version = 2026051702;
-$plugin->requires = 2024100700;
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = 'v1.0';
-$plugin->supported = [405, 502];
+    return true;
+}

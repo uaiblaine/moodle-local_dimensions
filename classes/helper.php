@@ -158,7 +158,7 @@ class helper {
         $options = constants::display_mode_options();
         $optionstext = [];
         foreach ($options as $key => $langstring) {
-            $optionstext[] = $key . '|' . (string) $langstring;
+            $optionstext[] = (string) $langstring;
         }
 
         return self::create_custom_field(
@@ -168,7 +168,7 @@ class helper {
             new \lang_string('displaymode', 'local_dimensions'),
             [
                 'options' => join("\n", $optionstext),
-                'defaultvalue' => (string) constants::DISPLAYMODE_COMPETENCIES,
+                'defaultvalue' => (string) $options[constants::DISPLAYMODE_COMPETENCIES],
             ],
             '' // Description removed to avoid fixed-language issue (field name is self-explanatory).
         );
@@ -430,9 +430,13 @@ class helper {
             self::get_display_mode_field();
             self::get_subline_source_field();
             self::get_template_idnumber_field();
-            self::get_enrollmentfilter_field();
-            self::get_singlecourseredirect_field();
         }
+
+        // Enrollment filter + single-course redirect: provisioned for both
+        // templates and competencies so the cascade competency -> template ->
+        // global has a place to read each layer from.
+        self::get_enrollmentfilter_field($area);
+        self::get_singlecourseredirect_field($area);
 
         // Image fields: only create if using external customfield_picture plugin.
         // In built-in mode, images are managed by picture_manager directly.
@@ -454,17 +458,24 @@ class helper {
         }
     }
 
+    /** @var int Re-check window for the lazy-provisioning hook fallback (seconds). */
+    const FIELDS_ENSURED_TTL = 3600;
+
     /**
      * Ensure all custom fields exist for both LP and competency areas.
      *
-     * Uses a session flag so the check runs only once per user session,
-     * avoiding repeated DB queries on every page load.
-     *
+     * Throttled by a session-scoped timestamp so the work runs at most once
+     * per {@see self::FIELDS_ENSURED_TTL} window per admin session. The TTL
+     * means a field accidentally deleted via the customfield admin UI is
+     * re-created within the window — install.php, the upgrade tail block, and
+     * the settings updated-callbacks cover the immediate cases.
      */
     public static function ensure_all_fields(): void {
         global $SESSION;
 
-        if (!empty($SESSION->local_dimensions_fields_ensured)) {
+        $now = time();
+        $last = (int) ($SESSION->local_dimensions_fields_ensured ?? 0);
+        if ($last && ($now - $last) < self::FIELDS_ENSURED_TTL) {
             return;
         }
 
@@ -476,7 +487,19 @@ class helper {
         self::ensure_custom_fields_exist(self::AREA_LP);
         self::ensure_custom_fields_exist(self::AREA_COMPETENCY);
 
-        $SESSION->local_dimensions_fields_ensured = true;
+        $SESSION->local_dimensions_fields_ensured = $now;
+    }
+
+    /**
+     * Updated-callback target for admin settings that toggle conditional fields.
+     *
+     * Wired from settings.php so toggling `imagehandler` or `enablecustomscss`
+     * provisions any newly-conditional fields immediately, without waiting for
+     * the lazy hook fallback to fire.
+     */
+    public static function ensure_custom_fields_on_setting_change(): void {
+        self::ensure_custom_fields_exist(self::AREA_LP);
+        self::ensure_custom_fields_exist(self::AREA_COMPETENCY);
     }
 
     /**
@@ -521,7 +544,7 @@ class helper {
         $options = constants::subline_source_options();
         $optionstext = [];
         foreach ($options as $key => $langstring) {
-            $optionstext[] = $key . '|' . (string) $langstring;
+            $optionstext[] = (string) $langstring;
         }
 
         return self::create_custom_field(
@@ -531,7 +554,7 @@ class helper {
             new \lang_string('subline_source', 'local_dimensions'),
             [
                 'options' => join("\n", $optionstext),
-                'defaultvalue' => constants::SUBLINE_STATUS,
+                'defaultvalue' => (string) $options[constants::SUBLINE_STATUS],
             ],
             ''
         );
@@ -576,17 +599,18 @@ class helper {
     }
 
     /**
-     * Get or create the per-template enrollment filter select field (lp area).
+     * Get or create the enrollment filter select field for the given area.
      *
-     * Storage: select customfield, options "key|label". Default option is
-     * `inherit`, which resolves to the site-wide
-     * `local_dimensions/enrollmentfilter` setting at read time.
+     * Storage: select customfield. Default option is `inherit`, which resolves
+     * to the next layer (template, then site-wide
+     * `local_dimensions/enrollmentfilter` setting) at read time.
      *
+     * @param string $area The area (lp or competency)
      * @return field_controller|null
      */
-    public static function get_enrollmentfilter_field(): ?field_controller {
+    public static function get_enrollmentfilter_field(string $area = self::AREA_LP): ?field_controller {
         $shortname = constants::CFIELD_ENROLLMENTFILTER;
-        $field = self::find_field_by_shortname($shortname, self::AREA_LP);
+        $field = self::find_field_by_shortname($shortname, $area);
 
         if ($field) {
             return $field;
@@ -595,34 +619,35 @@ class helper {
         $options = constants::enrollmentfilter_options();
         $optionstext = [];
         foreach ($options as $key => $langstring) {
-            $optionstext[] = $key . '|' . (string) $langstring;
+            $optionstext[] = (string) $langstring;
         }
 
         return self::create_custom_field(
             $shortname,
             'select',
-            self::AREA_LP,
+            $area,
             new \lang_string('enrollmentfilter', 'local_dimensions'),
             [
                 'options' => join("\n", $optionstext),
-                'defaultvalue' => constants::ENROLLMENTFILTER_INHERIT,
+                'defaultvalue' => (string) $options[constants::ENROLLMENTFILTER_INHERIT],
             ],
             ''
         );
     }
 
     /**
-     * Get or create the per-template single-course redirect select field (lp area).
+     * Get or create the single-course redirect select field for the given area.
      *
-     * Storage: select customfield, options "key|label". Default option is
-     * `inherit`, which resolves to the site-wide
-     * `local_dimensions/singlecourseredirect` setting at read time.
+     * Storage: select customfield. Default option is `inherit`, which resolves
+     * to the next layer (template, then site-wide
+     * `local_dimensions/singlecourseredirect` setting) at read time.
      *
+     * @param string $area The area (lp or competency)
      * @return field_controller|null
      */
-    public static function get_singlecourseredirect_field(): ?field_controller {
+    public static function get_singlecourseredirect_field(string $area = self::AREA_LP): ?field_controller {
         $shortname = constants::CFIELD_SINGLECOURSEREDIRECT;
-        $field = self::find_field_by_shortname($shortname, self::AREA_LP);
+        $field = self::find_field_by_shortname($shortname, $area);
 
         if ($field) {
             return $field;
@@ -631,17 +656,17 @@ class helper {
         $options = constants::singlecourseredirect_options();
         $optionstext = [];
         foreach ($options as $key => $langstring) {
-            $optionstext[] = $key . '|' . (string) $langstring;
+            $optionstext[] = (string) $langstring;
         }
 
         return self::create_custom_field(
             $shortname,
             'select',
-            self::AREA_LP,
+            $area,
             new \lang_string('singlecourseredirect', 'local_dimensions'),
             [
                 'options' => join("\n", $optionstext),
-                'defaultvalue' => constants::SINGLECOURSEREDIRECT_INHERIT,
+                'defaultvalue' => (string) $options[constants::SINGLECOURSEREDIRECT_INHERIT],
             ],
             ''
         );
@@ -738,6 +763,100 @@ class helper {
         }
 
         return $resolved === constants::SINGLECOURSEREDIRECT_YES;
+    }
+
+    /**
+     * Read the raw stored option key for a competency-area filter field.
+     *
+     * Returns the option key as stored (one of $allowed) or $default when the
+     * competency has no row, the field does not exist, or the stored value is
+     * unrecognised.
+     *
+     * @param int $competencyid Competency ID
+     * @param string $shortname Customfield shortname
+     * @param string[] $allowed Allowed option keys (ordered to match field options)
+     * @param string $default Fallback when no value resolves
+     * @return string One of $allowed or $default
+     */
+    private static function get_competency_select_raw(
+        int $competencyid,
+        string $shortname,
+        array $allowed,
+        string $default
+    ): string {
+        if ($competencyid <= 0) {
+            return $default;
+        }
+        $field = self::find_field_by_shortname($shortname, self::AREA_COMPETENCY);
+        if (!$field) {
+            return $default;
+        }
+        $fields = \core_customfield\api::get_instance_fields_data([$field->get('id') => $field], $competencyid);
+        foreach ($fields as $data) {
+            $value = $data->get_value();
+            if (is_int($value) && isset($allowed[$value - 1])) {
+                $value = $allowed[$value - 1];
+            }
+            $value = (string) $value;
+            if ($value !== '' && in_array($value, $allowed, true)) {
+                return $value;
+            }
+        }
+        return $default;
+    }
+
+    /**
+     * Resolve the effective enrollment filter when viewing a competency through a plan.
+     *
+     * Cascade: competency-level customfield -> template-level customfield ->
+     * site-wide `local_dimensions/enrollmentfilter`. The template layer is
+     * consulted even when the competency is not in the template's plan (e.g.
+     * related-competency links), so the user's plan context still applies.
+     *
+     * @param int $competencyid Competency being viewed
+     * @param int $templateid Template of the plan the competency is being viewed through (0 for manual plans)
+     * @return string One of constants::ENROLLMENTFILTER_ALL|ENROLLED|ACTIVE
+     */
+    public static function resolve_enrollmentfilter_for_view(int $competencyid, int $templateid): string {
+        $compraw = self::get_competency_select_raw(
+            $competencyid,
+            constants::CFIELD_ENROLLMENTFILTER,
+            array_keys(constants::enrollmentfilter_options()),
+            constants::ENROLLMENTFILTER_INHERIT
+        );
+        if ($compraw !== constants::ENROLLMENTFILTER_INHERIT) {
+            return $compraw;
+        }
+        if ($templateid > 0) {
+            return self::get_template_enrollmentfilter($templateid);
+        }
+        return (string) (get_config('local_dimensions', 'enrollmentfilter') ?: constants::ENROLLMENTFILTER_ALL);
+    }
+
+    /**
+     * Resolve the effective single-course redirect flag when viewing a competency through a plan.
+     *
+     * Cascade: competency-level customfield -> template-level customfield ->
+     * site-wide `local_dimensions/singlecourseredirect`.
+     *
+     * @param int $competencyid Competency being viewed
+     * @param int $templateid Template of the plan the competency is being viewed through (0 for manual plans)
+     * @return bool true when the single-course redirect should fire
+     */
+    public static function resolve_singlecourseredirect_for_view(int $competencyid, int $templateid): bool {
+        $compraw = self::get_competency_select_raw(
+            $competencyid,
+            constants::CFIELD_SINGLECOURSEREDIRECT,
+            array_keys(constants::singlecourseredirect_options()),
+            constants::SINGLECOURSEREDIRECT_INHERIT
+        );
+        if ($compraw !== constants::SINGLECOURSEREDIRECT_INHERIT) {
+            return $compraw === constants::SINGLECOURSEREDIRECT_YES;
+        }
+        if ($templateid > 0) {
+            return self::get_template_singlecourseredirect($templateid);
+        }
+        return (bool) get_config('local_dimensions', 'singlecourseredirect');
     }
 
     /**

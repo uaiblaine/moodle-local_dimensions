@@ -46,6 +46,7 @@
     * hastag1 (bool)
     * tag2 (string|null)
     * hastag2 (bool)
+    * variant (string) - Card color variant for the default banner gradient (blue|orange|green)
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -78,12 +79,13 @@
         "hastag1": true,
         "tag2": "Technical",
         "hastag2": true,
-        "hastags": true
+        "hastags": true,
+        "variant": "blue"
     }
 }}
-<article class="local-dimensions-template-card" data-region="template-row" data-template-id="{{id}}" data-search="{{shortname}} {{idnumber}}" tabindex="0">
+<article class="local-dimensions-template-card" data-region="template-row" data-template-id="{{id}}" data-variant="{{variant}}" data-search="{{shortname}} {{idnumber}}" tabindex="0">
     <div class="local-dimensions-template-card-banner{{#hascardimage}} local-dimensions-template-card-banner-image{{/hascardimage}}"
-         style="{{#hasbgcolor}}background-color: {{bgcolor}};{{/hasbgcolor}}{{#hascardimage}} background-image: url('{{cardimageurl}}');{{/hascardimage}}{{#hastextcolor}} color: {{textcolor}};{{/hastextcolor}}">
+         style="{{#hasbgcolor}}--local-dimensions-template-card-bg: {{bgcolor}}; --local-dimensions-template-card-image: none;{{/hasbgcolor}}{{#hascardimage}} --local-dimensions-template-card-image: url('{{cardimageurl}}');{{/hascardimage}}{{#hastextcolor}} --local-dimensions-template-card-ink: {{textcolor}};{{/hastextcolor}}">
         {{#hidden}}<span class="local-dimensions-manage-chip local-dimensions-template-card-chip-hidden">{{#str}}hidden, tool_lp{{/str}}</span>{{/hidden}}
         {{#hastype}}<span class="local-dimensions-manage-chip local-dimensions-template-card-chip-type">{{type}}</span>{{/hastype}}
     </div>

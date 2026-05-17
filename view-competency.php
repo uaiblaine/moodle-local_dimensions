@@ -29,7 +29,6 @@ require_once('../../config.php');
 use local_dimensions\output\view_competency_page;
 use local_dimensions\calculator;
 use local_dimensions\constants;
-use local_dimensions\template_metadata_cache;
 
 // Parameters received via URL.
 $planid = required_param('id', PARAM_INT);
@@ -48,37 +47,18 @@ $PAGE->set_url(new moodle_url('/local/dimensions/view-competency.php', [
 $PAGE->set_context($context);
 $PAGE->add_body_class('local-dimensions-viewcompetency');
 
-// Authorization gate: read_plan() throws if the user cannot access the plan.
-// Rethrowing as moodle_exception mirrors the pattern used by view-plan.php and
-// blocks an authenticated user from rendering any plan/competency by guessing IDs.
+// Authorization gate: read_plan() is the access check. We intentionally do NOT
+// require the competency to be in this plan — related-competency links rendered
+// by the accordion (when local_dimensions/showrelated is enabled) point at
+// competencies from competency_related, which is framework-wide and not bound
+// to competency_templatecomp / competency_plancomp. The competency framework's
+// own read permissions cover broader protection.
 try {
     $plan = \core_competency\api::read_plan($planid);
 } catch (\Exception $e) {
     throw new \moodle_exception('invalidplan', 'local_dimensions');
 }
 $templateid = (int) $plan->get('templateid');
-
-// Defense in depth: the competency must belong to this plan. Template-based
-// plans use competency_templatecomp; manual plans use competency_plancomp
-// (same split used by plan_trail_cache::fetch_trail_data).
-if ($templateid > 0) {
-    $competencyinplan = $DB->record_exists(
-        'competency_templatecomp',
-        ['templateid' => $templateid, 'competencyid' => $competencyid]
-    );
-} else {
-    $competencyinplan = $DB->record_exists(
-        'competency_plancomp',
-        ['planid' => $planid, 'competencyid' => $competencyid]
-    );
-}
-if (!$competencyinplan) {
-    throw new \moodle_exception('invalidcompetencyforplan', 'local_dimensions');
-}
-
-// Per-template overrides for enrollmentfilter / singlecourseredirect; falls
-// back to site-wide settings when the plan has no template (manual plan).
-$tplmeta = ($templateid > 0) ? template_metadata_cache::get_template_metadata($templateid) : null;
 
 // Load the competency.
 $competency = $DB->get_record('competency', ['id' => $competencyid]);
@@ -98,30 +78,40 @@ if ($competency) {
 
     $courses = $DB->get_records_sql($sql, ['competencyid' => $competencyid]);
 
-    // Apply enrollment filter (per-template override falls back to site setting).
-    $enrollmentfilter = $tplmeta['enrollmentfilter']
-        ?? ((string)(get_config('local_dimensions', 'enrollmentfilter') ?: constants::ENROLLMENTFILTER_ALL));
+    // Apply enrollment filter; cascade competency -> template -> global.
+    $enrollmentfilter = \local_dimensions\helper::resolve_enrollmentfilter_for_view(
+        $competencyid,
+        $templateid
+    );
     if ($enrollmentfilter !== constants::ENROLLMENTFILTER_ALL) {
         $courses = calculator::filter_courses_by_enrollment($courses, $USER->id, $enrollmentfilter);
     }
 
-    // Store the return URL and valid course IDs for the "Return to Plan" button feature.
-    // This MUST run before the singlecourseredirect check below, because redirect()
-    // aborts execution and the context would never be stored.
-    if (get_config('local_dimensions', 'enablereturnbutton')) {
+    // Resolve the singlecourseredirect cascade (competency -> template -> global).
+    // Computed before the FAB write so we can decide whether to skip it: writing
+    // $PAGE->url for the destination course would create a loop, because the FAB
+    // on that course would point back here and this page would just redirect to
+    // the same course again.
+    $singlecourseredirect = \local_dimensions\helper::resolve_singlecourseredirect_for_view(
+        $competencyid,
+        $templateid
+    );
+    $willredirect = (
+        $enrollmentfilter === constants::ENROLLMENTFILTER_ACTIVE
+        && $singlecourseredirect
+        && count($courses) === 1
+    );
+
+    // Store the return URL for the "Return to Plan" FAB. Skipped when
+    // $willredirect would fire (see comment above). Any URL previously written
+    // by view-plan.php for this course remains in the cache, so users coming
+    // from plan -> competency -> course still get a working FAB back to the plan.
+    if (!$willredirect && get_config('local_dimensions', 'enablereturnbutton')) {
         $validcourseids = array_keys($courses);
         \local_dimensions\helper::set_return_context($PAGE->url, $validcourseids);
     }
 
-    // Redirect directly to course if only one active enrolment and the (per-template
-    // or global) singlecourseredirect flag is enabled.
-    $singlecourseredirect = $tplmeta['singlecourseredirect']
-        ?? (bool) get_config('local_dimensions', 'singlecourseredirect');
-    if (
-        $enrollmentfilter === constants::ENROLLMENTFILTER_ACTIVE
-        && $singlecourseredirect
-        && count($courses) === 1
-    ) {
+    if ($willredirect) {
         $singlecourse = reset($courses);
         redirect(new moodle_url('/course/view.php', ['id' => $singlecourse->id]));
     }

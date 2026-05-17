@@ -127,4 +127,3 @@ function local_dimensions_set_return_context_for_course(int $courseid, moodle_ur
 function local_dimensions_get_return_context_for_course(int $courseid): ?array {
     return helper::get_return_context_for_course($courseid);
 }
-
