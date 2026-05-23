@@ -385,9 +385,10 @@ class template_metadata_cache {
     /**
      * Get display mode int value from the select field.
      *
-     * The displaymode select field stores options as "1|Label\n2|Label".
-     * The intvalue is the 1-based index into the options list, and the
-     * option key (before the pipe) is the actual display mode constant.
+     * The displaymode select field stores options as plain labels
+     * (e.g. "Competency Tracker\nFull Plan Overview"). The intvalue is
+     * a 1-based index into the options list, which by design maps directly
+     * to the DISPLAYMODE_* constant keys (1 = COMPETENCIES, 2 = PLAN).
      *
      * @param array $records Records keyed by shortname.
      * @return int Display mode constant.
@@ -400,28 +401,15 @@ class template_metadata_cache {
 
         $record = $records[$shortname];
         $selectedindex = isset($record->intvalue) ? (int)$record->intvalue : 0;
-        if ($selectedindex <= 0 || empty($record->configdata)) {
+        if ($selectedindex <= 0) {
             return constants::DISPLAYMODE_COMPETENCIES;
         }
 
-        $config = json_decode($record->configdata, true);
-        if (!is_array($config) || empty($config['options'])) {
-            return constants::DISPLAYMODE_COMPETENCIES;
-        }
-
-        $options = explode("\n", $config['options']);
-        $optionindex = $selectedindex - 1;
-        if (!isset($options[$optionindex])) {
-            return constants::DISPLAYMODE_COMPETENCIES;
-        }
-
-        // Options are stored as "key|label"; extract the key.
-        $option = trim($options[$optionindex]);
-        $parts = explode('|', $option, 2);
-        $value = (int)$parts[0];
-
-        if (array_key_exists($value, constants::display_mode_options())) {
-            return $value;
+        // The display mode select field stores plain labels (not "key|label").
+        // The intvalue is the 1-based option index which, by design, maps
+        // directly to the DISPLAYMODE_* constant keys (1 = COMPETENCIES, 2 = PLAN).
+        if (array_key_exists($selectedindex, constants::display_mode_options())) {
+            return $selectedindex;
         }
 
         return constants::DISPLAYMODE_COMPETENCIES;
