@@ -85,13 +85,19 @@ class observer {
         }
 
         // Remove custom field data tied to this competency. delete_instance is a no-op
-        // if no data exists, so it is safe to call unconditionally.
+        // if no data exists, so it is safe to call unconditionally. It also cleans up
+        // any associated files, but only while the instance context still exists.
         try {
             competency_handler::create()->delete_instance($instanceid);
         } catch (\Throwable $e) {
             debugging('local_dimensions: failed to delete competency customfield data for id '
                 . $instanceid . ': ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
+
+        // Context-independent sweep: from Moodle 5.1 the instance context is
+        // destroyed before the *_deleted event fires, so delete_instance can no
+        // longer resolve the data and silently leaves the rows behind.
+        self::delete_customfield_data($instanceid, helper::AREA_COMPETENCY);
 
         self::invalidate_competency_caches($instanceid);
     }
@@ -136,6 +142,10 @@ class observer {
             debugging('local_dimensions: failed to delete template customfield data for id '
                 . $instanceid . ': ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
+
+        // Context-independent sweep (see competency_deleted) — the template
+        // context is gone by the time this *_deleted event fires on 5.1+.
+        self::delete_customfield_data($instanceid, helper::AREA_LP);
 
         self::invalidate_template_caches($instanceid, true);
     }
@@ -197,6 +207,35 @@ class observer {
             debugging('local_dimensions: instance_form_save failed for instance '
                 . $instanceid . ': ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
+    }
+
+    /**
+     * Delete every customfield_data row for one instance in a plugin area.
+     *
+     * Context-independent: matches rows by instanceid and the area's field ids
+     * directly, so it still works once core has destroyed the instance context
+     * (which it does before the *_deleted event fires from Moodle 5.1).
+     *
+     * @param int $instanceid Competency or template id.
+     * @param string $area local_dimensions customfield area (lp or competency).
+     */
+    protected static function delete_customfield_data(int $instanceid, string $area): void {
+        global $DB;
+
+        if ($instanceid <= 0) {
+            return;
+        }
+
+        $DB->delete_records_select(
+            'customfield_data',
+            "instanceid = :instanceid
+                 AND fieldid IN (
+                     SELECT f.id
+                       FROM {customfield_field} f
+                       JOIN {customfield_category} c ON c.id = f.categoryid
+                      WHERE c.component = :component AND c.area = :area)",
+            ['instanceid' => $instanceid, 'component' => 'local_dimensions', 'area' => $area]
+        );
     }
 
     /**
