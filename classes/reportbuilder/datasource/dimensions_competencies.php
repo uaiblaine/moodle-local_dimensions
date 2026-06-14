@@ -35,7 +35,6 @@ use local_dimensions\reportbuilder\local\entities\competency_extras;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class dimensions_competencies extends competencies {
-
     /**
      * Human-readable name shown in the report-builder UI.
      */
