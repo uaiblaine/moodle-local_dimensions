@@ -38,6 +38,11 @@ use local_dimensions\helper;
 class update_competency extends external_api {
     use customfields_io;
 
+    /**
+     * Describe the web service parameters.
+     *
+     * @return external_function_parameters
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'competency' => competency_exporter::get_update_structure(),
@@ -78,6 +83,11 @@ class update_competency extends external_api {
         return $payload;
     }
 
+    /**
+     * Describe the web service return structure.
+     *
+     * @return external_single_structure
+     */
     public static function execute_returns(): external_single_structure {
         return self::with_customfields(competency_exporter::get_read_structure());
     }
