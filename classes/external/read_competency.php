@@ -46,6 +46,9 @@ class read_competency extends external_api {
 
     /**
      * Read the competency + customfields.
+     *
+     * @param int $id Database record id for the competency.
+     * @return array Exported competency record plus a customfields key.
      */
     public static function execute(int $id): array {
         global $PAGE;

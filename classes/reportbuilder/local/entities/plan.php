@@ -229,6 +229,9 @@ class plan extends base {
      * Mirrors {@see \core_competency\plan::get_statusname()} but works without
      * an instantiated plan model (so it's safe in callbacks operating on raw
      * column values).
+     *
+     * @param int|null $status Raw competency_plan.status value.
+     * @return string Localised status label, or '' when unknown.
      */
     private static function format_plan_status(?int $status): string {
         $map = [

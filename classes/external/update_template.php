@@ -49,6 +49,10 @@ class update_template extends external_api {
 
     /**
      * Update the template, persist customfields, return the merged record.
+     *
+     * @param array $template Template record fields to update.
+     * @param array $customfields Form-shaped customfield values to persist.
+     * @return array Merged template record plus a customfields key.
      */
     public static function execute(array $template, array $customfields = []): array {
         global $PAGE;

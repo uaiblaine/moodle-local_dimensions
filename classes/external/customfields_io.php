@@ -91,6 +91,12 @@ trait customfields_io {
      *
      * Unknown shortnames, non-editable fields (per-field can_edit checked inside
      * the handler), and out-of-scope types are silently skipped.
+     *
+     * @param int $instanceid Instance id (competency or template).
+     * @param string $area local_dimensions customfield area.
+     * @param array $input Form-shaped rows of {shortname, value}.
+     * @param bool $isnew Whether the instance is being created.
+     * @return void
      */
     protected static function apply_customfields(int $instanceid, string $area, array $input, bool $isnew): void {
         if (empty($input)) {
@@ -124,6 +130,8 @@ trait customfields_io {
     /**
      * Read stored customfield values for an instance, in MVP-scope types only.
      *
+     * @param int $instanceid Instance id (competency or template).
+     * @param string $area local_dimensions customfield area.
      * @return array<int, array{shortname:string, name:string, type:string, value:string, displayvalue:string}>
      */
     protected static function read_customfields(int $instanceid, string $area): array {
@@ -154,6 +162,9 @@ trait customfields_io {
      *
      * Relies on `external_single_structure::$keys` being publicly accessible
      * (verified in core/external/classes/external_single_structure.php).
+     *
+     * @param external_single_structure $base Structure to extend.
+     * @return external_single_structure The base plus a customfields key.
      */
     protected static function with_customfields(external_single_structure $base): external_single_structure {
         $keys = $base->keys;
@@ -163,6 +174,9 @@ trait customfields_io {
 
     /**
      * Resolve the customfield handler for a given local_dimensions area.
+     *
+     * @param string $area local_dimensions customfield area (lp or competency).
+     * @return handler The area's customfield handler.
      */
     private static function get_handler_for_area(string $area): handler {
         return $area === helper::AREA_LP ? lp_handler::create() : competency_handler::create();

@@ -46,6 +46,9 @@ class read_template extends external_api {
 
     /**
      * Read the template + customfields.
+     *
+     * @param int $id Database record id for the template.
+     * @return array Exported template record plus a customfields key.
      */
     public static function execute(int $id): array {
         global $PAGE;
