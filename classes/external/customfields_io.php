@@ -39,8 +39,7 @@ use local_dimensions\helper;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 trait customfields_io {
-
-    /** Customfield types accepted on write and exposed on read. */
+    /** @var string[] Customfield types accepted on write and exposed on read. */
     private static array $supportedcftypes = ['text', 'select', 'textarea'];
 
     /**

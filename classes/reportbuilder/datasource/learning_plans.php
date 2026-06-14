@@ -37,7 +37,6 @@ use local_dimensions\reportbuilder\local\entities\{plan, template};
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class learning_plans extends datasource {
-
     /**
      * Human-readable name shown in the report-builder UI.
      */
