@@ -38,7 +38,6 @@ use local_dimensions\helper;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class competency_extras extends base {
-
     /**
      * Database tables that this entity uses.
      *
