@@ -148,12 +148,16 @@ final class observer_test extends \advanced_testcase {
         $handler = competency_handler::create();
         $contextid = $handler->get_instance_context($id)->id;
         // Only insert if we have at least one configured field (skip otherwise).
+        // The area has several configured fields; any one is enough for the
+        // cleanup assertion, so pick the lowest id and ignore the rest.
         $fieldid = $DB->get_field_sql(
             "SELECT f.id
                FROM {customfield_field} f
                JOIN {customfield_category} c ON c.id = f.categoryid
-              WHERE c.component = :component AND c.area = :area",
-            ['component' => 'local_dimensions', 'area' => 'competency']
+              WHERE c.component = :component AND c.area = :area
+           ORDER BY f.id",
+            ['component' => 'local_dimensions', 'area' => 'competency'],
+            IGNORE_MULTIPLE
         );
         if ($fieldid) {
             $DB->insert_record('customfield_data', (object) [
@@ -217,12 +221,16 @@ final class observer_test extends \advanced_testcase {
 
         $handler = lp_handler::create();
         $contextid = $handler->get_instance_context($id)->id;
+        // The area has several configured fields; any one is enough for the
+        // cleanup assertion, so pick the lowest id and ignore the rest.
         $fieldid = $DB->get_field_sql(
             "SELECT f.id
                FROM {customfield_field} f
                JOIN {customfield_category} c ON c.id = f.categoryid
-              WHERE c.component = :component AND c.area = :area",
-            ['component' => 'local_dimensions', 'area' => 'lp']
+              WHERE c.component = :component AND c.area = :area
+           ORDER BY f.id",
+            ['component' => 'local_dimensions', 'area' => 'lp'],
+            IGNORE_MULTIPLE
         );
         if ($fieldid) {
             $DB->insert_record('customfield_data', (object) [
