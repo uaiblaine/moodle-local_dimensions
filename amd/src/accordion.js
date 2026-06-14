@@ -24,7 +24,7 @@
 define(
     ['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/modal', 'core/log',
         'local_dimensions/collapsible_description', 'local_dimensions/chip_filters'],
-    function (Ajax, Templates, Notification, Str, Modal, Log, CollapsibleDescription, ChipFilters) {
+    function(Ajax, Templates, Notification, Str, Modal, Log, CollapsibleDescription, ChipFilters) {
         'use strict';
 
         // Cache for loaded competency summaries to avoid reloading.
@@ -80,16 +80,16 @@ define(
                     competencyid: competencyId,
                     planid: planId
                 }
-            }])[0].then(function (response) {
+            }])[0].then(function(response) {
                 return JSON.parse(response);
             });
 
             // Use custom webservice when enrollment filter is configured, otherwise use core.
             let coursesMethodName = 'tool_lp_list_courses_using_competency';
-            let coursesArgs = { id: competencyId };
+            let coursesArgs = {id: competencyId};
             if (displaySettings.summaryenrollmentfilter && displaySettings.summaryenrollmentfilter !== 'all') {
                 coursesMethodName = 'local_dimensions_get_competency_courses';
-                coursesArgs = { competencyid: competencyId };
+                coursesArgs = {competencyid: competencyId};
             }
             const coursesPromise = Ajax.call([{
                 methodname: coursesMethodName,
@@ -97,7 +97,7 @@ define(
             }])[0];
 
             // Wait for both to complete.
-            Promise.all([summaryPromise, coursesPromise]).then(function (results) {
+            Promise.all([summaryPromise, coursesPromise]).then(function(results) {
                 const summaryResponse = results[0];
                 const coursesResponse = results[1];
 
@@ -111,7 +111,7 @@ define(
 
                 // Render the summary content (including course cards).
                 renderCompetencySummary(contentEl, summaryResponse, coursesResponse, planId);
-            }).catch(function (error) {
+            }).catch(function(error) {
                 // Hide loading, show error.
                 if (loadingEl) {
                     loadingEl.style.display = 'none';
@@ -139,64 +139,64 @@ define(
 
             // Fetch all required language strings first.
             return Str.get_strings([
-                { key: 'rating_label', component: 'local_dimensions' },
-                { key: 'proficient_label', component: 'local_dimensions' },
-                { key: 'evidence_label', component: 'local_dimensions' },
-                { key: 'yes', component: 'local_dimensions' },
-                { key: 'no', component: 'local_dimensions' },
-                { key: 'competency_path', component: 'local_dimensions' },
-                { key: 'in_framework', component: 'local_dimensions' },
-                { key: 'related_dimensions', component: 'local_dimensions' },
-                { key: 'evidence_type_file', component: 'local_dimensions' },
-                { key: 'evidence_type_manual', component: 'local_dimensions' },
-                { key: 'evidence_type_activity', component: 'local_dimensions' },
-                { key: 'evidence_type_coursegrade', component: 'local_dimensions' },
-                { key: 'evidence_type_prior', component: 'local_dimensions' },
-                { key: 'evidence_type_other', component: 'local_dimensions' },
-                { key: 'evidence_by', component: 'local_dimensions' },
-                { key: 'no_evidence', component: 'local_dimensions' },
-                { key: 'access_course', component: 'local_dimensions' },
-                { key: 'linked_courses', component: 'local_dimensions' },
-                { key: 'assessment_status', component: 'local_dimensions' },
-                { key: 'description_label', component: 'local_dimensions' },
-                { key: 'taxonomycard_label', component: 'local_dimensions' },
-                { key: 'show_more', component: 'local_dimensions' },
-                { key: 'show_less', component: 'local_dimensions' },
-                { key: 'proficiency', component: 'local_dimensions' },
-                { key: 'access', component: 'local_dimensions' },
-                { key: 'strftimedaydate', component: 'core_langconfig' },
-                { key: 'evidence_slider_prev', component: 'local_dimensions' },
-                { key: 'evidence_slider_next', component: 'local_dimensions' },
-                { key: 'competency_path', component: 'local_dimensions' },
-                { key: 'evidence_details', component: 'local_dimensions' },
-                { key: 'evidence_note', component: 'local_dimensions' },
-                { key: 'evidence_link', component: 'local_dimensions' },
-                { key: 'evidence_grade', component: 'local_dimensions' },
-                { key: 'evidence_author', component: 'local_dimensions' },
-                { key: 'evidence_date', component: 'local_dimensions' },
-                { key: 'evidence_view_details', component: 'local_dimensions' },
-                { key: 'evidence_open_link', component: 'local_dimensions' },
-                { key: 'rules_tab', component: 'local_dimensions' },
-                { key: 'rules_progress', component: 'local_dimensions' },
-                { key: 'rules_total_competencies', component: 'local_dimensions' },
-                { key: 'rules_required_tag', component: 'local_dimensions' },
-                { key: 'rules_assessment_prefix', component: 'local_dimensions' },
-                { key: 'rules_pts', component: 'local_dimensions' },
-                { key: 'rules_no_points', component: 'local_dimensions' },
-                { key: 'evidence_submit', component: 'local_dimensions' },
-                { key: 'rules_todo', component: 'local_dimensions' },
-                { key: 'rules_completed_count', component: 'local_dimensions' },
-                { key: 'rules_info_title', component: 'local_dimensions' },
-                { key: 'rules_missing_mandatory_notice', component: 'local_dimensions' },
-                { key: 'rules_filter_label', component: 'local_dimensions' },
-                { key: 'rules_filter_all', component: 'local_dimensions' },
-                { key: 'rules_filter_required', component: 'local_dimensions' },
-                { key: 'rules_sr_alert', component: 'local_dimensions' },
-                { key: 'rules_sr_proficient', component: 'local_dimensions' },
-                { key: 'rules_sr_inprogress', component: 'local_dimensions' },
-                { key: 'rules_sr_todo', component: 'local_dimensions' },
-                { key: 'rules_sr_progress', component: 'local_dimensions' }
-            ]).then(function (strings) {
+                {key: 'rating_label', component: 'local_dimensions'},
+                {key: 'proficient_label', component: 'local_dimensions'},
+                {key: 'evidence_label', component: 'local_dimensions'},
+                {key: 'yes', component: 'local_dimensions'},
+                {key: 'no', component: 'local_dimensions'},
+                {key: 'competency_path', component: 'local_dimensions'},
+                {key: 'in_framework', component: 'local_dimensions'},
+                {key: 'related_dimensions', component: 'local_dimensions'},
+                {key: 'evidence_type_file', component: 'local_dimensions'},
+                {key: 'evidence_type_manual', component: 'local_dimensions'},
+                {key: 'evidence_type_activity', component: 'local_dimensions'},
+                {key: 'evidence_type_coursegrade', component: 'local_dimensions'},
+                {key: 'evidence_type_prior', component: 'local_dimensions'},
+                {key: 'evidence_type_other', component: 'local_dimensions'},
+                {key: 'evidence_by', component: 'local_dimensions'},
+                {key: 'no_evidence', component: 'local_dimensions'},
+                {key: 'access_course', component: 'local_dimensions'},
+                {key: 'linked_courses', component: 'local_dimensions'},
+                {key: 'assessment_status', component: 'local_dimensions'},
+                {key: 'description_label', component: 'local_dimensions'},
+                {key: 'taxonomycard_label', component: 'local_dimensions'},
+                {key: 'show_more', component: 'local_dimensions'},
+                {key: 'show_less', component: 'local_dimensions'},
+                {key: 'proficiency', component: 'local_dimensions'},
+                {key: 'access', component: 'local_dimensions'},
+                {key: 'strftimedaydate', component: 'core_langconfig'},
+                {key: 'evidence_slider_prev', component: 'local_dimensions'},
+                {key: 'evidence_slider_next', component: 'local_dimensions'},
+                {key: 'competency_path', component: 'local_dimensions'},
+                {key: 'evidence_details', component: 'local_dimensions'},
+                {key: 'evidence_note', component: 'local_dimensions'},
+                {key: 'evidence_link', component: 'local_dimensions'},
+                {key: 'evidence_grade', component: 'local_dimensions'},
+                {key: 'evidence_author', component: 'local_dimensions'},
+                {key: 'evidence_date', component: 'local_dimensions'},
+                {key: 'evidence_view_details', component: 'local_dimensions'},
+                {key: 'evidence_open_link', component: 'local_dimensions'},
+                {key: 'rules_tab', component: 'local_dimensions'},
+                {key: 'rules_progress', component: 'local_dimensions'},
+                {key: 'rules_total_competencies', component: 'local_dimensions'},
+                {key: 'rules_required_tag', component: 'local_dimensions'},
+                {key: 'rules_assessment_prefix', component: 'local_dimensions'},
+                {key: 'rules_pts', component: 'local_dimensions'},
+                {key: 'rules_no_points', component: 'local_dimensions'},
+                {key: 'evidence_submit', component: 'local_dimensions'},
+                {key: 'rules_todo', component: 'local_dimensions'},
+                {key: 'rules_completed_count', component: 'local_dimensions'},
+                {key: 'rules_info_title', component: 'local_dimensions'},
+                {key: 'rules_missing_mandatory_notice', component: 'local_dimensions'},
+                {key: 'rules_filter_label', component: 'local_dimensions'},
+                {key: 'rules_filter_all', component: 'local_dimensions'},
+                {key: 'rules_filter_required', component: 'local_dimensions'},
+                {key: 'rules_sr_alert', component: 'local_dimensions'},
+                {key: 'rules_sr_proficient', component: 'local_dimensions'},
+                {key: 'rules_sr_inprogress', component: 'local_dimensions'},
+                {key: 'rules_sr_todo', component: 'local_dimensions'},
+                {key: 'rules_sr_progress', component: 'local_dimensions'}
+            ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
                     proficientLabel: strings[1],
@@ -278,7 +278,6 @@ define(
                 CollapsibleDescription.refresh(contentEl);
 
 
-
                 // Initialize evidence slider(s) — pass evidence data, strings, and scale config for modal.
                 // Competency-level scaleconfiguration is null when it inherits from the framework.
                 // Fall back to the resolved scaleconfiguration on the competency tree data object.
@@ -311,7 +310,7 @@ define(
             const ucs = data.usercompetencysummary;
             const competencyData = ucs ? ucs.competency : null;
             const comp = competencyData ? competencyData.competency : null;
-            const visibleCourses = (courses || []).filter(function (course) {
+            const visibleCourses = (courses || []).filter(function(course) {
                 return course.visible == 1;
             });
             const primaryTaxonomy = getPrimaryTaxonomy(competencyData);
@@ -355,16 +354,16 @@ define(
             const tabs = [];
 
             if (summaryState.hasStatus) {
-                tabs.push({ id: 'status', label: strMap.assessmentStatus, icon: 'fa-star' });
+                tabs.push({id: 'status', label: strMap.assessmentStatus, icon: 'fa-star'});
             }
             if (summaryState.hasDesc || summaryState.hasTaxonomyCard || summaryState.hasPath || summaryState.hasRelated) {
-                tabs.push({ id: 'description', label: strMap.descriptionLabel, icon: 'fa-file-text-o' });
+                tabs.push({id: 'description', label: strMap.descriptionLabel, icon: 'fa-file-text-o'});
             }
             if (summaryState.hasEvidence) {
-                tabs.push({ id: 'evidence', label: strMap.evidenceLabel, icon: 'fa-check-square-o' });
+                tabs.push({id: 'evidence', label: strMap.evidenceLabel, icon: 'fa-check-square-o'});
             }
             if (summaryState.hasRules) {
-                tabs.push({ id: 'rules', label: strMap.rulesTab, icon: 'fa-gavel' });
+                tabs.push({id: 'rules', label: strMap.rulesTab, icon: 'fa-gavel'});
             }
 
             return tabs;
@@ -403,7 +402,7 @@ define(
         function renderSummaryTabNavigation(tabs, competencyId) {
             let html = '<div class="local-dimensions-tabs-nav" role="tablist">';
 
-            tabs.forEach(function (tab, idx) {
+            tabs.forEach(function(tab, idx) {
                 const isActive = idx === 0;
                 html += '<button type="button" class="local-dimensions-tab-btn' + (isActive ? ' active' : '') + '"';
                 html += ' role="tab"';
@@ -588,14 +587,14 @@ define(
                 }
 
                 // Deactivate all tabs in this wrapper.
-                wrapper.querySelectorAll('.local-dimensions-tab-btn').forEach(function (b) {
+                wrapper.querySelectorAll('.local-dimensions-tab-btn').forEach(function(b) {
                     b.classList.remove('active');
                     b.setAttribute('aria-selected', 'false');
                     b.setAttribute('tabindex', '-1');
                 });
 
                 // Deactivate all panes.
-                wrapper.querySelectorAll('.local-dimensions-tab-pane').forEach(function (p) {
+                wrapper.querySelectorAll('.local-dimensions-tab-pane').forEach(function(p) {
                     p.classList.remove('active');
                 });
 
@@ -621,13 +620,13 @@ define(
                 }
             }
 
-            tabBtns.forEach(function (btn) {
-                btn.addEventListener('click', function () {
+            tabBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
                     activateTab(this, false);
                 });
 
                 // Keyboard navigation: Arrow Left/Right, Home, End (ARIA Authoring Practices).
-                btn.addEventListener('keydown', function (e) {
+                btn.addEventListener('keydown', function(e) {
                     const wrapper = this.closest('.local-dimensions-tabs-wrapper');
                     if (!wrapper) {
                         return;
@@ -664,10 +663,10 @@ define(
                 return;
             }
 
-            const refresh = function () {
+            const refresh = function() {
                 container
                     .querySelectorAll('.local-dimensions-ev-slider-wrapper, .local-dimensions-courses-scroll-wrapper')
-                    .forEach(function (wrapper) {
+                    .forEach(function(wrapper) {
                         if (typeof wrapper._dimsUpdateArrows === 'function') {
                             wrapper._dimsUpdateArrows();
                         }
@@ -718,7 +717,7 @@ define(
                     competencyid: competencyId,
                     planid: planId
                 }
-            }])[0].then(function (response) {
+            }])[0].then(function(response) {
                 const data = JSON.parse(response);
 
                 if (loadingEl) {
@@ -729,7 +728,7 @@ define(
                     contentEl.style.display = 'block';
                     initRulesFilters(contentEl);
                 }
-            }).catch(function (error) {
+            }).catch(function(error) {
                 if (loadingEl) {
                     loadingEl.style.display = 'none';
                 }
@@ -817,7 +816,7 @@ define(
             // Children list as accessible list.
             if (data.children && data.children.length > 0) {
                 html += '<ul class="local-dimensions-rules-child-list" role="list">';
-                data.children.forEach(function (child) {
+                data.children.forEach(function(child) {
                     html += renderRulesChild(child, strMap, planId, isPoints);
                 });
                 html += '</ul>';
@@ -981,7 +980,7 @@ define(
                 return;
             }
 
-            container.querySelectorAll('.local-dimensions-rules-filter-tabs').forEach(function (tablist) {
+            container.querySelectorAll('.local-dimensions-rules-filter-tabs').forEach(function(tablist) {
                 const buttons = Array.from(tablist.querySelectorAll('.local-dimensions-rules-filter-tab'));
                 const section = tablist.closest('.local-dimensions-rules-section');
                 if (!section || buttons.length === 0) {
@@ -990,8 +989,8 @@ define(
 
                 const cards = Array.from(section.querySelectorAll('.local-dimensions-rules-child-card'));
 
-                const applyFilter = function (filter, focusButton) {
-                    buttons.forEach(function (button) {
+                const applyFilter = function(filter, focusButton) {
+                    buttons.forEach(function(button) {
                         const isActive = button.dataset.filter === filter;
                         button.classList.toggle('active', isActive);
                         button.setAttribute('aria-selected', isActive ? 'true' : 'false');
@@ -1000,18 +999,18 @@ define(
                         }
                     });
 
-                    cards.forEach(function (card) {
+                    cards.forEach(function(card) {
                         const showCard = filter === 'all' || card.dataset.required === 'true';
                         card.hidden = !showCard;
                     });
                 };
 
-                buttons.forEach(function (button) {
-                    button.addEventListener('click', function () {
+                buttons.forEach(function(button) {
+                    button.addEventListener('click', function() {
                         applyFilter(this.dataset.filter, false);
                     });
 
-                    button.addEventListener('keydown', function (e) {
+                    button.addEventListener('keydown', function(e) {
                         const index = buttons.indexOf(this);
                         let nextIndex = -1;
 
@@ -1056,7 +1055,7 @@ define(
             // Slider track.
             html += '<div class="local-dimensions-ev-slider-track">';
 
-            evidence.forEach(function (ev, index) {
+            evidence.forEach(function(ev, index) {
                 const typeInfo = getEvidenceTypeInfo(ev, strMap);
                 const hasExtraDetails = ev.note || ev.url || (ev.grade && ev.gradename && ev.gradename !== '-');
 
@@ -1142,7 +1141,7 @@ define(
                 if (!Array.isArray(config)) {
                     return false;
                 }
-                // gradeValue is 1-based, array is 0-based.
+                // GradeValue is 1-based, array is 0-based.
                 const index = Number.parseInt(gradeValue, 10) - 1;
                 if (index >= 0 && index < config.length) {
                     return !!(config[index].proficient && Number.parseInt(config[index].proficient, 10) === 1);
@@ -1211,7 +1210,7 @@ define(
                 body: Templates.render('local_dimensions/evidence_detail_modal', context),
                 large: false,
                 removeOnClose: true
-            }).then(function (modal) {
+            }).then(function(modal) {
                 modal.show();
                 return modal;
             }).catch(Notification.exception);
@@ -1252,7 +1251,7 @@ define(
          * @return {number[]}
          */
         function getTrackCardOffsets(track, cardSelector) {
-            return Array.prototype.map.call(track.querySelectorAll(cardSelector), function (card) {
+            return Array.prototype.map.call(track.querySelectorAll(cardSelector), function(card) {
                 return getTrackCardOffset(track, card);
             });
         }
@@ -1303,7 +1302,7 @@ define(
             const duration = Math.min(520, Math.max(300, Math.abs(distance) * 1.2));
             let startedAt = null;
 
-            const step = function (timestamp) {
+            const step = function(timestamp) {
                 if (startedAt === null) {
                     startedAt = timestamp;
                 }
@@ -1320,7 +1319,7 @@ define(
                 track.scrollLeft = targetLeft;
                 track._dimsAnimFrame = null;
                 if (globalThis.requestAnimationFrame) {
-                    globalThis.requestAnimationFrame(function () {
+                    globalThis.requestAnimationFrame(function() {
                         track.classList.remove('local-dimensions-animating');
                     });
                 } else {
@@ -1459,7 +1458,7 @@ define(
             const cardSelector = config.cardSelector;
             const itemCount = config.itemCount;
             const edgeThreshold = config.edgeThreshold || 2;
-            const updateArrows = function () {
+            const updateArrows = function() {
                 updateScrollableArrows(
                     wrapper,
                     track,
@@ -1473,19 +1472,19 @@ define(
             wrapper.classList.add('local-dimensions-controls-hidden');
             if (prevBtn) {
                 prevBtn.style.display = 'none';
-                prevBtn.addEventListener('click', function () {
+                prevBtn.addEventListener('click', function() {
                     scrollToTrackAdjacentCard(track, cardSelector, edgeThreshold, -1, updateArrows);
                 });
             }
             if (nextBtn) {
                 nextBtn.style.display = 'none';
-                nextBtn.addEventListener('click', function () {
+                nextBtn.addEventListener('click', function() {
                     scrollToTrackAdjacentCard(track, cardSelector, edgeThreshold, 1, updateArrows);
                 });
             }
 
-            track.querySelectorAll(cardSelector).forEach(function (card) {
-                card.addEventListener('click', function (event) {
+            track.querySelectorAll(cardSelector).forEach(function(card) {
+                card.addEventListener('click', function(event) {
                     if (event.target.closest('a, button')) {
                         return;
                     }
@@ -1521,7 +1520,7 @@ define(
         function initSliders(contentEl, evidenceData, strMap, scaleConfig) {
             const sliders = contentEl.querySelectorAll('.local-dimensions-ev-slider-wrapper');
 
-            sliders.forEach(function (wrapper) {
+            sliders.forEach(function(wrapper) {
                 const track = wrapper.querySelector('.local-dimensions-ev-slider-track');
                 const prevBtn = wrapper.querySelector('.local-dimensions-ev-slider-prev');
                 const nextBtn = wrapper.querySelector('.local-dimensions-ev-slider-next');
@@ -1542,7 +1541,7 @@ define(
                 });
 
                 // Evidence detail button handler — opens modal with full evidence info.
-                wrapper.addEventListener('click', function (e) {
+                wrapper.addEventListener('click', function(e) {
                     const btn = e.target.closest('.local-dimensions-ev-detail-btn');
                     if (!btn) {
                         return;
@@ -1569,7 +1568,7 @@ define(
             let suppressNextClick = false;
             const dragThreshold = 6;
 
-            el.addEventListener('mousedown', function (e) {
+            el.addEventListener('mousedown', function(e) {
                 // Ignore clicks on links/buttons.
                 if (e.target.closest('a, button')) {
                     return;
@@ -1581,7 +1580,7 @@ define(
                 scrollLeft = el.scrollLeft;
             });
 
-            el.addEventListener('mouseleave', function () {
+            el.addEventListener('mouseleave', function() {
                 if (isDown && hasDragged) {
                     suppressNextClick = true;
                 }
@@ -1590,7 +1589,7 @@ define(
                 el.classList.remove('local-dimensions-dragging');
             });
 
-            el.addEventListener('mouseup', function () {
+            el.addEventListener('mouseup', function() {
                 if (isDown && hasDragged) {
                     suppressNextClick = true;
                 }
@@ -1599,7 +1598,7 @@ define(
                 el.classList.remove('local-dimensions-dragging');
             });
 
-            el.addEventListener('mousemove', function (e) {
+            el.addEventListener('mousemove', function(e) {
                 if (!isDown) {
                     return;
                 }
@@ -1617,7 +1616,7 @@ define(
             });
 
             // Prevent click handlers from firing right after dragging.
-            el.addEventListener('click', function (e) {
+            el.addEventListener('click', function(e) {
                 if (!suppressNextClick) {
                     return;
                 }
@@ -1648,7 +1647,7 @@ define(
             html += '<div class="local-dimensions-courses-scroll' +
                 (hasManyCourses ? '' : ' local-dimensions-courses-no-scroll') + '">';
 
-            courses.forEach(function (course) {
+            courses.forEach(function(course) {
                 const courseUrl = M.cfg.wwwroot + '/course/view.php?id=' + course.id;
                 const courseName = course.fullname || course.shortname || '';
                 const progress = Number.parseInt(course.progress, 10) || 0;
@@ -1720,7 +1719,7 @@ define(
         function initCourseScroll(contentEl) {
             const wrappers = contentEl.querySelectorAll('.local-dimensions-courses-scroll-wrapper');
 
-            wrappers.forEach(function (wrapper) {
+            wrappers.forEach(function(wrapper) {
                 const track = wrapper.querySelector('.local-dimensions-courses-scroll');
                 const prevBtn = wrapper.querySelector('.local-dimensions-scroll-prev');
                 const nextBtn = wrapper.querySelector('.local-dimensions-scroll-next');
@@ -1765,7 +1764,7 @@ define(
 
             // Parent competencies.
             if (data.compparents && Array.isArray(data.compparents)) {
-                data.compparents.forEach(function (parent) {
+                data.compparents.forEach(function(parent) {
                     if (parent.shortname) {
                         pathParts.push(escapeHtml(parent.shortname));
                     }
@@ -1776,7 +1775,7 @@ define(
                 html += '<nav class="local-dimensions-path-bar" aria-label="' + escapeHtml(strMap.pathBreadcrumbLabel) + '">';
                 html += '<span class="local-dimensions-path-label">' + escapeHtml(strMap.pathBreadcrumbLabel) + ':</span>';
                 html += '<ol class="local-dimensions-path-breadcrumb">';
-                pathParts.forEach(function (part, idx) {
+                pathParts.forEach(function(part, idx) {
                     html += '<li>';
                     if (idx > 0) {
                         html += '<i class="fa fa-chevron-right local-dimensions-path-bar-sep" aria-hidden="true"></i>';
@@ -1814,7 +1813,7 @@ define(
             html += '</h3>';
             html += '<div class="local-dimensions-related-pills">';
 
-            data.relatedcompetencies.forEach(function (related) {
+            data.relatedcompetencies.forEach(function(related) {
                 if (useLink && related.id) {
                     const href = displaySettings.viewcompetencyurl + '?id=' + planId + '&competencyid=' + related.id;
                     html += '<a href="' + escapeHtml(href) +
@@ -1878,24 +1877,24 @@ define(
             };
 
             const mapping = {
-                behaviour: { iconurl: taxonomyIcons.behaviour || '', accentClass: 'local-dimensions-taxonomy-card-behaviour' },
+                behaviour: {iconurl: taxonomyIcons.behaviour || '', accentClass: 'local-dimensions-taxonomy-card-behaviour'},
                 behavior: {
                     iconurl: taxonomyIcons.behavior || taxonomyIcons.behaviour || '',
                     accentClass: 'local-dimensions-taxonomy-card-behaviour'
                 },
-                competency: { iconurl: taxonomyIcons.competency || '', accentClass: 'local-dimensions-taxonomy-card-competency' },
-                concept: { iconurl: taxonomyIcons.concept || '', accentClass: 'local-dimensions-taxonomy-card-concept' },
-                domain: { iconurl: taxonomyIcons.domain || '', accentClass: 'local-dimensions-taxonomy-card-domain' },
-                indicator: { iconurl: taxonomyIcons.indicator || '', accentClass: 'local-dimensions-taxonomy-card-indicator' },
-                level: { iconurl: taxonomyIcons.level || '', accentClass: 'local-dimensions-taxonomy-card-level' },
-                outcome: { iconurl: taxonomyIcons.outcome || '', accentClass: 'local-dimensions-taxonomy-card-outcome' },
-                practice: { iconurl: taxonomyIcons.practice || '', accentClass: 'local-dimensions-taxonomy-card-practice' },
+                competency: {iconurl: taxonomyIcons.competency || '', accentClass: 'local-dimensions-taxonomy-card-competency'},
+                concept: {iconurl: taxonomyIcons.concept || '', accentClass: 'local-dimensions-taxonomy-card-concept'},
+                domain: {iconurl: taxonomyIcons.domain || '', accentClass: 'local-dimensions-taxonomy-card-domain'},
+                indicator: {iconurl: taxonomyIcons.indicator || '', accentClass: 'local-dimensions-taxonomy-card-indicator'},
+                level: {iconurl: taxonomyIcons.level || '', accentClass: 'local-dimensions-taxonomy-card-level'},
+                outcome: {iconurl: taxonomyIcons.outcome || '', accentClass: 'local-dimensions-taxonomy-card-outcome'},
+                practice: {iconurl: taxonomyIcons.practice || '', accentClass: 'local-dimensions-taxonomy-card-practice'},
                 proficiency: {
                     iconurl: taxonomyIcons.proficiency || '',
                     accentClass: 'local-dimensions-taxonomy-card-proficiency'
                 },
-                skill: { iconurl: taxonomyIcons.skill || '', accentClass: 'local-dimensions-taxonomy-card-skill' },
-                value: { iconurl: taxonomyIcons.value || '', accentClass: 'local-dimensions-taxonomy-card-value' }
+                skill: {iconurl: taxonomyIcons.skill || '', accentClass: 'local-dimensions-taxonomy-card-skill'},
+                value: {iconurl: taxonomyIcons.value || '', accentClass: 'local-dimensions-taxonomy-card-value'}
             };
 
             return mapping[key] || meta;
@@ -2171,11 +2170,11 @@ define(
 
             try {
                 const day = date.getDate();
-                const monthLong = date.toLocaleDateString(lang, { month: 'long' });
-                const monthShort = date.toLocaleDateString(lang, { month: 'short' });
+                const monthLong = date.toLocaleDateString(lang, {month: 'long'});
+                const monthShort = date.toLocaleDateString(lang, {month: 'short'});
                 const year = date.getFullYear();
-                const weekdayLong = date.toLocaleDateString(lang, { weekday: 'long' });
-                const weekdayShort = date.toLocaleDateString(lang, { weekday: 'short' });
+                const weekdayLong = date.toLocaleDateString(lang, {weekday: 'long'});
+                const weekdayShort = date.toLocaleDateString(lang, {weekday: 'short'});
 
                 return formatStr
                     .replace('%A', weekdayLong)
@@ -2227,8 +2226,8 @@ define(
 
             const toggleButtons = document.querySelectorAll('.local-dimensions-accordion-toggle');
 
-            toggleButtons.forEach(function (button) {
-                button.addEventListener('click', function () {
+            toggleButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
                     const expanded = this.getAttribute('aria-expanded') === 'true';
                     const contentId = this.getAttribute('aria-controls');
                     const content = document.getElementById(contentId);
@@ -2246,7 +2245,7 @@ define(
                         content.hidden = true;
                     } else {
                         // Close all other accordion items first.
-                        toggleButtons.forEach(function (otherBtn) {
+                        toggleButtons.forEach(function(otherBtn) {
                             if (otherBtn !== button) {
                                 const otherId = otherBtn.getAttribute('aria-controls');
                                 const otherContent = document.getElementById(otherId);
@@ -2269,7 +2268,7 @@ define(
                 });
 
                 // Keyboard support - Enter and Space.
-                button.addEventListener('keydown', function (e) {
+                button.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         this.click();
@@ -2282,7 +2281,7 @@ define(
             initSearch();
 
             // Wire up custom-field chip filters (no-op when none rendered).
-            ChipFilters.init('local-dimensions-viewplan-chip-filters', function (selection) {
+            ChipFilters.init('local-dimensions-viewplan-chip-filters', function(selection) {
                 activeChipSelection = selection || {};
                 applyFilter();
             });
@@ -2337,10 +2336,10 @@ define(
         function initFilterTabs() {
             const filterTabs = document.querySelectorAll('.local-dimensions-filter-tab');
 
-            filterTabs.forEach(function (tab) {
-                tab.addEventListener('click', function () {
+            filterTabs.forEach(function(tab) {
+                tab.addEventListener('click', function() {
                     // Update active state on tabs.
-                    filterTabs.forEach(function (t) {
+                    filterTabs.forEach(function(t) {
                         t.classList.remove('active');
                         t.setAttribute('aria-selected', 'false');
                     });
@@ -2352,7 +2351,7 @@ define(
                 });
 
                 // Keyboard support.
-                tab.addEventListener('keydown', function (e) {
+                tab.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         this.click();
@@ -2373,20 +2372,20 @@ define(
 
             let debounceTimer = null;
 
-            input.addEventListener('input', function () {
+            input.addEventListener('input', function() {
                 // Show/hide clear button.
                 if (clearBtn) {
                     clearBtn.style.display = input.value.length > 0 ? 'flex' : 'none';
                 }
                 // Debounce filtering (100ms).
                 clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(function () {
+                debounceTimer = setTimeout(function() {
                     applyFilter();
                 }, 100);
             });
 
             if (clearBtn) {
-                clearBtn.addEventListener('click', function () {
+                clearBtn.addEventListener('click', function() {
                     input.value = '';
                     clearBtn.style.display = 'none';
                     input.focus();
@@ -2403,7 +2402,7 @@ define(
             const query = getSearchQuery();
             const accordionItems = document.querySelectorAll('.local-dimensions-accordion-item');
 
-            accordionItems.forEach(function (item) {
+            accordionItems.forEach(function(item) {
                 const isCompleted = item.classList.contains('completed');
 
                 // Tab filter.

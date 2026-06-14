@@ -31,7 +31,7 @@
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['local_dimensions/filter_tabs_nav'], function (FilterTabsNav) {
+define(['local_dimensions/filter_tabs_nav'], function(FilterTabsNav) {
     'use strict';
 
     /**
@@ -49,7 +49,7 @@ define(['local_dimensions/filter_tabs_nav'], function (FilterTabsNav) {
      */
     function readSelection(container) {
         var selection = {};
-        container.querySelectorAll('.local-dimensions-filter-tab[aria-pressed="true"]').forEach(function (chip) {
+        container.querySelectorAll('.local-dimensions-filter-tab[aria-pressed="true"]').forEach(function(chip) {
             var group = chip.closest('.local-dimensions-filter-tabs-wrapper');
             if (!group) {
                 return;
@@ -78,7 +78,7 @@ define(['local_dimensions/filter_tabs_nav'], function (FilterTabsNav) {
         if (!clearBtn) {
             return;
         }
-        var hasAny = Object.keys(selection).some(function (k) {
+        var hasAny = Object.keys(selection).some(function(k) {
             return selection[k] && selection[k].length > 0;
         });
         clearBtn.hidden = !hasAny;
@@ -90,7 +90,7 @@ define(['local_dimensions/filter_tabs_nav'], function (FilterTabsNav) {
      * @param {HTMLElement} container
      */
     function clearAll(container) {
-        container.querySelectorAll('.local-dimensions-filter-tab[aria-pressed="true"]').forEach(function (chip) {
+        container.querySelectorAll('.local-dimensions-filter-tab[aria-pressed="true"]').forEach(function(chip) {
             chip.setAttribute('aria-pressed', 'false');
         });
     }
@@ -102,8 +102,8 @@ define(['local_dimensions/filter_tabs_nav'], function (FilterTabsNav) {
      * @param {Function} callback Receives the updated selection map.
      */
     function setupContainer(container, callback) {
-        container.querySelectorAll('.local-dimensions-filter-tab').forEach(function (chip) {
-            chip.addEventListener('click', function () {
+        container.querySelectorAll('.local-dimensions-filter-tab').forEach(function(chip) {
+            chip.addEventListener('click', function() {
                 var pressed = chip.getAttribute('aria-pressed') === 'true';
                 chip.setAttribute('aria-pressed', pressed ? 'false' : 'true');
                 var selection = readSelection(container);
@@ -117,7 +117,7 @@ define(['local_dimensions/filter_tabs_nav'], function (FilterTabsNav) {
 
         var clearBtn = container.querySelector('[data-chip-clear]');
         if (clearBtn) {
-            clearBtn.addEventListener('click', function () {
+            clearBtn.addEventListener('click', function() {
                 clearAll(container);
                 var selection = readSelection(container);
                 refreshClear(container, selection);
@@ -136,12 +136,12 @@ define(['local_dimensions/filter_tabs_nav'], function (FilterTabsNav) {
          * @param {string} containerId DOM id of the [data-chip-filters] node.
          * @param {Function} callback Invoked with the updated selection map.
          */
-        init: function (containerId, callback) {
+        init: function(containerId, callback) {
             var container = document.getElementById(containerId);
             if (!container) {
                 return;
             }
-            registry[containerId] = { container: container, callback: callback };
+            registry[containerId] = {container: container, callback: callback};
             setupContainer(container, callback);
             // Activate the scrollable pill UI on every chip group.
             FilterTabsNav.initAll(container);
@@ -156,7 +156,7 @@ define(['local_dimensions/filter_tabs_nav'], function (FilterTabsNav) {
          * @param {Object<string, string>} itemValues item shortname=>value map.
          * @return {boolean}
          */
-        matchesSelection: function (selection, itemValues) {
+        matchesSelection: function(selection, itemValues) {
             var keys = Object.keys(selection || {});
             for (var i = 0; i < keys.length; i++) {
                 var field = keys[i];
