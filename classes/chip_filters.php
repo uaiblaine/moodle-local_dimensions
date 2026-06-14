@@ -270,8 +270,8 @@ class chip_filters {
      * Build a "filterfields" template payload from per-instance values.
      *
      * @param string[] $shortnames Configured shortnames in display order.
-     * @param array<int, array<string, string>> $instancevalues Map of instanceid => {shortname => value}.
-     * @param array<string, string> $labels Optional shortname => human label override.
+     * @param array $instancevalues Map of instanceid => {shortname => value}.
+     * @param array $labels Optional shortname => human label override.
      * @return array<int, array{shortname:string,label:string,values:array<int,array{value:string}>}>
      */
     public static function build_filterfields_payload(

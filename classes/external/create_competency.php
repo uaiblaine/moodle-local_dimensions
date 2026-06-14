@@ -48,6 +48,10 @@ class create_competency extends external_api {
 
     /**
      * Create the competency, persist customfields, return the merged record.
+     *
+     * @param array $competency Competency record fields to create.
+     * @param array $customfields Form-shaped customfield values to persist.
+     * @return array Merged competency record plus a customfields key.
      */
     public static function execute(array $competency, array $customfields = []): array {
         global $PAGE;

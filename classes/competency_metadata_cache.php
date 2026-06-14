@@ -40,19 +40,19 @@ namespace local_dimensions;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class competency_metadata_cache {
-    /** @var \cache|null Cache instance. */
-    private static $cache = null;
-
     /**
      * Get the cache instance.
+     *
+     * The MUC factory already memoises one loader per definition per request
+     * (cache_factory::$cachesfromdefinitions), so cache::make() is free to call
+     * each time. A plugin-level static handle would only add a reference that
+     * survives PHPUnit's resetAfterTest(), reading a stale store after the
+     * factory is reset.
      *
      * @return \cache
      */
     private static function get_cache(): \cache {
-        if (self::$cache === null) {
-            self::$cache = \cache::make('local_dimensions', 'competency_metadata');
-        }
-        return self::$cache;
+        return \cache::make('local_dimensions', 'competency_metadata');
     }
 
     /**

@@ -47,19 +47,17 @@ namespace local_dimensions;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class template_metadata_cache {
-    /** @var \cache|null Cache instance. */
-    private static $cache = null;
-
     /**
      * Get the cache instance.
+     *
+     * The MUC factory already memoises one loader per definition per request,
+     * so a plugin-level static handle adds no speed and only risks a stale
+     * reference surviving PHPUnit's resetAfterTest(). Call cache::make() each time.
      *
      * @return \cache
      */
     private static function get_cache(): \cache {
-        if (self::$cache === null) {
-            self::$cache = \cache::make('local_dimensions', 'template_metadata');
-        }
-        return self::$cache;
+        return \cache::make('local_dimensions', 'template_metadata');
     }
 
     /**
