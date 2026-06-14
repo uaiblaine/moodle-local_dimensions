@@ -213,9 +213,12 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
                     item.className = 'local-dimensions-icon-dropdown-item';
 
                     var iconClass = resolveClass(icon);
-                    var sourceLabel = icon.source === 'core' ? strings.sourceCore
-                        : (icon.source === 'fasolid' ? strings.sourceFasolid
-                            : (icon.source === 'fabrand' ? strings.sourceFabrand : strings.sourceFablank));
+                    var sourceLabels = {
+                        core: strings.sourceCore,
+                        fasolid: strings.sourceFasolid,
+                        fabrand: strings.sourceFabrand
+                    };
+                    var sourceLabel = sourceLabels[icon.source] || strings.sourceFablank;
                     var sourceColor = icon.source === 'core' ? 'bg-warning text-dark' : 'bg-success';
 
                     item.innerHTML = '<i class="' + iconClass + ' fa-fw" aria-hidden="true"></i>' +

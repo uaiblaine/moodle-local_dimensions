@@ -441,6 +441,8 @@ define([
         }])[0]
         .then(function(hasrelated) {
             if (hasrelated) {
+                // Returned nested chain (string load → dialog) is intentional.
+                // eslint-disable-next-line promise/no-nesting
                 return Str.get_strings([
                     {key: 'deletetemplate', component: 'tool_lp', param: templateName},
                     {key: 'deletetemplatewithplans', component: 'tool_lp'},
@@ -468,6 +470,8 @@ define([
                     return null;
                 });
             }
+            // Returned nested chain (string load → dialog) is intentional.
+            // eslint-disable-next-line promise/no-nesting
             return Str.get_strings([
                 {key: 'confirm', component: 'moodle'},
                 {key: 'deletetemplate', component: 'tool_lp', param: templateName},

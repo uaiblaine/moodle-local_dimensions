@@ -284,6 +284,8 @@ define([], function() {
 
         var tick = function(now) {
             var progress = clamp((now - startTime) / durationMs, 0, 1);
+            // EASE_OUT_CUBIC is a const easing function, not a constructor.
+            // eslint-disable-next-line @babel/new-cap
             var eased = EASE_OUT_CUBIC(progress);
             maskEl.scrollLeft = Math.round(startLeft + delta * eased);
             if (progress < 1) {
