@@ -195,7 +195,7 @@ define([
 
         applyAll();
 
-        // form-autocomplete replaces the <ul> on every filter and re-renders the
+        // Form-autocomplete replaces the <ul> on every filter and re-renders the
         // selection chip on every change; observe the whole container and reapply.
         // Idempotent application keeps the observer from looping on its own writes.
         new MutationObserver(applyAll).observe(container, {childList: true, subtree: true});

@@ -27,7 +27,7 @@
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define([], function () {
+define([], function() {
     'use strict';
 
     var CONTAINER_SELECTOR = '[data-collapsible-description]';
@@ -111,7 +111,7 @@ define([], function () {
             return;
         }
 
-        toggle.addEventListener('click', function () {
+        toggle.addEventListener('click', function() {
             var willExpand = !container.classList.contains(EXPANDED_CLASS);
             container.classList.toggle(EXPANDED_CLASS, willExpand);
             syncToggle(container, toggle, willExpand);
@@ -122,8 +122,8 @@ define([], function () {
 
         if (typeof ResizeObserver !== 'undefined') {
             if (!resizeObserver) {
-                resizeObserver = new ResizeObserver(function (entries) {
-                    entries.forEach(function (entry) {
+                resizeObserver = new ResizeObserver(function(entries) {
+                    entries.forEach(function(entry) {
                         var owner = entry.target.closest(CONTAINER_SELECTOR);
                         if (owner) {
                             measure(owner);
@@ -136,15 +136,17 @@ define([], function () {
 
         if (!windowListenerAttached) {
             windowListenerAttached = true;
-            window.addEventListener('resize', function () {
+            window.addEventListener('resize', function() {
                 trackedContainers.forEach(measure);
-            }, { passive: true });
+            }, {passive: true});
         }
 
         // Re-measure once embedded media (images/iframes) finish loading.
         var media = content.querySelectorAll('img, iframe, video');
-        media.forEach(function (el) {
-            el.addEventListener('load', function () { measure(container); }, { once: true });
+        media.forEach(function(el) {
+            el.addEventListener('load', function() {
+ measure(container);
+}, {once: true});
         });
 
         measure(container);
@@ -167,7 +169,7 @@ define([], function () {
         /**
          * Initialise every collapsible description currently in the document.
          */
-        init: function () {
+        init: function() {
             setupAllUnder(document);
         },
 
@@ -177,7 +179,7 @@ define([], function () {
          *
          * @param {HTMLElement|string} rootOrSelector
          */
-        refresh: function (rootOrSelector) {
+        refresh: function(rootOrSelector) {
             var root = typeof rootOrSelector === 'string'
                 ? document.querySelector(rootOrSelector)
                 : rootOrSelector;

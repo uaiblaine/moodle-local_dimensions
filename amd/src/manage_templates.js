@@ -459,7 +459,7 @@ define([
                         strings[1], // Body message.
                         actions, // Radio options.
                         strings[4], // Confirm.
-                        strings[5]  // Cancel.
+                        strings[5] // Cancel.
                     );
                     selector.display();
                     selector.on('save', function(e, data) {

@@ -27,7 +27,7 @@
 
 define(['jquery'], function($) {
     'use strict';
-    // jQuery is required only to keep this module on the same dependency surface
+    // JQuery is required only to keep this module on the same dependency surface
     // as `local_dimensions/edit_competency`. Direct usage is intentionally avoided
     // here so the bundle stays small.
     void $;

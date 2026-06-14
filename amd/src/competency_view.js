@@ -22,7 +22,7 @@
  */
 define(['jquery', 'core/ajax', 'core/templates', 'core/str',
     'local_dimensions/chip_filters', 'local_dimensions/collapsible_description'],
-function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
+function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
 
     /**
      * Apply the active chip selection to all course-card wrappers.
@@ -30,7 +30,7 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
      * @param {Object<string, string[]>} selection
      */
     function applyCardChipFilter(selection) {
-        $('.local-dimensions-course-card-wrapper').each(function () {
+        $('.local-dimensions-course-card-wrapper').each(function() {
             var $wrapper = $(this);
             var raw = $wrapper.attr('data-filtervalues');
             var values = {};
@@ -44,9 +44,9 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             // Treat data-completed as a virtual filter key so the
             // "completed/not completed" chip group integrates with the rest.
             if ($wrapper.attr('data-completed') === '1') {
-                values['__status'] = 'completed';
+                values.__status = 'completed';
             } else if ($wrapper.attr('data-completed') === '0') {
-                values['__status'] = 'not_completed';
+                values.__status = 'not_completed';
             }
             if (ChipFilters.matchesSelection(selection || {}, values)) {
                 $wrapper.show();
@@ -57,7 +57,7 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
     }
 
     return {
-        init: function (settings) {
+        init: function(settings) {
             settings = settings || {};
             // Activate chip filters and collapsible hero description; both
             // are no-ops when the host page does not render them.
@@ -86,7 +86,7 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             var courseIds = [];
 
             // 1. Collect IDs.
-            containers.each(function () {
+            containers.each(function() {
                 var id = $(this).data('courseid');
                 if (id) {
                     courseIds.push(id);
@@ -105,10 +105,10 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 course_loading: 'Loading…'
             };
             Str.get_strings([
-                { key: 'course_load_error', component: 'local_dimensions' },
-                { key: 'course_load_retry', component: 'local_dimensions' },
-                { key: 'course_loading', component: 'local_dimensions' }
-            ]).done(function (s) {
+                {key: 'course_load_error', component: 'local_dimensions'},
+                {key: 'course_load_retry', component: 'local_dimensions'},
+                {key: 'course_loading', component: 'local_dimensions'}
+            ]).done(function(s) {
                 loaderStrings.course_load_error = s[0];
                 loaderStrings.course_load_retry = s[1];
                 loaderStrings.course_loading = s[2];
@@ -123,7 +123,7 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             function renderCourse(data) {
                 var container = $('.local-dimensions-progress-container[data-courseid="' + data.courseid + '"]');
                 if (data.enabled && data.sections) {
-                    $.each(data.sections, function (j, section) {
+                    $.each(data.sections, function(j, section) {
                         if (section.has_activities) {
                             if (section.percentage == 100) {
                                 section.badge_class = 'badge-success';
@@ -148,7 +148,7 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 data.learnmorebuttoncolor = learnmorebuttoncolor;
 
                 return Templates.render('local_dimensions/progress_card_body', data)
-                    .then(function (html, js) {
+                    .then(function(html, js) {
                         Templates.replaceNodeContents(container, html, js);
                         if (data.locked) {
                             var card = container.closest('.card');
@@ -171,7 +171,7 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 var container = $('.local-dimensions-progress-container[data-courseid="' + courseid + '"]');
                 var errorMsg = loaderStrings.course_load_error;
                 var retryMsg = loaderStrings.course_load_retry;
-                // role="alert" surfaces the failure to assistive tech without
+                // Role="alert" surfaces the failure to assistive tech without
                 // requiring focus; aria-label on the button names the action
                 // even though the visible text already says "Retry".
                 var $wrap = $('<div class="text-danger small p-3 text-center" role="alert"></div>');
@@ -181,7 +181,7 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                     .attr('aria-label', retryMsg);
                 $btn.appendTo($wrap);
                 container.empty().append($wrap);
-                $btn.one('click', function () {
+                $btn.one('click', function() {
                     container.html(
                         '<div class="text-center p-3" role="status" aria-live="polite">' +
                             '<i class="fa fa-spinner fa-spin fa-2x text-primary" aria-hidden="true"></i>' +
@@ -207,25 +207,25 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             function loadCourseWithSoftTimeout(courseid) {
                 var call = Ajax.call([{
                     methodname: 'local_dimensions_get_course_progress',
-                    args: { courseids: [courseid] }
+                    args: {courseids: [courseid]}
                 }])[0];
 
                 var ajaxPromise = $.Deferred();
-                call.done(function (results) {
+                call.done(function(results) {
                     if (results && results[0]) {
-                        renderCourse(results[0]).fail(function () {
-                            renderErrorState(courseid, function () {
+                        renderCourse(results[0]).fail(function() {
+                            renderErrorState(courseid, function() {
                                 loadCourseWithSoftTimeout(courseid);
                             });
                         });
                     } else {
-                        renderErrorState(courseid, function () {
+                        renderErrorState(courseid, function() {
                             loadCourseWithSoftTimeout(courseid);
                         });
                     }
                     ajaxPromise.resolve();
-                }).fail(function () {
-                    renderErrorState(courseid, function () {
+                }).fail(function() {
+                    renderErrorState(courseid, function() {
                         loadCourseWithSoftTimeout(courseid);
                     });
                     ajaxPromise.resolve();
@@ -233,15 +233,21 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
 
                 // Soft timeout: return whichever fires first.
                 var timeoutPromise = $.Deferred();
-                window.setTimeout(function () { timeoutPromise.resolve(); }, 2000);
+                window.setTimeout(function() {
+ timeoutPromise.resolve();
+}, 2000);
                 return $.when(
-                    $.Deferred(function (d) {
+                    $.Deferred(function(d) {
                         var done = false;
-                        ajaxPromise.then(function () {
-                            if (!done) { done = true; d.resolve(); }
+                        ajaxPromise.then(function() {
+                            if (!done) {
+ done = true; d.resolve();
+}
                         });
-                        timeoutPromise.then(function () {
-                            if (!done) { done = true; d.resolve(); }
+                        timeoutPromise.then(function() {
+                            if (!done) {
+ done = true; d.resolve();
+}
                         });
                     })
                 );
@@ -255,8 +261,8 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
              */
             function loadSequentially(ids) {
                 var chain = $.Deferred().resolve();
-                $.each(ids, function (i, cid) {
-                    chain = chain.then(function () {
+                $.each(ids, function(i, cid) {
+                    chain = chain.then(function() {
                         return loadCourseWithSoftTimeout(cid);
                     });
                 });
@@ -268,11 +274,11 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             // (b) prioritise not-completed/not-locked courses in the loader.
             Ajax.call([{
                 methodname: 'local_dimensions_get_courses_completion_status',
-                args: { courseids: courseIds }
-            }])[0].done(function (statuses) {
+                args: {courseids: courseIds}
+            }])[0].done(function(statuses) {
                 var notCompletedIds = [];
                 var completedOrLockedIds = [];
-                $.each(statuses, function (i, s) {
+                $.each(statuses, function(i, s) {
                     var $wrapper = $('.local-dimensions-course-card-wrapper[data-courseid="' + s.courseid + '"]');
                     var done = !!s.iscompleted;
                     $wrapper.attr('data-completed', done ? '1' : '0');
@@ -285,10 +291,10 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
 
                 // PHASE B — sequential FIFO with 2s soft timeout. Not-completed
                 // courses go first so the user sees actionable cards earliest.
-                loadSequentially(notCompletedIds).then(function () {
+                loadSequentially(notCompletedIds).then(function() {
                     return loadSequentially(completedOrLockedIds);
                 });
-            }).fail(function () {
+            }).fail(function() {
                 // Lightweight call failed — fall back to the previous behaviour
                 // and load every course sequentially without prioritisation.
                 loadSequentially(courseIds);
@@ -312,7 +318,7 @@ function ($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
         var SVG_NS = 'http://www.w3.org/2000/svg';
         var STROKE_WIDTH = 2;
         var DASH_ARRAY = '8 8';
-        var BORDER_RADIUS = 6; // matches 0.375rem at 16px base
+        var BORDER_RADIUS = 6; // Matches 0.375rem at 16px base
 
         var svg = document.createElementNS(SVG_NS, 'svg');
         svg.setAttribute('class', 'local-dimensions-locked-border-svg');
