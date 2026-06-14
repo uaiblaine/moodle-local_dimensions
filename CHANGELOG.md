@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **Custom field data leaked on competency/template deletion (Moodle 5.1+).** Core destroys the instance context before firing the `*_deleted` event, so the observer's `delete_instance()` cleanup silently found nothing. Added a context-independent sweep that removes `customfield_data` by instance id and area.
+- Removed a static MUC loader handle (`self::$cache`) from the four cache helper classes; it survived PHPUnit's `resetAfterTest()` and broke cache-invalidation tests (the core cache factory already memoises one loader per definition per request).
+- Migrated CI to the moodle-an-hochschulen reusable workflow (PHPUnit + Behat now run on every PHP × DB leg) and cleared the pre-existing phpcs/phpdoc/ESLint debt the previous workflow never actually ran.
+
 ### Added
 - **Manage competencies** revamp:
   - Context segmented switch (System / Course category) and category autocomplete with badges showing the number of competency frameworks per category.
