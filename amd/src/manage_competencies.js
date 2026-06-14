@@ -1163,6 +1163,9 @@ define([
 
             initDetailsResize(root);
 
+            // Click delegator dispatches many data-action handlers; branch
+            // count over the lint cap is acknowledged (refactor pending).
+            // eslint-disable-next-line complexity
             root.addEventListener('click', function(event) {
                 var actionTarget = event.target.closest('[data-action]');
                 if (actionTarget) {

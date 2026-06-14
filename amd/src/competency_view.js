@@ -100,18 +100,18 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             // Pre-load strings used by the error/retry UI so the synchronous
             // renderer below can reference them without race conditions.
             var loaderStrings = {
-                course_load_error: 'Could not load progress.',
-                course_load_retry: 'Retry',
-                course_loading: 'Loading…'
+                error: 'Could not load progress.',
+                retry: 'Retry',
+                loading: 'Loading…'
             };
             Str.get_strings([
                 {key: 'course_load_error', component: 'local_dimensions'},
                 {key: 'course_load_retry', component: 'local_dimensions'},
                 {key: 'course_loading', component: 'local_dimensions'}
             ]).done(function(s) {
-                loaderStrings.course_load_error = s[0];
-                loaderStrings.course_load_retry = s[1];
-                loaderStrings.course_loading = s[2];
+                loaderStrings.error = s[0];
+                loaderStrings.retry = s[1];
+                loaderStrings.loading = s[2];
             });
 
             /**
@@ -125,6 +125,8 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 if (data.enabled && data.sections) {
                     $.each(data.sections, function(j, section) {
                         if (section.has_activities) {
+                            // Template field name (progress_card_body.mustache) — keep snake_case.
+                            /* eslint-disable camelcase */
                             if (section.percentage == 100) {
                                 section.badge_class = 'badge-success';
                             } else if (section.percentage > 0) {
@@ -132,6 +134,7 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                             } else {
                                 section.badge_class = 'badge-secondary';
                             }
+                            /* eslint-enable camelcase */
                         }
                         section.dasharray = (section.percentage * 0.754).toFixed(2);
                         section.lockiconurl = iconurls.lock || '';
@@ -158,6 +161,7 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                                 injectAnimatedBorder(card[0], overlay[0], animatelockedborder);
                             }
                         }
+                        return null;
                     });
             }
 
@@ -169,8 +173,8 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
              */
             function renderErrorState(courseid, retryFn) {
                 var container = $('.local-dimensions-progress-container[data-courseid="' + courseid + '"]');
-                var errorMsg = loaderStrings.course_load_error;
-                var retryMsg = loaderStrings.course_load_retry;
+                var errorMsg = loaderStrings.error;
+                var retryMsg = loaderStrings.retry;
                 // Role="alert" surfaces the failure to assistive tech without
                 // requiring focus; aria-label on the button names the action
                 // even though the visible text already says "Retry".
@@ -185,7 +189,7 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                     container.html(
                         '<div class="text-center p-3" role="status" aria-live="polite">' +
                             '<i class="fa fa-spinner fa-spin fa-2x text-primary" aria-hidden="true"></i>' +
-                            '<span class="sr-only">' + loaderStrings.course_loading + '</span>' +
+                            '<span class="sr-only">' + loaderStrings.loading + '</span>' +
                         '</div>'
                     );
                     retryFn();
@@ -239,6 +243,10 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 return $.when(
                     $.Deferred(function(d) {
                         var done = false;
+                        /* The jQuery Deferred race resolves d on whichever of
+                         * ajax / timeout settles first; neither .then() can be
+                         * returned or caught without disabling the other branch. */
+                        /* eslint-disable promise/always-return, promise/catch-or-return */
                         ajaxPromise.then(function() {
                             if (!done) {
  done = true; d.resolve();
@@ -249,6 +257,7 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
  done = true; d.resolve();
 }
                         });
+                        /* eslint-enable promise/always-return, promise/catch-or-return */
                     })
                 );
             }
@@ -291,7 +300,7 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
 
                 // PHASE B — sequential FIFO with 2s soft timeout. Not-completed
                 // courses go first so the user sees actionable cards earliest.
-                loadSequentially(notCompletedIds).then(function() {
+                return loadSequentially(notCompletedIds).then(function() {
                     return loadSequentially(completedOrLockedIds);
                 });
             }).fail(function() {

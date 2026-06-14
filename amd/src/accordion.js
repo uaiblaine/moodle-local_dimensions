@@ -111,6 +111,7 @@ define(
 
                 // Render the summary content (including course cards).
                 renderCompetencySummary(contentEl, summaryResponse, coursesResponse, planId);
+                return null;
             }).catch(function(error) {
                 // Hide loading, show error.
                 if (loadingEl) {
@@ -728,6 +729,7 @@ define(
                     contentEl.style.display = 'block';
                     initRulesFilters(contentEl);
                 }
+                return null;
             }).catch(function(error) {
                 if (loadingEl) {
                     loadingEl.style.display = 'none';
