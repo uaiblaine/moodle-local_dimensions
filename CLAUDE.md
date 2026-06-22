@@ -1,0 +1,285 @@
+# Claude instructions for `local_dimensions`
+
+This file is auto-loaded as context whenever Claude works in this plugin's
+directory tree. It captures the **Moodle development standards** this plugin
+follows so future edits stay in the same style and pass CI on the first try.
+The conventions are shared with the sibling plugins `block_feedback_tracker`
+and `local_profilefield_repeatable`; this file keeps only what is true here.
+
+Plugin context: a Moodle **local** plugin ("Competency Dimensions") that
+extends core competencies and learning plan templates with custom fields and
+renders two learner-facing views — **Competency tracker** (course-card grid)
+and **Full plan overview** (expandable accordion) — plus a draggable "Return
+to Plan" FAB. It defines **no database tables of its own**: all data lives in
+core competency tables and `customfield_data`. Supports Moodle **4.5 through
+5.2** (`$plugin->requires = 2024100700`, `$plugin->supported = [405, 502]`).
+CI is the **moodle-an-hochschulen/moodle-workflows** reusable workflow, called
+once per supported branch in `.github/workflows/ci.yml` (5.02 full PHP × DB
+matrix; 5.01/5.00/4.05 one-DB-only) — **update those calls when `supported`
+changes**. Development happens on Moodle 5.1.
+
+## Commands
+
+This plugin is its **own git repo** (`/Volumes/N1TB/dev/github/moodle-local_dimensions`,
+branch `main`). The build needs a real Moodle checkout; the dev Moodle root is
+`/Volumes/N1TB/dev/github/moodle` (5.x split layout: webroot under `public/`).
+
+### Building JavaScript assets (required before committing JS)
+
+The AMD modules in `amd/src/*.js` compile to `amd/build/*.min.js` via Moodle's
+grunt. The plugin is **not** inside a Moodle root, and a symlink **breaks**
+`grunt --root` (the Gruntfile resolves real paths) — so `rsync` the source into
+the mirror path, build, then copy the artefacts back. The mirror path differs
+by Moodle major version:
+
+| Moodle version | Mirror path inside the Moodle root | Grunt invocation |
+| -------------- | ---------------------------------- | ---------------- |
+| 4.5 (legacy)   | `local/dimensions`                 | `npx grunt amd --root=local/dimensions` |
+| 5.0+           | `public/local/dimensions`          | `npx grunt amd --root=public/local/dimensions` |
+
+```sh
+cd /Volumes/N1TB/dev/github/moodle
+rsync -a --exclude=node_modules --exclude=.git \
+  /Volumes/N1TB/dev/github/moodle-local_dimensions/ public/local/dimensions/
+npx grunt amd --root=public/local/dimensions
+cp public/local/dimensions/amd/build/*.min.js \
+   public/local/dimensions/amd/build/*.map \
+   /Volumes/N1TB/dev/github/moodle-local_dimensions/amd/build/
+```
+
+`amd/build/**` is **tracked in git** — Moodle serves the compiled output, not
+`amd/src`. Every `amd/src` edit must ship its rebuilt `.min.js` + `.map` in the
+same commit, and a `version.php` bump so the cache revision changes. Hand-edited
+minified files are a stopgap only; regenerate with grunt before pushing so the
+module-name annotation, source map, and minification match what Moodle expects.
+
+### Linting (run from the Moodle root, pre-push)
+
+```sh
+npx eslint  public/local/dimensions/amd/src
+npx stylelint public/local/dimensions/styles.css
+```
+
+CI runs `grunt --max-lint-warnings 0`, so **every ESLint/Stylelint warning fails
+the build** — there is no warning tier. The local stylelint config
+(`.stylelintrc.json`) extends `stylelint-config-standard` with 4-space indent,
+single quotes, short hex, and `selector-class-pattern ^[a-z0-9\-]+$`. The repo's
+own `package.json` has only stylelint devDeps — **don't** run `npm run build`
+here; the canonical artefacts come from Moodle's Gruntfile.
+
+### Cache / dev loop
+
+After changing PHP that affects rendering, purge caches:
+`php admin/cli/purge_caches.php` (core CLI lives at the **repo root**, outside
+`public/`). For the JS dev loop, set *Site admin → Development → Debug = DEVELOPER*
+and *cachejs = off* so Moodle serves `amd/src` directly without a rebuild.
+
+## CI gating
+
+`moodle-plugin-ci install` runs per job. The **static leg** gates on: `phplint`,
+`phpmd` (informational), `phpcs --max-warnings 0` (**warnings fail**),
+`phpdoc --max-warnings 0`, a development-leftover checker that fails on stray
+to-do markers / merge-conflict markers in **any** file (docs included — never
+write those tokens literally), `validate`, `savepoints`, `mustache`, and
+`grunt --max-lint-warnings 0` (incl. stylelint). **Runtime legs** run PHPUnit
+(`--fail-on-warning`) and Behat on every PHP × DB combination.
+`.moodle-plugin-ci.yml` filters `node_modules`/`vendor` from the scan.
+
+phpcs/phpdoc/PHPUnit/Behat have **no local runner** here — eyeball them at write
+time against the rules below; only eslint/stylelint are verifiable locally.
+
+## Code layout
+
+```
+settings.php                 Admin tree — added under the 'competencies' admin
+                             category (not 'localplugins'), gated on
+                             get_config('core_competency', 'enabled')
+lib.php                      Procedural hooks + SCSS injection
+version.php                  component / version / requires / supported
+view-plan.php                Learner views (plan overview / competency tracker)
+view-competency.php          Single-competency detail view
+manage_competencies.php      Admin: manage competencies w/ custom fields
+manage_templates.php         Admin: manage learning plan templates
+edit_competency*.php         Edit forms (competency, framework)
+edit_template.php            Edit form (template)
+customfield*.php             Custom field config landing pages
+classes/
+  hook_callbacks.php         before_footer_html_generation → Return FAB
+  helper.php                 Custom-field provisioning + return-context + queries
+  observer.php               core_competency event observers (cache + cleanup)
+  calculator.php             Real-time course/section progress
+  constants.php              CFIELD_* shortnames + shared constants
+  *_cache.php                MUC loader wrappers (template/competency metadata,
+                             template_course, plan_trail)
+  scss_manager.php           Per-template/competency SCSS compile + cache
+  picture_manager.php        Card image handling (builtin vs customfield_picture)
+  chip_filters.php           Custom-field-driven chip filter model
+  admin/                     setting_iconpicker (AJAX FontAwesome picker)
+  customfield/               competency_handler + lp_handler (two CF areas)
+  external/                  Web-service functions (one class each)
+  form/                      moodleform subclasses (competency_form, template_form)
+  output/                    Renderables (view_plan_summary_page, view_competency_page)
+  privacy/                   Null provider (no personal data stored)
+  reportbuilder/             Datasources + entities (competencies, plans)
+db/                          access, caches, events, hooks, services, install,
+                             upgrade, uninstall  (NO install.xml — no own tables)
+templates/                   Mustache (server-rendered UI)
+amd/src/                     Plain AMD modules (define([], …)) — NOT Preact/React
+amd/build/                   Committed minified output (grunt) — keep in sync
+lang/{en,pt_br}/             English + Brazilian Portuguese, both kept in sync
+tests/                       PHPUnit (currently observer_test.php only)
+```
+
+## Architecture gotchas
+
+### Custom-field auto-provisioning
+The plugin owns two `customfield` areas via `classes/customfield/`:
+`competency_handler` and `lp_handler` (learning plan templates). Fields are
+provisioned lazily: `helper::ensure_all_fields()` runs once per session from the
+footer hook (guarded by `get_config('core_competency', 'enabled')`), and
+`helper::ensure_custom_fields_on_setting_change()` runs from setting
+`set_updatedcallback`s. Field shortnames are constants in
+`classes/constants.php` (`CFIELD_*`) — reference those, never string literals.
+
+### Custom-field data cleanup on delete (Moodle 5.1+)
+Core destroys the instance context **before** firing `competency_deleted` /
+`competency_template_deleted`, so a context-scoped `delete_instance()` cleanup
+finds nothing. `observer.php` therefore sweeps `customfield_data` by instance id
++ area directly. Preserve that context-independent path when touching deletion.
+
+### Return-to-Plan FAB (`hook_callbacks::before_footer_html_generation`)
+Renders only when: feature enabled, logged-in non-guest, a course is in context,
+the page is **course content** (skips `$PAGE->pagelayout` in
+`admin`/`report`/`maintenance`/`login`/`redirect`, so it stays off course
+settings, gradebook, reports and site admin), and a stored return context exists
+for that course. The FAB is draggable; its position persists in `sessionStorage`
+(per-tab, current session) — see `amd/src/return_button.js`.
+
+### Caches and invalidation
+`observer.php` invalidates the metadata/trail caches on the relevant
+`core\event\competency_*` events. When you add a query that reads cached
+metadata, add the matching invalidation to the observer rather than relying on
+the defensive TTL alone.
+
+## Coding style
+
+### File header
+Every PHP file starts with the GPL block, then a file docblock with
+`@package local_dimensions`, `@copyright`, `@license` (no `@author`).
+Namespaced class files add `namespace local_dimensions\<sub>;`. Use
+`defined('MOODLE_INTERNAL') || die();` in every file **with side-effects**
+(procedural files, `db/*.php`, files with `require_once`/globals). **Omit** it in
+pure namespaced single-class files (constants/enums/handlers with no
+side-effects) — the sniff `moodle.Files.MoodleInternal.MoodleInternalNotNeeded`
+fails the build otherwise. (This plugin's classes do not use
+`declare(strict_types=1)`; match the surrounding files.)
+
+### PHPDoc (`phpdoc --max-warnings 0`)
+- Every class, method, property, constant has a `/** */` docblock; `@param`,
+  `@return`, `@throws` declared explicitly even when implied by the signature.
+- **`@param` array types must be plain `array`** — `local_moodlecheck` can't pair
+  `$var` to its parameter when the type is a generic (`array<int,string>`) or a
+  shape (`array{...}`), and reports "incomplete parameters list (error)". Put the
+  shape in the description prose. `@return array{...}`/`array<…>` is fine (no var
+  to pair).
+- Property docblocks need `@var` even with typed properties
+  (`moodle.Commenting.VariableComment.MissingVar`).
+
+### Naming
+- Classes/methods: `lower_snake_case` (Moodle, not PSR-4 PascalCase).
+- Constants: `UPPER_SNAKE_CASE`. Properties: single lowercase word where possible.
+- Frankenstyle prefix on globals/functions: `local_dimensions_*`.
+
+### CodeSniffer rules that routinely bite (pre-empt at write time)
+1. **Variables are lower-case only** — no camelCase/snake_case
+   (`...ValidVariableName.VariableNameLowerCase`). `$courseid`, not `$courseId`.
+2. **PSR-2 multi-line calls** — `(` last on its line, one arg per line, `)` on its
+   own line at call indent.
+3. **Inline `//` comments**: one space, capital first letter, terminal
+   punctuation. Lowercase-start / version-tagged / multi-line commentary belongs
+   in a `/* … */` block (`moodle.Commenting.InlineComment.*`). The same applies to
+   the leftover checker — never type to-do or merge-conflict tokens literally.
+4. **Operator spacing**: exactly one space around `===`/`!==`/`?`/`:` — column
+   alignment with extra spaces fails (`Squiz.WhiteSpace.OperatorSpacing`).
+5. **Multi-line `if`**: first expression on the line after `(`, `)` on its own
+   line (`PSR12.ControlStructures.ControlStructureSpacing.*`).
+6. **Line length**: hard max **180** (error), soft max **132** (warning, and the
+   warning count fails `phpdoc --max-warnings 0`). Wrap long `@return` shapes.
+7. **No "commented-out code"** false positives: drop trivial trailing `//`
+   comments containing `=` or PHP-looking text (`Squiz.PHP.CommentedOutCode`).
+
+### Dynamic string references
+The string checker can't verify constructed IDs. **Don't**
+`get_string('foo_' . $x, …)` — use a literal `switch`/`match` returning each
+fixed key.
+
+## Lang strings
+`lang/en/local_dimensions.php` and `lang/pt_br/local_dimensions.php` are kept in
+**sync** and **alphabetically sorted** (the `validate` step enforces ordering).
+Conventions here: a setting uses plain keys `<key>` + `<key>_desc` (e.g.
+`enablereturnbutton` / `enablereturnbutton_desc`); each cache definition has a
+`cachedef_<name>`; each capability a `dimensions:<capname>` (the `local/` prefix
+is dropped in the lang key). When adding a string, insert it in the correct
+alphabetic slot in **both** language files.
+
+## Web services
+- Function classes under `classes/external/`, one per file, extend
+  `\core_external\external_api`; `execute_parameters()` →
+  `external_function_parameters`, `execute_returns()` → an external structure.
+- Every read function does `validate_context()` + `require_capability()`; writes
+  add an event. Register in `db/services.php` (`type` read/write, `ajax => true`)
+  — **services install only on upgrade, so a new function needs a `version.php`
+  bump.**
+- A WS that emits localised strings must include `current_language()` in any
+  cache key.
+
+## MUC caches (`db/caches.php`)
+Cache **keys must avoid `:`** (unsafe in file-store paths). This plugin's keys:
+`returncontext` → `course_{id}`, `*_scss` → `css_{id}`, `plan_trail` →
+`{planid}_{userid}`, metadata caches → bare id. Application caches use defensive
+TTLs + `staticacceleration`; session caches hold per-user transient state. Each
+definition needs a `cachedef_<name>` lang string.
+
+## Mustache templates
+Every `templates/*.mustache` needs an `Example context (json):` block in its
+docblock — the Mustache lint renders against it and validates the HTML (supply
+non-empty loop data so the preview produces valid markup). Use triple-stash
+`{{{html}}}` only for trusted server-rendered HTML (e.g. `moodleform::render()`).
+Server-side rendering uses `renderable` + `templatable` + `render_from_template`
+— **zero `html_writer`** in plugin code (moodleform's own markup excepted).
+
+## Forms (moodleform)
+Form classes under `classes/form/` start with
+`require_once($CFG->libdir . '/formslib.php')` (moodleform isn't autoloaded). The
+submit-button label must differ from any collapsible section-header label (a11y +
+Behat target the header toggle otherwise). Populate rich-text/editor fields via
+`set_data()` (form-level), not `setDefault()`, so TinyMCE initialises with text +
+format.
+
+## Upgrade savepoints
+Each `db/upgrade.php` step ends with
+`upgrade_plugin_savepoint(true, <version>, 'local', 'dimensions');` — match
+`<version>` to the `version.php` bump.
+
+## PHPUnit tests
+- `tests/<area>/<thing>_test.php`; class
+  `local_dimensions\<ns>\<thing>_test extends \advanced_testcase`; `@covers`
+  annotation on the class docblock; `$this->resetAfterTest()` in any DB test.
+- `$DB->get_records()` / `getDataGenerator()->create_*()` return **string** ids
+  under both drivers — cast to `(int)` for typed-int signatures and normalise
+  haystacks before strict `assertContains`.
+
+## Cross-DB SQL
+CI runs PostgreSQL and MariaDB. Avoid `SELECT :literal FROM t` (PG infers text);
+avoid `ORDER BY … NULLS FIRST` (use `COALESCE(col, 0)`); cast numeric columns
+read from the DB to `(int)`/`(float)` when typing matters.
+
+## Git / version.php
+The plugin repo (`main`) is separate from the Moodle checkout it's built inside —
+run git from the plugin dir (or `git -C`), since `cd` doesn't persist between Bash
+calls. When rebasing/cherry-picking conflicts on the `version.php` `$plugin->version`
+line, keep the **higher** number so the upgrade still triggers.
+
+## When in doubt
+Follow the patterns in existing files. The codebase is internally consistent —
+if a new file feels like it matches no existing shape, re-examine the approach.
