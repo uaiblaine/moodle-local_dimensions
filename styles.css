@@ -4636,6 +4636,9 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     z-index: 9999;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
 }
 
 .local-dimensions-return-fab:hover,
@@ -4648,6 +4651,13 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
 
 .local-dimensions-return-fab:active {
     transform: translateY(-1px);
+}
+
+/* While dragging: follow the pointer instantly and don't apply hover lift. */
+.local-dimensions-return-fab.local-dimensions-fab-dragging {
+    cursor: grabbing;
+    transition: none;
+    transform: none;
 }
 
 .local-dimensions-return-fab i {

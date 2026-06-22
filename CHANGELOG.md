@@ -32,8 +32,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - New custom field `local_dimensions_template_idnumber` (text, lp area only) — fills the role of an idnumber for templates which have no native column.
 - New helpers in `local_dimensions\helper`: `count_frameworks_by_category`, `count_templates_by_category`, `count_plans_by_template`, `count_cohorts_by_template` (single grouped SQL each).
 - New batch method `template_metadata_cache::get_metadata_for_many` — single grouped customfield_data SELECT for a list of templates, populating MUC for cache misses.
+- **Return to Plan** FAB is now draggable: the user can move it when it overlaps other UI. The chosen position is kept in `sessionStorage` (per-tab, current session only) and restored on reload; double-click resets it to the default corner. Dragging never triggers navigation (movement threshold + click suppression).
 
 ### Changed
+- **Return to Plan** FAB no longer appears on administrative / report pages (course settings, gradebook and other reports, site admin, etc.). `hook_callbacks::before_footer_html_generation` now skips pages whose `$PAGE->pagelayout` is `admin`, `report`, `maintenance`, `login`, or `redirect`, so the button shows only on course-content and activity pages.
 - `manage_competencies.php` and `manage_templates.php` now route through `admin_externalpage_setup()` when accessed in system context, so the capability registered in `settings.php` becomes the real gate (not just a menu filter). Coursecat access keeps the lighter per-context check.
 - `manage_competencies.php` and `manage_templates.php` push the `visible=0` check to SQL: a single `record_exists_select` for the toggle flag, plus `onlyvisible=true` passed to `api::list_frameworks`/`api::list_templates` when "show hidden" is off.
 - `template_form.php` populates the description field via `set_data()` (form-level) instead of `setDefault()`, so the rich-text editor (TinyMCE) initialises correctly with both text and format.

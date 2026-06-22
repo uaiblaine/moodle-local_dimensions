@@ -40,8 +40,9 @@ class hook_callbacks {
      * This displays a FAB button when:
      * 1. The feature is enabled in settings
      * 2. User is currently on a course or activity page
-     * 3. There is a stored return context for the current course (came from a plan view)
-     * 4. Not running inside an iframe (H5P, etc.)
+     * 3. The page is course content (not an administrative/report page)
+     * 4. There is a stored return context for the current course (came from a plan view)
+     * 5. Not running inside an iframe (H5P, etc.)
      *
      * @param before_footer_html_generation $hook
      */
@@ -66,6 +67,15 @@ class hook_callbacks {
         // Check if we're on a valid course/activity page.
         $currentcourseid = self::get_current_course_id();
         if ($currentcourseid === null) {
+            return;
+        }
+
+        // Don't show on administrative / report pages (course settings, gradebook
+        // and other reports, site admin, etc.) even though a course is in context.
+        // The button is meant for course-content and activity pages only, where a
+        // student or a teacher testing a plan is actually consuming the content.
+        $adminlayouts = ['admin', 'report', 'maintenance', 'login', 'redirect'];
+        if (in_array($PAGE->pagelayout, $adminlayouts, true)) {
             return;
         }
 
