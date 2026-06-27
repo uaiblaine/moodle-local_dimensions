@@ -1,0 +1,87 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/contextbar
+
+    Shared context selector governing both the Structure and Plans tabs.
+
+    The category select is always rendered (hidden in system mode) so toggling context
+    is purely client-side. Each option and the bar itself carry both adaptive counts so
+    the displayed count switches between frameworks and plans without a round-trip.
+
+    Context variables required:
+    * contexttype (string) · issystem (bool) · iscoursecat (bool) · needscategory (bool)
+    * selectedcategoryid (int) · hascategories (bool)
+    * categoryoptions (array) {id, name, selected, frameworkcount, templatecount}
+    * systemframeworkcount (int) · systemtemplatecount (int)
+    * selectedframeworkcount (int) · selectedtemplatecount (int)
+
+    Example context (json):
+    {
+        "contexttype": "coursecat",
+        "issystem": false,
+        "iscoursecat": true,
+        "needscategory": false,
+        "selectedcategoryid": 3,
+        "hascategories": true,
+        "categoryoptions": [
+            {"id": 3, "name": "Sciences", "selected": true, "frameworkcount": 4, "templatecount": 2}
+        ],
+        "systemframeworkcount": 7,
+        "systemtemplatecount": 5,
+        "selectedframeworkcount": 4,
+        "selectedtemplatecount": 2
+    }
+}}
+<div class="local-dimensions-central-contextbar d-flex flex-wrap align-items-end gap-3 mb-4"
+     data-region="contextbar"
+     data-contexttype="{{contexttype}}"
+     data-categoryid="{{selectedcategoryid}}"
+     data-activemode="structure"
+     data-systemframeworkcount="{{systemframeworkcount}}"
+     data-systemtemplatecount="{{systemtemplatecount}}">
+    <div>
+        <span class="d-block small text-muted mb-1">{{#str}}managecompetencies_context, local_dimensions{{/str}}</span>
+        <div class="btn-group" role="group" aria-label="{{#str}}managecompetencies_context, local_dimensions{{/str}}">
+            <button type="button" class="btn btn-sm {{#issystem}}btn-primary{{/issystem}}{{^issystem}}btn-outline-secondary{{/issystem}}" data-action="context" data-context="system">
+                <i class="fa fa-globe me-1" aria-hidden="true"></i>{{#str}}managecompetencies_context_system, local_dimensions{{/str}}
+            </button>
+            <button type="button" class="btn btn-sm {{#iscoursecat}}btn-primary{{/iscoursecat}}{{^iscoursecat}}btn-outline-secondary{{/iscoursecat}}" data-action="context" data-context="coursecat">
+                <i class="fa fa-folder-open-o me-1" aria-hidden="true"></i>{{#str}}managecompetencies_context_coursecat, local_dimensions{{/str}}
+            </button>
+        </div>
+    </div>
+
+    <div data-region="category-wrapper"{{^iscoursecat}} hidden{{/iscoursecat}}>
+        <label class="d-block small text-muted mb-1" for="local-dimensions-central-category">
+            {{#str}}managecompetencies_category, local_dimensions{{/str}}
+        </label>
+        <select id="local-dimensions-central-category" class="custom-select" data-region="category-select">
+            <option value="0">{{#str}}managecompetencies_category_placeholder, local_dimensions{{/str}}</option>
+            {{#categoryoptions}}
+            <option value="{{id}}" data-name="{{name}}" data-frameworkcount="{{frameworkcount}}" data-templatecount="{{templatecount}}"{{#selected}} selected{{/selected}}>{{name}} ({{frameworkcount}})</option>
+            {{/categoryoptions}}
+        </select>
+    </div>
+
+    <div class="text-muted small" data-region="context-count"
+         data-frameworkcount="{{selectedframeworkcount}}" data-templatecount="{{selectedtemplatecount}}"{{#needscategory}} hidden{{/needscategory}}>
+        <strong data-region="count-value">{{selectedframeworkcount}}</strong>
+        <span data-mode="structure">{{#str}}central_frameworks, local_dimensions{{/str}}</span>
+        <span data-mode="plans" hidden>{{#str}}central_plans, local_dimensions{{/str}}</span>
+    </div>
+</div>

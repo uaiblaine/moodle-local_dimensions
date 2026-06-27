@@ -1384,6 +1384,13 @@ body.local-dimensions-manage-page .moodle-dialogue:where(:has([data-region='comp
 }
 /* stylelint-enable selector-class-pattern */
 
+/* The custom SCSS field is a textarea customfield rendered as a core editor; the hub modals
+   pin it to plain text (see helper::force_customscss_plain), so the redundant format selector
+   is hidden. The element id is randomised in modals, so target the stable name attribute. */
+.modal-form-dialogue select[name='customfield_customscss_editor[format]'] {
+    display: none;
+}
+
 .local-dimensions-edit input[type='text']:focus,
 .local-dimensions-edit input[type='number']:focus,
 .local-dimensions-edit select:focus,

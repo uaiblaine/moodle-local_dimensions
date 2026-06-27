@@ -300,6 +300,14 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
 
     $ADMIN->add('local_dimensions', $settings);
 
+    // Competency hub — single-surface admin (modal/dynamic_tabs). Work in progress.
+    $ADMIN->add('local_dimensions', new admin_externalpage(
+        'local_dimensions_central',
+        get_string('central', 'local_dimensions'),
+        new moodle_url('/local/dimensions/central.php'),
+        'moodle/competency:competencymanage'
+    ));
+
     // Competency custom fields configuration.
     $ADMIN->add('local_dimensions', new admin_externalpage(
         'local_dimensions_customfield',

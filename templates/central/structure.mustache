@@ -1,0 +1,151 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/structure
+
+    Structure tab: framework switcher + competency tree (master-detail).
+
+    The System / Course category context selector is rendered once at page level
+    (local_dimensions/central/contextbar); this tab receives the resolved context via
+    its data attributes and shows the guided empty state when a category is still needed.
+
+    Context variables required:
+    * contexttype (string) · selectedcategoryid (int) · selectedframeworkid (int)
+    * competenciesjson (string json) · rulesmodulesjson (string json)
+    * needscategoryselection (bool)
+    * hasframeworks (bool) · frameworks (array) {id, name, idnumber, selected, competencycount}
+    * competencies (array) {id, parentid, shortname, idnumber, indent, haschildren, taxonomy, coursecount}
+    * hascompetencies (bool) · competencycount (int) · canmanage (int)
+
+    Example context (json):
+    {
+        "contexttype": "system",
+        "selectedcategoryid": 0,
+        "selectedframeworkid": 5,
+        "competenciesjson": "[]",
+        "rulesmodulesjson": "[]",
+        "needscategoryselection": false,
+        "hasframeworks": true,
+        "frameworks": [
+            {"id": 5, "name": "Core skills", "idnumber": "CORE", "selected": true, "competencycount": 12}
+        ],
+        "competencycount": 12,
+        "canmanage": 1,
+        "hascompetencies": true,
+        "competencies": [
+            {
+                "id": 7, "parentid": 0, "shortname": "Communication", "idnumber": "COMM-01",
+                "taxonomy": "Competency", "coursecount": 3, "indent": 0, "haschildren": true
+            }
+        ]
+    }
+}}
+<div class="local-dimensions-central-structure" data-region="structure"
+     data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}" data-frameworkid="{{selectedframeworkid}}">
+    <script type="application/json" data-region="competency-model">{{{competenciesjson}}}</script>
+    <script type="application/json" data-region="rules-modules">{{{rulesmodulesjson}}}</script>
+
+    {{#needscategoryselection}}
+    <div class="alert alert-info" role="status">{{#str}}managecompetencies_selectcategory_help, local_dimensions{{/str}}</div>
+    {{/needscategoryselection}}
+
+    {{^needscategoryselection}}
+    {{#hasframeworks}}
+    <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+        <div>
+            <label class="d-block small text-muted mb-1" for="local-dimensions-central-framework">
+                {{#str}}competencyframework, tool_lp{{/str}}
+            </label>
+            <select id="local-dimensions-central-framework" class="custom-select" data-region="framework-select">
+                {{#frameworks}}
+                <option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}{{#idnumber}} · {{idnumber}}{{/idnumber}}</option>
+                {{/frameworks}}
+            </select>
+        </div>
+        <div class="text-muted small">
+            {{#str}}managecompetencies_items, local_dimensions{{/str}}: <strong>{{competencycount}}</strong>
+        </div>
+        {{#canmanage}}
+        <button type="button" class="btn btn-primary btn-sm ms-auto" data-action="addroot">
+            <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}managecompetencies_addroot, local_dimensions{{/str}}
+        </button>
+        {{/canmanage}}
+    </div>
+
+    {{#hascompetencies}}
+    <div class="row">
+        <section class="col-lg-7 mb-3" data-region="tree-pane">
+            <div class="card h-100">
+                <div class="card-body p-2" data-region="competency-tree">
+                    {{#competencies}}
+                    {{> local_dimensions/central/structure_node }}
+                    {{/competencies}}
+                </div>
+            </div>
+        </section>
+
+        <aside class="col-lg-5 mb-3" data-region="detail-pane">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div data-region="detail-empty" class="text-muted">
+                        <i class="fa fa-info-circle me-1" aria-hidden="true"></i>
+                        {{#str}}managecompetencies_selectdetails, local_dimensions{{/str}}
+                    </div>
+                    <div data-region="detail-content" hidden>
+                        <div class="small text-muted" data-region="detail-taxonomy"></div>
+                        <h3 class="h5 mb-1" data-region="detail-title"></h3>
+                        <div class="text-monospace small text-muted mb-2" data-region="detail-idnumber"></div>
+                        <div class="small" data-region="detail-courses"></div>
+                        {{#canmanage}}
+                        <div class="mt-3 d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-primary" data-action="edit">
+                                <i class="fa fa-pencil me-1" aria-hidden="true"></i>{{#str}}edit{{/str}}
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" data-action="addchild">
+                                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}managecompetencies_addchild, local_dimensions{{/str}}
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" data-action="rules">
+                                <i class="fa fa-cog me-1" aria-hidden="true"></i>{{#str}}competencyrule, tool_lp{{/str}}
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" data-action="moveup" title="{{#str}}moveup{{/str}}">
+                                <i class="fa fa-arrow-up" aria-hidden="true"></i><span class="sr-only">{{#str}}moveup{{/str}}</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" data-action="movedown" title="{{#str}}movedown{{/str}}">
+                                <i class="fa fa-arrow-down" aria-hidden="true"></i><span class="sr-only">{{#str}}movedown{{/str}}</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete">
+                                <i class="fa fa-trash me-1" aria-hidden="true"></i>{{#str}}delete{{/str}}
+                            </button>
+                        </div>
+                        {{/canmanage}}
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+    {{/hascompetencies}}
+
+    {{^hascompetencies}}
+    <div class="alert alert-info" role="status">{{#str}}nocompetencies, local_dimensions{{/str}}</div>
+    {{/hascompetencies}}
+    {{/hasframeworks}}
+
+    {{^hasframeworks}}
+    <div class="alert alert-info" role="status">{{#str}}noframeworks, local_dimensions{{/str}}</div>
+    {{/hasframeworks}}
+    {{/needscategoryselection}}
+</div>

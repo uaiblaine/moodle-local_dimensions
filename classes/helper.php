@@ -1247,4 +1247,208 @@ class helper {
         }
         return $counts;
     }
+
+    /**
+     * Whether the user can read competency frameworks or learning plan templates in a context.
+     *
+     * The Competency hub context selector is shared by the Structure (frameworks) and
+     * Plans (templates) tabs, so a context is offered when either area is readable there.
+     *
+     * @param \context $context The context to test.
+     * @return bool
+     */
+    public static function can_read_competency_context(\context $context): bool {
+        return \core_competency\competency_framework::can_read_context($context)
+            || \core_competency\template::can_read_context($context);
+    }
+
+    /**
+     * Resolve the shared "context selector" state for the Competency hub.
+     *
+     * Both the Structure and Plans tabs are governed by a single context selector
+     * (System or a course category). Centralising the resolution keeps the context
+     * bar renderable and both tabs in agreement on the working context.
+     *
+     * The returned context is the system context unless a readable course category is
+     * selected. The needscategory flag is true when course-category mode is active but
+     * no readable category is chosen yet (guided empty state). Returned array keys:
+     * context (\context), contexttype (string), categoryid (int), iscoursecat (bool),
+     * needscategory (bool).
+     *
+     * @param string $contexttype Either 'system' or 'coursecat'.
+     * @param int $categoryid Selected course category id (course-category mode only).
+     * @return array The resolved context selector state.
+     */
+    public static function resolve_central_context(string $contexttype, int $categoryid): array {
+        $contexttype = $contexttype === 'coursecat' ? 'coursecat' : 'system';
+        $context = \core\context\system::instance();
+        $iscoursecat = false;
+
+        if ($contexttype === 'coursecat' && $categoryid > 0) {
+            try {
+                $candidate = \context_coursecat::instance($categoryid);
+                if (self::can_read_competency_context($candidate)) {
+                    $context = $candidate;
+                    $iscoursecat = true;
+                } else {
+                    $categoryid = 0;
+                }
+            } catch (\moodle_exception $e) {
+                $categoryid = 0;
+            }
+        }
+
+        return [
+            'context' => $context,
+            'contexttype' => $contexttype,
+            'categoryid' => $iscoursecat ? $categoryid : 0,
+            'iscoursecat' => $iscoursecat,
+            'needscategory' => $contexttype === 'coursecat' && !$iscoursecat,
+        ];
+    }
+
+    /**
+     * Course category options for the Competency hub context selector.
+     *
+     * Each readable category carries both adaptive counts so the client can switch the
+     * displayed count between frameworks (Structure) and learning plans (Plans) without a
+     * round-trip. Counts come from two aggregate queries (no N+1). Each entry holds:
+     * id, name, selected, frameworkcount, templatecount, hasframeworks, hastemplates.
+     *
+     * @param int $selectedid Currently selected category id.
+     * @return array The list of category options.
+     */
+    public static function central_category_options(int $selectedid): array {
+        $catids = [];
+        $catnames = [];
+        foreach (\core_course_category::make_categories_list() as $catid => $catname) {
+            try {
+                if (self::can_read_competency_context(\context_coursecat::instance((int) $catid))) {
+                    $catids[] = (int) $catid;
+                    $catnames[(int) $catid] = $catname;
+                }
+            } catch (\moodle_exception $e) {
+                continue;
+            }
+        }
+
+        $frameworkcounts = self::count_frameworks_by_category($catids);
+        $templatecounts = self::count_templates_by_category($catids);
+
+        $options = [];
+        foreach ($catids as $catid) {
+            $frameworkcount = (int) ($frameworkcounts[$catid] ?? 0);
+            $templatecount = (int) ($templatecounts[$catid] ?? 0);
+            $options[] = [
+                'id' => $catid,
+                'name' => $catnames[$catid],
+                'selected' => $catid === $selectedid,
+                'frameworkcount' => $frameworkcount,
+                'templatecount' => $templatecount,
+                'hasframeworks' => $frameworkcount > 0,
+                'hastemplates' => $templatecount > 0,
+            ];
+        }
+        return $options;
+    }
+
+    /**
+     * Pin the custom SCSS editor field to plain text in a modal form.
+     *
+     * The SCSS field is a textarea customfield rendered as a core editor element. On a new
+     * instance the editor defaults to the rich (TinyMCE) editor, and once the value is plain it
+     * still exposes a format selector. SCSS is always plain text, so this pins the editor value's
+     * format to FORMAT_PLAIN (which renders the plain textarea editor). The now-redundant format
+     * selector is hidden for the hub modals in styles.css. Call from definition_after_data().
+     *
+     * @param \MoodleQuickForm $mform The form being rendered.
+     * @return void
+     */
+    public static function force_customscss_plain(\MoodleQuickForm $mform): void {
+        $name = 'customfield_' . constants::CFIELD_CUSTOMSCSS . '_editor';
+        if (!$mform->elementExists($name)) {
+            return;
+        }
+        $element = $mform->getElement($name);
+        $value = (array) $element->getValue();
+        $value['text'] = $value['text'] ?? '';
+        $value['format'] = FORMAT_PLAIN;
+        $element->setValue($value);
+    }
+
+    /**
+     * Server-side validation of the submitted custom SCSS (when the feature is enabled).
+     *
+     * Shared by the competency and template modal forms so both block saving invalid SCSS
+     * identically. Returns an errors array (form field name => message) to merge into the
+     * form's validation() result, or an empty array when SCSS is disabled, empty, or valid.
+     *
+     * @param array $data Submitted form data.
+     * @return array Validation errors keyed by form field name.
+     */
+    public static function validate_customscss(array $data): array {
+        if (!get_config('local_dimensions', 'enablecustomscss')) {
+            return [];
+        }
+        [$scssvalue, $errorfield] = self::extract_submitted_scss($data);
+        if (trim($scssvalue) === '') {
+            return [];
+        }
+        $result = scss_manager::validate_scss($scssvalue);
+        if ($result !== true) {
+            return [$errorfield => $result];
+        }
+        return [];
+    }
+
+    /**
+     * Extract the submitted custom SCSS value from the possible form field structures.
+     *
+     * The SCSS customfield may submit as an editor array/object ({text}/{value}) or a plain
+     * string depending on the editor in use. Returns the SCSS text and the field name to map
+     * any error onto.
+     *
+     * @param array $data Submitted form data.
+     * @return array Two-element list: the SCSS value (string) and the field name (string).
+     */
+    public static function extract_submitted_scss(array $data): array {
+        $fieldcandidates = [
+            'customfield_' . constants::CFIELD_CUSTOMSCSS . '_editor',
+            'customfield_' . constants::CFIELD_CUSTOMSCSS,
+        ];
+
+        foreach ($fieldcandidates as $fieldname) {
+            if (!array_key_exists($fieldname, $data)) {
+                continue;
+            }
+            $value = $data[$fieldname];
+            if (is_array($value)) {
+                if (array_key_exists('text', $value)) {
+                    return [(string) $value['text'], $fieldname];
+                }
+                if (array_key_exists('value', $value)) {
+                    return [(string) $value['value'], $fieldname];
+                }
+                return ['', $fieldname];
+            }
+            if (is_object($value)) {
+                if (property_exists($value, 'text')) {
+                    return [(string) $value->text, $fieldname];
+                }
+                if (property_exists($value, 'value')) {
+                    return [(string) $value->value, $fieldname];
+                }
+                return ['', $fieldname];
+            }
+            if (is_string($value)) {
+                return [$value, $fieldname];
+            }
+            if (is_scalar($value)) {
+                return [(string) $value, $fieldname];
+            }
+            return ['', $fieldname];
+        }
+
+        return ['', $fieldcandidates[0]];
+    }
 }

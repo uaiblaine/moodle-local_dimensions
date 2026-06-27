@@ -1,0 +1,160 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/plans
+
+    Learning plans tab: template list + the selected template's competencies (cross-framework).
+
+    The System / Course category context selector is rendered once at page level
+    (local_dimensions/central/contextbar); this tab receives the resolved context via its
+    data attributes and shows the guided empty state when a category is still needed.
+
+    Context variables required:
+    * contexttype (string) · selectedcategoryid (int) · contextid (int) · needscategoryselection (bool)
+    * hastemplates (bool) · templates (array) {id, name, competencycount, visible, selected}
+    * selectedtemplateid (int) · selectedtemplatename (string)
+    * hascompetencies (bool) · competencies (array) {id, shortname, frameworktag}
+    * competencycount (int) · canmanage (int)
+    * competencyid (int) · filteredbycompetency (bool)
+    * selectedcompetencyid (int) · selectedcompetencylabel (string)
+
+    Example context (json):
+    {
+        "contexttype": "system",
+        "selectedcategoryid": 0,
+        "contextid": 1,
+        "needscategoryselection": false,
+        "competencyid": 7,
+        "filteredbycompetency": true,
+        "selectedcompetencyid": 7,
+        "selectedcompetencylabel": "Communication · CORE",
+        "hastemplates": true,
+        "templates": [
+            {"id": 4, "name": "Induction plan", "competencycount": 6, "visible": true, "selected": true}
+        ],
+        "selectedtemplateid": 4,
+        "selectedtemplatename": "Induction plan",
+        "hascompetencies": true,
+        "competencies": [
+            {"id": 7, "shortname": "Communication", "frameworktag": "CORE"}
+        ],
+        "competencycount": 6,
+        "canmanage": 1
+    }
+}}
+<div class="local-dimensions-central-plans" data-region="plans"
+     data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}"
+     data-contextid="{{contextid}}">
+    {{#needscategoryselection}}
+    <div class="alert alert-info" role="status">{{#str}}managecompetencies_selectcategory_help, local_dimensions{{/str}}</div>
+    {{/needscategoryselection}}
+
+    {{^needscategoryselection}}
+    <div class="d-flex flex-wrap align-items-end gap-3 mb-3" data-region="plan-search">
+        <div class="flex-grow-1">
+            <label class="d-block small text-muted mb-1" for="local-dimensions-central-competency-search">
+                {{#str}}central_searchcompetency, local_dimensions{{/str}}
+            </label>
+            <select id="local-dimensions-central-competency-search" data-region="competency-search" class="form-control">
+                {{#filteredbycompetency}}
+                <option value="{{selectedcompetencyid}}" selected>{{selectedcompetencylabel}}</option>
+                {{/filteredbycompetency}}
+            </select>
+        </div>
+        {{#canmanage}}
+        <div class="ms-auto align-self-center">
+            <button type="button" class="btn btn-primary btn-sm" data-action="new-template">
+                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}managetemplates_addtemplate, local_dimensions{{/str}}
+            </button>
+        </div>
+        {{/canmanage}}
+        {{#filteredbycompetency}}
+        <div class="align-self-center">
+            <span class="badge bg-info text-dark">{{#str}}central_filteredbycompetency, local_dimensions, {{selectedcompetencylabel}}{{/str}}</span>
+            <button type="button" class="btn btn-sm btn-link" data-action="clear-competency">
+                {{#str}}central_clearcompetencyfilter, local_dimensions{{/str}}
+            </button>
+        </div>
+        {{/filteredbycompetency}}
+    </div>
+    {{#hastemplates}}
+    <div class="row">
+        <section class="col-lg-5 mb-3" data-region="template-list">
+            <div class="card h-100">
+                <div class="card-body p-2">
+                    {{#templates}}
+                    <button type="button"
+                            class="btn btn-link text-start text-decoration-none d-flex align-items-center w-100 px-2 py-1 local-dimensions-central-row {{#selected}}active{{/selected}}"
+                            data-action="select-template" data-id="{{id}}">
+                        <i class="fa fa-clipboard-list me-2 text-muted" aria-hidden="true"></i>
+                        <span class="flex-grow-1">{{name}}</span>
+                        <span class="badge bg-light text-muted">{{competencycount}}</span>
+                        {{^visible}}<span class="badge bg-secondary ms-1">{{#str}}hidden, tool_lp{{/str}}</span>{{/visible}}
+                    </button>
+                    {{/templates}}
+                </div>
+            </div>
+        </section>
+
+        <aside class="col-lg-7 mb-3" data-region="plan-detail">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="h5 mb-2">{{selectedtemplatename}}</h3>
+                    <div class="small text-muted mb-2">
+                        {{#str}}competencies, core_competency{{/str}}: <strong>{{competencycount}}</strong>
+                    </div>
+                    {{#hascompetencies}}
+                    <ul class="list-unstyled mb-0">
+                        {{#competencies}}
+                        <li class="d-flex align-items-center justify-content-between py-1 border-bottom">
+                            <span>{{shortname}}</span>
+                            {{#frameworktag}}<span class="badge bg-light text-muted">{{frameworktag}}</span>{{/frameworktag}}
+                        </li>
+                        {{/competencies}}
+                    </ul>
+                    {{/hascompetencies}}
+                    {{^hascompetencies}}
+                    <div class="alert alert-warning mb-0" role="status">{{#str}}nocompetencies, local_dimensions{{/str}}</div>
+                    {{/hascompetencies}}
+                    {{#canmanage}}
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-primary" data-action="edit-template"
+                                data-id="{{selectedtemplateid}}">
+                            <i class="fa fa-pencil me-1" aria-hidden="true"></i>{{#str}}edit{{/str}}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-template"
+                                data-id="{{selectedtemplateid}}" data-name="{{selectedtemplatename}}">
+                            <i class="fa fa-trash me-1" aria-hidden="true"></i>{{#str}}delete{{/str}}
+                        </button>
+                    </div>
+                    {{/canmanage}}
+                </div>
+            </div>
+        </aside>
+    </div>
+    {{/hastemplates}}
+
+    {{^hastemplates}}
+    {{#filteredbycompetency}}
+    <div class="alert alert-warning" role="status">{{#str}}central_noplanswithcompetency, local_dimensions{{/str}}</div>
+    {{/filteredbycompetency}}
+    {{^filteredbycompetency}}
+    <div class="alert alert-info" role="status">{{#str}}noplans, local_dimensions{{/str}}</div>
+    {{/filteredbycompetency}}
+    {{/hastemplates}}
+    {{/needscategoryselection}}
+</div>
