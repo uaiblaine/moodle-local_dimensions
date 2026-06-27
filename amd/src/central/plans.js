@@ -30,6 +30,7 @@ import Notification from 'core/notification';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
+import {show as showCompetencyBrowser} from 'local_dimensions/central/competency_browser';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
 const FORM_CLASS = 'local_dimensions\\form\\template_dynamic_form';
@@ -37,12 +38,8 @@ const DATASOURCE = 'local_dimensions/central/competency_datasource';
 
 const SELECTORS = {
     region: '[data-region="plans"]',
-    selectTemplate: '[data-action="select-template"]',
     competencySearch: '[data-region="competency-search"]',
-    clearCompetency: '[data-action="clear-competency"]',
-    newTemplate: '[data-action="new-template"]',
-    editTemplate: '[data-action="edit-template"]',
-    deleteTemplate: '[data-action="delete-template"]',
+    competencyAdd: '[data-region="competency-add"]',
 };
 
 /**
@@ -106,6 +103,93 @@ const deleteTemplate = async(pane, id, name) => {
 };
 
 /**
+ * Remove a competency from the template after a lightweight confirm, then refresh the tab.
+ *
+ * @param {HTMLElement} pane
+ * @param {String|Number} id
+ * @param {String} name
+ * @return {Promise<void>}
+ */
+const removeCompetency = async(pane, id, name) => {
+    const competencyid = Number(id);
+    const [title, body, removelabel] = await Promise.all([
+        getString('central_removecompetency', 'local_dimensions'),
+        getString('central_removecompetency_confirm', 'local_dimensions', name),
+        getString('remove'),
+    ]);
+    try {
+        await Notification.saveCancelPromise(title, body, removelabel);
+    } catch (e) {
+        return;
+    }
+    await Ajax.call([{
+        methodname: 'core_competency_remove_competency_from_template',
+        args: {templateid: Number(pane.dataset.templateid), competencyid: competencyid},
+    }])[0];
+    reloadPane(pane).catch(Notification.exception);
+};
+
+/**
+ * Move a competency one position up or down within the template, then refresh the tab.
+ *
+ * @param {HTMLElement} pane
+ * @param {HTMLElement} button The clicked move button.
+ * @param {String} direction 'up' or 'down'.
+ * @return {Promise<void>}
+ */
+const moveCompetency = async(pane, button, direction) => {
+    const li = button.closest('[data-competency]');
+    if (!li) {
+        return;
+    }
+    const sibling = direction === 'up' ? li.previousElementSibling : li.nextElementSibling;
+    if (!sibling || !sibling.dataset.competency) {
+        return;
+    }
+    await Ajax.call([{
+        methodname: 'core_competency_reorder_template_competency',
+        args: {
+            templateid: Number(pane.dataset.templateid),
+            competencyidfrom: Number(li.dataset.competency),
+            competencyidto: Number(sibling.dataset.competency),
+        },
+    }])[0];
+    reloadPane(pane).catch(Notification.exception);
+};
+
+/**
+ * Click dispatch for the plans region, keyed by the clicked element's data-action.
+ * Each handler receives (pane, region, target). Kept as a flat map so the click
+ * listener stays trivial (one lookup) instead of a long if/else chain.
+ *
+ * @type {Object}
+ */
+const ACTION_HANDLERS = {
+    'select-template': (pane, region, target) => {
+        pane.dataset.templateid = target.dataset.id;
+        reloadPane(pane).catch(Notification.exception);
+    },
+    'clear-competency': (pane) => {
+        pane.dataset.competencyid = 0;
+        reloadPane(pane).catch(Notification.exception);
+    },
+    'browse-frameworks': (pane, region) => showCompetencyBrowser(pane, region).catch(Notification.exception),
+    'new-template': (pane, region) => openForm(
+        pane,
+        {id: 0, contextid: region.dataset.contextid || 0},
+        'managetemplates_addtemplate',
+        'local_dimensions'
+    ),
+    'edit-template': (pane, region, target) => openForm(pane, {id: target.dataset.id}, 'edittemplate', 'tool_lp'),
+    'delete-template': (pane, region, target) =>
+        deleteTemplate(pane, target.dataset.id, target.dataset.name || '').catch(Notification.exception),
+    'remove-competency': (pane, region, target) =>
+        removeCompetency(pane, target.dataset.id, target.dataset.name || '').catch(Notification.exception),
+    'move-competency-up': (pane, region, target) => moveCompetency(pane, target, 'up').catch(Notification.exception),
+    'move-competency-down': (pane, region, target) => moveCompetency(pane, target, 'down').catch(Notification.exception),
+};
+
+/**
  * Initialise the Learning plans tab. Re-runs after each tab refresh.
  */
 export const init = () => {
@@ -114,6 +198,13 @@ export const init = () => {
         return;
     }
     const pane = region.closest('[data-tab-content]');
+
+    // The server auto-selects a template (selectedtemplateid); mirror it onto the pane dataset so
+    // getContent args and the add/remove/reorder web services target the rendered template even
+    // before the user clicks one (otherwise templateid is absent and the WS gets 0 -> invalid context).
+    if (pane && region.dataset.templateid) {
+        pane.dataset.templateid = region.dataset.templateid;
+    }
 
     const search = region.querySelector(SELECTORS.competencySearch);
     if (search && pane && !search.dataset.enhanced) {
@@ -127,30 +218,32 @@ export const init = () => {
             .catch(Notification.exception);
     }
 
+    const addpicker = region.querySelector(SELECTORS.competencyAdd);
+    if (addpicker && pane && !addpicker.dataset.enhanced) {
+        addpicker.dataset.enhanced = '1';
+        addpicker.addEventListener('change', () => {
+            const competencyid = Number(addpicker.value);
+            if (!competencyid) {
+                return;
+            }
+            Ajax.call([{
+                methodname: 'core_competency_add_competency_to_template',
+                args: {templateid: Number(pane.dataset.templateid), competencyid: competencyid},
+            }])[0].then(() => reloadPane(pane)).catch(Notification.exception);
+        });
+        getString('central_addcompetency', 'local_dimensions')
+            .then((placeholder) => enhance(SELECTORS.competencyAdd, false, DATASOURCE, placeholder, false, true, '', true))
+            .catch(Notification.exception);
+    }
+
     region.addEventListener('click', (event) => {
-        const item = event.target.closest(SELECTORS.selectTemplate);
-        if (item && pane) {
-            pane.dataset.templateid = item.dataset.id;
-            reloadPane(pane).catch(Notification.exception);
+        const target = event.target.closest('[data-action]');
+        if (!target || !pane) {
             return;
         }
-        if (event.target.closest(SELECTORS.clearCompetency) && pane) {
-            pane.dataset.competencyid = 0;
-            reloadPane(pane).catch(Notification.exception);
-            return;
-        }
-        if (event.target.closest(SELECTORS.newTemplate) && pane) {
-            openForm(pane, {id: 0, contextid: region.dataset.contextid || 0}, 'managetemplates_addtemplate', 'local_dimensions');
-            return;
-        }
-        const edit = event.target.closest(SELECTORS.editTemplate);
-        if (edit && pane) {
-            openForm(pane, {id: edit.dataset.id}, 'edittemplate', 'tool_lp');
-            return;
-        }
-        const del = event.target.closest(SELECTORS.deleteTemplate);
-        if (del && pane) {
-            deleteTemplate(pane, del.dataset.id, del.dataset.name || '').catch(Notification.exception);
+        const handler = ACTION_HANDLERS[target.dataset.action];
+        if (handler) {
+            handler(pane, region, target);
         }
     });
 };

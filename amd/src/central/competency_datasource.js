@@ -40,12 +40,23 @@ export const transport = (selector, query, success, failure) => {
 
 /**
  * Map the raw items to autocomplete {value, label} pairs (label carries the framework tag).
+ * Items whose id is listed in the originating select's data-exclude attribute are dropped
+ * (used by the add picker to hide competencies already on the template).
  *
- * @param {String} selector Unused (autocomplete contract).
+ * @param {String} selector The originating select's selector (autocomplete contract).
  * @param {Array} results Raw items from transport().
  * @return {Array}
  */
-export const processResults = (selector, results) => results.map((competency) => ({
-    value: competency.id,
-    label: competency.frameworktag ? `${competency.shortname} · ${competency.frameworktag}` : competency.shortname,
-}));
+export const processResults = (selector, results) => {
+    const source = document.querySelector(selector);
+    const raw = source && source.dataset.exclude ? source.dataset.exclude : '';
+    const excluded = new Set(raw.split(',').filter((id) => id !== ''));
+    return results
+        .filter((competency) => !excluded.has(String(competency.id)))
+        .map((competency) => ({
+            value: competency.id,
+            label: competency.frameworktag
+                ? `${competency.shortname} · ${competency.frameworktag}`
+                : competency.shortname,
+        }));
+};

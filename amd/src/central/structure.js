@@ -28,8 +28,7 @@ import Ajax from 'core/ajax';
 import ModalForm from 'core_form/modalform';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
-import RuleConfig from 'tool_lp/competencyruleconfig';
-import Outcomes from 'tool_lp/competency_outcomes';
+import {show as showRuleConfigModal} from 'local_dimensions/central/rule_config';
 import {getString} from 'core/str';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
@@ -59,10 +58,8 @@ const SELECTORS = {
 let activeRow = null;
 /** @type {Object|null} */
 let treeModel = null;
-/** @type {Object|null} */
-let ruleConfigInstance = null;
-/** @type {Object|null} */
-let ruleTarget = null;
+/** @type {Array} */
+let rulesModules = [];
 
 /**
  * Read a JSON island embedded in the tab.
@@ -117,7 +114,7 @@ const createTreeModel = (region) => {
         },
         hasRule: function(id) {
             const competency = this.getCompetency(id);
-            return !!competency && competency.ruleoutcome !== Outcomes.NONE && !!competency.ruletype;
+            return !!competency && competency.ruleoutcome !== 0 && !!competency.ruletype;
         },
         updateRule: function(id, config) {
             const competency = this.getCompetency(id);
@@ -253,60 +250,58 @@ const confirmDelete = async(pane, row) => {
 };
 
 /**
- * Open the native competency rule configuration dialogue.
+ * Persist a rule config via core_competency_update_competency, then refresh the pane.
  *
- * @param {Number} id
+ * @param {HTMLElement} pane
+ * @param {Object} competency The target competency from the tree model.
+ * @param {Object} config {ruletype, ruleoutcome, ruleconfig}.
+ * @return {Promise<void>}
  */
-const showRuleConfig = (id) => {
-    if (!ruleConfigInstance || !treeModel) {
-        return;
-    }
-    ruleTarget = treeModel.getCompetency(id);
-    if (!ruleTarget) {
-        return;
-    }
-    ruleConfigInstance.setTargetCompetencyId(id);
-    ruleConfigInstance.display().catch(Notification.exception);
-};
-
-/**
- * Persist the rule configuration (mirrors manage_competencies.js); reload to refresh state.
- *
- * @param {Object} model
- * @param {Event} e
- * @param {Object} config
- */
-const saveRuleConfig = (model, e, config) => {
-    if (!ruleTarget) {
-        return;
-    }
-    Ajax.call([{methodname: 'core_competency_read_competency', args: {id: ruleTarget.id}}])[0]
-        .then((competency) => Ajax.call([{
+const persistRule = (pane, competency, config) => {
+    return Ajax.call([{methodname: 'core_competency_read_competency', args: {id: competency.id}}])[0]
+        .then((full) => Ajax.call([{
             methodname: 'core_competency_update_competency',
             args: {
                 competency: {
-                    id: competency.id,
-                    shortname: competency.shortname,
-                    idnumber: competency.idnumber,
-                    description: competency.description,
-                    descriptionformat: competency.descriptionformat,
-                    parentid: competency.parentid,
-                    competencyframeworkid: competency.competencyframeworkid,
-                    scaleid: competency.scaleid,
-                    scaleconfiguration: competency.scaleconfiguration,
+                    id: full.id,
+                    shortname: full.shortname,
+                    idnumber: full.idnumber,
+                    description: full.description,
+                    descriptionformat: full.descriptionformat,
+                    parentid: full.parentid,
+                    competencyframeworkid: full.competencyframeworkid,
+                    scaleid: full.scaleid,
+                    scaleconfiguration: full.scaleconfiguration,
                     ruletype: config.ruletype,
                     ruleoutcome: config.ruleoutcome,
                     ruleconfig: config.ruleconfig,
                 },
             },
         }])[0])
-        .then((result) => {
-            if (result) {
-                model.updateRule(ruleTarget.id, config);
-                window.location.reload();
-            }
-            return result;
-        })
+        .then(() => {
+            treeModel.updateRule(competency.id, config);
+            return reloadPane(pane);
+        });
+};
+
+/**
+ * Open the native rule-config modal for a competency and persist the result.
+ *
+ * @param {HTMLElement} pane
+ * @param {Number} id
+ * @return {void}
+ */
+const showRuleConfig = (pane, id) => {
+    if (!treeModel) {
+        return;
+    }
+    const competency = treeModel.getCompetency(id);
+    if (!competency) {
+        return;
+    }
+    const children = treeModel.getChildren(id);
+    showRuleConfigModal(competency, children, rulesModules)
+        .then((config) => (config ? persistRule(pane, competency, config) : null))
         .catch(Notification.exception);
 };
 
@@ -322,12 +317,7 @@ export const init = () => {
     const frameworkid = region.dataset.frameworkid || '';
 
     treeModel = createTreeModel(region);
-    ruleConfigInstance = null;
-    const rulesModules = readJson(region, 'rules-modules', []);
-    if (rulesModules.length) {
-        ruleConfigInstance = new RuleConfig(treeModel, rulesModules);
-        ruleConfigInstance.on('save', saveRuleConfig.bind(null, treeModel));
-    }
+    rulesModules = readJson(region, 'rules-modules', []);
 
     region.addEventListener('click', (event) => {
         const toggle = event.target.closest(SELECTORS.toggle);
@@ -358,7 +348,7 @@ export const init = () => {
         } else if (event.target.closest(SELECTORS.addChild)) {
             openForm(pane, {competencyframeworkid: frameworkid, parentid: activeRow.dataset.id, id: 0}, 'addcompetency');
         } else if (event.target.closest(SELECTORS.rules)) {
-            showRuleConfig(Number(activeRow.dataset.id));
+            showRuleConfig(pane, Number(activeRow.dataset.id));
         } else if (event.target.closest(SELECTORS.moveUp)) {
             callAndReload(pane, 'core_competency_move_up_competency', activeRow.dataset.id);
         } else if (event.target.closest(SELECTORS.moveDown)) {
