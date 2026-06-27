@@ -13,3 +13,6 @@ package-lock.json
 
 # Linter config
 .stylelintrc.json
+
+# Local-only design/planning docs (not part of the plugin release)
+docs/
