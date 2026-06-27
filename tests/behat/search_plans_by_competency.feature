@@ -27,7 +27,6 @@ Feature: Filter learning plans by competency in the Competency hub
     And I click on "Learning plans" "link"
     And I should see "Plan without"
     And I set the field "Filter plans by competency" to "Alpha competency"
-    And I click on "Alpha competency · BF1" item in the autocomplete list
     Then I should see "Plan with"
     And I should not see "Plan without"
     And I click on "Clear competency filter" "button"
