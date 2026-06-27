@@ -26,7 +26,6 @@ Feature: Filter learning plans by competency in the Competency hub
     When I visit "/local/dimensions/central.php"
     And I click on "Learning plans" "link"
     And I should see "Plan without"
-    And I open the autocomplete suggestions list
     And I set the field "Filter plans by competency" to "Alpha competency"
     And I click on "Alpha competency · BF1" item in the autocomplete list
     Then I should see "Plan with"

@@ -116,7 +116,7 @@ final class search_competencies_test extends \externallib_advanced_testcase {
      */
     public function test_requires_competencyview_capability(): void {
         $this->resetAfterTest();
-        // competencyview is granted to authenticated users by default, so prohibit it explicitly.
+        // The competencyview capability is granted to authenticated users by default; prohibit it.
         $context = \context_system::instance();
         $user = $this->getDataGenerator()->create_user();
         $roleid = $this->getDataGenerator()->create_role();
