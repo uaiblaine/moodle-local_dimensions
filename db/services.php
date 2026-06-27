@@ -127,4 +127,14 @@ $functions = [
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
     ],
+
+    // Competency hub Plans tab — autocomplete search.
+    'local_dimensions_search_competencies' => [
+        'classname' => 'local_dimensions\external\search_competencies',
+        'methodname' => 'execute',
+        'description' => 'Search competencies across readable frameworks for the Competency hub.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+    ],
 ];

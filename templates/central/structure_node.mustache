@@ -1,0 +1,63 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/structure_node
+
+    A single competency node: row + (lazy) children container. Rendered server-side for
+    roots and client-side (via core/templates) when a node is expanded.
+
+    Context variables required:
+    * id, parentid (int) · shortname, idnumber, taxonomy (string)
+    * coursecount (int) · indent (int) · haschildren (bool)
+
+    Example context (json):
+    {
+        "id": 7,
+        "parentid": 0,
+        "shortname": "Communication",
+        "idnumber": "COMM-01",
+        "taxonomy": "Competency",
+        "coursecount": 3,
+        "indent": 0,
+        "haschildren": true
+    }
+}}
+<div class="local-dimensions-central-node" data-node="{{id}}">
+    <div class="d-flex align-items-center" style="padding-left: {{indent}}px;">
+        {{#haschildren}}
+        <button type="button" class="btn btn-sm btn-link p-0 me-1 local-dimensions-central-toggle" data-action="toggle" data-id="{{id}}" aria-expanded="false" aria-label="{{shortname}}">
+            <i class="fa fa-chevron-right" aria-hidden="true"></i>
+        </button>
+        {{/haschildren}}
+        {{^haschildren}}
+        <span class="me-1 local-dimensions-central-toggle-spacer" style="display:inline-block;width:1.25rem;" aria-hidden="true"></span>
+        {{/haschildren}}
+        <button type="button"
+                class="btn btn-link text-start text-decoration-none d-flex align-items-center flex-grow-1 px-2 py-1 local-dimensions-central-row"
+                data-action="select"
+                data-id="{{id}}"
+                data-parentid="{{parentid}}"
+                data-name="{{shortname}}"
+                data-idnumber="{{idnumber}}"
+                data-taxonomy="{{taxonomy}}"
+                data-courses="{{coursecount}}">
+            <i class="fa {{#haschildren}}fa-folder-o{{/haschildren}}{{^haschildren}}fa-circle-o{{/haschildren}} me-2 text-muted" aria-hidden="true"></i>
+            <span class="local-dimensions-central-row-name">{{shortname}}</span>
+        </button>
+    </div>
+    <div class="local-dimensions-central-children" data-children="{{id}}" hidden></div>
+</div>
