@@ -137,4 +137,13 @@ $functions = [
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
     ],
+
+    'local_dimensions_browse_competencies' => [
+        'classname' => 'local_dimensions\external\browse_competencies',
+        'methodname' => 'execute',
+        'description' => 'Browse a framework\'s competencies as a lazy tree, or search within it.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+    ],
 ];

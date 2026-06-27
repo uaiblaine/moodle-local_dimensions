@@ -147,7 +147,10 @@ class plans extends \core\output\dynamic_tabs\base {
         }
 
         // Selected template competencies, each tagged with its source framework (cross-framework).
+        // first/last drive the move up/down buttons; excludeids feeds the add picker so it never
+        // offers a competency already on the template (core's add throws on a duplicate).
         $competencies = [];
+        $excludeids = [];
         if ($selected) {
             $frameworktags = [];
             foreach (api::list_competencies_in_template($templateid) as $competency) {
@@ -158,11 +161,19 @@ class plans extends \core\output\dynamic_tabs\base {
                         ? ($framework->get('idnumber') !== '' ? $framework->get('idnumber') : $framework->get('shortname'))
                         : '';
                 }
+                $cid = (int) $competency->get('id');
+                $excludeids[] = $cid;
                 $competencies[] = [
-                    'id' => (int) $competency->get('id'),
+                    'id' => $cid,
                     'shortname' => format_string($competency->get('shortname')),
                     'frameworktag' => format_string($frameworktags[$fwid]),
+                    'first' => false,
+                    'last' => false,
                 ];
+            }
+            if (!empty($competencies)) {
+                $competencies[0]['first'] = true;
+                $competencies[count($competencies) - 1]['last'] = true;
             }
         }
 
@@ -184,6 +195,7 @@ class plans extends \core\output\dynamic_tabs\base {
             'hascompetencies' => !empty($competencies),
             'competencies' => $competencies,
             'competencycount' => count($competencies),
+            'excludeids' => implode(',', $excludeids),
             'canmanage' => (int) has_capability('moodle/competency:templatemanage', $context),
         ];
     }
