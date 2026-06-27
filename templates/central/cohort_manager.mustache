@@ -1,0 +1,49 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/cohort_manager
+
+    Body of the "Manage cohorts" modal: an add-cohort autocomplete and a table of attached cohorts.
+    Rows in [data-region="cohort-rows"] are rendered by local_dimensions/central/cohort_manager from
+    local_dimensions_list_template_cohorts.
+
+    Context variables required:
+    * contextid (int)
+
+    Example context (json):
+    {
+        "contextid": 1
+    }
+}}
+<div class="local-dimensions-cohort-manager" data-region="cohort-manager">
+    <div class="mb-3">
+        <label class="form-label" for="local-dimensions-cohort-add">{{#str}}central_cohorts_add, local_dimensions{{/str}}</label>
+        <select id="local-dimensions-cohort-add" data-region="cohort-add" data-contextid="{{contextid}}"
+                class="form-select"></select>
+    </div>
+    <table class="table table-sm mb-0">
+        <thead>
+            <tr>
+                <th scope="col">{{#str}}cohort, cohort{{/str}}</th>
+                <th scope="col">{{#str}}central_cohorts_members, local_dimensions{{/str}}</th>
+                <th scope="col">{{#str}}central_cohorts_plans, local_dimensions{{/str}}</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody data-region="cohort-rows"></tbody>
+    </table>
+</div>
