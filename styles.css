@@ -5409,3 +5409,10 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     background: var(--local-dimensions-manage-primary-line);
 }
 
+/* Cap the Competency hub plan-detail competency list so long plans scroll inside the card,
+   not the whole page. */
+.local-dimensions-central-complist {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+

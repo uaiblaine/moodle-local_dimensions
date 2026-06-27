@@ -146,4 +146,38 @@ $functions = [
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
     ],
+
+    // Competency hub Plans tab — template cohort management + background plan sync.
+    'local_dimensions_list_template_cohorts' => [
+        'classname' => 'local_dimensions\external\list_template_cohorts',
+        'methodname' => 'execute',
+        'description' => 'List the cohorts attached to a learning plan template.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:templateview',
+        'ajax' => true,
+    ],
+    'local_dimensions_add_template_cohort' => [
+        'classname' => 'local_dimensions\external\add_template_cohort',
+        'methodname' => 'execute',
+        'description' => 'Attach a cohort to a template and queue background plan generation.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_sync_template_cohort' => [
+        'classname' => 'local_dimensions\external\sync_template_cohort',
+        'methodname' => 'execute',
+        'description' => 'Queue background plan generation for a template cohort.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_remove_template_cohort' => [
+        'classname' => 'local_dimensions\external\remove_template_cohort',
+        'methodname' => 'execute',
+        'description' => 'Detach a cohort from a template (keeps existing plans).',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
 ];

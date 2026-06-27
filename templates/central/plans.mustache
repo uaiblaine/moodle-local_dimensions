@@ -136,7 +136,7 @@
                     </div>
                     {{/canmanage}}
                     {{#hascompetencies}}
-                    <ul class="list-unstyled mb-0">
+                    <ul class="list-unstyled mb-0 local-dimensions-central-complist">
                         {{#competencies}}
                         <li class="d-flex align-items-center justify-content-between py-1 border-bottom"
                             data-competency="{{id}}">
@@ -181,6 +181,9 @@
                         <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-template"
                                 data-id="{{selectedtemplateid}}" data-name="{{selectedtemplatename}}">
                             <i class="fa fa-trash me-1" aria-hidden="true"></i>{{#str}}delete{{/str}}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="manage-cohorts">
+                            <i class="fa fa-users me-1" aria-hidden="true"></i>{{#str}}central_cohorts_manage, local_dimensions{{/str}}
                         </button>
                     </div>
                     {{/canmanage}}

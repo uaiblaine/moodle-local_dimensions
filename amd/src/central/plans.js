@@ -31,6 +31,7 @@ import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {show as showCompetencyBrowser} from 'local_dimensions/central/competency_browser';
+import {show as showCohortManager} from 'local_dimensions/central/cohort_manager';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
 const FORM_CLASS = 'local_dimensions\\form\\template_dynamic_form';
@@ -174,6 +175,7 @@ const ACTION_HANDLERS = {
         reloadPane(pane).catch(Notification.exception);
     },
     'browse-frameworks': (pane, region) => showCompetencyBrowser(pane, region).catch(Notification.exception),
+    'manage-cohorts': (pane, region) => showCohortManager(pane, region).catch(Notification.exception),
     'new-template': (pane, region) => openForm(
         pane,
         {id: 0, contextid: region.dataset.contextid || 0},
