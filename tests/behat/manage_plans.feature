@@ -13,7 +13,7 @@ Feature: Manage learning plans from the Competency hub
     When I visit "/local/dimensions/central.php"
     And I click on "Learning plans" "link"
     And I click on "New template" "button"
-    And I set the field "Short name" to "Induction plan"
+    And I set the field "shortname" to "Induction plan"
     And I click on "Save changes" "button"
     Then I should see "Induction plan"
 
@@ -25,7 +25,7 @@ Feature: Manage learning plans from the Competency hub
     And I click on "Learning plans" "link"
     And I click on "Old name" "button"
     And I click on "Edit" "button"
-    And I set the field "Short name" to "New name"
+    And I set the field "shortname" to "New name"
     And I click on "Save changes" "button"
     Then I should see "New name"
     And I should not see "Old name"

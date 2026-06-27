@@ -70,7 +70,7 @@
         <label class="d-block small text-muted mb-1" for="local-dimensions-central-category">
             {{#str}}managecompetencies_category, local_dimensions{{/str}}
         </label>
-        <select id="local-dimensions-central-category" class="custom-select" data-region="category-select">
+        <select id="local-dimensions-central-category" class="form-select" data-region="category-select">
             <option value="0">{{#str}}managecompetencies_category_placeholder, local_dimensions{{/str}}</option>
             {{#categoryoptions}}
             <option value="{{id}}" data-name="{{name}}" data-frameworkcount="{{frameworkcount}}" data-templatecount="{{templatecount}}"{{#selected}} selected{{/selected}}>{{name}} ({{frameworkcount}})</option>

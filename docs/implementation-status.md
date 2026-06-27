@@ -64,7 +64,7 @@ core competency web services (`core_competency_delete_competency`, `_move_up/_mo
 1. Plans: **cross-framework competency picker** (add/remove `template_competency`) + **cohort/users
    assignment + sync** modal (mtube group-management style, `template_cohort`).
 2. Competency → course/activity links in a modal with `ruleoutcome` (codeplan phase 2).
-3. TODOs: lazy-**fetch** for huge frameworks; strict visibility in the linked-course count; SCSS parity in
+3. Follow-ups: lazy-**fetch** for huge frameworks; strict visibility in the linked-course count; SCSS parity in
    the modal; broader Behat/PHPUnit for the hub (the scale-dialogue regression exists:
    `tests/behat/configure_scale.feature`); a11y; make rule save refresh instead of reload.
 

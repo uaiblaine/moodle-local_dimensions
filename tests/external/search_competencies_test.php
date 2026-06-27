@@ -116,8 +116,15 @@ final class search_competencies_test extends \externallib_advanced_testcase {
      */
     public function test_requires_competencyview_capability(): void {
         $this->resetAfterTest();
+        // competencyview is granted to authenticated users by default, so prohibit it explicitly.
+        $context = \context_system::instance();
         $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        role_assign($roleid, $user->id, $context->id);
+        assign_capability('moodle/competency:competencyview', CAP_PROHIBIT, $roleid, $context->id, true);
+        accesslib_clear_all_caches_for_unit_testing();
         $this->setUser($user);
+
         $this->expectException(\required_capability_exception::class);
         search_competencies::execute('Alpha', 0, 25);
     }
