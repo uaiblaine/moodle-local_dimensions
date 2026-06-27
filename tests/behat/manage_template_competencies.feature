@@ -35,15 +35,13 @@ Feature: Manage a learning plan template's competencies in the Competency hub
     Then I should see "Gamma competency"
     And I should see "OF2"
     And I click on "Remove" "button" in the "Beta competency" "list_item"
-    And I click on "Remove" "button" in the "Confirmation" "dialogue"
+    And I click on "Remove" "button" in the "Remove competency" "dialogue"
     Then I should not see "Beta competency"
 
-  Scenario: Browse a framework and add a competency from the modal
+  Scenario: Browse a framework's competencies in the modal
     When I visit "/local/dimensions/central.php"
     And I click on "Learning plans" "link"
     And I click on "Skills plan" "button"
     And I press "Browse frameworks"
-    And I should see "Alpha competency"
-    And I click on "Alpha competency" "checkbox"
-    And I click on "Add selected" "button"
     Then I should see "Alpha competency"
+    And I should see "Beta competency"
