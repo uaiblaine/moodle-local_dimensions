@@ -1,0 +1,58 @@
+<!-- @dsCard group="Dados" name="Mestre-detalhe" subtitle="Árvore de competências + painel de detalhe + chips de framework" -->
+<style>
+:root{
+  --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
+  --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
+  --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
+  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
+  --text-success:#0f6e56;--bg-success:#e1f5ee;--border-success:#5dcaa5;
+  --border:#e3e1da;--border-strong:#cfccc4;--radius:8px;
+  --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
+  --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
+  --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
+  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
+  --text-success:#5dcaa5;--bg-success:#0a2a24;--border-success:#085041;
+  --border:#3a3940;--border-strong:#4a4951;
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;}
+.md{display:flex;gap:12px;flex-wrap:wrap;max-width:580px;margin:0 auto;}
+.pane{border:0.5px solid var(--border);border-radius:var(--radius);padding:10px;background:var(--surface-2);}
+.tree{flex:1 1 280px;min-width:250px;}
+.detail{flex:1 1 220px;min-width:210px;}
+.row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;font-size:13px;}
+.row.sel{background:var(--bg-accent);} .row.sel .nm{color:var(--text-accent);}
+.ind{padding-left:26px;}
+.tag{font-size:10px;padding:1px 6px;border-radius:10px;border:0.5px solid;}
+.chip{font-size:11px;padding:1px 7px;border-radius:var(--radius);background:var(--bg-accent);color:var(--text-accent);display:inline-block;}
+.act{display:flex;align-items:center;gap:7px;padding:7px 9px;border:0.5px solid var(--border);border-radius:var(--radius);font-size:12px;}
+</style>
+<div class="md">
+  <div class="pane tree">
+    <div style="font-size:13px;font-weight:500;margin-bottom:6px;">Estrutura do framework</div>
+    <div class="row"><span style="color:var(--text-muted)">⌄</span><span class="nm">Comunicação</span></div>
+    <div class="row ind"><span style="color:var(--text-muted)">•</span><span class="nm">Comunicação escrita</span></div>
+    <div class="row sel"><span style="color:var(--text-accent)">⌄</span><span class="nm">Resolução de problemas</span></div>
+    <div class="row ind"><span style="color:var(--text-muted)">•</span><span class="nm">Pensamento analítico</span></div>
+    <div class="row"><span style="color:var(--text-muted)">⌄</span><span class="nm">Trabalho em equipe</span></div>
+  </div>
+  <div class="pane detail">
+    <div style="font-size:11px;color:var(--text-accent);">Competência</div>
+    <div style="font-size:15px;font-weight:500;">Resolução de problemas</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;">
+      <span class="chip">8 cursos · 21 atividades</span>
+      <span class="chip" style="background:var(--surface-1);color:var(--text-secondary);">em 2 planos</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <span class="tag" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">CG-EP</span>
+      <span class="tag" style="background:var(--bg-warning);color:var(--text-warning);border-color:var(--border-warning)">MAT</span>
+      <span class="tag" style="background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)">TI-SEC</span>
+    </div>
+    <div style="margin-top:10px;display:grid;gap:6px;">
+      <div class="act" style="border-color:var(--border-accent);background:var(--bg-accent);color:var(--text-accent)">Vincular a cursos e atividades</div>
+      <div class="act">Editar competência</div>
+    </div>
+  </div>
+</div>

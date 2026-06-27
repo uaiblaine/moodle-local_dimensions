@@ -1,0 +1,35 @@
+<!-- @dsCard group="Formulário" name="Dropzone de imagem" subtitle="Anexo padrão Moodle (arrasta e solta) — funciona em modal" -->
+<style>
+:root{
+  --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
+  --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
+  --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
+  --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
+  --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
+  --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
+  --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
+  --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:520px;margin:0 auto;}
+.lbl{font-size:11px;color:var(--text-secondary);margin-bottom:4px;display:block;}
+.drop{border:1px dashed var(--border-stronger);border-radius:var(--radius);padding:14px;display:flex;align-items:center;gap:10px;background:var(--surface-1);}
+.thumb{width:40px;height:40px;border-radius:6px;border:0.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;}
+.up{font-size:22px;color:var(--text-accent);}
+.t1{font-size:11px;color:var(--text-primary);}
+.t2{font-size:11px;color:var(--text-muted);}
+.acc{color:var(--text-accent);}
+</style>
+<div class="row">
+  <div>
+    <span class="lbl">Imagem do card (com arquivo)</span>
+    <div class="drop"><div class="thumb" style="background:#0f6e56;">▣</div><div><div class="t1">card.jpg</div><div class="t2 acc">arraste para substituir</div></div></div>
+  </div>
+  <div>
+    <span class="lbl">Imagem de fundo (vazio)</span>
+    <div class="drop"><span class="up">⤒</span><div><div class="t1">Arraste e solte aqui</div><div class="t2">ou clique para enviar</div></div></div>
+  </div>
+</div>

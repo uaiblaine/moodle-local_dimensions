@@ -1,0 +1,46 @@
+<!-- @dsCard group="Formulário" name="Seção de formulário" subtitle="Título + descrição + linhas de campo (texto, select, colorpicker)" -->
+<style>
+:root{
+  --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
+  --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
+  --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;--text-danger:#a32d2d;
+  --border:#e3e1da;--border-strong:#cfccc4;--radius:8px;
+  --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
+  --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
+  --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;--text-danger:#f09595;
+  --border:#3a3940;--border-strong:#4a4951;
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;}
+.sec{border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;max-width:540px;margin:0 auto;background:var(--surface-2);}
+.sec-head{padding:9px 12px;background:var(--surface-1);border-bottom:0.5px solid var(--border);}
+.sec-head .t{font-size:13px;font-weight:500;}
+.sec-head .m{font-size:11px;color:var(--text-secondary);}
+.sec-body{padding:12px;display:grid;gap:10px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.lbl{font-size:11px;color:var(--text-secondary);margin-bottom:3px;display:block;}
+.req{color:var(--text-danger);}
+.ctrl{min-height:32px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);display:flex;align-items:center;padding:6px 8px;font-size:12px;gap:6px;}
+.sel{justify-content:space-between;}
+.chev{color:var(--text-muted);font-size:11px;}
+.color{display:inline-flex;align-items:center;gap:6px;border:0.5px solid var(--border);border-radius:var(--radius);padding:5px 8px;font-size:12px;font-family:var(--font-mono);}
+.sw{width:14px;height:14px;border-radius:4px;border:0.5px solid var(--border);}
+.sub{font-size:11px;color:var(--text-accent);font-weight:500;}
+</style>
+<div class="sec">
+  <div class="sec-head"><div class="t">Campos personalizados</div><div class="m">Aparência e metadados usados nas telas de visualização e nos filtros.</div></div>
+  <div class="sec-body">
+    <div class="grid2">
+      <div><span class="lbl">Nome <span class="req">*</span></span><div class="ctrl">Resolução de problemas</div></div>
+      <div><span class="lbl">Tipo</span><div class="ctrl sel"><span>Unidade</span><span class="chev">▾</span></div></div>
+    </div>
+    <div class="sub">Aparência</div>
+    <div class="grid2">
+      <div><span class="lbl">Cor de fundo</span><span class="color"><span class="sw" style="background:#185fa5"></span> #185FA5</span></div>
+      <div><span class="lbl">Cor do texto</span><span class="color"><span class="sw" style="background:#0b1020"></span> #0B1020</span></div>
+    </div>
+    <div><span class="lbl">Descrição</span><div class="ctrl" style="min-height:48px;align-items:flex-start;color:var(--text-secondary)">Texto descritivo…</div></div>
+  </div>
+</div>
