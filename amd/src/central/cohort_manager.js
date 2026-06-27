@@ -16,8 +16,9 @@
 /**
  * "Manage cohorts" modal for a learning plan template (Competency hub Plans tab).
  *
- * Lists attached cohorts with member/plan counts, attaches new cohorts (reusing the core
- * core/form-cohort-selector autocomplete), detaches them, and queues background plan generation.
+ * Lists attached cohorts with member/plan counts, attaches new cohorts (cohort autocomplete that
+ * excludes the already-attached ones), detaches them, and queues background plan generation. After an
+ * attach the modal body is re-rendered so the autocomplete resets to an empty, ready state.
  *
  * @module     local_dimensions/central/cohort_manager
  * @copyright  2026 Anderson Blaine
@@ -83,7 +84,7 @@ const makeRow = (state, cohort) => {
 };
 
 /**
- * Re-fetch the cohort list and rebuild the table body.
+ * Re-fetch the cohort list, update the picker's exclude list, and rebuild the table body.
  *
  * @param {Object} state Modal state.
  * @return {Promise<void>}
@@ -111,7 +112,7 @@ const refresh = async(state) => {
 };
 
 /**
- * Detach a cohort after a lightweight confirm.
+ * Detach a cohort after a lightweight confirm, then refresh the table.
  *
  * @param {Object} state Modal state.
  * @param {HTMLElement} row The cohort row.
@@ -162,6 +163,46 @@ const onRowsClick = (state, event) => {
 };
 
 /**
+ * Attach the selected cohort, then re-render the body so the autocomplete resets.
+ *
+ * @param {Object} state Modal state.
+ * @return {void}
+ */
+const onAdd = (state) => {
+    const cohortid = Number(state.addsel.value);
+    if (!cohortid) {
+        return;
+    }
+    Ajax.call([{
+        methodname: 'local_dimensions_add_template_cohort',
+        args: {templateid: state.templateid, cohortid: cohortid},
+    }])[0]
+        .then(() => {
+            addToast(state.queuedlabel);
+            return Templates.replaceNodeContents(state.bodyEl, state.bodyhtml, '');
+        })
+        .then(() => setup(state))
+        .catch(Notification.exception);
+};
+
+/**
+ * Bind the (re-rendered) body: grab regions, wire events, enhance the picker, fill the table.
+ *
+ * @param {Object} state Modal state.
+ * @return {Promise<void>}
+ */
+const setup = (state) => {
+    state.rowsEl = state.bodyEl.querySelector(SELECTORS.rows);
+    state.addsel = state.bodyEl.querySelector(SELECTORS.cohortAdd);
+    if (state.addsel) {
+        state.addsel.addEventListener('change', () => onAdd(state));
+    }
+    state.rowsEl.addEventListener('click', (event) => onRowsClick(state, event));
+    enhance(SELECTORS.cohortAdd, false, DATASOURCE, state.addlabel).catch(Notification.exception);
+    return refresh(state);
+};
+
+/**
  * Open the manage-cohorts modal for the plans pane's selected template.
  *
  * @param {HTMLElement} pane The tab pane.
@@ -183,45 +224,23 @@ export const show = async(pane, region) => {
     const modal = await Modal.create({title, body: html});
     modal.setRemoveOnClose(true);
 
-    const root = modal.getRoot()[0];
     const state = {
         templateid: Number(pane.dataset.templateid),
-        rowsEl: root.querySelector(SELECTORS.rows),
+        bodyEl: modal.getRoot()[0].querySelector('.modal-body'),
+        bodyhtml: html,
+        addlabel: addlabel,
         synclabel: synclabel,
         removelabel: removelabel,
         nonelabel: nonelabel,
         queuedlabel: queuedlabel,
+        rowsEl: null,
+        addsel: null,
     };
 
-    const addsel = root.querySelector(SELECTORS.cohortAdd);
-    state.addsel = addsel;
-    if (addsel) {
-        addsel.addEventListener('change', () => {
-            const cohortid = Number(addsel.value);
-            if (!cohortid) {
-                return;
-            }
-            Ajax.call([{
-                methodname: 'local_dimensions_add_template_cohort',
-                args: {templateid: state.templateid, cohortid: cohortid},
-            }])[0]
-                .then(() => {
-                    addToast(queuedlabel);
-                    return refresh(state);
-                })
-                .catch(Notification.exception);
-        });
-    }
-
-    state.rowsEl.addEventListener('click', (event) => onRowsClick(state, event));
-
-    // Enhance the cohort autocomplete only once the modal is in the visible DOM: core/form-autocomplete's
-    // enhance() resolves the element via document.querySelector, which finds nothing while the modal is
-    // still detached (core/modal attaches it on show).
+    // Wire + enhance only once the modal is in the visible DOM (form-autocomplete's enhance() resolves
+    // the element via document.querySelector, which finds nothing while the modal is still detached).
     modal.getRoot().on(ModalEvents.shown, () => {
-        enhance(SELECTORS.cohortAdd, false, DATASOURCE, addlabel).catch(Notification.exception);
+        setup(state).catch(Notification.exception);
     });
-
-    await refresh(state);
     modal.show();
 };
