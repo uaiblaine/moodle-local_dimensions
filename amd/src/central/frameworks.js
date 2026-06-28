@@ -27,6 +27,7 @@ import ModalForm from 'core_form/modalform';
 import Notification from 'core/notification';
 import {getString} from 'core/str';
 import {reloadPane} from 'local_dimensions/central/tabs';
+import {open as openScaleConfig} from 'local_dimensions/central/framework_scaleconfig';
 
 const FORM_CLASS = 'local_dimensions\\form\\framework_dynamic_form';
 
@@ -35,22 +36,111 @@ const SELECTORS = {
     row: '[data-framework]',
 };
 
+/** @type {Boolean} Whether the document-level scale-config delegation is wired (once per page). */
+let scaleconfigwired = false;
+
 /**
- * Open the edit modal for a framework and refresh the pane on success.
+ * Open the scale-config modal for the framework form's current scale and write the result back.
+ *
+ * @return {void}
+ */
+const openScaleConfigForForm = () => {
+    // Select by name, not id: core_form\dynamic_form appends a random suffix to element ids
+    // (e.g. id_scaleid_c5fLCIS8ExDrcVf), so a fixed #id_scaleid selector never matches.
+    const scale = document.querySelector('select[name="scaleid"]');
+    const hidden = document.querySelector('[name="scaleconfiguration"]');
+    const summary = document.querySelector('[data-region="scaleconfig-summary"]');
+    if (!scale || !hidden) {
+        return;
+    }
+    openScaleConfig(Number(scale.value), hidden.value)
+        .then((json) => {
+            if (!json) {
+                return null;
+            }
+            hidden.value = json;
+            return getString('central_frameworks_scaleconfigured', 'local_dimensions');
+        })
+        .then((label) => {
+            if (label && summary) {
+                summary.textContent = label;
+            }
+            return null;
+        })
+        .catch(Notification.exception);
+};
+
+/**
+ * Set up document-level delegation for the framework form's scale-config button (once per page).
+ * The dynamic form renders inside a modalform whose JS lifecycle does not run our init, so the button
+ * is wired globally — the click bubbles to the document regardless of when the form body renders.
+ *
+ * @return {void}
+ */
+const setupScaleConfigDelegation = () => {
+    if (scaleconfigwired) {
+        return;
+    }
+    scaleconfigwired = true;
+    // Capture phase: fires on the way down from the document, before anything inside the modalform
+    // can stop the click from propagating — so the handler runs regardless of the modal's internals.
+    document.addEventListener('click', (event) => {
+        if (event.target.closest('[data-action="configure-scale"]')) {
+            event.preventDefault();
+            openScaleConfigForForm();
+        }
+    }, true);
+    document.addEventListener('change', (event) => {
+        if (event.target.name !== 'scaleid') {
+            return;
+        }
+        const hidden = document.querySelector('[name="scaleconfiguration"]');
+        const summary = document.querySelector('[data-region="scaleconfig-summary"]');
+        if (hidden) {
+            hidden.value = '';
+        }
+        if (summary) {
+            summary.textContent = '';
+        }
+    });
+};
+
+/**
+ * Open the framework create/edit modal, wiring the scale-config control and pane refresh.
+ *
+ * @param {HTMLElement} pane The tab pane.
+ * @param {Object} args The dynamic form args ({id} for edit, {id: 0, contextid} for create).
+ * @param {String} titlekey The modal title lang key.
+ * @return {Promise<void>}
+ */
+const openFrameworkForm = async(pane, args, titlekey) => {
+    const form = new ModalForm({
+        formClass: FORM_CLASS,
+        args: args,
+        modalConfig: {title: await getString(titlekey, 'local_dimensions')},
+    });
+    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadPane(pane).catch(Notification.exception));
+    form.show();
+};
+
+/**
+ * Open the edit modal for a framework.
  *
  * @param {HTMLElement} pane The tab pane.
  * @param {Number} id The framework id.
  * @return {Promise<void>}
  */
-const editFramework = async(pane, id) => {
-    const form = new ModalForm({
-        formClass: FORM_CLASS,
-        args: {id: id},
-        modalConfig: {title: await getString('central_frameworks_edit', 'local_dimensions')},
-    });
-    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadPane(pane).catch(Notification.exception));
-    form.show();
-};
+const editFramework = (pane, id) => openFrameworkForm(pane, {id: id}, 'central_frameworks_edit');
+
+/**
+ * Open the create modal for a new framework in the tab's context.
+ *
+ * @param {HTMLElement} pane The tab pane.
+ * @param {HTMLElement} region The frameworks region (carries data-contextid).
+ * @return {Promise<void>}
+ */
+const createFramework = (pane, region) =>
+    openFrameworkForm(pane, {id: 0, contextid: Number(region.dataset.contextid)}, 'central_frameworks_new');
 
 /**
  * Toggle a framework's visibility, then refresh the pane.
@@ -123,8 +213,13 @@ export const init = () => {
         return;
     }
     const pane = region.closest('[data-tab-content]');
+    setupScaleConfigDelegation();
 
     region.addEventListener('click', (event) => {
+        if (event.target.closest('[data-action="new"]')) {
+            createFramework(pane, region).catch(Notification.exception);
+            return;
+        }
         const row = event.target.closest(SELECTORS.row);
         if (!row) {
             return;

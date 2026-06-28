@@ -15,10 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Modal (dynamic) form to edit a competency framework's basic fields — for the Competency hub.
+ * Modal (dynamic) form to create or edit a competency framework — for the Competency hub.
  *
- * Edits shortname, idnumber, description, visibility and per-level taxonomies. The scale is shown
- * read-only (changing it / creating frameworks is the existing full-page form, replaced by Plan B).
+ * Create and edit of basic fields + per-level taxonomies. The scale + proficiency config is editable on
+ * create, and on edit of a framework with no user competencies (core freezes it once graded); otherwise
+ * the scale is shown read-only.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -29,9 +30,10 @@ namespace local_dimensions\form;
 
 use core_competency\api;
 use core_competency\competency_framework;
+use local_dimensions\helper;
 
 /**
- * Edit a competency framework in a modal.
+ * Create/edit a competency framework in a modal.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -41,10 +43,31 @@ class framework_dynamic_form extends \core_form\dynamic_form {
     /**
      * Get the framework id from the request.
      *
-     * @return int Framework id.
+     * @return int Framework id (0 when creating).
      */
     private function get_frameworkid(): int {
         return $this->optional_param('id', 0, PARAM_INT);
+    }
+
+    /**
+     * Load the framework being edited, or null on create.
+     *
+     * @return competency_framework|null
+     */
+    private function get_framework(): ?competency_framework {
+        $id = $this->get_frameworkid();
+        return $id ? (competency_framework::get_record(['id' => $id]) ?: null) : null;
+    }
+
+    /**
+     * Whether the scale (and its proficiency config) is editable: on create, or on edit of a framework
+     * with no user competencies (core freezes the scale once a competency has been graded).
+     *
+     * @param competency_framework|null $framework The framework, or null on create.
+     * @return bool
+     */
+    private function scale_editable(?competency_framework $framework): bool {
+        return $framework === null || !$framework->has_user_competencies();
     }
 
     /**
@@ -58,13 +81,24 @@ class framework_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Submission context: the framework's own context.
+     * Submission context: the framework's own context on edit, else the requested context on create.
      *
      * @return \context
      */
     protected function get_context_for_dynamic_submission(): \context {
-        $framework = competency_framework::get_record(['id' => $this->get_frameworkid()]);
-        return $framework ? $framework->get_context() : \context_system::instance();
+        $framework = $this->get_framework();
+        if ($framework) {
+            return $framework->get_context();
+        }
+        $contextid = $this->optional_param('contextid', 0, PARAM_INT);
+        if ($contextid > 0) {
+            try {
+                return \context::instance_by_id($contextid);
+            } catch (\moodle_exception $e) {
+                return \context_system::instance();
+            }
+        }
+        return \context_system::instance();
     }
 
     /**
@@ -86,16 +120,20 @@ class framework_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Form fields: basic info, visibility, read-only scale, and per-level taxonomies.
+     * Form fields: basic info, scale (+ proficiency config when editable), visibility, taxonomies.
      *
      * @return void
      */
     public function definition() {
         $mform = $this->_form;
-        $framework = competency_framework::get_record(['id' => $this->get_frameworkid()]) ?: null;
+        $framework = $this->get_framework();
+        $editable = $this->scale_editable($framework);
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
+        $mform->addElement('hidden', 'contextid');
+        $mform->setType('contextid', PARAM_INT);
+        $mform->setDefault('contextid', $this->get_context_for_dynamic_submission()->id);
 
         $mform->addElement('text', 'shortname', get_string('shortname', 'tool_lp'), ['maxlength' => 100]);
         $mform->setType('shortname', PARAM_TEXT);
@@ -110,10 +148,28 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         $mform->addElement('editor', 'description', get_string('description', 'tool_lp'), ['rows' => 4]);
         $mform->setType('description', PARAM_CLEANHTML);
 
-        // Scale is read-only here (Plan B adds native scale editing/create).
-        $scale = $framework ? $framework->get_scale() : null;
-        $scalename = $scale ? $scale->name : '';
-        $mform->addElement('static', 'scalestatic', get_string('central_frameworks_scale', 'local_dimensions'), $scalename);
+        if ($editable) {
+            $mform->addElement('select', 'scaleid', get_string('central_frameworks_scale', 'local_dimensions'), get_scales_menu());
+            $mform->setType('scaleid', PARAM_INT);
+            $mform->addRule('scaleid', null, 'required', null, 'client');
+
+            $mform->addElement('hidden', 'scaleconfiguration', '', ['id' => 'id_scaleconfiguration']);
+            $mform->setType('scaleconfiguration', PARAM_RAW);
+
+            $configbutton = '<button type="button" class="btn btn-secondary btn-sm" '
+                . 'data-action="configure-scale">'
+                . get_string('central_frameworks_configurescale', 'local_dimensions') . '</button>'
+                . ' <span class="text-muted small ms-2" data-region="scaleconfig-summary"></span>';
+            $mform->addElement('static', 'scaleconfig', '', $configbutton);
+        } else {
+            $scale = $framework ? $framework->get_scale() : null;
+            $mform->addElement(
+                'static',
+                'scalestatic',
+                get_string('central_frameworks_scale', 'local_dimensions'),
+                $scale ? $scale->name : ''
+            );
+        }
 
         $mform->addElement('selectyesno', 'visible', get_string('visible', 'tool_lp'));
         $mform->setDefault('visible', 1);
@@ -131,12 +187,14 @@ class framework_dynamic_form extends \core_form\dynamic_form {
      * @return void
      */
     public function set_data_for_dynamic_submission(): void {
-        $framework = competency_framework::get_record(['id' => $this->get_frameworkid()]);
+        $framework = $this->get_framework();
         if (!$framework) {
+            $this->set_data((object) ['id' => 0, 'contextid' => $this->get_context_for_dynamic_submission()->id]);
             return;
         }
         $data = (object) [
             'id' => (int) $framework->get('id'),
+            'contextid' => (int) $framework->get('contextid'),
             'shortname' => $framework->get('shortname'),
             'idnumber' => $framework->get('idnumber'),
             'visible' => (int) $framework->get('visible'),
@@ -145,6 +203,10 @@ class framework_dynamic_form extends \core_form\dynamic_form {
                 'format' => $framework->get('descriptionformat'),
             ],
         ];
+        if ($this->scale_editable($framework)) {
+            $data->scaleid = (int) $framework->get('scaleid');
+            $data->scaleconfiguration = $framework->get('scaleconfiguration');
+        }
 
         // Taxonomies are stored comma-joined (one key per level); expand to the per-level array.
         $taxonomies = array_filter(explode(',', (string) $framework->get('taxonomies')));
@@ -159,16 +221,16 @@ class framework_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Update the framework's editable fields (scale config and context are preserved by core).
+     * Create or update the framework.
      *
      * @return array{frameworkid: int}
      */
     public function process_dynamic_submission() {
         $data = $this->get_data();
         $id = (int) $data->id;
+        $framework = $this->get_framework();
 
         $record = new \stdClass();
-        $record->id = $id;
         $record->shortname = $data->shortname;
         $record->idnumber = $data->idnumber;
         $record->description = $data->description['text'] ?? '';
@@ -177,14 +239,24 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         if (!empty($data->taxonomies) && is_array($data->taxonomies)) {
             $record->taxonomies = implode(',', $data->taxonomies);
         }
+        if ($this->scale_editable($framework)) {
+            $record->scaleid = (int) $data->scaleid;
+            $record->scaleconfiguration = $data->scaleconfiguration;
+        }
 
-        api::update_framework($record);
+        if ($id === 0) {
+            $record->contextid = (int) $data->contextid;
+            $id = (int) api::create_framework($record)->get('id');
+        } else {
+            $record->id = $id;
+            api::update_framework($record);
+        }
 
         return ['frameworkid' => $id];
     }
 
     /**
-     * Validate shortname/idnumber uniqueness within the context.
+     * Validate shortname uniqueness and the scale-proficiency config (when editable).
      *
      * @param array $data Submitted data.
      * @param array $files Submitted files.
@@ -194,13 +266,17 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         $errors = parent::validation($data, $files);
 
         $id = (int) ($data['id'] ?? 0);
-        $contextid = $this->get_context_for_dynamic_submission()->id;
+        $contextid = (int) ($data['contextid'] ?? $this->get_context_for_dynamic_submission()->id);
         $shortname = $data['shortname'] ?? '';
         if (!empty($shortname)) {
             $existing = competency_framework::get_record(['shortname' => $shortname, 'contextid' => $contextid]);
             if ($existing && (int) $existing->get('id') !== $id) {
                 $errors['shortname'] = get_string('shortnametaken', 'tool_lp');
             }
+        }
+
+        if ($this->scale_editable($this->get_framework()) && !helper::scaleconfig_is_complete($data['scaleconfiguration'] ?? '')) {
+            $errors['scaleid'] = get_string('central_frameworks_scaleincomplete', 'local_dimensions');
         }
 
         return $errors;

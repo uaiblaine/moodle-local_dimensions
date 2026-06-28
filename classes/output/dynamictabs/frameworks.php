@@ -87,22 +87,17 @@ class frameworks extends \core\output\dynamic_tabs\base {
         $rows = $needscategory ? [] : helper::framework_rows($pagecontext);
         $canmanage = !$needscategory && competency_framework::can_manage_context($pagecontext);
 
-        $newurl = new \moodle_url('/local/dimensions/edit_competency_framework.php', [
-            'pagecontextid' => $pagecontext->id,
-            'competencyframeworkid' => 0,
-        ]);
-
         $PAGE->requires->js_call_amd('local_dimensions/central/frameworks', 'init');
 
         return [
             'contexttype' => $contexttype,
             'selectedcategoryid' => $categoryid,
+            'contextid' => $pagecontext->id,
             'needscategoryselection' => $needscategory,
             'hasframeworks' => !empty($rows),
             'frameworks' => $rows,
             'frameworkcount' => count($rows),
             'canmanage' => (int) $canmanage,
-            'newframeworkurl' => $newurl->out(false),
         ];
     }
 }
