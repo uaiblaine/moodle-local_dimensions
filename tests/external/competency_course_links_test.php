@@ -90,8 +90,8 @@ final class competency_course_links_test extends \advanced_testcase {
 
         $added = link_competency_course::execute($competencyid, $courseid);
         $this->assertSame($courseid, (int) $added['courseid']);
-        $this->assertSame(1, $DB->count_records('competency_coursecomp',
-            ['competencyid' => $competencyid, 'courseid' => $courseid]));
+        $count = $DB->count_records('competency_coursecomp', ['competencyid' => $competencyid, 'courseid' => $courseid]);
+        $this->assertSame(1, $count);
 
         $outcome = \core_competency\course_competency::OUTCOME_COMPLETE;
         $this->assertTrue(set_course_link_outcome::execute($competencyid, $courseid, $outcome)['success']);
@@ -99,8 +99,8 @@ final class competency_course_links_test extends \advanced_testcase {
         $this->assertSame($outcome, (int) $links['items'][0]['ruleoutcome']);
 
         $this->assertTrue(unlink_competency_course::execute($competencyid, $courseid)['success']);
-        $this->assertSame(0, $DB->count_records('competency_coursecomp',
-            ['competencyid' => $competencyid, 'courseid' => $courseid]));
+        $count = $DB->count_records('competency_coursecomp', ['competencyid' => $competencyid, 'courseid' => $courseid]);
+        $this->assertSame(0, $count);
     }
 
     /**
@@ -117,12 +117,12 @@ final class competency_course_links_test extends \advanced_testcase {
 
         link_competency_course::execute($competencyid, $courseid);
         link_competency_module::execute($competencyid, (int) $assign->cmid);
-        $this->assertSame(1, $DB->count_records('competency_modulecomp',
-            ['competencyid' => $competencyid, 'cmid' => (int) $assign->cmid]));
+        $count = $DB->count_records('competency_modulecomp', ['competencyid' => $competencyid, 'cmid' => (int) $assign->cmid]);
+        $this->assertSame(1, $count);
 
         unlink_competency_course::execute($competencyid, $courseid);
-        $this->assertSame(0, $DB->count_records('competency_modulecomp',
-            ['competencyid' => $competencyid, 'cmid' => (int) $assign->cmid]));
+        $count = $DB->count_records('competency_modulecomp', ['competencyid' => $competencyid, 'cmid' => (int) $assign->cmid]);
+        $this->assertSame(0, $count);
     }
 
     /**
