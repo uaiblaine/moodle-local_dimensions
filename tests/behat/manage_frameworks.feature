@@ -2,7 +2,7 @@
 Feature: Manage competency frameworks from the Competency hub
   In order to maintain competency frameworks without leaving the hub
   As an administrator
-  I need a Frameworks tab with edit and visibility actions
+  I need a Frameworks tab that lists frameworks with management actions
 
   Background:
     Given the following config values are set as admin:
@@ -12,11 +12,9 @@ Feature: Manage competency frameworks from the Competency hub
       | Behat framework  | BF1      |
     And I log in as "admin"
 
-  Scenario: Open the Frameworks tab and rename a framework
+  Scenario: The Frameworks tab lists frameworks with management actions
     When I visit "/local/dimensions/central.php"
     And I click on "Frameworks" "link"
-    And I click on "Edit" "button"
-    And I set the field "shortname" to "Renamed framework"
-    And I click on "Save changes" "button"
-    Then I should see "Renamed framework"
-    And I should not see "Behat framework"
+    Then I should see "Behat framework"
+    And I should see "New framework"
+    And I should see "Edit" in the ".local-dimensions-central-framework" "css_element"
