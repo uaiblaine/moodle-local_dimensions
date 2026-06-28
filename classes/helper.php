@@ -24,6 +24,9 @@
 
 namespace local_dimensions;
 
+use core_competency\api;
+use core_competency\competency;
+use core_competency\competency_framework;
 use core_competency\course_competency;
 use core_competency\course_module_competency;
 use core_customfield\field_controller;
@@ -1403,6 +1406,34 @@ class helper {
             return [];
         }
         return array_map(static fn($course): int => (int) $course->id, $courses);
+    }
+
+    /**
+     * Build the framework management rows for a context (Frameworks tab).
+     *
+     * @param \context $context The resolved page context (system or course category).
+     * @return array List of ['id' => int, 'shortname' => string, 'idnumber' => string,
+     *               'competencycount' => int, 'visible' => bool, 'deletable' => bool, 'canmanage' => bool].
+     */
+    public static function framework_rows(\context $context): array {
+        $rows = [];
+        foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $context, 'self', false) as $framework) {
+            if (!competency_framework::can_read_context($framework->get_context())) {
+                continue;
+            }
+            $id = (int) $framework->get('id');
+            $competencyids = competency::get_ids_by_frameworkid($id);
+            $rows[] = [
+                'id' => $id,
+                'shortname' => format_string($framework->get('shortname')),
+                'idnumber' => s($framework->get('idnumber')),
+                'competencycount' => count($competencyids),
+                'visible' => (bool) $framework->get('visible'),
+                'deletable' => competency::can_all_be_deleted($competencyids),
+                'canmanage' => competency_framework::can_manage_context($framework->get_context()),
+            ];
+        }
+        return $rows;
     }
 
     /**

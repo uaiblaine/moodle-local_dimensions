@@ -288,4 +288,14 @@ $functions = [
         'capabilities' => 'moodle/competency:coursecompetencymanage',
         'ajax' => true,
     ],
+
+    // Competency hub Frameworks tab.
+    'local_dimensions_set_framework_visibility' => [
+        'classname' => 'local_dimensions\external\set_framework_visibility',
+        'methodname' => 'execute',
+        'description' => 'Toggle a competency framework\'s visibility.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:competencymanage',
+        'ajax' => true,
+    ],
 ];

@@ -1,0 +1,65 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/frameworks_row
+
+    One competency framework row in the Frameworks tab.
+
+    Context variables required:
+    * id, shortname, idnumber (string) · competencycount (int)
+    * visible, deletable, canmanage (bool)
+
+    Example context (json):
+    {
+        "id": 5,
+        "shortname": "Core skills",
+        "idnumber": "CORE",
+        "competencycount": 12,
+        "visible": true,
+        "deletable": false,
+        "canmanage": true
+    }
+}}
+<div class="d-flex align-items-center border-bottom py-2 local-dimensions-central-framework"
+     data-framework="{{id}}" data-frameworkid="{{id}}" data-name="{{shortname}}"
+     data-count="{{competencycount}}" data-visible="{{#visible}}1{{/visible}}{{^visible}}0{{/visible}}"
+     data-deletable="{{#deletable}}1{{/deletable}}{{^deletable}}0{{/deletable}}">
+    <div class="flex-grow-1">
+        <span class="fw-bold">{{shortname}}</span>
+        {{#idnumber}}<span class="text-muted small ms-2">{{idnumber}}</span>{{/idnumber}}
+        <span class="text-muted small ms-2">{{#str}}central_frameworks_competencies, local_dimensions, {{competencycount}}{{/str}}</span>
+        {{^visible}}<span class="badge bg-secondary ms-2">{{#str}}hidden{{/str}}</span>{{/visible}}
+    </div>
+    {{#canmanage}}
+    <div class="d-flex gap-1">
+        <button type="button" class="btn btn-sm btn-link p-1" data-action="visibility"
+                title="{{#str}}central_frameworks_visibility, local_dimensions{{/str}}">
+            <i class="fa {{#visible}}fa-eye{{/visible}}{{^visible}}fa-eye-slash{{/visible}}" aria-hidden="true"></i>
+            <span class="sr-only">{{#str}}central_frameworks_visibility, local_dimensions{{/str}}</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-secondary" data-action="edit">
+            <i class="fa fa-pencil me-1" aria-hidden="true"></i>{{#str}}edit{{/str}}
+        </button>
+        <button type="button" class="btn btn-sm btn-secondary" data-action="duplicate">
+            <i class="fa fa-copy me-1" aria-hidden="true"></i>{{#str}}central_frameworks_duplicate, local_dimensions{{/str}}
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete">
+            <i class="fa fa-trash me-1" aria-hidden="true"></i>{{#str}}delete{{/str}}
+        </button>
+    </div>
+    {{/canmanage}}
+</div>
