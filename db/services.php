@@ -180,4 +180,38 @@ $functions = [
         'capabilities' => 'moodle/competency:templatemanage',
         'ajax' => true,
     ],
+
+    // Competency hub Plans tab — individual-user participants grid.
+    'local_dimensions_list_template_participants' => [
+        'classname' => 'local_dimensions\external\list_template_participants',
+        'methodname' => 'execute',
+        'description' => 'List a template\'s participants (plans) with cohort/individual filters.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:templateview',
+        'ajax' => true,
+    ],
+    'local_dimensions_add_template_user_plan' => [
+        'classname' => 'local_dimensions\external\add_template_user_plan',
+        'methodname' => 'execute',
+        'description' => 'Assign a template to an individual user (creates a plan).',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_unlink_template_user_plan' => [
+        'classname' => 'local_dimensions\external\unlink_template_user_plan',
+        'methodname' => 'execute',
+        'description' => 'Unlink a user\'s plan from its template (becomes individual).',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:planmanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_delete_template_user_plan' => [
+        'classname' => 'local_dimensions\external\delete_template_user_plan',
+        'methodname' => 'execute',
+        'description' => 'Delete a user\'s plan created from a template.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:planmanage',
+        'ajax' => true,
+    ],
 ];

@@ -61,7 +61,8 @@
 }}
 <div class="local-dimensions-central-plans" data-region="plans"
      data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}"
-     data-contextid="{{contextid}}" data-templateid="{{selectedtemplateid}}">
+     data-contextid="{{contextid}}" data-templateid="{{selectedtemplateid}}"
+     data-templatename="{{selectedtemplatename}}">
     {{#needscategoryselection}}
     <div class="alert alert-info" role="status">{{#str}}managecompetencies_selectcategory_help, local_dimensions{{/str}}</div>
     {{/needscategoryselection}}
@@ -182,8 +183,8 @@
                                 data-id="{{selectedtemplateid}}" data-name="{{selectedtemplatename}}">
                             <i class="fa fa-trash me-1" aria-hidden="true"></i>{{#str}}delete{{/str}}
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="manage-cohorts">
-                            <i class="fa fa-users me-1" aria-hidden="true"></i>{{#str}}central_cohorts_manage, local_dimensions{{/str}}
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="manage-participants">
+                            <i class="fa fa-users me-1" aria-hidden="true"></i>{{#str}}central_participants_manage, local_dimensions{{/str}}
                         </button>
                     </div>
                     {{/canmanage}}
