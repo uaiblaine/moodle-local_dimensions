@@ -31,6 +31,7 @@ require_once($CFG->libdir . '/adminlib.php');
 use core_competency\api;
 use local_dimensions\helper;
 use local_dimensions\output\central\contextbar;
+use local_dimensions\output\dynamictabs\frameworks;
 use local_dimensions\output\dynamictabs\plans;
 use local_dimensions\output\dynamictabs\structure;
 
@@ -88,6 +89,14 @@ $tabsdata = [
             'shortname' => 'plans',
             'displayname' => get_string('learningplans', 'local_dimensions'),
             'tabclass' => plans::class,
+            'enabled' => true,
+            'active' => false,
+            'content' => '',
+        ],
+        [
+            'shortname' => 'frameworks',
+            'displayname' => get_string('central_frameworks_tab', 'local_dimensions'),
+            'tabclass' => frameworks::class,
             'enabled' => true,
             'active' => false,
             'content' => '',
