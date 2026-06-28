@@ -26,8 +26,6 @@
  */
 
 import Ajax from 'core/ajax';
-import Modal from 'core/modal';
-import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
@@ -203,15 +201,15 @@ const setup = (state) => {
 };
 
 /**
- * Open the manage-cohorts modal for the plans pane's selected template.
+ * Mount the cohort manager into a container (the Cohorts tab pane of the participants modal).
+ * Call after the container is attached + visible so the autocomplete enhances correctly.
  *
- * @param {HTMLElement} pane The tab pane.
- * @param {HTMLElement} region The plans region (carries contextid).
+ * @param {HTMLElement} container The element to render the cohort UI into.
+ * @param {Object} opts Options: templateid, contextid.
  * @return {Promise<void>}
  */
-export const show = async(pane, region) => {
-    const [title, addlabel, synclabel, removelabel, nonelabel, queuedlabel] = await Promise.all([
-        getString('central_cohorts_title', 'local_dimensions'),
+export const mount = async(container, opts) => {
+    const [addlabel, synclabel, removelabel, nonelabel, queuedlabel] = await Promise.all([
         getString('central_cohorts_add', 'local_dimensions'),
         getString('central_cohorts_sync', 'local_dimensions'),
         getString('central_cohorts_remove', 'local_dimensions'),
@@ -219,14 +217,11 @@ export const show = async(pane, region) => {
         getString('central_cohorts_syncqueued', 'local_dimensions'),
     ]);
     const {html} = await Templates.renderForPromise('local_dimensions/central/cohort_manager', {
-        contextid: Number(region.dataset.contextid),
+        contextid: Number(opts.contextid),
     });
-    const modal = await Modal.create({title, body: html});
-    modal.setRemoveOnClose(true);
-
     const state = {
-        templateid: Number(pane.dataset.templateid),
-        bodyEl: modal.getRoot()[0].querySelector('.modal-body'),
+        templateid: Number(opts.templateid),
+        bodyEl: container,
         bodyhtml: html,
         addlabel: addlabel,
         synclabel: synclabel,
@@ -236,11 +231,6 @@ export const show = async(pane, region) => {
         rowsEl: null,
         addsel: null,
     };
-
-    // Wire + enhance only once the modal is in the visible DOM (form-autocomplete's enhance() resolves
-    // the element via document.querySelector, which finds nothing while the modal is still detached).
-    modal.getRoot().on(ModalEvents.shown, () => {
-        setup(state).catch(Notification.exception);
-    });
-    modal.show();
+    await Templates.replaceNodeContents(container, html, '');
+    await setup(state);
 };
