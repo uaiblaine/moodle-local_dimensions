@@ -18,7 +18,6 @@ namespace local_dimensions\external;
 
 use core_competency\api;
 use core_competency\plan;
-use local_dimensions\task\sync_template_cohort as sync_task;
 
 /**
  * Tests for the template participant external functions.
@@ -50,17 +49,6 @@ final class template_participants_test extends \advanced_testcase {
     }
 
     /**
-     * Run the queued cohort sync adhoc task(s) so the cohort plans get created.
-     *
-     * @return void
-     */
-    private function run_sync(): void {
-        foreach (\core\task\manager::get_adhoc_tasks(sync_task::class) as $task) {
-            $task->execute();
-        }
-    }
-
-    /**
      * add creates a linked plan (idempotent); list shows linked-only by default with origin columns.
      *
      * @return void
@@ -70,7 +58,7 @@ final class template_participants_test extends \advanced_testcase {
         $this->setAdminUser();
         [$templateid, $cohortid, $cohortusers, $extra] = $this->fixture();
         api::create_template_cohort($templateid, $cohortid);
-        $this->run_sync();
+        api::create_plans_from_template_cohort($templateid, $cohortid, false);
 
         $created = add_template_user_plan::execute($templateid, $extra);
         $this->assertTrue($created['created']);
@@ -97,7 +85,7 @@ final class template_participants_test extends \advanced_testcase {
         $this->setAdminUser();
         [$templateid, $cohortid, , $extra] = $this->fixture();
         api::create_template_cohort($templateid, $cohortid);
-        $this->run_sync();
+        api::create_plans_from_template_cohort($templateid, $cohortid, false);
         add_template_user_plan::execute($templateid, $extra);
 
         $list = list_template_participants::execute($templateid, $cohortid, '', false, 0, 50);
