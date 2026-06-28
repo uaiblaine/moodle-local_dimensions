@@ -19,7 +19,7 @@ Feature: Manage a learning plan template's cohorts in the Competency hub
     When I visit "/local/dimensions/central.php"
     And I click on "Learning plans" "link"
     And I click on "Skills plan" "button"
-    And I press "Manage cohorts"
+    And I press "Manage participants"
     And I set the field "Add cohort" to "Marketing"
     Then I should see "Marketing"
     And I click on "Remove cohort" "button" in the "Marketing" "table_row"
