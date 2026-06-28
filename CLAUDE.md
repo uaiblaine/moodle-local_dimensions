@@ -269,6 +269,54 @@ Each `db/upgrade.php` step ends with
   under both drivers — cast to `(int)` for typed-int signatures and normalise
   haystacks before strict `assertContains`.
 
+## Behat (JS) — CI-only, locator gotchas
+No local Behat here — a new `.feature` is first exercised in CI, so budget one
+fix-and-repush; keep scenarios as thin smoke tests and put the logic in PHPUnit.
+Hard-won:
+- **Autocomplete:** pick a value with **only** `I set the field "<label>" to
+  "<text>"` — it types, clicks the auto-activated suggestion and presses ESC
+  (`behat_form_autocomplete::add_value`). A following `I click on "…" item in the
+  autocomplete list` hits a now-hidden `<li>` → `ElementNotInteractableException`.
+- **Confirm dialog:** `… "button" in the "<X>" "dialogue"` matches the modal by its
+  **title** (the first arg of `Notification.saveCancelPromise`/`deleteCancelPromise`),
+  not the word "Confirmation".
+- **Checkbox:** the `"checkbox"` named selector needs a real `<label>` (for/wrapping),
+  **not** `aria-label`.
+- Don't Behat tree expand / infinite scroll / shift-select / drag-drop (headless-fragile)
+  — cover them in PHPUnit at the data layer.
+
+## Hub front-end (AMD / modals)
+New `amd/src` is **ESM**; the hub is **zero-YUI** — reused legacy YUI components
+(`tool_lp/competencypicker`, `competencyruleconfig`) break embedded here, so wrap core
+web services in a native `core/modal*` instead.
+- **Autocomplete in a modal:** enhance on the `ModalEvents.shown` event —
+  `core/form-autocomplete` `enhance()` resolves the element via `document.querySelector`,
+  which finds nothing before `modal.show()` attaches the modal. A single-select autocomplete
+  has no clear API → re-render the body to reset it.
+- **Exclude list:** read `data-exclude` via `element.dataset` (fresh per search) in your own
+  datasource; `core/form-cohort-selector` caches it via jQuery `.data()`.
+- **Raw `<select>` chevron:** `form-select` (4.5–5.2 are all BS5); never `custom-select`.
+- **`[hidden]` vs `.d-block`:** `.d-block { display:block !important }` overrides `[hidden]`;
+  to toggle via `el.hidden` use a plain block (`<div>`). `.form-check` adds `margin-left:-1.5em`
+  to its input (overlaps a preceding chevron) — use a plain `d-flex` row for custom rows.
+- **Feedback in modals (house pattern):** for success/error/info messages fired from inside a
+  `core/modal`, **host a toast region in the modal body** so `core/toast` renders *above* the
+  dialog. The page-level `.toast-wrapper` is `z-index:1051` (below the modal's `1055`), so a toast
+  fired from a modal lands behind it. On `ModalEvents.shown` call
+  `addToastRegion(modal.getBody()[0]).catch(Notification.exception)` (from `core/toast`); core's
+  `core/modal` auto-removes it on close (`removeToastRegion(this.getBody())`), so no leak and **no
+  global z-index override**. The **host** modal owns the region — modules that only `mount()` into
+  it (`cohort_manager`, `participants_users`) must not add their own. For an *in-place* change (a row
+  added/edited without a full list reload) also briefly **flash** the affected element
+  (`el.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500})`)
+  so the confirmation is visible where the user is looking. JS-built `<select>`/inputs need an `id`
+  or `name` or the browser logs an autofill warning. (Wired in `competency_links` +
+  `participants_manager`.)
+- **dataset-as-truth panes:** seed `pane.dataset.<arg>` from the server-rendered selected value
+  in `init`, or a WS receives 0 → `context::instance_by_id()` "Invalid context id".
+- **PHP:** `array_flip([5])` → `[5 => 0]`, so `!empty($map[5])` is **false** — test membership
+  with `isset`, or build an explicit `[$id => true]` map.
+
 ## Cross-DB SQL
 CI runs PostgreSQL and MariaDB. Avoid `SELECT :literal FROM t` (PG infers text);
 avoid `ORDER BY … NULLS FIRST` (use `COALESCE(col, 0)`); cast numeric columns

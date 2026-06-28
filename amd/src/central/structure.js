@@ -29,6 +29,7 @@ import ModalForm from 'core_form/modalform';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
 import {show as showRuleConfigModal} from 'local_dimensions/central/rule_config';
+import {open as openLinksModal} from 'local_dimensions/central/competency_links';
 import {getString} from 'core/str';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
@@ -43,6 +44,7 @@ const SELECTORS = {
     edit: '[data-action="edit"]',
     addChild: '[data-action="addchild"]',
     rules: '[data-action="rules"]',
+    links: '[data-action="links"]',
     moveUp: '[data-action="moveup"]',
     moveDown: '[data-action="movedown"]',
     remove: '[data-action="delete"]',
@@ -60,6 +62,10 @@ let activeRow = null;
 let treeModel = null;
 /** @type {Array} */
 let rulesModules = [];
+/** @type {Array} */
+let courseOutcomes = [];
+/** @type {Array} */
+let moduleOutcomes = [];
 
 /**
  * Read a JSON island embedded in the tab.
@@ -318,6 +324,8 @@ export const init = () => {
 
     treeModel = createTreeModel(region);
     rulesModules = readJson(region, 'rules-modules', []);
+    courseOutcomes = readJson(region, 'course-outcomes', []);
+    moduleOutcomes = readJson(region, 'module-outcomes', []);
 
     region.addEventListener('click', (event) => {
         const toggle = event.target.closest(SELECTORS.toggle);
@@ -349,6 +357,14 @@ export const init = () => {
             openForm(pane, {competencyframeworkid: frameworkid, parentid: activeRow.dataset.id, id: 0}, 'addcompetency');
         } else if (event.target.closest(SELECTORS.rules)) {
             showRuleConfig(pane, Number(activeRow.dataset.id));
+        } else if (event.target.closest(SELECTORS.links)) {
+            openLinksModal({
+                competencyid: Number(activeRow.dataset.id),
+                competencyname: activeRow.dataset.name || '',
+                courseoutcomes: courseOutcomes,
+                moduleoutcomes: moduleOutcomes,
+                onClose: () => reloadPane(pane).catch(Notification.exception),
+            });
         } else if (event.target.closest(SELECTORS.moveUp)) {
             callAndReload(pane, 'core_competency_move_up_competency', activeRow.dataset.id);
         } else if (event.target.closest(SELECTORS.moveDown)) {

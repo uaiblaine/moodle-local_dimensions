@@ -1,0 +1,55 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/competency_links
+
+    Body shell for the "Courses & activities" modal. The course rows and per-course activity rows are
+    rendered client-side by local_dimensions/central/competency_links; this shell carries the add-course
+    autocomplete select and the empty/load-more regions.
+
+    Context variables required:
+    * competencyid (int)
+
+    Example context (json):
+    {
+        "competencyid": 7
+    }
+}}
+<div class="local-dimensions-central-links" data-region="competency-links">
+    <div class="alert alert-warning" role="status" data-region="hiddenframework" hidden>
+        {{#str}}central_links_hiddenframework, local_dimensions{{/str}}
+    </div>
+    <div class="mb-3">
+        <label class="d-block small text-muted mb-1" for="local-dimensions-links-add">
+            {{#str}}central_links_addcourse, local_dimensions{{/str}}
+        </label>
+        <select id="local-dimensions-links-add"
+                class="form-select"
+                data-region="course-add"
+                data-competencyid="{{competencyid}}"
+                data-exclude=""></select>
+    </div>
+    <div data-region="course-rows"></div>
+    <div class="text-muted small" data-region="course-empty" hidden>
+        {{#str}}central_links_nocourses, local_dimensions{{/str}}
+    </div>
+    <div class="text-center mt-2" data-region="loadmore-wrap" hidden>
+        <button type="button" class="btn btn-sm btn-link" data-action="loadmore">
+            {{#str}}central_links_loadmore, local_dimensions{{/str}}
+        </button>
+    </div>
+</div>

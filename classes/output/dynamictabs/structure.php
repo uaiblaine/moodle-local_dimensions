@@ -142,6 +142,8 @@ class structure extends \core\output\dynamic_tabs\base {
                 $canmanage ? helper::get_competency_rule_modules() : [],
                 $jsonoptions
             ),
+            'courseoutcomesjson' => json_encode(helper::course_outcome_options(), $jsonoptions),
+            'moduleoutcomesjson' => json_encode(helper::module_outcome_options(), $jsonoptions),
         ];
     }
 
