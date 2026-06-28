@@ -78,8 +78,8 @@ final class competency_module_links_test extends \advanced_testcase {
 
         $added = link_competency_module::execute($competencyid, $cmid1);
         $this->assertSame($cmid1, (int) $added['cmid']);
-        $this->assertSame(1, $DB->count_records('competency_modulecomp',
-            ['competencyid' => $competencyid, 'cmid' => $cmid1]));
+        $count = $DB->count_records('competency_modulecomp', ['competencyid' => $competencyid, 'cmid' => $cmid1]);
+        $this->assertSame(1, $count);
 
         $outcome = \core_competency\course_module_competency::OUTCOME_RECOMMEND;
         $this->assertTrue(set_module_link_outcome::execute($competencyid, $cmid1, $outcome)['success']);
@@ -87,7 +87,7 @@ final class competency_module_links_test extends \advanced_testcase {
         $this->assertSame($outcome, (int) $record->ruleoutcome);
 
         $this->assertTrue(unlink_competency_module::execute($competencyid, $cmid1)['success']);
-        $this->assertSame(0, $DB->count_records('competency_modulecomp',
-            ['competencyid' => $competencyid, 'cmid' => $cmid1]));
+        $count = $DB->count_records('competency_modulecomp', ['competencyid' => $competencyid, 'cmid' => $cmid1]);
+        $this->assertSame(0, $count);
     }
 }
