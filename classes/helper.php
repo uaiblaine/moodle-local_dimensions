@@ -24,6 +24,8 @@
 
 namespace local_dimensions;
 
+use core_competency\course_competency;
+use core_competency\course_module_competency;
 use core_customfield\field_controller;
 use core_customfield\handler;
 use cache;
@@ -1350,6 +1352,57 @@ class helper {
             ];
         }
         return $options;
+    }
+
+    /**
+     * Course-competency rule-outcome options for a select, localized via the core list.
+     *
+     * @return array List of ['value' => int, 'label' => string].
+     */
+    public static function course_outcome_options(): array {
+        $options = [];
+        foreach (course_competency::get_ruleoutcome_list() as $value => $label) {
+            $options[] = ['value' => (int) $value, 'label' => (string) $label];
+        }
+        return $options;
+    }
+
+    /**
+     * Course-module-competency rule-outcome options for a select, localized via the core list.
+     *
+     * @return array List of ['value' => int, 'label' => string].
+     */
+    public static function module_outcome_options(): array {
+        $options = [];
+        foreach (course_module_competency::get_ruleoutcome_list() as $value => $label) {
+            $options[] = ['value' => (int) $value, 'label' => (string) $label];
+        }
+        return $options;
+    }
+
+    /**
+     * Ids of courses where the current user may manage course competencies.
+     *
+     * Returns null when the user is a site admin (no restriction — every course is manageable),
+     * an empty array when the user manages none, or the list of manageable course ids otherwise.
+     *
+     * @return array|null Manageable course ids, or null for "no restriction".
+     */
+    public static function manageable_course_ids(): ?array {
+        global $USER;
+        if (is_siteadmin()) {
+            return null;
+        }
+        $courses = get_user_capability_course(
+            'moodle/competency:coursecompetencymanage',
+            $USER->id,
+            true,
+            'shortname'
+        );
+        if ($courses === false) {
+            return [];
+        }
+        return array_map(static fn($course): int => (int) $course->id, $courses);
     }
 
     /**

@@ -26,6 +26,7 @@ import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
 import {getString} from 'core/str';
+import {addToastRegion} from 'core/toast';
 import {mount as mountCohorts} from 'local_dimensions/central/cohort_manager';
 import {mount as mountUsers} from 'local_dimensions/central/participants_users';
 
@@ -79,6 +80,9 @@ export const show = async(pane, region) => {
 
     let usersmounted = false;
     modal.getRoot().on(ModalEvents.shown, () => {
+        // Host a toast region inside the modal body so the cohort/user managers' success toasts
+        // render above the dialog, not behind it. Core removes it on close.
+        addToastRegion(modal.getBody()[0]).catch(Notification.exception);
         mountCohorts(root.querySelector(SELECTORS.paneCohorts), opts).catch(Notification.exception);
         root.querySelector(SELECTORS.tabs).addEventListener('click', (event) => {
             const button = event.target.closest('.nav-link');
