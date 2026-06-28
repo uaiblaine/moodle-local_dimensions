@@ -102,7 +102,8 @@ final class template_participants_test extends \advanced_testcase {
         $this->setAdminUser();
         [$templateid, , , $extra] = $this->fixture();
         add_template_user_plan::execute($templateid, $extra);
-        $planid = (int) reset(api::list_plans_for_template($templateid))->get('id');
+        $plans = api::list_plans_for_template($templateid);
+        $planid = (int) reset($plans)->get('id');
 
         unlink_template_user_plan::execute($planid);
         $this->assertSame(0, list_template_participants::execute($templateid, 0, '', false, 0, 50)['total']);
@@ -124,7 +125,8 @@ final class template_participants_test extends \advanced_testcase {
         $this->setAdminUser();
         [$templateid, , , $extra] = $this->fixture();
         add_template_user_plan::execute($templateid, $extra);
-        $planid = (int) reset(api::list_plans_for_template($templateid))->get('id');
+        $plans = api::list_plans_for_template($templateid);
+        $planid = (int) reset($plans)->get('id');
 
         delete_template_user_plan::execute($planid);
         $this->assertSame(0, list_template_participants::execute($templateid, 0, '', true, 0, 50)['total']);
