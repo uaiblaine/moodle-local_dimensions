@@ -1437,6 +1437,31 @@ class helper {
     }
 
     /**
+     * Whether a framework scale configuration has at least one default and one proficient value.
+     *
+     * @param string $json The scaleconfiguration JSON ([{scaleid}, {id, scaledefault, proficient}, ...]).
+     * @return bool
+     */
+    public static function scaleconfig_is_complete(string $json): bool {
+        $config = json_decode($json);
+        if (!is_array($config) || count($config) < 2) {
+            return false;
+        }
+        array_shift($config);
+        $hasdefault = false;
+        $hasproficient = false;
+        foreach ($config as $value) {
+            if (!empty($value->scaledefault)) {
+                $hasdefault = true;
+            }
+            if (!empty($value->proficient)) {
+                $hasproficient = true;
+            }
+        }
+        return $hasdefault && $hasproficient;
+    }
+
+    /**
      * Pin the custom SCSS editor field to plain text in a modal form.
      *
      * The SCSS field is a textarea customfield rendered as a core editor element. On a new

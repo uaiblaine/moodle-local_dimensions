@@ -21,19 +21,19 @@
     The System / Course category selector is rendered once at page level (contextbar).
 
     Context variables required:
-    * contexttype (string) · selectedcategoryid (int) · needscategoryselection (bool)
-    * hasframeworks (bool) · frameworkcount (int) · canmanage (int) · newframeworkurl (string)
+    * contexttype (string) · selectedcategoryid (int) · contextid (int) · needscategoryselection (bool)
+    * hasframeworks (bool) · frameworkcount (int) · canmanage (int)
     * frameworks (array) {id, shortname, idnumber, competencycount, visible, deletable, canmanage}
 
     Example context (json):
     {
         "contexttype": "system",
         "selectedcategoryid": 0,
+        "contextid": 1,
         "needscategoryselection": false,
         "hasframeworks": true,
         "frameworkcount": 1,
         "canmanage": 1,
-        "newframeworkurl": "https://example.com/local/dimensions/edit_competency_framework.php",
         "frameworks": [
             {"id": 5, "shortname": "Core skills", "idnumber": "CORE", "competencycount": 12,
              "visible": true, "deletable": false, "canmanage": true}
@@ -41,7 +41,7 @@
     }
 }}
 <div class="local-dimensions-central-frameworks" data-region="frameworks"
-     data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}">
+     data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}" data-contextid="{{contextid}}">
 
     {{#needscategoryselection}}
     <div class="alert alert-info" role="status">{{#str}}managecompetencies_selectcategory_help, local_dimensions{{/str}}</div>
@@ -53,9 +53,9 @@
             {{#str}}central_frameworks_items, local_dimensions{{/str}}: <strong>{{frameworkcount}}</strong>
         </div>
         {{#canmanage}}
-        <a href="{{newframeworkurl}}" class="btn btn-primary btn-sm ms-auto">
+        <button type="button" class="btn btn-primary btn-sm ms-auto" data-action="new">
             <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}central_frameworks_new, local_dimensions{{/str}}
-        </a>
+        </button>
         {{/canmanage}}
     </div>
 

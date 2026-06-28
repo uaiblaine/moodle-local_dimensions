@@ -1,0 +1,51 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/framework_scaleconfig
+
+    The inline scale-proficiency rows for a framework: one row per scale value with a default radio
+    and a proficient checkbox. Rendered client-side by local_dimensions/central/framework_scaleconfig.
+
+    Context variables required:
+    * rows (array) {id (int), name (string), isdefault (bool), isproficient (bool)}
+
+    Example context (json):
+    {
+        "rows": [
+            {"id": 1, "name": "Not yet competent", "isdefault": true, "isproficient": false},
+            {"id": 2, "name": "Competent", "isdefault": false, "isproficient": true}
+        ]
+    }
+}}
+<div class="d-flex align-items-center py-1 small text-muted border-bottom">
+    <span class="flex-grow-1">{{#str}}central_frameworks_scalevalue, local_dimensions{{/str}}</span>
+    <span class="me-4 text-end" style="width: 4rem;">{{#str}}central_frameworks_scaledefault, local_dimensions{{/str}}</span>
+    <span class="text-end" style="width: 5rem;">{{#str}}central_frameworks_scaleproficient, local_dimensions{{/str}}</span>
+</div>
+{{#rows}}
+<div class="d-flex align-items-center py-1" data-value="{{id}}">
+    <span class="flex-grow-1">{{name}}</span>
+    <span class="me-4 text-end" style="width: 4rem;">
+        <input type="radio" name="dimensions-scaledefault" value="{{id}}" data-role="default"
+               {{#isdefault}}checked{{/isdefault}} aria-label="{{name}} {{#str}}central_frameworks_scaledefault, local_dimensions{{/str}}">
+    </span>
+    <span class="text-end" style="width: 5rem;">
+        <input type="checkbox" value="{{id}}" data-role="proficient"
+               {{#isproficient}}checked{{/isproficient}} aria-label="{{name}} {{#str}}central_frameworks_scaleproficient, local_dimensions{{/str}}">
+    </span>
+</div>
+{{/rows}}
