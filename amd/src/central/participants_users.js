@@ -154,6 +154,11 @@ const applyFilters = (state) => {
 const mutate = async(state, row, methodname) => {
     await Ajax.call([{methodname: methodname, args: {planid: Number(row.dataset.planid)}}])[0];
     await applyFilters(state);
+    // Keep keyboard focus in the grid once the mutated row's controls disappear.
+    const nextaction = state.rowsEl.querySelector('[data-action="unlink-plan"], [data-action="delete-plan"]');
+    if (nextaction) {
+        nextaction.focus();
+    }
 };
 
 /**

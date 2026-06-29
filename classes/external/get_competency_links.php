@@ -32,6 +32,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_dimensions\helper;
 
 /**
  * Web service: paginated list of courses linked to a competency.
@@ -97,6 +98,14 @@ class get_competency_links extends external_api {
             $sqlparams['q1'] = $likevalue;
             $sqlparams['q2'] = $likevalue;
         }
+
+        // Scope the count and list to the courses the viewer may manage.
+        $coursefilter = helper::manageable_course_constraint('cc.courseid', 'mgc');
+        if ($coursefilter === null) {
+            return ['items' => [], 'total' => 0, 'canlink' => $canlink];
+        }
+        $where .= $coursefilter[0];
+        $sqlparams += $coursefilter[1];
 
         $countsql = "SELECT COUNT(1)
                        FROM {competency_coursecomp} cc

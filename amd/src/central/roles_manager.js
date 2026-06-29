@@ -204,6 +204,11 @@ const onRemove = async(state, row) => {
     }])[0];
     addToast(state.queuedlabel);
     await refresh(state);
+    // Keep keyboard focus in the list once the removed row disappears.
+    const nextaction = state.root.querySelector('[data-action="role-remove"]');
+    if (nextaction) {
+        nextaction.focus();
+    }
 };
 
 /**

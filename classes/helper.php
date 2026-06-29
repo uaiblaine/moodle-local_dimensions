@@ -1390,15 +1390,20 @@ class helper {
             $haschildren[(int) $pid] = true;
         }
 
-        // Batch: linked-course counts (visibility refinement is a later slice).
-        [$csql, $cparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'cid');
-        $counts = $DB->get_records_sql_menu(
-            "SELECT competencyid, COUNT(1)
-               FROM {competency_coursecomp}
-              WHERE competencyid $csql
-           GROUP BY competencyid",
-            $cparams
-        );
+        // Batch: linked-course counts, scoped to the courses the viewer may manage.
+        $counts = [];
+        $coursefilter = self::manageable_course_constraint('courseid', 'mgc');
+        if ($coursefilter !== null) {
+            [$csql, $cparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'cid');
+            $where = "competencyid $csql" . $coursefilter[0];
+            $counts = $DB->get_records_sql_menu(
+                "SELECT competencyid, COUNT(1)
+                   FROM {competency_coursecomp}
+                  WHERE $where
+               GROUP BY competencyid",
+                $cparams + $coursefilter[1]
+            );
+        }
 
         $nodes = [];
         foreach ($records as $record) {
@@ -1492,6 +1497,31 @@ class helper {
             return [];
         }
         return array_map(static fn($course): int => (int) $course->id, $courses);
+    }
+
+    /**
+     * Build a SQL constraint restricting a course-id column to the courses the current user may manage.
+     *
+     * Wraps manageable_course_ids() into a reusable WHERE fragment. Returns one of:
+     * - ['', []]                            no restriction (site admin) — every row matches;
+     * - null                                the user manages no course — the caller returns an empty result;
+     * - [" AND <column> <insql>", $params]  restricted to the manageable course ids.
+     *
+     * @param string $column Fully-qualified course-id column (e.g. 'courseid' or 'cc.courseid').
+     * @param string $prefix Unique named-parameter prefix to avoid collisions with the caller's params.
+     * @return array|null [sql fragment, params], or null when the user manages no course.
+     */
+    public static function manageable_course_constraint(string $column, string $prefix): ?array {
+        global $DB;
+        $manageable = self::manageable_course_ids();
+        if ($manageable === null) {
+            return ['', []];
+        }
+        if ($manageable === []) {
+            return null;
+        }
+        [$insql, $params] = $DB->get_in_or_equal($manageable, SQL_PARAMS_NAMED, $prefix);
+        return [" AND $column $insql", $params];
     }
 
     /**

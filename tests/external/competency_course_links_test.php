@@ -64,6 +64,43 @@ final class competency_course_links_test extends \advanced_testcase {
     }
 
     /**
+     * get_competency_links scopes the total and list to the viewer's manageable courses.
+     *
+     * @return void
+     */
+    public function test_get_links_respects_manageable_courses(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$competencyid, $courseid1, $courseid2] = $this->fixture();
+
+        link_competency_course::execute($competencyid, $courseid1);
+        link_competency_course::execute($competencyid, $courseid2);
+
+        // Site admin sees both.
+        $adminresult = get_competency_links::execute($competencyid, '', 0, 25);
+        $this->assertSame(2, $adminresult['total']);
+        $this->assertCount(2, $adminresult['items']);
+
+        // A user who can view competencies but manages course competencies only in course 1 sees 1.
+        $user = $this->getDataGenerator()->create_user();
+        $systemcontext = \core\context\system::instance();
+        $coursecontext = \core\context\course::instance($courseid1);
+        $viewrole = $this->getDataGenerator()->create_role(['shortname' => 'compviewer']);
+        assign_capability('moodle/competency:competencyview', CAP_ALLOW, $viewrole, $systemcontext->id);
+        role_assign($viewrole, $user->id, $systemcontext->id);
+        $managerole = $this->getDataGenerator()->create_role(['shortname' => 'ccmanager']);
+        assign_capability('moodle/competency:coursecompetencymanage', CAP_ALLOW, $managerole, $coursecontext->id);
+        role_assign($managerole, $user->id, $coursecontext->id);
+        accesslib_clear_all_caches_for_unit_testing();
+        $this->setUser($user);
+
+        $scoped = get_competency_links::execute($competencyid, '', 0, 25);
+        $this->assertSame(1, $scoped['total']);
+        $this->assertCount(1, $scoped['items']);
+        $this->assertSame($courseid1, (int) $scoped['items'][0]['courseid']);
+    }
+
+    /**
      * canlink is false when the competency's framework is hidden.
      *
      * @return void

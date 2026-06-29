@@ -50,8 +50,17 @@ export const paneArgs = (pane) => {
  */
 export const reloadPane = async(pane, args) => {
     const useargs = args || paneArgs(pane);
+    // Capture whether keyboard focus is inside the content we are about to replace.
+    const refocus = pane.contains(document.activeElement);
     const response = await getContent(pane.dataset.tabClass, JSON.stringify(useargs));
     const responseJs = $.parseHTML(response.javascript, null, true).map((node) => node.innerHTML).join('\n');
     const {html, js} = await Templates.renderForPromise(response.template, JSON.parse(response.content));
     await Templates.replaceNodeContents(pane, html, js + responseJs);
+    if (refocus) {
+        // The focused element was replaced; move focus into the refreshed pane so keyboard and
+        // screen-reader users are not dropped to the document body.
+        const target = pane.querySelector('[data-region]') || pane;
+        target.setAttribute('tabindex', '-1');
+        target.focus({preventScroll: true});
+    }
 };

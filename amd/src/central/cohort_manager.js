@@ -134,6 +134,11 @@ const removeCohort = async(state, row) => {
         args: {templateid: state.templateid, cohortid: cohortid},
     }])[0];
     await refresh(state);
+    // Keep keyboard focus in the list once the removed row disappears.
+    const nextaction = state.rowsEl.querySelector('[data-action="remove-cohort"]');
+    if (nextaction) {
+        nextaction.focus();
+    }
 };
 
 /**
