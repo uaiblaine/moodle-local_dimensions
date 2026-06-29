@@ -1427,10 +1427,12 @@ class helper {
     /**
      * Compute a competency's tree depth from its path (root = 0).
      *
-     * The path is /0/<root>/<child>/... ; the depth is the number of ancestor competencies,
-     * i.e. one less than the count of non-zero path segments (which includes the node itself).
+     * Core stores competency.path as the ancestor chain only (with a leading 0) and never the node's
+     * own id: a root is /0/, a child of root is /0/<rootid>/, a grandchild is /0/<rootid>/<childid>/.
+     * The depth therefore equals the number of ancestor competencies, i.e. the count of non-zero path
+     * segments.
      *
-     * @param string $path The competency.path value (e.g. /0/5/34/).
+     * @param string $path The competency.path value (e.g. /0/5/ for a child of competency 5).
      * @return int Depth, 0 for a root.
      */
     private static function path_depth(string $path): int {
@@ -1438,7 +1440,7 @@ class helper {
             explode('/', trim($path, '/')),
             static fn(string $segment): bool => $segment !== '' && $segment !== '0'
         );
-        return max(0, count($segments) - 1);
+        return count($segments);
     }
 
     /**
