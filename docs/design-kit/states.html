@@ -1,0 +1,67 @@
+<!-- @dsCard group="Fundações" name="Estados e foco" subtitle="default/hover/active/disabled + foco visível (WCAG 2.2 AA) — mapeia .btn-* do Boost" -->
+<style>
+:root{
+  --mds-color-blue-100:#cfe2f2;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;--mds-color-blue-700:#094173;
+  --mds-color-red-500:#ca3120;--mds-color-red-600:#a2271a;--mds-color-red-700:#791d13;
+  --mds-color-gray-100:#f8f9fa;--mds-color-gray-200:#e9ecef;--mds-color-gray-300:#dee2e6;--mds-color-gray-400:#ced4da;--mds-color-gray-500:#8f959e;--mds-color-gray-600:#6a737b;--mds-color-gray-700:#495057;--mds-color-gray-900:#1d2125;--mds-color-white:#fff;
+  --mds-bg-surface-default:var(--mds-color-white);--mds-bg-surface-subtle:var(--mds-color-gray-100);
+  --mds-text-default:var(--mds-color-gray-900);--mds-text-muted:var(--mds-color-gray-600);--mds-text-disabled:var(--mds-color-gray-500);
+  --mds-border-default:var(--mds-color-gray-300);--mds-border-strong:var(--mds-color-gray-500);
+  --mds-radius-md:0.5rem;--mds-stroke-sm:0.0625rem;
+  --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --mds-bg-surface-default:#1d2125;--mds-bg-surface-subtle:#16191c;
+  --mds-text-default:#f8f9fa;--mds-text-muted:#ced4da;--mds-text-disabled:#6a737b;
+  --mds-border-default:#495057;--mds-border-strong:#6a737b;
+}}
+body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
+.h{font-size:12px;font-weight:500;color:var(--mds-text-muted);margin:16px 0 6px;}
+.h:first-of-type{margin-top:2px;}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.cap{font-size:10px;color:var(--mds-text-muted);width:62px;}
+.btn{font-size:12px;padding:6px 14px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid transparent;color:var(--mds-color-white);}
+.sec{background:var(--mds-bg-surface-default);color:var(--mds-text-default);border-color:var(--mds-border-strong);}
+.ghost{background:transparent;color:var(--mds-color-blue-500);border-color:transparent;}
+.dis{opacity:1;color:var(--mds-text-disabled);background:var(--mds-color-gray-200);border-color:var(--mds-color-gray-200);}
+.field{font-size:12px;padding:7px 10px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid var(--mds-border-default);background:var(--mds-bg-surface-default);color:var(--mds-text-default);min-width:160px;}
+.field.foc{border-color:var(--mds-color-blue-500);box-shadow:0 0 0 3px var(--mds-color-blue-200);}
+.note{font-size:10px;color:var(--mds-text-muted);margin-top:2px;}
+.tag{font-family:Menlo,monospace;font-size:10px;color:var(--mds-text-muted);}
+</style>
+
+<div class="h">Primary · <span class="tag">.btn-primary</span></div>
+<div class="row">
+  <span class="cap">default</span><span class="btn" style="background:var(--mds-color-blue-500)">Salvar</span>
+  <span class="cap">hover</span><span class="btn" style="background:var(--mds-color-blue-600)">Salvar</span>
+  <span class="cap">active</span><span class="btn" style="background:var(--mds-color-blue-700)">Salvar</span>
+  <span class="cap">focus</span><span class="btn" style="background:var(--mds-color-blue-500);box-shadow:0 0 0 3px var(--mds-color-blue-200)">Salvar</span>
+  <span class="cap">disabled</span><span class="btn dis">Salvar</span>
+</div>
+
+<div class="h">Secondary · <span class="tag">.btn-secondary / .btn-outline-secondary</span></div>
+<div class="row">
+  <span class="cap">default</span><span class="btn sec">Cancelar</span>
+  <span class="cap">hover</span><span class="btn sec" style="background:var(--mds-color-gray-100)">Cancelar</span>
+  <span class="cap">focus</span><span class="btn sec" style="box-shadow:0 0 0 3px var(--mds-color-blue-200)">Cancelar</span>
+</div>
+
+<div class="h">Danger · <span class="tag">.btn-outline-danger</span></div>
+<div class="row">
+  <span class="cap">default</span><span class="btn" style="background:var(--mds-color-red-500)">Excluir</span>
+  <span class="cap">hover</span><span class="btn" style="background:var(--mds-color-red-600)">Excluir</span>
+  <span class="cap">active</span><span class="btn" style="background:var(--mds-color-red-700)">Excluir</span>
+</div>
+
+<div class="h">Link / ghost · <span class="tag">.btn-link</span></div>
+<div class="row">
+  <span class="cap">default</span><span class="btn ghost">Procurar em frameworks</span>
+  <span class="cap">focus</span><span class="btn ghost" style="box-shadow:0 0 0 3px var(--mds-color-blue-200)">Procurar em frameworks</span>
+</div>
+
+<div class="h">Campo de formulário · <span class="tag">.form-control</span> · foco visível</div>
+<div class="row">
+  <span class="cap">default</span><span class="field">Buscar competência…</span>
+  <span class="cap">foco</span><span class="field foc">Buscar competência…</span>
+</div>
+<div class="note">Anel de foco = <code>0 0 0 3px blue-200</code> sobre borda blue-500 (token <code>--mds-focus-default</code>). Todo interativo é alcançável por teclado e tem foco visível — pilar de acessibilidade do MDS.</div>

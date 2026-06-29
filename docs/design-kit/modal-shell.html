@@ -1,0 +1,44 @@
+<!-- @dsCard group="Shell" name="Modal shell" subtitle="Cabeçalho, corpo e rodapé — base dos dynamic_form · Moodle DS" -->
+<style>
+:root{
+  --mds-blue-50:#e7f0f9;--mds-blue-200:#9fc4e5;--mds-blue-500:#0f6cbf;
+  --mds-gray-100:#f8f9fa;--mds-gray-200:#e9ecef;--mds-gray-300:#dee2e6;--mds-gray-400:#ced4da;--mds-gray-600:#6a737b;--mds-gray-900:#1d2125;--mds-white:#fff;
+  --mds-surface:var(--mds-white);--mds-surface-subtle:var(--mds-gray-100);--mds-text:var(--mds-gray-900);--mds-text-muted:var(--mds-gray-600);
+  --mds-border:var(--mds-gray-300);--mds-primary:var(--mds-blue-500);--mds-primary-tint:var(--mds-blue-50);--mds-primary-border:var(--mds-blue-200);
+  --mds-radius:0.5rem;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
+  --surface-2:var(--mds-surface);--surface-1:var(--mds-surface-subtle);--surface-0:var(--mds-gray-200);
+  --text-primary:var(--mds-text);--text-secondary:var(--mds-text-muted);--text-muted:var(--mds-text-muted);
+  --text-accent:var(--mds-primary);--bg-accent:var(--mds-primary-tint);--border-accent:var(--mds-primary-border);
+  --border:var(--mds-border);--border-strong:var(--mds-gray-400);--radius:var(--mds-radius);
+}
+@media (prefers-color-scheme:dark){:root{
+  --mds-surface:#1d2125;--mds-surface-subtle:#16191c;--mds-text:#f8f9fa;--mds-text-muted:#ced4da;
+  --mds-border:#495057;--mds-primary:#3f89cc;--mds-primary-tint:#062b4c;--mds-primary-border:#0f6cbf;
+  --surface-2:var(--mds-surface);--surface-1:var(--mds-surface-subtle);--surface-0:#0e1012;
+  --text-primary:var(--mds-text);--text-secondary:var(--mds-text-muted);--text-muted:var(--mds-text-muted);
+  --text-accent:var(--mds-primary);--bg-accent:var(--mds-primary-tint);--border-accent:var(--mds-primary-border);
+  --border:var(--mds-border);--border-strong:#6a737b;
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;}
+.m{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:560px;margin:0 auto;}
+.m-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);}
+.m-head .ic{width:18px;height:18px;border-radius:5px;background:var(--bg-accent);display:inline-block;}
+.m-title{font-size:15px;font-weight:500;}
+.m-hint{margin-left:auto;font-size:11px;font-family:var(--font-mono);color:var(--text-secondary);}
+.m-x{width:18px;height:18px;border-radius:4px;border:1px solid var(--border);}
+.m-body{padding:16px;color:var(--text-secondary);font-size:13px;min-height:80px;}
+.slot{border:1px dashed var(--border-strong);border-radius:var(--radius);padding:18px;text-align:center;color:var(--text-muted);font-size:12px;}
+.m-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--border);}
+.btn{font-size:12px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);}
+.btn-primary{background:var(--mds-primary);color:#fff;border-color:var(--mds-primary);}
+</style>
+<div class="m">
+  <div class="m-head">
+    <span class="ic"></span>
+    <span class="m-title">Título do modal</span>
+    <span class="m-hint">dynamic_form · sem recarregar</span>
+    <span class="m-x"></span>
+  </div>
+  <div class="m-body"><div class="slot">slot de conteúdo — form, picker, lista…</div></div>
+  <div class="m-foot"><span class="btn">Cancelar</span><span class="btn btn-primary">Salvar</span></div>
+</div>

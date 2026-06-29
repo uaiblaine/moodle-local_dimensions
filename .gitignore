@@ -15,4 +15,6 @@ package-lock.json
 .stylelintrc.json
 
 # Local-only design/planning docs (not part of the plugin release)
-docs/
+docs/*
+# ...except the design kit (tracked design system; mirrors the claude.ai/design project)
+!docs/design-kit/
