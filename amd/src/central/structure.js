@@ -32,6 +32,7 @@ import Templates from 'core/templates';
 import {show as showRuleConfigModal} from 'local_dimensions/central/rule_config';
 import {open as openLinksModal} from 'local_dimensions/central/competency_links';
 import {getString} from 'core/str';
+import {add as addToast} from 'core/toast';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
 const FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
@@ -337,15 +338,15 @@ const confirmDelete = async(pane, row) => {
 };
 
 /**
- * Persist a rule config via core_competency_update_competency, then refresh the pane.
+ * Persist a rule config via core_competency_update_competency, then update the node in place.
  *
- * @param {HTMLElement} pane
- * @param {Object} competency {id, ruletype, ruleoutcome, ruleconfig} from the selected row.
+ * @param {HTMLElement} row The selected [data-action="select"] element to update + flash.
  * @param {Object} config {ruletype, ruleoutcome, ruleconfig}.
  * @return {Promise<void>}
  */
-const persistRule = (pane, competency, config) => {
-    return Ajax.call([{methodname: 'core_competency_read_competency', args: {id: competency.id}}])[0]
+const persistRule = (row, config) => {
+    const id = Number(row.dataset.id);
+    return Ajax.call([{methodname: 'core_competency_read_competency', args: {id: id}}])[0]
         .then((full) => Ajax.call([{
             methodname: 'core_competency_update_competency',
             args: {
@@ -365,17 +366,25 @@ const persistRule = (pane, competency, config) => {
                 },
             },
         }])[0])
-        .then(() => reloadPane(pane));
+        .then(() => getString('changessaved'))
+        .then((message) => {
+            // Update the node's rule data in place + flash, instead of reloading the whole pane.
+            row.dataset.ruletype = config.ruletype || '';
+            row.dataset.ruleoutcome = String(config.ruleoutcome || 0);
+            row.dataset.ruleconfig = config.ruleconfig || '';
+            row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+            addToast(message);
+            return null;
+        });
 };
 
 /**
  * Open the native rule-config modal for the selected row and persist the result.
  *
- * @param {HTMLElement} pane
  * @param {HTMLElement} row The selected [data-action="select"] element.
  * @return {void}
  */
-const showRuleConfig = (pane, row) => {
+const showRuleConfig = (row) => {
     const competency = {
         id: Number(row.dataset.id),
         ruletype: row.dataset.ruletype || '',
@@ -384,7 +393,7 @@ const showRuleConfig = (pane, row) => {
     };
     fetchAllChildren(competency.id)
         .then((children) => showRuleConfigModal(competency, children, rulesModules))
-        .then((config) => (config ? persistRule(pane, competency, config) : null))
+        .then((config) => (config ? persistRule(row, config) : null))
         .catch(Notification.exception);
 };
 
@@ -406,7 +415,7 @@ const handleDetailAction = (pane, event, frameworkid) => {
     } else if (event.target.closest(SELECTORS.addChild)) {
         openForm(pane, {competencyframeworkid: frameworkid, parentid: activeRow.dataset.id, id: 0}, 'addcompetency');
     } else if (event.target.closest(SELECTORS.rules)) {
-        showRuleConfig(pane, activeRow);
+        showRuleConfig(activeRow);
     } else if (event.target.closest(SELECTORS.links)) {
         openLinksModal({
             competencyid: Number(activeRow.dataset.id),

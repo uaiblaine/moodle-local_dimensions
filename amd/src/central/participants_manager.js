@@ -93,13 +93,12 @@ export const show = async(pane, region) => {
         // render above the dialog, not behind it. Core removes it on close.
         addToastRegion(modal.getBody()[0]).catch(Notification.exception);
         mountCohorts(root.querySelector(SELECTORS.paneCohorts), opts).catch(Notification.exception);
-        root.querySelector(SELECTORS.tabs).addEventListener('click', (event) => {
-            const button = event.target.closest('.nav-link');
-            if (!button) {
-                return;
-            }
-            event.preventDefault();
-            activateTab(root, button);
+
+        const tablist = root.querySelector(SELECTORS.tabs);
+        const tabs = () => Array.from(tablist.querySelectorAll('.nav-link'));
+
+        // Lazy-mount a tab's pane the first time it is shown.
+        const ensureMounted = (button) => {
             if (button.dataset.region === 'tab-users' && !usersmounted) {
                 usersmounted = true;
                 mountUsers(root.querySelector(SELECTORS.paneUsers), opts).catch(Notification.exception);
@@ -107,6 +106,51 @@ export const show = async(pane, region) => {
             if (button.dataset.region === 'tab-roles' && !rolesmounted) {
                 rolesmounted = true;
                 mountRoles(root.querySelector(SELECTORS.paneRoles), opts).catch(Notification.exception);
+            }
+        };
+
+        // Activate a tab + its panel, keep the roving tabindex on the selected tab, lazy-mount it,
+        // and optionally move focus to it (keyboard activation).
+        const selectTab = (button, setfocus) => {
+            activateTab(root, button);
+            tabs().forEach((tab) => tab.setAttribute('tabindex', tab === button ? '0' : '-1'));
+            ensureMounted(button);
+            if (setfocus) {
+                button.focus();
+            }
+        };
+
+        // The active tab is the tablist's single tab-stop (WAI-ARIA tabs roving tabindex).
+        tabs().forEach((tab) => tab.setAttribute('tabindex', tab.classList.contains('active') ? '0' : '-1'));
+
+        tablist.addEventListener('click', (event) => {
+            const button = event.target.closest('.nav-link');
+            if (button) {
+                event.preventDefault();
+                selectTab(button, false);
+            }
+        });
+
+        tablist.addEventListener('keydown', (event) => {
+            const current = event.target.closest('.nav-link');
+            if (!current) {
+                return;
+            }
+            const all = tabs();
+            const index = all.indexOf(current);
+            let next = null;
+            if (event.key === 'ArrowRight') {
+                next = all[(index + 1) % all.length];
+            } else if (event.key === 'ArrowLeft') {
+                next = all[(index - 1 + all.length) % all.length];
+            } else if (event.key === 'Home') {
+                next = all[0];
+            } else if (event.key === 'End') {
+                next = all[all.length - 1];
+            }
+            if (next) {
+                event.preventDefault();
+                selectTab(next, true);
             }
         });
     });

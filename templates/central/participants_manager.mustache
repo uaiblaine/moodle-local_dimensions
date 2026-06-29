@@ -37,20 +37,23 @@
     </div>
     <ul class="nav nav-tabs mb-3" role="tablist" data-region="participant-tabs">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" type="button" role="tab" data-region="tab-cohorts"
+            <button class="nav-link active" type="button" role="tab" id="local-dimensions-tab-cohorts"
+                    aria-controls="local-dimensions-pane-cohorts" data-region="tab-cohorts"
                     data-target-pane="pane-cohorts" aria-selected="true">
                 {{#str}}central_participants_tab_cohorts, local_dimensions{{/str}}
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" type="button" role="tab" data-region="tab-users"
+            <button class="nav-link" type="button" role="tab" id="local-dimensions-tab-users"
+                    aria-controls="local-dimensions-pane-users" data-region="tab-users"
                     data-target-pane="pane-users" aria-selected="false">
                 {{#str}}central_participants_tab_users, local_dimensions{{/str}}
             </button>
         </li>
         {{#canassignroles}}
         <li class="nav-item" role="presentation">
-            <button class="nav-link" type="button" role="tab" data-region="tab-roles"
+            <button class="nav-link" type="button" role="tab" id="local-dimensions-tab-roles"
+                    aria-controls="local-dimensions-pane-roles" data-region="tab-roles"
                     data-target-pane="pane-roles" aria-selected="false">
                 {{#str}}central_roles_tab, local_dimensions{{/str}}
             </button>
@@ -59,8 +62,9 @@
     </ul>
     <div class="tab-content">
         <div class="tab-pane fade show active" id="local-dimensions-pane-cohorts" role="tabpanel"
-             data-region="pane-cohorts"></div>
-        <div class="tab-pane fade" id="local-dimensions-pane-users" role="tabpanel" data-region="pane-users">
+             aria-labelledby="local-dimensions-tab-cohorts" data-region="pane-cohorts"></div>
+        <div class="tab-pane fade" id="local-dimensions-pane-users" role="tabpanel"
+             aria-labelledby="local-dimensions-tab-users" data-region="pane-users">
             <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
                 <div>
                     <label class="d-block small text-muted mb-1" for="local-dimensions-participant-cohort">
@@ -92,6 +96,7 @@
                         class="form-select"></select>
             </div>
             <table class="table table-sm mb-0">
+                <caption class="visually-hidden">{{#str}}central_participants_tab_users, local_dimensions{{/str}}</caption>
                 <thead>
                     <tr>
                         <th scope="col">{{#str}}central_participants_col_user, local_dimensions{{/str}}</th>
@@ -107,7 +112,8 @@
             <div data-region="participant-sentinel"></div>
         </div>
         {{#canassignroles}}
-        <div class="tab-pane fade" id="local-dimensions-pane-roles" role="tabpanel" data-region="pane-roles"></div>
+        <div class="tab-pane fade" id="local-dimensions-pane-roles" role="tabpanel"
+             aria-labelledby="local-dimensions-tab-roles" data-region="pane-roles"></div>
         {{/canassignroles}}
     </div>
 </div>

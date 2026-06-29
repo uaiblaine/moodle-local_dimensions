@@ -111,6 +111,46 @@ final class browse_structure_test extends \advanced_testcase {
     }
 
     /**
+     * coursecount counts only the courses the viewer may manage competencies in.
+     *
+     * @return void
+     */
+    public function test_coursecount_respects_manageable_courses(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $dg = $this->getDataGenerator();
+        $ccg = $dg->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework();
+        $fwid = (int) $framework->get('id');
+        $comp = $ccg->create_competency(['competencyframeworkid' => $fwid, 'shortname' => 'Linked']);
+
+        $coursea = $dg->create_course();
+        $courseb = $dg->create_course();
+        api::add_competency_to_course($coursea->id, $comp->get('id'));
+        api::add_competency_to_course($courseb->id, $comp->get('id'));
+
+        // Site admin sees both linked courses.
+        $adminresult = browse_structure::execute($fwid, 0, 0, 50);
+        $this->assertSame(2, $adminresult['items'][0]['coursecount']);
+
+        // A user who can view competencies but manages course competencies only in course A sees 1.
+        $user = $dg->create_user();
+        $systemcontext = \core\context\system::instance();
+        $coursecontext = \core\context\course::instance($coursea->id);
+        $viewrole = $dg->create_role(['shortname' => 'compviewer']);
+        assign_capability('moodle/competency:competencyview', CAP_ALLOW, $viewrole, $systemcontext->id);
+        role_assign($viewrole, $user->id, $systemcontext->id);
+        $managerole = $dg->create_role(['shortname' => 'ccmanager']);
+        assign_capability('moodle/competency:coursecompetencymanage', CAP_ALLOW, $managerole, $coursecontext->id);
+        role_assign($managerole, $user->id, $coursecontext->id);
+        accesslib_clear_all_caches_for_unit_testing();
+        $this->setUser($user);
+
+        $scoped = browse_structure::execute($fwid, 0, 0, 50);
+        $this->assertSame(1, $scoped['items'][0]['coursecount']);
+    }
+
+    /**
      * Rule fields (ruletype/ruleoutcome/ruleconfig) round-trip through the shaper.
      *
      * @return void
