@@ -235,4 +235,12 @@ export const init = () => {
             deleteFramework(pane, row).catch(Notification.exception);
         }
     });
+
+    const toggleHidden = region.querySelector('[data-action="toggle-hidden"]');
+    if (toggleHidden && pane) {
+        toggleHidden.addEventListener('change', () => {
+            pane.dataset.showhidden = toggleHidden.checked ? '1' : '0';
+            reloadPane(pane).catch(Notification.exception);
+        });
+    }
 };

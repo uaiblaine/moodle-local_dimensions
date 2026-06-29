@@ -177,6 +177,8 @@ class plans extends \core\output\dynamic_tabs\base {
             }
         }
 
+        $canassignroles = has_capability('moodle/role:manage', context_system::instance());
+
         $PAGE->requires->js_call_amd('local_dimensions/central/plans', 'init');
 
         return [
@@ -197,6 +199,7 @@ class plans extends \core\output\dynamic_tabs\base {
             'competencycount' => count($competencies),
             'excludeids' => implode(',', $excludeids),
             'canmanage' => (int) has_capability('moodle/competency:templatemanage', $context),
+            'canassignroles' => (int) $canassignroles,
         ];
     }
 }

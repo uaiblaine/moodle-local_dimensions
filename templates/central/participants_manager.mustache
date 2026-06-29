@@ -22,12 +22,13 @@
     local_dimensions/central/participants_users.
 
     Context variables required:
-    * templatename (string) · contextid (int)
+    * templatename (string) · contextid (int) · canassignroles (bool)
 
     Example context (json):
     {
         "templatename": "Induction plan",
-        "contextid": 1
+        "contextid": 1,
+        "canassignroles": true
     }
 }}
 <div class="local-dimensions-participants" data-region="participants" data-contextid="{{contextid}}">
@@ -47,6 +48,14 @@
                 {{#str}}central_participants_tab_users, local_dimensions{{/str}}
             </button>
         </li>
+        {{#canassignroles}}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" type="button" role="tab" data-region="tab-roles"
+                    data-target-pane="pane-roles" aria-selected="false">
+                {{#str}}central_roles_tab, local_dimensions{{/str}}
+            </button>
+        </li>
+        {{/canassignroles}}
     </ul>
     <div class="tab-content">
         <div class="tab-pane fade show active" id="local-dimensions-pane-cohorts" role="tabpanel"
@@ -97,5 +106,8 @@
             </table>
             <div data-region="participant-sentinel"></div>
         </div>
+        {{#canassignroles}}
+        <div class="tab-pane fade" id="local-dimensions-pane-roles" role="tabpanel" data-region="pane-roles"></div>
+        {{/canassignroles}}
     </div>
 </div>

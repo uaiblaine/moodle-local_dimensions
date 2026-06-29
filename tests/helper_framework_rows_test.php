@@ -42,7 +42,8 @@ final class helper_framework_rows_test extends \advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $ccg->create_course_competency(['courseid' => $course->id, 'competencyid' => $competency->get('id')]);
 
-        $rows = helper::framework_rows($context);
+        // Pass includehidden=true so both visible and hidden frameworks are returned.
+        $rows = helper::framework_rows($context, true);
         $byid = [];
         foreach ($rows as $row) {
             $byid[(int) $row['id']] = $row;
@@ -56,5 +57,39 @@ final class helper_framework_rows_test extends \advanced_testcase {
         $this->assertSame(1, $byid[(int) $used->get('id')]['competencycount']);
         $this->assertTrue($byid[(int) $used->get('id')]['visible']);
         $this->assertFalse($byid[(int) $used->get('id')]['deletable']);
+    }
+
+    /**
+     * framework_rows with default (visible-only) hides hidden frameworks;
+     * with includehidden=true both visible and hidden frameworks are returned.
+     *
+     * @return void
+     */
+    public function test_framework_rows_includehidden(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $context = \context_system::instance();
+
+        $visible = $ccg->create_framework(['visible' => 1]);
+        $hidden = $ccg->create_framework(['visible' => 0]);
+
+        // Default: visible-only — hidden framework must not appear.
+        $rows = helper::framework_rows($context);
+        $ids = [];
+        foreach ($rows as $row) {
+            $ids[] = (int) $row['id'];
+        }
+        $this->assertContains((int) $visible->get('id'), $ids);
+        $this->assertNotContains((int) $hidden->get('id'), $ids);
+
+        // With includehidden=true — both frameworks must appear.
+        $rowsall = helper::framework_rows($context, true);
+        $idsall = [];
+        foreach ($rowsall as $row) {
+            $idsall[] = (int) $row['id'];
+        }
+        $this->assertContains((int) $visible->get('id'), $idsall);
+        $this->assertContains((int) $hidden->get('id'), $idsall);
     }
 }

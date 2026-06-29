@@ -83,8 +83,9 @@ class frameworks extends \core\output\dynamic_tabs\base {
         $categoryid = (int) $resolved['categoryid'];
         $needscategory = (bool) $resolved['needscategory'];
         $pagecontext = $resolved['context'];
+        $showhidden = (bool) ($data['showhidden'] ?? false);
 
-        $rows = $needscategory ? [] : helper::framework_rows($pagecontext);
+        $rows = $needscategory ? [] : helper::framework_rows($pagecontext, $showhidden);
         $canmanage = !$needscategory && competency_framework::can_manage_context($pagecontext);
 
         $PAGE->requires->js_call_amd('local_dimensions/central/frameworks', 'init');
@@ -98,6 +99,7 @@ class frameworks extends \core\output\dynamic_tabs\base {
             'frameworks' => $rows,
             'frameworkcount' => count($rows),
             'canmanage' => (int) $canmanage,
+            'showhidden' => $showhidden,
         ];
     }
 }

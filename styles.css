@@ -5416,3 +5416,17 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     overflow-y: auto;
 }
 
+/* The Manage participants modal is data-dense (Cohorts / Users tabs with grids); widen it
+   responsively, scoped to our dialog so other site modals keep their default size. */
+@media (min-width: 992px) {
+    .local-dimensions-participants-modal {
+        --bs-modal-width: 800px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .local-dimensions-participants-modal {
+        --bs-modal-width: 1140px;
+    }
+}
+
