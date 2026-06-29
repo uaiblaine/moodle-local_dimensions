@@ -29,11 +29,13 @@ import {getString} from 'core/str';
 import {addToastRegion} from 'core/toast';
 import {mount as mountCohorts} from 'local_dimensions/central/cohort_manager';
 import {mount as mountUsers} from 'local_dimensions/central/participants_users';
+import {mount as mountRoles} from 'local_dimensions/central/roles_manager';
 
 const SELECTORS = {
     tabs: '[data-region="participant-tabs"]',
     paneCohorts: '[data-region="pane-cohorts"]',
     paneUsers: '[data-region="pane-users"]',
+    paneRoles: '[data-region="pane-roles"]',
 };
 
 /**
@@ -68,17 +70,24 @@ export const show = async(pane, region) => {
     const {html} = await Templates.renderForPromise('local_dimensions/central/participants_manager', {
         templatename: region.dataset.templatename || '',
         contextid: Number(region.dataset.contextid),
+        canassignroles: region.dataset.canassignroles === '1',
     });
     const modal = await Modal.create({title, body: html});
     modal.setRemoveOnClose(true);
 
     const root = modal.getRoot()[0];
+    // Widen this data-dense modal (tabs + grids) responsively, scoped to our dialog only.
+    const dialog = root.querySelector('.modal-dialog');
+    if (dialog) {
+        dialog.classList.add('local-dimensions-participants-modal');
+    }
     const opts = {
         templateid: Number(pane.dataset.templateid),
         contextid: Number(region.dataset.contextid),
     };
 
     let usersmounted = false;
+    let rolesmounted = false;
     modal.getRoot().on(ModalEvents.shown, () => {
         // Host a toast region inside the modal body so the cohort/user managers' success toasts
         // render above the dialog, not behind it. Core removes it on close.
@@ -94,6 +103,10 @@ export const show = async(pane, region) => {
             if (button.dataset.region === 'tab-users' && !usersmounted) {
                 usersmounted = true;
                 mountUsers(root.querySelector(SELECTORS.paneUsers), opts).catch(Notification.exception);
+            }
+            if (button.dataset.region === 'tab-roles' && !rolesmounted) {
+                rolesmounted = true;
+                mountRoles(root.querySelector(SELECTORS.paneRoles), opts).catch(Notification.exception);
             }
         });
     });

@@ -15,9 +15,10 @@
 
 /**
  * Structure tab: master-detail selection, no-reload framework switch, create/edit/move/
- * delete competency, and competency rule configuration (tool_lp/competencyruleconfig).
- * The System / Course category context is owned by the shared page-level selector
- * (local_dimensions/central/context); this module only switches frameworks within it.
+ * delete competency, and competency rule configuration. The tree is lazy — children and
+ * overflow roots are fetched on demand via local_dimensions_browse_structure, so the page
+ * never ships the whole framework model. The System / Course category context is owned by
+ * the shared page-level selector (local_dimensions/central/context).
  *
  * @module     local_dimensions/central/structure
  * @copyright  2026 Anderson Blaine
@@ -34,10 +35,13 @@ import {getString} from 'core/str';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
 const FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
+const PAGE_SIZE = 25;
 
 const SELECTORS = {
     region: '[data-region="structure"]',
     frameworkSelect: '[data-region="framework-select"]',
+    tree: '[data-region="competency-tree"]',
+    rootLoadMore: '[data-region="root-loadmore"]',
     toggle: '[data-action="toggle"]',
     row: '[data-action="select"]',
     addRoot: '[data-action="addroot"]',
@@ -58,14 +62,16 @@ const SELECTORS = {
 
 /** @type {HTMLElement|null} */
 let activeRow = null;
-/** @type {Object|null} */
-let treeModel = null;
 /** @type {Array} */
 let rulesModules = [];
 /** @type {Array} */
 let courseOutcomes = [];
 /** @type {Array} */
 let moduleOutcomes = [];
+/** @type {Number} */
+let activeFrameworkid = 0;
+/** @type {Promise<String>|null} */
+let loadMoreLabelPromise = null;
 
 /**
  * Read a JSON island embedded in the tab.
@@ -88,49 +94,78 @@ const readJson = (region, dataRegion, fallback) => {
 };
 
 /**
- * Build the tree model consumed by tool_lp/competencyruleconfig.
+ * Fetch one page of a parent's direct children (0 = roots) from browse_structure.
  *
- * @param {HTMLElement} region
- * @return {Object}
+ * @param {Number} parentid
+ * @param {Number} limitfrom
+ * @return {Promise<Object>} Resolves to {items, total}.
  */
-const createTreeModel = (region) => {
-    const competencies = readJson(region, 'competency-model', []);
-    const byId = {};
-    competencies.forEach((competency) => {
-        competency.id = Number(competency.id);
-        competency.parentid = Number(competency.parentid);
-        competency.competencyframeworkid = Number(competency.competencyframeworkid);
-        competency.ruleoutcome = Number(competency.ruleoutcome || 0);
-        byId[competency.id] = competency;
-    });
+const browse = (parentid, limitfrom) => Ajax.call([{
+    methodname: 'local_dimensions_browse_structure',
+    args: {
+        frameworkid: activeFrameworkid,
+        parentid: Number(parentid),
+        limitfrom: Number(limitfrom),
+        limitnum: PAGE_SIZE,
+    },
+}])[0];
 
-    return {
-        getCompetencyFrameworkId: () => (competencies.length ? competencies[0].competencyframeworkid : 0),
-        getChildren: (id) => competencies.filter((competency) => competency.parentid === Number(id)),
-        getCompetency: (id) => byId[Number(id)],
-        getCompetencyLevel: function(id) {
-            const competency = this.getCompetency(id);
-            if (!competency || !competency.path) {
-                return 0;
-            }
-            return competency.path.replace(/^\/|\/$/g, '').split('/').length;
-        },
-        hasChildren: function(id) {
-            return this.getChildren(id).length > 0;
-        },
-        hasRule: function(id) {
-            const competency = this.getCompetency(id);
-            return !!competency && competency.ruleoutcome !== 0 && !!competency.ruletype;
-        },
-        updateRule: function(id, config) {
-            const competency = this.getCompetency(id);
-            if (competency) {
-                competency.ruletype = config.ruletype;
-                competency.ruleoutcome = Number(config.ruleoutcome || 0);
-                competency.ruleconfig = config.ruleconfig;
-            }
-        },
-    };
+/**
+ * Render competency nodes (from browse_structure) into a container.
+ *
+ * @param {HTMLElement} container
+ * @param {Array} items
+ * @return {Promise<void>}
+ */
+const renderNodes = async(container, items) => {
+    for (const item of items) {
+        const {html, js} = await Templates.renderForPromise('local_dimensions/central/structure_node', item);
+        await Templates.appendNodeContents(container, html, js);
+    }
+};
+
+/**
+ * Build a "load more" link that runs the given loader on click.
+ *
+ * @param {Function} loader Async loader to run.
+ * @return {HTMLElement}
+ */
+const makeLoadMore = (loader) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-sm btn-link';
+    btn.dataset.region = 'child-loadmore';
+    if (loadMoreLabelPromise) {
+        loadMoreLabelPromise.then((label) => {
+            btn.textContent = label;
+            return label;
+        }).catch(Notification.exception);
+    }
+    btn.addEventListener('click', () => loader().catch(Notification.exception));
+    return btn;
+};
+
+/**
+ * Load and render the next page of a node's children into its container, managing the
+ * per-container "load more" link.
+ *
+ * @param {HTMLElement} container The [data-children] container.
+ * @param {Number} parentid
+ * @return {Promise<void>}
+ */
+const loadChildPage = async(container, parentid) => {
+    const existing = container.querySelector(':scope > [data-region="child-loadmore"]');
+    if (existing) {
+        existing.remove();
+    }
+    const offset = Number(container.dataset.offset || '0');
+    const response = await browse(parentid, offset);
+    await renderNodes(container, response.items);
+    const newoffset = offset + response.items.length;
+    container.dataset.offset = String(newoffset);
+    if (newoffset < response.total && response.items.length > 0) {
+        container.appendChild(makeLoadMore(() => loadChildPage(container, parentid)));
+    }
 };
 
 /**
@@ -154,17 +189,13 @@ const selectRow = (region, row) => {
 };
 
 /**
- * Expand or collapse a competency node, rendering its children from the in-memory
- * model the first time it is opened (lazy rendering — the DOM stays small).
+ * Expand or collapse a competency node, fetching its children the first time it is opened.
  *
  * @param {HTMLElement} region
  * @param {HTMLElement} button The toggle button.
  * @return {Promise<void>}
  */
 const toggleNode = async(region, button) => {
-    if (!treeModel) {
-        return;
-    }
     const id = Number(button.dataset.id);
     const container = region.querySelector(`[data-children="${id}"]`);
     if (!container) {
@@ -183,11 +214,15 @@ const toggleNode = async(region, button) => {
     }
 
     if (container.dataset.loaded !== '1') {
-        for (const child of treeModel.getChildren(id)) {
-            const {html, js} = await Templates.renderForPromise('local_dimensions/central/structure_node', child);
-            await Templates.appendNodeContents(container, html, js);
-        }
+        // Mark loaded before awaiting so a rapid second click can't double-fetch;
+        // reset on failure so a transient error can still be retried.
         container.dataset.loaded = '1';
+        try {
+            await loadChildPage(container, id);
+        } catch (e) {
+            container.dataset.loaded = '0';
+            throw e;
+        }
     }
 
     container.hidden = false;
@@ -196,6 +231,52 @@ const toggleNode = async(region, button) => {
     if (icon) {
         icon.className = 'fa fa-chevron-down';
     }
+};
+
+/**
+ * Load the next page of roots, inserting them before the root "load more" button.
+ *
+ * @param {HTMLElement} region
+ * @return {Promise<void>}
+ */
+const loadMoreRoots = async(region) => {
+    const tree = region.querySelector(SELECTORS.tree);
+    const button = region.querySelector(SELECTORS.rootLoadMore);
+    if (!tree || !button) {
+        return;
+    }
+    const offset = Number(button.dataset.offset || '0');
+    const response = await browse(0, offset);
+    const wrapper = document.createElement('div');
+    await renderNodes(wrapper, response.items);
+    while (wrapper.firstChild) {
+        tree.insertBefore(wrapper.firstChild, button);
+    }
+    const newoffset = offset + response.items.length;
+    button.dataset.offset = String(newoffset);
+    if (newoffset >= response.total || response.items.length === 0) {
+        button.remove();
+    }
+};
+
+/**
+ * Fetch every direct child of a competency (all pages) as {id, shortname} for the rule editor.
+ *
+ * @param {Number} parentid
+ * @return {Promise<Array>}
+ */
+const fetchAllChildren = async(parentid) => {
+    const children = [];
+    let offset = 0;
+    for (;;) {
+        const response = await browse(parentid, offset);
+        response.items.forEach((item) => children.push({id: item.id, shortname: item.shortname}));
+        offset += response.items.length;
+        if (offset >= response.total || response.items.length === 0) {
+            break;
+        }
+    }
+    return children;
 };
 
 /**
@@ -259,7 +340,7 @@ const confirmDelete = async(pane, row) => {
  * Persist a rule config via core_competency_update_competency, then refresh the pane.
  *
  * @param {HTMLElement} pane
- * @param {Object} competency The target competency from the tree model.
+ * @param {Object} competency {id, ruletype, ruleoutcome, ruleconfig} from the selected row.
  * @param {Object} config {ruletype, ruleoutcome, ruleconfig}.
  * @return {Promise<void>}
  */
@@ -284,31 +365,63 @@ const persistRule = (pane, competency, config) => {
                 },
             },
         }])[0])
-        .then(() => {
-            treeModel.updateRule(competency.id, config);
-            return reloadPane(pane);
-        });
+        .then(() => reloadPane(pane));
 };
 
 /**
- * Open the native rule-config modal for a competency and persist the result.
+ * Open the native rule-config modal for the selected row and persist the result.
  *
  * @param {HTMLElement} pane
- * @param {Number} id
+ * @param {HTMLElement} row The selected [data-action="select"] element.
  * @return {void}
  */
-const showRuleConfig = (pane, id) => {
-    if (!treeModel) {
-        return;
-    }
-    const competency = treeModel.getCompetency(id);
-    if (!competency) {
-        return;
-    }
-    const children = treeModel.getChildren(id);
-    showRuleConfigModal(competency, children, rulesModules)
+const showRuleConfig = (pane, row) => {
+    const competency = {
+        id: Number(row.dataset.id),
+        ruletype: row.dataset.ruletype || '',
+        ruleoutcome: Number(row.dataset.ruleoutcome || 0),
+        ruleconfig: row.dataset.ruleconfig || '',
+    };
+    fetchAllChildren(competency.id)
+        .then((children) => showRuleConfigModal(competency, children, rulesModules))
         .then((config) => (config ? persistRule(pane, competency, config) : null))
         .catch(Notification.exception);
+};
+
+/**
+ * Handle a detail-pane action for the active row.
+ *
+ * @param {HTMLElement} pane
+ * @param {Event} event
+ * @param {String} frameworkid
+ * @return {void}
+ */
+const handleDetailAction = (pane, event, frameworkid) => {
+    if (event.target.closest(SELECTORS.edit)) {
+        openForm(pane, {
+            competencyframeworkid: frameworkid,
+            id: activeRow.dataset.id,
+            parentid: activeRow.dataset.parentid,
+        }, 'editcompetency');
+    } else if (event.target.closest(SELECTORS.addChild)) {
+        openForm(pane, {competencyframeworkid: frameworkid, parentid: activeRow.dataset.id, id: 0}, 'addcompetency');
+    } else if (event.target.closest(SELECTORS.rules)) {
+        showRuleConfig(pane, activeRow);
+    } else if (event.target.closest(SELECTORS.links)) {
+        openLinksModal({
+            competencyid: Number(activeRow.dataset.id),
+            competencyname: activeRow.dataset.name || '',
+            courseoutcomes: courseOutcomes,
+            moduleoutcomes: moduleOutcomes,
+            onClose: () => reloadPane(pane).catch(Notification.exception),
+        });
+    } else if (event.target.closest(SELECTORS.moveUp)) {
+        callAndReload(pane, 'core_competency_move_up_competency', activeRow.dataset.id);
+    } else if (event.target.closest(SELECTORS.moveDown)) {
+        callAndReload(pane, 'core_competency_move_down_competency', activeRow.dataset.id);
+    } else if (event.target.closest(SELECTORS.remove)) {
+        confirmDelete(pane, activeRow);
+    }
 };
 
 /**
@@ -321,17 +434,31 @@ export const init = () => {
     }
     const pane = region.closest('[data-tab-content]');
     const frameworkid = region.dataset.frameworkid || '';
+    activeFrameworkid = Number(frameworkid || 0);
 
-    treeModel = createTreeModel(region);
+    if (pane) {
+        // Keep the pane dataset in sync with the framework the server actually resolved
+        // (it may differ from a prior selection after a visibility-toggle fallback).
+        pane.dataset.frameworkid = frameworkid;
+    }
+
     rulesModules = readJson(region, 'rules-modules', []);
     courseOutcomes = readJson(region, 'course-outcomes', []);
     moduleOutcomes = readJson(region, 'module-outcomes', []);
+
+    loadMoreLabelPromise = getString('managecompetencies_loadmore', 'local_dimensions');
+    loadMoreLabelPromise.catch(Notification.exception);
 
     region.addEventListener('click', (event) => {
         const toggle = event.target.closest(SELECTORS.toggle);
         if (toggle) {
             event.preventDefault();
             toggleNode(region, toggle).catch(Notification.exception);
+            return;
+        }
+        if (event.target.closest(SELECTORS.rootLoadMore)) {
+            event.preventDefault();
+            loadMoreRoots(region).catch(Notification.exception);
             return;
         }
         const row = event.target.closest(SELECTORS.row);
@@ -347,31 +474,7 @@ export const init = () => {
         if (!activeRow) {
             return;
         }
-        if (event.target.closest(SELECTORS.edit)) {
-            openForm(pane, {
-                competencyframeworkid: frameworkid,
-                id: activeRow.dataset.id,
-                parentid: activeRow.dataset.parentid,
-            }, 'editcompetency');
-        } else if (event.target.closest(SELECTORS.addChild)) {
-            openForm(pane, {competencyframeworkid: frameworkid, parentid: activeRow.dataset.id, id: 0}, 'addcompetency');
-        } else if (event.target.closest(SELECTORS.rules)) {
-            showRuleConfig(pane, Number(activeRow.dataset.id));
-        } else if (event.target.closest(SELECTORS.links)) {
-            openLinksModal({
-                competencyid: Number(activeRow.dataset.id),
-                competencyname: activeRow.dataset.name || '',
-                courseoutcomes: courseOutcomes,
-                moduleoutcomes: moduleOutcomes,
-                onClose: () => reloadPane(pane).catch(Notification.exception),
-            });
-        } else if (event.target.closest(SELECTORS.moveUp)) {
-            callAndReload(pane, 'core_competency_move_up_competency', activeRow.dataset.id);
-        } else if (event.target.closest(SELECTORS.moveDown)) {
-            callAndReload(pane, 'core_competency_move_down_competency', activeRow.dataset.id);
-        } else if (event.target.closest(SELECTORS.remove)) {
-            confirmDelete(pane, activeRow);
-        }
+        handleDetailAction(pane, event, frameworkid);
     });
 
     const select = region.querySelector(SELECTORS.frameworkSelect);
@@ -379,6 +482,14 @@ export const init = () => {
         select.addEventListener('change', () => {
             // The pane dataset is the single source of truth for the tab's arguments.
             pane.dataset.frameworkid = select.value;
+            reloadPane(pane).catch(Notification.exception);
+        });
+    }
+
+    const toggleHidden = region.querySelector('[data-action="toggle-hidden"]');
+    if (toggleHidden && pane) {
+        toggleHidden.addEventListener('change', () => {
+            pane.dataset.showhidden = toggleHidden.checked ? '1' : '0';
             reloadPane(pane).catch(Notification.exception);
         });
     }

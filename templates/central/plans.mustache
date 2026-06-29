@@ -29,7 +29,7 @@
     * selectedtemplateid (int) · selectedtemplatename (string)
     * hascompetencies (bool) · competencies (array) {id, shortname, frameworktag, first, last}
     * excludeids (string) · comma-separated ids already on the template (add-picker exclusion)
-    * competencycount (int) · canmanage (int)
+    * competencycount (int) · canmanage (int) · canassignroles (int)
     * competencyid (int) · filteredbycompetency (bool)
     * selectedcompetencyid (int) · selectedcompetencylabel (string)
 
@@ -56,13 +56,14 @@
             {"id": 9, "shortname": "Teamwork", "frameworktag": "SOFT", "first": false, "last": true}
         ],
         "competencycount": 6,
-        "canmanage": 1
+        "canmanage": 1,
+        "canassignroles": 1
     }
 }}
 <div class="local-dimensions-central-plans" data-region="plans"
      data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}"
      data-contextid="{{contextid}}" data-templateid="{{selectedtemplateid}}"
-     data-templatename="{{selectedtemplatename}}">
+     data-templatename="{{selectedtemplatename}}" data-canassignroles="{{canassignroles}}">
     {{#needscategoryselection}}
     <div class="alert alert-info" role="status">{{#str}}managecompetencies_selectcategory_help, local_dimensions{{/str}}</div>
     {{/needscategoryselection}}

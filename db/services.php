@@ -146,6 +146,14 @@ $functions = [
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
     ],
+    'local_dimensions_browse_structure' => [
+        'classname' => 'local_dimensions\external\browse_structure',
+        'methodname' => 'execute',
+        'description' => 'Browse a framework\'s competencies as a paginated lazy tree for the Structure tab.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+    ],
 
     // Competency hub Plans tab — template cohort management + background plan sync.
     'local_dimensions_list_template_cohorts' => [
@@ -296,6 +304,32 @@ $functions = [
         'description' => 'Toggle a competency framework\'s visibility.',
         'type' => 'write',
         'capabilities' => 'moodle/competency:competencymanage',
+        'ajax' => true,
+    ],
+
+    // Competency hub Plans tab — cohort role assignments.
+    'local_dimensions_list_template_cohort_roles' => [
+        'classname' => 'local_dimensions\external\list_template_cohort_roles',
+        'methodname' => 'execute',
+        'description' => 'List cohort role assignments over a learning plan\'s cohorts, with sync status.',
+        'type' => 'read',
+        'capabilities' => 'moodle/role:manage',
+        'ajax' => true,
+    ],
+    'local_dimensions_add_cohort_role' => [
+        'classname' => 'local_dimensions\external\add_cohort_role',
+        'methodname' => 'execute',
+        'description' => 'Assign a user-context role to a user over a learning plan cohort.',
+        'type' => 'write',
+        'capabilities' => 'moodle/role:manage',
+        'ajax' => true,
+    ],
+    'local_dimensions_remove_cohort_role' => [
+        'classname' => 'local_dimensions\external\remove_cohort_role',
+        'methodname' => 'execute',
+        'description' => 'Remove a cohort role assignment.',
+        'type' => 'write',
+        'capabilities' => 'moodle/role:manage',
         'ajax' => true,
     ],
 ];

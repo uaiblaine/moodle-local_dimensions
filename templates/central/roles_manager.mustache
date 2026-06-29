@@ -1,0 +1,76 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/roles_manager
+
+    Skeleton of the "Assign roles" pane in the Manage participants modal. The role/cohort selects and the
+    assignments table are filled by local_dimensions/central/roles_manager (mount) from
+    local_dimensions_list_template_cohort_roles.
+
+    Context variables required: (none — the skeleton is static; data is fetched client-side)
+
+    Example context (json):
+    {
+    }
+}}
+<div class="local-dimensions-roles" data-region="roles">
+    <div class="alert alert-warning" data-region="role-noroles" hidden>
+        {{#str}}central_roles_noroles, local_dimensions{{/str}}
+    </div>
+    <div class="alert alert-warning" data-region="role-nocohorts" hidden>
+        {{#str}}central_roles_nocohorts, local_dimensions{{/str}}
+    </div>
+    <div data-region="role-form" hidden>
+        <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
+            <div class="flex-grow-1">
+                <label class="d-block small text-muted mb-1" for="local-dimensions-role-user">
+                    {{#str}}central_roles_selectuser, local_dimensions{{/str}}
+                </label>
+                <select id="local-dimensions-role-user" data-region="role-user" class="form-select"></select>
+            </div>
+            <div>
+                <label class="d-block small text-muted mb-1" for="local-dimensions-role-role">
+                    {{#str}}central_roles_selectrole, local_dimensions{{/str}}
+                </label>
+                <select id="local-dimensions-role-role" data-region="role-role" class="form-select"></select>
+            </div>
+            <div>
+                <label class="d-block small text-muted mb-1" for="local-dimensions-role-cohort">
+                    {{#str}}central_roles_selectcohort, local_dimensions{{/str}}
+                </label>
+                <select id="local-dimensions-role-cohort" data-region="role-cohort" class="form-select"></select>
+            </div>
+            <button type="button" class="btn btn-primary" data-action="role-add">
+                {{#str}}central_roles_add, local_dimensions{{/str}}
+            </button>
+        </div>
+        <table class="table table-sm mb-2">
+            <thead>
+                <tr>
+                    <th scope="col">{{#str}}central_roles_col_user, local_dimensions{{/str}}</th>
+                    <th scope="col">{{#str}}central_roles_col_role, local_dimensions{{/str}}</th>
+                    <th scope="col">{{#str}}central_roles_col_cohort, local_dimensions{{/str}}</th>
+                    <th scope="col">{{#str}}central_roles_col_status, local_dimensions{{/str}}</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody data-region="role-rows"></tbody>
+        </table>
+        <p class="text-muted small mb-1">{{#str}}central_roles_backgroundnote, local_dimensions{{/str}}</p>
+        <p class="text-muted small mb-0">{{#str}}central_roles_globalnote, local_dimensions{{/str}}</p>
+    </div>
+</div>

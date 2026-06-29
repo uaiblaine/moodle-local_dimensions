@@ -50,6 +50,9 @@ class helper {
     /** @var string Area for competencies */
     const AREA_COMPETENCY = 'competency';
 
+    /** @var int Page size for the lazy Structure tree (roots + children). */
+    const STRUCTURE_PAGE_SIZE = 25;
+
     /**
      * Get the handler for a given area.
      *
@@ -1358,6 +1361,87 @@ class helper {
     }
 
     /**
+     * Shape a set of sibling competency records into Structure-tree nodes.
+     *
+     * Used by both the server-rendered first page of roots and the browse_structure web
+     * service, so a server-rendered node and a lazily-fetched node are identical. Each node
+     * is: id, parentid (int), shortname, idnumber, taxonomy (string), coursecount, depth,
+     * indent (int), haschildren (bool), ruletype, ruleconfig (string|null), ruleoutcome (int).
+     * Two batch queries (has-children, linked-course counts) cover the whole page; depth and
+     * taxonomy are derived from each record's path.
+     *
+     * @param array $records Sibling competency persistent objects (core_competency\competency).
+     * @param competency_framework $framework The owning framework (for taxonomy + context).
+     * @param \context $context Context for format_string.
+     * @return array List of node arrays in input order.
+     */
+    public static function structure_nodes(array $records, competency_framework $framework, \context $context): array {
+        global $DB;
+        if (empty($records)) {
+            return [];
+        }
+        $ids = array_map(static fn(competency $c): int => (int) $c->get('id'), $records);
+
+        // Batch: which of these ids are themselves a parent.
+        [$insql, $inparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'p');
+        $parents = $DB->get_fieldset_select('competency', 'DISTINCT parentid', "parentid $insql", $inparams);
+        $haschildren = [];
+        foreach ($parents as $pid) {
+            $haschildren[(int) $pid] = true;
+        }
+
+        // Batch: linked-course counts (visibility refinement is a later slice).
+        [$csql, $cparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'cid');
+        $counts = $DB->get_records_sql_menu(
+            "SELECT competencyid, COUNT(1)
+               FROM {competency_coursecomp}
+              WHERE competencyid $csql
+           GROUP BY competencyid",
+            $cparams
+        );
+
+        $nodes = [];
+        foreach ($records as $record) {
+            $id = (int) $record->get('id');
+            $depth = self::path_depth((string) $record->get('path'));
+            $level = $depth + 1;
+            $taxonomy = $framework->get_taxonomy($level) ?: competency_framework::TAXONOMY_COMPETENCY;
+            $nodes[] = [
+                'id' => $id,
+                'parentid' => (int) $record->get('parentid'),
+                'shortname' => format_string($record->get('shortname'), true, ['context' => $context]),
+                'idnumber' => (string) $record->get('idnumber'),
+                'taxonomy' => get_string('taxonomy_' . $taxonomy, 'core_competency'),
+                'coursecount' => (int) ($counts[$id] ?? 0),
+                'depth' => $depth,
+                'indent' => $depth * 22,
+                'haschildren' => !empty($haschildren[$id]),
+                'ruletype' => $record->get('ruletype'),
+                'ruleoutcome' => (int) $record->get('ruleoutcome'),
+                'ruleconfig' => $record->get('ruleconfig'),
+            ];
+        }
+        return $nodes;
+    }
+
+    /**
+     * Compute a competency's tree depth from its path (root = 0).
+     *
+     * The path is /0/<root>/<child>/... ; the depth is the number of ancestor competencies,
+     * i.e. one less than the count of non-zero path segments (which includes the node itself).
+     *
+     * @param string $path The competency.path value (e.g. /0/5/34/).
+     * @return int Depth, 0 for a root.
+     */
+    private static function path_depth(string $path): int {
+        $segments = array_filter(
+            explode('/', trim($path, '/')),
+            static fn(string $segment): bool => $segment !== '' && $segment !== '0'
+        );
+        return max(0, count($segments) - 1);
+    }
+
+    /**
      * Course-competency rule-outcome options for a select, localized via the core list.
      *
      * @return array List of ['value' => int, 'label' => string].
@@ -1412,12 +1496,13 @@ class helper {
      * Build the framework management rows for a context (Frameworks tab).
      *
      * @param \context $context The resolved page context (system or course category).
+     * @param bool $includehidden Whether to include hidden frameworks (default visible-only).
      * @return array List of ['id' => int, 'shortname' => string, 'idnumber' => string,
      *               'competencycount' => int, 'visible' => bool, 'deletable' => bool, 'canmanage' => bool].
      */
-    public static function framework_rows(\context $context): array {
+    public static function framework_rows(\context $context, bool $includehidden = false): array {
         $rows = [];
-        foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $context, 'self', false) as $framework) {
+        foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $context, 'self', !$includehidden) as $framework) {
             if (!competency_framework::can_read_context($framework->get_context())) {
                 continue;
             }
