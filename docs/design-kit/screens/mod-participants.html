@@ -1,0 +1,103 @@
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Participantes" subtitle="MOD.PART (Coortes/Usuários/Papéis) — atual vs proposta, com IDs" -->
+<style>
+:root{
+  --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
+  --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
+  --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
+  --text-success:#0f6e56;--bg-success:#e1f5ee;--border-success:#5dcaa5;
+  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
+  --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
+  --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
+  --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
+  --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
+  --text-success:#5dcaa5;--bg-success:#0a2a24;--border-success:#085041;
+  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
+  --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
+.screens{display:flex;flex-wrap:wrap;gap:18px;}
+.panel{flex:1 1 460px;min-width:340px;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:10px;}
+.pdot{width:8px;height:8px;border-radius:50%;}
+.idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
+.lbl{font-size:11px;color:var(--text-secondary);}
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.col{display:flex;flex-direction:column;gap:4px;}
+.m{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.m-head{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:0.5px solid var(--border);}
+.m-title{font-size:13px;font-weight:500;}.m-x{margin-left:auto;color:var(--text-muted);}
+.m-body{padding:12px 13px;display:flex;flex-direction:column;gap:10px;}
+.tabs{display:flex;gap:4px;border-bottom:0.5px solid var(--border);}
+.tab{font-size:12px;padding:5px 10px;border:0.5px solid transparent;border-bottom:0;border-radius:var(--radius) var(--radius) 0 0;color:var(--text-secondary);}
+.tab.on{background:var(--surface-1);border-color:var(--border);color:var(--text-accent);font-weight:500;}
+.sec{border:0.5px solid var(--border);border-radius:var(--radius);padding:8px;}
+.seclbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;}
+.ctrl{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;padding:5px 8px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);}
+.trow{display:flex;align-items:center;gap:8px;padding:4px 6px;border-bottom:0.5px solid var(--border);font-size:11px;}
+.th{font-size:10px;color:var(--text-secondary);}
+.badge{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--surface-1);color:var(--text-secondary);}
+.sw{display:inline-flex;align-items:center;gap:6px;font-size:11px;}
+.pill{font-size:10px;padding:1px 6px;border-radius:10px;border:0.5px solid;}
+.note{font-size:10px;color:var(--text-muted);}
+.screens>.panel:last-child{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+@media (prefers-color-scheme:dark){.screens>.panel:last-child{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
+</style>
+<div class="screens">
+
+  <section class="panel">
+    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · modal com 3 abas</div>
+    <div class="m">
+      <div class="m-head"><span class="m-title">Plano de integração <span class="idb">PART-HEADER</span></span><span class="m-x">✕</span></div>
+      <div class="m-body">
+        <div class="tabs"><span class="tab on">Coortes</span><span class="tab">Usuários</span><span class="tab">Papéis</span></div>
+        <div class="row"><span class="idb">PART-TAB-COHORTS</span><span class="idb">PART-TAB-USERS</span><span class="idb">PART-TAB-ROLES · se canassignroles</span></div>
+
+        <div class="sec">
+          <div class="seclbl">Aba Coortes · MOD.COHORT</div>
+          <div class="row" style="justify-content:space-between;"><span class="ctrl" style="min-width:200px;"><span style="color:var(--text-muted)">Adicionar coorte…</span><span style="color:var(--text-secondary)">⌄</span></span><span class="idb">COHORT-ADD</span></div>
+          <div class="trow th" style="margin-top:6px;"><span style="flex:1;">Coorte</span><span style="width:54px;">Membros</span><span style="width:42px;">Planos</span><span style="width:46px;"></span></div>
+          <div class="trow"><span style="flex:1;">Turma 2024</span><span style="width:54px;">32</span><span style="width:42px;">30</span><span style="width:46px;color:var(--text-secondary)">remover</span></div>
+          <span class="idb">COHORT-ROWS · sem rótulo · JS</span>
+        </div>
+
+        <div class="sec">
+          <div class="seclbl">Aba Usuários · inline</div>
+          <div class="row"><span class="ctrl"><span>Coorte: todas</span><span style="color:var(--text-secondary)">⌄</span></span><span class="ctrl" style="flex:1;"><span style="color:var(--text-muted)">Buscar…</span></span><span class="sw">☐ Mostrar individuais</span></div>
+          <div class="row" style="margin-top:5px;"><span class="ctrl" style="min-width:200px;"><span style="color:var(--text-muted)">Adicionar participante…</span><span style="color:var(--text-secondary)">⌄</span></span></div>
+          <div class="trow th" style="margin-top:6px;"><span style="flex:1;">Usuário</span><span style="width:50px;">Status</span><span style="width:54px;">Modelo</span><span style="width:54px;">Coorte</span><span style="width:36px;">Ind.</span><span style="width:20px;"></span></div>
+          <div class="trow"><span style="flex:1;">Ana Pereira</span><span style="width:50px;"><span class="pill" style="background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)">ativo</span></span><span style="width:54px;">coorte</span><span style="width:54px;">Turma 2024</span><span style="width:36px;">—</span><span style="width:20px;color:var(--text-secondary)">✕</span></div>
+          <div class="row" style="margin-top:4px;"><span class="idb">PART-COHORTFILTER / SEARCH / INDIVIDUAL / ADD</span><span class="idb">PART-ROWS · JS · scroll infinito</span></div>
+        </div>
+
+        <div class="sec">
+          <div class="seclbl">Aba Papéis · MOD.ROLES</div>
+          <div class="row"><span class="ctrl"><span style="color:var(--text-muted)">Usuário</span><span style="color:var(--text-secondary)">⌄</span></span><span class="ctrl"><span style="color:var(--text-muted)">Papel</span><span style="color:var(--text-secondary)">⌄</span></span><span class="ctrl"><span style="color:var(--text-muted)">Coorte</span><span style="color:var(--text-secondary)">⌄</span></span><span class="pill" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">Adicionar</span></div>
+          <div class="trow th" style="margin-top:6px;"><span style="flex:1;">Usuário</span><span style="width:60px;">Papel</span><span style="width:60px;">Coorte</span><span style="width:54px;">Status</span><span style="width:20px;"></span></div>
+          <div class="trow"><span style="flex:1;">João Silva</span><span style="width:60px;">Mentor</span><span style="width:60px;">Turma 2024</span><span style="width:54px;"><span class="pill" style="background:var(--bg-warning);color:var(--text-warning);border-color:var(--border-warning)">na fila</span></span><span style="width:20px;color:var(--text-secondary)">✕</span></div>
+          <span class="note">Atribuição roda em segundo plano e é global <span class="idb">ROLES-USER/ROLE/COHORT/ADD · ROLES-ROWS</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · grade de usuários em foco</div>
+    <div class="m">
+      <div class="m-head"><span class="m-title">Participantes · Plano de integração</span><span class="m-x">✕</span></div>
+      <div class="m-body">
+        <div class="tabs"><span class="tab on">Usuários <span class="badge">128</span></span><span class="tab">Coortes <span class="badge">3</span></span><span class="tab">Papéis <span class="badge">5</span></span></div>
+        <div class="row"><span class="ctrl" style="flex:1;"><span style="color:var(--text-muted)">🔍 Buscar ou adicionar participante…</span></span><span class="ctrl"><span>Coorte: todas</span><span style="color:var(--text-secondary)">⌄</span></span></div>
+        <div class="sec">
+          <div class="trow th"><span style="flex:1;">Usuário</span><span style="width:64px;">Origem</span><span style="width:54px;">Status</span><span style="width:20px;"></span></div>
+          <div class="trow"><span style="flex:1;">Ana Pereira</span><span style="width:64px;"><span class="badge">Turma 2024</span></span><span style="width:54px;"><span class="pill" style="background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)">ativo</span></span><span style="width:20px;color:var(--text-secondary)">⋮</span></div>
+          <div class="trow" style="border-bottom:0;"><span style="flex:1;">Bruno Costa</span><span style="width:64px;"><span class="pill" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">individual</span></span><span style="width:54px;"><span class="pill" style="background:var(--bg-warning);color:var(--text-warning);border-color:var(--border-warning)">na fila</span></span><span style="width:20px;color:var(--text-secondary)">⋮</span></div>
+        </div>
+        <span class="note">to-be: "modelo + coorte + individual" colapsam em "Origem"; status com cor; ações em ⋮ — mapeia PART-ROWS</span>
+      </div>
+    </div>
+  </section>
+
+</div>

@@ -1,0 +1,50 @@
+<!-- @dsCard group="Formulário" name="Seção de formulário" subtitle="Título + descrição + linhas de campo (texto, select, colorpicker) · Moodle DS" -->
+<style>
+:root{
+  --mds-blue-50:#e7f0f9;--mds-blue-200:#9fc4e5;--mds-blue-500:#0f6cbf;
+  --mds-gray-100:#f8f9fa;--mds-gray-200:#e9ecef;--mds-gray-300:#dee2e6;--mds-gray-400:#ced4da;--mds-gray-600:#6a737b;--mds-gray-900:#1d2125;--mds-white:#fff;--mds-red-500:#ca3120;
+  --mds-surface:var(--mds-white);--mds-surface-subtle:var(--mds-gray-100);--mds-text:var(--mds-gray-900);--mds-text-muted:var(--mds-gray-600);
+  --mds-border:var(--mds-gray-300);--mds-primary:var(--mds-blue-500);
+  --mds-radius:0.5rem;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
+  --surface-2:var(--mds-surface);--surface-1:var(--mds-surface-subtle);--surface-0:var(--mds-gray-200);
+  --text-primary:var(--mds-text);--text-secondary:var(--mds-text-muted);--text-muted:var(--mds-text-muted);
+  --text-accent:var(--mds-primary);--text-danger:var(--mds-red-500);--border:var(--mds-border);--radius:var(--mds-radius);
+}
+@media (prefers-color-scheme:dark){:root{
+  --mds-surface:#1d2125;--mds-surface-subtle:#16191c;--mds-text:#f8f9fa;--mds-text-muted:#ced4da;
+  --mds-border:#495057;--mds-primary:#3f89cc;
+  --surface-2:var(--mds-surface);--surface-1:var(--mds-surface-subtle);--surface-0:#0e1012;
+  --text-primary:var(--mds-text);--text-secondary:var(--mds-text-muted);--text-muted:var(--mds-text-muted);
+  --text-accent:var(--mds-primary);--text-danger:#df8379;--border:var(--mds-border);
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;}
+.sec{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;max-width:540px;margin:0 auto;background:var(--surface-2);}
+.sec-head{padding:9px 12px;background:var(--surface-1);border-bottom:1px solid var(--border);}
+.sec-head .t{font-size:13px;font-weight:500;}
+.sec-head .m{font-size:11px;color:var(--text-secondary);}
+.sec-body{padding:12px;display:grid;gap:10px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.lbl{font-size:11px;color:var(--text-secondary);margin-bottom:3px;display:block;}
+.req{color:var(--text-danger);}
+.ctrl{min-height:32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);display:flex;align-items:center;padding:6px 8px;font-size:12px;gap:6px;}
+.sel{justify-content:space-between;}
+.chev{color:var(--text-muted);font-size:11px;}
+.color{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:var(--radius);padding:5px 8px;font-size:12px;font-family:var(--font-mono);}
+.sw{width:14px;height:14px;border-radius:4px;border:1px solid var(--border);}
+.sub{font-size:11px;color:var(--text-accent);font-weight:500;}
+</style>
+<div class="sec">
+  <div class="sec-head"><div class="t">Campos personalizados</div><div class="m">Aparência e metadados usados nas telas de visualização e nos filtros.</div></div>
+  <div class="sec-body">
+    <div class="grid2">
+      <div><span class="lbl">Nome <span class="req">*</span></span><div class="ctrl">Resolução de problemas</div></div>
+      <div><span class="lbl">Tipo</span><div class="ctrl sel"><span>Unidade</span><span class="chev">▾</span></div></div>
+    </div>
+    <div class="sub">Aparência</div>
+    <div class="grid2">
+      <div><span class="lbl">Cor de fundo</span><span class="color"><span class="sw" style="background:#0f6cbf"></span> #0F6CBF</span></div>
+      <div><span class="lbl">Cor do texto</span><span class="color"><span class="sw" style="background:#1d2125"></span> #1D2125</span></div>
+    </div>
+    <div><span class="lbl">Descrição</span><div class="ctrl" style="min-height:48px;align-items:flex-start;color:var(--text-secondary)">Texto descritivo…</div></div>
+  </div>
+</div>

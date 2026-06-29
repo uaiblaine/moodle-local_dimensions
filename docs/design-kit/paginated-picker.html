@@ -1,0 +1,55 @@
+<!-- @dsCard group="Dados" name="Picker paginado" subtitle="Busca server-side + resultados AJAX + paginação (cross-framework) · Moodle DS" -->
+<style>
+:root{
+  --mds-blue-50:#e7f0f9;--mds-blue-200:#9fc4e5;--mds-blue-500:#0f6cbf;
+  --mds-yellow-100:#fcefdc;--mds-yellow-800:#60451f;
+  --mds-green-100:#d7e4d6;--mds-green-800:#153114;
+  --mds-gray-100:#f8f9fa;--mds-gray-200:#e9ecef;--mds-gray-300:#dee2e6;--mds-gray-400:#ced4da;--mds-gray-600:#6a737b;--mds-gray-900:#1d2125;--mds-white:#fff;
+  --mds-surface:var(--mds-white);--mds-surface-subtle:var(--mds-gray-100);--mds-text:var(--mds-gray-900);--mds-text-muted:var(--mds-gray-600);
+  --mds-border:var(--mds-gray-300);--mds-primary:var(--mds-blue-500);--mds-primary-tint:var(--mds-blue-50);--mds-primary-border:var(--mds-blue-200);
+  --mds-radius:0.5rem;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --surface-2:var(--mds-surface);--surface-1:var(--mds-surface-subtle);--surface-0:var(--mds-gray-200);
+  --text-primary:var(--mds-text);--text-secondary:var(--mds-text-muted);--text-muted:var(--mds-text-muted);
+  --text-accent:var(--mds-primary);--bg-accent:var(--mds-primary-tint);--border-accent:var(--mds-primary-border);
+  --text-warning:var(--mds-yellow-800);--bg-warning:var(--mds-yellow-100);--border-warning:var(--mds-yellow-800);
+  --text-success:var(--mds-green-800);--bg-success:var(--mds-green-100);--border-success:var(--mds-green-800);
+  --border:var(--mds-border);--border-strong:var(--mds-gray-400);--radius:var(--mds-radius);
+}
+@media (prefers-color-scheme:dark){:root{
+  --mds-surface:#1d2125;--mds-surface-subtle:#16191c;--mds-text:#f8f9fa;--mds-text-muted:#ced4da;
+  --mds-border:#495057;--mds-primary:#3f89cc;--mds-primary-tint:#062b4c;--mds-primary-border:#0f6cbf;
+  --surface-2:var(--mds-surface);--surface-1:var(--mds-surface-subtle);--surface-0:#0e1012;
+  --text-primary:var(--mds-text);--text-secondary:var(--mds-text-muted);--text-muted:var(--mds-text-muted);
+  --text-accent:var(--mds-primary);--bg-accent:var(--mds-primary-tint);--border-accent:var(--mds-primary-border);
+  --text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;
+  --text-success:#86af84;--bg-success:#153114;--border-success:#86af84;
+  --border:var(--mds-border);--border-strong:#6a737b;
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;}
+.wrap{max-width:540px;margin:0 auto;}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.ctrl{min-height:32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);display:flex;align-items:center;padding:6px 8px;font-size:12px;gap:6px;}
+.ph{color:var(--text-muted);}
+.res{display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);margin-top:6px;}
+.res.on{border-color:var(--border-accent);background:var(--bg-accent);}
+.tag{font-size:10px;padding:1px 6px;border-radius:10px;border:1px solid;}
+.path{font-size:10px;color:var(--text-muted);}
+.pg{width:26px;height:26px;border:1px solid var(--border);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;}
+.pg.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent);}
+</style>
+<div class="wrap">
+  <div class="bar">
+    <div class="ctrl" style="flex:1;min-width:160px;">🔍 <span class="ph">Buscar competência…</span><span style="margin-left:auto;font-size:11px;color:var(--text-accent)">buscando…</span></div>
+    <div class="ctrl" style="width:180px;justify-content:space-between;"><span>Todos os frameworks</span><span class="ph">▾</span></div>
+  </div>
+  <div style="font-size:11px;color:var(--text-muted);">Busca server-side · framework pode ter centenas de competências</div>
+  <div class="res"><span style="color:var(--text-muted)">☐</span><div style="flex:1;"><div style="font-size:12px;">Lógica matemática</div><div class="path">Matemática ▸ Raciocínio</div></div><span class="tag" style="background:var(--bg-warning);color:var(--text-warning);border-color:var(--border-warning)">MAT</span></div>
+  <div class="res on"><span style="color:var(--text-accent)">☑</span><div style="flex:1;"><div style="font-size:12px;color:var(--text-accent)">Pensamento lógico-dedutivo</div><div class="path" style="color:var(--text-accent)">Competências Gerais ▸ Resolução de problemas</div></div><span class="tag" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">CG-EP</span></div>
+  <div class="res"><span style="color:var(--text-muted)">☐</span><div style="flex:1;"><div style="font-size:12px;">Segurança da informação</div><div class="path">TI e Segurança ▸ Fundamentos</div></div><span class="tag" style="background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)">TI-SEC</span></div>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+    <span style="font-size:11px;color:var(--text-secondary)">Mostrando 1–20 de 247</span>
+    <div style="margin-left:auto;display:flex;gap:5px;align-items:center;">
+      <span class="pg">‹</span><span class="pg on">1</span><span class="pg">2</span><span class="pg">3</span><span style="color:var(--text-muted)">…</span><span class="pg">13</span><span class="pg">›</span>
+    </div>
+  </div>
+</div>

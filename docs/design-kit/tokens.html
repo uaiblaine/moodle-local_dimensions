@@ -1,0 +1,133 @@
+<!-- @dsCard group="Fundações" name="Tokens" subtitle="Alinhado ao Moodle DS — valores Boost, nomes --mds-*, estados + foco + elevação" -->
+<style>
+:root{
+  --mds-color-blue-50:#e7f0f9;--mds-color-blue-100:#cfe2f2;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;--mds-color-blue-700:#094173;--mds-color-blue-800:#062b4c;
+  --mds-color-cyan-100:#cce6ea;--mds-color-cyan-600:#006778;--mds-color-cyan-800:#00343c;
+  --mds-color-green-100:#d7e4d6;--mds-color-green-500:#357a32;--mds-color-green-800:#153114;
+  --mds-color-yellow-100:#fcefdc;--mds-color-yellow-500:#f0ad4e;--mds-color-yellow-800:#60451f;
+  --mds-color-red-100:#f4d6d2;--mds-color-red-200:#eaada6;--mds-color-red-500:#ca3120;--mds-color-red-600:#a2271a;--mds-color-red-700:#791d13;--mds-color-red-800:#51140d;
+  --mds-color-gray-100:#f8f9fa;--mds-color-gray-200:#e9ecef;--mds-color-gray-300:#dee2e6;--mds-color-gray-400:#ced4da;--mds-color-gray-500:#8f959e;--mds-color-gray-600:#6a737b;--mds-color-gray-700:#495057;--mds-color-gray-800:#343a40;--mds-color-gray-900:#1d2125;--mds-color-white:#fff;
+  --mds-bg-surface-default:var(--mds-color-white);--mds-bg-surface-subtle:var(--mds-color-gray-100);--mds-bg-surface-strong:var(--mds-color-gray-200);
+  --mds-text-default:var(--mds-color-gray-900);--mds-text-muted:var(--mds-color-gray-600);--mds-text-subtle:var(--mds-color-gray-700);--mds-text-inverse:var(--mds-color-gray-100);
+  --mds-border-default:var(--mds-color-gray-300);--mds-border-subtle:var(--mds-color-gray-200);
+  --mds-bg-interactive-primary-default:var(--mds-color-blue-500);--mds-bg-interactive-primary-hover:var(--mds-color-blue-600);--mds-bg-interactive-primary-active:var(--mds-color-blue-700);--mds-bg-interactive-primary-disabled:var(--mds-color-blue-200);
+  --mds-bg-interactive-danger-default:var(--mds-color-red-500);--mds-bg-interactive-danger-hover:var(--mds-color-red-600);--mds-bg-interactive-danger-active:var(--mds-color-red-700);
+  --mds-bg-interactive-secondary-default:var(--mds-color-gray-300);--mds-bg-interactive-secondary-hover:var(--mds-color-gray-400);
+  --mds-bg-feedback-info-subtle:var(--mds-color-cyan-100);--mds-text-feedback-info:var(--mds-color-cyan-800);
+  --mds-bg-feedback-success-subtle:var(--mds-color-green-100);--mds-text-feedback-success:var(--mds-color-green-800);
+  --mds-bg-feedback-warning-subtle:var(--mds-color-yellow-100);--mds-text-feedback-warning:var(--mds-color-yellow-800);
+  --mds-bg-feedback-danger-subtle:var(--mds-color-red-100);--mds-text-feedback-danger:var(--mds-color-red-800);
+  --mds-radius-xs:0.25rem;--mds-radius-sm:0.375rem;--mds-radius-md:0.5rem;--mds-radius-lg:0.75rem;--mds-radius-xl:1rem;--mds-radius-pill:50rem;
+  --mds-stroke-sm:0.0625rem;--mds-stroke-md:0.125rem;
+  --mds-focus-default:var(--mds-bg-interactive-primary-default);
+  --mds-shadow-sm:0 0.125rem 0.25rem rgba(0,0,0,.08);--mds-shadow-md:0 0.5rem 1rem rgba(0,0,0,.15);--mds-shadow-lg:0 1rem 3rem rgba(0,0,0,.17);
+  --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --mds-bg-surface-default:#1d2125;--mds-bg-surface-subtle:#16191c;--mds-bg-surface-strong:#343a40;
+  --mds-text-default:#f8f9fa;--mds-text-muted:#ced4da;--mds-text-subtle:#dee2e6;--mds-text-inverse:#1d2125;
+  --mds-border-default:#495057;--mds-border-subtle:#343a40;
+  --mds-bg-feedback-info-subtle:#00343c;--mds-text-feedback-info:#cce6ea;
+  --mds-bg-feedback-success-subtle:#153114;--mds-text-feedback-success:#d7e4d6;
+  --mds-bg-feedback-warning-subtle:#60451f;--mds-text-feedback-warning:#fcefdc;
+  --mds-bg-feedback-danger-subtle:#51140d;--mds-text-feedback-danger:#f4d6d2;
+}}
+body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
+.h{font-size:13px;font-weight:500;color:var(--mds-text-muted);margin:18px 0 8px;}
+.h:first-of-type{margin-top:4px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;}
+.sw{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);overflow:hidden;background:var(--mds-bg-surface-default);}
+.sw .bar{height:38px;}
+.sw .lab{padding:5px 7px;font-size:10px;color:var(--mds-text-muted);font-family:var(--font-mono);}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.btn{font-size:12px;padding:6px 12px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid transparent;color:var(--mds-color-white);}
+.btn-sec{background:var(--mds-bg-surface-default);color:var(--mds-text-default);border-color:var(--mds-border-default);}
+.fb{font-size:12px;padding:4px 10px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid;}
+.note{font-size:11px;color:var(--mds-text-muted);}
+.callout{margin-top:20px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-left:3px solid var(--mds-bg-interactive-primary-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);padding:10px 12px;}
+.callout .t{font-size:12px;font-weight:500;margin-bottom:4px;}
+.callout li{font-size:11px;color:var(--mds-text-subtle);margin:2px 0;}
+.scaleitem{display:flex;flex-direction:column;align-items:flex-start;gap:3px;}
+.scalebar{height:14px;background:var(--mds-bg-interactive-primary-default);border-radius:2px;}
+.type span{display:block;}
+</style>
+
+<div class="h">Superfícies e bordas</div>
+<div class="grid">
+  <div class="sw"><div class="bar" style="background:var(--mds-bg-surface-default)"></div><div class="lab">surface-default · #fff</div></div>
+  <div class="sw"><div class="bar" style="background:var(--mds-bg-surface-subtle)"></div><div class="lab">surface-subtle · gray-100</div></div>
+  <div class="sw"><div class="bar" style="background:var(--mds-bg-surface-strong)"></div><div class="lab">surface-strong · gray-200</div></div>
+  <div class="sw"><div class="bar" style="background:var(--mds-border-default)"></div><div class="lab">border-default · gray-300</div></div>
+  <div class="sw"><div class="bar" style="background:var(--mds-color-gray-900)"></div><div class="lab">text-default · gray-900</div></div>
+</div>
+
+<div class="h">Interativo — fills sólidos + estados (não é tint)</div>
+<div class="note" style="margin-bottom:6px;">primary · default → hover → active → disabled, e o anel de foco</div>
+<div class="row">
+  <span class="btn" style="background:var(--mds-bg-interactive-primary-default)">Default</span>
+  <span class="btn" style="background:var(--mds-bg-interactive-primary-hover)">Hover</span>
+  <span class="btn" style="background:var(--mds-bg-interactive-primary-active)">Active</span>
+  <span class="btn" style="background:var(--mds-bg-interactive-primary-disabled)">Disabled</span>
+  <span class="btn" style="background:var(--mds-bg-interactive-primary-default);box-shadow:0 0 0 3px var(--mds-color-blue-200)">Focus</span>
+</div>
+<div class="row" style="margin-top:6px;">
+  <span class="btn btn-sec">Secondary</span>
+  <span class="btn" style="background:var(--mds-bg-interactive-danger-default)">Danger</span>
+  <span class="btn" style="background:var(--mds-bg-interactive-danger-hover)">Danger hover</span>
+</div>
+
+<div class="h">Feedback — tints de status (texto no stop 800)</div>
+<div class="row">
+  <span class="fb" style="background:var(--mds-bg-feedback-info-subtle);color:var(--mds-text-feedback-info);border-color:var(--mds-text-feedback-info)">info · cyan</span>
+  <span class="fb" style="background:var(--mds-bg-feedback-success-subtle);color:var(--mds-text-feedback-success);border-color:var(--mds-text-feedback-success)">success · green</span>
+  <span class="fb" style="background:var(--mds-bg-feedback-warning-subtle);color:var(--mds-text-feedback-warning);border-color:var(--mds-text-feedback-warning)">warning · yellow</span>
+  <span class="fb" style="background:var(--mds-bg-feedback-danger-subtle);color:var(--mds-text-feedback-danger);border-color:var(--mds-text-feedback-danger)">danger · red</span>
+</div>
+
+<div class="h">Raio (md = 8px, bate com a interpretação anterior)</div>
+<div class="row">
+  <span class="fb" style="border-radius:var(--mds-radius-xs);border-color:var(--mds-border-default)">xs 4</span>
+  <span class="fb" style="border-radius:var(--mds-radius-sm);border-color:var(--mds-border-default)">sm 6</span>
+  <span class="fb" style="border-radius:var(--mds-radius-md);border-color:var(--mds-border-default)">md 8</span>
+  <span class="fb" style="border-radius:var(--mds-radius-lg);border-color:var(--mds-border-default)">lg 12</span>
+  <span class="fb" style="border-radius:var(--mds-radius-pill);border-color:var(--mds-border-default)">pill</span>
+</div>
+
+<div class="h">Espaçamento (escala T-shirt sobre rem)</div>
+<div class="row" style="align-items:flex-end;">
+  <div class="scaleitem"><div class="scalebar" style="width:4px;"></div><span class="note">xxs 4</span></div>
+  <div class="scaleitem"><div class="scalebar" style="width:8px;"></div><span class="note">xs 8</span></div>
+  <div class="scaleitem"><div class="scalebar" style="width:12px;"></div><span class="note">sm 12</span></div>
+  <div class="scaleitem"><div class="scalebar" style="width:16px;"></div><span class="note">md 16</span></div>
+  <div class="scaleitem"><div class="scalebar" style="width:20px;"></div><span class="note">lg 20</span></div>
+  <div class="scaleitem"><div class="scalebar" style="width:32px;"></div><span class="note">xl 32</span></div>
+  <div class="scaleitem"><div class="scalebar" style="width:48px;"></div><span class="note">xxl 48</span></div>
+</div>
+
+<div class="h">Tipografia · Noto Sans</div>
+<div class="type">
+  <span style="font-size:40px;font-weight:500;line-height:1.2;">Heading 1 · 2.5rem/500</span>
+  <span style="font-size:24px;font-weight:500;">Heading 4 · 1.5rem/500</span>
+  <span style="font-size:16px;font-weight:400;">Parágrafo · 1rem/400 · line-height 1.5</span>
+  <span style="font-size:14px;color:var(--mds-text-muted);">Pequeno · 0.875rem · muted</span>
+  <span style="font-size:12px;font-family:var(--font-mono);color:var(--mds-text-subtle);">mono · RP-001 · idnumber</span>
+  <span class="note" style="margin-top:4px;">pesos: light 300 · regular 400 · medium 500 · semibold 600 · bold 700</span>
+</div>
+
+<div class="h">Elevação (Boost usa sombras; nosso kit era flat)</div>
+<div class="row">
+  <span class="fb" style="border:0;box-shadow:var(--mds-shadow-sm);background:var(--mds-bg-surface-default)">shadow-sm</span>
+  <span class="fb" style="border:0;box-shadow:var(--mds-shadow-md);background:var(--mds-bg-surface-default)">shadow-md</span>
+  <span class="fb" style="border:0;box-shadow:var(--mds-shadow-lg);background:var(--mds-bg-surface-default)">shadow-lg</span>
+</div>
+
+<div class="callout">
+  <div class="t">Divergências da interpretação anterior (CDS/Anthropic → Moodle DS)</div>
+  <ul style="margin:4px 0 0;padding-left:16px;">
+    <li>Superfícies <b>neutras quentes → grays Bootstrap</b> (frias).</li>
+    <li>Accent único azul → <b>primary (blue-500) + info (cyan) separados</b>, com estados.</li>
+    <li>Hairline <b>0.5px → 1px</b> (stroke-sm); fonte <b>Anthropic Sans → Noto Sans</b>.</li>
+    <li>Adicionados: <b>fills interativos + estados</b>, <b>foco</b> (WCAG 2.2 AA) e <b>elevação</b>.</li>
+    <li>Nomenclatura <b>flat → semântica <code>--mds-*</code></b> (primitive→semantic) → port para React do MDS (Moodle 5.3 LTS) vira rename.</li>
+  </ul>
+</div>
