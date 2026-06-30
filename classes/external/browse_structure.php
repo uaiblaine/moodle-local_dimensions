@@ -127,6 +127,8 @@ class browse_structure extends external_api {
                 'ruletype' => new external_value(PARAM_RAW, 'Rule class name, or null when no rule'),
                 'ruleoutcome' => new external_value(PARAM_INT, 'Rule outcome code (0 = none)'),
                 'ruleconfig' => new external_value(PARAM_RAW, 'Rule configuration JSON, or null'),
+                'activitycount' => new external_value(PARAM_INT, 'Number of linked course-module activities'),
+                'rulelabel' => new external_value(PARAM_TEXT, 'Localized competency rule label'),
             ])),
             'total' => new external_value(PARAM_INT, 'Total direct children for this parent across all pages'),
         ]);
