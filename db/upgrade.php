@@ -154,6 +154,16 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026051201, 'local', 'dimensions');
     }
 
+    // Structure tab v3 (Fase 1): nodes now carry activitycount + rulelabel, the tree gained
+    // display-option toggles (taxonomy/idnumber/rule badges) and expand/collapse-all, and the
+    // detail pane shows labeled fields. Purge caches so the rebuilt structure.min.js and the new
+    // managecompetencies_* strings are served fresh to sessions holding the previous revision.
+    if ($oldversion < 2026063000) {
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026063000, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
