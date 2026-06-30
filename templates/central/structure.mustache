@@ -109,8 +109,8 @@
     </div>
 
     {{#hascompetencies}}
-    <div class="row">
-        <section class="col-lg-7 mb-3" data-region="tree-pane">
+    <div class="local-dimensions-central-structure-body" data-region="structure-body">
+        <section class="local-dimensions-central-structure-tree-pane" data-region="tree-pane">
             <div class="card h-100">
                 <div class="card-header d-flex align-items-center gap-3 py-2">
                     <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-action="expand-all">
@@ -160,8 +160,10 @@
                 </div>
             </div>
         </section>
-
-        <aside class="col-lg-5 mb-3" data-region="detail-pane">
+        <div class="local-dimensions-central-structure-resizer" data-region="structure-resizer"
+             role="separator" aria-orientation="vertical" tabindex="0"
+             aria-label="{{#str}}managecompetencies_resizepanels, local_dimensions{{/str}}"></div>
+        <aside class="local-dimensions-central-structure-detail-pane" data-region="detail-pane">
             <div class="card h-100">
                 <div class="card-body">
                     <div data-region="detail-empty" class="text-muted">

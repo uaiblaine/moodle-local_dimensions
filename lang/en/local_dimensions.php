@@ -350,6 +350,7 @@ $string['managecompetencies_noframeworks_context_help'] = 'There are no readable
 $string['managecompetencies_noframeworks_context_title'] = 'No frameworks in this context';
 $string['managecompetencies_noresults'] = 'No competencies match the current filters.';
 $string['managecompetencies_norule'] = 'No rule';
+$string['managecompetencies_resizepanels'] = 'Resize panels';
 $string['managecompetencies_rule_notapplicable'] = 'Not applicable (no children)';
 $string['managecompetencies_searchnotintree'] = 'This competency is not in the current framework view.';
 $string['managecompetencies_searchplaceholder'] = 'Search by name or ID number';
