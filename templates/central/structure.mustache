@@ -126,6 +126,12 @@
                         <span class="visually-hidden">{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}</span>
                     </button>
                 </div>
+                <div class="card-body py-2 border-bottom">
+                    <input type="search" class="form-control form-control-sm" id="local-dimensions-structure-search"
+                           data-region="structure-search" autocomplete="off"
+                           placeholder="{{#str}}managecompetencies_searchplaceholder, local_dimensions{{/str}}">
+                    <div class="list-group mt-2 local-dimensions-central-searchresults" data-region="search-results" hidden></div>
+                </div>
                 <div class="card-body border-bottom py-2" id="local-dimensions-central-displayopts" data-region="display-options-panel"
                      role="group" aria-label="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
                     <div class="form-check form-switch">

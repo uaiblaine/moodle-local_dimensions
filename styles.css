@@ -5452,3 +5452,9 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     overflow-y: auto;
 }
 
+/* Search results dropdown under the tree search box scrolls instead of pushing the tree down. */
+.local-dimensions-central-searchresults {
+    max-height: 40vh;
+    overflow-y: auto;
+}
+

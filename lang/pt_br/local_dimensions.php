@@ -351,6 +351,7 @@ $string['managecompetencies_noframeworks_context_title'] = 'Nenhuma estrutura ne
 $string['managecompetencies_noresults'] = 'Nenhuma competência corresponde aos filtros atuais.';
 $string['managecompetencies_norule'] = 'Sem regra';
 $string['managecompetencies_rule_notapplicable'] = 'Não aplicável (sem filhas)';
+$string['managecompetencies_searchnotintree'] = 'Esta competência não está na visão do framework atual.';
 $string['managecompetencies_searchplaceholder'] = 'Buscar por nome ou identificador';
 $string['managecompetencies_selectcategory_help'] = 'Escolha primeiro a categoria de curso e depois selecione a estrutura de competências armazenada no contexto dessa categoria.';
 $string['managecompetencies_selectcategory_title'] = 'Selecione uma categoria de curso';
