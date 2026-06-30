@@ -91,9 +91,9 @@ final class search_structure_test extends \externallib_advanced_testcase {
 
         $item = $result['items'][0];
         $this->assertSame($gid, $item['id']);
-        // pathids must be root then parent (no own id, no sentinel 0).
+        // Pathids must be root then parent (no own id, no sentinel 0).
         $this->assertSame([$rid, $cid], $item['pathids']);
-        // path string must contain both ancestor shortnames.
+        // Path string must contain both ancestor shortnames.
         $this->assertStringContainsString('Root competency', $item['path']);
         $this->assertStringContainsString('Child competency', $item['path']);
     }
