@@ -5430,3 +5430,19 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     }
 }
 
+/* Competency hub — Structure tree (v3 display options). Each node can show a
+   taxonomy / identifier / rule badge; visibility is toggled by show-* classes on
+   the tree container so lazily-fetched children inherit the current choice. */
+.local-dimensions-central-structure .local-dimensions-central-tax,
+.local-dimensions-central-structure .local-dimensions-central-id,
+.local-dimensions-central-structure .local-dimensions-central-rulebadge {
+    display: none;
+    font-weight: 400;
+}
+
+.local-dimensions-central-tree.show-tax .local-dimensions-central-tax,
+.local-dimensions-central-tree.show-id .local-dimensions-central-id,
+.local-dimensions-central-tree.show-rule .local-dimensions-central-rulebadge {
+    display: inline-block;
+}
+

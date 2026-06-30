@@ -22,8 +22,8 @@
 
     Context variables required:
     * id, parentid (int) · shortname, idnumber, taxonomy (string)
-    * coursecount (int) · depth, indent (int) · haschildren (bool)
-    * ruletype, ruleconfig (string|null) · ruleoutcome (int)
+    * coursecount (int) · activitycount (int) · depth, indent (int) · haschildren (bool)
+    * ruletype, ruleconfig (string|null) · ruleoutcome (int) · rulelabel (string)
 
     Example context (json):
     {
@@ -33,12 +33,14 @@
         "idnumber": "COMM-01",
         "taxonomy": "Competency",
         "coursecount": 3,
+        "activitycount": 5,
         "indent": 0,
         "haschildren": true,
         "depth": 0,
-        "ruletype": "",
+        "ruletype": "core_competency\\competency_rule_all",
         "ruleoutcome": 0,
-        "ruleconfig": ""
+        "ruleconfig": "",
+        "rulelabel": "All criteria of this competency are complete"
     }
 }}
 <div class="local-dimensions-central-node" data-node="{{id}}">
@@ -60,11 +62,23 @@
                 data-idnumber="{{idnumber}}"
                 data-taxonomy="{{taxonomy}}"
                 data-courses="{{coursecount}}"
+                data-activities="{{activitycount}}"
+                data-haschildren="{{#haschildren}}1{{/haschildren}}"
                 data-ruletype="{{ruletype}}"
                 data-ruleoutcome="{{ruleoutcome}}"
-                data-ruleconfig="{{ruleconfig}}">
+                data-ruleconfig="{{ruleconfig}}"
+                data-rulelabel="{{rulelabel}}">
             <i class="fa {{#haschildren}}fa-folder-o{{/haschildren}}{{^haschildren}}fa-circle-o{{/haschildren}} me-2 text-muted" aria-hidden="true"></i>
             <span class="local-dimensions-central-row-name">{{shortname}}</span>
+            <span class="badge bg-light text-dark ms-2 local-dimensions-central-tax">{{taxonomy}}</span>
+            {{#idnumber}}
+            <span class="badge bg-light text-dark ms-2 local-dimensions-central-id">{{idnumber}}</span>
+            {{/idnumber}}
+            {{#haschildren}}
+            {{#ruletype}}
+            <span class="badge bg-success ms-2 local-dimensions-central-rulebadge">{{rulelabel}}</span>
+            {{/ruletype}}
+            {{/haschildren}}
         </button>
     </div>
     <div class="local-dimensions-central-children" data-children="{{id}}" data-offset="0" hidden></div>
