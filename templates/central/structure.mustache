@@ -29,7 +29,7 @@
     * needscategoryselection (bool)
     * hasframeworks (bool) · frameworks (array) {id, name, idnumber, selected, competencycount, hidden}
     * competencies (array) {id, parentid, shortname, idnumber, indent, haschildren, taxonomy, coursecount,
-      depth, ruletype, ruleoutcome, ruleconfig}
+      activitycount, rulelabel, depth, ruletype, ruleoutcome, ruleconfig}
     * hascompetencies (bool) · competencycount (int) · rootshown (int) · roottotal (int) · hasmoreroots (bool)
     * canmanage (int)
 
@@ -56,14 +56,15 @@
         "competencies": [
             {
                 "id": 7, "parentid": 0, "shortname": "Communication", "idnumber": "COMM-01",
-                "taxonomy": "Competency", "coursecount": 3, "depth": 0, "indent": 0,
-                "haschildren": true, "ruletype": "", "ruleoutcome": 0, "ruleconfig": ""
+                "taxonomy": "Competency", "coursecount": 3, "activitycount": 5, "depth": 0, "indent": 0,
+                "haschildren": true, "ruletype": "", "ruleoutcome": 0, "ruleconfig": "", "rulelabel": "No rule"
             }
         ]
     }
 }}
 <div class="local-dimensions-central-structure" data-region="structure"
-     data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}" data-frameworkid="{{selectedframeworkid}}">
+     data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}" data-frameworkid="{{selectedframeworkid}}"
+     data-narule="{{#str}}managecompetencies_rule_notapplicable, local_dimensions{{/str}}">
     <script type="application/json" data-region="rules-modules">{{{rulesmodulesjson}}}</script>
     <script type="application/json" data-region="course-outcomes">{{{courseoutcomesjson}}}</script>
     <script type="application/json" data-region="module-outcomes">{{{moduleoutcomesjson}}}</script>
@@ -96,9 +97,14 @@
             {{#str}}managecompetencies_items, local_dimensions{{/str}}: <strong>{{competencycount}}</strong>
         </div>
         {{#canmanage}}
-        <button type="button" class="btn btn-primary btn-sm ms-auto" data-action="addroot">
-            <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}managecompetencies_addroot, local_dimensions{{/str}}
-        </button>
+        <div class="ms-auto text-end">
+            <button type="button" class="btn btn-primary btn-sm" data-action="add">
+                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}managecompetencies_addcompetency, local_dimensions{{/str}}
+            </button>
+            <div class="small text-muted mt-1" data-region="add-hint">
+                {{#str}}managecompetencies_addhint_root, local_dimensions{{/str}}
+            </div>
+        </div>
         {{/canmanage}}
     </div>
 
@@ -106,7 +112,35 @@
     <div class="row">
         <section class="col-lg-7 mb-3" data-region="tree-pane">
             <div class="card h-100">
-                <div class="card-body p-2" data-region="competency-tree">
+                <div class="card-header d-flex align-items-center gap-3 py-2">
+                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-action="expand-all">
+                        <i class="fa fa-angle-double-down me-1" aria-hidden="true"></i>{{#str}}managecompetencies_expandall, local_dimensions{{/str}}
+                    </button>
+                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-action="collapse-all">
+                        <i class="fa fa-angle-double-up me-1" aria-hidden="true"></i>{{#str}}managecompetencies_collapseall, local_dimensions{{/str}}
+                    </button>
+                    <button type="button" class="btn btn-sm btn-link p-0 ms-auto text-decoration-none" data-action="display-options"
+                            aria-expanded="true" aria-controls="local-dimensions-central-displayopts"
+                            title="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
+                        <i class="fa fa-cog" aria-hidden="true"></i>
+                        <span class="visually-hidden">{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}</span>
+                    </button>
+                </div>
+                <div class="card-body border-bottom py-2" id="local-dimensions-central-displayopts" data-region="display-options-panel">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="local-dimensions-disp-tax" data-display-toggle="tax">
+                        <label class="form-check-label" for="local-dimensions-disp-tax">{{#str}}managecompetencies_showtaxonomy, local_dimensions{{/str}}</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="local-dimensions-disp-id" data-display-toggle="id">
+                        <label class="form-check-label" for="local-dimensions-disp-id">{{#str}}managecompetencies_showids, local_dimensions{{/str}}</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="local-dimensions-disp-rule" data-display-toggle="rule" checked>
+                        <label class="form-check-label" for="local-dimensions-disp-rule">{{#str}}managecompetencies_showrule, local_dimensions{{/str}}</label>
+                    </div>
+                </div>
+                <div class="card-body p-2 local-dimensions-central-tree show-rule" data-region="competency-tree">
                     {{#competencies}}
                     {{> local_dimensions/central/structure_node }}
                     {{/competencies}}
@@ -128,10 +162,32 @@
                         {{#str}}managecompetencies_selectdetails, local_dimensions{{/str}}
                     </div>
                     <div data-region="detail-content" hidden>
-                        <div class="small text-muted" data-region="detail-taxonomy"></div>
-                        <h3 class="h5 mb-1" data-region="detail-title"></h3>
-                        <div class="text-monospace small text-muted mb-2" data-region="detail-idnumber"></div>
-                        <div class="small" data-region="detail-courses"></div>
+                        <div class="mb-2">
+                            <div class="small text-muted">{{#str}}managecompetencies_taxonomy, local_dimensions{{/str}}</div>
+                            <div data-region="detail-taxonomy"></div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="small text-muted">{{#str}}name{{/str}}</div>
+                            <h3 class="h5 mb-0" data-region="detail-title"></h3>
+                        </div>
+                        <div class="mb-2">
+                            <div class="small text-muted">{{#str}}idnumber{{/str}}</div>
+                            <div class="text-monospace" data-region="detail-idnumber"></div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col">
+                                <div class="small text-muted">{{#str}}managecompetencies_linkedcourses, local_dimensions{{/str}}</div>
+                                <div data-region="detail-courses"></div>
+                            </div>
+                            <div class="col">
+                                <div class="small text-muted">{{#str}}managecompetencies_linkedactivities, local_dimensions{{/str}}</div>
+                                <div data-region="detail-activities"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="small text-muted">{{#str}}competencyrule, tool_lp{{/str}}</div>
+                            <div data-region="detail-rule"></div>
+                        </div>
                         {{#canmanage}}
                         <div class="mt-3 d-flex flex-wrap gap-2">
                             <button type="button" class="btn btn-sm btn-primary" data-action="edit">
