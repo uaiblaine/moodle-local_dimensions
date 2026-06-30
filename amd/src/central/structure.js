@@ -67,6 +67,9 @@ const SELECTORS = {
     displayOptions: '[data-action="display-options"]',
     displayPanel: '[data-region="display-options-panel"]',
     displayToggle: '[data-display-toggle]',
+    searchInput: '[data-region="structure-search"]',
+    searchResults: '[data-region="search-results"]',
+    childLoadMore: '[data-region="child-loadmore"]',
 };
 
 /** @type {HTMLElement|null} */
@@ -81,6 +84,8 @@ let moduleOutcomes = [];
 let activeFrameworkid = 0;
 /** @type {Promise<String>|null} */
 let loadMoreLabelPromise = null;
+/** @type {Number} setTimeout id for debouncing the structure search. */
+let searchDebounce = 0;
 
 /** @type {Number} Maximum branches a single "expand all" will open before stopping. */
 const EXPAND_CAP = 200;
@@ -229,6 +234,143 @@ const applyDisplayPrefs = (region) => {
         cb.checked = on;
         tree.classList.toggle(DISPLAY_CLASSES[key], on);
     });
+};
+
+/**
+ * Render search hits as clickable result buttons (or hide the list when empty).
+ *
+ * @param {HTMLElement} region
+ * @param {Array} items Hits from search_structure: {id, shortname, idnumber, path, pathids}.
+ */
+const renderSearchResults = (region, items) => {
+    const list = region.querySelector(SELECTORS.searchResults);
+    if (!list) {
+        return;
+    }
+    list.innerHTML = '';
+    if (!items.length) {
+        list.hidden = true;
+        return;
+    }
+    items.forEach((item) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'list-group-item list-group-item-action text-start';
+        button.dataset.id = String(item.id);
+        button.dataset.pathids = JSON.stringify(item.pathids || []);
+        const name = document.createElement('span');
+        name.className = 'fw-medium';
+        name.textContent = item.shortname;
+        button.appendChild(name);
+        if (item.idnumber) {
+            const idn = document.createElement('span');
+            idn.className = 'font-monospace small text-muted ms-2';
+            idn.textContent = item.idnumber;
+            button.appendChild(idn);
+        }
+        if (item.path) {
+            const path = document.createElement('div');
+            path.className = 'small text-muted';
+            path.textContent = item.path;
+            button.appendChild(path);
+        }
+        list.appendChild(button);
+    });
+    list.hidden = false;
+};
+
+/**
+ * Run the framework-scoped search for the current query and render the results.
+ *
+ * @param {HTMLElement} region
+ * @param {String} query
+ * @return {Promise<void>}
+ */
+const runSearch = async(region, query) => {
+    const response = await Ajax.call([{
+        methodname: 'local_dimensions_search_structure',
+        args: {frameworkid: activeFrameworkid, query, limitfrom: 0, limitnum: 25},
+    }])[0];
+    renderSearchResults(region, response.items);
+};
+
+/** @type {Number} Safety cap on load-more iterations during a reveal-walk. */
+const REVEAL_CAP = 100;
+
+/**
+ * Page in nodes at one tree level until the node with the given id is present, or until
+ * there are no more pages. Level is the roots when parentid is 0, else a node's children.
+ *
+ * @param {HTMLElement} region
+ * @param {Number} id The competency id to surface.
+ * @param {Number} parentid The parent whose level holds it (0 = roots).
+ * @param {String} selector A SELECTORS entry to match the node element by (toggle or row).
+ * @return {Promise<HTMLElement|null>}
+ */
+const ensureLoaded = async(region, id, parentid, selector) => {
+    const find = () => region.querySelector(`${selector}[data-id="${id}"]`);
+    let guard = 0;
+    for (;;) {
+        const found = find();
+        if (found) {
+            return found;
+        }
+        if (guard >= REVEAL_CAP) {
+            return null;
+        }
+        guard += 1;
+        if (parentid === 0) {
+            if (!region.querySelector(SELECTORS.rootLoadMore)) {
+                return null;
+            }
+            await loadMoreRoots(region);
+        } else {
+            const container = region.querySelector(`[data-children="${parentid}"]`);
+            if (!container) {
+                return null;
+            }
+            const more = container.querySelector(`:scope > ${SELECTORS.childLoadMore}`);
+            if (!more && container.dataset.loaded === '1') {
+                return null;
+            }
+            await loadChildPage(container, parentid);
+        }
+    }
+};
+
+/**
+ * Reveal and select a competency by expanding its ancestor path, then scroll + flash it.
+ *
+ * @param {HTMLElement} region
+ * @param {Number} targetid
+ * @param {Array} pathids Ancestor id chain root->parent (empty for a root).
+ * @return {Promise<void>}
+ */
+const revealNode = async(region, targetid, pathids) => {
+    const list = region.querySelector(SELECTORS.searchResults);
+    if (list) {
+        list.hidden = true;
+    }
+    let parentid = 0;
+    for (const ancestorid of pathids) {
+        const toggle = await ensureLoaded(region, Number(ancestorid), parentid, SELECTORS.toggle);
+        if (!toggle) {
+            addToast(await getString('managecompetencies_searchnotintree', 'local_dimensions'));
+            return;
+        }
+        if (toggle.getAttribute('aria-expanded') === 'false') {
+            await toggleNode(region, toggle);
+        }
+        parentid = Number(ancestorid);
+    }
+    const row = await ensureLoaded(region, Number(targetid), parentid, SELECTORS.row);
+    if (!row) {
+        addToast(await getString('managecompetencies_searchnotintree', 'local_dimensions'));
+        return;
+    }
+    selectRow(region, row);
+    row.scrollIntoView({block: 'center', behavior: 'smooth'});
+    row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
 };
 
 /**
@@ -582,6 +724,18 @@ export const init = () => {
     loadMoreLabelPromise.catch(Notification.exception);
 
     region.addEventListener('click', (event) => {
+        const result = event.target.closest(`${SELECTORS.searchResults} [data-id]`);
+        if (result) {
+            event.preventDefault();
+            let pathids = [];
+            try {
+                pathids = JSON.parse(result.dataset.pathids || '[]');
+            } catch (e) {
+                pathids = [];
+            }
+            revealNode(region, Number(result.dataset.id), pathids).catch(Notification.exception);
+            return;
+        }
         const toggle = event.target.closest(SELECTORS.toggle);
         if (toggle) {
             event.preventDefault();
@@ -640,6 +794,21 @@ export const init = () => {
         prefs[toggle.dataset.displayToggle] = toggle.checked;
         writeDisplayPrefs(prefs);
     });
+
+    const searchInput = region.querySelector(SELECTORS.searchInput);
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.trim();
+            window.clearTimeout(searchDebounce);
+            if (query.length < 2) {
+                renderSearchResults(region, []);
+                return;
+            }
+            searchDebounce = window.setTimeout(() => {
+                runSearch(region, query).catch(Notification.exception);
+            }, 250);
+        });
+    }
 
     const select = region.querySelector(SELECTORS.frameworkSelect);
     if (select && pane) {

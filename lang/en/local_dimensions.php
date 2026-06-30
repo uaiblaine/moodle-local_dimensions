@@ -351,6 +351,7 @@ $string['managecompetencies_noframeworks_context_title'] = 'No frameworks in thi
 $string['managecompetencies_noresults'] = 'No competencies match the current filters.';
 $string['managecompetencies_norule'] = 'No rule';
 $string['managecompetencies_rule_notapplicable'] = 'Not applicable (no children)';
+$string['managecompetencies_searchnotintree'] = 'This competency is not in the current framework view.';
 $string['managecompetencies_searchplaceholder'] = 'Search by name or ID number';
 $string['managecompetencies_selectcategory_help'] = 'Choose the course category first, then select the competency framework stored in that category context.';
 $string['managecompetencies_selectcategory_title'] = 'Select a course category';
