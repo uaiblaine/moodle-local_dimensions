@@ -126,7 +126,8 @@
                         <span class="visually-hidden">{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}</span>
                     </button>
                 </div>
-                <div class="card-body border-bottom py-2" id="local-dimensions-central-displayopts" data-region="display-options-panel">
+                <div class="card-body border-bottom py-2" id="local-dimensions-central-displayopts" data-region="display-options-panel"
+                     role="group" aria-label="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="local-dimensions-disp-tax" data-display-toggle="tax">
                         <label class="form-check-label" for="local-dimensions-disp-tax">{{#str}}managecompetencies_showtaxonomy, local_dimensions{{/str}}</label>
@@ -172,7 +173,7 @@
                         </div>
                         <div class="mb-2">
                             <div class="small text-muted">{{#str}}idnumber{{/str}}</div>
-                            <div class="text-monospace" data-region="detail-idnumber"></div>
+                            <div class="font-monospace" data-region="detail-idnumber"></div>
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col">
