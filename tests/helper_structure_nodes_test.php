@@ -29,6 +29,8 @@ use core_competency\api;
 use core_competency\competency;
 
 /**
+ * Tests for helper::structure_nodes() activity-count and rule-label enrichment.
+ *
  * @covers \local_dimensions\helper::structure_nodes
  */
 final class helper_structure_nodes_test extends advanced_testcase {
