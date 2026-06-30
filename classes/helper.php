@@ -1365,9 +1365,10 @@ class helper {
      *
      * Used by both the server-rendered first page of roots and the browse_structure web
      * service, so a server-rendered node and a lazily-fetched node are identical. Each node
-     * is: id, parentid (int), shortname, idnumber, taxonomy (string), coursecount, depth,
-     * indent (int), haschildren (bool), ruletype, ruleconfig (string|null), ruleoutcome (int).
-     * Two batch queries (has-children, linked-course counts) cover the whole page; depth and
+     * is: id, parentid (int), shortname, idnumber, taxonomy (string), coursecount,
+     * activitycount (int), depth, indent (int), haschildren (bool), ruletype,
+     * ruleconfig (string|null), ruleoutcome (int), rulelabel (string).
+     * Three batch queries (has-children, linked-course counts, linked-activity counts) cover the whole page; depth and
      * taxonomy are derived from each record's path.
      *
      * @param array $records Sibling competency persistent objects (core_competency\competency).
@@ -1405,6 +1406,22 @@ class helper {
             );
         }
 
+        // Batch: linked-activity counts, scoped to the modules in courses the viewer may manage.
+        $actcounts = [];
+        $modulefilter = self::manageable_course_constraint('cm.course', 'mgm');
+        if ($modulefilter !== null) {
+            [$msql, $mparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'mid');
+            $where = "mc.competencyid $msql" . $modulefilter[0];
+            $actcounts = $DB->get_records_sql_menu(
+                "SELECT mc.competencyid, COUNT(1)
+                   FROM {competency_modulecomp} mc
+                   JOIN {course_modules} cm ON cm.id = mc.cmid
+                  WHERE $where
+               GROUP BY mc.competencyid",
+                $mparams + $modulefilter[1]
+            );
+        }
+
         $nodes = [];
         foreach ($records as $record) {
             $id = (int) $record->get('id');
@@ -1418,12 +1435,14 @@ class helper {
                 'idnumber' => (string) $record->get('idnumber'),
                 'taxonomy' => get_string('taxonomy_' . $taxonomy, 'core_competency'),
                 'coursecount' => (int) ($counts[$id] ?? 0),
+                'activitycount' => (int) ($actcounts[$id] ?? 0),
                 'depth' => $depth,
                 'indent' => $depth * 22,
                 'haschildren' => !empty($haschildren[$id]),
                 'ruletype' => $record->get('ruletype'),
                 'ruleoutcome' => (int) $record->get('ruleoutcome'),
                 'ruleconfig' => $record->get('ruleconfig'),
+                'rulelabel' => self::get_competency_rule_label($record->get('ruletype')),
             ];
         }
         return $nodes;
