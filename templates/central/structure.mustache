@@ -89,7 +89,7 @@
             </label>
             <select id="local-dimensions-central-framework" class="form-select" data-region="framework-select">
                 {{#frameworks}}
-                <option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}{{#idnumber}} · {{idnumber}}{{/idnumber}}{{#hidden}} · {{#str}}hidden, tool_lp{{/str}}{{/hidden}}</option>
+                <option value="{{id}}" data-hidden="{{#hidden}}1{{/hidden}}"{{#selected}} selected{{/selected}}>{{name}}{{#idnumber}} · {{idnumber}}{{/idnumber}}{{#hidden}} · {{#str}}hidden, tool_lp{{/str}}{{/hidden}}</option>
                 {{/frameworks}}
             </select>
         </div>
@@ -126,12 +126,6 @@
                         <span class="visually-hidden">{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}</span>
                     </button>
                 </div>
-                <div class="card-body py-2 border-bottom">
-                    <input type="search" class="form-control form-control-sm" id="local-dimensions-structure-search"
-                           data-region="structure-search" autocomplete="off"
-                           placeholder="{{#str}}managecompetencies_searchplaceholder, local_dimensions{{/str}}">
-                    <div class="list-group mt-2 local-dimensions-central-searchresults" data-region="search-results" hidden></div>
-                </div>
                 <div class="card-body border-bottom py-2" id="local-dimensions-central-displayopts" data-region="display-options-panel"
                      role="group" aria-label="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
                     <div class="form-check form-switch">
@@ -146,6 +140,12 @@
                         <input class="form-check-input" type="checkbox" id="local-dimensions-disp-rule" data-display-toggle="rule" checked>
                         <label class="form-check-label" for="local-dimensions-disp-rule">{{#str}}managecompetencies_showrule, local_dimensions{{/str}}</label>
                     </div>
+                </div>
+                <div class="card-body py-2 border-bottom local-dimensions-central-search-wrap">
+                    <input type="search" class="form-control form-control-sm" id="local-dimensions-structure-search"
+                           data-region="structure-search" autocomplete="off"
+                           placeholder="{{#str}}managecompetencies_searchplaceholder, local_dimensions{{/str}}">
+                    <div class="list-group local-dimensions-central-searchresults" data-region="search-results" hidden></div>
                 </div>
                 <div class="card-body p-2 local-dimensions-central-tree show-rule" data-region="competency-tree">
                     {{#competencies}}

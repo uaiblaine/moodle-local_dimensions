@@ -5452,10 +5452,20 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     overflow-y: auto;
 }
 
-/* Search results dropdown under the tree search box scrolls instead of pushing the tree down. */
+/* Search box + its results dropdown. The results overlay the top of the tree (absolute) so
+   selecting a hit does not shift the layout; the revealed node appears right below. */
+.local-dimensions-central-search-wrap {
+    position: relative;
+}
+
 .local-dimensions-central-searchresults {
+    position: absolute;
+    right: 0.5rem;
+    left: 0.5rem;
+    z-index: 5;
     max-height: 40vh;
     overflow-y: auto;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
 .local-dimensions-central-structure-body {

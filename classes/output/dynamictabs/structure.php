@@ -91,10 +91,12 @@ class structure extends \core\output\dynamic_tabs\base {
         $frameworkid = (int) ($data['frameworkid'] ?? 0);
         $showhidden = (bool) ($data['showhidden'] ?? false);
 
-        // Frameworks readable in the resolved context.
+        // Frameworks readable in the resolved context. All (including hidden) are sent so the
+        // "show hidden" toggle can reveal them client-side without reloading the tab; the default
+        // selection still prefers a visible framework.
         $frameworks = [];
         if (!$needscategory) {
-            foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $pagecontext, 'self', !$showhidden) as $framework) {
+            foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $pagecontext, 'self', false) as $framework) {
                 if (competency_framework::can_read_context($framework->get_context())) {
                     $frameworks[(int) $framework->get('id')] = $framework;
                 }
@@ -102,7 +104,16 @@ class structure extends \core\output\dynamic_tabs\base {
         }
 
         if ($frameworkid <= 0 || !isset($frameworks[$frameworkid])) {
-            $frameworkid = (int) (array_key_first($frameworks) ?? 0);
+            $frameworkid = 0;
+            foreach ($frameworks as $id => $framework) {
+                if ((bool) $framework->get('visible')) {
+                    $frameworkid = $id;
+                    break;
+                }
+            }
+            if ($frameworkid === 0) {
+                $frameworkid = (int) (array_key_first($frameworks) ?? 0);
+            }
         }
         $selected = $frameworks[$frameworkid] ?? null;
 

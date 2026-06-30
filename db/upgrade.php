@@ -183,6 +183,15 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026063002, 'local', 'dimensions');
     }
 
+    // Structure tab v3 polish: "show hidden frameworks" now filters the framework dropdown
+    // client-side (no reload, no toggle flash), the search box sits below the display toggles,
+    // and search results render as an overlay. Purge caches so the rebuilt JS/Mustache/CSS are served fresh.
+    if ($oldversion < 2026063003) {
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026063003, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint

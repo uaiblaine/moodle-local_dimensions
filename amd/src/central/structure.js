@@ -94,6 +94,10 @@ let searchDebounce = 0;
 const EXPAND_CAP = 200;
 /** @type {String} sessionStorage key for the per-session display-toggle choice. */
 const DISPLAY_KEY = 'local_dimensions_structure_display';
+/** @type {String} sessionStorage key for the show-hidden-frameworks choice. */
+const SHOWHIDDEN_KEY = 'local_dimensions_structure_showhidden';
+/** @type {Array} Snapshot of all framework <option> descriptors for client-side filtering. */
+let frameworkOptions = [];
 /** @type {Object} Map of toggle key to the CSS class it controls on the tree container. */
 const DISPLAY_CLASSES = {tax: 'show-tax', id: 'show-id', rule: 'show-rule'};
 
@@ -216,6 +220,34 @@ const writeDisplayPrefs = (prefs) => {
     } catch (e) {
         // Storage unavailable (e.g. private mode) — the toggles simply do not persist.
     }
+};
+
+/**
+ * Show or hide the hidden-framework options in the framework dropdown without reloading the
+ * tab. The currently selected framework always stays visible.
+ *
+ * @param {HTMLElement} region
+ * @param {Boolean} show Whether to include hidden frameworks in the dropdown.
+ */
+const applyShowHidden = (region, show) => {
+    const select = region.querySelector(SELECTORS.frameworkSelect);
+    if (!select || !frameworkOptions.length) {
+        return;
+    }
+    const current = select.value;
+    select.innerHTML = '';
+    frameworkOptions.forEach((framework) => {
+        if (!show && framework.hidden && framework.value !== current) {
+            return;
+        }
+        const option = document.createElement('option');
+        option.value = framework.value;
+        option.textContent = framework.label;
+        if (framework.value === current) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
 };
 
 /**
@@ -372,7 +404,7 @@ const revealNode = async(region, targetid, pathids) => {
         list.hidden = true;
     }
     selectRow(region, row);
-    row.scrollIntoView({block: 'center', behavior: 'smooth'});
+    row.scrollIntoView({block: 'nearest', behavior: 'smooth'});
     row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
 };
 
@@ -916,12 +948,36 @@ export const init = () => {
         });
     }
 
+    // Snapshot every framework option so "show hidden" filters the dropdown client-side
+    // (no pane reload -> no re-apply of display prefs -> no toggle flash).
+    const frameworkselect = region.querySelector(SELECTORS.frameworkSelect);
+    if (frameworkselect) {
+        frameworkOptions = Array.from(frameworkselect.options).map((option) => ({
+            value: option.value,
+            label: option.textContent,
+            hidden: option.dataset.hidden === '1',
+        }));
+    }
     const toggleHidden = region.querySelector('[data-action="toggle-hidden"]');
-    if (toggleHidden && pane) {
+    if (toggleHidden) {
+        let showhidden = toggleHidden.checked;
+        try {
+            const stored = window.sessionStorage.getItem(SHOWHIDDEN_KEY);
+            if (stored !== null) {
+                showhidden = stored === '1';
+            }
+        } catch (e) {
+            // Storage unavailable; fall back to the server-rendered checkbox state.
+        }
+        toggleHidden.checked = showhidden;
+        applyShowHidden(region, showhidden);
         toggleHidden.addEventListener('change', () => {
-            window.clearTimeout(searchDebounce);
-            pane.dataset.showhidden = toggleHidden.checked ? '1' : '0';
-            reloadPane(pane).catch(Notification.exception);
+            try {
+                window.sessionStorage.setItem(SHOWHIDDEN_KEY, toggleHidden.checked ? '1' : '0');
+            } catch (e) {
+                // Storage unavailable; the choice simply does not persist.
+            }
+            applyShowHidden(region, toggleHidden.checked);
         });
     }
 
