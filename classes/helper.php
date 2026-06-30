@@ -1391,34 +1391,46 @@ class helper {
             $haschildren[(int) $pid] = true;
         }
 
+        // Resolve the viewer's manageable-course scope once; both the course-link and
+        // activity-link counts reuse it (null = site admin / no restriction, [] = none).
+        $manageable = self::manageable_course_ids();
+
         // Batch: linked-course counts, scoped to the courses the viewer may manage.
         $counts = [];
-        $coursefilter = self::manageable_course_constraint('courseid', 'mgc');
-        if ($coursefilter !== null) {
+        if ($manageable !== []) {
             [$csql, $cparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'cid');
-            $where = "competencyid $csql" . $coursefilter[0];
+            $where = "competencyid $csql";
+            if ($manageable !== null) {
+                [$ccsql, $ccparams] = $DB->get_in_or_equal($manageable, SQL_PARAMS_NAMED, 'mgc');
+                $where .= " AND courseid $ccsql";
+                $cparams += $ccparams;
+            }
             $counts = $DB->get_records_sql_menu(
                 "SELECT competencyid, COUNT(1)
                    FROM {competency_coursecomp}
                   WHERE $where
                GROUP BY competencyid",
-                $cparams + $coursefilter[1]
+                $cparams
             );
         }
 
         // Batch: linked-activity counts, scoped to the modules in courses the viewer may manage.
         $actcounts = [];
-        $modulefilter = self::manageable_course_constraint('cm.course', 'mgm');
-        if ($modulefilter !== null) {
+        if ($manageable !== []) {
             [$msql, $mparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'mid');
-            $where = "mc.competencyid $msql" . $modulefilter[0];
+            $where = "mc.competencyid $msql";
+            if ($manageable !== null) {
+                [$mcsql, $mcparams] = $DB->get_in_or_equal($manageable, SQL_PARAMS_NAMED, 'mgm');
+                $where .= " AND cm.course $mcsql";
+                $mparams += $mcparams;
+            }
             $actcounts = $DB->get_records_sql_menu(
                 "SELECT mc.competencyid, COUNT(1)
                    FROM {competency_modulecomp} mc
                    JOIN {course_modules} cm ON cm.id = mc.cmid
                   WHERE $where
                GROUP BY mc.competencyid",
-                $mparams + $modulefilter[1]
+                $mparams
             );
         }
 
