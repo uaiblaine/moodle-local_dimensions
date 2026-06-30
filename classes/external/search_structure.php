@@ -117,8 +117,7 @@ class search_structure extends external_api {
         $perrecordancestors = [];
         $ancestorids = [];
         foreach ($records as $record) {
-            // path stores the ancestor chain as "/0/<id1>/<id2>/"; strip leading/trailing slashes,
-            // then discard the sentinel "0" segment — only real ancestor ids remain.
+            // Path holds ancestors only (e.g. /0/12/45/); strip slashes and the sentinel 0 for real ancestor ids.
             $segments = array_values(array_filter(
                 explode('/', trim((string) $record->path, '/')),
                 static fn(string $segment): bool => $segment !== '' && $segment !== '0'
