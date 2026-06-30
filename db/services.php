@@ -138,6 +138,16 @@ $functions = [
         'ajax' => true,
     ],
 
+    // Competency hub Structure tab — in-tree search with ancestor path.
+    'local_dimensions_search_structure' => [
+        'classname' => 'local_dimensions\external\search_structure',
+        'methodname' => 'execute',
+        'description' => 'Search competencies within a framework for the Structure tab, returning each hit ancestor path.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+    ],
+
     'local_dimensions_browse_competencies' => [
         'classname' => 'local_dimensions\external\browse_competencies',
         'methodname' => 'execute',
