@@ -174,6 +174,15 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026063001, 'local', 'dimensions');
     }
 
+    // Structure tab v3 (Fase 2): adds the search_structure web service (in-tree search with
+    // reveal-walk) and a resizable tree/detail split. Purge caches so the new WS is registered
+    // and the rebuilt structure.min.js + Mustache + CSS are served fresh.
+    if ($oldversion < 2026063002) {
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026063002, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
