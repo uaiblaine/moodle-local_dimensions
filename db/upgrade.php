@@ -164,6 +164,16 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026063000, 'local', 'dimensions');
     }
 
+    // Structure tab v3 polish: the tree drops the folder/circle node icons (leaf nodes show a
+    // bullet, branches keep the chevron) and the tree container scrolls internally (max-height)
+    // so "expand all" no longer scrolls the page. Purge caches so the updated Mustache + CSS are
+    // served fresh.
+    if ($oldversion < 2026063001) {
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026063001, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
