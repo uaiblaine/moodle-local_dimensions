@@ -330,7 +330,7 @@ const ensureLoaded = async(region, id, parentid, selector) => {
                 return null;
             }
             const more = container.querySelector(`:scope > ${SELECTORS.childLoadMore}`);
-            if (!more && container.dataset.loaded === '1') {
+            if (container.dataset.loaded !== '1' || !more) {
                 return null;
             }
             await loadChildPage(container, parentid);
@@ -348,9 +348,6 @@ const ensureLoaded = async(region, id, parentid, selector) => {
  */
 const revealNode = async(region, targetid, pathids) => {
     const list = region.querySelector(SELECTORS.searchResults);
-    if (list) {
-        list.hidden = true;
-    }
     let parentid = 0;
     for (const ancestorid of pathids) {
         const toggle = await ensureLoaded(region, Number(ancestorid), parentid, SELECTORS.toggle);
@@ -367,6 +364,9 @@ const revealNode = async(region, targetid, pathids) => {
     if (!row) {
         addToast(await getString('managecompetencies_searchnotintree', 'local_dimensions'));
         return;
+    }
+    if (list) {
+        list.hidden = true;
     }
     selectRow(region, row);
     row.scrollIntoView({block: 'center', behavior: 'smooth'});
@@ -813,6 +813,7 @@ export const init = () => {
     const select = region.querySelector(SELECTORS.frameworkSelect);
     if (select && pane) {
         select.addEventListener('change', () => {
+            window.clearTimeout(searchDebounce);
             // The pane dataset is the single source of truth for the tab's arguments.
             pane.dataset.frameworkid = select.value;
             reloadPane(pane).catch(Notification.exception);
@@ -822,6 +823,7 @@ export const init = () => {
     const toggleHidden = region.querySelector('[data-action="toggle-hidden"]');
     if (toggleHidden && pane) {
         toggleHidden.addEventListener('change', () => {
+            window.clearTimeout(searchDebounce);
             pane.dataset.showhidden = toggleHidden.checked ? '1' : '0';
             reloadPane(pane).catch(Notification.exception);
         });
