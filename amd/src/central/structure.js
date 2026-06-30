@@ -45,7 +45,6 @@ const SELECTORS = {
     rootLoadMore: '[data-region="root-loadmore"]',
     toggle: '[data-action="toggle"]',
     row: '[data-action="select"]',
-    addRoot: '[data-action="addroot"]',
     edit: '[data-action="edit"]',
     addChild: '[data-action="addchild"]',
     rules: '[data-action="rules"]',
@@ -59,6 +58,15 @@ const SELECTORS = {
     detailIdnumber: '[data-region="detail-idnumber"]',
     detailTaxonomy: '[data-region="detail-taxonomy"]',
     detailCourses: '[data-region="detail-courses"]',
+    detailActivities: '[data-region="detail-activities"]',
+    detailRule: '[data-region="detail-rule"]',
+    addBtn: '[data-action="add"]',
+    addHint: '[data-region="add-hint"]',
+    expandAll: '[data-action="expand-all"]',
+    collapseAll: '[data-action="collapse-all"]',
+    displayOptions: '[data-action="display-options"]',
+    displayPanel: '[data-region="display-options-panel"]',
+    displayToggle: '[data-display-toggle]',
 };
 
 /** @type {HTMLElement|null} */
@@ -73,6 +81,13 @@ let moduleOutcomes = [];
 let activeFrameworkid = 0;
 /** @type {Promise<String>|null} */
 let loadMoreLabelPromise = null;
+
+/** @type {Number} Maximum branches a single "expand all" will open before stopping. */
+const EXPAND_CAP = 200;
+/** @type {String} sessionStorage key for the per-session display-toggle choice. */
+const DISPLAY_KEY = 'local_dimensions_structure_display';
+/** @type {Object} Map of toggle key to the CSS class it controls on the tree container. */
+const DISPLAY_CLASSES = {tax: 'show-tax', id: 'show-id', rule: 'show-rule'};
 
 /**
  * Read a JSON island embedded in the tab.
@@ -170,6 +185,53 @@ const loadChildPage = async(container, parentid) => {
 };
 
 /**
+ * Read the persisted display-toggle choice from sessionStorage.
+ *
+ * @return {Object} Map of toggle key to boolean; empty when nothing is stored.
+ */
+const readDisplayPrefs = () => {
+    try {
+        return JSON.parse(window.sessionStorage.getItem(DISPLAY_KEY) || 'null') || {};
+    } catch (e) {
+        return {};
+    }
+};
+
+/**
+ * Persist the display-toggle choice to sessionStorage.
+ *
+ * @param {Object} prefs Map of toggle key to boolean.
+ */
+const writeDisplayPrefs = (prefs) => {
+    try {
+        window.sessionStorage.setItem(DISPLAY_KEY, JSON.stringify(prefs));
+    } catch (e) {
+        // Storage unavailable (e.g. private mode) — the toggles simply do not persist.
+    }
+};
+
+/**
+ * Reconcile the toggle checkboxes and tree classes with the persisted choice (or the
+ * server-rendered defaults when nothing is stored). Runs on every init so the choice
+ * survives a pane reload.
+ *
+ * @param {HTMLElement} region
+ */
+const applyDisplayPrefs = (region) => {
+    const tree = region.querySelector(SELECTORS.tree);
+    if (!tree) {
+        return;
+    }
+    const stored = readDisplayPrefs();
+    region.querySelectorAll(SELECTORS.displayToggle).forEach((cb) => {
+        const key = cb.dataset.displayToggle;
+        const on = Object.prototype.hasOwnProperty.call(stored, key) ? Boolean(stored[key]) : cb.checked;
+        cb.checked = on;
+        tree.classList.toggle(DISPLAY_CLASSES[key], on);
+    });
+};
+
+/**
  * Populate the detail pane from the selected tree row.
  *
  * @param {HTMLElement} region
@@ -187,6 +249,24 @@ const selectRow = (region, row) => {
     content.querySelector(SELECTORS.detailIdnumber).textContent = row.dataset.idnumber || '';
     content.querySelector(SELECTORS.detailTaxonomy).textContent = row.dataset.taxonomy || '';
     content.querySelector(SELECTORS.detailCourses).textContent = row.dataset.courses || '0';
+    content.querySelector(SELECTORS.detailActivities).textContent = row.dataset.activities || '0';
+
+    // A leaf cannot carry a rule (a rule aggregates children); show the not-applicable label.
+    const haschildren = row.dataset.haschildren === '1';
+    const narule = region.dataset.narule || '';
+    content.querySelector(SELECTORS.detailRule).textContent =
+        haschildren ? (row.dataset.rulelabel || '') : narule;
+
+    // The header "Add competency" button is context-sensitive; reflect the selected parent.
+    const hint = region.querySelector(SELECTORS.addHint);
+    if (hint) {
+        getString('managecompetencies_addhint_child', 'local_dimensions', row.dataset.name || '')
+            .then((label) => {
+                hint.textContent = label;
+                return label;
+            })
+            .catch(Notification.exception);
+    }
 };
 
 /**
@@ -232,6 +312,49 @@ const toggleNode = async(region, button) => {
     if (icon) {
         icon.className = 'fa fa-chevron-down';
     }
+};
+
+/**
+ * Progressively expand every branch, fetching children on demand. Stops after EXPAND_CAP
+ * branches and toasts, so a very large framework cannot hang the browser.
+ *
+ * @param {HTMLElement} region
+ * @return {Promise<void>}
+ */
+const expandAll = async(region) => {
+    let opened = 0;
+    for (;;) {
+        const next = region.querySelector(`${SELECTORS.toggle}[aria-expanded="false"]`);
+        if (!next) {
+            return;
+        }
+        await toggleNode(region, next);
+        opened += 1;
+        if (opened >= EXPAND_CAP) {
+            addToast(await getString('managecompetencies_expandcapped', 'local_dimensions', EXPAND_CAP));
+            return;
+        }
+    }
+};
+
+/**
+ * Collapse every open branch (no fetching; children stay cached for re-expansion).
+ *
+ * @param {HTMLElement} region
+ */
+const collapseAll = (region) => {
+    region.querySelectorAll(`${SELECTORS.toggle}[aria-expanded="true"]`).forEach((toggle) => {
+        const container = region.querySelector(`[data-children="${Number(toggle.dataset.id)}"]`);
+        if (container) {
+            container.hidden = true;
+            container.dataset.open = '0';
+        }
+        toggle.setAttribute('aria-expanded', 'false');
+        const icon = toggle.querySelector('i');
+        if (icon) {
+            icon.className = 'fa fa-chevron-right';
+        }
+    });
 };
 
 /**
@@ -476,14 +599,46 @@ export const init = () => {
             selectRow(region, row);
             return;
         }
-        if (event.target.closest(SELECTORS.addRoot)) {
-            openForm(pane, {competencyframeworkid: frameworkid, parentid: 0, id: 0}, 'addcompetency');
+        if (event.target.closest(SELECTORS.expandAll)) {
+            expandAll(region).catch(Notification.exception);
+            return;
+        }
+        if (event.target.closest(SELECTORS.collapseAll)) {
+            collapseAll(region);
+            return;
+        }
+        const gear = event.target.closest(SELECTORS.displayOptions);
+        if (gear) {
+            const panel = region.querySelector(SELECTORS.displayPanel);
+            if (panel) {
+                panel.hidden = !panel.hidden;
+                gear.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+            }
+            return;
+        }
+        if (event.target.closest(SELECTORS.addBtn)) {
+            const parentid = activeRow ? activeRow.dataset.id : 0;
+            openForm(pane, {competencyframeworkid: frameworkid, parentid, id: 0}, 'addcompetency');
             return;
         }
         if (!activeRow) {
             return;
         }
         handleDetailAction(pane, event, frameworkid);
+    });
+
+    region.addEventListener('change', (event) => {
+        const toggle = event.target.closest(SELECTORS.displayToggle);
+        if (!toggle) {
+            return;
+        }
+        const tree = region.querySelector(SELECTORS.tree);
+        if (tree) {
+            tree.classList.toggle(DISPLAY_CLASSES[toggle.dataset.displayToggle], toggle.checked);
+        }
+        const prefs = readDisplayPrefs();
+        prefs[toggle.dataset.displayToggle] = toggle.checked;
+        writeDisplayPrefs(prefs);
     });
 
     const select = region.querySelector(SELECTORS.frameworkSelect);
@@ -502,4 +657,6 @@ export const init = () => {
             reloadPane(pane).catch(Notification.exception);
         });
     }
+
+    applyDisplayPrefs(region);
 };
