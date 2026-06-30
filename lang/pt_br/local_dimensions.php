@@ -350,6 +350,7 @@ $string['managecompetencies_noframeworks_context_help'] = 'Não há estruturas d
 $string['managecompetencies_noframeworks_context_title'] = 'Nenhuma estrutura neste contexto';
 $string['managecompetencies_noresults'] = 'Nenhuma competência corresponde aos filtros atuais.';
 $string['managecompetencies_norule'] = 'Sem regra';
+$string['managecompetencies_resizepanels'] = 'Redimensionar painéis';
 $string['managecompetencies_rule_notapplicable'] = 'Não aplicável (sem filhas)';
 $string['managecompetencies_searchnotintree'] = 'Esta competência não está na visão do framework atual.';
 $string['managecompetencies_searchplaceholder'] = 'Buscar por nome ou identificador';

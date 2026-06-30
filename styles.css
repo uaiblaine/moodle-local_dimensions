@@ -5458,3 +5458,56 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     overflow-y: auto;
 }
 
+.local-dimensions-central-structure-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-structure-detail-width, clamp(18rem, 30vw, 32rem));
+    align-items: start;
+}
+
+.local-dimensions-central-structure-body.resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
+.local-dimensions-central-structure-tree-pane,
+.local-dimensions-central-structure-detail-pane {
+    min-width: 0;
+}
+
+.local-dimensions-central-structure-resizer {
+    position: relative;
+    align-self: stretch;
+    width: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: col-resize;
+}
+
+.local-dimensions-central-structure-resizer::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 3px;
+    height: 2.5rem;
+    border-radius: 999px;
+    background: var(--bs-border-color, #ced4da);
+    transform: translate(-50%, -50%);
+}
+
+.local-dimensions-central-structure-resizer:hover::before,
+.local-dimensions-central-structure-resizer:focus::before {
+    background: var(--bs-primary, #0f6cbf);
+}
+
+@media (max-width: 991.98px) {
+    .local-dimensions-central-structure-body {
+        grid-template-columns: 1fr;
+    }
+
+    .local-dimensions-central-structure-resizer {
+        display: none;
+    }
+}
+
