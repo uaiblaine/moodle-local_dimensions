@@ -1,0 +1,73 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/delete_template_modal
+
+    Body of the delete-template confirmation modal shown when the template
+    still has learner plans. Names the template, states the real plan count
+    and spells out the consequence of each choice: unlink (default — the
+    plans keep existing without a template) or delete the plans.
+    Used inside a core/modal_delete_cancel via Templates.render(); the JS in
+    local_dimensions/manage_templates reads the checked radio on delete.
+
+    Context variables required:
+    * name (string) - Template short name.
+    * plancount (int) - Number of learner plans created from the template.
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "name": "Onboarding plan",
+        "plancount": 12
+    }
+}}
+<div class="local-dimensions-delete-template-modal">
+    <p class="local-dimensions-delete-template-name">
+        {{#str}} managetemplates_delete_template, local_dimensions {{/str}}
+        <strong class="local-dimensions-delete-template-shortname">{{name}}</strong>
+    </p>
+    <p class="local-dimensions-delete-template-inplans">
+        {{#str}} managetemplates_delete_inplans, local_dimensions, {{plancount}} {{/str}}
+    </p>
+    <fieldset class="local-dimensions-delete-template-options">
+        <legend class="sr-only visually-hidden">{{#str}} managetemplates_delete_options, local_dimensions {{/str}}</legend>
+        <label class="local-dimensions-delete-template-option">
+            <input type="radio" name="local-dimensions-delete-template-choice" value="unlink" checked>
+            <span class="local-dimensions-delete-template-option-text">
+                <span class="local-dimensions-delete-template-option-title">
+                    {{#str}} managetemplates_delete_unlink, local_dimensions {{/str}}
+                </span>
+                <span class="local-dimensions-delete-template-option-note">
+                    {{#str}} managetemplates_delete_unlink_note, local_dimensions, {{plancount}} {{/str}}
+                </span>
+            </span>
+        </label>
+        <label class="local-dimensions-delete-template-option">
+            <input type="radio" name="local-dimensions-delete-template-choice" value="delete">
+            <span class="local-dimensions-delete-template-option-text">
+                <span class="local-dimensions-delete-template-option-title text-danger">
+                    {{#str}} managetemplates_delete_deleteplans, local_dimensions {{/str}}
+                </span>
+                <span class="local-dimensions-delete-template-option-note">
+                    {{#str}} managetemplates_delete_deleteplans_note, local_dimensions, {{plancount}} {{/str}}
+                </span>
+            </span>
+        </label>
+    </fieldset>
+</div>
