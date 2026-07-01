@@ -5452,6 +5452,28 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     overflow-y: auto;
 }
 
+/* Structure tree row states: selected (JS toggles .active on the selected row), hover and
+   keyboard focus. Uses Bootstrap CSS variables so light/dark themes both work. */
+.local-dimensions-central-row {
+    border-left: 3px solid transparent;
+    border-radius: 0.25rem;
+}
+
+.local-dimensions-central-row:hover {
+    background-color: var(--bs-secondary-bg, rgba(0, 0, 0, 0.05));
+}
+
+.local-dimensions-central-row.active {
+    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+    border-left-color: var(--bs-primary, #0f6cbf);
+    font-weight: 500;
+}
+
+.local-dimensions-central-row:focus-visible {
+    outline: 2px solid var(--bs-primary, #0f6cbf);
+    outline-offset: -2px;
+}
+
 /* Search box + its results dropdown. The results overlay the top of the tree (absolute) so
    selecting a hit does not shift the layout; the revealed node appears right below. */
 .local-dimensions-central-search-wrap {
