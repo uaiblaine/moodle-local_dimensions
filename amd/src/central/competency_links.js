@@ -565,7 +565,10 @@ export const open = async(opts) => {
     });
     modal.getRoot().on(ModalEvents.hidden, () => {
         if (typeof opts.onClose === 'function') {
-            opts.onClose();
+            // Report the current linked-course count so the caller can refresh in place
+            // (each child of the rows container is one linked-course row).
+            const count = state.rowsEl ? state.rowsEl.children.length : null;
+            opts.onClose(count);
         }
     });
     modal.show();
