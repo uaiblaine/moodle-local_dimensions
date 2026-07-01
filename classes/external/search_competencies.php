@@ -31,6 +31,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_dimensions\helper;
 
 /**
  * Web service: paginated competency search (cross-framework, readable frameworks only).
@@ -100,7 +101,7 @@ class search_competencies extends external_api {
         }
 
         [$insql, $inparams] = $DB->get_in_or_equal(array_keys($tags), SQL_PARAMS_NAMED, 'fw');
-        $like = $DB->sql_like('shortname', ':q1', false) . ' OR ' . $DB->sql_like('idnumber', ':q2', false);
+        $like = helper::sql_like_ai('shortname', ':q1') . ' OR ' . helper::sql_like_ai('idnumber', ':q2');
         $likevalue = '%' . $DB->sql_like_escape($query) . '%';
         $selectparams = $inparams + ['q1' => $likevalue, 'q2' => $likevalue];
         $where = "competencyframeworkid $insql AND ($like)";

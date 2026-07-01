@@ -92,7 +92,7 @@ class get_competency_links extends external_api {
         $where = 'cc.competencyid = :competencyid';
         $sqlparams = ['competencyid' => $competencyid];
         if ($query !== '') {
-            $like = $DB->sql_like('c.fullname', ':q1', false) . ' OR ' . $DB->sql_like('c.shortname', ':q2', false);
+            $like = helper::sql_like_ai('c.fullname', ':q1') . ' OR ' . helper::sql_like_ai('c.shortname', ':q2');
             $likevalue = '%' . $DB->sql_like_escape($query) . '%';
             $where .= " AND ($like)";
             $sqlparams['q1'] = $likevalue;
