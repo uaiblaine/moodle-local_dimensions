@@ -701,14 +701,37 @@ const showRuleConfig = (row) => {
 };
 
 /**
+ * Update a node's linked-course count in place after the links modal closes, without reloading
+ * the tab (so tree expansion and selection survive). A null count means "unknown" - leave as-is.
+ *
+ * @param {HTMLElement} region
+ * @param {HTMLElement} row The node's [data-action="select"] element the modal was opened for.
+ * @param {Number|null} count The reported linked-course count.
+ */
+const updateCourseCount = (region, row, count) => {
+    if (count === null || count === undefined) {
+        return;
+    }
+    row.dataset.courses = String(count);
+    if (row === activeRow) {
+        const detail = region.querySelector(SELECTORS.detailCourses);
+        if (detail) {
+            detail.textContent = String(count);
+        }
+    }
+    row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+};
+
+/**
  * Handle a detail-pane action for the active row.
  *
+ * @param {HTMLElement} region
  * @param {HTMLElement} pane
  * @param {Event} event
  * @param {String} frameworkid
  * @return {void}
  */
-const handleDetailAction = (pane, event, frameworkid) => {
+const handleDetailAction = (region, pane, event, frameworkid) => {
     if (event.target.closest(SELECTORS.edit)) {
         openForm(pane, {
             competencyframeworkid: frameworkid,
@@ -720,12 +743,14 @@ const handleDetailAction = (pane, event, frameworkid) => {
     } else if (event.target.closest(SELECTORS.rules)) {
         showRuleConfig(activeRow);
     } else if (event.target.closest(SELECTORS.links)) {
+        const row = activeRow;
         openLinksModal({
-            competencyid: Number(activeRow.dataset.id),
-            competencyname: activeRow.dataset.name || '',
+            competencyid: Number(row.dataset.id),
+            competencyname: row.dataset.name || '',
             courseoutcomes: courseOutcomes,
             moduleoutcomes: moduleOutcomes,
-            onClose: () => reloadPane(pane).catch(Notification.exception),
+            // Refresh the linked-course count in place (no pane reload -> selection/expansion kept).
+            onClose: (count) => updateCourseCount(region, row, count),
         });
     } else if (event.target.closest(SELECTORS.related)) {
         openRelatedModal({
@@ -922,7 +947,7 @@ export const init = () => {
         if (!activeRow) {
             return;
         }
-        handleDetailAction(pane, event, frameworkid);
+        handleDetailAction(region, pane, event, frameworkid);
     });
 
     region.addEventListener('change', (event) => {
