@@ -45,6 +45,7 @@ const SELECTORS = {
     tree: '[data-region="competency-tree"]',
     rootLoadMore: '[data-region="root-loadmore"]',
     toggle: '[data-action="toggle"]',
+    node: '.local-dimensions-central-node',
     row: '[data-action="select"]',
     edit: '[data-action="edit"]',
     addChild: '[data-action="addchild"]',
@@ -887,6 +888,13 @@ export const init = () => {
         if (row) {
             event.preventDefault();
             selectRow(region, row);
+            // A node with children also expands/collapses on a whole-row click (not just the chevron).
+            if (row.dataset.haschildren === '1') {
+                const toggle = row.parentElement.querySelector(SELECTORS.toggle);
+                if (toggle) {
+                    toggleNode(region, toggle).catch(Notification.exception);
+                }
+            }
             return;
         }
         if (event.target.closest(SELECTORS.expandAll)) {
