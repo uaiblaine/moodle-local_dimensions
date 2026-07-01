@@ -584,19 +584,6 @@ const fetchAllChildren = async(parentid) => {
 };
 
 /**
- * Call a single-id core competency web service, then refresh the tab.
- *
- * @param {HTMLElement} pane
- * @param {String} methodname
- * @param {String|Number} id
- */
-const callAndReload = (pane, methodname, id) => {
-    Ajax.call([{methodname, args: {id: Number(id)}}])[0]
-        .then(() => reloadPane(pane))
-        .catch(Notification.exception);
-};
-
-/**
  * Open the competency modal form and refresh the tab on success.
  *
  * @param {HTMLElement} pane
@@ -723,6 +710,45 @@ const updateCourseCount = (region, row, count) => {
 };
 
 /**
+ * Reorder a node among its siblings in place after the move web service succeeds, preserving
+ * tree expansion, selection and scroll. Swaps the node element with its adjacent sibling node;
+ * falls back to a pane reload only when the adjacent sibling is not rendered (an unloaded page).
+ *
+ * @param {HTMLElement} pane
+ * @param {HTMLElement} row The selected node's [data-action="select"] element.
+ * @param {String} methodname The core move web service (up or down).
+ * @param {String} direction 'up' or 'down'.
+ */
+const moveNode = (pane, row, methodname, direction) => {
+    const node = row.closest(SELECTORS.node);
+    if (!node) {
+        return;
+    }
+    const sibling = direction === 'up' ? node.previousElementSibling : node.nextElementSibling;
+    // No sibling at all = boundary (first/last overall); the move is a server-side no-op, skip it.
+    if (!sibling) {
+        return;
+    }
+    const target = sibling.matches(SELECTORS.node) ? sibling : null;
+    Ajax.call([{methodname, args: {id: Number(row.dataset.id)}}])[0]
+        .then(() => {
+            if (!target) {
+                // Sibling exists but is not a node (e.g. a load-more) - the real neighbour is on
+                // an unfetched page; reload to stay correct.
+                return reloadPane(pane);
+            }
+            if (direction === 'up') {
+                node.parentNode.insertBefore(node, target);
+            } else {
+                node.parentNode.insertBefore(target, node);
+            }
+            row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+            return null;
+        })
+        .catch(Notification.exception);
+};
+
+/**
  * Handle a detail-pane action for the active row.
  *
  * @param {HTMLElement} region
@@ -759,9 +785,9 @@ const handleDetailAction = (region, pane, event, frameworkid) => {
             frameworkid: activeFrameworkid,
         });
     } else if (event.target.closest(SELECTORS.moveUp)) {
-        callAndReload(pane, 'core_competency_move_up_competency', activeRow.dataset.id);
+        moveNode(pane, activeRow, 'core_competency_move_up_competency', 'up');
     } else if (event.target.closest(SELECTORS.moveDown)) {
-        callAndReload(pane, 'core_competency_move_down_competency', activeRow.dataset.id);
+        moveNode(pane, activeRow, 'core_competency_move_down_competency', 'down');
     } else if (event.target.closest(SELECTORS.remove)) {
         confirmDelete(pane, activeRow);
     }
