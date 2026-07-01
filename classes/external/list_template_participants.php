@@ -31,6 +31,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_dimensions\helper;
 use local_dimensions\local\plan_status;
 
 /**
@@ -129,7 +130,7 @@ class list_template_participants extends external_api {
 
         $namesql = '';
         if ($params['query'] !== '') {
-            $namesql = ' AND ' . $DB->sql_like($DB->sql_fullname('u.firstname', 'u.lastname'), ':q', false);
+            $namesql = ' AND ' . helper::sql_like_ai($DB->sql_fullname('u.firstname', 'u.lastname'), ':q');
             $sqlparams['q'] = '%' . $DB->sql_like_escape($params['query']) . '%';
         }
 

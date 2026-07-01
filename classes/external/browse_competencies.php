@@ -106,7 +106,7 @@ class browse_competencies extends external_api {
         $searchmode = \core_text::strlen($query) >= self::MIN_QUERY_LENGTH;
         $selectparams = ['fw' => $frameworkid];
         if ($searchmode) {
-            $like = $DB->sql_like('shortname', ':q1', false) . ' OR ' . $DB->sql_like('idnumber', ':q2', false);
+            $like = helper::sql_like_ai('shortname', ':q1') . ' OR ' . helper::sql_like_ai('idnumber', ':q2');
             $likevalue = '%' . $DB->sql_like_escape($query) . '%';
             $selectparams += ['q1' => $likevalue, 'q2' => $likevalue];
             $where = "competencyframeworkid = :fw AND ($like)";

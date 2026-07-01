@@ -98,7 +98,7 @@ class search_structure extends external_api {
         }
 
         $fwcontext = $framework->get_context();
-        $like = $DB->sql_like('shortname', ':q1', false) . ' OR ' . $DB->sql_like('idnumber', ':q2', false);
+        $like = helper::sql_like_ai('shortname', ':q1') . ' OR ' . helper::sql_like_ai('idnumber', ':q2');
         $likevalue = '%' . $DB->sql_like_escape($query) . '%';
         $selectparams = ['fw' => $frameworkid, 'q1' => $likevalue, 'q2' => $likevalue];
         $where = "competencyframeworkid = :fw AND ($like)";
