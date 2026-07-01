@@ -31,6 +31,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_dimensions\helper;
 
 /**
  * Web service: framework-scoped competency search returning each hit's ancestor path.
@@ -113,42 +114,22 @@ class search_structure extends external_api {
             $limitnum
         );
 
-        // Collect ancestor ids across the whole page so breadcrumb names resolve in one batch query.
-        $perrecordancestors = [];
-        $ancestorids = [];
+        // Build every hit's ancestor breadcrumb in one batch (shared with list_related_competencies).
+        $pathsbyid = [];
         foreach ($records as $record) {
-            // Path holds ancestors only (e.g. /0/12/45/); strip slashes and the sentinel 0 for real ancestor ids.
-            $segments = array_values(array_filter(
-                explode('/', trim((string) $record->path, '/')),
-                static fn(string $segment): bool => $segment !== '' && $segment !== '0'
-            ));
-            $ancestors = array_map('intval', $segments);
-            $perrecordancestors[(int) $record->id] = $ancestors;
-            foreach ($ancestors as $ancestorid) {
-                $ancestorids[$ancestorid] = true;
-            }
+            $pathsbyid[(int) $record->id] = $record->path;
         }
-
-        $names = [];
-        if (!empty($ancestorids)) {
-            $names = $DB->get_records_list('competency', 'id', array_keys($ancestorids), '', 'id, shortname');
-        }
+        $breadcrumbs = helper::competency_breadcrumbs($pathsbyid, $fwcontext);
 
         $items = [];
         foreach ($records as $record) {
-            $ancestors = $perrecordancestors[(int) $record->id];
-            $crumbs = [];
-            foreach ($ancestors as $ancestorid) {
-                if (isset($names[$ancestorid])) {
-                    $crumbs[] = format_string($names[$ancestorid]->shortname, true, ['context' => $fwcontext]);
-                }
-            }
+            $crumbs = $breadcrumbs[(int) $record->id] ?? ['path' => '', 'pathids' => []];
             $items[] = [
                 'id' => (int) $record->id,
                 'shortname' => format_string($record->shortname, true, ['context' => $fwcontext]),
                 'idnumber' => (string) $record->idnumber,
-                'path' => implode(' / ', $crumbs),
-                'pathids' => $ancestors,
+                'path' => $crumbs['path'],
+                'pathids' => $crumbs['pathids'],
             ];
         }
 
