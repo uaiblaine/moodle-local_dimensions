@@ -31,6 +31,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_dimensions\helper;
 
 /**
  * Web service: framework-scoped competency browse (lazy children) and search, paginated.
@@ -120,14 +121,19 @@ class browse_competencies extends external_api {
         $items = [];
         if (!empty($records)) {
             $haschildren = self::has_children_map(array_map(static fn($r) => (int) $r->id, $records));
-            $names = self::ancestor_names($records, $context);
+            // Ancestor breadcrumbs for the whole page in one batch (shared helper).
+            $pathsbyid = [];
+            foreach ($records as $record) {
+                $pathsbyid[(int) $record->id] = $record->path;
+            }
+            $breadcrumbs = helper::competency_breadcrumbs($pathsbyid, $context);
             foreach ($records as $record) {
                 $items[] = [
                     'id' => (int) $record->id,
                     'shortname' => format_string($record->shortname, true, ['context' => $context]),
                     'idnumber' => (string) $record->idnumber,
                     'haschildren' => !empty($haschildren[(int) $record->id]),
-                    'path' => self::build_path($record->path, $names),
+                    'path' => $breadcrumbs[(int) $record->id]['path'] ?? '',
                 ];
             }
         }
@@ -153,51 +159,6 @@ class browse_competencies extends external_api {
             $map[(int) $pid] = true;
         }
         return $map;
-    }
-
-    /**
-     * Fetch the shortnames of every ancestor referenced by the page's competency paths (one batch query).
-     *
-     * @param array $records Competency records on the page.
-     * @param \context $context Context for format_string.
-     * @return array Map of competency id => formatted shortname.
-     */
-    private static function ancestor_names(array $records, \context $context): array {
-        global $DB;
-        $ancestorids = [];
-        foreach ($records as $record) {
-            foreach (explode('/', trim((string) $record->path, '/')) as $pid) {
-                if ($pid !== '' && $pid !== '0') {
-                    $ancestorids[(int) $pid] = true;
-                }
-            }
-        }
-        if (empty($ancestorids)) {
-            return [];
-        }
-        $names = [];
-        $rows = $DB->get_records_list('competency', 'id', array_keys($ancestorids), '', 'id, shortname');
-        foreach ($rows as $row) {
-            $names[(int) $row->id] = format_string($row->shortname, true, ['context' => $context]);
-        }
-        return $names;
-    }
-
-    /**
-     * Build a human-readable ancestor path ("Parent / Child") from a competency path string.
-     *
-     * @param string $path The competency.path value (e.g. /0/5/34/).
-     * @param array $names Map of competency id => formatted shortname.
-     * @return string The joined ancestor shortnames, or '' for a root.
-     */
-    private static function build_path(string $path, array $names): string {
-        $parts = [];
-        foreach (explode('/', trim($path, '/')) as $pid) {
-            if ($pid !== '' && $pid !== '0' && isset($names[(int) $pid])) {
-                $parts[] = $names[(int) $pid];
-            }
-        }
-        return implode(' / ', $parts);
     }
 
     /**
