@@ -983,6 +983,56 @@ class helper {
     }
 
     /**
+     * Build ancestor breadcrumbs for a set of competencies in one batch query.
+     *
+     * Each competency's `path` holds only its ancestors with a leading sentinel 0
+     * (root `/0/`, child of X `/0/<X>/`), so the breadcrumb is the ancestor shortnames
+     * root to parent. Shared by search_structure and list_related_competencies.
+     *
+     * @param array $pathsbyid Map of competency id to its `path` string.
+     * @param \context $context Context used to format the ancestor shortnames.
+     * @return array Map of competency id to ['path' => string, 'pathids' => int[]].
+     */
+    public static function competency_breadcrumbs(array $pathsbyid, \context $context): array {
+        global $DB;
+
+        $perid = [];
+        $ancestorids = [];
+        foreach ($pathsbyid as $id => $path) {
+            $segments = array_values(array_filter(
+                explode('/', trim((string) $path, '/')),
+                static fn(string $segment): bool => $segment !== '' && $segment !== '0'
+            ));
+            $ancestors = array_map('intval', $segments);
+            $perid[(int) $id] = $ancestors;
+            foreach ($ancestors as $ancestorid) {
+                $ancestorids[$ancestorid] = true;
+            }
+        }
+
+        $names = [];
+        if (!empty($ancestorids)) {
+            $names = $DB->get_records_list('competency', 'id', array_keys($ancestorids), '', 'id, shortname');
+        }
+
+        $result = [];
+        foreach ($perid as $id => $ancestors) {
+            $crumbs = [];
+            foreach ($ancestors as $ancestorid) {
+                if (isset($names[$ancestorid])) {
+                    $crumbs[] = format_string($names[$ancestorid]->shortname, true, ['context' => $context]);
+                }
+            }
+            $result[$id] = [
+                'path' => implode(' / ', $crumbs),
+                'pathids' => $ancestors,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
      * Return a localized rule outcome label.
      *
      * @param int $ruleoutcome Native rule outcome id.
