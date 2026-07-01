@@ -31,6 +31,7 @@ import Notification from 'core/notification';
 import Templates from 'core/templates';
 import {show as showRuleConfigModal} from 'local_dimensions/central/rule_config';
 import {open as openLinksModal} from 'local_dimensions/central/competency_links';
+import {open as openRelatedModal} from 'local_dimensions/central/related_competencies';
 import {getString} from 'core/str';
 import {add as addToast} from 'core/toast';
 import {reloadPane} from 'local_dimensions/central/tabs';
@@ -49,6 +50,7 @@ const SELECTORS = {
     addChild: '[data-action="addchild"]',
     rules: '[data-action="rules"]',
     links: '[data-action="links"]',
+    related: '[data-action="related"]',
     moveUp: '[data-action="moveup"]',
     moveDown: '[data-action="movedown"]',
     remove: '[data-action="delete"]',
@@ -723,6 +725,12 @@ const handleDetailAction = (pane, event, frameworkid) => {
             courseoutcomes: courseOutcomes,
             moduleoutcomes: moduleOutcomes,
             onClose: () => reloadPane(pane).catch(Notification.exception),
+        });
+    } else if (event.target.closest(SELECTORS.related)) {
+        openRelatedModal({
+            competencyid: Number(activeRow.dataset.id),
+            competencyname: activeRow.dataset.name || '',
+            frameworkid: activeFrameworkid,
         });
     } else if (event.target.closest(SELECTORS.moveUp)) {
         callAndReload(pane, 'core_competency_move_up_competency', activeRow.dataset.id);
