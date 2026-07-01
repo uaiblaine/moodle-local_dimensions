@@ -1,0 +1,50 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/related_competencies
+
+    Body shell for the "Related competencies" modal. The current-relation rows are rendered
+    client-side by local_dimensions/central/related_competencies; this shell carries the
+    framework-scoped add autocomplete select and the empty-state region.
+
+    Context variables required:
+    * competencyid (int)
+    * frameworkid (int)
+
+    Example context (json):
+    {
+        "competencyid": 7,
+        "frameworkid": 3
+    }
+}}
+<div class="local-dimensions-central-related" data-region="related-competencies">
+    <div class="mb-3">
+        <label class="d-block small text-muted mb-1" for="local-dimensions-related-add">
+            {{#str}}central_related_add, local_dimensions{{/str}}
+        </label>
+        <select id="local-dimensions-related-add"
+                class="form-select"
+                data-region="related-add"
+                data-competencyid="{{competencyid}}"
+                data-frameworkid="{{frameworkid}}"
+                data-exclude=""></select>
+    </div>
+    <div data-region="related-list"></div>
+    <div class="text-muted small" data-region="related-empty" hidden>
+        {{#str}}central_related_empty, local_dimensions{{/str}}
+    </div>
+</div>
