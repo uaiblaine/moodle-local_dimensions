@@ -1033,6 +1033,55 @@ class helper {
     }
 
     /**
+     * Ensure the PostgreSQL `unaccent` extension is available, creating it when missing.
+     *
+     * On non-PostgreSQL databases this is a no-op returning false (accent-insensitivity there
+     * comes from the collation, not unaccent()). On PostgreSQL it checks the pg_extension
+     * catalogue and, if unaccent is absent, attempts CREATE EXTENSION IF NOT EXISTS unaccent;
+     * if creation fails (insufficient privilege / contrib missing) it returns false so callers
+     * can degrade to an accent-sensitive search rather than erroring.
+     *
+     * @return bool True when unaccent() can be used in SQL (PostgreSQL only).
+     */
+    public static function ensure_unaccent(): bool {
+        global $DB;
+        if ($DB->get_dbfamily() !== 'postgres') {
+            return false;
+        }
+        // Check the catalogue on each call rather than caching: PostgreSQL PHPUnit wraps each test
+        // in a rolled-back transaction, so a cached "created" flag would go stale once the CREATE
+        // EXTENSION is undone, and a later query would reference a now-missing unaccent().
+        if ($DB->record_exists_sql("SELECT 1 FROM pg_extension WHERE extname = 'unaccent'")) {
+            return true;
+        }
+        try {
+            $DB->execute('CREATE EXTENSION IF NOT EXISTS unaccent');
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Return a case- and accent-insensitive LIKE fragment that works on MySQL/MariaDB and
+     * PostgreSQL. On PostgreSQL it wraps both operands in unaccent() (when the extension is
+     * available; otherwise it falls back to an accent-sensitive comparison); on other databases
+     * it relies on the collation via core sql_like(). The bound parameter value must still be
+     * built with sql_like_escape() and the surrounding wildcards by the caller.
+     *
+     * @param string $fieldname The column or SQL expression to match.
+     * @param string $param The bound parameter placeholder (e.g. ':q1').
+     * @return string The SQL LIKE fragment.
+     */
+    public static function sql_like_ai(string $fieldname, string $param): string {
+        global $DB;
+        if (self::ensure_unaccent()) {
+            return "unaccent($fieldname) ILIKE unaccent($param) ESCAPE '\\'";
+        }
+        return $DB->sql_like($fieldname, $param, false, false);
+    }
+
+    /**
      * Return a localized rule outcome label.
      *
      * @param int $ruleoutcome Native rule outcome id.
