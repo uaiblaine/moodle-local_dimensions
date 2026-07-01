@@ -18,6 +18,23 @@ Requirements
 - Core competencies enabled (`core_competency`)
 
 
+Accent-insensitive search
+-------------------------
+
+Competency, plan and course searches in the Competency hub are accent-insensitive
+("lingua" also matches "língua"). On MySQL/MariaDB this works out of the box via the
+database collation. On **PostgreSQL** it uses the `unaccent` extension, which the plugin
+creates automatically (`CREATE EXTENSION IF NOT EXISTS unaccent`) during upgrade or on
+first search where the database user has permission — on supported PostgreSQL (13+)
+`unaccent` is a *trusted* extension the database owner may create without superuser rights.
+
+If your instance is locked down and the plugin cannot create it, run this once as a database
+superuser and searches become accent-insensitive on PostgreSQL too (until then they degrade
+gracefully to accent-sensitive):
+
+    CREATE EXTENSION unaccent;
+
+
 Motivation for this plugin
 --------------------------
 
