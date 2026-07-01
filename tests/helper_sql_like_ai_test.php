@@ -27,6 +27,8 @@ namespace local_dimensions;
 use advanced_testcase;
 
 /**
+ * Unit tests for the accent-insensitive sql_like_ai() search helper.
+ *
  * @covers \local_dimensions\helper::sql_like_ai
  */
 final class helper_sql_like_ai_test extends advanced_testcase {
