@@ -39,6 +39,7 @@ Formato `@dsCard`, grupo "Telas (as-is ↔ to-be)" no índice do DS.
 | `screens/pln-plans.html` | Aba Planos (`PLN`) |
 | `screens/mod-browser.html` | Modal `MOD.BROWSER` · Procurar em frameworks |
 | `screens/mod-links.html` | Modal `MOD.LINKS` · Cursos e atividades |
+| `screens/mod-related.html` | Modal `MOD.RELATED` · Competências referenciadas |
 | `screens/mod-rule.html` | Modal `MOD.RULE` · Regra de conclusão |
 | `screens/mod-participants.html` | Modal `MOD.PART` (+ `MOD.COHORT`/`MOD.ROLES`) |
 | `screens/mod-delplans.html` | Modal `MOD.DELPLANS` · Excluir template com planos |
@@ -59,6 +60,7 @@ tipo, **origem** (`mustache:linha` ou módulo `amd`), dados e regra de negócio.
 | `maps/pln-plans.md` | `PLN` · Aba Planos (templates + competências) |
 | `maps/mod-browser.md` | `MOD.BROWSER` · Navegador de competências |
 | `maps/mod-links.md` | `MOD.LINKS` · Vínculos curso↔atividade |
+| `maps/mod-related.md` | `MOD.RELATED` · Competências referenciadas |
 | `maps/mod-rule.md` | `MOD.RULE` · Regra de conclusão |
 | `maps/mod-scale.md` | `MOD.SCALE` · Escala/proficiência do framework |
 | `maps/mod-participants.md` | `MOD.PART` · Participantes (Coortes/Usuários/Papéis) |
@@ -66,7 +68,7 @@ tipo, **origem** (`mustache:linha` ou módulo `amd`), dados e regra de negócio.
 
 ### Convenção de IDs
 Formato `PREFIXO-SECAO-NN`. Prefixos: `BAR` (contextbar), `EST`/`FWK`/`PLN` (abas),
-`MOD.{BROWSER,LINKS,RULE,COHORT,ROLES,PART,SCALE,DELPLANS}` (modais). Recebe ID todo elemento
+`MOD.{BROWSER,LINKS,RELATED,RULE,COHORT,ROLES,PART,SCALE,DELPLANS}` (modais). Recebe ID todo elemento
 interativo e toda região estática com significado (headings, empty states, contadores);
 wrappers puros de layout não. IDs são estáveis — não mudam ao reordenar a tela.
 
