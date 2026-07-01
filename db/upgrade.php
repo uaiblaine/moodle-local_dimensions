@@ -202,6 +202,15 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026063004, 'local', 'dimensions');
     }
 
+    // Structure tab v3 (Fase 3): the "Related competencies" modal adds a read WS
+    // (local_dimensions_list_related_competencies). The bump registers it via
+    // external_update_descriptions; purge so the rebuilt JS/Mustache/strings are served fresh.
+    if ($oldversion < 2026063005) {
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026063005, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
