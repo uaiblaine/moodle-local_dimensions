@@ -164,6 +164,14 @@ $functions = [
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
     ],
+    'local_dimensions_list_related_competencies' => [
+        'classname' => 'local_dimensions\external\list_related_competencies',
+        'methodname' => 'execute',
+        'description' => 'List a competency\'s related competencies (same framework) with ancestor path.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+    ],
 
     // Competency hub Plans tab — template cohort management + background plan sync.
     'local_dimensions_list_template_cohorts' => [
