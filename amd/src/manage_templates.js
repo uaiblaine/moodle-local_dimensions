@@ -26,8 +26,10 @@ define([
     'core/notification',
     'core/str',
     'core/form-autocomplete',
-    'tool_lp/actionselector'
-], function(Ajax, Notification, Str, Autocomplete, ActionSelector) {
+    'core/modal_delete_cancel',
+    'core/modal_events',
+    'core/templates'
+], function(Ajax, Notification, Str, Autocomplete, ModalDeleteCancel, ModalEvents, Templates) {
     'use strict';
 
     /**
@@ -425,47 +427,40 @@ define([
     /**
      * Confirm and run the delete-template flow against the native AJAX service.
      *
-     * Mirrors the native tool_lp UX: when the template has no related plans,
-     * a single Confirm/Cancel dialog. When plans exist, an action-selector
-     * modal with two radio choices ("Delete the learning plans" /
-     * "Unlink the learning plans from their template") so the admin makes the
-     * deleteplans decision the same way they would in core's templates UI.
+     * When the template has no related plans, a single Confirm/Cancel dialog.
+     * When plans exist, a delete/cancel modal that names the template, shows
+     * the real plan count and spells out the consequence of each choice:
+     * unlink (default — the plans keep existing without a template) or
+     * delete the learner plans.
      *
      * @param {Number} templateId Template ID.
      * @param {String} templateName Template short name (for the dialog body).
+     * @param {Number} plancount Number of learner plans created from the template.
      */
-    function confirmDelete(templateId, templateName) {
+    function confirmDelete(templateId, templateName, plancount) {
         Ajax.call([{
             methodname: 'core_competency_template_has_related_data',
             args: {id: templateId}
         }])[0]
         .then(function(hasrelated) {
             if (hasrelated) {
-                // Returned nested chain (string load → dialog) is intentional.
+                // Returned nested chain (modal build → event wiring) is intentional.
                 // eslint-disable-next-line promise/no-nesting
-                return Str.get_strings([
-                    {key: 'deletetemplate', component: 'tool_lp', param: templateName},
-                    {key: 'deletetemplatewithplans', component: 'tool_lp'},
-                    {key: 'deleteplans', component: 'tool_lp'},
-                    {key: 'unlinkplanstemplate', component: 'tool_lp'},
-                    {key: 'confirm', component: 'moodle'},
-                    {key: 'cancel', component: 'moodle'}
-                ])
-                .then(function(strings) {
-                    var actions = [
-                        {text: strings[2], value: 'delete'},
-                        {text: strings[3], value: 'unlink'}
-                    ];
-                    var selector = new ActionSelector(
-                        strings[0], // Title.
-                        strings[1], // Body message.
-                        actions, // Radio options.
-                        strings[4], // Confirm.
-                        strings[5] // Cancel.
-                    );
-                    selector.display();
-                    selector.on('save', function(e, data) {
-                        runDeleteTemplate(templateId, data.action === 'delete');
+                return ModalDeleteCancel.create({
+                    title: Str.get_string('managetemplates_delete', 'local_dimensions'),
+                    body: Templates.render('local_dimensions/delete_template_modal', {
+                        name: templateName,
+                        plancount: plancount
+                    }),
+                    show: true,
+                    removeOnClose: true
+                })
+                .then(function(modal) {
+                    modal.getRoot().on(ModalEvents.delete, function() {
+                        var choice = modal.getRoot()[0].querySelector(
+                            'input[name="local-dimensions-delete-template-choice"]:checked'
+                        );
+                        runDeleteTemplate(templateId, !!choice && choice.value === 'delete');
                     });
                     return null;
                 });
@@ -643,9 +638,10 @@ define([
                 if (action === 'delete') {
                     event.preventDefault();
                     var deleteId = Number(actionTarget.dataset.id);
-                    var deleteName = actionTarget.dataset.name || '';
+                    var deleteTemplate = templatesById[deleteId];
+                    var deleteName = actionTarget.dataset.name || (deleteTemplate && deleteTemplate.shortname) || '';
                     if (deleteId > 0) {
-                        confirmDelete(deleteId, deleteName);
+                        confirmDelete(deleteId, deleteName, deleteTemplate ? Number(deleteTemplate.plancount) || 0 : 0);
                     }
                 }
             });

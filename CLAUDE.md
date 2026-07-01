@@ -24,6 +24,16 @@ This plugin is its **own git repo** (`/Volumes/N1TB/dev/github/moodle-local_dime
 branch `main`). The build needs a real Moodle checkout; the dev Moodle root is
 `/Volumes/N1TB/dev/github/moodle` (5.x split layout: webroot under `public/`).
 
+There are **two clones** of the same GitHub repo
+(`uaiblaine/moodle-local_dimensions`): the standalone one above, and
+`public/local/dimensions` **inside the Moodle checkout** (used for grunt builds
+and for `git archive` when producing the install zip). Work also lands on
+GitHub from other sessions — **`git fetch` + `pull` the standalone clone before
+starting**, or you will build on a stale base. The rsync in the build recipe
+overwrites the inner clone's working tree; once the work is pushed,
+`git -C public/local/dimensions fetch && git -C public/local/dimensions reset --hard origin/main`
+realigns it.
+
 ### Building JavaScript assets (required before committing JS)
 
 The AMD modules in `amd/src/*.js` compile to `amd/build/*.min.js` via Moodle's
@@ -67,11 +77,21 @@ single quotes, short hex, and `selector-class-pattern ^[a-z0-9\-]+$`. The repo's
 own `package.json` has only stylelint devDeps — **don't** run `npm run build`
 here; the canonical artefacts come from Moodle's Gruntfile.
 
-### Cache / dev loop
+### Test deploy / dev loop
 
-After changing PHP that affects rendering, purge caches:
-`php admin/cli/purge_caches.php` (core CLI lives at the **repo root**, outside
-`public/`). For the JS dev loop, set *Site admin → Development → Debug = DEVELOPER*
+Deployment is a **manual zip install** on a test server. The zip is produced by
+`git archive` from the plugin clone that lives inside the Moodle checkout:
+
+```sh
+git -C /Volumes/N1TB/dev/github/moodle/public/local/dimensions fetch origin
+git -C /Volumes/N1TB/dev/github/moodle/public/local/dimensions archive \
+  --format=zip --prefix=dimensions/ origin/main -o ~/Downloads/dimensions.zip
+```
+
+`git archive` packages a **commit**, never the working tree: uncommitted work
+does not enter the zip, and `origin/main` is the last-**fetched** remote state.
+Commit + push the work (and `fetch` in the archiving clone) before building the
+zip. For the JS dev loop, set *Site admin → Development → Debug = DEVELOPER*
 and *cachejs = off* so Moodle serves `amd/src` directly without a rebuild.
 
 ## CI gating

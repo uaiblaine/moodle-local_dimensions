@@ -23,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Cards (default) / Table view toggle, search, show-hidden, show-identifiers.
   - Card view leverages template customfield visuals (card image, background colour, type/tag chips).
   - Right-side details aside with template metadata, plan / cohort counters, action buttons including duplicate and delete.
-  - Native `tool_lp/actionselector` modal on delete: choose between "Delete the learning plans" and "Unlink the learning plans from their template".
+  - Delete modal with explicit consequence (design screen `mod-delplans`, to-be): a `core/modal_delete_cancel` that names the template ("Template:" label in the body), shows the real learner-plan count and states the consequence of each radio choice — unlink (default; the plans keep existing without a template) or delete the plans (irreversible). Shared by both delete flows: the manage templates page and the Competency hub Plans tab (which previously used a plain unlink/delete radio dialogue — `templates/central/delete_template_plans.mustache`, now removed in favour of the shared `templates/delete_template_modal.mustache`).
   - Cohort linking and plan creation link out to the native `tool/lp` pages.
 - **Edit competency / edit template** parity:
   - Mustache shell with back link, hero (title / context / metadata chips), sticky section navigation, and submit button in the action bar.

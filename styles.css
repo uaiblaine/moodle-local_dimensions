@@ -5543,3 +5543,77 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     }
 }
 
+/* ============================================
+      DELETE TEMPLATE MODAL
+      ============================================ */
+
+/*
+ * Body of the delete-template confirmation modal (core/modal_delete_cancel).
+ * Rendered at body level, outside .local-dimensions-manage, so the manage
+ * custom properties are not in scope — literal hexes from the same palette.
+ */
+.local-dimensions-delete-template-name {
+    margin-bottom: 0.25rem;
+    color: #6c7787;
+}
+
+.local-dimensions-delete-template-shortname {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1c2433;
+}
+
+.local-dimensions-delete-template-inplans {
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: #3a4658;
+}
+
+.local-dimensions-delete-template-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.local-dimensions-delete-template-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid #cdc3b0;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.local-dimensions-delete-template-option:has(input:checked) {
+    border-color: #cee0f3;
+    background: #e6f0fb;
+}
+
+.local-dimensions-delete-template-option:has(input:focus-visible) {
+    outline: 2px solid #0f6cbf;
+    outline-offset: 1px;
+}
+
+.local-dimensions-delete-template-option input {
+    margin-top: 0.2rem;
+}
+
+.local-dimensions-delete-template-option-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.local-dimensions-delete-template-option-title {
+    font-weight: 500;
+}
+
+.local-dimensions-delete-template-option-note {
+    font-size: 0.8rem;
+    color: #6c7787;
+}
+

@@ -26,7 +26,7 @@
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · contextid (int) · needscategoryselection (bool)
     * hastemplates (bool) · templates (array) {id, name, competencycount, visible, selected}
-    * selectedtemplateid (int) · selectedtemplatename (string)
+    * selectedtemplateid (int) · selectedtemplatename (string) · selectedtemplateplancount (int)
     * hascompetencies (bool) · competencies (array) {id, shortname, frameworktag, first, last}
     * excludeids (string) · comma-separated ids already on the template (add-picker exclusion)
     * competencycount (int) · canmanage (int) · canassignroles (int)
@@ -49,6 +49,7 @@
         ],
         "selectedtemplateid": 4,
         "selectedtemplatename": "Induction plan",
+        "selectedtemplateplancount": 12,
         "hascompetencies": true,
         "excludeids": "7,9",
         "competencies": [
@@ -181,7 +182,8 @@
                             <i class="fa fa-pencil me-1" aria-hidden="true"></i>{{#str}}edit{{/str}}
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-template"
-                                data-id="{{selectedtemplateid}}" data-name="{{selectedtemplatename}}">
+                                data-id="{{selectedtemplateid}}" data-name="{{selectedtemplatename}}"
+                                data-plancount="{{selectedtemplateplancount}}">
                             <i class="fa fa-trash me-1" aria-hidden="true"></i>{{#str}}delete{{/str}}
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-action="manage-participants">

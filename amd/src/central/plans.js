@@ -24,7 +24,7 @@
 
 import Ajax from 'core/ajax';
 import ModalForm from 'core_form/modalform';
-import ModalSaveCancel from 'core/modal_save_cancel';
+import ModalDeleteCancel from 'core/modal_delete_cancel';
 import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
@@ -64,12 +64,17 @@ const openForm = async(pane, args, titlekey, titlecomponent) => {
 /**
  * Delete a template, asking how to handle its learning plans when it has any.
  *
+ * With plans, a delete/cancel modal names the template, shows the real plan
+ * count and spells out the consequence of each choice: unlink (default — the
+ * plans keep existing without a template) or delete the learner plans.
+ *
  * @param {HTMLElement} pane
  * @param {String|Number} id
  * @param {String} name
+ * @param {String|Number} plancount Number of learner plans created from the template.
  * @return {Promise<void>}
  */
-const deleteTemplate = async(pane, id, name) => {
+const deleteTemplate = async(pane, id, name, plancount) => {
     const templateid = Number(id);
     const hasplans = await Ajax.call([{
         methodname: 'core_competency_template_has_related_data',
@@ -81,20 +86,26 @@ const deleteTemplate = async(pane, id, name) => {
         args: {id: templateid, deleteplans: deleteplans},
     }])[0].then(() => reloadPane(pane)).catch(Notification.exception);
 
-    const title = await getString('deletetemplate', 'tool_lp', name);
-
     if (hasplans) {
-        const {html} = await Templates.renderForPromise('local_dimensions/central/delete_template_plans', {});
-        const modal = await ModalSaveCancel.create({title, body: html});
-        modal.setSaveButtonText(await getString('delete'));
-        modal.getRoot().on(ModalEvents.save, () => {
-            const checked = modal.getRoot()[0].querySelector('input[name="deleteplans"]:checked');
-            remove(!!checked && checked.value === '1');
+        const {html} = await Templates.renderForPromise('local_dimensions/delete_template_modal', {
+            name: name,
+            plancount: Number(plancount) || 0,
         });
-        modal.show();
+        const modal = await ModalDeleteCancel.create({
+            title: getString('managetemplates_delete', 'local_dimensions'),
+            body: html,
+            show: true,
+            removeOnClose: true,
+        });
+        modal.getRoot().on(ModalEvents.delete, () => {
+            const checked = modal.getRoot()[0]
+                .querySelector('input[name="local-dimensions-delete-template-choice"]:checked');
+            remove(!!checked && checked.value === 'delete');
+        });
         return;
     }
 
+    const title = await getString('deletetemplate', 'tool_lp', name);
     try {
         await Notification.deleteCancelPromise(await getString('delete'), title);
     } catch (e) {
@@ -184,7 +195,8 @@ const ACTION_HANDLERS = {
     ),
     'edit-template': (pane, region, target) => openForm(pane, {id: target.dataset.id}, 'edittemplate', 'tool_lp'),
     'delete-template': (pane, region, target) =>
-        deleteTemplate(pane, target.dataset.id, target.dataset.name || '').catch(Notification.exception),
+        deleteTemplate(pane, target.dataset.id, target.dataset.name || '', target.dataset.plancount || 0)
+            .catch(Notification.exception),
     'remove-competency': (pane, region, target) =>
         removeCompetency(pane, target.dataset.id, target.dataset.name || '').catch(Notification.exception),
     'move-competency-up': (pane, region, target) => moveCompetency(pane, target, 'up').catch(Notification.exception),

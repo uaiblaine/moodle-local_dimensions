@@ -194,6 +194,9 @@ class plans extends \core\output\dynamic_tabs\base {
             'templates' => $templateoptions,
             'selectedtemplateid' => $templateid,
             'selectedtemplatename' => $selected ? format_string($selected->get('shortname')) : '',
+            'selectedtemplateplancount' => $selected
+                ? (helper::count_plans_by_template([$templateid])[$templateid] ?? 0)
+                : 0,
             'hascompetencies' => !empty($competencies),
             'competencies' => $competencies,
             'competencycount' => count($competencies),
