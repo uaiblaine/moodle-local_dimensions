@@ -192,6 +192,16 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026063003, 'local', 'dimensions');
     }
 
+    // Force a web-service descriptions re-sync. An upgrade previously ran against a stale
+    // db/services.php (an old copy had overwritten the working tree), so Moodle pruned the
+    // functions missing from that file (browse_structure, search_structure, ...). This bump
+    // re-registers every function now declared in db/services.php via external_update_descriptions.
+    if ($oldversion < 2026063004) {
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026063004, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
