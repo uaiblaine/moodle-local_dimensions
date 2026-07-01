@@ -211,6 +211,16 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026063005, 'local', 'dimensions');
     }
 
+    // Search + tree polish batch: accent-insensitive search (provision the PostgreSQL unaccent
+    // extension where possible - non-fatal), plus rebuilt JS/CSS/templates. Purge so the new
+    // bundles/strings are served fresh.
+    if ($oldversion < 2026070100) {
+        \local_dimensions\helper::ensure_unaccent();
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026070100, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
