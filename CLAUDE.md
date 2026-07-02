@@ -333,6 +333,13 @@ Hard-won:
 - **Icon-only buttons:** give them an `aria-label`; the `"button"` named selector
   matches it (Moodle 3.11+). Disambiguate per-row toggles by scoping to the row's
   `"list_item"`.
+- **aria-labels that embed the row name hijack name-based clicks:** the button
+  selector matches `aria-label` by `contains()` and takes the **first
+  document-order hit** — a hover-revealed helper (opacity: 0 is still
+  WebDriver-interactable!) whose label is "Move to position…: {name}" placed
+  before the real row control steals `I click on "{name}" "button"`. Put such
+  helpers **after** the main control in the DOM and pull them left visually
+  with flex `order: -1` (see the drag grips).
 - **Reworking a tab's UI breaks its `.feature` steps** — grep `tests/behat/` for
   every label/button you move, rename or collapse, and fix the scenarios in the
   same commit (this cost a full CI round on the Plans-tab redesign).

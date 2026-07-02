@@ -48,14 +48,6 @@
 }}
 <div class="local-dimensions-central-node" data-node="{{id}}">
     <div class="d-flex align-items-center" style="padding-left: {{indent}}px;">
-        {{#canmanage}}
-        <button type="button" class="btn btn-link p-0 local-dimensions-central-plan-drag"
-                data-region="node-drag-handle"
-                title="{{#str}}central_plans_moveto, local_dimensions{{/str}}"
-                aria-label="{{#str}}central_plans_moveto, local_dimensions{{/str}}: {{shortname}}">
-            <i class="fa fa-grip-vertical" aria-hidden="true"></i>
-        </button>
-        {{/canmanage}}
         {{#haschildren}}
         <button type="button" class="btn btn-sm btn-link p-0 me-1 local-dimensions-central-toggle" data-action="toggle" data-id="{{id}}" aria-expanded="false" aria-label="{{shortname}}">
             <i class="fa fa-chevron-right" aria-hidden="true"></i>
@@ -91,6 +83,17 @@
             {{/ruletype}}
             {{/haschildren}}
         </button>
+        {{#canmanage}}
+        {{! Rendered after the row button (the grip's aria-label embeds the competency name,
+            and Behat name-based clicks match the first document-order hit); the flex order
+            in CSS still paints it at the left edge. }}
+        <button type="button" class="btn btn-link p-0 local-dimensions-central-plan-drag"
+                data-region="node-drag-handle"
+                title="{{#str}}central_plans_moveto, local_dimensions{{/str}}"
+                aria-label="{{#str}}central_plans_moveto, local_dimensions{{/str}}: {{shortname}}">
+            <i class="fa fa-grip-vertical" aria-hidden="true"></i>
+        </button>
+        {{/canmanage}}
     </div>
     <div class="local-dimensions-central-children" data-children="{{id}}" data-offset="0" hidden></div>
 </div>

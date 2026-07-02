@@ -245,14 +245,6 @@
                     <ul class="list-unstyled mb-0" data-region="competency-items">
                         {{#competencies}}
                         <li class="d-flex align-items-center py-1 border-bottom" data-competency="{{id}}">
-                            {{#canmanage}}
-                            <button type="button" class="btn btn-link p-0 local-dimensions-central-plan-drag"
-                                    data-region="drag-handle" data-action="move-competency-to"
-                                    title="{{#str}}central_plans_moveto, local_dimensions{{/str}}"
-                                    aria-label="{{#str}}central_plans_moveto, local_dimensions{{/str}}: {{shortname}}">
-                                <i class="fa fa-grip-vertical" aria-hidden="true"></i>
-                            </button>
-                            {{/canmanage}}
                             <span class="flex-grow-1">
                                 <span data-region="comp-name">{{shortname}}</span>
                                 {{#taxonomy}}
@@ -310,6 +302,15 @@
                                     </li>
                                 </ul>
                             </div>
+                            {{! Rendered after the row content (the grip's aria-label embeds the competency
+                                name, and Behat name-based clicks match the first document-order hit); the
+                                flex order in CSS still paints it at the left edge. }}
+                            <button type="button" class="btn btn-link p-0 local-dimensions-central-plan-drag"
+                                    data-region="drag-handle" data-action="move-competency-to"
+                                    title="{{#str}}central_plans_moveto, local_dimensions{{/str}}"
+                                    aria-label="{{#str}}central_plans_moveto, local_dimensions{{/str}}: {{shortname}}">
+                                <i class="fa fa-grip-vertical" aria-hidden="true"></i>
+                            </button>
                             {{/canmanage}}
                         </li>
                         {{/competencies}}
