@@ -464,7 +464,8 @@ const initDragReorder = (region, pane) => {
             return null;
         }).catch((error) => {
             Notification.exception(error);
-            // Restore the server's order so the preview does not lie about the state.
+            // Restoring the server's order from a failure handler is intentional.
+            // eslint-disable-next-line promise/no-nesting
             reloadKeepingScroll(pane).catch(() => null);
         });
     });
@@ -534,6 +535,8 @@ const moveCompetencyTo = async(pane, region, target) => {
             return null;
         }).catch((error) => {
             Notification.exception(error);
+            // Restoring the server's order from a failure handler is intentional.
+            // eslint-disable-next-line promise/no-nesting
             reloadKeepingScroll(pane).catch(() => null);
         });
     });

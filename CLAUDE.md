@@ -66,12 +66,18 @@ module-name annotation, source map, and minification match what Moodle expects.
 ### Linting (run from the Moodle root, pre-push)
 
 ```sh
-npx eslint  public/local/dimensions/amd/src
+npx eslint --max-warnings 0 public/local/dimensions/amd/src
 npx stylelint public/local/dimensions/styles.css
 ```
 
 CI runs `grunt --max-lint-warnings 0`, so **every ESLint/Stylelint warning fails
-the build** — there is no warning tier. The local stylelint config
+the build** — there is no warning tier. A plain local `npx grunt amd` build does
+**not** fail on ESLint warnings (it prints them and exits 0, easy to miss in
+filtered output) — always run the `npx eslint --max-warnings 0` command above
+before pushing. `promise/no-nesting` is the usual offender: an intentional
+nested chain (e.g. a recovery reload inside a `.catch` handler) needs
+`// eslint-disable-next-line promise/no-nesting` on the line directly above the
+nested call, with a comment saying why. The local stylelint config
 (`.stylelintrc.json`) extends `stylelint-config-standard` with 4-space indent,
 single quotes, short hex, and `selector-class-pattern ^[a-z0-9\-]+$`. The repo's
 own `package.json` has only stylelint devDeps — **don't** run `npm run build`
@@ -343,7 +349,15 @@ web services in a native `core/modal*` instead.
   has no clear API → re-render the body to reset it.
 - **Exclude list:** read `data-exclude` via `element.dataset` (fresh per search) in your own
   datasource; `core/form-cohort-selector` caches it via jQuery `.data()`.
-- **Raw `<select>` chevron:** `form-select` (4.5–5.2 are all BS5); never `custom-select`.
+- **Raw `<select>` chevron:** `form-select` (the BS5 *classes* are bridged on 4.5);
+  never `custom-select`.
+- **Bootstrap 4 vs 5 — JS data attributes are NOT bridged:** Moodle 4.5 runs
+  Bootstrap 4, whose data-API listens on `data-toggle`; 5.x listens on
+  `data-bs-toggle`. Components wired via markup (dropdowns etc.) need **both**
+  attributes side by side, and both alignment classes
+  (`dropdown-menu-right dropdown-menu-end`). Symptom of forgetting: the toggle
+  clicks fine but the menu never opens on 4.5 — CI's 4.05 Behat leg catches it
+  as `ElementNotInteractableException` on the menu item.
 - **`[hidden]` vs `.d-block`:** `.d-block { display:block !important }` overrides `[hidden]`;
   to toggle via `el.hidden` use a plain block (`<div>`). `.form-check` adds `margin-left:-1.5em`
   to its input (overlaps a preceding chevron) — use a plain `d-flex` row for custom rows.

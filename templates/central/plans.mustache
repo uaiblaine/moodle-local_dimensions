@@ -270,12 +270,13 @@
                             {{/frameworktag}}
                             {{#canmanage}}
                             <div class="dropdown">
+                                {{! Both data attributes: Moodle 4.5 is Bootstrap 4 (data-toggle), 5.x is BS5 (data-bs-toggle). }}
                                 <button type="button" class="btn btn-sm btn-link p-1 text-body"
-                                        data-bs-toggle="dropdown" aria-expanded="false"
+                                        data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="false"
                                         aria-label="{{#str}}actions{{/str}}: {{shortname}}">
                                     <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
+                                <ul class="dropdown-menu dropdown-menu-right dropdown-menu-end">
                                     <li>
                                         <button type="button" class="dropdown-item" data-action="edit-competency"
                                                 data-id="{{id}}" data-frameworkid="{{frameworkid}}">
@@ -333,12 +334,13 @@
                             <i class="fa fa-users me-1" aria-hidden="true"></i>{{#str}}central_participants_manage, local_dimensions{{/str}}
                         </button>
                         <div class="dropdown">
+                            {{! Both data attributes: Moodle 4.5 is Bootstrap 4 (data-toggle), 5.x is BS5 (data-bs-toggle). }}
                             <button type="button" class="btn btn-sm btn-outline-secondary"
-                                    data-bs-toggle="dropdown" aria-expanded="false"
+                                    data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="false"
                                     aria-label="{{#str}}central_plans_moreactions, local_dimensions{{/str}}">
                                 <i class="fa fa-ellipsis-h" aria-hidden="true"></i>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
+                            <ul class="dropdown-menu dropdown-menu-right dropdown-menu-end">
                                 <li>
                                     <button type="button" class="dropdown-item" data-action="duplicate-template"
                                             data-id="{{selectedtemplateid}}">
