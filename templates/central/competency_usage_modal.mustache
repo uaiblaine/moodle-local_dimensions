@@ -1,0 +1,93 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/competency_usage_modal
+
+    Body of the competency usage modal on the Structure tab: three read-only lists
+    (linked courses, linked activities each labelled with its course, and the learning
+    plan templates bundling the competency). Rendered client-side by
+    local_dimensions/central/structure from the local_dimensions_competency_usage
+    web service response.
+
+    Context variables required:
+    * hascourses (bool) · courses (array) {id, name, shortname}
+    * hasactivities (bool) · activities (array) {cmid, name, coursename, courseshortname}
+    * hastemplates (bool) · templates (array) {id, name, visible}
+
+    Example context (json):
+    {
+        "hascourses": true,
+        "courses": [
+            {"id": 3, "name": "Communication 101", "shortname": "COMM101"}
+        ],
+        "hasactivities": true,
+        "activities": [
+            {"cmid": 12, "name": "Final essay", "coursename": "Communication 101", "courseshortname": "COMM101"}
+        ],
+        "hastemplates": true,
+        "templates": [
+            {"id": 4, "name": "Induction plan", "visible": true}
+        ]
+    }
+}}
+<div class="local-dimensions-central-usage">
+    <h4 class="h6 mb-1">{{#str}}managecompetencies_linkedcourses, local_dimensions{{/str}}</h4>
+    {{#hascourses}}
+    <ul class="list-unstyled mb-3">
+        {{#courses}}
+        <li class="py-1 border-bottom">
+            {{name}}
+            <span class="font-monospace small text-muted ms-1">{{shortname}}</span>
+        </li>
+        {{/courses}}
+    </ul>
+    {{/hascourses}}
+    {{^hascourses}}
+    <p class="text-muted small mb-3">{{#str}}central_links_nocourses, local_dimensions{{/str}}</p>
+    {{/hascourses}}
+
+    <h4 class="h6 mb-1">{{#str}}managecompetencies_linkedactivities, local_dimensions{{/str}}</h4>
+    {{#hasactivities}}
+    <ul class="list-unstyled mb-3">
+        {{#activities}}
+        <li class="py-1 border-bottom">
+            {{name}}
+            <span class="small text-muted ms-1">— {{coursename}}</span>
+            <span class="font-monospace small text-muted ms-1">{{courseshortname}}</span>
+        </li>
+        {{/activities}}
+    </ul>
+    {{/hasactivities}}
+    {{^hasactivities}}
+    <p class="text-muted small mb-3">{{#str}}central_usage_noactivities, local_dimensions{{/str}}</p>
+    {{/hasactivities}}
+
+    <h4 class="h6 mb-1">{{#str}}central_structure_linkedplans, local_dimensions{{/str}}</h4>
+    {{#hastemplates}}
+    <ul class="list-unstyled mb-0">
+        {{#templates}}
+        <li class="py-1 border-bottom">
+            {{name}}
+            {{^visible}}<span class="badge bg-secondary ms-1">{{#str}}hidden, tool_lp{{/str}}</span>{{/visible}}
+        </li>
+        {{/templates}}
+    </ul>
+    {{/hastemplates}}
+    {{^hastemplates}}
+    <p class="text-muted small mb-0">{{#str}}central_usage_noplans, local_dimensions{{/str}}</p>
+    {{/hastemplates}}
+</div>

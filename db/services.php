@@ -138,6 +138,16 @@ $functions = [
         'ajax' => true,
     ],
 
+    // Competency hub Structure tab — read-only usage lists behind the detail counters.
+    'local_dimensions_competency_usage' => [
+        'classname' => 'local_dimensions\external\competency_usage',
+        'methodname' => 'execute',
+        'description' => 'List the courses, activities and learning plan templates using a competency.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+    ],
+
     // Competency hub Structure tab — in-tree search with ancestor path.
     'local_dimensions_search_structure' => [
         'classname' => 'local_dimensions\external\search_structure',

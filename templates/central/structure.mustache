@@ -28,8 +28,8 @@
     * rulesmodulesjson (string json) · courseoutcomesjson (string json) · moduleoutcomesjson (string json)
     * needscategoryselection (bool)
     * hasframeworks (bool) · frameworks (array) {id, name, idnumber, selected, competencycount, hidden}
-    * competencies (array) {id, parentid, shortname, idnumber, indent, haschildren, taxonomy, coursecount,
-      activitycount, rulelabel, depth, ruletype, ruleoutcome, ruleconfig}
+    * competencies (array) {id, parentid, shortname, idnumber, indent, haschildren, canmanage, taxonomy,
+      coursecount, activitycount, templatecount, rulelabel, depth, ruletype, ruleoutcome, ruleconfig}
     * hascompetencies (bool) · competencycount (int) · rootshown (int) · roottotal (int) · hasmoreroots (bool)
     * canmanage (int)
 
@@ -56,8 +56,9 @@
         "competencies": [
             {
                 "id": 7, "parentid": 0, "shortname": "Communication", "idnumber": "COMM-01",
-                "taxonomy": "Competency", "coursecount": 3, "activitycount": 5, "depth": 0, "indent": 0,
-                "haschildren": true, "ruletype": "", "ruleoutcome": 0, "ruleconfig": "", "rulelabel": "No rule"
+                "taxonomy": "Competency", "coursecount": 3, "activitycount": 5, "templatecount": 2,
+                "depth": 0, "indent": 0, "haschildren": true, "canmanage": true,
+                "ruletype": "", "ruleoutcome": 0, "ruleconfig": "", "rulelabel": "No rule"
             }
         ]
     }
@@ -126,7 +127,7 @@
                         <span class="visually-hidden">{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}</span>
                     </button>
                 </div>
-                <div class="card-body border-bottom py-2" id="local-dimensions-central-displayopts" data-region="display-options-panel"
+                <div class="card-body border-bottom py-2 flex-grow-0" id="local-dimensions-central-displayopts" data-region="display-options-panel"
                      role="group" aria-label="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="local-dimensions-disp-tax" data-display-toggle="tax">
@@ -141,13 +142,13 @@
                         <label class="form-check-label" for="local-dimensions-disp-rule">{{#str}}managecompetencies_showrule, local_dimensions{{/str}}</label>
                     </div>
                 </div>
-                <div class="card-body py-2 border-bottom local-dimensions-central-search-wrap">
+                <div class="card-body py-2 border-bottom flex-grow-0 local-dimensions-central-search-wrap">
                     <input type="search" class="form-control form-control-sm" id="local-dimensions-structure-search"
                            data-region="structure-search" autocomplete="off"
                            placeholder="{{#str}}managecompetencies_searchplaceholder, local_dimensions{{/str}}">
                     <div class="list-group local-dimensions-central-searchresults" data-region="search-results" hidden></div>
                 </div>
-                <div class="card-body p-2 local-dimensions-central-tree show-rule" data-region="competency-tree">
+                <div class="card-body p-2 local-dimensions-central-tree local-dimensions-central-structure-scroll show-rule" data-region="competency-tree">
                     {{#competencies}}
                     {{> local_dimensions/central/structure_node }}
                     {{/competencies}}
@@ -165,7 +166,7 @@
              aria-label="{{#str}}managecompetencies_resizepanels, local_dimensions{{/str}}"></div>
         <aside class="local-dimensions-central-structure-detail-pane" data-region="detail-pane">
             <div class="card h-100">
-                <div class="card-body">
+                <div class="card-body local-dimensions-central-structure-scroll">
                     <div data-region="detail-empty" class="text-muted">
                         <i class="fa fa-info-circle me-1" aria-hidden="true"></i>
                         {{#str}}managecompetencies_selectdetails, local_dimensions{{/str}}
@@ -186,11 +187,18 @@
                         <div class="row g-2 mb-2">
                             <div class="col">
                                 <div class="small text-muted">{{#str}}managecompetencies_linkedcourses, local_dimensions{{/str}}</div>
-                                <div data-region="detail-courses"></div>
+                                <button type="button" class="btn btn-link p-0 text-decoration-underline"
+                                        data-action="show-usage" data-region="detail-courses"></button>
                             </div>
                             <div class="col">
                                 <div class="small text-muted">{{#str}}managecompetencies_linkedactivities, local_dimensions{{/str}}</div>
-                                <div data-region="detail-activities"></div>
+                                <button type="button" class="btn btn-link p-0 text-decoration-underline"
+                                        data-action="show-usage" data-region="detail-activities"></button>
+                            </div>
+                            <div class="col">
+                                <div class="small text-muted">{{#str}}central_structure_linkedplans, local_dimensions{{/str}}</div>
+                                <button type="button" class="btn btn-link p-0 text-decoration-underline"
+                                        data-action="show-usage" data-region="detail-plans"></button>
                             </div>
                         </div>
                         <div class="mb-2">

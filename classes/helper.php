@@ -1465,9 +1465,10 @@ class helper {
      * Used by both the server-rendered first page of roots and the browse_structure web
      * service, so a server-rendered node and a lazily-fetched node are identical. Each node
      * is: id, parentid (int), shortname, idnumber, taxonomy (string), coursecount,
-     * activitycount (int), depth, indent (int), haschildren (bool), ruletype,
-     * ruleconfig (string|null), ruleoutcome (int), rulelabel (string).
-     * Three batch queries (has-children, linked-course counts, linked-activity counts) cover the whole page; depth and
+     * activitycount, templatecount (int), depth, indent (int), haschildren (bool),
+     * canmanage (bool), ruletype, ruleconfig (string|null), ruleoutcome (int),
+     * rulelabel (string). Four batch queries (has-children, linked-course counts,
+     * linked-activity counts, linked-template counts) cover the whole page; depth and
      * taxonomy are derived from each record's path.
      *
      * @param array $records Sibling competency persistent objects (core_competency\competency).
@@ -1533,6 +1534,18 @@ class helper {
             );
         }
 
+        // Batch: linked learning plan template counts (how many templates bundle each competency).
+        [$tsql, $tparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'tid');
+        $tplcounts = $DB->get_records_sql_menu(
+            "SELECT competencyid, COUNT(1)
+               FROM {competency_templatecomp}
+              WHERE competencyid $tsql
+           GROUP BY competencyid",
+            $tparams
+        );
+
+        $canmanage = has_capability('moodle/competency:competencymanage', $framework->get_context());
+
         $nodes = [];
         foreach ($records as $record) {
             $id = (int) $record->get('id');
@@ -1547,9 +1560,11 @@ class helper {
                 'taxonomy' => get_string('taxonomy_' . $taxonomy, 'core_competency'),
                 'coursecount' => (int) ($counts[$id] ?? 0),
                 'activitycount' => (int) ($actcounts[$id] ?? 0),
+                'templatecount' => (int) ($tplcounts[$id] ?? 0),
                 'depth' => $depth,
                 'indent' => $depth * 22,
                 'haschildren' => !empty($haschildren[$id]),
+                'canmanage' => $canmanage,
                 'ruletype' => $record->get('ruletype'),
                 'ruleoutcome' => (int) $record->get('ruleoutcome'),
                 'ruleconfig' => $record->get('ruleconfig'),
