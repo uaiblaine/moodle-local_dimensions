@@ -17,27 +17,31 @@
 {{!
     @template local_dimensions/central/competency_usage_modal
 
-    Body of the competency usage modal on the Structure tab: three read-only lists
-    (linked courses, linked activities each labelled with its course, and the learning
-    plan templates bundling the competency). Rendered client-side by
+    Body of the competency usage modal on the Structure tab. Only the section matching
+    the counter the user clicked is rendered (show* flags): linked courses, linked
+    activities (each labelled with its course) or the learning plan templates bundling
+    the competency — the modal title carries the section name. Rendered client-side by
     local_dimensions/central/structure from the local_dimensions_competency_usage
     web service response.
 
     Context variables required:
-    * hascourses (bool) · courses (array) {id, name, shortname}
-    * hasactivities (bool) · activities (array) {cmid, name, coursename, courseshortname}
-    * hastemplates (bool) · templates (array) {id, name, visible}
+    * showcourses (bool) · hascourses (bool) · courses (array) {id, name, shortname}
+    * showactivities (bool) · hasactivities (bool) · activities (array) {cmid, name, coursename, courseshortname}
+    * showtemplates (bool) · hastemplates (bool) · templates (array) {id, name, visible}
 
     Example context (json):
     {
+        "showcourses": true,
         "hascourses": true,
         "courses": [
             {"id": 3, "name": "Communication 101", "shortname": "COMM101"}
         ],
+        "showactivities": false,
         "hasactivities": true,
         "activities": [
             {"cmid": 12, "name": "Final essay", "coursename": "Communication 101", "courseshortname": "COMM101"}
         ],
+        "showtemplates": false,
         "hastemplates": true,
         "templates": [
             {"id": 4, "name": "Induction plan", "visible": true}
@@ -45,9 +49,9 @@
     }
 }}
 <div class="local-dimensions-central-usage">
-    <h4 class="h6 mb-1">{{#str}}managecompetencies_linkedcourses, local_dimensions{{/str}}</h4>
+    {{#showcourses}}
     {{#hascourses}}
-    <ul class="list-unstyled mb-3">
+    <ul class="list-unstyled mb-0">
         {{#courses}}
         <li class="py-1 border-bottom">
             {{name}}
@@ -57,12 +61,13 @@
     </ul>
     {{/hascourses}}
     {{^hascourses}}
-    <p class="text-muted small mb-3">{{#str}}central_links_nocourses, local_dimensions{{/str}}</p>
+    <p class="text-muted small mb-0">{{#str}}central_links_nocourses, local_dimensions{{/str}}</p>
     {{/hascourses}}
+    {{/showcourses}}
 
-    <h4 class="h6 mb-1">{{#str}}managecompetencies_linkedactivities, local_dimensions{{/str}}</h4>
+    {{#showactivities}}
     {{#hasactivities}}
-    <ul class="list-unstyled mb-3">
+    <ul class="list-unstyled mb-0">
         {{#activities}}
         <li class="py-1 border-bottom">
             {{name}}
@@ -73,10 +78,11 @@
     </ul>
     {{/hasactivities}}
     {{^hasactivities}}
-    <p class="text-muted small mb-3">{{#str}}central_usage_noactivities, local_dimensions{{/str}}</p>
+    <p class="text-muted small mb-0">{{#str}}central_usage_noactivities, local_dimensions{{/str}}</p>
     {{/hasactivities}}
+    {{/showactivities}}
 
-    <h4 class="h6 mb-1">{{#str}}central_structure_linkedplans, local_dimensions{{/str}}</h4>
+    {{#showtemplates}}
     {{#hastemplates}}
     <ul class="list-unstyled mb-0">
         {{#templates}}
@@ -90,4 +96,5 @@
     {{^hastemplates}}
     <p class="text-muted small mb-0">{{#str}}central_usage_noplans, local_dimensions{{/str}}</p>
     {{/hastemplates}}
+    {{/showtemplates}}
 </div>

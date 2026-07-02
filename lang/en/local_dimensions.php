@@ -194,7 +194,6 @@ $string['central_searchcompetency'] = 'Filter plans by competency';
 $string['central_structure_linkedplans'] = 'Linked learning plans';
 $string['central_usage_noactivities'] = 'No linked activities.';
 $string['central_usage_noplans'] = 'Not part of any learning plan.';
-$string['central_usage_title'] = 'Linked items — {$a}';
 $string['chipfilterheading'] = 'Custom-field chip filters';
 $string['chipfilterheading_desc'] = 'Choose which custom fields are exposed as clickable chip filters on the competency view and plan view pages. Provide a comma-separated list of custom field shortnames.';
 $string['column_duedate'] = 'Due date';
