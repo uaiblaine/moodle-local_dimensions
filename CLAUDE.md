@@ -272,6 +272,12 @@ alphabetic slot in **both** language files.
   bump.**
 - A WS that emits localised strings must include `current_language()` in any
   cache key.
+- **`execute_returns()` is an allowlist**: `clean_returnvalue` silently strips
+  keys the structure doesn't declare. When a shared builder (e.g.
+  `helper::structure_nodes()`) gains a field, update the returns of **every**
+  WS that channels it (`browse_structure` etc.). Symptom: server-rendered rows
+  carry the new data, WS-rendered ones (lazily-fetched children) don't — e.g.
+  drag grips appearing only on root nodes.
 
 ## MUC caches (`db/caches.php`)
 Cache **keys must avoid `:`** (unsafe in file-store paths). This plugin's keys:
