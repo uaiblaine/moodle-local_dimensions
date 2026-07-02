@@ -5491,11 +5491,14 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
 
 /* Learning plans tab — same master-detail grid, but the divider starts at 50/50 and
    the whole body has one fixed working height so both panes always match vertically
-   (design: min 320px, max 60vh capped at 680px). */
+   (design: min 320px, max 60vh capped at 680px). Written as height + min/max-height
+   because the CI stylelint (csstree/validator) rejects clamp() in height. */
 .local-dimensions-central-plans-body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-plans-detail-width, calc(50% - 0.25rem));
-    height: clamp(320px, 60vh, 680px);
+    height: 60vh;
+    min-height: 320px;
+    max-height: 680px;
 }
 
 .local-dimensions-central-plans-list-pane,
@@ -5555,21 +5558,27 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     overflow-y: auto;
 }
 
-/* Disabled (hidden) templates stay in the DOM; the show-disabled toggle reveals them.
-   The row buttons carry Bootstrap's .d-flex (display !important), so the visibility
-   rules need !important too. The search-filter rule comes last and carries the same
-   specificity as the reveal rule, so a revealed row that misses the query still hides. */
-.local-dimensions-central-plans .local-dimensions-central-plan-hidden {
-    display: none !important;
+/* Plan rows own their display here (no .d-flex utility in the markup — its !important
+   would force !important onto the visibility rules below, which the CI stylelint
+   forbids). Disabled (hidden) templates stay in the DOM; the show-disabled toggle
+   reveals them. The search-filter rule comes last with the highest specificity, so a
+   revealed row that misses the query still hides. */
+.local-dimensions-central-plans [data-region='template-rows'] .local-dimensions-central-row {
+    display: flex;
+    align-items: center;
 }
 
-.local-dimensions-central-plans .show-disabled .local-dimensions-central-plan-hidden {
-    display: flex !important;
+.local-dimensions-central-plans [data-region='template-rows'] .local-dimensions-central-plan-hidden {
+    display: none;
+}
+
+.local-dimensions-central-plans [data-region='template-rows'].show-disabled .local-dimensions-central-plan-hidden {
+    display: flex;
     opacity: 0.75;
 }
 
-.local-dimensions-central-plans .local-dimensions-central-row.local-dimensions-central-plan-filtered {
-    display: none !important;
+.local-dimensions-central-plans [data-region='template-rows'] .local-dimensions-central-row.local-dimensions-central-plan-filtered {
+    display: none;
 }
 
 /* Accent chip (competency count, filter tags) and the tag-remove button inside it. */

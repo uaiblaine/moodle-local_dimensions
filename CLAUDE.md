@@ -77,6 +77,19 @@ single quotes, short hex, and `selector-class-pattern ^[a-z0-9\-]+$`. The repo's
 own `package.json` has only stylelint devDeps — **don't** run `npm run build`
 here; the canonical artefacts come from Moodle's Gruntfile.
 
+CI's stylelint is **Moodle's own config** — stricter than `.stylelintrc.json`
+and not reproducible by the local `npx stylelint` run. Two of its rules must be
+pre-empted at write time:
+
+- `declaration-no-important` — never write `!important`. When a Bootstrap
+  utility in the markup (`.d-flex`, `.d-block` — both `!important`) would fight
+  a `display` you need to toggle, drop the utility from the template and own
+  the property in a plugin class instead (see the plan-row visibility rules).
+- `csstree/validator` — rejects property values its (older) grammar doesn't
+  know: `clamp()`/`min()`/`max()` in `height`-like properties fail with
+  "Invalid value". Use plain `height` + `min-height`/`max-height` pairs;
+  `calc()` is accepted.
+
 ### Test deploy / dev loop
 
 Deployment is a **manual zip install** on a test server. The zip is produced by
@@ -147,7 +160,8 @@ templates/                   Mustache (server-rendered UI)
 amd/src/                     Plain AMD modules (define([], …)) — NOT Preact/React
 amd/build/                   Committed minified output (grunt) — keep in sync
 lang/{en,pt_br}/             English + Brazilian Portuguese, both kept in sync
-tests/                       PHPUnit (currently observer_test.php only)
+tests/                       PHPUnit (observer, helper_* et al) + behat/
+                             (hub smoke-test .features + step definitions)
 ```
 
 ## Architecture gotchas
@@ -302,6 +316,20 @@ Hard-won:
   not the word "Confirmation".
 - **Checkbox:** the `"checkbox"` named selector needs a real `<label>` (for/wrapping),
   **not** `aria-label`.
+- **Progressive-disclosure UI:** controls inside dropdown menus or collapsed panels
+  exist in the DOM but are **not interactable** — the step dies with
+  `ElementNotInteractableException` (no retry). Open the container first: the ⋯
+  overflow menu ("More actions"), a row kebab ("Actions" scoped to the
+  `"list_item"`), the "Add competency" panel, the "Add to filter" picker. After
+  any pane reload (add/remove/edit) collapsed panels **re-collapse** — re-open
+  before the next interaction, and put a `Then I should see` barrier after the
+  reload so the click doesn't race the re-render.
+- **Icon-only buttons:** give them an `aria-label`; the `"button"` named selector
+  matches it (Moodle 3.11+). Disambiguate per-row toggles by scoping to the row's
+  `"list_item"`.
+- **Reworking a tab's UI breaks its `.feature` steps** — grep `tests/behat/` for
+  every label/button you move, rename or collapse, and fix the scenarios in the
+  same commit (this cost a full CI round on the Plans-tab redesign).
 - Don't Behat tree expand / infinite scroll / shift-select / drag-drop (headless-fragile)
   — cover them in PHPUnit at the data layer.
 
