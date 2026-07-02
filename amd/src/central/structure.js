@@ -844,11 +844,44 @@ const openNodeMoveModal = async(pane, node) => {
 };
 
 /**
- * Drag-and-drop reordering of tree nodes among their same-parent siblings. The drag
- * starts from the grip that appears on row hover; the node (with its subtree) is
- * live-repositioned at the pointer's midpoint, and the drop is persisted as one
- * batched request. Reparenting is out of scope — hovering nodes of another branch
- * is ignored (use Edit's parent select for that).
+ * Reparent a node (indent under a new parent, or outdent to the framework root).
+ * The level change cascades indentation and taxonomy through the whole subtree, so
+ * a server re-render is the only honest refresh: the pane reloads and the moved
+ * node is revealed (branch expanded, selected, flashed) at its new location.
+ * Core appends the node at the end of the new parent's children.
+ *
+ * @param {HTMLElement} pane
+ * @param {HTMLElement} node The dragged [data-node] wrapper.
+ * @param {HTMLElement|null} parentnode The new parent node, or null for the root level.
+ * @return {Promise<void>}
+ */
+const reparentNode = async(pane, node, parentnode) => {
+    const row = node.querySelector(SELECTORS.row);
+    const id = Number(row.dataset.id);
+    // Ancestor chain of the destination (root -> new parent) for the post-reload reveal.
+    const pathids = [];
+    let ancestor = parentnode;
+    while (ancestor) {
+        pathids.unshift(Number(ancestor.dataset.node));
+        ancestor = ancestor.parentElement.closest(SELECTORS.node);
+    }
+    await Ajax.call([{
+        methodname: 'core_competency_set_parent_competency',
+        args: {competencyid: id, parentid: parentnode ? Number(parentnode.dataset.node) : 0},
+    }])[0];
+    await reloadPane(pane);
+    const fresh = document.querySelector(SELECTORS.region);
+    if (fresh) {
+        await revealNode(fresh, id, pathids);
+    }
+};
+
+/**
+ * Drag-and-drop of tree nodes, level-aware. The drag starts from the grip that
+ * appears on row hover and the node travels with its subtree. Three drop gestures:
+ * the top/bottom edges of a same-parent sibling reorder in place (persisted as one
+ * batched request); the middle of any row indents the node as that row's child;
+ * the tree's empty space outdents it back to the root level.
  *
  * @param {HTMLElement} region
  * @param {HTMLElement} pane
@@ -860,6 +893,18 @@ const initTreeDrag = (region, pane) => {
     }
     let dragged = null;
     let startindex = -1;
+    /** @type {HTMLElement|String|null} New parent node, 'root', or null for sibling reorder. */
+    let dropinto = null;
+    let highlighted = null;
+
+    const clearDropHints = () => {
+        if (highlighted) {
+            highlighted.classList.remove('local-dimensions-central-drop-target');
+            highlighted = null;
+        }
+        tree.classList.remove('local-dimensions-central-drop-root');
+        dropinto = null;
+    };
 
     // The node only becomes draggable while the pointer holds its grip.
     tree.addEventListener('mousedown', (event) => {
@@ -895,15 +940,64 @@ const initTreeDrag = (region, pane) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
         const over = event.target.closest(SELECTORS.node);
-        // Same-parent constraint: reordering only, never reparenting.
-        if (!over || over === dragged || over.parentElement !== dragged.parentElement) {
+        const draggedrow = dragged.querySelector(SELECTORS.row);
+
+        if (!over) {
+            // Tree whitespace: outdent back to the root level (no-op for a root node).
+            clearDropHints();
+            if (draggedrow && draggedrow.dataset.parentid !== '0') {
+                dropinto = 'root';
+                tree.classList.add('local-dimensions-central-drop-root');
+            }
             return;
         }
-        const rect = over.getBoundingClientRect();
-        if (event.clientY - rect.top > rect.height / 2) {
-            over.after(dragged);
-        } else {
-            over.before(dragged);
+        if (over === dragged || dragged.contains(over)) {
+            clearDropHints();
+            return;
+        }
+
+        // Zones are measured on the row line only; hovering an expanded node's children
+        // area resolves to the child nodes themselves.
+        const line = over.querySelector(':scope > .d-flex');
+        if (!line) {
+            return;
+        }
+        const rect = line.getBoundingClientRect();
+        if (event.clientY < rect.top || event.clientY > rect.bottom) {
+            return;
+        }
+        const ratio = (event.clientY - rect.top) / rect.height;
+
+        if (ratio < 0.3 || ratio > 0.7) {
+            // Edge zones: live reorder, same-parent siblings only.
+            clearDropHints();
+            if (over.parentElement !== dragged.parentElement) {
+                return;
+            }
+            if (ratio < 0.3) {
+                over.before(dragged);
+            } else {
+                over.after(dragged);
+            }
+            return;
+        }
+
+        // Middle zone: indent as a child of the hovered node (no-op on the current parent).
+        if (draggedrow && Number(draggedrow.dataset.parentid) === Number(over.dataset.node)) {
+            clearDropHints();
+            return;
+        }
+        if (highlighted !== line) {
+            clearDropHints();
+            highlighted = line;
+            line.classList.add('local-dimensions-central-drop-target');
+        }
+        dropinto = over;
+    });
+
+    tree.addEventListener('dragleave', (event) => {
+        if (dragged && !tree.contains(event.relatedTarget)) {
+            clearDropHints();
         }
     });
 
@@ -917,6 +1011,12 @@ const initTreeDrag = (region, pane) => {
         dragged = null;
         node.classList.remove('local-dimensions-central-plan-dragging');
         node.removeAttribute('draggable');
+        const target = dropinto;
+        clearDropHints();
+        if (target) {
+            reparentNode(pane, node, target === 'root' ? null : target).catch(Notification.exception);
+            return;
+        }
         const endindex = nodeSiblings(node).indexOf(node);
         if (startindex >= 0 && endindex >= 0) {
             persistNodeMove(pane, node, startindex, endindex);
@@ -924,28 +1024,43 @@ const initTreeDrag = (region, pane) => {
     });
 };
 
+/** @type {Object} Usage-modal section -> lang key of its title (also the counter label). */
+const USAGE_SECTIONS = {
+    courses: 'managecompetencies_linkedcourses',
+    activities: 'managecompetencies_linkedactivities',
+    templates: 'central_structure_linkedplans',
+};
+
 /**
- * Fetch and show where the active competency is used: linked courses, activities
- * (each labelled with its course) and the learning plan templates bundling it.
+ * Fetch and show one usage list for the active competency, matching the counter the
+ * user clicked: linked courses, linked activities (each labelled with its course) or
+ * the learning plan templates bundling it. The web service is shared; only the
+ * clicked section is rendered.
  *
  * @param {HTMLElement} row The active tree row.
+ * @param {String} section 'courses', 'activities' or 'templates'.
  * @return {Promise<void>}
  */
-const openUsageModal = async(row) => {
+const openUsageModal = async(row, section) => {
+    const labelkey = USAGE_SECTIONS[section] ? section : 'courses';
     const usage = await Ajax.call([{
         methodname: 'local_dimensions_competency_usage',
         args: {competencyid: Number(row.dataset.id)},
     }])[0];
     const {html} = await Templates.renderForPromise('local_dimensions/central/competency_usage_modal', {
+        showcourses: labelkey === 'courses',
         hascourses: usage.courses.length > 0,
         courses: usage.courses,
+        showactivities: labelkey === 'activities',
         hasactivities: usage.activities.length > 0,
         activities: usage.activities,
+        showtemplates: labelkey === 'templates',
         hastemplates: usage.templates.length > 0,
         templates: usage.templates,
     });
     await Modal.create({
-        title: getString('central_usage_title', 'local_dimensions', row.dataset.name || ''),
+        title: getString(USAGE_SECTIONS[labelkey], 'local_dimensions')
+            .then((label) => label + ' — ' + (row.dataset.name || '')),
         body: html,
         large: true,
         show: true,
@@ -963,8 +1078,9 @@ const openUsageModal = async(row) => {
  * @return {void}
  */
 const handleDetailAction = (region, pane, event, frameworkid) => {
-    if (event.target.closest(SELECTORS.showUsage)) {
-        openUsageModal(activeRow).catch(Notification.exception);
+    const usagebutton = event.target.closest(SELECTORS.showUsage);
+    if (usagebutton) {
+        openUsageModal(activeRow, usagebutton.dataset.usage).catch(Notification.exception);
     } else if (event.target.closest(SELECTORS.edit)) {
         openForm(pane, {
             competencyframeworkid: frameworkid,

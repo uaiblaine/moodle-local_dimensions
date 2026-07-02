@@ -194,7 +194,6 @@ $string['central_searchcompetency'] = 'Filtrar planos por competência';
 $string['central_structure_linkedplans'] = 'Planos de aprendizagem vinculados';
 $string['central_usage_noactivities'] = 'Nenhuma atividade vinculada.';
 $string['central_usage_noplans'] = 'Não está em nenhum plano de aprendizagem.';
-$string['central_usage_title'] = 'Vínculos — {$a}';
 $string['chipfilterheading'] = 'Filtros por campos personalizados';
 $string['chipfilterheading_desc'] = 'Escolha quais campos personalizados aparecem como chips de filtro nas páginas visualização por competência e visualização por plano. Informe uma lista de shortnames separados por vírgula.';
 $string['column_duedate'] = 'Data de entrega';

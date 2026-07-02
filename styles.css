@@ -5656,6 +5656,20 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     border-radius: 0.25rem;
 }
 
+/* Level-aware drop hints on the Structure tree: hovering a row's middle makes the
+   dragged competency its child; hovering the tree whitespace returns it to root. */
+.local-dimensions-central-drop-target {
+    outline: 2px dashed var(--bs-primary, #0f6cbf);
+    outline-offset: -2px;
+    border-radius: 0.25rem;
+    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+}
+
+.local-dimensions-central-tree.local-dimensions-central-drop-root {
+    outline: 2px dashed var(--bs-primary, #0f6cbf);
+    outline-offset: -4px;
+}
+
 @media (max-width: 991.98px) {
     .local-dimensions-central-structure-body,
     .local-dimensions-central-plans-body {
