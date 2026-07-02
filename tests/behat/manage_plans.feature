@@ -37,6 +37,7 @@ Feature: Manage learning plans from the Competency hub
     When I visit "/local/dimensions/central.php"
     And I click on "Learning plans" "link"
     And I click on "Disposable" "button"
-    And I click on "Delete" "button"
+    And I click on "More actions" "button"
+    And I click on "Delete template" "button"
     And I click on "Delete" "button" in the "Delete" "dialogue"
     Then I should not see "Disposable"

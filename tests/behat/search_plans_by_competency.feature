@@ -26,6 +26,7 @@ Feature: Filter learning plans by competency in the Competency hub
     When I visit "/local/dimensions/central.php"
     And I click on "Learning plans" "link"
     And I should see "Plan without"
+    And I click on "Add to filter" "button"
     And I set the field "Filter plans by competency" to "Alpha competency"
     Then I should see "Plan with"
     And I should not see "Plan without"
