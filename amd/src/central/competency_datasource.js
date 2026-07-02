@@ -39,7 +39,21 @@ export const transport = (selector, query, success, failure) => {
 };
 
 /**
- * Map the raw items to autocomplete {value, label} pairs (label carries the framework tag).
+ * HTML-escape a plain-text fragment for use inside a suggestion label.
+ *
+ * @param {String} text
+ * @return {String}
+ */
+const escapeHtml = (text) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+};
+
+/**
+ * Map the raw items to autocomplete {value, label} pairs. The label follows the
+ * Structure-tab search pattern: competency name, idnumber in monospace, and a muted
+ * breadcrumb line with the origin framework tag plus the ancestor path.
  * Items whose id is listed in the originating select's data-exclude attribute are dropped
  * (used by the add picker to hide competencies already on the template).
  *
@@ -53,10 +67,15 @@ export const processResults = (selector, results) => {
     const excluded = new Set(raw.split(',').filter((id) => id !== ''));
     return results
         .filter((competency) => !excluded.has(String(competency.id)))
-        .map((competency) => ({
-            value: competency.id,
-            label: competency.frameworktag
-                ? `${competency.shortname} · ${competency.frameworktag}`
-                : competency.shortname,
-        }));
+        .map((competency) => {
+            let label = `<span class="fw-medium">${escapeHtml(competency.shortname)}</span>`;
+            if (competency.idnumber) {
+                label += ` <span class="font-monospace small text-muted">${escapeHtml(competency.idnumber)}</span>`;
+            }
+            const trail = [competency.frameworktag, competency.path].filter(Boolean).join(' / ');
+            if (trail) {
+                label += `<div class="small text-muted">${escapeHtml(trail)}</div>`;
+            }
+            return {value: competency.id, label: label};
+        });
 };

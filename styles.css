@@ -5409,13 +5409,6 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     background: var(--local-dimensions-manage-primary-line);
 }
 
-/* Cap the Competency hub plan-detail competency list so long plans scroll inside the card,
-   not the whole page. */
-.local-dimensions-central-complist {
-    max-height: 60vh;
-    overflow-y: auto;
-}
-
 /* The Manage participants modal is data-dense (Cohorts / Users tabs with grids); widen it
    responsively, scoped to our dialog so other site modals keep their default size. */
 @media (min-width: 992px) {
@@ -5496,17 +5489,35 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     align-items: start;
 }
 
-.local-dimensions-central-structure-body.resizing {
+/* Learning plans tab — same master-detail grid, but the divider starts at 50/50 and
+   the whole body has one fixed working height so both panes always match vertically
+   (design: min 320px, max 60vh capped at 680px). */
+.local-dimensions-central-plans-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-plans-detail-width, calc(50% - 0.25rem));
+    height: clamp(320px, 60vh, 680px);
+}
+
+.local-dimensions-central-plans-list-pane,
+.local-dimensions-central-plans-detail-pane {
+    min-height: 0;
+}
+
+.local-dimensions-central-structure-body.resizing,
+.local-dimensions-central-plans-body.resizing {
     cursor: col-resize;
     user-select: none;
 }
 
 .local-dimensions-central-structure-tree-pane,
-.local-dimensions-central-structure-detail-pane {
+.local-dimensions-central-structure-detail-pane,
+.local-dimensions-central-plans-list-pane,
+.local-dimensions-central-plans-detail-pane {
     min-width: 0;
 }
 
-.local-dimensions-central-structure-resizer {
+.local-dimensions-central-structure-resizer,
+.local-dimensions-central-plans-resizer {
     position: relative;
     align-self: stretch;
     width: 0.5rem;
@@ -5516,7 +5527,8 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     cursor: col-resize;
 }
 
-.local-dimensions-central-structure-resizer::before {
+.local-dimensions-central-structure-resizer::before,
+.local-dimensions-central-plans-resizer::before {
     content: '';
     position: absolute;
     top: 50%;
@@ -5529,16 +5541,118 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
 }
 
 .local-dimensions-central-structure-resizer:hover::before,
-.local-dimensions-central-structure-resizer:focus::before {
+.local-dimensions-central-structure-resizer:focus::before,
+.local-dimensions-central-plans-resizer:hover::before,
+.local-dimensions-central-plans-resizer:focus::before {
     background: var(--bs-primary, #0f6cbf);
 }
 
+/* Only the list sections scroll: the plan list on the left, and the competency list
+   between the fixed header (plan name + counts) and the fixed action footer on the
+   right. min-height: 0 lets the flex card section shrink below its content height. */
+.local-dimensions-central-plans-scroll {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* Disabled (hidden) templates stay in the DOM; the show-disabled toggle reveals them.
+   The row buttons carry Bootstrap's .d-flex (display !important), so the visibility
+   rules need !important too. The search-filter rule comes last and carries the same
+   specificity as the reveal rule, so a revealed row that misses the query still hides. */
+.local-dimensions-central-plans .local-dimensions-central-plan-hidden {
+    display: none !important;
+}
+
+.local-dimensions-central-plans .show-disabled .local-dimensions-central-plan-hidden {
+    display: flex !important;
+    opacity: 0.75;
+}
+
+.local-dimensions-central-plans .local-dimensions-central-row.local-dimensions-central-plan-filtered {
+    display: none !important;
+}
+
+/* Accent chip (competency count, filter tags) and the tag-remove button inside it. */
+.local-dimensions-central-chip-accent {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+    color: var(--bs-primary-text-emphasis, #0f6cbf);
+    font-weight: 500;
+}
+
+.local-dimensions-central-chip-remove {
+    color: inherit;
+    line-height: 1;
+}
+
+/* Optional per-competency metadata on the plan detail (taxonomy / idnumber / path),
+   toggled by show-* classes on the list — same pattern as the Structure tree. */
+.local-dimensions-central-plans .local-dimensions-central-tax,
+.local-dimensions-central-plans .local-dimensions-central-id,
+.local-dimensions-central-plans .local-dimensions-central-path {
+    display: none;
+    font-weight: 400;
+}
+
+.local-dimensions-central-plans [data-region='competency-items'].show-tax .local-dimensions-central-tax,
+.local-dimensions-central-plans [data-region='competency-items'].show-id .local-dimensions-central-id {
+    display: inline-block;
+}
+
+.local-dimensions-central-plans [data-region='competency-items'].show-path .local-dimensions-central-path {
+    display: block;
+}
+
+/* Drag-to-reorder: the grip only fades in while the row is hovered (file-tree style);
+   the dragged row dims until it is dropped. */
+.local-dimensions-central-plan-drag {
+    flex: none;
+    width: 1.25rem;
+    text-align: center;
+    color: var(--bs-secondary-color, #6a737b);
+    opacity: 0;
+    cursor: grab;
+    transition: opacity 0.15s ease-in-out;
+}
+
+.local-dimensions-central-plan-drag:active {
+    cursor: grabbing;
+}
+
+.local-dimensions-central-plans [data-region='competency-items'] > li:hover {
+    background-color: var(--bs-secondary-bg, rgba(0, 0, 0, 0.04));
+    border-radius: 0.25rem;
+}
+
+.local-dimensions-central-plans [data-region='competency-items'] > li:hover .local-dimensions-central-plan-drag,
+.local-dimensions-central-plan-drag:focus-visible {
+    opacity: 1;
+}
+
+.local-dimensions-central-plan-dragging {
+    opacity: 0.45;
+    background-color: var(--bs-secondary-bg, rgba(0, 0, 0, 0.04));
+    border-radius: 0.25rem;
+}
+
 @media (max-width: 991.98px) {
-    .local-dimensions-central-structure-body {
+    .local-dimensions-central-structure-body,
+    .local-dimensions-central-plans-body {
         grid-template-columns: 1fr;
     }
 
-    .local-dimensions-central-structure-resizer {
+    /* Stacked panes size to their own content; each list still scrolls internally. */
+    .local-dimensions-central-plans-body {
+        height: auto;
+    }
+
+    .local-dimensions-central-plans-scroll {
+        max-height: 50vh;
+    }
+
+    .local-dimensions-central-structure-resizer,
+    .local-dimensions-central-plans-resizer {
         display: none;
     }
 }

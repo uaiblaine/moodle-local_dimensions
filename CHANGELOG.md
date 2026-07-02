@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Plans tab to-be (design screen `pln-plans`)** — same master-detail, cleaner:
+  - Search plans by name **or idnumber** (`local_dimensions_template_idnumber`), client-side over the rendered rows, with a no-results notice.
+  - **Multi-competency filter** as removable tags (intersection semantics: a template must contain *every* tagged competency), plus "clear filter". The picker autocomplete stays hidden until "Add to filter" is clicked.
+  - **Show disabled plans** toggle (managers only — non-managers never receive hidden templates). Choice persists per session; disabled rows stay in the DOM and are revealed at reduced opacity. This also fixes the previous behaviour where hidden templates were never listed at all (`api::list_templates` was called with `$onlyvisible = true`, making the mustache "hidden" badge dead code).
+  - **Resizable panes** via a shared draggable divider starting at 50/50 (`central/pane_resizer` — extracted from the Structure tab implementation, now used by both tabs). Both panes keep a fixed working height (min 320px, max 60vh capped at 680px) and scroll internally.
+  - Detail pane surfaces **enabled state, due date, learner-plan count and cohort count** (single grouped SQL each) next to the competency count.
+  - Per-competency row actions (move up/down, remove) collapsed into a **kebab menu**; template actions become "Edit details", "Add competency", "Participants" and an overflow menu with **Duplicate** (new — `core_competency_duplicate_template`, the copy is auto-selected) and Delete (the shared explicit-consequence modal).
+  - Auto-selection prefers the first *visible* template so the detail matches the default list view.
+  - Both competency pickers (filter + add-to-plan) render suggestions in the Structure-search pattern: name, idnumber in monospace, and a muted breadcrumb line (framework tag / ancestor path) — `local_dimensions_search_competencies` now returns the `path` via `helper::competency_breadcrumbs()`.
+  - Panes always match vertically: the grid body owns one fixed height (`clamp(320px, 60vh, 680px)`); in the detail card only the competency list scrolls, with the header (plan name + counts) and the action bar pinned as a fixed footer. The divider can shrink the plan list down to ~200px (the competency side usually needs the room).
+  - Per-competency kebab gains **Edit competency**, opening the standard competency modal (`competency_dynamic_form`; each row carries its framework id so the form resolves the right context).
+  - **Display options** on the plan detail, mirroring the Structure tab: a gear next to the plan title expands a (collapsed by default) panel with "show taxonomy", "show paths" and "show identifiers" switches; choices persist per session and apply as `show-*` classes on the competency list. Taxonomy comes from `helper::get_taxonomy_at_level()` at each competency's level, paths from `helper::competency_breadcrumbs()`.
+  - **Drag-and-drop reordering** of the plan's competencies: a grip handle fades in on row hover (file-tree style); the row live-repositions while dragging and a single `core_competency_reorder_template_competency` call persists the drop.
+  - **Move to position modal** for long lists (core-like): a plain click on the grip (or the kebab item) opens a `core/modal_save_cancel` with a numbered select of every position, annotated with the competency currently there; saving issues one reorder call. This is also the keyboard-accessible path (the grip is a real focusable button revealed on focus).
+  - **Reorders are applied in place** (kebab up/down, drag-drop and the position modal): no pane reload, the moved row flashes briefly and the first/last menu states are recomputed — long lists keep their scroll position. Flows that still reload the pane (add/remove/edit competency, plan selection) now restore the scroll of both lists afterwards.
+
 ### Fixed
 - **Custom field data leaked on competency/template deletion (Moodle 5.1+).** Core destroys the instance context before firing the `*_deleted` event, so the observer's `delete_instance()` cleanup silently found nothing. Added a context-independent sweep that removes `customfield_data` by instance id and area.
 - Removed a static MUC loader handle (`self::$cache`) from the four cache helper classes; it survived PHPUnit's `resetAfterTest()` and broke cache-invalidation tests (the core cache factory already memoises one loader per definition per request).

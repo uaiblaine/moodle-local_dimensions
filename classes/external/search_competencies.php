@@ -66,7 +66,7 @@ class search_competencies extends external_api {
      * @param string $query Search text.
      * @param int $limitfrom Offset.
      * @param int $limitnum Page size.
-     * @return array Keys: items (list of {id, shortname, idnumber, frameworktag}), total (int).
+     * @return array Keys: items (list of {id, shortname, idnumber, frameworktag, path}), total (int).
      */
     public static function execute(string $query, int $limitfrom = 0, int $limitnum = 25): array {
         global $DB;
@@ -108,14 +108,24 @@ class search_competencies extends external_api {
 
         $total = $DB->count_records_select('competency', $where, $selectparams);
 
-        $items = [];
         $records = $DB->get_records_select('competency', $where, $selectparams, 'shortname ASC', '*', $limitfrom, $limitnum);
+
+        // Ancestor breadcrumb per hit (root to parent), same shape the Structure search shows.
+        $pathsbyid = [];
         foreach ($records as $record) {
+            $pathsbyid[(int) $record->id] = $record->path;
+        }
+        $breadcrumbs = helper::competency_breadcrumbs($pathsbyid, $context);
+
+        $items = [];
+        foreach ($records as $record) {
+            $crumbs = $breadcrumbs[(int) $record->id] ?? ['path' => ''];
             $items[] = [
                 'id' => (int) $record->id,
                 'shortname' => format_string($record->shortname, true, ['context' => $context]),
                 'idnumber' => (string) $record->idnumber,
                 'frameworktag' => format_string($tags[(int) $record->competencyframeworkid] ?? '', true, ['context' => $context]),
+                'path' => $crumbs['path'],
             ];
         }
 
@@ -134,6 +144,7 @@ class search_competencies extends external_api {
                 'shortname' => new external_value(PARAM_TEXT, 'Competency short name'),
                 'idnumber' => new external_value(PARAM_RAW, 'Competency ID number'),
                 'frameworktag' => new external_value(PARAM_TEXT, 'Origin framework tag'),
+                'path' => new external_value(PARAM_TEXT, 'Ancestor breadcrumb (shortnames, root to parent)'),
             ])),
             'total' => new external_value(PARAM_INT, 'Total matches across all pages'),
         ]);
