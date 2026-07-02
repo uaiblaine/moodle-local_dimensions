@@ -5621,8 +5621,12 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
 
 /* Drag-to-reorder: the grip only fades in while the row is hovered (file-tree style);
    the dragged row dims until it is dropped. */
+/* The grip sits AFTER the row control in the DOM (its aria-label embeds the row name,
+   and Behat's name-based button clicks take the first document-order match) —
+   order: -1 still paints it at the left edge of the flex row. */
 .local-dimensions-central-plan-drag {
     flex: none;
+    order: -1;
     width: 1.25rem;
     text-align: center;
     color: var(--bs-secondary-color, #6a737b);
