@@ -25,6 +25,7 @@
 import Ajax from 'core/ajax';
 import ModalForm from 'core_form/modalform';
 import ModalDeleteCancel from 'core/modal_delete_cancel';
+import ModalSaveCancel from 'core/modal_save_cancel';
 import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
@@ -32,32 +33,191 @@ import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {show as showCompetencyBrowser} from 'local_dimensions/central/competency_browser';
 import {show as showParticipants} from 'local_dimensions/central/participants_manager';
+import {initPaneResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
 const FORM_CLASS = 'local_dimensions\\form\\template_dynamic_form';
+const COMPETENCY_FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
 const DATASOURCE = 'local_dimensions/central/competency_datasource';
+
+/** @type {String} sessionStorage key for the show-disabled-plans choice. */
+const SHOWDISABLED_KEY = 'local_dimensions_plans_showdisabled';
+
+/** @type {String} sessionStorage key for the per-session display-toggle choice. */
+const DISPLAY_KEY = 'local_dimensions_plans_display';
+
+/** @type {Object} Map of display-toggle key to the CSS class it controls on the list. */
+const DISPLAY_CLASSES = {tax: 'show-tax', path: 'show-path', id: 'show-id'};
 
 const SELECTORS = {
     region: '[data-region="plans"]',
     competencySearch: '[data-region="competency-search"]',
     competencyAdd: '[data-region="competency-add"]',
+    filterPicker: '[data-region="competency-filter-picker"]',
+    filterAddButton: '[data-action="add-filter-competency"]',
+    planSearch: '[data-region="plan-search-input"]',
+    templateRows: '[data-region="template-rows"]',
+    templateRow: '[data-region="template-row"]',
+    searchEmpty: '[data-region="plan-search-empty"]',
+    addPanel: '[data-region="add-panel"]',
+    plansBody: '[data-region="plans-body"]',
+    plansResizer: '[data-region="plans-resizer"]',
+    detailPane: '[data-region="plan-detail"]',
+    showDisabled: '[data-action="toggle-disabled"]',
+    displayPanel: '[data-region="display-options-panel"]',
+    displayToggle: '[data-display-toggle]',
+    competencyItems: '[data-region="competency-items"]',
+    competencyList: '[data-region="competency-list"]',
+    dragHandle: '[data-region="drag-handle"]',
+    compName: '[data-region="comp-name"]',
 };
 
 /**
- * Open the template modal form and refresh the tab on success.
+ * Reload the pane, restoring the scroll position of the given scroll regions so a
+ * refresh does not jump long lists back to the top.
  *
  * @param {HTMLElement} pane
+ * @param {String[]} [selectors] Scroll containers to preserve; defaults to both lists.
+ * @return {Promise<void>}
+ */
+const reloadKeepingScroll = async(pane, selectors) => {
+    const regions = selectors || [SELECTORS.templateRows, SELECTORS.competencyList];
+    const positions = {};
+    regions.forEach((selector) => {
+        const el = pane.querySelector(selector);
+        if (el) {
+            positions[selector] = el.scrollTop;
+        }
+    });
+    await reloadPane(pane);
+    regions.forEach((selector) => {
+        const el = pane.querySelector(selector);
+        if (el && positions[selector]) {
+            el.scrollTop = positions[selector];
+        }
+    });
+};
+
+/**
+ * Briefly flash a row so an in-place change is visible where the user is looking.
+ *
+ * @param {HTMLElement} row
+ */
+const flashRow = (row) => {
+    row.animate(
+        [{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}],
+        {duration: 1500}
+    );
+};
+
+/**
+ * Recompute the first/last disabled state of every row's move up/down menu items
+ * after an in-place reorder.
+ *
+ * @param {HTMLElement} list The competency items container.
+ */
+const refreshMoveState = (list) => {
+    const rows = [...list.querySelectorAll('[data-competency]')];
+    rows.forEach((li, index) => {
+        const up = li.querySelector('[data-action="move-competency-up"]');
+        const down = li.querySelector('[data-action="move-competency-down"]');
+        if (up) {
+            up.disabled = index === 0;
+        }
+        if (down) {
+            down.disabled = index === rows.length - 1;
+        }
+    });
+};
+
+/**
+ * Parse the competency-filter CSV from the pane dataset into ids.
+ *
+ * @param {HTMLElement} pane
+ * @return {Number[]}
+ */
+const filterIds = (pane) => (pane.dataset.competencyids || '')
+    .split(',')
+    .map((id) => Number(id))
+    .filter((id) => id > 0);
+
+/**
+ * Filter the template rows against the search box (name + idnumber haystack) and
+ * toggle the no-results notice. Disabled templates only count as visible when the
+ * show-disabled toggle has revealed them.
+ *
+ * @param {HTMLElement} region
+ */
+const applyPlanSearch = (region) => {
+    const input = region.querySelector(SELECTORS.planSearch);
+    const rows = region.querySelector(SELECTORS.templateRows);
+    const query = input ? input.value.trim().toLowerCase() : '';
+    const showdisabled = !!rows && rows.classList.contains('show-disabled');
+    let visible = 0;
+    region.querySelectorAll(SELECTORS.templateRow).forEach((row) => {
+        const match = !query || (row.dataset.search || '').indexOf(query) !== -1;
+        row.classList.toggle('local-dimensions-central-plan-filtered', !match);
+        const disabled = row.classList.contains('local-dimensions-central-plan-hidden');
+        if (match && (showdisabled || !disabled)) {
+            visible++;
+        }
+    });
+    const empty = region.querySelector(SELECTORS.searchEmpty);
+    if (empty) {
+        empty.hidden = visible !== 0;
+    }
+};
+
+/**
+ * Wire the "show disabled plans" toggle: the choice persists per session and is
+ * applied as a class on the rows container (the disabled rows stay in the DOM).
+ *
+ * @param {HTMLElement} region
+ */
+const initShowDisabled = (region) => {
+    const toggle = region.querySelector(SELECTORS.showDisabled);
+    const rows = region.querySelector(SELECTORS.templateRows);
+    if (!toggle || !rows) {
+        return;
+    }
+    let show = toggle.checked;
+    try {
+        const stored = window.sessionStorage.getItem(SHOWDISABLED_KEY);
+        if (stored !== null) {
+            show = stored === '1';
+        }
+    } catch (e) {
+        // Storage unavailable; fall back to the server-rendered checkbox state.
+    }
+    toggle.checked = show;
+    rows.classList.toggle('show-disabled', show);
+    toggle.addEventListener('change', () => {
+        try {
+            window.sessionStorage.setItem(SHOWDISABLED_KEY, toggle.checked ? '1' : '0');
+        } catch (e) {
+            // Storage unavailable; the choice simply does not persist.
+        }
+        rows.classList.toggle('show-disabled', toggle.checked);
+        applyPlanSearch(region);
+    });
+};
+
+/**
+ * Open a modal form (template or competency) and refresh the tab on success.
+ *
+ * @param {HTMLElement} pane
+ * @param {String} formclass Fully-qualified dynamic-form class.
  * @param {Object} args
  * @param {String} titlekey
  * @param {String} titlecomponent
  */
-const openForm = async(pane, args, titlekey, titlecomponent) => {
+const openForm = async(pane, formclass, args, titlekey, titlecomponent) => {
     const form = new ModalForm({
-        formClass: FORM_CLASS,
+        formClass: formclass,
         args,
         modalConfig: {title: await getString(titlekey, titlecomponent)},
     });
-    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadPane(pane).catch(Notification.exception));
+    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadKeepingScroll(pane).catch(Notification.exception));
     form.show();
 };
 
@@ -138,7 +298,263 @@ const removeCompetency = async(pane, id, name) => {
         methodname: 'core_competency_remove_competency_from_template',
         args: {templateid: Number(pane.dataset.templateid), competencyid: competencyid},
     }])[0];
-    reloadPane(pane).catch(Notification.exception);
+    reloadKeepingScroll(pane).catch(Notification.exception);
+};
+
+/**
+ * Read the persisted display-toggle choice from sessionStorage.
+ *
+ * @return {Object} Map of toggle key to boolean; empty when nothing is stored.
+ */
+const readDisplayPrefs = () => {
+    try {
+        return JSON.parse(window.sessionStorage.getItem(DISPLAY_KEY) || 'null') || {};
+    } catch (e) {
+        return {};
+    }
+};
+
+/**
+ * Persist the display-toggle choice to sessionStorage.
+ *
+ * @param {Object} prefs Map of toggle key to boolean.
+ */
+const writeDisplayPrefs = (prefs) => {
+    try {
+        window.sessionStorage.setItem(DISPLAY_KEY, JSON.stringify(prefs));
+    } catch (e) {
+        // Storage unavailable (e.g. private mode) — the toggles simply do not persist.
+    }
+};
+
+/**
+ * Apply the stored display prefs to the checkboxes and the competency list classes,
+ * so the choice survives a pane reload (mirrors the Structure tab).
+ *
+ * @param {HTMLElement} region
+ */
+const applyDisplayPrefs = (region) => {
+    const list = region.querySelector(SELECTORS.competencyItems);
+    if (!list) {
+        return;
+    }
+    const stored = readDisplayPrefs();
+    region.querySelectorAll(SELECTORS.displayToggle).forEach((cb) => {
+        const key = cb.dataset.displayToggle;
+        const on = Object.prototype.hasOwnProperty.call(stored, key) ? Boolean(stored[key]) : cb.checked;
+        cb.checked = on;
+        list.classList.toggle(DISPLAY_CLASSES[key], on);
+    });
+};
+
+/**
+ * Wire the display-option switches: each change persists the choice and reapplies
+ * the show-* classes on the competency list.
+ *
+ * @param {HTMLElement} region
+ */
+const initDisplayOptions = (region) => {
+    region.querySelectorAll(SELECTORS.displayToggle).forEach((cb) => {
+        cb.addEventListener('change', () => {
+            const prefs = readDisplayPrefs();
+            prefs[cb.dataset.displayToggle] = cb.checked;
+            writeDisplayPrefs(prefs);
+            applyDisplayPrefs(region);
+        });
+    });
+    applyDisplayPrefs(region);
+};
+
+/**
+ * Drag-and-drop reordering of the plan's competencies. The drag starts from the grip
+ * handle that appears on row hover; while dragging the row is live-repositioned at the
+ * pointer's midpoint, and on release a single reorder web-service call persists the
+ * final position (the kebab move up/down stays as the keyboard-accessible path).
+ *
+ * @param {HTMLElement} region
+ * @param {HTMLElement} pane
+ */
+const initDragReorder = (region, pane) => {
+    const list = region.querySelector(SELECTORS.competencyItems);
+    if (!list || !pane) {
+        return;
+    }
+    let dragged = null;
+    let startorder = [];
+
+    // The row is only draggable while the pointer holds its grip, so text selection
+    // and accidental row drags stay untouched.
+    list.querySelectorAll(SELECTORS.dragHandle).forEach((handle) => {
+        const row = handle.closest('[data-competency]');
+        if (!row) {
+            return;
+        }
+        handle.addEventListener('mousedown', () => row.setAttribute('draggable', 'true'));
+        handle.addEventListener('mouseup', () => row.removeAttribute('draggable'));
+        handle.addEventListener('mouseleave', () => {
+            if (!dragged) {
+                row.removeAttribute('draggable');
+            }
+        });
+    });
+
+    list.addEventListener('dragstart', (event) => {
+        dragged = event.target.closest('[data-competency]');
+        if (!dragged) {
+            return;
+        }
+        startorder = [...list.querySelectorAll('[data-competency]')].map((li) => li.dataset.competency);
+        dragged.classList.add('local-dimensions-central-plan-dragging');
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', dragged.dataset.competency);
+    });
+
+    list.addEventListener('dragover', (event) => {
+        if (!dragged) {
+            return;
+        }
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        const over = event.target.closest('[data-competency]');
+        if (!over || over === dragged) {
+            return;
+        }
+        const rect = over.getBoundingClientRect();
+        if (event.clientY - rect.top > rect.height / 2) {
+            over.after(dragged);
+        } else {
+            over.before(dragged);
+        }
+    });
+
+    list.addEventListener('drop', (event) => event.preventDefault());
+
+    list.addEventListener('dragend', () => {
+        if (!dragged) {
+            return;
+        }
+        const row = dragged;
+        dragged = null;
+        row.classList.remove('local-dimensions-central-plan-dragging');
+        row.removeAttribute('draggable');
+        const neworder = [...list.querySelectorAll('[data-competency]')].map((li) => li.dataset.competency);
+        const id = row.dataset.competency;
+        const from = startorder.indexOf(id);
+        const to = neworder.indexOf(id);
+        if (from === to || from === -1 || to === -1) {
+            return;
+        }
+        // Core's reorder puts "from" right AFTER "to" when moving down and right BEFORE
+        // it when moving up — so the reference row is the new previous/next sibling.
+        const reference = to > from ? row.previousElementSibling : row.nextElementSibling;
+        if (!reference || !reference.dataset.competency) {
+            return;
+        }
+        Ajax.call([{
+            methodname: 'core_competency_reorder_template_competency',
+            args: {
+                templateid: Number(pane.dataset.templateid),
+                competencyidfrom: Number(id),
+                competencyidto: Number(reference.dataset.competency),
+            },
+        }])[0].then(() => {
+            // The DOM already sits in the final order; confirm in place, keep the scroll.
+            refreshMoveState(list);
+            flashRow(row);
+            return null;
+        }).catch((error) => {
+            Notification.exception(error);
+            // Restore the server's order so the preview does not lie about the state.
+            reloadKeepingScroll(pane).catch(() => null);
+        });
+    });
+};
+
+/**
+ * Open the "move to position" modal for a competency row: a numbered select of every
+ * position (annotated with the competency currently there). Saving issues one reorder
+ * web-service call and repositions the row in place — the practical path for long
+ * lists, and the keyboard-accessible one (drag-and-drop is pointer-only).
+ *
+ * @param {HTMLElement} pane
+ * @param {HTMLElement} region
+ * @param {HTMLElement} target The clicked handle or menu item, inside the row.
+ * @return {Promise<void>}
+ */
+const moveCompetencyTo = async(pane, region, target) => {
+    const list = region.querySelector(SELECTORS.competencyItems);
+    const row = target.closest('[data-competency]');
+    if (!list || !row) {
+        return;
+    }
+    const rows = [...list.querySelectorAll('[data-competency]')];
+    if (rows.length < 2) {
+        return;
+    }
+    const current = rows.indexOf(row);
+    const options = rows.map((li, index) => {
+        const name = li.querySelector(SELECTORS.compName);
+        return {
+            value: index,
+            label: (index + 1) + '. ' + (name ? name.textContent.trim() : ''),
+            selected: index === current,
+        };
+    });
+    const {html} = await Templates.renderForPromise('local_dimensions/central/move_competency_modal', {options: options});
+    const modal = await ModalSaveCancel.create({
+        title: getString('central_plans_moveto', 'local_dimensions'),
+        body: html,
+        show: true,
+        removeOnClose: true,
+    });
+    modal.getRoot().on(ModalEvents.save, () => {
+        const select = modal.getRoot()[0].querySelector('#local-dimensions-plans-move-position');
+        const targetindex = select ? Number(select.value) : current;
+        if (targetindex === current || !rows[targetindex]) {
+            return;
+        }
+        const reference = rows[targetindex];
+        Ajax.call([{
+            methodname: 'core_competency_reorder_template_competency',
+            args: {
+                templateid: Number(pane.dataset.templateid),
+                competencyidfrom: Number(row.dataset.competency),
+                competencyidto: Number(reference.dataset.competency),
+            },
+        }])[0].then(() => {
+            // Core lands the row after the occupant when moving down, before it when
+            // moving up — mirror that in place so the list matches without a reload.
+            if (targetindex > current) {
+                reference.after(row);
+            } else {
+                reference.before(row);
+            }
+            refreshMoveState(list);
+            flashRow(row);
+            return null;
+        }).catch((error) => {
+            Notification.exception(error);
+            reloadKeepingScroll(pane).catch(() => null);
+        });
+    });
+};
+
+/**
+ * Duplicate a template and select the copy once the tab refreshes.
+ *
+ * @param {HTMLElement} pane
+ * @param {String|Number} id
+ * @return {Promise<void>}
+ */
+const duplicateTemplate = async(pane, id) => {
+    const newtemplate = await Ajax.call([{
+        methodname: 'core_competency_duplicate_template',
+        args: {id: Number(id)},
+    }])[0];
+    if (newtemplate && newtemplate.id) {
+        pane.dataset.templateid = newtemplate.id;
+    }
+    await reloadPane(pane);
 };
 
 /**
@@ -166,7 +582,14 @@ const moveCompetency = async(pane, button, direction) => {
             competencyidto: Number(sibling.dataset.competency),
         },
     }])[0];
-    reloadPane(pane).catch(Notification.exception);
+    // In-place move: no pane reload, so long lists keep their scroll position.
+    if (direction === 'up') {
+        sibling.before(li);
+    } else {
+        sibling.after(li);
+    }
+    refreshMoveState(li.closest(SELECTORS.competencyItems));
+    flashRow(li);
 };
 
 /**
@@ -179,21 +602,82 @@ const moveCompetency = async(pane, button, direction) => {
 const ACTION_HANDLERS = {
     'select-template': (pane, region, target) => {
         pane.dataset.templateid = target.dataset.id;
-        reloadPane(pane).catch(Notification.exception);
+        // Keep the plan-list scroll; the detail shows new content so its scroll resets.
+        reloadKeepingScroll(pane, [SELECTORS.templateRows]).catch(Notification.exception);
     },
     'clear-competency': (pane) => {
-        pane.dataset.competencyid = 0;
+        pane.dataset.competencyids = '';
         reloadPane(pane).catch(Notification.exception);
+    },
+    'remove-filter-competency': (pane, region, target) => {
+        const removed = Number(target.dataset.id);
+        pane.dataset.competencyids = filterIds(pane).filter((id) => id !== removed).join(',');
+        reloadPane(pane).catch(Notification.exception);
+    },
+    'add-filter-competency': (pane, region) => {
+        const picker = region.querySelector(SELECTORS.filterPicker);
+        const button = region.querySelector(SELECTORS.filterAddButton);
+        if (!picker) {
+            return;
+        }
+        picker.hidden = !picker.hidden;
+        if (button) {
+            button.setAttribute('aria-expanded', picker.hidden ? 'false' : 'true');
+        }
+        if (!picker.hidden) {
+            const input = picker.querySelector('input');
+            if (input) {
+                input.focus();
+            }
+        }
+    },
+    'toggle-add': (pane, region, target) => {
+        const panel = region.querySelector(SELECTORS.addPanel);
+        if (!panel) {
+            return;
+        }
+        panel.hidden = !panel.hidden;
+        target.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+        if (!panel.hidden) {
+            const input = panel.querySelector('input');
+            if (input) {
+                input.focus();
+            }
+        }
+    },
+    'duplicate-template': (pane, region, target) =>
+        duplicateTemplate(pane, target.dataset.id).catch(Notification.exception),
+    'display-options': (pane, region, target) => {
+        const panel = region.querySelector(SELECTORS.displayPanel);
+        if (!panel) {
+            return;
+        }
+        panel.hidden = !panel.hidden;
+        target.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
     },
     'browse-frameworks': (pane, region) => showCompetencyBrowser(pane, region).catch(Notification.exception),
     'manage-participants': (pane, region) => showParticipants(pane, region).catch(Notification.exception),
     'new-template': (pane, region) => openForm(
         pane,
+        FORM_CLASS,
         {id: 0, contextid: region.dataset.contextid || 0},
         'managetemplates_addtemplate',
         'local_dimensions'
     ),
-    'edit-template': (pane, region, target) => openForm(pane, {id: target.dataset.id}, 'edittemplate', 'tool_lp'),
+    'edit-template': (pane, region, target) => openForm(
+        pane,
+        FORM_CLASS,
+        {id: target.dataset.id},
+        'edittemplate',
+        'tool_lp'
+    ),
+    'edit-competency': (pane, region, target) => openForm(
+        pane,
+        COMPETENCY_FORM_CLASS,
+        {id: target.dataset.id, competencyframeworkid: target.dataset.frameworkid},
+        'editcompetency',
+        'tool_lp'
+    ),
     'delete-template': (pane, region, target) =>
         deleteTemplate(pane, target.dataset.id, target.dataset.name || '', target.dataset.plancount || 0)
             .catch(Notification.exception),
@@ -201,6 +685,7 @@ const ACTION_HANDLERS = {
         removeCompetency(pane, target.dataset.id, target.dataset.name || '').catch(Notification.exception),
     'move-competency-up': (pane, region, target) => moveCompetency(pane, target, 'up').catch(Notification.exception),
     'move-competency-down': (pane, region, target) => moveCompetency(pane, target, 'down').catch(Notification.exception),
+    'move-competency-to': (pane, region, target) => moveCompetencyTo(pane, region, target).catch(Notification.exception),
 };
 
 /**
@@ -220,17 +705,53 @@ export const init = () => {
         pane.dataset.templateid = region.dataset.templateid;
     }
 
+    // Mirror the server-validated filter back too, so unreadable/deleted competencies the
+    // server dropped do not linger in the pane dataset.
+    if (pane && 'competencyids' in region.dataset) {
+        pane.dataset.competencyids = region.dataset.competencyids;
+    }
+
     const search = region.querySelector(SELECTORS.competencySearch);
     if (search && pane && !search.dataset.enhanced) {
         search.dataset.enhanced = '1';
         search.addEventListener('change', () => {
-            pane.dataset.competencyid = search.value || 0;
+            const added = Number(search.value);
+            if (!added) {
+                return;
+            }
+            const ids = filterIds(pane);
+            if (!ids.includes(added)) {
+                ids.push(added);
+            }
+            pane.dataset.competencyids = ids.join(',');
             reloadPane(pane).catch(Notification.exception);
         });
         getString('central_searchcompetency', 'local_dimensions')
             .then((placeholder) => enhance(SELECTORS.competencySearch, false, DATASOURCE, placeholder, false, true, '', true))
             .catch(Notification.exception);
     }
+
+    const searchinput = region.querySelector(SELECTORS.planSearch);
+    if (searchinput) {
+        searchinput.addEventListener('input', () => applyPlanSearch(region));
+    }
+
+    initShowDisabled(region);
+    initDisplayOptions(region);
+    initDragReorder(region, pane);
+    // The competency detail generally needs more room than the plan list: allow the
+    // divider to shrink the list down to ~200px and let the detail grow well past the
+    // structure-tab default cap.
+    initPaneResizer({
+        body: region.querySelector(SELECTORS.plansBody),
+        resizer: region.querySelector(SELECTORS.plansResizer),
+        detail: region.querySelector(SELECTORS.detailPane),
+        cssvar: '--local-dimensions-plans-detail-width',
+        storagekey: 'local_dimensions_plans_detail_width',
+        minimum: 280,
+        maximum: 1600,
+        reserve: 200,
+    });
 
     const addpicker = region.querySelector(SELECTORS.competencyAdd);
     if (addpicker && pane && !addpicker.dataset.enhanced) {
@@ -243,7 +764,7 @@ export const init = () => {
             Ajax.call([{
                 methodname: 'core_competency_add_competency_to_template',
                 args: {templateid: Number(pane.dataset.templateid), competencyid: competencyid},
-            }])[0].then(() => reloadPane(pane)).catch(Notification.exception);
+            }])[0].then(() => reloadKeepingScroll(pane)).catch(Notification.exception);
         });
         getString('central_addcompetency', 'local_dimensions')
             .then((placeholder) => enhance(SELECTORS.competencyAdd, false, DATASOURCE, placeholder, false, true, '', true))

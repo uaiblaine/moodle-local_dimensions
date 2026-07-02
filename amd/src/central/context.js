@@ -128,8 +128,8 @@ const applyContextToPanes = (contexttype, categoryid) => {
         if ('templateid' in pane.dataset) {
             pane.dataset.templateid = 0;
         }
-        if ('competencyid' in pane.dataset) {
-            pane.dataset.competencyid = 0;
+        if ('competencyids' in pane.dataset) {
+            pane.dataset.competencyids = '';
         }
     });
 };

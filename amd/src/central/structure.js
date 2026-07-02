@@ -34,6 +34,7 @@ import {open as openLinksModal} from 'local_dimensions/central/competency_links'
 import {open as openRelatedModal} from 'local_dimensions/central/related_competencies';
 import {getString} from 'core/str';
 import {add as addToast} from 'core/toast';
+import {initPaneResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
 const FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
@@ -794,95 +795,18 @@ const handleDetailAction = (region, pane, event, frameworkid) => {
 };
 
 /**
- * Wire the draggable divider between the tree and detail panes. The detail width is
- * persisted in localStorage and reapplied on each init, so it survives pane reloads.
- * Mirrors the manage-templates resizer; supports pointer drag, dblclick reset and
- * ArrowLeft/ArrowRight keyboard resizing.
+ * Wire the draggable divider between the tree and detail panes via the shared
+ * pane resizer (pointer drag, dblclick reset, arrow-key resize, localStorage).
  *
  * @param {HTMLElement} region
  */
 const initStructureResize = (region) => {
-    const storagekey = 'local_dimensions_structure_detail_width';
-    const resizer = region.querySelector(SELECTORS.structureResizer);
-    const detail = region.querySelector(SELECTORS.detailPane);
-    const body = region.querySelector(SELECTORS.structureBody);
-    if (!resizer || !detail || !body) {
-        return;
-    }
-    const minimum = 240;
-    const maximum = 640;
-    const applyWidth = (width) => {
-        const bodywidth = body.getBoundingClientRect().width;
-        const availablemax = Math.max(minimum, Math.min(maximum, bodywidth - 320));
-        const next = Math.min(Math.max(width, minimum), availablemax);
-        body.style.setProperty('--local-dimensions-structure-detail-width', next + 'px');
-        resizer.setAttribute('aria-valuenow', String(Math.round(next)));
-        return next;
-    };
-    const persist = (width) => {
-        try {
-            window.localStorage.setItem(storagekey, String(Math.round(width)));
-        } catch (e) {
-            // Local storage may be unavailable in restricted browser contexts.
-        }
-    };
-    try {
-        const stored = Number(window.localStorage.getItem(storagekey));
-        if (stored) {
-            applyWidth(stored);
-        }
-    } catch (e) {
-        // Local storage may be unavailable in restricted browser contexts.
-    }
-    resizer.setAttribute('aria-valuemin', String(minimum));
-    resizer.setAttribute('aria-valuemax', String(maximum));
-    let startx = 0;
-    let startwidth = 0;
-    resizer.addEventListener('pointerdown', (event) => {
-        event.preventDefault();
-        startx = event.clientX;
-        startwidth = detail.getBoundingClientRect().width;
-        body.classList.add('resizing');
-        resizer.setPointerCapture(event.pointerId);
-    });
-    resizer.addEventListener('pointermove', (event) => {
-        if (!body.classList.contains('resizing')) {
-            return;
-        }
-        applyWidth(startwidth + startx - event.clientX);
-    });
-    resizer.addEventListener('pointerup', (event) => {
-        if (!body.classList.contains('resizing')) {
-            return;
-        }
-        const width = applyWidth(detail.getBoundingClientRect().width);
-        body.classList.remove('resizing');
-        try {
-            resizer.releasePointerCapture(event.pointerId);
-        } catch (e) {
-            // Pointer capture may already be released.
-        }
-        persist(width);
-    });
-    resizer.addEventListener('dblclick', () => {
-        body.style.removeProperty('--local-dimensions-structure-detail-width');
-        try {
-            window.localStorage.removeItem(storagekey);
-        } catch (e) {
-            // Local storage may be unavailable in restricted browser contexts.
-        }
-    });
-    resizer.addEventListener('keydown', (event) => {
-        let delta = 0;
-        if (event.key === 'ArrowLeft') {
-            delta = 24;
-        } else if (event.key === 'ArrowRight') {
-            delta = -24;
-        } else {
-            return;
-        }
-        event.preventDefault();
-        persist(applyWidth(detail.getBoundingClientRect().width + delta));
+    initPaneResizer({
+        body: region.querySelector(SELECTORS.structureBody),
+        resizer: region.querySelector(SELECTORS.structureResizer),
+        detail: region.querySelector(SELECTORS.detailPane),
+        cssvar: '--local-dimensions-structure-detail-width',
+        storagekey: 'local_dimensions_structure_detail_width',
     });
 };
 

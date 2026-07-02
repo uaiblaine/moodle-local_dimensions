@@ -1,0 +1,45 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/move_competency_modal
+
+    Body of the "move competency to position" modal on the Plans tab: a single select
+    listing every position (numbered, annotated with the competency currently there).
+    Rendered client-side by local_dimensions/central/plans inside a core/modal_save_cancel;
+    the JS reads the selected index on save and issues one reorder web-service call.
+
+    Context variables required:
+    * options (array) {value, label, selected} - One entry per list position.
+
+    Example context (json):
+    {
+        "options": [
+            {"value": 0, "label": "1. Communication", "selected": true},
+            {"value": 1, "label": "2. Teamwork", "selected": false}
+        ]
+    }
+}}
+<div class="local-dimensions-central-plans-move">
+    <label class="d-block small text-muted mb-1" for="local-dimensions-plans-move-position">
+        {{#str}}central_plans_moveto_label, local_dimensions{{/str}}
+    </label>
+    <select class="form-select" id="local-dimensions-plans-move-position" name="local-dimensions-plans-move-position">
+        {{#options}}
+        <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+        {{/options}}
+    </select>
+</div>
