@@ -26,7 +26,10 @@
  */
 
 import Ajax from 'core/ajax';
+import Modal from 'core/modal';
+import ModalEvents from 'core/modal_events';
 import ModalForm from 'core_form/modalform';
+import ModalSaveCancel from 'core/modal_save_cancel';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
 import {show as showRuleConfigModal} from 'local_dimensions/central/rule_config';
@@ -63,7 +66,10 @@ const SELECTORS = {
     detailTaxonomy: '[data-region="detail-taxonomy"]',
     detailCourses: '[data-region="detail-courses"]',
     detailActivities: '[data-region="detail-activities"]',
+    detailPlans: '[data-region="detail-plans"]',
     detailRule: '[data-region="detail-rule"]',
+    nodeDragHandle: '[data-region="node-drag-handle"]',
+    showUsage: '[data-action="show-usage"]',
     addBtn: '[data-action="add"]',
     addHint: '[data-region="add-hint"]',
     expandAll: '[data-action="expand-all"]',
@@ -431,6 +437,7 @@ const selectRow = (region, row) => {
     content.querySelector(SELECTORS.detailTaxonomy).textContent = row.dataset.taxonomy || '';
     content.querySelector(SELECTORS.detailCourses).textContent = row.dataset.courses || '0';
     content.querySelector(SELECTORS.detailActivities).textContent = row.dataset.activities || '0';
+    content.querySelector(SELECTORS.detailPlans).textContent = row.dataset.templates || '0';
 
     // A leaf cannot carry a rule (a rule aggregates children); show the not-applicable label.
     const haschildren = row.dataset.haschildren === '1';
@@ -750,6 +757,203 @@ const moveNode = (pane, row, methodname, direction) => {
 };
 
 /**
+ * The rendered same-parent siblings of a node (its subtree travels with it).
+ *
+ * @param {HTMLElement} node A [data-node] wrapper.
+ * @return {HTMLElement[]}
+ */
+const nodeSiblings = (node) => [...node.parentElement.children].filter((el) => el.matches(SELECTORS.node));
+
+/**
+ * Persist an in-place sibling move as a batch of single-step core move calls
+ * (core has no reorder-to-position service for framework competencies), then
+ * flash the row. The DOM is expected to already show the final order; on
+ * failure the pane reloads so the preview does not lie about the state.
+ *
+ * @param {HTMLElement} pane
+ * @param {HTMLElement} node The moved [data-node] wrapper.
+ * @param {Number} from Original sibling index.
+ * @param {Number} to Final sibling index.
+ */
+const persistNodeMove = (pane, node, from, to) => {
+    const delta = to - from;
+    if (!delta) {
+        return;
+    }
+    const row = node.querySelector(SELECTORS.row);
+    const methodname = delta > 0 ? 'core_competency_move_down_competency' : 'core_competency_move_up_competency';
+    const requests = Array.from({length: Math.abs(delta)}, () => ({
+        methodname: methodname,
+        args: {id: Number(row.dataset.id)},
+    }));
+    Promise.all(Ajax.call(requests)).then(() => {
+        row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+        return null;
+    }).catch((error) => {
+        Notification.exception(error);
+        // Restoring the server's order from a failure handler is intentional.
+        // eslint-disable-next-line promise/no-nesting
+        reloadPane(pane).catch(() => null);
+    });
+};
+
+/**
+ * Open the "move to position" modal for a tree node: a numbered select of its
+ * same-parent siblings. Saving batches the single-step moves and repositions the
+ * node in place — the practical path for long branches, and the keyboard one.
+ *
+ * @param {HTMLElement} pane
+ * @param {HTMLElement} node The [data-node] wrapper to move.
+ * @return {Promise<void>}
+ */
+const openNodeMoveModal = async(pane, node) => {
+    const siblings = nodeSiblings(node);
+    if (siblings.length < 2) {
+        return;
+    }
+    const current = siblings.indexOf(node);
+    const options = siblings.map((sibling, index) => {
+        const row = sibling.querySelector(SELECTORS.row);
+        return {
+            value: index,
+            label: (index + 1) + '. ' + ((row && row.dataset.name) || ''),
+            selected: index === current,
+        };
+    });
+    const {html} = await Templates.renderForPromise('local_dimensions/central/move_competency_modal', {options: options});
+    const modal = await ModalSaveCancel.create({
+        title: getString('central_plans_moveto', 'local_dimensions'),
+        body: html,
+        show: true,
+        removeOnClose: true,
+    });
+    modal.getRoot().on(ModalEvents.save, () => {
+        const select = modal.getRoot()[0].querySelector('#local-dimensions-plans-move-position');
+        const targetindex = select ? Number(select.value) : current;
+        if (targetindex === current || !siblings[targetindex]) {
+            return;
+        }
+        const reference = siblings[targetindex];
+        if (targetindex > current) {
+            reference.after(node);
+        } else {
+            reference.before(node);
+        }
+        persistNodeMove(pane, node, current, targetindex);
+    });
+};
+
+/**
+ * Drag-and-drop reordering of tree nodes among their same-parent siblings. The drag
+ * starts from the grip that appears on row hover; the node (with its subtree) is
+ * live-repositioned at the pointer's midpoint, and the drop is persisted as one
+ * batched request. Reparenting is out of scope — hovering nodes of another branch
+ * is ignored (use Edit's parent select for that).
+ *
+ * @param {HTMLElement} region
+ * @param {HTMLElement} pane
+ */
+const initTreeDrag = (region, pane) => {
+    const tree = region.querySelector(SELECTORS.tree);
+    if (!tree) {
+        return;
+    }
+    let dragged = null;
+    let startindex = -1;
+
+    // The node only becomes draggable while the pointer holds its grip.
+    tree.addEventListener('mousedown', (event) => {
+        const handle = event.target.closest(SELECTORS.nodeDragHandle);
+        const node = handle && handle.closest(SELECTORS.node);
+        if (node) {
+            node.setAttribute('draggable', 'true');
+        }
+    });
+    tree.addEventListener('mouseup', (event) => {
+        const handle = event.target.closest(SELECTORS.nodeDragHandle);
+        const node = handle && handle.closest(SELECTORS.node);
+        if (node && !dragged) {
+            node.removeAttribute('draggable');
+        }
+    });
+
+    tree.addEventListener('dragstart', (event) => {
+        dragged = event.target.closest(SELECTORS.node);
+        if (!dragged) {
+            return;
+        }
+        startindex = nodeSiblings(dragged).indexOf(dragged);
+        dragged.classList.add('local-dimensions-central-plan-dragging');
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', dragged.dataset.node);
+    });
+
+    tree.addEventListener('dragover', (event) => {
+        if (!dragged) {
+            return;
+        }
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        const over = event.target.closest(SELECTORS.node);
+        // Same-parent constraint: reordering only, never reparenting.
+        if (!over || over === dragged || over.parentElement !== dragged.parentElement) {
+            return;
+        }
+        const rect = over.getBoundingClientRect();
+        if (event.clientY - rect.top > rect.height / 2) {
+            over.after(dragged);
+        } else {
+            over.before(dragged);
+        }
+    });
+
+    tree.addEventListener('drop', (event) => event.preventDefault());
+
+    tree.addEventListener('dragend', () => {
+        if (!dragged) {
+            return;
+        }
+        const node = dragged;
+        dragged = null;
+        node.classList.remove('local-dimensions-central-plan-dragging');
+        node.removeAttribute('draggable');
+        const endindex = nodeSiblings(node).indexOf(node);
+        if (startindex >= 0 && endindex >= 0) {
+            persistNodeMove(pane, node, startindex, endindex);
+        }
+    });
+};
+
+/**
+ * Fetch and show where the active competency is used: linked courses, activities
+ * (each labelled with its course) and the learning plan templates bundling it.
+ *
+ * @param {HTMLElement} row The active tree row.
+ * @return {Promise<void>}
+ */
+const openUsageModal = async(row) => {
+    const usage = await Ajax.call([{
+        methodname: 'local_dimensions_competency_usage',
+        args: {competencyid: Number(row.dataset.id)},
+    }])[0];
+    const {html} = await Templates.renderForPromise('local_dimensions/central/competency_usage_modal', {
+        hascourses: usage.courses.length > 0,
+        courses: usage.courses,
+        hasactivities: usage.activities.length > 0,
+        activities: usage.activities,
+        hastemplates: usage.templates.length > 0,
+        templates: usage.templates,
+    });
+    await Modal.create({
+        title: getString('central_usage_title', 'local_dimensions', row.dataset.name || ''),
+        body: html,
+        large: true,
+        show: true,
+        removeOnClose: true,
+    });
+};
+
+/**
  * Handle a detail-pane action for the active row.
  *
  * @param {HTMLElement} region
@@ -759,7 +963,9 @@ const moveNode = (pane, row, methodname, direction) => {
  * @return {void}
  */
 const handleDetailAction = (region, pane, event, frameworkid) => {
-    if (event.target.closest(SELECTORS.edit)) {
+    if (event.target.closest(SELECTORS.showUsage)) {
+        openUsageModal(activeRow).catch(Notification.exception);
+    } else if (event.target.closest(SELECTORS.edit)) {
         openForm(pane, {
             competencyframeworkid: frameworkid,
             id: activeRow.dataset.id,
@@ -801,12 +1007,17 @@ const handleDetailAction = (region, pane, event, frameworkid) => {
  * @param {HTMLElement} region
  */
 const initStructureResize = (region) => {
+    // Same reach as the Plans tab: the divider can shrink the tree down to ~200px
+    // and let the detail grow well past the old 640px cap.
     initPaneResizer({
         body: region.querySelector(SELECTORS.structureBody),
         resizer: region.querySelector(SELECTORS.structureResizer),
         detail: region.querySelector(SELECTORS.detailPane),
         cssvar: '--local-dimensions-structure-detail-width',
         storagekey: 'local_dimensions_structure_detail_width',
+        minimum: 280,
+        maximum: 1600,
+        reserve: 200,
     });
 };
 
@@ -846,6 +1057,15 @@ export const init = () => {
                 pathids = [];
             }
             revealNode(region, Number(result.dataset.id), pathids).catch(Notification.exception);
+            return;
+        }
+        const griphandle = event.target.closest(SELECTORS.nodeDragHandle);
+        if (griphandle) {
+            event.preventDefault();
+            const node = griphandle.closest(SELECTORS.node);
+            if (node) {
+                openNodeMoveModal(pane, node).catch(Notification.exception);
+            }
             return;
         }
         const toggle = event.target.closest(SELECTORS.toggle);
@@ -974,4 +1194,5 @@ export const init = () => {
 
     applyDisplayPrefs(region);
     initStructureResize(region);
+    initTreeDrag(region, pane);
 };

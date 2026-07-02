@@ -5439,11 +5439,8 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     display: inline-block;
 }
 
-/* Cap the tree height so "expand all" scrolls inside the card, not the whole page. */
-.local-dimensions-central-tree {
-    max-height: 60vh;
-    overflow-y: auto;
-}
+/* The tree scrolls via .local-dimensions-central-structure-scroll (fixed-height grid);
+   this class keeps only the show-* toggle scoping. */
 
 /* Structure tree row states: selected (JS toggles .active on the selected row), hover and
    keyboard focus. Uses Bootstrap CSS variables so light/dark themes both work. */
@@ -5483,10 +5480,15 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
+/* Structure tab — one fixed working height so tree and detail always match
+   vertically (same treatment as the Plans tab); the tree and detail sections
+   scroll internally while the tree toolbar and search stay pinned. */
 .local-dimensions-central-structure-body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-structure-detail-width, clamp(18rem, 30vw, 32rem));
-    align-items: start;
+    height: 60vh;
+    min-height: 320px;
+    max-height: 680px;
 }
 
 /* Learning plans tab — same master-detail grid, but the divider starts at 50/50 and
@@ -5502,7 +5504,9 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
 }
 
 .local-dimensions-central-plans-list-pane,
-.local-dimensions-central-plans-detail-pane {
+.local-dimensions-central-plans-detail-pane,
+.local-dimensions-central-structure-tree-pane,
+.local-dimensions-central-structure-detail-pane {
     min-height: 0;
 }
 
@@ -5552,8 +5556,10 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
 
 /* Only the list sections scroll: the plan list on the left, and the competency list
    between the fixed header (plan name + counts) and the fixed action footer on the
-   right. min-height: 0 lets the flex card section shrink below its content height. */
-.local-dimensions-central-plans-scroll {
+   right. The structure variant covers the tree body and the detail card body.
+   min-height: 0 lets the flex card section shrink below its content height. */
+.local-dimensions-central-plans-scroll,
+.local-dimensions-central-structure-scroll {
     min-height: 0;
     overflow-y: auto;
 }
@@ -5635,6 +5641,7 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
 }
 
 .local-dimensions-central-plans [data-region='competency-items'] > li:hover .local-dimensions-central-plan-drag,
+.local-dimensions-central-node > .d-flex:hover .local-dimensions-central-plan-drag,
 .local-dimensions-central-plan-drag:focus-visible {
     opacity: 1;
 }
@@ -5652,11 +5659,14 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     }
 
     /* Stacked panes size to their own content; each list still scrolls internally. */
-    .local-dimensions-central-plans-body {
+    .local-dimensions-central-plans-body,
+    .local-dimensions-central-structure-body {
         height: auto;
+        max-height: none;
     }
 
-    .local-dimensions-central-plans-scroll {
+    .local-dimensions-central-plans-scroll,
+    .local-dimensions-central-structure-scroll {
         max-height: 50vh;
     }
 
