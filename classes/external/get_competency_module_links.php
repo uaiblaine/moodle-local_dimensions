@@ -99,7 +99,7 @@ class get_competency_module_links extends external_api {
                     'cmid' => (int) $cm->id,
                     'name' => $cm->get_formatted_name(),
                     'modname' => $cm->modname,
-                    'modtype' => $cm->modfullname,
+                    'modtype' => (string) $cm->modfullname,
                     'iconurl' => $cm->get_icon_url()->out(false),
                     'ruleoutcome' => $outcomes[(int) $cm->id],
                     'hascompletion' => (int) ($completioninfo->is_enabled($cm) != COMPLETION_TRACKING_NONE),
@@ -122,7 +122,7 @@ class get_competency_module_links extends external_api {
                     'cmid' => (int) $cm->id,
                     'name' => $cm->get_formatted_name(),
                     'modname' => $cm->modname,
-                    'modtype' => $cm->modfullname,
+                    'modtype' => (string) $cm->modfullname,
                 ];
             }
         }
