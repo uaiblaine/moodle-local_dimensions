@@ -34,7 +34,7 @@ import Templates from 'core/templates';
 import {getString} from 'core/str';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 25;
 const SEARCH_MIN = 2;
 const INDENT_STEP = 20;
 

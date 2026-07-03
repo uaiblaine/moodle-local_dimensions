@@ -42,7 +42,7 @@ export const transport = (selector, query, success, failure) => {
     const templateid = source && source.dataset.templateid ? Number(source.dataset.templateid) : 0;
     Ajax.call([{
         methodname: 'local_dimensions_search_assignable_users',
-        args: {templateid: templateid, query: query, limitfrom: 0, limitnum: 50},
+        args: {templateid: templateid, query: query, limitfrom: 0, limitnum: 25},
     }])[0].then((response) => success(response.items)).catch(failure);
 };
 

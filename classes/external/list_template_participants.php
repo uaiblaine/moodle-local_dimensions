@@ -57,7 +57,7 @@ class list_template_participants extends external_api {
             'query' => new external_value(PARAM_RAW_TRIMMED, 'Name search', VALUE_DEFAULT, ''),
             'includeindividual' => new external_value(PARAM_BOOL, 'Include unlinked individual plans', VALUE_DEFAULT, false),
             'limitfrom' => new external_value(PARAM_INT, 'Offset', VALUE_DEFAULT, 0),
-            'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, 50),
+            'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, 25),
         ]);
     }
 
@@ -78,7 +78,7 @@ class list_template_participants extends external_api {
         string $query = '',
         bool $includeindividual = false,
         int $limitfrom = 0,
-        int $limitnum = 50
+        int $limitnum = 25
     ): array {
         global $DB;
 

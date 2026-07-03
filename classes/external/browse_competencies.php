@@ -58,7 +58,7 @@ class browse_competencies extends external_api {
             'parentid' => new external_value(PARAM_INT, 'Parent competency id (0 = roots)', VALUE_DEFAULT, 0),
             'query' => new external_value(PARAM_RAW_TRIMMED, 'Search text; non-empty switches to search mode', VALUE_DEFAULT, ''),
             'limitfrom' => new external_value(PARAM_INT, 'Offset for pagination', VALUE_DEFAULT, 0),
-            'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, 50),
+            'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, 25),
         ]);
     }
 
@@ -77,7 +77,7 @@ class browse_competencies extends external_api {
         int $parentid = 0,
         string $query = '',
         int $limitfrom = 0,
-        int $limitnum = 50
+        int $limitnum = 25
     ): array {
         global $DB;
 
