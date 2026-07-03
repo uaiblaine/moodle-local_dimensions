@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Participants modal (Plans tab) — assign picker and filters**:
+  - The assign-user picker only suggests users **without a plan created from the template** (new WS
+    `local_dimensions_search_assignable_users`, gated on `moodle/competency:templatemanage`): core refuses
+    a second plan from the same template — whether the existing one came from cohort sync or was created
+    individually — so suggesting those users only gave the false impression they still had to be added.
+    Email/ID number/username are matched (and echoed in monospace next to the name) only for viewers
+    holding `moodle/site:viewuseridentity`. The cohort picker already excluded attached cohorts.
+  - The users-grid filters (cohort, name search, show-individual toggle) collapse into a **filter-icon
+    dropdown** at the right of the list container, following core's reportbuilder `filters-dropdown`
+    pattern (BS4 keeps the dropdown open via the inner form; BS5 via `data-bs-auto-close="outside"`).
+    The grid keeps its existing infinite-scroll pagination (50 per page).
+  - With the picker now suggesting only addable users, its autocomplete selected-items strip is hidden
+    like the course and cohort pickers (the strip kept the last pick fixed, suggesting a pending state).
 - **Courses & activities modal to-be (design screen `mod-links`)** — course→activities cards:
   - Each linked course renders as a **bordered card** (the accordion content stays delimited inside the
     border): graduation-cap marker, course name as a link opening the course in a new window, short name

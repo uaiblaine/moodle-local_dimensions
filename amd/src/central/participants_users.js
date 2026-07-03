@@ -14,8 +14,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Users grid for the Manage participants modal: filterable, AJAX-searched, paginated list of the
- * template's plans with unlink/delete actions and an assign-user autocomplete.
+ * Users grid for the Manage participants modal: an infinite-scroll paginated list of the template's
+ * plans with unlink/delete actions, filters (cohort, name search, individual toggle) collapsed into
+ * a filter-icon dropdown at the right of the list, and an assign-user autocomplete that only
+ * suggests users without a plan created from the template.
  *
  * @module     local_dimensions/central/participants_users
  * @copyright  2026 Anderson Blaine
@@ -36,6 +38,7 @@ const SELECTORS = {
     cohort: '[data-region="participant-cohort"]',
     search: '[data-region="participant-search"]',
     individual: '[data-region="participant-individual"]',
+    filtersform: '[data-region="participant-filters-form"]',
     add: '[data-region="participant-add"]',
     rows: '[data-region="participant-rows"]',
     sentinel: '[data-region="participant-sentinel"]',
@@ -216,6 +219,9 @@ const fillCohortFilter = async(state) => {
  * @return {void}
  */
 const wire = (state, pane) => {
+    // The filter controls live in a <form> inside the filters dropdown (Bootstrap 4 keeps a
+    // dropdown open for clicks inside a form); stop Enter in the search box from submitting it.
+    pane.querySelector(SELECTORS.filtersform).addEventListener('submit', (event) => event.preventDefault());
     state.cohortsel.addEventListener('change', () => {
         state.cohortid = Number(state.cohortsel.value);
         applyFilters(state).catch(Notification.exception);
@@ -273,6 +279,7 @@ export const mount = async(pane, opts) => {
     ]);
     const addsel = pane.querySelector(SELECTORS.add);
     addsel.dataset.contextid = String(opts.contextid);
+    addsel.dataset.templateid = String(opts.templateid);
 
     const state = {
         templateid: Number(opts.templateid),

@@ -16,6 +16,12 @@
 /**
  * core/form-autocomplete datasource for the Competency hub participant (user) picker.
  *
+ * Searches via local_dimensions_search_assignable_users (template read from the select's
+ * data-templateid), so users who already have a plan created from the template — individually
+ * or by cohort sync — are excluded server-side: core refuses a second plan from the same
+ * template, so suggesting them only misleads. Identity fields render in monospace next to
+ * the name when the server exposes them.
+ *
  * @module     local_dimensions/central/user_datasource
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,28 +30,46 @@
 import Ajax from 'core/ajax';
 
 /**
- * Search users by name/identity.
+ * Search users assignable to the select's template.
  *
- * @param {String} selector Unused (autocomplete contract).
+ * @param {String} selector The originating select's selector.
  * @param {String} query The user's search text.
  * @param {Function} success Callback receiving the raw user list.
  * @param {Function} failure Callback receiving an error.
  */
 export const transport = (selector, query, success, failure) => {
+    const source = document.querySelector(selector);
+    const templateid = source && source.dataset.templateid ? Number(source.dataset.templateid) : 0;
     Ajax.call([{
-        methodname: 'core_user_search_identity',
-        args: {query: query},
-    }])[0].then((response) => success(response.list)).catch(failure);
+        methodname: 'local_dimensions_search_assignable_users',
+        args: {templateid: templateid, query: query, limitfrom: 0, limitnum: 50},
+    }])[0].then((response) => success(response.items)).catch(failure);
 };
 
 /**
- * Map users to autocomplete {value, label} pairs (label = full name + any identity fields).
+ * HTML-escape a plain-text fragment for use inside a suggestion label.
+ *
+ * @param {String} text
+ * @return {String}
+ */
+const escapeHtml = (text) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+};
+
+/**
+ * Map users to autocomplete {value, label} pairs (full name plus identity in monospace).
  *
  * @param {String} selector Unused (autocomplete contract).
  * @param {Array} results Raw users from transport().
  * @return {Array}
  */
 export const processResults = (selector, results) => results.map((user) => {
-    const extra = (user.extrafields || []).map((field) => field.value).filter((value) => value !== '');
-    return {value: user.id, label: extra.length ? `${user.fullname} (${extra.join(', ')})` : user.fullname};
+    let label = escapeHtml(user.fullname);
+    if (user.identity) {
+        label += ` <span class="font-monospace small local-dimensions-central-links-code">`
+            + `${escapeHtml(user.identity)}</span>`;
+    }
+    return {value: user.id, label: label};
 });
