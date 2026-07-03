@@ -99,6 +99,7 @@ final class competency_module_links_test extends \advanced_testcase {
         $row = $result['linked'][0];
         $this->assertSame(1, (int) $row['hascompletion']);
         $this->assertSame(1, (int) $row['sharedcount']);
+        $this->assertSame('Assignment', $row['modtype']);
         $this->assertStringContainsString('showonly=activitycompletionheader', $row['editurl']);
         $this->assertStringContainsString('showonly=competenciessection', $row['competenciesurl']);
     }

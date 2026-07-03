@@ -10,30 +10,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Courses & activities modal to-be (design screen `mod-links`)** — course→activities cards:
   - Each linked course renders as a **bordered card** (the accordion content stays delimited inside the
     border): graduation-cap marker, course name as a link opening the course in a new window, short name
-    in monospace, and a live **"linked / total activities"** counter that reads **"Whole course"** (plus an
-    explanatory note) when no specific activity is linked.
+    in monospace, and a live **linked-activity counter** ("1 activity" / "N activities") that reads
+    **"Whole course"** (plus an explanatory note) when no specific activity is linked.
   - **Completion-rule badges** at both levels: green "Completion rule configured" or amber "Create
     completion rule", deep-linking to the course completion settings (`course/completion.php`) or the
     activity's completion section (`modedit.php?...&showonly=activitycompletionheader`) when the user may
-    edit them. Backed by new WS fields (`hascompletion`, `completionurl`, `editurl`, `totalmodules`).
-  - Activities become **checkbox rows** (linked first, then available): ticking links, unticking asks for
-    the usual confirm and unlinks — replacing the old select + "Add activity" control. Outcome selects stay
-    per row, prefixed by an explicit "Outcome:" label at both levels.
+    edit them. Backed by new WS fields (`hascompletion`, `completionurl`, `editurl`).
+  - Activities are added through an **activity search** (client-side over the course's available modules,
+    accent-insensitive by name; each result shows the localised **module type**) — replacing the old
+    select + "Add activity" control and scaling to courses with dozens of activities. Linked activities
+    are removable (✕) **two-line rows** with dashed dividers: the name on its own line (wraps to two
+    lines, then ellipsizes with the full name on hover) next to its module-type tag, then the outcome
+    select and completion badge on the line below, so long names never push the controls off the edge.
   - **Shared-competency warning** on linked activities: when other competencies are linked to the same
     activity, an alert explains the completion rule is shared and links to the activity's Competencies
     section (`showonly=competenciessection`). Backed by the new `sharedcount` WS field.
   - **Course picker search** (`local_dimensions_search_linkable_courses`) now also matches the course
     **ID number** (besides name and short name), **excludes hidden courses**, and the suggestions show the
-    short name in monospace next to the course name. This is the plugin's only course picker — the
-    category autocompletes on the manage pages select categories, not courses, so no other site needed the
-    expanded search.
+    short name in monospace next to the course name — with a contrast fix so the short name inverts along
+    with the highlighted suggestion row instead of staying low-contrast grey-on-blue. This is the plugin's
+    only course picker — the category autocompletes on the manage pages select categories, not courses, so
+    no other site needed the expanded search.
 
 ### Changed
 - `local_dimensions_get_competency_links` / `local_dimensions_link_competency_course` return
-  `totalmodules`, `hascompletion`, `courseurl` and (capability-gated) `completionurl` per course row;
-  `local_dimensions_get_competency_module_links` returns `hascompletion`, `sharedcount` and
-  (capability-gated) `editurl` / `competenciesurl` per linked activity, and now skips course modules
-  flagged as deletion-in-progress.
+  `hascompletion`, `courseurl` and (capability-gated) `completionurl` per course row;
+  `local_dimensions_get_competency_module_links` returns `modtype` (localised module type name),
+  `hascompletion`, `sharedcount` and (capability-gated) `editurl` / `competenciesurl` per activity, and
+  now skips course modules flagged as deletion-in-progress.
 
 ### Added
 - **Plans tab to-be (design screen `pln-plans`)** — same master-detail, cleaner:

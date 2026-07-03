@@ -61,7 +61,6 @@ final class competency_course_links_test extends \advanced_testcase {
         $this->assertSame($courseid, (int) $result['items'][0]['courseid']);
         $this->assertSame(1, (int) $result['items'][0]['canmanage']);
         $this->assertSame(0, (int) $result['items'][0]['modulecount']);
-        $this->assertSame(0, (int) $result['items'][0]['totalmodules']);
         $this->assertSame(0, (int) $result['items'][0]['hascompletion']);
         $this->assertStringContainsString('/course/view.php', $result['items'][0]['courseurl']);
         // Admins hold moodle/course:update, so the completion settings link is present.
@@ -69,7 +68,7 @@ final class competency_course_links_test extends \advanced_testcase {
     }
 
     /**
-     * The course row exposes completion-rule state and linked/total activity counts.
+     * The course row exposes completion-rule state and the linked-activity count.
      *
      * @return void
      */
@@ -98,7 +97,6 @@ final class competency_course_links_test extends \advanced_testcase {
         $result = get_competency_links::execute($competencyid, '', 0, 25);
         $item = $result['items'][0];
         $this->assertSame(1, (int) $item['modulecount']);
-        $this->assertSame(2, (int) $item['totalmodules']);
         $this->assertSame(1, (int) $item['hascompletion']);
     }
 

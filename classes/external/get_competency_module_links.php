@@ -99,6 +99,7 @@ class get_competency_module_links extends external_api {
                     'cmid' => (int) $cm->id,
                     'name' => $cm->get_formatted_name(),
                     'modname' => $cm->modname,
+                    'modtype' => $cm->modfullname,
                     'iconurl' => $cm->get_icon_url()->out(false),
                     'ruleoutcome' => $outcomes[(int) $cm->id],
                     'hascompletion' => (int) ($completioninfo->is_enabled($cm) != COMPLETION_TRACKING_NONE),
@@ -117,7 +118,12 @@ class get_competency_module_links extends external_api {
                 }
                 $linked[] = $row;
             } else {
-                $available[] = ['cmid' => (int) $cm->id, 'name' => $cm->get_formatted_name(), 'modname' => $cm->modname];
+                $available[] = [
+                    'cmid' => (int) $cm->id,
+                    'name' => $cm->get_formatted_name(),
+                    'modname' => $cm->modname,
+                    'modtype' => $cm->modfullname,
+                ];
             }
         }
 
@@ -151,6 +157,7 @@ class get_competency_module_links extends external_api {
                 'cmid' => new external_value(PARAM_INT, 'Course module id'),
                 'name' => new external_value(PARAM_RAW, 'Activity name'),
                 'modname' => new external_value(PARAM_PLUGIN, 'Module type'),
+                'modtype' => new external_value(PARAM_RAW, 'Localised module type name'),
                 'iconurl' => new external_value(PARAM_URL, 'Activity icon URL', VALUE_OPTIONAL),
                 'ruleoutcome' => new external_value(PARAM_INT, 'Module competency rule outcome'),
                 'hascompletion' => new external_value(PARAM_INT, 'Whether the activity has completion tracking configured'),
@@ -171,6 +178,7 @@ class get_competency_module_links extends external_api {
                 'cmid' => new external_value(PARAM_INT, 'Course module id'),
                 'name' => new external_value(PARAM_RAW, 'Activity name'),
                 'modname' => new external_value(PARAM_PLUGIN, 'Module type'),
+                'modtype' => new external_value(PARAM_RAW, 'Localised module type name'),
             ])),
             'canmanage' => new external_value(PARAM_BOOL, 'Whether the user can manage activity links'),
         ]);
