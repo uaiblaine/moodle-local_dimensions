@@ -28,9 +28,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - **Course picker search** (`local_dimensions_search_linkable_courses`) now also matches the course
     **ID number** (besides name and short name), **excludes hidden courses**, and the suggestions show the
     short name in monospace next to the course name — with a contrast fix so the short name inverts along
-    with the highlighted suggestion row instead of staying low-contrast grey-on-blue. This is the plugin's
-    only course picker — the category autocompletes on the manage pages select categories, not courses, so
-    no other site needed the expanded search.
+    with the highlighted suggestion row instead of staying low-contrast grey-on-blue. The autocomplete's
+    selected-items strip is hidden in this modal (the picker links immediately and resets — the course
+    cards below are the selection), removing the blank row above the field and the brief flash of the
+    picked course. This is the plugin's only course picker — the category autocompletes on the manage
+    pages select categories, not courses, so no other site needed the expanded search.
 
 ### Changed
 - `local_dimensions_get_competency_links` / `local_dimensions_link_competency_course` return

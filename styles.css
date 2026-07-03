@@ -5922,3 +5922,13 @@ a.local-dimensions-central-links-badge-warn:focus {
     color: inherit;
     opacity: 0.85;
 }
+
+/*
+ * The add-course picker links the picked course immediately and then resets itself,
+ * so the autocomplete's selected-items strip is never meaningful here: it sits blank
+ * above the field and only flashes the picked course for an instant before its card
+ * appears in the list below. Hide it — the linked-course cards are the selection.
+ */
+.local-dimensions-central-links .form-autocomplete-selection {
+    display: none;
+}
