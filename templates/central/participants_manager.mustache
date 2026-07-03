@@ -65,35 +65,56 @@
              aria-labelledby="local-dimensions-tab-cohorts" data-region="pane-cohorts"></div>
         <div class="tab-pane fade" id="local-dimensions-pane-users" role="tabpanel"
              aria-labelledby="local-dimensions-tab-users" data-region="pane-users">
-            <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
-                <div>
-                    <label class="d-block small text-muted mb-1" for="local-dimensions-participant-cohort">
-                        {{#str}}central_participants_cohortfilter, local_dimensions{{/str}}
+            <div class="d-flex align-items-end mb-2">
+                <div class="flex-grow-1 me-2">
+                    <label class="d-block small text-muted mb-1" for="local-dimensions-participant-add">
+                        {{#str}}central_participants_add, local_dimensions{{/str}}
                     </label>
-                    <select id="local-dimensions-participant-cohort" data-region="participant-cohort"
+                    <select id="local-dimensions-participant-add" data-region="participant-add"
                             class="form-select"></select>
                 </div>
-                <div class="flex-grow-1">
-                    <label class="d-block small text-muted mb-1" for="local-dimensions-participant-search">
-                        {{#str}}central_participants_search, local_dimensions{{/str}}
-                    </label>
-                    <input type="text" id="local-dimensions-participant-search" data-region="participant-search"
-                           class="form-control">
+                {{! Both data attributes: Moodle 4.5 is Bootstrap 4 (data-toggle), 5.x is BS5 (data-bs-toggle).
+                    The controls sit in a <form> so BS4 keeps the dropdown open for clicks inside it;
+                    data-bs-auto-close does the same on BS5. }}
+                <div class="dropdown" data-region="participant-filters">
+                    <button class="btn btn-outline-secondary" type="button"
+                            id="local-dimensions-participant-filters-toggle"
+                            data-toggle="dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                            aria-haspopup="true" aria-expanded="false"
+                            title="{{#str}}filters, moodle{{/str}}" aria-label="{{#str}}filters, moodle{{/str}}">
+                        {{#pix}}i/filter, core{{/pix}}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right dropdown-menu-end
+                                local-dimensions-participants-filters p-3"
+                         aria-labelledby="local-dimensions-participant-filters-toggle">
+                        <form data-region="participant-filters-form">
+                            <div class="mb-2">
+                                <label class="d-block small text-muted mb-1"
+                                       for="local-dimensions-participant-cohort">
+                                    {{#str}}central_participants_cohortfilter, local_dimensions{{/str}}
+                                </label>
+                                <select id="local-dimensions-participant-cohort" data-region="participant-cohort"
+                                        class="form-select"></select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="d-block small text-muted mb-1"
+                                       for="local-dimensions-participant-search">
+                                    {{#str}}central_participants_search, local_dimensions{{/str}}
+                                </label>
+                                <input type="text" id="local-dimensions-participant-search"
+                                       data-region="participant-search" class="form-control">
+                            </div>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox"
+                                       id="local-dimensions-participant-individual"
+                                       data-region="participant-individual">
+                                <label class="form-check-label" for="local-dimensions-participant-individual">
+                                    {{#str}}central_participants_showindividual, local_dimensions{{/str}}
+                                </label>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <div class="form-check form-switch align-self-center mt-3">
-                    <input class="form-check-input" type="checkbox" id="local-dimensions-participant-individual"
-                           data-region="participant-individual">
-                    <label class="form-check-label" for="local-dimensions-participant-individual">
-                        {{#str}}central_participants_showindividual, local_dimensions{{/str}}
-                    </label>
-                </div>
-            </div>
-            <div class="mb-2">
-                <label class="d-block small text-muted mb-1" for="local-dimensions-participant-add">
-                    {{#str}}central_participants_add, local_dimensions{{/str}}
-                </label>
-                <select id="local-dimensions-participant-add" data-region="participant-add"
-                        class="form-select"></select>
             </div>
             <table class="table table-sm mb-0">
                 <caption class="visually-hidden">{{#str}}central_participants_tab_users, local_dimensions{{/str}}</caption>

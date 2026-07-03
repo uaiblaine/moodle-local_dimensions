@@ -5908,9 +5908,9 @@ a.local-dimensions-central-links-badge-warn:focus {
 }
 
 /*
- * Muted secondary text (course shortname) inside autocomplete suggestions: inherit the
- * inverted colour when the row is highlighted, instead of text-muted's fixed grey that
- * loses contrast on the active-row background.
+ * Muted secondary text (course shortname, user identity) inside autocomplete suggestions:
+ * inherit the inverted colour when the row is highlighted, instead of text-muted's fixed
+ * grey that loses contrast on the active-row background.
  */
 .local-dimensions-central-links-code {
     color: #6a737b;
@@ -5928,10 +5928,17 @@ a.local-dimensions-central-links-badge-warn:focus {
  * so the autocomplete's selected-items strip is never meaningful here: it sits blank
  * above the field and only flashes the picked course for an instant before its card
  * appears in the list below. Hide it — the linked-course cards are the selection.
- * The cohort picker in the Plans-tab participants modal follows the same
- * instant-add pattern, so its strip is hidden too.
+ * The cohort and assign-user pickers in the Plans-tab participants modal follow the
+ * same instant-add pattern (and only suggest entries that can still be added), so
+ * their strips are hidden too.
  */
 .local-dimensions-central-links .form-autocomplete-selection,
-.local-dimensions-cohort-manager .form-autocomplete-selection {
+.local-dimensions-cohort-manager .form-autocomplete-selection,
+.local-dimensions-participants .form-autocomplete-selection {
     display: none;
+}
+
+/* Filters dropdown on the participants users grid (core filters-dropdown pattern). */
+.local-dimensions-participants-filters {
+    min-width: 18rem;
 }

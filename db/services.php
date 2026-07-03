@@ -226,6 +226,14 @@ $functions = [
         'capabilities' => 'moodle/competency:templateview',
         'ajax' => true,
     ],
+    'local_dimensions_search_assignable_users' => [
+        'classname' => 'local_dimensions\external\search_assignable_users',
+        'methodname' => 'execute',
+        'description' => 'Search users without a plan created from the template (assign picker).',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
     'local_dimensions_add_template_user_plan' => [
         'classname' => 'local_dimensions\external\add_template_user_plan',
         'methodname' => 'execute',
