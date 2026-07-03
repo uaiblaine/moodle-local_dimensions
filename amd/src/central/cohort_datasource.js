@@ -41,7 +41,7 @@ export const transport = (selector, query, success, failure) => {
     const contextid = source && source.dataset.contextid ? Number(source.dataset.contextid) : 0;
     Ajax.call([{
         methodname: 'core_cohort_search_cohorts',
-        args: {query: query, context: {contextid: contextid}, limitfrom: 0, limitnum: 100},
+        args: {query: query, context: {contextid: contextid}, limitfrom: 0, limitnum: 25},
     }])[0].then((response) => success(response.cohorts)).catch(failure);
 };
 

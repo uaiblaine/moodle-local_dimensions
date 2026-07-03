@@ -48,6 +48,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     pages select categories, not courses, so no other site needed the expanded search.
 
 ### Changed
+- Pagination page size standardised to **25 everywhere**: the participants grid and competency browser
+  (`PAGE_SIZE`), the course/user/cohort picker transports, and the `limitnum` defaults of
+  `list_template_participants` and `browse_competencies` (hard caps stay at 100).
 - `local_dimensions_get_competency_links` / `local_dimensions_link_competency_course` return
   `hascompletion`, `courseurl` and (capability-gated) `completionurl` per course row;
   `local_dimensions_get_competency_module_links` returns `modtype` (localised module type name),

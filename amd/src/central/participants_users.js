@@ -30,7 +30,7 @@ import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {add as addToast} from 'core/toast';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 25;
 const STATUS_COMPLETE = 2;
 const DATASOURCE = 'local_dimensions/central/user_datasource';
 

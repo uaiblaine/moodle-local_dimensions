@@ -42,7 +42,7 @@ export const transport = (selector, query, success, failure) => {
     const competencyid = source && source.dataset.competencyid ? Number(source.dataset.competencyid) : 0;
     Ajax.call([{
         methodname: 'local_dimensions_search_linkable_courses',
-        args: {competencyid: competencyid, query: query, limitfrom: 0, limitnum: 50},
+        args: {competencyid: competencyid, query: query, limitfrom: 0, limitnum: 25},
     }])[0].then((response) => success(response.items)).catch(failure);
 };
 
