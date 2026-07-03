@@ -15,9 +15,12 @@
 
 /**
  * "Courses & activities" modal: manage a competency's course and activity links, each with its own
- * rule outcome. Courses load paginated; a course's activities load lazily on expand (one read returns
- * linked + available). Outcome selects save on change. Rows are built in JS to avoid a template render
- * per row. Closing the modal triggers the caller's onClose so the Structure tree's course count refreshes.
+ * rule outcome. Each linked course renders as a bordered card (course link, short name, linked/total
+ * activity count and a completion-rule badge); its activities expand inside the card border and load
+ * lazily on first expand (one read returns linked + available, both rendered as checkbox rows that
+ * link/unlink on toggle). Activity rows carry their own outcome select, completion-rule badge and a
+ * shared-competency warning. Outcome selects save on change. Rows are built in JS to avoid a template
+ * render per row. Closing the modal triggers the caller's onClose so the Structure tree count refreshes.
  *
  * @module     local_dimensions/central/competency_links
  * @copyright  2026 Anderson Blaine
@@ -97,6 +100,52 @@ const iconButton = (action, icon, label) => {
 };
 
 /**
+ * Append an external-link glyph plus a screen-reader "new window" note to a link.
+ *
+ * @param {HTMLAnchorElement} link The link to decorate.
+ * @param {String} newwindowlabel Localised "opens in new window" text.
+ */
+const decorateExternalLink = (link, newwindowlabel) => {
+    const ext = document.createElement('i');
+    ext.className = 'fa fa-external-link ms-1';
+    ext.setAttribute('aria-hidden', 'true');
+    const sr = document.createElement('span');
+    sr.className = 'sr-only';
+    sr.textContent = newwindowlabel;
+    link.appendChild(ext);
+    link.appendChild(sr);
+};
+
+/**
+ * Build a completion-rule badge: green when a rule exists, amber "create one" otherwise.
+ * Rendered as a link into the matching settings page when the user may edit it.
+ *
+ * @param {Object} state Modal state.
+ * @param {Boolean} hascompletion Whether a completion rule is configured.
+ * @param {String} url Settings URL, or empty when the user may not edit.
+ * @return {HTMLElement}
+ */
+const makeCompletionBadge = (state, hascompletion, url) => {
+    const variant = hascompletion ? 'ok' : 'warn';
+    const badge = document.createElement(url ? 'a' : 'span');
+    badge.className = `local-dimensions-central-links-badge local-dimensions-central-links-badge-${variant} ms-2`;
+    const glyph = document.createElement('i');
+    glyph.className = hascompletion ? 'fa fa-check' : 'fa fa-exclamation-triangle';
+    glyph.setAttribute('aria-hidden', 'true');
+    badge.appendChild(glyph);
+    badge.appendChild(document.createTextNode(
+        hascompletion ? state.completionoklabel : state.completionmissinglabel
+    ));
+    if (url) {
+        badge.href = url;
+        badge.target = '_blank';
+        badge.rel = 'noopener noreferrer';
+        decorateExternalLink(badge, state.newwindowlabel);
+    }
+    return badge;
+};
+
+/**
  * Briefly highlight an element so an in-place change is visible without leaving the modal.
  *
  * @param {HTMLElement} el The element to flash.
@@ -112,82 +161,129 @@ const flash = (el) => {
 };
 
 /**
- * Build one activity row.
+ * Refresh a course card's linked/total activity count and its "whole course" note.
  *
  * @param {Object} state Modal state.
- * @param {Object} module {cmid, name, modname, iconurl, ruleoutcome, canmanage}.
+ * @param {HTMLElement} courseEl The course card.
+ * @param {Number} linked Number of linked activities.
+ * @param {Number} total Total number of activities in the course.
+ * @return {Promise<void>}
+ */
+const updateCourseMeta = async(state, courseEl, linked, total) => {
+    const count = courseEl.querySelector('[data-role="modcount"]');
+    const note = courseEl.querySelector('[data-role="wholecoursenote"]');
+    if (linked > 0) {
+        count.textContent = await getString('central_links_modulecount', 'local_dimensions', {linked: linked, total: total});
+        note.hidden = true;
+    } else {
+        count.textContent = state.wholecourselabel;
+        note.hidden = false;
+    }
+};
+
+/**
+ * Build one linked-activity row: checkbox (unticking unlinks), outcome select, completion badge
+ * and, when other competencies share the activity, a warning that the rule affects them all.
+ *
+ * @param {Object} state Modal state.
+ * @param {Object} module {cmid, name, ruleoutcome, hascompletion, sharedcount, canmanage, editurl, competenciesurl}.
+ * @param {String} sharedtext Localised shared-competency warning ('' when not shared).
  * @return {HTMLElement}
  */
-const makeModuleRow = (state, module) => {
+const makeModuleRow = (state, module, sharedtext) => {
     const row = document.createElement('div');
-    row.className = 'd-flex align-items-center py-1 ps-4';
+    row.className = 'py-1';
     row.dataset.cmid = String(module.cmid);
+    row.dataset.name = module.name;
 
+    const line = document.createElement('div');
+    line.className = 'd-flex align-items-center';
+
+    const label = document.createElement('label');
+    label.className = 'd-flex align-items-center flex-grow-1 mb-0 me-2';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.className = 'me-2';
+    box.checked = true;
+    box.dataset.action = 'toggle-module';
+    box.disabled = !module.canmanage;
     const name = document.createElement('span');
-    name.className = 'flex-grow-1 text-truncate';
+    name.className = 'text-truncate';
     name.textContent = module.name;
+    label.appendChild(box);
+    label.appendChild(name);
 
     const select = outcomeSelect(state.moduleoutcomes, module.ruleoutcome, state.outcomelabel, !module.canmanage);
     select.dataset.role = 'module-outcome';
     select.name = 'module-outcome';
 
-    row.appendChild(name);
-    row.appendChild(select);
-    if (module.canmanage) {
-        row.appendChild(iconButton('remove-module', 'trash', state.removeactivitylabel));
+    line.appendChild(label);
+    line.appendChild(select);
+    line.appendChild(makeCompletionBadge(state, Boolean(module.hascompletion), module.editurl || ''));
+    row.appendChild(line);
+
+    if (module.sharedcount > 0 && sharedtext) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-warning d-flex align-items-center justify-content-between py-1 px-2 small mt-1 mb-0';
+        const text = document.createElement('span');
+        text.textContent = sharedtext;
+        alert.appendChild(text);
+        if (module.competenciesurl) {
+            const link = document.createElement('a');
+            link.href = module.competenciesurl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.className = 'text-nowrap ms-2';
+            link.textContent = state.opencompetencieslabel;
+            decorateExternalLink(link, state.newwindowlabel);
+            alert.appendChild(link);
+        }
+        row.appendChild(alert);
     }
     return row;
 };
 
 /**
- * Build the "add activity" inline control from a course's available modules.
+ * Build one available-activity row: an unticked checkbox that links the activity on toggle.
  *
  * @param {Object} state Modal state.
- * @param {Array} available List of {cmid, name, modname}.
+ * @param {Object} module {cmid, name, modname}.
  * @return {HTMLElement}
  */
-const makeAddActivity = (state, available) => {
-    const wrap = document.createElement('div');
-    wrap.className = 'd-flex align-items-center py-1 ps-4';
-    if (!available.length) {
-        return wrap;
-    }
-    const select = document.createElement('select');
-    select.className = 'form-select form-select-sm w-auto d-inline-block';
-    select.dataset.role = 'activity-add';
-    select.name = 'activity-add';
-    select.setAttribute('aria-label', state.addactivitylabel);
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = state.addactivitylabel;
-    select.appendChild(placeholder);
-    available.forEach((module) => {
-        const node = document.createElement('option');
-        node.value = String(module.cmid);
-        node.textContent = module.name;
-        select.appendChild(node);
-    });
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'btn btn-sm btn-link ms-2';
-    button.dataset.action = 'add-activity';
-    button.textContent = state.addactivitylabel;
-    wrap.appendChild(select);
-    wrap.appendChild(button);
-    return wrap;
+const makeAvailableRow = (state, module) => {
+    const row = document.createElement('div');
+    row.className = 'py-1';
+    row.dataset.cmid = String(module.cmid);
+    row.dataset.name = module.name;
+
+    const label = document.createElement('label');
+    label.className = 'd-flex align-items-center mb-0';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.className = 'me-2';
+    box.dataset.action = 'toggle-module';
+    const name = document.createElement('span');
+    name.className = 'text-truncate text-muted';
+    name.textContent = module.name;
+    label.appendChild(box);
+    label.appendChild(name);
+    row.appendChild(label);
+    return row;
 };
 
 /**
- * Build one course row (header + collapsed activities container).
+ * Build one course card (header + outcome row + collapsed activities container, all inside one border).
  *
  * @param {Object} state Modal state.
- * @param {Object} course {courseid, fullname, ruleoutcome, modulecount, canmanage}.
+ * @param {Object} course {courseid, fullname, shortname, ruleoutcome, modulecount, totalmodules,
+ *                        hascompletion, canmanage, courseurl, completionurl}.
  * @return {HTMLElement}
  */
 const makeCourseRow = (state, course) => {
     const wrap = document.createElement('div');
-    wrap.className = 'border-bottom py-1';
+    wrap.className = 'local-dimensions-central-links-card';
     wrap.dataset.courseid = String(course.courseid);
+    wrap.dataset.fullname = course.fullname;
 
     const header = document.createElement('div');
     header.className = 'd-flex align-items-center';
@@ -202,28 +298,71 @@ const makeCourseRow = (state, course) => {
     chevron.setAttribute('aria-hidden', 'true');
     toggle.appendChild(chevron);
 
-    const name = document.createElement('span');
-    name.className = 'flex-grow-1 text-truncate';
-    name.textContent = course.fullname;
+    const grad = document.createElement('i');
+    grad.className = 'fa fa-graduation-cap text-muted me-1';
+    grad.setAttribute('aria-hidden', 'true');
 
-    const select = outcomeSelect(state.courseoutcomes, course.ruleoutcome, state.outcomelabel, !course.canmanage);
-    select.dataset.role = 'course-outcome';
-    select.name = 'course-outcome';
+    let name;
+    if (course.courseurl) {
+        name = document.createElement('a');
+        name.href = course.courseurl;
+        name.target = '_blank';
+        name.rel = 'noopener noreferrer';
+        name.className = 'text-truncate local-dimensions-central-links-name';
+        name.textContent = course.fullname;
+        decorateExternalLink(name, state.newwindowlabel);
+    } else {
+        name = document.createElement('span');
+        name.className = 'text-truncate local-dimensions-central-links-name';
+        name.textContent = course.fullname;
+    }
+
+    const shortname = document.createElement('span');
+    shortname.className = 'font-monospace small text-muted ms-1';
+    shortname.textContent = course.shortname || '';
+
+    const count = document.createElement('span');
+    count.className = 'small text-muted text-nowrap ms-auto';
+    count.dataset.role = 'modcount';
 
     header.appendChild(toggle);
+    header.appendChild(grad);
     header.appendChild(name);
-    header.appendChild(select);
+    header.appendChild(shortname);
+    header.appendChild(count);
     if (course.canmanage) {
         header.appendChild(iconButton('remove-course', 'trash', state.removecourselabel));
     }
 
+    const outcomerow = document.createElement('div');
+    outcomerow.className = 'd-flex align-items-center flex-wrap mt-1 ps-4';
+    const outcomeprefix = document.createElement('span');
+    outcomeprefix.className = 'small text-muted me-2';
+    outcomeprefix.textContent = state.outcomeprefixlabel;
+    const select = outcomeSelect(state.courseoutcomes, course.ruleoutcome, state.outcomelabel, !course.canmanage);
+    select.dataset.role = 'course-outcome';
+    select.name = 'course-outcome';
+    outcomerow.appendChild(outcomeprefix);
+    outcomerow.appendChild(select);
+    outcomerow.appendChild(makeCompletionBadge(state, Boolean(course.hascompletion), course.completionurl || ''));
+
+    const note = document.createElement('div');
+    note.className = 'small text-muted ps-4 mt-1';
+    note.dataset.role = 'wholecoursenote';
+    note.textContent = state.wholecoursenotelabel;
+    note.hidden = true;
+
     const children = document.createElement('div');
+    children.className = 'local-dimensions-central-links-acts ps-4';
     children.dataset.role = 'activities';
     children.dataset.loaded = '0';
     children.hidden = true;
 
     wrap.appendChild(header);
+    wrap.appendChild(outcomerow);
+    wrap.appendChild(note);
     wrap.appendChild(children);
+    updateCourseMeta(state, wrap, Number(course.modulecount), Number(course.totalmodules)).catch(Notification.exception);
     return wrap;
 };
 
@@ -254,10 +393,11 @@ const loadCourses = async(state) => {
 };
 
 /**
- * Lazily load a course's activities into its container.
+ * Lazily load a course's activities into its container (linked first, then available), refreshing
+ * the card's linked/total count from the fresh data.
  *
  * @param {Object} state Modal state.
- * @param {HTMLElement} courseEl The course row.
+ * @param {HTMLElement} courseEl The course card.
  * @return {Promise<void>}
  */
 const loadActivities = async(state, courseEl) => {
@@ -268,26 +408,42 @@ const loadActivities = async(state, courseEl) => {
         args: {competencyid: state.competencyid, courseid: courseid},
     }])[0];
 
+    const sharedtexts = await Promise.all(response.linked.map((module) => {
+        if (!module.sharedcount) {
+            return Promise.resolve('');
+        }
+        const key = module.sharedcount === 1 ? 'central_links_sharedwarningone' : 'central_links_sharedwarning';
+        return getString(key, 'local_dimensions', module.sharedcount);
+    }));
+
     container.textContent = '';
-    if (!response.linked.length) {
+    const showavailable = response.canmanage && response.available.length > 0;
+    if (!response.linked.length && !showavailable) {
         const none = document.createElement('div');
-        none.className = 'text-muted small ps-4 py-1';
+        none.className = 'text-muted small py-1';
         none.textContent = state.noactivitieslabel;
         container.appendChild(none);
     } else {
-        response.linked.forEach((module) => container.appendChild(makeModuleRow(state, module)));
-    }
-    if (response.canmanage) {
-        container.appendChild(makeAddActivity(state, response.available));
+        const header = document.createElement('div');
+        header.className = 'small text-muted mb-1';
+        header.textContent = state.activitieshdrlabel;
+        container.appendChild(header);
+        response.linked.forEach((module, index) => {
+            container.appendChild(makeModuleRow(state, module, sharedtexts[index]));
+        });
+        if (showavailable) {
+            response.available.forEach((module) => container.appendChild(makeAvailableRow(state, module)));
+        }
     }
     container.dataset.loaded = '1';
+    await updateCourseMeta(state, courseEl, response.linked.length, response.linked.length + response.available.length);
 };
 
 /**
- * Toggle a course row's activities, loading them on first open.
+ * Toggle a course card's activities, loading them on first open.
  *
  * @param {Object} state Modal state.
- * @param {HTMLElement} courseEl The course row.
+ * @param {HTMLElement} courseEl The course card.
  * @param {HTMLElement} toggle The toggle button.
  * @return {Promise<void>}
  */
@@ -312,12 +468,12 @@ const toggleCourse = async(state, courseEl, toggle) => {
  * Remove a course link after a confirm.
  *
  * @param {Object} state Modal state.
- * @param {HTMLElement} courseEl The course row.
+ * @param {HTMLElement} courseEl The course card.
  * @return {Promise<void>}
  */
 const removeCourse = async(state, courseEl) => {
     const courseid = Number(courseEl.dataset.courseid);
-    const name = courseEl.querySelector('span').textContent;
+    const name = courseEl.dataset.fullname || '';
     const [title, body] = await Promise.all([
         getString('central_links_removecourse', 'local_dimensions'),
         getString('central_links_removecourse_confirm', 'local_dimensions', name),
@@ -337,15 +493,40 @@ const removeCourse = async(state, courseEl) => {
 };
 
 /**
- * Remove an activity link after a confirm.
+ * Link or unlink an activity from its toggled checkbox, then reload the course's activities.
+ * Unlinking asks for a confirm first; cancelling re-ticks the box.
  *
  * @param {Object} state Modal state.
- * @param {HTMLElement} moduleEl The activity row.
+ * @param {HTMLInputElement} box The toggled checkbox.
  * @return {Promise<void>}
  */
-const removeModule = async(state, moduleEl) => {
+const toggleModule = async(state, box) => {
+    const moduleEl = box.closest('[data-cmid]');
+    const courseEl = box.closest('[data-courseid]');
+    const container = courseEl.querySelector('[data-role="activities"]');
     const cmid = Number(moduleEl.dataset.cmid);
-    const name = moduleEl.querySelector('span').textContent;
+
+    if (box.checked) {
+        box.disabled = true;
+        try {
+            await Ajax.call([{
+                methodname: 'local_dimensions_link_competency_module',
+                args: {competencyid: state.competencyid, cmid: cmid},
+            }])[0];
+        } catch (error) {
+            // Restore the untouched state so the row still reflects the server and can be retried.
+            box.checked = false;
+            box.disabled = false;
+            throw error;
+        }
+        container.dataset.loaded = '0';
+        await loadActivities(state, courseEl);
+        flash(container.querySelector('[data-cmid="' + cmid + '"]'));
+        addToast(state.activityaddedlabel);
+        return;
+    }
+
+    const name = moduleEl.dataset.name || '';
     const [title, body] = await Promise.all([
         getString('central_links_removeactivity', 'local_dimensions'),
         getString('central_links_removeactivity_confirm', 'local_dimensions', name),
@@ -353,41 +534,24 @@ const removeModule = async(state, moduleEl) => {
     try {
         await Notification.deleteCancelPromise(title, body);
     } catch (e) {
+        box.checked = true;
         return;
     }
-    await Ajax.call([{
-        methodname: 'local_dimensions_unlink_competency_module',
-        args: {competencyid: state.competencyid, cmid: cmid},
-    }])[0];
-    const courseEl = moduleEl.closest('[data-courseid]');
-    moduleEl.remove();
-    const container = courseEl.querySelector('[data-role="activities"]');
-    container.dataset.loaded = '0';
-    await loadActivities(state, courseEl);
-};
-
-/**
- * Add the selected activity to its course.
- *
- * @param {Object} state Modal state.
- * @param {HTMLElement} courseEl The course row.
- * @return {Promise<void>}
- */
-const addActivity = async(state, courseEl) => {
-    const select = courseEl.querySelector('[data-role="activity-add"]');
-    const cmid = Number(select.value);
-    if (!cmid) {
-        return;
+    box.disabled = true;
+    try {
+        await Ajax.call([{
+            methodname: 'local_dimensions_unlink_competency_module',
+            args: {competencyid: state.competencyid, cmid: cmid},
+        }])[0];
+    } catch (error) {
+        // Restore the untouched state so the row still reflects the server and can be retried.
+        box.checked = true;
+        box.disabled = false;
+        throw error;
     }
-    await Ajax.call([{
-        methodname: 'local_dimensions_link_competency_module',
-        args: {competencyid: state.competencyid, cmid: cmid},
-    }])[0];
-    const container = courseEl.querySelector('[data-role="activities"]');
     container.dataset.loaded = '0';
     await loadActivities(state, courseEl);
-    flash(container.querySelector('[data-cmid="' + cmid + '"]'));
-    addToast(state.activityaddedlabel);
+    addToast(state.activityremovedlabel);
 };
 
 /**
@@ -459,14 +623,6 @@ const onClick = (state, event) => {
         removeCourse(state, event.target.closest('[data-courseid]')).catch(Notification.exception);
         return;
     }
-    if (event.target.closest('[data-action="remove-module"]')) {
-        removeModule(state, event.target.closest('[data-cmid]')).catch(Notification.exception);
-        return;
-    }
-    if (event.target.closest('[data-action="add-activity"]')) {
-        addActivity(state, event.target.closest('[data-courseid]')).catch(Notification.exception);
-        return;
-    }
     if (event.target.closest('[data-action="loadmore"]')) {
         loadCourses(state).catch(Notification.exception);
     }
@@ -482,7 +638,7 @@ const bindPicker = (state) => {
     state.addsel = state.root.querySelector(SELECTORS.courseAdd);
     state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
     state.addsel.addEventListener('change', () => onAddCourse(state));
-    enhance(SELECTORS.courseAdd, false, DATASOURCE, state.addcourselabel).catch(Notification.exception);
+    enhance(SELECTORS.courseAdd, false, DATASOURCE, state.addcourseplaceholder).catch(Notification.exception);
 };
 
 /**
@@ -495,15 +651,22 @@ export const open = async(opts) => {
     const [title, labels] = await Promise.all([
         getString('central_links_title', 'local_dimensions', opts.competencyname),
         Promise.all([
-            getString('central_links_addcourse', 'local_dimensions'),
-            getString('central_links_addactivity', 'local_dimensions'),
+            getString('central_links_addcourse_placeholder', 'local_dimensions'),
             getString('central_links_outcome', 'local_dimensions'),
+            getString('central_links_outcomeprefix', 'local_dimensions'),
             getString('central_links_removecourse', 'local_dimensions'),
-            getString('central_links_removeactivity', 'local_dimensions'),
             getString('central_links_noactivities', 'local_dimensions'),
+            getString('central_links_activitieshdr', 'local_dimensions'),
             getString('central_links_courseadded', 'local_dimensions'),
             getString('central_links_activityadded', 'local_dimensions'),
+            getString('central_links_activityremoved', 'local_dimensions'),
             getString('central_links_saved', 'local_dimensions'),
+            getString('central_links_wholecourse', 'local_dimensions'),
+            getString('central_links_wholecoursenote', 'local_dimensions'),
+            getString('central_links_completionrule_ok', 'local_dimensions'),
+            getString('central_links_completionrule_missing', 'local_dimensions'),
+            getString('central_links_opencompetencies', 'local_dimensions'),
+            getString('opensinnewwindow', 'core'),
         ]),
     ]);
     const {html} = await Templates.renderForPromise('local_dimensions/central/competency_links', {
@@ -526,15 +689,22 @@ export const open = async(opts) => {
         addshtml: '',
         offset: 0,
         excluded: new Set(),
-        addcourselabel: labels[0],
-        addactivitylabel: labels[1],
-        outcomelabel: labels[2],
+        addcourseplaceholder: labels[0],
+        outcomelabel: labels[1],
+        outcomeprefixlabel: labels[2],
         removecourselabel: labels[3],
-        removeactivitylabel: labels[4],
-        noactivitieslabel: labels[5],
+        noactivitieslabel: labels[4],
+        activitieshdrlabel: labels[5],
         courseaddedlabel: labels[6],
         activityaddedlabel: labels[7],
-        savedlabel: labels[8],
+        activityremovedlabel: labels[8],
+        savedlabel: labels[9],
+        wholecourselabel: labels[10],
+        wholecoursenotelabel: labels[11],
+        completionoklabel: labels[12],
+        completionmissinglabel: labels[13],
+        opencompetencieslabel: labels[14],
+        newwindowlabel: labels[15],
     };
 
     modal.getRoot().on(ModalEvents.shown, () => {
@@ -549,6 +719,10 @@ export const open = async(opts) => {
         state.addshtml = region.querySelector(SELECTORS.courseAdd).parentElement.innerHTML;
         region.addEventListener('click', (event) => onClick(state, event));
         region.addEventListener('change', (event) => {
+            if (event.target.matches('[data-action="toggle-module"]')) {
+                toggleModule(state, event.target).catch(Notification.exception);
+                return;
+            }
             const select = event.target.closest('[data-role="course-outcome"], [data-role="module-outcome"]');
             if (select) {
                 saveOutcome(state, select)
@@ -566,7 +740,7 @@ export const open = async(opts) => {
     modal.getRoot().on(ModalEvents.hidden, () => {
         if (typeof opts.onClose === 'function') {
             // Report the current linked-course count so the caller can refresh in place
-            // (each child of the rows container is one linked-course row).
+            // (each child of the rows container is one linked-course card).
             const count = state.rowsEl ? state.rowsEl.children.length : null;
             opts.onClose(count);
         }

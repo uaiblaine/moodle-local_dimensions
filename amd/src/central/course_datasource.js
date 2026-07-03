@@ -17,9 +17,10 @@
  * core/form-autocomplete datasource for the Competency hub add-course picker.
  *
  * Searches courses the user may link via local_dimensions_search_linkable_courses (competency read from
- * the select's data-competencyid) and drops any course id in the select's data-exclude attribute (the
- * courses already linked). data-exclude is read fresh from the DOM on each search, so it stays correct
- * after the linked list changes.
+ * the select's data-competencyid; the server matches name, short name and ID number and excludes hidden
+ * courses) and drops any course id in the select's data-exclude attribute (the courses already linked).
+ * data-exclude is read fresh from the DOM on each search, so it stays correct after the linked list
+ * changes. Suggestions show the course name plus the short name in monospace.
  *
  * @module     local_dimensions/central/course_datasource
  * @copyright  2026 Anderson Blaine
@@ -46,7 +47,20 @@ export const transport = (selector, query, success, failure) => {
 };
 
 /**
+ * HTML-escape a plain-text fragment for use inside a suggestion label.
+ *
+ * @param {String} text
+ * @return {String}
+ */
+const escapeHtml = (text) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+};
+
+/**
  * Map courses to autocomplete {value, label} pairs, excluding already-linked ids.
+ * The label shows the course full name plus the short name in monospace.
  *
  * @param {String} selector The originating select's selector.
  * @param {Array} results Raw items from transport().
@@ -58,5 +72,11 @@ export const processResults = (selector, results) => {
     const excluded = new Set(raw.split(',').filter((id) => id !== ''));
     return results
         .filter((course) => !excluded.has(String(course.id)))
-        .map((course) => ({value: course.id, label: course.fullname}));
+        .map((course) => {
+            let label = escapeHtml(course.fullname);
+            if (course.shortname) {
+                label += ` <span class="font-monospace small text-muted">${escapeHtml(course.shortname)}</span>`;
+            }
+            return {value: course.id, label: label};
+        });
 };

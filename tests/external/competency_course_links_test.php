@@ -61,6 +61,45 @@ final class competency_course_links_test extends \advanced_testcase {
         $this->assertSame($courseid, (int) $result['items'][0]['courseid']);
         $this->assertSame(1, (int) $result['items'][0]['canmanage']);
         $this->assertSame(0, (int) $result['items'][0]['modulecount']);
+        $this->assertSame(0, (int) $result['items'][0]['totalmodules']);
+        $this->assertSame(0, (int) $result['items'][0]['hascompletion']);
+        $this->assertStringContainsString('/course/view.php', $result['items'][0]['courseurl']);
+        // Admins hold moodle/course:update, so the completion settings link is present.
+        $this->assertStringContainsString('/course/completion.php', $result['items'][0]['completionurl']);
+    }
+
+    /**
+     * The course row exposes completion-rule state and linked/total activity counts.
+     *
+     * @return void
+     */
+    public function test_get_links_completion_and_module_counts(): void {
+        global $CFG, $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        require_once($CFG->dirroot . '/completion/criteria/completion_criteria.php');
+        set_config('enablecompletion', 1);
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework(['visible' => 1]);
+        $competency = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $competencyid = (int) $competency->get('id');
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $courseid = (int) $course->id;
+        $assign = $this->getDataGenerator()->create_module('assign', ['course' => $courseid]);
+        $this->getDataGenerator()->create_module('assign', ['course' => $courseid]);
+        $DB->insert_record('course_completion_criteria', (object) [
+            'course' => $courseid,
+            'criteriatype' => COMPLETION_CRITERIA_TYPE_SELF,
+        ]);
+
+        link_competency_course::execute($competencyid, $courseid);
+        link_competency_module::execute($competencyid, (int) $assign->cmid);
+
+        $result = get_competency_links::execute($competencyid, '', 0, 25);
+        $item = $result['items'][0];
+        $this->assertSame(1, (int) $item['modulecount']);
+        $this->assertSame(2, (int) $item['totalmodules']);
+        $this->assertSame(1, (int) $item['hascompletion']);
     }
 
     /**
@@ -127,6 +166,8 @@ final class competency_course_links_test extends \advanced_testcase {
 
         $added = link_competency_course::execute($competencyid, $courseid);
         $this->assertSame($courseid, (int) $added['courseid']);
+        $this->assertSame(0, (int) $added['hascompletion']);
+        $this->assertStringContainsString('/course/view.php', $added['courseurl']);
         $count = $DB->count_records('competency_coursecomp', ['competencyid' => $competencyid, 'courseid' => $courseid]);
         $this->assertSame(1, $count);
 

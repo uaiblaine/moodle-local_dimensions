@@ -33,6 +33,7 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 use local_dimensions\helper;
+use moodle_url;
 
 /**
  * Web service: paginated list of courses linked to a competency.
@@ -113,15 +114,19 @@ class get_competency_links extends external_api {
                       WHERE $where";
         $total = (int) $DB->count_records_sql($countsql, $sqlparams);
 
-        $recordsql = "SELECT cc.id AS linkid, cc.ruleoutcome, c.id AS courseid, c.fullname, c.shortname, c.visible
+        $recordsql = "SELECT cc.id AS linkid, cc.ruleoutcome, c.id AS courseid, c.fullname, c.shortname, c.visible,
+                             c.enablecompletion
                         FROM {competency_coursecomp} cc
                         JOIN {course} c ON c.id = cc.courseid
                        WHERE $where
                     ORDER BY c.fullname ASC";
         $records = $DB->get_records_sql($recordsql, $sqlparams, $limitfrom, $limitnum);
 
-        // One grouped query for activity-link counts across the page's courses.
+        // Grouped queries across the page's courses: linked-activity counts, total activities,
+        // and whether course completion criteria exist (drives the completion-rule badge).
         $modulecounts = [];
+        $totalmodules = [];
+        $criteriacounts = [];
         if (!empty($records)) {
             $courseids = array_map(static fn($r): int => (int) $r->courseid, $records);
             [$insql, $inparams] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED, 'cm');
@@ -130,24 +135,49 @@ class get_competency_links extends external_api {
                 "SELECT cm.course, COUNT(1)
                    FROM {competency_modulecomp} mc
                    JOIN {course_modules} cm ON cm.id = mc.cmid
-                  WHERE cm.course $insql AND mc.competencyid = :competencyid
+                  WHERE cm.course $insql AND mc.competencyid = :competencyid AND cm.deletioninprogress = 0
                GROUP BY cm.course",
+                $inparams
+            );
+            [$insql, $inparams] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED, 'tm');
+            $totalmodules = $DB->get_records_sql_menu(
+                "SELECT cm.course, COUNT(1)
+                   FROM {course_modules} cm
+                  WHERE cm.course $insql AND cm.deletioninprogress = 0
+               GROUP BY cm.course",
+                $inparams
+            );
+            [$insql, $inparams] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED, 'cr');
+            $criteriacounts = $DB->get_records_sql_menu(
+                "SELECT ccrit.course, COUNT(1)
+                   FROM {course_completion_criteria} ccrit
+                  WHERE ccrit.course $insql
+               GROUP BY ccrit.course",
                 $inparams
             );
         }
 
         $items = [];
         foreach ($records as $record) {
-            $coursecontext = context_course::instance((int) $record->courseid);
-            $items[] = [
-                'courseid' => (int) $record->courseid,
+            $courseid = (int) $record->courseid;
+            $coursecontext = context_course::instance($courseid);
+            $hascompletion = !empty($record->enablecompletion) && !empty($criteriacounts[$courseid]);
+            $item = [
+                'courseid' => $courseid,
                 'fullname' => format_string($record->fullname, true, ['context' => $coursecontext]),
                 'shortname' => format_string($record->shortname, true, ['context' => $coursecontext]),
                 'visible' => (int) $record->visible,
                 'ruleoutcome' => (int) $record->ruleoutcome,
-                'modulecount' => (int) ($modulecounts[(int) $record->courseid] ?? 0),
+                'modulecount' => (int) ($modulecounts[$courseid] ?? 0),
+                'totalmodules' => (int) ($totalmodules[$courseid] ?? 0),
+                'hascompletion' => (int) $hascompletion,
                 'canmanage' => (int) has_capability('moodle/competency:coursecompetencymanage', $coursecontext),
+                'courseurl' => (new moodle_url('/course/view.php', ['id' => $courseid]))->out(false),
             ];
+            if (has_capability('moodle/course:update', $coursecontext)) {
+                $item['completionurl'] = (new moodle_url('/course/completion.php', ['id' => $courseid]))->out(false);
+            }
+            $items[] = $item;
         }
 
         return ['items' => $items, 'total' => $total, 'canlink' => $canlink];
@@ -167,7 +197,15 @@ class get_competency_links extends external_api {
                 'visible' => new external_value(PARAM_INT, 'Course visibility'),
                 'ruleoutcome' => new external_value(PARAM_INT, 'Course competency rule outcome'),
                 'modulecount' => new external_value(PARAM_INT, 'Number of linked activities in the course'),
+                'totalmodules' => new external_value(PARAM_INT, 'Total number of activities in the course'),
+                'hascompletion' => new external_value(PARAM_INT, 'Whether the course has completion criteria configured'),
                 'canmanage' => new external_value(PARAM_INT, 'Whether the user can manage links in this course'),
+                'courseurl' => new external_value(PARAM_URL, 'URL of the course page'),
+                'completionurl' => new external_value(
+                    PARAM_URL,
+                    'URL of the course completion settings (only when the user may edit them)',
+                    VALUE_OPTIONAL
+                ),
             ])),
             'total' => new external_value(PARAM_INT, 'Total linked courses'),
             'canlink' => new external_value(PARAM_BOOL, 'Whether new course links are allowed (framework visible)'),

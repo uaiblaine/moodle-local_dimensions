@@ -59,7 +59,9 @@ class search_linkable_courses extends external_api {
     }
 
     /**
-     * Search manageable courses, excluding already-linked ones and the site course.
+     * Search manageable courses, excluding already-linked ones, hidden courses and the site course.
+     *
+     * Matches the query against the course full name, short name and ID number.
      *
      * @param int $competencyid The competency id.
      * @param string $query Search text.
@@ -90,8 +92,8 @@ class search_linkable_courses extends external_api {
             return ['items' => [], 'total' => 0];
         }
 
-        // Build WHERE: not the site course, not already linked, optionally restricted to manageable ids.
-        $where = 'c.id <> :siteid';
+        // Build WHERE: visible, not the site course, not already linked, optionally restricted to manageable ids.
+        $where = 'c.id <> :siteid AND c.visible = 1';
         $sqlparams = ['siteid' => SITEID, 'competencyid' => $competencyid];
         $where .= ' AND c.id NOT IN (SELECT cc.courseid FROM {competency_coursecomp} cc WHERE cc.competencyid = :competencyid)';
 
@@ -101,11 +103,14 @@ class search_linkable_courses extends external_api {
             $sqlparams += $inparams;
         }
         if ($query !== '') {
-            $like = helper::sql_like_ai('c.fullname', ':q1') . ' OR ' . helper::sql_like_ai('c.shortname', ':q2');
+            $like = helper::sql_like_ai('c.fullname', ':q1')
+                . ' OR ' . helper::sql_like_ai('c.shortname', ':q2')
+                . ' OR ' . helper::sql_like_ai('c.idnumber', ':q3');
             $likevalue = '%' . $DB->sql_like_escape($query) . '%';
             $where .= " AND ($like)";
             $sqlparams['q1'] = $likevalue;
             $sqlparams['q2'] = $likevalue;
+            $sqlparams['q3'] = $likevalue;
         }
 
         $total = (int) $DB->count_records_sql("SELECT COUNT(1) FROM {course} c WHERE $where", $sqlparams);

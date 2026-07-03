@@ -5768,3 +5768,73 @@ body.local-dimensions-edit-competency-page .local-dimensions-dialogue-rule input
     color: #6c7787;
 }
 
+
+/* ============================================
+      COURSES & ACTIVITIES MODAL (CENTRAL HUB)
+      ============================================ */
+
+/*
+ * Course cards inside the "Courses & activities" modal. Rendered at body
+ * level (core/modal), outside .local-dimensions-manage, so the manage custom
+ * properties are not in scope — literal hexes from the same palette.
+ * Each linked course is one bordered card; its expanded activities stay
+ * inside the border, separated by a dashed rule.
+ */
+.local-dimensions-central-links-card {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+}
+
+.local-dimensions-central-links-card + .local-dimensions-central-links-card {
+    margin-top: 0.5rem;
+}
+
+.local-dimensions-central-links-name {
+    min-width: 0;
+    font-weight: 500;
+}
+
+.local-dimensions-central-links-acts {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #dee2e6;
+}
+
+.local-dimensions-central-links-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.05rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+a.local-dimensions-central-links-badge:hover,
+a.local-dimensions-central-links-badge:focus {
+    text-decoration: underline;
+}
+
+.local-dimensions-central-links-badge-ok {
+    border: 1px solid #86af84;
+    background: #d7e4d6;
+    color: #153114;
+}
+
+a.local-dimensions-central-links-badge-ok:hover,
+a.local-dimensions-central-links-badge-ok:focus {
+    color: #153114;
+}
+
+.local-dimensions-central-links-badge-warn {
+    border: 1px solid #f3bd71;
+    background: #fcefdc;
+    color: #60451f;
+}
+
+a.local-dimensions-central-links-badge-warn:hover,
+a.local-dimensions-central-links-badge-warn:focus {
+    color: #60451f;
+}

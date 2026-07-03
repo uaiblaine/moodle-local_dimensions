@@ -63,6 +63,44 @@ final class competency_module_links_test extends \advanced_testcase {
         $this->assertContains($cmid1, $linkedids);
         $this->assertNotContains($cmid1, $availableids);
         $this->assertSame(1, (int) $result['canmanage']);
+        $this->assertArrayHasKey('hascompletion', $result['linked'][0]);
+        $this->assertArrayHasKey('sharedcount', $result['linked'][0]);
+    }
+
+    /**
+     * Linked rows expose completion state, shared-competency count and settings deep links.
+     *
+     * @return void
+     */
+    public function test_completion_and_shared_flags(): void {
+        global $CFG;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        require_once($CFG->libdir . '/completionlib.php');
+        set_config('enablecompletion', 1);
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework(['visible' => 1]);
+        $competency = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $other = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $competencyid = (int) $competency->get('id');
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $courseid = (int) $course->id;
+        $assign = $this->getDataGenerator()->create_module(
+            'assign',
+            ['course' => $courseid, 'completion' => COMPLETION_TRACKING_MANUAL]
+        );
+        link_competency_course::execute($competencyid, $courseid);
+        link_competency_course::execute((int) $other->get('id'), $courseid);
+        link_competency_module::execute($competencyid, (int) $assign->cmid);
+        link_competency_module::execute((int) $other->get('id'), (int) $assign->cmid);
+
+        $result = get_competency_module_links::execute($competencyid, $courseid);
+        $this->assertCount(1, $result['linked']);
+        $row = $result['linked'][0];
+        $this->assertSame(1, (int) $row['hascompletion']);
+        $this->assertSame(1, (int) $row['sharedcount']);
+        $this->assertStringContainsString('showonly=activitycompletionheader', $row['editurl']);
+        $this->assertStringContainsString('showonly=competenciessection', $row['competenciesurl']);
     }
 
     /**
