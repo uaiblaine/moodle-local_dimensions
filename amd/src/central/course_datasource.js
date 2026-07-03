@@ -75,7 +75,8 @@ export const processResults = (selector, results) => {
         .map((course) => {
             let label = escapeHtml(course.fullname);
             if (course.shortname) {
-                label += ` <span class="font-monospace small text-muted">${escapeHtml(course.shortname)}</span>`;
+                label += ` <span class="font-monospace small local-dimensions-central-links-code">`
+                    + `${escapeHtml(course.shortname)}</span>`;
             }
             return {value: course.id, label: label};
         });

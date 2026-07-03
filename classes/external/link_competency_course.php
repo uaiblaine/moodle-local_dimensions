@@ -58,7 +58,7 @@ class link_competency_course extends external_api {
      * @param int $competencyid The competency id.
      * @param int $courseid The course id.
      * @return array The course row {courseid, fullname, shortname, visible, ruleoutcome, modulecount,
-     *               totalmodules, hascompletion, canmanage, courseurl, completionurl}.
+     *               hascompletion, canmanage, courseurl, completionurl}.
      */
     public static function execute(int $competencyid, int $courseid): array {
         global $DB;
@@ -97,7 +97,6 @@ class link_competency_course extends external_api {
             'visible' => (int) $course->visible,
             'ruleoutcome' => (int) $link->ruleoutcome,
             'modulecount' => 0,
-            'totalmodules' => (int) $DB->count_records('course_modules', ['course' => $courseid, 'deletioninprogress' => 0]),
             'hascompletion' => (int) $hascompletion,
             'canmanage' => (int) has_capability('moodle/competency:coursecompetencymanage', $coursecontext),
             'courseurl' => (new moodle_url('/course/view.php', ['id' => $courseid]))->out(false),
@@ -121,7 +120,6 @@ class link_competency_course extends external_api {
             'visible' => new external_value(PARAM_INT, 'Course visibility'),
             'ruleoutcome' => new external_value(PARAM_INT, 'Course competency rule outcome'),
             'modulecount' => new external_value(PARAM_INT, 'Number of linked activities'),
-            'totalmodules' => new external_value(PARAM_INT, 'Total number of activities in the course'),
             'hascompletion' => new external_value(PARAM_INT, 'Whether the course has completion criteria configured'),
             'canmanage' => new external_value(PARAM_INT, 'Whether the user can manage links in this course'),
             'courseurl' => new external_value(PARAM_URL, 'URL of the course page'),

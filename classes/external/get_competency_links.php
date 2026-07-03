@@ -122,10 +122,9 @@ class get_competency_links extends external_api {
                     ORDER BY c.fullname ASC";
         $records = $DB->get_records_sql($recordsql, $sqlparams, $limitfrom, $limitnum);
 
-        // Grouped queries across the page's courses: linked-activity counts, total activities,
-        // and whether course completion criteria exist (drives the completion-rule badge).
+        // Grouped queries across the page's courses: linked-activity counts and whether
+        // course completion criteria exist (drives the completion-rule badge).
         $modulecounts = [];
-        $totalmodules = [];
         $criteriacounts = [];
         if (!empty($records)) {
             $courseids = array_map(static fn($r): int => (int) $r->courseid, $records);
@@ -136,14 +135,6 @@ class get_competency_links extends external_api {
                    FROM {competency_modulecomp} mc
                    JOIN {course_modules} cm ON cm.id = mc.cmid
                   WHERE cm.course $insql AND mc.competencyid = :competencyid AND cm.deletioninprogress = 0
-               GROUP BY cm.course",
-                $inparams
-            );
-            [$insql, $inparams] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED, 'tm');
-            $totalmodules = $DB->get_records_sql_menu(
-                "SELECT cm.course, COUNT(1)
-                   FROM {course_modules} cm
-                  WHERE cm.course $insql AND cm.deletioninprogress = 0
                GROUP BY cm.course",
                 $inparams
             );
@@ -169,7 +160,6 @@ class get_competency_links extends external_api {
                 'visible' => (int) $record->visible,
                 'ruleoutcome' => (int) $record->ruleoutcome,
                 'modulecount' => (int) ($modulecounts[$courseid] ?? 0),
-                'totalmodules' => (int) ($totalmodules[$courseid] ?? 0),
                 'hascompletion' => (int) $hascompletion,
                 'canmanage' => (int) has_capability('moodle/competency:coursecompetencymanage', $coursecontext),
                 'courseurl' => (new moodle_url('/course/view.php', ['id' => $courseid]))->out(false),
@@ -197,7 +187,6 @@ class get_competency_links extends external_api {
                 'visible' => new external_value(PARAM_INT, 'Course visibility'),
                 'ruleoutcome' => new external_value(PARAM_INT, 'Course competency rule outcome'),
                 'modulecount' => new external_value(PARAM_INT, 'Number of linked activities in the course'),
-                'totalmodules' => new external_value(PARAM_INT, 'Total number of activities in the course'),
                 'hascompletion' => new external_value(PARAM_INT, 'Whether the course has completion criteria configured'),
                 'canmanage' => new external_value(PARAM_INT, 'Whether the user can manage links in this course'),
                 'courseurl' => new external_value(PARAM_URL, 'URL of the course page'),

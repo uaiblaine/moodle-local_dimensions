@@ -15,12 +15,13 @@
 
 /**
  * "Courses & activities" modal: manage a competency's course and activity links, each with its own
- * rule outcome. Each linked course renders as a bordered card (course link, short name, linked/total
- * activity count and a completion-rule badge); its activities expand inside the card border and load
- * lazily on first expand (one read returns linked + available, both rendered as checkbox rows that
- * link/unlink on toggle). Activity rows carry their own outcome select, completion-rule badge and a
- * shared-competency warning. Outcome selects save on change. Rows are built in JS to avoid a template
- * render per row. Closing the modal triggers the caller's onClose so the Structure tree count refreshes.
+ * rule outcome. Each linked course renders as a bordered card (course link, short name, linked-activity
+ * count and a completion-rule badge); its activities expand inside the card border and load lazily on
+ * first expand. Activities are added through a client-side search over the course's available modules
+ * (name + localised module type) and listed as removable two-line rows: name (clamped, full name on
+ * hover) with the module type, then the outcome select, completion-rule badge and shared-competency
+ * warning. Outcome selects save on change. Rows are built in JS to avoid a template render per row.
+ * Closing the modal triggers the caller's onClose so the Structure tree count refreshes.
  *
  * @module     local_dimensions/central/competency_links
  * @copyright  2026 Anderson Blaine
@@ -46,7 +47,17 @@ const SELECTORS = {
     courseRows: '[data-region="course-rows"]',
     courseEmpty: '[data-region="course-empty"]',
     loadMoreWrap: '[data-region="loadmore-wrap"]',
+    activitySearch: '[data-role="activity-search"]',
+    activitySearchList: '[data-role="activity-search-list"]',
 };
+
+/**
+ * Fold a string for search matching: lower-case and accent-stripped.
+ *
+ * @param {String} text The text to fold.
+ * @return {String}
+ */
+const fold = (text) => text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 /**
  * Build a labelled <select> of outcome options.
@@ -97,6 +108,19 @@ const iconButton = (action, icon, label) => {
     button.appendChild(glyph);
     button.appendChild(sr);
     return button;
+};
+
+/**
+ * Build a small module-type tag (e.g. "Assignment", "Forum").
+ *
+ * @param {String} text Localised module type name.
+ * @return {HTMLSpanElement}
+ */
+const mtypeTag = (text) => {
+    const tag = document.createElement('span');
+    tag.className = 'local-dimensions-central-links-mtype ms-2';
+    tag.textContent = text;
+    return tag;
 };
 
 /**
@@ -161,19 +185,21 @@ const flash = (el) => {
 };
 
 /**
- * Refresh a course card's linked/total activity count and its "whole course" note.
+ * Refresh a course card's linked-activity count and its "whole course" note.
  *
  * @param {Object} state Modal state.
  * @param {HTMLElement} courseEl The course card.
  * @param {Number} linked Number of linked activities.
- * @param {Number} total Total number of activities in the course.
  * @return {Promise<void>}
  */
-const updateCourseMeta = async(state, courseEl, linked, total) => {
+const updateCourseMeta = async(state, courseEl, linked) => {
     const count = courseEl.querySelector('[data-role="modcount"]');
     const note = courseEl.querySelector('[data-role="wholecoursenote"]');
-    if (linked > 0) {
-        count.textContent = await getString('central_links_modulecount', 'local_dimensions', {linked: linked, total: total});
+    if (linked === 1) {
+        count.textContent = await getString('central_links_modulecountone', 'local_dimensions');
+        note.hidden = true;
+    } else if (linked > 1) {
+        count.textContent = await getString('central_links_modulecount', 'local_dimensions', linked);
         note.hidden = true;
     } else {
         count.textContent = state.wholecourselabel;
@@ -182,45 +208,45 @@ const updateCourseMeta = async(state, courseEl, linked, total) => {
 };
 
 /**
- * Build one linked-activity row: checkbox (unticking unlinks), outcome select, completion badge
- * and, when other competencies share the activity, a warning that the rule affects them all.
+ * Build one linked-activity row: the name on its own clamped line (full name on hover) with the
+ * module type and a remove button, then the outcome select and completion badge on a second line,
+ * and — when other competencies share the activity — a warning that the rule affects them all.
  *
  * @param {Object} state Modal state.
- * @param {Object} module {cmid, name, ruleoutcome, hascompletion, sharedcount, canmanage, editurl, competenciesurl}.
+ * @param {Object} module {cmid, name, modtype, ruleoutcome, hascompletion, sharedcount, canmanage,
+ *                        editurl, competenciesurl}.
  * @param {String} sharedtext Localised shared-competency warning ('' when not shared).
  * @return {HTMLElement}
  */
 const makeModuleRow = (state, module, sharedtext) => {
     const row = document.createElement('div');
-    row.className = 'py-1';
+    row.className = 'local-dimensions-central-links-act';
     row.dataset.cmid = String(module.cmid);
     row.dataset.name = module.name;
 
-    const line = document.createElement('div');
-    line.className = 'd-flex align-items-center';
-
-    const label = document.createElement('label');
-    label.className = 'd-flex align-items-center flex-grow-1 mb-0 me-2';
-    const box = document.createElement('input');
-    box.type = 'checkbox';
-    box.className = 'me-2';
-    box.checked = true;
-    box.dataset.action = 'toggle-module';
-    box.disabled = !module.canmanage;
+    const nameline = document.createElement('div');
+    nameline.className = 'd-flex align-items-start';
     const name = document.createElement('span');
-    name.className = 'text-truncate';
+    name.className = 'local-dimensions-central-links-actname flex-grow-1';
+    name.title = module.name;
     name.textContent = module.name;
-    label.appendChild(box);
-    label.appendChild(name);
+    nameline.appendChild(name);
+    if (module.modtype) {
+        nameline.appendChild(mtypeTag(module.modtype));
+    }
+    if (module.canmanage) {
+        nameline.appendChild(iconButton('remove-module', 'times', state.removeactivitylabel));
+    }
+    row.appendChild(nameline);
 
+    const controls = document.createElement('div');
+    controls.className = 'd-flex align-items-center flex-wrap mt-1';
     const select = outcomeSelect(state.moduleoutcomes, module.ruleoutcome, state.outcomelabel, !module.canmanage);
     select.dataset.role = 'module-outcome';
     select.name = 'module-outcome';
-
-    line.appendChild(label);
-    line.appendChild(select);
-    line.appendChild(makeCompletionBadge(state, Boolean(module.hascompletion), module.editurl || ''));
-    row.appendChild(line);
+    controls.appendChild(select);
+    controls.appendChild(makeCompletionBadge(state, Boolean(module.hascompletion), module.editurl || ''));
+    row.appendChild(controls);
 
     if (module.sharedcount > 0 && sharedtext) {
         const alert = document.createElement('div');
@@ -244,39 +270,81 @@ const makeModuleRow = (state, module, sharedtext) => {
 };
 
 /**
- * Build one available-activity row: an unticked checkbox that links the activity on toggle.
+ * Build the add-activity search: a text input filtering the course's available modules client-side
+ * (fold-matched by name); each result shows the name plus the module type and adds the link on click.
  *
  * @param {Object} state Modal state.
- * @param {Object} module {cmid, name, modname}.
+ * @param {Number} courseid The course id (for a unique input id).
+ * @param {Array} available List of {cmid, name, modtype}.
  * @return {HTMLElement}
  */
-const makeAvailableRow = (state, module) => {
-    const row = document.createElement('div');
-    row.className = 'py-1';
-    row.dataset.cmid = String(module.cmid);
-    row.dataset.name = module.name;
+const makeActivitySearch = (state, courseid, available) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'mb-2';
+    wrap.dataset.role = 'activity-search';
 
-    const label = document.createElement('label');
-    label.className = 'd-flex align-items-center mb-0';
-    const box = document.createElement('input');
-    box.type = 'checkbox';
-    box.className = 'me-2';
-    box.dataset.action = 'toggle-module';
-    const name = document.createElement('span');
-    name.className = 'text-truncate text-muted';
-    name.textContent = module.name;
-    label.appendChild(box);
-    label.appendChild(name);
-    row.appendChild(label);
-    return row;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-control form-control-sm';
+    input.id = `local-dimensions-links-actsearch-${courseid}`;
+    input.name = 'activity-search';
+    input.autocomplete = 'off';
+    input.placeholder = state.addactivityplaceholder;
+    input.setAttribute('aria-label', state.addactivitylabel);
+
+    const list = document.createElement('div');
+    list.className = 'local-dimensions-central-links-actsearch-list';
+    list.dataset.role = 'activity-search-list';
+    list.hidden = true;
+
+    const render = () => {
+        const query = fold(input.value.trim());
+        const matches = available.filter((module) => !query || fold(module.name).includes(query));
+        list.textContent = '';
+        if (!matches.length) {
+            const none = document.createElement('div');
+            none.className = 'text-muted small px-2 py-1';
+            none.textContent = state.nomatcheslabel;
+            list.appendChild(none);
+        } else {
+            matches.forEach((module) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'local-dimensions-central-links-actsearch-item';
+                item.dataset.action = 'add-module';
+                item.dataset.cmid = String(module.cmid);
+                const name = document.createElement('span');
+                name.className = 'flex-grow-1 text-truncate';
+                name.textContent = module.name;
+                item.appendChild(name);
+                if (module.modtype) {
+                    item.appendChild(mtypeTag(module.modtype));
+                }
+                list.appendChild(item);
+            });
+        }
+        list.hidden = false;
+    };
+
+    input.addEventListener('input', render);
+    input.addEventListener('focus', render);
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            list.hidden = true;
+        }
+    });
+
+    wrap.appendChild(input);
+    wrap.appendChild(list);
+    return wrap;
 };
 
 /**
  * Build one course card (header + outcome row + collapsed activities container, all inside one border).
  *
  * @param {Object} state Modal state.
- * @param {Object} course {courseid, fullname, shortname, ruleoutcome, modulecount, totalmodules,
- *                        hascompletion, canmanage, courseurl, completionurl}.
+ * @param {Object} course {courseid, fullname, shortname, ruleoutcome, modulecount, hascompletion,
+ *                        canmanage, courseurl, completionurl}.
  * @return {HTMLElement}
  */
 const makeCourseRow = (state, course) => {
@@ -353,7 +421,7 @@ const makeCourseRow = (state, course) => {
     note.hidden = true;
 
     const children = document.createElement('div');
-    children.className = 'local-dimensions-central-links-acts ps-4';
+    children.className = 'local-dimensions-central-links-acts';
     children.dataset.role = 'activities';
     children.dataset.loaded = '0';
     children.hidden = true;
@@ -362,7 +430,7 @@ const makeCourseRow = (state, course) => {
     wrap.appendChild(outcomerow);
     wrap.appendChild(note);
     wrap.appendChild(children);
-    updateCourseMeta(state, wrap, Number(course.modulecount), Number(course.totalmodules)).catch(Notification.exception);
+    updateCourseMeta(state, wrap, Number(course.modulecount)).catch(Notification.exception);
     return wrap;
 };
 
@@ -393,8 +461,8 @@ const loadCourses = async(state) => {
 };
 
 /**
- * Lazily load a course's activities into its container (linked first, then available), refreshing
- * the card's linked/total count from the fresh data.
+ * Lazily load a course's activities into its container (search first, then the linked rows),
+ * refreshing the card's linked count from the fresh data.
  *
  * @param {Object} state Modal state.
  * @param {HTMLElement} courseEl The course card.
@@ -417,26 +485,25 @@ const loadActivities = async(state, courseEl) => {
     }));
 
     container.textContent = '';
-    const showavailable = response.canmanage && response.available.length > 0;
-    if (!response.linked.length && !showavailable) {
+    const header = document.createElement('div');
+    header.className = 'small text-muted mb-1';
+    header.textContent = state.activitieshdrlabel;
+    container.appendChild(header);
+    if (response.canmanage && response.available.length) {
+        container.appendChild(makeActivitySearch(state, courseid, response.available));
+    }
+    if (response.linked.length) {
+        response.linked.forEach((module, index) => {
+            container.appendChild(makeModuleRow(state, module, sharedtexts[index]));
+        });
+    } else {
         const none = document.createElement('div');
         none.className = 'text-muted small py-1';
         none.textContent = state.noactivitieslabel;
         container.appendChild(none);
-    } else {
-        const header = document.createElement('div');
-        header.className = 'small text-muted mb-1';
-        header.textContent = state.activitieshdrlabel;
-        container.appendChild(header);
-        response.linked.forEach((module, index) => {
-            container.appendChild(makeModuleRow(state, module, sharedtexts[index]));
-        });
-        if (showavailable) {
-            response.available.forEach((module) => container.appendChild(makeAvailableRow(state, module)));
-        }
     }
     container.dataset.loaded = '1';
-    await updateCourseMeta(state, courseEl, response.linked.length, response.linked.length + response.available.length);
+    await updateCourseMeta(state, courseEl, response.linked.length);
 };
 
 /**
@@ -493,39 +560,37 @@ const removeCourse = async(state, courseEl) => {
 };
 
 /**
- * Link or unlink an activity from its toggled checkbox, then reload the course's activities.
- * Unlinking asks for a confirm first; cancelling re-ticks the box.
+ * Link the activity picked in the search, then reload the course's activities.
  *
  * @param {Object} state Modal state.
- * @param {HTMLInputElement} box The toggled checkbox.
+ * @param {HTMLElement} courseEl The course card.
+ * @param {Number} cmid The course module id.
  * @return {Promise<void>}
  */
-const toggleModule = async(state, box) => {
-    const moduleEl = box.closest('[data-cmid]');
-    const courseEl = box.closest('[data-courseid]');
-    const container = courseEl.querySelector('[data-role="activities"]');
-    const cmid = Number(moduleEl.dataset.cmid);
-
-    if (box.checked) {
-        box.disabled = true;
-        try {
-            await Ajax.call([{
-                methodname: 'local_dimensions_link_competency_module',
-                args: {competencyid: state.competencyid, cmid: cmid},
-            }])[0];
-        } catch (error) {
-            // Restore the untouched state so the row still reflects the server and can be retried.
-            box.checked = false;
-            box.disabled = false;
-            throw error;
-        }
-        container.dataset.loaded = '0';
-        await loadActivities(state, courseEl);
-        flash(container.querySelector('[data-cmid="' + cmid + '"]'));
-        addToast(state.activityaddedlabel);
+const addModule = async(state, courseEl, cmid) => {
+    if (!cmid) {
         return;
     }
+    await Ajax.call([{
+        methodname: 'local_dimensions_link_competency_module',
+        args: {competencyid: state.competencyid, cmid: cmid},
+    }])[0];
+    const container = courseEl.querySelector('[data-role="activities"]');
+    container.dataset.loaded = '0';
+    await loadActivities(state, courseEl);
+    flash(container.querySelector('[data-cmid="' + cmid + '"]'));
+    addToast(state.activityaddedlabel);
+};
 
+/**
+ * Remove an activity link after a confirm, then reload the course's activities.
+ *
+ * @param {Object} state Modal state.
+ * @param {HTMLElement} moduleEl The activity row.
+ * @return {Promise<void>}
+ */
+const removeModule = async(state, moduleEl) => {
+    const cmid = Number(moduleEl.dataset.cmid);
     const name = moduleEl.dataset.name || '';
     const [title, body] = await Promise.all([
         getString('central_links_removeactivity', 'local_dimensions'),
@@ -534,21 +599,14 @@ const toggleModule = async(state, box) => {
     try {
         await Notification.deleteCancelPromise(title, body);
     } catch (e) {
-        box.checked = true;
         return;
     }
-    box.disabled = true;
-    try {
-        await Ajax.call([{
-            methodname: 'local_dimensions_unlink_competency_module',
-            args: {competencyid: state.competencyid, cmid: cmid},
-        }])[0];
-    } catch (error) {
-        // Restore the untouched state so the row still reflects the server and can be retried.
-        box.checked = true;
-        box.disabled = false;
-        throw error;
-    }
+    await Ajax.call([{
+        methodname: 'local_dimensions_unlink_competency_module',
+        args: {competencyid: state.competencyid, cmid: cmid},
+    }])[0];
+    const courseEl = moduleEl.closest('[data-courseid]');
+    const container = courseEl.querySelector('[data-role="activities"]');
     container.dataset.loaded = '0';
     await loadActivities(state, courseEl);
     addToast(state.activityremovedlabel);
@@ -607,13 +665,22 @@ const onAddCourse = (state) => {
 };
 
 /**
- * Route a click inside the body to its handler.
+ * Route a click inside the body to its handler. Also closes any open activity-search dropdown
+ * the click landed outside of.
  *
  * @param {Object} state Modal state.
  * @param {Event} event The click event.
  * @return {void}
  */
 const onClick = (state, event) => {
+    state.root.querySelectorAll(SELECTORS.activitySearch).forEach((search) => {
+        if (!search.contains(event.target)) {
+            const list = search.querySelector(SELECTORS.activitySearchList);
+            if (list) {
+                list.hidden = true;
+            }
+        }
+    });
     const toggle = event.target.closest('[data-action="toggle-course"]');
     if (toggle) {
         toggleCourse(state, toggle.closest('[data-courseid]'), toggle).catch(Notification.exception);
@@ -621,6 +688,15 @@ const onClick = (state, event) => {
     }
     if (event.target.closest('[data-action="remove-course"]')) {
         removeCourse(state, event.target.closest('[data-courseid]')).catch(Notification.exception);
+        return;
+    }
+    const additem = event.target.closest('[data-action="add-module"]');
+    if (additem) {
+        addModule(state, additem.closest('[data-courseid]'), Number(additem.dataset.cmid)).catch(Notification.exception);
+        return;
+    }
+    if (event.target.closest('[data-action="remove-module"]')) {
+        removeModule(state, event.target.closest('[data-cmid]')).catch(Notification.exception);
         return;
     }
     if (event.target.closest('[data-action="loadmore"]')) {
@@ -652,11 +728,15 @@ export const open = async(opts) => {
         getString('central_links_title', 'local_dimensions', opts.competencyname),
         Promise.all([
             getString('central_links_addcourse_placeholder', 'local_dimensions'),
+            getString('central_links_addactivity', 'local_dimensions'),
+            getString('central_links_addactivity_placeholder', 'local_dimensions'),
             getString('central_links_outcome', 'local_dimensions'),
             getString('central_links_outcomeprefix', 'local_dimensions'),
             getString('central_links_removecourse', 'local_dimensions'),
+            getString('central_links_removeactivity', 'local_dimensions'),
             getString('central_links_noactivities', 'local_dimensions'),
             getString('central_links_activitieshdr', 'local_dimensions'),
+            getString('central_links_nomatches', 'local_dimensions'),
             getString('central_links_courseadded', 'local_dimensions'),
             getString('central_links_activityadded', 'local_dimensions'),
             getString('central_links_activityremoved', 'local_dimensions'),
@@ -690,21 +770,25 @@ export const open = async(opts) => {
         offset: 0,
         excluded: new Set(),
         addcourseplaceholder: labels[0],
-        outcomelabel: labels[1],
-        outcomeprefixlabel: labels[2],
-        removecourselabel: labels[3],
-        noactivitieslabel: labels[4],
-        activitieshdrlabel: labels[5],
-        courseaddedlabel: labels[6],
-        activityaddedlabel: labels[7],
-        activityremovedlabel: labels[8],
-        savedlabel: labels[9],
-        wholecourselabel: labels[10],
-        wholecoursenotelabel: labels[11],
-        completionoklabel: labels[12],
-        completionmissinglabel: labels[13],
-        opencompetencieslabel: labels[14],
-        newwindowlabel: labels[15],
+        addactivitylabel: labels[1],
+        addactivityplaceholder: labels[2],
+        outcomelabel: labels[3],
+        outcomeprefixlabel: labels[4],
+        removecourselabel: labels[5],
+        removeactivitylabel: labels[6],
+        noactivitieslabel: labels[7],
+        activitieshdrlabel: labels[8],
+        nomatcheslabel: labels[9],
+        courseaddedlabel: labels[10],
+        activityaddedlabel: labels[11],
+        activityremovedlabel: labels[12],
+        savedlabel: labels[13],
+        wholecourselabel: labels[14],
+        wholecoursenotelabel: labels[15],
+        completionoklabel: labels[16],
+        completionmissinglabel: labels[17],
+        opencompetencieslabel: labels[18],
+        newwindowlabel: labels[19],
     };
 
     modal.getRoot().on(ModalEvents.shown, () => {
@@ -719,10 +803,6 @@ export const open = async(opts) => {
         state.addshtml = region.querySelector(SELECTORS.courseAdd).parentElement.innerHTML;
         region.addEventListener('click', (event) => onClick(state, event));
         region.addEventListener('change', (event) => {
-            if (event.target.matches('[data-action="toggle-module"]')) {
-                toggleModule(state, event.target).catch(Notification.exception);
-                return;
-            }
             const select = event.target.closest('[data-role="course-outcome"], [data-role="module-outcome"]');
             if (select) {
                 saveOutcome(state, select)
