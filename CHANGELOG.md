@@ -40,6 +40,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `local_dimensions_get_competency_module_links` returns `modtype` (localised module type name),
   `hascompletion`, `sharedcount` and (capability-gated) `editurl` / `competenciesurl` per activity, and
   now skips course modules flagged as deletion-in-progress.
+- The cohort picker in the Plans-tab participants modal hides the autocomplete selected-items strip,
+  matching the links-modal course picker: both add the pick immediately and reset, so the strip only
+  sat blank and flashed the selection.
 
 ### Added
 - **Plans tab to-be (design screen `pln-plans`)** — same master-detail, cleaner:
