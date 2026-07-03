@@ -31,6 +31,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use moodle_url;
 
 /**
  * Web service: a course's activities for a competency (linked + available to link).
@@ -55,11 +56,17 @@ class get_competency_module_links extends external_api {
     /**
      * List the course's activities split into linked and available.
      *
+     * Linked rows carry the data behind the activity card extras: whether completion tracking is
+     * configured, how many other competencies share the activity, and the settings deep links.
+     *
      * @param int $competencyid The competency id.
      * @param int $courseid The course id.
      * @return array Keys: linked (list), available (list), canmanage (bool).
      */
     public static function execute(int $competencyid, int $courseid): array {
+        global $CFG, $DB;
+        require_once($CFG->libdir . '/completionlib.php');
+
         $params = self::validate_parameters(self::execute_parameters(), [
             'competencyid' => $competencyid,
             'courseid' => $courseid,
@@ -71,6 +78,7 @@ class get_competency_module_links extends external_api {
         self::validate_context($coursecontext);
         require_capability('moodle/competency:coursecompetencyview', $coursecontext);
         $canmanage = has_capability('moodle/competency:coursecompetencymanage', $coursecontext);
+        $canedit = has_capability('moodle/course:manageactivities', $coursecontext);
 
         // Existing activity links for this competency in this course, keyed by cmid.
         $outcomes = [];
@@ -78,25 +86,54 @@ class get_competency_module_links extends external_api {
             $outcomes[(int) $record->get('cmid')] = (int) $record->get('ruleoutcome');
         }
 
+        $completioninfo = new \completion_info(get_course($courseid));
         $modinfo = get_fast_modinfo($courseid);
         $linked = [];
         $available = [];
         foreach ($modinfo->get_cms() as $cm) {
-            if (!$cm->uservisible) {
+            if (!$cm->uservisible || $cm->deletioninprogress) {
                 continue;
             }
-            $row = [
-                'cmid' => (int) $cm->id,
-                'name' => $cm->get_formatted_name(),
-                'modname' => $cm->modname,
-                'iconurl' => $cm->get_icon_url()->out(false),
-            ];
             if (array_key_exists((int) $cm->id, $outcomes)) {
-                $row['ruleoutcome'] = $outcomes[(int) $cm->id];
-                $row['canmanage'] = (int) $canmanage;
+                $row = [
+                    'cmid' => (int) $cm->id,
+                    'name' => $cm->get_formatted_name(),
+                    'modname' => $cm->modname,
+                    'iconurl' => $cm->get_icon_url()->out(false),
+                    'ruleoutcome' => $outcomes[(int) $cm->id],
+                    'hascompletion' => (int) ($completioninfo->is_enabled($cm) != COMPLETION_TRACKING_NONE),
+                    'sharedcount' => 0,
+                    'canmanage' => (int) $canmanage,
+                ];
+                if ($canedit) {
+                    $row['editurl'] = (new moodle_url(
+                        '/course/modedit.php',
+                        ['update' => (int) $cm->id, 'showonly' => 'activitycompletionheader']
+                    ))->out(false);
+                    $row['competenciesurl'] = (new moodle_url(
+                        '/course/modedit.php',
+                        ['update' => (int) $cm->id, 'showonly' => 'competenciessection']
+                    ))->out(false);
+                }
                 $linked[] = $row;
             } else {
                 $available[] = ['cmid' => (int) $cm->id, 'name' => $cm->get_formatted_name(), 'modname' => $cm->modname];
+            }
+        }
+
+        // One grouped query: how many competencies each linked activity carries (shared = count - 1).
+        if (!empty($linked)) {
+            $cmids = array_column($linked, 'cmid');
+            [$insql, $inparams] = $DB->get_in_or_equal($cmids, SQL_PARAMS_NAMED, 'sc');
+            $counts = $DB->get_records_sql_menu(
+                "SELECT mc.cmid, COUNT(1)
+                   FROM {competency_modulecomp} mc
+                  WHERE mc.cmid $insql
+               GROUP BY mc.cmid",
+                $inparams
+            );
+            foreach ($linked as $index => $row) {
+                $linked[$index]['sharedcount'] = max(0, (int) ($counts[$row['cmid']] ?? 1) - 1);
             }
         }
 
@@ -116,7 +153,19 @@ class get_competency_module_links extends external_api {
                 'modname' => new external_value(PARAM_PLUGIN, 'Module type'),
                 'iconurl' => new external_value(PARAM_URL, 'Activity icon URL', VALUE_OPTIONAL),
                 'ruleoutcome' => new external_value(PARAM_INT, 'Module competency rule outcome'),
+                'hascompletion' => new external_value(PARAM_INT, 'Whether the activity has completion tracking configured'),
+                'sharedcount' => new external_value(PARAM_INT, 'Number of other competencies linked to the activity'),
                 'canmanage' => new external_value(PARAM_INT, 'Whether the user can manage activity links'),
+                'editurl' => new external_value(
+                    PARAM_URL,
+                    'URL of the activity completion settings (only when the user may edit the activity)',
+                    VALUE_OPTIONAL
+                ),
+                'competenciesurl' => new external_value(
+                    PARAM_URL,
+                    'URL of the activity competencies settings (only when the user may edit the activity)',
+                    VALUE_OPTIONAL
+                ),
             ])),
             'available' => new external_multiple_structure(new external_single_structure([
                 'cmid' => new external_value(PARAM_INT, 'Course module id'),

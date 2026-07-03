@@ -47,4 +47,52 @@ final class linkable_courses_test extends \advanced_testcase {
         $this->assertContains((int) $free->id, $ids);
         $this->assertNotContains((int) $linked->id, $ids);
     }
+
+    /**
+     * Hidden courses never appear in the picker, even for admins.
+     *
+     * @return void
+     */
+    public function test_search_excludes_hidden_courses(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework(['visible' => 1]);
+        $competency = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $competencyid = (int) $competency->get('id');
+        $visible = $this->getDataGenerator()->create_course(['fullname' => 'Beta visible', 'visible' => 1]);
+        $hidden = $this->getDataGenerator()->create_course(['fullname' => 'Beta hidden', 'visible' => 0]);
+
+        $result = search_linkable_courses::execute($competencyid, 'Beta', 0, 25);
+        $ids = array_map(static fn($item): int => (int) $item['id'], $result['items']);
+        $this->assertContains((int) $visible->id, $ids);
+        $this->assertNotContains((int) $hidden->id, $ids);
+    }
+
+    /**
+     * The picker matches the course short name and ID number, not only the full name.
+     *
+     * @return void
+     */
+    public function test_search_matches_shortname_and_idnumber(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework(['visible' => 1]);
+        $competency = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $competencyid = (int) $competency->get('id');
+        $course = $this->getDataGenerator()->create_course([
+            'fullname' => 'Applied mathematics',
+            'shortname' => 'MAT101',
+            'idnumber' => 'EXT-77',
+        ]);
+
+        $byshortname = search_linkable_courses::execute($competencyid, 'MAT101', 0, 25);
+        $ids = array_map(static fn($item): int => (int) $item['id'], $byshortname['items']);
+        $this->assertContains((int) $course->id, $ids);
+
+        $byidnumber = search_linkable_courses::execute($competencyid, 'EXT-77', 0, 25);
+        $ids = array_map(static fn($item): int => (int) $item['id'], $byidnumber['items']);
+        $this->assertContains((int) $course->id, $ids);
+    }
 }

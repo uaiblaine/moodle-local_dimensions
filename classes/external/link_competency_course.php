@@ -30,6 +30,7 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
+use moodle_url;
 
 /**
  * Web service: link a competency to a course (core enforces the course-context capability).
@@ -56,7 +57,8 @@ class link_competency_course extends external_api {
      *
      * @param int $competencyid The competency id.
      * @param int $courseid The course id.
-     * @return array The course row {courseid, fullname, shortname, visible, ruleoutcome, modulecount, canmanage}.
+     * @return array The course row {courseid, fullname, shortname, visible, ruleoutcome, modulecount,
+     *               totalmodules, hascompletion, canmanage, courseurl, completionurl}.
      */
     public static function execute(int $competencyid, int $courseid): array {
         global $DB;
@@ -73,23 +75,37 @@ class link_competency_course extends external_api {
 
         api::add_competency_to_course($courseid, $competencyid);
 
-        $course = $DB->get_record('course', ['id' => $courseid], 'id, fullname, shortname, visible', MUST_EXIST);
+        $course = $DB->get_record(
+            'course',
+            ['id' => $courseid],
+            'id, fullname, shortname, visible, enablecompletion',
+            MUST_EXIST
+        );
         $link = $DB->get_record(
             'competency_coursecomp',
             ['competencyid' => $competencyid, 'courseid' => $courseid],
             'ruleoutcome',
             MUST_EXIST
         );
+        $hascompletion = !empty($course->enablecompletion)
+            && $DB->record_exists('course_completion_criteria', ['course' => $courseid]);
 
-        return [
+        $row = [
             'courseid' => (int) $course->id,
             'fullname' => format_string($course->fullname, true, ['context' => $coursecontext]),
             'shortname' => format_string($course->shortname, true, ['context' => $coursecontext]),
             'visible' => (int) $course->visible,
             'ruleoutcome' => (int) $link->ruleoutcome,
             'modulecount' => 0,
+            'totalmodules' => (int) $DB->count_records('course_modules', ['course' => $courseid, 'deletioninprogress' => 0]),
+            'hascompletion' => (int) $hascompletion,
             'canmanage' => (int) has_capability('moodle/competency:coursecompetencymanage', $coursecontext),
+            'courseurl' => (new moodle_url('/course/view.php', ['id' => $courseid]))->out(false),
         ];
+        if (has_capability('moodle/course:update', $coursecontext)) {
+            $row['completionurl'] = (new moodle_url('/course/completion.php', ['id' => $courseid]))->out(false);
+        }
+        return $row;
     }
 
     /**
@@ -105,7 +121,15 @@ class link_competency_course extends external_api {
             'visible' => new external_value(PARAM_INT, 'Course visibility'),
             'ruleoutcome' => new external_value(PARAM_INT, 'Course competency rule outcome'),
             'modulecount' => new external_value(PARAM_INT, 'Number of linked activities'),
+            'totalmodules' => new external_value(PARAM_INT, 'Total number of activities in the course'),
+            'hascompletion' => new external_value(PARAM_INT, 'Whether the course has completion criteria configured'),
             'canmanage' => new external_value(PARAM_INT, 'Whether the user can manage links in this course'),
+            'courseurl' => new external_value(PARAM_URL, 'URL of the course page'),
+            'completionurl' => new external_value(
+                PARAM_URL,
+                'URL of the course completion settings (only when the user may edit them)',
+                VALUE_OPTIONAL
+            ),
         ]);
     }
 }
