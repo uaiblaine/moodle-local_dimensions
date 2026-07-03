@@ -5928,7 +5928,10 @@ a.local-dimensions-central-links-badge-warn:focus {
  * so the autocomplete's selected-items strip is never meaningful here: it sits blank
  * above the field and only flashes the picked course for an instant before its card
  * appears in the list below. Hide it — the linked-course cards are the selection.
+ * The cohort picker in the Plans-tab participants modal follows the same
+ * instant-add pattern, so its strip is hidden too.
  */
-.local-dimensions-central-links .form-autocomplete-selection {
+.local-dimensions-central-links .form-autocomplete-selection,
+.local-dimensions-cohort-manager .form-autocomplete-selection {
     display: none;
 }
