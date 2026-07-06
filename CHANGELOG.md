@@ -48,6 +48,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     pages select categories, not courses, so no other site needed the expanded search.
 
 ### Changed
+- **Related competencies modal (Structure tab)** adds relations through the same framework browser as
+  the Plans tab's "Browse frameworks" modal — debounced search plus the lazy competency tree with
+  checkbox rows, shift-range selection, "Show paths" toggle and infinite scrolling, extracted into the
+  shared `central/competency_tree_browser` AMD module + Mustache partial — replacing the search
+  autocomplete (`central/related_datasource` removed). There is **no framework selector**: a relation
+  can only reference a competency of the same framework, so the tree is always the competency's own
+  framework (a note in the modal says so). The competency itself and already-related competencies
+  render as disabled checked rows ("This competency" / "Already related"), and a batch **"Add
+  selected"** button — enabled while pickable rows are checked — adds the checked relations without
+  closing the modal, refreshing the rows (with flash + in-modal toast) and the tree. The tree box is
+  height-capped in this modal so the current relations stay in reach (design screen `mod-related`,
+  to-be revision 2). Review hardening, in both modals where shared: checked competencies **persist
+  across filter/mode re-renders** (the selection is a state set restored on render; the Browse modal
+  clears it on framework switch so a hidden cross-framework pick can't sneak in), a failed add batch
+  still re-syncs rows/tree with the server and keeps the pending checks for retry, expand/collapse
+  toggles carry an accessible name + `aria-expanded`, and keyboard focus is restored after add/remove
+  instead of falling to `<body>`.
 - Pagination page size standardised to **25 everywhere**: the participants grid and competency browser
   (`PAGE_SIZE`), the course/user/cohort picker transports, and the `limitnum` defaults of
   `list_template_participants` and `browse_competencies` (hard caps stay at 100).

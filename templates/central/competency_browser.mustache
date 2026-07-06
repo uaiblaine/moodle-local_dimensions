@@ -17,9 +17,9 @@
 {{!
     @template local_dimensions/central/competency_browser
 
-    Body of the "Browse frameworks" modal: a framework selector + a client-side filter, with the
-    competency checkbox rows rendered into [data-region="competency-list"] by the
-    local_dimensions/central/competency_browser AMD module (it calls core read web services).
+    Body of the "Browse frameworks" modal: a framework selector on top of the shared
+    framework browser partial (central/competency_tree_browser — filter, show-paths toggle
+    and lazy tree list), driven by the local_dimensions/central/competency_browser AMD module.
 
     Context variables required:
     * hasframeworks (bool)
@@ -46,17 +46,7 @@
             {{/frameworks}}
         </select>
     </div>
-    <div class="mb-2">
-        <input type="text" data-region="filter" class="form-control"
-               placeholder="{{#str}}central_browseframeworks_filter, local_dimensions{{/str}}">
-    </div>
-    <div class="form-check form-switch mb-2">
-        <input class="form-check-input" type="checkbox" id="local-dimensions-cb-pathtoggle" data-region="path-toggle">
-        <label class="form-check-label" for="local-dimensions-cb-pathtoggle">
-            {{#str}}central_browseframeworks_showpaths, local_dimensions{{/str}}
-        </label>
-    </div>
-    <div data-region="competency-list" class="local-dimensions-competency-browser-list"></div>
+    {{> local_dimensions/central/competency_tree_browser }}
     {{/hasframeworks}}
     {{^hasframeworks}}
     <div class="alert alert-info mb-0" role="status">
