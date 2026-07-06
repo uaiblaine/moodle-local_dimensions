@@ -5942,3 +5942,14 @@ a.local-dimensions-central-links-badge-warn:focus {
 .local-dimensions-participants-filters {
     min-width: 18rem;
 }
+
+/*
+ * Related competencies modal: cap the shared framework browser's scroll box so the
+ * current-relation rows below the tree stay reachable without scrolling the whole
+ * dialog. The infinite-scroll sentinel lives inside this box, so paging keeps being
+ * gated by scrolling it (the Browse frameworks modal leaves the box uncapped).
+ */
+.local-dimensions-central-related .local-dimensions-cb-scroll {
+    max-height: 40vh;
+    overflow-y: auto;
+}

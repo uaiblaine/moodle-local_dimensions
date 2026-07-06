@@ -1,0 +1,44 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/competency_tree_browser
+
+    Shared framework-competency browser body: a filter input, a show-paths toggle and the
+    lazy competency tree list, all driven by the local_dimensions/central/competency_tree_browser
+    AMD module. Included by the "Browse frameworks" modal (below its framework selector) and by
+    the "Related competencies" modal (framework fixed — a relation can only reference a
+    competency of the same framework, so no selector).
+
+    Context variables required: none (all rows are rendered client-side).
+
+    Example context (json):
+    {}
+}}
+<div class="mb-2">
+    <input type="text" data-region="filter" class="form-control"
+           placeholder="{{#str}}central_browseframeworks_filter, local_dimensions{{/str}}"
+           aria-label="{{#str}}central_browseframeworks_filter, local_dimensions{{/str}}">
+</div>
+<div class="form-check form-switch mb-2">
+    <input class="form-check-input" type="checkbox" id="local-dimensions-cb-pathtoggle-{{uniqid}}" data-region="path-toggle">
+    <label class="form-check-label" for="local-dimensions-cb-pathtoggle-{{uniqid}}">
+        {{#str}}central_browseframeworks_showpaths, local_dimensions{{/str}}
+    </label>
+</div>
+<div class="local-dimensions-cb-scroll">
+    <div data-region="competency-list" class="local-dimensions-competency-browser-list"></div>
+</div>

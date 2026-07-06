@@ -14,9 +14,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * "Related competencies" modal: list a competency's related competencies (same framework),
- * remove per row, and add new ones via a framework-scoped search autocomplete. Rows are built
- * in JS. Relations are symmetric, so add/remove affects both directions.
+ * "Related competencies" modal: list a competency's related competencies, remove per row,
+ * and add new ones through the same framework browser as the "Browse frameworks" modal —
+ * debounced search plus the lazy competency tree with checkbox rows (shared
+ * central/competency_tree_browser module) — minus the framework selector, because a
+ * relation can only reference a competency of the same framework. The competency itself
+ * and already-related competencies show as disabled rows. Rows are built in JS.
+ * Relations are symmetric, so add/remove affects both directions.
  *
  * @module     local_dimensions/central/related_competencies
  * @copyright  2026 Anderson Blaine
@@ -28,16 +32,15 @@ import Modal from 'core/modal';
 import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
-import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'core/toast';
-
-const DATASOURCE = 'local_dimensions/central/related_datasource';
+import {applyMode, destroyBrowser, getCheckedIds, initBrowser} from 'local_dimensions/central/competency_tree_browser';
 
 const SELECTORS = {
     region: '[data-region="related-competencies"]',
-    addSelect: '[data-region="related-add"]',
-    list: '[data-region="related-list"]',
+    pickerList: '[data-region="competency-list"]',
+    addSelected: '[data-action="add-selected"]',
+    relations: '[data-region="related-list"]',
     empty: '[data-region="related-empty"]',
 };
 
@@ -117,15 +120,41 @@ const loadRelations = async(state) => {
         methodname: 'local_dimensions_list_related_competencies',
         args: {competencyid: state.competencyid},
     }])[0];
-    state.listEl.textContent = '';
-    state.excluded = new Set([String(state.competencyid)]);
+    state.relationsEl.textContent = '';
+    state.excluded.clear();
+    state.excluded.add(String(state.competencyid));
     response.items.forEach((item) => {
-        state.listEl.appendChild(makeRow(state, item));
+        state.relationsEl.appendChild(makeRow(state, item));
         state.excluded.add(String(item.id));
     });
     state.emptyEl.hidden = response.items.length > 0;
-    if (state.addsel) {
-        state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
+};
+
+/**
+ * Enable the "Add selected" button only while at least one pickable row is checked.
+ *
+ * @param {Object} state Modal state.
+ * @return {void}
+ */
+const updateAddButton = (state) => {
+    state.addbtnEl.disabled = getCheckedIds(state).length === 0;
+};
+
+/**
+ * Give keyboard focus a useful home when the previously focused control was disabled or
+ * removed (focus falls to <body>, forcing keyboard users to re-traverse the dialog).
+ *
+ * @param {Object} state Modal state.
+ * @param {HTMLElement|null} preferred Element to focus first, falling back to the filter.
+ * @return {void}
+ */
+const restoreFocus = (state, preferred) => {
+    if (document.activeElement !== document.body) {
+        return;
+    }
+    const target = preferred || state.root.querySelector('[data-region="filter"]');
+    if (target) {
+        target.focus();
     }
 };
 
@@ -154,54 +183,45 @@ const removeRelated = async(state, rowEl) => {
     }])[0];
     rowEl.remove();
     state.excluded.delete(String(relatedid));
-    if (state.addsel) {
-        state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
-    }
-    state.emptyEl.hidden = state.listEl.children.length > 0;
+    state.emptyEl.hidden = state.relationsEl.children.length > 0;
+    // Re-render the tree so the removed competency becomes pickable again.
+    await applyMode(state, state.mode, state.query);
+    updateAddButton(state);
+    // The confirm dialog restored focus to the now-detached row button.
+    restoreFocus(state, state.relationsEl.querySelector('[data-action="remove-related"]'));
     addToast(state.removedlabel);
 };
 
 /**
- * Add the picked competency, then re-fetch the list and reset the picker.
+ * Add every checked competency as a relation, then refresh the rows and the tree.
  *
  * @param {Object} state Modal state.
- * @return {void}
+ * @return {Promise<void>}
  */
-const onAdd = (state) => {
-    const relatedid = Number(state.addsel.value);
-    if (!relatedid) {
+const addSelected = async(state) => {
+    const ids = getCheckedIds(state);
+    if (!ids.length) {
         return;
     }
-    state.excluded.add(String(relatedid));
-    Ajax.call([{
-        methodname: 'core_competency_add_related_competency',
-        args: {competencyid: state.competencyid, relatedcompetencyid: relatedid},
-    }])[0]
-        .then(() => Templates.replaceNodeContents(state.addsel.parentElement, state.addshtml, ''))
-        .then(() => {
-            bindPicker(state);
-            return loadRelations(state);
-        })
-        .then(() => {
-            flash(state.listEl.querySelector(`[data-relatedid="${relatedid}"]`));
-            addToast(state.addedlabel);
-            return null;
-        })
-        .catch(Notification.exception);
-};
-
-/**
- * (Re-)bind the add picker: refresh the cached select and enhance the autocomplete.
- *
- * @param {Object} state Modal state.
- * @return {void}
- */
-const bindPicker = (state) => {
-    state.addsel = state.root.querySelector(SELECTORS.addSelect);
-    state.addsel.dataset.frameworkid = String(state.frameworkid);
-    state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
-    state.addsel.addEventListener('change', () => onAdd(state));
-    enhance(SELECTORS.addSelect, false, DATASOURCE, state.addlabel).catch(Notification.exception);
+    state.addbtnEl.disabled = true;
+    try {
+        await Promise.all(Ajax.call(ids.map((relatedid) => ({
+            methodname: 'core_competency_add_related_competency',
+            args: {competencyid: state.competencyid, relatedcompetencyid: relatedid},
+        }))));
+        state.checked.clear();
+    } finally {
+        // A failing call in the batch does not roll back the earlier ones, so re-sync the
+        // rows and the tree with the server even on error; the still-pending checks are
+        // kept (and restored on render) so the user can retry them.
+        await loadRelations(state);
+        await applyMode(state, state.mode, state.query);
+        updateAddButton(state);
+        // Disabling the focused button dropped focus to <body>.
+        restoreFocus(state, null);
+    }
+    ids.forEach((relatedid) => flash(state.relationsEl.querySelector(`[data-relatedid="${relatedid}"]`)));
+    addToast(state.addedlabel);
 };
 
 /**
@@ -211,31 +231,35 @@ const bindPicker = (state) => {
  * @return {Promise<void>}
  */
 export const open = async(opts) => {
-    const [title, addlabel, removelabel, addedlabel, removedlabel] = await Promise.all([
-        getString('central_related_title', 'local_dimensions', opts.competencyname),
-        getString('central_related_add', 'local_dimensions'),
-        getString('central_related_remove', 'local_dimensions'),
-        getString('central_related_added', 'local_dimensions'),
-        getString('central_related_removed', 'local_dimensions'),
-    ]);
-    const {html} = await Templates.renderForPromise('local_dimensions/central/related_competencies', {
-        competencyid: Number(opts.competencyid),
-        frameworkid: Number(opts.frameworkid),
-    });
+    const competencyid = Number(opts.competencyid);
+    const [title, removelabel, addedlabel, removedlabel, selflabel, relatedlabel, loadmorelabel, emptylabel] =
+        await Promise.all([
+            getString('central_related_title', 'local_dimensions', opts.competencyname),
+            getString('central_related_remove', 'local_dimensions'),
+            getString('central_related_added', 'local_dimensions'),
+            getString('central_related_removed', 'local_dimensions'),
+            getString('central_related_self', 'local_dimensions'),
+            getString('central_related_alreadyrelated', 'local_dimensions'),
+            getString('central_browseframeworks_loadmore', 'local_dimensions'),
+            getString('central_browseframeworks_empty', 'local_dimensions'),
+        ]);
+    const {html} = await Templates.renderForPromise('local_dimensions/central/related_competencies', {});
     const modal = await Modal.create({title, body: html});
     modal.setRemoveOnClose(true);
 
     const root = modal.getRoot()[0];
     const state = {
-        competencyid: Number(opts.competencyid),
+        competencyid: competencyid,
         frameworkid: Number(opts.frameworkid),
         root: root,
         listEl: null,
+        relationsEl: null,
         emptyEl: null,
-        addsel: null,
-        addshtml: '',
-        excluded: new Set([String(Number(opts.competencyid))]),
-        addlabel: addlabel,
+        addbtnEl: null,
+        excluded: new Set([String(competencyid)]),
+        excludedsuffix: (id) => (id === String(competencyid) ? selflabel : relatedlabel),
+        loadmorelabel: loadmorelabel,
+        emptylabel: emptylabel,
         removelabel: removelabel,
         addedlabel: addedlabel,
         removedlabel: removedlabel,
@@ -246,16 +270,27 @@ export const open = async(opts) => {
         // it (the page-level region sits below the modal). Core removes it on close.
         addToastRegion(modal.getBody()[0]).catch(Notification.exception);
         const region = root.querySelector(SELECTORS.region);
-        state.listEl = region.querySelector(SELECTORS.list);
+        state.listEl = region.querySelector(SELECTORS.pickerList);
+        state.relationsEl = region.querySelector(SELECTORS.relations);
         state.emptyEl = region.querySelector(SELECTORS.empty);
-        state.addshtml = region.querySelector(SELECTORS.addSelect).parentElement.innerHTML;
+        state.addbtnEl = region.querySelector(SELECTORS.addSelected);
         region.addEventListener('click', (event) => {
             if (event.target.closest('[data-action="remove-related"]')) {
                 removeRelated(state, event.target.closest('[data-relatedid]')).catch(Notification.exception);
             }
         });
-        bindPicker(state);
-        loadRelations(state).catch(Notification.exception);
+        state.addbtnEl.addEventListener('click', () => addSelected(state).catch(Notification.exception));
+        loadRelations(state)
+            .then(() => initBrowser(state))
+            .then(() => {
+                // Registered after the browser's own click handler so row-click toggles are
+                // already applied when the button state is recomputed.
+                state.listEl.addEventListener('click', () => updateAddButton(state));
+                state.listEl.addEventListener('change', () => updateAddButton(state));
+                return null;
+            })
+            .catch(Notification.exception);
     });
+    modal.getRoot().on(ModalEvents.hidden, () => destroyBrowser(state));
     modal.show();
 };

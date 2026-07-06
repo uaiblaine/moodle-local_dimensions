@@ -17,32 +17,27 @@
 {{!
     @template local_dimensions/central/related_competencies
 
-    Body shell for the "Related competencies" modal. The current-relation rows are rendered
-    client-side by local_dimensions/central/related_competencies; this shell carries the
-    framework-scoped add autocomplete select and the empty-state region.
+    Body shell for the "Related competencies" modal: the same framework browser as the
+    "Browse frameworks" modal (search + lazy competency tree, shared partial), minus the
+    framework selector — a relation can only reference a competency of the same framework —
+    followed by the current-relation rows. The tree and the rows are rendered client-side
+    by local_dimensions/central/related_competencies.
 
-    Context variables required:
-    * competencyid (int)
-    * frameworkid (int)
+    Context variables required: none (all dynamic content is rendered client-side).
 
     Example context (json):
-    {
-        "competencyid": 7,
-        "frameworkid": 3
-    }
+    {}
 }}
 <div class="local-dimensions-central-related" data-region="related-competencies">
-    <div class="mb-3">
-        <label class="d-block small text-muted mb-1" for="local-dimensions-related-add">
-            {{#str}}central_related_add, local_dimensions{{/str}}
-        </label>
-        <select id="local-dimensions-related-add"
-                class="form-select"
-                data-region="related-add"
-                data-competencyid="{{competencyid}}"
-                data-frameworkid="{{frameworkid}}"
-                data-exclude=""></select>
+    <div class="small fw-medium mb-1">{{#str}}central_related_add, local_dimensions{{/str}}</div>
+    <p class="small text-muted mb-2">{{#str}}central_related_sameframework, local_dimensions{{/str}}</p>
+    {{> local_dimensions/central/competency_tree_browser }}
+    <div class="d-flex justify-content-end my-2">
+        <button type="button" class="btn btn-primary btn-sm" data-action="add-selected" disabled>
+            {{#str}}central_browseframeworks_add, local_dimensions{{/str}}
+        </button>
     </div>
+    <hr class="my-2">
     <div data-region="related-list"></div>
     <div class="text-muted small" data-region="related-empty" hidden>
         {{#str}}central_related_empty, local_dimensions{{/str}}
