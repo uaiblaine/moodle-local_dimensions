@@ -124,8 +124,9 @@ class template_dynamic_form extends \core_form\dynamic_form {
         $mform->addElement('date_time_selector', 'duedate', get_string('duedate', 'tool_lp'), ['optional' => true]);
         $mform->addHelpButton('duedate', 'duedate', 'tool_lp');
 
-        // Plugin custom fields (renders the "Custom fields" header + the lp area fields).
-        lp_handler::create()->instance_form_definition($mform, $this->get_templateid());
+        // Plugin custom fields. Pass '' to suppress the handler's page-level heading: inside the
+        // modal the core category headers already label the fields (parity with the competency modal).
+        lp_handler::create()->instance_form_definition($mform, $this->get_templateid(), '');
     }
 
     /**

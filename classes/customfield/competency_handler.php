@@ -160,15 +160,10 @@ class competency_handler extends handler {
         ?string $headerlangidentifier = null,
         ?string $headerlangcomponent = null
     ) {
-        global $OUTPUT;
-
-        if ($headerlangidentifier !== '') {
-            $headerlangidentifier = $headerlangidentifier ?? 'customfields';
-            $headerlangcomponent = $headerlangcomponent ?? 'local_dimensions';
-            $mform->addElement('html', $OUTPUT->render_from_template('local_dimensions/customfield_header', [
-                'title' => get_string($headerlangidentifier, $headerlangcomponent),
-            ]));
-        }
+        // No plugin-level heading: the core custom-field category headers (rendered by the
+        // parent) already label the fields, and the caller owns any section wrapper. Pass the
+        // identifier through untouched so the category names show verbatim — overriding it with
+        // a lang string here discarded the real category name in the hub modal.
         parent::instance_form_definition($mform, $instanceid, $headerlangidentifier, $headerlangcomponent);
 
         // In built-in mode, add filemanagers for background and card images.

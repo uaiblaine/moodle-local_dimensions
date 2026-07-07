@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **Edit-competency and edit-plan modals** no longer show the redundant plugin-level `<h2>`
+  ("Competency custom fields" / "Learning plan template custom fields") above the custom-field
+  block — inside the dialog the core custom-field **category headers already label the fields**.
+  The competency modal now also shows the **real category name** in each accordion header: the
+  handler was overriding it with `get_string('customfields', …)` (a string with no `{$a}`), which
+  discarded the category name; the identifier is now passed through untouched (matching how the
+  plan modal already behaved). The plan modal suppresses the heading by passing `''`; the full-page
+  admin forms (`edit_competency.php` / `edit_template.php`) are unchanged. Removed the now-unused
+  `customfield_header` template.
+
 ### Added
 - **Participants modal (Plans tab) — assign picker and filters**:
   - The assign-user picker only suggests users **without a plan created from the template** (new WS

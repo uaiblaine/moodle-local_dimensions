@@ -160,7 +160,13 @@ class lp_handler extends handler {
         ?string $headerlangidentifier = null,
         ?string $headerlangcomponent = null
     ) {
-        $mform->addElement('html', '<h2 class="mt-4 mb-3">' . get_string('templatecustomfields', 'local_dimensions') . '</h2>');
+        // The full-page admin form (edit_template.php) relies on this heading to label the
+        // custom-field block; the hub modal passes '' to suppress it, because the core category
+        // headers already label the fields inside the dialog.
+        if ($headerlangidentifier !== '') {
+            $heading = get_string('templatecustomfields', 'local_dimensions');
+            $mform->addElement('html', '<h2 class="mt-4 mb-3">' . $heading . '</h2>');
+        }
         parent::instance_form_definition($mform, $instanceid, $headerlangidentifier, $headerlangcomponent);
 
         // In built-in mode, add filemanagers for background and card images.
