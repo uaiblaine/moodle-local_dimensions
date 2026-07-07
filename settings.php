@@ -316,27 +316,11 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         'moodle/competency:competencymanage'
     ));
 
-    // Manage competencies with custom fields.
-    $ADMIN->add('local_dimensions', new admin_externalpage(
-        'local_dimensions_manage',
-        get_string('managecompetencies', 'local_dimensions'),
-        new moodle_url('/local/dimensions/manage_competencies.php'),
-        'moodle/competency:competencymanage'
-    ));
-
     // Learning plan template custom fields configuration.
     $ADMIN->add('local_dimensions', new admin_externalpage(
         'local_dimensions_customfield_template',
         get_string('templatecustomfields', 'local_dimensions'),
         new moodle_url('/local/dimensions/customfield_template.php'),
-        'moodle/competency:templatemanage'
-    ));
-
-    // Manage templates with custom fields.
-    $ADMIN->add('local_dimensions', new admin_externalpage(
-        'local_dimensions_manage_templates',
-        get_string('managetemplates', 'local_dimensions'),
-        new moodle_url('/local/dimensions/manage_templates.php'),
         'moodle/competency:templatemanage'
     ));
 }

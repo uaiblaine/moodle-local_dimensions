@@ -17,9 +17,9 @@
 /**
  * Modal (dynamic) form to create or edit a competency — for the Competency hub.
  *
- * Mirrors the field set and save flow of competency_form / edit_competency.php, but
- * runs inside a modal (core_form/modalform) with no page reload. Rule configuration
- * is handled separately (see docs/admin-redesign-codeplan.md, phase 2).
+ * Runs inside a modal (core_form/modalform) with no page reload; the plugin's
+ * competency custom fields are rendered and saved by competency_handler. Rule
+ * configuration is handled separately by the Structure tab's rule_config modal.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

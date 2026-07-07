@@ -511,29 +511,6 @@ class helper {
     }
 
     /**
-     * Get the display mode for a specific template.
-     *
-     * @param int $templateid Learning plan template ID
-     * @return int Display mode constant (DISPLAYMODE_COMPETENCIES or DISPLAYMODE_PLAN)
-     */
-    public static function get_template_display_mode(int $templateid): int {
-        $field = self::get_display_mode_field();
-        if (!$field) {
-            return constants::DISPLAYMODE_COMPETENCIES;
-        }
-
-        $fields = \core_customfield\api::get_instance_fields_data([$field->get('id') => $field], $templateid);
-        foreach ($fields as $data) {
-            $value = (int) $data->get('intvalue');
-            if (array_key_exists($value, constants::display_mode_options())) {
-                return $value;
-            }
-        }
-
-        return constants::DISPLAYMODE_COMPETENCIES;
-    }
-
-    /**
      * Get or create the per-template "subline source" select field (lp area).
      *
      * The selected value drives which piece of information is shown beneath the
@@ -1079,63 +1056,6 @@ class helper {
             return "unaccent($fieldname) ILIKE unaccent($param) ESCAPE '\\'";
         }
         return $DB->sql_like($fieldname, $param, false, false);
-    }
-
-    /**
-     * Return a localized rule outcome label.
-     *
-     * @param int $ruleoutcome Native rule outcome id.
-     * @return string
-     */
-    public static function get_competency_rule_outcome_label(int $ruleoutcome): string {
-        if ($ruleoutcome === \core_competency\competency::OUTCOME_EVIDENCE) {
-            return get_string('competencyoutcome_evidence', 'tool_lp');
-        } else if ($ruleoutcome === \core_competency\competency::OUTCOME_COMPLETE) {
-            return get_string('competencyoutcome_complete', 'tool_lp');
-        } else if ($ruleoutcome === \core_competency\competency::OUTCOME_RECOMMEND) {
-            return get_string('competencyoutcome_recommend', 'tool_lp');
-        }
-
-        return get_string('competencyoutcome_none', 'tool_lp');
-    }
-
-    /**
-     * Build a compact tree model for the native tool_lp rule configuration widget.
-     *
-     * @param \core_competency\competency $competency The target competency.
-     * @return array<int, array<string, mixed>> Target competency followed by direct children.
-     */
-    public static function get_competency_rule_model(\core_competency\competency $competency): array {
-        $models = [self::export_competency_rule_model($competency)];
-        $children = \core_competency\competency::get_records(
-            ['parentid' => $competency->get('id')],
-            'sortorder'
-        );
-
-        foreach ($children as $child) {
-            $models[] = self::export_competency_rule_model($child);
-        }
-
-        return $models;
-    }
-
-    /**
-     * Export a competency record for the native rule JS model.
-     *
-     * @param \core_competency\competency $competency The competency.
-     * @return array<string, mixed>
-     */
-    protected static function export_competency_rule_model(\core_competency\competency $competency): array {
-        return [
-            'id' => (int)$competency->get('id'),
-            'parentid' => (int)$competency->get('parentid'),
-            'competencyframeworkid' => (int)$competency->get('competencyframeworkid'),
-            'shortname' => $competency->get('shortname'),
-            'path' => $competency->get('path'),
-            'ruletype' => $competency->get('ruletype'),
-            'ruleoutcome' => (int)$competency->get('ruleoutcome'),
-            'ruleconfig' => $competency->get('ruleconfig'),
-        ];
     }
 
     /**
