@@ -25,6 +25,7 @@
 
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · selectedframeworkid (int) · showhidden (bool)
+    * hashiddenframeworks (bool)
     * rulesmodulesjson (string json) · courseoutcomesjson (string json) · moduleoutcomesjson (string json)
     * needscategoryselection (bool)
     * hasframeworks (bool) · frameworks (array) {id, name, idnumber, selected, competencycount, hidden}
@@ -39,6 +40,7 @@
         "selectedcategoryid": 0,
         "selectedframeworkid": 5,
         "showhidden": false,
+        "hashiddenframeworks": true,
         "rulesmodulesjson": "[]",
         "courseoutcomesjson": "[]",
         "moduleoutcomesjson": "[]",
@@ -77,6 +79,7 @@
     {{/needscategoryselection}}
 
     {{^needscategoryselection}}
+    {{#hashiddenframeworks}}
     <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" id="local-dimensions-structure-showhidden"
                data-action="toggle-hidden"{{#showhidden}} checked{{/showhidden}}>
@@ -84,11 +87,12 @@
             {{#str}}managecompetencies_showhiddenframeworks, local_dimensions{{/str}}
         </label>
     </div>
+    {{/hashiddenframeworks}}
     {{#hasframeworks}}
     <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
         <div>
             <label class="d-block small text-muted mb-1" for="local-dimensions-central-framework">
-                {{#str}}competencyframework, tool_lp{{/str}}
+                {{#str}}central_browseframeworks_framework, local_dimensions{{/str}}
             </label>
             <select id="local-dimensions-central-framework" class="form-select" data-region="framework-select">
                 {{#frameworks}}

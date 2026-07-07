@@ -118,3 +118,94 @@ export const initPaneResizer = ({body, resizer, detail, cssvar, storagekey, mini
         persist(applyWidth(detail.getBoundingClientRect().width + delta));
     });
 };
+
+/**
+ * Wire a vertical resizer that adjusts a container's height from a handle rendered
+ * directly below it. The height is written to a CSS custom property (so it survives
+ * pane reloads) and persisted in localStorage. Supports pointer drag, dblclick reset
+ * and ArrowUp/ArrowDown keyboard resizing.
+ *
+ * @param {Object} options
+ * @param {HTMLElement} options.body The container whose height the CSS variable drives.
+ * @param {HTMLElement} options.resizer The handle element (role="separator").
+ * @param {String} options.cssvar CSS custom property the container height reads.
+ * @param {String} options.storagekey localStorage key that persists the chosen height.
+ * @param {Number} [options.minimum] Minimum height in pixels.
+ * @param {Number} [options.maximum] Maximum height in pixels; defaults to 85% of the viewport.
+ */
+export const initVerticalResizer = ({body, resizer, cssvar, storagekey, minimum = 320, maximum = 0}) => {
+    if (!resizer || !body) {
+        return;
+    }
+    const cap = () => maximum || Math.round(window.innerHeight * 0.85);
+    const applyHeight = (height) => {
+        const next = Math.min(Math.max(height, minimum), cap());
+        body.style.setProperty(cssvar, next + 'px');
+        resizer.setAttribute('aria-valuenow', String(Math.round(next)));
+        return next;
+    };
+    const persist = (height) => {
+        try {
+            window.localStorage.setItem(storagekey, String(Math.round(height)));
+        } catch (e) {
+            // Local storage may be unavailable in restricted browser contexts.
+        }
+    };
+    try {
+        const stored = Number(window.localStorage.getItem(storagekey));
+        if (stored) {
+            applyHeight(stored);
+        }
+    } catch (e) {
+        // Local storage may be unavailable in restricted browser contexts.
+    }
+    resizer.setAttribute('aria-valuemin', String(minimum));
+    let starty = 0;
+    let startheight = 0;
+    resizer.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        starty = event.clientY;
+        startheight = body.getBoundingClientRect().height;
+        body.classList.add('local-dimensions-resizing-vert');
+        resizer.setPointerCapture(event.pointerId);
+    });
+    resizer.addEventListener('pointermove', (event) => {
+        if (!body.classList.contains('local-dimensions-resizing-vert')) {
+            return;
+        }
+        applyHeight(startheight + event.clientY - starty);
+    });
+    resizer.addEventListener('pointerup', (event) => {
+        if (!body.classList.contains('local-dimensions-resizing-vert')) {
+            return;
+        }
+        const height = applyHeight(body.getBoundingClientRect().height);
+        body.classList.remove('local-dimensions-resizing-vert');
+        try {
+            resizer.releasePointerCapture(event.pointerId);
+        } catch (e) {
+            // Pointer capture may already be released.
+        }
+        persist(height);
+    });
+    resizer.addEventListener('dblclick', () => {
+        body.style.removeProperty(cssvar);
+        try {
+            window.localStorage.removeItem(storagekey);
+        } catch (e) {
+            // Local storage may be unavailable in restricted browser contexts.
+        }
+    });
+    resizer.addEventListener('keydown', (event) => {
+        let delta = 0;
+        if (event.key === 'ArrowUp') {
+            delta = -24;
+        } else if (event.key === 'ArrowDown') {
+            delta = 24;
+        } else {
+            return;
+        }
+        event.preventDefault();
+        persist(applyHeight(body.getBoundingClientRect().height + delta));
+    });
+};

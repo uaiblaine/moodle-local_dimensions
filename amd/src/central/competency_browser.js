@@ -59,12 +59,11 @@ const addSelected = (state) => {
  * Open the browse-frameworks modal for the given plans pane.
  *
  * @param {HTMLElement} pane The tab pane.
- * @param {HTMLElement} region The plans region (contextid + add-picker exclusion list).
+ * @param {HTMLElement} region The plans region (contextid + the exclusion list of ids already on the plan).
  * @return {Promise<void>}
  */
 export const show = async(pane, region) => {
-    const addsel = region.querySelector('[data-region="competency-add"]');
-    const raw = addsel && addsel.dataset.exclude ? addsel.dataset.exclude : '';
+    const raw = region.dataset.excludeids || '';
     const [addedlabel, loadmorelabel, emptylabel] = await Promise.all([
         getString('central_browseframeworks_alreadyadded', 'local_dimensions'),
         getString('central_browseframeworks_loadmore', 'local_dimensions'),

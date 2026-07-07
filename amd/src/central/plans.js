@@ -33,7 +33,7 @@ import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {show as showCompetencyBrowser} from 'local_dimensions/central/competency_browser';
 import {show as showParticipants} from 'local_dimensions/central/participants_manager';
-import {initPaneResizer} from 'local_dimensions/central/pane_resizer';
+import {initPaneResizer, initVerticalResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
 const FORM_CLASS = 'local_dimensions\\form\\template_dynamic_form';
@@ -49,23 +49,30 @@ const DISPLAY_KEY = 'local_dimensions_plans_display';
 /** @type {Object} Map of display-toggle key to the CSS class it controls on the list. */
 const DISPLAY_CLASSES = {tax: 'show-tax', path: 'show-path', id: 'show-id'};
 
+/** @type {String} sessionStorage key for the plan-list display-toggle choice. */
+const LISTDISPLAY_KEY = 'local_dimensions_plans_listdisplay';
+
+/** @type {Object} Map of plan-list display-toggle key to the CSS class it controls on the rows. */
+const LISTDISPLAY_CLASSES = {id: 'show-id', duedate: 'show-duedate'};
+
 const SELECTORS = {
     region: '[data-region="plans"]',
     competencySearch: '[data-region="competency-search"]',
-    competencyAdd: '[data-region="competency-add"]',
     filterPicker: '[data-region="competency-filter-picker"]',
     filterAddButton: '[data-action="add-filter-competency"]',
     planSearch: '[data-region="plan-search-input"]',
     templateRows: '[data-region="template-rows"]',
     templateRow: '[data-region="template-row"]',
     searchEmpty: '[data-region="plan-search-empty"]',
-    addPanel: '[data-region="add-panel"]',
     plansBody: '[data-region="plans-body"]',
     plansResizer: '[data-region="plans-resizer"]',
+    plansVResizer: '[data-region="plans-vresizer"]',
     detailPane: '[data-region="plan-detail"]',
     showDisabled: '[data-action="toggle-disabled"]',
     displayPanel: '[data-region="display-options-panel"]',
     displayToggle: '[data-display-toggle]',
+    listDisplayPanel: '[data-region="list-display-options-panel"]',
+    listDisplayToggle: '[data-list-toggle]',
     competencyItems: '[data-region="competency-items"]',
     competencyList: '[data-region="competency-list"]',
     dragHandle: '[data-region="drag-handle"]',
@@ -366,6 +373,70 @@ const initDisplayOptions = (region) => {
 };
 
 /**
+ * Read the persisted plan-list display-toggle choice from sessionStorage.
+ *
+ * @return {Object} Map of toggle key to boolean; empty when nothing is stored.
+ */
+const readListDisplayPrefs = () => {
+    try {
+        return JSON.parse(window.sessionStorage.getItem(LISTDISPLAY_KEY) || 'null') || {};
+    } catch (e) {
+        return {};
+    }
+};
+
+/**
+ * Persist the plan-list display-toggle choice to sessionStorage.
+ *
+ * @param {Object} prefs Map of toggle key to boolean.
+ */
+const writeListDisplayPrefs = (prefs) => {
+    try {
+        window.sessionStorage.setItem(LISTDISPLAY_KEY, JSON.stringify(prefs));
+    } catch (e) {
+        // Storage unavailable (e.g. private mode) — the toggles simply do not persist.
+    }
+};
+
+/**
+ * Apply the stored plan-list display prefs to the checkboxes and the rows container
+ * classes (show identifiers / show due date), so the choice survives a pane reload.
+ *
+ * @param {HTMLElement} region
+ */
+const applyListDisplayPrefs = (region) => {
+    const rows = region.querySelector(SELECTORS.templateRows);
+    if (!rows) {
+        return;
+    }
+    const stored = readListDisplayPrefs();
+    region.querySelectorAll(SELECTORS.listDisplayToggle).forEach((cb) => {
+        const key = cb.dataset.listToggle;
+        const on = Object.prototype.hasOwnProperty.call(stored, key) ? Boolean(stored[key]) : cb.checked;
+        cb.checked = on;
+        rows.classList.toggle(LISTDISPLAY_CLASSES[key], on);
+    });
+};
+
+/**
+ * Wire the plan-list display-option switches: each change persists the choice and
+ * reapplies the show-* classes on the rows container.
+ *
+ * @param {HTMLElement} region
+ */
+const initListDisplayOptions = (region) => {
+    region.querySelectorAll(SELECTORS.listDisplayToggle).forEach((cb) => {
+        cb.addEventListener('change', () => {
+            const prefs = readListDisplayPrefs();
+            prefs[cb.dataset.listToggle] = cb.checked;
+            writeListDisplayPrefs(prefs);
+            applyListDisplayPrefs(region);
+        });
+    });
+    applyListDisplayPrefs(region);
+};
+
+/**
  * Drag-and-drop reordering of the plan's competencies. The drag starts from the grip
  * handle that appears on row hover; while dragging the row is live-repositioned at the
  * pointer's midpoint, and on release a single reorder web-service call persists the
@@ -634,24 +705,18 @@ const ACTION_HANDLERS = {
             }
         }
     },
-    'toggle-add': (pane, region, target) => {
-        const panel = region.querySelector(SELECTORS.addPanel);
+    'duplicate-template': (pane, region, target) =>
+        duplicateTemplate(pane, target.dataset.id).catch(Notification.exception),
+    'display-options': (pane, region, target) => {
+        const panel = region.querySelector(SELECTORS.displayPanel);
         if (!panel) {
             return;
         }
         panel.hidden = !panel.hidden;
         target.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
-        if (!panel.hidden) {
-            const input = panel.querySelector('input');
-            if (input) {
-                input.focus();
-            }
-        }
     },
-    'duplicate-template': (pane, region, target) =>
-        duplicateTemplate(pane, target.dataset.id).catch(Notification.exception),
-    'display-options': (pane, region, target) => {
-        const panel = region.querySelector(SELECTORS.displayPanel);
+    'list-display-options': (pane, region, target) => {
+        const panel = region.querySelector(SELECTORS.listDisplayPanel);
         if (!panel) {
             return;
         }
@@ -741,6 +806,7 @@ export const init = () => {
 
     initShowDisabled(region);
     initDisplayOptions(region);
+    initListDisplayOptions(region);
     initDragReorder(region, pane);
     // The competency detail generally needs more room than the plan list: allow the
     // divider to shrink the list down to ~200px and let the detail grow well past the
@@ -755,24 +821,13 @@ export const init = () => {
         maximum: 1600,
         reserve: 200,
     });
-
-    const addpicker = region.querySelector(SELECTORS.competencyAdd);
-    if (addpicker && pane && !addpicker.dataset.enhanced) {
-        addpicker.dataset.enhanced = '1';
-        addpicker.addEventListener('change', () => {
-            const competencyid = Number(addpicker.value);
-            if (!competencyid) {
-                return;
-            }
-            Ajax.call([{
-                methodname: 'core_competency_add_competency_to_template',
-                args: {templateid: Number(pane.dataset.templateid), competencyid: competencyid},
-            }])[0].then(() => reloadKeepingScroll(pane)).catch(Notification.exception);
-        });
-        getString('central_addcompetency', 'local_dimensions')
-            .then((placeholder) => enhance(SELECTORS.competencyAdd, false, DATASOURCE, placeholder, false, true, '', true))
-            .catch(Notification.exception);
-    }
+    initVerticalResizer({
+        body: region.querySelector(SELECTORS.plansBody),
+        resizer: region.querySelector(SELECTORS.plansVResizer),
+        cssvar: '--local-dimensions-plans-body-height',
+        storagekey: 'local_dimensions_plans_body_height',
+        minimum: 320,
+    });
 
     region.addEventListener('click', (event) => {
         const target = event.target.closest('[data-action]');

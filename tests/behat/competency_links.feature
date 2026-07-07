@@ -23,6 +23,8 @@ Feature: Link a competency to courses and activities in the Competency hub
 
   Scenario: Open the Courses & activities modal and see a linked course
     When I visit "/local/dimensions/central.php"
-    And I click on "Alpha competency" "button"
+    And I click on "Competencies" "link" in the "#dynamictabs-tabs" "css_element"
+    Then I should see "Alpha competency"
+    When I click on "Alpha competency" "button"
     And I click on "Courses & activities" "button"
     Then I should see "Linked course"
