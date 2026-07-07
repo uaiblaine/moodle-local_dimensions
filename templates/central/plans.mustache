@@ -38,7 +38,7 @@
     * competencyfilters (array) {id, label} · filteredbycompetency (bool)
     * hascompetencies (bool) · competencies (array) {id, shortname, idnumber, taxonomy, path,
       frameworktag, frameworkid, first, last}
-    * excludeids (string) · comma-separated ids already on the template (add-picker exclusion)
+    * excludeids (string) · comma-separated ids already on the template (browse-modal exclusion)
     * competencycount (int) · canmanage (int) · canassignroles (int)
 
     Example context (json):
@@ -98,7 +98,7 @@
      data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}"
      data-contextid="{{contextid}}" data-templateid="{{selectedtemplateid}}"
      data-templatename="{{selectedtemplatename}}" data-competencyids="{{competencyids}}"
-     data-canassignroles="{{canassignroles}}">
+     data-excludeids="{{excludeids}}" data-canassignroles="{{canassignroles}}">
     {{#needscategoryselection}}
     <div class="alert alert-info" role="status">{{#str}}managecompetencies_selectcategory_help, local_dimensions{{/str}}</div>
     {{/needscategoryselection}}
@@ -390,8 +390,7 @@
                                 data-id="{{selectedtemplateid}}">
                             <i class="fa fa-pencil me-1" aria-hidden="true"></i>{{#str}}central_plans_editdetails, local_dimensions{{/str}}
                         </button>
-                        <button type="button" class="btn btn-sm btn-secondary" data-action="toggle-add"
-                                aria-expanded="false" aria-controls="local-dimensions-plans-addpanel">
+                        <button type="button" class="btn btn-sm btn-secondary" data-action="browse-frameworks">
                             <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}central_addcompetency, local_dimensions{{/str}}
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-action="manage-participants">
@@ -421,19 +420,6 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
-                    <div class="mt-3" id="local-dimensions-plans-addpanel" data-region="add-panel" hidden>
-                        <label class="d-block small text-muted mb-1" for="local-dimensions-central-competency-add">
-                            {{#str}}central_addcompetency, local_dimensions{{/str}}
-                        </label>
-                        <select id="local-dimensions-central-competency-add" data-region="competency-add"
-                                data-templateid="{{selectedtemplateid}}" data-exclude="{{excludeids}}"
-                                class="form-select">
-                        </select>
-                        <button type="button" class="btn btn-link btn-sm px-0 mt-1" data-action="browse-frameworks">
-                            <i class="fa fa-sitemap me-1" aria-hidden="true"></i>
-                            {{#str}}central_browseframeworks, local_dimensions{{/str}}
-                        </button>
                     </div>
                 </div>
                 {{/canmanage}}

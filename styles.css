@@ -3235,7 +3235,9 @@
     grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-plans-detail-width, calc(50% - 0.25rem));
     height: 60vh;
     min-height: 320px;
-    max-height: 680px;
+    max-height: 85vh;
+    overflow: hidden;
+    resize: vertical;
 }
 
 /* No templates (or a competency filter matched none): only the selector card renders,
@@ -3244,6 +3246,14 @@
     grid-template-columns: minmax(0, 1fr);
     height: auto;
     max-height: none;
+    resize: none;
+}
+
+/* Lift an open row-action menu above adjacent rows and the action footer. The competency
+   list scrolls, so a menu opening near its bottom edge can still be clipped by the scroll
+   container — the vertical resize on the body above gives room to avoid that. */
+.local-dimensions-central-plans [data-region='competency-items'] .dropdown-menu {
+    z-index: 1021;
 }
 
 .local-dimensions-central-plans-list-pane,

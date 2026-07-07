@@ -58,14 +58,12 @@ const LISTDISPLAY_CLASSES = {id: 'show-id', duedate: 'show-duedate'};
 const SELECTORS = {
     region: '[data-region="plans"]',
     competencySearch: '[data-region="competency-search"]',
-    competencyAdd: '[data-region="competency-add"]',
     filterPicker: '[data-region="competency-filter-picker"]',
     filterAddButton: '[data-action="add-filter-competency"]',
     planSearch: '[data-region="plan-search-input"]',
     templateRows: '[data-region="template-rows"]',
     templateRow: '[data-region="template-row"]',
     searchEmpty: '[data-region="plan-search-empty"]',
-    addPanel: '[data-region="add-panel"]',
     plansBody: '[data-region="plans-body"]',
     plansResizer: '[data-region="plans-resizer"]',
     detailPane: '[data-region="plan-detail"]',
@@ -706,20 +704,6 @@ const ACTION_HANDLERS = {
             }
         }
     },
-    'toggle-add': (pane, region, target) => {
-        const panel = region.querySelector(SELECTORS.addPanel);
-        if (!panel) {
-            return;
-        }
-        panel.hidden = !panel.hidden;
-        target.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
-        if (!panel.hidden) {
-            const input = panel.querySelector('input');
-            if (input) {
-                input.focus();
-            }
-        }
-    },
     'duplicate-template': (pane, region, target) =>
         duplicateTemplate(pane, target.dataset.id).catch(Notification.exception),
     'display-options': (pane, region, target) => {
@@ -836,24 +820,6 @@ export const init = () => {
         maximum: 1600,
         reserve: 200,
     });
-
-    const addpicker = region.querySelector(SELECTORS.competencyAdd);
-    if (addpicker && pane && !addpicker.dataset.enhanced) {
-        addpicker.dataset.enhanced = '1';
-        addpicker.addEventListener('change', () => {
-            const competencyid = Number(addpicker.value);
-            if (!competencyid) {
-                return;
-            }
-            Ajax.call([{
-                methodname: 'core_competency_add_competency_to_template',
-                args: {templateid: Number(pane.dataset.templateid), competencyid: competencyid},
-            }])[0].then(() => reloadKeepingScroll(pane)).catch(Notification.exception);
-        });
-        getString('central_addcompetency', 'local_dimensions')
-            .then((placeholder) => enhance(SELECTORS.competencyAdd, false, DATASOURCE, placeholder, false, true, '', true))
-            .catch(Notification.exception);
-    }
 
     region.addEventListener('click', (event) => {
         const target = event.target.closest('[data-action]');
