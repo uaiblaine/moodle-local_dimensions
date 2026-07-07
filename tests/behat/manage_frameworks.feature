@@ -18,3 +18,15 @@ Feature: Manage competency frameworks from the Competency hub
     Then I should see "Behat framework"
     And I should see "New framework"
     And I should see "Edit" in the ".local-dimensions-central-framework" "css_element"
+
+  Scenario: Import and export open their modals from the Frameworks tab
+    When I visit "/local/dimensions/central.php"
+    And I click on "Frameworks" "link"
+    Then I should see "Import"
+    And I should see "Export"
+    When I click on "Import" "button"
+    Then I should see "CSV file" in the "Import framework from CSV" "dialogue"
+    And I should see "Update the existing framework with the same ID number" in the "Import framework from CSV" "dialogue"
+    And I click on "Cancel" "button" in the "Import framework from CSV" "dialogue"
+    When I click on "Export" "button"
+    Then I should see "Framework to export" in the "Export framework to CSV" "dialogue"

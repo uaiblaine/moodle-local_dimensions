@@ -23,13 +23,18 @@
  */
 
 import Ajax from 'core/ajax';
+import Modal from 'core/modal';
+import ModalEvents from 'core/modal_events';
 import ModalForm from 'core_form/modalform';
 import Notification from 'core/notification';
+import Templates from 'core/templates';
 import {getString} from 'core/str';
+import {add as addToast, addToastRegion} from 'core/toast';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import {open as openScaleConfig} from 'local_dimensions/central/framework_scaleconfig';
 
 const FORM_CLASS = 'local_dimensions\\form\\framework_dynamic_form';
+const IMPORT_FORM_CLASS = 'local_dimensions\\form\\import_framework_dynamic_form';
 
 const SELECTORS = {
     region: '[data-region="frameworks"]',
@@ -143,6 +148,164 @@ const createFramework = (pane, region) =>
     openFrameworkForm(pane, {id: 0, contextid: Number(region.dataset.contextid)}, 'central_frameworks_new');
 
 /**
+ * A small Bootstrap spinner element.
+ *
+ * @return {HTMLElement}
+ */
+const makeSpinner = () => {
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner-border spinner-border-sm';
+    spinner.setAttribute('role', 'status');
+    spinner.setAttribute('aria-hidden', 'true');
+    return spinner;
+};
+
+/**
+ * Show a processing banner inside the import modal body while the CSV is imported in-request.
+ *
+ * @param {ModalForm} form The import modal form.
+ * @return {Promise<void>}
+ */
+const showImportLoading = async(form) => {
+    const body = form.modal && form.modal.getBody ? form.modal.getBody()[0] : null;
+    if (!body || body.querySelector('[data-region="import-loading"]')) {
+        return;
+    }
+    const label = await getString('central_frameworks_importing', 'local_dimensions');
+    const banner = document.createElement('div');
+    banner.dataset.region = 'import-loading';
+    banner.className = 'alert alert-info d-flex align-items-center gap-2 mb-3';
+    const text = document.createElement('span');
+    text.textContent = label;
+    banner.append(makeSpinner(), text);
+    body.prepend(banner);
+};
+
+/**
+ * Remove the import processing banner (e.g. when server validation sends the form back).
+ *
+ * @param {ModalForm} form The import modal form.
+ * @return {void}
+ */
+const hideImportLoading = (form) => {
+    const body = form.modal && form.modal.getBody ? form.modal.getBody()[0] : null;
+    const banner = body ? body.querySelector('[data-region="import-loading"]') : null;
+    if (banner) {
+        banner.remove();
+    }
+};
+
+/**
+ * Open the import-framework modal (a dynamic form with a CSV file picker) for the tab's context.
+ *
+ * @param {HTMLElement} pane The tab pane.
+ * @param {HTMLElement} region The frameworks region (carries data-contextid).
+ * @return {Promise<void>}
+ */
+const openImportForm = async(pane, region) => {
+    const form = new ModalForm({
+        formClass: IMPORT_FORM_CLASS,
+        args: {contextid: Number(region.dataset.contextid)},
+        modalConfig: {title: await getString('central_frameworks_import_title', 'local_dimensions')},
+    });
+    form.addEventListener(form.events.SUBMIT_BUTTON_PRESSED, () => showImportLoading(form).catch(Notification.exception));
+    form.addEventListener(form.events.CLIENT_VALIDATION_ERROR, () => hideImportLoading(form));
+    form.addEventListener(form.events.SERVER_VALIDATION_ERROR, () => hideImportLoading(form));
+    form.addEventListener(form.events.FORM_SUBMITTED, (event) => {
+        const count = event.detail && event.detail.competencycount ? event.detail.competencycount : 0;
+        reloadPane(pane).catch(Notification.exception);
+        getString('central_frameworks_import_done', 'local_dimensions', {count: count})
+            .then((message) => addToast(message, {type: 'success'}))
+            .catch(Notification.exception);
+    });
+    form.show();
+};
+
+/**
+ * Stream a CSV string to the browser as a downloaded file.
+ *
+ * @param {String} filename The suggested filename.
+ * @param {String} content The CSV content.
+ * @return {void}
+ */
+const triggerDownload = (filename, content) => {
+    const blob = new Blob([content], {type: 'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+};
+
+/**
+ * Fetch the selected framework's CSV from the web service and download it, with a loader.
+ *
+ * @param {Modal} modal The export modal.
+ * @return {Promise<void>}
+ */
+const downloadFramework = async(modal) => {
+    const body = modal.getBody()[0];
+    const select = body.querySelector('[data-region="export-select"]');
+    const button = body.querySelector('[data-action="download"]');
+    const loader = body.querySelector('[data-region="export-loader"]');
+    const frameworkid = Number(select.value);
+    if (!frameworkid) {
+        return;
+    }
+    button.disabled = true;
+    loader.hidden = false;
+    loader.append(makeSpinner());
+    try {
+        const result = await Ajax.call([{
+            methodname: 'local_dimensions_export_framework',
+            args: {frameworkid: frameworkid},
+        }])[0];
+        triggerDownload(result.filename, result.content);
+        addToast(await getString('central_frameworks_export_done', 'local_dimensions'), {type: 'success'});
+    } catch (error) {
+        Notification.exception(error);
+    } finally {
+        button.disabled = false;
+        loader.hidden = true;
+        loader.replaceChildren();
+    }
+};
+
+/**
+ * Open the export modal: pick a framework from the current context and download its CSV.
+ *
+ * @param {HTMLElement} pane The tab pane (unused; kept for a consistent handler signature).
+ * @param {HTMLElement} region The frameworks region (its rows list the frameworks to export).
+ * @return {Promise<void>}
+ */
+const openExportModal = async(pane, region) => {
+    const [title, body] = await Promise.all([
+        getString('central_frameworks_export_title', 'local_dimensions'),
+        Templates.render('local_dimensions/central/frameworks_export', {}),
+    ]);
+    const modal = await Modal.create({title: title, body: body});
+    modal.setRemoveOnClose(true);
+    modal.getRoot().on(ModalEvents.shown, () => {
+        addToastRegion(modal.getBody()[0]).catch(Notification.exception);
+        const select = modal.getBody()[0].querySelector('[data-region="export-select"]');
+        region.querySelectorAll(SELECTORS.row).forEach((row) => {
+            const option = document.createElement('option');
+            option.value = row.dataset.frameworkid;
+            option.textContent = row.dataset.name;
+            select.append(option);
+        });
+    });
+    modal.getRoot().on('click', '[data-action="download"]', (event) => {
+        event.preventDefault();
+        downloadFramework(modal).catch(Notification.exception);
+    });
+    modal.show();
+};
+
+/**
  * Toggle a framework's visibility, then refresh the pane.
  *
  * @param {HTMLElement} pane The tab pane.
@@ -218,6 +381,14 @@ export const init = () => {
     region.addEventListener('click', (event) => {
         if (event.target.closest('[data-action="new"]')) {
             createFramework(pane, region).catch(Notification.exception);
+            return;
+        }
+        if (event.target.closest('[data-action="import"]')) {
+            openImportForm(pane, region).catch(Notification.exception);
+            return;
+        }
+        if (event.target.closest('[data-action="export"]')) {
+            openExportModal(pane, region).catch(Notification.exception);
             return;
         }
         const row = event.target.closest(SELECTORS.row);

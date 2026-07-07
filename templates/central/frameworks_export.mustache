@@ -1,0 +1,43 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/frameworks_export
+
+    Body of the export-framework modal on the Competency hub Frameworks tab. The framework
+    select is populated client-side from the tab's framework rows; the Download button calls
+    the local_dimensions_export_framework web service and streams the CSV as a file.
+
+    Context variables required: none (static markup; strings resolved via {{#str}}).
+
+    Example context (json):
+    {
+    }
+}}
+<div data-region="export-body">
+    <div class="mb-3">
+        <label class="form-label" for="local-dimensions-export-select">
+            {{#str}}central_frameworks_export_pick, local_dimensions{{/str}}
+        </label>
+        <select class="form-select" id="local-dimensions-export-select" data-region="export-select"></select>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-primary" data-action="download">
+            <i class="fa fa-download me-1" aria-hidden="true"></i>{{#str}}central_frameworks_export, local_dimensions{{/str}}
+        </button>
+        <span data-region="export-loader" class="d-inline-flex" hidden></span>
+    </div>
+</div>

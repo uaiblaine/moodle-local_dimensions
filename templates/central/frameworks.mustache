@@ -22,7 +22,7 @@
 
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · contextid (int) · needscategoryselection (bool)
-    * hasframeworks (bool) · frameworkcount (int) · canmanage (int) · showhidden (bool)
+    * hasframeworks (bool) · frameworkcount (int) · canmanage (int) · canexport (int) · showhidden (bool)
     * frameworks (array) {id, shortname, idnumber, competencycount, visible, deletable, canmanage}
 
     Example context (json):
@@ -34,6 +34,7 @@
         "hasframeworks": true,
         "frameworkcount": 1,
         "canmanage": 1,
+        "canexport": 1,
         "showhidden": false,
         "frameworks": [
             {"id": 5, "shortname": "Core skills", "idnumber": "CORE", "competencycount": 12,
@@ -54,9 +55,19 @@
             {{#str}}central_frameworks_items, local_dimensions{{/str}}: <strong>{{frameworkcount}}</strong>
         </div>
         {{#canmanage}}
-        <button type="button" class="btn btn-primary btn-sm ms-auto" data-action="new">
-            <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}central_frameworks_new, local_dimensions{{/str}}
-        </button>
+        <div class="d-flex flex-wrap gap-2 ms-auto">
+            <button type="button" class="btn btn-primary btn-sm" data-action="new">
+                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}central_frameworks_new, local_dimensions{{/str}}
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="import">
+                <i class="fa fa-upload me-1" aria-hidden="true"></i>{{#str}}central_frameworks_import, local_dimensions{{/str}}
+            </button>
+            {{#canexport}}
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="export">
+                <i class="fa fa-download me-1" aria-hidden="true"></i>{{#str}}central_frameworks_export, local_dimensions{{/str}}
+            </button>
+            {{/canexport}}
+        </div>
         {{/canmanage}}
     </div>
     <div class="form-check form-switch mb-3">

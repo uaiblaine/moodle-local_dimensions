@@ -99,6 +99,7 @@ class frameworks extends \core\output\dynamic_tabs\base {
             'frameworks' => $rows,
             'frameworkcount' => count($rows),
             'canmanage' => (int) $canmanage,
+            'canexport' => (int) ($canmanage && !empty($rows)),
             'showhidden' => $showhidden,
         ];
     }
