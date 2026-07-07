@@ -230,6 +230,20 @@ class plans extends \core\output\dynamic_tabs\base {
 
         $duedate = $selected ? (int) $selected->get('duedate') : 0;
 
+        // Detail-pane metadata for the selected template: idnumber, description and the
+        // type/tag custom-field chips, all read from the same metadata cache as the list.
+        $selectedmeta = $selected ? ($metadatamap[$templateid] ?? []) : [];
+        $selectedidnumber = (string) ($selectedmeta['idnumber'] ?? '');
+        $selectedtype = (string) ($selectedmeta['type'] ?? '');
+        $selectedtag1 = (string) ($selectedmeta['tag1'] ?? '');
+        $selectedtag2 = (string) ($selectedmeta['tag2'] ?? '');
+        $selecteddescription = $selected ? format_text(
+            (string) $selected->get('description'),
+            (int) $selected->get('descriptionformat'),
+            ['context' => $selected->get_context()]
+        ) : '';
+        $selecteddescriptionplain = trim(strip_tags($selecteddescription));
+
         $PAGE->requires->js_call_amd('local_dimensions/central/plans', 'init');
 
         return [
@@ -245,6 +259,16 @@ class plans extends \core\output\dynamic_tabs\base {
             'templates' => $templateoptions,
             'selectedtemplateid' => $templateid,
             'selectedtemplatename' => $selected ? format_string($selected->get('shortname')) : '',
+            'selectedtemplateidnumber' => s($selectedidnumber),
+            'selectedtemplatehasidnumber' => $selectedidnumber !== '',
+            'selectedtemplatedescription' => $selecteddescription,
+            'selectedtemplatehasdescription' => $selecteddescriptionplain !== '',
+            'selectedtemplatetype' => format_string($selectedtype),
+            'selectedtemplatehastype' => $selectedtype !== '',
+            'selectedtemplatetag1' => format_string($selectedtag1),
+            'selectedtemplatehastag1' => $selectedtag1 !== '',
+            'selectedtemplatetag2' => format_string($selectedtag2),
+            'selectedtemplatehastag2' => $selectedtag2 !== '',
             'selectedtemplatevisible' => $selected ? (bool) $selected->get('visible') : false,
             'selectedtemplatehasduedate' => $duedate > 0,
             'selectedtemplateduedate' => $duedate > 0

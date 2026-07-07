@@ -56,7 +56,9 @@
         "competencies": [
             {
                 "id": 7, "parentid": 0, "shortname": "Communication", "idnumber": "COMM-01",
-                "taxonomy": "Competency", "coursecount": 3, "activitycount": 5, "templatecount": 2,
+                "taxonomy": "Competency", "scale": "Default competence scale",
+                "description": "Communicates clearly in writing and speech.",
+                "coursecount": 3, "activitycount": 5, "templatecount": 2,
                 "depth": 0, "indent": 0, "haschildren": true, "canmanage": true,
                 "ruletype": "", "ruleoutcome": 0, "ruleconfig": "", "rulelabel": "No rule"
             }
@@ -183,6 +185,14 @@
                         <div class="mb-2">
                             <div class="small text-muted">{{#str}}idnumber{{/str}}</div>
                             <div class="font-monospace" data-region="detail-idnumber"></div>
+                        </div>
+                        <div class="mb-2" data-region="detail-scale-wrap" hidden>
+                            <div class="small text-muted">{{#str}}scale, tool_lp{{/str}}</div>
+                            <div data-region="detail-scale"></div>
+                        </div>
+                        <div class="mb-2" data-region="detail-description-wrap" hidden>
+                            <div class="small text-muted">{{#str}}description{{/str}}</div>
+                            <div class="small" data-region="detail-description"></div>
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col">

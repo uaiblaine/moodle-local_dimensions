@@ -1466,18 +1466,45 @@ class helper {
 
         $canmanage = has_capability('moodle/competency:competencymanage', $framework->get_context());
 
+        // Batch: resolve scale display names once. A competency with scaleid 0 inherits the
+        // framework default; the detail pane shows that effective scale.
+        $frameworkscaleid = (int) $framework->get('scaleid');
+        $scaleids = [$frameworkscaleid];
+        foreach ($records as $record) {
+            $sid = (int) $record->get('scaleid');
+            if ($sid > 0) {
+                $scaleids[] = $sid;
+            }
+        }
+        $scaleids = array_values(array_unique(array_filter($scaleids)));
+        $scalenames = [];
+        if (!empty($scaleids)) {
+            foreach ($DB->get_records_list('scale', 'id', $scaleids) as $scale) {
+                $scalenames[(int) $scale->id] = format_string($scale->name, true, ['context' => $context]);
+            }
+        }
+
         $nodes = [];
         foreach ($records as $record) {
             $id = (int) $record->get('id');
             $depth = self::path_depth((string) $record->get('path'));
             $level = $depth + 1;
             $taxonomy = $framework->get_taxonomy($level) ?: competency_framework::TAXONOMY_COMPETENCY;
+            $scaleid = (int) $record->get('scaleid');
+            $effectivescaleid = $scaleid > 0 ? $scaleid : $frameworkscaleid;
+            $description = trim(strip_tags(format_text(
+                (string) $record->get('description'),
+                (int) $record->get('descriptionformat'),
+                ['context' => $context]
+            )));
             $nodes[] = [
                 'id' => $id,
                 'parentid' => (int) $record->get('parentid'),
                 'shortname' => format_string($record->get('shortname'), true, ['context' => $context]),
                 'idnumber' => (string) $record->get('idnumber'),
                 'taxonomy' => get_string('taxonomy_' . $taxonomy, 'core_competency'),
+                'scale' => (string) ($scalenames[$effectivescaleid] ?? ''),
+                'description' => $description,
                 'coursecount' => (int) ($counts[$id] ?? 0),
                 'activitycount' => (int) ($actcounts[$id] ?? 0),
                 'templatecount' => (int) ($tplcounts[$id] ?? 0),

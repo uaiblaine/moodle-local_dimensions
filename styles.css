@@ -3300,6 +3300,16 @@
     line-height: 1;
 }
 
+/* Type chip on the plan detail — a distinct hue from the accent count chip.
+   Fallback hexes keep it readable on Bootstrap 4 (Moodle 4.5), which lacks the vars. */
+.local-dimensions-central-chip-type {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--bs-info-bg-subtle, #cff4fc);
+    color: var(--bs-info-text-emphasis, #055160);
+    font-weight: 500;
+}
+
 /* Optional per-competency metadata on the plan detail (taxonomy / idnumber / path),
    toggled by show-* classes on the list — same pattern as the Structure tree. */
 .local-dimensions-central-plans .local-dimensions-central-tax,

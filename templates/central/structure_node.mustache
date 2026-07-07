@@ -21,7 +21,7 @@
     roots and client-side (via core/templates) when a node is expanded.
 
     Context variables required:
-    * id, parentid (int) · shortname, idnumber, taxonomy (string)
+    * id, parentid (int) · shortname, idnumber, taxonomy, scale, description (string)
     * coursecount (int) · activitycount (int) · templatecount (int)
     * depth, indent (int) · haschildren (bool) · canmanage (bool)
     * ruletype, ruleconfig (string|null) · ruleoutcome (int) · rulelabel (string)
@@ -33,6 +33,8 @@
         "shortname": "Communication",
         "idnumber": "COMM-01",
         "taxonomy": "Competency",
+        "scale": "Default competence scale",
+        "description": "Communicates clearly in writing and speech.",
         "coursecount": 3,
         "activitycount": 5,
         "templatecount": 2,
@@ -64,6 +66,8 @@
                 data-name="{{shortname}}"
                 data-idnumber="{{idnumber}}"
                 data-taxonomy="{{taxonomy}}"
+                data-scale="{{scale}}"
+                data-description="{{description}}"
                 data-courses="{{coursecount}}"
                 data-activities="{{activitycount}}"
                 data-templates="{{templatecount}}"
