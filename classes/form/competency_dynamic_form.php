@@ -32,6 +32,7 @@ use core\context\system as context_system;
 use core_competency\api;
 use core_competency\competency;
 use core_competency\competency_framework;
+use local_dimensions\constants;
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\helper;
 
@@ -192,6 +193,12 @@ class competency_dynamic_form extends \core_form\dynamic_form {
             '#id_scaleid_central',
             '#tool_lp_scaleconfiguration_central',
             '#id_scaleconfigbutton_central',
+        ]);
+
+        // Live swatch next to the bg/text colour custom fields (same timing window).
+        $PAGE->requires->js_call_amd('local_dimensions/central/colour_swatch', 'init', [
+            constants::CFIELD_CUSTOMBGCOLOR,
+            constants::CFIELD_CUSTOMTEXTCOLOR,
         ]);
     }
 
