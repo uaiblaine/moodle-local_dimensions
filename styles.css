@@ -3233,11 +3233,9 @@
 .local-dimensions-central-plans-body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-plans-detail-width, calc(50% - 0.25rem));
-    height: 60vh;
+    height: var(--local-dimensions-plans-body-height, 60vh);
     min-height: 320px;
     max-height: 85vh;
-    overflow: hidden;
-    resize: vertical;
 }
 
 /* No templates (or a competency filter matched none): only the selector card renders,
@@ -3246,7 +3244,37 @@
     grid-template-columns: minmax(0, 1fr);
     height: auto;
     max-height: none;
-    resize: none;
+}
+
+/* Full-width handle below the master-detail body: drag it to resize the panels'
+   height (JS drives --local-dimensions-plans-body-height). Mirrors the vertical
+   divider grip but on the horizontal axis. */
+.local-dimensions-central-plans-vresizer {
+    position: relative;
+    height: 0.6rem;
+    cursor: row-resize;
+}
+
+.local-dimensions-central-plans-vresizer::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.5rem;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--bs-border-color, #ced4da);
+    transform: translate(-50%, -50%);
+}
+
+.local-dimensions-central-plans-vresizer:hover::before,
+.local-dimensions-central-plans-vresizer:focus::before {
+    background: var(--bs-primary, #0f6cbf);
+}
+
+.local-dimensions-central-plans-body.local-dimensions-resizing-vert {
+    cursor: row-resize;
+    user-select: none;
 }
 
 /* Lift an open row-action menu above adjacent rows and the action footer. The competency

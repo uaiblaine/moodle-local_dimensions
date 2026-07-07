@@ -18,7 +18,7 @@ Feature: Configure a competency scale from the Competency hub edit modal
 
   Scenario: The Configure scale button opens the scale configuration dialogue inside the modal
     When I visit "/local/dimensions/central.php"
-    And I click on "Competencies" "link"
+    And I click on "Competencies" "link" in the "#dynamictabs-tabs" "css_element"
     Then I should see "Behat competency"
     When I click on "Behat competency" "button"
     And I click on "[data-action='edit']" "css_element"

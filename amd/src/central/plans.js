@@ -33,7 +33,7 @@ import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {show as showCompetencyBrowser} from 'local_dimensions/central/competency_browser';
 import {show as showParticipants} from 'local_dimensions/central/participants_manager';
-import {initPaneResizer} from 'local_dimensions/central/pane_resizer';
+import {initPaneResizer, initVerticalResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
 const FORM_CLASS = 'local_dimensions\\form\\template_dynamic_form';
@@ -66,6 +66,7 @@ const SELECTORS = {
     searchEmpty: '[data-region="plan-search-empty"]',
     plansBody: '[data-region="plans-body"]',
     plansResizer: '[data-region="plans-resizer"]',
+    plansVResizer: '[data-region="plans-vresizer"]',
     detailPane: '[data-region="plan-detail"]',
     showDisabled: '[data-action="toggle-disabled"]',
     displayPanel: '[data-region="display-options-panel"]',
@@ -819,6 +820,13 @@ export const init = () => {
         minimum: 280,
         maximum: 1600,
         reserve: 200,
+    });
+    initVerticalResizer({
+        body: region.querySelector(SELECTORS.plansBody),
+        resizer: region.querySelector(SELECTORS.plansVResizer),
+        cssvar: '--local-dimensions-plans-body-height',
+        storagekey: 'local_dimensions_plans_body_height',
+        minimum: 320,
     });
 
     region.addEventListener('click', (event) => {
