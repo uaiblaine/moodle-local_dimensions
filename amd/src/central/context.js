@@ -26,7 +26,18 @@
  */
 
 import Notification from 'core/notification';
+import {getString} from 'core/str';
+import {enhance} from 'core/form-autocomplete';
 import {reloadPane} from 'local_dimensions/central/tabs';
+
+/**
+ * Pristine clone of the category wrapper (label + raw select), taken before the autocomplete
+ * enhancement mutates it. core/form-autocomplete has no reset API, so we restore this trusted
+ * DOM subtree and re-enhance whenever a context switch invalidates the selection.
+ *
+ * @type {HTMLElement|null}
+ */
+let pristineCategoryNode = null;
 
 const SELECTORS = {
     bar: '[data-region="contextbar"]',
@@ -162,12 +173,19 @@ const setContext = (bar, contexttype) => {
     if (wrapper) {
         wrapper.hidden = contexttype !== 'coursecat';
     }
-    // Context switch starts the guided category flow afresh.
-    const select = bar.querySelector(SELECTORS.categorySelect);
-    if (select) {
-        select.value = '0';
-    }
     bar.dataset.categoryid = 0;
+
+    // Context switch starts the guided category flow afresh: entering coursecat resets and
+    // re-enhances the picker (its synchronous DOM reset runs before the counter reads it);
+    // leaving it just clears the now-hidden native value.
+    if (contexttype === 'coursecat') {
+        enhanceCategory(bar, true).catch(Notification.exception);
+    } else {
+        const select = bar.querySelector(SELECTORS.categorySelect);
+        if (select) {
+            select.value = '0';
+        }
+    }
 
     applyContextToPanes(contexttype, 0);
     renderCounter(bar);
@@ -189,6 +207,40 @@ const setCategory = (bar, select) => {
 };
 
 /**
+ * Enhance the category select into a searchable single-select autocomplete, and wire its
+ * change handler. When `reset` is set the wrapper is first restored to its pristine markup
+ * so a stale selection from a previous coursecat visit is dropped (form-autocomplete keeps
+ * no reset API, so re-rendering the region is the supported way to clear it).
+ *
+ * @param {HTMLElement} bar
+ * @param {Boolean} reset Whether to drop the current selection before enhancing.
+ * @return {Promise<void>}
+ */
+const enhanceCategory = async(bar, reset) => {
+    const wrapper = bar.querySelector(SELECTORS.categoryWrapper);
+    if (!wrapper || pristineCategoryNode === null) {
+        return;
+    }
+    if (reset) {
+        // Restore the pristine label + select (cloned trusted DOM, so no markup parsing).
+        wrapper.replaceChildren(...pristineCategoryNode.cloneNode(true).childNodes);
+    }
+    const select = wrapper.querySelector(SELECTORS.categorySelect);
+    if (!select) {
+        return;
+    }
+    if (reset) {
+        select.value = '0';
+    }
+    // Match the option labels to the active tab's count before the autocomplete reads them.
+    renderOptionLabels(bar);
+    const placeholder = await getString('managecompetencies_category_placeholder', 'local_dimensions');
+    await enhance(SELECTORS.categorySelect, false, '', placeholder, false, true, placeholder, true);
+    wrapper.querySelector(SELECTORS.categorySelect)
+        .addEventListener('change', (event) => setCategory(bar, event.target));
+};
+
+/**
  * Initialise the shared context selector. Runs once on page load (the bar lives outside
  * the tab panes, so it is not re-rendered on tab refresh).
  */
@@ -206,9 +258,16 @@ export const init = () => {
         }
     });
 
+    const wrapper = bar.querySelector(SELECTORS.categoryWrapper);
     const select = bar.querySelector(SELECTORS.categorySelect);
-    if (select) {
-        select.addEventListener('change', () => setCategory(bar, select));
+    if (wrapper && select) {
+        // Snapshot the pristine wrapper before enhancing so a later context switch can reset it.
+        pristineCategoryNode = wrapper.cloneNode(true);
+        if (bar.dataset.contexttype === 'coursecat') {
+            enhanceCategory(bar, false).catch(Notification.exception);
+        } else {
+            select.addEventListener('change', () => setCategory(bar, select));
+        }
     }
 
     // Tab switches keep the counter and option labels in step with the active mode.
