@@ -21,6 +21,8 @@ Feature: See a competency's related competencies in the Competency hub
 
   Scenario: Open the Related competencies modal and see a related competency
     When I visit "/local/dimensions/central.php"
-    And I click on "Alpha competency" "button"
+    And I click on "Competencies" "link"
+    Then I should see "Alpha competency"
+    When I click on "Alpha competency" "button"
     And I click on "Related competencies" "button"
     Then I should see "Bravo competency"

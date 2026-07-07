@@ -1,8 +1,8 @@
 @local @local_dimensions @javascript
-Feature: Manage competency frameworks from the Competency hub
-  In order to maintain competency frameworks without leaving the hub
+Feature: Manage competency structures from the Competency hub
+  In order to maintain competency structures without leaving the hub
   As an administrator
-  I need a Frameworks tab that lists frameworks with management actions
+  I need a Structures tab that lists structures with management actions
 
   Background:
     Given the following config values are set as admin:
@@ -12,21 +12,21 @@ Feature: Manage competency frameworks from the Competency hub
       | Behat framework  | BF1      |
     And I log in as "admin"
 
-  Scenario: The Frameworks tab lists frameworks with management actions
+  Scenario: The Structures tab lists structures with management actions
     When I visit "/local/dimensions/central.php"
-    And I click on "Frameworks" "link"
+    And I click on "Structures" "link"
     Then I should see "Behat framework"
-    And I should see "New framework"
+    And I should see "New structure"
     And I should see "Edit" in the ".local-dimensions-central-framework" "css_element"
 
-  Scenario: Import and export open their modals from the Frameworks tab
+  Scenario: Import and export open their modals from the Structures tab
     When I visit "/local/dimensions/central.php"
-    And I click on "Frameworks" "link"
+    And I click on "Structures" "link"
     Then I should see "Import"
     And I should see "Export"
     When I click on "Import" "button"
-    Then I should see "CSV file" in the "Import framework from CSV" "dialogue"
-    And I should see "Update the existing framework with the same ID number" in the "Import framework from CSV" "dialogue"
-    And I click on "Cancel" "button" in the "Import framework from CSV" "dialogue"
+    Then I should see "CSV file" in the "Import structure from CSV" "dialogue"
+    And I should see "Update the existing structure with the same ID number" in the "Import structure from CSV" "dialogue"
+    And I click on "Cancel" "button" in the "Import structure from CSV" "dialogue"
     When I click on "Export" "button"
-    Then I should see "Framework to export" in the "Export framework to CSV" "dialogue"
+    Then I should see "Structure to export" in the "Export structure to CSV" "dialogue"

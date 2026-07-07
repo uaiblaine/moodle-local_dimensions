@@ -49,6 +49,12 @@ const DISPLAY_KEY = 'local_dimensions_plans_display';
 /** @type {Object} Map of display-toggle key to the CSS class it controls on the list. */
 const DISPLAY_CLASSES = {tax: 'show-tax', path: 'show-path', id: 'show-id'};
 
+/** @type {String} sessionStorage key for the plan-list display-toggle choice. */
+const LISTDISPLAY_KEY = 'local_dimensions_plans_listdisplay';
+
+/** @type {Object} Map of plan-list display-toggle key to the CSS class it controls on the rows. */
+const LISTDISPLAY_CLASSES = {id: 'show-id', duedate: 'show-duedate'};
+
 const SELECTORS = {
     region: '[data-region="plans"]',
     competencySearch: '[data-region="competency-search"]',
@@ -66,6 +72,8 @@ const SELECTORS = {
     showDisabled: '[data-action="toggle-disabled"]',
     displayPanel: '[data-region="display-options-panel"]',
     displayToggle: '[data-display-toggle]',
+    listDisplayPanel: '[data-region="list-display-options-panel"]',
+    listDisplayToggle: '[data-list-toggle]',
     competencyItems: '[data-region="competency-items"]',
     competencyList: '[data-region="competency-list"]',
     dragHandle: '[data-region="drag-handle"]',
@@ -366,6 +374,70 @@ const initDisplayOptions = (region) => {
 };
 
 /**
+ * Read the persisted plan-list display-toggle choice from sessionStorage.
+ *
+ * @return {Object} Map of toggle key to boolean; empty when nothing is stored.
+ */
+const readListDisplayPrefs = () => {
+    try {
+        return JSON.parse(window.sessionStorage.getItem(LISTDISPLAY_KEY) || 'null') || {};
+    } catch (e) {
+        return {};
+    }
+};
+
+/**
+ * Persist the plan-list display-toggle choice to sessionStorage.
+ *
+ * @param {Object} prefs Map of toggle key to boolean.
+ */
+const writeListDisplayPrefs = (prefs) => {
+    try {
+        window.sessionStorage.setItem(LISTDISPLAY_KEY, JSON.stringify(prefs));
+    } catch (e) {
+        // Storage unavailable (e.g. private mode) — the toggles simply do not persist.
+    }
+};
+
+/**
+ * Apply the stored plan-list display prefs to the checkboxes and the rows container
+ * classes (show identifiers / show due date), so the choice survives a pane reload.
+ *
+ * @param {HTMLElement} region
+ */
+const applyListDisplayPrefs = (region) => {
+    const rows = region.querySelector(SELECTORS.templateRows);
+    if (!rows) {
+        return;
+    }
+    const stored = readListDisplayPrefs();
+    region.querySelectorAll(SELECTORS.listDisplayToggle).forEach((cb) => {
+        const key = cb.dataset.listToggle;
+        const on = Object.prototype.hasOwnProperty.call(stored, key) ? Boolean(stored[key]) : cb.checked;
+        cb.checked = on;
+        rows.classList.toggle(LISTDISPLAY_CLASSES[key], on);
+    });
+};
+
+/**
+ * Wire the plan-list display-option switches: each change persists the choice and
+ * reapplies the show-* classes on the rows container.
+ *
+ * @param {HTMLElement} region
+ */
+const initListDisplayOptions = (region) => {
+    region.querySelectorAll(SELECTORS.listDisplayToggle).forEach((cb) => {
+        cb.addEventListener('change', () => {
+            const prefs = readListDisplayPrefs();
+            prefs[cb.dataset.listToggle] = cb.checked;
+            writeListDisplayPrefs(prefs);
+            applyListDisplayPrefs(region);
+        });
+    });
+    applyListDisplayPrefs(region);
+};
+
+/**
  * Drag-and-drop reordering of the plan's competencies. The drag starts from the grip
  * handle that appears on row hover; while dragging the row is live-repositioned at the
  * pointer's midpoint, and on release a single reorder web-service call persists the
@@ -658,6 +730,14 @@ const ACTION_HANDLERS = {
         panel.hidden = !panel.hidden;
         target.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
     },
+    'list-display-options': (pane, region, target) => {
+        const panel = region.querySelector(SELECTORS.listDisplayPanel);
+        if (!panel) {
+            return;
+        }
+        panel.hidden = !panel.hidden;
+        target.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+    },
     'browse-frameworks': (pane, region) => showCompetencyBrowser(pane, region).catch(Notification.exception),
     'manage-participants': (pane, region) => showParticipants(pane, region).catch(Notification.exception),
     'new-template': (pane, region) => openForm(
@@ -741,6 +821,7 @@ export const init = () => {
 
     initShowDisabled(region);
     initDisplayOptions(region);
+    initListDisplayOptions(region);
     initDragReorder(region, pane);
     // The competency detail generally needs more room than the plan list: allow the
     // divider to shrink the list down to ~200px and let the detail grow well past the

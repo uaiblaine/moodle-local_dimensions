@@ -46,6 +46,6 @@ Feature: Manage a learning plan template's competencies in the Competency hub
     And I click on "Learning plans" "link"
     And I click on "Skills plan" "button"
     And I click on "Add competency" "button"
-    And I press "Browse frameworks"
+    And I press "Browse structures"
     Then I should see "Alpha competency"
     And I should see "Beta competency"

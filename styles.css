@@ -3238,6 +3238,14 @@
     max-height: 680px;
 }
 
+/* No templates (or a competency filter matched none): only the selector card renders,
+   so collapse the master-detail grid to a single full-width, content-height column. */
+.local-dimensions-central-plans-body-single {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    max-height: none;
+}
+
 .local-dimensions-central-plans-list-pane,
 .local-dimensions-central-plans-detail-pane,
 .local-dimensions-central-structure-tree-pane,
@@ -3316,6 +3324,21 @@
 .local-dimensions-central-plans [data-region='template-rows'].show-disabled .local-dimensions-central-plan-hidden {
     display: flex;
     opacity: 0.75;
+}
+
+/* The plan idnumber and due date sit inline on each list row, hidden by default and
+   revealed by the selector's display-options toggles (mirrors the tree show-* toggles). */
+.local-dimensions-central-plans [data-region='template-rows'] .local-dimensions-central-plan-id,
+.local-dimensions-central-plans [data-region='template-rows'] .local-dimensions-central-plan-duedate {
+    display: none;
+}
+
+.local-dimensions-central-plans [data-region='template-rows'].show-id .local-dimensions-central-plan-id {
+    display: inline;
+}
+
+.local-dimensions-central-plans [data-region='template-rows'].show-duedate .local-dimensions-central-plan-duedate {
+    display: inline;
 }
 
 .local-dimensions-central-plans [data-region='template-rows'] .local-dimensions-central-row.local-dimensions-central-plan-filtered {
