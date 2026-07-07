@@ -64,6 +64,10 @@ const SELECTORS = {
     detailTitle: '[data-region="detail-title"]',
     detailIdnumber: '[data-region="detail-idnumber"]',
     detailTaxonomy: '[data-region="detail-taxonomy"]',
+    detailScale: '[data-region="detail-scale"]',
+    detailScaleWrap: '[data-region="detail-scale-wrap"]',
+    detailDescription: '[data-region="detail-description"]',
+    detailDescriptionWrap: '[data-region="detail-description-wrap"]',
     detailCourses: '[data-region="detail-courses"]',
     detailActivities: '[data-region="detail-activities"]',
     detailPlans: '[data-region="detail-plans"]',
@@ -435,6 +439,17 @@ const selectRow = (region, row) => {
     content.querySelector(SELECTORS.detailTitle).textContent = row.dataset.name || '';
     content.querySelector(SELECTORS.detailIdnumber).textContent = row.dataset.idnumber || '';
     content.querySelector(SELECTORS.detailTaxonomy).textContent = row.dataset.taxonomy || '';
+
+    // Scale and description only appear when the node carries them (both optional).
+    const scale = row.dataset.scale || '';
+    const scalewrap = content.querySelector(SELECTORS.detailScaleWrap);
+    content.querySelector(SELECTORS.detailScale).textContent = scale;
+    scalewrap.hidden = scale === '';
+    const description = row.dataset.description || '';
+    const descwrap = content.querySelector(SELECTORS.detailDescriptionWrap);
+    content.querySelector(SELECTORS.detailDescription).textContent = description;
+    descwrap.hidden = description === '';
+
     content.querySelector(SELECTORS.detailCourses).textContent = row.dataset.courses || '0';
     content.querySelector(SELECTORS.detailActivities).textContent = row.dataset.activities || '0';
     content.querySelector(SELECTORS.detailPlans).textContent = row.dataset.templates || '0';
