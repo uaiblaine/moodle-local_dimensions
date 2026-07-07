@@ -244,6 +244,17 @@ fails the build otherwise. (This plugin's classes do not use
 7. **No "commented-out code"** false positives: drop trivial trailing `//`
    comments containing `=` or PHP-looking text (`Squiz.PHP.CommentedOutCode`).
 
+phpcs has no local runner here, so rules 3 and 6 are the ones that slip through
+eyeballing and fail CI. **Before pushing, grep the changed PHP for both** — every
+hit is a CI failure (`phpcs --max-warnings 0`):
+```sh
+# soft-max 132 line length (rule 6)
+awk 'length($0)>132{print FILENAME":"NR" ("length($0)")"}' <files>
+# inline // comment starting lowercase — first line of a block only; continuation
+# lines whose first line is capitalised are fine (rule 3)
+grep -nE '^\s*// [a-z]' <files>   # ignore the GPL header lines 5-15
+```
+
 ### Dynamic string references
 The string checker can't verify constructed IDs. **Don't**
 `get_string('foo_' . $x, …)` — use a literal `switch`/`match` returning each

@@ -850,13 +850,16 @@ class helper {
             $data['customfield_' . constants::CFIELD_CUSTOMTEXTCOLOR] = (string) $cfrow['cf_textcolor'];
         }
         if (array_key_exists('cf_tag1', $cfrow)) {
-            $data['customfield_' . constants::CFIELD_TAG1] = self::select_label_to_index(constants::CFIELD_TAG1, (string) $cfrow['cf_tag1']);
+            $data['customfield_' . constants::CFIELD_TAG1] =
+                self::select_label_to_index(constants::CFIELD_TAG1, (string) $cfrow['cf_tag1']);
         }
         if (array_key_exists('cf_tag2', $cfrow)) {
-            $data['customfield_' . constants::CFIELD_TAG2] = self::select_label_to_index(constants::CFIELD_TAG2, (string) $cfrow['cf_tag2']);
+            $data['customfield_' . constants::CFIELD_TAG2] =
+                self::select_label_to_index(constants::CFIELD_TAG2, (string) $cfrow['cf_tag2']);
         }
         if (array_key_exists('cf_type', $cfrow)) {
-            $data['customfield_' . constants::CFIELD_TYPE] = self::select_label_to_index(constants::CFIELD_TYPE, (string) $cfrow['cf_type']);
+            $data['customfield_' . constants::CFIELD_TYPE] =
+                self::select_label_to_index(constants::CFIELD_TYPE, (string) $cfrow['cf_type']);
         }
         if (array_key_exists('cf_enrollmentfilter', $cfrow)) {
             $data['customfield_' . constants::CFIELD_ENROLLMENTFILTER] = self::select_key_to_index(

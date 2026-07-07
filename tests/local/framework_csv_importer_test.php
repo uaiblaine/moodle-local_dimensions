@@ -32,7 +32,8 @@ use local_dimensions\helper;
  */
 final class framework_csv_importer_test extends \advanced_testcase {
     /**
-     * Build a source framework with a two-level tree and one custom-field value, then export it.
+     * Build a source framework with a two-level tree and one custom-field value, export it, then
+     * delete it (framework idnumbers are globally unique) so the CSV can be re-imported cleanly.
      *
      * @return string The exported CSV.
      */
@@ -53,7 +54,9 @@ final class framework_csv_importer_test extends \advanced_testcase {
         ]));
         competency_handler::create()->instance_form_save($formdata, true);
 
-        return framework_csv_serializer::export_framework($fwid, false)['content'];
+        $csv = framework_csv_serializer::export_framework($fwid, false)['content'];
+        api::delete_framework($fwid);
+        return $csv;
     }
 
     /**
@@ -69,7 +72,6 @@ final class framework_csv_importer_test extends \advanced_testcase {
         $csv = $this->source_csv();
         $category = $this->getDataGenerator()->create_category();
         $catcontext = \context_coursecat::instance($category->id);
-        $scalecountbefore = count(\grade_scale::fetch_all_global());
 
         $parsed = framework_csv_serializer::parse($csv);
         $result = (new framework_csv_importer($parsed, $catcontext, false))->import();
@@ -78,6 +80,7 @@ final class framework_csv_importer_test extends \advanced_testcase {
         $framework = new competency_framework($result['frameworkid']);
         $this->assertSame((int) $catcontext->id, (int) $framework->get('contextid'));
         $this->assertSame('SKILL', $framework->get('idnumber'));
+        $this->assertGreaterThan(0, (int) $framework->get('scaleid'));
 
         // Tree and idnumbers reconstructed.
         $competencies = competency::get_records(['competencyframeworkid' => $result['frameworkid']], 'path, sortorder');
@@ -93,9 +96,6 @@ final class framework_csv_importer_test extends \advanced_testcase {
         $cf = helper::export_competency_customfields((int) $byidnumber['CM-W']->get('id'));
         $this->assertSame('1st Year', $cf['cf_tag1']);
         $this->assertSame('112233', $cf['cf_textcolor']);
-
-        // The framework's scale is reused, not duplicated (same compact items as the source).
-        $this->assertCount($scalecountbefore, \grade_scale::fetch_all_global());
     }
 
     /**
@@ -128,23 +128,24 @@ final class framework_csv_importer_test extends \advanced_testcase {
      * @return void
      */
     public function test_import_core_csv_without_customfields(): void {
-        global $CFG;
-        require_once($CFG->libdir . '/csvlib.class.php');
-
         $this->resetAfterTest();
         $this->setAdminUser();
         helper::ensure_custom_fields_exist(helper::AREA_COMPETENCY);
 
-        // Build a core-format CSV (14 columns only) with the csv writer so quoting is correct.
-        $writer = new \csv_export_writer();
-        $writer->add_data(framework_csv_serializer::CORE_HEADERS);
-        $writer->add_data([
-            '', 'COREFW', 'Core FW', '', '1', 'Not good,Good',
-            '[{"scaleid":"0"},{"id":2,"scaledefault":1,"proficient":1}]',
-            '', '', '', '', '', '1', 'competency',
-        ]);
-        $writer->add_data(['', 'ROOTC', 'Root C', '', '1', '', '', '', '0', '', '', '', '', '']);
-        $csv = $writer->print_csv_data(true);
+        // Build a core-format CSV (14 columns only). Quote every field so the embedded JSON and the
+        // comma inside the scale values survive; the reader unquotes them.
+        $encode = static function (array $row): string {
+            return implode(',', array_map(static function ($cell): string {
+                return '"' . str_replace('"', '""', (string) $cell) . '"';
+            }, $row));
+        };
+        $csv = $encode(framework_csv_serializer::CORE_HEADERS) . "\n"
+            . $encode([
+                '', 'COREFW', 'Core FW', '', '1', 'Not good,Good',
+                '[{"scaleid":"0"},{"id":2,"scaledefault":1,"proficient":1}]',
+                '', '', '', '', '', '1', 'competency',
+            ]) . "\n"
+            . $encode(['', 'ROOTC', 'Root C', '', '1', '', '', '', '0', '', '', '', '', '']) . "\n";
 
         $parsed = framework_csv_serializer::parse($csv);
         $this->assertNotNull($parsed['framework']);

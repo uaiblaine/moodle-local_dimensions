@@ -122,7 +122,11 @@ class import_framework_dynamic_form extends \core_form\dynamic_form {
         $mform->setType('encoding', PARAM_RAW);
         $mform->setDefault('encoding', 'UTF-8');
 
-        $mform->addElement('advcheckbox', 'updateexisting', get_string('central_frameworks_import_updateexisting', 'local_dimensions'));
+        $mform->addElement(
+            'advcheckbox',
+            'updateexisting',
+            get_string('central_frameworks_import_updateexisting', 'local_dimensions')
+        );
         $mform->setType('updateexisting', PARAM_BOOL);
         $mform->addHelpButton('updateexisting', 'central_frameworks_import_updateexisting', 'local_dimensions');
     }

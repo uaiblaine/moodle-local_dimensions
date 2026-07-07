@@ -83,19 +83,16 @@ class framework_csv_serializer {
      * @return array{filename: string, content: string}
      */
     public static function export_framework(int $frameworkid, bool $includescss): array {
-        global $CFG;
-        require_once($CFG->libdir . '/csvlib.class.php');
-
         $framework = api::read_framework($frameworkid);
         $cfheaders = self::headers($includescss);
-        $blankcf = array_fill_keys(array_slice($cfheaders, count(self::CORE_HEADERS)), '');
+        $cftokens = array_slice($cfheaders, count(self::CORE_HEADERS));
+        $blankcf = array_fill(0, count($cftokens), '');
 
-        $writer = new \csv_export_writer();
-        $writer->add_data($cfheaders);
+        $rows = [$cfheaders];
 
         // Framework row: isframework = 1, empty parent/rule/related/exportid, blank CFs.
         $scale = $framework->get_scale();
-        $writer->add_data(array_merge([
+        $rows[] = array_merge([
             '',
             (string) $framework->get('idnumber'),
             (string) $framework->get('shortname'),
@@ -106,7 +103,7 @@ class framework_csv_serializer {
             '', '', '', '', '',
             '1',
             implode(',', $framework->get('taxonomies')),
-        ], array_values($blankcf)));
+        ], $blankcf);
 
         // Competency rows, indexed by id so a parent resolves to its idnumber.
         $competencies = api::list_competencies(['competencyframeworkid' => $frameworkid]);
@@ -119,7 +116,7 @@ class framework_csv_serializer {
             $parentid = (int) $competency->get('parentid');
             $hasownscale = $competency->get('scaleid') !== null && (int) $competency->get('scaleid') > 0;
             $ruleconfig = $competency->get('ruleconfig');
-            $core = [
+            $row = [
                 $parentid && isset($idtoidnumber[$parentid]) ? $idtoidnumber[$parentid] : '',
                 (string) $competency->get('idnumber'),
                 (string) $competency->get('shortname'),
@@ -136,18 +133,38 @@ class framework_csv_serializer {
                 '',
             ];
             $cf = helper::export_competency_customfields((int) $competency->get('id'));
-            $row = $core;
-            foreach (array_slice($cfheaders, count(self::CORE_HEADERS)) as $token) {
+            foreach ($cftokens as $token) {
                 $row[] = (string) ($cf[$token] ?? '');
             }
-            $writer->add_data($row);
+            $rows[] = $row;
+        }
+
+        $content = '';
+        foreach ($rows as $row) {
+            $content .= self::encode_row($row) . "\n";
         }
 
         $name = \clean_param($framework->get('shortname') . '-' . $framework->get('idnumber'), PARAM_FILE);
         return [
             'filename' => ($name !== '' ? $name : 'framework') . '.csv',
-            'content' => $writer->print_csv_data(true),
+            'content' => $content,
         ];
+    }
+
+    /**
+     * Encode one row as an RFC 4180 CSV line (every field quoted, internal quotes doubled).
+     *
+     * Built in memory rather than via csv_export_writer, whose fixed per-user temp path
+     * ("csvimport/<userid>/Moodle-data-export.csv") is double-unlinked — a PHP warning that
+     * fails phpunit --fail-on-warning — when two exports run in the same request.
+     *
+     * @param array $row Cell values.
+     * @return string
+     */
+    private static function encode_row(array $row): string {
+        return implode(',', array_map(static function ($cell): string {
+            return '"' . str_replace('"', '""', (string) $cell) . '"';
+        }, $row));
     }
 
     /**
@@ -229,7 +246,7 @@ class framework_csv_serializer {
 
             $isframework = trim($get(12));
             if ($isframework !== '' && $isframework !== '0') {
-                // isframework column (position 12) is truthy → the framework row.
+                // The isframework column (position 12) is truthy → this is the framework row.
                 $framework = (object) [
                     'idnumber' => shorten_text(clean_param($get(1), PARAM_TEXT), 100),
                     'shortname' => shorten_text(clean_param($get(2), PARAM_TEXT), 100),

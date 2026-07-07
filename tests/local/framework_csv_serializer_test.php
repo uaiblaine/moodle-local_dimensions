@@ -70,7 +70,7 @@ final class framework_csv_serializer_test extends \advanced_testcase {
         $this->assertCount(4, $lines);
         $this->assertStringContainsString('parentidnumber', $lines[0]);
         $this->assertStringContainsString('cf_tag1', $lines[0]);
-        // cf_customscss omitted when the SCSS feature is off.
+        // The cf_customscss column is omitted when the SCSS feature is off.
         $this->assertStringNotContainsString('cf_customscss', $lines[0]);
 
         $parsed = framework_csv_serializer::parse($result['content']);
