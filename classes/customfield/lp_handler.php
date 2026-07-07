@@ -160,9 +160,9 @@ class lp_handler extends handler {
         ?string $headerlangidentifier = null,
         ?string $headerlangcomponent = null
     ) {
-        // The full-page admin form (edit_template.php) relies on this heading to label the
-        // custom-field block; the hub modal passes '' to suppress it, because the core category
-        // headers already label the fields inside the dialog.
+        // A non-empty (or default) heading labels the custom-field block for callers that
+        // want it; the hub modal passes '' to suppress it, because the core category headers
+        // already label the fields inside the dialog.
         if ($headerlangidentifier !== '') {
             $heading = get_string('templatecustomfields', 'local_dimensions');
             $mform->addElement('html', '<h2 class="mt-4 mb-3">' . $heading . '</h2>');

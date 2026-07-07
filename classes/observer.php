@@ -21,9 +21,10 @@
  * templates are created or updated via the core tool_lp forms, and keeps
  * MUC caches consistent on create/update/delete events.
  *
- * The plugin's own edit forms (edit_competency.php, edit_template.php)
- * persist custom fields and invalidate caches inline, so the observers
- * skip those code paths to avoid double-writes.
+ * The Central hub's dynamic forms persist custom fields and invalidate caches
+ * inline; their submissions carry no raw customfield_* POST keys (the data
+ * travels as jsonformdata through core_form_dynamic_form), so the observer
+ * short-circuits on those paths without any double-write.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -45,19 +46,13 @@ use local_dimensions\plan_trail_cache;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class observer {
-    /** Internal edit script for competencies (skip target). */
-    private const SCRIPT_EDIT_COMPETENCY = '/local/dimensions/edit_competency.php';
-
-    /** Internal edit script for templates (skip target). */
-    private const SCRIPT_EDIT_TEMPLATE = '/local/dimensions/edit_template.php';
-
     /**
      * Observer for competency created event.
      *
      * @param \core\event\base $event
      */
     public static function competency_created(\core\event\base $event) {
-        self::save_customfields_for($event, competency_handler::create(), self::SCRIPT_EDIT_COMPETENCY, true);
+        self::save_customfields_for($event, competency_handler::create(), true);
         self::invalidate_competency_caches((int) $event->objectid);
     }
 
@@ -67,7 +62,7 @@ class observer {
      * @param \core\event\base $event
      */
     public static function competency_updated(\core\event\base $event) {
-        self::save_customfields_for($event, competency_handler::create(), self::SCRIPT_EDIT_COMPETENCY, false);
+        self::save_customfields_for($event, competency_handler::create(), false);
         self::invalidate_competency_caches((int) $event->objectid);
     }
 
@@ -108,7 +103,7 @@ class observer {
      * @param \core\event\base $event
      */
     public static function template_created(\core\event\base $event) {
-        self::save_customfields_for($event, lp_handler::create(), self::SCRIPT_EDIT_TEMPLATE, true);
+        self::save_customfields_for($event, lp_handler::create(), true);
         self::invalidate_template_caches((int) $event->objectid);
     }
 
@@ -118,7 +113,7 @@ class observer {
      * @param \core\event\base $event
      */
     public static function template_updated(\core\event\base $event) {
-        self::save_customfields_for($event, lp_handler::create(), self::SCRIPT_EDIT_TEMPLATE, false);
+        self::save_customfields_for($event, lp_handler::create(), false);
         self::invalidate_template_caches((int) $event->objectid);
     }
 
@@ -157,44 +152,36 @@ class observer {
      * handler (which throws coding_exception when the instance id is missing or
      * when the call originates outside a valid form context):
      *
-     *  1. Skip when the request originates from the plugin's own edit script,
-     *     since that controller already saves the data and would cause a double
-     *     write (and a clash with the picture_manager file flow).
-     *  2. Require a valid form submission with a matching sesskey.
-     *  3. Short-circuit when no customfield_* fields are present in the payload
-     *     (mirrors the optimisation inside core_customfield\handler).
-     *  4. Inject the authoritative instance id from the event before calling
+     *  1. Require a valid form submission with a matching sesskey.
+     *  2. Short-circuit when no customfield_* fields are present in the payload
+     *     (mirrors the optimisation inside core_customfield\handler). The hub's
+     *     dynamic forms save inline and submit through core_form_dynamic_form,
+     *     so no raw customfield_* keys reach data_submitted() and this observer
+     *     never double-writes their data.
+     *  3. Inject the authoritative instance id from the event before calling
      *     the handler.
      *
      * @param \core\event\base $event       The event triggering the save.
      * @param handler          $handler     The custom field handler to delegate to.
-     * @param string           $skipscript  Script path that owns inline saving.
      * @param bool             $isnew       Whether this is the create event.
      */
     protected static function save_customfields_for(
         \core\event\base $event,
         handler $handler,
-        string $skipscript,
         bool $isnew
     ): void {
-        // 1. Skip if the submit was handled by the plugin's own edit form.
-        $script = qualified_me();
-        if ($script !== false && strpos($script, $skipscript) !== false) {
-            return;
-        }
-
-        // 2. Only act on real form submissions with a valid sesskey.
+        // 1. Only act on real form submissions with a valid sesskey.
         $formdata = data_submitted();
         if (!$formdata || !confirm_sesskey()) {
             return;
         }
 
-        // 3. Short-circuit when the payload carries no customfield_* keys.
+        // 2. Short-circuit when the payload carries no customfield_* keys.
         if (!preg_grep('/^customfield_/', array_keys((array) $formdata))) {
             return;
         }
 
-        // 4. Use the event objectid as the authoritative instance id.
+        // 3. Use the event objectid as the authoritative instance id.
         $instanceid = (int) $event->objectid;
         if ($instanceid <= 0) {
             return;

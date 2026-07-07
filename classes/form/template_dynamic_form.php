@@ -17,8 +17,8 @@
 /**
  * Modal (dynamic) form to create or edit a learning plan template — for the Competency hub.
  *
- * Mirrors template_form / edit_template.php, but runs inside a modal (core_form/modalform)
- * with no page reload. Custom (lp) fields are rendered and saved by lp_handler.
+ * Runs inside a modal (core_form/modalform) with no page reload. Custom (lp)
+ * fields are rendered and saved by lp_handler.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -169,7 +169,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Submitted data: force the custom SCSS field to plain format (mirrors template_form).
+     * Submitted data: force the custom SCSS field to plain format.
      *
      * @return object|null
      */
