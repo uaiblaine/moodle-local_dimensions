@@ -137,11 +137,9 @@ lib.php                      Procedural hooks + SCSS injection
 version.php                  component / version / requires / supported
 view-plan.php                Learner views (plan overview / competency tracker)
 view-competency.php          Single-competency detail view
-manage_competencies.php      Admin: manage competencies w/ custom fields
-manage_templates.php         Admin: manage learning plan templates
-edit_competency*.php         Edit forms (competency, framework)
-edit_template.php            Edit form (template)
-customfield*.php             Custom field config landing pages
+central.php                  Admin: the Competency hub (Structure / Learning
+                             plans / Frameworks tabs — the whole admin surface)
+customfield*.php             Custom field config landing pages (core field defs)
 classes/
   hook_callbacks.php         before_footer_html_generation → Return FAB
   helper.php                 Custom-field provisioning + return-context + queries
@@ -156,8 +154,11 @@ classes/
   admin/                     setting_iconpicker (AJAX FontAwesome picker)
   customfield/               competency_handler + lp_handler (two CF areas)
   external/                  Web-service functions (one class each)
-  form/                      moodleform subclasses (competency_form, template_form)
-  output/                    Renderables (view_plan_summary_page, view_competency_page)
+  form/                      dynamic_form subclasses (competency/template/framework)
+  local/                     plan_status and other value helpers
+  output/                    Renderables: learner (view_*_page) + hub
+                             (central/, dynamictabs/ tab classes)
+  task/                      Adhoc tasks (cohort role + template cohort sync)
   privacy/                   Null provider (no personal data stored)
   reportbuilder/             Datasources + entities (competencies, plans)
 db/                          access, caches, events, hooks, services, install,

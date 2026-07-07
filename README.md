@@ -140,15 +140,16 @@ All settings are under **Site administration → Competencies → Competency Dim
 Admin pages
 -----------
 
-The plugin provides five admin pages under **Site administration → Competencies → Competency Dimensions settings**:
+The plugin provides four admin pages under **Site administration → Competencies → Competency Dimensions settings**:
 
 | Page                                 | Path                       | Capability required                  |
 |--------------------------------------|----------------------------|--------------------------------------|
 | Plugin settings                      | `settings.php`             | `moodle/site:config`                 |
+| Competency hub                       | `central.php`              | `moodle/competency:competencymanage` |
 | Competency custom fields             | `customfield.php`          | `moodle/competency:competencymanage` |
-| Manage competencies                  | `manage_competencies.php`  | `moodle/competency:competencymanage` |
 | Learning plan template custom fields | `customfield_template.php` | `moodle/competency:templatemanage`   |
-| Manage learning plan templates       | `manage_templates.php`     | `moodle/competency:templatemanage`   |
+
+The **Competency hub** (`central.php`) is the single-surface admin for competencies, frameworks and learning plan templates: a Structure / Learning plans / Frameworks tab set that creates, edits, links and assigns in place through modals and web services (no page reloads). The two custom-field pages host core's field-definition UI for each area.
 
 
 Custom fields
@@ -284,7 +285,7 @@ How this plugin works
 
 ### Custom fields for competencies and templates
 
-The plugin implements the Moodle custom fields API through two handlers (`competency_handler` and `lp_handler`) that integrate with the `core_customfield` system. Custom fields are auto-provisioned via the `helper` class and can be managed through dedicated admin pages.
+The plugin implements the Moodle custom fields API through two handlers (`competency_handler` and `lp_handler`) that integrate with the `core_customfield` system. Custom fields are auto-provisioned via the `helper` class and their definitions are managed through the two custom-field admin pages.
 
 ### Image handling
 
@@ -304,7 +305,7 @@ The `calculator` class provides real-time progress calculation:
 ### Custom SCSS injection
 
 When enabled, per-template and per-competency SCSS code is:
-1. Validated client-side (brace/parenthesis matching, punctuation checks)
+1. Validated server-side on save (invalid SCSS is rejected with an inline field error)
 2. Compiled server-side using Moodle's SCSS compiler
 3. Cached in MUC with manual invalidation on save
 4. Injected as inline `<style>` tags on the plan view pages
@@ -312,8 +313,9 @@ When enabled, per-template and per-competency SCSS code is:
 ### Frontend architecture
 
 The plugin includes:
-- **14 Mustache templates** for responsive layouts (hero header, course cards, accordion panels, evidence modals, settings widgets, etc.)
-- **AMD JavaScript modules**: `accordion`, `chip_filters`, `collapsible_description`, `competency_view`, `customcss_injector`, `edit_competency`, `edit_template`, `filter_tabs_nav`, `fontawesome_icon_selector`, `manage_competencies`, `manage_templates`, `return_button`, `setting_iconpicker`, `scss_validation`, `ui`
+- **Mustache templates** for responsive layouts (hero header, course cards, accordion panels, evidence modals, settings widgets) and the Competency hub (`templates/central/`)
+- **Learner/settings AMD modules**: `accordion`, `chip_filters`, `collapsible_description`, `competency_view`, `customcss_injector`, `filter_tabs_nav`, `return_button`, `setting_iconpicker`
+- **Competency hub AMD modules** (`amd/src/central/`): the tab controllers (`structure`, `plans`, `frameworks`, `context`, `tabs`), modal controllers (`competency_links`, `related_competencies`, `rule_config`, `participants_manager`, `cohort_manager`, `participants_users`, `roles_manager`, `competency_browser`, `competency_tree_browser`, `framework_scaleconfig`), autocomplete datasources and the shared `pane_resizer`
 - **Plugin icon assets** under `pix/status` and `pix/taxonomy` for hero badges, locked cards, rule states, and taxonomy cards
 - **CSS styles** with properly namespaced selectors (`.local-dimensions-*`, `.dims-*`, `#dimensions-*`)
 

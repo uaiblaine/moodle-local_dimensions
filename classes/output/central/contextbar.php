@@ -38,7 +38,7 @@ use local_dimensions\helper;
  * Renders the System / Course category switch plus the category picker once, above the
  * dynamic tabs. The category options and the system totals carry both adaptive counts
  * (frameworks and learning plans) so the client swaps the displayed count for the active
- * tab without a round-trip. See docs/admin-redesign.md §9.1.
+ * tab without a round-trip.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
