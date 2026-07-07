@@ -136,11 +136,20 @@ class template_dynamic_form extends \core_form\dynamic_form {
      * handler's after-data customisations would never apply when the modal is first rendered.
      */
     public function definition_after_data() {
+        global $PAGE;
+
         parent::definition_after_data();
         lp_handler::create()->instance_form_definition_after_data($this->_form, $this->get_templateid());
 
         // SCSS is plain text: pin its editor to FORMAT_PLAIN so it never opens as a rich editor.
         helper::force_customscss_plain($this->_form);
+
+        // Live swatch next to the bg/text colour custom fields; js_call_amd here reaches the
+        // modal (definition_after_data runs inside the JS-collection window, unlike definition()).
+        $PAGE->requires->js_call_amd('local_dimensions/central/colour_swatch', 'init', [
+            constants::CFIELD_CUSTOMBGCOLOR,
+            constants::CFIELD_CUSTOMTEXTCOLOR,
+        ]);
     }
 
     /**
