@@ -20,42 +20,31 @@ changes**. Development happens on Moodle 5.1.
 
 ## Commands
 
-This plugin is its **own git repo** (`/Volumes/N1TB/dev/github/moodle-local_dimensions`,
-branch `main`). The build needs a real Moodle checkout; the dev Moodle root is
-`/Volumes/N1TB/dev/github/moodle` (5.x split layout: webroot under `public/`).
-
-There are **two clones** of the same GitHub repo
-(`uaiblaine/moodle-local_dimensions`): the standalone one above, and
-`public/local/dimensions` **inside the Moodle checkout** (used for grunt builds
-and for `git archive` when producing the install zip). Work also lands on
-GitHub from other sessions — **`git fetch` + `pull` the standalone clone before
-starting**, or you will build on a stale base. The rsync in the build recipe
-overwrites the inner clone's working tree; once the work is pushed,
-`git -C public/local/dimensions fetch && git -C public/local/dimensions reset --hard origin/main`
-realigns it.
+This plugin lives as a **real git clone at `public/local/dimensions` inside the
+dev Moodle checkout** (`/Volumes/N1TB/dev/github/moodle`, 5.x split layout with
+the webroot under `public/`). That clone is the **single working tree**: edit,
+build and `git archive` all happen there directly — no separate standalone clone
+and no rsync are involved. It has its own history (branch `main`, remote
+`uaiblaine/moodle-local_dimensions`), so run git from the plugin dir (or
+`git -C`). `git fetch && git pull` before starting so you don't build on a stale
+base.
 
 ### Building JavaScript assets (required before committing JS)
 
 The AMD modules in `amd/src/*.js` compile to `amd/build/*.min.js` via Moodle's
-grunt. The plugin is **not** inside a Moodle root, and a symlink **breaks**
-`grunt --root` (the Gruntfile resolves real paths) — so `rsync` the source into
-the mirror path, build, then copy the artefacts back. The mirror path differs
-by Moodle major version:
-
-| Moodle version | Mirror path inside the Moodle root | Grunt invocation |
-| -------------- | ---------------------------------- | ---------------- |
-| 4.5 (legacy)   | `local/dimensions`                 | `npx grunt amd --root=local/dimensions` |
-| 5.0+           | `public/local/dimensions`          | `npx grunt amd --root=public/local/dimensions` |
+grunt. Since the plugin already sits at its real mirror path inside the checkout
+(`public/local/dimensions` is a real directory, not a symlink), grunt builds it
+**in place** — run it from the Moodle root, where `node_modules` and
+`Gruntfile.js` live (the plugin has none of its own):
 
 ```sh
 cd /Volumes/N1TB/dev/github/moodle
-rsync -a --exclude=node_modules --exclude=.git \
-  /Volumes/N1TB/dev/github/moodle-local_dimensions/ public/local/dimensions/
 npx grunt amd --root=public/local/dimensions
-cp public/local/dimensions/amd/build/*.min.js \
-   public/local/dimensions/amd/build/*.map \
-   /Volumes/N1TB/dev/github/moodle-local_dimensions/amd/build/
 ```
+
+The build writes the rebuilt `.min.js` + `.map` straight into the clone's
+`amd/build/`. (On a 4.5 checkout the mirror path is `local/dimensions`, so
+`--root=local/dimensions` instead.)
 
 `amd/build/**` is **tracked in git** — Moodle serves the compiled output, not
 `amd/src`. Every `amd/src` edit must ship its rebuilt `.min.js` + `.map` in the
@@ -98,20 +87,26 @@ pre-empted at write time:
 
 ### Test deploy / dev loop
 
-Deployment is a **manual zip install** on a test server. The zip is produced by
-`git archive` from the plugin clone that lives inside the Moodle checkout:
+Deployment is a **manual zip install** on a test server, produced by `git archive`
+from the plugin clone. `git archive` packages a **commit** (a tree), never the
+working tree — so commit first; uncommitted edits never enter the zip.
+
+To test local work **before it is pushed**, archive `HEAD` (the current branch
+tip, pushed or not); name the zip after the plugin version so each test install
+is traceable:
 
 ```sh
-git -C /Volumes/N1TB/dev/github/moodle/public/local/dimensions fetch origin
+ver=$(grep -oE '\$plugin->version[[:space:]]*=[[:space:]]*[0-9]+' \
+  /Volumes/N1TB/dev/github/moodle/public/local/dimensions/version.php | grep -oE '[0-9]+')
 git -C /Volumes/N1TB/dev/github/moodle/public/local/dimensions archive \
-  --format=zip --prefix=dimensions/ origin/main -o ~/Downloads/dimensions.zip
+  --format=zip --prefix=dimensions/ HEAD -o ~/Downloads/dimensions-$ver.zip
 ```
 
-`git archive` packages a **commit**, never the working tree: uncommitted work
-does not enter the zip, and `origin/main` is the last-**fetched** remote state.
-Commit + push the work (and `fetch` in the archiving clone) before building the
-zip. For the JS dev loop, set *Site admin → Development → Debug = DEVELOPER*
-and *cachejs = off* so Moodle serves `amd/src` directly without a rebuild.
+To package the **published** state instead, `git fetch origin` first and archive
+`origin/main` in place of `HEAD` — the fetch is only needed there, to refresh the
+remote ref `origin/main` resolves to. For the JS dev loop, set *Site admin →
+Development → Debug = DEVELOPER* and *cachejs = off* so Moodle serves `amd/src`
+directly without a rebuild.
 
 ## CI gating
 
