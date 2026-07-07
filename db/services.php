@@ -290,6 +290,14 @@ $functions = [
         'capabilities' => 'moodle/competency:competencymanage',
         'ajax' => true,
     ],
+    'local_dimensions_export_framework' => [
+        'classname' => 'local_dimensions\external\export_framework',
+        'methodname' => 'execute',
+        'description' => 'Export a competency framework and its custom fields as CSV.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+    ],
 
     // Competency hub Plans tab — cohort role assignments.
     'local_dimensions_list_template_cohort_roles' => [

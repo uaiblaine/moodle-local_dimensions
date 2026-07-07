@@ -791,6 +791,223 @@ class helper {
     }
 
     /**
+     * Read a competency's stored custom-field values as CSV tokens for export.
+     *
+     * Only real stored values are emitted (never a synthesised default): text for the
+     * colours and SCSS, the option label for the admin-defined selects (tag1/tag2/type),
+     * and the canonical option key for the cascade selects (enrollmentfilter/singlecourseredirect).
+     * The picture fields are file-backed and deliberately skipped (not round-trippable in CSV).
+     *
+     * @param int $competencyid Competency id.
+     * @return array<string, string> Keyed by cf_* column token (see framework_csv_serializer::CF_HEADERS).
+     */
+    public static function export_competency_customfields(int $competencyid): array {
+        $result = array_fill_keys([
+            'cf_bgcolor', 'cf_textcolor', 'cf_tag1', 'cf_tag2', 'cf_type',
+            'cf_enrollmentfilter', 'cf_singlecourseredirect', 'cf_customscss',
+        ], '');
+        if ($competencyid <= 0) {
+            return $result;
+        }
+        $result['cf_bgcolor'] = self::read_competency_text_cf($competencyid, constants::CFIELD_CUSTOMBGCOLOR);
+        $result['cf_textcolor'] = self::read_competency_text_cf($competencyid, constants::CFIELD_CUSTOMTEXTCOLOR);
+        $result['cf_customscss'] = self::read_competency_text_cf($competencyid, constants::CFIELD_CUSTOMSCSS);
+        $result['cf_tag1'] = self::read_competency_select_label($competencyid, constants::CFIELD_TAG1);
+        $result['cf_tag2'] = self::read_competency_select_label($competencyid, constants::CFIELD_TAG2);
+        $result['cf_type'] = self::read_competency_select_label($competencyid, constants::CFIELD_TYPE);
+        $result['cf_enrollmentfilter'] = self::read_competency_select_key(
+            $competencyid,
+            constants::CFIELD_ENROLLMENTFILTER,
+            array_keys(constants::enrollmentfilter_options())
+        );
+        $result['cf_singlecourseredirect'] = self::read_competency_select_key(
+            $competencyid,
+            constants::CFIELD_SINGLECOURSEREDIRECT,
+            array_keys(constants::singlecourseredirect_options())
+        );
+        return $result;
+    }
+
+    /**
+     * Convert CSV cf_* tokens into the customfield_* form-data an instance_form_save expects.
+     *
+     * Every managed select is set explicitly (index 0 = cleared) so an empty CSV cell clears the
+     * value rather than leaving a stale one; selects map their label/key to the stored 1-based
+     * index, falling back to a bare numeric cell. SCSS is set only when its column is present.
+     *
+     * @param array $cfrow Map of cf_* token => raw CSV cell value.
+     * @return array Form-data keyed by customfield_<shortname> (+ _editor for the SCSS textarea).
+     */
+    public static function customfields_to_formdata(array $cfrow): array {
+        $data = [];
+        // Only set a customfield_* key when its column is present in the CSV: an ABSENT column
+        // leaves the field untouched, while a present-but-empty cell clears it. (An unconditional
+        // set would wipe fields whose column a partial/hand-authored CSV happens to omit.)
+        if (array_key_exists('cf_bgcolor', $cfrow)) {
+            $data['customfield_' . constants::CFIELD_CUSTOMBGCOLOR] = (string) $cfrow['cf_bgcolor'];
+        }
+        if (array_key_exists('cf_textcolor', $cfrow)) {
+            $data['customfield_' . constants::CFIELD_CUSTOMTEXTCOLOR] = (string) $cfrow['cf_textcolor'];
+        }
+        if (array_key_exists('cf_tag1', $cfrow)) {
+            $data['customfield_' . constants::CFIELD_TAG1] = self::select_label_to_index(constants::CFIELD_TAG1, (string) $cfrow['cf_tag1']);
+        }
+        if (array_key_exists('cf_tag2', $cfrow)) {
+            $data['customfield_' . constants::CFIELD_TAG2] = self::select_label_to_index(constants::CFIELD_TAG2, (string) $cfrow['cf_tag2']);
+        }
+        if (array_key_exists('cf_type', $cfrow)) {
+            $data['customfield_' . constants::CFIELD_TYPE] = self::select_label_to_index(constants::CFIELD_TYPE, (string) $cfrow['cf_type']);
+        }
+        if (array_key_exists('cf_enrollmentfilter', $cfrow)) {
+            $data['customfield_' . constants::CFIELD_ENROLLMENTFILTER] = self::select_key_to_index(
+                array_keys(constants::enrollmentfilter_options()),
+                (string) $cfrow['cf_enrollmentfilter']
+            );
+        }
+        if (array_key_exists('cf_singlecourseredirect', $cfrow)) {
+            $data['customfield_' . constants::CFIELD_SINGLECOURSEREDIRECT] = self::select_key_to_index(
+                array_keys(constants::singlecourseredirect_options()),
+                (string) $cfrow['cf_singlecourseredirect']
+            );
+        }
+        if (array_key_exists('cf_customscss', $cfrow)) {
+            $data['customfield_' . constants::CFIELD_CUSTOMSCSS . '_editor'] = [
+                'text' => (string) $cfrow['cf_customscss'],
+                'format' => FORMAT_PLAIN,
+            ];
+        }
+        return $data;
+    }
+
+    /**
+     * The data_controller carrying a competency's real stored value for a field, or null.
+     *
+     * @param int $competencyid Competency id.
+     * @param string $shortname Custom-field shortname.
+     * @return \core_customfield\data_controller|null
+     */
+    private static function read_competency_cf_data(int $competencyid, string $shortname): ?\core_customfield\data_controller {
+        $field = self::find_field_by_shortname($shortname, self::AREA_COMPETENCY);
+        if (!$field) {
+            return null;
+        }
+        $datas = \core_customfield\api::get_instance_fields_data([$field->get('id') => $field], $competencyid);
+        foreach ($datas as $data) {
+            if ((int) $data->get('id') > 0) {
+                return $data;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * A competency text custom-field value, or empty string when unset.
+     *
+     * @param int $competencyid Competency id.
+     * @param string $shortname Custom-field shortname.
+     * @return string
+     */
+    private static function read_competency_text_cf(int $competencyid, string $shortname): string {
+        $data = self::read_competency_cf_data($competencyid, $shortname);
+        return $data ? (string) $data->get_value() : '';
+    }
+
+    /**
+     * The option label of a competency select custom-field, or empty string when unset.
+     *
+     * @param int $competencyid Competency id.
+     * @param string $shortname Custom-field shortname.
+     * @return string
+     */
+    private static function read_competency_select_label(int $competencyid, string $shortname): string {
+        $data = self::read_competency_cf_data($competencyid, $shortname);
+        if (!$data) {
+            return '';
+        }
+        $index = (int) $data->get_value();
+        if ($index <= 0) {
+            return '';
+        }
+        $options = self::select_raw_options($data->get_field());
+        return $options[$index - 1] ?? '';
+    }
+
+    /**
+     * The canonical option key (from $keys) of a competency cascade select, or empty string.
+     *
+     * @param int $competencyid Competency id.
+     * @param string $shortname Custom-field shortname.
+     * @param array $keys Ordered option keys matching the field's option order.
+     * @return string
+     */
+    private static function read_competency_select_key(int $competencyid, string $shortname, array $keys): string {
+        $data = self::read_competency_cf_data($competencyid, $shortname);
+        if (!$data) {
+            return '';
+        }
+        $index = (int) $data->get_value();
+        if ($index <= 0) {
+            return '';
+        }
+        return $keys[$index - 1] ?? '';
+    }
+
+    /**
+     * Map a select option label to its stored 1-based index (0 = none), with a numeric fallback.
+     *
+     * @param string $shortname Custom-field shortname.
+     * @param string $label Option label from the CSV cell.
+     * @return int
+     */
+    private static function select_label_to_index(string $shortname, string $label): int {
+        $label = trim($label);
+        if ($label === '') {
+            return 0;
+        }
+        $field = self::find_field_by_shortname($shortname, self::AREA_COMPETENCY);
+        if ($field) {
+            $pos = array_search($label, self::select_raw_options($field), true);
+            if ($pos !== false) {
+                return $pos + 1;
+            }
+        }
+        return ctype_digit($label) ? (int) $label : 0;
+    }
+
+    /**
+     * Map a canonical option key to its 1-based index within $keys (0 = none), numeric fallback.
+     *
+     * @param array $keys Ordered option keys matching the field's option order.
+     * @param string $key Key from the CSV cell.
+     * @return int
+     */
+    private static function select_key_to_index(array $keys, string $key): int {
+        $key = trim($key);
+        if ($key === '') {
+            return 0;
+        }
+        $pos = array_search($key, $keys, true);
+        if ($pos !== false) {
+            return $pos + 1;
+        }
+        return ctype_digit($key) ? (int) $key : 0;
+    }
+
+    /**
+     * The raw (unformatted, newline-split) option list of a select custom-field.
+     *
+     * @param field_controller $field Select field controller.
+     * @return string[] Zero-based list of option labels.
+     */
+    private static function select_raw_options(field_controller $field): array {
+        $optstr = (string) $field->get_configdata_property('options');
+        if (trim($optstr) === '') {
+            return [];
+        }
+        return preg_split("/\s*\n\s*/", trim($optstr), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    }
+
+    /**
      * Resolve the effective enrollment filter when viewing a competency through a plan.
      *
      * Cascade: competency-level customfield -> template-level customfield ->
