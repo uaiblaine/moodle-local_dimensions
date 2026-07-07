@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+- **Legacy manage/edit admin surface.** The Competency hub (`central.php`) now covers every
+  action the old pages offered, so the whole legacy surface is gone: `manage_competencies.php`,
+  `manage_templates.php`, `edit_competency.php`, `edit_competency_framework.php`,
+  `edit_template.php`; the full-page moodleform classes `competency_form` + `template_form`;
+  their exclusive Mustache templates and AMD modules (`manage_*`, `edit_*`, the orphaned
+  `fontawesome_icon_selector`); and the two `admin_externalpage` registrations in `settings.php`.
+- **Client-side SCSS validation** (`scss_validation.js`): `helper::validate_customscss` is now the
+  single hard gate, rejecting invalid SCSS with an inline field error in the modal.
+- **Unused customfield-aware CRUD web services** — `local_dimensions_{create,update,read}_{template,competency}`
+  and the `customfields_io` trait — had no callers (the hub uses `core_form` dynamic forms that call
+  `\core_competency\api` directly).
+- Dead helper methods (`get_competency_rule_model`, `get_competency_rule_outcome_label`,
+  `get_template_display_mode`, `export_competency_rule_model`), the observer's now-unreachable
+  `SCRIPT_EDIT_*` skip guards, ~1.9k lines of legacy admin CSS plus ~420 lines of dead
+  learner-view CSS, and 125 orphaned language strings across both languages.
+
 ### Fixed
 - **Edit-competency and edit-plan modals** no longer show the redundant plugin-level `<h2>`
   ("Competency custom fields" / "Learning plan template custom fields") above the custom-field

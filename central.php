@@ -17,8 +17,8 @@
 /**
  * Competency hub — single-surface admin built on core dynamic tabs.
  *
- * Work in progress (Phase 1: the Structure tab). Runs alongside the existing
- * manage_competencies.php; see docs/admin-redesign-codeplan.md.
+ * The plugin's admin surface: Structure, Learning plans and Frameworks tabs,
+ * each acting in place through core/modal and local_dimensions web services.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

@@ -34,8 +34,8 @@ use local_dimensions\template_metadata_cache;
 
 /**
  * Learning plans tab: browse learning plan templates and the competencies they bundle
- * (which may come from several frameworks). CRUD, the cross-framework picker and the
- * cohort assignment are added in later phases (see docs/admin-redesign-codeplan.md).
+ * (which may come from several frameworks), with template CRUD, the cross-framework
+ * competency picker and cohort/participant assignment all handled in place via modals.
  *
  * Args (from the pane data attributes / getContent): templateid.
  *

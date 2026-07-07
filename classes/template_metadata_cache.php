@@ -91,7 +91,7 @@ class template_metadata_cache {
      * per-template (the file storage API has no cheap batch path) but those are
      * stored back into MUC so subsequent reads hit cache.
      *
-     * Use this when rendering a list of templates (e.g. manage_templates) to
+     * Use this when rendering a list of templates (e.g. the Plans tab) to
      * avoid N cache reads + N SQL misses on a cold cache.
      *
      * @param int[] $templateids Template IDs.
