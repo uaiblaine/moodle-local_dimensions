@@ -285,7 +285,12 @@ definition needs a `cachedef_<name>` lang string.
 ## Mustache templates
 Every `templates/*.mustache` needs an `Example context (json):` block in its
 docblock — the Mustache lint renders against it and validates the HTML (supply
-non-empty loop data so the preview produces valid markup). Use triple-stash
+non-empty loop data so the preview produces valid markup). **Never write a `{{…}}`
+tag inside the `{{! … }}` docblock** (e.g. describing the template with
+"strings via `{{#str}}`"): Mustache comments don't nest and close at the *first*
+`}}`, so the `}}` of the embedded tag ends the comment early and the rest of the
+docblock (incl. `Example context (json): { }`) renders as visible text. Describe
+tags in prose without the braces. Use triple-stash
 `{{{html}}}` only for trusted server-rendered HTML (e.g. `moodleform::render()`).
 Server-side rendering uses `renderable` + `templatable` + `render_from_template`
 — **zero `html_writer`** in plugin code (moodleform's own markup excepted).
