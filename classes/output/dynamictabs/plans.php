@@ -29,6 +29,7 @@ use core_competency\api;
 use core_competency\competency;
 use core_competency\competency_framework;
 use core_competency\template;
+use local_dimensions\constants;
 use local_dimensions\helper;
 use local_dimensions\template_metadata_cache;
 
@@ -163,6 +164,7 @@ class plans extends \core\output\dynamic_tabs\base {
             $idnumber = (string) (($metadatamap[$id] ?? [])['idnumber'] ?? '');
             $visible = (bool) $template->get('visible');
             $hashiddentemplates = $hashiddentemplates || !$visible;
+            $optduedate = (int) $template->get('duedate');
             $templateoptions[] = [
                 'id' => $id,
                 'name' => $name,
@@ -171,6 +173,9 @@ class plans extends \core\output\dynamic_tabs\base {
                 'competencycount' => api::count_competencies_in_template($id),
                 'visible' => $visible,
                 'selected' => $id === $templateid,
+                'duedate' => $optduedate > 0
+                    ? userdate($optduedate, get_string('strftimedate', 'langconfig'))
+                    : '',
             ];
         }
 
@@ -237,6 +242,12 @@ class plans extends \core\output\dynamic_tabs\base {
         $selectedtype = (string) ($selectedmeta['type'] ?? '');
         $selectedtag1 = (string) ($selectedmeta['tag1'] ?? '');
         $selectedtag2 = (string) ($selectedmeta['tag2'] ?? '');
+        $selecteddisplaymode = '';
+        if ($selected) {
+            $displaymodeid = (int) ($selectedmeta['displaymode'] ?? constants::DISPLAYMODE_COMPETENCIES);
+            $displaymodeoptions = constants::display_mode_options();
+            $selecteddisplaymode = (string) ($displaymodeoptions[$displaymodeid] ?? '');
+        }
         $selecteddescription = $selected ? format_text(
             (string) $selected->get('description'),
             (int) $selected->get('descriptionformat'),
@@ -269,10 +280,12 @@ class plans extends \core\output\dynamic_tabs\base {
             'selectedtemplatehastag1' => $selectedtag1 !== '',
             'selectedtemplatetag2' => format_string($selectedtag2),
             'selectedtemplatehastag2' => $selectedtag2 !== '',
+            'selectedtemplatedisplaymode' => $selecteddisplaymode,
+            'selectedtemplatehasdisplaymode' => $selecteddisplaymode !== '',
             'selectedtemplatevisible' => $selected ? (bool) $selected->get('visible') : false,
             'selectedtemplatehasduedate' => $duedate > 0,
             'selectedtemplateduedate' => $duedate > 0
-                ? userdate($duedate, get_string('strftimedatefullshort', 'langconfig'))
+                ? userdate($duedate, get_string('strftimedate', 'langconfig'))
                 : '',
             'selectedtemplateplancount' => $selected
                 ? (helper::count_plans_by_template([$templateid])[$templateid] ?? 0)

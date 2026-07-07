@@ -23,6 +23,7 @@
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · contextid (int) · needscategoryselection (bool)
     * hasframeworks (bool) · frameworkcount (int) · canmanage (int) · canexport (int) · showhidden (bool)
+    * hashiddenframeworks (bool)
     * frameworks (array) {id, shortname, idnumber, competencycount, visible, deletable, canmanage}
 
     Example context (json):
@@ -36,6 +37,7 @@
         "canmanage": 1,
         "canexport": 1,
         "showhidden": false,
+        "hashiddenframeworks": true,
         "frameworks": [
             {"id": 5, "shortname": "Core skills", "idnumber": "CORE", "competencycount": 12,
              "visible": true, "deletable": false, "canmanage": true}
@@ -50,6 +52,15 @@
     {{/needscategoryselection}}
 
     {{^needscategoryselection}}
+    {{#hashiddenframeworks}}
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="local-dimensions-frameworks-showhidden"
+               data-action="toggle-hidden"{{#showhidden}} checked{{/showhidden}}>
+        <label class="form-check-label" for="local-dimensions-frameworks-showhidden">
+            {{#str}}managecompetencies_showhiddenframeworks, local_dimensions{{/str}}
+        </label>
+    </div>
+    {{/hashiddenframeworks}}
     <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
         <div class="text-muted small">
             {{#str}}central_frameworks_items, local_dimensions{{/str}}: <strong>{{frameworkcount}}</strong>
@@ -69,13 +80,6 @@
             {{/canexport}}
         </div>
         {{/canmanage}}
-    </div>
-    <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="local-dimensions-frameworks-showhidden"
-               data-action="toggle-hidden"{{#showhidden}} checked{{/showhidden}}>
-        <label class="form-check-label" for="local-dimensions-frameworks-showhidden">
-            {{#str}}managecompetencies_showhiddenframeworks, local_dimensions{{/str}}
-        </label>
     </div>
 
     {{#hasframeworks}}

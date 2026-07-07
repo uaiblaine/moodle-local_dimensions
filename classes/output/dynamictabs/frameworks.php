@@ -85,7 +85,21 @@ class frameworks extends \core\output\dynamic_tabs\base {
         $pagecontext = $resolved['context'];
         $showhidden = (bool) ($data['showhidden'] ?? false);
 
-        $rows = $needscategory ? [] : helper::framework_rows($pagecontext, $showhidden);
+        // Fetch the full set (incl. hidden) once so the "show hidden" toggle can be gated on
+        // whether any hidden structure actually exists, mirroring the Plans tab; then filter the
+        // display rows by the current toggle state.
+        $allrows = $needscategory ? [] : helper::framework_rows($pagecontext, true);
+        $hashiddenframeworks = false;
+        $rows = [];
+        foreach ($allrows as $row) {
+            if (empty($row['visible'])) {
+                $hashiddenframeworks = true;
+                if (!$showhidden) {
+                    continue;
+                }
+            }
+            $rows[] = $row;
+        }
         $canmanage = !$needscategory && competency_framework::can_manage_context($pagecontext);
 
         $PAGE->requires->js_call_amd('local_dimensions/central/frameworks', 'init');
@@ -96,6 +110,7 @@ class frameworks extends \core\output\dynamic_tabs\base {
             'contextid' => $pagecontext->id,
             'needscategoryselection' => $needscategory,
             'hasframeworks' => !empty($rows),
+            'hashiddenframeworks' => $hashiddenframeworks,
             'frameworks' => $rows,
             'frameworkcount' => count($rows),
             'canmanage' => (int) $canmanage,

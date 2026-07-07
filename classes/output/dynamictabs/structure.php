@@ -118,19 +118,22 @@ class structure extends \core\output\dynamic_tabs\base {
         $selected = $frameworks[$frameworkid] ?? null;
 
         $count = 0;
+        $hashiddenframeworks = false;
         $frameworkoptions = [];
         foreach ($frameworks as $id => $framework) {
             $competencycount = competency::count_records(['competencyframeworkid' => $id]);
             if ($id === $frameworkid) {
                 $count = $competencycount;
             }
+            $ishidden = !((bool) $framework->get('visible'));
+            $hashiddenframeworks = $hashiddenframeworks || $ishidden;
             $frameworkoptions[] = [
                 'id' => $id,
                 'name' => format_string($framework->get('shortname')),
                 'idnumber' => s($framework->get('idnumber')),
                 'selected' => $id === $frameworkid,
                 'competencycount' => $competencycount,
-                'hidden' => !((bool) $framework->get('visible')),
+                'hidden' => $ishidden,
             ];
         }
 
@@ -147,6 +150,7 @@ class structure extends \core\output\dynamic_tabs\base {
             'selectedcategoryid' => $categoryid,
             'needscategoryselection' => $needscategory,
             'showhidden' => $showhidden,
+            'hashiddenframeworks' => $hashiddenframeworks,
             'hasframeworks' => !empty($frameworkoptions),
             'frameworks' => $frameworkoptions,
             'selectedframeworkid' => $frameworkid,

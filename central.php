@@ -56,17 +56,16 @@ $categoryid = (int) $resolved['categoryid'];
 $contextbar = new contextbar($contexttype, $categoryid);
 $PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
 
-// Build the Structure tab and pre-render its body; refresh after actions is done
-// client-side via core_dynamic_tabs_get_content (no page reload).
-$structuretab = new structure([
+// Build the Frameworks tab and pre-render its body (it is the landing tab); refresh
+// after actions is done client-side via core_dynamic_tabs_get_content (no page reload).
+$frameworkstab = new frameworks([
     'contexttype' => $contexttype,
     'categoryid' => $categoryid,
-    'frameworkid' => $frameworkid,
 ]);
-$structuretab->require_access();
-$structurecontent = $OUTPUT->render_from_template(
-    $structuretab->get_template(),
-    $structuretab->export_for_template($OUTPUT)
+$frameworkstab->require_access();
+$frameworkscontent = $OUTPUT->render_from_template(
+    $frameworkstab->get_template(),
+    $frameworkstab->export_for_template($OUTPUT)
 );
 
 $tabsdata = [
@@ -78,25 +77,25 @@ $tabsdata = [
     ],
     'tabs' => [
         [
-            'shortname' => 'structure',
-            'displayname' => $structuretab->get_tab_label(),
-            'tabclass' => structure::class,
+            'shortname' => 'frameworks',
+            'displayname' => get_string('central_frameworks_tab', 'local_dimensions'),
+            'tabclass' => frameworks::class,
             'enabled' => true,
             'active' => true,
-            'content' => $structurecontent,
+            'content' => $frameworkscontent,
         ],
         [
-            'shortname' => 'plans',
-            'displayname' => get_string('learningplans', 'local_dimensions'),
-            'tabclass' => plans::class,
+            'shortname' => 'structure',
+            'displayname' => get_string('managecompetencies_structure', 'local_dimensions'),
+            'tabclass' => structure::class,
             'enabled' => true,
             'active' => false,
             'content' => '',
         ],
         [
-            'shortname' => 'frameworks',
-            'displayname' => get_string('central_frameworks_tab', 'local_dimensions'),
-            'tabclass' => frameworks::class,
+            'shortname' => 'plans',
+            'displayname' => get_string('learningplans', 'local_dimensions'),
+            'tabclass' => plans::class,
             'enabled' => true,
             'active' => false,
             'content' => '',

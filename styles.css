@@ -3233,9 +3233,55 @@
 .local-dimensions-central-plans-body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-plans-detail-width, calc(50% - 0.25rem));
-    height: 60vh;
+    height: var(--local-dimensions-plans-body-height, 60vh);
     min-height: 320px;
-    max-height: 680px;
+    max-height: 85vh;
+}
+
+/* No templates (or a competency filter matched none): only the selector card renders,
+   so collapse the master-detail grid to a single full-width, content-height column. */
+.local-dimensions-central-plans-body-single {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    max-height: none;
+}
+
+/* Full-width handle below the master-detail body: drag it to resize the panels'
+   height (JS drives --local-dimensions-plans-body-height). Mirrors the vertical
+   divider grip but on the horizontal axis. */
+.local-dimensions-central-plans-vresizer {
+    position: relative;
+    height: 0.6rem;
+    cursor: row-resize;
+}
+
+.local-dimensions-central-plans-vresizer::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.5rem;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--bs-border-color, #ced4da);
+    transform: translate(-50%, -50%);
+}
+
+.local-dimensions-central-plans-vresizer:hover::before,
+.local-dimensions-central-plans-vresizer:focus::before {
+    background: var(--bs-primary, #0f6cbf);
+}
+
+.local-dimensions-central-plans-body.local-dimensions-resizing-vert {
+    cursor: row-resize;
+    user-select: none;
+}
+
+/* Lift an open row-action menu above adjacent rows and the action footer. The competency
+   list scrolls, so a menu opening near its bottom edge can still be clipped by the scroll
+   container — the vertical resize on the body above gives room to avoid that. */
+.local-dimensions-central-plans [data-region='competency-items'] .dropdown-menu {
+    z-index: 1021;
 }
 
 .local-dimensions-central-plans-list-pane,
@@ -3316,6 +3362,21 @@
 .local-dimensions-central-plans [data-region='template-rows'].show-disabled .local-dimensions-central-plan-hidden {
     display: flex;
     opacity: 0.75;
+}
+
+/* The plan idnumber and due date sit inline on each list row, hidden by default and
+   revealed by the selector's display-options toggles (mirrors the tree show-* toggles). */
+.local-dimensions-central-plans [data-region='template-rows'] .local-dimensions-central-plan-id,
+.local-dimensions-central-plans [data-region='template-rows'] .local-dimensions-central-plan-duedate {
+    display: none;
+}
+
+.local-dimensions-central-plans [data-region='template-rows'].show-id .local-dimensions-central-plan-id {
+    display: inline;
+}
+
+.local-dimensions-central-plans [data-region='template-rows'].show-duedate .local-dimensions-central-plan-duedate {
+    display: inline;
 }
 
 .local-dimensions-central-plans [data-region='template-rows'] .local-dimensions-central-row.local-dimensions-central-plan-filtered {
