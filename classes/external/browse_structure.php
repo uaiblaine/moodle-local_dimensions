@@ -121,7 +121,7 @@ class browse_structure extends external_api {
                 'idnumber' => new external_value(PARAM_RAW, 'Competency ID number'),
                 'taxonomy' => new external_value(PARAM_TEXT, 'Localised taxonomy label for the node level'),
                 'scale' => new external_value(PARAM_TEXT, 'Effective scale name (framework default when inherited)'),
-                'description' => new external_value(PARAM_TEXT, 'Plain-text competency description for the detail pane'),
+                'description' => new external_value(PARAM_RAW, 'Formatted HTML competency description for the detail pane'),
                 'coursecount' => new external_value(PARAM_INT, 'Number of linked courses'),
                 'activitycount' => new external_value(PARAM_INT, 'Number of linked course-module activities'),
                 'templatecount' => new external_value(PARAM_INT, 'Number of learning plan templates bundling the competency'),

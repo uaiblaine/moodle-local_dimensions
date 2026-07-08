@@ -38,6 +38,7 @@ import {open as openLinksModal} from 'local_dimensions/central/competency_links'
 import {open as openRelatedModal} from 'local_dimensions/central/related_competencies';
 import {getString} from 'core/str';
 import {add as addToast} from 'core/toast';
+import CollapsibleDescription from 'local_dimensions/collapsible_description';
 import {initPaneResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 
@@ -448,8 +449,27 @@ const selectRow = (region, row) => {
     scalewrap.hidden = scale === '';
     const description = row.dataset.description || '';
     const descwrap = content.querySelector(SELECTORS.detailDescriptionWrap);
-    content.querySelector(SELECTORS.detailDescription).textContent = description;
+    const desctarget = content.querySelector(SELECTORS.detailDescription);
     descwrap.hidden = description === '';
+    // Clear the previous row's description up front so a slow render can never leave
+    // one competency's body under another's title.
+    desctarget.innerHTML = '';
+    if (description !== '') {
+        // Render the trusted server-rendered HTML (format_text, round-tripped through the
+        // data-description attribute) inside the reusable collapsible container so a long
+        // body caps its height with a Show more/less toggle. The render is async, so only
+        // inject when this row is still the active selection (guards rapid row switches).
+        Templates.renderForPromise('local_dimensions/collapsible_description', {
+            html: description,
+            id: 'local-dimensions-structure-desc-' + row.dataset.id,
+        }).then(({html}) => {
+            if (row.classList.contains('active')) {
+                desctarget.innerHTML = html;
+                CollapsibleDescription.refresh(desctarget);
+            }
+            return null;
+        }).catch(Notification.exception);
+    }
 
     content.querySelector(SELECTORS.detailCourses).textContent = row.dataset.courses || '0';
     content.querySelector(SELECTORS.detailActivities).textContent = row.dataset.activities || '0';

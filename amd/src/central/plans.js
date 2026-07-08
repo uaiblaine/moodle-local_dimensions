@@ -36,6 +36,7 @@ import {show as showCompetencyBrowser} from 'local_dimensions/central/competency
 import {show as showParticipants} from 'local_dimensions/central/participants_manager';
 import {initPaneResizer, initVerticalResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
+import CollapsibleDescription from 'local_dimensions/collapsible_description';
 
 const FORM_CLASS = 'local_dimensions\\form\\template_dynamic_form';
 const COMPETENCY_FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
@@ -766,6 +767,10 @@ export const init = () => {
         return;
     }
     const pane = region.closest('[data-tab-content]');
+
+    // Activate the collapsible container around the selected template's description
+    // (re-runs after each tab refresh, so a freshly rendered description is measured).
+    CollapsibleDescription.refresh(pane);
 
     // The server auto-selects a template (selectedtemplateid); mirror it onto the pane dataset so
     // getContent args and the add/remove/reorder web services target the rendered template even

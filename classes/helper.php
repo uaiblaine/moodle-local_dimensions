@@ -1712,11 +1712,16 @@ class helper {
             $taxonomy = $framework->get_taxonomy($level) ?: competency_framework::TAXONOMY_COMPETENCY;
             $scaleid = (int) $record->get('scaleid');
             $effectivescaleid = $scaleid > 0 ? $scaleid : $frameworkscaleid;
-            $description = trim(strip_tags(format_text(
+            $description = format_text(
                 (string) $record->get('description'),
                 (int) $record->get('descriptionformat'),
                 ['context' => $context]
-            )));
+            );
+            // Keep the formatted HTML for the detail pane, but treat a description
+            // that is empty once tags are stripped as blank so the pane can hide it.
+            if (trim(strip_tags($description)) === '') {
+                $description = '';
+            }
             $nodes[] = [
                 'id' => $id,
                 'parentid' => (int) $record->get('parentid'),
