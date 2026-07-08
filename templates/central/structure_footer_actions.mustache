@@ -1,0 +1,71 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/structure_footer_actions
+
+    CRUD actions for the selected competency, rendered into the page sticky footer by the
+    Structure tab. Buttons act on the module-level active row, so they carry no per-item
+    dataset. Follows core's raw sticky-footer button pattern (btn py-0 d-flex flex-column):
+    the icon sits above a centred label, no colour variant; the row is centred. Wraps the
+    buttons in the sticky-footer inner layout because the coordinator replaces the footer's
+    inner HTML wholesale.
+
+    Context variables required for this template:
+    * canmanage (bool) - whether the current user may manage the framework
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "canmanage": true
+    }
+}}
+<div class="sticky-footer-content-wrapper h-100 d-flex justify-content-center">
+    <div class="sticky-footer-content local-dimensions-central-footer-actions w-100 d-flex align-items-center gap-2 px-3 py-2">
+        {{#canmanage}}
+        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="edit">
+            <i class="fa fa-pencil" aria-hidden="true"></i>
+            <span>{{#str}}edit{{/str}}</span>
+        </button>
+        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="addchild">
+            <i class="fa fa-plus" aria-hidden="true"></i>
+            <span>{{#str}}managecompetencies_addchild, local_dimensions{{/str}}</span>
+        </button>
+        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="rules">
+            <i class="fa fa-list" aria-hidden="true"></i>
+            <span>{{#str}}competencyrule, tool_lp{{/str}}</span>
+        </button>
+        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="links">
+            <i class="fa fa-link" aria-hidden="true"></i>
+            <span>{{#str}}central_links_button, local_dimensions{{/str}}</span>
+        </button>
+        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="related">
+            <i class="fa fa-exchange" aria-hidden="true"></i>
+            <span>{{#str}}central_related_button, local_dimensions{{/str}}</span>
+        </button>
+        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="moveto">
+            <i class="fa fa-grip-vertical" aria-hidden="true"></i>
+            <span>{{#str}}central_plans_moveto, local_dimensions{{/str}}</span>
+        </button>
+        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="delete">
+            <i class="fa fa-trash" aria-hidden="true"></i>
+            <span>{{#str}}delete{{/str}}</span>
+        </button>
+        {{/canmanage}}
+    </div>
+</div>

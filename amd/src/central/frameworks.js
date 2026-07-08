@@ -33,6 +33,7 @@ import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'core/toast';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import {open as openScaleConfig} from 'local_dimensions/central/framework_scaleconfig';
+import * as ActionFooter from 'local_dimensions/central/action_footer';
 
 const FORM_CLASS = 'local_dimensions\\form\\framework_dynamic_form';
 const IMPORT_FORM_CLASS = 'local_dimensions\\form\\import_framework_dynamic_form';
@@ -377,6 +378,12 @@ export const init = () => {
         return;
     }
     const pane = region.closest('[data-tab-content]');
+    // The Frameworks tab has no sticky-footer actions; clear the shared footer when this
+    // tab becomes active so a footer left by the Structure/Plans tab does not linger here
+    // (backstop for keyboard tab activation, which fires no toggle click).
+    if (region.closest('.tab-pane.active')) {
+        ActionFooter.hide();
+    }
     setupScaleConfigDelegation();
 
     region.addEventListener('click', (event) => {

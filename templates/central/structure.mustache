@@ -69,6 +69,7 @@
 }}
 <div class="local-dimensions-central-structure" data-region="structure"
      data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}" data-frameworkid="{{selectedframeworkid}}"
+     data-canmanage="{{canmanage}}"
      data-narule="{{#str}}managecompetencies_rule_notapplicable, local_dimensions{{/str}}">
     <script type="application/json" data-region="rules-modules">{{{rulesmodulesjson}}}</script>
     <script type="application/json" data-region="course-outcomes">{{{courseoutcomesjson}}}</script>
@@ -219,34 +220,6 @@
                             <div class="small text-muted">{{#str}}competencyrule, tool_lp{{/str}}</div>
                             <div data-region="detail-rule"></div>
                         </div>
-                        {{#canmanage}}
-                        <div class="mt-3 d-flex flex-wrap gap-2">
-                            <button type="button" class="btn btn-sm btn-primary" data-action="edit">
-                                <i class="fa fa-pencil me-1" aria-hidden="true"></i>{{#str}}edit{{/str}}
-                            </button>
-                            <button type="button" class="btn btn-sm btn-secondary" data-action="addchild">
-                                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}managecompetencies_addchild, local_dimensions{{/str}}
-                            </button>
-                            <button type="button" class="btn btn-sm btn-secondary" data-action="rules">
-                                <i class="fa fa-list me-1" aria-hidden="true"></i>{{#str}}competencyrule, tool_lp{{/str}}
-                            </button>
-                            <button type="button" class="btn btn-sm btn-secondary" data-action="links">
-                                <i class="fa fa-link me-1" aria-hidden="true"></i>{{#str}}central_links_button, local_dimensions{{/str}}
-                            </button>
-                            <button type="button" class="btn btn-sm btn-secondary" data-action="related">
-                                <i class="fa fa-exchange me-1" aria-hidden="true"></i>{{#str}}central_related_button, local_dimensions{{/str}}
-                            </button>
-                            <button type="button" class="btn btn-sm btn-secondary" data-action="moveup" title="{{#str}}moveup{{/str}}">
-                                <i class="fa fa-arrow-up" aria-hidden="true"></i><span class="visually-hidden">{{#str}}moveup{{/str}}</span>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-secondary" data-action="movedown" title="{{#str}}movedown{{/str}}">
-                                <i class="fa fa-arrow-down" aria-hidden="true"></i><span class="visually-hidden">{{#str}}movedown{{/str}}</span>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete">
-                                <i class="fa fa-trash me-1" aria-hidden="true"></i>{{#str}}delete{{/str}}
-                            </button>
-                        </div>
-                        {{/canmanage}}
                     </div>
                 </div>
             </div>

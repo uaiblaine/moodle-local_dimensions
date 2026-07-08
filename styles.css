@@ -3174,8 +3174,6 @@
     display: inline-block;
 }
 
-/* The tree scrolls via .local-dimensions-central-structure-scroll (fixed-height grid);
-   this class keeps only the show-* toggle scoping. */
 
 /* Structure tree row states: selected (JS toggles .active on the selected row), hover and
    keyboard focus. Uses Bootstrap CSS variables so light/dark themes both work. */
@@ -3215,27 +3213,21 @@
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
-/* Structure tab — one fixed working height so tree and detail always match
-   vertically (same treatment as the Plans tab); the tree and detail sections
-   scroll internally while the tree toolbar and search stay pinned. */
+/* Structure tab — content-height master-detail grid. With the actions in the page sticky
+   footer the panes no longer scroll internally; the grid stretches the tree and detail panes
+   to the same height (the taller one drives), and the page scrolls when the tree is long. */
 .local-dimensions-central-structure-body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-structure-detail-width, clamp(18rem, 30vw, 32rem));
-    height: 60vh;
-    min-height: 320px;
-    max-height: 680px;
+    align-items: stretch;
 }
 
-/* Learning plans tab — same master-detail grid, but the divider starts at 50/50 and
-   the whole body has one fixed working height so both panes always match vertically
-   (design: min 320px, max 60vh capped at 680px). Written as height + min/max-height
-   because the CI stylelint (csstree/validator) rejects clamp() in height. */
+/* Learning plans tab — same content-height master-detail grid; the divider starts at 50/50.
+   The grid stretches both panes to the same height (the taller one drives). */
 .local-dimensions-central-plans-body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-plans-detail-width, calc(50% - 0.25rem));
-    height: var(--local-dimensions-plans-body-height, 60vh);
-    min-height: 320px;
-    max-height: 85vh;
+    align-items: stretch;
 }
 
 /* No templates (or a competency filter matched none): only the selector card renders,
@@ -3246,40 +3238,9 @@
     max-height: none;
 }
 
-/* Full-width handle below the master-detail body: drag it to resize the panels'
-   height (JS drives --local-dimensions-plans-body-height). Mirrors the vertical
-   divider grip but on the horizontal axis. */
-.local-dimensions-central-plans-vresizer {
-    position: relative;
-    height: 0.6rem;
-    cursor: row-resize;
-}
-
-.local-dimensions-central-plans-vresizer::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 2.5rem;
-    height: 3px;
-    border-radius: 999px;
-    background: var(--bs-border-color, #ced4da);
-    transform: translate(-50%, -50%);
-}
-
-.local-dimensions-central-plans-vresizer:hover::before,
-.local-dimensions-central-plans-vresizer:focus::before {
-    background: var(--bs-primary, #0f6cbf);
-}
-
-.local-dimensions-central-plans-body.local-dimensions-resizing-vert {
-    cursor: row-resize;
-    user-select: none;
-}
-
-/* Lift an open row-action menu above adjacent rows and the action footer. The competency
-   list scrolls, so a menu opening near its bottom edge can still be clipped by the scroll
-   container — the vertical resize on the body above gives room to avoid that. */
+/* Lift an open row-action menu above adjacent rows. The competency list scrolls, so a
+   menu opening near its bottom edge can still be clipped by the scroll container — the
+   vertical resize on the body above gives room to avoid that. */
 .local-dimensions-central-plans [data-region='competency-items'] .dropdown-menu {
     z-index: 1021;
 }
@@ -3313,12 +3274,11 @@
     --collapsible-max-vh: 7rem;
 }
 
-/* Bound the expanded description to a fraction of the card height and scroll it
-   internally, so a long body never pushes past the card AND the max-height transition
-   animates smoothly on expand/collapse (an expand to max-height:none cannot animate).
-   The plans card tracks its resizable body height; the structure card is a fixed 60vh. */
+/* Bound the expanded description and scroll it internally, so a long body never pushes the
+   detail card open indefinitely AND the max-height transition animates smoothly on
+   expand/collapse (an expand to max-height:none cannot animate). */
 .local-dimensions-central-plans-description .local-dimensions-collapsible.is-expanded .local-dimensions-collapsible-content {
-    max-height: calc(var(--local-dimensions-plans-body-height, 60vh) * 0.4);
+    max-height: calc(60vh * 0.4);
     overflow-y: auto;
 }
 
@@ -3358,14 +3318,21 @@
     background: var(--bs-primary, #0f6cbf);
 }
 
-/* Only the list sections scroll: the plan list on the left, and the competency list
-   between the fixed header (plan name + counts) and the fixed action footer on the
-   right. The structure variant covers the tree body and the detail card body.
-   min-height: 0 lets the flex card section shrink below its content height. */
-.local-dimensions-central-plans-scroll,
-.local-dimensions-central-structure-scroll {
-    min-height: 0;
-    overflow-y: auto;
+/* Sticky-footer action buttons follow core's raw pattern (btn py-0 d-flex flex-column):
+   the icon sits above a centred label, no colour variant. The row is centred; if the actions
+   do not all fit it falls back to start-aligned and scrolls horizontally (safe center), so
+   none are cut off — the id selector beats boost's overflow:hidden on .sticky-footer-content. */
+#sticky-footer .local-dimensions-central-footer-actions {
+    justify-content: safe center;
+    overflow-x: auto;
+}
+
+.local-dimensions-central-footer-actions .btn {
+    flex-shrink: 0;
+}
+
+.local-dimensions-central-footer-actions .btn i {
+    font-size: 1.1rem;
 }
 
 /* Plan rows own their display here (no .d-flex utility in the markup — its !important
@@ -3500,21 +3467,10 @@
 }
 
 @media (max-width: 991.98px) {
+    /* Stack the master-detail grid into one content-height column and drop the divider. */
     .local-dimensions-central-structure-body,
     .local-dimensions-central-plans-body {
         grid-template-columns: 1fr;
-    }
-
-    /* Stacked panes size to their own content; each list still scrolls internally. */
-    .local-dimensions-central-plans-body,
-    .local-dimensions-central-structure-body {
-        height: auto;
-        max-height: none;
-    }
-
-    .local-dimensions-central-plans-scroll,
-    .local-dimensions-central-structure-scroll {
-        max-height: 50vh;
     }
 
     .local-dimensions-central-structure-resizer,
