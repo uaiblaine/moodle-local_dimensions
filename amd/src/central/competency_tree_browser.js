@@ -40,7 +40,7 @@
  */
 
 import Ajax from 'core/ajax';
-import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import {getString} from 'core/str';
 
 const PAGE_SIZE = 25;
@@ -186,7 +186,7 @@ const appendLoadMore = (state, container, depth, loader) => {
     btn.textContent = state.loadmorelabel;
     btn.addEventListener('click', () => {
         btn.remove();
-        loader().catch(Notification.exception);
+        loader().catch(notifyError);
     });
     container.appendChild(btn);
 };
@@ -379,9 +379,9 @@ const onFilterInput = (state, value) => {
     state.debounce = window.setTimeout(() => {
         const query = value.trim();
         if (query.length >= SEARCH_MIN) {
-            applyMode(state, 'search', query).catch(Notification.exception);
+            applyMode(state, 'search', query).catch(notifyError);
         } else if (state.mode === 'search') {
-            applyMode(state, 'tree', '').catch(Notification.exception);
+            applyMode(state, 'tree', '').catch(notifyError);
         }
     }, 250);
 };
@@ -417,7 +417,7 @@ const onListClick = (state, event) => {
     if (toggler) {
         const node = toggler.closest('.local-dimensions-cb-node');
         if (node) {
-            toggleNode(state, node).catch(Notification.exception);
+            toggleNode(state, node).catch(notifyError);
         }
         return;
     }
@@ -491,7 +491,7 @@ export const initBrowser = async(state) => {
     await applyMode(state, 'tree', '');
     state.observer = new IntersectionObserver((entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
-            loadTopPage(state).catch(Notification.exception);
+            loadTopPage(state).catch(notifyError);
         }
     });
     state.observer.observe(state.sentinel);

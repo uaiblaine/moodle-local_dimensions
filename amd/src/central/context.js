@@ -25,7 +25,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import {getString} from 'core/str';
 import {enhance} from 'core/form-autocomplete';
 import {reloadPane} from 'local_dimensions/central/tabs';
@@ -151,7 +151,7 @@ const applyContextToPanes = (contexttype, categoryid) => {
 const refreshActive = () => {
     const pane = document.querySelector(SELECTORS.activePane);
     if (pane) {
-        reloadPane(pane).catch(Notification.exception);
+        reloadPane(pane).catch(notifyError);
     }
 };
 
@@ -179,7 +179,7 @@ const setContext = (bar, contexttype) => {
     // re-enhances the picker (its synchronous DOM reset runs before the counter reads it);
     // leaving it just clears the now-hidden native value.
     if (contexttype === 'coursecat') {
-        enhanceCategory(bar, true).catch(Notification.exception);
+        enhanceCategory(bar, true).catch(notifyError);
     } else {
         const select = bar.querySelector(SELECTORS.categorySelect);
         if (select) {
@@ -264,7 +264,7 @@ export const init = () => {
         // Snapshot the pristine wrapper before enhancing so a later context switch can reset it.
         pristineCategoryNode = wrapper.cloneNode(true);
         if (bar.dataset.contexttype === 'coursecat') {
-            enhanceCategory(bar, false).catch(Notification.exception);
+            enhanceCategory(bar, false).catch(notifyError);
         } else {
             select.addEventListener('change', () => setCategory(bar, select));
         }

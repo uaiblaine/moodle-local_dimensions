@@ -268,6 +268,7 @@ $string['entityname_competency_extras'] = 'Competência: campos personalizados d
 $string['entityname_plan'] = 'Plano de aprendizagem';
 $string['entityname_template'] = 'Modelo de plano de aprendizagem';
 $string['error_loading_summary'] = 'Erro ao carregar sumário da competência.';
+$string['errornetwork'] = 'Conexão perdida. Verifique sua internet e tente novamente.';
 $string['evidence_author'] = 'Registrado por';
 $string['evidence_by'] = 'por';
 $string['evidence_date'] = 'Data';

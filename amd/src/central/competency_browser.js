@@ -27,7 +27,7 @@
 import Ajax from 'core/ajax';
 import ModalSaveCancel from 'core/modal_save_cancel';
 import ModalEvents from 'core/modal_events';
-import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {getString} from 'core/str';
 import {applyMode, destroyBrowser, getCheckedIds, initBrowser} from 'local_dimensions/central/competency_tree_browser';
@@ -52,7 +52,7 @@ const addSelected = (state) => {
     if (!calls.length) {
         return;
     }
-    Promise.all(Ajax.call(calls)).then(() => reloadPane(state.pane)).catch(Notification.exception);
+    Promise.all(Ajax.call(calls)).then(() => reloadPane(state.pane)).catch(notifyError);
 };
 
 /**
@@ -113,7 +113,7 @@ export const show = async(pane, region) => {
                 // Selections are per framework: keeping them across a switch would silently
                 // add competencies from a framework no longer on screen.
                 state.checked.clear();
-                applyMode(state, 'tree', '').catch(Notification.exception);
+                applyMode(state, 'tree', '').catch(notifyError);
             });
         }
         await initBrowser(state);

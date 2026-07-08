@@ -32,6 +32,7 @@ import Ajax from 'core/ajax';
 import Modal from 'core/modal';
 import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
@@ -430,7 +431,7 @@ const makeCourseRow = (state, course) => {
     wrap.appendChild(outcomerow);
     wrap.appendChild(note);
     wrap.appendChild(children);
-    updateCourseMeta(state, wrap, Number(course.modulecount)).catch(Notification.exception);
+    updateCourseMeta(state, wrap, Number(course.modulecount)).catch(notifyError);
     return wrap;
 };
 
@@ -661,7 +662,7 @@ const onAddCourse = (state) => {
             return Templates.replaceNodeContents(state.addsel.parentElement, state.addshtml, '');
         })
         .then(() => bindPicker(state))
-        .catch(Notification.exception);
+        .catch(notifyError);
 };
 
 /**
@@ -683,24 +684,24 @@ const onClick = (state, event) => {
     });
     const toggle = event.target.closest('[data-action="toggle-course"]');
     if (toggle) {
-        toggleCourse(state, toggle.closest('[data-courseid]'), toggle).catch(Notification.exception);
+        toggleCourse(state, toggle.closest('[data-courseid]'), toggle).catch(notifyError);
         return;
     }
     if (event.target.closest('[data-action="remove-course"]')) {
-        removeCourse(state, event.target.closest('[data-courseid]')).catch(Notification.exception);
+        removeCourse(state, event.target.closest('[data-courseid]')).catch(notifyError);
         return;
     }
     const additem = event.target.closest('[data-action="add-module"]');
     if (additem) {
-        addModule(state, additem.closest('[data-courseid]'), Number(additem.dataset.cmid)).catch(Notification.exception);
+        addModule(state, additem.closest('[data-courseid]'), Number(additem.dataset.cmid)).catch(notifyError);
         return;
     }
     if (event.target.closest('[data-action="remove-module"]')) {
-        removeModule(state, event.target.closest('[data-cmid]')).catch(Notification.exception);
+        removeModule(state, event.target.closest('[data-cmid]')).catch(notifyError);
         return;
     }
     if (event.target.closest('[data-action="loadmore"]')) {
-        loadCourses(state).catch(Notification.exception);
+        loadCourses(state).catch(notifyError);
     }
 };
 
@@ -714,7 +715,7 @@ const bindPicker = (state) => {
     state.addsel = state.root.querySelector(SELECTORS.courseAdd);
     state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
     state.addsel.addEventListener('change', () => onAddCourse(state));
-    enhance(SELECTORS.courseAdd, false, DATASOURCE, state.addcourseplaceholder).catch(Notification.exception);
+    enhance(SELECTORS.courseAdd, false, DATASOURCE, state.addcourseplaceholder).catch(notifyError);
 };
 
 /**
@@ -794,7 +795,7 @@ export const open = async(opts) => {
     modal.getRoot().on(ModalEvents.shown, () => {
         // Host a toast region inside the modal body so success toasts render above the dialog,
         // not behind it (the page-level region sits below the modal). Core removes it on close.
-        addToastRegion(modal.getBody()[0]).catch(Notification.exception);
+        addToastRegion(modal.getBody()[0]).catch(notifyError);
         const region = root.querySelector(SELECTORS.region);
         state.rowsEl = region.querySelector(SELECTORS.courseRows);
         state.emptyEl = region.querySelector(SELECTORS.courseEmpty);
@@ -811,11 +812,11 @@ export const open = async(opts) => {
                         flash(select.closest('[data-cmid]') || select.closest('[data-courseid]'));
                         return null;
                     })
-                    .catch(Notification.exception);
+                    .catch(notifyError);
             }
         });
         bindPicker(state);
-        loadCourses(state).catch(Notification.exception);
+        loadCourses(state).catch(notifyError);
     });
     modal.getRoot().on(ModalEvents.hidden, () => {
         if (typeof opts.onClose === 'function') {

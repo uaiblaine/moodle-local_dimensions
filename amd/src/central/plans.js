@@ -28,6 +28,7 @@ import ModalDeleteCancel from 'core/modal_delete_cancel';
 import ModalSaveCancel from 'core/modal_save_cancel';
 import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
@@ -224,7 +225,7 @@ const openForm = async(pane, formclass, args, titlekey, titlecomponent) => {
         args,
         modalConfig: {title: await getString(titlekey, titlecomponent)},
     });
-    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadKeepingScroll(pane).catch(Notification.exception));
+    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadKeepingScroll(pane).catch(notifyError));
     form.show();
 };
 
@@ -251,7 +252,7 @@ const deleteTemplate = async(pane, id, name, plancount) => {
     const remove = (deleteplans) => Ajax.call([{
         methodname: 'core_competency_delete_template',
         args: {id: templateid, deleteplans: deleteplans},
-    }])[0].then(() => reloadPane(pane)).catch(Notification.exception);
+    }])[0].then(() => reloadPane(pane)).catch(notifyError);
 
     if (hasplans) {
         const {html} = await Templates.renderForPromise('local_dimensions/delete_template_modal', {
@@ -305,7 +306,7 @@ const removeCompetency = async(pane, id, name) => {
         methodname: 'core_competency_remove_competency_from_template',
         args: {templateid: Number(pane.dataset.templateid), competencyid: competencyid},
     }])[0];
-    reloadKeepingScroll(pane).catch(Notification.exception);
+    reloadKeepingScroll(pane).catch(notifyError);
 };
 
 /**
@@ -534,7 +535,7 @@ const initDragReorder = (region, pane) => {
             flashRow(row);
             return null;
         }).catch((error) => {
-            Notification.exception(error);
+            notifyError(error);
             // Restoring the server's order from a failure handler is intentional.
             // eslint-disable-next-line promise/no-nesting
             reloadKeepingScroll(pane).catch(() => null);
@@ -605,7 +606,7 @@ const moveCompetencyTo = async(pane, region, target) => {
             flashRow(row);
             return null;
         }).catch((error) => {
-            Notification.exception(error);
+            notifyError(error);
             // Restoring the server's order from a failure handler is intentional.
             // eslint-disable-next-line promise/no-nesting
             reloadKeepingScroll(pane).catch(() => null);
@@ -677,16 +678,16 @@ const ACTION_HANDLERS = {
     'select-template': (pane, region, target) => {
         pane.dataset.templateid = target.dataset.id;
         // Keep the plan-list scroll; the detail shows new content so its scroll resets.
-        reloadKeepingScroll(pane, [SELECTORS.templateRows]).catch(Notification.exception);
+        reloadKeepingScroll(pane, [SELECTORS.templateRows]).catch(notifyError);
     },
     'clear-competency': (pane) => {
         pane.dataset.competencyids = '';
-        reloadPane(pane).catch(Notification.exception);
+        reloadPane(pane).catch(notifyError);
     },
     'remove-filter-competency': (pane, region, target) => {
         const removed = Number(target.dataset.id);
         pane.dataset.competencyids = filterIds(pane).filter((id) => id !== removed).join(',');
-        reloadPane(pane).catch(Notification.exception);
+        reloadPane(pane).catch(notifyError);
     },
     'add-filter-competency': (pane, region) => {
         const picker = region.querySelector(SELECTORS.filterPicker);
@@ -706,7 +707,7 @@ const ACTION_HANDLERS = {
         }
     },
     'duplicate-template': (pane, region, target) =>
-        duplicateTemplate(pane, target.dataset.id).catch(Notification.exception),
+        duplicateTemplate(pane, target.dataset.id).catch(notifyError),
     'display-options': (pane, region, target) => {
         const panel = region.querySelector(SELECTORS.displayPanel);
         if (!panel) {
@@ -723,8 +724,8 @@ const ACTION_HANDLERS = {
         panel.hidden = !panel.hidden;
         target.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
     },
-    'browse-frameworks': (pane, region) => showCompetencyBrowser(pane, region).catch(Notification.exception),
-    'manage-participants': (pane, region) => showParticipants(pane, region).catch(Notification.exception),
+    'browse-frameworks': (pane, region) => showCompetencyBrowser(pane, region).catch(notifyError),
+    'manage-participants': (pane, region) => showParticipants(pane, region).catch(notifyError),
     'new-template': (pane, region) => openForm(
         pane,
         FORM_CLASS,
@@ -748,12 +749,12 @@ const ACTION_HANDLERS = {
     ),
     'delete-template': (pane, region, target) =>
         deleteTemplate(pane, target.dataset.id, target.dataset.name || '', target.dataset.plancount || 0)
-            .catch(Notification.exception),
+            .catch(notifyError),
     'remove-competency': (pane, region, target) =>
-        removeCompetency(pane, target.dataset.id, target.dataset.name || '').catch(Notification.exception),
-    'move-competency-up': (pane, region, target) => moveCompetency(pane, target, 'up').catch(Notification.exception),
-    'move-competency-down': (pane, region, target) => moveCompetency(pane, target, 'down').catch(Notification.exception),
-    'move-competency-to': (pane, region, target) => moveCompetencyTo(pane, region, target).catch(Notification.exception),
+        removeCompetency(pane, target.dataset.id, target.dataset.name || '').catch(notifyError),
+    'move-competency-up': (pane, region, target) => moveCompetency(pane, target, 'up').catch(notifyError),
+    'move-competency-down': (pane, region, target) => moveCompetency(pane, target, 'down').catch(notifyError),
+    'move-competency-to': (pane, region, target) => moveCompetencyTo(pane, region, target).catch(notifyError),
 };
 
 /**
@@ -792,11 +793,11 @@ export const init = () => {
                 ids.push(added);
             }
             pane.dataset.competencyids = ids.join(',');
-            reloadPane(pane).catch(Notification.exception);
+            reloadPane(pane).catch(notifyError);
         });
         getString('central_searchcompetency', 'local_dimensions')
             .then((placeholder) => enhance(SELECTORS.competencySearch, false, DATASOURCE, placeholder, false, true, '', true))
-            .catch(Notification.exception);
+            .catch(notifyError);
     }
 
     const searchinput = region.querySelector(SELECTORS.planSearch);
