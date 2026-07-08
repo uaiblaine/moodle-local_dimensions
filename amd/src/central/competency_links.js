@@ -191,16 +191,16 @@ const flash = (el) => {
  * @param {Object} state Modal state.
  * @param {HTMLElement} courseEl The course card.
  * @param {Number} linked Number of linked activities.
- * @return {Promise<void>}
+ * @return {void}
  */
-const updateCourseMeta = async(state, courseEl, linked) => {
+const updateCourseMeta = (state, courseEl, linked) => {
     const count = courseEl.querySelector('[data-role="modcount"]');
     const note = courseEl.querySelector('[data-role="wholecoursenote"]');
     if (linked === 1) {
-        count.textContent = await getString('central_links_modulecountone', 'local_dimensions');
+        count.textContent = state.modulecountonelabel;
         note.hidden = true;
     } else if (linked > 1) {
-        count.textContent = await getString('central_links_modulecount', 'local_dimensions', linked);
+        count.textContent = state.modulecounttemplate.replace('{count}', linked);
         note.hidden = true;
     } else {
         count.textContent = state.wholecourselabel;
@@ -431,7 +431,7 @@ const makeCourseRow = (state, course) => {
     wrap.appendChild(outcomerow);
     wrap.appendChild(note);
     wrap.appendChild(children);
-    updateCourseMeta(state, wrap, Number(course.modulecount)).catch(notifyError);
+    updateCourseMeta(state, wrap, Number(course.modulecount));
     return wrap;
 };
 
@@ -504,7 +504,7 @@ const loadActivities = async(state, courseEl) => {
         container.appendChild(none);
     }
     container.dataset.loaded = '1';
-    await updateCourseMeta(state, courseEl, response.linked.length);
+    updateCourseMeta(state, courseEl, response.linked.length);
 };
 
 /**
@@ -748,6 +748,8 @@ export const open = async(opts) => {
             getString('central_links_completionrule_missing', 'local_dimensions'),
             getString('central_links_opencompetencies', 'local_dimensions'),
             getString('opensinnewwindow', 'core'),
+            getString('central_links_modulecountone', 'local_dimensions'),
+            getString('central_links_modulecount', 'local_dimensions', '{count}'),
         ]),
     ]);
     const {html} = await Templates.renderForPromise('local_dimensions/central/competency_links', {
@@ -790,6 +792,8 @@ export const open = async(opts) => {
         completionmissinglabel: labels[17],
         opencompetencieslabel: labels[18],
         newwindowlabel: labels[19],
+        modulecountonelabel: labels[20],
+        modulecounttemplate: labels[21],
     };
 
     modal.getRoot().on(ModalEvents.shown, () => {

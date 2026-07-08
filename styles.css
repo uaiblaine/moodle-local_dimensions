@@ -3744,6 +3744,30 @@ a.local-dimensions-central-links-badge-warn:focus {
     display: none;
 }
 
+/*
+ * Unify the autocomplete toggle with the plain-select chevron across the hub.
+ * Core renders a raw down-triangle glyph (lib form_autocomplete_input); the
+ * Bootstrap --bs-form-select-bg-img is scoped to .form-select (not reachable
+ * here) and Moodle's stylelint forbids inline SVG image data, so mirror the
+ * chevron with the FontAwesome angle-down the theme already ships (Moodle
+ * 4.5-5.2 all use Font Awesome 6). font-size:0 hides the core glyph; the
+ * loading spinner keeps its own size.
+ */
+.local-dimensions-central-page .form-autocomplete-downarrow {
+    font-size: 0;
+}
+
+.local-dimensions-central-page .form-autocomplete-downarrow::before {
+    content: '\f107';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.875rem;
+}
+
+.local-dimensions-central-page .form-autocomplete-downarrow .loading-icon {
+    font-size: 1rem;
+}
+
 /* Filters dropdown on the participants users grid (core filters-dropdown pattern). */
 .local-dimensions-participants-filters {
     min-width: 18rem;
