@@ -1,0 +1,87 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/contrast_panel
+
+    Real-time WCAG contrast panel shown beside the background/text colour custom
+    fields in the competency and learning-plan-template modal forms.
+
+    This partial is structure only: every visible label comes from a lang string
+    and every dynamic value is written by the central/contrast AMD module into the
+    data-region hooks below. Without JavaScript nothing injects it, so the form is
+    unaffected.
+
+    Data-region hooks populated by the AMD module (no context variables required):
+    * contrast-result       - aria-live wrapper around the ratio and verdict
+    * contrast-ratio        - the numeric ratio, e.g. 4.59:1
+    * contrast-verdict      - the verdict pill (tone class + glyph + label set by JS)
+    * contrast-aa           - the WCAG AA badge (tone class + glyph + min set by JS)
+    * contrast-aaa          - the WCAG AAA badge
+    * contrast-suggestions  - the suggestions block, revealed when the pair fails AA
+    * contrast-note         - the fallback note (invalid input, or failing with no fix)
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+    }
+}}
+<div class="local-dimensions-contrast" data-region="contrast-panel" role="group"
+     aria-labelledby="local-dimensions-contrast-title">
+    <div class="local-dimensions-contrast-header">
+        <span class="local-dimensions-contrast-title" id="local-dimensions-contrast-title">
+            {{#str}}contrast_heading, local_dimensions{{/str}}
+        </span>
+        <span class="local-dimensions-contrast-standard">{{#str}}contrast_wcagversion, local_dimensions{{/str}}</span>
+    </div>
+    <div class="local-dimensions-contrast-result" data-region="contrast-result" aria-live="polite">
+        <div class="local-dimensions-contrast-score">
+            <span class="local-dimensions-contrast-ratio" data-region="contrast-ratio">&mdash;</span>
+            <span class="local-dimensions-contrast-ratio-label">{{#str}}contrast_ratio, local_dimensions{{/str}}</span>
+        </div>
+        <span class="local-dimensions-contrast-verdict is-muted" data-region="contrast-verdict">
+            <span class="local-dimensions-contrast-verdict-glyph" data-region="contrast-verdict-glyph" aria-hidden="true"></span>
+            <span data-region="contrast-verdict-label"></span>
+        </span>
+    </div>
+    <div class="local-dimensions-contrast-badges">
+        <span class="local-dimensions-contrast-badge is-muted" data-region="contrast-aa">
+            <span class="local-dimensions-contrast-badge-glyph" data-region="contrast-aa-glyph" aria-hidden="true"></span>
+            <span class="local-dimensions-contrast-badge-text">
+                <span class="local-dimensions-contrast-badge-name">{{#str}}contrast_wcag_aa, local_dimensions{{/str}}</span>
+                <span class="local-dimensions-contrast-badge-min" data-region="contrast-aa-min"></span>
+            </span>
+        </span>
+        <span class="local-dimensions-contrast-badge is-muted" data-region="contrast-aaa">
+            <span class="local-dimensions-contrast-badge-glyph" data-region="contrast-aaa-glyph" aria-hidden="true"></span>
+            <span class="local-dimensions-contrast-badge-text">
+                <span class="local-dimensions-contrast-badge-name">{{#str}}contrast_wcag_aaa, local_dimensions{{/str}}</span>
+                <span class="local-dimensions-contrast-badge-min" data-region="contrast-aaa-min"></span>
+            </span>
+        </span>
+    </div>
+    <p class="local-dimensions-contrast-sizenote">{{#str}}contrast_smalltextnote, local_dimensions{{/str}}</p>
+    <div class="local-dimensions-contrast-suggestions" data-region="contrast-suggestions" hidden>
+        <span class="local-dimensions-contrast-suggestions-title" data-region="contrast-suggestions-title"></span>
+        <div class="local-dimensions-contrast-suggestions-list" data-region="contrast-suggestions-list"></div>
+    </div>
+    <p class="local-dimensions-contrast-note is-muted" data-region="contrast-note" hidden>
+        <span class="local-dimensions-contrast-note-glyph" data-region="contrast-note-glyph" aria-hidden="true"></span>
+        <span data-region="contrast-note-text"></span>
+    </p>
+</div>
