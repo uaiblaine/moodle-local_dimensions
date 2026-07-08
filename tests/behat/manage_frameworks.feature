@@ -17,7 +17,8 @@ Feature: Manage competency structures from the Competency hub
     And I click on "Structures" "link"
     Then I should see "Behat framework"
     And I should see "New structure"
-    And I should see "Edit" in the ".local-dimensions-central-framework" "css_element"
+    When I click on "Behat framework" "button"
+    Then I should see "Edit" in the "#sticky-footer" "css_element"
 
   Scenario: Import and export open their modals from the Structures tab
     When I visit "/local/dimensions/central.php"
