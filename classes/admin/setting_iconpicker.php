@@ -76,10 +76,14 @@ class setting_iconpicker extends \admin_setting_configtext {
         $renderer = $PAGE->get_renderer('core');
         $html = $renderer->render_from_template('local_dimensions/setting_iconpicker', $templatedata);
 
-        // Initialise the AMD module for the icon picker behaviour.
+        // Initialise the AMD module for the icon picker behaviour. The visible
+        // search field carries the canonical setting id so the core-generated
+        // <label for="..."> points at a real, focusable control (a hidden input
+        // is not a labelable element); the value is stored in a sibling hidden
+        // input keyed off the widget id.
         $PAGE->requires->js_call_amd('local_dimensions/setting_iconpicker', 'init', [[
             'elementId' => $elementid,
-            'hiddenId' => $this->get_id(),
+            'inputId' => $this->get_id(),
         ]]);
 
         $element = \format_admin_setting($this, $this->visiblename, $html, $this->description, true, '', $default, $query);

@@ -22,7 +22,7 @@
     Context variables required:
     * elementid (string) - Base element ID for the widget
     * fullname (string) - Full setting name for the hidden input
-    * id (string) - ID for the hidden input
+    * id (string) - Canonical setting id, applied to the visible search input (the core label targets it)
     * value (string) - Current stored value (escaped)
     * hasvalue (bool) - Whether a value is currently set
     * currenthtml (string) - HTML preview of the current icon
@@ -45,7 +45,7 @@
     }
 }}
 <div class="form-autocomplete-container" id="{{elementid}}-container">
-    <input type="hidden" name="{{fullname}}" id="{{id}}" value="{{value}}">
+    <input type="hidden" name="{{fullname}}" id="{{elementid}}-value" value="{{value}}">
     <div class="d-flex align-items-center">
         {{#hasvalue}}
         <span class="mr-2 me-2" id="{{elementid}}-preview">{{{currenthtml}}}</span>
@@ -54,7 +54,7 @@
         <span class="mr-2 me-2" id="{{elementid}}-preview"></span>
         {{/hasvalue}}
         <div class="d-inline-flex align-items-center position-relative" style="max-width: 400px; flex: 1;">
-            <input type="text" class="form-control" id="{{elementid}}-search"
+            <input type="text" class="form-control" id="{{id}}"
                    placeholder="{{placeholder}}"
                    value="{{value}}"
                    autocomplete="off"
