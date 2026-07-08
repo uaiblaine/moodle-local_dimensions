@@ -76,11 +76,11 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
          *
          * @param {Object} config
          * @param {String} config.elementId  Base element ID for the widget
-         * @param {String} config.hiddenId   ID of the hidden input storing the value
+         * @param {String} config.inputId    ID of the visible search input (the canonical setting id / label target)
          */
         init: function(config) {
             var elementId = config.elementId;
-            var hiddenId = config.hiddenId;
+            var inputId = config.inputId;
 
             // Resolve localised strings; English defaults remain as fallback if
             // this fails or fires after a handler. No retry needed — the user
@@ -106,8 +106,8 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
                 window.console.error('Icon picker string load failed:', err);
             });
 
-            var searchInput = document.getElementById(elementId + '-search');
-            var hiddenInput = document.getElementById(hiddenId);
+            var searchInput = document.getElementById(inputId);
+            var hiddenInput = document.getElementById(elementId + '-value');
             var dropdown = document.getElementById(elementId + '-dropdown');
             var preview = document.getElementById(elementId + '-preview');
             var clearBtn = document.getElementById(elementId + '-clear');
