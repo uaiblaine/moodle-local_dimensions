@@ -46,6 +46,13 @@ const SELECTORS = {
 /** @type {Boolean} Whether the document-level scale-config delegation is wired (once per page). */
 let scaleconfigwired = false;
 
+/** @type {HTMLElement|null} The selected framework row, whose actions the footer drives. */
+let activeFrameworkRow = null;
+/** @type {HTMLElement|null} The tab region, captured at init for the footer dispatch. */
+let activeRegion = null;
+/** @type {HTMLElement|null} The tab pane, captured at init for the footer dispatch. */
+let activePane = null;
+
 /**
  * Open the scale-config modal for the framework form's current scale and write the result back.
  *
@@ -368,6 +375,61 @@ const deleteFramework = async(pane, row) => {
 };
 
 /**
+ * Route a sticky-footer [data-action] click to the selected framework's handler. Operates on
+ * the module-level selected row, so it works from the page footer (outside the tab region).
+ *
+ * @param {HTMLElement} target The clicked [data-action] element.
+ * @return {void}
+ */
+const dispatchFrameworksAction = (target) => {
+    // Ignore footer clicks once this tab is no longer active (guards a lingering footer during
+    // a slow tab switch).
+    if (!activeFrameworkRow || !activeRegion || !activeRegion.closest('.tab-pane.active')) {
+        return;
+    }
+    const row = activeFrameworkRow;
+    const id = Number(row.dataset.framework);
+    const action = target.dataset.action;
+    if (action === 'edit') {
+        editFramework(activePane, id).catch(notifyError);
+    } else if (action === 'visibility') {
+        toggleVisibility(activePane, row).catch(notifyError);
+    } else if (action === 'duplicate') {
+        duplicateFramework(activePane, id).catch(notifyError);
+    } else if (action === 'delete') {
+        deleteFramework(activePane, row).catch(notifyError);
+    }
+};
+
+/**
+ * Select a framework row and mirror its management actions into the shared sticky footer.
+ * Managers only; the async render is guarded so a rapid re-select cannot leave the footer
+ * bound to a stale row.
+ *
+ * @param {HTMLElement} region The tab region.
+ * @param {HTMLElement} row The clicked [data-framework] row.
+ * @return {void}
+ */
+const selectFramework = (region, row) => {
+    activeFrameworkRow = row;
+    region.querySelectorAll(SELECTORS.row).forEach((node) => node.classList.remove('active'));
+    row.classList.add('active');
+    if (region.dataset.canmanage !== '1') {
+        ActionFooter.hide();
+        return;
+    }
+    Templates.renderForPromise('local_dimensions/central/frameworks_footer_actions', {
+        canmanage: true,
+        visible: row.dataset.visible === '1',
+    }).then(({html}) => {
+        if (row.classList.contains('active') && region.closest('.tab-pane.active')) {
+            ActionFooter.show(html, dispatchFrameworksAction);
+        }
+        return null;
+    }).catch(Notification.exception);
+};
+
+/**
  * Initialise the Frameworks tab. Re-runs after each tab refresh.
  *
  * @return {void}
@@ -378,9 +440,11 @@ export const init = () => {
         return;
     }
     const pane = region.closest('[data-tab-content]');
-    // The Frameworks tab has no sticky-footer actions; clear the shared footer when this
-    // tab becomes active so a footer left by the Structure/Plans tab does not linger here
-    // (backstop for keyboard tab activation, which fires no toggle click).
+    activeRegion = region;
+    activePane = pane;
+    // Reset the shared sticky footer on entry, but only when this tab is active: init re-runs
+    // from an async tab load, so a late/out-of-order load for a tab the user left must not wipe
+    // its footer. selectFramework re-shows it when a row is chosen.
     if (region.closest('.tab-pane.active')) {
         ActionFooter.hide();
     }
@@ -400,18 +464,8 @@ export const init = () => {
             return;
         }
         const row = event.target.closest(SELECTORS.row);
-        if (!row) {
-            return;
-        }
-        const id = Number(row.dataset.framework);
-        if (event.target.closest('[data-action="edit"]')) {
-            editFramework(pane, id).catch(notifyError);
-        } else if (event.target.closest('[data-action="visibility"]')) {
-            toggleVisibility(pane, row).catch(notifyError);
-        } else if (event.target.closest('[data-action="duplicate"]')) {
-            duplicateFramework(pane, id).catch(notifyError);
-        } else if (event.target.closest('[data-action="delete"]')) {
-            deleteFramework(pane, row).catch(notifyError);
+        if (row) {
+            selectFramework(region, row);
         }
     });
 

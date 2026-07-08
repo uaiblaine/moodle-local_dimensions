@@ -3197,6 +3197,31 @@
     outline-offset: -2px;
 }
 
+/* Frameworks tab: each row is a selectable button (local-dimensions-central-framework-select)
+   inside the row wrapper; selecting it drives the sticky-footer actions. Mirrors the tree row
+   states above. */
+.local-dimensions-central-framework {
+    border-left: 3px solid transparent;
+    border-radius: 0.25rem;
+}
+
+.local-dimensions-central-framework-select {
+    color: inherit;
+    border-radius: 0.25rem;
+}
+
+.local-dimensions-central-framework-select:hover,
+.local-dimensions-central-framework-select:focus {
+    background-color: var(--bs-secondary-bg, rgba(0, 0, 0, 0.05));
+    color: inherit;
+    text-decoration: none;
+}
+
+.local-dimensions-central-framework.active {
+    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+    border-left-color: var(--bs-primary, #0f6cbf);
+}
+
 /* Search box + its results dropdown. The results overlay the top of the tree (absolute) so
    selecting a hit does not shift the layout; the revealed node appears right below. */
 .local-dimensions-central-search-wrap {
