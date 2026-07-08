@@ -27,6 +27,7 @@
 
 import Ajax from 'core/ajax';
 import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
@@ -154,14 +155,14 @@ const onRowsClick = (state, event) => {
         return;
     }
     if (event.target.closest('[data-action="remove-cohort"]')) {
-        removeCohort(state, row).catch(Notification.exception);
+        removeCohort(state, row).catch(notifyError);
         return;
     }
     if (event.target.closest('[data-action="sync-cohort"]')) {
         Ajax.call([{
             methodname: 'local_dimensions_sync_template_cohort',
             args: {templateid: state.templateid, cohortid: Number(row.dataset.cohortid)},
-        }])[0].then(() => addToast(state.queuedlabel)).catch(Notification.exception);
+        }])[0].then(() => addToast(state.queuedlabel)).catch(notifyError);
     }
 };
 
@@ -185,7 +186,7 @@ const onAdd = (state) => {
             return Templates.replaceNodeContents(state.bodyEl, state.bodyhtml, '');
         })
         .then(() => setup(state))
-        .catch(Notification.exception);
+        .catch(notifyError);
 };
 
 /**
@@ -201,7 +202,7 @@ const setup = (state) => {
         state.addsel.addEventListener('change', () => onAdd(state));
     }
     state.rowsEl.addEventListener('click', (event) => onRowsClick(state, event));
-    enhance(SELECTORS.cohortAdd, false, DATASOURCE, state.addlabel).catch(Notification.exception);
+    enhance(SELECTORS.cohortAdd, false, DATASOURCE, state.addlabel).catch(notifyError);
     return refresh(state);
 };
 

@@ -26,6 +26,7 @@
 
 import Ajax from 'core/ajax';
 import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {add as addToast} from 'core/toast';
@@ -177,7 +178,7 @@ const onRowsClick = (state, event) => {
         return;
     }
     if (event.target.closest('[data-action="unlink-plan"]')) {
-        mutate(state, row, 'local_dimensions_unlink_template_user_plan').catch(Notification.exception);
+        mutate(state, row, 'local_dimensions_unlink_template_user_plan').catch(notifyError);
         return;
     }
     if (event.target.closest('[data-action="delete-plan"]')) {
@@ -224,7 +225,7 @@ const wire = (state, pane) => {
     pane.querySelector(SELECTORS.filtersform).addEventListener('submit', (event) => event.preventDefault());
     state.cohortsel.addEventListener('change', () => {
         state.cohortid = Number(state.cohortsel.value);
-        applyFilters(state).catch(Notification.exception);
+        applyFilters(state).catch(notifyError);
     });
     const searchel = pane.querySelector(SELECTORS.search);
     searchel.addEventListener('input', () => {
@@ -233,13 +234,13 @@ const wire = (state, pane) => {
         }
         state.debounce = window.setTimeout(() => {
             state.query = searchel.value.trim();
-            applyFilters(state).catch(Notification.exception);
+            applyFilters(state).catch(notifyError);
         }, 250);
     });
     const toggle = pane.querySelector(SELECTORS.individual);
     toggle.addEventListener('change', () => {
         state.includeindividual = toggle.checked;
-        applyFilters(state).catch(Notification.exception);
+        applyFilters(state).catch(notifyError);
     });
     state.rowsEl.addEventListener('click', (event) => onRowsClick(state, event));
 
@@ -255,9 +256,9 @@ const wire = (state, pane) => {
         }])[0].then(() => {
             addToast(state.addedlabel);
             return applyFilters(state);
-        }).catch(Notification.exception);
+        }).catch(notifyError);
     });
-    enhance(SELECTORS.add, false, DATASOURCE, state.addlabel).catch(Notification.exception);
+    enhance(SELECTORS.add, false, DATASOURCE, state.addlabel).catch(notifyError);
 };
 
 /**
@@ -307,7 +308,7 @@ export const mount = async(pane, opts) => {
 
     state.observer = new IntersectionObserver((entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
-            loadPage(state).catch(Notification.exception);
+            loadPage(state).catch(notifyError);
         }
     });
     state.observer.observe(pane.querySelector(SELECTORS.sentinel));

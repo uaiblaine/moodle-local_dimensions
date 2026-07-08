@@ -27,6 +27,7 @@ import Modal from 'core/modal';
 import ModalEvents from 'core/modal_events';
 import ModalForm from 'core_form/modalform';
 import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'core/toast';
@@ -72,7 +73,7 @@ const openScaleConfigForForm = () => {
             }
             return null;
         })
-        .catch(Notification.exception);
+        .catch(notifyError);
 };
 
 /**
@@ -124,7 +125,7 @@ const openFrameworkForm = async(pane, args, titlekey) => {
         args: args,
         modalConfig: {title: await getString(titlekey, 'local_dimensions')},
     });
-    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadPane(pane).catch(Notification.exception));
+    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadPane(pane).catch(notifyError));
     form.show();
 };
 
@@ -208,15 +209,15 @@ const openImportForm = async(pane, region) => {
         args: {contextid: Number(region.dataset.contextid)},
         modalConfig: {title: await getString('central_frameworks_import_title', 'local_dimensions')},
     });
-    form.addEventListener(form.events.SUBMIT_BUTTON_PRESSED, () => showImportLoading(form).catch(Notification.exception));
+    form.addEventListener(form.events.SUBMIT_BUTTON_PRESSED, () => showImportLoading(form).catch(notifyError));
     form.addEventListener(form.events.CLIENT_VALIDATION_ERROR, () => hideImportLoading(form));
     form.addEventListener(form.events.SERVER_VALIDATION_ERROR, () => hideImportLoading(form));
     form.addEventListener(form.events.FORM_SUBMITTED, (event) => {
         const count = event.detail && event.detail.competencycount ? event.detail.competencycount : 0;
-        reloadPane(pane).catch(Notification.exception);
+        reloadPane(pane).catch(notifyError);
         getString('central_frameworks_import_done', 'local_dimensions', {count: count})
             .then((message) => addToast(message, {type: 'success'}))
-            .catch(Notification.exception);
+            .catch(notifyError);
     });
     form.show();
 };
@@ -266,7 +267,7 @@ const downloadFramework = async(modal) => {
         triggerDownload(result.filename, result.content);
         addToast(await getString('central_frameworks_export_done', 'local_dimensions'), {type: 'success'});
     } catch (error) {
-        Notification.exception(error);
+        notifyError(error);
     } finally {
         button.disabled = false;
         loader.hidden = true;
@@ -289,7 +290,7 @@ const openExportModal = async(pane, region) => {
     const modal = await Modal.create({title: title, body: body});
     modal.setRemoveOnClose(true);
     modal.getRoot().on(ModalEvents.shown, () => {
-        addToastRegion(modal.getBody()[0]).catch(Notification.exception);
+        addToastRegion(modal.getBody()[0]).catch(notifyError);
         const select = modal.getBody()[0].querySelector('[data-region="export-select"]');
         region.querySelectorAll(SELECTORS.row).forEach((row) => {
             const option = document.createElement('option');
@@ -300,7 +301,7 @@ const openExportModal = async(pane, region) => {
     });
     modal.getRoot().on('click', '[data-action="download"]', (event) => {
         event.preventDefault();
-        downloadFramework(modal).catch(Notification.exception);
+        downloadFramework(modal).catch(notifyError);
     });
     modal.show();
 };
@@ -380,15 +381,15 @@ export const init = () => {
 
     region.addEventListener('click', (event) => {
         if (event.target.closest('[data-action="new"]')) {
-            createFramework(pane, region).catch(Notification.exception);
+            createFramework(pane, region).catch(notifyError);
             return;
         }
         if (event.target.closest('[data-action="import"]')) {
-            openImportForm(pane, region).catch(Notification.exception);
+            openImportForm(pane, region).catch(notifyError);
             return;
         }
         if (event.target.closest('[data-action="export"]')) {
-            openExportModal(pane, region).catch(Notification.exception);
+            openExportModal(pane, region).catch(notifyError);
             return;
         }
         const row = event.target.closest(SELECTORS.row);
@@ -397,13 +398,13 @@ export const init = () => {
         }
         const id = Number(row.dataset.framework);
         if (event.target.closest('[data-action="edit"]')) {
-            editFramework(pane, id).catch(Notification.exception);
+            editFramework(pane, id).catch(notifyError);
         } else if (event.target.closest('[data-action="visibility"]')) {
-            toggleVisibility(pane, row).catch(Notification.exception);
+            toggleVisibility(pane, row).catch(notifyError);
         } else if (event.target.closest('[data-action="duplicate"]')) {
-            duplicateFramework(pane, id).catch(Notification.exception);
+            duplicateFramework(pane, id).catch(notifyError);
         } else if (event.target.closest('[data-action="delete"]')) {
-            deleteFramework(pane, row).catch(Notification.exception);
+            deleteFramework(pane, row).catch(notifyError);
         }
     });
 
@@ -411,7 +412,7 @@ export const init = () => {
     if (toggleHidden && pane) {
         toggleHidden.addEventListener('change', () => {
             pane.dataset.showhidden = toggleHidden.checked ? '1' : '0';
-            reloadPane(pane).catch(Notification.exception);
+            reloadPane(pane).catch(notifyError);
         });
     }
 };
