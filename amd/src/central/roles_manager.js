@@ -25,6 +25,7 @@
 
 import Ajax from 'core/ajax';
 import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
@@ -175,7 +176,7 @@ const onAdd = (state) => {
             }
             return null;
         })
-        .catch(Notification.exception);
+        .catch(notifyError);
 };
 
 /**
@@ -244,10 +245,10 @@ export const mount = async(container, opts) => {
     container.querySelector(SELECTORS.rows).addEventListener('click', (event) => {
         const row = event.target.closest('tr[data-assignmentid]');
         if (row && event.target.closest('[data-action="role-remove"]')) {
-            onRemove(state, row).catch(Notification.exception);
+            onRemove(state, row).catch(notifyError);
         }
     });
     await refresh(state);
     // Enhance the user picker (the pane is already attached + visible when mounted).
-    enhance(SELECTORS.user, false, USER_DATASOURCE, addlabel).catch(Notification.exception);
+    enhance(SELECTORS.user, false, USER_DATASOURCE, addlabel).catch(notifyError);
 };

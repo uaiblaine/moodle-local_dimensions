@@ -31,6 +31,7 @@ import ModalEvents from 'core/modal_events';
 import ModalForm from 'core_form/modalform';
 import ModalSaveCancel from 'core/modal_save_cancel';
 import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {show as showRuleConfigModal} from 'local_dimensions/central/rule_config';
 import {open as openLinksModal} from 'local_dimensions/central/competency_links';
@@ -181,9 +182,9 @@ const makeLoadMore = (loader) => {
         loadMoreLabelPromise.then((label) => {
             btn.textContent = label;
             return label;
-        }).catch(Notification.exception);
+        }).catch(notifyError);
     }
-    btn.addEventListener('click', () => loader().catch(Notification.exception));
+    btn.addEventListener('click', () => loader().catch(notifyError));
     return btn;
 };
 
@@ -468,7 +469,7 @@ const selectRow = (region, row) => {
                 hint.textContent = label;
                 return label;
             })
-            .catch(Notification.exception);
+            .catch(notifyError);
     }
 };
 
@@ -619,7 +620,7 @@ const openForm = async(pane, args, titlekey) => {
         args,
         modalConfig: {title: await getString(titlekey, 'tool_lp')},
     });
-    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadPane(pane).catch(Notification.exception));
+    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadPane(pane).catch(notifyError));
     form.show();
 };
 
@@ -647,7 +648,7 @@ const confirmDelete = async(pane, row) => {
             }
             return reloadPane(pane);
         })
-        .catch(Notification.exception);
+        .catch(notifyError);
 };
 
 /**
@@ -707,7 +708,7 @@ const showRuleConfig = (row) => {
     fetchAllChildren(competency.id)
         .then((children) => showRuleConfigModal(competency, children, rulesModules))
         .then((config) => (config ? persistRule(row, config) : null))
-        .catch(Notification.exception);
+        .catch(notifyError);
 };
 
 /**
@@ -768,7 +769,7 @@ const moveNode = (pane, row, methodname, direction) => {
             row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
             return null;
         })
-        .catch(Notification.exception);
+        .catch(notifyError);
 };
 
 /**
@@ -805,7 +806,7 @@ const persistNodeMove = (pane, node, from, to) => {
         row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
         return null;
     }).catch((error) => {
-        Notification.exception(error);
+        notifyError(error);
         // Restoring the server's order from a failure handler is intentional.
         // eslint-disable-next-line promise/no-nesting
         reloadPane(pane).catch(() => null);
@@ -1029,7 +1030,7 @@ const initTreeDrag = (region, pane) => {
         const target = dropinto;
         clearDropHints();
         if (target) {
-            reparentNode(pane, node, target === 'root' ? null : target).catch(Notification.exception);
+            reparentNode(pane, node, target === 'root' ? null : target).catch(notifyError);
             return;
         }
         const endindex = nodeSiblings(node).indexOf(node);
@@ -1095,7 +1096,7 @@ const openUsageModal = async(row, section) => {
 const handleDetailAction = (region, pane, event, frameworkid) => {
     const usagebutton = event.target.closest(SELECTORS.showUsage);
     if (usagebutton) {
-        openUsageModal(activeRow, usagebutton.dataset.usage).catch(Notification.exception);
+        openUsageModal(activeRow, usagebutton.dataset.usage).catch(notifyError);
     } else if (event.target.closest(SELECTORS.edit)) {
         openForm(pane, {
             competencyframeworkid: frameworkid,
@@ -1175,7 +1176,7 @@ export const init = () => {
     moduleOutcomes = readJson(region, 'module-outcomes', []);
 
     loadMoreLabelPromise = getString('managecompetencies_loadmore', 'local_dimensions');
-    loadMoreLabelPromise.catch(Notification.exception);
+    loadMoreLabelPromise.catch(notifyError);
 
     region.addEventListener('click', (event) => {
         const result = event.target.closest(`${SELECTORS.searchResults} [data-id]`);
@@ -1187,7 +1188,7 @@ export const init = () => {
             } catch (e) {
                 pathids = [];
             }
-            revealNode(region, Number(result.dataset.id), pathids).catch(Notification.exception);
+            revealNode(region, Number(result.dataset.id), pathids).catch(notifyError);
             return;
         }
         const griphandle = event.target.closest(SELECTORS.nodeDragHandle);
@@ -1195,19 +1196,19 @@ export const init = () => {
             event.preventDefault();
             const node = griphandle.closest(SELECTORS.node);
             if (node) {
-                openNodeMoveModal(pane, node).catch(Notification.exception);
+                openNodeMoveModal(pane, node).catch(notifyError);
             }
             return;
         }
         const toggle = event.target.closest(SELECTORS.toggle);
         if (toggle) {
             event.preventDefault();
-            toggleNode(region, toggle).catch(Notification.exception);
+            toggleNode(region, toggle).catch(notifyError);
             return;
         }
         if (event.target.closest(SELECTORS.rootLoadMore)) {
             event.preventDefault();
-            loadMoreRoots(region).catch(Notification.exception);
+            loadMoreRoots(region).catch(notifyError);
             return;
         }
         const row = event.target.closest(SELECTORS.row);
@@ -1218,13 +1219,13 @@ export const init = () => {
             if (row.dataset.haschildren === '1') {
                 const toggle = row.parentElement.querySelector(SELECTORS.toggle);
                 if (toggle) {
-                    toggleNode(region, toggle).catch(Notification.exception);
+                    toggleNode(region, toggle).catch(notifyError);
                 }
             }
             return;
         }
         if (event.target.closest(SELECTORS.expandAll)) {
-            expandAll(region).catch(Notification.exception);
+            expandAll(region).catch(notifyError);
             return;
         }
         if (event.target.closest(SELECTORS.collapseAll)) {
@@ -1275,7 +1276,7 @@ export const init = () => {
                 return;
             }
             searchDebounce = window.setTimeout(() => {
-                runSearch(region, query).catch(Notification.exception);
+                runSearch(region, query).catch(notifyError);
             }, 250);
         });
     }
@@ -1286,7 +1287,7 @@ export const init = () => {
             window.clearTimeout(searchDebounce);
             // The pane dataset is the single source of truth for the tab's arguments.
             pane.dataset.frameworkid = select.value;
-            reloadPane(pane).catch(Notification.exception);
+            reloadPane(pane).catch(notifyError);
         });
     }
 

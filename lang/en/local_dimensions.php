@@ -268,6 +268,7 @@ $string['entityname_competency_extras'] = 'Competency: Dimensions custom fields'
 $string['entityname_plan'] = 'Learning plan';
 $string['entityname_template'] = 'Learning plan template';
 $string['error_loading_summary'] = 'Error loading competency summary.';
+$string['errornetwork'] = 'Connection lost. Please check your network and try again.';
 $string['evidence_author'] = 'Registered by';
 $string['evidence_by'] = 'by';
 $string['evidence_date'] = 'Date';

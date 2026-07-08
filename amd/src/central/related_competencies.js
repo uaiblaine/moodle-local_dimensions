@@ -31,6 +31,7 @@ import Ajax from 'core/ajax';
 import Modal from 'core/modal';
 import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'core/toast';
@@ -268,7 +269,7 @@ export const open = async(opts) => {
     modal.getRoot().on(ModalEvents.shown, () => {
         // Host a toast region inside the modal body so toasts render above the dialog, not behind
         // it (the page-level region sits below the modal). Core removes it on close.
-        addToastRegion(modal.getBody()[0]).catch(Notification.exception);
+        addToastRegion(modal.getBody()[0]).catch(notifyError);
         const region = root.querySelector(SELECTORS.region);
         state.listEl = region.querySelector(SELECTORS.pickerList);
         state.relationsEl = region.querySelector(SELECTORS.relations);
@@ -276,10 +277,10 @@ export const open = async(opts) => {
         state.addbtnEl = region.querySelector(SELECTORS.addSelected);
         region.addEventListener('click', (event) => {
             if (event.target.closest('[data-action="remove-related"]')) {
-                removeRelated(state, event.target.closest('[data-relatedid]')).catch(Notification.exception);
+                removeRelated(state, event.target.closest('[data-relatedid]')).catch(notifyError);
             }
         });
-        state.addbtnEl.addEventListener('click', () => addSelected(state).catch(Notification.exception));
+        state.addbtnEl.addEventListener('click', () => addSelected(state).catch(notifyError));
         loadRelations(state)
             .then(() => initBrowser(state))
             .then(() => {
@@ -289,7 +290,7 @@ export const open = async(opts) => {
                 state.listEl.addEventListener('change', () => updateAddButton(state));
                 return null;
             })
-            .catch(Notification.exception);
+            .catch(notifyError);
     });
     modal.getRoot().on(ModalEvents.hidden, () => destroyBrowser(state));
     modal.show();

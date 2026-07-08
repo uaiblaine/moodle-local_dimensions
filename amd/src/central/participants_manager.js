@@ -23,7 +23,7 @@
 
 import Modal from 'core/modal';
 import ModalEvents from 'core/modal_events';
-import Notification from 'core/notification';
+import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {getString} from 'core/str';
 import {addToastRegion} from 'core/toast';
@@ -91,8 +91,8 @@ export const show = async(pane, region) => {
     modal.getRoot().on(ModalEvents.shown, () => {
         // Host a toast region inside the modal body so the cohort/user managers' success toasts
         // render above the dialog, not behind it. Core removes it on close.
-        addToastRegion(modal.getBody()[0]).catch(Notification.exception);
-        mountCohorts(root.querySelector(SELECTORS.paneCohorts), opts).catch(Notification.exception);
+        addToastRegion(modal.getBody()[0]).catch(notifyError);
+        mountCohorts(root.querySelector(SELECTORS.paneCohorts), opts).catch(notifyError);
 
         const tablist = root.querySelector(SELECTORS.tabs);
         const tabs = () => Array.from(tablist.querySelectorAll('.nav-link'));
@@ -101,11 +101,11 @@ export const show = async(pane, region) => {
         const ensureMounted = (button) => {
             if (button.dataset.region === 'tab-users' && !usersmounted) {
                 usersmounted = true;
-                mountUsers(root.querySelector(SELECTORS.paneUsers), opts).catch(Notification.exception);
+                mountUsers(root.querySelector(SELECTORS.paneUsers), opts).catch(notifyError);
             }
             if (button.dataset.region === 'tab-roles' && !rolesmounted) {
                 rolesmounted = true;
-                mountRoles(root.querySelector(SELECTORS.paneRoles), opts).catch(Notification.exception);
+                mountRoles(root.querySelector(SELECTORS.paneRoles), opts).catch(notifyError);
             }
         };
 
