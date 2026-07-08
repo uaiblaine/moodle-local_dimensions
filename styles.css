@@ -3304,6 +3304,29 @@
     min-width: 0;
 }
 
+/* The competency / learning-plan descriptions render inside the reusable
+   collapsible container (local_dimensions/collapsible_description). The hero's
+   30vh default is too tall for these compact metadata areas, so cap the
+   collapsed height lower; the toggle still reveals the full body on demand. */
+.local-dimensions-central-structure-detail-pane [data-region='detail-description'] .local-dimensions-collapsible,
+.local-dimensions-central-plans-description .local-dimensions-collapsible {
+    --collapsible-max-vh: 7rem;
+}
+
+/* Bound the expanded description to a fraction of the card height and scroll it
+   internally, so a long body never pushes past the card AND the max-height transition
+   animates smoothly on expand/collapse (an expand to max-height:none cannot animate).
+   The plans card tracks its resizable body height; the structure card is a fixed 60vh. */
+.local-dimensions-central-plans-description .local-dimensions-collapsible.is-expanded .local-dimensions-collapsible-content {
+    max-height: calc(var(--local-dimensions-plans-body-height, 60vh) * 0.4);
+    overflow-y: auto;
+}
+
+.local-dimensions-central-structure-detail-pane [data-region='detail-description'] .local-dimensions-collapsible.is-expanded .local-dimensions-collapsible-content {
+    max-height: calc(60vh * 0.4);
+    overflow-y: auto;
+}
+
 .local-dimensions-central-structure-resizer,
 .local-dimensions-central-plans-resizer {
     position: relative;

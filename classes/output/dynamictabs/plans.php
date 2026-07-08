@@ -272,7 +272,10 @@ class plans extends \core\output\dynamic_tabs\base {
             'selectedtemplatename' => $selected ? format_string($selected->get('shortname')) : '',
             'selectedtemplateidnumber' => s($selectedidnumber),
             'selectedtemplatehasidnumber' => $selectedidnumber !== '',
-            'selectedtemplatedescription' => $selecteddescription,
+            'selectedtemplatedescription' => [
+                'html' => $selecteddescription,
+                'id' => 'local-dimensions-plans-desc-' . $templateid,
+            ],
             'selectedtemplatehasdescription' => $selecteddescriptionplain !== '',
             'selectedtemplatetype' => format_string($selectedtype),
             'selectedtemplatehastype' => $selectedtype !== '',
