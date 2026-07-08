@@ -34,13 +34,19 @@ import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {show as showCompetencyBrowser} from 'local_dimensions/central/competency_browser';
 import {show as showParticipants} from 'local_dimensions/central/participants_manager';
-import {initPaneResizer, initVerticalResizer} from 'local_dimensions/central/pane_resizer';
+import {initPaneResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import CollapsibleDescription from 'local_dimensions/collapsible_description';
+import * as ActionFooter from 'local_dimensions/central/action_footer';
 
 const FORM_CLASS = 'local_dimensions\\form\\template_dynamic_form';
 const COMPETENCY_FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
 const DATASOURCE = 'local_dimensions/central/competency_datasource';
+
+/** @type {HTMLElement|null} The tab region, captured at init for the footer dispatch. */
+let activeRegion = null;
+/** @type {HTMLElement|null} The tab pane, captured at init for the footer dispatch. */
+let activePane = null;
 
 /** @type {String} sessionStorage key for the show-disabled-plans choice. */
 const SHOWDISABLED_KEY = 'local_dimensions_plans_showdisabled';
@@ -68,7 +74,6 @@ const SELECTORS = {
     searchEmpty: '[data-region="plan-search-empty"]',
     plansBody: '[data-region="plans-body"]',
     plansResizer: '[data-region="plans-resizer"]',
-    plansVResizer: '[data-region="plans-vresizer"]',
     detailPane: '[data-region="plan-detail"]',
     showDisabled: '[data-action="toggle-disabled"]',
     displayPanel: '[data-region="display-options-panel"]',
@@ -759,6 +764,26 @@ const ACTION_HANDLERS = {
 };
 
 /**
+ * Route a [data-action] click (from the tab region or the shared sticky footer) to its
+ * ACTION_HANDLERS entry. The footer sits outside the tab region, so it dispatches through
+ * the pane/region captured at init rather than relying on the click's DOM position.
+ *
+ * @param {HTMLElement} target The clicked [data-action] element.
+ * @return {void}
+ */
+const dispatchPlansAction = (target) => {
+    // Ignore footer clicks once this tab is no longer active (guards a footer lingering
+    // during a slow tab switch); in-region clicks always satisfy this.
+    if (!activePane || !activeRegion || !activeRegion.closest('.tab-pane.active')) {
+        return;
+    }
+    const handler = ACTION_HANDLERS[target.dataset.action];
+    if (handler) {
+        handler(activePane, activeRegion, target);
+    }
+};
+
+/**
  * Initialise the Learning plans tab. Re-runs after each tab refresh.
  */
 export const init = () => {
@@ -767,6 +792,24 @@ export const init = () => {
         return;
     }
     const pane = region.closest('[data-tab-content]');
+    activeRegion = region;
+    activePane = pane;
+
+    // Feed the selected template's actions into the shared page-level sticky footer, but
+    // only when this tab is actually active — dynamic tabs re-run init from an async load,
+    // so a late/out-of-order load for a tab the user already left must not drive the
+    // footer. The holder is removed after copying so its buttons are not duplicated in the
+    // DOM (a hidden duplicate earlier in document order would shadow name-based clicks).
+    // Re-runs on every tab entry and reloadPane, so it tracks the selected template.
+    if (region.closest('.tab-pane.active')) {
+        const footerholder = region.querySelector('[data-region="plans-footer-actions"]');
+        if (footerholder) {
+            ActionFooter.show(footerholder.innerHTML, dispatchPlansAction);
+            footerholder.remove();
+        } else {
+            ActionFooter.hide();
+        }
+    }
 
     // Activate the collapsible container around the selected template's description
     // (re-runs after each tab refresh, so a freshly rendered description is measured).
@@ -827,22 +870,11 @@ export const init = () => {
         maximum: 1600,
         reserve: 200,
     });
-    initVerticalResizer({
-        body: region.querySelector(SELECTORS.plansBody),
-        resizer: region.querySelector(SELECTORS.plansVResizer),
-        cssvar: '--local-dimensions-plans-body-height',
-        storagekey: 'local_dimensions_plans_body_height',
-        minimum: 320,
-    });
 
     region.addEventListener('click', (event) => {
         const target = event.target.closest('[data-action]');
-        if (!target || !pane) {
-            return;
-        }
-        const handler = ACTION_HANDLERS[target.dataset.action];
-        if (handler) {
-            handler(pane, region, target);
+        if (target) {
+            dispatchPlansAction(target);
         }
     });
 };

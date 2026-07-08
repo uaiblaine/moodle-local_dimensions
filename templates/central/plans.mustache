@@ -390,54 +390,42 @@
                     <div class="alert alert-warning mb-0" role="status">{{#str}}nocompetencies, local_dimensions{{/str}}</div>
                     {{/hascompetencies}}
                 </div>
-                {{#canmanage}}
-                <div class="card-body pt-2 flex-grow-0 border-top">
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        <button type="button" class="btn btn-sm btn-primary" data-action="edit-template"
-                                data-id="{{selectedtemplateid}}">
-                            <i class="fa fa-pencil me-1" aria-hidden="true"></i>{{#str}}central_plans_editdetails, local_dimensions{{/str}}
+            </div>
+            {{#canmanage}}
+            {{! Selected-template actions, fed into the page-level sticky footer by plans.js init.
+                Hidden holder so the markup is authored server-side (with the per-template data
+                attributes) and moved into #sticky-footer verbatim. Follows core's raw pattern
+                (btn py-0 d-flex flex-column): icon above a centred label, no colour variant. }}
+            <div data-region="plans-footer-actions" hidden>
+                <div class="sticky-footer-content-wrapper h-100 d-flex justify-content-center">
+                    <div class="sticky-footer-content local-dimensions-central-footer-actions w-100 d-flex align-items-center gap-2 px-3 py-2">
+                        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="edit-template" data-id="{{selectedtemplateid}}">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                            <span>{{#str}}central_plans_editdetails, local_dimensions{{/str}}</span>
                         </button>
-                        <button type="button" class="btn btn-sm btn-secondary" data-action="browse-frameworks">
-                            <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}central_addcompetency, local_dimensions{{/str}}
+                        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="browse-frameworks">
+                            <i class="fa fa-plus" aria-hidden="true"></i>
+                            <span>{{#str}}central_addcompetency, local_dimensions{{/str}}</span>
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="manage-participants">
-                            <i class="fa fa-users me-1" aria-hidden="true"></i>{{#str}}central_participants_manage, local_dimensions{{/str}}
+                        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="manage-participants">
+                            <i class="fa fa-users" aria-hidden="true"></i>
+                            <span>{{#str}}central_participants_manage, local_dimensions{{/str}}</span>
                         </button>
-                        <div class="dropdown">
-                            {{! Both data attributes: Moodle 4.5 is Bootstrap 4 (data-toggle), 5.x is BS5 (data-bs-toggle). }}
-                            <button type="button" class="btn btn-sm btn-outline-secondary"
-                                    data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="false"
-                                    aria-label="{{#str}}central_plans_moreactions, local_dimensions{{/str}}">
-                                <i class="fa fa-ellipsis-h" aria-hidden="true"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-right dropdown-menu-end">
-                                <li>
-                                    <button type="button" class="dropdown-item" data-action="duplicate-template"
-                                            data-id="{{selectedtemplateid}}">
-                                        <i class="fa fa-clone me-2" aria-hidden="true"></i>{{#str}}managetemplates_duplicate, local_dimensions{{/str}}
-                                    </button>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <button type="button" class="dropdown-item text-danger" data-action="delete-template"
-                                            data-id="{{selectedtemplateid}}" data-name="{{selectedtemplatename}}"
-                                            data-plancount="{{selectedtemplateplancount}}">
-                                        <i class="fa fa-trash me-2" aria-hidden="true"></i>{{#str}}managetemplates_delete, local_dimensions{{/str}}
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
+                        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="duplicate-template" data-id="{{selectedtemplateid}}">
+                            <i class="fa fa-clone" aria-hidden="true"></i>
+                            <span>{{#str}}managetemplates_duplicate, local_dimensions{{/str}}</span>
+                        </button>
+                        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="delete-template"
+                                data-id="{{selectedtemplateid}}" data-name="{{selectedtemplatename}}" data-plancount="{{selectedtemplateplancount}}">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                            <span>{{#str}}managetemplates_delete, local_dimensions{{/str}}</span>
+                        </button>
                     </div>
                 </div>
-                {{/canmanage}}
             </div>
+            {{/canmanage}}
         </aside>
         {{/hastemplates}}
     </div>
-    {{#hastemplates}}
-    <div class="local-dimensions-central-plans-vresizer" data-region="plans-vresizer"
-         role="separator" aria-orientation="horizontal" tabindex="0"
-         aria-label="{{#str}}managecompetencies_resizepanels, local_dimensions{{/str}}"></div>
-    {{/hastemplates}}
     {{/needscategoryselection}}
 </div>

@@ -41,6 +41,7 @@ import {add as addToast} from 'core/toast';
 import CollapsibleDescription from 'local_dimensions/collapsible_description';
 import {initPaneResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
+import * as ActionFooter from 'local_dimensions/central/action_footer';
 
 const FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
 const PAGE_SIZE = 25;
@@ -58,8 +59,7 @@ const SELECTORS = {
     rules: '[data-action="rules"]',
     links: '[data-action="links"]',
     related: '[data-action="related"]',
-    moveUp: '[data-action="moveup"]',
-    moveDown: '[data-action="movedown"]',
+    moveTo: '[data-action="moveto"]',
     remove: '[data-action="delete"]',
     detailEmpty: '[data-region="detail-empty"]',
     detailContent: '[data-region="detail-content"]',
@@ -93,6 +93,10 @@ const SELECTORS = {
 
 /** @type {HTMLElement|null} */
 let activeRow = null;
+/** @type {HTMLElement|null} The tab region, captured at init for the footer dispatch. */
+let activeRegion = null;
+/** @type {HTMLElement|null} The tab pane, captured at init for the footer dispatch. */
+let activePane = null;
 /** @type {Array} */
 let rulesModules = [];
 /** @type {Array} */
@@ -491,6 +495,22 @@ const selectRow = (region, row) => {
             })
             .catch(notifyError);
     }
+
+    // Mirror the selected competency's CRUD actions into the shared sticky footer.
+    // Managers only; the async render is guarded so a rapid row switch cannot leave
+    // the footer bound to a stale selection.
+    if (region.dataset.canmanage === '1') {
+        Templates.renderForPromise('local_dimensions/central/structure_footer_actions', {
+            canmanage: true,
+        }).then(({html}) => {
+            // Still the active row (guards rapid row switches) and still on the active
+            // Structure tab (guards a tab switch during the async render).
+            if (row.classList.contains('active') && region.closest('.tab-pane.active')) {
+                ActionFooter.show(html, dispatchStructureAction);
+            }
+            return null;
+        }).catch(Notification.exception);
+    }
 };
 
 /**
@@ -751,45 +771,6 @@ const updateCourseCount = (region, row, count) => {
         }
     }
     row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
-};
-
-/**
- * Reorder a node among its siblings in place after the move web service succeeds, preserving
- * tree expansion, selection and scroll. Swaps the node element with its adjacent sibling node;
- * falls back to a pane reload only when the adjacent sibling is not rendered (an unloaded page).
- *
- * @param {HTMLElement} pane
- * @param {HTMLElement} row The selected node's [data-action="select"] element.
- * @param {String} methodname The core move web service (up or down).
- * @param {String} direction 'up' or 'down'.
- */
-const moveNode = (pane, row, methodname, direction) => {
-    const node = row.closest(SELECTORS.node);
-    if (!node) {
-        return;
-    }
-    const sibling = direction === 'up' ? node.previousElementSibling : node.nextElementSibling;
-    // No sibling at all = boundary (first/last overall); the move is a server-side no-op, skip it.
-    if (!sibling) {
-        return;
-    }
-    const target = sibling.matches(SELECTORS.node) ? sibling : null;
-    Ajax.call([{methodname, args: {id: Number(row.dataset.id)}}])[0]
-        .then(() => {
-            if (!target) {
-                // Sibling exists but is not a node (e.g. a load-more) - the real neighbour is on
-                // an unfetched page; reload to stay correct.
-                return reloadPane(pane);
-            }
-            if (direction === 'up') {
-                node.parentNode.insertBefore(node, target);
-            } else {
-                node.parentNode.insertBefore(target, node);
-            }
-            row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
-            return null;
-        })
-        .catch(notifyError);
 };
 
 /**
@@ -1143,13 +1124,32 @@ const handleDetailAction = (region, pane, event, frameworkid) => {
             competencyname: activeRow.dataset.name || '',
             frameworkid: activeFrameworkid,
         });
-    } else if (event.target.closest(SELECTORS.moveUp)) {
-        moveNode(pane, activeRow, 'core_competency_move_up_competency', 'up');
-    } else if (event.target.closest(SELECTORS.moveDown)) {
-        moveNode(pane, activeRow, 'core_competency_move_down_competency', 'down');
+    } else if (event.target.closest(SELECTORS.moveTo)) {
+        const node = activeRow.closest(SELECTORS.node);
+        if (node) {
+            openNodeMoveModal(pane, node).catch(notifyError);
+        }
     } else if (event.target.closest(SELECTORS.remove)) {
         confirmDelete(pane, activeRow);
     }
+};
+
+/**
+ * Route a sticky-footer [data-action] click to the selection-scoped handler.
+ * Operates on the module-level active row, so it works from the page footer even
+ * though the footer sits outside the tab region.
+ *
+ * @param {HTMLElement} target The clicked [data-action] element.
+ * @param {Event} event The originating click event.
+ * @return {void}
+ */
+const dispatchStructureAction = (target, event) => {
+    // Ignore footer clicks once this tab is no longer active — a footer lingering during a
+    // slow tab switch must not act on the now-hidden (detached) selection.
+    if (!activeRow || !activeRegion || !activeRegion.closest('.tab-pane.active')) {
+        return;
+    }
+    handleDetailAction(activeRegion, activePane, event, activeRegion.dataset.frameworkid || '');
 };
 
 /**
@@ -1184,6 +1184,14 @@ export const init = () => {
     const pane = region.closest('[data-tab-content]');
     const frameworkid = region.dataset.frameworkid || '';
     activeFrameworkid = Number(frameworkid || 0);
+    activeRegion = region;
+    activePane = pane;
+    // Reset the shared sticky footer on entry, but only when this tab is the active one:
+    // dynamic tabs re-run init from an async load, so a late/out-of-order load for a tab
+    // the user already left must not wipe the current tab's footer. selectRow re-shows it.
+    if (region.closest('.tab-pane.active')) {
+        ActionFooter.hide();
+    }
 
     if (pane) {
         // Keep the pane dataset in sync with the framework the server actually resolved

@@ -55,6 +55,8 @@ $categoryid = (int) $resolved['categoryid'];
 // The context selector is page-level (governs both tabs); init it once on load.
 $contextbar = new contextbar($contexttype, $categoryid);
 $PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
+// The page-level sticky footer is shared by both tabs; init its coordinator once.
+$PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
 
 // Build the Frameworks tab and pre-render its body (it is the landing tab); refresh
 // after actions is done client-side via core_dynamic_tabs_get_content (no page reload).
@@ -106,4 +108,11 @@ $tabsdata = [
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_dimensions/central/contextbar', $contextbar->export_for_template($OUTPUT));
 echo $OUTPUT->render_from_template('core/dynamic_tabs', $tabsdata);
+
+// One page-level sticky footer shared by the Structure and Plans tabs; rendered
+// disabled so it stays hidden until a tab enables it on selection.
+$stickyfooter = new \core\output\sticky_footer();
+$stickyfooter->set_auto_enable(false);
+echo $OUTPUT->render($stickyfooter);
+
 echo $OUTPUT->footer();

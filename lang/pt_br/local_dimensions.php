@@ -168,7 +168,6 @@ $string['central_plans_editdetails'] = 'Editar detalhes';
 $string['central_plans_enabled'] = 'Habilitado';
 $string['central_plans_filterbycompetencies'] = 'Filtrar por competências';
 $string['central_plans_learnerplans'] = '{$a} planos de alunos';
-$string['central_plans_moreactions'] = 'Mais ações';
 $string['central_plans_moveto'] = 'Mover para posição…';
 $string['central_plans_moveto_label'] = 'Nova posição';
 $string['central_plans_removefilter'] = 'Remover {$a} do filtro';

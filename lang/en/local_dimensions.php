@@ -168,7 +168,6 @@ $string['central_plans_editdetails'] = 'Edit details';
 $string['central_plans_enabled'] = 'Enabled';
 $string['central_plans_filterbycompetencies'] = 'Filter by competencies';
 $string['central_plans_learnerplans'] = '{$a} learner plans';
-$string['central_plans_moreactions'] = 'More actions';
 $string['central_plans_moveto'] = 'Move to position…';
 $string['central_plans_moveto_label'] = 'New position';
 $string['central_plans_removefilter'] = 'Remove {$a} from the filter';
