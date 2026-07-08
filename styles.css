@@ -3360,6 +3360,23 @@
     font-size: 1.1rem;
 }
 
+/* On narrow screens the actions collapse to icon-only (the action-bar pattern), so the row
+   fits without overflowing. The label is hidden visually but kept in the accessibility tree
+   (sr-only technique) — the icons are aria-hidden, so the label is the button's only name. */
+@media (max-width: 767.98px) {
+    .local-dimensions-central-footer-actions .btn span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+    }
+}
+
 /* Plan rows own their display here (no .d-flex utility in the markup — its !important
    would force !important onto the visibility rules below, which the CI stylelint
    forbids). Disabled (hidden) templates stay in the DOM; the show-disabled toggle
