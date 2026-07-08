@@ -57,26 +57,49 @@
     display: none;
 }
 
-/* Live colour swatch prepended to the bg/text colour custom-field inputs
-   (amd/src/central/colour_swatch). The checkerboard shows through when the
-   value is empty or not a valid hex. */
+/* Live, clickable colour swatch prepended to the bg/text colour custom-field
+   inputs (amd/src/central/colour_swatch). The swatch is a label wrapping a
+   native colour input; the checkerboard shows through when the value is empty
+   or not a valid hex. */
 .local-dimensions-central-colour-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.local-dimensions-central-colour-row input {
+.local-dimensions-central-colour-row > input {
     flex: 1 1 auto;
     min-width: 0;
 }
 
 .local-dimensions-central-colour-swatch {
+    position: relative;
     flex: 0 0 auto;
     width: 2rem;
     height: 2rem;
+    overflow: hidden;
     border: 1px solid var(--bs-border-color, #ced4da);
     border-radius: 0.4rem;
+    cursor: pointer;
+}
+
+.local-dimensions-central-colour-preview {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.local-dimensions-central-colour-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    opacity: 0;
+    cursor: pointer;
 }
 
 .local-dimensions-central-colour-swatch-empty {
@@ -91,6 +114,340 @@
         0.5rem -0.5rem,
         -0.5rem 0;
     background-size: 1rem 1rem;
+}
+
+/* Real-time WCAG contrast panel beside the bg/text colour inputs
+   (amd/src/central/contrast). Mirrors the Claude Design prototype: a self-
+   contained card using fixed Moodle DS token values that flip under
+   prefers-color-scheme (light/dark), independent of the host theme. */
+.local-dimensions-contrast-layout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+.local-dimensions-contrast-fields {
+    flex: 1 1 16rem;
+    min-width: 0;
+}
+
+.local-dimensions-contrast-aside {
+    flex: 1 1 16rem;
+    min-width: 0;
+}
+
+.local-dimensions-contrast {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.9375rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.75rem;
+    background: #f8f9fa;
+    color: #1d2125;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+}
+
+.local-dimensions-contrast-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.local-dimensions-contrast-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.local-dimensions-contrast-standard {
+    flex: 0 0 auto;
+    padding: 0.125rem 0.5625rem;
+    border: 1px solid #dee2e6;
+    border-radius: 50rem;
+    background: #fff;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: #6a737b;
+}
+
+.local-dimensions-contrast-result {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.local-dimensions-contrast-score {
+    flex: 0 0 auto;
+}
+
+.local-dimensions-contrast-ratio {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.01em;
+}
+
+.local-dimensions-contrast-ratio-label {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #6a737b;
+}
+
+.local-dimensions-contrast-verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-left: auto;
+    padding: 0.375rem 0.8125rem;
+    border: 1px solid transparent;
+    border-radius: 50rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.local-dimensions-contrast-verdict-glyph {
+    font-weight: 700;
+}
+
+.local-dimensions-contrast-badges {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.local-dimensions-contrast-badge {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 0.5625rem;
+    padding: 0.5rem 0.6875rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.local-dimensions-contrast-badge-glyph {
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.local-dimensions-contrast-badge-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.local-dimensions-contrast-badge-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.local-dimensions-contrast-badge-min {
+    font-size: 0.625rem;
+    color: #6a737b;
+}
+
+.local-dimensions-contrast-sizenote {
+    margin: 0;
+    font-size: 0.625rem;
+    color: #6a737b;
+}
+
+.local-dimensions-contrast-suggestions {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.local-dimensions-contrast-suggestions:not([hidden]) {
+    display: flex;
+}
+
+.local-dimensions-contrast-suggestions-title {
+    font-size: 0.6875rem;
+    font-weight: 600;
+}
+
+.local-dimensions-contrast-suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.local-dimensions-contrast-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.local-dimensions-contrast-suggestion-swatch {
+    flex: 0 0 auto;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+}
+
+.local-dimensions-contrast-suggestion-text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.local-dimensions-contrast-suggestion-which {
+    font-size: 0.625rem;
+    color: #6a737b;
+}
+
+.local-dimensions-contrast-suggestion-meta {
+    font-family: monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.local-dimensions-contrast-suggestion-apply {
+    flex: 0 0 auto;
+}
+
+.local-dimensions-contrast-suggestion-apply:focus-visible {
+    outline: 2px solid #0f6cbf;
+    outline-offset: 2px;
+}
+
+.local-dimensions-contrast-note {
+    align-items: flex-start;
+    gap: 0.4375rem;
+    margin: 0;
+    font-size: 0.6875rem;
+}
+
+.local-dimensions-contrast-note:not([hidden]) {
+    display: flex;
+}
+
+.local-dimensions-contrast-note-glyph {
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+/* Feedback tones shared by the verdict pill and the WCAG badges. */
+.local-dimensions-contrast .is-success {
+    border-color: #153114;
+    background: #d7e4d6;
+    color: #153114;
+}
+
+.local-dimensions-contrast .is-warning {
+    border-color: #60451f;
+    background: #fcefdc;
+    color: #60451f;
+}
+
+.local-dimensions-contrast .is-danger {
+    border-color: #51140d;
+    background: #f4d6d2;
+    color: #51140d;
+}
+
+.local-dimensions-contrast .is-muted {
+    border-color: #dee2e6;
+    background: #fff;
+    color: #6a737b;
+}
+
+/* The note is text-only: its tone sets the text colour, not a filled pill. */
+.local-dimensions-contrast-note.is-muted,
+.local-dimensions-contrast-note.is-danger {
+    border-color: transparent;
+    background: transparent;
+}
+
+.local-dimensions-contrast-note.is-muted {
+    color: #6a737b;
+}
+
+.local-dimensions-contrast-note.is-danger {
+    color: #51140d;
+}
+
+@media (prefers-color-scheme: dark) {
+    .local-dimensions-contrast {
+        border-color: #495057;
+        background: #16191c;
+        color: #f8f9fa;
+    }
+
+    .local-dimensions-contrast-standard {
+        border-color: #495057;
+        background: #1d2125;
+        color: #ced4da;
+    }
+
+    .local-dimensions-contrast-ratio-label,
+    .local-dimensions-contrast-badge-min,
+    .local-dimensions-contrast-sizenote,
+    .local-dimensions-contrast-suggestion-which {
+        color: #ced4da;
+    }
+
+    .local-dimensions-contrast-badge,
+    .local-dimensions-contrast-suggestion {
+        border-color: #495057;
+        background: #1d2125;
+    }
+
+    .local-dimensions-contrast-suggestion-swatch {
+        border-color: #495057;
+    }
+
+    .local-dimensions-contrast .is-success {
+        border-color: #d7e4d6;
+        background: #153114;
+        color: #d7e4d6;
+    }
+
+    .local-dimensions-contrast .is-warning {
+        border-color: #fcefdc;
+        background: #60451f;
+        color: #fcefdc;
+    }
+
+    .local-dimensions-contrast .is-danger {
+        border-color: #f4d6d2;
+        background: #51140d;
+        color: #f4d6d2;
+    }
+
+    .local-dimensions-contrast .is-muted {
+        border-color: #495057;
+        background: #1d2125;
+        color: #ced4da;
+    }
+
+    .local-dimensions-contrast-note.is-muted,
+    .local-dimensions-contrast-note.is-danger {
+        background: transparent;
+    }
+
+    .local-dimensions-contrast-note.is-muted {
+        color: #ced4da;
+    }
+
+    .local-dimensions-contrast-note.is-danger {
+        color: #f4d6d2;
+    }
 }
 
 /* Percentage display mode styles */

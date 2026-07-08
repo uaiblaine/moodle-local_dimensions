@@ -14,18 +14,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Live colour swatch for the Competency hub's colour custom-field inputs.
+ * Live, clickable colour swatch for the Competency hub's colour custom-field inputs.
  *
  * The bg/text colour custom fields are plain text inputs holding a hex value.
- * This module prepends a small swatch that tracks what the user types, so the
- * hex is not entered blind. Wired from the competency and template dynamic
- * forms via js_call_amd in definition_after_data(), which runs inside the
- * modal's JS-collection window (same timing as tool_lp/scaleconfig).
+ * This module prepends a swatch that both previews and edits the colour: it
+ * tracks what the user types, and clicking it opens a native colour picker that
+ * writes the chosen hex back into the text input (dispatching input + change so
+ * the real-time contrast panel and any other listeners update). Wired from the
+ * competency and template dynamic forms via js_call_amd in definition_after_data().
  *
  * @module     local_dimensions/central/colour_swatch
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+import {getString} from 'core/str';
+import Notification from 'core/notification';
 
 /**
  * Return a normalised 3/6-digit hex colour, or an empty string.
@@ -39,11 +43,28 @@ const normaliseColour = (value) => {
 };
 
 /**
- * Prepend a live swatch to one colour custom-field input.
+ * Expand a normalised hex to the #rrggbb form a native colour input accepts.
+ *
+ * @param {String} colour A normalised (valid) hex colour, or an empty string.
+ * @return {String} A #rrggbb colour, or an empty string when the input is empty.
+ */
+const toSixDigit = (colour) => {
+    if (!colour) {
+        return '';
+    }
+    if (colour.length === 4) {
+        return '#' + colour[1] + colour[1] + colour[2] + colour[2] + colour[3] + colour[3];
+    }
+    return colour;
+};
+
+/**
+ * Prepend a live, clickable swatch to one colour custom-field input.
  *
  * @param {String} fieldname Custom-field shortname (without the customfield_ prefix).
+ * @param {String} pickerlabel Accessible label for the native colour input.
  */
-const decorate = (fieldname) => {
+const decorate = (fieldname, pickerlabel) => {
     if (!fieldname) {
         return;
     }
@@ -55,20 +76,41 @@ const decorate = (fieldname) => {
 
     const row = document.createElement('span');
     row.className = 'local-dimensions-central-colour-row';
-    const swatch = document.createElement('span');
-    swatch.className = 'local-dimensions-central-colour-swatch';
+
+    const picker = document.createElement('label');
+    picker.className = 'local-dimensions-central-colour-swatch';
+    const preview = document.createElement('span');
+    preview.className = 'local-dimensions-central-colour-preview';
+    const colourinput = document.createElement('input');
+    colourinput.type = 'color';
+    colourinput.className = 'local-dimensions-central-colour-input';
+    colourinput.setAttribute('aria-label', pickerlabel);
+    picker.appendChild(preview);
+    picker.appendChild(colourinput);
 
     input.parentNode.insertBefore(row, input);
-    row.appendChild(swatch);
+    row.appendChild(picker);
     row.appendChild(input);
 
-    const update = () => {
+    const sync = () => {
         const colour = normaliseColour(input.value);
-        swatch.style.backgroundColor = colour || 'transparent';
-        swatch.classList.toggle('local-dimensions-central-colour-swatch-empty', !colour);
+        preview.style.backgroundColor = colour || 'transparent';
+        preview.classList.toggle('local-dimensions-central-colour-swatch-empty', !colour);
+        const full = toSixDigit(colour);
+        if (full) {
+            colourinput.value = full;
+        }
     };
-    input.addEventListener('input', update);
-    update();
+
+    // Typing in the hex field updates the swatch and the native picker.
+    input.addEventListener('input', sync);
+    // Picking a colour writes it back to the hex field and notifies listeners.
+    colourinput.addEventListener('input', () => {
+        input.value = colourinput.value;
+        input.dispatchEvent(new Event('input', {bubbles: true}));
+        input.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+    sync();
 };
 
 /**
@@ -78,6 +120,11 @@ const decorate = (fieldname) => {
  * @param {String} textfield Text-colour custom-field shortname.
  */
 export const init = (bgfield, textfield) => {
-    decorate(bgfield);
-    decorate(textfield);
+    getString('colourpicker', 'local_dimensions')
+        .then((pickerlabel) => {
+            decorate(bgfield, pickerlabel);
+            decorate(textfield, pickerlabel);
+            return pickerlabel;
+        })
+        .catch(Notification.exception);
 };

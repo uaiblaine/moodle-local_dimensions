@@ -200,6 +200,12 @@ class competency_dynamic_form extends \core_form\dynamic_form {
             constants::CFIELD_CUSTOMBGCOLOR,
             constants::CFIELD_CUSTOMTEXTCOLOR,
         ]);
+
+        // Real-time WCAG contrast panel beside the same two colour inputs.
+        $PAGE->requires->js_call_amd('local_dimensions/central/contrast', 'init', [
+            constants::CFIELD_CUSTOMBGCOLOR,
+            constants::CFIELD_CUSTOMTEXTCOLOR,
+        ]);
     }
 
     /**
