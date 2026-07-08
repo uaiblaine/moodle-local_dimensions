@@ -21,26 +21,26 @@
     Displays when view-plan.php is accessed with only plan ID.
 
     Context variables required:
-    * hasplan (bool) - Whether we have a valid plan
     * planid (int) - Plan ID
-    * userid (int) - User ID
-    * planname (string) - Plan name
+    * percentagemode (string) - Percentage display mode (hover/inline)
     * hero (object) - Hero header data
+    * subline_is_status / subline_is_rating / subline_is_text (bool) - Which accordion subline to render
     * hascompetencies (bool) - Whether there are competencies
     * competencies (array) - Array of competency objects with:
         - id, shortname, isproficient, rating, hasrating
-        - viewurl, index, isfirst, islast
+        - badgeproficienticonurl, badgewarningiconurl
+        - sublinetext, hassublinetext, filtervaluesjson
     * competencycount (int) - Total competencies
+    * incompletecount (int) - Number of not-yet-proficient competencies
+    * haschipfilters, chipfilters - Chip-filter model
+    * hascustomcss, customcss - Compiled template SCSS
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 
     Example context (json):
     {
-        "hasplan": true,
         "planid": 10,
-        "userid": 5,
-        "planname": "Plan Example",
         "percentagemode": "hover",
         "hero": {
             "title": "Plan Hero",

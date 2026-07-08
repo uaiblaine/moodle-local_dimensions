@@ -92,7 +92,7 @@ $accordionsettings = [
 echo $OUTPUT->header();
 
 // Render full plan overview using Mustache template.
-$page = new view_plan_summary_page($plan, $USER->id);
+$page = new view_plan_summary_page($plan);
 $templatedata = $page->export_for_template($OUTPUT);
 echo $OUTPUT->render_from_template('local_dimensions/view_plan_summary', $templatedata);
 
@@ -110,9 +110,7 @@ if (!empty($templatedata['hascustomcss'])) {
 }
 
 // Core strings for accordion.
-$PAGE->requires->string_for_js('access_course', 'local_dimensions');
 $PAGE->requires->string_for_js('rating_label', 'local_dimensions');
-$PAGE->requires->string_for_js('proficient_label', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_label', 'local_dimensions');
 $PAGE->requires->string_for_js('yes', 'local_dimensions');
 $PAGE->requires->string_for_js('no', 'local_dimensions');
@@ -124,9 +122,7 @@ $PAGE->requires->string_for_js('taxonomycard_label', 'local_dimensions');
 
 // Competency path and related strings.
 $PAGE->requires->string_for_js('competency_path', 'local_dimensions');
-$PAGE->requires->string_for_js('in_framework', 'local_dimensions');
 $PAGE->requires->string_for_js('related_dimensions', 'local_dimensions');
-$PAGE->requires->string_for_js('path', 'tool_lp');
 
 // Evidence strings.
 $PAGE->requires->string_for_js('evidence_type_file', 'local_dimensions');
@@ -135,7 +131,6 @@ $PAGE->requires->string_for_js('evidence_type_activity', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_type_coursegrade', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_type_prior', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_type_other', 'local_dimensions');
-$PAGE->requires->string_for_js('evidence_by', 'local_dimensions');
 $PAGE->requires->string_for_js('no_evidence', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_slider_prev', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_slider_next', 'local_dimensions');
@@ -147,10 +142,8 @@ $PAGE->requires->string_for_js('rules_total_competencies', 'local_dimensions');
 $PAGE->requires->string_for_js('rules_required_tag', 'local_dimensions');
 $PAGE->requires->string_for_js('rules_assessment_prefix', 'local_dimensions');
 $PAGE->requires->string_for_js('rules_pts', 'local_dimensions');
-$PAGE->requires->string_for_js('rules_no_points', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_submit', 'local_dimensions');
 $PAGE->requires->string_for_js('rules_todo', 'local_dimensions');
-$PAGE->requires->string_for_js('rules_completed_count', 'local_dimensions');
 $PAGE->requires->string_for_js('rules_info_title', 'local_dimensions');
 $PAGE->requires->string_for_js('rules_missing_mandatory_notice', 'local_dimensions');
 $PAGE->requires->string_for_js('rules_filter_label', 'local_dimensions');

@@ -57,7 +57,7 @@ class get_courses_completion_status extends external_api {
      * Return the completion + lock status for each requested course.
      *
      * @param int[] $courseids
-     * @return array<int, array{courseid:int,iscompleted:bool,islocked:bool,enabled:bool}>
+     * @return array<int, array{courseid:int,iscompleted:bool,islocked:bool}>
      */
     public static function execute($courseids) {
         global $DB, $USER;
@@ -83,14 +83,12 @@ class get_courses_completion_status extends external_api {
                 $islocked = (bool) calculator::is_locked($course, $USER->id);
                 $results[] = [
                     'courseid' => $cid,
-                    'enabled' => (bool) $enabled,
                     'iscompleted' => $iscompleted,
                     'islocked' => $islocked,
                 ];
             } catch (\Exception $e) {
                 $results[] = [
                     'courseid' => $cid,
-                    'enabled' => false,
                     'iscompleted' => false,
                     'islocked' => false,
                 ];
@@ -108,7 +106,6 @@ class get_courses_completion_status extends external_api {
         return new external_multiple_structure(
             new external_single_structure([
                 'courseid' => new external_value(PARAM_INT, 'Course ID'),
-                'enabled' => new external_value(PARAM_BOOL, 'Whether completion tracking is enabled'),
                 'iscompleted' => new external_value(PARAM_BOOL, 'Whether the course is fully completed'),
                 'islocked' => new external_value(PARAM_BOOL, 'Whether the course is locked for the user'),
             ])
