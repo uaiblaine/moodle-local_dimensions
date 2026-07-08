@@ -144,11 +144,10 @@ if ($competency) {
     if (empty($lockedcardmode)) {
         $lockedcardmode = 'blocked';
     }
-    $showlockeddate = (bool) get_config('local_dimensions', 'showlockeddate');
-    // Default to true if not set.
-    if (get_config('local_dimensions', 'showlockeddate') === false) {
-        $showlockeddate = true;
-    }
+    // Default to true when the setting has never been saved: get_config returns
+    // boolean false only when the key is absent; an unchecked checkbox stores '0'.
+    $rawshowlockeddate = get_config('local_dimensions', 'showlockeddate');
+    $showlockeddate = ($rawshowlockeddate === false) ? true : (bool) $rawshowlockeddate;
     $cardicon = get_config('local_dimensions', 'cardicon');
     $learnmorebuttoncolor = get_config('local_dimensions', 'learnmorebuttoncolor');
     if (empty($learnmorebuttoncolor)) {
@@ -163,7 +162,6 @@ if ($competency) {
         'animatelockedborder' => (bool) get_config('local_dimensions', 'animatelockedborder'),
     ];
 
-    $PAGE->requires->string_for_js('connection_error', 'local_dimensions');
     $PAGE->requires->string_for_js('learn_more', 'local_dimensions');
     $PAGE->requires->string_for_js('locked_content', 'local_dimensions');
     $PAGE->requires->string_for_js('available_at', 'local_dimensions');

@@ -124,18 +124,6 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 var container = $('.local-dimensions-progress-container[data-courseid="' + data.courseid + '"]');
                 if (data.enabled && data.sections) {
                     $.each(data.sections, function(j, section) {
-                        if (section.has_activities) {
-                            // Template field name (progress_card_body.mustache) — keep snake_case.
-                            /* eslint-disable camelcase */
-                            if (section.percentage == 100) {
-                                section.badge_class = 'badge-success';
-                            } else if (section.percentage > 0) {
-                                section.badge_class = 'badge-info';
-                            } else {
-                                section.badge_class = 'badge-secondary';
-                            }
-                            /* eslint-enable camelcase */
-                        }
                         section.dasharray = (section.percentage * 0.754).toFixed(2);
                         section.lockiconurl = iconurls.lock || '';
                         section.checkiconurl = iconurls.checkcircle || '';

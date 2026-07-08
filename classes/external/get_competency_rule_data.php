@@ -92,7 +92,6 @@ class get_competency_rule_data extends external_api {
         // Resolve scale for grade names.
         $scale = self::get_competency_scale($competency);
         $framework = api::read_framework($competency->get('competencyframeworkid'));
-        $taxonomydata = helper::get_competency_taxonomy_data($competency, $framework);
 
         $ruledata = $simpleruletype === 'points'
             ? self::build_points_rule_data($config, $userid, $params['planid'], $scale)
@@ -106,15 +105,12 @@ class get_competency_rule_data extends external_api {
         $result = [
             'hasrule' => true,
             'ruletype' => $simpleruletype,
-            'ruleoutcome' => $ruleoutcome,
-            'taxonomy' => $taxonomydata,
             'outcometext' => $outcometext,
             'requiredwarningtext' => $requiredwarningtext,
             'totalrequired' => $ruledata['totalrequired'],
             'earnedpoints' => $ruledata['earnedpoints'],
             'hasrequired' => $ruledata['hasrequired'],
             'mandatorycount' => $ruledata['mandatorycount'],
-            'pendingmandatorycount' => $ruledata['pendingmandatorycount'],
             'hasmissingmandatory' => $hasmissingmandatory,
             'children' => $ruledata['children'],
             'childcount' => count($ruledata['children']),

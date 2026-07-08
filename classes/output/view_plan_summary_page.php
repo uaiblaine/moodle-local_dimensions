@@ -33,8 +33,6 @@ use renderer_base;
 use core_competency\api;
 use core_competency\plan;
 use local_dimensions\constants;
-use local_dimensions\helper;
-use local_dimensions\picture_manager;
 use local_dimensions\scss_manager;
 
 /**
@@ -48,71 +46,18 @@ use local_dimensions\scss_manager;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class view_plan_summary_page implements renderable, templatable {
+    use customfield_reader;
+
     /** @var plan The plan object */
     private $plan;
-
-    /** @var int The user ID */
-    private $userid;
-
-    /**
-     * Memoised cache of resolved custom-field controllers, keyed by "{area}|{shortname}".
-     * Avoids repeating the handler walk inside per-competency loops.
-     *
-     * @var array<string, \core_customfield\field_controller|false>
-     */
-    private $fieldcache = [];
 
     /**
      * Constructor.
      *
      * @param plan $plan The learning plan
-     * @param int $userid The user ID
      */
-    public function __construct(plan $plan, int $userid) {
+    public function __construct(plan $plan) {
         $this->plan = $plan;
-        $this->userid = $userid;
-    }
-
-    /**
-     * Resolve a custom field controller by shortname, memoised per render.
-     *
-     * @param string $shortname Custom field shortname.
-     * @param string $area Custom field area ('lp' or 'competency').
-     * @return \core_customfield\field_controller|null
-     */
-    private function get_field(string $shortname, string $area): ?\core_customfield\field_controller {
-        $key = $area . '|' . $shortname;
-        if (!array_key_exists($key, $this->fieldcache)) {
-            $this->fieldcache[$key] = helper::find_field_by_shortname($shortname, $area) ?? false;
-        }
-        return $this->fieldcache[$key] ?: null;
-    }
-
-    /**
-     * Fetch the data_controller for a given field/instance pair.
-     *
-     * Returns null when the customfield_data row does not exist (the API
-     * synthesises a default controller in that case; we discriminate by
-     * checking the persisted id).
-     *
-     * @param \core_customfield\field_controller $field
-     * @param int $instanceid
-     * @return \core_customfield\data_controller|null
-     */
-    private function get_field_data(
-        \core_customfield\field_controller $field,
-        int $instanceid
-    ): ?\core_customfield\data_controller {
-        $datas = \core_customfield\api::get_instance_fields_data(
-            [$field->get('id') => $field],
-            $instanceid
-        );
-        foreach ($datas as $data) {
-            if ((int) $data->get('id') > 0) {
-                return $data;
-            }
-        }
-        return null;
     }
 
     /**
@@ -163,10 +108,7 @@ class view_plan_summary_page implements renderable, templatable {
         ) : null;
 
         $data = [
-            'hasplan' => true,
             'planid' => $this->plan->get('id'),
-            'userid' => $this->userid,
-            'planname' => format_string($this->plan->get('name')),
             'percentagemode' => $percentagemode,
             'hero' => [
                 'title' => $templatename,
@@ -198,7 +140,6 @@ class view_plan_summary_page implements renderable, templatable {
         $sublinesource = $template
             ? \local_dimensions\helper::get_template_subline_source($template->get('id'))
             : constants::SUBLINE_STATUS;
-        $data['sublinesource'] = $sublinesource;
         $data['subline_is_status'] = ($sublinesource === constants::SUBLINE_STATUS);
         $data['subline_is_rating'] = ($sublinesource === constants::SUBLINE_RATING);
         $data['subline_is_text'] = in_array(
@@ -218,8 +159,6 @@ class view_plan_summary_page implements renderable, templatable {
         } catch (\Exception $e) {
             $pclist = [];
         }
-
-        $index = 0;
 
         foreach ($pclist as $pc) {
             $comp = $pc->competency;
@@ -242,12 +181,6 @@ class view_plan_summary_page implements renderable, templatable {
                     }
                 }
             }
-
-            // Build view URL for competency courses.
-            $viewurl = new \moodle_url('/local/dimensions/view-competency.php', [
-                'id' => $this->plan->get('id'),
-                'competencyid' => $comp->get('id'),
-            ]);
 
             // Resolve the dynamic subline shown in the accordion header.
             // The legacy behaviour (rating badge / "to do" pill) lives under
@@ -286,21 +219,15 @@ class view_plan_summary_page implements renderable, templatable {
             $data['competencies'][] = [
                 'id' => $comp->get('id'),
                 'shortname' => format_string($comp->get('shortname')),
-                'idnumber' => $comp->get('idnumber'),
                 'isproficient' => $isproficient,
                 'rating' => $ratingtext,
                 'hasrating' => $hasrating,
                 'badgeproficienticonurl' => $output->image_url('status/check-circle-fill', 'local_dimensions')->out(false),
                 'badgewarningiconurl' => $output->image_url('status/warning-triangle-fill', 'local_dimensions')->out(false),
-                'viewurl' => $viewurl->out(false),
-                'index' => $index,
-                'isfirst' => ($index === 0),
-                'islast' => ($index === count($pclist) - 1),
                 'sublinetext' => $sublinetext,
                 'hassublinetext' => ($sublinetext !== ''),
                 'filtervaluesjson' => json_encode((object) $filtervalues),
             ];
-            $index++;
         }
 
         $data['competencycount'] = count($data['competencies']);
@@ -371,99 +298,6 @@ class view_plan_summary_page implements renderable, templatable {
         if (preg_match('/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $value)) {
             if ($value[0] !== '#') {
                 $value = '#' . $value;
-            }
-            return $value;
-        }
-
-        return null;
-    }
-
-    /**
-     * Get a custom field image URL.
-     *
-     * @param int $instanceid The instance ID (template or competency)
-     * @param string $shortname The field shortname to retrieve
-     * @param string $area The custom field area (lp or competency)
-     * @return string|null The image URL or null if not found
-     */
-    protected function get_custom_field_image_url(int $instanceid, string $shortname, string $area): ?string {
-        // Built-in mode: try picture_manager first, fall back to external storage.
-        if (picture_manager::is_builtin_mode()) {
-            $type = ($shortname === constants::CFIELD_CUSTOMCARD) ? 'cardimage' : 'bgimage';
-            $url = picture_manager::get_image_url($area, $instanceid, $type);
-            if ($url) {
-                return $url;
-            }
-            // Fall through to check external storage for legacy images.
-        }
-
-        // External mode: use customfield_picture component.
-        $field = $this->get_field($shortname, $area);
-        if (!$field) {
-            return null;
-        }
-
-        $data = $this->get_field_data($field, $instanceid);
-        if (!$data) {
-            return null;
-        }
-
-        // Get the file from storage (using customfield_picture component).
-        $fs = get_file_storage();
-        $files = $fs->get_area_files(
-            (int) $data->get('contextid'),
-            'customfield_picture',
-            'file',
-            (int) $data->get('id'),
-            '',
-            false
-        );
-
-        if (empty($files)) {
-            return null;
-        }
-
-        $file = reset($files);
-        return \moodle_url::make_pluginfile_url(
-            $file->get_contextid(),
-            $file->get_component(),
-            $file->get_filearea(),
-            $file->get_itemid(),
-            $file->get_filepath(),
-            $file->get_filename()
-        )->out();
-    }
-
-    /**
-     * Get a custom field color value for a competency.
-     *
-     * @param int $competencyid The competency ID.
-     * @param string $shortname The field shortname to retrieve.
-     * @return string|null The field value or null if not found.
-     */
-    protected function get_competency_custom_field(int $competencyid, string $shortname): ?string {
-        // Field controller is memoised across calls, so the per-shortname lookup
-        // happens once for the whole render even though this method runs inside
-        // the foreach competency loop in export_for_template().
-        $field = $this->get_field($shortname, 'competency');
-        if (!$field) {
-            return null;
-        }
-
-        $data = $this->get_field_data($field, $competencyid);
-        if (!$data) {
-            return null;
-        }
-
-        $value = trim((string) $data->get('value'));
-        if ($value === '') {
-            return null;
-        }
-
-        // Validate hex color.
-        if (preg_match('/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $value)) {
-            if ($value[0] !== '#') {
-                $value = "#$value";
             }
             return $value;
         }
