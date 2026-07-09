@@ -34,7 +34,7 @@ import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {show as showCompetencyBrowser} from 'local_dimensions/central/competency_browser';
 import {show as showParticipants} from 'local_dimensions/central/participants_manager';
-import {initPaneResizer} from 'local_dimensions/central/pane_resizer';
+import {initMasterResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import CollapsibleDescription from 'local_dimensions/collapsible_description';
 import * as ActionFooter from 'local_dimensions/central/action_footer';
@@ -65,6 +65,7 @@ const LISTDISPLAY_CLASSES = {id: 'show-id', duedate: 'show-duedate'};
 
 const SELECTORS = {
     region: '[data-region="plans"]',
+    templateList: '[data-region="template-list"]',
     competencySearch: '[data-region="competency-search"]',
     filterPicker: '[data-region="competency-filter-picker"]',
     filterAddButton: '[data-action="add-filter-competency"]',
@@ -74,7 +75,6 @@ const SELECTORS = {
     searchEmpty: '[data-region="plan-search-empty"]',
     plansBody: '[data-region="plans-body"]',
     plansResizer: '[data-region="plans-resizer"]',
-    detailPane: '[data-region="plan-detail"]',
     showDisabled: '[data-action="toggle-disabled"]',
     displayPanel: '[data-region="display-options-panel"]',
     displayToggle: '[data-display-toggle]',
@@ -857,18 +857,17 @@ export const init = () => {
     initDisplayOptions(region);
     initListDisplayOptions(region);
     initDragReorder(region, pane);
-    // The competency detail generally needs more room than the plan list: allow the
-    // divider to shrink the list down to ~200px and let the detail grow well past the
-    // structure-tab default cap.
-    initPaneResizer({
+    // The redesign gives the master (templates) an explicit, adjustable width (default 400px)
+    // and lets the detail flex to fill the rest; the divider drives that master width.
+    initMasterResizer({
         body: region.querySelector(SELECTORS.plansBody),
         resizer: region.querySelector(SELECTORS.plansResizer),
-        detail: region.querySelector(SELECTORS.detailPane),
-        cssvar: '--local-dimensions-plans-detail-width',
-        storagekey: 'local_dimensions_plans_detail_width',
-        minimum: 280,
-        maximum: 1600,
-        reserve: 200,
+        master: region.querySelector(SELECTORS.templateList),
+        cssvar: '--local-dimensions-plans-master-width',
+        storagekey: 'local_dimensions_plans_master_width',
+        minimum: 300,
+        maximum: 1200,
+        reserve: 382,
     });
 
     region.addEventListener('click', (event) => {

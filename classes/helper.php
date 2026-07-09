@@ -1994,4 +1994,34 @@ class helper {
 
         return ['', $fieldcandidates[0]];
     }
+
+    /**
+     * Darken a hex colour by mixing it towards black.
+     *
+     * Used to build the Learning plans detail-header gradient, which shades the
+     * template's custom background colour progressively darker (mirrors the design
+     * kit: base 0% -> ~16% at 48% -> ~34% at the end). Accepts 3- or 6-digit hex
+     * with or without a leading '#'; an unparseable value falls back to black so
+     * the caller always gets a valid colour to emit.
+     *
+     * @param string $hex Source colour, e.g. "#2274c6" or "2274c6" or "#27c".
+     * @param float $amount Fraction to darken by, 0 (unchanged) to 1 (black).
+     * @return string Normalised "#rrggbb" darkened colour.
+     */
+    public static function darken_hex(string $hex, float $amount): string {
+        $hex = ltrim(trim($hex), '#');
+        if (strlen($hex) === 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        if (!preg_match('/^[0-9A-Fa-f]{6}$/', $hex)) {
+            return '#000000';
+        }
+
+        $amount = max(0.0, min(1.0, $amount));
+        $red = (int) round(hexdec(substr($hex, 0, 2)) * (1 - $amount));
+        $green = (int) round(hexdec(substr($hex, 2, 2)) * (1 - $amount));
+        $blue = (int) round(hexdec(substr($hex, 4, 2)) * (1 - $amount));
+
+        return sprintf('#%02x%02x%02x', $red, $green, $blue);
+    }
 }

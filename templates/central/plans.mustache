@@ -17,10 +17,18 @@
 {{!
     @template local_dimensions/central/plans
 
-    Learning plans tab: template list + the selected template's competencies (cross-framework).
-    Master-detail with a draggable resizer (starts 50/50), client-side search over template
-    name/idnumber, a multi-competency tag filter, and a "show disabled plans" toggle that
-    reveals hidden templates (managers only — non-managers never receive them).
+    Learning plans tab: a two-panel master/detail. The left "Templates" panel is a plain
+    card (gear-collapsed display options, search, "New template", competency filter and the
+    template rows). The right "Plan" panel wears the selected template's custom colours: a
+    140deg gradient header (background = local_dimensions_custombgcolor darkened, text/icons =
+    local_dimensions_customtextcolor) with the status badge, count pills, gear-collapsed
+    display toggles and metadata chips, then a white body with the description and the
+    competency list (grip, name, taxonomy/idnumber/path, structure badge, actions menu).
+
+    A 22px divider between the panels resizes the master (persisted); its grip is pinned to
+    the viewport centre so it stays reachable however far the panels scroll. Client-side
+    search over name/idnumber, a multi-competency tag filter and a "show disabled plans"
+    toggle are all preserved. Template-level actions live in the page sticky footer.
 
     The System / Course category context selector is rendered once at page level
     (local_dimensions/central/contextbar); this tab receives the resolved context via its
@@ -31,8 +39,12 @@
     * hastemplates (bool) · hashiddentemplates (bool)
     * templates (array) {id, name, idnumber, search, competencycount, visible, selected, duedate}
     * selectedtemplateid (int) · selectedtemplatename (string) · selectedtemplatevisible (bool)
+    * headertextcolor (string) · headerbgstop0 (string) · headerbgstop48 (string) · headerbgstop100 (string)
     * selectedtemplatehasduedate (bool) · selectedtemplateduedate (string)
     * selectedtemplatedisplaymode (string) · selectedtemplatehasdisplaymode (bool)
+    * selectedtemplatetype (string) · selectedtemplatehastype (bool)
+    * selectedtemplatetag1 (string) · selectedtemplatehastag1 (bool)
+    * selectedtemplatetag2 (string) · selectedtemplatehastag2 (bool)
     * selectedtemplateplancount (int) · selectedtemplatecohortcount (int)
     * competencyids (string) · CSV of the active filter competency ids
     * competencyfilters (array) {id, label} · filteredbycompetency (bool)
@@ -63,6 +75,10 @@
         ],
         "selectedtemplateid": 4,
         "selectedtemplatename": "Induction plan",
+        "headertextcolor": "#ffffff",
+        "headerbgstop0": "#2274c6",
+        "headerbgstop48": "#1d62a6",
+        "headerbgstop100": "#174d83",
         "selectedtemplatehasidnumber": true,
         "selectedtemplateidnumber": "IND-01",
         "selectedtemplatehasdescription": true,
@@ -71,13 +87,13 @@
             "id": "local-dimensions-plans-desc-4"
         },
         "selectedtemplatehastype": true,
-        "selectedtemplatetype": "Onboarding",
+        "selectedtemplatetype": "Modules",
         "selectedtemplatehastag1": true,
-        "selectedtemplatetag1": "HR",
-        "selectedtemplatehastag2": false,
-        "selectedtemplatetag2": "",
+        "selectedtemplatetag1": "Year 1",
+        "selectedtemplatehastag2": true,
+        "selectedtemplatetag2": "Intermediate",
         "selectedtemplatehasdisplaymode": true,
-        "selectedtemplatedisplaymode": "Competency tracker",
+        "selectedtemplatedisplaymode": "Plan overview",
         "selectedtemplatevisible": true,
         "selectedtemplatehasduedate": true,
         "selectedtemplateduedate": "31 December 2025",
@@ -107,72 +123,70 @@
     {{/needscategoryselection}}
 
     {{^needscategoryselection}}
-    {{#hashiddentemplates}}
-    <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="local-dimensions-plans-showdisabled"
-               data-action="toggle-disabled">
-        <label class="form-check-label" for="local-dimensions-plans-showdisabled">
-            {{#str}}central_plans_showdisabled, local_dimensions{{/str}}
-        </label>
-    </div>
-    {{/hashiddentemplates}}
-
     <div class="local-dimensions-central-plans-body{{^hastemplates}} local-dimensions-central-plans-body-single{{/hastemplates}}" data-region="plans-body">
         <section class="local-dimensions-central-plans-list-pane" data-region="template-list">
-            <div class="card h-100">
-                <div class="card-header d-flex align-items-center gap-3 py-2">
-                    <span class="fw-semibold flex-grow-1">{{#str}}central_plans_templatestitle, local_dimensions{{/str}}</span>
-                    <button type="button" class="btn btn-sm btn-link p-0 ms-auto text-decoration-none" data-action="list-display-options"
+            <div class="local-dimensions-central-plans-panel">
+                <div class="local-dimensions-central-plans-panel-head">
+                    <h2 class="local-dimensions-central-plans-panel-title">{{#str}}central_plans_templatestitle, local_dimensions{{/str}}</h2>
+                    <button type="button" class="local-dimensions-central-plans-gear" data-action="list-display-options"
                             aria-expanded="true" aria-controls="local-dimensions-plans-listopts"
                             title="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
                         <i class="fa fa-cog" aria-hidden="true"></i>
                         <span class="visually-hidden">{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}</span>
                     </button>
                 </div>
-                <div class="card-body border-bottom py-2 flex-grow-0" id="local-dimensions-plans-listopts"
-                     data-region="list-display-options-panel" role="group"
-                     aria-label="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="local-dimensions-plans-list-id" data-list-toggle="id">
-                        <label class="form-check-label" for="local-dimensions-plans-list-id">
-                            {{#str}}managecompetencies_showids, local_dimensions{{/str}}
+                <div class="local-dimensions-central-plans-panel-body">
+                    <div class="local-dimensions-central-plans-optgroup" id="local-dimensions-plans-listopts"
+                         data-region="list-display-options-panel" role="group"
+                         aria-label="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
+                        <label class="local-dimensions-plans-switch">
+                            <span class="local-dimensions-plans-switch-text">{{#str}}managecompetencies_showids, local_dimensions{{/str}}</span>
+                            <input type="checkbox" class="local-dimensions-plans-switch-input"
+                                   id="local-dimensions-plans-list-id" data-list-toggle="id">
+                            <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
                         </label>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="local-dimensions-plans-list-duedate" data-list-toggle="duedate">
-                        <label class="form-check-label" for="local-dimensions-plans-list-duedate">
-                            {{#str}}central_plans_showduedate, local_dimensions{{/str}}
+                        <label class="local-dimensions-plans-switch">
+                            <span class="local-dimensions-plans-switch-text">{{#str}}central_plans_showduedate, local_dimensions{{/str}}</span>
+                            <input type="checkbox" class="local-dimensions-plans-switch-input"
+                                   id="local-dimensions-plans-list-duedate" data-list-toggle="duedate">
+                            <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
                         </label>
+                        {{#hashiddentemplates}}
+                        <label class="local-dimensions-plans-switch">
+                            <span class="local-dimensions-plans-switch-text">{{#str}}central_plans_showdisabled, local_dimensions{{/str}}</span>
+                            <input type="checkbox" class="local-dimensions-plans-switch-input"
+                                   id="local-dimensions-plans-showdisabled" data-action="toggle-disabled">
+                            <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
+                        </label>
+                        {{/hashiddentemplates}}
                     </div>
-                </div>
-                <div class="card-body border-bottom py-2 flex-grow-0">
-                    <div class="d-flex flex-wrap align-items-center gap-3" data-region="plan-toolbar">
-                        <div class="flex-grow-1">
+
+                    <div class="local-dimensions-central-plans-searchrow" data-region="plan-toolbar">
+                        <span class="local-dimensions-central-plans-search">
+                            <i class="fa fa-search" aria-hidden="true"></i>
                             <label class="visually-hidden" for="local-dimensions-plans-search">
                                 {{#str}}managetemplates_searchplaceholder, local_dimensions{{/str}}
                             </label>
-                            <input type="search" class="form-control" id="local-dimensions-plans-search"
-                                   data-region="plan-search-input" autocomplete="off"
-                                   placeholder="{{#str}}managetemplates_searchplaceholder, local_dimensions{{/str}}">
-                        </div>
+                            <input type="search" id="local-dimensions-plans-search" data-region="plan-search-input"
+                                   autocomplete="off" placeholder="{{#str}}managetemplates_searchplaceholder, local_dimensions{{/str}}">
+                        </span>
                         {{#canmanage}}
-                        <div class="ms-auto">
-                            <button type="button" class="btn btn-primary btn-sm" data-action="new-template">
-                                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}managetemplates_addtemplate, local_dimensions{{/str}}
-                            </button>
-                        </div>
+                        <button type="button" class="local-dimensions-central-plans-new" data-action="new-template">
+                            <i class="fa fa-plus" aria-hidden="true"></i>{{#str}}managetemplates_addtemplate, local_dimensions{{/str}}
+                        </button>
                         {{/canmanage}}
                     </div>
-                    <div class="mt-2" data-region="competency-filter">
-                        <div class="d-flex flex-wrap align-items-center justify-content-between">
-                            <span class="small text-muted">{{#str}}central_plans_filterbycompetencies, local_dimensions{{/str}}</span>
+
+                    <div class="local-dimensions-central-plans-filter" data-region="competency-filter">
+                        <div class="local-dimensions-central-plans-filter-top">
+                            <span class="local-dimensions-central-plans-filter-label">{{#str}}central_plans_filterbycompetencies, local_dimensions{{/str}}</span>
                             {{#filteredbycompetency}}
-                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-action="clear-competency">
-                                <i class="fa fa-times me-1" aria-hidden="true"></i>{{#str}}central_clearcompetencyfilter, local_dimensions{{/str}}
+                            <button type="button" class="local-dimensions-central-plans-filter-clear" data-action="clear-competency">
+                                <i class="fa fa-times" aria-hidden="true"></i>{{#str}}central_clearcompetencyfilter, local_dimensions{{/str}}
                             </button>
                             {{/filteredbycompetency}}
                         </div>
-                        <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                        <div class="local-dimensions-central-plans-filter-chips">
                             {{#competencyfilters}}
                             <span class="badge local-dimensions-central-chip-accent">
                                 {{label}}
@@ -183,12 +197,13 @@
                                 </button>
                             </span>
                             {{/competencyfilters}}
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-action="add-filter-competency"
+                            <button type="button" class="local-dimensions-central-plans-filter-add" data-action="add-filter-competency"
                                     aria-expanded="false" aria-controls="local-dimensions-plans-filterpicker">
-                                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}central_plans_addfilter, local_dimensions{{/str}}
+                                <i class="fa fa-plus" aria-hidden="true"></i>{{#str}}central_plans_addfilter, local_dimensions{{/str}}
                             </button>
                         </div>
-                        <div class="mt-2" id="local-dimensions-plans-filterpicker" data-region="competency-filter-picker" hidden>
+                        <div class="local-dimensions-central-plans-filter-picker" id="local-dimensions-plans-filterpicker"
+                             data-region="competency-filter-picker" hidden>
                             <label class="visually-hidden" for="local-dimensions-central-competency-search">
                                 {{#str}}central_searchcompetency, local_dimensions{{/str}}
                             </label>
@@ -197,17 +212,22 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body p-2 local-dimensions-central-plans-scroll" data-region="template-rows">
+
+                <div class="local-dimensions-central-plans-tpl-list" data-region="template-rows">
                     {{#templates}}
                     <button type="button"
-                            class="btn btn-link text-start text-decoration-none w-100 px-2 py-1 local-dimensions-central-row {{#selected}}active{{/selected}}{{^visible}} local-dimensions-central-plan-hidden{{/visible}}"
+                            class="local-dimensions-central-plans-tpl-row local-dimensions-central-row {{#selected}}active{{/selected}}{{^visible}} local-dimensions-central-plan-hidden{{/visible}}"
                             data-action="select-template" data-id="{{id}}" data-region="template-row"
-                            data-search="{{search}}">
-                        <i class="fa fa-clipboard-list me-2 text-muted" aria-hidden="true"></i>
-                        <span class="flex-grow-1 text-truncate">{{name}}</span>
-                        {{#idnumber}}<span class="local-dimensions-central-plan-id text-muted small ms-2 text-nowrap">{{idnumber}}</span>{{/idnumber}}
-                        {{#duedate}}<span class="local-dimensions-central-plan-duedate text-muted small ms-2 text-nowrap">{{duedate}}</span>{{/duedate}}
-                        <span class="badge {{#selected}}local-dimensions-central-chip-accent{{/selected}}{{^selected}}bg-light text-muted{{/selected}}">{{competencycount}}</span>
+                            data-search="{{search}}"{{#selected}} aria-current="true"{{/selected}}>
+                        <i class="fa fa-clipboard-list local-dimensions-central-plans-tpl-icon" aria-hidden="true"></i>
+                        <span class="local-dimensions-central-plans-tpl-body">
+                            <span class="local-dimensions-central-plans-tpl-nameline">
+                                <span class="local-dimensions-central-plans-tpl-name">{{name}}</span>
+                                {{#idnumber}}<span class="local-dimensions-central-plan-id local-dimensions-central-plans-tpl-id">{{idnumber}}</span>{{/idnumber}}
+                            </span>
+                            {{#duedate}}<span class="local-dimensions-central-plan-duedate local-dimensions-central-plans-tpl-due"><i class="fa fa-calendar" aria-hidden="true"></i>{{duedate}}</span>{{/duedate}}
+                        </span>
+                        <span class="local-dimensions-central-plans-tpl-count{{#selected}} is-selected{{/selected}}">{{competencycount}}</span>
                         {{^visible}}<span class="badge bg-secondary ms-1">{{#str}}hidden, tool_lp{{/str}}</span>{{/visible}}
                     </button>
                     {{/templates}}
@@ -229,166 +249,200 @@
         {{#hastemplates}}
         <div class="local-dimensions-central-plans-resizer" data-region="plans-resizer"
              role="separator" aria-orientation="vertical" tabindex="0"
-             aria-label="{{#str}}managecompetencies_resizepanels, local_dimensions{{/str}}"></div>
+             aria-label="{{#str}}managecompetencies_resizepanels, local_dimensions{{/str}}">
+            <div class="local-dimensions-central-plans-resizer-grip" aria-hidden="true"></div>
+        </div>
 
         <aside class="local-dimensions-central-plans-detail-pane" data-region="plan-detail">
-            <div class="card h-100">
-                <div class="card-header d-flex align-items-center gap-3 py-2">
-                    <h3 class="h5 mb-0 flex-grow-1">{{selectedtemplatename}}</h3>
-                    <button type="button" class="btn btn-sm btn-link p-0 ms-auto text-decoration-none" data-action="display-options"
-                            aria-expanded="true" aria-controls="local-dimensions-plans-displayopts"
-                            title="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
-                        <i class="fa fa-cog" aria-hidden="true"></i>
-                        <span class="visually-hidden">{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}</span>
-                    </button>
-                </div>
-                <div class="card-body border-bottom py-2 flex-grow-0" id="local-dimensions-plans-displayopts" data-region="display-options-panel"
-                     role="group" aria-label="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="local-dimensions-plans-disp-tax"
-                               data-display-toggle="tax">
-                        <label class="form-check-label" for="local-dimensions-plans-disp-tax">
-                            {{#str}}managecompetencies_showtaxonomy, local_dimensions{{/str}}
-                        </label>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="local-dimensions-plans-disp-path"
-                               data-display-toggle="path">
-                        <label class="form-check-label" for="local-dimensions-plans-disp-path">
-                            {{#str}}central_browseframeworks_showpaths, local_dimensions{{/str}}
-                        </label>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="local-dimensions-plans-disp-id"
-                               data-display-toggle="id">
-                        <label class="form-check-label" for="local-dimensions-plans-disp-id">
-                            {{#str}}managecompetencies_showids, local_dimensions{{/str}}
-                        </label>
-                    </div>
-                </div>
-                <div class="card-body pb-2 flex-grow-0">
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <span class="badge local-dimensions-central-chip-accent">
-                            {{#str}}central_frameworks_competencies, local_dimensions, {{competencycount}}{{/str}}
-                        </span>
-                        <span class="badge bg-light text-muted">
-                            {{#str}}central_plans_learnerplans, local_dimensions, {{selectedtemplateplancount}}{{/str}}
-                        </span>
-                        <span class="badge bg-light text-muted">
-                            {{#str}}central_plans_cohorts, local_dimensions, {{selectedtemplatecohortcount}}{{/str}}
-                        </span>
-                        {{#selectedtemplatehastype}}
-                            <span class="badge local-dimensions-central-chip-type">{{selectedtemplatetype}}</span>
-                        {{/selectedtemplatehastype}}
-                        {{#selectedtemplatehastag1}}
-                            <span class="badge bg-light text-muted">{{selectedtemplatetag1}}</span>
-                        {{/selectedtemplatehastag1}}
-                        {{#selectedtemplatehastag2}}
-                            <span class="badge bg-light text-muted">{{selectedtemplatetag2}}</span>
-                        {{/selectedtemplatehastag2}}
-                        {{#selectedtemplatehasdisplaymode}}
-                            <span class="badge local-dimensions-central-chip-type">{{selectedtemplatedisplaymode}}</span>
-                        {{/selectedtemplatehasdisplaymode}}
-                    </div>
-                    <div class="d-flex flex-wrap align-items-center column-gap-4 row-gap-1 small mb-0">
-                        <span>
-                            <span class="text-muted">{{#str}}central_plans_enabled, local_dimensions{{/str}}:</span>
-                            {{#selectedtemplatevisible}}<span class="badge bg-success">{{#str}}yes{{/str}}</span>{{/selectedtemplatevisible}}
-                            {{^selectedtemplatevisible}}<span class="badge bg-secondary">{{#str}}no{{/str}}</span>{{/selectedtemplatevisible}}
-                        </span>
-                        <span>
-                            <span class="text-muted">{{#str}}managetemplates_duedate, local_dimensions{{/str}}:</span>
-                            {{#selectedtemplatehasduedate}}<strong>{{selectedtemplateduedate}}</strong>{{/selectedtemplatehasduedate}}
-                            {{^selectedtemplatehasduedate}}<span class="text-muted">{{#str}}managetemplates_duedate_none, local_dimensions{{/str}}</span>{{/selectedtemplatehasduedate}}
-                        </span>
-                    </div>
-                    {{#selectedtemplatehasdescription}}
-                        <div class="mt-2 small text-body local-dimensions-central-plans-description">
-                            {{#selectedtemplatedescription}}
-                                {{> local_dimensions/collapsible_description }}
-                            {{/selectedtemplatedescription}}
-                        </div>
-                    {{/selectedtemplatehasdescription}}
-                </div>
-                <div class="card-body py-1 local-dimensions-central-plans-scroll" data-region="competency-list">
-                    {{#hascompetencies}}
-                    <ul class="list-unstyled mb-0" data-region="competency-items">
-                        {{#competencies}}
-                        <li class="d-flex align-items-center py-1 border-bottom" data-competency="{{id}}">
-                            <span class="flex-grow-1">
-                                <span data-region="comp-name">{{shortname}}</span>
-                                {{#taxonomy}}
-                                <span class="local-dimensions-central-tax small text-muted ms-1">{{taxonomy}}</span>
-                                {{/taxonomy}}
-                                {{#idnumber}}
-                                <span class="local-dimensions-central-id font-monospace small text-muted ms-1">{{idnumber}}</span>
-                                {{/idnumber}}
-                                {{#path}}
-                                <span class="local-dimensions-central-path small text-muted">{{path}}</span>
-                                {{/path}}
-                            </span>
-                            {{#frameworktag}}
-                            <span class="badge bg-light text-muted me-2">{{frameworktag}}</span>
-                            {{/frameworktag}}
-                            {{#canmanage}}
-                            <div class="dropdown">
-                                {{! Both data attributes: Moodle 4.5 is Bootstrap 4 (data-toggle), 5.x is BS5 (data-bs-toggle). }}
-                                <button type="button" class="btn btn-sm btn-link p-1 text-body"
-                                        data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="false"
-                                        aria-label="{{#str}}actions{{/str}}: {{shortname}}">
-                                    <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-right dropdown-menu-end">
-                                    <li>
-                                        <button type="button" class="dropdown-item" data-action="edit-competency"
-                                                data-id="{{id}}" data-frameworkid="{{frameworkid}}">
-                                            <i class="fa fa-pencil me-2" aria-hidden="true"></i>{{#str}}editcompetency, tool_lp{{/str}}
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button type="button" class="dropdown-item" data-action="move-competency-up"
-                                                data-id="{{id}}"{{#first}} disabled{{/first}}>
-                                            <i class="fa fa-arrow-up me-2" aria-hidden="true"></i>{{#str}}moveup{{/str}}
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button type="button" class="dropdown-item" data-action="move-competency-down"
-                                                data-id="{{id}}"{{#last}} disabled{{/last}}>
-                                            <i class="fa fa-arrow-down me-2" aria-hidden="true"></i>{{#str}}movedown{{/str}}
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button type="button" class="dropdown-item" data-action="move-competency-to"
-                                                data-id="{{id}}">
-                                            <i class="fa fa-arrows-v me-2" aria-hidden="true"></i>{{#str}}central_plans_moveto, local_dimensions{{/str}}
-                                        </button>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <button type="button" class="dropdown-item text-danger" data-action="remove-competency"
-                                                data-id="{{id}}" data-name="{{shortname}}">
-                                            <i class="fa fa-times me-2" aria-hidden="true"></i>{{#str}}central_removecompetency, local_dimensions{{/str}}
-                                        </button>
-                                    </li>
-                                </ul>
+            <div class="local-dimensions-central-plans-detail">
+                <div class="local-dimensions-central-plans-detail-header" data-region="plan-detail-header"
+                     style="--ld-plans-hdr-0: {{headerbgstop0}}; --ld-plans-hdr-48: {{headerbgstop48}}; --ld-plans-hdr-100: {{headerbgstop100}}; color: {{headertextcolor}};">
+                    <div class="local-dimensions-central-plans-detail-glow" aria-hidden="true"
+                         style="background: radial-gradient(120% 95% at 8% -12%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%);"></div>
+                    <div class="local-dimensions-central-plans-detail-header-inner">
+                        <div class="local-dimensions-central-plans-detail-header-top">
+                            <div class="local-dimensions-central-plans-detail-heading">
+                                <div class="local-dimensions-central-plans-detail-titlerow">
+                                    <h2 class="local-dimensions-central-plans-detail-title">{{selectedtemplatename}}</h2>
+                                    {{#selectedtemplatevisible}}
+                                    <span class="local-dimensions-central-plans-status is-enabled">{{#str}}central_plans_enabled, local_dimensions{{/str}}</span>
+                                    {{/selectedtemplatevisible}}
+                                    {{^selectedtemplatevisible}}
+                                    <span class="local-dimensions-central-plans-status is-disabled">{{#str}}hidden, tool_lp{{/str}}</span>
+                                    {{/selectedtemplatevisible}}
+                                </div>
+                                <div class="local-dimensions-central-plans-detail-counts">
+                                    <span class="local-dimensions-central-plans-count">
+                                        {{#str}}central_plans_countcompetencies, local_dimensions{{/str}}
+                                        <span class="local-dimensions-central-plans-count-pill">{{competencycount}}</span>
+                                    </span>
+                                    <span class="local-dimensions-central-plans-count-sep" aria-hidden="true">•</span>
+                                    <span class="local-dimensions-central-plans-count">
+                                        {{#str}}central_plans_countplans, local_dimensions{{/str}}
+                                        <span class="local-dimensions-central-plans-count-pill">{{selectedtemplateplancount}}</span>
+                                    </span>
+                                    <span class="local-dimensions-central-plans-count-sep" aria-hidden="true">•</span>
+                                    <span class="local-dimensions-central-plans-count">
+                                        {{#str}}central_plans_countcohorts, local_dimensions{{/str}}
+                                        <span class="local-dimensions-central-plans-count-pill">{{selectedtemplatecohortcount}}</span>
+                                    </span>
+                                </div>
                             </div>
-                            {{! Rendered after the row content (the grip's aria-label embeds the competency
-                                name, and Behat name-based clicks match the first document-order hit); the
-                                flex order in CSS still paints it at the left edge. }}
-                            <button type="button" class="btn btn-link p-0 local-dimensions-central-plan-drag"
-                                    data-region="drag-handle" data-action="move-competency-to"
-                                    title="{{#str}}central_plans_moveto, local_dimensions{{/str}}"
-                                    aria-label="{{#str}}central_plans_moveto, local_dimensions{{/str}}: {{shortname}}">
-                                <i class="fa fa-grip-vertical" aria-hidden="true"></i>
+                            <button type="button" class="local-dimensions-central-plans-gear local-dimensions-central-plans-gear-onhead"
+                                    data-action="display-options" aria-expanded="true" aria-controls="local-dimensions-plans-displayopts"
+                                    title="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
+                                <i class="fa fa-cog" aria-hidden="true"></i>
+                                <span class="visually-hidden">{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}</span>
                             </button>
-                            {{/canmanage}}
-                        </li>
-                        {{/competencies}}
-                    </ul>
-                    {{/hascompetencies}}
-                    {{^hascompetencies}}
-                    <div class="alert alert-warning mb-0" role="status">{{#str}}nocompetencies, local_dimensions{{/str}}</div>
-                    {{/hascompetencies}}
+                        </div>
+
+                        <div class="local-dimensions-central-plans-optpanel" id="local-dimensions-plans-displayopts"
+                             data-region="display-options-panel" role="group"
+                             aria-label="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
+                            <label class="local-dimensions-plans-switch local-dimensions-plans-switch-dark">
+                                <span class="local-dimensions-plans-switch-text">{{#str}}managecompetencies_showtaxonomy, local_dimensions{{/str}}</span>
+                                <input type="checkbox" class="local-dimensions-plans-switch-input"
+                                       id="local-dimensions-plans-disp-tax" data-display-toggle="tax">
+                                <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
+                            </label>
+                            <label class="local-dimensions-plans-switch local-dimensions-plans-switch-dark">
+                                <span class="local-dimensions-plans-switch-text">{{#str}}central_browseframeworks_showpaths, local_dimensions{{/str}}</span>
+                                <input type="checkbox" class="local-dimensions-plans-switch-input"
+                                       id="local-dimensions-plans-disp-path" data-display-toggle="path">
+                                <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
+                            </label>
+                            <label class="local-dimensions-plans-switch local-dimensions-plans-switch-dark">
+                                <span class="local-dimensions-plans-switch-text">{{#str}}managecompetencies_showids, local_dimensions{{/str}}</span>
+                                <input type="checkbox" class="local-dimensions-plans-switch-input"
+                                       id="local-dimensions-plans-disp-id" data-display-toggle="id">
+                                <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
+                            </label>
+                        </div>
+
+                        <div class="local-dimensions-central-plans-chips">
+                            {{#selectedtemplatehasdisplaymode}}
+                            <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-accent">
+                                <i class="fa fa-eye" aria-hidden="true"></i>{{#str}}central_plans_displayformat, local_dimensions, {{selectedtemplatedisplaymode}}{{/str}}
+                            </span>
+                            {{/selectedtemplatehasdisplaymode}}
+                            {{#selectedtemplatehastype}}
+                            <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass">
+                                <i class="fa fa-tag" aria-hidden="true"></i>{{#str}}central_plans_labelchip, local_dimensions, {{selectedtemplatetype}}{{/str}}
+                            </span>
+                            {{/selectedtemplatehastype}}
+                            {{#selectedtemplatehasduedate}}
+                            <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass">
+                                <i class="fa fa-calendar" aria-hidden="true"></i>{{#str}}managetemplates_duedate, local_dimensions{{/str}}: {{selectedtemplateduedate}}
+                            </span>
+                            {{/selectedtemplatehasduedate}}
+                            {{#selectedtemplatehastag1}}
+                            <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass">{{selectedtemplatetag1}}</span>
+                            {{/selectedtemplatehastag1}}
+                            {{#selectedtemplatehastag2}}
+                            <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass">{{selectedtemplatetag2}}</span>
+                            {{/selectedtemplatehastag2}}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="local-dimensions-central-plans-detail-body">
+                    {{#selectedtemplatehasdescription}}
+                    <div class="local-dimensions-central-plans-description">
+                        {{#selectedtemplatedescription}}
+                            {{> local_dimensions/collapsible_description }}
+                        {{/selectedtemplatedescription}}
+                    </div>
+                    {{/selectedtemplatehasdescription}}
+
+                    <div class="local-dimensions-central-plans-list-header">
+                        <span class="local-dimensions-central-plans-list-gripspace" aria-hidden="true"></span>
+                        <span class="local-dimensions-central-plans-list-title">
+                            {{#selectedtemplatehastype}}{{#str}}central_plans_competencylistlabelled, local_dimensions, {{selectedtemplatetype}}{{/str}}{{/selectedtemplatehastype}}{{^selectedtemplatehastype}}{{#str}}central_plans_competencylist, local_dimensions{{/str}}{{/selectedtemplatehastype}}
+                        </span>
+                        <span class="local-dimensions-central-plans-list-col">{{#str}}central_plans_colstructure, local_dimensions{{/str}}</span>
+                        <span class="local-dimensions-central-plans-list-col local-dimensions-central-plans-list-col-actions">{{#str}}actions{{/str}}</span>
+                    </div>
+
+                    <div class="local-dimensions-central-plans-detail-list" data-region="competency-list">
+                        {{#hascompetencies}}
+                        <ul class="local-dimensions-central-plans-modules" data-region="competency-items">
+                            {{#competencies}}
+                            <li class="local-dimensions-central-plans-module" data-competency="{{id}}">
+                                <div class="local-dimensions-central-plans-module-main">
+                                    <div class="local-dimensions-central-plans-module-head">
+                                        <span class="local-dimensions-central-plans-module-name" data-region="comp-name">{{shortname}}</span>
+                                        {{#taxonomy}}<span class="local-dimensions-central-tax local-dimensions-central-plans-module-tax">– {{taxonomy}}</span>{{/taxonomy}}
+                                        {{#idnumber}}<span class="local-dimensions-central-id local-dimensions-central-plans-module-id">{{idnumber}}</span>{{/idnumber}}
+                                    </div>
+                                    {{#path}}
+                                    <div class="local-dimensions-central-path local-dimensions-central-plans-module-path">
+                                        <i class="fa fa-folder-o" aria-hidden="true"></i>{{path}}
+                                    </div>
+                                    {{/path}}
+                                </div>
+                                {{#frameworktag}}
+                                <span class="local-dimensions-central-plans-module-struct">{{frameworktag}}</span>
+                                {{/frameworktag}}
+                                {{#canmanage}}
+                                <div class="dropdown local-dimensions-central-plans-module-actions">
+                                    {{! Both data attributes: Moodle 4.5 is Bootstrap 4 (data-toggle), 5.x is BS5 (data-bs-toggle). }}
+                                    <button type="button" class="local-dimensions-central-plans-module-menu"
+                                            data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="false"
+                                            aria-label="{{#str}}actions{{/str}}: {{shortname}}">
+                                        <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-right dropdown-menu-end">
+                                        <li>
+                                            <button type="button" class="dropdown-item" data-action="edit-competency"
+                                                    data-id="{{id}}" data-frameworkid="{{frameworkid}}">
+                                                <i class="fa fa-pencil me-2" aria-hidden="true"></i>{{#str}}editcompetency, tool_lp{{/str}}
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="dropdown-item" data-action="move-competency-up"
+                                                    data-id="{{id}}"{{#first}} disabled{{/first}}>
+                                                <i class="fa fa-arrow-up me-2" aria-hidden="true"></i>{{#str}}moveup{{/str}}
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="dropdown-item" data-action="move-competency-down"
+                                                    data-id="{{id}}"{{#last}} disabled{{/last}}>
+                                                <i class="fa fa-arrow-down me-2" aria-hidden="true"></i>{{#str}}movedown{{/str}}
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="dropdown-item" data-action="move-competency-to"
+                                                    data-id="{{id}}">
+                                                <i class="fa fa-arrows-v me-2" aria-hidden="true"></i>{{#str}}central_plans_moveto, local_dimensions{{/str}}
+                                            </button>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <button type="button" class="dropdown-item text-danger" data-action="remove-competency"
+                                                    data-id="{{id}}" data-name="{{shortname}}">
+                                                <i class="fa fa-times me-2" aria-hidden="true"></i>{{#str}}central_removecompetency, local_dimensions{{/str}}
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                {{! Rendered after the row content (the grip's aria-label embeds the competency
+                                    name, and Behat name-based clicks match the first document-order hit); the
+                                    flex order in CSS still paints it at the left edge. }}
+                                <button type="button" class="btn btn-link p-0 local-dimensions-central-plan-drag"
+                                        data-region="drag-handle" data-action="move-competency-to"
+                                        title="{{#str}}central_plans_moveto, local_dimensions{{/str}}"
+                                        aria-label="{{#str}}central_plans_moveto, local_dimensions{{/str}}: {{shortname}}">
+                                    <i class="fa fa-grip-vertical" aria-hidden="true"></i>
+                                </button>
+                                {{/canmanage}}
+                            </li>
+                            {{/competencies}}
+                        </ul>
+                        {{/hascompetencies}}
+                        {{^hascompetencies}}
+                        <div class="alert alert-warning mb-0" role="status">{{#str}}nocompetencies, local_dimensions{{/str}}</div>
+                        {{/hascompetencies}}
+                    </div>
                 </div>
             </div>
             {{#canmanage}}
