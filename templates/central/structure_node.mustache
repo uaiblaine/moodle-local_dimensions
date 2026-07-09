@@ -27,7 +27,7 @@
 
     Context variables required:
     * id, parentid (int) · shortname, idnumber, taxonomy, scale, description (string)
-    * type, tag1, tag2 (string) · coursecount (int) · activitycount (int) · templatecount (int)
+    * type, tag1, tag2, bgcolor, textcolor (string) · coursecount (int) · activitycount (int) · templatecount (int)
     * depth, indent (int) · haschildren (bool) · canmanage (bool)
     * ruletype, ruleconfig (string|null) · ruleoutcome (int) · rulelabel (string)
 
@@ -43,6 +43,8 @@
         "type": "Module",
         "tag1": "Year 1",
         "tag2": "Intermediate",
+        "bgcolor": "#2274c6",
+        "textcolor": "#ffffff",
         "coursecount": 3,
         "activitycount": 5,
         "templatecount": 2,
@@ -81,6 +83,8 @@
                     data-type="{{type}}"
                     data-tag1="{{tag1}}"
                     data-tag2="{{tag2}}"
+                    data-bgcolor="{{bgcolor}}"
+                    data-textcolor="{{textcolor}}"
                     data-courses="{{coursecount}}"
                     data-activities="{{activitycount}}"
                     data-templates="{{templatecount}}"
