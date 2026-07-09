@@ -3857,12 +3857,15 @@
     gap: 10px;
 }
 
+/* The search box reserves 220px before it will shrink, so the "New template" button is
+   pushed onto its own line once the master pane is ~400px or narrower (rather than only
+   near the 300px minimum). Raise/lower this to move that wrap point. */
 .local-dimensions-central-plans-search {
-    flex: 1 1 120px;
+    flex: 1 1 220px;
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    min-width: 120px;
+    min-width: 220px;
     padding: 0 13px;
     border: 1px solid #ced4da;
     border-radius: 10px;
