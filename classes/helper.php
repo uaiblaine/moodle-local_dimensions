@@ -1954,7 +1954,8 @@ class helper {
      * @param \context $context The resolved page context (system or course category).
      * @param bool $includehidden Whether to include hidden frameworks (default visible-only).
      * @return array List of ['id' => int, 'shortname' => string, 'idnumber' => string,
-     *               'competencycount' => int, 'visible' => bool, 'deletable' => bool, 'canmanage' => bool].
+     *               'description' => string, 'competencycount' => int, 'visible' => bool,
+     *               'deletable' => bool, 'canmanage' => bool].
      */
     public static function framework_rows(\context $context, bool $includehidden = false): array {
         $rows = [];
@@ -1964,10 +1965,18 @@ class helper {
             }
             $id = (int) $framework->get('id');
             $competencyids = competency::get_ids_by_frameworkid($id);
+            // Plain, single-line description for the card (the template truncates it with an
+            // ellipsis and keeps the full text in a title tooltip).
+            $description = content_to_text(
+                (string) $framework->get('description'),
+                (int) $framework->get('descriptionformat')
+            );
+            $description = trim(preg_replace('/\s+/', ' ', $description));
             $rows[] = [
                 'id' => $id,
                 'shortname' => format_string($framework->get('shortname')),
                 'idnumber' => s($framework->get('idnumber')),
+                'description' => shorten_text($description, 300),
                 'competencycount' => count($competencyids),
                 'visible' => (bool) $framework->get('visible'),
                 'deletable' => competency::can_all_be_deleted($competencyids),

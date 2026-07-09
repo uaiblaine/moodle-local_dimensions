@@ -17,14 +17,19 @@
 {{!
     @template local_dimensions/central/frameworks
 
-    Frameworks tab: list frameworks in the resolved context with native management actions.
-    The System / Course category selector is rendered once at page level (contextbar).
+    Structures (frameworks) tab: a single-column list of structure cards in the resolved
+    context. A standalone pill toggle (shown only when hidden structures exist) reveals the
+    hidden ones; a sub-header shows the listed count (with a "· N hidden" suffix) and the
+    New / Import / Export actions. Each card opens the structure in the Competencies tab and
+    carries an actions menu (edit, duplicate, hide/show, export, delete). The System / Course
+    category selector is rendered once at page level (contextbar).
 
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · contextid (int) · needscategoryselection (bool)
-    * hasframeworks (bool) · frameworkcount (int) · canmanage (int) · canexport (int) · showhidden (bool)
-    * hashiddenframeworks (bool)
-    * frameworks (array) {id, shortname, idnumber, competencycount, visible, deletable, canmanage}
+    * hasframeworks (bool) · frameworkcount (int) · hasexcluded (bool) · excludedcount (int)
+    * canmanage (int) · canexport (int) · showhidden (bool)
+    * showhiddentoggle (object|null) {id, label, action, checked}
+    * frameworks (array) {id, shortname, idnumber, description, competencycount, visible, deletable, canmanage}
 
     Example context (json):
     {
@@ -34,13 +39,21 @@
         "needscategoryselection": false,
         "hasframeworks": true,
         "frameworkcount": 1,
+        "hasexcluded": true,
+        "excludedcount": 1,
         "canmanage": 1,
         "canexport": 1,
         "showhidden": false,
-        "hashiddenframeworks": true,
+        "showhiddentoggle": {
+            "id": "local-dimensions-frameworks-showhidden",
+            "label": "Show hidden structures",
+            "action": "toggle-hidden",
+            "checked": false
+        },
         "frameworks": [
-            {"id": 5, "shortname": "Core skills", "idnumber": "CORE", "competencycount": 12,
-             "visible": true, "deletable": false, "canmanage": true}
+            {"id": 5, "shortname": "Core skills", "idnumber": "CORE",
+             "description": "Baseline competencies for the current cohort.",
+             "competencycount": 12, "visible": true, "deletable": false, "canmanage": true}
         ]
     }
 }}
@@ -53,30 +66,25 @@
     {{/needscategoryselection}}
 
     {{^needscategoryselection}}
-    {{#hashiddenframeworks}}
-    <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="local-dimensions-frameworks-showhidden"
-               data-action="toggle-hidden"{{#showhidden}} checked{{/showhidden}}>
-        <label class="form-check-label" for="local-dimensions-frameworks-showhidden">
-            {{#str}}managecompetencies_showhiddenframeworks, local_dimensions{{/str}}
-        </label>
-    </div>
-    {{/hashiddenframeworks}}
-    <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
-        <div class="text-muted small">
-            {{#str}}central_frameworks_items, local_dimensions{{/str}}: <strong>{{frameworkcount}}</strong>
-        </div>
+    {{#showhiddentoggle}}
+    {{> local_dimensions/central/showhidden_toggle }}
+    {{/showhiddentoggle}}
+
+    <div class="local-dimensions-central-fwtoolbar">
+        <span class="local-dimensions-central-fwcount">
+            {{#str}}central_frameworks_listed, local_dimensions{{/str}}: <strong>{{frameworkcount}}</strong>{{#hasexcluded}}<span class="local-dimensions-central-fwexcluded"> · {{#str}}central_frameworks_hiddencount, local_dimensions, {{excludedcount}}{{/str}}</span>{{/hasexcluded}}
+        </span>
         {{#canmanage}}
-        <div class="d-flex flex-wrap gap-2 ms-auto">
-            <button type="button" class="btn btn-primary btn-sm" data-action="new">
-                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}central_frameworks_new, local_dimensions{{/str}}
+        <div class="local-dimensions-central-fwactions">
+            <button type="button" class="local-dimensions-central-plans-new" data-action="new">
+                <i class="fa fa-plus" aria-hidden="true"></i>{{#str}}central_frameworks_new, local_dimensions{{/str}}
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="import">
-                <i class="fa fa-upload me-1" aria-hidden="true"></i>{{#str}}central_frameworks_import, local_dimensions{{/str}}
+            <button type="button" class="local-dimensions-central-btn-outline" data-action="import">
+                <i class="fa fa-upload" aria-hidden="true"></i>{{#str}}central_frameworks_import, local_dimensions{{/str}}
             </button>
             {{#canexport}}
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="export">
-                <i class="fa fa-download me-1" aria-hidden="true"></i>{{#str}}central_frameworks_export, local_dimensions{{/str}}
+            <button type="button" class="local-dimensions-central-btn-outline" data-action="export">
+                <i class="fa fa-download" aria-hidden="true"></i>{{#str}}central_frameworks_export, local_dimensions{{/str}}
             </button>
             {{/canexport}}
         </div>
@@ -84,13 +92,11 @@
     </div>
 
     {{#hasframeworks}}
-    <div class="card">
-        <div class="card-body p-2" data-region="framework-rows">
-            {{#frameworks}}
-            {{> local_dimensions/central/frameworks_row }}
-            {{/frameworks}}
-        </div>
-    </div>
+    <ul class="local-dimensions-central-fwlist" data-region="framework-rows">
+        {{#frameworks}}
+        {{> local_dimensions/central/frameworks_row }}
+        {{/frameworks}}
+    </ul>
     {{/hasframeworks}}
 
     {{^hasframeworks}}

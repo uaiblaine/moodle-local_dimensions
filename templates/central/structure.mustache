@@ -34,6 +34,7 @@
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · selectedframeworkid (int) · showhidden (bool)
     * hashiddenframeworks (bool)
+    * showhiddentoggle (object|null) {id, label, action, checked} · standalone "show hidden" pill
     * rulesmodulesjson (string json) · courseoutcomesjson (string json) · moduleoutcomesjson (string json)
     * needscategoryselection (bool)
     * hasframeworks (bool) · frameworks (array) {id, name, idnumber, selected, competencycount, hidden}
@@ -50,6 +51,12 @@
         "selectedframeworkid": 5,
         "showhidden": false,
         "hashiddenframeworks": true,
+        "showhiddentoggle": {
+            "id": "local-dimensions-structure-showhidden",
+            "label": "Show hidden structures",
+            "action": "toggle-hidden",
+            "checked": false
+        },
         "rulesmodulesjson": "[]",
         "courseoutcomesjson": "[]",
         "moduleoutcomesjson": "[]",
@@ -93,15 +100,9 @@
 
     {{^needscategoryselection}}
     {{#hasframeworks}}
-    {{#hashiddenframeworks}}
-    <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="local-dimensions-structure-showhidden"
-               data-action="toggle-hidden"{{#showhidden}} checked{{/showhidden}}>
-        <label class="form-check-label" for="local-dimensions-structure-showhidden">
-            {{#str}}managecompetencies_showhiddenframeworks, local_dimensions{{/str}}
-        </label>
-    </div>
-    {{/hashiddenframeworks}}
+    {{#showhiddentoggle}}
+    {{> local_dimensions/central/showhidden_toggle }}
+    {{/showhiddentoggle}}
 
     <div class="local-dimensions-central-structure-subheader">
         <div class="local-dimensions-central-structure-subheader-main">
