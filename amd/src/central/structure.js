@@ -39,7 +39,7 @@ import {open as openRelatedModal} from 'local_dimensions/central/related_compete
 import {getString} from 'core/str';
 import {add as addToast} from 'core/toast';
 import CollapsibleDescription from 'local_dimensions/collapsible_description';
-import {initPaneResizer} from 'local_dimensions/central/pane_resizer';
+import {initMasterResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import * as ActionFooter from 'local_dimensions/central/action_footer';
 
@@ -49,6 +49,7 @@ const PAGE_SIZE = 25;
 const SELECTORS = {
     region: '[data-region="structure"]',
     frameworkSelect: '[data-region="framework-select"]',
+    treePane: '[data-region="tree-pane"]',
     tree: '[data-region="competency-tree"]',
     rootLoadMore: '[data-region="root-loadmore"]',
     toggle: '[data-action="toggle"]',
@@ -64,16 +65,24 @@ const SELECTORS = {
     detailEmpty: '[data-region="detail-empty"]',
     detailContent: '[data-region="detail-content"]',
     detailTitle: '[data-region="detail-title"]',
-    detailIdnumber: '[data-region="detail-idnumber"]',
     detailTaxonomy: '[data-region="detail-taxonomy"]',
+    detailRule: '[data-region="detail-rule"]',
+    detailRuleWrap: '[data-region="detail-rule-wrap"]',
+    detailLabel: '[data-region="detail-label"]',
+    detailLabelWrap: '[data-region="detail-label-wrap"]',
+    detailIdnumber: '[data-region="detail-idnumber"]',
+    detailIdnumberWrap: '[data-region="detail-idnumber-wrap"]',
     detailScale: '[data-region="detail-scale"]',
     detailScaleWrap: '[data-region="detail-scale-wrap"]',
+    detailTag1: '[data-region="detail-tag1"]',
+    detailTag1Wrap: '[data-region="detail-tag1-wrap"]',
+    detailTag2: '[data-region="detail-tag2"]',
+    detailTag2Wrap: '[data-region="detail-tag2-wrap"]',
     detailDescription: '[data-region="detail-description"]',
     detailDescriptionWrap: '[data-region="detail-description-wrap"]',
     detailCourses: '[data-region="detail-courses"]',
     detailActivities: '[data-region="detail-activities"]',
     detailPlans: '[data-region="detail-plans"]',
-    detailRule: '[data-region="detail-rule"]',
     nodeDragHandle: '[data-region="node-drag-handle"]',
     showUsage: '[data-action="show-usage"]',
     addBtn: '[data-action="add"]',
@@ -88,7 +97,6 @@ const SELECTORS = {
     childLoadMore: '[data-region="child-loadmore"]',
     structureBody: '[data-region="structure-body"]',
     structureResizer: '[data-region="structure-resizer"]',
-    detailPane: '[data-region="detail-pane"]',
 };
 
 /** @type {HTMLElement|null} */
@@ -173,24 +181,56 @@ const renderNodes = async(container, items) => {
 };
 
 /**
- * Build a "load more" link that runs the given loader on click.
+ * Build a "load more" control that runs the given loader on click: a solid accent button
+ * with a "+N" count of the next page, and a "Showing N of T" hint beside it.
  *
  * @param {Function} loader Async loader to run.
+ * @param {Number} shown Items already shown at this level.
+ * @param {Number} total Total items at this level across all pages.
  * @return {HTMLElement}
  */
-const makeLoadMore = (loader) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'btn btn-sm btn-link';
-    btn.dataset.region = 'child-loadmore';
+const makeLoadMore = (loader, shown, total) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'local-dimensions-central-structure-loadmore-wrap';
+    wrap.dataset.region = 'child-loadmore';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'local-dimensions-central-structure-loadmore';
+
+    const icon = document.createElement('i');
+    icon.className = 'fa fa-arrow-down';
+    icon.setAttribute('aria-hidden', 'true');
+    button.appendChild(icon);
+
+    const label = document.createElement('span');
+    button.appendChild(label);
     if (loadMoreLabelPromise) {
-        loadMoreLabelPromise.then((label) => {
-            btn.textContent = label;
-            return label;
+        loadMoreLabelPromise.then((text) => {
+            label.textContent = text;
+            return text;
         }).catch(notifyError);
     }
-    btn.addEventListener('click', () => loader().catch(notifyError));
-    return btn;
+
+    const count = document.createElement('span');
+    count.className = 'local-dimensions-central-structure-loadmore-count';
+    count.textContent = '+' + Math.min(PAGE_SIZE, Math.max(0, total - shown));
+    button.appendChild(count);
+
+    button.addEventListener('click', () => loader().catch(notifyError));
+    wrap.appendChild(button);
+
+    const hint = document.createElement('span');
+    hint.className = 'local-dimensions-central-structure-loadmore-hint';
+    getString('central_structure_loadmoreshown', 'local_dimensions', {shown: shown, total: total})
+        .then((text) => {
+            hint.textContent = text;
+            return text;
+        })
+        .catch(notifyError);
+    wrap.appendChild(hint);
+
+    return wrap;
 };
 
 /**
@@ -212,7 +252,13 @@ const loadChildPage = async(container, parentid) => {
     const newoffset = offset + response.items.length;
     container.dataset.offset = String(newoffset);
     if (newoffset < response.total && response.items.length > 0) {
-        container.appendChild(makeLoadMore(() => loadChildPage(container, parentid)));
+        const loadmore = makeLoadMore(() => loadChildPage(container, parentid), newoffset, response.total);
+        // Indent the control to the child level (aligns it under the rows at this depth).
+        const inner = container.querySelector('.local-dimensions-central-structure-node-inner');
+        if (inner && inner.style.paddingLeft) {
+            loadmore.style.paddingLeft = 'calc(10px + ' + inner.style.paddingLeft + ')';
+        }
+        container.appendChild(loadmore);
     }
 };
 
@@ -429,6 +475,105 @@ const revealNode = async(region, targetid, pathids) => {
 };
 
 /**
+ * Set a header chip's value and hide its wrapper when the value is empty.
+ *
+ * @param {HTMLElement} content The detail-content container.
+ * @param {String} valueselector Selector for the value span.
+ * @param {String} wrapselector Selector for the chip wrapper to hide/show.
+ * @param {String} value The value; an empty string hides the chip.
+ */
+const setChip = (content, valueselector, wrapselector, value) => {
+    const target = content.querySelector(valueselector);
+    const wrap = content.querySelector(wrapselector);
+    if (target) {
+        target.textContent = value;
+    }
+    if (wrap) {
+        wrap.hidden = value === '';
+    }
+};
+
+/**
+ * Apply async-composed chip text, but only while the row is still selected (guards rapid switches).
+ *
+ * @param {HTMLElement} row The selected row.
+ * @param {HTMLElement|null} target The value span to fill.
+ * @param {String} text The composed chip text.
+ * @return {null}
+ */
+const applyChipText = (row, target, text) => {
+    if (target && row.classList.contains('active')) {
+        target.textContent = text;
+    }
+    return null;
+};
+
+/**
+ * Populate the header metadata chips from the selected row, hiding each empty one.
+ *
+ * @param {HTMLElement} content The detail-content container.
+ * @param {HTMLElement} row The selected tree row.
+ */
+const populateDetailChips = (content, row) => {
+    setChip(content, SELECTORS.detailIdnumber, SELECTORS.detailIdnumberWrap, row.dataset.idnumber || '');
+    setChip(content, SELECTORS.detailScale, SELECTORS.detailScaleWrap, row.dataset.scale || '');
+    setChip(content, SELECTORS.detailTag1, SELECTORS.detailTag1Wrap, row.dataset.tag1 || '');
+    setChip(content, SELECTORS.detailTag2, SELECTORS.detailTag2Wrap, row.dataset.tag2 || '');
+
+    // Rule chip (accent) — only a node WITH children AND a rule shows it; a leaf never does.
+    const hasrule = row.dataset.haschildren === '1' && (row.dataset.ruletype || '') !== '';
+    content.querySelector(SELECTORS.detailRuleWrap).hidden = !hasrule;
+    if (hasrule) {
+        getString('central_structure_rule', 'local_dimensions', row.dataset.rulelabel || '')
+            .then((label) => applyChipText(row, content.querySelector(SELECTORS.detailRule), label))
+            .catch(notifyError);
+    }
+
+    // Competency-label chip = the Type custom field (mirrors the Plans "label" chip).
+    const type = row.dataset.type || '';
+    content.querySelector(SELECTORS.detailLabelWrap).hidden = type === '';
+    if (type !== '') {
+        getString('central_plans_labelchip', 'local_dimensions', type)
+            .then((label) => applyChipText(row, content.querySelector(SELECTORS.detailLabel), label))
+            .catch(notifyError);
+    }
+};
+
+/**
+ * Populate the metric counts and the collapsible description from the selected row.
+ *
+ * @param {HTMLElement} content The detail-content container.
+ * @param {HTMLElement} row The selected tree row.
+ */
+const populateDetailBody = (content, row) => {
+    content.querySelector(SELECTORS.detailCourses).textContent = row.dataset.courses || '0';
+    content.querySelector(SELECTORS.detailActivities).textContent = row.dataset.activities || '0';
+    content.querySelector(SELECTORS.detailPlans).textContent = row.dataset.templates || '0';
+
+    const description = row.dataset.description || '';
+    const descwrap = content.querySelector(SELECTORS.detailDescriptionWrap);
+    const desctarget = content.querySelector(SELECTORS.detailDescription);
+    descwrap.hidden = description === '';
+    desctarget.innerHTML = '';
+    if (description === '') {
+        return;
+    }
+    // The description is trusted server-rendered HTML (format_text, round-tripped through the
+    // data-description attribute) in the reusable collapsible container. The render is async,
+    // so only inject when this row is still the active selection (guards rapid row switches).
+    Templates.renderForPromise('local_dimensions/collapsible_description', {
+        html: description,
+        id: 'local-dimensions-structure-desc-' + row.dataset.id,
+    }).then(({html}) => {
+        if (row.classList.contains('active')) {
+            desctarget.innerHTML = html;
+            CollapsibleDescription.refresh(desctarget);
+        }
+        return null;
+    }).catch(Notification.exception);
+};
+
+/**
  * Populate the detail pane from the selected tree row.
  *
  * @param {HTMLElement} region
@@ -436,54 +581,28 @@ const revealNode = async(region, targetid, pathids) => {
  */
 const selectRow = (region, row) => {
     activeRow = row;
-    region.querySelectorAll(SELECTORS.row).forEach((node) => node.classList.remove('active'));
+    region.querySelectorAll(SELECTORS.row).forEach((node) => {
+        node.classList.remove('active');
+        node.removeAttribute('aria-current');
+    });
     row.classList.add('active');
+    // Expose the selection to assistive tech (the visual cue is a border + bold name).
+    row.setAttribute('aria-current', 'true');
+    // Mark the whole node row so the selection border and background span its full width.
+    region.querySelectorAll('.local-dimensions-central-node-active')
+        .forEach((node) => node.classList.remove('local-dimensions-central-node-active'));
+    const nodewrap = row.closest(SELECTORS.node);
+    if (nodewrap) {
+        nodewrap.classList.add('local-dimensions-central-node-active');
+    }
 
     region.querySelector(SELECTORS.detailEmpty).hidden = true;
     const content = region.querySelector(SELECTORS.detailContent);
     content.hidden = false;
     content.querySelector(SELECTORS.detailTitle).textContent = row.dataset.name || '';
-    content.querySelector(SELECTORS.detailIdnumber).textContent = row.dataset.idnumber || '';
     content.querySelector(SELECTORS.detailTaxonomy).textContent = row.dataset.taxonomy || '';
-
-    // Scale and description only appear when the node carries them (both optional).
-    const scale = row.dataset.scale || '';
-    const scalewrap = content.querySelector(SELECTORS.detailScaleWrap);
-    content.querySelector(SELECTORS.detailScale).textContent = scale;
-    scalewrap.hidden = scale === '';
-    const description = row.dataset.description || '';
-    const descwrap = content.querySelector(SELECTORS.detailDescriptionWrap);
-    const desctarget = content.querySelector(SELECTORS.detailDescription);
-    descwrap.hidden = description === '';
-    // Clear the previous row's description up front so a slow render can never leave
-    // one competency's body under another's title.
-    desctarget.innerHTML = '';
-    if (description !== '') {
-        // Render the trusted server-rendered HTML (format_text, round-tripped through the
-        // data-description attribute) inside the reusable collapsible container so a long
-        // body caps its height with a Show more/less toggle. The render is async, so only
-        // inject when this row is still the active selection (guards rapid row switches).
-        Templates.renderForPromise('local_dimensions/collapsible_description', {
-            html: description,
-            id: 'local-dimensions-structure-desc-' + row.dataset.id,
-        }).then(({html}) => {
-            if (row.classList.contains('active')) {
-                desctarget.innerHTML = html;
-                CollapsibleDescription.refresh(desctarget);
-            }
-            return null;
-        }).catch(Notification.exception);
-    }
-
-    content.querySelector(SELECTORS.detailCourses).textContent = row.dataset.courses || '0';
-    content.querySelector(SELECTORS.detailActivities).textContent = row.dataset.activities || '0';
-    content.querySelector(SELECTORS.detailPlans).textContent = row.dataset.templates || '0';
-
-    // A leaf cannot carry a rule (a rule aggregates children); show the not-applicable label.
-    const haschildren = row.dataset.haschildren === '1';
-    const narule = region.dataset.narule || '';
-    content.querySelector(SELECTORS.detailRule).textContent =
-        haschildren ? (row.dataset.rulelabel || '') : narule;
+    populateDetailChips(content, row);
+    populateDetailBody(content, row);
 
     // The header "Add competency" button is context-sensitive; reflect the selected parent.
     const hint = region.querySelector(SELECTORS.addHint);
@@ -613,17 +732,34 @@ const loadMoreRoots = async(region) => {
     if (!tree || !button) {
         return;
     }
+    // The button lives inside its wrap (button + hint); insert new roots before that wrap.
+    const anchor = button.closest('.local-dimensions-central-structure-loadmore-wrap') || button;
     const offset = Number(button.dataset.offset || '0');
     const response = await browse(0, offset);
     const wrapper = document.createElement('div');
     await renderNodes(wrapper, response.items);
     while (wrapper.firstChild) {
-        tree.insertBefore(wrapper.firstChild, button);
+        tree.insertBefore(wrapper.firstChild, anchor);
     }
     const newoffset = offset + response.items.length;
     button.dataset.offset = String(newoffset);
     if (newoffset >= response.total || response.items.length === 0) {
-        button.remove();
+        anchor.remove();
+        return;
+    }
+    // Refresh the "+N" count and the "Showing N of T" hint for the next page.
+    const count = button.querySelector('.local-dimensions-central-structure-loadmore-count');
+    if (count) {
+        count.textContent = '+' + Math.min(PAGE_SIZE, Math.max(0, response.total - newoffset));
+    }
+    const hint = anchor.querySelector('.local-dimensions-central-structure-loadmore-hint');
+    if (hint) {
+        getString('central_structure_loadmoreshown', 'local_dimensions', {shown: newoffset, total: response.total})
+            .then((text) => {
+                hint.textContent = text;
+                return text;
+            })
+            .catch(notifyError);
     }
 };
 
@@ -1159,17 +1295,17 @@ const dispatchStructureAction = (target, event) => {
  * @param {HTMLElement} region
  */
 const initStructureResize = (region) => {
-    // Same reach as the Plans tab: the divider can shrink the tree down to ~200px
-    // and let the detail grow well past the old 640px cap.
-    initPaneResizer({
+    // The redesign gives the tree (master) an explicit, adjustable width (default 430px) and
+    // lets the detail flex to fill the rest; the divider drives that master width.
+    initMasterResizer({
         body: region.querySelector(SELECTORS.structureBody),
         resizer: region.querySelector(SELECTORS.structureResizer),
-        detail: region.querySelector(SELECTORS.detailPane),
-        cssvar: '--local-dimensions-structure-detail-width',
-        storagekey: 'local_dimensions_structure_detail_width',
-        minimum: 280,
-        maximum: 1600,
-        reserve: 200,
+        master: region.querySelector(SELECTORS.treePane),
+        cssvar: '--local-dimensions-structure-master-width',
+        storagekey: 'local_dimensions_structure_master_width',
+        minimum: 320,
+        maximum: 1200,
+        reserve: 382,
     });
 };
 

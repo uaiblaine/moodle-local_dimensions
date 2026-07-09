@@ -133,6 +133,9 @@ class browse_structure extends external_api {
                 'ruleoutcome' => new external_value(PARAM_INT, 'Rule outcome code (0 = none)'),
                 'ruleconfig' => new external_value(PARAM_RAW, 'Rule configuration JSON, or null'),
                 'rulelabel' => new external_value(PARAM_TEXT, 'Localized competency rule label'),
+                'type' => new external_value(PARAM_TEXT, 'Competency type custom-field label (empty when unset)'),
+                'tag1' => new external_value(PARAM_TEXT, 'Competency tag 1 custom-field label (empty when unset)'),
+                'tag2' => new external_value(PARAM_TEXT, 'Competency tag 2 custom-field label (empty when unset)'),
             ])),
             'total' => new external_value(PARAM_INT, 'Total direct children for this parent across all pages'),
         ]);
