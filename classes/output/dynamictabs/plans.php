@@ -255,6 +255,13 @@ class plans extends \core\output\dynamic_tabs\base {
         ) : '';
         $selecteddescriptionplain = trim(strip_tags($selecteddescription));
 
+        // The detail header wears the template's custom colours (same fields as the
+        // learner hero): the background is a 140deg gradient that darkens the base
+        // colour, and the text/icons take the custom text colour. Both fall back to
+        // the Moodle primary / white when the template has no custom colours set.
+        $headerbg = ((string) ($selectedmeta['bgcolor'] ?? '')) ?: '#0f6cbf';
+        $headertextcolor = ((string) ($selectedmeta['textcolor'] ?? '')) ?: '#ffffff';
+
         $PAGE->requires->js_call_amd('local_dimensions/central/plans', 'init');
 
         return [
@@ -285,6 +292,10 @@ class plans extends \core\output\dynamic_tabs\base {
             'selectedtemplatehastag2' => $selectedtag2 !== '',
             'selectedtemplatedisplaymode' => $selecteddisplaymode,
             'selectedtemplatehasdisplaymode' => $selecteddisplaymode !== '',
+            'headertextcolor' => $headertextcolor,
+            'headerbgstop0' => $headerbg,
+            'headerbgstop48' => helper::darken_hex($headerbg, 0.16),
+            'headerbgstop100' => helper::darken_hex($headerbg, 0.34),
             'selectedtemplatevisible' => $selected ? (bool) $selected->get('visible') : false,
             'selectedtemplatehasduedate' => $duedate > 0,
             'selectedtemplateduedate' => $duedate > 0

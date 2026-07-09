@@ -3604,20 +3604,32 @@
     align-items: stretch;
 }
 
-/* Learning plans tab — same content-height master-detail grid; the divider starts at 50/50.
-   The grid stretches both panes to the same height (the taller one drives). */
+/* Learning plans tab — redesigned two-panel master/detail. The panels align to the top and
+   the 22px divider stretches to the taller one; the page (not an inner box) scrolls, so the
+   resizer grip can stay pinned to the viewport centre. The master starts at 400px and is
+   adjustable (persisted in --local-dimensions-plans-master-width); the detail flexes to fill
+   the rest. */
 .local-dimensions-central-plans-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 0.5rem var(--local-dimensions-plans-detail-width, calc(50% - 0.25rem));
-    align-items: stretch;
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
 }
 
-/* No templates (or a competency filter matched none): only the selector card renders,
-   so collapse the master-detail grid to a single full-width, content-height column. */
-.local-dimensions-central-plans-body-single {
-    grid-template-columns: minmax(0, 1fr);
-    height: auto;
-    max-height: none;
+.local-dimensions-central-plans-list-pane {
+    flex: none;
+    width: var(--local-dimensions-plans-master-width, 400px);
+    min-width: 300px;
+}
+
+.local-dimensions-central-plans-detail-pane {
+    flex: 1 1 0;
+    min-width: 360px;
+}
+
+/* No templates (or a competency filter matched none): only the master panel renders,
+   so it spans the full width. */
+.local-dimensions-central-plans-body-single .local-dimensions-central-plans-list-pane {
+    width: 100%;
 }
 
 /* Lift an open row-action menu above adjacent rows. The competency list scrolls, so a
@@ -3669,8 +3681,7 @@
     overflow-y: auto;
 }
 
-.local-dimensions-central-structure-resizer,
-.local-dimensions-central-plans-resizer {
+.local-dimensions-central-structure-resizer {
     position: relative;
     align-self: stretch;
     width: 0.5rem;
@@ -3680,8 +3691,7 @@
     cursor: col-resize;
 }
 
-.local-dimensions-central-structure-resizer::before,
-.local-dimensions-central-plans-resizer::before {
+.local-dimensions-central-structure-resizer::before {
     content: '';
     position: absolute;
     top: 50%;
@@ -3694,10 +3704,50 @@
 }
 
 .local-dimensions-central-structure-resizer:hover::before,
-.local-dimensions-central-structure-resizer:focus::before,
-.local-dimensions-central-plans-resizer:hover::before,
-.local-dimensions-central-plans-resizer:focus::before {
+.local-dimensions-central-structure-resizer:focus::before {
     background: var(--bs-primary, #0f6cbf);
+}
+
+/* Plans divider: a 22px hit area whose grip is pinned to the middle of the viewport
+   (position: sticky) so it stays reachable however far the panels scroll. The ::before is a
+   full-height guide line that only paints on hover/focus. */
+.local-dimensions-central-plans-resizer {
+    position: relative;
+    flex: none;
+    align-self: stretch;
+    width: 22px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: col-resize;
+}
+
+.local-dimensions-central-plans-resizer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    background: transparent;
+    transform: translateX(-50%);
+}
+
+.local-dimensions-central-plans-resizer:hover::before,
+.local-dimensions-central-plans-resizer:focus-visible::before {
+    background: rgba(159, 196, 229, 0.45);
+}
+
+.local-dimensions-central-plans-resizer-grip {
+    position: sticky;
+    top: calc(50vh - 20px);
+    width: 4px;
+    height: 2.5rem;
+    margin: 0 auto;
+    border-radius: 999px;
+    background: #aeb4ba;
+    pointer-events: none;
+    box-shadow: 0 0 0 4px var(--bs-body-bg, #edeef1);
 }
 
 /* Sticky-footer action buttons follow core's raw pattern (btn py-0 d-flex flex-column):
@@ -3734,6 +3784,710 @@
     }
 }
 
+/* ============================================
+      LEARNING PLANS TAB — redesigned panels
+      ============================================ */
+
+/* Left "Templates" panel: a plain white card with a soft double shadow. Rounded via
+   border-radius (no overflow: hidden, so the competency-filter autocomplete list is not
+   clipped); the row list carries the matching bottom rounding. */
+.local-dimensions-central-plans-panel {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid #e7e9ec;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 10px 26px rgba(0, 0, 0, 0.05);
+}
+
+.local-dimensions-central-plans-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 22px;
+    border-bottom: 1px solid #eef0f2;
+}
+
+.local-dimensions-central-plans-panel-title {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* Gear button (collapse/expand the display options). Blue on the white panel; inherits the
+   header text colour via the -onhead modifier on the coloured detail header. */
+.local-dimensions-central-plans-gear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #0f6cbf;
+    cursor: pointer;
+}
+
+.local-dimensions-central-plans-gear:hover {
+    background: #eef4fb;
+}
+
+.local-dimensions-central-plans-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px 22px;
+}
+
+/* Display-options group; JS toggles [hidden] on it via the gear. */
+.local-dimensions-central-plans-optgroup {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Search + New template row. */
+.local-dimensions-central-plans-searchrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.local-dimensions-central-plans-search {
+    flex: 1 1 120px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 120px;
+    padding: 0 13px;
+    border: 1px solid #ced4da;
+    border-radius: 10px;
+    background: #fff;
+    color: #6a737b;
+}
+
+.local-dimensions-central-plans-search i {
+    flex: none;
+    font-size: 14px;
+}
+
+.local-dimensions-central-plans-search input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    padding: 10px 0;
+    border: 0;
+    background: transparent;
+    color: #1d2125;
+    font-size: 14px;
+}
+
+.local-dimensions-central-plans-search input:focus {
+    outline: none;
+}
+
+.local-dimensions-central-plans-search input::placeholder {
+    color: #6a737b;
+    opacity: 1;
+}
+
+.local-dimensions-central-plans-new {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 15px;
+    border: 0;
+    border-radius: 10px;
+    background: #0f6cbf;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.local-dimensions-central-plans-new:hover {
+    background: #0c5699;
+    color: #fff;
+}
+
+/* Competency filter. */
+.local-dimensions-central-plans-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.local-dimensions-central-plans-filter-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.local-dimensions-central-plans-filter-label {
+    font-size: 13px;
+    color: #6a737b;
+}
+
+.local-dimensions-central-plans-filter-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #0f6cbf;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.local-dimensions-central-plans-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.local-dimensions-central-plans-filter-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 10px;
+    background: #fff;
+    color: #495057;
+    font-size: 13.5px;
+    cursor: pointer;
+}
+
+.local-dimensions-central-plans-filter-add:hover {
+    background: #f5f7f9;
+}
+
+/* Template rows: the container clips to the panel's bottom corners. */
+.local-dimensions-central-plans-tpl-list {
+    border-top: 1px solid #eef0f2;
+    border-radius: 0 0 16px 16px;
+    overflow: hidden;
+}
+
+.local-dimensions-central-plans-tpl-row {
+    gap: 11px;
+    width: 100%;
+    padding: 13px 22px;
+    border: 0;
+    border-bottom: 1px solid #f3f4f6;
+    border-radius: 0;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+}
+
+.local-dimensions-central-plans-tpl-row:hover {
+    background: #f5f7f9;
+}
+
+.local-dimensions-central-plans-tpl-row.active {
+    background: #eaf2fb;
+    font-weight: 400;
+}
+
+.local-dimensions-central-plans-tpl-icon {
+    flex: none;
+    color: #7d868f;
+    font-size: 16px;
+}
+
+.local-dimensions-central-plans-tpl-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.local-dimensions-central-plans-tpl-nameline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.local-dimensions-central-plans-tpl-name {
+    overflow: hidden;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1d2125;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-central-plans-tpl-row.active .local-dimensions-central-plans-tpl-name {
+    color: #0f6cbf;
+}
+
+.local-dimensions-central-plans-tpl-id {
+    flex: none;
+    padding: 1px 7px;
+    border: 1px solid #e3e6ea;
+    border-radius: 6px;
+    background: #f1f3f5;
+    color: #495057;
+    font-family: Menlo, ui-monospace, monospace;
+    font-size: 11px;
+}
+
+.local-dimensions-central-plans-tpl-due {
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #6a737b;
+}
+
+.local-dimensions-central-plans-tpl-due i {
+    flex: none;
+    font-size: 12px;
+}
+
+.local-dimensions-central-plans-tpl-count {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 23px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: #eef0f2;
+    color: #495057;
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.local-dimensions-central-plans-tpl-count.is-selected {
+    background: #d6e6f7;
+    color: #0d5a9f;
+}
+
+/* Right "Plan" panel: rounded 24px with a deep shadow. No overflow: hidden on the panel or
+   body so a competency row's actions menu is never clipped; the header clips its own glow. */
+.local-dimensions-central-plans-detail {
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 3px 8px rgba(13, 60, 110, 0.1), 0 22px 46px rgba(13, 60, 110, 0.17);
+}
+
+/* Coloured header: a 140deg gradient from the template's background colour to progressively
+   darker stops (computed server-side into --ld-plans-hdr-*); text/icons take the custom text
+   colour. The glow child adds a soft top-left highlight; overflow: hidden clips it (and the
+   gradient) to the rounded top corners. */
+.local-dimensions-central-plans-detail-header {
+    position: relative;
+    z-index: 0;
+    overflow: hidden;
+    padding: 26px 30px 36px;
+    border-radius: 24px 24px 0 0;
+    background: linear-gradient(140deg, var(--ld-plans-hdr-0, #0f6cbf) 0%, var(--ld-plans-hdr-48, #0d5a9f) 48%, var(--ld-plans-hdr-100, #0a4680) 100%);
+}
+
+.local-dimensions-central-plans-detail-glow {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.local-dimensions-central-plans-detail-header-inner {
+    position: relative;
+    z-index: 1;
+}
+
+.local-dimensions-central-plans-detail-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.local-dimensions-central-plans-detail-heading {
+    min-width: 0;
+}
+
+.local-dimensions-central-plans-detail-titlerow {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    flex-wrap: wrap;
+}
+
+.local-dimensions-central-plans-detail-title {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+}
+
+.local-dimensions-central-plans-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 13px;
+    border-radius: 999px;
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.local-dimensions-central-plans-status.is-enabled {
+    background: #217a37;
+}
+
+.local-dimensions-central-plans-status.is-disabled {
+    background: #6a737b;
+}
+
+.local-dimensions-central-plans-detail-counts {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-top: 15px;
+    font-size: 15px;
+    flex-wrap: wrap;
+}
+
+.local-dimensions-central-plans-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.local-dimensions-central-plans-count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 23px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #495057;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.local-dimensions-central-plans-count-sep {
+    opacity: 0.45;
+}
+
+/* Gear on the coloured header inherits the header text colour. */
+.local-dimensions-central-plans-gear-onhead {
+    flex: none;
+    width: auto;
+    height: auto;
+    padding: 5px;
+    color: inherit;
+    opacity: 0.92;
+}
+
+.local-dimensions-central-plans-gear-onhead:hover {
+    background: rgba(255, 255, 255, 0.12);
+    opacity: 1;
+}
+
+.local-dimensions-central-plans-gear-onhead i {
+    font-size: 18px;
+}
+
+/* Glass display-options panel on the header; JS toggles [hidden] via the gear. */
+.local-dimensions-central-plans-optpanel {
+    display: flex;
+    flex-direction: column;
+    max-width: 430px;
+    margin-top: 22px;
+    padding: 14px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Metadata chips. */
+.local-dimensions-central-plans-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.local-dimensions-central-plans-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 15px;
+    border-radius: 999px;
+    font-size: 13.5px;
+}
+
+.local-dimensions-central-plans-chip i {
+    flex: none;
+    font-size: 14px;
+}
+
+.local-dimensions-central-plans-chip-accent {
+    background: #495057;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+}
+
+.local-dimensions-central-plans-chip-glass {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.13);
+    color: inherit;
+}
+
+/* White body lifts over the header (negative margin); no overflow: hidden so the row actions
+   menu can escape. Bottom corners round to match the panel. */
+.local-dimensions-central-plans-detail-body {
+    position: relative;
+    z-index: 2;
+    margin-top: -16px;
+    padding: 24px 30px 28px;
+    border-radius: 22px 22px 24px 24px;
+    background: #fff;
+}
+
+.local-dimensions-central-plans-detail-body .local-dimensions-central-plans-description {
+    margin-bottom: 4px;
+    font-size: 15px;
+    color: #495057;
+}
+
+/* Competency list header (grip spacer · title · Structure · Actions). */
+.local-dimensions-central-plans-list-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    padding: 11px 8px;
+    border-bottom: 1px solid #e6e9ec;
+}
+
+.local-dimensions-central-plans-list-gripspace {
+    flex: none;
+    width: 10px;
+}
+
+.local-dimensions-central-plans-list-title {
+    flex: 1 1 auto;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1d2125;
+}
+
+.local-dimensions-central-plans-list-col {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #6a737b;
+}
+
+.local-dimensions-central-plans-list-col-actions {
+    flex: none;
+    width: 30px;
+    text-align: center;
+}
+
+/* Competency (module) rows. */
+.local-dimensions-central-plans-modules {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.local-dimensions-central-plans-module {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px 8px;
+    border-bottom: 1px solid #eef0f2;
+    cursor: default;
+    transition: background 0.12s ease;
+}
+
+.local-dimensions-central-plans-module-main {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.local-dimensions-central-plans-module-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+.local-dimensions-central-plans-module-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1d2125;
+}
+
+.local-dimensions-central-plans-module-tax {
+    font-size: 15px;
+    color: #6a737b;
+}
+
+.local-dimensions-central-plans-module-id {
+    padding: 1px 7px;
+    border: 1px solid #e3e6ea;
+    border-radius: 6px;
+    background: #f1f3f5;
+    color: #495057;
+    font-family: Menlo, ui-monospace, monospace;
+    font-size: 11px;
+}
+
+.local-dimensions-central-plans-module-path {
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: #6a737b;
+}
+
+.local-dimensions-central-plans-module-path i {
+    flex: none;
+    font-size: 12px;
+}
+
+.local-dimensions-central-plans-module-struct {
+    flex: none;
+    margin-top: 2px;
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 13px;
+    border: 1px solid #e6e9ec;
+    border-radius: 999px;
+    background: #f1f3f5;
+    color: #495057;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Row actions button (the dropdown menu itself keeps Bootstrap styling). */
+.local-dimensions-central-plans-module-actions {
+    flex: none;
+    margin-top: 2px;
+}
+
+.local-dimensions-central-plans-module-menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #6a737b;
+    cursor: pointer;
+}
+
+.local-dimensions-central-plans-module-menu:hover {
+    background: #eef0f2;
+}
+
+/* Custom pill toggles. The real checkbox is visually hidden (absolute) but still drives
+   :checked / :focus-visible on the following track; the label wraps everything for a11y. */
+.local-dimensions-plans-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0;
+    color: #343a40;
+    font-size: 14.5px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.local-dimensions-plans-switch-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.local-dimensions-plans-switch-track {
+    position: relative;
+    flex: none;
+    display: inline-block;
+    width: 42px;
+    height: 23px;
+    border-radius: 999px;
+    background: #ced4da;
+    transition: background 0.15s ease;
+}
+
+.local-dimensions-plans-switch-knob {
+    position: absolute;
+    top: 2.5px;
+    left: 2.5px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform 0.18s ease;
+}
+
+.local-dimensions-plans-switch-input:checked ~ .local-dimensions-plans-switch-track {
+    background: #0f6cbf;
+}
+
+.local-dimensions-plans-switch-input:checked ~ .local-dimensions-plans-switch-track .local-dimensions-plans-switch-knob {
+    transform: translateX(19px);
+}
+
+.local-dimensions-plans-switch-input:focus-visible ~ .local-dimensions-plans-switch-track {
+    outline: 2px solid #0f6cbf;
+    outline-offset: 2px;
+}
+
+/* Dark variant on the coloured header. */
+.local-dimensions-plans-switch-dark {
+    padding: 7px 0;
+    color: inherit;
+    font-size: 15px;
+}
+
+.local-dimensions-plans-switch-dark .local-dimensions-plans-switch-track {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.local-dimensions-plans-switch-dark .local-dimensions-plans-switch-knob {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.local-dimensions-plans-switch-dark .local-dimensions-plans-switch-input:checked ~ .local-dimensions-plans-switch-track {
+    background: #0b427e;
+}
+
+.local-dimensions-plans-switch-dark .local-dimensions-plans-switch-input:focus-visible ~ .local-dimensions-plans-switch-track {
+    outline-color: #fff;
+}
+
 /* Plan rows own their display here (no .d-flex utility in the markup — its !important
    would force !important onto the visibility rules below, which the CI stylelint
    forbids). Disabled (hidden) templates stay in the DOM; the show-disabled toggle
@@ -3761,11 +4515,11 @@
 }
 
 .local-dimensions-central-plans [data-region='template-rows'].show-id .local-dimensions-central-plan-id {
-    display: inline;
+    display: inline-flex;
 }
 
 .local-dimensions-central-plans [data-region='template-rows'].show-duedate .local-dimensions-central-plan-duedate {
-    display: inline;
+    display: inline-flex;
 }
 
 .local-dimensions-central-plans [data-region='template-rows'] .local-dimensions-central-row.local-dimensions-central-plan-filtered {
@@ -3811,7 +4565,7 @@
 }
 
 .local-dimensions-central-plans [data-region='competency-items'].show-path .local-dimensions-central-path {
-    display: block;
+    display: flex;
 }
 
 /* Drag-to-reorder: the grip only fades in while the row is hovered (file-tree style);
@@ -3835,8 +4589,7 @@
 }
 
 .local-dimensions-central-plans [data-region='competency-items'] > li:hover {
-    background-color: var(--bs-secondary-bg, rgba(0, 0, 0, 0.04));
-    border-radius: 0.25rem;
+    background-color: #f7f8fa;
 }
 
 .local-dimensions-central-plans [data-region='competency-items'] > li:hover .local-dimensions-central-plan-drag,
@@ -3866,10 +4619,18 @@
 }
 
 @media (max-width: 991.98px) {
-    /* Stack the master-detail grid into one content-height column and drop the divider. */
-    .local-dimensions-central-structure-body,
-    .local-dimensions-central-plans-body {
+    /* Stack the master-detail layouts into one content-height column and drop the divider. */
+    .local-dimensions-central-structure-body {
         grid-template-columns: 1fr;
+    }
+
+    .local-dimensions-central-plans-body {
+        flex-direction: column;
+    }
+
+    .local-dimensions-central-plans-list-pane,
+    .local-dimensions-central-plans-detail-pane {
+        width: 100%;
     }
 
     .local-dimensions-central-structure-resizer,
