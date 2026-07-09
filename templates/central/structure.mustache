@@ -17,11 +17,19 @@
 {{!
     @template local_dimensions/central/structure
 
-    Structure tab: framework switcher + competency tree (master-detail).
+    Structure tab: a framework sub-header (structure picker + item count + level-sensitive
+    "Add competency") over a two-panel master/detail. The left tree panel is a plain white
+    card (Expand/Collapse toolbar, gear-collapsed display toggles, search, and the lazy
+    competency tree). The right detail panel wears a brand gradient header (title + taxonomy
+    badge + Rule/label/ID/scale/tag chips) over a white body with the courses/activities/plans
+    metric cards and the description; it is `position: sticky` so it stays in view as the tree
+    scrolls. A 22px divider (sticky-centred grip) resizes the tree. The detail is populated
+    client-side from the selected node's data attributes; the node CRUD actions live in the
+    page sticky footer.
 
     The System / Course category context selector is rendered once at page level
-    (local_dimensions/central/contextbar); this tab receives the resolved context via
-    its data attributes and shows the guided empty state when a category is still needed.
+    (local_dimensions/central/contextbar); this tab receives the resolved context via its
+    data attributes and shows the guided empty state when a category is still needed.
 
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · selectedframeworkid (int) · showhidden (bool)
@@ -30,9 +38,10 @@
     * needscategoryselection (bool)
     * hasframeworks (bool) · frameworks (array) {id, name, idnumber, selected, competencycount, hidden}
     * competencies (array) {id, parentid, shortname, idnumber, indent, haschildren, canmanage, taxonomy,
-      coursecount, activitycount, templatecount, rulelabel, depth, ruletype, ruleoutcome, ruleconfig}
+      scale, description, type, tag1, tag2, coursecount, activitycount, templatecount, rulelabel, depth,
+      ruletype, ruleoutcome, ruleconfig}
     * hascompetencies (bool) · competencycount (int) · rootshown (int) · roottotal (int) · hasmoreroots (bool)
-    * canmanage (int)
+    * rootmorecount (int) · rootloadmorehint (string) · canmanage (int)
 
     Example context (json):
     {
@@ -51,8 +60,10 @@
         ],
         "competencycount": 12,
         "rootshown": 1,
-        "roottotal": 1,
-        "hasmoreroots": false,
+        "roottotal": 3,
+        "hasmoreroots": true,
+        "rootmorecount": 2,
+        "rootloadmorehint": "Showing 1 of 3",
         "canmanage": 1,
         "hascompetencies": true,
         "competencies": [
@@ -60,6 +71,7 @@
                 "id": 7, "parentid": 0, "shortname": "Communication", "idnumber": "COMM-01",
                 "taxonomy": "Competency", "scale": "Default competence scale",
                 "description": "Communicates clearly in writing and speech.",
+                "type": "Module", "tag1": "Year 1", "tag2": "Intermediate",
                 "coursecount": 3, "activitycount": 5, "templatecount": 2,
                 "depth": 0, "indent": 0, "haschildren": true, "canmanage": true,
                 "ruletype": "", "ruleoutcome": 0, "ruleconfig": "", "rulelabel": "No rule"
@@ -69,8 +81,7 @@
 }}
 <div class="local-dimensions-central-structure" data-region="structure"
      data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}" data-frameworkid="{{selectedframeworkid}}"
-     data-canmanage="{{canmanage}}"
-     data-narule="{{#str}}managecompetencies_rule_notapplicable, local_dimensions{{/str}}">
+     data-canmanage="{{canmanage}}">
     <script type="application/json" data-region="rules-modules">{{{rulesmodulesjson}}}</script>
     <script type="application/json" data-region="course-outcomes">{{{courseoutcomesjson}}}</script>
     <script type="application/json" data-region="module-outcomes">{{{moduleoutcomesjson}}}</script>
@@ -80,6 +91,7 @@
     {{/needscategoryselection}}
 
     {{^needscategoryselection}}
+    {{#hasframeworks}}
     {{#hashiddenframeworks}}
     <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" id="local-dimensions-structure-showhidden"
@@ -89,29 +101,31 @@
         </label>
     </div>
     {{/hashiddenframeworks}}
-    {{#hasframeworks}}
-    <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
-        <div>
-            <label class="d-block small text-muted mb-1" for="local-dimensions-central-framework">
-                {{#str}}central_browseframeworks_framework, local_dimensions{{/str}}
-            </label>
-            <select id="local-dimensions-central-framework" class="form-select" data-region="framework-select">
-                {{#frameworks}}
-                <option value="{{id}}" data-hidden="{{#hidden}}1{{/hidden}}"{{#selected}} selected{{/selected}}>{{name}}{{#idnumber}} · {{idnumber}}{{/idnumber}}{{#hidden}} · {{#str}}hidden, tool_lp{{/str}}{{/hidden}}</option>
-                {{/frameworks}}
-            </select>
-        </div>
-        <div class="text-muted small">
-            {{#str}}managecompetencies_items, local_dimensions{{/str}}: <strong>{{competencycount}}</strong>
+
+    <div class="local-dimensions-central-structure-subheader">
+        <div class="local-dimensions-central-structure-subheader-main">
+            <div class="local-dimensions-central-structure-fwfield">
+                <label class="local-dimensions-central-structure-sublabel" for="local-dimensions-central-framework">
+                    {{#str}}central_browseframeworks_framework, local_dimensions{{/str}}
+                </label>
+                <select id="local-dimensions-central-framework" class="form-select local-dimensions-central-structure-fwselect" data-region="framework-select">
+                    {{#frameworks}}
+                    <option value="{{id}}" data-hidden="{{#hidden}}1{{/hidden}}"{{#selected}} selected{{/selected}}>{{name}}{{#idnumber}} · {{idnumber}}{{/idnumber}}{{#hidden}} · {{#str}}hidden, tool_lp{{/str}}{{/hidden}}</option>
+                    {{/frameworks}}
+                </select>
+            </div>
+            <span class="local-dimensions-central-structure-fwcount">
+                {{#str}}managecompetencies_items, local_dimensions{{/str}}: <strong>{{competencycount}}</strong>
+            </span>
         </div>
         {{#canmanage}}
-        <div class="ms-auto text-end">
-            <button type="button" class="btn btn-primary btn-sm" data-action="add">
-                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}}managecompetencies_addcompetency, local_dimensions{{/str}}
+        <div class="local-dimensions-central-structure-subheader-actions">
+            <button type="button" class="local-dimensions-central-plans-new" data-action="add">
+                <i class="fa fa-plus" aria-hidden="true"></i>{{#str}}managecompetencies_addcompetency, local_dimensions{{/str}}
             </button>
-            <div class="small text-muted mt-1" data-region="add-hint">
+            <span class="local-dimensions-central-structure-addhint" data-region="add-hint">
                 {{#str}}managecompetencies_addhint_root, local_dimensions{{/str}}
-            </div>
+            </span>
         </div>
         {{/canmanage}}
     </div>
@@ -119,106 +133,138 @@
     {{#hascompetencies}}
     <div class="local-dimensions-central-structure-body" data-region="structure-body">
         <section class="local-dimensions-central-structure-tree-pane" data-region="tree-pane">
-            <div class="card h-100">
-                <div class="card-header d-flex align-items-center gap-3 py-2">
-                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-action="expand-all">
-                        <i class="fa fa-angle-double-down me-1" aria-hidden="true"></i>{{#str}}managecompetencies_expandall, local_dimensions{{/str}}
+            <div class="local-dimensions-central-plans-panel">
+                <div class="local-dimensions-central-structure-toolbar">
+                    <button type="button" class="local-dimensions-central-structure-toolaction" data-action="expand-all">
+                        <i class="fa fa-angle-double-down" aria-hidden="true"></i>{{#str}}managecompetencies_expandall, local_dimensions{{/str}}
                     </button>
-                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-action="collapse-all">
-                        <i class="fa fa-angle-double-up me-1" aria-hidden="true"></i>{{#str}}managecompetencies_collapseall, local_dimensions{{/str}}
+                    <button type="button" class="local-dimensions-central-structure-toolaction" data-action="collapse-all">
+                        <i class="fa fa-angle-double-up" aria-hidden="true"></i>{{#str}}managecompetencies_collapseall, local_dimensions{{/str}}
                     </button>
-                    <button type="button" class="btn btn-sm btn-link p-0 ms-auto text-decoration-none" data-action="display-options"
+                    <button type="button" class="local-dimensions-central-plans-gear local-dimensions-central-structure-toolgear" data-action="display-options"
                             aria-expanded="true" aria-controls="local-dimensions-central-displayopts"
                             title="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
                         <i class="fa fa-cog" aria-hidden="true"></i>
                         <span class="visually-hidden">{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}</span>
                     </button>
                 </div>
-                <div class="card-body border-bottom py-2 flex-grow-0" id="local-dimensions-central-displayopts" data-region="display-options-panel"
+                <div class="local-dimensions-central-structure-optgroup" id="local-dimensions-central-displayopts" data-region="display-options-panel"
                      role="group" aria-label="{{#str}}managecompetencies_displayoptions, local_dimensions{{/str}}">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="local-dimensions-disp-tax" data-display-toggle="tax">
-                        <label class="form-check-label" for="local-dimensions-disp-tax">{{#str}}managecompetencies_showtaxonomy, local_dimensions{{/str}}</label>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="local-dimensions-disp-id" data-display-toggle="id">
-                        <label class="form-check-label" for="local-dimensions-disp-id">{{#str}}managecompetencies_showids, local_dimensions{{/str}}</label>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="local-dimensions-disp-rule" data-display-toggle="rule" checked>
-                        <label class="form-check-label" for="local-dimensions-disp-rule">{{#str}}managecompetencies_showrule, local_dimensions{{/str}}</label>
-                    </div>
+                    <label class="local-dimensions-plans-switch">
+                        <span class="local-dimensions-plans-switch-text">{{#str}}managecompetencies_showtaxonomy, local_dimensions{{/str}}</span>
+                        <input type="checkbox" class="local-dimensions-plans-switch-input" id="local-dimensions-disp-tax" data-display-toggle="tax">
+                        <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
+                    </label>
+                    <label class="local-dimensions-plans-switch">
+                        <span class="local-dimensions-plans-switch-text">{{#str}}managecompetencies_showids, local_dimensions{{/str}}</span>
+                        <input type="checkbox" class="local-dimensions-plans-switch-input" id="local-dimensions-disp-id" data-display-toggle="id">
+                        <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
+                    </label>
+                    <label class="local-dimensions-plans-switch">
+                        <span class="local-dimensions-plans-switch-text">{{#str}}managecompetencies_showrule, local_dimensions{{/str}}</span>
+                        <input type="checkbox" class="local-dimensions-plans-switch-input" id="local-dimensions-disp-rule" data-display-toggle="rule" checked>
+                        <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
+                    </label>
                 </div>
-                <div class="card-body py-2 border-bottom flex-grow-0 local-dimensions-central-search-wrap">
-                    <input type="search" class="form-control form-control-sm" id="local-dimensions-structure-search"
-                           data-region="structure-search" autocomplete="off"
-                           placeholder="{{#str}}managecompetencies_searchplaceholder, local_dimensions{{/str}}">
+                <div class="local-dimensions-central-structure-searchbox local-dimensions-central-search-wrap">
+                    <span class="local-dimensions-central-plans-search">
+                        <i class="fa fa-search" aria-hidden="true"></i>
+                        <label class="visually-hidden" for="local-dimensions-structure-search">
+                            {{#str}}managecompetencies_searchplaceholder, local_dimensions{{/str}}
+                        </label>
+                        <input type="search" id="local-dimensions-structure-search" data-region="structure-search"
+                               autocomplete="off" placeholder="{{#str}}managecompetencies_searchplaceholder, local_dimensions{{/str}}">
+                    </span>
                     <div class="list-group local-dimensions-central-searchresults" data-region="search-results" hidden></div>
                 </div>
-                <div class="card-body p-2 local-dimensions-central-tree local-dimensions-central-structure-scroll show-rule" data-region="competency-tree">
+                <div class="local-dimensions-central-tree local-dimensions-central-structure-treebox show-rule" data-region="competency-tree">
                     {{#competencies}}
                     {{> local_dimensions/central/structure_node }}
                     {{/competencies}}
                     {{#hasmoreroots}}
-                    <button type="button" class="btn btn-sm btn-link" data-region="root-loadmore"
-                            data-offset="{{rootshown}}" data-total="{{roottotal}}">
-                        {{#str}}managecompetencies_loadmore, local_dimensions{{/str}}
-                    </button>
+                    <div class="local-dimensions-central-structure-loadmore-wrap">
+                        <button type="button" class="local-dimensions-central-structure-loadmore" data-region="root-loadmore"
+                                data-offset="{{rootshown}}" data-total="{{roottotal}}">
+                            <i class="fa fa-arrow-down" aria-hidden="true"></i>{{#str}}managecompetencies_loadmore, local_dimensions{{/str}}
+                            <span class="local-dimensions-central-structure-loadmore-count">+{{rootmorecount}}</span>
+                        </button>
+                        <span class="local-dimensions-central-structure-loadmore-hint">{{rootloadmorehint}}</span>
+                    </div>
                     {{/hasmoreroots}}
                 </div>
             </div>
         </section>
-        <div class="local-dimensions-central-structure-resizer" data-region="structure-resizer"
+
+        <div class="local-dimensions-central-plans-resizer" data-region="structure-resizer"
              role="separator" aria-orientation="vertical" tabindex="0"
-             aria-label="{{#str}}managecompetencies_resizepanels, local_dimensions{{/str}}"></div>
+             aria-label="{{#str}}managecompetencies_resizepanels, local_dimensions{{/str}}">
+            <div class="local-dimensions-central-plans-resizer-grip" aria-hidden="true"></div>
+        </div>
+
         <aside class="local-dimensions-central-structure-detail-pane" data-region="detail-pane">
-            <div class="card h-100">
-                <div class="card-body local-dimensions-central-structure-scroll">
-                    <div data-region="detail-empty" class="text-muted">
-                        <i class="fa fa-info-circle me-1" aria-hidden="true"></i>
-                        {{#str}}managecompetencies_selectdetails, local_dimensions{{/str}}
+            <div class="local-dimensions-central-plans-detail local-dimensions-central-structure-detail">
+                <div class="local-dimensions-central-structure-detail-empty" data-region="detail-empty">
+                    <i class="fa fa-info-circle me-1" aria-hidden="true"></i>
+                    {{#str}}managecompetencies_selectdetails, local_dimensions{{/str}}
+                </div>
+                <div data-region="detail-content" hidden>
+                    <div class="local-dimensions-central-plans-detail-header local-dimensions-central-structure-detail-header">
+                        <div class="local-dimensions-central-plans-detail-glow" aria-hidden="true"
+                             style="background: radial-gradient(120% 95% at 8% -12%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%);"></div>
+                        <div class="local-dimensions-central-plans-detail-header-inner">
+                            <div class="local-dimensions-central-structure-detail-titlerow">
+                                <h2 class="local-dimensions-central-plans-detail-title" data-region="detail-title"></h2>
+                                <span class="local-dimensions-central-structure-detail-tax" data-region="detail-taxonomy"></span>
+                            </div>
+                            <div class="local-dimensions-central-plans-chips">
+                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-accent" data-region="detail-rule-wrap" hidden>
+                                    <i class="fa fa-check" aria-hidden="true"></i><span data-region="detail-rule"></span>
+                                </span>
+                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass" data-region="detail-label-wrap" hidden>
+                                    <i class="fa fa-tag" aria-hidden="true"></i><span data-region="detail-label"></span>
+                                </span>
+                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass" data-region="detail-idnumber-wrap" hidden>
+                                    <span class="local-dimensions-central-structure-detail-idprefix">{{#str}}idnumber{{/str}}:</span>
+                                    <span class="font-monospace" data-region="detail-idnumber"></span>
+                                </span>
+                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass" data-region="detail-scale-wrap" hidden>
+                                    <span data-region="detail-scale"></span>
+                                </span>
+                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass" data-region="detail-tag1-wrap" hidden>
+                                    <span data-region="detail-tag1"></span>
+                                </span>
+                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass" data-region="detail-tag2-wrap" hidden>
+                                    <span data-region="detail-tag2"></span>
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div data-region="detail-content" hidden>
-                        <div class="mb-2">
-                            <div class="small text-muted">{{#str}}managecompetencies_taxonomy, local_dimensions{{/str}}</div>
-                            <div data-region="detail-taxonomy"></div>
-                        </div>
-                        <div class="mb-2">
-                            <div class="small text-muted">{{#str}}name{{/str}}</div>
-                            <h3 class="h5 mb-0" data-region="detail-title"></h3>
-                        </div>
-                        <div class="mb-2">
-                            <div class="small text-muted">{{#str}}idnumber{{/str}}</div>
-                            <div class="font-monospace" data-region="detail-idnumber"></div>
-                        </div>
-                        <div class="mb-2" data-region="detail-scale-wrap" hidden>
-                            <div class="small text-muted">{{#str}}scale, tool_lp{{/str}}</div>
-                            <div data-region="detail-scale"></div>
-                        </div>
-                        <div class="mb-2" data-region="detail-description-wrap" hidden>
-                            <div class="small text-muted">{{#str}}description{{/str}}</div>
-                            <div class="small" data-region="detail-description"></div>
-                        </div>
-                        <div class="row g-2 mb-2">
-                            <div class="col">
-                                <div class="small text-muted">{{#str}}managecompetencies_linkedcourses, local_dimensions{{/str}}</div>
-                                <button type="button" class="btn btn-link p-0 text-decoration-underline"
+                    <div class="local-dimensions-central-plans-detail-body">
+                        <div class="local-dimensions-central-structure-metrics">
+                            <div class="local-dimensions-central-structure-metric">
+                                <div class="local-dimensions-central-structure-metric-label" id="local-dimensions-structure-metric-courses-label">{{#str}}managecompetencies_linkedcourses, local_dimensions{{/str}}</div>
+                                <button type="button" class="local-dimensions-central-structure-metric-value"
+                                        id="local-dimensions-structure-metric-courses-value"
+                                        aria-labelledby="local-dimensions-structure-metric-courses-label local-dimensions-structure-metric-courses-value"
                                         data-action="show-usage" data-usage="courses" data-region="detail-courses"></button>
                             </div>
-                            <div class="col">
-                                <div class="small text-muted">{{#str}}managecompetencies_linkedactivities, local_dimensions{{/str}}</div>
-                                <button type="button" class="btn btn-link p-0 text-decoration-underline"
+                            <div class="local-dimensions-central-structure-metric">
+                                <div class="local-dimensions-central-structure-metric-label" id="local-dimensions-structure-metric-activities-label">{{#str}}managecompetencies_linkedactivities, local_dimensions{{/str}}</div>
+                                <button type="button" class="local-dimensions-central-structure-metric-value"
+                                        id="local-dimensions-structure-metric-activities-value"
+                                        aria-labelledby="local-dimensions-structure-metric-activities-label local-dimensions-structure-metric-activities-value"
                                         data-action="show-usage" data-usage="activities" data-region="detail-activities"></button>
                             </div>
-                            <div class="col">
-                                <div class="small text-muted">{{#str}}central_structure_linkedplans, local_dimensions{{/str}}</div>
-                                <button type="button" class="btn btn-link p-0 text-decoration-underline"
+                            <div class="local-dimensions-central-structure-metric">
+                                <div class="local-dimensions-central-structure-metric-label" id="local-dimensions-structure-metric-plans-label">{{#str}}central_structure_linkedplans, local_dimensions{{/str}}</div>
+                                <button type="button" class="local-dimensions-central-structure-metric-value"
+                                        id="local-dimensions-structure-metric-plans-value"
+                                        aria-labelledby="local-dimensions-structure-metric-plans-label local-dimensions-structure-metric-plans-value"
                                         data-action="show-usage" data-usage="templates" data-region="detail-plans"></button>
                             </div>
                         </div>
-                        <div class="mb-2">
-                            <div class="small text-muted">{{#str}}competencyrule, tool_lp{{/str}}</div>
-                            <div data-region="detail-rule"></div>
+                        <div class="local-dimensions-central-structure-descwrap" data-region="detail-description-wrap" hidden>
+                            <div class="local-dimensions-central-plans-description" data-region="detail-description"></div>
                         </div>
                     </div>
                 </div>

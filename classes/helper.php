@@ -1704,6 +1704,10 @@ class helper {
             }
         }
 
+        // Batch: the type/tag1/tag2 select-field labels for this page of competencies, so the
+        // detail pane can show the same metadata chips as the Plans tab (one grouped query).
+        $cflabels = self::structure_customfield_labels($ids);
+
         $nodes = [];
         foreach ($records as $record) {
             $id = (int) $record->get('id');
@@ -1741,9 +1745,79 @@ class helper {
                 'ruleoutcome' => (int) $record->get('ruleoutcome'),
                 'ruleconfig' => $record->get('ruleconfig'),
                 'rulelabel' => self::get_competency_rule_label($record->get('ruletype')),
+                'type' => (string) ($cflabels[$id][constants::CFIELD_TYPE] ?? ''),
+                'tag1' => (string) ($cflabels[$id][constants::CFIELD_TAG1] ?? ''),
+                'tag2' => (string) ($cflabels[$id][constants::CFIELD_TAG2] ?? ''),
             ];
         }
         return $nodes;
+    }
+
+    /**
+     * Batch-read the type/tag1/tag2 select-field labels for a set of competencies.
+     *
+     * These are `select` custom fields in the competency area: each stores a 1-based option
+     * index (`intvalue`) plus the field's option list in `configdata`. One grouped query pulls
+     * the rows for the whole page; the label is the option text at the stored index.
+     *
+     * @param array $ids Competency ids.
+     * @return array Map keyed by competency id then shortname => option label (only set values).
+     */
+    private static function structure_customfield_labels(array $ids): array {
+        global $DB;
+
+        $ids = array_values(array_filter(array_map('intval', $ids)));
+        if (empty($ids)) {
+            return [];
+        }
+
+        $shortnames = [constants::CFIELD_TYPE, constants::CFIELD_TAG1, constants::CFIELD_TAG2];
+        [$idsql, $idparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'cid');
+        [$snsql, $snparams] = $DB->get_in_or_equal($shortnames, SQL_PARAMS_NAMED, 'sn');
+        $params = $idparams + $snparams + [
+            'component' => 'local_dimensions',
+            'area' => self::AREA_COMPETENCY,
+        ];
+
+        // Direct query against the core {customfield_*} tables — intentional for the grouped
+        // batch shape (the customfield API has no batch read across instances). Mirrors
+        // template_metadata_cache; re-validate if core changes the customfield schema.
+        $sql = "SELECT d.id AS dataid, d.instanceid, f.shortname, f.configdata, d.intvalue
+                  FROM {customfield_data} d
+                  JOIN {customfield_field} f ON f.id = d.fieldid
+                  JOIN {customfield_category} c ON c.id = f.categoryid
+                 WHERE d.instanceid $idsql
+                   AND f.shortname $snsql
+                   AND c.component = :component
+                   AND c.area = :area";
+
+        $result = [];
+        foreach ($DB->get_records_sql($sql, $params) as $row) {
+            $label = self::decode_customfield_select_label($row);
+            if ($label !== '') {
+                $result[(int) $row->instanceid][$row->shortname] = $label;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Decode a select custom field's option label from a customfield_data row.
+     *
+     * @param \stdClass $row Row with intvalue (1-based option index) and configdata (options JSON).
+     * @return string The option label at the stored index, or '' when unset/out of range.
+     */
+    private static function decode_customfield_select_label(\stdClass $row): string {
+        $index = isset($row->intvalue) ? (int) $row->intvalue : 0;
+        if ($index <= 0 || empty($row->configdata)) {
+            return '';
+        }
+        $config = json_decode($row->configdata, true);
+        if (!is_array($config) || empty($config['options'])) {
+            return '';
+        }
+        $options = explode("\n", $config['options']);
+        return isset($options[$index - 1]) ? trim($options[$index - 1]) : '';
     }
 
     /**

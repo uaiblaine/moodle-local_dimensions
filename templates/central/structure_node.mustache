@@ -20,9 +20,14 @@
     A single competency node: row + (lazy) children container. Rendered server-side for
     roots and client-side (via core/templates) when a node is expanded.
 
+    The row line is `.d-flex` (kept as a stable hook: the drag code measures drop zones on
+    `.local-dimensions-central-node > .d-flex`). The grip sits after the row content in the
+    DOM (its aria-label embeds the name, and Behat name clicks take the first document-order
+    hit) — CSS order:-1 paints it at the fixed left edge, while the inner row indents by depth.
+
     Context variables required:
     * id, parentid (int) · shortname, idnumber, taxonomy, scale, description (string)
-    * coursecount (int) · activitycount (int) · templatecount (int)
+    * type, tag1, tag2 (string) · coursecount (int) · activitycount (int) · templatecount (int)
     * depth, indent (int) · haschildren (bool) · canmanage (bool)
     * ruletype, ruleconfig (string|null) · ruleoutcome (int) · rulelabel (string)
 
@@ -35,6 +40,9 @@
         "taxonomy": "Competency",
         "scale": "Default competence scale",
         "description": "Communicates clearly in writing and speech.",
+        "type": "Module",
+        "tag1": "Year 1",
+        "tag2": "Intermediate",
         "coursecount": 3,
         "activitycount": 5,
         "templatecount": 2,
@@ -49,48 +57,53 @@
     }
 }}
 <div class="local-dimensions-central-node" data-node="{{id}}">
-    <div class="d-flex align-items-center" style="padding-left: {{indent}}px;">
-        {{#haschildren}}
-        <button type="button" class="btn btn-sm btn-link p-0 me-1 local-dimensions-central-toggle" data-action="toggle" data-id="{{id}}" aria-expanded="false" aria-label="{{shortname}}">
-            <i class="fa fa-chevron-right" aria-hidden="true"></i>
-        </button>
-        {{/haschildren}}
-        {{^haschildren}}
-        <span class="me-1 text-muted text-center local-dimensions-central-toggle-spacer" style="display:inline-block;width:1.25rem;" aria-hidden="true">&bull;</span>
-        {{/haschildren}}
-        <button type="button"
-                class="btn btn-link text-start text-decoration-none d-flex align-items-center flex-grow-1 px-2 py-1 local-dimensions-central-row"
-                data-action="select"
-                data-id="{{id}}"
-                data-parentid="{{parentid}}"
-                data-name="{{shortname}}"
-                data-idnumber="{{idnumber}}"
-                data-taxonomy="{{taxonomy}}"
-                data-scale="{{scale}}"
-                data-description="{{description}}"
-                data-courses="{{coursecount}}"
-                data-activities="{{activitycount}}"
-                data-templates="{{templatecount}}"
-                data-haschildren="{{#haschildren}}1{{/haschildren}}"
-                data-ruletype="{{ruletype}}"
-                data-ruleoutcome="{{ruleoutcome}}"
-                data-ruleconfig="{{ruleconfig}}"
-                data-rulelabel="{{rulelabel}}">
-            <span class="local-dimensions-central-row-name">{{shortname}}</span>
-            <span class="badge bg-light text-dark ms-2 local-dimensions-central-tax">{{taxonomy}}</span>
-            {{#idnumber}}
-            <span class="badge bg-light text-dark ms-2 local-dimensions-central-id">{{idnumber}}</span>
-            {{/idnumber}}
+    <div class="d-flex local-dimensions-central-structure-node-row">
+        <div class="local-dimensions-central-structure-node-inner" style="padding-left: {{indent}}px;">
             {{#haschildren}}
-            {{#ruletype}}
-            <span class="badge bg-info ms-2 local-dimensions-central-rulebadge">{{rulelabel}}</span>
-            {{/ruletype}}
+            <button type="button" class="btn btn-link p-0 local-dimensions-central-toggle local-dimensions-central-structure-node-toggle"
+                    data-action="toggle" data-id="{{id}}" aria-expanded="false" aria-label="{{shortname}}">
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+            </button>
             {{/haschildren}}
-        </button>
+            {{^haschildren}}
+            <span class="local-dimensions-central-toggle-spacer local-dimensions-central-structure-node-bullet" aria-hidden="true">•</span>
+            {{/haschildren}}
+            <button type="button"
+                    class="btn btn-link text-start text-decoration-none local-dimensions-central-structure-node-select"
+                    data-action="select"
+                    data-id="{{id}}"
+                    data-parentid="{{parentid}}"
+                    data-name="{{shortname}}"
+                    data-idnumber="{{idnumber}}"
+                    data-taxonomy="{{taxonomy}}"
+                    data-scale="{{scale}}"
+                    data-description="{{description}}"
+                    data-type="{{type}}"
+                    data-tag1="{{tag1}}"
+                    data-tag2="{{tag2}}"
+                    data-courses="{{coursecount}}"
+                    data-activities="{{activitycount}}"
+                    data-templates="{{templatecount}}"
+                    data-haschildren="{{#haschildren}}1{{/haschildren}}"
+                    data-ruletype="{{ruletype}}"
+                    data-ruleoutcome="{{ruleoutcome}}"
+                    data-ruleconfig="{{ruleconfig}}"
+                    data-rulelabel="{{rulelabel}}">
+                <span class="local-dimensions-central-row-name">{{shortname}}</span>
+                <span class="local-dimensions-central-tax local-dimensions-central-structure-node-tax">{{taxonomy}}</span>
+                {{#idnumber}}
+                <span class="local-dimensions-central-id local-dimensions-central-structure-node-id">{{idnumber}}</span>
+                {{/idnumber}}
+                {{#haschildren}}
+                {{#ruletype}}
+                <span class="local-dimensions-central-rulebadge local-dimensions-central-structure-node-rule">{{rulelabel}}</span>
+                {{/ruletype}}
+                {{/haschildren}}
+            </button>
+        </div>
         {{#canmanage}}
-        {{! Rendered after the row button (the grip's aria-label embeds the competency name,
-            and Behat name-based clicks match the first document-order hit); the flex order
-            in CSS still paints it at the left edge. }}
+        {{! After the row button (aria-label embeds the name; Behat name clicks take the first
+            document-order hit) — CSS order:-1 paints it at the left edge of the flex row. }}
         <button type="button" class="btn btn-link p-0 local-dimensions-central-plan-drag"
                 data-region="node-drag-handle"
                 title="{{#str}}central_plans_moveto, local_dimensions{{/str}}"

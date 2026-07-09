@@ -139,6 +139,14 @@ class structure extends \core\output\dynamic_tabs\base {
 
         [$rootnodes, $roottotal] = $selected ? $this->first_page_of_roots($selected) : [[], 0];
 
+        // Load-more affordance: the size of the next root page and a "Showing N of T" hint.
+        $rootshown = count($rootnodes);
+        $rootmorecount = max(0, min(helper::STRUCTURE_PAGE_SIZE, $roottotal - $rootshown));
+        $rootloadmorehint = get_string('central_structure_loadmoreshown', 'local_dimensions', (object) [
+            'shown' => $rootshown,
+            'total' => $roottotal,
+        ]);
+
         $canmanage = $selected && competency_framework::can_manage_context($selected->get_context());
 
         $PAGE->requires->js_call_amd('local_dimensions/central/structure', 'init');
@@ -159,9 +167,11 @@ class structure extends \core\output\dynamic_tabs\base {
             'hascompetencies' => $count > 0,
             'competencycount' => $count,
             'competencies' => $rootnodes,
-            'rootshown' => count($rootnodes),
+            'rootshown' => $rootshown,
             'roottotal' => $roottotal,
-            'hasmoreroots' => $roottotal > count($rootnodes),
+            'hasmoreroots' => $roottotal > $rootshown,
+            'rootmorecount' => $rootmorecount,
+            'rootloadmorehint' => $rootloadmorehint,
             'canmanage' => (int) $canmanage,
             'rulesmodulesjson' => json_encode(
                 $canmanage ? helper::get_competency_rule_modules() : [],
