@@ -64,6 +64,7 @@ const SELECTORS = {
     remove: '[data-action="delete"]',
     detailEmpty: '[data-region="detail-empty"]',
     detailContent: '[data-region="detail-content"]',
+    detailHeader: '.local-dimensions-central-structure-detail-header',
     detailTitle: '[data-region="detail-title"]',
     detailTaxonomy: '[data-region="detail-taxonomy"]',
     detailRule: '[data-region="detail-rule"]',
@@ -509,6 +510,50 @@ const applyChipText = (row, target, text) => {
 };
 
 /**
+ * Darken a hex colour towards black by the given fraction (0-1), mirroring helper::darken_hex.
+ *
+ * @param {String} hex Source colour, e.g. "#2274c6".
+ * @param {Number} amount Fraction to darken by (0 = unchanged, 1 = black).
+ * @return {String} The darkened "#rrggbb" colour (or the input when unparseable).
+ */
+const darkenHex = (hex, amount) => {
+    const clean = String(hex).replace('#', '');
+    const full = clean.length === 3 ? clean.split('').map((char) => char + char).join('') : clean;
+    if (!(/^[0-9a-fA-F]{6}$/).test(full)) {
+        return hex;
+    }
+    const channel = (start) => Math.round(parseInt(full.slice(start, start + 2), 16) * (1 - amount))
+        .toString(16)
+        .padStart(2, '0');
+    return '#' + channel(0) + channel(2) + channel(4);
+};
+
+/**
+ * Paint the detail header with the selected competency's custom colours (the same 140deg
+ * darkening gradient the Plans tab uses), or clear them to fall back to the brand default.
+ *
+ * @param {HTMLElement} content The detail-content container.
+ * @param {HTMLElement} row The selected tree row.
+ */
+const applyHeaderColors = (content, row) => {
+    const header = content.querySelector(SELECTORS.detailHeader);
+    if (!header) {
+        return;
+    }
+    const bg = row.dataset.bgcolor || '';
+    if (bg) {
+        header.style.setProperty('--ld-plans-hdr-0', bg);
+        header.style.setProperty('--ld-plans-hdr-48', darkenHex(bg, 0.16));
+        header.style.setProperty('--ld-plans-hdr-100', darkenHex(bg, 0.34));
+    } else {
+        header.style.removeProperty('--ld-plans-hdr-0');
+        header.style.removeProperty('--ld-plans-hdr-48');
+        header.style.removeProperty('--ld-plans-hdr-100');
+    }
+    header.style.color = row.dataset.textcolor || '';
+};
+
+/**
  * Populate the header metadata chips from the selected row, hiding each empty one.
  *
  * @param {HTMLElement} content The detail-content container.
@@ -601,6 +646,7 @@ const selectRow = (region, row) => {
     content.hidden = false;
     content.querySelector(SELECTORS.detailTitle).textContent = row.dataset.name || '';
     content.querySelector(SELECTORS.detailTaxonomy).textContent = row.dataset.taxonomy || '';
+    applyHeaderColors(content, row);
     populateDetailChips(content, row);
     populateDetailBody(content, row);
 
@@ -784,7 +830,82 @@ const fetchAllChildren = async(parentid) => {
 };
 
 /**
- * Open the competency modal form and refresh the tab on success.
+ * Refresh a single competency's node in place after an edit: re-render its row from fresh
+ * server data (keeping the children container + expansion) and re-select it so the detail pane
+ * updates — without reloading the whole tab, so the tree state is preserved (mirrors the Plans
+ * tab). Falls back to a full reload when the node is gone, or to reload-and-reveal when it was
+ * reparented during the edit (its position in the tree changed).
+ *
+ * @param {HTMLElement} pane
+ * @param {Number} id Competency id.
+ * @return {Promise<void>}
+ */
+const refreshNode = async(pane, id) => {
+    const region = document.querySelector(SELECTORS.region);
+    const existing = region && region.querySelector(`${SELECTORS.node}[data-node="${id}"]`);
+    if (!region || !existing) {
+        await reloadPane(pane);
+        return;
+    }
+    const response = await Ajax.call([{
+        methodname: 'local_dimensions_get_structure_node',
+        args: {competencyid: id},
+    }])[0];
+    const data = response && response.found ? response.node : null;
+    if (!data) {
+        await reloadPane(pane);
+        return;
+    }
+    const oldrow = existing.querySelector(SELECTORS.row);
+    const wasactive = !!(oldrow && oldrow.classList.contains('active'));
+
+    // The edit form can reparent the competency; a moved node changes its tree position, which
+    // an in-place row swap cannot represent — reload and reveal it at its new location instead.
+    if (oldrow && Number(oldrow.dataset.parentid) !== Number(data.parentid)) {
+        await reloadPane(pane);
+        const fresh = document.querySelector(SELECTORS.region);
+        if (fresh) {
+            await revealNode(fresh, id, response.pathids || []);
+        }
+        return;
+    }
+
+    // Re-render the row line from the fresh node and swap it in, keeping the untouched children
+    // container and the expanded/collapsed toggle state.
+    const {html, js} = await Templates.renderForPromise('local_dimensions/central/structure_node', data);
+    const holder = document.createElement('div');
+    await Templates.appendNodeContents(holder, html, js);
+    const freshline = holder.querySelector('.local-dimensions-central-structure-node-row');
+    const oldline = existing.querySelector(':scope > .local-dimensions-central-structure-node-row');
+    if (!freshline || !oldline) {
+        await reloadPane(pane);
+        return;
+    }
+    const container = existing.querySelector(`[data-children="${id}"]`);
+    const expanded = !!(container && container.dataset.open === '1');
+    oldline.replaceWith(freshline);
+    if (expanded) {
+        const toggle = freshline.querySelector(SELECTORS.toggle);
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', 'true');
+            const icon = toggle.querySelector('i');
+            if (icon) {
+                icon.className = 'fa fa-chevron-down';
+            }
+        }
+    }
+    if (wasactive) {
+        const freshrow = freshline.querySelector(SELECTORS.row);
+        if (freshrow) {
+            selectRow(region, freshrow);
+        }
+    }
+};
+
+/**
+ * Open the competency modal form. On success, editing an existing competency refreshes just
+ * that node in place (keeping the tree expansion + selection); creating one reloads the tab so
+ * the new node appears.
  *
  * @param {HTMLElement} pane
  * @param {Object} args
@@ -796,7 +917,14 @@ const openForm = async(pane, args, titlekey) => {
         args,
         modalConfig: {title: await getString(titlekey, 'tool_lp')},
     });
-    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadPane(pane).catch(notifyError));
+    const editingid = Number(args.id) || 0;
+    form.addEventListener(form.events.FORM_SUBMITTED, () => {
+        if (editingid > 0) {
+            refreshNode(pane, editingid).catch(notifyError);
+        } else {
+            reloadPane(pane).catch(notifyError);
+        }
+    });
     form.show();
 };
 

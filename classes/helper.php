@@ -1704,9 +1704,10 @@ class helper {
             }
         }
 
-        // Batch: the type/tag1/tag2 select-field labels for this page of competencies, so the
-        // detail pane can show the same metadata chips as the Plans tab (one grouped query).
-        $cflabels = self::structure_customfield_labels($ids);
+        // Batch: per-competency custom-field data for this page — the type/tag1/tag2 select
+        // labels (metadata chips) plus the custom background/text colours the detail header
+        // wears (mirrors the Plans tab), in one grouped query.
+        $cfdata = self::structure_customfield_data($ids);
 
         $nodes = [];
         foreach ($records as $record) {
@@ -1745,25 +1746,28 @@ class helper {
                 'ruleoutcome' => (int) $record->get('ruleoutcome'),
                 'ruleconfig' => $record->get('ruleconfig'),
                 'rulelabel' => self::get_competency_rule_label($record->get('ruletype')),
-                'type' => (string) ($cflabels[$id][constants::CFIELD_TYPE] ?? ''),
-                'tag1' => (string) ($cflabels[$id][constants::CFIELD_TAG1] ?? ''),
-                'tag2' => (string) ($cflabels[$id][constants::CFIELD_TAG2] ?? ''),
+                'type' => (string) ($cfdata[$id][constants::CFIELD_TYPE] ?? ''),
+                'tag1' => (string) ($cfdata[$id][constants::CFIELD_TAG1] ?? ''),
+                'tag2' => (string) ($cfdata[$id][constants::CFIELD_TAG2] ?? ''),
+                'bgcolor' => (string) ($cfdata[$id][constants::CFIELD_CUSTOMBGCOLOR] ?? ''),
+                'textcolor' => (string) ($cfdata[$id][constants::CFIELD_CUSTOMTEXTCOLOR] ?? ''),
             ];
         }
         return $nodes;
     }
 
     /**
-     * Batch-read the type/tag1/tag2 select-field labels for a set of competencies.
+     * Batch-read per-competency custom-field data for a set of competencies: the type/tag1/tag2
+     * select-field labels (metadata chips) and the custom background/text colours (detail header).
      *
-     * These are `select` custom fields in the competency area: each stores a 1-based option
-     * index (`intvalue`) plus the field's option list in `configdata`. One grouped query pulls
-     * the rows for the whole page; the label is the option text at the stored index.
+     * The selects store a 1-based option index (`intvalue`) plus the option list in `configdata`;
+     * the colours are text fields whose `value` holds the hex. One grouped query pulls the rows
+     * for the whole page.
      *
      * @param array $ids Competency ids.
-     * @return array Map keyed by competency id then shortname => option label (only set values).
+     * @return array Map keyed by competency id then shortname => decoded value (only set values).
      */
-    private static function structure_customfield_labels(array $ids): array {
+    private static function structure_customfield_data(array $ids): array {
         global $DB;
 
         $ids = array_values(array_filter(array_map('intval', $ids)));
@@ -1771,7 +1775,11 @@ class helper {
             return [];
         }
 
-        $shortnames = [constants::CFIELD_TYPE, constants::CFIELD_TAG1, constants::CFIELD_TAG2];
+        $colors = [constants::CFIELD_CUSTOMBGCOLOR, constants::CFIELD_CUSTOMTEXTCOLOR];
+        $shortnames = array_merge(
+            [constants::CFIELD_TYPE, constants::CFIELD_TAG1, constants::CFIELD_TAG2],
+            $colors
+        );
         [$idsql, $idparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'cid');
         [$snsql, $snparams] = $DB->get_in_or_equal($shortnames, SQL_PARAMS_NAMED, 'sn');
         $params = $idparams + $snparams + [
@@ -1782,7 +1790,7 @@ class helper {
         // Direct query against the core {customfield_*} tables — intentional for the grouped
         // batch shape (the customfield API has no batch read across instances). Mirrors
         // template_metadata_cache; re-validate if core changes the customfield schema.
-        $sql = "SELECT d.id AS dataid, d.instanceid, f.shortname, f.configdata, d.intvalue
+        $sql = "SELECT d.id AS dataid, d.instanceid, f.shortname, f.configdata, d.intvalue, d.value
                   FROM {customfield_data} d
                   JOIN {customfield_field} f ON f.id = d.fieldid
                   JOIN {customfield_category} c ON c.id = f.categoryid
@@ -1791,14 +1799,39 @@ class helper {
                    AND c.component = :component
                    AND c.area = :area";
 
+        // Membership map for the colour shortnames; isset() (never !empty) reads it, since
+        // array_flip values start at 0.
+        $iscolor = array_flip($colors);
         $result = [];
         foreach ($DB->get_records_sql($sql, $params) as $row) {
+            $instanceid = (int) $row->instanceid;
+            if (isset($iscolor[$row->shortname])) {
+                $hex = self::normalise_hex_color((string) ($row->value ?? ''));
+                if ($hex !== '') {
+                    $result[$instanceid][$row->shortname] = $hex;
+                }
+                continue;
+            }
             $label = self::decode_customfield_select_label($row);
             if ($label !== '') {
-                $result[(int) $row->instanceid][$row->shortname] = $label;
+                $result[$instanceid][$row->shortname] = $label;
             }
         }
         return $result;
+    }
+
+    /**
+     * Validate and normalise a hex colour string to a leading-'#' form, or '' when invalid.
+     *
+     * @param string $value Raw stored colour value.
+     * @return string Normalised colour with a leading '#', or '' when not a valid 3/6-digit hex.
+     */
+    private static function normalise_hex_color(string $value): string {
+        $value = trim($value);
+        if (!preg_match('/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $value)) {
+            return '';
+        }
+        return $value[0] === '#' ? $value : '#' . $value;
     }
 
     /**

@@ -122,6 +122,14 @@ $functions = [
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
     ],
+    'local_dimensions_get_structure_node' => [
+        'classname' => 'local_dimensions\external\get_structure_node',
+        'methodname' => 'execute',
+        'description' => 'Fetch a single competency\'s fresh Structure-tab node for an in-place refresh.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+    ],
     'local_dimensions_list_related_competencies' => [
         'classname' => 'local_dimensions\external\list_related_competencies',
         'methodname' => 'execute',

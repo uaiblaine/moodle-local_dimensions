@@ -108,35 +108,51 @@ class browse_structure extends external_api {
     }
 
     /**
+     * The external structure of a single competency tree node.
+     *
+     * Shared with get_structure_node so both web services declare the exact shape
+     * helper::structure_nodes() emits (avoids the execute_returns allowlist silently
+     * stripping fields when the shaper gains one).
+     *
+     * @param int $required VALUE_REQUIRED (default) or VALUE_OPTIONAL for the whole node.
+     * @return external_single_structure
+     */
+    public static function node_structure(int $required = VALUE_REQUIRED): external_single_structure {
+        return new external_single_structure([
+            'id' => new external_value(PARAM_INT, 'Competency id'),
+            'parentid' => new external_value(PARAM_INT, 'Parent competency id (0 = root)'),
+            'shortname' => new external_value(PARAM_TEXT, 'Competency short name'),
+            'idnumber' => new external_value(PARAM_RAW, 'Competency ID number'),
+            'taxonomy' => new external_value(PARAM_TEXT, 'Localised taxonomy label for the node level'),
+            'scale' => new external_value(PARAM_TEXT, 'Effective scale name (framework default when inherited)'),
+            'description' => new external_value(PARAM_RAW, 'Formatted HTML competency description for the detail pane'),
+            'coursecount' => new external_value(PARAM_INT, 'Number of linked courses'),
+            'activitycount' => new external_value(PARAM_INT, 'Number of linked course-module activities'),
+            'templatecount' => new external_value(PARAM_INT, 'Number of learning plan templates bundling the competency'),
+            'depth' => new external_value(PARAM_INT, 'Tree depth (0 = root)'),
+            'indent' => new external_value(PARAM_INT, 'Indent in pixels (depth * 22)'),
+            'haschildren' => new external_value(PARAM_BOOL, 'Whether the competency has child competencies'),
+            'canmanage' => new external_value(PARAM_BOOL, 'Whether the caller may manage (reorder/move) the competency'),
+            'ruletype' => new external_value(PARAM_RAW, 'Rule class name, or null when no rule'),
+            'ruleoutcome' => new external_value(PARAM_INT, 'Rule outcome code (0 = none)'),
+            'ruleconfig' => new external_value(PARAM_RAW, 'Rule configuration JSON, or null'),
+            'rulelabel' => new external_value(PARAM_TEXT, 'Localized competency rule label'),
+            'type' => new external_value(PARAM_TEXT, 'Competency type custom-field label (empty when unset)'),
+            'tag1' => new external_value(PARAM_TEXT, 'Competency tag 1 custom-field label (empty when unset)'),
+            'tag2' => new external_value(PARAM_TEXT, 'Competency tag 2 custom-field label (empty when unset)'),
+            'bgcolor' => new external_value(PARAM_TEXT, 'Custom header background colour hex, empty when unset'),
+            'textcolor' => new external_value(PARAM_TEXT, 'Custom header text colour hex, empty when unset'),
+        ], 'Competency tree node', $required);
+    }
+
+    /**
      * Define the return structure for the browse_structure external function.
      *
      * @return external_single_structure
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'items' => new external_multiple_structure(new external_single_structure([
-                'id' => new external_value(PARAM_INT, 'Competency id'),
-                'parentid' => new external_value(PARAM_INT, 'Parent competency id (0 = root)'),
-                'shortname' => new external_value(PARAM_TEXT, 'Competency short name'),
-                'idnumber' => new external_value(PARAM_RAW, 'Competency ID number'),
-                'taxonomy' => new external_value(PARAM_TEXT, 'Localised taxonomy label for the node level'),
-                'scale' => new external_value(PARAM_TEXT, 'Effective scale name (framework default when inherited)'),
-                'description' => new external_value(PARAM_RAW, 'Formatted HTML competency description for the detail pane'),
-                'coursecount' => new external_value(PARAM_INT, 'Number of linked courses'),
-                'activitycount' => new external_value(PARAM_INT, 'Number of linked course-module activities'),
-                'templatecount' => new external_value(PARAM_INT, 'Number of learning plan templates bundling the competency'),
-                'depth' => new external_value(PARAM_INT, 'Tree depth (0 = root)'),
-                'indent' => new external_value(PARAM_INT, 'Indent in pixels (depth * 22)'),
-                'haschildren' => new external_value(PARAM_BOOL, 'Whether the competency has child competencies'),
-                'canmanage' => new external_value(PARAM_BOOL, 'Whether the caller may manage (reorder/move) the competency'),
-                'ruletype' => new external_value(PARAM_RAW, 'Rule class name, or null when no rule'),
-                'ruleoutcome' => new external_value(PARAM_INT, 'Rule outcome code (0 = none)'),
-                'ruleconfig' => new external_value(PARAM_RAW, 'Rule configuration JSON, or null'),
-                'rulelabel' => new external_value(PARAM_TEXT, 'Localized competency rule label'),
-                'type' => new external_value(PARAM_TEXT, 'Competency type custom-field label (empty when unset)'),
-                'tag1' => new external_value(PARAM_TEXT, 'Competency tag 1 custom-field label (empty when unset)'),
-                'tag2' => new external_value(PARAM_TEXT, 'Competency tag 2 custom-field label (empty when unset)'),
-            ])),
+            'items' => new external_multiple_structure(self::node_structure()),
             'total' => new external_value(PARAM_INT, 'Total direct children for this parent across all pages'),
         ]);
     }

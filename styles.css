@@ -4609,7 +4609,7 @@
 /* Tree node row: the row line carries the selection border + hover/selected background; the
    grip is a fixed left column (order:-1) and the inner content indents by depth. */
 .local-dimensions-central-structure-node-row {
-    align-items: flex-start;
+    align-items: center;
     gap: 6px;
     padding: 7px 10px;
     border-left: 2px solid transparent;
@@ -4625,9 +4625,9 @@
     background: #e7f0f9;
 }
 
-/* Grip, chevron/bullet and the name all use a 22px line box, vertically centred and
-   top-anchored to the row's first line — so the controls line up with the name centre even
-   when chips wrap onto a second line. */
+/* Grip, chevron/bullet and the name are each a flex box with their glyph/text centred, and the
+   row + inner containers centre their children — so the controls line up with the name's
+   vertical centre (a node whose chips wrap onto a second line centres against the full row). */
 .local-dimensions-central-structure-node-row .local-dimensions-central-plan-drag {
     height: 22px;
     display: inline-flex;
@@ -4640,8 +4640,8 @@
     flex: 1 1 auto;
     min-width: 0;
     display: flex;
-    align-items: flex-start;
-    gap: 8px;
+    align-items: center;
+    gap: 4px;
 }
 
 .local-dimensions-central-structure-node-toggle {
