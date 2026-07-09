@@ -36,11 +36,11 @@
         "deletable": false
     }
 }}
-<li class="local-dimensions-central-fwcard{{^visible}} is-hidden{{/visible}}"
-    data-framework="{{id}}" data-frameworkid="{{id}}" data-name="{{shortname}}"
-    data-count="{{competencycount}}"
-    data-visible="{{#visible}}1{{/visible}}{{^visible}}0{{/visible}}"
-    data-deletable="{{#deletable}}1{{/deletable}}{{^deletable}}0{{/deletable}}">
+<div class="local-dimensions-central-fwcard{{^visible}} is-hidden{{/visible}}"
+     data-framework="{{id}}" data-frameworkid="{{id}}" data-name="{{shortname}}"
+     data-count="{{competencycount}}"
+     data-visible="{{#visible}}1{{/visible}}{{^visible}}0{{/visible}}"
+     data-deletable="{{#deletable}}1{{/deletable}}{{^deletable}}0{{/deletable}}">
     <button type="button" class="local-dimensions-central-fwcard-select" data-action="select-framework">
         <span class="local-dimensions-central-fwcard-body">
             <span class="local-dimensions-central-fwcard-head">
@@ -54,4 +54,4 @@
             <strong>{{competencycount}}</strong>{{#str}}central_frameworks_competencieslabel, local_dimensions{{/str}}
         </span>
     </button>
-</li>
+</div>
