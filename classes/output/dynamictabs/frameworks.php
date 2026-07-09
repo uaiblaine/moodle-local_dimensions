@@ -89,17 +89,21 @@ class frameworks extends \core\output\dynamic_tabs\base {
         // whether any hidden structure actually exists, mirroring the Plans tab; then filter the
         // display rows by the current toggle state.
         $allrows = $needscategory ? [] : helper::framework_rows($pagecontext, true);
-        $hashiddenframeworks = false;
+        $hiddencount = 0;
         $rows = [];
         foreach ($allrows as $row) {
             if (empty($row['visible'])) {
-                $hashiddenframeworks = true;
+                $hiddencount++;
                 if (!$showhidden) {
                     continue;
                 }
             }
             $rows[] = $row;
         }
+        $hashiddenframeworks = $hiddencount > 0;
+        // Structures hidden from the current view (only when the toggle is off) — surfaced as
+        // the "· N hidden" suffix on the count so the number stays honest.
+        $excludedcount = $showhidden ? 0 : $hiddencount;
         $canmanage = !$needscategory && competency_framework::can_manage_context($pagecontext);
 
         $PAGE->requires->js_call_amd('local_dimensions/central/frameworks', 'init');
@@ -113,9 +117,17 @@ class frameworks extends \core\output\dynamic_tabs\base {
             'hashiddenframeworks' => $hashiddenframeworks,
             'frameworks' => $rows,
             'frameworkcount' => count($rows),
+            'hasexcluded' => $excludedcount > 0,
+            'excludedcount' => $excludedcount,
             'canmanage' => (int) $canmanage,
             'canexport' => (int) ($canmanage && !empty($rows)),
             'showhidden' => $showhidden,
+            'showhiddentoggle' => $hashiddenframeworks ? [
+                'id' => 'local-dimensions-frameworks-showhidden',
+                'label' => get_string('managecompetencies_showhiddenframeworks', 'local_dimensions'),
+                'action' => 'toggle-hidden',
+                'checked' => $showhidden,
+            ] : null,
         ];
     }
 }

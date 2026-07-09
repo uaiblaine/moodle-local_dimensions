@@ -159,6 +159,12 @@ class structure extends \core\output\dynamic_tabs\base {
             'needscategoryselection' => $needscategory,
             'showhidden' => $showhidden,
             'hashiddenframeworks' => $hashiddenframeworks,
+            'showhiddentoggle' => $hashiddenframeworks ? [
+                'id' => 'local-dimensions-structure-showhidden',
+                'label' => get_string('managecompetencies_showhiddenframeworks', 'local_dimensions'),
+                'action' => 'toggle-hidden',
+                'checked' => $showhidden,
+            ] : null,
             'hasframeworks' => !empty($frameworkoptions),
             'frameworks' => $frameworkoptions,
             'selectedframeworkid' => $frameworkid,

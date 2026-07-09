@@ -17,33 +17,41 @@
 {{!
     @template local_dimensions/central/frameworks_row
 
-    One competency framework row in the Frameworks tab.
+    One structure (competency framework) card in the Structures tab. The whole card is a select
+    button: choosing it highlights the card and drives the shared page sticky-footer actions
+    (edit, visibility, duplicate, delete). Hidden structures render dimmed with a badge.
 
     Context variables required:
-    * id, shortname, idnumber (string) · competencycount (int)
-    * visible, deletable, canmanage (bool)
+    * id, shortname, idnumber, description (string) · competencycount (int)
+    * visible, deletable (bool)
 
     Example context (json):
     {
         "id": 5,
         "shortname": "Core skills",
         "idnumber": "CORE",
+        "description": "Baseline competencies for the current cohort.",
         "competencycount": 12,
         "visible": true,
-        "deletable": false,
-        "canmanage": true
+        "deletable": false
     }
 }}
-<div class="d-flex align-items-center border-bottom local-dimensions-central-framework"
-     data-framework="{{id}}" data-frameworkid="{{id}}" data-name="{{shortname}}"
-     data-count="{{competencycount}}" data-visible="{{#visible}}1{{/visible}}{{^visible}}0{{/visible}}"
-     data-deletable="{{#deletable}}1{{/deletable}}{{^deletable}}0{{/deletable}}">
-    <button type="button"
-            class="btn text-start text-decoration-none flex-grow-1 py-2 local-dimensions-central-framework-select"
-            data-action="select-framework">
-        <span class="fw-bold">{{shortname}}</span>
-        {{#idnumber}}<span class="text-muted small ms-2">{{idnumber}}</span>{{/idnumber}}
-        <span class="text-muted small ms-2">{{#str}}central_frameworks_competencies, local_dimensions, {{competencycount}}{{/str}}</span>
-        {{^visible}}<span class="badge bg-secondary ms-2">{{#str}}hidden, tool_lp{{/str}}</span>{{/visible}}
+<li class="local-dimensions-central-fwcard{{^visible}} is-hidden{{/visible}}"
+    data-framework="{{id}}" data-frameworkid="{{id}}" data-name="{{shortname}}"
+    data-count="{{competencycount}}"
+    data-visible="{{#visible}}1{{/visible}}{{^visible}}0{{/visible}}"
+    data-deletable="{{#deletable}}1{{/deletable}}{{^deletable}}0{{/deletable}}">
+    <button type="button" class="local-dimensions-central-fwcard-select" data-action="select-framework">
+        <span class="local-dimensions-central-fwcard-body">
+            <span class="local-dimensions-central-fwcard-head">
+                <span class="local-dimensions-central-fwcard-name">{{shortname}}</span>
+                {{#idnumber}}<span class="local-dimensions-central-fwcard-idnumber">{{idnumber}}</span>{{/idnumber}}
+                {{^visible}}<span class="local-dimensions-central-fwcard-hidden"><i class="fa fa-eye-slash" aria-hidden="true"></i>{{#str}}hidden, tool_lp{{/str}}</span>{{/visible}}
+            </span>
+            {{#description}}<span class="local-dimensions-central-fwcard-desc" title="{{description}}">{{description}}</span>{{/description}}
+        </span>
+        <span class="local-dimensions-central-fwcard-count">
+            <strong>{{competencycount}}</strong>{{#str}}central_frameworks_competencieslabel, local_dimensions{{/str}}
+        </span>
     </button>
-</div>
+</li>

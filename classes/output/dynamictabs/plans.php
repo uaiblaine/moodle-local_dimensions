@@ -274,6 +274,12 @@ class plans extends \core\output\dynamic_tabs\base {
             'needscategoryselection' => $needscategory,
             'hastemplates' => !empty($templateoptions),
             'hashiddentemplates' => $hashiddentemplates,
+            'showhiddentoggle' => $hashiddentemplates ? [
+                'id' => 'local-dimensions-plans-showdisabled',
+                'label' => get_string('central_plans_showdisabled', 'local_dimensions'),
+                'action' => 'toggle-disabled',
+                'checked' => false,
+            ] : null,
             'templates' => $templateoptions,
             'selectedtemplateid' => $templateid,
             'selectedtemplatename' => $selected ? format_string($selected->get('shortname')) : '',

@@ -37,6 +37,7 @@
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · contextid (int) · needscategoryselection (bool)
     * hastemplates (bool) · hashiddentemplates (bool)
+    * showhiddentoggle (object|null) {id, label, action, checked} · standalone "show hidden" pill
     * templates (array) {id, name, idnumber, search, competencycount, visible, selected, duedate}
     * selectedtemplateid (int) · selectedtemplatename (string) · selectedtemplatevisible (bool)
     * headertextcolor (string) · headerbgstop0 (string) · headerbgstop48 (string) · headerbgstop100 (string)
@@ -67,6 +68,12 @@
         "filteredbycompetency": true,
         "hastemplates": true,
         "hashiddentemplates": true,
+        "showhiddentoggle": {
+            "id": "local-dimensions-plans-showdisabled",
+            "label": "Show hidden templates",
+            "action": "toggle-disabled",
+            "checked": false
+        },
         "templates": [
             {"id": 4, "name": "Induction plan", "idnumber": "IND-01", "search": "induction plan ind-01",
              "competencycount": 6, "visible": true, "selected": true, "duedate": "31 December 2025"},
@@ -123,6 +130,9 @@
     {{/needscategoryselection}}
 
     {{^needscategoryselection}}
+    {{#showhiddentoggle}}
+    {{> local_dimensions/central/showhidden_toggle }}
+    {{/showhiddentoggle}}
     <div class="local-dimensions-central-plans-body{{^hastemplates}} local-dimensions-central-plans-body-single{{/hastemplates}}" data-region="plans-body">
         <section class="local-dimensions-central-plans-list-pane" data-region="template-list">
             <div class="local-dimensions-central-plans-panel">
@@ -151,14 +161,6 @@
                                    id="local-dimensions-plans-list-duedate" data-list-toggle="duedate">
                             <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
                         </label>
-                        {{#hashiddentemplates}}
-                        <label class="local-dimensions-plans-switch">
-                            <span class="local-dimensions-plans-switch-text">{{#str}}central_plans_showdisabled, local_dimensions{{/str}}</span>
-                            <input type="checkbox" class="local-dimensions-plans-switch-input"
-                                   id="local-dimensions-plans-showdisabled" data-action="toggle-disabled">
-                            <span class="local-dimensions-plans-switch-track" aria-hidden="true"><span class="local-dimensions-plans-switch-knob"></span></span>
-                        </label>
-                        {{/hashiddentemplates}}
                     </div>
 
                     <div class="local-dimensions-central-plans-searchrow" data-region="plan-toolbar">
