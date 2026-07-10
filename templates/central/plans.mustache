@@ -372,7 +372,8 @@
                             <li class="local-dimensions-central-plans-module" data-competency="{{id}}">
                                 <div class="local-dimensions-central-plans-module-main">
                                     <div class="local-dimensions-central-plans-module-head">
-                                        <span class="local-dimensions-central-plans-module-name" data-region="comp-name">{{shortname}}</span>
+                                        <button type="button" class="local-dimensions-central-plans-module-name" data-region="comp-name"
+                                                data-action="open-competency-detail" data-id="{{id}}">{{shortname}}</button>
                                         {{#taxonomy}}<span class="local-dimensions-central-tax local-dimensions-central-plans-module-tax">– {{taxonomy}}</span>{{/taxonomy}}
                                         {{#idnumber}}<span class="local-dimensions-central-id local-dimensions-central-plans-module-id">{{idnumber}}</span>{{/idnumber}}
                                     </div>

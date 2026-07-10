@@ -38,6 +38,7 @@ import {initMasterResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import CollapsibleDescription from 'local_dimensions/collapsible_description';
 import * as ActionFooter from 'local_dimensions/central/action_footer';
+import {openCompetencyDetailModal} from 'local_dimensions/central/competency_detail';
 
 const FORM_CLASS = 'local_dimensions\\form\\template_dynamic_form';
 const COMPETENCY_FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
@@ -761,6 +762,8 @@ const ACTION_HANDLERS = {
     'move-competency-up': (pane, region, target) => moveCompetency(pane, target, 'up').catch(notifyError),
     'move-competency-down': (pane, region, target) => moveCompetency(pane, target, 'down').catch(notifyError),
     'move-competency-to': (pane, region, target) => moveCompetencyTo(pane, region, target).catch(notifyError),
+    'open-competency-detail': (pane, region, target) =>
+        openCompetencyDetailModal(Number(target.dataset.id)).catch(notifyError),
 };
 
 /**

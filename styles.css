@@ -4485,9 +4485,19 @@
 }
 
 .local-dimensions-central-plans-module-name {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
     font-size: 16px;
     font-weight: 700;
+    line-height: inherit;
     color: #1d2125;
+    text-align: left;
+
+    /* A button that opens the competency detail modal, but kept looking like plain text:
+       the only hover affordance is the pointer cursor — no colour change, no underline. */
+    cursor: pointer;
 }
 
 .local-dimensions-central-plans-module-tax {
