@@ -176,7 +176,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         ]
     ));
 
-    // Single course redirect (only applies when enrollment filter is 'active').
+    // Single course redirect: skip the tracker when a single accessible course remains.
     $settings->add(new admin_setting_configcheckbox(
         'local_dimensions/singlecourseredirect',
         get_string('singlecourseredirect', 'local_dimensions'),
@@ -191,19 +191,6 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         'local_dimensions/plansummaryheading',
         get_string('plansummaryheading', 'local_dimensions'),
         get_string('plansummaryheading_desc', 'local_dimensions')
-    ));
-
-    // Enrollment filter for full plan overview accordion.
-    $settings->add(new admin_setting_configselect(
-        'local_dimensions/summaryenrollmentfilter',
-        get_string('summaryenrollmentfilter', 'local_dimensions'),
-        get_string('summaryenrollmentfilter_desc', 'local_dimensions'),
-        'all',
-        [
-            'all' => get_string('enrollmentfilter_all', 'local_dimensions'),
-            'enrolled' => get_string('enrollmentfilter_enrolled', 'local_dimensions'),
-            'active' => get_string('enrollmentfilter_active', 'local_dimensions'),
-        ]
     ));
 
     // Show competency description.
