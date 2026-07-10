@@ -35,12 +35,21 @@ use local_dimensions\output\dynamictabs\frameworks;
 use local_dimensions\output\dynamictabs\plans;
 use local_dimensions\output\dynamictabs\structure;
 
-$frameworkid = optional_param('frameworkid', 0, PARAM_INT);
-$contexttype = optional_param('contexttype', 'system', PARAM_ALPHA);
-$categoryid = optional_param('categoryid', 0, PARAM_INT);
-
 admin_externalpage_setup('local_dimensions_central');
 api::require_enabled();
+
+// Restore the last-visited view (tab / context / selection) from the user's saved preference;
+// an explicit URL param always wins so deep-links keep working.
+$prefs = helper::get_central_prefs();
+$nav = $prefs['nav'];
+$contexttype = optional_param('contexttype', $nav['contexttype'], PARAM_ALPHA);
+$categoryid = optional_param('categoryid', $nav['categoryid'], PARAM_INT);
+$frameworkid = optional_param('frameworkid', $nav['frameworkid'], PARAM_INT);
+$templateid = optional_param('templateid', $nav['templateid'], PARAM_INT);
+$activetab = optional_param('tab', $nav['tab'], PARAM_ALPHA);
+if (!in_array($activetab, ['frameworks', 'structure', 'plans'], true)) {
+    $activetab = 'frameworks';
+}
 
 $PAGE->set_url(new moodle_url('/local/dimensions/central.php'));
 $PAGE->set_title(get_string('central', 'local_dimensions'));
@@ -58,17 +67,55 @@ $PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
 // The page-level sticky footer is shared by both tabs; init its coordinator once.
 $PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
 
-// Build the Frameworks tab and pre-render its body (it is the landing tab); refresh
-// after actions is done client-side via core_dynamic_tabs_get_content (no page reload).
-$frameworkstab = new frameworks([
+// Init the shared view-state store with the resolved nav + display, so the client saves
+// changes against the state the page actually rendered (e.g. a downgraded coursecat context).
+$prefs['nav'] = [
+    'tab' => $activetab,
     'contexttype' => $contexttype,
     'categoryid' => $categoryid,
-]);
-$frameworkstab->require_access();
-$frameworkscontent = $OUTPUT->render_from_template(
-    $frameworkstab->get_template(),
-    $frameworkstab->export_for_template($OUTPUT)
-);
+    'frameworkid' => $frameworkid,
+    'templateid' => $templateid,
+];
+$PAGE->requires->js_call_amd('local_dimensions/central/preferences', 'init', [$prefs]);
+
+// Build the three tabs; pre-render only the restored (active) one — the others lazy-load via
+// core_dynamic_tabs_get_content on first activation.
+$tabinstances = [
+    'frameworks' => new frameworks(['contexttype' => $contexttype, 'categoryid' => $categoryid]),
+    'structure' => new structure([
+        'contexttype' => $contexttype,
+        'categoryid' => $categoryid,
+        'frameworkid' => $frameworkid,
+    ]),
+    'plans' => new plans([
+        'contexttype' => $contexttype,
+        'categoryid' => $categoryid,
+        'templateid' => $templateid,
+    ]),
+];
+$tablabels = [
+    'frameworks' => get_string('central_frameworks_tab', 'local_dimensions'),
+    'structure' => get_string('managecompetencies_structure', 'local_dimensions'),
+    'plans' => get_string('learningplans', 'local_dimensions'),
+];
+$tabs = [];
+foreach (['frameworks', 'structure', 'plans'] as $shortname) {
+    $isactive = ($shortname === $activetab);
+    $tab = $tabinstances[$shortname];
+    $content = '';
+    if ($isactive) {
+        $tab->require_access();
+        $content = $OUTPUT->render_from_template($tab->get_template(), $tab->export_for_template($OUTPUT));
+    }
+    $tabs[] = [
+        'shortname' => $shortname,
+        'displayname' => $tablabels[$shortname],
+        'tabclass' => get_class($tab),
+        'enabled' => true,
+        'active' => $isactive,
+        'content' => $content,
+    ];
+}
 
 $tabsdata = [
     'showtabsnavigation' => true,
@@ -76,33 +123,9 @@ $tabsdata = [
         ['name' => 'contexttype', 'value' => $contexttype],
         ['name' => 'categoryid', 'value' => $categoryid],
         ['name' => 'frameworkid', 'value' => $frameworkid],
+        ['name' => 'templateid', 'value' => $templateid],
     ],
-    'tabs' => [
-        [
-            'shortname' => 'frameworks',
-            'displayname' => get_string('central_frameworks_tab', 'local_dimensions'),
-            'tabclass' => frameworks::class,
-            'enabled' => true,
-            'active' => true,
-            'content' => $frameworkscontent,
-        ],
-        [
-            'shortname' => 'structure',
-            'displayname' => get_string('managecompetencies_structure', 'local_dimensions'),
-            'tabclass' => structure::class,
-            'enabled' => true,
-            'active' => false,
-            'content' => '',
-        ],
-        [
-            'shortname' => 'plans',
-            'displayname' => get_string('learningplans', 'local_dimensions'),
-            'tabclass' => plans::class,
-            'enabled' => true,
-            'active' => false,
-            'content' => '',
-        ],
-    ],
+    'tabs' => $tabs,
 ];
 
 echo $OUTPUT->header();
