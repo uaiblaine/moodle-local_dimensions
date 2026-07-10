@@ -438,6 +438,8 @@ class helper {
             self::get_display_mode_field();
             self::get_subline_source_field();
             self::get_template_idnumber_field();
+            self::get_showrelated_field();
+            self::get_showrelatedlink_field();
         }
 
         // Enrollment filter + single-course redirect: provisioned for both
@@ -658,6 +660,64 @@ class helper {
     }
 
     /**
+     * Get or create the per-template "show related competencies" select field (lp area).
+     *
+     * @return field_controller|null
+     */
+    public static function get_showrelated_field(): ?field_controller {
+        $shortname = constants::CFIELD_SHOWRELATED;
+        $field = self::find_field_by_shortname($shortname, self::AREA_LP);
+        if ($field) {
+            return $field;
+        }
+        $options = constants::showrelated_options();
+        $optionstext = [];
+        foreach ($options as $key => $langstring) {
+            $optionstext[] = (string) $langstring;
+        }
+        return self::create_custom_field(
+            $shortname,
+            'select',
+            self::AREA_LP,
+            new \lang_string('showrelated', 'local_dimensions'),
+            [
+                'options' => join("\n", $optionstext),
+                'defaultvalue' => (string) $options[constants::SHOWRELATED_INHERIT],
+            ],
+            ''
+        );
+    }
+
+    /**
+     * Get or create the per-template "link related competencies" select field (lp area).
+     *
+     * @return field_controller|null
+     */
+    public static function get_showrelatedlink_field(): ?field_controller {
+        $shortname = constants::CFIELD_SHOWRELATEDLINK;
+        $field = self::find_field_by_shortname($shortname, self::AREA_LP);
+        if ($field) {
+            return $field;
+        }
+        $options = constants::showrelatedlink_options();
+        $optionstext = [];
+        foreach ($options as $key => $langstring) {
+            $optionstext[] = (string) $langstring;
+        }
+        return self::create_custom_field(
+            $shortname,
+            'select',
+            self::AREA_LP,
+            new \lang_string('showrelatedlink', 'local_dimensions'),
+            [
+                'options' => join("\n", $optionstext),
+                'defaultvalue' => (string) $options[constants::SHOWRELATED_INHERIT],
+            ],
+            ''
+        );
+    }
+
+    /**
      * Resolve the effective enrollment filter for a learning plan template.
      *
      * Returns one of `all` / `enrolled` / `active`. When the template stores
@@ -748,6 +808,74 @@ class helper {
         }
 
         return $resolved === constants::SINGLECOURSEREDIRECT_YES;
+    }
+
+    /**
+     * Resolve whether related competencies are shown for a template (plan -> global).
+     *
+     * @param int $templateid Learning plan template ID.
+     * @return bool
+     */
+    public static function resolve_showrelated_for_template(int $templateid): bool {
+        return self::resolve_lp_bool_toggle(
+            $templateid,
+            self::get_showrelated_field(),
+            constants::showrelated_options(),
+            (bool) get_config('local_dimensions', 'showrelated')
+        );
+    }
+
+    /**
+     * Resolve whether related-competency links are shown for a template (plan -> global).
+     *
+     * @param int $templateid Learning plan template ID.
+     * @return bool
+     */
+    public static function resolve_showrelatedlink_for_template(int $templateid): bool {
+        return self::resolve_lp_bool_toggle(
+            $templateid,
+            self::get_showrelatedlink_field(),
+            constants::showrelatedlink_options(),
+            (bool) get_config('local_dimensions', 'showrelatedlink')
+        );
+    }
+
+    /**
+     * Resolve an lp inherit/yes/no toggle field to a bool, falling back to the global default.
+     *
+     * @param int $templateid Learning plan template ID.
+     * @param field_controller|null $field The customfield, or null.
+     * @param array $options The inherit/yes/no options map (keys are the option ids).
+     * @param bool $global The global default used when the field is unset or inherits.
+     * @return bool
+     */
+    private static function resolve_lp_bool_toggle(
+        int $templateid,
+        ?field_controller $field,
+        array $options,
+        bool $global
+    ): bool {
+        if ($templateid <= 0 || !$field) {
+            return $global;
+        }
+        $allowed = array_keys($options);
+        $resolved = constants::SHOWRELATED_INHERIT;
+        $fields = \core_customfield\api::get_instance_fields_data([$field->get('id') => $field], $templateid);
+        foreach ($fields as $data) {
+            $value = $data->get_value();
+            if (is_int($value) && isset($allowed[$value - 1])) {
+                $value = $allowed[$value - 1];
+            }
+            $value = (string) $value;
+            if ($value !== '' && in_array($value, $allowed, true)) {
+                $resolved = $value;
+                break;
+            }
+        }
+        if ($resolved === constants::SHOWRELATED_INHERIT) {
+            return $global;
+        }
+        return $resolved === constants::SHOWRELATED_YES;
     }
 
     /**
