@@ -34,6 +34,7 @@ import {add as addToast, addToastRegion} from 'core/toast';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import {open as openScaleConfig} from 'local_dimensions/central/framework_scaleconfig';
 import * as ActionFooter from 'local_dimensions/central/action_footer';
+import * as Preferences from 'local_dimensions/central/preferences';
 
 const FORM_CLASS = 'local_dimensions\\form\\framework_dynamic_form';
 const IMPORT_FORM_CLASS = 'local_dimensions\\form\\import_framework_dynamic_form';
@@ -473,6 +474,7 @@ export const init = () => {
     if (toggleHidden && pane) {
         toggleHidden.addEventListener('change', () => {
             pane.dataset.showhidden = toggleHidden.checked ? '1' : '0';
+            Preferences.saveDisplay({frameworksshowhidden: toggleHidden.checked});
             reloadPane(pane).catch(notifyError);
         });
     }
