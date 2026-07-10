@@ -127,6 +127,45 @@ class template_dynamic_form extends \core_form\dynamic_form {
         // Plugin custom fields. Pass '' to suppress the handler's page-level heading: inside the
         // modal the core category headers already label the fields (parity with the competency modal).
         lp_handler::create()->instance_form_definition($mform, $this->get_templateid(), '');
+
+        // Show each cascade setting only for the display mode it affects. The displaymode select
+        // submits the 1-based option index, which equals the DISPLAYMODE_* constant by construction.
+        $displaymode = 'customfield_' . constants::CFIELD_DISPLAYMODE;
+        // Singlecourseredirect only affects the Trilha (Competency Tracker) view.
+        $mform->hideIf(
+            'customfield_' . constants::CFIELD_SINGLECOURSEREDIRECT,
+            $displaymode,
+            'eq',
+            (string) constants::DISPLAYMODE_PLAN
+        );
+        // Showrelated / showrelatedlink only affect the Panorama (Full Plan Overview) accordion.
+        $mform->hideIf(
+            'customfield_' . constants::CFIELD_SHOWRELATED,
+            $displaymode,
+            'eq',
+            (string) constants::DISPLAYMODE_COMPETENCIES
+        );
+        $mform->hideIf(
+            'customfield_' . constants::CFIELD_SHOWRELATEDLINK,
+            $displaymode,
+            'eq',
+            (string) constants::DISPLAYMODE_COMPETENCIES
+        );
+        // Showrelatedlink is moot when related competencies are hidden.
+        $mform->hideIf(
+            'customfield_' . constants::CFIELD_SHOWRELATEDLINK,
+            'customfield_' . constants::CFIELD_SHOWRELATED,
+            'eq',
+            (string) (array_search(constants::SHOWRELATED_NO, array_keys(constants::showrelated_options()), true) + 1)
+        );
+
+        // Explain the global -> plan -> competency cascade to the editor.
+        $mform->addElement(
+            'static',
+            'local_dimensions_cascadehelp',
+            '',
+            get_string('cascade_help', 'local_dimensions')
+        );
     }
 
     /**
