@@ -71,6 +71,12 @@ class constants {
     /** @var string Custom field shortname for per-template single-course redirect (lp area only) */
     const CFIELD_SINGLECOURSEREDIRECT = 'local_dimensions_singlecourseredirect';
 
+    /** @var string User preference: Competency hub last-visited view (tab/context/category/selection) as JSON */
+    const PREF_CENTRAL_NAV = 'local_dimensions_central_nav';
+
+    /** @var string User preference: Competency hub display-toggle visibility state as JSON */
+    const PREF_CENTRAL_DISPLAY = 'local_dimensions_central_display';
+
     /** @var string Enrollment filter: inherit the global setting */
     const ENROLLMENTFILTER_INHERIT = 'inherit';
 
