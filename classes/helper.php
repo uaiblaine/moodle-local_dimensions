@@ -1142,9 +1142,9 @@ class helper {
      * Resolve the effective enrollment filter when viewing a competency through a plan.
      *
      * Cascade: competency-level customfield -> template-level customfield ->
-     * site-wide `local_dimensions/enrollmentfilter`. The template layer is
-     * consulted even when the competency is not in the template's plan (e.g.
-     * related-competency links), so the user's plan context still applies.
+     * site-wide `local_dimensions/enrollmentfilter`. Pass `templateid = 0` to skip the
+     * template layer (competency -> global): callers do this for a competency that is not
+     * in the plan (e.g. a related-competency link), so the plan's rule does not leak onto it.
      *
      * @param int $competencyid Competency being viewed
      * @param int $templateid Template of the plan the competency is being viewed through (0 for manual plans)

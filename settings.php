@@ -176,7 +176,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         ]
     ));
 
-    // Single course redirect (only applies when enrollment filter is 'active').
+    // Single course redirect: skip the tracker when a single accessible course remains.
     $settings->add(new admin_setting_configcheckbox(
         'local_dimensions/singlecourseredirect',
         get_string('singlecourseredirect', 'local_dimensions'),
