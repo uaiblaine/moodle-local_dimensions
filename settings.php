@@ -193,19 +193,6 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         get_string('plansummaryheading_desc', 'local_dimensions')
     ));
 
-    // Enrollment filter for full plan overview accordion.
-    $settings->add(new admin_setting_configselect(
-        'local_dimensions/summaryenrollmentfilter',
-        get_string('summaryenrollmentfilter', 'local_dimensions'),
-        get_string('summaryenrollmentfilter_desc', 'local_dimensions'),
-        'all',
-        [
-            'all' => get_string('enrollmentfilter_all', 'local_dimensions'),
-            'enrolled' => get_string('enrollmentfilter_enrolled', 'local_dimensions'),
-            'active' => get_string('enrollmentfilter_active', 'local_dimensions'),
-        ]
-    ));
-
     // Show competency description.
     $settings->add(new admin_setting_configcheckbox(
         'local_dimensions/showdescription',
