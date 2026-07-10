@@ -64,22 +64,17 @@ if (get_config('local_dimensions', 'enablereturnbutton')) {
     \local_dimensions\helper::set_return_context($PAGE->url, $validcourseids);
 }
 
-// Prepare accordion display settings from admin config.
-// These will be passed to the JavaScript module via js_call_amd().
-$summaryenrollmentfilter = get_config('local_dimensions', 'summaryenrollmentfilter');
-if (empty($summaryenrollmentfilter)) {
-    $summaryenrollmentfilter = 'all';
-}
+// Prepare accordion display settings from admin config + the per-plan cascade.
+$templateid = (int) $plan->get('templateid');
 
 $accordionsettings = [
     'showdescription' => (bool) get_config('local_dimensions', 'showdescription'),
     'showtaxonomycard' => (bool) get_config('local_dimensions', 'showtaxonomycard'),
     'showpath' => (bool) get_config('local_dimensions', 'showpath'),
-    'showrelated' => (bool) get_config('local_dimensions', 'showrelated'),
-    'showrelatedlink' => (bool) get_config('local_dimensions', 'showrelatedlink'),
+    'showrelated' => \local_dimensions\helper::resolve_showrelated_for_template($templateid),
+    'showrelatedlink' => \local_dimensions\helper::resolve_showrelatedlink_for_template($templateid),
     'viewcompetencyurl' => (new \moodle_url('/local/dimensions/view-competency.php'))->out(false),
     'showevidence' => (bool) get_config('local_dimensions', 'showevidence'),
-    'summaryenrollmentfilter' => $summaryenrollmentfilter,
     'enableevidencesubmitbutton' => (bool) get_config('local_dimensions', 'enableevidencesubmitbutton')
         && has_capability(
             'moodle/competency:userevidencemanageown',
