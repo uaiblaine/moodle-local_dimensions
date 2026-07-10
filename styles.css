@@ -5069,6 +5069,10 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
    matches the inline detail pane exactly. */
 .local-dimensions-related-modal .modal-dialog {
     max-width: 620px;
+
+    /* core/modal focuses .modal-dialog (tabindex 0) on open; its focus outline hugs the
+       card exactly (the content/body add no padding), so round it to match the 24px card. */
+    border-radius: 24px;
 }
 
 .local-dimensions-related-modal .modal-header {
