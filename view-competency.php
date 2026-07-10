@@ -60,6 +60,12 @@ try {
 }
 $templateid = (int) $plan->get('templateid');
 
+// Related-competency links can point at a competency that is not in this plan; there the plan
+// layer of the cascade does not apply (competency -> global only).
+$effectivetemplateid = \local_dimensions\helper::competency_in_plan($competencyid, $plan)
+    ? $templateid
+    : 0;
+
 // Load the competency.
 $competency = $DB->get_record('competency', ['id' => $competencyid]);
 $pagetitle = $competency ? format_string($competency->shortname) : get_string('pluginname', 'local_dimensions');
@@ -81,7 +87,7 @@ if ($competency) {
     // Apply enrollment filter; cascade competency -> template -> global.
     $enrollmentfilter = \local_dimensions\helper::resolve_enrollmentfilter_for_view(
         $competencyid,
-        $templateid
+        $effectivetemplateid
     );
     if ($enrollmentfilter !== constants::ENROLLMENTFILTER_ALL) {
         $courses = calculator::filter_courses_by_enrollment($courses, $USER->id, $enrollmentfilter);
@@ -94,12 +100,12 @@ if ($competency) {
     // the same course again.
     $singlecourseredirect = \local_dimensions\helper::resolve_singlecourseredirect_for_view(
         $competencyid,
-        $templateid
+        $effectivetemplateid
     );
     $willredirect = (
-        $enrollmentfilter === constants::ENROLLMENTFILTER_ACTIVE
-        && $singlecourseredirect
+        $singlecourseredirect
         && count($courses) === 1
+        && calculator::user_can_access_course(reset($courses), $USER->id)
     );
 
     // Store the return URL for the "Return to Plan" FAB. Skipped when
