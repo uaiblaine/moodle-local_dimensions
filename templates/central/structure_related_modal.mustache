@@ -1,0 +1,46 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/structure_related_modal
+
+    Body of the referenced-competency modal on the Structure tab: the same competency
+    detail card as the inline pane (shared local_dimensions/central/structure_detail_content
+    partial) so the visual is identical, wrapped so it fills the dialog with its own close
+    button. The metric counters render as plain, non-interactive numbers (linksclickable off)
+    to avoid opening a usage modal over this one, and the referenced-competencies section is
+    omitted (showrelated off). Populated client-side by local_dimensions/central/structure
+    from the local_dimensions_get_structure_node web service response.
+
+    Context variables required:
+    * detailconfig (object) {linksclickable, showrelated} · always {false, false} here
+
+    Example context (json):
+    {
+        "detailconfig": {"linksclickable": false, "showrelated": false}
+    }
+}}
+<div class="local-dimensions-central-plans-detail local-dimensions-central-structure-detail local-dimensions-related-modal-card">
+    <button type="button" class="local-dimensions-related-modal-close" data-action="close-related-modal"
+            aria-label="{{#str}}closebuttontitle{{/str}}">
+        <i class="fa fa-times" aria-hidden="true"></i>
+    </button>
+    <div data-region="detail-content">
+        {{#detailconfig}}
+        {{> local_dimensions/central/structure_detail_content }}
+        {{/detailconfig}}
+    </div>
+</div>

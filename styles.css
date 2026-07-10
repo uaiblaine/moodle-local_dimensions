@@ -4963,14 +4963,19 @@
     font-size: 30px;
     font-weight: 700;
     line-height: 1.1;
+}
+
+/* Only the inline pane's counters are clickable (they open the usage modal). The
+   referenced-competency modal renders the same counters as plain, static numbers. */
+button.local-dimensions-central-structure-metric-value {
     cursor: pointer;
 }
 
-.local-dimensions-central-structure-metric-value:hover {
+button.local-dimensions-central-structure-metric-value:hover {
     text-decoration: underline;
 }
 
-.local-dimensions-central-structure-metric-value:focus-visible {
+button.local-dimensions-central-structure-metric-value:focus-visible {
     outline: 2px solid #0f6cbf;
     outline-offset: 2px;
 }
@@ -4983,6 +4988,130 @@
 .local-dimensions-central-structure-detail-empty {
     padding: 40px 30px;
     color: #6a737b;
+}
+
+/* Referenced competencies: a bordered-top section under the description listing the
+   selected competency's related competencies (core competency relations) as chips.
+   Each chip opens the referenced competency in a modal reusing the detail visual. */
+.local-dimensions-central-structure-related {
+    margin-top: 24px;
+    padding-top: 22px;
+    border-top: 1px solid #eef0f2;
+}
+
+.local-dimensions-central-structure-related-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.local-dimensions-central-structure-related-icon {
+    display: inline-flex;
+    color: #0f6cbf;
+}
+
+.local-dimensions-central-structure-related-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1d2125;
+}
+
+.local-dimensions-central-structure-related-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #eef0f2;
+    color: #6a737b;
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.local-dimensions-central-structure-related-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+.local-dimensions-central-structure-related-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border: 1px solid #d6e6f7;
+    border-radius: 999px;
+    background: #eef4fb;
+    color: #0f6cbf;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.local-dimensions-central-structure-related-chip:hover,
+.local-dimensions-central-structure-related-chip:focus {
+    background: #dce9f8;
+    border-color: #9fc4e5;
+}
+
+.local-dimensions-central-structure-related-chip i {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* Referenced-competency modal: the detail card fills the dialog. The core modal header is
+   hidden — the card carries its own gradient header and a close button — so the visual
+   matches the inline detail pane exactly. */
+.local-dimensions-related-modal .modal-dialog {
+    max-width: 620px;
+}
+
+.local-dimensions-related-modal .modal-header {
+    display: none;
+}
+
+.local-dimensions-related-modal .modal-content {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.local-dimensions-related-modal .modal-body {
+    padding: 0;
+}
+
+.local-dimensions-related-modal-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.local-dimensions-related-modal-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.local-dimensions-related-modal-close:hover,
+.local-dimensions-related-modal-close:focus {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 /* Per-level "load more": a solid accent button with a "+N" count of the next page, and a
@@ -5132,12 +5261,8 @@
     text-align: center;
     color: var(--bs-secondary-color, #6a737b);
     opacity: 0;
-    cursor: grab;
+    cursor: move;
     transition: opacity 0.15s ease-in-out;
-}
-
-.local-dimensions-central-plan-drag:active {
-    cursor: grabbing;
 }
 
 .local-dimensions-central-plans [data-region='competency-items'] > li:hover {
