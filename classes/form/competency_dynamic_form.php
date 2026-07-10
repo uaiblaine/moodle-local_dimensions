@@ -166,6 +166,14 @@ class competency_dynamic_form extends \core_form\dynamic_form {
 
         // Plugin custom fields (the core category headers label them; no extra plugin heading).
         competency_handler::create()->instance_form_definition($mform, $this->get_competencyid());
+
+        // Explain the competency -> plan -> global cascade to the editor.
+        $mform->addElement(
+            'static',
+            'local_dimensions_cascadehelp',
+            '',
+            get_string('cascade_help_competency', 'local_dimensions')
+        );
     }
 
     /**
