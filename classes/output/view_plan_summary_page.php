@@ -192,16 +192,19 @@ class view_plan_summary_page implements renderable, templatable {
                     $sublinetext = $hasrating ? $ratingtext : '';
                     break;
                 case constants::SUBLINE_TAG1:
-                    $sublinetext = (string) ($this->get_competency_custom_field(
+                    // Tag1/tag2 are select custom fields: resolve the chosen
+                    // option label (get_competency_custom_field only reads hex
+                    // colour fields and would return null here).
+                    $sublinetext = \local_dimensions\helper::read_competency_select_label(
                         $comp->get('id'),
                         constants::CFIELD_TAG1
-                    ) ?? '');
+                    );
                     break;
                 case constants::SUBLINE_TAG2:
-                    $sublinetext = (string) ($this->get_competency_custom_field(
+                    $sublinetext = \local_dimensions\helper::read_competency_select_label(
                         $comp->get('id'),
                         constants::CFIELD_TAG2
-                    ) ?? '');
+                    );
                     break;
                 case constants::SUBLINE_NONE:
                 case constants::SUBLINE_STATUS:
