@@ -83,7 +83,11 @@ class frameworks extends \core\output\dynamic_tabs\base {
         $categoryid = (int) $resolved['categoryid'];
         $needscategory = (bool) $resolved['needscategory'];
         $pagecontext = $resolved['context'];
-        $showhidden = (bool) ($data['showhidden'] ?? false);
+        // Persisted per user: an explicit pane arg (set when the user toggles) wins; otherwise
+        // fall back to the saved display preference so the choice survives a fresh page load.
+        $showhidden = array_key_exists('showhidden', $data)
+            ? (bool) $data['showhidden']
+            : (bool) helper::get_central_prefs()['display']['frameworksshowhidden'];
 
         // Fetch the full set (incl. hidden) once so the "show hidden" toggle can be gated on
         // whether any hidden structure actually exists, mirroring the Plans tab; then filter the
