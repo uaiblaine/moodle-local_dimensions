@@ -17,9 +17,9 @@
 /**
  * External API to get courses linked to a competency with enrollment filter.
  *
- * This webservice wraps tool_lp_list_courses_using_competency and applies
- * the summaryenrollmentfilter admin setting to filter courses based on
- * the user's enrollment status.
+ * This webservice wraps tool_lp_list_courses_using_competency and resolves
+ * the enrolment-filter cascade (competency -> plan's template -> global
+ * setting) to filter courses based on the user's enrollment status.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -52,6 +52,7 @@ class get_competency_courses extends external_api {
     public static function execute_parameters() {
         return new external_function_parameters([
             'competencyid' => new external_value(PARAM_INT, 'The competency ID'),
+            'planid' => new external_value(PARAM_INT, 'The learning plan ID (drives the enrolment-filter cascade)'),
         ]);
     }
 
@@ -59,16 +60,19 @@ class get_competency_courses extends external_api {
      * Get courses linked to a competency, filtered by enrollment setting.
      *
      * @param int $competencyid The competency ID
+     * @param int $planid The learning plan ID (drives the enrolment-filter cascade)
      * @return array Filtered list of courses
      */
-    public static function execute($competencyid) {
+    public static function execute($competencyid, $planid) {
         global $USER, $DB;
 
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'competencyid' => $competencyid,
+            'planid' => $planid,
         ]);
         $competencyid = $params['competencyid'];
+        $planid = $params['planid'];
 
         // Context validation.
         $systemcontext = context_system::instance();
@@ -83,14 +87,19 @@ class get_competency_courses extends external_api {
               ORDER BY c.fullname ASC";
         $courses = $DB->get_records_sql($sql, ['competencyid' => $competencyid]);
 
-        // Apply enrollment filter from admin settings.
-        $filtermode = get_config('local_dimensions', 'summaryenrollmentfilter');
-        if (!empty($filtermode) && $filtermode !== 'all') {
-            $courses = \local_dimensions\calculator::filter_courses_by_enrollment(
-                $courses,
-                $USER->id,
-                $filtermode
-            );
+        // Resolve the enrolment filter through the cascade (competency -> plan -> global).
+        // The accordion only lists the plan's own competencies, so the plan's template applies.
+        $templateid = 0;
+        if ($planid > 0) {
+            try {
+                $templateid = (int) \core_competency\api::read_plan($planid)->get('templateid');
+            } catch (\Exception $e) {
+                $templateid = 0;
+            }
+        }
+        $filtermode = \local_dimensions\helper::resolve_enrollmentfilter_for_view($competencyid, $templateid);
+        if ($filtermode !== \local_dimensions\constants::ENROLLMENTFILTER_ALL) {
+            $courses = \local_dimensions\calculator::filter_courses_by_enrollment($courses, $USER->id, $filtermode);
         }
 
         // Build the response with course image and progress.
