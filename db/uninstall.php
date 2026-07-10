@@ -17,8 +17,8 @@
 /**
  * Uninstall script for local_dimensions.
  *
- * Removes custom field categories, fields, data and stored files
- * that were created by this plugin.
+ * Removes custom field categories, fields, data, stored files and user preferences that were
+ * created by this plugin.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -54,6 +54,11 @@ function xmldb_local_dimensions_uninstall() {
     foreach ($fileareas as $filearea) {
         $fs->delete_area_files($context->id, 'local_dimensions', $filearea);
     }
+
+    // 3. Delete this plugin's user preferences (Competency hub view state). Core does not purge
+    // a component's user_preferences rows on uninstall (the table has no component column), so
+    // remove them here by name prefix to avoid orphaned rows.
+    \local_dimensions\helper::purge_user_preferences();
 
     return true;
 }

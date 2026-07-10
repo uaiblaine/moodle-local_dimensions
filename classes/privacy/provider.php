@@ -17,10 +17,10 @@
 /**
  * Privacy API implementation for local_dimensions.
  *
- * This plugin does not store any personal user data itself. It extends the
- * core competency system with custom fields (associated with competencies,
- * not users) and calculates course progress in real-time without persisting
- * any personal data beyond what Moodle core already handles.
+ * The plugin stores no personal data of its own beyond two per-user preferences that remember
+ * the Competency hub's last-visited view and its display-toggle choices. It has no database
+ * tables (custom-field data belongs to competencies/templates, not users), so this is a
+ * preference-only provider.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -29,20 +29,61 @@
 
 namespace local_dimensions\privacy;
 
+use core_privacy\local\metadata\collection;
+use core_privacy\local\request\user_preference_provider;
+use core_privacy\local\request\writer;
+use local_dimensions\constants;
+
 /**
- * Privacy provider indicating this plugin does not store personal data.
+ * Preference-only privacy provider for the Competency hub view state.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements \core_privacy\local\metadata\null_provider {
+class provider implements \core_privacy\local\metadata\provider, user_preference_provider {
     /**
-     * Returns a reason why this plugin does not store any personal data.
+     * Describe the user preferences this plugin stores.
      *
-     * @return string The language string identifier for the reason.
+     * @param collection $collection The metadata collection to add to.
+     * @return collection The updated collection.
      */
-    public static function get_reason(): string {
-        return 'privacy:metadata';
+    public static function get_metadata(collection $collection): collection {
+        $collection->add_user_preference(
+            constants::PREF_CENTRAL_NAV,
+            'privacy:metadata:preference:central_nav'
+        );
+        $collection->add_user_preference(
+            constants::PREF_CENTRAL_DISPLAY,
+            'privacy:metadata:preference:central_display'
+        );
+        return $collection;
+    }
+
+    /**
+     * Export the stored view-state preferences for the given user.
+     *
+     * @param int $userid The id of the user to export for.
+     * @return void
+     */
+    public static function export_user_preferences(int $userid): void {
+        $nav = get_user_preferences(constants::PREF_CENTRAL_NAV, null, $userid);
+        if ($nav !== null && $nav !== '') {
+            writer::export_user_preference(
+                'local_dimensions',
+                constants::PREF_CENTRAL_NAV,
+                $nav,
+                get_string('privacy:metadata:preference:central_nav', 'local_dimensions')
+            );
+        }
+        $display = get_user_preferences(constants::PREF_CENTRAL_DISPLAY, null, $userid);
+        if ($display !== null && $display !== '') {
+            writer::export_user_preference(
+                'local_dimensions',
+                constants::PREF_CENTRAL_DISPLAY,
+                $display,
+                get_string('privacy:metadata:preference:central_display', 'local_dimensions')
+            );
+        }
     }
 }
