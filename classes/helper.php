@@ -1065,6 +1065,26 @@ class helper {
     }
 
     /**
+     * Whether a competency belongs to a plan (directly or via its template).
+     *
+     * Used to decide if the plan layer of the cascade applies: a related-competency page reached
+     * from the accordion may point at a competency that is not in the plan, in which case only the
+     * competency's own value and the global setting apply (the plan layer is skipped).
+     *
+     * @param int $competencyid Competency id.
+     * @param \core_competency\plan $plan The plan.
+     * @return bool
+     */
+    public static function competency_in_plan(int $competencyid, \core_competency\plan $plan): bool {
+        foreach (\core_competency\api::list_plan_competencies($plan->get('id')) as $pc) {
+            if ((int) $pc->competency->get('id') === $competencyid) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Return the localized taxonomy metadata for a framework level.
      *
      * Mirrors Moodle core's competency_summary_exporter logic:
