@@ -65,11 +65,17 @@ class constants {
     /** @var string Custom field shortname for the template identifier (lp area only — analogue of competency framework idnumber) */
     const CFIELD_TEMPLATE_IDNUMBER = 'local_dimensions_template_idnumber';
 
-    /** @var string Custom field shortname for per-template enrollment filter (lp area only) */
+    /** @var string Custom field shortname for per-template enrollment filter (cascade select — provisioned for both areas) */
     const CFIELD_ENROLLMENTFILTER = 'local_dimensions_enrollmentfilter';
 
-    /** @var string Custom field shortname for per-template single-course redirect (lp area only) */
+    /** @var string Custom field shortname for per-template single-course redirect (cascade select — provisioned for both areas) */
     const CFIELD_SINGLECOURSEREDIRECT = 'local_dimensions_singlecourseredirect';
+
+    /** @var string Custom field shortname for per-template "show related competencies" (lp area only) */
+    const CFIELD_SHOWRELATED = 'local_dimensions_showrelated';
+
+    /** @var string Custom field shortname for per-template "link related competencies" (lp area only) */
+    const CFIELD_SHOWRELATEDLINK = 'local_dimensions_showrelatedlink';
 
     /** @var string User preference: Competency hub last-visited view (tab/context/category/selection) as JSON */
     const PREF_CENTRAL_NAV = 'local_dimensions_central_nav';
@@ -97,6 +103,15 @@ class constants {
 
     /** @var string Single-course redirect: disable for this template */
     const SINGLECOURSEREDIRECT_NO = 'no';
+
+    /** @var string Show-related toggle: inherit the global setting */
+    const SHOWRELATED_INHERIT = 'inherit';
+
+    /** @var string Show-related toggle: enable for this template */
+    const SHOWRELATED_YES = 'yes';
+
+    /** @var string Show-related toggle: disable for this template */
+    const SHOWRELATED_NO = 'no';
 
     /** @var string Subline source: hide the subline */
     const SUBLINE_NONE = 'none';
@@ -176,6 +191,32 @@ class constants {
             self::SINGLECOURSEREDIRECT_INHERIT => new \lang_string('singlecourseredirect_inherit', 'local_dimensions'),
             self::SINGLECOURSEREDIRECT_YES => new \lang_string('singlecourseredirect_yes', 'local_dimensions'),
             self::SINGLECOURSEREDIRECT_NO => new \lang_string('singlecourseredirect_no', 'local_dimensions'),
+        ];
+    }
+
+    /**
+     * Localized options for the per-template "show related competencies" select.
+     *
+     * @return array<string, \lang_string> keyed by option identifier
+     */
+    public static function showrelated_options(): array {
+        return [
+            self::SHOWRELATED_INHERIT => new \lang_string('showrelated_inherit', 'local_dimensions'),
+            self::SHOWRELATED_YES => new \lang_string('showrelated_yes', 'local_dimensions'),
+            self::SHOWRELATED_NO => new \lang_string('showrelated_no', 'local_dimensions'),
+        ];
+    }
+
+    /**
+     * Localized options for the per-template "link related competencies" select.
+     *
+     * @return array<string, \lang_string> keyed by option identifier
+     */
+    public static function showrelatedlink_options(): array {
+        return [
+            self::SHOWRELATED_INHERIT => new \lang_string('showrelatedlink_inherit', 'local_dimensions'),
+            self::SHOWRELATED_YES => new \lang_string('showrelatedlink_yes', 'local_dimensions'),
+            self::SHOWRELATED_NO => new \lang_string('showrelatedlink_no', 'local_dimensions'),
         ];
     }
 }
