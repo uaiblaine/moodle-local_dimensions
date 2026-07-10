@@ -42,6 +42,7 @@ import {renderDetailInto, openCompetencyDetailModal} from 'local_dimensions/cent
 import {initMasterResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import * as ActionFooter from 'local_dimensions/central/action_footer';
+import * as Preferences from 'local_dimensions/central/preferences';
 
 const FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
 const PAGE_SIZE = 25;
@@ -106,10 +107,6 @@ let searchDebounce = 0;
 
 /** @type {Number} Maximum branches a single "expand all" will open before stopping. */
 const EXPAND_CAP = 200;
-/** @type {String} sessionStorage key for the per-session display-toggle choice. */
-const DISPLAY_KEY = 'local_dimensions_structure_display';
-/** @type {String} sessionStorage key for the show-hidden-frameworks choice. */
-const SHOWHIDDEN_KEY = 'local_dimensions_structure_showhidden';
 /** @type {Array} Snapshot of all framework <option> descriptors for client-side filtering. */
 let frameworkOptions = [];
 /** @type {Object} Map of toggle key to the CSS class it controls on the tree container. */
@@ -249,29 +246,19 @@ const loadChildPage = async(container, parentid) => {
 };
 
 /**
- * Read the persisted display-toggle choice from sessionStorage.
+ * Read the persisted structure display-toggle choice from the shared preferences store.
  *
- * @return {Object} Map of toggle key to boolean; empty when nothing is stored.
+ * @return {Object} Map of toggle key to boolean.
  */
-const readDisplayPrefs = () => {
-    try {
-        return JSON.parse(window.sessionStorage.getItem(DISPLAY_KEY) || 'null') || {};
-    } catch (e) {
-        return {};
-    }
-};
+const readDisplayPrefs = () => ({...Preferences.getDisplay().structure});
 
 /**
- * Persist the display-toggle choice to sessionStorage.
+ * Persist the structure display-toggle choice via the shared preferences store.
  *
  * @param {Object} prefs Map of toggle key to boolean.
  */
 const writeDisplayPrefs = (prefs) => {
-    try {
-        window.sessionStorage.setItem(DISPLAY_KEY, JSON.stringify(prefs));
-    } catch (e) {
-        // Storage unavailable (e.g. private mode) — the toggles simply do not persist.
-    }
+    Preferences.saveDisplay({structure: prefs});
 };
 
 /**
@@ -1462,6 +1449,7 @@ export const init = () => {
             window.clearTimeout(searchDebounce);
             // The pane dataset is the single source of truth for the tab's arguments.
             pane.dataset.frameworkid = select.value;
+            Preferences.saveNav({frameworkid: Number(select.value) || 0});
             reloadPane(pane).catch(notifyError);
         });
     }
@@ -1478,23 +1466,11 @@ export const init = () => {
     }
     const toggleHidden = region.querySelector('[data-action="toggle-hidden"]');
     if (toggleHidden) {
-        let showhidden = toggleHidden.checked;
-        try {
-            const stored = window.sessionStorage.getItem(SHOWHIDDEN_KEY);
-            if (stored !== null) {
-                showhidden = stored === '1';
-            }
-        } catch (e) {
-            // Storage unavailable; fall back to the server-rendered checkbox state.
-        }
+        const showhidden = Boolean(Preferences.getDisplay().structure.showhidden);
         toggleHidden.checked = showhidden;
         applyShowHidden(region, showhidden);
         toggleHidden.addEventListener('change', () => {
-            try {
-                window.sessionStorage.setItem(SHOWHIDDEN_KEY, toggleHidden.checked ? '1' : '0');
-            } catch (e) {
-                // Storage unavailable; the choice simply does not persist.
-            }
+            Preferences.saveDisplay({structure: {showhidden: toggleHidden.checked}});
             applyShowHidden(region, toggleHidden.checked);
         });
     }

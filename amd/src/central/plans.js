@@ -39,6 +39,7 @@ import {reloadPane} from 'local_dimensions/central/tabs';
 import CollapsibleDescription from 'local_dimensions/collapsible_description';
 import * as ActionFooter from 'local_dimensions/central/action_footer';
 import {openCompetencyDetailModal} from 'local_dimensions/central/competency_detail';
+import * as Preferences from 'local_dimensions/central/preferences';
 
 const FORM_CLASS = 'local_dimensions\\form\\template_dynamic_form';
 const COMPETENCY_FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
@@ -49,17 +50,8 @@ let activeRegion = null;
 /** @type {HTMLElement|null} The tab pane, captured at init for the footer dispatch. */
 let activePane = null;
 
-/** @type {String} sessionStorage key for the show-disabled-plans choice. */
-const SHOWDISABLED_KEY = 'local_dimensions_plans_showdisabled';
-
-/** @type {String} sessionStorage key for the per-session display-toggle choice. */
-const DISPLAY_KEY = 'local_dimensions_plans_display';
-
 /** @type {Object} Map of display-toggle key to the CSS class it controls on the list. */
 const DISPLAY_CLASSES = {tax: 'show-tax', path: 'show-path', id: 'show-id'};
-
-/** @type {String} sessionStorage key for the plan-list display-toggle choice. */
-const LISTDISPLAY_KEY = 'local_dimensions_plans_listdisplay';
 
 /** @type {Object} Map of plan-list display-toggle key to the CSS class it controls on the rows. */
 const LISTDISPLAY_CLASSES = {id: 'show-id', duedate: 'show-duedate'};
@@ -195,23 +187,11 @@ const initShowDisabled = (region) => {
     if (!toggle || !rows) {
         return;
     }
-    let show = toggle.checked;
-    try {
-        const stored = window.sessionStorage.getItem(SHOWDISABLED_KEY);
-        if (stored !== null) {
-            show = stored === '1';
-        }
-    } catch (e) {
-        // Storage unavailable; fall back to the server-rendered checkbox state.
-    }
+    const show = Boolean(Preferences.getDisplay().plansshowdisabled);
     toggle.checked = show;
     rows.classList.toggle('show-disabled', show);
     toggle.addEventListener('change', () => {
-        try {
-            window.sessionStorage.setItem(SHOWDISABLED_KEY, toggle.checked ? '1' : '0');
-        } catch (e) {
-            // Storage unavailable; the choice simply does not persist.
-        }
+        Preferences.saveDisplay({plansshowdisabled: toggle.checked});
         rows.classList.toggle('show-disabled', toggle.checked);
         applyPlanSearch(region);
     });
@@ -317,29 +297,19 @@ const removeCompetency = async(pane, id, name) => {
 };
 
 /**
- * Read the persisted display-toggle choice from sessionStorage.
+ * Read the persisted display-toggle choice from the shared preferences store.
  *
- * @return {Object} Map of toggle key to boolean; empty when nothing is stored.
+ * @return {Object} Map of toggle key to boolean.
  */
-const readDisplayPrefs = () => {
-    try {
-        return JSON.parse(window.sessionStorage.getItem(DISPLAY_KEY) || 'null') || {};
-    } catch (e) {
-        return {};
-    }
-};
+const readDisplayPrefs = () => ({...Preferences.getDisplay().plansdetail});
 
 /**
- * Persist the display-toggle choice to sessionStorage.
+ * Persist the display-toggle choice via the shared preferences store.
  *
  * @param {Object} prefs Map of toggle key to boolean.
  */
 const writeDisplayPrefs = (prefs) => {
-    try {
-        window.sessionStorage.setItem(DISPLAY_KEY, JSON.stringify(prefs));
-    } catch (e) {
-        // Storage unavailable (e.g. private mode) — the toggles simply do not persist.
-    }
+    Preferences.saveDisplay({plansdetail: prefs});
 };
 
 /**
@@ -381,29 +351,19 @@ const initDisplayOptions = (region) => {
 };
 
 /**
- * Read the persisted plan-list display-toggle choice from sessionStorage.
+ * Read the persisted plan-list display-toggle choice from the shared preferences store.
  *
- * @return {Object} Map of toggle key to boolean; empty when nothing is stored.
+ * @return {Object} Map of toggle key to boolean.
  */
-const readListDisplayPrefs = () => {
-    try {
-        return JSON.parse(window.sessionStorage.getItem(LISTDISPLAY_KEY) || 'null') || {};
-    } catch (e) {
-        return {};
-    }
-};
+const readListDisplayPrefs = () => ({...Preferences.getDisplay().planslist});
 
 /**
- * Persist the plan-list display-toggle choice to sessionStorage.
+ * Persist the plan-list display-toggle choice via the shared preferences store.
  *
  * @param {Object} prefs Map of toggle key to boolean.
  */
 const writeListDisplayPrefs = (prefs) => {
-    try {
-        window.sessionStorage.setItem(LISTDISPLAY_KEY, JSON.stringify(prefs));
-    } catch (e) {
-        // Storage unavailable (e.g. private mode) — the toggles simply do not persist.
-    }
+    Preferences.saveDisplay({planslist: prefs});
 };
 
 /**
@@ -684,6 +644,7 @@ const moveCompetency = async(pane, button, direction) => {
 const ACTION_HANDLERS = {
     'select-template': (pane, region, target) => {
         pane.dataset.templateid = target.dataset.id;
+        Preferences.saveNav({templateid: Number(target.dataset.id) || 0});
         // Keep the plan-list scroll; the detail shows new content so its scroll resets.
         reloadKeepingScroll(pane, [SELECTORS.templateRows]).catch(notifyError);
     },

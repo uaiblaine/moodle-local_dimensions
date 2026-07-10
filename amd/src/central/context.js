@@ -29,6 +29,7 @@ import {notifyError} from 'local_dimensions/central/errors';
 import {getString} from 'core/str';
 import {enhance} from 'core/form-autocomplete';
 import {reloadPane} from 'local_dimensions/central/tabs';
+import * as Preferences from 'local_dimensions/central/preferences';
 
 /**
  * Pristine clone of the category wrapper (label + raw select), taken before the autocomplete
@@ -190,6 +191,7 @@ const setContext = (bar, contexttype) => {
     applyContextToPanes(contexttype, 0);
     renderCounter(bar);
     refreshActive();
+    Preferences.saveNav({contexttype: contexttype, categoryid: 0});
 };
 
 /**
@@ -204,6 +206,7 @@ const setCategory = (bar, select) => {
     applyContextToPanes('coursecat', categoryid);
     renderCounter(bar);
     refreshActive();
+    Preferences.saveNav({contexttype: 'coursecat', categoryid: categoryid});
 };
 
 /**
@@ -276,6 +279,10 @@ export const init = () => {
             bar.dataset.activemode = activeMode();
             renderCounter(bar);
             renderOptionLabels(bar);
+            const active = document.querySelector(SELECTORS.activePane);
+            if (active) {
+                Preferences.saveNav({tab: active.dataset.tabContent});
+            }
         });
     });
 };
