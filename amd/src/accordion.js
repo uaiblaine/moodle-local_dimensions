@@ -84,16 +84,11 @@ define(
                 return JSON.parse(response);
             });
 
-            // Use custom webservice when enrollment filter is configured, otherwise use core.
-            let coursesMethodName = 'tool_lp_list_courses_using_competency';
-            let coursesArgs = {id: competencyId};
-            if (displaySettings.summaryenrollmentfilter && displaySettings.summaryenrollmentfilter !== 'all') {
-                coursesMethodName = 'local_dimensions_get_competency_courses';
-                coursesArgs = {competencyid: competencyId};
-            }
+            // Always use the plugin WS: it resolves the enrolment-filter cascade
+            // (competency -> plan -> global) server-side and returns richer course cards.
             const coursesPromise = Ajax.call([{
-                methodname: coursesMethodName,
-                args: coursesArgs
+                methodname: 'local_dimensions_get_competency_courses',
+                args: {competencyid: competencyId, planid: planId}
             }])[0];
 
             // Wait for both to complete.
@@ -1805,7 +1800,8 @@ define(
                 if (useLink && related.id) {
                     const href = displaySettings.viewcompetencyurl + '?id=' + planId + '&competencyid=' + related.id;
                     html += '<a href="' + escapeHtml(href) +
-                        '" class="local-dimensions-related-pill-v2 local-dimensions-related-pill-link">'
+                        '" target="_blank" rel="noopener"' +
+                        ' class="local-dimensions-related-pill-v2 local-dimensions-related-pill-link">'
                         + escapeHtml(related.shortname) + '</a>';
                 } else {
                     html += '<span class="local-dimensions-related-pill-v2">' + escapeHtml(related.shortname) + '</span>';
