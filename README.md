@@ -1,11 +1,6 @@
 moodle-local_dimensions
 =======================
 
-[![ci](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml/badge.svg?branch=MOODLE_405_STABLE)](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml?query=branch%3AMOODLE_405_STABLE)
-[![ci](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml/badge.svg?branch=MOODLE_500_STABLE)](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml?query=branch%3AMOODLE_500_STABLE)
-[![ci](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml/badge.svg?branch=MOODLE_501_STABLE)](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml?query=branch%3AMOODLE_501_STABLE)
-[![ci](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml/badge.svg?branch=MOODLE_502_STABLE)](https://github.com/uaiblaine/moodle-local_dimensions/actions/workflows/ci.yml?query=branch%3AMOODLE_502_STABLE)
-
 See your learning path in a new dimension.
 
 A Moodle local plugin that extends the core competency system with custom fields, course section progress tracking, and a visual learning plan interface. It provides two display modes — **Competency tracker** and **Full plan overview** — with rich customization options for colors, images, icons, tags, and SCSS.
@@ -21,16 +16,9 @@ Requirements
 Accent-insensitive search
 -------------------------
 
-Competency, plan and course searches in the Competency hub are accent-insensitive
-("lingua" also matches "língua"). On MySQL/MariaDB this works out of the box via the
-database collation. On **PostgreSQL** it uses the `unaccent` extension, which the plugin
-creates automatically (`CREATE EXTENSION IF NOT EXISTS unaccent`) during upgrade or on
-first search where the database user has permission — on supported PostgreSQL (13+)
-`unaccent` is a *trusted* extension the database owner may create without superuser rights.
+Competency, plan and course searches in the Competency hub are accent-insensitive ("lingua" also matches "língua"). On MySQL/MariaDB this works out of the box via the database collation. On **PostgreSQL** it uses the `unaccent` extension, which the plugin creates automatically (`CREATE EXTENSION IF NOT EXISTS unaccent`) during upgrade or on first search where the database user has permission — on supported PostgreSQL (13+) `unaccent` is a *trusted* extension the database owner may create without superuser rights.
 
-If your instance is locked down and the plugin cannot create it, run this once as a database
-superuser and searches become accent-insensitive on PostgreSQL too (until then they degrade
-gracefully to accent-sensitive):
+If your instance is locked down and the plugin cannot create it, run this once as a database superuser and searches become accent-insensitive on PostgreSQL too (until then they degrade gracefully to accent-sensitive):
 
     CREATE EXTENSION unaccent;
 
@@ -38,17 +26,11 @@ gracefully to accent-sensitive):
 Motivation for this plugin
 --------------------------
 
-Moodle’s competency framework is one of the most sophisticated learning-outcome management systems available in a learning platform. However, for the system to reach its full potential, additional presentation layers and complementary resources are needed to clearly express its rules, relationships, and graphical representations of progress.
+Moodle's competency system is one of the most sophisticated learning-outcome management mechanisms available on a learning platform. But for all that potential to actually come through, it takes presentation layers and complementary resources that make its rules, relationships, and graphical progress representations clear.
 
-This plugin was designed to explore that perspective: enhancing the way competencies and learning plans are visualized and interpreted without changing Moodle’s underlying model. By enriching the presentation layer and providing clearer structural feedback, the goal is to make competency-based learning easier to understand and apply in practice.
+This plugin was built to explore that gap, without changing Moodle's underlying data model. It started on the student side: whoever navigates a learning plan gained custom fields, a visual identity of its own, and clear graphical progress representations. Over time, the focus extended into management: the Competency Hub brings together dozens of screens and paths currently scattered across the admin area into a single place, built for fast, intuitive management. From there, naturally, the educator who runs all of this day to day became central to the design too, with a light management touch of its own, since native reports were extended, though that's a detail next to the rest.
 
-Specifically, the plugin aims to:
-	1.	Extend competencies and learning plan templates with custom fields (card images, background colors, tags, icons, and SCSS styling)
-	2.	Provide real-time course section progress tracking, including recursive subsection support
-	3.	Offer a modern and accessible learning plan visualization with two distinct display modes
-	4.	Support enrolment-aware filtering and locked content detection
-
-While the competency system has been part of Moodle for many years, its conceptual depth often makes it underutilized in practice. By improving the visual and structural representation of competency relationships and progress, this project seeks to highlight the expressive power already present in the framework and make it more approachable for everyday instructional design.
+Dimension, here, isn't a new angle: it's more room to see. This plugin creates no tables: it uses what Moodle already stores and already knows how to do. It avoids depending on non-core plugins whenever a native path exists, and prefers exploring that path in ways nobody has tried yet. The goal is to simplify the journey: clear steps, obvious actions, a flow that doesn't need a manual. Less plugin, more Moodle. It's not about adding a new piece. It's about revealing what was already there, just in a dimension no one had opened yet.
 
 Installation
 ------------
@@ -150,6 +132,16 @@ The plugin provides four admin pages under **Site administration → Competencie
 | Learning plan template custom fields | `customfield_template.php` | `moodle/competency:templatemanage`   |
 
 The **Competency hub** (`central.php`) is the single-surface admin for competencies, frameworks and learning plan templates: a Structure / Learning plans / Frameworks tab set that creates, edits, links and assigns in place through modals and web services (no page reloads). The two custom-field pages host core's field-definition UI for each area.
+
+### Remembering where you were
+
+The Competency hub remembers, per user, the tab you were on, the System /
+Course-category context and category you had chosen, the framework or
+learning-plan template you had selected, and your display-toggle choices
+(taxonomy, identifiers, competency rule, due dates, show hidden / disabled).
+It is stored as Moodle user preferences, so it persists across sessions and
+devices and is restored when you reopen the hub. An explicit URL parameter
+(e.g. a deep link) still overrides the saved view.
 
 
 Custom fields
@@ -435,9 +427,9 @@ If you want to use this plugin with an RTL language, and it doesn't work as-is, 
 Privacy
 -------
 
-This plugin does not store persistent personal profile data. Custom field data is associated with competencies and learning plan templates, not with individual users. Course progress calculation is performed in real-time, and temporary session cache entries (`returncontext`, `plan_trail`) are used only to support navigation and rendering during active sessions.
+The plugin stores no personal data beyond two per-user preferences that remember the Competency hub's last-visited view and display choices. These are exported by the Privacy API on a data-subject request and removed on plugin uninstall. Custom field data is associated with competencies and learning plan templates, not with individual users. Course progress calculation is performed in real-time, and temporary session cache entries (`returncontext`, `plan_trail`) are used only to support navigation and rendering during active sessions.
 
-The plugin implements the Moodle Privacy API (`null_provider`).
+The plugin implements the Moodle Privacy API as a preference-only provider (`core_privacy\local\request\user_preference_provider`).
 
 
 Scheduled tasks
