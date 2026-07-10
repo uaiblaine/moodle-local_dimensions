@@ -61,14 +61,9 @@ $resolved = helper::resolve_central_context($contexttype, $categoryid);
 $contexttype = $resolved['contexttype'];
 $categoryid = (int) $resolved['categoryid'];
 
-// The context selector is page-level (governs both tabs); init it once on load.
-$contextbar = new contextbar($contexttype, $categoryid);
-$PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
-// The page-level sticky footer is shared by both tabs; init its coordinator once.
-$PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
-
-// Init the shared view-state store with the resolved nav + display, so the client saves
-// changes against the state the page actually rendered (e.g. a downgraded coursecat context).
+// Init the shared view-state store first (before the context selector) with the resolved nav +
+// display, so the client saves changes against the state the page actually rendered (e.g. a
+// downgraded coursecat context) and context.js can read the saved tab to restore it on load.
 $prefs['nav'] = [
     'tab' => $activetab,
     'contexttype' => $contexttype,
@@ -78,8 +73,15 @@ $prefs['nav'] = [
 ];
 $PAGE->requires->js_call_amd('local_dimensions/central/preferences', 'init', [$prefs]);
 
-// Build the three tabs; pre-render only the restored (active) one — the others lazy-load via
-// core_dynamic_tabs_get_content on first activation.
+// The context selector is page-level (governs both tabs); init it once on load.
+$contextbar = new contextbar($contexttype, $categoryid);
+$PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
+// The page-level sticky footer is shared by both tabs; init its coordinator once.
+$PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
+
+// Build the three tabs. core/dynamic_tabs always opens the FIRST tab (Frameworks) on load — it
+// ignores a server "active" flag unless the URL hash names a tab — so pre-render Frameworks and
+// let context.js restore the saved tab on the client after load.
 $tabinstances = [
     'frameworks' => new frameworks(['contexttype' => $contexttype, 'categoryid' => $categoryid]),
     'structure' => new structure([
@@ -100,7 +102,7 @@ $tablabels = [
 ];
 $tabs = [];
 foreach (['frameworks', 'structure', 'plans'] as $shortname) {
-    $isactive = ($shortname === $activetab);
+    $isactive = ($shortname === 'frameworks');
     $tab = $tabinstances[$shortname];
     $content = '';
     if ($isactive) {
