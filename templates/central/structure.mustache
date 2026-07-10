@@ -43,10 +43,12 @@
       ruletype, ruleoutcome, ruleconfig}
     * hascompetencies (bool) · competencycount (int) · rootshown (int) · roottotal (int) · hasmoreroots (bool)
     * rootmorecount (int) · rootloadmorehint (string) · canmanage (int)
+    * detailconfig (object) {linksclickable, showrelated} · flags passed to the shared detail partial
 
     Example context (json):
     {
         "contexttype": "system",
+        "detailconfig": {"linksclickable": true, "showrelated": true},
         "selectedcategoryid": 0,
         "selectedframeworkid": 5,
         "showhidden": false,
@@ -210,65 +212,9 @@
                     {{#str}}managecompetencies_selectdetails, local_dimensions{{/str}}
                 </div>
                 <div data-region="detail-content" hidden>
-                    <div class="local-dimensions-central-plans-detail-header local-dimensions-central-structure-detail-header">
-                        <div class="local-dimensions-central-plans-detail-glow" aria-hidden="true"
-                             style="background: radial-gradient(120% 95% at 8% -12%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%);"></div>
-                        <div class="local-dimensions-central-plans-detail-header-inner">
-                            <div class="local-dimensions-central-structure-detail-titlerow">
-                                <h2 class="local-dimensions-central-plans-detail-title" data-region="detail-title"></h2>
-                                <span class="local-dimensions-central-structure-detail-tax" data-region="detail-taxonomy"></span>
-                            </div>
-                            <div class="local-dimensions-central-plans-chips">
-                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-accent" data-region="detail-rule-wrap" hidden>
-                                    <i class="fa fa-check" aria-hidden="true"></i><span data-region="detail-rule"></span>
-                                </span>
-                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass" data-region="detail-label-wrap" hidden>
-                                    <i class="fa fa-tag" aria-hidden="true"></i><span data-region="detail-label"></span>
-                                </span>
-                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass" data-region="detail-idnumber-wrap" hidden>
-                                    <span class="local-dimensions-central-structure-detail-idprefix">{{#str}}idnumber{{/str}}:</span>
-                                    <span class="font-monospace" data-region="detail-idnumber"></span>
-                                </span>
-                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass" data-region="detail-scale-wrap" hidden>
-                                    <span data-region="detail-scale"></span>
-                                </span>
-                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass" data-region="detail-tag1-wrap" hidden>
-                                    <span data-region="detail-tag1"></span>
-                                </span>
-                                <span class="local-dimensions-central-plans-chip local-dimensions-central-plans-chip-glass" data-region="detail-tag2-wrap" hidden>
-                                    <span data-region="detail-tag2"></span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="local-dimensions-central-plans-detail-body">
-                        <div class="local-dimensions-central-structure-metrics">
-                            <div class="local-dimensions-central-structure-metric">
-                                <div class="local-dimensions-central-structure-metric-label" id="local-dimensions-structure-metric-courses-label">{{#str}}managecompetencies_linkedcourses, local_dimensions{{/str}}</div>
-                                <button type="button" class="local-dimensions-central-structure-metric-value"
-                                        id="local-dimensions-structure-metric-courses-value"
-                                        aria-labelledby="local-dimensions-structure-metric-courses-label local-dimensions-structure-metric-courses-value"
-                                        data-action="show-usage" data-usage="courses" data-region="detail-courses"></button>
-                            </div>
-                            <div class="local-dimensions-central-structure-metric">
-                                <div class="local-dimensions-central-structure-metric-label" id="local-dimensions-structure-metric-activities-label">{{#str}}managecompetencies_linkedactivities, local_dimensions{{/str}}</div>
-                                <button type="button" class="local-dimensions-central-structure-metric-value"
-                                        id="local-dimensions-structure-metric-activities-value"
-                                        aria-labelledby="local-dimensions-structure-metric-activities-label local-dimensions-structure-metric-activities-value"
-                                        data-action="show-usage" data-usage="activities" data-region="detail-activities"></button>
-                            </div>
-                            <div class="local-dimensions-central-structure-metric">
-                                <div class="local-dimensions-central-structure-metric-label" id="local-dimensions-structure-metric-plans-label">{{#str}}central_structure_linkedplans, local_dimensions{{/str}}</div>
-                                <button type="button" class="local-dimensions-central-structure-metric-value"
-                                        id="local-dimensions-structure-metric-plans-value"
-                                        aria-labelledby="local-dimensions-structure-metric-plans-label local-dimensions-structure-metric-plans-value"
-                                        data-action="show-usage" data-usage="templates" data-region="detail-plans"></button>
-                            </div>
-                        </div>
-                        <div class="local-dimensions-central-structure-descwrap" data-region="detail-description-wrap" hidden>
-                            <div class="local-dimensions-central-plans-description" data-region="detail-description"></div>
-                        </div>
-                    </div>
+                    {{#detailconfig}}
+                    {{> local_dimensions/central/structure_detail_content }}
+                    {{/detailconfig}}
                 </div>
             </div>
         </aside>

@@ -156,6 +156,10 @@ class structure extends \core\output\dynamic_tabs\base {
         return [
             'contexttype' => $contexttype,
             'selectedcategoryid' => $categoryid,
+            // Flags for the shared detail partial: the inline pane has clickable usage
+            // counters and the referenced-competencies section (the referenced-competency
+            // modal reuses the same partial with both switched off).
+            'detailconfig' => ['linksclickable' => true, 'showrelated' => true],
             'needscategoryselection' => $needscategory,
             'showhidden' => $showhidden,
             'hashiddenframeworks' => $hashiddenframeworks,
