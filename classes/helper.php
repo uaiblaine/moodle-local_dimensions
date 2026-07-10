@@ -922,7 +922,7 @@ class helper {
      * @param string $shortname Custom-field shortname.
      * @return string
      */
-    private static function read_competency_select_label(int $competencyid, string $shortname): string {
+    public static function read_competency_select_label(int $competencyid, string $shortname): string {
         $data = self::read_competency_cf_data($competencyid, $shortname);
         if (!$data) {
             return '';
