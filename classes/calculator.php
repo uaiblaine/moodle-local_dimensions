@@ -360,4 +360,41 @@ class calculator {
 
         return $filtered;
     }
+
+    /**
+     * Whether the user can actually open a course: actively enrolled, or able to self-enrol.
+     *
+     * Self-enrolment is checked via the core self plugin's can_self_enrol(), which is scoped to the
+     * current user ($USER) and already enforces the instance status, dates, max-enrolled and the
+     * cohort restriction (customint5) — so a plan's synced restriction cohort is honoured with no
+     * extra code. The self branch therefore only answers for the current user.
+     *
+     * @param \stdClass $course A course record with at least an id.
+     * @param int $userid The user id.
+     * @return bool
+     */
+    public static function user_can_access_course(\stdClass $course, int $userid): bool {
+        global $CFG, $USER;
+
+        $coursecontext = \core\context\course::instance($course->id);
+        if (is_enrolled($coursecontext, $userid, '', true)) {
+            return true;
+        }
+
+        if ($userid !== (int) $USER->id) {
+            return false;
+        }
+
+        require_once($CFG->dirroot . '/enrol/self/lib.php');
+        $selfplugin = enrol_get_plugin('self');
+        if (!$selfplugin) {
+            return false;
+        }
+        foreach (enrol_get_instances($course->id, true) as $instance) {
+            if ($instance->enrol === 'self' && $selfplugin->can_self_enrol($instance, false) === true) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
