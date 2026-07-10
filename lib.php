@@ -127,3 +127,25 @@ function local_dimensions_set_return_context_for_course(int $courseid, moodle_ur
 function local_dimensions_get_return_context_for_course(int $courseid): ?array {
     return helper::get_return_context_for_course($courseid);
 }
+
+/**
+ * Declare the plugin's AJAX-updatable user preferences (Competency hub view state).
+ *
+ * Registers the two JSON preferences that persist the hub's last-visited view and its
+ * display-toggle choices, so core_user's preference web service accepts them from the hub's
+ * JavaScript. Each is writable only by its owner. Discovered by get_plugins_with_function().
+ *
+ * @return array Preference definitions keyed by preference name.
+ */
+function local_dimensions_user_preferences(): array {
+    $definition = [
+        'null' => NULL_ALLOWED,
+        'default' => '',
+        'type' => PARAM_RAW,
+        'permissioncallback' => [\core_user::class, 'is_current_user'],
+    ];
+    return [
+        \local_dimensions\constants::PREF_CENTRAL_NAV => $definition,
+        \local_dimensions\constants::PREF_CENTRAL_DISPLAY => $definition,
+    ];
+}

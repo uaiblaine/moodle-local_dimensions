@@ -1510,6 +1510,85 @@ class helper {
     }
 
     /**
+     * Read and sanitise the Competency hub's per-user view-state preferences.
+     *
+     * Returns a two-key array: 'nav' (last tab, context, category and the selected framework /
+     * template) and 'display' (the visibility toggles). Each is decoded from its JSON user
+     * preference and validated against defaults, so a missing, empty or corrupt preference
+     * always yields safe defaults. Booleans/ints are coerced; unknown values fall back.
+     *
+     * @return array ['nav' => array, 'display' => array]
+     */
+    public static function get_central_prefs(): array {
+        $navraw = json_decode((string) get_user_preferences(constants::PREF_CENTRAL_NAV, ''), true);
+        $displayraw = json_decode((string) get_user_preferences(constants::PREF_CENTRAL_DISPLAY, ''), true);
+        if (!is_array($navraw)) {
+            $navraw = [];
+        }
+        if (!is_array($displayraw)) {
+            $displayraw = [];
+        }
+
+        $tab = (string) ($navraw['tab'] ?? 'frameworks');
+        if (!in_array($tab, ['frameworks', 'structure', 'plans'], true)) {
+            $tab = 'frameworks';
+        }
+        $nav = [
+            'tab' => $tab,
+            'contexttype' => ($navraw['contexttype'] ?? 'system') === 'coursecat' ? 'coursecat' : 'system',
+            'categoryid' => (int) ($navraw['categoryid'] ?? 0),
+            'frameworkid' => (int) ($navraw['frameworkid'] ?? 0),
+            'templateid' => (int) ($navraw['templateid'] ?? 0),
+        ];
+
+        $dispbool = static function (array $src, string $key, bool $default): bool {
+            return array_key_exists($key, $src) ? (bool) $src[$key] : $default;
+        };
+        $structsrc = is_array($displayraw['structure'] ?? null) ? $displayraw['structure'] : [];
+        $listsrc = is_array($displayraw['planslist'] ?? null) ? $displayraw['planslist'] : [];
+        $detailsrc = is_array($displayraw['plansdetail'] ?? null) ? $displayraw['plansdetail'] : [];
+        $display = [
+            'structure' => [
+                'tax' => $dispbool($structsrc, 'tax', false),
+                'id' => $dispbool($structsrc, 'id', false),
+                'rule' => $dispbool($structsrc, 'rule', true),
+                'showhidden' => $dispbool($structsrc, 'showhidden', false),
+            ],
+            'planslist' => [
+                'id' => $dispbool($listsrc, 'id', false),
+                'duedate' => $dispbool($listsrc, 'duedate', false),
+            ],
+            'plansdetail' => [
+                'tax' => $dispbool($detailsrc, 'tax', false),
+                'path' => $dispbool($detailsrc, 'path', false),
+                'id' => $dispbool($detailsrc, 'id', false),
+            ],
+            'plansshowdisabled' => $dispbool($displayraw, 'plansshowdisabled', false),
+            'frameworksshowhidden' => $dispbool($displayraw, 'frameworksshowhidden', false),
+        ];
+
+        return ['nav' => $nav, 'display' => $display];
+    }
+
+    /**
+     * Delete every user preference this plugin owns, for all users.
+     *
+     * Moodle does not purge a component's user_preferences rows on uninstall (the table has no
+     * component column), so the uninstall hook calls this to avoid orphaned rows. Deletes by the
+     * plugin's frankenstyle name prefix.
+     *
+     * @return void
+     */
+    public static function purge_user_preferences(): void {
+        global $DB;
+        $DB->delete_records_select(
+            'user_preferences',
+            $DB->sql_like('name', ':pattern'),
+            ['pattern' => $DB->sql_like_escape('local_dimensions_') . '%']
+        );
+    }
+
+    /**
      * Resolve the shared "context selector" state for the Competency hub.
      *
      * Both the Structure and Plans tabs are governed by a single context selector
