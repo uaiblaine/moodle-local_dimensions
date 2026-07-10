@@ -221,6 +221,15 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026070100, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071000) {
+        // Persist the Competency hub view state via user preferences plus a full privacy
+        // provider; purge so the new AMD bundles, the preference callback and the new strings
+        // are served fresh.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026071000, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
