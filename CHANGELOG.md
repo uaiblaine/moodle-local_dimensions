@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Fixed
+- **Return-to-Plan FAB — own-plan writers only.** `view-plan.php` and `view-competency.php`
+  now store return contexts only when the plan belongs to the viewing user: a manager or
+  teacher reviewing a student's plan no longer gets their own session's return buttons
+  repointed at that plan on every course of the template (nor their own plan's buttons
+  silently overwritten). The `block_dimensions` web service is unaffected — its UI only ever
+  submits the user's own plans.
+- **Return-to-Plan FAB — 4-hour defensive TTL** on the `returncontext` session cache, bounding
+  how long a stale button can outlive a deleted plan or an unlinked course. Entries are
+  rewritten on every plan/tracker visit, so active navigation never expires.
 - **Return-to-Plan FAB — redirect loops closed structurally.** Every FAB URL written by
   `view-competency.php` now carries `noredirect=1`, honoured by its single-course-redirect check,
   so a cached FAB can never bounce the user back to the course they clicked it from — even when

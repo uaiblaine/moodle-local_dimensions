@@ -110,7 +110,11 @@ if ($competency) {
         && calculator::user_can_access_course(reset($courses), $USER->id)
     );
 
-    if (get_config('local_dimensions', 'enablereturnbutton')) {
+    // Own-plan only: see the matching guard in view-plan.php.
+    if (
+        get_config('local_dimensions', 'enablereturnbutton')
+        && (int) $plan->get('userid') === (int) $USER->id
+    ) {
         if ($willredirect) {
             // Point the destination course's FAB at the plan overview: this page
             // would just redirect again, and entry paths that never pass through
