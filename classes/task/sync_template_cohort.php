@@ -53,7 +53,11 @@ class sync_template_cohort extends \core\task\adhoc_task {
             'recreateunlinked' => $recreateunlinked,
         ]);
         $task->set_userid($userid);
-        \core\task\manager::queue_adhoc_task($task);
+        /* Deduplicate against an identical pending task (attach + a manual sync
+           click both queue for the same pair): a doubled run would race
+           get_missing_plans and create every plan twice — competency_plan has
+           no unique index on (templateid, userid). */
+        \core\task\manager::queue_adhoc_task($task, true);
     }
 
     /**

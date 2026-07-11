@@ -23,6 +23,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   from the cohort modal.
 
 ### Fixed
+- **Concurrency hardening (hub editing by multiple admins).** Three proportional guards from a
+  concurrency audit: (1) custom-field provisioning now runs under a core Lock API lock — it was
+  check-then-act with no DB unique index behind it, so two racing first requests (two fresh admin
+  sessions, or two CSV imports) could silently create every field definition twice, permanently
+  doubling the fields in every edit modal; (2) the template-cohort sync task queues with
+  `checkforexisting`, so attach + a manual sync click no longer enqueue two identical tasks whose
+  overlapping runs would create every learner plan twice (`competency_plan` has no unique index);
+  (3) concurrent first-saves of the same competency/template custom fields retry once on the
+  `customfield_data` unique-index collision — the retry finds the committed row and updates it,
+  instead of surfacing "Error writing to database" after a half-saved record.
 - **Return-to-Plan FAB — own-plan writers only.** `view-plan.php` and `view-competency.php`
   now store return contexts only when the plan belongs to the viewing user: a manager or
   teacher reviewing a student's plan no longer gets their own session's return buttons

@@ -433,38 +433,58 @@ class helper {
      * @param string $area The area (lp or competency)
      */
     public static function ensure_custom_fields_exist(string $area): void {
-        // Display mode only for templates.
-        if ($area === self::AREA_LP) {
-            self::get_display_mode_field();
-            self::get_subline_source_field();
-            self::get_template_idnumber_field();
-            self::get_showrelated_field();
-            self::get_showrelatedlink_field();
+        /* Provisioning is check-then-act and neither customfield_field nor
+           customfield_category has a unique index (the shortname check only
+           runs in the admin form, not on the programmatic create path), so two
+           concurrent first requests would silently create duplicate field
+           definitions. The lock serialises provisioning; the per-field
+           existence checks below then see whatever the winner created. */
+        $lockfactory = \core\lock\lock_config::get_lock_factory('local_dimensions');
+        $lock = $lockfactory->get_lock('provisionfields', 10);
+        if (!$lock) {
+            // Another request is provisioning right now; nothing to do here.
+            return;
         }
+        try {
+            /* No cache to clear before re-checking: find_field_by_shortname()
+               builds a fresh handler per call (handler::create() is not a
+               singleton) and core reads categories straight from the DB. */
 
-        // Enrollment filter + single-course redirect: provisioned for both
-        // templates and competencies so the cascade competency -> template ->
-        // global has a place to read each layer from.
-        self::get_enrollmentfilter_field($area);
-        self::get_singlecourseredirect_field($area);
+            // Display mode only for templates.
+            if ($area === self::AREA_LP) {
+                self::get_display_mode_field();
+                self::get_subline_source_field();
+                self::get_template_idnumber_field();
+                self::get_showrelated_field();
+                self::get_showrelatedlink_field();
+            }
 
-        // Image fields: only create if using external customfield_picture plugin.
-        // In built-in mode, images are managed by picture_manager directly.
-        if (!picture_manager::is_builtin_mode()) {
-            self::get_customcard_field($area);
-            self::get_custombgimage_field($area);
-        }
+            // Enrollment filter + single-course redirect: provisioned for both
+            // templates and competencies so the cascade competency -> template ->
+            // global has a place to read each layer from.
+            self::get_enrollmentfilter_field($area);
+            self::get_singlecourseredirect_field($area);
 
-        // Non-image fields are always created.
-        self::get_custombgcolor_field($area);
-        self::get_customtextcolor_field($area);
-        self::get_tag1_field($area);
-        self::get_tag2_field($area);
-        self::get_type_field($area);
+            // Image fields: only create if using external customfield_picture plugin.
+            // In built-in mode, images are managed by picture_manager directly.
+            if (!picture_manager::is_builtin_mode()) {
+                self::get_customcard_field($area);
+                self::get_custombgimage_field($area);
+            }
 
-        // Custom SCSS field for templates and competencies.
-        if (get_config('local_dimensions', 'enablecustomscss')) {
-            self::get_customscss_field($area);
+            // Non-image fields are always created.
+            self::get_custombgcolor_field($area);
+            self::get_customtextcolor_field($area);
+            self::get_tag1_field($area);
+            self::get_tag2_field($area);
+            self::get_type_field($area);
+
+            // Custom SCSS field for templates and competencies.
+            if (get_config('local_dimensions', 'enablecustomscss')) {
+                self::get_customscss_field($area);
+            }
+        } finally {
+            $lock->release();
         }
     }
 
