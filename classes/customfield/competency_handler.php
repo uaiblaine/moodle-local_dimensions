@@ -194,7 +194,14 @@ class competency_handler extends handler {
      * @param int $instanceid The competency ID.
      */
     public function instance_form_save_with_image(\stdClass $data, bool $isnew, int $instanceid): void {
-        $this->instance_form_save($data, !$isnew);
+        try {
+            $this->instance_form_save($data, !$isnew);
+        } catch (\dml_write_exception $e) {
+            /* Two users first-saving the same instance race the id-0 INSERT into
+               customfield_data's unique index; the retry re-reads the instance
+               data, finds the committed row and takes the update path. */
+            $this->instance_form_save($data, !$isnew);
+        }
 
         // In built-in mode, save the uploaded image.
         if (picture_manager::is_builtin_mode()) {

@@ -196,7 +196,14 @@ class lp_handler extends handler {
      * @param int $instanceid The template ID.
      */
     public function instance_form_save_with_image(\stdClass $data, int $instanceid): void {
-        $this->instance_form_save($data, true);
+        try {
+            $this->instance_form_save($data, true);
+        } catch (\dml_write_exception $e) {
+            /* Two users first-saving the same instance race the id-0 INSERT into
+               customfield_data's unique index; the retry re-reads the instance
+               data, finds the committed row and takes the update path. */
+            $this->instance_form_save($data, true);
+        }
 
         // In built-in mode, save the uploaded image.
         if (picture_manager::is_builtin_mode()) {
