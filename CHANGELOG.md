@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **Return-to-Plan FAB — redirect loops closed structurally.** Every FAB URL written by
+  `view-competency.php` now carries `noredirect=1`, honoured by its single-course-redirect check,
+  so a cached FAB can never bounce the user back to the course they clicked it from — even when
+  the redirect conditions (course count, enrolment/self-enrol state, the cascade value) start
+  holding only after the URL was cached. When the page does redirect, it now writes the **plan
+  overview** URL for the destination course instead of skipping the write, so entry paths that
+  never pass through `view-plan.php` (block competency card, direct link) get a working FAB too.
+- **Return-to-Plan FAB — page filter now fails closed.** The pagelayout blocklist (5 of Boost's
+  19 layouts) became an allowlist (`course`/`incourse`): the FAB no longer renders inside
+  `secure` quiz attempt windows (it was a one-click navigation escape from a locked-down
+  attempt), on user profiles inside a course (`mypublic`), on group management/course reset
+  (`standard`), on scripts that never set a layout (`base`), or in popup/embedded/print views.
+  Administrative core pages that ship layout `incourse` (participants, `tool_lp` course pages,
+  gradebook setup/export/import, quiz question editing, content bank, notes, switch-role,
+  backup restore listing…) are excluded by a pagetype filter on top. The course enrolment page
+  keeps the FAB deliberately: a learner arriving from a plan benefits from it while
+  self-enrolling.
+
 ### Removed
 - **Legacy manage/edit admin surface.** The Competency hub (`central.php`) now covers every
   action the old pages offered, so the whole legacy surface is gone: `manage_competencies.php`,
