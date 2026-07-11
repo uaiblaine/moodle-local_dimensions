@@ -84,9 +84,16 @@ class link_competency_course extends external_api {
         $link = $DB->get_record(
             'competency_coursecomp',
             ['competencyid' => $competencyid, 'courseid' => $courseid],
-            'ruleoutcome',
+            'id, ruleoutcome',
             MUST_EXIST
         );
+
+        // Core fires no event for the course link lifecycle; log the decision.
+        \local_dimensions\event\course_link_added::create([
+            'context' => $coursecontext,
+            'objectid' => (int) $link->id,
+            'other' => ['competencyid' => $competencyid, 'courseid' => $courseid],
+        ])->trigger();
         $hascompletion = !empty($course->enablecompletion)
             && $DB->record_exists('course_completion_criteria', ['course' => $courseid]);
 

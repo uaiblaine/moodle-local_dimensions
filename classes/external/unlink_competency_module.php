@@ -26,6 +26,7 @@ namespace local_dimensions\external;
 
 use core\context\module as context_module;
 use core_competency\api;
+use core_competency\course_module_competency;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
@@ -69,7 +70,17 @@ class unlink_competency_module extends external_api {
         $modcontext = context_module::instance($cmid);
         self::validate_context($modcontext);
 
+        $link = course_module_competency::get_record(['competencyid' => $competencyid, 'cmid' => $cmid]);
         $success = api::remove_competency_from_course_module($cmid, $competencyid);
+
+        if ($success && $link) {
+            // Core fires no event for the module link lifecycle; log the decision.
+            \local_dimensions\event\module_link_removed::create([
+                'context' => $modcontext,
+                'objectid' => (int) $link->get('id'),
+                'other' => ['competencyid' => $competencyid, 'cmid' => $cmid],
+            ])->trigger();
+        }
 
         return ['success' => (bool) $success];
     }

@@ -17,6 +17,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   '(updated)' marker and built-in card/background image changes appear as bgimage/cardimage
   keys). The custom-field events fire from a single choke point in each handler, covering the
   hub modals, web services, the legacy-form observer path and the CSV importer alike.
+- **Audit events for competency-course/activity links and duplication.** Seven more events close
+  the remaining loggable gaps: `course_link_added`/`removed`/`outcome_updated` and
+  `module_link_added`/`removed`/`outcome_updated` (fired from the hub's link web services at
+  course/module context, so they appear in course-level logs; outcome events carry old and new
+  values — the unlink of a course also deletes course ratings, which was previously untraceable),
+  and `template_duplicated` (which source template was copied and how many custom field values
+  and files came along, complementing core's created event for the copy).
 
 - **Hub gear panels remember their open/collapsed state.** The display-options panels behind
   the gear (fa-cog) buttons — Structure toolbar, Plans template list and Plans template detail —

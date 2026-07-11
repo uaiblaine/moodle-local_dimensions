@@ -82,7 +82,22 @@ class set_module_link_outcome extends external_api {
             ['competencyid' => $competencyid, 'cmid' => $cmid],
             MUST_EXIST
         );
+        $oldoutcome = (int) $link->get('ruleoutcome');
         $success = api::set_course_module_competency_ruleoutcome($link, $ruleoutcome);
+
+        if ($success && $oldoutcome !== $ruleoutcome) {
+            // Core fires no event for the outcome change; log the decision.
+            \local_dimensions\event\module_link_outcome_updated::create([
+                'context' => $modcontext,
+                'objectid' => (int) $link->get('id'),
+                'other' => [
+                    'competencyid' => $competencyid,
+                    'cmid' => $cmid,
+                    'oldoutcome' => $oldoutcome,
+                    'newoutcome' => $ruleoutcome,
+                ],
+            ])->trigger();
+        }
 
         return ['success' => (bool) $success];
     }
