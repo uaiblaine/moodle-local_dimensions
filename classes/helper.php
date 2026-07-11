@@ -446,9 +446,11 @@ class helper {
             return;
         }
         try {
-            /* No cache to clear before re-checking: find_field_by_shortname()
-               builds a fresh handler per call (handler::create() is not a
-               singleton) and core reads categories straight from the DB. */
+            /* The plugin handlers are singletons (they override create()), so a
+               category/field list cached earlier in this request — before the
+               lock wait — would hide what the lock winner just created and the
+               existence checks below would re-create duplicates. Re-read fresh. */
+            self::get_handler($area)->reset_configuration_cache();
 
             // Display mode only for templates.
             if ($area === self::AREA_LP) {

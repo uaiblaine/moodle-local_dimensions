@@ -74,8 +74,19 @@ class add_template_cohort extends external_api {
         self::validate_context($context);
         require_capability('moodle/competency:templatemanage', $context);
 
-        api::create_template_cohort($template->get('id'), $params['cohortid']);
+        $relation = api::create_template_cohort($template->get('id'), $params['cohortid']);
         sync_task::queue($template->get('id'), $params['cohortid'], (int) $USER->id);
+
+        // Core fires no event for the template-cohort relation; log the decision.
+        \local_dimensions\event\template_cohort_added::create([
+            'context' => $context,
+            'objectid' => (int) $relation->get('id'),
+            'other' => [
+                'templateid' => (int) $template->get('id'),
+                'cohortid' => (int) $params['cohortid'],
+                'syncqueued' => true,
+            ],
+        ])->trigger();
 
         return ['success' => true];
     }

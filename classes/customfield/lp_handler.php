@@ -25,6 +25,7 @@
 namespace local_dimensions\customfield;
 
 use core_customfield\handler;
+use local_dimensions\event\template_customfields_updated;
 use local_dimensions\picture_manager;
 use core\context;
 use core\context\system as context_system;
@@ -37,6 +38,8 @@ use core\context\system as context_system;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class lp_handler extends handler {
+    use instance_change_logger;
+
     /**
      * @var lp_handler
      */
@@ -205,9 +208,26 @@ class lp_handler extends handler {
             $this->instance_form_save($data, true);
         }
 
-        // In built-in mode, save the uploaded image.
+        // In built-in mode, save the uploaded image and log a change of it.
         if (picture_manager::is_builtin_mode()) {
+            $before = $this->snapshot_image_hashes('lp', $instanceid);
             picture_manager::save_all_from_form($data, 'lp', $instanceid);
+            $changed = $this->diff_image_hashes($before, $this->snapshot_image_hashes('lp', $instanceid));
+            $this->trigger_customfields_updated(template_customfields_updated::class, $instanceid, false, $changed);
         }
+    }
+
+    /**
+     * Save custom field data and log which fields changed.
+     *
+     * @param \stdClass $instance Form data carrying the instance id.
+     * @param bool $isnewinstance Whether the call is made during instance creation.
+     */
+    public function instance_form_save(\stdClass $instance, bool $isnewinstance = false) {
+        $instanceid = (int) ($instance->id ?? 0);
+        $before = $this->snapshot_instance_values($instanceid);
+        parent::instance_form_save($instance, $isnewinstance);
+        $changed = $this->diff_instance_values($before, $this->snapshot_instance_values($instanceid));
+        $this->trigger_customfields_updated(template_customfields_updated::class, $instanceid, $isnewinstance, $changed);
     }
 }

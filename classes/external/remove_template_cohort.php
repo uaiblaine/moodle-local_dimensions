@@ -73,7 +73,18 @@ class remove_template_cohort extends external_api {
 
         $relation = template_cohort::get_relation($template->get('id'), $params['cohortid']);
         if ($relation->get('id')) {
+            $relationid = (int) $relation->get('id');
             $relation->delete();
+
+            // Core fires no event for the template-cohort relation; log the decision.
+            \local_dimensions\event\template_cohort_removed::create([
+                'context' => $context,
+                'objectid' => $relationid,
+                'other' => [
+                    'templateid' => (int) $template->get('id'),
+                    'cohortid' => (int) $params['cohortid'],
+                ],
+            ])->trigger();
         }
         return ['success' => true];
     }
