@@ -90,10 +90,13 @@ $definitions = [
     // Session cache for the "Return to Plan" button context.
     // Key: 'returncontext'
     // Value: serialised array with return URL and valid course IDs.
+    // The TTL bounds staleness (deleted plans, unlinked courses): entries are
+    // rewritten on every plan/tracker visit, so active navigation never expires.
     'returncontext' => [
         'mode' => cache_store::MODE_SESSION,
         'simplekeys' => true,
         'simpledata' => true,
+        'ttl' => 14400, // 4 hours defensive TTL.
     ],
 
     // Session cache for plan trail data (competency id, shortname, proficiency).

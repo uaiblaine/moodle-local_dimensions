@@ -193,9 +193,11 @@ administrative core pages that ship layout `incourse` (participants, tool_lp,
 Anti-loop invariant: every FAB URL `view-competency.php` writes carries
 `noredirect=1` (honoured in its `$willredirect` check), and when it does
 redirect it writes the **plan** URL for the destination course instead — keep
-both when touching the redirect path. The FAB is draggable; its position
-persists in `sessionStorage` (per-tab, current session) — see
-`amd/src/return_button.js`.
+both when touching the redirect path. Both views write contexts **only for the
+plan's own user** (staff reviewing someone else's plan must not pollute their
+session), and the `returncontext` session cache has a 4h defensive TTL. The FAB
+is draggable; its position persists in `sessionStorage` (per-tab, current
+session) — see `amd/src/return_button.js`.
 
 ### Caches and invalidation
 `observer.php` invalidates the metadata/trail caches on the relevant
