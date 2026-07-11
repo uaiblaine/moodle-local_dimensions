@@ -173,6 +173,16 @@ $functions = [
         'ajax' => true,
     ],
 
+    // Competency hub Plans tab — full duplication (core copy + plugin data).
+    'local_dimensions_duplicate_template' => [
+        'classname' => 'local_dimensions\external\duplicate_template',
+        'methodname' => 'execute',
+        'description' => 'Duplicate a template including custom fields, embedded files and card images.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
+
     // Competency hub Plans tab — individual-user participants grid.
     'local_dimensions_list_template_participants' => [
         'classname' => 'local_dimensions\external\list_template_participants',
