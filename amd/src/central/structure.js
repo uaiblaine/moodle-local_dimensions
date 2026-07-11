@@ -311,6 +311,23 @@ const applyDisplayPrefs = (region) => {
 };
 
 /**
+ * Restore the display-options panel open/collapsed state from the preferences
+ * store, so the gear choice survives pane reloads and future visits.
+ *
+ * @param {HTMLElement} region
+ */
+const applyPanelState = (region) => {
+    const panel = region.querySelector(SELECTORS.displayPanel);
+    const gear = region.querySelector(SELECTORS.displayOptions);
+    if (!panel || !gear) {
+        return;
+    }
+    const open = Boolean(Preferences.getDisplay().panels.structure);
+    panel.hidden = !open;
+    gear.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+
+/**
  * Render search hits as clickable result buttons (or hide the list when empty).
  *
  * @param {HTMLElement} region
@@ -1400,6 +1417,7 @@ export const init = () => {
             if (panel) {
                 panel.hidden = !panel.hidden;
                 gear.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+                Preferences.saveDisplay({panels: {structure: !panel.hidden}});
             }
             return;
         }
@@ -1476,6 +1494,7 @@ export const init = () => {
     }
 
     applyDisplayPrefs(region);
+    applyPanelState(region);
     initStructureResize(region);
     initTreeDrag(region, pane);
 };

@@ -66,6 +66,9 @@ final class preferences_test extends advanced_testcase {
         $this->assertTrue($prefs['display']['structure']['rule']);
         $this->assertFalse($prefs['display']['structure']['tax']);
         $this->assertFalse($prefs['display']['frameworksshowhidden']);
+        $this->assertTrue($prefs['display']['panels']['structure']);
+        $this->assertTrue($prefs['display']['panels']['planslist']);
+        $this->assertTrue($prefs['display']['panels']['plansdetail']);
     }
 
     /**
@@ -83,6 +86,7 @@ final class preferences_test extends advanced_testcase {
         ]), $USER->id);
         set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode([
             'structure' => ['tax' => true, 'rule' => false],
+            'panels' => ['structure' => false, 'plansdetail' => 0],
             'plansshowdisabled' => true,
         ]), $USER->id);
         $prefs = helper::get_central_prefs();
@@ -94,6 +98,9 @@ final class preferences_test extends advanced_testcase {
         $this->assertTrue($prefs['display']['structure']['tax']);
         $this->assertFalse($prefs['display']['structure']['rule']);
         $this->assertFalse($prefs['display']['structure']['id']);
+        $this->assertFalse($prefs['display']['panels']['structure']);
+        $this->assertFalse($prefs['display']['panels']['plansdetail']);
+        $this->assertTrue($prefs['display']['panels']['planslist']);
         $this->assertTrue($prefs['display']['plansshowdisabled']);
     }
 

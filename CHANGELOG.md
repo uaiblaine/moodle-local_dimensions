@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Hub gear panels remember their open/collapsed state.** The display-options panels behind
+  the gear (fa-cog) buttons — Structure toolbar, Plans template list and Plans template detail —
+  now persist per user in the `local_dimensions_central_display` preference (a new `panels`
+  section), alongside the toggles they contain: collapse a panel once and it stays collapsed
+  across pane reloads, sessions and devices.
 - **Full template duplication in the Competency hub.** The Plans tab's Duplicate action now
   goes through a plugin web service (`local_dimensions_duplicate_template`) that wraps core's
   duplicate and completes it: all lp-area custom fields (display mode, cascade filters, colors,
