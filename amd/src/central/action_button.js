@@ -14,11 +14,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Build a compact, icon-only action button for the hub's table rows.
+ * Build a compact icon + text action button for the hub's table rows.
  *
  * Shared by the cohort / participants / roles managers so every row action looks the same:
- * an outlined secondary button carrying a Font Awesome icon, with the human label exposed as
- * both the tooltip and the accessible name (the "button" Behat/ARIA selector matches it).
+ * an outlined secondary button with a Font Awesome icon followed by the visible label. The
+ * decorative icon is aria-hidden; the visible text is the accessible name (the "button"
+ * Behat/ARIA selector matches it), so no separate title/aria-label is needed.
  *
  * @module     local_dimensions/central/action_button
  * @copyright  2026 Anderson Blaine
@@ -26,11 +27,11 @@
  */
 
 /**
- * Create an icon-only action button.
+ * Create an icon + text action button.
  *
  * @param {String} action Value for the button's data-action attribute (delegated click handler).
  * @param {String} iconname Font Awesome class, e.g. 'fa-trash'.
- * @param {String} label Accessible name + tooltip for the button.
+ * @param {String} label Visible button text (and accessible name).
  * @param {String} [extraclass] Optional extra class(es), e.g. 'me-1' for inter-button spacing.
  * @return {HTMLButtonElement}
  */
@@ -39,11 +40,10 @@ export const iconButton = (action, iconname, label, extraclass = '') => {
     button.type = 'button';
     button.className = ('btn btn-outline-secondary btn-sm ' + extraclass).trim();
     button.dataset.action = action;
-    button.title = label;
-    button.setAttribute('aria-label', label);
     const icon = document.createElement('i');
-    icon.className = 'fa ' + iconname;
+    icon.className = 'fa ' + iconname + ' me-1';
     icon.setAttribute('aria-hidden', 'true');
     button.appendChild(icon);
+    button.appendChild(document.createTextNode(label));
     return button;
 };
