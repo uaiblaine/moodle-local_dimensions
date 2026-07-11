@@ -125,6 +125,7 @@ $string['central_links_button'] = 'Courses & activities';
 $string['central_links_completionrule_missing'] = 'Create completion rule';
 $string['central_links_completionrule_ok'] = 'Completion rule configured';
 $string['central_links_courseadded'] = 'Course added';
+$string['central_links_courseremoved'] = 'Course removed';
 $string['central_links_hiddenframework'] = 'This competency belongs to a hidden structure and cannot be linked to courses.';
 $string['central_links_loadmore'] = 'Load more';
 $string['central_links_modulecount'] = '{$a} activities';
