@@ -42,6 +42,7 @@ const DISPLAY_DEFAULTS = {
     structure: {tax: false, id: false, rule: true, showhidden: false},
     planslist: {id: false, duedate: false},
     plansdetail: {tax: false, path: false, id: false},
+    panels: {structure: true, planslist: true, plansdetail: true},
     plansshowdisabled: false,
     frameworksshowhidden: false,
 };
@@ -87,6 +88,7 @@ export const init = (state) => {
         structure: {...DISPLAY_DEFAULTS.structure, ...(incoming.structure || {})},
         planslist: {...DISPLAY_DEFAULTS.planslist, ...(incoming.planslist || {})},
         plansdetail: {...DISPLAY_DEFAULTS.plansdetail, ...(incoming.plansdetail || {})},
+        panels: {...DISPLAY_DEFAULTS.panels, ...(incoming.panels || {})},
         plansshowdisabled: Boolean(incoming.plansshowdisabled),
         frameworksshowhidden: Boolean(incoming.frameworksshowhidden),
     };

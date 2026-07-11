@@ -70,8 +70,10 @@ const SELECTORS = {
     plansResizer: '[data-region="plans-resizer"]',
     showDisabled: '[data-action="toggle-disabled"]',
     displayPanel: '[data-region="display-options-panel"]',
+    displayGear: '[data-action="display-options"]',
     displayToggle: '[data-display-toggle]',
     listDisplayPanel: '[data-region="list-display-options-panel"]',
+    listDisplayGear: '[data-action="list-display-options"]',
     listDisplayToggle: '[data-list-toggle]',
     competencyItems: '[data-region="competency-items"]',
     competencyList: '[data-region="competency-list"]',
@@ -333,6 +335,26 @@ const applyDisplayPrefs = (region) => {
 };
 
 /**
+ * Restore a display-options panel open/collapsed state from the preferences store,
+ * so the gear choice survives pane reloads and future visits.
+ *
+ * @param {HTMLElement} region
+ * @param {String} panelselector Selector of the collapsible panel.
+ * @param {String} gearselector Selector of the gear button controlling it.
+ * @param {String} prefkey Key inside the display "panels" section.
+ */
+const applyPanelState = (region, panelselector, gearselector, prefkey) => {
+    const panel = region.querySelector(panelselector);
+    const gear = region.querySelector(gearselector);
+    if (!panel || !gear) {
+        return;
+    }
+    const open = Boolean(Preferences.getDisplay().panels[prefkey]);
+    panel.hidden = !open;
+    gear.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+
+/**
  * Wire the display-option switches: each change persists the choice and reapplies
  * the show-* classes on the competency list.
  *
@@ -348,6 +370,7 @@ const initDisplayOptions = (region) => {
         });
     });
     applyDisplayPrefs(region);
+    applyPanelState(region, SELECTORS.displayPanel, SELECTORS.displayGear, 'plansdetail');
 };
 
 /**
@@ -402,6 +425,7 @@ const initListDisplayOptions = (region) => {
         });
     });
     applyListDisplayPrefs(region);
+    applyPanelState(region, SELECTORS.listDisplayPanel, SELECTORS.listDisplayGear, 'planslist');
 };
 
 /**
@@ -685,6 +709,7 @@ const ACTION_HANDLERS = {
         }
         panel.hidden = !panel.hidden;
         target.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+        Preferences.saveDisplay({panels: {plansdetail: !panel.hidden}});
     },
     'list-display-options': (pane, region, target) => {
         const panel = region.querySelector(SELECTORS.listDisplayPanel);
@@ -693,6 +718,7 @@ const ACTION_HANDLERS = {
         }
         panel.hidden = !panel.hidden;
         target.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+        Preferences.saveDisplay({panels: {planslist: !panel.hidden}});
     },
     'browse-frameworks': (pane, region) => showCompetencyBrowser(pane, region).catch(notifyError),
     'manage-participants': (pane, region) => showParticipants(pane, region).catch(notifyError),

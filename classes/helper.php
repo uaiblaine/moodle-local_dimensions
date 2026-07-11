@@ -1695,6 +1695,7 @@ class helper {
         $structsrc = is_array($displayraw['structure'] ?? null) ? $displayraw['structure'] : [];
         $listsrc = is_array($displayraw['planslist'] ?? null) ? $displayraw['planslist'] : [];
         $detailsrc = is_array($displayraw['plansdetail'] ?? null) ? $displayraw['plansdetail'] : [];
+        $panelsrc = is_array($displayraw['panels'] ?? null) ? $displayraw['panels'] : [];
         $display = [
             'structure' => [
                 'tax' => $dispbool($structsrc, 'tax', false),
@@ -1710,6 +1711,11 @@ class helper {
                 'tax' => $dispbool($detailsrc, 'tax', false),
                 'path' => $dispbool($detailsrc, 'path', false),
                 'id' => $dispbool($detailsrc, 'id', false),
+            ],
+            'panels' => [
+                'structure' => $dispbool($panelsrc, 'structure', true),
+                'planslist' => $dispbool($panelsrc, 'planslist', true),
+                'plansdetail' => $dispbool($panelsrc, 'plansdetail', true),
             ],
             'plansshowdisabled' => $dispbool($displayraw, 'plansshowdisabled', false),
             'frameworksshowhidden' => $dispbool($displayraw, 'frameworksshowhidden', false),
