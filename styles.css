@@ -3515,6 +3515,62 @@
     }
 }
 
+/*
+ * Give the Manage participants modal the full available viewport height so its long grids and
+ * the autocomplete suggestion dropdowns have room; the body scrolls inside it. Scoped to our
+ * dialog (which core creates scrollable) so other site modals keep their content-fit height.
+ */
+.local-dimensions-participants-modal.modal-dialog-scrollable:has(.form-autocomplete-suggestions) .modal-content {
+    height: calc(100% - var(--bs-modal-margin) * 2);
+}
+
+/*
+ * The per-tab "open the core admin page" link sits at the header's right edge, just left of the
+ * close button: let the title take the remaining width so both controls group on the right.
+ */
+.local-dimensions-participants-modal .modal-header .modal-title {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.local-dimensions-participants-modal .local-dimensions-participants-headerlink {
+    margin-left: 0.5rem;
+}
+
+/*
+ * Standardise the close button across the plugin's hub modals — Bootstrap's default .btn-close is
+ * a faint, low-contrast glyph. Give it a light-blue chip with a dark-blue "times" icon drawn with
+ * the theme's Font Awesome (Moodle stylelint forbids inline SVG image data, and the glyph lets us
+ * colour it precisely). Scoped to modals holding this plugin's content; the referenced-competency
+ * modal keeps its own close button (its header is hidden), so it is excluded.
+ */
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border-radius: 8px;
+    background-color: #e7f0f9;
+    background-image: none;
+    opacity: 1;
+}
+
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close::before {
+    content: '\f00d';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.9rem;
+    line-height: 1;
+    color: #0f4d85;
+}
+
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close:hover,
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close:focus {
+    background-color: #d4e6fb;
+}
+
 /* Competency hub — Structure tree (v3 display options). Each node can show a
    taxonomy / identifier / rule badge; visibility is toggled by show-* classes on
    the tree container so lazily-fetched children inherit the current choice. */

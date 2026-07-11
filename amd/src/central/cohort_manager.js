@@ -32,6 +32,7 @@ import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {add as addToast} from 'core/toast';
+import {iconButton} from 'local_dimensions/central/action_button';
 
 const DATASOURCE = 'local_dimensions/central/cohort_datasource';
 
@@ -62,18 +63,8 @@ const makeRow = (state, cohort) => {
     plans.textContent = String(cohort.plans);
 
     const actions = document.createElement('td');
-    const sync = document.createElement('button');
-    sync.type = 'button';
-    sync.className = 'btn btn-sm btn-link p-0 me-2';
-    sync.dataset.action = 'sync-cohort';
-    sync.textContent = state.synclabel;
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.className = 'btn btn-sm btn-link text-danger p-0';
-    remove.dataset.action = 'remove-cohort';
-    remove.textContent = state.removelabel;
-    actions.appendChild(sync);
-    actions.appendChild(remove);
+    actions.appendChild(iconButton('sync-cohort', 'fa-exchange', state.synclabel, 'me-1'));
+    actions.appendChild(iconButton('remove-cohort', 'fa-trash', state.removelabel));
 
     tr.appendChild(name);
     tr.appendChild(members);

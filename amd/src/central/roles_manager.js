@@ -30,6 +30,7 @@ import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {add as addToast} from 'core/toast';
+import {iconButton} from 'local_dimensions/central/action_button';
 
 const USER_DATASOURCE = 'local_dimensions/central/user_datasource';
 
@@ -92,12 +93,7 @@ const makeRow = (state, assignment) => {
     status.appendChild(badge);
 
     const actions = document.createElement('td');
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.className = 'btn btn-sm btn-link text-danger p-0';
-    remove.dataset.action = 'role-remove';
-    remove.textContent = state.removelabel;
-    actions.appendChild(remove);
+    actions.appendChild(iconButton('role-remove', 'fa-trash', state.removelabel));
 
     tr.appendChild(user);
     tr.appendChild(role);

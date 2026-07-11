@@ -80,9 +80,8 @@
                     <button class="btn btn-outline-secondary" type="button"
                             id="local-dimensions-participant-filters-toggle"
                             data-toggle="dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-                            aria-haspopup="true" aria-expanded="false"
-                            title="{{#str}}filters, moodle{{/str}}" aria-label="{{#str}}filters, moodle{{/str}}">
-                        {{#pix}}i/filter, core{{/pix}}
+                            aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-filter me-1" aria-hidden="true"></i>{{#str}}filters, moodle{{/str}}
                     </button>
                     <div class="dropdown-menu dropdown-menu-right dropdown-menu-end
                                 local-dimensions-participants-filters p-3"
@@ -116,7 +115,7 @@
                     </div>
                 </div>
             </div>
-            <table class="table table-sm mb-0">
+            <table class="flexible table table-striped table-hover table generaltable mb-0">
                 <caption class="visually-hidden">{{#str}}central_participants_tab_users, local_dimensions{{/str}}</caption>
                 <thead>
                     <tr>
@@ -125,7 +124,7 @@
                         <th scope="col">{{#str}}central_participants_col_model, local_dimensions{{/str}}</th>
                         <th scope="col">{{#str}}central_participants_col_cohort, local_dimensions{{/str}}</th>
                         <th scope="col">{{#str}}central_participants_col_individual, local_dimensions{{/str}}</th>
-                        <th scope="col"></th>
+                        <th scope="col">{{#str}}actions{{/str}}</th>
                     </tr>
                 </thead>
                 <tbody data-region="participant-rows"></tbody>
