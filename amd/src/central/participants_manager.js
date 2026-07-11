@@ -25,7 +25,7 @@ import Modal from 'core/modal';
 import ModalEvents from 'core/modal_events';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
-import {getString} from 'core/str';
+import {getString, getStrings} from 'core/str';
 import {addToastRegion} from 'core/toast';
 import {mount as mountCohorts} from 'local_dimensions/central/cohort_manager';
 import {mount as mountUsers} from 'local_dimensions/central/participants_users';
@@ -36,6 +36,70 @@ const SELECTORS = {
     paneCohorts: '[data-region="pane-cohorts"]',
     paneUsers: '[data-region="pane-users"]',
     paneRoles: '[data-region="pane-roles"]',
+};
+
+// Each tab can offer a header shortcut that opens the matching core admin page in a new tab.
+// The capability flag names the data attribute the server sets on the plans region (a "1" when
+// the user can reach that page); only allowed links are rendered.
+const HEADER_PAGES = [
+    {pane: 'pane-cohorts', path: '/cohort/index.php', flag: 'cancohortpage',
+        strkey: 'central_participants_openpage_cohorts'},
+    {pane: 'pane-users', path: '/admin/user.php', flag: 'canuserpage',
+        strkey: 'central_participants_openpage_users'},
+    {pane: 'pane-roles', path: '/admin/roles/manage.php', flag: 'canassignroles',
+        strkey: 'central_participants_openpage_roles'},
+];
+
+/**
+ * Inject the per-tab "open the matching core admin page" links into the modal header, just to
+ * the left of the close button. Each link is only added when the user can reach its page. They
+ * start hidden; the tab switcher reveals the one matching the active tab.
+ *
+ * @param {HTMLElement} root The modal root.
+ * @param {HTMLElement} region The plans region (carries the capability flags).
+ * @return {Promise<Object>} Map of pane region name -> the injected link element.
+ */
+const injectHeaderLinks = async(root, region) => {
+    const header = root.querySelector('.modal-header');
+    if (!header) {
+        return {};
+    }
+    const allowed = HEADER_PAGES.filter((page) => region.dataset[page.flag] === '1');
+    if (!allowed.length) {
+        return {};
+    }
+    const closebtn = header.querySelector('.btn-close');
+    const labels = await getStrings(allowed.map((page) => ({key: page.strkey, component: 'local_dimensions'})));
+    const links = {};
+    allowed.forEach((page, index) => {
+        const link = document.createElement('a');
+        link.href = M.cfg.wwwroot + page.path;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.className = 'btn btn-outline-secondary btn-sm local-dimensions-participants-headerlink d-none';
+        link.title = labels[index];
+        link.setAttribute('aria-label', labels[index]);
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-arrow-up-right-from-square';
+        icon.setAttribute('aria-hidden', 'true');
+        link.appendChild(icon);
+        header.insertBefore(link, closebtn);
+        links[page.pane] = link;
+    });
+    return links;
+};
+
+/**
+ * Reveal the header link matching the active tab's pane and hide the rest.
+ *
+ * @param {Object} links Map of pane region name -> link element (from injectHeaderLinks).
+ * @param {String} paneregion The active tab's target pane (e.g. 'pane-users').
+ * @return {void}
+ */
+const showHeaderLinkFor = (links, paneregion) => {
+    Object.keys(links).forEach((pane) => {
+        links[pane].classList.toggle('d-none', pane !== paneregion);
+    });
 };
 
 /**
@@ -81,6 +145,7 @@ export const show = async(pane, region) => {
     if (dialog) {
         dialog.classList.add('local-dimensions-participants-modal');
     }
+    const headerlinks = await injectHeaderLinks(root, region);
     const opts = {
         templateid: Number(pane.dataset.templateid),
         contextid: Number(region.dataset.contextid),
@@ -113,6 +178,7 @@ export const show = async(pane, region) => {
         // and optionally move focus to it (keyboard activation).
         const selectTab = (button, setfocus) => {
             activateTab(root, button);
+            showHeaderLinkFor(headerlinks, button.dataset.targetPane);
             tabs().forEach((tab) => tab.setAttribute('tabindex', tab === button ? '0' : '-1'));
             ensureMounted(button);
             if (setfocus) {
@@ -122,6 +188,11 @@ export const show = async(pane, region) => {
 
         // The active tab is the tablist's single tab-stop (WAI-ARIA tabs roving tabindex).
         tabs().forEach((tab) => tab.setAttribute('tabindex', tab.classList.contains('active') ? '0' : '-1'));
+        // Reveal the header link that belongs to the initially-active (Cohorts) tab.
+        const activetab = tablist.querySelector('.nav-link.active');
+        if (activetab) {
+            showHeaderLinkFor(headerlinks, activetab.dataset.targetPane);
+        }
 
         tablist.addEventListener('click', (event) => {
             const button = event.target.closest('.nav-link');

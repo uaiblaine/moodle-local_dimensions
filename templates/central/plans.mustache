@@ -53,6 +53,7 @@
       frameworktag, frameworkid, first, last}
     * excludeids (string) · comma-separated ids already on the template (browse-modal exclusion)
     * competencycount (int) · canmanage (int) · canassignroles (int)
+    * cancohortpage (int) · canuserpage (int) · gate the participants-modal header page links
 
     Example context (json):
     {
@@ -117,14 +118,17 @@
         ],
         "competencycount": 6,
         "canmanage": 1,
-        "canassignroles": 1
+        "canassignroles": 1,
+        "cancohortpage": 1,
+        "canuserpage": 1
     }
 }}
 <div class="local-dimensions-central-plans" data-region="plans"
      data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}"
      data-contextid="{{contextid}}" data-templateid="{{selectedtemplateid}}"
      data-templatename="{{selectedtemplatename}}" data-competencyids="{{competencyids}}"
-     data-excludeids="{{excludeids}}" data-canassignroles="{{canassignroles}}">
+     data-excludeids="{{excludeids}}" data-canassignroles="{{canassignroles}}"
+     data-cancohortpage="{{cancohortpage}}" data-canuserpage="{{canuserpage}}">
     {{#needscategoryselection}}
     <div class="alert alert-info" role="status">{{#str}}managecompetencies_selectcategory_help, local_dimensions{{/str}}</div>
     {{/needscategoryselection}}

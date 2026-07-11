@@ -232,7 +232,14 @@ class plans extends \core\output\dynamic_tabs\base {
             }
         }
 
-        $canassignroles = has_capability('moodle/role:manage', context_system::instance());
+        // Capabilities for the "open the core admin page" shortcut in the participants modal
+        // header: each button only shows if the user can actually reach the page it opens.
+        $syscontext = context_system::instance();
+        $canassignroles = has_capability('moodle/role:manage', $syscontext);
+        $cancohortpage = has_capability('moodle/cohort:view', $syscontext)
+            || has_capability('moodle/cohort:manage', $syscontext);
+        $canuserpage = has_capability('moodle/user:update', $syscontext)
+            || has_capability('moodle/user:delete', $syscontext);
 
         $duedate = $selected ? (int) $selected->get('duedate') : 0;
 
@@ -320,6 +327,8 @@ class plans extends \core\output\dynamic_tabs\base {
             'excludeids' => implode(',', $excludeids),
             'canmanage' => (int) $canmanage,
             'canassignroles' => (int) $canassignroles,
+            'cancohortpage' => (int) $cancohortpage,
+            'canuserpage' => (int) $canuserpage,
         ];
     }
 }

@@ -30,6 +30,7 @@ import {notifyError} from 'local_dimensions/central/errors';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {add as addToast} from 'core/toast';
+import {iconButton} from 'local_dimensions/central/action_button';
 
 const PAGE_SIZE = 25;
 const STATUS_COMPLETE = 2;
@@ -76,19 +77,9 @@ const makeRow = (state, item) => {
 
     const actions = document.createElement('td');
     if (item.status !== STATUS_COMPLETE) {
-        const unlink = document.createElement('button');
-        unlink.type = 'button';
-        unlink.className = 'btn btn-sm btn-link p-0 me-2';
-        unlink.dataset.action = 'unlink-plan';
-        unlink.textContent = state.unlinklabel;
-        actions.appendChild(unlink);
+        actions.appendChild(iconButton('unlink-plan', 'fa-times', state.unlinklabel, 'me-1'));
     }
-    const del = document.createElement('button');
-    del.type = 'button';
-    del.className = 'btn btn-sm btn-link text-danger p-0';
-    del.dataset.action = 'delete-plan';
-    del.textContent = state.deletelabel;
-    actions.appendChild(del);
+    actions.appendChild(iconButton('delete-plan', 'fa-trash', state.deletelabel));
     tr.appendChild(actions);
     return tr;
 };
