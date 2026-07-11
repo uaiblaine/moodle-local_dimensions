@@ -185,11 +185,17 @@ finds nothing. `observer.php` therefore sweeps `customfield_data` by instance id
 
 ### Return-to-Plan FAB (`hook_callbacks::before_footer_html_generation`)
 Renders only when: feature enabled, logged-in non-guest, a course is in context,
-the page is **course content** (skips `$PAGE->pagelayout` in
-`admin`/`report`/`maintenance`/`login`/`redirect`, so it stays off course
-settings, gradebook, reports and site admin), and a stored return context exists
-for that course. The FAB is draggable; its position persists in `sessionStorage`
-(per-tab, current session) — see `amd/src/return_button.js`.
+the page is **course content** — a pagelayout **allowlist** (`course`/`incourse`,
+fails closed so `secure` quiz windows, popups, `mypublic` profiles and
+layout-less scripts never get the button) plus a pagetype blocklist for the
+administrative core pages that ship layout `incourse` (participants, tool_lp,
+`grade-*`, quiz editing…) — and a stored return context exists for that course.
+Anti-loop invariant: every FAB URL `view-competency.php` writes carries
+`noredirect=1` (honoured in its `$willredirect` check), and when it does
+redirect it writes the **plan** URL for the destination course instead — keep
+both when touching the redirect path. The FAB is draggable; its position
+persists in `sessionStorage` (per-tab, current session) — see
+`amd/src/return_button.js`.
 
 ### Caches and invalidation
 `observer.php` invalidates the metadata/trail caches on the relevant

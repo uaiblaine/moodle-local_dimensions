@@ -94,27 +94,38 @@ if ($competency) {
     }
 
     // Resolve the singlecourseredirect cascade (competency -> template -> global).
-    // Computed before the FAB write so we can decide whether to skip it: writing
-    // $PAGE->url for the destination course would create a loop, because the FAB
-    // on that course would point back here and this page would just redirect to
-    // the same course again.
+    // The noredirect=1 flag is baked into every FAB URL this page writes, so a
+    // FAB click always renders the tracker instead of redirecting: the redirect
+    // conditions (course count, enrolment state, the cascade value) can start
+    // holding after the URL was cached, and without the flag a stale FAB would
+    // bounce straight back to the course the user clicked it from.
     $singlecourseredirect = \local_dimensions\helper::resolve_singlecourseredirect_for_view(
         $competencyid,
         $effectivetemplateid
     );
     $willredirect = (
         $singlecourseredirect
+        && !optional_param('noredirect', 0, PARAM_BOOL)
         && count($courses) === 1
         && calculator::user_can_access_course(reset($courses), $USER->id)
     );
 
-    // Store the return URL for the "Return to Plan" FAB. Skipped when
-    // $willredirect would fire (see comment above). Any URL previously written
-    // by view-plan.php for this course remains in the cache, so users coming
-    // from plan -> competency -> course still get a working FAB back to the plan.
-    if (!$willredirect && get_config('local_dimensions', 'enablereturnbutton')) {
-        $validcourseids = array_keys($courses);
-        \local_dimensions\helper::set_return_context($PAGE->url, $validcourseids);
+    if (get_config('local_dimensions', 'enablereturnbutton')) {
+        if ($willredirect) {
+            // Point the destination course's FAB at the plan overview: this page
+            // would just redirect again, and entry paths that never pass through
+            // view-plan.php (block card, direct link) would otherwise leave the
+            // course with no FAB at all.
+            \local_dimensions\helper::set_return_context_for_course(
+                (int) reset($courses)->id,
+                new moodle_url('/local/dimensions/view-plan.php', ['id' => $planid])
+            );
+        } else {
+            \local_dimensions\helper::set_return_context(
+                new moodle_url($PAGE->url, ['noredirect' => 1]),
+                array_keys($courses)
+            );
+        }
     }
 
     if ($willredirect) {
