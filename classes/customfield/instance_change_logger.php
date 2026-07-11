@@ -52,13 +52,15 @@ trait instance_change_logger {
     }
 
     /**
-     * Snapshot the stored custom field values of an instance.
+     * Snapshot the EFFECTIVE custom field values of an instance.
      *
-     * Only fields with a stored data row are captured: an absent row and a
-     * default value are equivalent for the change diff.
+     * Every field is captured through get_value(), which falls back to the
+     * field default when no data row exists yet — so a form save that merely
+     * materialises a row at its default value (the modal submits every field)
+     * does not read as a change, and the diff lists only real edits.
      *
      * @param int $instanceid Instance (competency or template) id.
-     * @return array Map of shortname to [field type, raw value].
+     * @return array Map of shortname to [field type, effective value].
      */
     private function snapshot_instance_values(int $instanceid): array {
         if (!$instanceid) {
@@ -67,9 +69,6 @@ trait instance_change_logger {
         $values = [];
         $fieldsdata = \core_customfield\api::get_instance_fields_data($this->get_fields(), $instanceid);
         foreach ($fieldsdata as $data) {
-            if (!$data->get('id')) {
-                continue;
-            }
             $field = $data->get_field();
             $values[$field->get('shortname')] = [$field->get('type'), $data->get_value()];
         }

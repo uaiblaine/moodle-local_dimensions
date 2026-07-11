@@ -157,6 +157,20 @@ final class admin_events_test extends \advanced_testcase {
             return $event instanceof template_customfields_updated;
         }));
         $this->assertCount(0, $again);
+        $sink->clear();
+
+        // Re-submitting unchanged fields alongside one real edit lists ONLY the
+        // edit: the diff compares effective values, so rows materialised at
+        // their default by the full-form submit are not reported as changes.
+        $formdata->{'customfield_' . constants::CFIELD_CUSTOMBGCOLOR} = '#112233';
+        lp_handler::create()->instance_form_save($formdata, false);
+        $third = array_values(array_filter($sink->get_events(), static function ($event) {
+            return $event instanceof template_customfields_updated;
+        }));
+        $this->assertCount(1, $third);
+        $thirdchanged = $third[0]->other['changed'];
+        $this->assertSame([constants::CFIELD_CUSTOMBGCOLOR], array_keys($thirdchanged));
+        $this->assertSame('#112233', $thirdchanged[constants::CFIELD_CUSTOMBGCOLOR]['new']);
         $sink->close();
     }
 

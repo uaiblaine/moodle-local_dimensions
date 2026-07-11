@@ -64,7 +64,9 @@ class competency_customfields_updated extends base {
      * @return string
      */
     public function get_description() {
-        $fields = implode(', ', array_keys((array) $this->other['changed']));
+        $fields = implode(', ', array_map(static function ($key) {
+            return str_replace('local_dimensions_', '', $key);
+        }, array_keys((array) $this->other['changed'])));
         return "The user with id '$this->userid' changed the custom fields ($fields) of the competency "
             . "with id '$this->objectid'.";
     }
