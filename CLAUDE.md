@@ -148,6 +148,8 @@ classes/
   chip_filters.php           Custom-field-driven chip filter model
   admin/                     setting_iconpicker (AJAX FontAwesome picker)
   customfield/               competency_handler + lp_handler (two CF areas)
+  event/                     Audit events (cohort links/roles, customfields,
+                             course/module links, duplication)
   external/                  Web-service functions (one class each)
   form/                      dynamic_form subclasses (competency/template/framework)
   local/                     plan_status and other value helpers
@@ -176,6 +178,17 @@ footer hook (guarded by `get_config('core_competency', 'enabled')`), and
 `helper::ensure_custom_fields_on_setting_change()` runs from setting
 `set_updatedcallback`s. Field shortnames are constants in
 `classes/constants.php` (`CFIELD_*`) — reference those, never string literals.
+Storage facts that bite: the both-areas fields (colors, tags, filters) reuse the
+**same shortname** in the lp and competency areas — never `get_record` on
+`customfield_field` by bare shortname (dml_multiple_records); scope through the
+category (component+area) or the handler. Data rows carry `instanceid = <id>`
+and **`itemid = 0`**; files embedded in field data are keyed by the **data row
+id** (`customfield_textarea`/`value`, `customfield_picture`/`file`), not the
+instance. Provisioning is serialised under a core Lock API lock and calls
+`reset_configuration_cache()` after acquiring it (the plugin handlers override
+`create()` as **singletons**, unlike core's per-call `create()`) — keep both
+when touching `ensure_custom_fields_exist()`; neither `customfield_field` nor
+`customfield_category` has a DB unique index to catch duplicates.
 
 ### Custom-field data cleanup on delete (Moodle 5.1+)
 Core destroys the instance context **before** firing `competency_deleted` /
@@ -204,6 +217,20 @@ session) — see `amd/src/return_button.js`.
 `core\event\competency_*` events. When you add a query that reads cached
 metadata, add the matching invalidation to the observer rather than relying on
 the defensive TTL alone.
+
+### Audit events (`classes/event/`)
+The hub logs decisions core never does (cohort attach/detach, cohort-role
+rules, customfield value changes, course/module links, duplication). Events
+need **no registration** (`db/events.php` is observers-only); `objecttable`
+over a core table is legal (mod_quiz precedent) but then `objectid` is
+required — fetch link rows **before** deleting them. Core APIs that return
+`false` on the idempotent duplicate path (`create_cohort_role_assignment`,
+`add_competency_to_template`) must not reach a trigger's `->get()`. The two
+`*_customfields_updated` events fire from the `instance_form_save()` override
+in both handlers (covers modals, WSes, observer repost, CSV import — new
+handler writes are auto-logged) and diff **effective** values via
+`get_value()`, redacting textarea bodies to `'(updated)'`. In PHPUnit, core
+refuses a module link unless the competency is on the course first.
 
 ## Coding style
 
