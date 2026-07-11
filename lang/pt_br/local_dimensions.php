@@ -125,6 +125,7 @@ $string['central_links_button'] = 'Cursos e atividades';
 $string['central_links_completionrule_missing'] = 'Criar regra de conclusão';
 $string['central_links_completionrule_ok'] = 'Possui regra de conclusão';
 $string['central_links_courseadded'] = 'Curso adicionado';
+$string['central_links_courseremoved'] = 'Curso removido';
 $string['central_links_hiddenframework'] = 'Esta competência pertence a uma estrutura oculta e não pode ser vinculada a cursos.';
 $string['central_links_loadmore'] = 'Carregar mais';
 $string['central_links_modulecount'] = '{$a} atividades';

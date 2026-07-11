@@ -44,6 +44,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   from the cohort modal.
 
 ### Fixed
+- **"Course removed" toast in the Courses & activities modal.** Removing a course link showed no
+  confirmation toast while every sibling action (course added, activity added/removed, outcome
+  saved) showed one — the flow removed the card silently. It now toasts like the others.
 - **Custom-field provisioning lock: stale singleton cache closed.** The plugin handlers override
   `create()` as singletons, so a category list cached before waiting on the provisioning lock
   could hide what the lock winner had just created and re-create duplicate fields anyway. The

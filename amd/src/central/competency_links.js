@@ -558,6 +558,7 @@ const removeCourse = async(state, courseEl) => {
     state.excluded.delete(String(courseid));
     state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
     courseEl.remove();
+    addToast(state.courseremovedlabel);
 };
 
 /**
@@ -750,6 +751,7 @@ export const open = async(opts) => {
             getString('opensinnewwindow', 'core'),
             getString('central_links_modulecountone', 'local_dimensions'),
             getString('central_links_modulecount', 'local_dimensions', '{count}'),
+            getString('central_links_courseremoved', 'local_dimensions'),
         ]),
     ]);
     const {html} = await Templates.renderForPromise('local_dimensions/central/competency_links', {
@@ -794,6 +796,7 @@ export const open = async(opts) => {
         newwindowlabel: labels[19],
         modulecountonelabel: labels[20],
         modulecounttemplate: labels[21],
+        courseremovedlabel: labels[22],
     };
 
     modal.getRoot().on(ModalEvents.shown, () => {
