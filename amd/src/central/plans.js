@@ -589,9 +589,11 @@ const moveCompetencyTo = async(pane, region, target) => {
  * @return {Promise<void>}
  */
 const duplicateTemplate = async(pane, id) => {
+    // Plugin wrapper around core_competency_duplicate_template: also copies
+    // the lp-area custom fields, their embedded files and the card images.
     const newtemplate = await Ajax.call([{
-        methodname: 'core_competency_duplicate_template',
-        args: {id: Number(id)},
+        methodname: 'local_dimensions_duplicate_template',
+        args: {templateid: Number(id)},
     }])[0];
     if (newtemplate && newtemplate.id) {
         pane.dataset.templateid = newtemplate.id;

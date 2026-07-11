@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Full template duplication in the Competency hub.** The Plans tab's Duplicate action now
+  goes through a plugin web service (`local_dimensions_duplicate_template`) that wraps core's
+  duplicate and completes it: all lp-area custom fields (display mode, cascade filters, colors,
+  tags, type, idnumber, SCSS…), files embedded in those fields, and the built-in card/background
+  images are copied to the new template. Both image stores are copied (built-in file areas and
+  legacy `customfield_picture` rows), so templates created under either image-handler mode keep
+  their pictures. Cohort links are deliberately **not** copied: core's plan-sync cron would
+  mass-create plans for every cohort member without confirmation — re-attach cohorts explicitly
+  from the cohort modal.
+
 ### Fixed
 - **Return-to-Plan FAB — own-plan writers only.** `view-plan.php` and `view-competency.php`
   now store return contexts only when the plan belongs to the viewing user: a manager or

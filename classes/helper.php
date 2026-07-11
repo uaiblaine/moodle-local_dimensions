@@ -2367,4 +2367,83 @@ class helper {
 
         return sprintf('#%02x%02x%02x', $red, $green, $blue);
     }
+
+    /**
+     * Copy all plugin-side data from one learning plan template to another.
+     *
+     * Complements core's api::duplicate_template(), which copies only the
+     * template row and its competency links: this clones the lp-area custom
+     * field rows (with any files embedded in them) and the built-in card /
+     * background images. Cohort links are intentionally NOT copied — core's
+     * sync_plans_from_template_cohorts_task would mass-create plans for every
+     * cohort member on the next cron run.
+     *
+     * The customfield_data rows are cloned by direct SQL rather than through
+     * the customfield handler: handler reads silently skip fields whose type
+     * plugin is disabled (e.g. legacy customfield_picture rows), while the
+     * metadata cache still serves their files.
+     *
+     * @param int $sourceid Source template id.
+     * @param int $targetid Target (freshly duplicated) template id.
+     */
+    public static function copy_template_plugin_data(int $sourceid, int $targetid): void {
+        global $DB;
+
+        $fs = get_file_storage();
+        $syscontextid = \core\context\system::instance()->id;
+
+        // Files embedded in a custom field's data are keyed by the DATA row id,
+        // not the instance id, under the field type's own component.
+        $embeddedfileareas = [
+            'textarea' => ['customfield_textarea', 'value'],
+            'picture' => ['customfield_picture', 'file'],
+        ];
+
+        $sql = "SELECT d.*, f.type AS fieldtype
+                  FROM {customfield_data} d
+                  JOIN {customfield_field} f ON f.id = d.fieldid
+                  JOIN {customfield_category} c ON c.id = f.categoryid
+                 WHERE c.component = :component AND c.area = :area AND d.instanceid = :instanceid";
+        $rows = $DB->get_records_sql($sql, [
+            'component' => 'local_dimensions',
+            'area' => self::AREA_LP,
+            'instanceid' => $sourceid,
+        ]);
+        foreach ($rows as $row) {
+            $fieldtype = $row->fieldtype;
+            $olddataid = (int) $row->id;
+            unset($row->id, $row->fieldtype);
+            $row->instanceid = $targetid;
+            $row->timecreated = time();
+            $row->timemodified = time();
+            /* The unique index instanceid-fieldid-component-area-itemid forbids a
+               second row; the target may already have one (re-run, or the
+               observer's form-repost path), so replace instead of colliding. */
+            $DB->delete_records('customfield_data', ['fieldid' => $row->fieldid, 'instanceid' => $targetid]);
+            $newdataid = (int) $DB->insert_record('customfield_data', $row);
+
+            if (isset($embeddedfileareas[$fieldtype])) {
+                [$component, $filearea] = $embeddedfileareas[$fieldtype];
+                $files = $fs->get_area_files((int) $row->contextid, $component, $filearea, $olddataid, 'id', false);
+                foreach ($files as $file) {
+                    $fs->create_file_from_storedfile(['itemid' => $newdataid], $file);
+                }
+            }
+        }
+
+        // Built-in card/background images are keyed by template id.
+        foreach ([picture_manager::FILEAREA_TEMPLATE, picture_manager::FILEAREA_TEMPLATE_CARD] as $filearea) {
+            $fs->delete_area_files($syscontextid, picture_manager::COMPONENT, $filearea, $targetid);
+            $files = $fs->get_area_files($syscontextid, picture_manager::COMPONENT, $filearea, $sourceid, 'id', false);
+            foreach ($files as $file) {
+                $fs->create_file_from_storedfile(['itemid' => $targetid], $file);
+            }
+        }
+
+        /* Mandatory, not defensive: template_scss has no TTL and caches an empty
+           string on a miss, so a learner render between core duplication and this
+           copy would poison css_{target} permanently. */
+        template_metadata_cache::invalidate_template($targetid);
+        scss_manager::invalidate_cache($targetid, self::AREA_LP);
+    }
 }
