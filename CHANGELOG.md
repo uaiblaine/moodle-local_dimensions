@@ -16,7 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   fields changed, with old/new values for scalar fields; custom SCSS bodies are redacted to an
   '(updated)' marker and built-in card/background image changes appear as bgimage/cardimage
   keys). The custom-field events fire from a single choke point in each handler, covering the
-  hub modals, web services, the legacy-form observer path and the CSV importer alike.
+  hub modals, web services, the legacy-form observer path and the CSV importer alike. The diff
+  compares **effective** values (stored or field default), so a full-form submit that merely
+  materialises rows at their default value lists only the fields actually edited — and the
+  event description shows the short field names, without the component prefix.
 - **Audit events for competency-course/activity links and duplication.** Seven more events close
   the remaining loggable gaps: `course_link_added`/`removed`/`outcome_updated` and
   `module_link_added`/`removed`/`outcome_updated` (fired from the hub's link web services at
