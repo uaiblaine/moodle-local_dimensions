@@ -78,6 +78,13 @@ class link_competency_module extends external_api {
             MUST_EXIST
         );
 
+        // Core fires no event for the module link lifecycle; log the decision.
+        \local_dimensions\event\module_link_added::create([
+            'context' => $modcontext,
+            'objectid' => (int) $link->get('id'),
+            'other' => ['competencyid' => $competencyid, 'cmid' => $cmid],
+        ])->trigger();
+
         return [
             'cmid' => (int) $cm->id,
             'name' => $cm->get_formatted_name(),

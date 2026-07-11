@@ -31,6 +31,13 @@ use local_dimensions\helper;
  * @covers     \local_dimensions\event\cohort_role_added
  * @covers     \local_dimensions\event\cohort_role_removed
  * @covers     \local_dimensions\event\template_customfields_updated
+ * @covers     \local_dimensions\event\course_link_added
+ * @covers     \local_dimensions\event\course_link_outcome_updated
+ * @covers     \local_dimensions\event\course_link_removed
+ * @covers     \local_dimensions\event\module_link_added
+ * @covers     \local_dimensions\event\module_link_outcome_updated
+ * @covers     \local_dimensions\event\module_link_removed
+ * @covers     \local_dimensions\event\template_duplicated
  * @covers     \local_dimensions\customfield\lp_handler
  */
 final class admin_events_test extends \advanced_testcase {
@@ -150,6 +157,132 @@ final class admin_events_test extends \advanced_testcase {
             return $event instanceof template_customfields_updated;
         }));
         $this->assertCount(0, $again);
+        $sink->close();
+    }
+
+    /**
+     * Course link add / outcome change / remove fire the course_link events.
+     *
+     * @return void
+     */
+    public function test_course_link_events(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $lpg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $lpg->create_framework();
+        $competencyid = (int) $lpg->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+        ])->get('id');
+        $courseid = (int) $this->getDataGenerator()->create_course()->id;
+
+        $sink = $this->redirectEvents();
+        \local_dimensions\external\link_competency_course::execute($competencyid, $courseid);
+        $added = array_values(array_filter($sink->get_events(), static function ($event) {
+            return $event instanceof course_link_added;
+        }));
+        $this->assertCount(1, $added);
+        $this->assertSame($competencyid, (int) $added[0]->other['competencyid']);
+        $this->assertSame($courseid, (int) $added[0]->courseid);
+        $sink->clear();
+
+        \local_dimensions\external\set_course_link_outcome::execute(
+            $competencyid,
+            $courseid,
+            \core_competency\course_competency::OUTCOME_COMPLETE
+        );
+        $updated = array_values(array_filter($sink->get_events(), static function ($event) {
+            return $event instanceof course_link_outcome_updated;
+        }));
+        $this->assertCount(1, $updated);
+        $this->assertSame(
+            \core_competency\course_competency::OUTCOME_COMPLETE,
+            (int) $updated[0]->other['newoutcome']
+        );
+        $sink->clear();
+
+        \local_dimensions\external\unlink_competency_course::execute($competencyid, $courseid);
+        $removed = array_values(array_filter($sink->get_events(), static function ($event) {
+            return $event instanceof course_link_removed;
+        }));
+        $this->assertCount(1, $removed);
+        $this->assertSame($competencyid, (int) $removed[0]->other['competencyid']);
+        $sink->close();
+    }
+
+    /**
+     * Module link add / outcome change / remove fire the module_link events.
+     *
+     * @return void
+     */
+    public function test_module_link_events(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $lpg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $lpg->create_framework();
+        $competencyid = (int) $lpg->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+        ])->get('id');
+        $course = $this->getDataGenerator()->create_course();
+        $module = $this->getDataGenerator()->create_module('assign', ['course' => $course->id]);
+        $cmid = (int) $module->cmid;
+
+        $sink = $this->redirectEvents();
+        \local_dimensions\external\link_competency_module::execute($competencyid, $cmid);
+        $added = array_values(array_filter($sink->get_events(), static function ($event) {
+            return $event instanceof module_link_added;
+        }));
+        $this->assertCount(1, $added);
+        $this->assertSame($cmid, (int) $added[0]->other['cmid']);
+        $sink->clear();
+
+        \local_dimensions\external\set_module_link_outcome::execute(
+            $competencyid,
+            $cmid,
+            \core_competency\course_module_competency::OUTCOME_COMPLETE
+        );
+        $updated = array_values(array_filter($sink->get_events(), static function ($event) {
+            return $event instanceof module_link_outcome_updated;
+        }));
+        $this->assertCount(1, $updated);
+        $sink->clear();
+
+        \local_dimensions\external\unlink_competency_module::execute($competencyid, $cmid);
+        $removed = array_values(array_filter($sink->get_events(), static function ($event) {
+            return $event instanceof module_link_removed;
+        }));
+        $this->assertCount(1, $removed);
+        $sink->close();
+    }
+
+    /**
+     * Duplicating a template fires template_duplicated with the copy counts.
+     *
+     * @return void
+     */
+    public function test_template_duplicated_event(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+
+        $lpg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $sourceid = (int) $lpg->create_template(['shortname' => 'Source'])->get('id');
+        $formdata = (object) [
+            'id' => $sourceid,
+            'customfield_' . constants::CFIELD_DISPLAYMODE => 2,
+        ];
+        lp_handler::create()->instance_form_save($formdata, true);
+
+        $sink = $this->redirectEvents();
+        $result = \local_dimensions\external\duplicate_template::execute($sourceid);
+        $events = array_values(array_filter($sink->get_events(), static function ($event) {
+            return $event instanceof template_duplicated;
+        }));
+        $this->assertCount(1, $events);
+        $this->assertSame((int) $result['id'], (int) $events[0]->objectid);
+        $this->assertSame($sourceid, (int) $events[0]->other['sourceid']);
+        $this->assertGreaterThanOrEqual(1, (int) $events[0]->other['copiedfields']);
         $sink->close();
     }
 }

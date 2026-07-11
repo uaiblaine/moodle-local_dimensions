@@ -74,7 +74,19 @@ class duplicate_template extends external_api {
         $duplicate = api::duplicate_template($params['templateid']);
         $newid = (int) $duplicate->get('id');
 
-        helper::copy_template_plugin_data($params['templateid'], $newid);
+        $counts = helper::copy_template_plugin_data($params['templateid'], $newid);
+
+        // Core fired competency_template_created for the copy; this records the
+        // plugin-side completion (source template + copied payload).
+        \local_dimensions\event\template_duplicated::create([
+            'context' => $context,
+            'objectid' => $newid,
+            'other' => [
+                'sourceid' => (int) $params['templateid'],
+                'copiedfields' => (int) $counts['fields'],
+                'copiedfiles' => (int) $counts['files'],
+            ],
+        ])->trigger();
 
         return ['id' => $newid];
     }

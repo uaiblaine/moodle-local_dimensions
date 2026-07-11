@@ -2413,9 +2413,13 @@ class helper {
      *
      * @param int $sourceid Source template id.
      * @param int $targetid Target (freshly duplicated) template id.
+     * @return array Copy counts: keys fields (customfield rows) and files.
      */
-    public static function copy_template_plugin_data(int $sourceid, int $targetid): void {
+    public static function copy_template_plugin_data(int $sourceid, int $targetid): array {
         global $DB;
+
+        $copiedfields = 0;
+        $copiedfiles = 0;
 
         $fs = get_file_storage();
         $syscontextid = \core\context\system::instance()->id;
@@ -2449,12 +2453,14 @@ class helper {
                observer's form-repost path), so replace instead of colliding. */
             $DB->delete_records('customfield_data', ['fieldid' => $row->fieldid, 'instanceid' => $targetid]);
             $newdataid = (int) $DB->insert_record('customfield_data', $row);
+            $copiedfields++;
 
             if (isset($embeddedfileareas[$fieldtype])) {
                 [$component, $filearea] = $embeddedfileareas[$fieldtype];
                 $files = $fs->get_area_files((int) $row->contextid, $component, $filearea, $olddataid, 'id', false);
                 foreach ($files as $file) {
                     $fs->create_file_from_storedfile(['itemid' => $newdataid], $file);
+                    $copiedfiles++;
                 }
             }
         }
@@ -2465,6 +2471,7 @@ class helper {
             $files = $fs->get_area_files($syscontextid, picture_manager::COMPONENT, $filearea, $sourceid, 'id', false);
             foreach ($files as $file) {
                 $fs->create_file_from_storedfile(['itemid' => $targetid], $file);
+                $copiedfiles++;
             }
         }
 
@@ -2473,5 +2480,7 @@ class helper {
            copy would poison css_{target} permanently. */
         template_metadata_cache::invalidate_template($targetid);
         scss_manager::invalidate_cache($targetid, self::AREA_LP);
+
+        return ['fields' => $copiedfields, 'files' => $copiedfiles];
     }
 }
