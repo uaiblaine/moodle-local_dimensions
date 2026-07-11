@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Administrative audit events.** Six plugin events now log hub decisions that were invisible —
+  core fires nothing for any of them: `template_cohort_added`/`removed` (cohort attach/detach,
+  the action that mass-creates learner plans; payload records whether background sync was
+  queued), `cohort_role_added`/`removed` (the tool_cohortroles mapping decision, with the role
+  holder as related user — previously only the per-member role assignments appeared, attributed
+  to cron), and `competency_customfields_updated`/`template_customfields_updated` (which custom
+  fields changed, with old/new values for scalar fields; custom SCSS bodies are redacted to an
+  '(updated)' marker and built-in card/background image changes appear as bgimage/cardimage
+  keys). The custom-field events fire from a single choke point in each handler, covering the
+  hub modals, web services, the legacy-form observer path and the CSV importer alike.
+
 - **Hub gear panels remember their open/collapsed state.** The display-options panels behind
   the gear (fa-cog) buttons — Structure toolbar, Plans template list and Plans template detail —
   now persist per user in the `local_dimensions_central_display` preference (a new `panels`
@@ -23,6 +34,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   from the cohort modal.
 
 ### Fixed
+- **Custom-field provisioning lock: stale singleton cache closed.** The plugin handlers override
+  `create()` as singletons, so a category list cached before waiting on the provisioning lock
+  could hide what the lock winner had just created and re-create duplicate fields anyway. The
+  provisioning path now resets the handler's configuration cache after acquiring the lock.
 - **Concurrency hardening (hub editing by multiple admins).** Three proportional guards from a
   concurrency audit: (1) custom-field provisioning now runs under a core Lock API lock — it was
   check-then-act with no DB unique index behind it, so two racing first requests (two fresh admin

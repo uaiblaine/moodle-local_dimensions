@@ -93,12 +93,25 @@ class add_cohort_role extends external_api {
             throw new \moodle_exception('central_roles_invalidrole', 'local_dimensions');
         }
 
-        \tool_cohortroles\api::create_cohort_role_assignment((object) [
+        $assignment = \tool_cohortroles\api::create_cohort_role_assignment((object) [
             'userid' => $params['userid'],
             'roleid' => $params['roleid'],
             'cohortid' => $params['cohortid'],
         ]);
         sync_cohort_roles::queue((int) $USER->id);
+
+        // The tool_cohortroles api fires no event for the mapping decision; the
+        // per-member role_assigned events only fire later, from the sync task.
+        \local_dimensions\event\cohort_role_added::create([
+            'context' => $system,
+            'objectid' => (int) $assignment->get('id'),
+            'relateduserid' => (int) $params['userid'],
+            'other' => [
+                'templateid' => (int) $template->get('id'),
+                'cohortid' => (int) $params['cohortid'],
+                'roleid' => (int) $params['roleid'],
+            ],
+        ])->trigger();
 
         return ['success' => true];
     }

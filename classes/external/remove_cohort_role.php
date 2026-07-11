@@ -91,6 +91,20 @@ class remove_cohort_role extends external_api {
         $result = \tool_cohortroles\api::delete_cohort_role_assignment($params['assignmentid']);
         sync_cohort_roles::queue((int) $USER->id);
 
+        if ($result) {
+            // Counterpart of cohort_role_added: log who removed the mapping.
+            \local_dimensions\event\cohort_role_removed::create([
+                'context' => $system,
+                'objectid' => (int) $params['assignmentid'],
+                'relateduserid' => (int) $assignment->get('userid'),
+                'other' => [
+                    'templateid' => (int) $template->get('id'),
+                    'cohortid' => (int) $assignment->get('cohortid'),
+                    'roleid' => (int) $assignment->get('roleid'),
+                ],
+            ])->trigger();
+        }
+
         return ['success' => (bool) $result];
     }
 
