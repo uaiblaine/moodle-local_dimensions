@@ -28,6 +28,29 @@ use local_dimensions\customfield\lp_handler;
  */
 final class helper_duplicate_test extends \advanced_testcase {
     /**
+     * Resolve an lp-area field id by shortname.
+     *
+     * Both-areas fields (colors, tags, filters) reuse the same shortname in the
+     * competency area, so a bare shortname lookup on customfield_field matches
+     * two rows — scope by category component/area instead.
+     *
+     * @param string $shortname Custom-field shortname.
+     * @return int Field id.
+     */
+    private function lp_field_id(string $shortname): int {
+        global $DB;
+        $sql = "SELECT f.id
+                  FROM {customfield_field} f
+                  JOIN {customfield_category} c ON c.id = f.categoryid
+                 WHERE c.component = :component AND c.area = :area AND f.shortname = :shortname";
+        return (int) $DB->get_field_sql($sql, [
+            'component' => 'local_dimensions',
+            'area' => helper::AREA_LP,
+            'shortname' => $shortname,
+        ], MUST_EXIST);
+    }
+
+    /**
      * Custom field rows, embedded files and built-in images are all copied.
      *
      * @return void
@@ -69,15 +92,10 @@ final class helper_duplicate_test extends \advanced_testcase {
         ], 'card-bytes');
 
         // A file embedded in the SCSS textarea data row, keyed by the DATA id.
-        $scssfield = $DB->get_record(
-            'customfield_field',
-            ['shortname' => constants::CFIELD_CUSTOMSCSS],
-            '*',
-            MUST_EXIST
-        );
+        $scssfieldid = $this->lp_field_id(constants::CFIELD_CUSTOMSCSS);
         $sourcedata = $DB->get_record(
             'customfield_data',
-            ['fieldid' => $scssfield->id, 'instanceid' => $sourceid],
+            ['fieldid' => $scssfieldid, 'instanceid' => $sourceid],
             '*',
             MUST_EXIST
         );
@@ -93,30 +111,18 @@ final class helper_duplicate_test extends \advanced_testcase {
         helper::copy_template_plugin_data($sourceid, $targetid);
 
         // Select value copied (1-based option index in intvalue).
-        $modefield = $DB->get_record(
-            'customfield_field',
-            ['shortname' => constants::CFIELD_DISPLAYMODE],
-            '*',
-            MUST_EXIST
-        );
         $copiedmode = $DB->get_record(
             'customfield_data',
-            ['fieldid' => $modefield->id, 'instanceid' => $targetid],
+            ['fieldid' => $this->lp_field_id(constants::CFIELD_DISPLAYMODE), 'instanceid' => $targetid],
             '*',
             MUST_EXIST
         );
         $this->assertSame(2, (int) $copiedmode->intvalue);
 
         // Text value copied to both the datafield and the mirror column.
-        $colorfield = $DB->get_record(
-            'customfield_field',
-            ['shortname' => constants::CFIELD_CUSTOMBGCOLOR],
-            '*',
-            MUST_EXIST
-        );
         $copiedcolor = $DB->get_record(
             'customfield_data',
-            ['fieldid' => $colorfield->id, 'instanceid' => $targetid],
+            ['fieldid' => $this->lp_field_id(constants::CFIELD_CUSTOMBGCOLOR), 'instanceid' => $targetid],
             '*',
             MUST_EXIST
         );
@@ -126,7 +132,7 @@ final class helper_duplicate_test extends \advanced_testcase {
         // Embedded file re-keyed to the NEW data row id; source untouched.
         $copieddata = $DB->get_record(
             'customfield_data',
-            ['fieldid' => $scssfield->id, 'instanceid' => $targetid],
+            ['fieldid' => $scssfieldid, 'instanceid' => $targetid],
             '*',
             MUST_EXIST
         );
@@ -183,15 +189,9 @@ final class helper_duplicate_test extends \advanced_testcase {
         helper::copy_template_plugin_data($sourceid, $targetid);
         helper::copy_template_plugin_data($sourceid, $targetid);
 
-        $modefield = $DB->get_record(
-            'customfield_field',
-            ['shortname' => constants::CFIELD_DISPLAYMODE],
-            '*',
-            MUST_EXIST
-        );
         $rows = $DB->get_records(
             'customfield_data',
-            ['fieldid' => $modefield->id, 'instanceid' => $targetid]
+            ['fieldid' => $this->lp_field_id(constants::CFIELD_DISPLAYMODE), 'instanceid' => $targetid]
         );
         $this->assertCount(1, $rows);
         $this->assertSame(2, (int) reset($rows)->intvalue);
