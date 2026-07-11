@@ -181,8 +181,9 @@ class plans extends \core\output\dynamic_tabs\base {
 
         // Selected template competencies, each tagged with its source framework (cross-framework).
         // first/last drive the move up/down buttons; excludeids feeds the add picker so it never
-        // offers a competency already on the template (core's add throws on a duplicate).
-        // taxonomy/path/idnumber feed the display-options toggles on the detail pane.
+        // offers a competency already on the template (core's add returns false on a committed
+        // duplicate — check-then-act, so two concurrent adds can still slip past it; the table
+        // has no unique index). taxonomy/path/idnumber feed the display-options toggles.
         $competencies = [];
         $excludeids = [];
         if ($selected) {
