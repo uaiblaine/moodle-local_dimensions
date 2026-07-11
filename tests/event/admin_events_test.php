@@ -241,6 +241,8 @@ final class admin_events_test extends \advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $module = $this->getDataGenerator()->create_module('assign', ['course' => $course->id]);
         $cmid = (int) $module->cmid;
+        // Core requires the competency on the course before any of its modules.
+        \local_dimensions\external\link_competency_course::execute($competencyid, (int) $course->id);
 
         $sink = $this->redirectEvents();
         \local_dimensions\external\link_competency_module::execute($competencyid, $cmid);

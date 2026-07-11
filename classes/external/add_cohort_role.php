@@ -100,18 +100,22 @@ class add_cohort_role extends external_api {
         ]);
         sync_cohort_roles::queue((int) $USER->id);
 
-        // The tool_cohortroles api fires no event for the mapping decision; the
-        // per-member role_assigned events only fire later, from the sync task.
-        \local_dimensions\event\cohort_role_added::create([
-            'context' => $system,
-            'objectid' => (int) $assignment->get('id'),
-            'relateduserid' => (int) $params['userid'],
-            'other' => [
-                'templateid' => (int) $template->get('id'),
-                'cohortid' => (int) $params['cohortid'],
-                'roleid' => (int) $params['roleid'],
-            ],
-        ])->trigger();
+        /* The tool_cohortroles api fires no event for the mapping decision; the
+           per-member role_assigned events only fire later, from the sync task.
+           It returns false for an already-existing mapping (the WS is
+           idempotent) — a no-op logs nothing. */
+        if ($assignment) {
+            \local_dimensions\event\cohort_role_added::create([
+                'context' => $system,
+                'objectid' => (int) $assignment->get('id'),
+                'relateduserid' => (int) $params['userid'],
+                'other' => [
+                    'templateid' => (int) $template->get('id'),
+                    'cohortid' => (int) $params['cohortid'],
+                    'roleid' => (int) $params['roleid'],
+                ],
+            ])->trigger();
+        }
 
         return ['success' => true];
     }
