@@ -557,6 +557,8 @@ const onToggleStatus = async(state, row) => {
             paintRow(state, twin);
             twin.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
         });
+        const toastkey = data.active ? 'central_enrol_toast_enabled' : 'central_enrol_toast_disabled';
+        addToast(await getString(toastkey, 'local_dimensions', row.dataset.shortname));
     } finally {
         toggle.disabled = false;
     }
@@ -687,6 +689,9 @@ const applyMethodChange = (state, method) => {
     state.root.querySelectorAll(`${SELECTORS.methodgroup} button`).forEach((button) => {
         const on = button.dataset.method === method;
         button.classList.toggle('active', on);
+        // The selected segment wears the primary colour, the other stays outlined.
+        button.classList.toggle('btn-primary', on);
+        button.classList.toggle('btn-outline-secondary', !on);
         button.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
     state.root.querySelector(SELECTORS.hint).textContent =
