@@ -151,7 +151,7 @@ final class enrol_methods_test extends \advanced_testcase {
         $fixture = $this->build_fixture();
 
         // As admin both competencies list; page size 1 still reports total 2.
-        $result = list_enrol_competencies::execute($fixture['templateid'], 0, false, false, 0, 1);
+        $result = list_enrol_competencies::execute($fixture['templateid'], 0, false, false, '', 0, 1);
         $this->assertSame(2, $result['total']);
         $this->assertCount(1, $result['items']);
         $this->assertSame(2, $result['totalcourses']);
@@ -167,6 +167,30 @@ final class enrol_methods_test extends \advanced_testcase {
         $this->assertSame(0, $result['total']);
         $result = list_enrol_competencies::execute($fixture['templateid'], $fixture['cataid'], true);
         $this->assertSame(1, $result['total']);
+
+        // Competency name filter: case- and accent-insensitive.
+        $DB->set_field('course', 'visible', 1, ['id' => $fixture['coursea']->id]);
+        $lpg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $lpg->create_framework();
+        $accented = $lpg->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'shortname' => 'Comunicação avançada',
+        ]);
+        $lpg->create_template_competency([
+            'templateid' => $fixture['templateid'],
+            'competencyid' => $accented->get('id'),
+        ]);
+        $lpg->create_course_competency([
+            'competencyid' => $accented->get('id'),
+            'courseid' => $fixture['coursea']->id,
+        ]);
+        $result = list_enrol_competencies::execute($fixture['templateid'], 0, false, false, 'COMUNICACAO');
+        $this->assertSame(1, $result['total']);
+        $this->assertSame('Comunicação avançada', $result['items'][0]['shortname']);
+        $result = list_enrol_competencies::execute($fixture['templateid'], 0, false, false, 'avançada');
+        $this->assertSame(1, $result['total']);
+        $result = list_enrol_competencies::execute($fixture['templateid'], 0, false, false, 'nomatchxyz');
+        $this->assertSame(0, $result['total']);
     }
 
     /**

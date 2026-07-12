@@ -83,6 +83,14 @@
         <p class="text-muted small mb-3" data-region="enrol-hint"></p>
         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
             <div>
+                <label class="visually-hidden" for="local-dimensions-enrol-search">
+                    {{#str}}central_enrol_search, local_dimensions{{/str}}
+                </label>
+                <input type="text" id="local-dimensions-enrol-search" data-region="enrol-search"
+                       class="form-control form-control-sm local-dimensions-enrol-search"
+                       placeholder="{{#str}}central_enrol_search, local_dimensions{{/str}}">
+            </div>
+            <div>
                 <label class="visually-hidden" for="local-dimensions-enrol-category">
                     {{#str}}central_enrol_category, local_dimensions{{/str}}
                 </label>

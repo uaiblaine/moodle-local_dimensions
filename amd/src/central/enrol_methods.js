@@ -47,6 +47,7 @@ const SELECTORS = {
     methodgroup: '[data-region="enrol-method"]',
     role: '[data-region="enrol-role"]',
     hint: '[data-region="enrol-hint"]',
+    search: '[data-region="enrol-search"]',
     category: '[data-region="enrol-category"]',
     hiddentoggle: '[data-region="enrol-hidden"]',
     viscount: '[data-region="enrol-viscount"]',
@@ -80,7 +81,7 @@ const STATUS_BADGES = {
 const loadLabels = async() => {
     const [configured, processing, notconfigured, info, loadmore, hintcohort, hintself, methodcohort,
         methodself, competency, opencourse, categoryall, selfcohortonly, instanceenabled, instancedisabled,
-        category, visible, yes, no, inactive, role, hiddenfromstudents] = await getStrings([
+        nothing, category, visible, yes, no, inactive, role, hiddenfromstudents] = await getStrings([
         {key: 'central_enrol_status_configured', component: 'local_dimensions'},
         {key: 'central_enrol_status_processing', component: 'local_dimensions'},
         {key: 'central_enrol_status_notconfigured', component: 'local_dimensions'},
@@ -96,6 +97,7 @@ const loadLabels = async() => {
         {key: 'central_enrol_selfcohortonly', component: 'local_dimensions'},
         {key: 'central_enrol_instance_enabled', component: 'local_dimensions'},
         {key: 'central_enrol_instance_disabled', component: 'local_dimensions'},
+        {key: 'nothingtodisplay', component: 'moodle'},
         {key: 'category', component: 'moodle'},
         {key: 'visible', component: 'moodle'},
         {key: 'yes', component: 'moodle'},
@@ -120,6 +122,7 @@ const loadLabels = async() => {
         'selfcohortonly': selfcohortonly,
         'instanceenabled': instanceenabled,
         'instancedisabled': instancedisabled,
+        'nothing': nothing,
         'category': category,
         'visible': visible,
         'yes': yes,
@@ -416,6 +419,7 @@ const loadCompetencies = async(state, offset, preloaded = null) => {
             templateid: state.templateid,
             categoryid: state.categoryid,
             includehidden: state.showhidden,
+            query: state.query,
             limitfrom: offset,
             limitnum: PAGE_COMPETENCIES,
         },
@@ -423,6 +427,12 @@ const loadCompetencies = async(state, offset, preloaded = null) => {
     const tree = state.root.querySelector(SELECTORS.tree);
     const parts = await Promise.all(data.items.map((item) => renderGroupHtml(state, item)));
     await Templates.appendNodeContents(tree, parts.join(''), '');
+    if (!data.total && !offset) {
+        const nothing = document.createElement('p');
+        nothing.className = 'text-muted small mb-0';
+        nothing.textContent = state.labels.nothing;
+        tree.appendChild(nothing);
+    }
     const shown = offset + data.items.length;
     if (shown < data.total) {
         tree.appendChild(makeLoadMore(state, 'enrol-morecomps', {offset: shown}));
@@ -853,6 +863,7 @@ const init = async(state) => {
                 categoryid: state.categoryid,
                 includehidden: state.showhidden,
                 includebootstrap: true,
+                query: state.query,
                 limitnum: PAGE_COMPETENCIES,
             },
         },
@@ -947,6 +958,19 @@ const wireEvents = (state) => {
         }
     });
 
+    state.root.addEventListener('input', (event) => {
+        if (!event.target.matches(SELECTORS.search)) {
+            return;
+        }
+        // Debounced server-side filter: the competency list is paginated, so a client-side
+        // filter would miss the pages not loaded yet.
+        clearTimeout(state.searchtimer);
+        state.searchtimer = setTimeout(() => {
+            state.query = event.target.value.trim();
+            reload(state).catch(notifyError);
+        }, 300);
+    });
+
     state.root.addEventListener('change', (event) => {
         const target = event.target;
         if (target.matches(SELECTORS.cohort)) {
@@ -997,6 +1021,8 @@ export const mount = async(container, opts) => {
         roleid: 0,
         categoryid: 0,
         showhidden: false,
+        query: '',
+        searchtimer: null,
         selected: new Set(),
         pending: new Set(),
         polltimer: null,

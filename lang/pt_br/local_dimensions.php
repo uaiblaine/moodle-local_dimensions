@@ -104,6 +104,7 @@ $string['central_enrol_methoddisabled'] = 'Este método de inscrição está des
 $string['central_enrol_proccount'] = '{$a} em processamento';
 $string['central_enrol_remove'] = 'Remover método';
 $string['central_enrol_role'] = 'Papel atribuído';
+$string['central_enrol_search'] = 'Pesquisar competências';
 $string['central_enrol_selcount'] = '{$a} selecionado(s)';
 $string['central_enrol_selectall'] = 'Selecionar todos os cursos de {$a}';
 $string['central_enrol_selectcourse'] = 'Selecionar {$a}';

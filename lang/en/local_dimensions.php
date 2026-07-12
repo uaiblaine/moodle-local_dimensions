@@ -104,6 +104,7 @@ $string['central_enrol_methoddisabled'] = 'This enrolment method is disabled on 
 $string['central_enrol_proccount'] = '{$a} processing';
 $string['central_enrol_remove'] = 'Remove method';
 $string['central_enrol_role'] = 'Assigned role';
+$string['central_enrol_search'] = 'Search competencies';
 $string['central_enrol_selcount'] = '{$a} selected';
 $string['central_enrol_selectall'] = 'Select all courses of {$a}';
 $string['central_enrol_selectcourse'] = 'Select {$a}';
