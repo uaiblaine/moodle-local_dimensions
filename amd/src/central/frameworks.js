@@ -176,7 +176,10 @@ const openFrameworkForm = async(pane, args, titlekey) => {
         args: args,
         modalConfig: {title: await getString(titlekey, 'local_dimensions')},
     });
-    form.addEventListener(form.events.FORM_SUBMITTED, () => reloadPane(pane).catch(notifyError));
+    form.addEventListener(form.events.FORM_SUBMITTED, () => {
+        getString('central_frameworks_saved', 'local_dimensions').then(addToast).catch(notifyError);
+        reloadPane(pane).catch(notifyError);
+    });
     form.addEventListener(form.events.LOADED, () => injectScalesLink(form).catch(notifyError));
     form.show();
 };
