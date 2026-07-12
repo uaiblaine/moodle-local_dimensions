@@ -1,0 +1,49 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/enrol_group
+
+    One competency group of the Enrolment methods accordion: a select-all checkbox, a toggle button
+    (chevron + competency name + course-count badge) and an initially hidden, empty children
+    container that local_dimensions/central/enrol_methods fills on first expansion.
+
+    Context variables required:
+    * competencyid (int) · name (string) · countlabel (string) · selectalllabel (string)
+
+    Example context (json):
+    {
+        "competencyid": 12,
+        "name": "Corporate communication",
+        "countlabel": "2 courses",
+        "selectalllabel": "Select all courses of Corporate communication"
+    }
+}}
+<div class="local-dimensions-enrol-group border rounded mb-2" data-group="{{competencyid}}" data-name="{{name}}">
+    <div class="d-flex align-items-center gap-2 p-2">
+        <input type="checkbox" class="form-check-input m-0" data-groupcheck="{{competencyid}}"
+               aria-label="{{selectalllabel}}">
+        <button type="button"
+                class="btn btn-link p-0 text-start text-decoration-none text-reset flex-grow-1
+                       d-flex align-items-center gap-2"
+                data-action="enrol-toggle" data-competencyid="{{competencyid}}" aria-expanded="false">
+            <i class="fa fa-chevron-right" aria-hidden="true" data-region="chevron"></i>
+            <span class="fw-medium text-truncate">{{name}}</span>
+            <span class="badge bg-secondary">{{countlabel}}</span>
+        </button>
+    </div>
+    <div class="border-top p-2" data-children="{{competencyid}}" data-offset="0" hidden></div>
+</div>

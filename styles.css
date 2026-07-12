@@ -5679,3 +5679,13 @@ a.local-dimensions-central-links-badge-warn:focus {
     max-height: 40vh;
     overflow-y: auto;
 }
+
+/*
+ * Enrolment methods tab (participants modal): cap the competency accordion's scroll box so
+ * the config bar above and the action footer below stay visible while long course lists
+ * scroll on their own.
+ */
+.local-dimensions-enrol-tree {
+    max-height: 50vh;
+    overflow-y: auto;
+}
