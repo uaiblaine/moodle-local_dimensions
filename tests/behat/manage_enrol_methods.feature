@@ -34,6 +34,7 @@ Feature: Bulk-configure enrolment methods from the Competency hub
     And I press "Manage participants"
     And I click on "Enrolment methods" "button" in the "Manage participants" "dialogue"
     Then I should see "No cohort is linked to this plan" in the "Manage participants" "dialogue"
+    And I should not see "are both disabled on this site" in the "Manage participants" "dialogue"
 
   Scenario: See the linked course and its status for the plan cohort
     Given the following "cohorts" exist:
@@ -47,6 +48,8 @@ Feature: Bulk-configure enrolment methods from the Competency hub
     And I should see "Marketing" in the "Manage participants" "dialogue"
     And I click on "Enrolment methods" "button" in the "Manage participants" "dialogue"
     Then I should see "1 course" in the "Manage participants" "dialogue"
+    And I should not see "No cohort is linked to this plan" in the "Manage participants" "dialogue"
+    And I should not see "are both disabled on this site" in the "Manage participants" "dialogue"
     When I click on "Alpha competency" "button" in the "Manage participants" "dialogue"
     Then I should see "LINK1" in the "Manage participants" "dialogue"
     And I should see "Not configured" in the "Manage participants" "dialogue"

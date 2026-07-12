@@ -278,6 +278,15 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071103, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071104) {
+        // Enrolment methods tab: the disabled/empty alerts toggle via el.hidden again (the
+        // d-flex utility on the alert beat the hidden attribute, so both always showed).
+        // Purge so the rebuilt Mustache is served fresh.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026071104, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
