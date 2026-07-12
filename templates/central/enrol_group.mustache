@@ -17,9 +17,10 @@
 {{!
     @template local_dimensions/central/enrol_group
 
-    One competency group of the Enrolment methods accordion: a select-all checkbox, a toggle button
-    (chevron + competency name + course-count badge) and an initially hidden, empty children
-    container that local_dimensions/central/enrol_methods fills on first expansion.
+    One competency group of the Enrolment methods accordion: a select-all checkbox, a toggle
+    button (chevron + competency name + course-count badge) and an initially hidden children
+    container hosting a labelled courses table whose body rows are filled on first expansion
+    by local_dimensions/central/enrol_methods.
 
     Context variables required:
     * competencyid (int) · name (string) · countlabel (string) · selectalllabel (string)
@@ -42,8 +43,23 @@
                 data-action="enrol-toggle" data-competencyid="{{competencyid}}" aria-expanded="false">
             <i class="fa fa-chevron-right" aria-hidden="true" data-region="chevron"></i>
             <span class="fw-medium text-truncate">{{name}}</span>
-            <span class="badge bg-secondary">{{countlabel}}</span>
+            <span class="badge bg-secondary text-dark">{{countlabel}}</span>
         </button>
     </div>
-    <div class="border-top px-3 py-2" data-children="{{competencyid}}" data-offset="0" hidden></div>
+    <div class="border-top px-3 py-2" data-children="{{competencyid}}" data-offset="0" hidden>
+        <table class="table table-striped table-hover generaltable mb-0">
+            <caption class="visually-hidden">{{name}}</caption>
+            <thead>
+                <tr>
+                    <th scope="col"><span class="visually-hidden">{{#str}}select, moodle{{/str}}</span></th>
+                    <th scope="col">{{#str}}course, moodle{{/str}}</th>
+                    <th scope="col">{{#str}}category, moodle{{/str}}</th>
+                    <th scope="col">{{#str}}role, moodle{{/str}}</th>
+                    <th scope="col">{{#str}}status, moodle{{/str}}</th>
+                    <th scope="col">{{#str}}actions, moodle{{/str}}</th>
+                </tr>
+            </thead>
+            <tbody data-region="enrol-rows"></tbody>
+        </table>
+    </div>
 </div>

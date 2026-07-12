@@ -62,10 +62,12 @@ const SELECTORS = {
     spinner: '[data-region="row-spinner"]',
 };
 
+/* Boost's secondary is a light grey while the default badge text is white, so the neutral
+   pill pairs bg-secondary with text-dark (core's own combination) to keep AA contrast. */
 const STATUS_BADGES = {
     configured: 'badge bg-success',
     processing: 'badge bg-info',
-    notconfigured: 'badge bg-secondary',
+    notconfigured: 'badge bg-secondary text-dark',
 };
 
 /**
@@ -178,8 +180,7 @@ const paintRow = (state, row) => {
     pill.textContent = state.labels['status_' + status] || '';
     const rolename = (state.method === 'cohort' ? row.dataset.cohortRole : row.dataset.selfRole) || '';
     const rolenote = row.querySelector(SELECTORS.rolenote);
-    rolenote.hidden = !(status === 'configured' && rolename);
-    rolenote.textContent = rolenote.hidden ? '' : rolename;
+    rolenote.textContent = (status === 'configured' && rolename) ? rolename : '';
     const processing = status === 'processing';
     const check = row.querySelector(SELECTORS.rowcheck);
     check.hidden = processing;
@@ -359,7 +360,7 @@ const loadCourses = async(state, competencyid, offset) => {
     const children = group.querySelector(`[data-children="${competencyid}"]`);
     const name = group.dataset.name;
     const parts = await Promise.all(data.items.map((item) => renderRowHtml(state, item, name)));
-    await Templates.appendNodeContents(children, parts.join(''), '');
+    await Templates.appendNodeContents(children.querySelector('[data-region="enrol-rows"]'), parts.join(''), '');
     children.querySelectorAll(SELECTORS.row).forEach((row) => {
         paintRow(state, row);
         const courseid = Number(row.dataset.courseid);
