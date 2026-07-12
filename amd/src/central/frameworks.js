@@ -131,17 +131,22 @@ const setupScaleConfigDelegation = () => {
  * @return {Promise<void>}
  */
 const injectScalesLink = async(form) => {
-    if (!activeRegion || activeRegion.dataset.canscalespage !== '1' || !form.modal) {
+    if (!form.modal) {
         return;
     }
     const root = form.modal.getRoot()[0];
+    const dialog = root.querySelector('.modal-dialog');
+    if (dialog) {
+        // Applied even without the link: the shared class also standardises the close-button
+        // chip, which otherwise only styles modals whose body carries plugin classes.
+        dialog.classList.add('local-dimensions-headerlink-modal');
+    }
+    if (!activeRegion || activeRegion.dataset.canscalespage !== '1') {
+        return;
+    }
     const header = root.querySelector('.modal-header');
     if (!header || header.querySelector('.local-dimensions-headerlink')) {
         return;
-    }
-    const dialog = root.querySelector('.modal-dialog');
-    if (dialog) {
-        dialog.classList.add('local-dimensions-headerlink-modal');
     }
     const label = await getString('central_frameworks_openscales', 'local_dimensions');
     const link = document.createElement('a');

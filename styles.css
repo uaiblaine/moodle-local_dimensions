@@ -3554,7 +3554,8 @@
  * colour it precisely). Scoped to modals holding this plugin's content; the referenced-competency
  * modal keeps its own close button (its header is hidden), so it is excluded.
  */
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close {
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close,
+.local-dimensions-headerlink-modal .btn-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -3567,7 +3568,8 @@
     opacity: 1;
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close::before {
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close::before,
+.local-dimensions-headerlink-modal .btn-close::before {
     content: '\f00d';
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
@@ -3577,7 +3579,9 @@
 }
 
 .modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close:hover,
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close:focus {
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close:focus,
+.local-dimensions-headerlink-modal .btn-close:hover,
+.local-dimensions-headerlink-modal .btn-close:focus {
     background-color: #d4e6fb;
 }
 
