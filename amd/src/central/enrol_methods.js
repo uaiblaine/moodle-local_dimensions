@@ -57,8 +57,8 @@ const SELECTORS = {
     rowcheck: 'input[data-rowcheck]',
     row: '.local-dimensions-enrol-row',
     status: '[data-region="row-status"]',
+    rolenote: '[data-region="row-role"]',
     spinner: '[data-region="row-spinner"]',
-    chevron: '[data-region="chevron"]',
 };
 
 const STATUS_BADGES = {
@@ -74,7 +74,8 @@ const STATUS_BADGES = {
  */
 const loadLabels = async() => {
     const [configured, processing, notconfigured, info, loadmore, hintcohort, hintself, methodcohort,
-        methodself, competency, opencourse, categoryall, category, visible, yes, no] = await getStrings([
+        methodself, competency, opencourse, categoryall, selfcohortonly, category, visible, yes, no,
+        inactive, role] = await getStrings([
         {key: 'central_enrol_status_configured', component: 'local_dimensions'},
         {key: 'central_enrol_status_processing', component: 'local_dimensions'},
         {key: 'central_enrol_status_notconfigured', component: 'local_dimensions'},
@@ -87,10 +88,13 @@ const loadLabels = async() => {
         {key: 'central_enrol_detail_competency', component: 'local_dimensions'},
         {key: 'central_enrol_detail_opencourse', component: 'local_dimensions'},
         {key: 'central_enrol_categoryall', component: 'local_dimensions'},
+        {key: 'central_enrol_selfcohortonly', component: 'local_dimensions'},
         {key: 'category', component: 'moodle'},
         {key: 'visible', component: 'moodle'},
         {key: 'yes', component: 'moodle'},
         {key: 'no', component: 'moodle'},
+        {key: 'inactive', component: 'moodle'},
+        {key: 'role', component: 'moodle'},
     ]);
     return {
         'status_configured': configured,
@@ -105,10 +109,13 @@ const loadLabels = async() => {
         'competency': competency,
         'opencourse': opencourse,
         'categoryall': categoryall,
+        'selfcohortonly': selfcohortonly,
         'category': category,
         'visible': visible,
         'yes': yes,
         'no': no,
+        'inactive': inactive,
+        'role': role,
     };
 };
 
@@ -157,7 +164,7 @@ const setRowStatus = (state, row, status) => {
 };
 
 /**
- * Paint a row's status pill and swap the checkbox for a spinner while processing.
+ * Paint a row's status pill, the assigned-role note and the checkbox/spinner swap.
  *
  * @param {Object} state Tab state.
  * @param {HTMLElement} row Course row.
@@ -168,6 +175,10 @@ const paintRow = (state, row) => {
     const pill = row.querySelector(SELECTORS.status);
     pill.className = STATUS_BADGES[status] || STATUS_BADGES.notconfigured;
     pill.textContent = state.labels['status_' + status] || '';
+    const rolename = (state.method === 'cohort' ? row.dataset.cohortRole : row.dataset.selfRole) || '';
+    const rolenote = row.querySelector(SELECTORS.rolenote);
+    rolenote.hidden = !(status === 'configured' && rolename);
+    rolenote.textContent = rolenote.hidden ? '' : rolename;
     const processing = status === 'processing';
     const check = row.querySelector(SELECTORS.rowcheck);
     check.hidden = processing;
@@ -375,15 +386,13 @@ const loadCourses = async(state, competencyid, offset) => {
 const toggleGroup = async(state, button) => {
     const competencyid = Number(button.dataset.competencyid);
     const children = state.root.querySelector(`[data-children="${competencyid}"]`);
-    const chevron = button.querySelector(SELECTORS.chevron);
+    // The chevron rotation and the reveal animation are pure CSS, keyed on aria-expanded.
     if (button.getAttribute('aria-expanded') === 'true') {
         children.hidden = true;
         button.setAttribute('aria-expanded', 'false');
-        chevron.className = 'fa fa-chevron-right';
         return;
     }
     button.setAttribute('aria-expanded', 'true');
-    chevron.className = 'fa fa-chevron-down';
     children.hidden = false;
     if (children.dataset.loaded !== '1') {
         children.dataset.loaded = '1';
@@ -570,20 +579,38 @@ const reload = async(state) => {
 };
 
 /**
- * A status line for the details modal: the status label, plus the configured-since date.
+ * A status line for the details modal: for self enrolment it leads with the cohort-only
+ * nature of the instance; when configured it appends the date, an Inactive marker when the
+ * instance is disabled, and the assigned role.
  *
  * @param {Object} state Tab state.
- * @param {String} status configured|processing|notconfigured.
- * @param {String} since Localised configured-since date ('' when unknown).
- * @return {Promise<String>}
+ * @param {HTMLElement} row Course row.
+ * @param {String} method 'cohort' or 'self'.
+ * @return {String}
  */
-const statusLine = async(state, status, since) => {
-    const label = state.labels['status_' + (status || 'notconfigured')] || '';
-    if (status === 'configured' && since) {
-        const sincetext = await getString('central_enrol_detail_configuredsince', 'local_dimensions', since);
-        return label + ' · ' + sincetext;
+const statusLine = (state, row, method) => {
+    const data = row.dataset;
+    const cohort = method === 'cohort';
+    const status = (cohort ? data.cohortStatus : data.selfStatus) || 'notconfigured';
+    const since = cohort ? data.cohortSince : data.selfSince;
+    const active = (cohort ? data.cohortActive : data.selfActive) === '1';
+    const rolename = cohort ? data.cohortRole : data.selfRole;
+    const parts = [];
+    if (!cohort) {
+        parts.push(state.labels.selfcohortonly);
     }
-    return label;
+    let statustext = state.labels['status_' + status] || '';
+    if (status === 'configured' && since) {
+        statustext += ' ' + since;
+    }
+    parts.push(statustext);
+    if (status === 'configured' && !active) {
+        parts.push(state.labels.inactive);
+    }
+    if (status === 'configured' && rolename) {
+        parts.push(state.labels.role + ': ' + rolename);
+    }
+    return parts.join(' · ');
 };
 
 /**
@@ -595,10 +622,8 @@ const statusLine = async(state, status, since) => {
  */
 const showDetail = async(state, row) => {
     const data = row.dataset;
-    const [cohortline, selfline] = await Promise.all([
-        statusLine(state, data.cohortStatus, data.cohortSince),
-        statusLine(state, data.selfStatus, data.selfSince),
-    ]);
+    const cohortline = statusLine(state, row, 'cohort');
+    const selfline = statusLine(state, row, 'self');
     const {html} = await Templates.renderForPromise('local_dimensions/central/enrol_detail', {
         fullname: data.fullname,
         shortname: data.shortname,
@@ -615,7 +640,7 @@ const showDetail = async(state, row) => {
         courseurl: data.courseurl,
         opencourselabel: state.labels.opencourse,
     });
-    const modal = await Modal.create({title: data.fullname, body: html});
+    const modal = await Modal.create({title: data.fullname, body: html, large: true});
     modal.setRemoveOnClose(true);
     modal.show();
 };
@@ -630,23 +655,85 @@ const showDetail = async(state, row) => {
 const applyBootstrap = (state, bootstrap) => {
     const roleselect = state.root.querySelector(SELECTORS.role);
     fillSelect(roleselect, bootstrap.roles.map((role) => ({value: role.id, label: role.name})));
-    if (bootstrap.defaultroleid) {
+    const wantedrole = state.roleid || Number(bootstrap.defaultroleid);
+    if (wantedrole && bootstrap.roles.some((role) => Number(role.id) === wantedrole)) {
+        roleselect.value = String(wantedrole);
+    } else if (bootstrap.defaultroleid) {
         roleselect.value = String(bootstrap.defaultroleid);
     }
     state.roleid = Number(roleselect.value) || 0;
 
     const options = [{value: 0, label: state.labels.categoryall}];
     bootstrap.categories.forEach((cat) => options.push({value: cat.id, label: cat.name}));
-    fillSelect(state.root.querySelector(SELECTORS.category), options);
+    const categoryselect = state.root.querySelector(SELECTORS.category);
+    fillSelect(categoryselect, options);
+    if (state.categoryid && bootstrap.categories.some((cat) => Number(cat.id) === state.categoryid)) {
+        categoryselect.value = String(state.categoryid);
+    }
+    state.categoryid = Number(categoryselect.value) || 0;
 
     const buttons = state.root.querySelectorAll(`${SELECTORS.methodgroup} button`);
     buttons.forEach((button) => {
         const enabled = button.dataset.method === 'cohort' ? bootstrap.cohortenabled : bootstrap.selfenabled;
         button.disabled = !enabled;
     });
-    if (!bootstrap.cohortenabled && bootstrap.selfenabled) {
+    if (!bootstrap.cohortenabled && bootstrap.selfenabled && state.method === 'cohort') {
         applyMethodChange(state, 'self');
     }
+};
+
+/**
+ * Fetch the cohorts and the first competency page, then populate the whole pane. Runs on
+ * mount and again on the Refresh action, so a cohort attached meanwhile on the Cohorts tab
+ * appears without closing the modal. Keeps the current cohort/role/category when possible.
+ *
+ * @param {Object} state Tab state.
+ * @return {Promise<void>}
+ */
+const init = async(state) => {
+    stopPolling(state);
+    state.pending.clear();
+    state.selected.clear();
+    state.root.querySelector(SELECTORS.tree).textContent = '';
+    const [cohortdata, compdata] = await Promise.all(Ajax.call([
+        {
+            methodname: 'local_dimensions_list_template_cohorts',
+            args: {templateid: state.templateid},
+        },
+        {
+            methodname: 'local_dimensions_list_enrol_competencies',
+            args: {
+                templateid: state.templateid,
+                categoryid: state.categoryid,
+                includehidden: state.showhidden,
+                includebootstrap: true,
+                limitnum: PAGE_COMPETENCIES,
+            },
+        },
+    ]));
+    const empty = state.root.querySelector(SELECTORS.empty);
+    const main = state.root.querySelector(SELECTORS.main);
+    if (!cohortdata.cohorts.length) {
+        empty.hidden = false;
+        main.hidden = true;
+        return;
+    }
+    empty.hidden = true;
+    main.hidden = false;
+
+    const cohortselect = state.root.querySelector(SELECTORS.cohort);
+    fillSelect(cohortselect, cohortdata.cohorts.map((cohort) => ({value: cohort.cohortid, label: cohort.name})));
+    if (state.cohortid && cohortdata.cohorts.some((cohort) => Number(cohort.cohortid) === state.cohortid)) {
+        cohortselect.value = String(state.cohortid);
+    }
+    state.cohortid = Number(cohortselect.value) || 0;
+    applyBootstrap(state, compdata.bootstrap || {
+        roles: [], defaultroleid: 0, categories: [], cohortenabled: true, selfenabled: true,
+    });
+    state.root.querySelector(SELECTORS.hint).textContent =
+        state.method === 'cohort' ? state.labels.hintcohort : state.labels.hintself;
+    updateFooter(state);
+    await loadCompetencies(state, 0, compdata);
 };
 
 /**
@@ -657,6 +744,10 @@ const applyBootstrap = (state, bootstrap) => {
  */
 const wireEvents = (state) => {
     state.root.addEventListener('click', (event) => {
+        if (event.target.closest('[data-action="enrol-refresh"]')) {
+            init(state).catch(notifyError);
+            return;
+        }
         const toggle = event.target.closest('[data-action="enrol-toggle"]');
         if (toggle) {
             toggleGroup(state, toggle).catch(notifyError);
@@ -749,32 +840,6 @@ export const mount = async(container, opts) => {
         polltimer: null,
     };
 
-    const [cohortdata, compdata] = await Promise.all(Ajax.call([
-        {
-            methodname: 'local_dimensions_list_template_cohorts',
-            args: {templateid: state.templateid},
-        },
-        {
-            methodname: 'local_dimensions_list_enrol_competencies',
-            args: {templateid: state.templateid, includebootstrap: true, limitnum: PAGE_COMPETENCIES},
-        },
-    ]));
-    if (!cohortdata.cohorts.length) {
-        container.querySelector(SELECTORS.empty).hidden = false;
-        return;
-    }
-    container.querySelector(SELECTORS.main).hidden = false;
-
-    const cohortselect = container.querySelector(SELECTORS.cohort);
-    fillSelect(cohortselect, cohortdata.cohorts.map((cohort) => ({value: cohort.cohortid, label: cohort.name})));
-    state.cohortid = Number(cohortselect.value) || 0;
-    applyBootstrap(state, compdata.bootstrap || {
-        roles: [], defaultroleid: 0, categories: [], cohortenabled: true, selfenabled: true,
-    });
-    container.querySelector(SELECTORS.hint).textContent =
-        state.method === 'cohort' ? labels.hintcohort : labels.hintself;
-
     wireEvents(state);
-    updateFooter(state);
-    await loadCompetencies(state, 0, compdata);
+    await init(state);
 };
