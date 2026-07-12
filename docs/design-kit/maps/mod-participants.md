@@ -15,6 +15,7 @@ Modal hospedeiro com cabeçalho + abas **Coortes / Usuários / Papéis**. A aba 
 | `PART-TAB-COHORTS` | Coortes | aba | `participants_manager.mustache:40` | `data-target-pane="pane-cohorts"` | ativa por padrão |
 | `PART-TAB-USERS` | Usuários | aba | `participants_manager.mustache:47` | `data-target-pane="pane-users"` | — |
 | `PART-TAB-ROLES` | Papéis | aba | `participants_manager.mustache:55` | `data-target-pane="pane-roles"` | só se `canassignroles` |
+| `PART-TAB-ENROL` | Métodos de inscrição | aba | _to-be_ | `data-target-pane="pane-enrol"` | nova 4ª aba → monta `MOD.ENROL` (ver [`mod-enrolmethods.md`](mod-enrolmethods.md)) |
 
 ## Aba Coortes (`MOD.COHORT`)
 

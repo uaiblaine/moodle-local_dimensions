@@ -42,6 +42,7 @@ Formato `@dsCard`, grupo "Telas (as-is ↔ to-be)" no índice do DS.
 | `screens/mod-related.html` | Modal `MOD.RELATED` · Competências referenciadas |
 | `screens/mod-rule.html` | Modal `MOD.RULE` · Regra de conclusão |
 | `screens/mod-participants.html` | Modal `MOD.PART` (+ `MOD.COHORT`/`MOD.ROLES`) |
+| `screens/mod-enrolmethods.html` | Modal `MOD.ENROL` · Métodos de inscrição (nova 4ª aba de `MOD.PART`) |
 | `screens/mod-delplans.html` | Modal `MOD.DELPLANS` · Excluir template com planos |
 
 Todas as superfícies da Central estão cobertas (as-is + to-be). Próximo: **Camada 3** —
@@ -64,11 +65,12 @@ tipo, **origem** (`mustache:linha` ou módulo `amd`), dados e regra de negócio.
 | `maps/mod-rule.md` | `MOD.RULE` · Regra de conclusão |
 | `maps/mod-scale.md` | `MOD.SCALE` · Escala/proficiência do framework |
 | `maps/mod-participants.md` | `MOD.PART` · Participantes (Coortes/Usuários/Papéis) |
+| `maps/mod-enrolmethods.md` | `MOD.ENROL` · Métodos de inscrição (to-be — proposta) |
 | `maps/mod-delplans.md` | `MOD.DELPLANS` · Excluir template com planos |
 
 ### Convenção de IDs
 Formato `PREFIXO-SECAO-NN`. Prefixos: `BAR` (contextbar), `EST`/`FWK`/`PLN` (abas),
-`MOD.{BROWSER,LINKS,RELATED,RULE,COHORT,ROLES,PART,SCALE,DELPLANS}` (modais). Recebe ID todo elemento
+`MOD.{BROWSER,LINKS,RELATED,RULE,COHORT,ROLES,PART,ENROL,SCALE,DELPLANS}` (modais). Recebe ID todo elemento
 interativo e toda região estática com significado (headings, empty states, contadores);
 wrappers puros de layout não. IDs são estáveis — não mudam ao reordenar a tela.
 
