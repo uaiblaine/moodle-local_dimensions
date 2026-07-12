@@ -30,11 +30,14 @@
     }
 }}
 <div class="local-dimensions-enrol" data-region="enrol">
-    <div class="alert alert-info" data-region="enrol-empty" hidden>
-        {{#str}}central_enrol_empty, local_dimensions{{/str}}
+    <div class="alert alert-info d-flex flex-wrap gap-2 align-items-center" data-region="enrol-empty" hidden>
+        <span class="me-auto">{{#str}}central_enrol_empty, local_dimensions{{/str}}</span>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-action="enrol-refresh">
+            <i class="fa fa-rotate me-1" aria-hidden="true"></i>{{#str}}refresh, moodle{{/str}}
+        </button>
     </div>
     <div data-region="enrol-main" hidden>
-        <div class="d-flex flex-wrap gap-2 align-items-end mb-1">
+        <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
             <div>
                 <label class="d-block small text-muted mb-1" for="local-dimensions-enrol-cohort">
                     {{#str}}central_enrol_cohort, local_dimensions{{/str}}
@@ -64,8 +67,8 @@
                 <select id="local-dimensions-enrol-role" data-region="enrol-role" class="form-select"></select>
             </div>
         </div>
-        <p class="text-muted small mb-2" data-region="enrol-hint"></p>
-        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+        <p class="text-muted small mb-3" data-region="enrol-hint"></p>
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
             <div>
                 <label class="visually-hidden" for="local-dimensions-enrol-category">
                     {{#str}}central_enrol_category, local_dimensions{{/str}}
@@ -81,8 +84,11 @@
                 </label>
             </div>
             <span class="text-muted small ms-auto" data-region="enrol-viscount"></span>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="enrol-refresh">
+                <i class="fa fa-rotate me-1" aria-hidden="true"></i>{{#str}}refresh, moodle{{/str}}
+            </button>
         </div>
-        <div class="local-dimensions-enrol-tree mb-2" data-region="enrol-tree"></div>
+        <div class="local-dimensions-enrol-tree mb-3" data-region="enrol-tree"></div>
         <div class="d-flex flex-wrap gap-2 align-items-center border-top pt-2">
             <span class="small" data-region="enrol-selcount"></span>
             <span class="small text-primary" data-region="enrol-proccount" hidden>

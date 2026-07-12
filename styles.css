@@ -5689,3 +5689,45 @@ a.local-dimensions-central-links-badge-warn:focus {
     max-height: 50vh;
     overflow-y: auto;
 }
+
+/*
+ * Enrolment methods tab: the group chevron rotates and the children container fades/slides
+ * in via CSS keyed on the toggle's aria-expanded state; rows get a subtle separator.
+ */
+.local-dimensions-enrol-group [data-region='chevron'] {
+    transition: transform 0.2s ease;
+}
+
+.local-dimensions-enrol-group [data-action='enrol-toggle'][aria-expanded='true'] [data-region='chevron'] {
+    transform: rotate(90deg);
+}
+
+.local-dimensions-enrol-group [data-children]:not([hidden]) {
+    animation: local-dimensions-enrol-expand 0.18s ease-out;
+}
+
+@keyframes local-dimensions-enrol-expand {
+    from {
+        opacity: 0;
+        transform: translateY(-0.25rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.local-dimensions-enrol-row + .local-dimensions-enrol-row {
+    border-top: 1px solid rgb(0 0 0 / 8%);
+}
+
+/* Course-details modal: breathing room in the striped facts table. */
+.local-dimensions-enrol-detail-table th {
+    width: 35%;
+}
+
+.local-dimensions-enrol-detail-table td,
+.local-dimensions-enrol-detail-table th {
+    padding: 0.75rem 1rem;
+}

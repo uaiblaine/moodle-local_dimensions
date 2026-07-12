@@ -174,6 +174,7 @@ final class enrol_methods_test extends \advanced_testcase {
      * @return void
      */
     public function test_list_courses_statuses(): void {
+        global $DB;
         $this->resetAfterTest();
         $this->setAdminUser();
         $fixture = $this->build_fixture();
@@ -209,6 +210,19 @@ final class enrol_methods_test extends \advanced_testcase {
         $this->assertSame('notconfigured', $rowb['selfstatus']);
         $this->assertTrue($rowa['visible']);
         $this->assertStringContainsString('/course/view.php', $rowa['courseurl']);
+
+        // The configured instance carries its enabled state and assigned role name.
+        $this->assertTrue($rowa['cohortactive']);
+        $this->assertNotSame('', $rowa['cohortrolename']);
+        $this->assertFalse($rowb['cohortactive']);
+        $this->assertSame('', $rowb['cohortrolename']);
+
+        // A disabled instance still reads configured, but inactive.
+        $DB->set_field('enrol', 'status', ENROL_INSTANCE_DISABLED, ['enrol' => 'cohort', 'courseid' => $courseaid]);
+        $result = list_enrol_courses::execute($fixture['templateid'], $fixture['comp1id'], $fixture['cohortid']);
+        $byid = array_column($result['items'], null, 'courseid');
+        $this->assertSame('configured', $byid[$courseaid]['cohortstatus']);
+        $this->assertFalse($byid[$courseaid]['cohortactive']);
     }
 
     /**

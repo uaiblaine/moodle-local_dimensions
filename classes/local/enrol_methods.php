@@ -165,11 +165,12 @@ class enrol_methods {
     /**
      * Configured state of both methods for a set of courses against one cohort.
      *
-     * The "since" value is the earliest matching instance's timecreated (0 when none).
+     * The "since", "active" and "roleid" values come from the earliest matching instance
+     * (0/false when none); "active" is true when that instance is enabled.
      *
      * @param array $courseids Course ids.
      * @param int $cohortid Cohort id.
-     * @return array Map of courseid => [method => object {configured (bool), since (int)}].
+     * @return array Map of courseid => [method => object {configured (bool), since (int), active (bool), roleid (int)}].
      */
     public static function status_map(array $courseids, int $cohortid): array {
         global $DB;
@@ -177,8 +178,12 @@ class enrol_methods {
         $statuses = [];
         foreach ($courseids as $courseid) {
             $statuses[(int) $courseid] = [
-                process_enrol_method::METHOD_COHORT => (object) ['configured' => false, 'since' => 0],
-                process_enrol_method::METHOD_SELF => (object) ['configured' => false, 'since' => 0],
+                process_enrol_method::METHOD_COHORT => (object) [
+                    'configured' => false, 'since' => 0, 'active' => false, 'roleid' => 0,
+                ],
+                process_enrol_method::METHOD_SELF => (object) [
+                    'configured' => false, 'since' => 0, 'active' => false, 'roleid' => 0,
+                ],
             ];
         }
         if (!$statuses) {
@@ -189,14 +194,22 @@ class enrol_methods {
         $params['cohortid2'] = $cohortid;
         $select = "courseid $insql AND ((enrol = 'cohort' AND customint1 = :cohortid1)"
             . " OR (enrol = 'self' AND customint5 = :cohortid2))";
-        $rows = $DB->get_records_select('enrol', $select, $params, 'id ASC', 'id, courseid, enrol, timecreated');
+        $rows = $DB->get_records_select(
+            'enrol',
+            $select,
+            $params,
+            'id ASC',
+            'id, courseid, enrol, status, roleid, timecreated'
+        );
         foreach ($rows as $row) {
             $entry = $statuses[(int) $row->courseid][(string) $row->enrol];
-            $entry->configured = true;
-            $time = (int) $row->timecreated;
-            if ($time && (!$entry->since || $time < $entry->since)) {
-                $entry->since = $time;
+            if (!$entry->configured) {
+                // First (earliest) matching instance wins for the detail fields.
+                $entry->active = ((int) $row->status === ENROL_INSTANCE_ENABLED);
+                $entry->roleid = (int) $row->roleid;
+                $entry->since = (int) $row->timecreated;
             }
+            $entry->configured = true;
         }
         return $statuses;
     }

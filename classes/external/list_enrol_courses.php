@@ -147,6 +147,8 @@ class list_enrol_courses extends external_api {
         }, $courses);
         $statuses = enrol_methods::status_map($pageids, $params['cohortid']);
         $pending = process_enrol_method::pending_map();
+        $rolenames = self::role_names($statuses, $context);
+        $dateformat = get_string('strftimedaydatetime', 'langconfig');
 
         $items = [];
         foreach ($courses as $course) {
@@ -169,11 +171,43 @@ class list_enrol_courses extends external_api {
                     $status = $state->configured ? 'configured' : 'notconfigured';
                 }
                 $item[$method . 'status'] = $status;
-                $item[$method . 'configuredsince'] = ($state->configured && $state->since) ? userdate($state->since) : '';
+                $item[$method . 'configuredsince'] = ($state->configured && $state->since)
+                    ? userdate($state->since, $dateformat)
+                    : '';
+                $item[$method . 'active'] = $state->configured && $state->active;
+                $item[$method . 'rolename'] = $state->configured ? ($rolenames[$state->roleid] ?? '') : '';
             }
             $items[] = $item;
         }
         return ['items' => $items, 'total' => $total];
+    }
+
+    /**
+     * Localised names of the roles referenced by the page's enrol instances.
+     *
+     * @param array $statuses Status map from enrol_methods::status_map().
+     * @param \context $context Context the role names are localised for.
+     * @return array Map of roleid => localised role name.
+     */
+    private static function role_names(array $statuses, \context $context): array {
+        $roleids = [];
+        foreach ($statuses as $methods) {
+            foreach ($methods as $state) {
+                if ($state->roleid) {
+                    $roleids[$state->roleid] = true;
+                }
+            }
+        }
+        if (!$roleids) {
+            return [];
+        }
+        $names = [];
+        foreach (role_fix_names(get_all_roles(), $context, ROLENAME_ALIAS) as $role) {
+            if (isset($roleids[(int) $role->id])) {
+                $names[(int) $role->id] = $role->localname;
+            }
+        }
+        return $names;
     }
 
     /**
@@ -192,8 +226,12 @@ class list_enrol_courses extends external_api {
                 'courseurl' => new external_value(PARAM_URL, 'Course view URL'),
                 'cohortstatus' => new external_value(PARAM_ALPHA, 'Cohort sync: configured|processing|notconfigured'),
                 'cohortconfiguredsince' => new external_value(PARAM_TEXT, 'Cohort sync configured-since date, or empty'),
+                'cohortactive' => new external_value(PARAM_BOOL, 'Whether the cohort sync instance is enabled'),
+                'cohortrolename' => new external_value(PARAM_TEXT, 'Role the cohort sync instance assigns, or empty'),
                 'selfstatus' => new external_value(PARAM_ALPHA, 'Self enrolment: configured|processing|notconfigured'),
                 'selfconfiguredsince' => new external_value(PARAM_TEXT, 'Self enrolment configured-since date, or empty'),
+                'selfactive' => new external_value(PARAM_BOOL, 'Whether the self enrolment instance is enabled'),
+                'selfrolename' => new external_value(PARAM_TEXT, 'Role the self enrolment instance assigns, or empty'),
             ])),
             'total' => new external_value(PARAM_INT, 'Total configurable courses after filters'),
         ]);

@@ -259,6 +259,16 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071101, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071102) {
+        // Enrolment methods tab polish after first manual testing: refresh button, active
+        // state + assigned role surfaced in rows/details, striped larger details modal,
+        // accordion animation and reworked strings. Purge so the rebuilt JS/Mustache/strings
+        // are served fresh.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026071102, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
