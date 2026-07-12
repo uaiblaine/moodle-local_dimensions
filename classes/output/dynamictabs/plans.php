@@ -240,6 +240,7 @@ class plans extends \core\output\dynamic_tabs\base {
             || has_capability('moodle/cohort:manage', $syscontext);
         $canuserpage = has_capability('moodle/user:update', $syscontext)
             || has_capability('moodle/user:delete', $syscontext);
+        $canenrolpage = has_capability('moodle/site:config', $syscontext);
 
         $duedate = $selected ? (int) $selected->get('duedate') : 0;
 
@@ -329,6 +330,7 @@ class plans extends \core\output\dynamic_tabs\base {
             'canassignroles' => (int) $canassignroles,
             'cancohortpage' => (int) $cancohortpage,
             'canuserpage' => (int) $canuserpage,
+            'canenrolpage' => (int) $canenrolpage,
         ];
     }
 }

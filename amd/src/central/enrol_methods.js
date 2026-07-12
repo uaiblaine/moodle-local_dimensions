@@ -40,6 +40,7 @@ const POLL_MS = 5000;
 
 const SELECTORS = {
     empty: '[data-region="enrol-empty"]',
+    disabled: '[data-region="enrol-disabled"]',
     main: '[data-region="enrol-main"]',
     cohort: '[data-region="enrol-cohort"]',
     methodgroup: '[data-region="enrol-method"]',
@@ -712,7 +713,20 @@ const init = async(state) => {
         },
     ]));
     const empty = state.root.querySelector(SELECTORS.empty);
+    const disabled = state.root.querySelector(SELECTORS.disabled);
     const main = state.root.querySelector(SELECTORS.main);
+    const bootstrap = compdata.bootstrap || {
+        roles: [], defaultroleid: 0, categories: [], cohortenabled: true, selfenabled: true,
+    };
+    // Neither method is enabled sitewide: the whole tab is inert, warn instead. The header
+    // link to the enrol-plugins admin page (site admins only) is where this gets fixed.
+    if (!bootstrap.cohortenabled && !bootstrap.selfenabled) {
+        disabled.hidden = false;
+        empty.hidden = true;
+        main.hidden = true;
+        return;
+    }
+    disabled.hidden = true;
     if (!cohortdata.cohorts.length) {
         empty.hidden = false;
         main.hidden = true;
@@ -727,9 +741,7 @@ const init = async(state) => {
         cohortselect.value = String(state.cohortid);
     }
     state.cohortid = Number(cohortselect.value) || 0;
-    applyBootstrap(state, compdata.bootstrap || {
-        roles: [], defaultroleid: 0, categories: [], cohortenabled: true, selfenabled: true,
-    });
+    applyBootstrap(state, bootstrap);
     state.root.querySelector(SELECTORS.hint).textContent =
         state.method === 'cohort' ? state.labels.hintcohort : state.labels.hintself;
     updateFooter(state);
