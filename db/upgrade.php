@@ -344,6 +344,14 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071110, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071111) {
+        // Framework form: a frozen scale select is also disabled (readonly alone does not
+        // lock a select visually); the constant keeps supplying scaleid server-side.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026071111, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
