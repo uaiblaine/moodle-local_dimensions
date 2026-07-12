@@ -33,7 +33,7 @@ Feature: Bulk-configure enrolment methods from the Competency hub
     And I click on "Skills plan" "button"
     And I press "Manage participants"
     And I click on "Enrolment methods" "button" in the "Manage participants" "dialogue"
-    Then I should see "No cohort is linked to this plan yet" in the "Manage participants" "dialogue"
+    Then I should see "No cohort is linked to this plan" in the "Manage participants" "dialogue"
 
   Scenario: See the linked course and its status for the plan cohort
     Given the following "cohorts" exist:
