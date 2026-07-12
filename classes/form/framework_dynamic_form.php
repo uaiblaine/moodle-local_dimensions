@@ -156,10 +156,12 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         $mform->setType('scaleid', PARAM_INT);
         $mform->addRule('scaleid', null, 'required', null, 'client');
         if ($this->scale_frozen($framework)) {
-            /* Native parity (tool_lp form): the scale is in use, so only WHICH scale is frozen —
-               readonly keeps the field readable by the scale-config JS while the constant makes
-               the server ignore any tampered value. The proficiency config stays editable. */
-            $scaleel->updateAttributes(['readonly' => 'readonly']);
+            /* The scale is in use, so only WHICH scale is frozen; the proficiency config stays
+               editable via the Configure scale button. Unlike the native form (readonly only,
+               which a select ignores visually), disabled truly locks the UI: the field then
+               stays out of the POST, but the constant supplies scaleid server-side and the
+               scale-config JS still reads .value from a disabled select. */
+            $scaleel->updateAttributes(['readonly' => 'readonly', 'disabled' => 'disabled']);
             $mform->setConstant('scaleid', (int) $framework->get('scaleid'));
         }
 
