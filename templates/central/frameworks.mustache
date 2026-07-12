@@ -27,7 +27,7 @@
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · contextid (int) · needscategoryselection (bool)
     * hasframeworks (bool) · frameworkcount (int) · hasexcluded (bool) · excludedcount (int)
-    * canmanage (int) · canexport (int) · showhidden (bool)
+    * canmanage (int) · canscalespage (int) · canexport (int) · showhidden (bool)
     * showhiddentoggle (object|null) {id, label, action, checked}
     * frameworks (array) {id, shortname, idnumber, description, competencycount, visible, deletable, canmanage}
 
@@ -42,6 +42,7 @@
         "hasexcluded": true,
         "excludedcount": 1,
         "canmanage": 1,
+        "canscalespage": 1,
         "canexport": 1,
         "showhidden": false,
         "showhiddentoggle": {
@@ -59,7 +60,7 @@
 }}
 <div class="local-dimensions-central-frameworks" data-region="frameworks"
      data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}" data-contextid="{{contextid}}"
-     data-canmanage="{{canmanage}}">
+     data-canmanage="{{canmanage}}" data-canscalespage="{{canscalespage}}">
 
     {{#needscategoryselection}}
     <div class="alert alert-info" role="status">{{#str}}managecompetencies_selectcategory_help, local_dimensions{{/str}}</div>

@@ -27,3 +27,14 @@ Feature: Configure a competency scale from the Competency hub edit modal
     And I click on "Configure scale" "button"
     Then I should see "Scale value"
     And I should see "Good"
+
+  Scenario: Edit an existing structure: header shortcut and scale reconfiguration
+    When I visit "/local/dimensions/central.php"
+    And I click on "Structures" "link"
+    Then I should see "Behat framework"
+    When I click on "Behat framework" "button"
+    And I click on "Edit" "button" in the "#sticky-footer" "css_element"
+    Then I should see "Scale" in the "Edit structure" "dialogue"
+    And "Open scales page" "link" should exist in the "Edit structure" "dialogue"
+    When I click on "Configure scale" "button" in the "Edit structure" "dialogue"
+    Then I should see "Scale value"
