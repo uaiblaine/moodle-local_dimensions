@@ -342,4 +342,38 @@ $functions = [
         'capabilities' => 'moodle/role:manage',
         'ajax' => true,
     ],
+
+    // Competency hub Plans tab — bulk enrolment methods (participants modal, 4th tab).
+    'local_dimensions_list_enrol_competencies' => [
+        'classname' => 'local_dimensions\external\list_enrol_competencies',
+        'methodname' => 'execute',
+        'description' => 'List a template\'s competencies with configurable-course counts for the enrolment tab.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_list_enrol_courses' => [
+        'classname' => 'local_dimensions\external\list_enrol_courses',
+        'methodname' => 'execute',
+        'description' => 'List a competency\'s configurable courses with per-method enrolment status.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_queue_enrol_action' => [
+        'classname' => 'local_dimensions\external\queue_enrol_action',
+        'methodname' => 'execute',
+        'description' => 'Queue background apply/remove of an enrolment method over selected courses.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_get_enrol_queue_status' => [
+        'classname' => 'local_dimensions\external\get_enrol_queue_status',
+        'methodname' => 'execute',
+        'description' => 'Poll pending enrolment-method tasks and fresh per-course status.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
 ];

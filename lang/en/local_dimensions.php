@@ -78,6 +78,7 @@ $string['central_cohorts_remove_confirm'] = 'Detach "{$a}" from this template? E
 $string['central_cohorts_sync'] = 'Sync';
 $string['central_cohorts_syncqueued'] = 'Sync queued — plans will be created on the next cron run.';
 $string['central_enrol_busy'] = 'Another enrolment action is already processing this combination. Please try again shortly.';
+$string['central_enrol_methoddisabled'] = 'This enrolment method is disabled on this site.';
 $string['central_frameworks'] = 'structures';
 $string['central_frameworks_competencies'] = '{$a} competencies';
 $string['central_frameworks_competencieslabel'] = 'competencies';
