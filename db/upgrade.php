@@ -361,6 +361,15 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071112, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071113) {
+        // Framework form modal: the standardised close-button chip now also covers modals
+        // tagged with the shared header class (a ModalForm body carries no plugin classes,
+        // so the :has() selector alone never matched it). Purge for the rebuilt CSS/AMD.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026071113, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
