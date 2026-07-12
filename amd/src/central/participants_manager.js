@@ -50,6 +50,8 @@ const HEADER_PAGES = [
         strkey: 'central_participants_openpage_users'},
     {pane: 'pane-roles', path: '/admin/roles/manage.php', flag: 'canassignroles',
         strkey: 'central_participants_openpage_roles'},
+    {pane: 'pane-enrol', path: '/admin/settings.php?section=manageenrols', flag: 'canenrolpage',
+        strkey: 'central_participants_openpage_enrol'},
 ];
 
 /**
