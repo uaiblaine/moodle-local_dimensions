@@ -3539,8 +3539,10 @@
 }
 
 /* Row action buttons carry me-1 as a horizontal gap to the next button; add a little bottom
-   room too so a pair that wraps in a narrow actions cell keeps a gap between the rows. */
-.local-dimensions-participants-modal .btn.btn-outline-secondary.btn-sm.me-1 {
+   room too so a pair that wraps in a narrow actions cell keeps a gap between the rows.
+   Scoped to the Users pane only: on the modal's other tabs the extra bottom margin threw
+   single buttons out of alignment. */
+#local-dimensions-pane-users button.btn.btn-outline-secondary.btn-sm.me-1 {
     margin-bottom: 5px;
 }
 
