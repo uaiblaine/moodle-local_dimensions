@@ -1,0 +1,66 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/enrol_detail
+
+    Body of the course-details modal opened from an Enrolment methods row. Every label and line is
+    pre-localised by local_dimensions/central/enrol_methods from the row's data attributes: the
+    status lines already combine the status label with the configured-since date. The course link
+    opens in a new tab.
+
+    Context variables required:
+    * fullname · shortname · categorylabel · categoryname · visiblelabel · visiblevalue (strings)
+    * competencylabel · competencyname · cohortlabel · cohortline · selflabel · selfline (strings)
+    * courseurl · opencourselabel (strings)
+
+    Example context (json):
+    {
+        "fullname": "Communication fundamentals",
+        "shortname": "MKT-101",
+        "categorylabel": "Category",
+        "categoryname": "Marketing",
+        "visiblelabel": "Visible",
+        "visiblevalue": "Yes",
+        "competencylabel": "Competency",
+        "competencyname": "Corporate communication",
+        "cohortlabel": "Cohort sync",
+        "cohortline": "Configured · Configured on 3 July 2026",
+        "selflabel": "Self enrolment",
+        "selfline": "Not configured",
+        "courseurl": "https://example.com/course/view.php?id=42",
+        "opencourselabel": "Open course"
+    }
+}}
+<div class="local-dimensions-enrol-detail">
+    <h5 class="mb-0">{{fullname}}</h5>
+    <p class="text-muted small mb-3">{{shortname}}</p>
+    <dl class="row small mb-3">
+        <dt class="col-sm-4">{{categorylabel}}</dt>
+        <dd class="col-sm-8 mb-1">{{categoryname}}</dd>
+        <dt class="col-sm-4">{{visiblelabel}}</dt>
+        <dd class="col-sm-8 mb-1">{{visiblevalue}}</dd>
+        <dt class="col-sm-4">{{competencylabel}}</dt>
+        <dd class="col-sm-8 mb-1">{{competencyname}}</dd>
+        <dt class="col-sm-4">{{cohortlabel}}</dt>
+        <dd class="col-sm-8 mb-1">{{cohortline}}</dd>
+        <dt class="col-sm-4">{{selflabel}}</dt>
+        <dd class="col-sm-8 mb-1">{{selfline}}</dd>
+    </dl>
+    <a href="{{courseurl}}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm">
+        <i class="fa fa-arrow-up-right-from-square me-1" aria-hidden="true"></i>{{opencourselabel}}
+    </a>
+</div>

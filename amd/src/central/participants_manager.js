@@ -30,12 +30,14 @@ import {addToastRegion} from 'core/toast';
 import {mount as mountCohorts} from 'local_dimensions/central/cohort_manager';
 import {mount as mountUsers} from 'local_dimensions/central/participants_users';
 import {mount as mountRoles} from 'local_dimensions/central/roles_manager';
+import {mount as mountEnrol} from 'local_dimensions/central/enrol_methods';
 
 const SELECTORS = {
     tabs: '[data-region="participant-tabs"]',
     paneCohorts: '[data-region="pane-cohorts"]',
     paneUsers: '[data-region="pane-users"]',
     paneRoles: '[data-region="pane-roles"]',
+    paneEnrol: '[data-region="pane-enrol"]',
 };
 
 // Each tab can offer a header shortcut that opens the matching core admin page in a new tab.
@@ -135,6 +137,7 @@ export const show = async(pane, region) => {
         templatename: region.dataset.templatename || '',
         contextid: Number(region.dataset.contextid),
         canassignroles: region.dataset.canassignroles === '1',
+        canmanageenrol: region.dataset.canmanageenrol === '1',
     });
     const modal = await Modal.create({title, body: html});
     modal.setRemoveOnClose(true);
@@ -153,6 +156,7 @@ export const show = async(pane, region) => {
 
     let usersmounted = false;
     let rolesmounted = false;
+    let enrolmounted = false;
     modal.getRoot().on(ModalEvents.shown, () => {
         // Host a toast region inside the modal body so the cohort/user managers' success toasts
         // render above the dialog, not behind it. Core removes it on close.
@@ -171,6 +175,10 @@ export const show = async(pane, region) => {
             if (button.dataset.region === 'tab-roles' && !rolesmounted) {
                 rolesmounted = true;
                 mountRoles(root.querySelector(SELECTORS.paneRoles), opts).catch(notifyError);
+            }
+            if (button.dataset.region === 'tab-enrol' && !enrolmounted) {
+                enrolmounted = true;
+                mountEnrol(root.querySelector(SELECTORS.paneEnrol), opts).catch(notifyError);
             }
         };
 

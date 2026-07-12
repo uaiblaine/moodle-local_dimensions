@@ -1,0 +1,102 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/enrol_methods
+
+    Skeleton of the "Enrolment methods" pane in the Manage participants modal. The cohort, role and
+    category selects, the method segment, the competency accordion and the footer counters are all
+    filled by local_dimensions/central/enrol_methods (mount) from the enrol web services. The pane
+    starts with both regions hidden; mount reveals either the empty-state alert (no cohort linked)
+    or the main region.
+
+    Context variables required: (none - the skeleton is static; data is fetched client-side)
+
+    Example context (json):
+    {
+    }
+}}
+<div class="local-dimensions-enrol" data-region="enrol">
+    <div class="alert alert-info" data-region="enrol-empty" hidden>
+        {{#str}}central_enrol_empty, local_dimensions{{/str}}
+    </div>
+    <div data-region="enrol-main" hidden>
+        <div class="d-flex flex-wrap gap-2 align-items-end mb-1">
+            <div>
+                <label class="d-block small text-muted mb-1" for="local-dimensions-enrol-cohort">
+                    {{#str}}central_enrol_cohort, local_dimensions{{/str}}
+                </label>
+                <select id="local-dimensions-enrol-cohort" data-region="enrol-cohort" class="form-select"></select>
+            </div>
+            <div>
+                <span class="d-block small text-muted mb-1" id="local-dimensions-enrol-method-label">
+                    {{#str}}central_enrol_method, local_dimensions{{/str}}
+                </span>
+                <div class="btn-group" role="group" data-region="enrol-method"
+                     aria-labelledby="local-dimensions-enrol-method-label">
+                    <button type="button" class="btn btn-outline-secondary active" data-method="cohort"
+                            aria-pressed="true">
+                        {{#str}}central_enrol_method_cohort, local_dimensions{{/str}}
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-method="self"
+                            aria-pressed="false">
+                        {{#str}}central_enrol_method_self, local_dimensions{{/str}}
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label class="d-block small text-muted mb-1" for="local-dimensions-enrol-role">
+                    {{#str}}central_enrol_role, local_dimensions{{/str}}
+                </label>
+                <select id="local-dimensions-enrol-role" data-region="enrol-role" class="form-select"></select>
+            </div>
+        </div>
+        <p class="text-muted small mb-2" data-region="enrol-hint"></p>
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+            <div>
+                <label class="visually-hidden" for="local-dimensions-enrol-category">
+                    {{#str}}central_enrol_category, local_dimensions{{/str}}
+                </label>
+                <select id="local-dimensions-enrol-category" data-region="enrol-category"
+                        class="form-select form-select-sm"></select>
+            </div>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="local-dimensions-enrol-hidden"
+                       data-region="enrol-hidden">
+                <label class="form-check-label small" for="local-dimensions-enrol-hidden">
+                    {{#str}}central_enrol_showhidden, local_dimensions{{/str}}
+                </label>
+            </div>
+            <span class="text-muted small ms-auto" data-region="enrol-viscount"></span>
+        </div>
+        <div class="local-dimensions-enrol-tree mb-2" data-region="enrol-tree"></div>
+        <div class="d-flex flex-wrap gap-2 align-items-center border-top pt-2">
+            <span class="small" data-region="enrol-selcount"></span>
+            <span class="small text-primary" data-region="enrol-proccount" hidden>
+                <i class="fa fa-spinner fa-spin me-1" aria-hidden="true"></i><span
+                    data-region="enrol-proccount-text"></span>
+            </span>
+            <span class="ms-auto">
+                <button type="button" class="btn btn-outline-danger me-1" data-action="enrol-remove" disabled>
+                    {{#str}}central_enrol_remove, local_dimensions{{/str}}
+                </button>
+                <button type="button" class="btn btn-primary" data-action="enrol-apply" disabled>
+                    {{#str}}central_enrol_apply, local_dimensions{{/str}}
+                </button>
+            </span>
+        </div>
+    </div>
+</div>
