@@ -5692,7 +5692,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 /*
  * Enrolment methods tab: the group chevron rotates and the children container fades/slides
- * in via CSS keyed on the toggle's aria-expanded state; rows get a subtle separator.
+ * in via CSS keyed on the toggle's aria-expanded state; the courses table centres its cells.
  */
 .local-dimensions-enrol-group [data-region='chevron'] {
     transition: transform 0.2s ease;
@@ -5718,8 +5718,9 @@ a.local-dimensions-central-links-badge-warn:focus {
     }
 }
 
-.local-dimensions-enrol-row + .local-dimensions-enrol-row {
-    border-top: 1px solid rgb(0 0 0 / 8%);
+.local-dimensions-enrol-group [data-children] td,
+.local-dimensions-enrol-group [data-children] th {
+    vertical-align: middle;
 }
 
 /* Course-details modal: breathing room in the striped facts table. */

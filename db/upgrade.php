@@ -287,6 +287,16 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071104, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071105) {
+        // Enrolment methods tab a11y pass: the accordion body becomes a labelled table
+        // (course / category / role / status / actions headers) and the neutral badges pair
+        // bg-secondary with text-dark for contrast. Purge so the rebuilt JS/Mustache/styles
+        // are served fresh.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026071105, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
