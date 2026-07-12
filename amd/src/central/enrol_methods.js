@@ -33,6 +33,7 @@ import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {getString, getStrings} from 'core/str';
 import {add as addToast} from 'core/toast';
+import {iconButton} from 'local_dimensions/central/action_button';
 
 const PAGE_COMPETENCIES = 20;
 const PAGE_COURSES = 25;
@@ -78,7 +79,7 @@ const STATUS_BADGES = {
 const loadLabels = async() => {
     const [configured, processing, notconfigured, info, loadmore, hintcohort, hintself, methodcohort,
         methodself, competency, opencourse, categoryall, selfcohortonly, category, visible, yes, no,
-        inactive, role] = await getStrings([
+        inactive, role, hiddenfromstudents] = await getStrings([
         {key: 'central_enrol_status_configured', component: 'local_dimensions'},
         {key: 'central_enrol_status_processing', component: 'local_dimensions'},
         {key: 'central_enrol_status_notconfigured', component: 'local_dimensions'},
@@ -98,6 +99,7 @@ const loadLabels = async() => {
         {key: 'no', component: 'moodle'},
         {key: 'inactive', component: 'moodle'},
         {key: 'role', component: 'moodle'},
+        {key: 'hiddenfromstudents', component: 'moodle'},
     ]);
     return {
         'status_configured': configured,
@@ -119,6 +121,7 @@ const loadLabels = async() => {
         'no': no,
         'inactive': inactive,
         'role': role,
+        'hiddenlabel': hiddenfromstudents,
     };
 };
 
@@ -283,22 +286,91 @@ const renderGroupHtml = async(state, item) => {
 };
 
 /**
- * Render one course row's HTML.
+ * Build one course table row. Rows are DOM-built (not a Mustache partial) because a bare
+ * tr fragment cannot pass the template HTML validation; the row's data attributes carry
+ * both methods' status/date/active/role so repaints and the details modal need no refetch.
  *
  * @param {Object} state Tab state.
  * @param {Object} item Course item from the web service.
  * @param {String} competencyname Owning competency name (for the details modal).
- * @return {Promise<String>}
+ * @return {Promise<HTMLTableRowElement>}
  */
-const renderRowHtml = async(state, item, competencyname) => {
+const makeRow = async(state, item, competencyname) => {
     const selectlabel = await getString('central_enrol_selectcourse', 'local_dimensions', item.shortname);
-    const context = Object.assign({}, item, {
-        competencyname: competencyname,
-        selectlabel: selectlabel,
-        infolabel: state.labels.info,
-    });
-    const {html} = await Templates.renderForPromise('local_dimensions/central/enrol_row', context);
-    return html;
+    const row = document.createElement('tr');
+    row.className = 'local-dimensions-enrol-row';
+    row.dataset.courseid = String(item.courseid);
+    row.dataset.cohortStatus = item.cohortstatus;
+    row.dataset.selfStatus = item.selfstatus;
+    row.dataset.cohortSince = item.cohortconfiguredsince;
+    row.dataset.selfSince = item.selfconfiguredsince;
+    row.dataset.cohortActive = item.cohortactive ? '1' : '0';
+    row.dataset.selfActive = item.selfactive ? '1' : '0';
+    row.dataset.cohortRole = item.cohortrolename;
+    row.dataset.selfRole = item.selfrolename;
+    row.dataset.courseurl = item.courseurl;
+    row.dataset.visible = item.visible ? '1' : '0';
+    row.dataset.shortname = item.shortname;
+    row.dataset.fullname = item.fullname;
+    row.dataset.categoryname = item.categoryname;
+    row.dataset.competencyname = competencyname;
+
+    const selectcell = document.createElement('td');
+    const check = document.createElement('input');
+    check.type = 'checkbox';
+    check.className = 'form-check-input m-0';
+    check.dataset.rowcheck = '1';
+    check.setAttribute('aria-label', selectlabel);
+    const spinner = document.createElement('i');
+    spinner.className = 'fa fa-spinner fa-spin text-primary';
+    spinner.setAttribute('aria-hidden', 'true');
+    spinner.dataset.region = 'row-spinner';
+    spinner.hidden = true;
+    selectcell.appendChild(check);
+    selectcell.appendChild(spinner);
+
+    const coursecell = document.createElement('th');
+    coursecell.scope = 'row';
+    coursecell.className = 'fw-normal';
+    const shortname = document.createElement('span');
+    shortname.className = 'fw-medium';
+    shortname.textContent = item.shortname;
+    coursecell.appendChild(shortname);
+    coursecell.appendChild(document.createTextNode(' · ' + item.fullname));
+    if (!item.visible) {
+        const eye = document.createElement('i');
+        eye.className = 'fa fa-eye-slash text-muted ms-1';
+        eye.setAttribute('aria-hidden', 'true');
+        const srtext = document.createElement('span');
+        srtext.className = 'visually-hidden';
+        srtext.textContent = state.labels.hiddenlabel;
+        coursecell.appendChild(document.createTextNode(' '));
+        coursecell.appendChild(eye);
+        coursecell.appendChild(srtext);
+    }
+
+    const categorycell = document.createElement('td');
+    categorycell.textContent = item.categoryname;
+
+    const rolecell = document.createElement('td');
+    rolecell.dataset.region = 'row-role';
+
+    const statuscell = document.createElement('td');
+    const pill = document.createElement('span');
+    pill.className = 'badge';
+    pill.dataset.region = 'row-status';
+    statuscell.appendChild(pill);
+
+    const actionscell = document.createElement('td');
+    actionscell.appendChild(iconButton('enrol-info', 'fa-circle-info', state.labels.info));
+
+    row.appendChild(selectcell);
+    row.appendChild(coursecell);
+    row.appendChild(categorycell);
+    row.appendChild(rolecell);
+    row.appendChild(statuscell);
+    row.appendChild(actionscell);
+    return row;
 };
 
 /**
@@ -359,8 +431,9 @@ const loadCourses = async(state, competencyid, offset) => {
     const group = state.root.querySelector(`[data-group="${competencyid}"]`);
     const children = group.querySelector(`[data-children="${competencyid}"]`);
     const name = group.dataset.name;
-    const parts = await Promise.all(data.items.map((item) => renderRowHtml(state, item, name)));
-    await Templates.appendNodeContents(children.querySelector('[data-region="enrol-rows"]'), parts.join(''), '');
+    const rows = await Promise.all(data.items.map((item) => makeRow(state, item, name)));
+    const tbody = children.querySelector('[data-region="enrol-rows"]');
+    rows.forEach((row) => tbody.appendChild(row));
     children.querySelectorAll(SELECTORS.row).forEach((row) => {
         paintRow(state, row);
         const courseid = Number(row.dataset.courseid);

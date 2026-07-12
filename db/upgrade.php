@@ -297,6 +297,15 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071105, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071106) {
+        // Enrolment methods tab: course rows are DOM-built (a bare tr Mustache partial
+        // cannot pass the template HTML validation), retiring enrol_row.mustache. Purge so
+        // the rebuilt AMD bundle is served fresh.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026071106, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
