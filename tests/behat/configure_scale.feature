@@ -37,4 +37,4 @@ Feature: Configure a competency scale from the Competency hub edit modal
     Then I should see "Scale" in the "Edit structure" "dialogue"
     And "Open scales page" "link" should exist in the "Edit structure" "dialogue"
     When I click on "Configure scale" "button" in the "Edit structure" "dialogue"
-    Then I should see "Scale value"
+    Then I should see "Proficient" in the "Configure scale" "dialogue"
