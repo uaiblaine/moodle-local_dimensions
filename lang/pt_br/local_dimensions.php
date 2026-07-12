@@ -78,6 +78,7 @@ $string['central_cohorts_remove_confirm'] = 'Desvincular "{$a}" deste modelo? Os
 $string['central_cohorts_sync'] = 'Sincronizar';
 $string['central_cohorts_syncqueued'] = 'Sincronização enfileirada — os planos serão criados no próximo cron.';
 $string['central_enrol_busy'] = 'Outra ação de inscrição já está processando esta combinação. Tente novamente em instantes.';
+$string['central_enrol_methoddisabled'] = 'Este método de inscrição está desabilitado neste site.';
 $string['central_frameworks'] = 'estruturas';
 $string['central_frameworks_competencies'] = '{$a} competências';
 $string['central_frameworks_competencieslabel'] = 'competências';
