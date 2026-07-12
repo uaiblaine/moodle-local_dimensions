@@ -77,12 +77,12 @@ const injectHeaderLinks = async(root, region) => {
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         link.className = 'btn btn-outline-secondary btn-sm local-dimensions-participants-headerlink d-none';
-        link.title = labels[index];
-        link.setAttribute('aria-label', labels[index]);
         const icon = document.createElement('i');
-        icon.className = 'fa fa-arrow-up-right-from-square';
+        icon.className = 'fa fa-arrow-up-right-from-square me-1';
         icon.setAttribute('aria-hidden', 'true');
         link.appendChild(icon);
+        // The visible label is the accessible name; no separate title/aria-label needed.
+        link.appendChild(document.createTextNode(labels[index]));
         header.insertBefore(link, closebtn);
         links[page.pane] = link;
     });
