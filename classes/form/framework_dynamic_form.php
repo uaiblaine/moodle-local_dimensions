@@ -213,14 +213,10 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         $data->scaleid = (int) $framework->get('scaleid');
         $data->scaleconfiguration = $framework->get('scaleconfiguration');
 
-        // Taxonomies are stored comma-joined (one key per level); expand to the per-level array.
-        $taxonomies = array_filter(explode(',', (string) $framework->get('taxonomies')));
-        $level = 1;
-        $taxdata = [];
-        foreach ($taxonomies as $taxonomy) {
-            $taxdata[$level++] = $taxonomy;
-        }
-        $data->taxonomies = $taxdata;
+        /* The persistent's magic getter already explodes the comma-joined column into the
+           per-level array indexed from 1 — casting that array to string was a warning, which
+           developer debugging (Behat) escalates into an exception before the modal opens. */
+        $data->taxonomies = $framework->get('taxonomies');
 
         $this->set_data($data);
     }
