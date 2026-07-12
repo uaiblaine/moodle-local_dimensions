@@ -28,9 +28,17 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
     compatible.
 - **Per-user persistent hub state**: last tab/context/framework/template, display toggles and
   gear panels survive sessions and devices (two JSON user preferences + privacy provider).
-- **13 administrative audit events** for decisions core never logs: cohort attach/detach,
+- **Bulk enrolment methods** (participants modal, 4th tab): apply/remove cohort sync
+  (`enrol_cohort`) or cohort-restricted self enrolment (`enrol_self`, `customint5`) on the
+  courses linked to a template's competencies — single role per operation (gradebook roles),
+  category/hidden filters, lazy per-competency accordion, per-course status against the
+  selected cohort, and one background adhoc task per (course, method, cohort) combination
+  with queue dedup, Lock API serialisation, idempotent execution, audit events and a queue
+  poll driving per-row Processing states.
+- **15 administrative audit events** for decisions core never logs: cohort attach/detach,
   cohort-role rules, custom-field value changes (effective-value diff, SCSS redacted),
-  course/activity links with rule outcomes, and template duplication.
+  course/activity links with rule outcomes, template duplication, and enrolment methods
+  applied/removed in bulk.
 - **Concurrency safeguards**: custom-field provisioning under a core Lock API lock,
   deduplicated cohort-sync task queueing, and a retry on concurrent first-saves of custom
   fields.
