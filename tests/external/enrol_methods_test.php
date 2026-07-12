@@ -29,6 +29,7 @@ use local_dimensions\task\process_enrol_method;
  * @covers     \local_dimensions\external\list_enrol_courses
  * @covers     \local_dimensions\external\queue_enrol_action
  * @covers     \local_dimensions\external\get_enrol_queue_status
+ * @covers     \local_dimensions\external\set_enrol_instance_status
  * @covers     \local_dimensions\local\enrol_methods
  */
 final class enrol_methods_test extends \advanced_testcase {
@@ -353,6 +354,68 @@ final class enrol_methods_test extends \advanced_testcase {
             $fixture['studentroleid'],
             process_enrol_method::ACTION_APPLY,
             [(int) $fixture['coursea']->id]
+        );
+    }
+
+    /**
+     * The status toggle disables and re-enables every matching instance, and no-ops gracefully.
+     *
+     * @return void
+     */
+    public function test_set_enrol_instance_status(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $fixture = $this->build_fixture();
+        $courseaid = (int) $fixture['coursea']->id;
+
+        // No matching instance yet: graceful no-op.
+        $result = set_enrol_instance_status::execute(
+            $fixture['templateid'],
+            $courseaid,
+            $fixture['cohortid'],
+            process_enrol_method::METHOD_COHORT,
+            false
+        );
+        $this->assertFalse($result['configured']);
+
+        enrol_get_plugin('cohort')->add_instance($fixture['coursea'], [
+            'customint1' => $fixture['cohortid'],
+            'roleid' => $fixture['studentroleid'],
+            'customint2' => 0,
+        ]);
+        $result = set_enrol_instance_status::execute(
+            $fixture['templateid'],
+            $courseaid,
+            $fixture['cohortid'],
+            process_enrol_method::METHOD_COHORT,
+            false
+        );
+        $this->assertTrue($result['configured']);
+        $this->assertFalse($result['active']);
+        $instances = process_enrol_method::get_instances($courseaid, 'cohort', $fixture['cohortid']);
+        $this->assertSame(ENROL_INSTANCE_DISABLED, (int) reset($instances)->status);
+
+        $result = set_enrol_instance_status::execute(
+            $fixture['templateid'],
+            $courseaid,
+            $fixture['cohortid'],
+            process_enrol_method::METHOD_COHORT,
+            true
+        );
+        $this->assertTrue($result['active']);
+        $instances = process_enrol_method::get_instances($courseaid, 'cohort', $fixture['cohortid']);
+        $this->assertSame(ENROL_INSTANCE_ENABLED, (int) reset($instances)->status);
+
+        // A user without the course-level enrolment capabilities is refused.
+        $restricted = $this->create_restricted_manager([$fixture['coursea']]);
+        $this->setUser($restricted);
+        $this->expectException(\required_capability_exception::class);
+        set_enrol_instance_status::execute(
+            $fixture['templateid'],
+            (int) $fixture['courseb']->id,
+            $fixture['cohortid'],
+            process_enrol_method::METHOD_COHORT,
+            false
         );
     }
 

@@ -306,6 +306,16 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071106, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071107) {
+        // Enrolment methods tab: per-row enable/disable toggle backed by the new
+        // set_enrol_instance_status web service (registered via external_update_descriptions)
+        // and border cleanup on the accordion tables. Purge so the rebuilt AMD bundle and
+        // strings are served fresh.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026071107, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint

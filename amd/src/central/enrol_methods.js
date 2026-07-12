@@ -61,6 +61,7 @@ const SELECTORS = {
     status: '[data-region="row-status"]',
     rolenote: '[data-region="row-role"]',
     spinner: '[data-region="row-spinner"]',
+    statustoggle: '[data-action="enrol-toggle-status"]',
 };
 
 /* Boost's secondary is a light grey while the default badge text is white, so the neutral
@@ -78,8 +79,8 @@ const STATUS_BADGES = {
  */
 const loadLabels = async() => {
     const [configured, processing, notconfigured, info, loadmore, hintcohort, hintself, methodcohort,
-        methodself, competency, opencourse, categoryall, selfcohortonly, category, visible, yes, no,
-        inactive, role, hiddenfromstudents] = await getStrings([
+        methodself, competency, opencourse, categoryall, selfcohortonly, instanceenabled, instancedisabled,
+        category, visible, yes, no, inactive, role, hiddenfromstudents] = await getStrings([
         {key: 'central_enrol_status_configured', component: 'local_dimensions'},
         {key: 'central_enrol_status_processing', component: 'local_dimensions'},
         {key: 'central_enrol_status_notconfigured', component: 'local_dimensions'},
@@ -93,6 +94,8 @@ const loadLabels = async() => {
         {key: 'central_enrol_detail_opencourse', component: 'local_dimensions'},
         {key: 'central_enrol_categoryall', component: 'local_dimensions'},
         {key: 'central_enrol_selfcohortonly', component: 'local_dimensions'},
+        {key: 'central_enrol_instance_enabled', component: 'local_dimensions'},
+        {key: 'central_enrol_instance_disabled', component: 'local_dimensions'},
         {key: 'category', component: 'moodle'},
         {key: 'visible', component: 'moodle'},
         {key: 'yes', component: 'moodle'},
@@ -115,6 +118,8 @@ const loadLabels = async() => {
         'opencourse': opencourse,
         'categoryall': categoryall,
         'selfcohortonly': selfcohortonly,
+        'instanceenabled': instanceenabled,
+        'instancedisabled': instancedisabled,
         'category': category,
         'visible': visible,
         'yes': yes,
@@ -170,7 +175,8 @@ const setRowStatus = (state, row, status) => {
 };
 
 /**
- * Paint a row's status pill, the assigned-role note and the checkbox/spinner swap.
+ * Paint a row's status pill, the assigned-role note, the enable/disable toggle and the
+ * checkbox/spinner swap.
  *
  * @param {Object} state Tab state.
  * @param {HTMLElement} row Course row.
@@ -184,6 +190,14 @@ const paintRow = (state, row) => {
     const rolename = (state.method === 'cohort' ? row.dataset.cohortRole : row.dataset.selfRole) || '';
     const rolenote = row.querySelector(SELECTORS.rolenote);
     rolenote.textContent = (status === 'configured' && rolename) ? rolename : '';
+    const active = (state.method === 'cohort' ? row.dataset.cohortActive : row.dataset.selfActive) === '1';
+    const toggle = row.querySelector(SELECTORS.statustoggle);
+    toggle.hidden = status !== 'configured';
+    if (!toggle.hidden) {
+        toggle.querySelector('i').className = 'fa ' + (active ? 'fa-eye' : 'fa-eye-slash') + ' me-1';
+        toggle.querySelector('[data-region="row-active-text"]').textContent =
+            active ? state.labels.instanceenabled : state.labels.instancedisabled;
+    }
     const processing = status === 'processing';
     const check = row.querySelector(SELECTORS.rowcheck);
     check.hidden = processing;
@@ -362,6 +376,20 @@ const makeRow = async(state, item, competencyname) => {
     statuscell.appendChild(pill);
 
     const actionscell = document.createElement('td');
+    // Enable/disable toggle: painted (icon + label + visibility) by paintRow per method state.
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'btn btn-outline-secondary btn-sm me-1';
+    toggle.dataset.action = 'enrol-toggle-status';
+    toggle.hidden = true;
+    const toggleicon = document.createElement('i');
+    toggleicon.className = 'fa fa-eye me-1';
+    toggleicon.setAttribute('aria-hidden', 'true');
+    const toggletext = document.createElement('span');
+    toggletext.dataset.region = 'row-active-text';
+    toggle.appendChild(toggleicon);
+    toggle.appendChild(toggletext);
+    actionscell.appendChild(toggle);
     actionscell.appendChild(iconButton('enrol-info', 'fa-circle-info', state.labels.info));
 
     row.appendChild(selectcell);
@@ -494,6 +522,44 @@ const markProcessing = (state, courseid) => {
         setRowStatus(state, row, 'processing');
         paintRow(state, row);
     });
+};
+
+/**
+ * Flip the enabled state of the row's configured instance for the current method, then
+ * repaint the course's rows (a course can appear under more than one competency).
+ *
+ * @param {Object} state Tab state.
+ * @param {HTMLElement} row Course row.
+ * @return {Promise<void>}
+ */
+const onToggleStatus = async(state, row) => {
+    const toggle = row.querySelector(SELECTORS.statustoggle);
+    const active = (state.method === 'cohort' ? row.dataset.cohortActive : row.dataset.selfActive) === '1';
+    toggle.disabled = true;
+    try {
+        const data = await Ajax.call([{
+            methodname: 'local_dimensions_set_enrol_instance_status',
+            args: {
+                templateid: state.templateid,
+                courseid: Number(row.dataset.courseid),
+                cohortid: state.cohortid,
+                method: state.method,
+                enabled: !active,
+            },
+        }])[0];
+        const value = data.active ? '1' : '0';
+        state.root.querySelectorAll(`${SELECTORS.row}[data-courseid="${row.dataset.courseid}"]`).forEach((twin) => {
+            if (state.method === 'cohort') {
+                twin.dataset.cohortActive = value;
+            } else {
+                twin.dataset.selfActive = value;
+            }
+            paintRow(state, twin);
+            twin.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+        });
+    } finally {
+        toggle.disabled = false;
+    }
 };
 
 /**
@@ -842,6 +908,11 @@ const wireEvents = (state) => {
         const info = event.target.closest('[data-action="enrol-info"]');
         if (info) {
             showDetail(state, info.closest(SELECTORS.row)).catch(notifyError);
+            return;
+        }
+        const statustoggle = event.target.closest(SELECTORS.statustoggle);
+        if (statustoggle) {
+            onToggleStatus(state, statustoggle.closest(SELECTORS.row)).catch(notifyError);
             return;
         }
         const morecomps = event.target.closest('[data-action="enrol-morecomps"]');
