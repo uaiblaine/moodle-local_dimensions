@@ -3,7 +3,7 @@ moodle-local_dimensions
 
 See your learning path in a new dimension.
 
-A Moodle local plugin that extends the core competency system with custom fields, course section progress tracking, and a visual learning plan interface. It provides two display modes — **Competency tracker** and **Full plan overview** — with rich customization options for colors, images, icons, tags, and SCSS.
+A Moodle local plugin that extends the core competency system in both directions: for learners, two visual learning plan views — **Competency tracker** and **Full plan overview** — with real-time course progress and a visual identity per plan; for administrators, the **Competency hub**, a single screen that manages frameworks, competencies and learning plan templates end to end. All of it on top of Moodle's own data model — the plugin creates no database tables.
 
 
 Requirements
@@ -11,16 +11,6 @@ Requirements
 
 - Moodle 4.5 or later (tested up to Moodle 5.2)
 - Core competencies enabled (`core_competency`)
-
-
-Accent-insensitive search
--------------------------
-
-Competency, plan and course searches in the Competency hub are accent-insensitive ("lingua" also matches "língua"). On MySQL/MariaDB this works out of the box via the database collation. On **PostgreSQL** it uses the `unaccent` extension, which the plugin creates automatically (`CREATE EXTENSION IF NOT EXISTS unaccent`) during upgrade or on first search where the database user has permission — on supported PostgreSQL (13+) `unaccent` is a *trusted* extension the database owner may create without superuser rights.
-
-If your instance is locked down and the plugin cannot create it, run this once as a database superuser and searches become accent-insensitive on PostgreSQL too (until then they degrade gracefully to accent-sensitive):
-
-    CREATE EXTENSION unaccent;
 
 
 Motivation for this plugin
@@ -40,302 +30,61 @@ Install the plugin like any other plugin to folder `/local/dimensions`.
 See http://docs.moodle.org/en/Installing_plugins for details on installing Moodle plugins.
 
 
-Display modes
+Learner views
 -------------
 
-The plugin provides two ways to visualize a learning plan, selectable per template via a custom field:
+Two ways to visualize a learning plan, selectable per template via a custom field.
 
 ### Competency tracker
 
-Shows linked courses for a single competency as a responsive grid of course cards. Each card displays:
-- Real-time section progress via circular SVG indicators
-- Lock status with configurable icons and "Learn More" buttons
-- Availability dates for future enrolments
+The linked courses of one competency as a responsive grid of course cards: real-time section progress (circular indicators, recursive subsection support), lock status with configurable icons and messages, availability dates for future enrolments, and tag-driven chip filters. An optional redirect skips the grid entirely when the learner has a single active enrolment.
 
 ### Full plan overview
 
-Shows all competencies in the plan as an expandable accordion. Each accordion panel loads via AJAX and can display:
-- Competency description
-- Main taxonomy card for the current competency (optional)
-- Hierarchy path (framework → parent → competency)
-- Related dimensions (optionally clickable)
-- Competency completion rules (rule type, outcome text, sub-competency progress, required-item alerts, and proficiency status)
-- Evidence cards with detail modals
-- Linked course cards with section progress
+All competencies of the plan as an expandable accordion, loaded lazily. Each panel can show the competency description, its taxonomy card and hierarchy path, related competencies, evidence cards with detail modals, linked course cards with progress, and a **Rules** tab that turns Moodle's competency completion rules — All/Points, outcome, earned progress, required children, proficiency status — into something learners actually understand at a glance.
 
-Taxonomy metadata is resolved on the backend and included in the AJAX payload, so the frontend renders the current competency taxonomy and rule outcome text without inferring framework labels client-side.
-
-#### Competency completion rules
-
-When a competency has a completion rule configured in Moodle's core competency framework, a **Rules** tab is displayed in the accordion panel. It shows:
-
-- **Rule type**: "All" (all linked sub-competencies must be rated as proficient) or "Points" (sum of points from sub-competencies must reach a threshold)
-- **Rule outcome**: What happens when the rule is met — evidence is attached automatically, the competency is marked as complete, or the competency is recommended for review. Outcome descriptions are returned already localized by the backend
-- **Progress indicator**: A progress bar showing earned points (or completed count) versus the total required
-- **Required-item alert**: Highlights when the minimum score was reached but mandatory child items are still pending
-- **Sub-competency list**: Each child competency with its current rating, proficiency status (proficient, graded but not proficient, or not yet evaluated), and whether it is marked as required
-- **Local filters**: Quick toggle between all child items and only required ones when the rule includes mandatory children
-- **Submit evidence**: Optional button (configurable in admin settings) linking to the prior learning evidence page
+A draggable **"Return to plan"** floating button brings learners back from course pages to the plan they came from.
 
 
-Admin settings
+Competency hub
 --------------
 
-All settings are under **Site administration → Competencies → Competency Dimensions settings**.
+The hub (`central.php`, under **Site administration → Competencies**) gathers the dozens of screens Moodle spreads across the admin area into a single surface — three tabs, everything in modals backed by AJAX web services, no page reloads:
 
-### General settings
+- **Structures**: a lazy competency tree with search-and-reveal, drag-and-drop reorder and reparent, a native completion-rule editor, per-competency usage counters, and course/activity linking with rule outcomes.
+- **Learning plans**: master–detail template management — create and edit in modals, full duplication (custom fields, embedded files and images included), a competency picker with framework browser, and the **Manage participants** modal: cohorts with background plan generation, individual users, cohort-role rules, and **bulk enrolment methods** — apply or remove cohort sync / cohort-restricted self enrolment across all courses linked to the plan's competencies, processed as background tasks with live per-course status.
+- **Frameworks**: native create/edit with scale configuration, duplication, visibility toggle, reason-gated delete, and CSV import/export.
 
-| Setting                        | Description                                                        | Default   |
-|--------------------------------|--------------------------------------------------------------------|-----------|
-| Enable "Return to plan" button | Floating FAB button to navigate back to the plan from course pages | Enabled   |
-| Button colour                  | Colour of the return button                                        | `#667eea` |
-| Image handling method          | Built-in or external `customfield_picture` plugin                  | Built-in  |
-| Enable custom SCSS             | Allow per-template and per-competency SCSS injection               | Disabled  |
+The hub remembers where you were — tab, context, selected framework or template and display toggles persist per user across sessions and devices. And it logs the administrative decisions core never does (cohort attach/detach, links, duplication, bulk enrolment actions…) as regular Moodle events in the standard log.
 
-### Competency tracker mode
-
-| Setting                    | Description                                                           | Default        |
-|----------------------------|-----------------------------------------------------------------------|----------------|
-| Percentage display mode    | Fixed, on hover, or hidden                                            | Hover          |
-| Locked card display mode   | "Locked content" message or "Learn More" button                       | Locked content |
-| "Learn More" button colour | Colour for the learn more button on locked cards                      | `#667eea`      |
-| Show availability date     | Show the availability date on locked cards                            | Enabled        |
-| Animate locked border      | Enable marching-ants animation on the locked-card dashed border       | Disabled       |
-| Locked card icon           | Custom FontAwesome icon for locked cards (searchable picker)          | Default lock   |
-| Enrolment filter           | Show all courses, enrolled only, or active enrolments only            | All            |
-| Single course redirect     | Skip the competency tracker if the user has only one active enrolment | Disabled       |
-
-### Full plan overview mode
-
-| Setting                         | Description                                                                        | Default  |
-|---------------------------------|------------------------------------------------------------------------------------|----------|
-| Enrolment filter                | Filter courses in accordion by enrolment status                                    | All      |
-| Show competency description     | Display the full description text                                                  | Enabled  |
-| Show main taxonomy card         | Display the current competency taxonomy as a dedicated card in the Description tab | Disabled |
-| Show competency path            | Display the hierarchy path (framework → parent)                                    | Disabled |
-| Show related competencies       | Display linked related competencies                                                | Disabled |
-| Link related competencies       | Make related competency names clickable                                            | Disabled |
-| Show evidence                   | Display evidence cards with icons                                                  | Enabled  |
-| Enable "Submit Evidence" button | Show a button in the Rules tab linking to the prior learning evidence page         | Disabled |
+Two companion admin pages host core's custom-field definition UI for the competency and template areas.
 
 
-Admin pages
------------
-
-The plugin provides four admin pages under **Site administration → Competencies → Competency Dimensions settings**:
-
-| Page                                 | Path                       | Capability required                  |
-|--------------------------------------|----------------------------|--------------------------------------|
-| Plugin settings                      | `settings.php`             | `moodle/site:config`                 |
-| Competency hub                       | `central.php`              | `moodle/competency:competencymanage` |
-| Competency custom fields             | `customfield.php`          | `moodle/competency:competencymanage` |
-| Learning plan template custom fields | `customfield_template.php` | `moodle/competency:templatemanage`   |
-
-The **Competency hub** (`central.php`) is the single-surface admin for competencies, frameworks and learning plan templates: a Structure / Learning plans / Frameworks tab set that creates, edits, links and assigns in place through modals and web services (no page reloads). The two custom-field pages host core's field-definition UI for each area.
-
-### Remembering where you were
-
-The Competency hub remembers, per user, the tab you were on, the System /
-Course-category context and category you had chosen, the framework or
-learning-plan template you had selected, and your display-toggle choices
-(taxonomy, identifiers, competency rule, due dates, show hidden / disabled).
-It is stored as Moodle user preferences, so it persists across sessions and
-devices and is restored when you reopen the hub. An explicit URL parameter
-(e.g. a deep link) still overrides the saved view.
-
-
-Custom fields
+Customisation
 -------------
 
-The plugin auto-provisions custom fields on first admin access. Non-image fields are created for both competencies and learning plan templates; image fields are created only when the external `customfield_picture` handler is active.
+Competencies and templates gain auto-provisioned custom fields: card and hero background images (built-in file areas by default, or the external `customfield_picture` plugin), background and text colours, classification tags, a type label, the per-template display mode and — when enabled — per-template/per-competency **custom SCSS**, validated and compiled server-side and cached.
 
-| Shortname                          | Type     | Description                                                                   |
-|------------------------------------|----------|-------------------------------------------------------------------------------|
-| `local_dimensions_customcard`      | picture  | Card image for visual representation (external image handler mode only)       |
-| `local_dimensions_custombgimage`   | picture  | Background image for the hero header (external image handler mode only)       |
-| `local_dimensions_custombgcolor`   | text     | Background colour in hex format                                               |
-| `local_dimensions_customtextcolor` | text     | Text colour in hex format                                                     |
-| `local_dimensions_tag1`            | select   | Year/period classification (example only; values can be adjusted as needed)   |
-| `local_dimensions_tag2`            | select   | Category/type classification (example only; values can be adjusted as needed) |
-| `local_dimensions_type`            | select   | Competency/category type label                                                |
-| `local_dimensions_customscss`      | textarea | Custom SCSS code (when enabled)                                               |
-| `local_dimensions_displaymode`     | select   | Display mode (templates only)                                                 |
-
-In built-in image mode, card/background images are stored in plugin file areas (`competency_card`, `template_card`, `competency_bg`, `template_bg`) instead of custom field records.
+Admin settings (**Site administration → Competencies → Competency Dimensions settings**) cover the "Return to plan" button, image handling and SCSS, plus per-view display options: percentage and locked-card behaviour, enrolment filters, the single-course redirect, and which sections each accordion panel shows (description, taxonomy, path, related competencies, evidence, rules).
 
 
-Web services
-------------
-
-This plugin provides the following AJAX web services:
-
-### local_dimensions_get_course_progress
-
-Calculates the progress of course sections including recursive subsections.
-
-**Parameters:**
-- `courseids` (int[]): List of course IDs
-
-**Returns:** Array of section progress data (name, percentage, URL, lock status, completion state).
-
-### local_dimensions_get_competency_courses
-
-Get courses linked to a competency with the enrolment filter applied.
-
-**Parameters:**
-- `competencyid` (int): The competency ID
-
-**Returns:** Array of courses with image, name, progress percentage, and visibility.
-
-### local_dimensions_get_user_competency_summary_in_plan
-
-Wrapper for `tool_lp_data_for_user_competency_summary_in_plan` that avoids context issues with theme string loading during AJAX calls.
-
-**Parameters:**
-- `competencyid` (int): The competency ID
-- `planid` (int): The plan ID
-
-**Returns:** JSON-encoded competency summary data enriched with taxonomy metadata for the current competency (`taxonomy.current`, `taxonomy.children`, `taxonomy.bylevel`) and a ready-to-render `taxonomyterm`.
-
-### local_dimensions_get_competency_rule_data
-
-Get competency completion rule data including children, points, required status, and proficiency for the Rules tab.
-
-**Parameters:**
-- `competencyid` (int): The parent competency ID
-- `planid` (int): The learning plan ID
-
-**Returns:** JSON object with rule type, localized outcome text, total required, earned points, mandatory counts, missing-mandatory alert state, child competencies (with grade name, proficiency, points, and required status), taxonomy metadata, and whether the evidence submission button is enabled.
-
-### local_dimensions_get_fontawesome_icons
-
-Get FontAwesome icons matching a search query for the admin icon picker. Supports Boost Union's extended icon map if available, with a fallback to core icons and SCSS parsing.
-
-**Parameters:**
-- `query` (string): Search query
-
-**Returns:** Matching icons with CSS classes and sources, capped at 3000 results.
-
-
-Capabilities
-------------
-
-### local/dimensions:view
-
-Allows viewing the Dimensions learning plan pages and accessing AJAX web services.
-
-**Default archetypes:** Manager, Teacher, Authenticated User.
-
-
-Performance and caching
------------------------
-
-The plugin uses application and session-level MUC caches to minimize database queries and avoid repeated computation:
-
-| Cache                 | Mode        | Key                  | Purpose                                                                           | TTL                 |
-|-----------------------|-------------|----------------------|-----------------------------------------------------------------------------------|---------------------|
-| `template_courses`    | application | `template_id`        | Stores valid course IDs per template                                              | 1 hour              |
-| `template_metadata`   | application | `templateid`         | Caches template metadata for card rendering (type, tags, colours, card image URL) | 30 minutes          |
-| `competency_metadata` | application | `competencyid`       | Caches competency metadata for card rendering (tags, colours, card image URL)     | 30 minutes          |
-| `template_scss`       | application | `css_{templateid}`   | Compiled CSS from template SCSS                                                   | Manual invalidation |
-| `competency_scss`     | application | `css_{competencyid}` | Compiled CSS from competency SCSS                                                 | Manual invalidation |
-| `returncontext`       | session     | `returncontext`      | Stores return URL and allowed course IDs for the floating "Return to plan" button | Session lifetime    |
-| `plan_trail`          | session     | `planid_userid`      | Stores lightweight plan competency trail data for summary/status rendering        | 5 minutes           |
-
-Compiled SCSS caches are automatically invalidated when the SCSS field is saved. Metadata caches are invalidated when related metadata/images change. The template courses cache uses static acceleration with a pool size of 50 entries.
-
-Additionally:
-- Custom field provisioning runs only once per admin session (session flag)
-- Course section progress is calculated on demand via AJAX, not stored
-- Accordion panels in full plan overview load lazily via AJAX (one request per panel)
-- The icon picker service caps results at 3000 and uses efficient string matching
-
-
-Event observers
----------------
-
-| Event                                                 | Handler                                   | Purpose                                                                       |
-|-------------------------------------------------------|-------------------------------------------|-------------------------------------------------------------------------------|
-| `core\event\competency_created`                       | `observer::competency_created`            | Save custom field data when competencies are created via core forms           |
-| `core\event\competency_updated`                       | `observer::competency_updated`            | Save custom field data when competencies are updated via core forms           |
-| `core\event\competency_user_competency_rated`         | `observer::user_competency_rated`         | Invalidate the affected user's plan trail session cache                       |
-| `core\event\competency_user_competency_rated_in_plan` | `observer::user_competency_rated_in_plan` | Invalidate the specific plan trail cache entry for the affected user          |
-| `core\event\competency_evidence_created`              | `observer::evidence_created`              | Invalidate the affected user's plan trail cache after new evidence is created |
-
-
-Hook callbacks
+Under the hood
 --------------
 
-| Hook                              | Handler                                         | Purpose                                                                      |
-|-----------------------------------|-------------------------------------------------|------------------------------------------------------------------------------|
+- **No own tables**: everything lives in core competency tables, `customfield_data`, file areas, user preferences and MUC caches.
+- **Performance**: metadata and progress caches with defensive TTLs and event-driven invalidation; lazy AJAX loading throughout; session caches for navigation state.
+- **Background work**: heavy actions — plan generation from cohorts, cohort-role sync, bulk enrolment methods — are queued as ad-hoc tasks with deduplication and Lock API serialisation, processed by Moodle's standard cron.
+- **Frontend**: ESM AMD modules, zero YUI, Bootstrap 4 + 5 compatible, Mustache server-side rendering, namespaced CSS.
 
-| `before_footer_html_generation`   | `hook_callbacks::before_footer_html_generation` | Renders the "Return to plan" floating button and ensures custom fields exist |
 
+Accent-insensitive search
+-------------------------
 
-How this plugin works
----------------------
+Competency, plan and course searches in the Competency hub are accent-insensitive ("lingua" also matches "língua"). On MySQL/MariaDB this works out of the box via the database collation. On **PostgreSQL** it uses the `unaccent` extension, which the plugin creates automatically (`CREATE EXTENSION IF NOT EXISTS unaccent`) during upgrade or on first search where the database user has permission — on supported PostgreSQL (13+) `unaccent` is a *trusted* extension the database owner may create without superuser rights.
 
-### Custom fields for competencies and templates
+If your instance is locked down and the plugin cannot create it, run this once as a database superuser and searches become accent-insensitive on PostgreSQL too (until then they degrade gracefully to accent-sensitive):
 
-The plugin implements the Moodle custom fields API through two handlers (`competency_handler` and `lp_handler`) that integrate with the `core_customfield` system. Custom fields are auto-provisioned via the `helper` class and their definitions are managed through the two custom-field admin pages.
-
-### Image handling
-
-Two modes are available:
-- **Built-in** (default): Manages images via `picture_manager` using Moodle's file storage API with dedicated file areas (`competency_card`, `template_card`, `competency_bg`, `template_bg`)
-- **External plugin**: Delegates to the `customfield_picture` plugin if installed
-
-### Course progress calculation
-
-The `calculator` class provides real-time progress calculation:
-1. Fetches all course sections and their completion-enabled activities
-2. Builds a parent-child section map for recursive subsection support (Flex sections, mod_subsection)
-3. Checks enrolment, access restrictions, and section visibility
-4. Detects locked content and future enrolment start dates
-5. Returns structured data for frontend display
-
-### Custom SCSS injection
-
-When enabled, per-template and per-competency SCSS code is:
-1. Validated server-side on save (invalid SCSS is rejected with an inline field error)
-2. Compiled server-side using Moodle's SCSS compiler
-3. Cached in MUC with manual invalidation on save
-4. Injected as inline `<style>` tags on the plan view pages
-
-### Frontend architecture
-
-The plugin includes:
-- **Mustache templates** for responsive layouts (hero header, course cards, accordion panels, evidence modals, settings widgets) and the Competency hub (`templates/central/`)
-- **Learner/settings AMD modules**: `accordion`, `chip_filters`, `collapsible_description`, `competency_view`, `customcss_injector`, `filter_tabs_nav`, `return_button`, `setting_iconpicker`
-- **Competency hub AMD modules** (`amd/src/central/`): the tab controllers (`structure`, `plans`, `frameworks`, `context`, `tabs`), modal controllers (`competency_links`, `related_competencies`, `rule_config`, `participants_manager`, `cohort_manager`, `participants_users`, `roles_manager`, `competency_browser`, `competency_tree_browser`, `framework_scaleconfig`), autocomplete datasources and the shared `pane_resizer`
-- **Plugin icon assets** under `pix/status` and `pix/taxonomy` for hero badges, locked cards, rule states, and taxonomy cards
-- **CSS styles** with properly namespaced selectors (`.local-dimensions-*`, `.dims-*`, `#dimensions-*`)
-
-### Building JavaScript assets
-
-The plugin's AMD modules in `amd/src/*.js` must be compiled to `amd/build/*.min.js` using Moodle's grunt task. The mirror path differs by Moodle major version:
-
-| Moodle version | Mirror path inside the Moodle root | Grunt invocation |
-| -------------- | ---------------------------------- | ---------------- |
-| 4.5 (legacy)   | `local/dimensions`                 | `grunt --root=local/dimensions amd` |
-| 5.0+           | `public/local/dimensions`          | `grunt --root=public/local/dimensions amd` |
-
-A symlink at the mirror path **breaks** `grunt --root` because the Gruntfile resolves real paths. Always use `rsync` (or a real copy) for the mirror, then copy `amd/build/*.min.js` and `*.map` back to the plugin source tree.
-
-Example workflow on Moodle 5+:
-
-```sh
-cd <moodle-root>
-rsync -a --exclude=node_modules --exclude=.git \
-  /path/to/moodle-local_dimensions/ public/local/dimensions/
-./node_modules/.bin/grunt --root=public/local/dimensions amd
-cp public/local/dimensions/amd/build/*.min.js \
-   public/local/dimensions/amd/build/*.map \
-   /path/to/moodle-local_dimensions/amd/build/
-```
-
-Avoid the plugin's local `npm run build` (if any) — the canonical artefacts are produced by Moodle's own Gruntfile so that AMD module-name annotations, source maps, and minification match what Moodle expects.
-
+    CREATE EXTENSION unaccent;
 
 Accessibility
 -------------
@@ -393,24 +142,6 @@ Please create pull requests on GitHub:
 https://github.com/uaiblaine/moodle-local_dimensions/pulls
 
 
-Moodle release support
-----------------------
-
-This plugin uses a **branch-per-version** strategy. Each Moodle major version has its own stable branch that receives bug fixes and security patches independently. New features are committed to `main` first and backported selectively.
-
-| Branch              | Moodle version     | PHP versions | Status                                      |
-|---------------------|--------------------|--------------|---------------------------------------------|
-| `MOODLE_405_STABLE` | 4.5 (LTS)          | 8.1 – 8.3    | Maintained – bug fixes and security patches |
-| `MOODLE_500_STABLE` | 5.0                | 8.2 – 8.3    | Maintained – bug fixes                      |
-| `MOODLE_501_STABLE` | 5.1                | 8.2 – 8.4    | Maintained – active                         |
-| `MOODLE_502_STABLE` | 5.2                | 8.2 – 8.4    | Maintained – active (latest)                |
-| `main`              | Development (next) | 8.3 – 8.4    | Development branch – not for production use |
-
-**Tag format:** `v{MAJOR}.{MINOR}-r{RELEASE}` per stable branch, with independent release counters (e.g. `v4.5-r1` on `MOODLE_405_STABLE`, `v5.1-r3` on `MOODLE_501_STABLE`).
-
-There may be several weeks after a new major release of Moodle has been published until we can do a compatibility check and fix problems if necessary. If you encounter problems with a new major release of Moodle - or can confirm that this plugin still works with a new major release - please let us know on GitHub.
-
-
 Translating this plugin
 -----------------------
 
@@ -427,7 +158,7 @@ If you want to use this plugin with an RTL language, and it doesn't work as-is, 
 Privacy
 -------
 
-The plugin stores no personal data beyond two per-user preferences that remember the Competency hub's last-visited view and display choices. These are exported by the Privacy API on a data-subject request and removed on plugin uninstall. Custom field data is associated with competencies and learning plan templates, not with individual users. Course progress calculation is performed in real-time, and temporary session cache entries (`returncontext`, `plan_trail`) are used only to support navigation and rendering during active sessions.
+The plugin stores no personal data beyond two per-user preferences that remember the Competency hub's last-visited view and display choices. These are exported by the Privacy API on a data-subject request and removed on plugin uninstall. Custom field data is associated with competencies and learning plan templates, not with individual users. Course progress calculation is performed in real-time, and temporary session cache entries are used only to support navigation and rendering during active sessions.
 
 The plugin implements the Moodle Privacy API as a preference-only provider (`core_privacy\local\request\user_preference_provider`).
 
@@ -435,7 +166,7 @@ The plugin implements the Moodle Privacy API as a preference-only provider (`cor
 Scheduled tasks
 ---------------
 
-This plugin does not add any scheduled tasks.
+This plugin adds no scheduled (cron-registered) tasks. It queues **ad-hoc background tasks** on demand — plan generation from template cohorts, cohort-role synchronisation and bulk enrolment methods — which Moodle's standard cron processes.
 
 
 Contributors
