@@ -376,4 +376,12 @@ $functions = [
         'capabilities' => 'moodle/competency:templatemanage',
         'ajax' => true,
     ],
+    'local_dimensions_set_enrol_instance_status' => [
+        'classname' => 'local_dimensions\external\set_enrol_instance_status',
+        'methodname' => 'execute',
+        'description' => 'Enable or disable a course enrol instance for a method + cohort combination.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
 ];

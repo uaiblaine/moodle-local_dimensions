@@ -5725,6 +5725,16 @@ a.local-dimensions-central-links-badge-warn:focus {
     vertical-align: middle;
 }
 
+/* The container already draws the frame: no border above the header row nor below the last row. */
+.local-dimensions-enrol-group [data-children] thead th {
+    border-top: 0;
+}
+
+.local-dimensions-enrol-group [data-children] tbody tr:last-child td,
+.local-dimensions-enrol-group [data-children] tbody tr:last-child th {
+    border-bottom: 0;
+}
+
 /* Course-details modal: breathing room in the striped facts table. */
 .local-dimensions-enrol-detail-table th {
     width: 35%;
