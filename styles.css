@@ -5725,6 +5725,10 @@ a.local-dimensions-central-links-badge-warn:focus {
     vertical-align: middle;
 }
 
+.local-dimensions-enrol-search {
+    width: 14rem;
+}
+
 /* The container already draws the frame: no border above the header row nor below the last row. */
 .local-dimensions-enrol-group [data-children] thead th {
     border-top: 0;

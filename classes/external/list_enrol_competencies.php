@@ -59,6 +59,7 @@ class list_enrol_competencies extends external_api {
             'categoryid' => new external_value(PARAM_INT, 'Course category filter (0 = all)', VALUE_DEFAULT, 0),
             'includehidden' => new external_value(PARAM_BOOL, 'Include hidden courses', VALUE_DEFAULT, false),
             'includebootstrap' => new external_value(PARAM_BOOL, 'Include the tab bootstrap data', VALUE_DEFAULT, false),
+            'query' => new external_value(PARAM_RAW_TRIMMED, 'Competency name filter', VALUE_DEFAULT, ''),
             'limitfrom' => new external_value(PARAM_INT, 'Pagination offset', VALUE_DEFAULT, 0),
             'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, 20),
         ]);
@@ -71,6 +72,7 @@ class list_enrol_competencies extends external_api {
      * @param int $categoryid Course category filter (0 = all).
      * @param bool $includehidden Whether hidden courses count.
      * @param bool $includebootstrap Whether to include roles/categories/method availability.
+     * @param string $query Competency name filter (case- and accent-insensitive).
      * @param int $limitfrom Pagination offset.
      * @param int $limitnum Page size.
      * @return array Keys: items, total, totalcourses and optionally bootstrap.
@@ -80,6 +82,7 @@ class list_enrol_competencies extends external_api {
         int $categoryid = 0,
         bool $includehidden = false,
         bool $includebootstrap = false,
+        string $query = '',
         int $limitfrom = 0,
         int $limitnum = 20
     ): array {
@@ -88,6 +91,7 @@ class list_enrol_competencies extends external_api {
             'categoryid' => $categoryid,
             'includehidden' => $includehidden,
             'includebootstrap' => $includebootstrap,
+            'query' => $query,
             'limitfrom' => $limitfrom,
             'limitnum' => $limitnum,
         ]);
@@ -118,8 +122,13 @@ class list_enrol_competencies extends external_api {
 
         $items = [];
         $passingids = [];
+        $needle = self::normalize($params['query']);
         foreach (api::list_competencies_in_template($template->get('id')) as $competency) {
             $competencyid = (int) $competency->get('id');
+            $shortname = format_string($competency->get('shortname'), true, ['context' => $context]);
+            if ($needle !== '' && strpos(self::normalize($shortname), $needle) === false) {
+                continue;
+            }
             $count = 0;
             foreach ($bycompetency[$competencyid] ?? [] as $courseid) {
                 if ($passes($courseid)) {
@@ -132,7 +141,7 @@ class list_enrol_competencies extends external_api {
             }
             $items[] = [
                 'competencyid' => $competencyid,
-                'shortname' => format_string($competency->get('shortname'), true, ['context' => $context]),
+                'shortname' => $shortname,
                 'coursecount' => $count,
             ];
         }
@@ -144,6 +153,16 @@ class list_enrol_competencies extends external_api {
             $result['bootstrap'] = self::bootstrap($context, $records, $allowed);
         }
         return $result;
+    }
+
+    /**
+     * Case- and accent-insensitive normalisation for the competency name filter.
+     *
+     * @param string $text Raw text.
+     * @return string
+     */
+    private static function normalize(string $text): string {
+        return \core_text::strtolower(\core_text::specialtoascii($text));
     }
 
     /**

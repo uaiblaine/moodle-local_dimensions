@@ -325,6 +325,15 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071108, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071109) {
+        // Enrolment methods tab: server-side competency search (case- and accent-insensitive
+        // query on list_enrol_competencies) with a debounced search box. Purge so the rebuilt
+        // AMD bundle, Mustache and strings are served fresh.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026071109, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
