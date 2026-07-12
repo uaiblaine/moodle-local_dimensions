@@ -80,7 +80,7 @@ const injectHeaderLinks = async(root, region) => {
         link.href = M.cfg.wwwroot + page.path;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        link.className = 'btn btn-outline-secondary btn-sm local-dimensions-participants-headerlink d-none';
+        link.className = 'btn btn-outline-secondary btn-sm local-dimensions-headerlink d-none';
         const icon = document.createElement('i');
         icon.className = 'fa fa-arrow-up-right-from-square me-1';
         icon.setAttribute('aria-hidden', 'true');
@@ -148,7 +148,7 @@ export const show = async(pane, region) => {
     // Widen this data-dense modal (tabs + grids) responsively, scoped to our dialog only.
     const dialog = root.querySelector('.modal-dialog');
     if (dialog) {
-        dialog.classList.add('local-dimensions-participants-modal');
+        dialog.classList.add('local-dimensions-participants-modal', 'local-dimensions-headerlink-modal');
     }
     const headerlinks = await injectHeaderLinks(root, region);
     const opts = {

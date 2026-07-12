@@ -17,9 +17,9 @@
 /**
  * Modal (dynamic) form to create or edit a competency framework — for the Competency hub.
  *
- * Create and edit of basic fields + per-level taxonomies. The scale + proficiency config is editable on
- * create, and on edit of a framework with no user competencies (core freezes it once graded); otherwise
- * the scale is shown read-only.
+ * Create and edit of basic fields + per-level taxonomies. Mirrors core tool_lp: the scale and its
+ * proficiency configuration are always editable; only WHICH scale is frozen (readonly select + form
+ * constant) once the framework has user competencies, exactly like the native edit page.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -60,14 +60,14 @@ class framework_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Whether the scale (and its proficiency config) is editable: on create, or on edit of a framework
-     * with no user competencies (core freezes the scale once a competency has been graded).
+     * Whether the scale CHOICE is frozen: once a framework has user competencies core forbids
+     * switching scales, but the proficiency configuration stays editable (native parity).
      *
      * @param competency_framework|null $framework The framework, or null on create.
      * @return bool
      */
-    private function scale_editable(?competency_framework $framework): bool {
-        return $framework === null || !$framework->has_user_competencies();
+    private function scale_frozen(?competency_framework $framework): bool {
+        return $framework !== null && $framework->has_user_competencies();
     }
 
     /**
@@ -127,7 +127,6 @@ class framework_dynamic_form extends \core_form\dynamic_form {
     public function definition() {
         $mform = $this->_form;
         $framework = $this->get_framework();
-        $editable = $this->scale_editable($framework);
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
@@ -148,28 +147,32 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         $mform->addElement('editor', 'description', get_string('description', 'tool_lp'), ['rows' => 4]);
         $mform->setType('description', PARAM_CLEANHTML);
 
-        if ($editable) {
-            $mform->addElement('select', 'scaleid', get_string('central_frameworks_scale', 'local_dimensions'), get_scales_menu());
-            $mform->setType('scaleid', PARAM_INT);
-            $mform->addRule('scaleid', null, 'required', null, 'client');
-
-            $mform->addElement('hidden', 'scaleconfiguration', '', ['id' => 'id_scaleconfiguration']);
-            $mform->setType('scaleconfiguration', PARAM_RAW);
-
-            $configbutton = '<button type="button" class="btn btn-secondary btn-sm" '
-                . 'data-action="configure-scale">'
-                . get_string('central_frameworks_configurescale', 'local_dimensions') . '</button>'
-                . ' <span class="text-muted small ms-2" data-region="scaleconfig-summary"></span>';
-            $mform->addElement('static', 'scaleconfig', '', $configbutton);
-        } else {
-            $scale = $framework ? $framework->get_scale() : null;
-            $mform->addElement(
-                'static',
-                'scalestatic',
-                get_string('central_frameworks_scale', 'local_dimensions'),
-                $scale ? $scale->name : ''
-            );
+        $scaleel = $mform->addElement(
+            'select',
+            'scaleid',
+            get_string('central_frameworks_scale', 'local_dimensions'),
+            get_scales_menu()
+        );
+        $mform->setType('scaleid', PARAM_INT);
+        $mform->addRule('scaleid', null, 'required', null, 'client');
+        if ($this->scale_frozen($framework)) {
+            /* Native parity (tool_lp form): the scale is in use, so only WHICH scale is frozen —
+               readonly keeps the field readable by the scale-config JS while the constant makes
+               the server ignore any tampered value. The proficiency config stays editable. */
+            $scaleel->updateAttributes(['readonly' => 'readonly']);
+            $mform->setConstant('scaleid', (int) $framework->get('scaleid'));
         }
+
+        $mform->addElement('hidden', 'scaleconfiguration', '', ['id' => 'id_scaleconfiguration']);
+        $mform->setType('scaleconfiguration', PARAM_RAW);
+
+        $configured = $framework && helper::scaleconfig_is_complete((string) $framework->get('scaleconfiguration'));
+        $summary = $configured ? get_string('central_frameworks_scaleconfigured', 'local_dimensions') : '';
+        $configbutton = '<button type="button" class="btn btn-secondary btn-sm" '
+            . 'data-action="configure-scale">'
+            . get_string('central_frameworks_configurescale', 'local_dimensions') . '</button>'
+            . ' <span class="text-muted small ms-2" data-region="scaleconfig-summary">' . $summary . '</span>';
+        $mform->addElement('static', 'scaleconfig', '', $configbutton);
 
         $mform->addElement('selectyesno', 'visible', get_string('visible', 'tool_lp'));
         $mform->setDefault('visible', 1);
@@ -203,10 +206,8 @@ class framework_dynamic_form extends \core_form\dynamic_form {
                 'format' => $framework->get('descriptionformat'),
             ],
         ];
-        if ($this->scale_editable($framework)) {
-            $data->scaleid = (int) $framework->get('scaleid');
-            $data->scaleconfiguration = $framework->get('scaleconfiguration');
-        }
+        $data->scaleid = (int) $framework->get('scaleid');
+        $data->scaleconfiguration = $framework->get('scaleconfiguration');
 
         // Taxonomies are stored comma-joined (one key per level); expand to the per-level array.
         $taxonomies = array_filter(explode(',', (string) $framework->get('taxonomies')));
@@ -228,7 +229,6 @@ class framework_dynamic_form extends \core_form\dynamic_form {
     public function process_dynamic_submission() {
         $data = $this->get_data();
         $id = (int) $data->id;
-        $framework = $this->get_framework();
 
         $record = new \stdClass();
         $record->shortname = $data->shortname;
@@ -239,10 +239,10 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         if (!empty($data->taxonomies) && is_array($data->taxonomies)) {
             $record->taxonomies = implode(',', $data->taxonomies);
         }
-        if ($this->scale_editable($framework)) {
-            $record->scaleid = (int) $data->scaleid;
-            $record->scaleconfiguration = $data->scaleconfiguration;
-        }
+        // Scale choice + proficiency config always persist; on a frozen framework the form
+        // constant already pinned scaleid to its current value (native parity).
+        $record->scaleid = (int) $data->scaleid;
+        $record->scaleconfiguration = $data->scaleconfiguration;
 
         if ($id === 0) {
             $record->contextid = (int) $data->contextid;
@@ -275,7 +275,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
             }
         }
 
-        if ($this->scale_editable($this->get_framework()) && !helper::scaleconfig_is_complete($data['scaleconfiguration'] ?? '')) {
+        if (!helper::scaleconfig_is_complete($data['scaleconfiguration'] ?? '')) {
             $errors['scaleid'] = get_string('central_frameworks_scaleincomplete', 'local_dimensions');
         }
 

@@ -109,6 +109,8 @@ class frameworks extends \core\output\dynamic_tabs\base {
         // the "· N hidden" suffix on the count so the number stays honest.
         $excludedcount = $showhidden ? 0 : $hiddencount;
         $canmanage = !$needscategory && competency_framework::can_manage_context($pagecontext);
+        // The create/edit modal's "Open scales page" header shortcut mirrors the page's own gate.
+        $canscalespage = has_capability('moodle/course:managescales', \context_system::instance());
 
         $PAGE->requires->js_call_amd('local_dimensions/central/frameworks', 'init');
 
@@ -124,6 +126,7 @@ class frameworks extends \core\output\dynamic_tabs\base {
             'hasexcluded' => $excludedcount > 0,
             'excludedcount' => $excludedcount,
             'canmanage' => (int) $canmanage,
+            'canscalespage' => (int) $canscalespage,
             'canexport' => (int) ($canmanage && !empty($rows)),
             'showhidden' => $showhidden,
             'showhiddentoggle' => $hashiddenframeworks ? [

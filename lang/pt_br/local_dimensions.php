@@ -146,6 +146,7 @@ $string['central_frameworks_items'] = 'Estruturas';
 $string['central_frameworks_listed'] = 'Estruturas listadas';
 $string['central_frameworks_new'] = 'Nova estrutura';
 $string['central_frameworks_none'] = 'Nenhuma estrutura neste contexto.';
+$string['central_frameworks_openscales'] = 'Abrir página de escalas';
 $string['central_frameworks_scale'] = 'Escala';
 $string['central_frameworks_scaleconfigured'] = 'Configurada';
 $string['central_frameworks_scaledefault'] = 'Padrão';

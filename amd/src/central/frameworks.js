@@ -106,7 +106,9 @@ const setupScaleConfigDelegation = () => {
         }
     }, true);
     document.addEventListener('change', (event) => {
-        if (event.target.name !== 'scaleid') {
+        if (event.target.name !== 'scaleid' || event.target.hasAttribute('readonly')) {
+            // A frozen scale select (framework already graded) must not wipe the stored
+            // proficiency config: the server pins scaleid via a form constant anyway.
             return;
         }
         const hidden = document.querySelector('[name="scaleconfiguration"]');
@@ -118,6 +120,41 @@ const setupScaleConfigDelegation = () => {
             summary.textContent = '';
         }
     });
+};
+
+/**
+ * Inject the "Open scales page" shortcut into the framework form modal header, just left of
+ * the close button — same pattern and classes as the participants modal header links. Only
+ * shown when the user can reach the scales admin page.
+ *
+ * @param {ModalForm} form The modal form (after its LOADED event).
+ * @return {Promise<void>}
+ */
+const injectScalesLink = async(form) => {
+    if (!activeRegion || activeRegion.dataset.canscalespage !== '1' || !form.modal) {
+        return;
+    }
+    const root = form.modal.getRoot()[0];
+    const header = root.querySelector('.modal-header');
+    if (!header || header.querySelector('.local-dimensions-headerlink')) {
+        return;
+    }
+    const dialog = root.querySelector('.modal-dialog');
+    if (dialog) {
+        dialog.classList.add('local-dimensions-headerlink-modal');
+    }
+    const label = await getString('central_frameworks_openscales', 'local_dimensions');
+    const link = document.createElement('a');
+    link.href = M.cfg.wwwroot + '/grade/edit/scale/index.php';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.className = 'btn btn-outline-secondary btn-sm local-dimensions-headerlink';
+    const icon = document.createElement('i');
+    icon.className = 'fa fa-arrow-up-right-from-square me-1';
+    icon.setAttribute('aria-hidden', 'true');
+    link.appendChild(icon);
+    link.appendChild(document.createTextNode(label));
+    header.insertBefore(link, header.querySelector('.btn-close'));
 };
 
 /**
@@ -135,6 +172,7 @@ const openFrameworkForm = async(pane, args, titlekey) => {
         modalConfig: {title: await getString(titlekey, 'local_dimensions')},
     });
     form.addEventListener(form.events.FORM_SUBMITTED, () => reloadPane(pane).catch(notifyError));
+    form.addEventListener(form.events.LOADED, () => injectScalesLink(form).catch(notifyError));
     form.show();
 };
 

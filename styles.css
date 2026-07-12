@@ -3525,15 +3525,16 @@
 }
 
 /*
- * The per-tab "open the core admin page" link sits at the header's right edge, just left of the
- * close button: let the title take the remaining width so both controls group on the right.
+ * Shared header-link modals (participants tabs, framework form): the "open the core admin
+ * page" link sits at the header's right edge, just left of the close button — let the title
+ * take the remaining width so both controls group on the right.
  */
-.local-dimensions-participants-modal .modal-header .modal-title {
+.local-dimensions-headerlink-modal .modal-header .modal-title {
     flex-grow: 1;
     min-width: 0;
 }
 
-.local-dimensions-participants-modal .local-dimensions-participants-headerlink {
+.local-dimensions-headerlink-modal .local-dimensions-headerlink {
     margin-left: 0.5rem;
     margin-right: 0.5rem;
 }
