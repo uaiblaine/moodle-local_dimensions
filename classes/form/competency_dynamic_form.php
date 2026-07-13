@@ -183,13 +183,22 @@ class competency_dynamic_form extends \core_form\dynamic_form {
         // Plugin custom fields (the core category headers label them; no extra plugin heading).
         competency_handler::create()->instance_form_definition($mform, $this->get_competencyid());
 
-        // Explain the competency -> plan -> global cascade to the editor.
-        $mform->addElement(
+        // Cascade explainer, naming the two cascading selects and placed right above them.
+        $cascadehelp = $mform->createElement(
             'static',
             'local_dimensions_cascadehelp',
             '',
-            get_string('cascade_help_competency', 'local_dimensions')
+            get_string('cascade_help_competency', 'local_dimensions', (object) [
+                'enrol' => get_string('enrollmentfilter', 'local_dimensions'),
+                'redirect' => get_string('singlecourseredirect', 'local_dimensions'),
+            ])
         );
+        $cascadetarget = 'customfield_' . constants::CFIELD_ENROLLMENTFILTER;
+        if ($mform->elementExists($cascadetarget)) {
+            $mform->insertElementBefore($cascadehelp, $cascadetarget);
+        } else {
+            $mform->addElement($cascadehelp);
+        }
     }
 
     /**

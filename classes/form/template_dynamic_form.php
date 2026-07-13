@@ -144,6 +144,23 @@ class template_dynamic_form extends \core_form\dynamic_form {
         // modal the core category headers already label the fields (parity with the competency modal).
         lp_handler::create()->instance_form_definition($mform, $this->get_templateid(), '');
 
+        // Cascade explainer, naming the two cascading selects and placed right above them.
+        $cascadehelp = $mform->createElement(
+            'static',
+            'local_dimensions_cascadehelp',
+            '',
+            get_string('cascade_help', 'local_dimensions', (object) [
+                'enrol' => get_string('enrollmentfilter', 'local_dimensions'),
+                'redirect' => get_string('singlecourseredirect', 'local_dimensions'),
+            ])
+        );
+        $cascadetarget = 'customfield_' . constants::CFIELD_ENROLLMENTFILTER;
+        if ($mform->elementExists($cascadetarget)) {
+            $mform->insertElementBefore($cascadehelp, $cascadetarget);
+        } else {
+            $mform->addElement($cascadehelp);
+        }
+
         // Show each cascade setting only for the display mode it affects. The displaymode select
         // submits the 1-based option index, which equals the DISPLAYMODE_* constant by construction.
         $displaymode = 'customfield_' . constants::CFIELD_DISPLAYMODE;
@@ -175,13 +192,6 @@ class template_dynamic_form extends \core_form\dynamic_form {
             (string) (array_search(constants::SHOWRELATED_NO, array_keys(constants::showrelated_options()), true) + 1)
         );
 
-        // Explain the global -> plan -> competency cascade to the editor.
-        $mform->addElement(
-            'static',
-            'local_dimensions_cascadehelp',
-            '',
-            get_string('cascade_help', 'local_dimensions')
-        );
     }
 
     /**
