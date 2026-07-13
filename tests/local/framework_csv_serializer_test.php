@@ -52,10 +52,13 @@ final class framework_csv_serializer_test extends \advanced_testcase {
         api::add_related_competency((int) $child->get('id'), (int) $root->get('id'));
 
         // Give the child real custom-field values through the same write path the importer uses.
+        // Select labels come from the lang defaults, so future string edits keep the test passing.
+        $tag1label = explode("\n", get_string('tag1_options', 'local_dimensions'))[1];
+        $typelabel = explode("\n", get_string('type_options', 'local_dimensions'))[0];
         $formdata = (object) (['id' => (int) $child->get('id')] + helper::customfields_to_formdata([
             'cf_bgcolor' => 'ff0000',
-            'cf_tag1' => '2nd Year',
-            'cf_type' => 'modules',
+            'cf_tag1' => $tag1label,
+            'cf_type' => $typelabel,
         ]));
         competency_handler::create()->instance_form_save($formdata, true);
 
@@ -86,8 +89,8 @@ final class framework_csv_serializer_test extends \advanced_testcase {
         // The child's custom-field tokens survive the round trip (label for selects, hex for colours).
         $cf = $parsed['competencies']['C1']->cf;
         $this->assertSame('ff0000', $cf['cf_bgcolor']);
-        $this->assertSame('2nd Year', $cf['cf_tag1']);
-        $this->assertSame('modules', $cf['cf_type']);
+        $this->assertSame($tag1label, $cf['cf_tag1']);
+        $this->assertSame($typelabel, $cf['cf_type']);
 
         // The related-competency idnumber is carried on the child row.
         $this->assertSame('R1', $parsed['competencies']['C1']->relatedidnumbers);

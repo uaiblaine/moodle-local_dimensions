@@ -49,7 +49,7 @@ final class framework_csv_importer_test extends \advanced_testcase {
             'idnumber' => 'CM-W',
         ]);
         $formdata = (object) (['id' => (int) $child->get('id')] + helper::customfields_to_formdata([
-            'cf_tag1' => '1st Year',
+            'cf_tag1' => explode("\n", get_string('tag1_options', 'local_dimensions'))[0],
             'cf_textcolor' => '112233',
         ]));
         competency_handler::create()->instance_form_save($formdata, true);
@@ -94,7 +94,7 @@ final class framework_csv_importer_test extends \advanced_testcase {
 
         // Custom fields round-tripped onto the new competency.
         $cf = helper::export_competency_customfields((int) $byidnumber['CM-W']->get('id'));
-        $this->assertSame('1st Year', $cf['cf_tag1']);
+        $this->assertSame(explode("\n", get_string('tag1_options', 'local_dimensions'))[0], $cf['cf_tag1']);
         $this->assertSame('112233', $cf['cf_textcolor']);
     }
 
