@@ -36,6 +36,12 @@ use local_dimensions\constants;
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\helper;
 
+defined('MOODLE_INTERNAL') || die();
+
+// FILE_INTERNAL (used by the description editor options) lives in filelib, not loaded on the AJAX path.
+global $CFG;
+require_once($CFG->libdir . '/filelib.php');
+
 /**
  * Create/edit competency in a modal.
  *
