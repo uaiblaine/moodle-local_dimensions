@@ -38,9 +38,9 @@ use local_dimensions\helper;
 
 defined('MOODLE_INTERNAL') || die();
 
-// FILE_INTERNAL (used by the description editor options) lives in filelib, not loaded on the AJAX path.
+// FILE_INTERNAL (used by the description editor options) lives in repository/lib.php, not loaded on the AJAX path.
 global $CFG;
-require_once($CFG->libdir . '/filelib.php');
+require_once($CFG->dirroot . '/repository/lib.php');
 
 /**
  * Create/edit competency in a modal.
