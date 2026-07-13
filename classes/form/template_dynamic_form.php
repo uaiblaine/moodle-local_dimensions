@@ -191,7 +191,6 @@ class template_dynamic_form extends \core_form\dynamic_form {
             'eq',
             (string) (array_search(constants::SHOWRELATED_NO, array_keys(constants::showrelated_options()), true) + 1)
         );
-
     }
 
     /**
