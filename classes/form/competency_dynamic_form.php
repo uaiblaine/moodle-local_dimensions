@@ -38,7 +38,7 @@ use local_dimensions\helper;
 
 defined('MOODLE_INTERNAL') || die();
 
-// FILE_INTERNAL (used by the description editor options) lives in repository/lib.php, not loaded on the AJAX path.
+// FILE_EXTERNAL (used by the description editor options) lives in repository/lib.php, not loaded on the AJAX path.
 global $CFG;
 require_once($CFG->dirroot . '/repository/lib.php');
 
@@ -150,14 +150,16 @@ class competency_dynamic_form extends \core_form\dynamic_form {
         $mform->setType('idnumber', PARAM_RAW);
         $mform->addRule('idnumber', null, 'required', null, 'client');
 
-        /* FILE_INTERNAL only: the default return_types includes FILE_EXTERNAL, which keeps tiny_media
-           enabled without a filepicker and crashes on Moodle 5.0-5.2 (MDL-78428); no file area here. */
+        /* Filepicker options must exist (their absence crashes tiny_media's embed dialog on
+           Moodle 5.0-5.2, MDL-78428), hence maxfiles=1; FILE_EXTERNAL keeps the upload repository
+           out of the picker, so media/images are insertable by URL only — descriptions have no
+           file area and internal/draft files would be silently lost on save. */
         $mform->addElement(
             'editor',
             'description',
             get_string('description'),
             ['rows' => 4],
-            ['return_types' => FILE_INTERNAL]
+            ['maxfiles' => 1, 'return_types' => FILE_EXTERNAL, 'enable_filemanagement' => false]
         );
         $mform->setType('description', PARAM_CLEANHTML);
 
