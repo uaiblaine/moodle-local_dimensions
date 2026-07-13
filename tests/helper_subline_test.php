@@ -102,18 +102,21 @@ final class helper_subline_test extends \advanced_testcase {
         $this->assertSame('', helper::read_competency_select_label($competencyid, constants::CFIELD_TAG1));
 
         // Store tag1 and tag2 through the shared CSV form-data path (label to stored index).
+        // Labels come from the lang defaults the fields were provisioned with, so string edits keep passing.
+        $tag1label = explode("\n", get_string('tag1_options', 'local_dimensions'))[0];
+        $tag2label = explode("\n", get_string('tag2_options', 'local_dimensions'))[2];
         $data = (object) (['id' => $competencyid] + helper::customfields_to_formdata([
-            'cf_tag1' => '1st Year',
-            'cf_tag2' => 'Advanced',
+            'cf_tag1' => $tag1label,
+            'cf_tag2' => $tag2label,
         ]));
         competency_handler::create()->instance_form_save($data, true);
 
         $this->assertSame(
-            '1st Year',
+            $tag1label,
             helper::read_competency_select_label($competencyid, constants::CFIELD_TAG1)
         );
         $this->assertSame(
-            'Advanced',
+            $tag2label,
             helper::read_competency_select_label($competencyid, constants::CFIELD_TAG2)
         );
     }
