@@ -152,6 +152,8 @@ class template_dynamic_form extends \core_form\dynamic_form {
             get_string('cascade_help', 'local_dimensions', (object) [
                 'enrol' => get_string('enrollmentfilter', 'local_dimensions'),
                 'redirect' => get_string('singlecourseredirect', 'local_dimensions'),
+                'displaymode' => get_string('displaymode', 'local_dimensions'),
+                'tracker' => get_string('displaymode_competencies', 'local_dimensions'),
             ])
         );
         $cascadetarget = 'customfield_' . constants::CFIELD_ENROLLMENTFILTER;
