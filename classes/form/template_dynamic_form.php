@@ -114,7 +114,15 @@ class template_dynamic_form extends \core_form\dynamic_form {
         $mform->addRule('shortname', null, 'required', null, 'client');
         $mform->addRule('shortname', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
 
-        $mform->addElement('editor', 'description', get_string('description', 'tool_lp'), ['rows' => 4]);
+        /* FILE_INTERNAL only: the default return_types includes FILE_EXTERNAL, which keeps tiny_media
+           enabled without a filepicker and crashes on Moodle 5.0-5.2 (MDL-78428); no file area here. */
+        $mform->addElement(
+            'editor',
+            'description',
+            get_string('description', 'tool_lp'),
+            ['rows' => 4],
+            ['return_types' => FILE_INTERNAL]
+        );
         $mform->setType('description', PARAM_CLEANHTML);
 
         $mform->addElement('selectyesno', 'visible', get_string('visible', 'tool_lp'));

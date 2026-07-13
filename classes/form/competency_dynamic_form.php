@@ -144,7 +144,15 @@ class competency_dynamic_form extends \core_form\dynamic_form {
         $mform->setType('idnumber', PARAM_RAW);
         $mform->addRule('idnumber', null, 'required', null, 'client');
 
-        $mform->addElement('editor', 'description', get_string('description'), ['rows' => 4]);
+        /* FILE_INTERNAL only: the default return_types includes FILE_EXTERNAL, which keeps tiny_media
+           enabled without a filepicker and crashes on Moodle 5.0-5.2 (MDL-78428); no file area here. */
+        $mform->addElement(
+            'editor',
+            'description',
+            get_string('description'),
+            ['rows' => 4],
+            ['return_types' => FILE_INTERNAL]
+        );
         $mform->setType('description', PARAM_CLEANHTML);
 
         // Fixed element ids: dynamic_form sets data-random-ids, which appends a random suffix
