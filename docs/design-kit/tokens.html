@@ -19,8 +19,11 @@
   --mds-bg-feedback-danger-subtle:var(--mds-color-red-100);--mds-text-feedback-danger:var(--mds-color-red-800);
   --mds-radius-xs:0.25rem;--mds-radius-sm:0.375rem;--mds-radius-md:0.5rem;--mds-radius-lg:0.75rem;--mds-radius-xl:1rem;--mds-radius-pill:50rem;
   --mds-stroke-sm:0.0625rem;--mds-stroke-md:0.125rem;
+  --mds-loading-min-height:12rem;
   --mds-focus-default:var(--mds-bg-interactive-primary-default);
   --mds-shadow-sm:0 0.125rem 0.25rem rgba(0,0,0,.08);--mds-shadow-md:0 0.5rem 1rem rgba(0,0,0,.15);--mds-shadow-lg:0 1rem 3rem rgba(0,0,0,.17);
+  --mds-motion-fast:150ms;--mds-motion-base:250ms;--mds-motion-flash:1500ms;
+  --mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
   --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
 }
 @media (prefers-color-scheme:dark){:root{
@@ -44,6 +47,12 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .btn-sec{background:var(--mds-bg-surface-default);color:var(--mds-text-default);border-color:var(--mds-border-default);}
 .fb{font-size:12px;padding:4px 10px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid;}
 .note{font-size:11px;color:var(--mds-text-muted);}
+.mo{cursor:pointer;background:var(--mds-bg-surface-default);}
+.mo:hover{background-color:var(--mds-bg-surface-strong);}
+.mo-fast{transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
+.mo-base{transition:background-color var(--mds-motion-base) var(--mds-motion-ease);}
+@media (prefers-reduced-motion:reduce){.mo-fast,.mo-base{transition:none;}}
+.load{min-height:var(--mds-loading-min-height);display:flex;align-items:center;justify-content:center;border:var(--mds-stroke-sm) dashed var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);}
 .callout{margin-top:20px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-left:3px solid var(--mds-bg-interactive-primary-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);padding:10px 12px;}
 .callout .t{font-size:12px;font-weight:500;margin-bottom:4px;}
 .callout li{font-size:11px;color:var(--mds-text-subtle);margin:2px 0;}
@@ -121,6 +130,26 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
   <span class="fb" style="border:0;box-shadow:var(--mds-shadow-lg);background:var(--mds-bg-surface-default)">shadow-lg</span>
 </div>
 
+<div class="h">Movimento (o kit não tinha vocabulário; o código tem 12 durações soltas)</div>
+<div class="row">
+  <span class="fb mo mo-fast" style="border-color:var(--mds-border-default)">fast 150ms · hover, foco, cor</span>
+  <span class="fb mo mo-base" style="border-color:var(--mds-border-default)">base 250ms · layout, indicador de aba</span>
+  <span class="fb" style="border-color:var(--mds-border-default)">flash 1500ms · confirmação in-place</span>
+</div>
+<div class="note" style="margin-top:6px;">
+  Passe o mouse nos dois primeiros para sentir 150ms contra 250ms; <code>flash</code> não transiciona — quem o
+  dispara é o JS. easing único <code>--mds-motion-ease</code> = <code>cubic-bezier(0.4,0,0.2,1)</code>
+  (Material standard, já usado no FAB). <code>fast</code> bate com o <code>.15s</code> do Bootstrap;
+  <code>flash</code> é o valor já shipado. Sob <code>prefers-reduced-motion</code> as duas transições somem.
+</div>
+<div class="h">Carregando</div>
+<div class="load"><span class="note">o <code>spinner-border</code> do Bootstrap entra aqui · 12rem reservados</span></div>
+<div class="note" style="margin-top:6px;">
+  Sem token de spinner: usamos o <code>spinner-border</code> do Bootstrap, que traz o próprio
+  <code>.75s linear infinite</code> — nenhuma keyframe para escrever e nenhuma dívida de reduced-motion.
+  Entra só <code>--mds-loading-min-height: 12rem</code>, para o pane não colapsar enquanto carrega.
+</div>
+
 <div class="callout">
   <div class="t">Divergências da interpretação anterior (CDS/Anthropic → Moodle DS)</div>
   <ul style="margin:4px 0 0;padding-left:16px;">
@@ -129,5 +158,9 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
     <li>Hairline <b>0.5px → 1px</b> (stroke-sm); fonte <b>Anthropic Sans → Noto Sans</b>.</li>
     <li>Adicionados: <b>fills interativos + estados</b>, <b>foco</b> (WCAG 2.2 AA) e <b>elevação</b>.</li>
     <li>Nomenclatura <b>flat → semântica <code>--mds-*</code></b> (primitive→semantic) → port para React do MDS (Moodle 5.3 LTS) vira rename.</li>
+    <li><b>Movimento</b>: <code>--mds-motion-flash</code> é consumido por <b>JS (WAAPI)</b>, não por CSS — é a
+        referência para deduplicar as <b>10 cópias</b> do <code>flashRow</code> num helper só.</li>
+    <li>Estes tokens são consumidos por <b>zero</b> regras shipadas hoje. Escopo de adoção: superfícies
+        <b>novas ou reformuladas</b> — retro-tokenizar todo o CSS shipado briga com a regra de menos código.</li>
   </ul>
 </div>
