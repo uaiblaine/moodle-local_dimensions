@@ -3513,27 +3513,15 @@
     border-radius: 4px;
 }
 
-/* The Manage participants modal is data-dense (Cohorts / Users tabs with grids); widen it
-   responsively, scoped to our dialog so other site modals keep their default size. */
-@media (min-width: 992px) {
-    .local-dimensions-participants-modal {
-        --bs-modal-width: 800px;
-    }
-}
-
-@media (min-width: 1200px) {
-    .local-dimensions-participants-modal {
-        --bs-modal-width: 1140px;
-    }
-}
-
 /*
  * Give the Manage participants modal the full available viewport height so its long grids and
  * the autocomplete suggestion dropdowns have room; the body scrolls inside it. Scoped to our
  * dialog (which core creates scrollable) so other site modals keep their content-fit height.
+ * The modal-margin variable is Bootstrap 5 only, so fall back to Bootstrap 4's own
+ * $modal-dialog-margin-y-sm-up for Moodle 4.5, where the variable is undefined.
  */
 .local-dimensions-participants-modal.modal-dialog-scrollable:has(.form-autocomplete-suggestions) .modal-content {
-    height: calc(100% - var(--bs-modal-margin) * 2);
+    height: calc(100% - var(--bs-modal-margin, 1.75rem) * 2);
 }
 
 /*
