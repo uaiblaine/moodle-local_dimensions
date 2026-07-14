@@ -1,4 +1,4 @@
-<!-- @dsCard group="Fundações" name="Estados e foco" subtitle="default/hover/active/disabled + foco visível (WCAG 2.2 AA) — mapeia .btn-* do Boost" -->
+<!-- @dsCard group="Fundações" name="Estados e foco" subtitle="default/hover/active/disabled/busy + foco visível (WCAG 2.2 AA) — mapeia .btn-* do Boost" -->
 <style>
 :root{
   --mds-color-blue-100:#cfe2f2;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;--mds-color-blue-700:#094173;
@@ -7,13 +7,15 @@
   --mds-bg-surface-default:var(--mds-color-white);--mds-bg-surface-subtle:var(--mds-color-gray-100);
   --mds-text-default:var(--mds-color-gray-900);--mds-text-muted:var(--mds-color-gray-600);--mds-text-disabled:var(--mds-color-gray-500);
   --mds-border-default:var(--mds-color-gray-300);--mds-border-strong:var(--mds-color-gray-500);
-  --mds-radius-md:0.5rem;--mds-stroke-sm:0.0625rem;
+  --mds-accent-busy:var(--mds-color-blue-500);
+  --mds-radius-md:0.5rem;--mds-stroke-sm:0.0625rem;--mds-loading-min-height:12rem;
   --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root{
   --mds-bg-surface-default:#1d2125;--mds-bg-surface-subtle:#16191c;
   --mds-text-default:#f8f9fa;--mds-text-muted:#ced4da;--mds-text-disabled:#6a737b;
   --mds-border-default:#495057;--mds-border-strong:#6a737b;
+  --mds-accent-busy:var(--mds-color-blue-200);
 }}
 body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
 .h{font-size:12px;font-weight:500;color:var(--mds-text-muted);margin:16px 0 6px;}
@@ -26,6 +28,11 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .dis{opacity:1;color:var(--mds-text-disabled);background:var(--mds-color-gray-200);border-color:var(--mds-color-gray-200);}
 .field{font-size:12px;padding:7px 10px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid var(--mds-border-default);background:var(--mds-bg-surface-default);color:var(--mds-text-default);min-width:160px;}
 .field.foc{border-color:var(--mds-color-blue-500);box-shadow:0 0 0 3px var(--mds-color-blue-200);}
+.load{min-height:var(--mds-loading-min-height);display:flex;align-items:center;justify-content:center;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);color:var(--mds-accent-busy);}
+.spin{display:inline-block;width:2rem;height:2rem;border:.25em solid currentColor;border-right-color:transparent;border-radius:50%;animation:.75s linear infinite spinner-border;}
+.spin.sm{width:1rem;height:1rem;border-width:.2em;}
+@keyframes spinner-border{to{transform:rotate(360deg);}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:1.5s;}}
 .note{font-size:10px;color:var(--mds-text-muted);margin-top:2px;}
 .tag{font-family:Menlo,monospace;font-size:10px;color:var(--mds-text-muted);}
 </style>
@@ -57,6 +64,66 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 <div class="row">
   <span class="cap">default</span><span class="btn ghost">Procurar em frameworks</span>
   <span class="cap">focus</span><span class="btn ghost" style="box-shadow:0 0 0 3px var(--mds-color-blue-200)">Procurar em frameworks</span>
+</div>
+
+<div class="h">Carregando / ocupado · <span class="tag">.spinner-border</span></div>
+<div class="note" style="margin-bottom:8px;">
+  O hub fala <b>dois idiomas</b> para a mesma ideia: <code>spinner-border</code> (frameworks.js, via um
+  <code>makeSpinner()</code> compartilhado — banner do import + loader do export) e <code>fa fa-spinner fa-spin</code>
+  (enrol_methods, na linha e no contador). A troca de aba (<code>reloadPane</code>) não mostra estado nenhum, e
+  <code>aria-busy</code> não aparece em nenhum arquivo de código do plugin. Padrão do MDS: <b>só
+  <code>spinner-border</code></b>, nos dois formatos abaixo, e o pane marcado com <code>aria-busy</code> +
+  <code>aria-live="polite"</code> + <code>aria-label</code> — os três que o <code>format_mtube</code> já põe no
+  placeholder dele — mais um <code>role="status"</code>, que é <b>adição do hub</b>: o
+  <code>fakeactivities.mustache</code> é um <code>&lt;ul&gt;</code> e não declara <code>role</code> nenhum, fica com o
+  <code>role=list</code> implícito. O spinner em si vai <code>aria-hidden</code>: quem anuncia é o container, então o
+  <code>role="status"</code> fica nele e não no anel, senão vira live region aninhada dentro de live region.
+  O <code>aria-label</code> é <b>obrigatório</b>, não enfeite — mas pelo motivo certo: ele não dá <i>conteúdo</i> à live
+  region (anúncio de live region vem do conteúdo, e enquanto <code>aria-busy="true"</code> o anúncio fica adiado de
+  qualquer jeito); ele dá <b>nome</b>, e um <code>status</code> anônimo não diz nada a quem esbarra nele navegando.
+  Requisito para quem for implementar o pane: o placeholder entra no lugar do conteúdo em que o foco podia estar, então
+  precisa receber o foco — e o nome é o que o usuário ouve ao aterrissar. (Passo que o <code>reloadPane</code> de hoje
+  não tem: ele troca conteúdo pronto por conteúdo pronto, sem placeholder no meio.) O
+  <code>aria-live</code> é redundante — <code>role="status"</code> já implica <code>polite</code> — e fica explícito de
+  propósito, porque o suporte a live region implícita varia entre leitores. (O <code>makeSpinner()</code> põe
+  <code>role="status"</code> <i>e</i> <code>aria-hidden</code> no mesmo elemento — o <code>aria-hidden</code> anula o
+  role; aqui os dois papéis ficam separados.)
+</div>
+<div class="row" style="align-items:flex-start;gap:16px;">
+  <div style="flex:1;min-width:220px;">
+    <div class="note" style="margin-bottom:4px;"><b>Pane</b> · troca de aba · <code>aria-busy="true"</code> · 12rem reservados</div>
+    <div class="load" role="status" aria-busy="true" aria-live="polite" aria-label="Carregando competências…"><span class="spin" aria-hidden="true"></span></div>
+  </div>
+  <div style="flex:1;min-width:220px;">
+    <div class="note" style="margin-bottom:4px;"><b>Botão</b> · <code>disabled</code> + <code>.spinner-border-sm</code></div>
+    <span class="btn dis" style="display:inline-flex;align-items:center;gap:6px;"><span class="spin sm" aria-hidden="true"></span>Salvando…</span>
+  </div>
+</div>
+<div class="note" style="margin-top:8px;">
+  Este preview não carrega o Bootstrap, então reproduz aqui a keyframe <code>spinner-border</code> e a regra de
+  reduced-motion — só para o card girar de verdade. <b>No plugin não se escreve nenhuma das duas</b>: o Boost traz
+  <code>.75s linear infinite</code> e, sob <code>prefers-reduced-motion</code>, dobra a duração para <code>1.5s</code>
+  em vez de congelar (<code>$enable-reduced-motion: true</code>). Medidas idênticas às do Boost: 2rem/<code>.25em</code>
+  e 1rem/<code>.2em</code> no <code>-sm</code>; a cor sai de <code>currentColor</code>, então o spinner do botão herda
+  o cinza do <code>disabled</code> sozinho.
+</div>
+<div class="note" style="margin-top:4px;">
+  <b>Disciplina obrigatória</b>: limpar o estado num <code>finally</code>, nunca só no caminho de sucesso — senão um
+  load que falha deixa o pane girando pra sempre, sem retry. O hub já usa <code>finally</code> em 5 pontos — o
+  <code>downloadFramework()</code> reabilita o botão e esconde o loader lá. O pane novo segue a mesma regra.
+</div>
+<div class="note" style="margin-top:4px;">
+  <b>Veredito dividido sobre o <code>format_mtube</code></b>, de onde vem metade deste card: os <b>templates</b> dele
+  são a referência boa — <code>fakeactivities.mustache</code> traz <code>aria-busy</code> +
+  <code>aria-live="polite"</code> + <code>aria-label</code> + esqueleto, que é justo o que falta no hub. O <b>JS</b> é o
+  contraexemplo, e o recorte que importa não é a camada e sim o próprio código de loading: os <b>4</b> arquivos que
+  tocam o <code>#background-loading</code> têm <b>zero</b> <code>finally</code> — e <b>3 deles são de
+  <code>features/</code></b>, a mesma camada que soma 60 blocos <code>finally</code> em <i>outros</i> arquivos. Os 3
+  pontos que escondem o loading (<code>main.js:946</code>, <code>preview_embed.js:141</code> e <code>:182</code>) estão
+  todos no caminho de sucesso, e os <code>catch</code> de <code>preview_embed.js:116</code> e <code>:129</code> dão
+  <code>return</code> sem restaurar nada — iframe que não carrega, spinner pra sempre, <i>dentro</i> da camada
+  disciplinada. A lição não é "mtube não sabe fazer": a disciplina existe na base e simplesmente não chega no código
+  onde o estado de load mora. Por isso a regra está no card.
 </div>
 
 <div class="h">Campo de formulário · <span class="tag">.form-control</span> · foco visível</div>
