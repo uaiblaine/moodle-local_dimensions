@@ -145,10 +145,12 @@ export const show = async(pane, region) => {
     modal.setRemoveOnClose(true);
 
     const root = modal.getRoot()[0];
-    // Widen this data-dense modal (tabs + grids) responsively, scoped to our dialog only.
+    // Widen this data-dense modal (tabs + grids) responsively. Bootstrap's own modal-xl carries
+    // the sizing (identical on 4 and 5); core's modal API only exposes setLarge(), so add the
+    // class directly. The plugin classes below only hook the height and header-link rules.
     const dialog = root.querySelector('.modal-dialog');
     if (dialog) {
-        dialog.classList.add('local-dimensions-participants-modal', 'local-dimensions-headerlink-modal');
+        dialog.classList.add('modal-xl', 'local-dimensions-participants-modal', 'local-dimensions-headerlink-modal');
     }
     const headerlinks = await injectHeaderLinks(root, region);
     const opts = {

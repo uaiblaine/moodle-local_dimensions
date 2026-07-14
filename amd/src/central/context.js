@@ -25,6 +25,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+import $ from 'jquery';
 import {notifyError} from 'local_dimensions/central/errors';
 import {getString} from 'core/str';
 import {enhance} from 'core/form-autocomplete';
@@ -51,7 +52,9 @@ const SELECTORS = {
     categoryOption: '[data-region="category-select"] option[data-name]',
     activePane: '.dynamictabs .tab-pane.active',
     pane: '.dynamictabs [data-tab-content]',
-    tabToggle: '.dynamictabs a[data-bs-toggle="tab"]',
+    // Core's dynamic_tabs template emits data-toggle on Moodle 4.5 (Bootstrap 4) and
+    // data-bs-toggle on 5.x (Bootstrap 5), so match either attribute.
+    tabToggle: '.dynamictabs a[data-toggle="tab"], .dynamictabs a[data-bs-toggle="tab"]',
 };
 
 /**
@@ -273,17 +276,17 @@ export const init = () => {
         }
     }
 
-    // Tab switches keep the counter and option labels in step with the active mode.
-    document.querySelectorAll(SELECTORS.tabToggle).forEach((toggle) => {
-        toggle.addEventListener('shown.bs.tab', () => {
-            bar.dataset.activemode = activeMode();
-            renderCounter(bar);
-            renderOptionLabels(bar);
-            const active = document.querySelector(SELECTORS.activePane);
-            if (active) {
-                Preferences.saveNav({tab: active.dataset.tabContent});
-            }
-        });
+    // Tab switches keep the counter and option labels in step with the active mode. Bound via
+    // jQuery because Bootstrap 4 (Moodle 4.5) only fires its tab events as jQuery events, which
+    // never reach a native listener; Bootstrap 5 fires both, so one jQuery listener covers both.
+    $(SELECTORS.tabToggle).on('shown.bs.tab', () => {
+        bar.dataset.activemode = activeMode();
+        renderCounter(bar);
+        renderOptionLabels(bar);
+        const active = document.querySelector(SELECTORS.activePane);
+        if (active) {
+            Preferences.saveNav({tab: active.dataset.tabContent});
+        }
     });
 
     // Core's dynamic_tabs module force-opens the first tab (Frameworks) on load regardless of the
@@ -292,7 +295,8 @@ export const init = () => {
     // Deferred so it runs after core's synchronous init has opened Frameworks.
     const savedtab = Preferences.getNav().tab;
     if (savedtab && savedtab !== 'frameworks') {
-        const savedlink = document.querySelector(`.dynamictabs a[data-bs-toggle="tab"][href="#${savedtab}"]`);
+        const savedlink = Array.from(document.querySelectorAll(SELECTORS.tabToggle))
+            .find((toggle) => toggle.getAttribute('href') === `#${savedtab}`);
         if (savedlink) {
             window.setTimeout(() => savedlink.click(), 0);
         }
