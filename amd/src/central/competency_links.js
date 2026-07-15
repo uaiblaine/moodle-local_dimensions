@@ -48,6 +48,7 @@ const SELECTORS = {
     courseRows: '[data-region="course-rows"]',
     courseEmpty: '[data-region="course-empty"]',
     loadMoreWrap: '[data-region="loadmore-wrap"]',
+    addInput: '[data-fieldtype="autocomplete"]',
     activitySearch: '[data-role="activity-search"]',
     activitySearchList: '[data-role="activity-search-list"]',
 };
@@ -536,6 +537,32 @@ const toggleCourse = async(state, courseEl, toggle) => {
 };
 
 /**
+ * Give keyboard focus a useful home when the element holding it was removed (focus falls to
+ * <body>, forcing keyboard users to re-traverse the dialog).
+ *
+ * @param {Object} state Modal state.
+ * @param {HTMLElement|null} preferred Element to focus first, falling back to whatever the
+ *     region still offers.
+ * @return {void}
+ */
+const restoreFocus = (state, preferred) => {
+    if (document.activeElement !== document.body) {
+        return;
+    }
+    /* The fallback is the enhanced autocomplete input, never state.addsel: enhance() hides the
+       original select, so it is not focusable. Load more comes first while it is still on
+       screen — with a page pending it, and not the picker, is the way on. */
+    const container = state.addsel ? state.addsel.parentElement : null;
+    const loadmore = state.loadMoreEl && !state.loadMoreEl.hidden
+        ? state.loadMoreEl.querySelector('[data-action="loadmore"]')
+        : null;
+    const target = preferred || loadmore || (container && container.querySelector(SELECTORS.addInput));
+    if (target) {
+        target.focus();
+    }
+};
+
+/**
  * Remove a course link after a confirm.
  *
  * @param {Object} state Modal state.
@@ -574,6 +601,10 @@ const removeCourse = async(state, courseEl) => {
     /* The list is paginated, so an empty rows container only means "no courses linked" once
        there is nothing left to load: with a page still pending the message would be a lie. */
     state.emptyEl.hidden = state.rowsEl.children.length > 0 || !state.loadMoreEl.hidden;
+    /* The confirm dialog handed focus back to the trash button of the card just detached. The
+       toggle is preferred over the next trash because only the toggle is always rendered — the
+       trash is capability-gated per course. */
+    restoreFocus(state, state.rowsEl.querySelector('[data-action="toggle-course"]'));
     addToast(state.courseremovedlabel);
 };
 
@@ -627,6 +658,11 @@ const removeModule = async(state, moduleEl) => {
     const container = courseEl.querySelector('[data-role="activities"]');
     container.dataset.loaded = '0';
     await loadActivities(state, courseEl);
+    /* Queried after the reload, since it empties and refills the container. Focus stays inside
+       the card the user was working in: its toggle is always rendered, so it is the home when
+       the last activity goes. */
+    restoreFocus(state, container.querySelector('[data-action="remove-module"]')
+        || courseEl.querySelector('[data-action="toggle-course"]'));
     addToast(state.activityremovedlabel);
 };
 
