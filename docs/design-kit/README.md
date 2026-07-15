@@ -67,12 +67,17 @@ tipo, **origem** (`mustache:linha` ou módulo `amd`), dados e regra de negócio.
 | `maps/mod-participants.md` | `MOD.PART` · Participantes (Coortes/Usuários/Papéis) |
 | `maps/mod-enrolmethods.md` | `MOD.ENROL` · Métodos de inscrição (to-be — proposta) |
 | `maps/mod-delplans.md` | `MOD.DELPLANS` · Excluir template com planos |
+| `maps/mod-usage.md` | `MOD.USAGE` · Onde a competência é usada (**sem tela** — ver o mapa) |
 
 ### Convenção de IDs
 Formato `PREFIXO-SECAO-NN`. Prefixos: `BAR` (contextbar), `EST`/`FWK`/`PLN` (abas),
-`MOD.{BROWSER,LINKS,RELATED,RULE,COHORT,ROLES,PART,ENROL,SCALE,DELPLANS}` (modais). Recebe ID todo elemento
+`MOD.{BROWSER,LINKS,RELATED,RULE,COHORT,ROLES,PART,ENROL,SCALE,DELPLANS,USAGE}` (modais). Recebe ID todo elemento
 interativo e toda região estática com significado (headings, empty states, contadores);
 wrappers puros de layout não. IDs são estáveis — não mudam ao reordenar a tela.
+
+**Um elemento, um ID.** O gatilho pertence à superfície **onde ele mora** — o mapa do modal o
+**referencia**, não emite um segundo ID para ele. Ex.: os contadores que abrem o `MOD.USAGE` são
+`EST-DETAIL-COURSES/-ACTIVITIES/-PLANS` e continuam no `est-structure.md`.
 
 ## Como sincronizar com o Claude Design
 A ferramenta **DesignSync** lê e escreve o projeto (validado nesta sessão):
