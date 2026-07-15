@@ -114,12 +114,17 @@ class get_competency_links extends external_api {
                       WHERE $where";
         $total = (int) $DB->count_records_sql($countsql, $sqlparams);
 
+        /*
+         * The id breaks fullname ties so the sort is total. Course names repeat, and a partial
+         * order lets the database return tied rows in a different sequence per call, which is
+         * enough on its own to make an offset cursor skip or duplicate a row between pages.
+         */
         $recordsql = "SELECT cc.id AS linkid, cc.ruleoutcome, c.id AS courseid, c.fullname, c.shortname, c.visible,
                              c.enablecompletion
                         FROM {competency_coursecomp} cc
                         JOIN {course} c ON c.id = cc.courseid
                        WHERE $where
-                    ORDER BY c.fullname ASC";
+                    ORDER BY c.fullname ASC, c.id ASC";
         $records = $DB->get_records_sql($recordsql, $sqlparams, $limitfrom, $limitnum);
 
         // Grouped queries across the page's courses: linked-activity counts and whether
