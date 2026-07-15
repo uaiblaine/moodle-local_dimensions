@@ -125,6 +125,54 @@ Sombras: cor sm/md/lg = preto 8%/15%/17%; md ≈ `0 8px 16px rgba(0,0,0,.15)`.
 - o toggle Sistema/Categoria é **nav-pill com selecionado em cinza**, **não** um `.btn-primary` azul. (Corrigido na `hierarchy-nav`.)
 - `role="tablist"`, `.nav-link.active`, `aria-selected`; alcançável por teclado.
 
+## Restrições de plataforma
+
+Antes de qualquer escolha estética, duas coisas decidem o que **dá pra construir** aqui: o que o
+stylelint do CI aceita e o que o Bootstrap 4 do Moodle 4.5 entende. Registradas uma vez neste
+documento em vez de redescobertas a cada superfície — as duas já custaram retrabalho.
+
+**Boundary do stylelint do CI**
+
+O CI roda o config do **core** (`.stylelintrc` na raiz do Moodle), não o `.stylelintrc.json` do
+plugin — que não carrega nenhuma das regras abaixo. Daí a impressão de boundary invisível: o
+`npx stylelint` local passa e o CI falha. É reproduzível, apontando o stylelint pro config do core
+(da raiz do Moodle):
+
+```sh
+npx stylelint --config .stylelintrc public/local/dimensions/styles.css
+```
+
+| Regra (core `.stylelintrc`) | Rejeita | Saída |
+| --- | --- | --- |
+| `declaration-no-important` | qualquer `!important` — e `keyframe-declaration-no-important` fecha o mesmo dentro de `@keyframes` | quando um utilitário Bootstrap no markup (`.d-flex`, `.d-block`, ambos `!important`) briga com uma propriedade que precisamos alternar, **tirar o utilitário do template** e assumir a propriedade numa classe do plugin |
+| `csstree/validator` (`stylelint-csstree-validator` 3.x) | `clamp()`/`min()`/`max()` **onde se espera um comprimento** — a gramática é antiga e não os conhece. Verificado falhando em `height`, `min-height`, `max-height`, `width`, `max-width`, `font-size`, `padding`, `margin`, `gap`, `flex-basis` → *"Invalid value"* | `calc()` **passa** (e `minmax()` em grid também); no lugar do `clamp()`, par `height` + `min-height`/`max-height` |
+| `time-min-milliseconds: 100` | qualquer duração `< 100ms` | é o **piso da escala de motion** — `--mds-motion-fast` (150ms) já está acima; não descer abaixo de 100ms atrás de "mais snappy" |
+
+> As três são **erro**, não warning. E o `csstree/validator` não é só de `height`: pega qualquer
+> propriedade de comprimento — formular como "só height-like" subestima o alcance.
+
+**Bootstrap 4 (Moodle 4.5) × Bootstrap 5 (5.x)**
+
+O plugin suporta 4.5 → 5.2, e **4.5 é Bootstrap 4**. As *classes* do BS5 têm ponte no 4.5
+(`form-select` etc.), mas os **data attributes do JS não**: o data-API do BS4 escuta `data-toggle`,
+o do BS5 escuta `data-bs-toggle`. Componente ligado por markup (dropdown etc.) precisa dos **dois**
+lado a lado, e das duas classes de alinhamento (`dropdown-menu-right dropdown-menu-end`) — como em
+`participants_manager.mustache` e `plans.mustache`. Seletor de JS idem: casar os dois.
+
+| Fato (verificado em `v4.5.12` × checkout 5.1) | Consequência de desenho |
+| --- | --- |
+| 4.5 **não define nenhuma custom property `--bs-*` de modal** (`--bs-modal-width`, `--bs-modal-margin`…) — seu `_modal.scss` é só variável SCSS | nunca dimensionar modal por var do BS5. Usar as classes do próprio Bootstrap — `modal-xl` é **idêntico em 4 e 5** (800px no `lg`, 1140px no `xl`) — ou dar fallback: `var(--bs-modal-margin, 1.75rem)` (= `$modal-dialog-margin-y-sm-up` do 4.5) |
+| BS5 (`EventHandler.trigger`) dispara **os dois** eventos, jQuery e nativo; BS4 dispara **só jQuery** | um listener **jQuery** cobre os dois ramos; `addEventListener` cobre só o 5.x |
+| `lib/amd/src/first.js` faz `window.jQuery = $`, então o BS5 **sempre** pega seu caminho jQuery | o bind por jQuery não é gambiarra de compatibilidade: é o caminho que o core garante nos dois |
+
+O custo de ignorar isso já foi pago: dois defeitos **silenciosos** no 4.5, corrigidos em `f84d30a`.
+O `context.js` casava as abas só por `data-bs-toggle` e escutava evento nativo — no 4.5 o seletor
+não casava nada e o evento não chegava, então o contador da contextbar nunca seguia a aba, o
+`saveNav` nunca rodava e o restore da aba salva nunca disparava. E o modal de participantes
+dimensionava a si mesmo com `--bs-modal-width`: indefinida no 4.5, ele encolhia pro `$modal-md`
+(**500px**) com quatro abas e grids dentro. Nenhum dos dois quebra visivelmente no 5.x — só somem
+no branch mais antigo, que é exatamente onde ninguém olha.
+
 ## Reflexo no kit
 
 - `tokens.html` reescrito para o modelo MDS (semântico, valores Moodle, estados, foco, elevação, escalas) — feito.
