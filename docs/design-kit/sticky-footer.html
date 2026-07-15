@@ -32,14 +32,14 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
 
 /* ---- A barra: o #sticky-footer do core com o inner layout que os 3 mustaches trazem ---- */
 .foot{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);box-shadow:var(--mds-shadow-md);}
-/* As duas regras reais de styles.css:3973-3976, no seletor de id que vence o overflow:hidden do Boost. */
+/* As duas regras reais de styles.css:3969-3972, no seletor de id que vence o overflow:hidden do Boost. */
 .foot .fwrap{display:flex;align-items:center;gap:8px;padding:6px 12px;justify-content:safe center;overflow-x:auto;}
 /* Padrão cru do core: btn py-0 d-flex flex-column align-items-center — ícone acima do rótulo
-   centrado, sem variante de cor. flex-shrink:0 é a regra real (styles.css:3978-3980). */
+   centrado, sem variante de cor. flex-shrink:0 é a regra real (styles.css:3974-3976). */
 .fbtn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 9px;border:var(--mds-stroke-sm) solid transparent;border-radius:var(--mds-radius-sm);background:none;color:var(--mds-text-default);font-family:inherit;font-size:11px;line-height:1.3;cursor:pointer;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
 .fbtn:hover{background:var(--mds-bg-surface-strong);}
 .fbtn:focus-visible{outline:2px solid var(--mds-accent);outline-offset:1px;}
-/* styles.css:3982-3984 põe font-size:1.1rem no <i> da fonte de ícones; aqui o glifo é um SVG,
+/* styles.css:3978-3980 põe font-size:1.1rem no <i> da fonte de ícones; aqui o glifo é um SVG,
    então o equivalente é a caixa de 1.1rem abaixo. */
 .ic{width:1.1rem;height:1.1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .lbl{white-space:nowrap;}
@@ -49,7 +49,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
 .mflag-ph{visibility:hidden;}
 .mflag{font-family:var(--font-mono);font-size:8.5px;line-height:1.5;padding:0 5px;border-radius:var(--mds-radius-pill);background:var(--mds-accent-tint);color:var(--mds-accent);border:var(--mds-stroke-sm) solid var(--mds-accent);white-space:nowrap;margin-top:1px;}
 
-/* Colapso sr-only real (styles.css:3989-4001). Estreite a janela abaixo de 768px e os rótulos
+/* Colapso sr-only real (styles.css:3985-3997). Estreite a janela abaixo de 768px e os rótulos
    destes rodapés somem de verdade — os ícones são aria-hidden, então o rótulo é o único nome
    acessível do botão e por isso ele fica na árvore, não em display:none. */
 @media (max-width:767.98px){
@@ -191,7 +191,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
   Não sobra nenhuma forma de agir sobre a linha selecionada.
 </div>
 
-<div class="h">CSS que sustenta a barra · <span class="tag">styles.css:3969-4001</span></div>
+<div class="h">CSS que sustenta a barra · <span class="tag">styles.css:3965-3997</span></div>
 <div class="note" style="margin-top:2px;">
   <b>Centralizar sem cortar</b>: <code>#sticky-footer .local-dimensions-central-footer-actions</code> aplica
   <code>justify-content: safe center</code> + <code>overflow-x: auto</code>. O <b>seletor de id é deliberado</b>:

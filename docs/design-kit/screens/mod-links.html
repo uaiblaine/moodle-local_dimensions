@@ -119,7 +119,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .act+.act{border-top:0.5px dashed var(--border);}
 .aname{display:flex;align-items:flex-start;gap:5px;}
 /* O nome real quebra em DUAS linhas e então reticencia, com o nome inteiro no title
-   (styles.css:5565-5574). Aqui a mecânica é a mesma; não é clamp(), é line-clamp. */
+   (styles.css:5561-5570). Aqui a mecânica é a mesma; não é clamp(), é line-clamp. */
 .antext{flex:1;min-width:0;font-size:11px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;word-break:break-word;}
 .mtype{font-size:9px;padding:0 5px;border:0.5px solid var(--text-secondary);border-radius:6px;color:var(--text-secondary);white-space:nowrap;flex:none;}
 .actrl{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px;}
@@ -135,13 +135,13 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
    Combinador de IRMÃO, nunca :has(): medido no mod-participants, um :has() num ancestral só
    reavalia um passo depois. Os checkboxes são irmãos do .pane e o ~ os alcança.
    DIVERGÊNCIA HONESTA: aqui quem troca o chevron é o CSS; em PRODUÇÃO é um className em JS
-   (js:524 / :532). O que se demonstra é o estado, não o mecanismo da troca. */
+   (js:528 / :536). O que se demonstra é o estado, não o mecanismo da troca. */
 .dchk{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
 #a-exp:not(:checked) ~ .pane .acts{display:none;}
 #a-exp:not(:checked) ~ .pane .chev-down{display:none;}
 #a-exp:checked ~ .pane .chev-right{display:none;}
 /* O contador NÃO muda ao expandir: updateCourseMeta só o repinta com o dado fresco do WS
-   (js:507). Nada aqui toca a .ccount — de propósito. */
+   (js:511). Nada aqui toca a .ccount — de propósito. */
 #a-exp:focus-visible ~ .pane .card-1{outline:2px solid var(--acc-fg);outline-offset:2px;}
 
 /* ---- DEMONSTRAÇÃO 2 (to-be): expandir/restaurar ----
@@ -182,9 +182,11 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
     <div class="warn" style="margin-bottom:10px;">
       <b>Esta tela foi redesenhada porque a anterior desenhava linhas que não existem mais.</b> O
-      <code>competency_links.js</code> mudou <b>sete</b> vezes depois que ela foi feita
-      (<code>159a800</code>, 2026-06-29) — a sétima é o <code>5d9da31</code> (2026-07-15), o conserto
-      do estado vazio anotado abaixo. A maior: o <code>93e4f69</code> trouxe atividades com
+      <code>competency_links.js</code> mudou <b>nove</b> vezes depois que ela foi feita
+      (<code>159a800</code>, 2026-06-29) — as três últimas são todas de <b>2026-07-15</b>:
+      <code>5d9da31</code> (estado vazio), <code>cf6dad6</code> (o cursor do "Carregar mais") e
+      <code>59af0f4</code> (foco no teclado), os três anotados abaixo. A maior: o
+      <code>93e4f69</code> trouxe atividades com
       <b>checkbox</b> e o <code>d7578b3</code> as removeu <b>no mesmo dia</b>, trocando por uma
       <b>busca</b> + <b>✕</b> por linha. Um <code>grep -nE 'checkbox|form-check'</code> no JS de hoje
       devolve <b>nada</b>. O Mustache, esse, não muda desde <code>bcdbea1</code> — e é por isso que
@@ -205,11 +207,11 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
           <span>Esta competência pertence a uma estrutura oculta e não pode ser vinculada a cursos.</span>
         </div>
         <div class="row"><span class="idb">MOD.LINKS-HIDDENFW · :33-35 · nasce hidden</span></div>
-        <span class="note"><b>Não é decorativo:</b> o mesmo par de linhas que liga o alerta <b>desabilita o picker</b> (<code>js:450-451</code>). O <code>canlink</code> do WS é literalmente a visibilidade da estrutura (<code>get_competency_links.php:91</code>). Os vínculos <b>existentes</b> continuam listados e com outcome editável — o bloqueio é só para <b>novos</b>.</span>
+        <span class="note"><b>Não é decorativo:</b> o mesmo par de linhas que liga o alerta <b>desabilita o picker</b> (<code>js:451-452</code>). O <code>canlink</code> do WS é literalmente a visibilidade da estrutura (<code>get_competency_links.php:91</code>). Os vínculos <b>existentes</b> continuam listados e com outcome editável — o bloqueio é só para <b>novos</b>.</span>
 
         <span class="lbl">Adicionar curso <span class="idb">MOD.LINKS-ADD-LABEL · :37-39</span></span>
         <div class="ctrl"><span class="ph">Vincular curso — busque por nome, nome breve ou número de ID…</span><span class="chev">⌄</span></div>
-        <div class="row"><span class="idb">MOD.LINKS-ADD · :40-44 · course_datasource.js</span><span class="idb">MOD.LINKS-ADD-CHEVRON · styles.css:5659-5672</span></div>
+        <div class="row"><span class="idb">MOD.LINKS-ADD · :40-44 · course_datasource.js</span><span class="idb">MOD.LINKS-ADD-CHEVRON · styles.css:5655-5668</span></div>
 
         <!-- card 1: expandido -->
         <div class="card card-1">
@@ -238,10 +240,10 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
               <div class="aitem"><span class="an">Fórum de dúvidas</span><span class="mtype">Fórum</span></div>
             </div>
             <div class="row" style="margin-top:5px;">
-              <span class="idb">MOD.LINKS-ACTSEARCH · js:282-341</span>
-              <span class="idb">MOD.LINKS-ACTSEARCH-ITEM · js:311-324</span>
+              <span class="idb">MOD.LINKS-ACTSEARCH · js:283-342</span>
+              <span class="idb">MOD.LINKS-ACTSEARCH-ITEM · js:312-325</span>
             </div>
-            <span class="note" style="display:block;margin:4px 0 7px;">Busca <b>client-side</b>, sem WS: filtra o <code>available</code> que já veio na mesma leitura. <b>Dobra acento dos dois lados</b> (<code>fold</code>, <code>js:61</code>) — "pratica" acha "Prática". <b>Só o nome</b> casa; o tipo é exibido e não é buscável.</span>
+            <span class="note" style="display:block;margin:4px 0 7px;">Busca <b>client-side</b>, sem WS: filtra o <code>available</code> que já veio na mesma leitura. <b>Dobra acento dos dois lados</b> (<code>fold</code>, <code>js:62</code>) — "pratica" acha "Prática". <b>Só o nome</b> casa; o tipo é exibido e não é buscável.</span>
 
             <div class="act">
               <div class="aname">
@@ -272,9 +274,9 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
             </div>
 
             <div class="row" style="margin-top:6px;">
-              <span class="idb">MOD.LINKS-ACT · js:222-271</span>
-              <span class="idb">MOD.LINKS-ACT-SHARED · js:252-269</span>
-              <span class="idb">MOD.LINKS-ACTS · js:424-428 · data-loaded</span>
+              <span class="idb">MOD.LINKS-ACT · js:223-272</span>
+              <span class="idb">MOD.LINKS-ACT-SHARED · js:253-270</span>
+              <span class="idb">MOD.LINKS-ACTS · js:425-429 · data-loaded</span>
             </div>
           </div>
         </div>
@@ -298,9 +300,9 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
         </div>
 
         <div class="row">
-          <span class="idb">MOD.LINKS-CARD · js:351-436</span>
-          <span class="idb">MOD.LINKS-CARD-COUNT · js:196-209</span>
-          <span class="idb">MOD.LINKS-WHOLENOTE · js:418-422</span>
+          <span class="idb">MOD.LINKS-CARD · js:352-437</span>
+          <span class="idb">MOD.LINKS-CARD-COUNT · js:197-210</span>
+          <span class="idb">MOD.LINKS-WHOLENOTE · js:419-423</span>
         </div>
         <span class="note"><b>O contador tem três estados, não dois.</b> Com 0 atividades vinculadas ele <b>deixa de ser contagem</b> e vira o rótulo <b>"Curso inteiro"</b>, e a nota aparece embaixo — é o segundo card. Com 1, "1 atividade" (string própria). Com 2+, "{n} atividades". O total do curso <b>nunca</b> é mostrado: não existe "2 / 5".</span>
 
@@ -308,11 +310,11 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
           <span style="font-size:11px;color:var(--acc-fg)">Carregar mais</span>
           <span class="idb">MOD.LINKS-LOADMORE · :50-53 · página de 25</span>
         </div>
-        <span class="note">Estado vazio: "Nenhum curso vinculado." <span class="idb">MOD.LINKS-EMPTY · :47-49</span> — a condição de <b>entrada</b> é mais estreita do que "a lista zerou": só sai com <code>offset === 0 &amp;&amp; total === 0</code> (<code>js:460</code>).<br><b>CORRIGIDO em 2026-07-15.</b> O <code>removeCourse</code> tirava o card e <b>não voltava</b> ao estado vazio: remover o último curso deixava o painel <b>em branco</b>, sem mensagem nenhuma. Das três transições para o estado vazio, duas já estavam ligadas (o <code>loadCourses</code> pela contagem do servidor, <code>js:460</code>; o <code>onAddCourse</code> escondendo no add, <code>js:664</code>) — faltava esta. Agora o <code>removeCourse</code> reavalia a bandeira depois do <code>courseEl.remove()</code> (<code>js:563</code>).<br><b>E o predicado não é o do gêmeo.</b> O <code>related_competencies</code> resolve o mesmo problema com <code>children.length &gt; 0</code> e só; copiar aquela linha aqui teria sido <b>errado</b>. Aquela lista é <b>sem paginação</b> — refaz tudo a cada mudança, então as linhas na tela são a verdade inteira. Esta pagina de <b>25</b> (<code>PAGE_SIZE</code>, <code>js:42</code>): com 30 vínculos, remover os 25 da tela imprimiria "Nenhum curso vinculado." <b>acima de um "Carregar mais" vivo</b>, com 5 cursos ainda atados — troca o painel branco por uma <b>afirmação falsa</b>, que é o pior dos dois. Daí o segundo termo: o contêiner vazio só quer dizer "nenhum curso vinculado" quando não há mais nada a carregar, e o módulo já sabia disso pelo <code>loadMoreEl.hidden</code>.<br><b>O que continua quebrado (não é o mesmo defeito).</b> O <code>state.offset</code> <b>não</b> é decrementado ao remover: o censo completo da variável são quatro linhas (<code>js:447</code> lê, <code>:458</code> soma, <code>:460</code> e <code>:461</code> leem) e nenhuma subtrai. Um "Carregar mais" depois de uma remoção ainda consulta um cursor velho e <b>pula um curso</b>. É aritmética de paginação, defeito separado, deixado para a sua própria mudança.</span>
+        <span class="note">Estado vazio: "Nenhum curso vinculado." <span class="idb">MOD.LINKS-EMPTY · :47-49</span> — a condição de <b>entrada</b> é mais estreita do que "a lista zerou": só sai com <code>offset === 0 &amp;&amp; total === 0</code> (<code>js:464</code>).<br><b>CORRIGIDO em 2026-07-15.</b> O <code>removeCourse</code> tirava o card e <b>não voltava</b> ao estado vazio: remover o último curso deixava o painel <b>em branco</b>, sem mensagem nenhuma. Das três transições para o estado vazio, duas já estavam ligadas (o <code>loadCourses</code> pela contagem do servidor, <code>js:464</code>; o <code>onAddCourse</code> escondendo no add, <code>js:713</code>) — faltava esta. Agora o <code>removeCourse</code> reavalia a bandeira depois do <code>courseEl.remove()</code> (<code>js:603</code>).<br><b>E o predicado não é o do gêmeo.</b> O <code>related_competencies</code> resolve o mesmo problema com <code>children.length &gt; 0</code> e só; copiar aquela linha aqui teria sido <b>errado</b>. Aquela lista é <b>sem paginação</b> — refaz tudo a cada mudança, então as linhas na tela são a verdade inteira. Esta pagina de <b>25</b> (<code>PAGE_SIZE</code>, <code>js:42</code>): com 30 vínculos, remover os 25 da tela imprimiria "Nenhum curso vinculado." <b>acima de um "Carregar mais" vivo</b>, com 5 cursos ainda atados — troca o painel branco por uma <b>afirmação falsa</b>, que é o pior dos dois. Daí o segundo termo: o contêiner vazio só quer dizer "nenhum curso vinculado" quando não há mais nada a carregar, e o módulo já sabia disso pelo <code>loadMoreEl.hidden</code>.<br><b>O cursor: também CORRIGIDO em 2026-07-15</b> (<code>cf6dad6</code>), e era defeito separado deste. O <code>state.offset</code> <b>não</b> era decrementado ao remover — o censo da variável eram <b>quatro</b> linhas (uma lia, uma somava, duas liam) e <b>nenhuma subtraía</b>, então um "Carregar mais" depois de uma remoção consultava um cursor velho e <b>pulava o curso que subiu</b>. Hoje são <b>cinco</b>: o <code>removeCourse</code> devolve o cursor junto com a linha (<code>js:599</code>). O decremento é <b>condicionado a uma etiqueta</b>, não incondicional — o <code>loadCourses</code> marca <code>row.dataset.paged = '1'</code> só nas linhas que o próprio cursor buscou (<code>js:457</code>), e o <code>removeCourse</code> subtrai apenas se a etiqueta estiver lá, <b>consumindo-a</b> (<code>js:597-600</code>). Os dois motivos são reais e distintos: <code>offset</code> <b>não</b> é "linhas na tela" (o picker anexa linhas que o cursor nunca contou), e o 🗑 continua vivo através dos <b>dois</b> awaits (confirmar + desvincular), então um re-clique alcança a mesma linha — o segundo desvínculo <b>resolve com <code>success: false</code> em vez de lançar</b> (<code>unlink_competency_course.php:85</code>), e sem a etiqueta as duas passagens decrementariam.<br><b>E metade do defeito era a ordenação, não a aritmética.</b> Sem ordem <b>total</b>, um cursor de offset pula ou duplica entre páginas <b>sem mutação nenhuma</b>: nomes de curso repetem, e o banco pode devolver linhas empatadas em sequência diferente a cada chamada. O <code>get_competency_links.php:127</code> hoje ordena por <code>c.fullname ASC, c.id ASC</code>; o desempate é total porque o índice <b>único</b> <code>courseidcompetencyid</code> do core (<code>competency_coursecomp</code>, <code>lib/db/install.xml</code>) dá no máximo <b>uma</b> linha por curso com o <code>competencyid</code> fixado no WHERE.<br><b>O que continua aberto — o espelho, no add.</b> O <code>onAddCourse</code> anexa a linha e <b>não</b> toca no <code>offset</code> (<code>js:698-719</code>; nenhuma das cinco linhas do censo cai dentro dele): o próximo "Carregar mais" re-busca um índice que já está na tela e <b>duplica</b> um card. <b>E não se conserta com <code>offset += 1</code></b> — se o curso adicionado entra <i>antes</i> ou <i>depois</i> do cursor depende do <code>fullname</code> dele, que é exatamente a chave da ordenação. É por isso que a linha nova <b>não</b> recebe a etiqueta <code>paged</code>: ela é marcada no <code>loadCourses</code> (<code>js:457</code>), não no <code>makeCourseRow</code> — que o <code>onAddCourse</code> também chama. Dois WSs irmãos ainda carregam a ordenação sem desempate: <code>get_competency_courses.php:87</code> e <code>search_linkable_courses.php:119</code>.</span>
 
         <div class="row" style="margin-top:2px;">
           <span class="toast"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Salvo</span>
-          <span class="idb">MOD.LINKS-TOAST · js:808</span>
+          <span class="idb">MOD.LINKS-TOAST · js:857</span>
         </div>
       </div>
 
@@ -321,27 +323,41 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
     <div class="row" style="margin-top:9px;">
       <span class="idb">MOD.LINKS-ACTION · structure_footer_actions.mustache:53-56</span>
-      <span class="idb">MOD.LINKS-COUNT-REFRESH · js:831-838 → structure.js:908-920</span>
+      <span class="idb">MOD.LINKS-COUNT-REFRESH · js:880-887 → structure.js:908-920</span>
     </div>
 
-    <span class="note" style="display:block;margin-top:6px;"><b>Clique no chevron do primeiro card</b> — as atividades somem e voltam. É a carga preguiçosa real: <code>toggleCourse</code> (<code>js:518-533</code>) só chama o WS na <b>primeira</b> abertura e marca <code>data-loaded="1"</code>; depois disso é só mostrar/esconder. <b>O que a tela não demonstra:</b> aqui quem troca o chevron é o CSS; em produção é um <code>className</code> em JS (<code>js:524</code> / <code>:532</code>). O estado é real; o mecanismo da troca, não.</span>
+    <span class="note" style="display:block;margin-top:6px;"><b>Clique no chevron do primeiro card</b> — as atividades somem e voltam. É a carga preguiçosa real: <code>toggleCourse</code> (<code>js:522-537</code>) só chama o WS na <b>primeira</b> abertura e marca <code>data-loaded="1"</code>; depois disso é só mostrar/esconder. <b>O que a tela não demonstra:</b> aqui quem troca o chevron é o CSS; em produção é um <code>className</code> em JS (<code>js:528</code> / <code>:536</code>). O estado é real; o mecanismo da troca, não.</span>
 
     <div class="ok" style="margin-top:8px;">
       <b>O toast mora dentro do modal, e este arquivo é o caso de referência.</b>
-      <code>js:808</code> chama <code>addToastRegion(modal.getBody()[0])</code> no
-      <code>ModalEvents.shown</code> (<code>:805</code>). O motivo é aritmética de
+      <code>js:857</code> chama <code>addToastRegion(modal.getBody()[0])</code> no
+      <code>ModalEvents.shown</code> (<code>:854</code>). O motivo é aritmética de
       <code>z-index</code>: a <code>.toast-wrapper</code> da página é <b>1051</b>
       (<code>theme/boost/scss/moodle/core.scss:2432</code>) e o diálogo é <b>1055</b>
       (<code>$zindex-modal</code>, <code>bootstrap/_variables.scss:1139</code>) — um toast disparado
       daqui pousaria <b>atrás</b> do modal. O comentário do core na linha de cima ainda diz "above any
       modals": envelheceu no salto para o BS5, que subiu o modal de 1050 para 1055. <b>Este é o
       modal que mais depende disso:</b> são <b>5</b> <code>addToast</code> próprios
-      (<code>:564</code>, <code>:587</code>, <code>:617</code>, <code>:665</code>, <code>:821</code>)
+      (<code>:608</code>, <code>:631</code>, <code>:666</code>, <code>:714</code>, <code>:870</code>)
       mais o de rede do <code>notifyError</code>, e <b>nenhuma</b> dessas ações fecha o diálogo.
       <b>Três</b> delas também <b>piscam</b> o elemento (<code>flash</code>,
-      <code>js:178-186</code>, chamado em <code>:586</code>, <code>:662</code> e <code>:822</code>): o
+      <code>js:179-187</code>, chamado em <code>:630</code>, <code>:711</code> e <code>:871</code>): o
       toast diz <i>o quê</i>, o flash diz <i>onde</i>. As duas sem flash são as <b>remoções</b> — não
       há o que piscar quando o elemento acabou de sair do DOM.
+      <br><b>E o que as remoções ganharam no lugar do flash: o foco — <code>59af0f4</code>,
+      2026-07-15.</b> Sair do DOM levava o foco junto: ele caía no <code>&lt;body&gt;</code> e quem
+      usa teclado tinha que re-atravessar o diálogo inteiro. As <b>duas</b> remoções agora chamam o
+      <code>restoreFocus</code> (<code>js:548-563</code>), e <b>cada uma prefere um alvo diferente</b>.
+      O <code>removeCourse</code> (<code>:607</code>) vai para o <b>chevron</b>
+      (<code>[data-action="toggle-course"]</code>) e <b>não</b> para o próximo 🗑: só o chevron é
+      <b>sempre</b> renderizado — o 🗑 é gated por capacidade curso a curso. O <code>removeModule</code>
+      (<code>:664-665</code>) fica <b>dentro do card</b> em que o usuário estava: prefere o ✕ da
+      próxima atividade e cai no chevron <b>daquele</b> card quando a última atividade sai.
+      O "Carregar mais" tem precedência enquanto estiver visível (com página pendente, é ele o caminho
+      adiante, não o picker). E o último recurso é o <b>input enhanced</b> do autocomplete
+      (<code>SELECTORS.addInput</code>, <code>js:51</code>), <b>nunca</b> o <code>state.addsel</code>:
+      o <code>enhance()</code> do core esconde o <code>&lt;select&gt;</code> original, e escondido ele
+      não recebe foco.
     </div>
   </section>
 
@@ -407,8 +423,8 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <b>Por que esta tela é candidata.</b> É o modal do hub com mais coisa por linha: nome do curso
       + nome breve + contador + 🗑, e dentro dele nome da atividade + tipo + ✕ + outcome +
       distintivo + aviso de compartilhada. O nome da atividade já quebra em <b>duas linhas</b> e
-      então reticencia (<code>styles.css:5565-5574</code>) — a largura é o recurso escasso. Hoje o
-      único ajuste é <code>large: true</code> (<code>js:763</code>).
+      então reticencia (<code>styles.css:5561-5570</code>) — a largura é o recurso escasso. Hoje o
+      único ajuste é <code>large: true</code> (<code>js:812</code>).
     </div>
 
     <div class="ok" style="margin-top:8px;">
@@ -454,7 +470,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
     <div class="warn" style="margin-top:8px;">
       <b>O que fica em aberto, e a tela não resolve.</b> O <code>large: true</code> de hoje
-      (<code>js:763</code>) e a classe <code>fullscreen</code> do to-be são <b>dois</b> mecanismos de
+      (<code>js:812</code>) e a classe <code>fullscreen</code> do to-be são <b>dois</b> mecanismos de
       largura. Quem implementar precisa decidir se o <code>fullscreen</code> empilha sobre o
       <code>large</code> ou o substitui. <b>Este preview não decide isso</b>: ele não roda o
       <code>core/modal</code>, e a largura aqui é <code>max-width</code> num
