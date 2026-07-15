@@ -75,7 +75,7 @@ recarrega o ativo. O select de categoria é sempre renderizado (oculto em modo s
 | 2 | toolbar da aba Estruturas | `frameworks.mustache:75-76` | `central_frameworks_listed` ("Estruturas listadas"): `frameworkcount` + "· N ocultas" |
 | 3 | subheader da aba Competências | `structure.mustache:121-122` | `managecompetencies_items` ("itens"): `competencycount` do framework selecionado |
 
-## to-be (IMP-05, `mtube: refresh`)
+## to-be (IMP-05, `mtube: atualizar`)
 
 > A contextbar ganha um controle de atualizar, reusando o `reloadPane` que já existe
 > (`tabs.js:51-66`) e que hoje **nenhum controle de UI expõe**. **Não** vai no sticky-footer: ele é
