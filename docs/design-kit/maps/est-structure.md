@@ -225,5 +225,5 @@ Ver `hierarchy-nav.html`. O que a aba Estrutura confirma: `central.php:114` pass
 `core/dynamic_tabs.mustache:53` faz **triple-stash** (`{{{displayname}}}`) — o ícone entra pelo
 rótulo, **sem** mudar template do core. `central.php:57` já põe `local-dimensions-central-page` no
 `<body>`, que é o escopo para o indicador `inset 0 -2px 0` não vazar para outros consumidores de
-`dynamic_tabs` do site. **Não** portar o dropdown de overflow por `ResizeObserver` do mtube: ~130
+`dynamic_tabs` do site. **Não** portar o dropdown de overflow por `ResizeObserver` do mtube: 146
 linhas de medição para três rótulos curtos (`central.php:98-102`) que nunca transbordam.
