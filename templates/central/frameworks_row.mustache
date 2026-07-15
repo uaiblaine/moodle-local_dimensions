@@ -23,6 +23,7 @@
 
     Context variables required:
     * id, shortname, idnumber, description (string) · competencycount (int)
+    * competencylabel (string) - the noun already pluralised for competencycount by the tab class
     * visible, deletable (bool)
 
     Example context (json):
@@ -32,6 +33,7 @@
         "idnumber": "CORE",
         "description": "Baseline competencies for the current cohort.",
         "competencycount": 12,
+        "competencylabel": "competencies",
         "visible": true,
         "deletable": false
     }
@@ -51,7 +53,7 @@
             {{#description}}<span class="local-dimensions-central-fwcard-desc" title="{{description}}">{{description}}</span>{{/description}}
         </span>
         <span class="local-dimensions-central-fwcard-count">
-            <strong>{{competencycount}}</strong>{{#str}}central_frameworks_competencieslabel, local_dimensions{{/str}}
+            <strong>{{competencycount}}</strong>{{competencylabel}}
         </span>
     </button>
 </div>

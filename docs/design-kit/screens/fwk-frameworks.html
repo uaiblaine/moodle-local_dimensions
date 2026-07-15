@@ -75,7 +75,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .fwpill b{font-size:12px;color:var(--text-accent);}
 
 /* O toggle governa de verdade a lista e o contador, espelhando a regra do servidor
-   (excludedcount = showhidden ? 0 : hiddencount, dynamictabs/frameworks.php:110): com o
+   (excludedcount = showhidden ? 0 : hiddencount, dynamictabs/frameworks.php:117): com o
    toggle DESLIGADO a card oculta some e o sufixo "· N ocultas" aparece; LIGADO, a card
    aparece e o sufixo some — os dois estados nunca coexistem, porque no plugin não podem.
    Sem :has() o card degrada para exatamente o estado padrão (desligado), que é honesto. */
@@ -147,12 +147,12 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     <div class="note" style="margin-top:5px;">
       O toggle acima <b>funciona</b>: ele governa a card oculta e o sufixo do contador, como no plugin.
       Partial compartilhado com <code>EST</code>/<code>PLN</code>; só é renderizado quando existe alguma
-      oculta (<code>showhiddentoggle</code> nulo → nada, <code>dynamictabs/frameworks.php:132</code>).
+      oculta (<code>showhiddentoggle</code> nulo → nada, <code>dynamictabs/frameworks.php:149</code>).
     </div>
 
     <div class="tbar">
       <span class="cnt">
-        Estruturas listadas: <b class="n-off">2</b><b class="n-on">3</b><span class="excl"> · 1 ocultas</span>
+        Estruturas listadas: <b class="n-off">2</b><b class="n-on">3</b><span class="excl"> · 1 oculta</span>
         <span class="idb">FWK-COUNT</span> <span class="idb">FWK-HIDDENCOUNT</span>
       </span>
       <span class="row" style="gap:6px;">
@@ -165,9 +165,9 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
       <span class="idb">FWK-NEW</span><span class="idb">FWK-IMPORT</span><span class="idb">FWK-EXPORT · canexport</span>
     </div>
     <div class="note" style="margin-bottom:8px;">
-      São <b>três</b> ações de cabeçalho, não uma (<code>frameworks.mustache:80-90</code>). O grupo todo é
+      São <b>três</b> ações de cabeçalho, não uma (<code>frameworks.mustache:82-92</code>). O grupo todo é
       gated por <code>canmanage</code>; o <b>Exportar</b> tem gate duplo — <code>{{#canexport}}</code> aninhado,
-      e no servidor <code>canexport = canmanage &amp;&amp; !empty($rows)</code> (<code>dynamictabs/frameworks.php:130</code>),
+      e no servidor <code>canexport = canmanage &amp;&amp; !empty($rows)</code> (<code>dynamictabs/frameworks.php:147</code>),
       então some quando não há o que exportar.
     </div>
 
@@ -201,7 +201,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     </div>
     <div class="note" style="margin-top:6px;">
       O card <b>inteiro</b> é um botão de seleção (<code>FWK-ROW-SELECT</code>,
-      <code>frameworks_row.mustache:44</code>) — a primeira card está <code>.active</code> acima, e é por isso
+      <code>frameworks_row.mustache:46</code>) — a primeira card está <code>.active</code> acima, e é por isso
       que o rodapé abaixo existe. Não há ação nenhuma <b>dentro</b> da card.
     </div>
 
