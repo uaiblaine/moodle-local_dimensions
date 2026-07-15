@@ -17,11 +17,17 @@
  * Shared owner of the page-level sticky footer for the Competency hub.
  *
  * The hub is one page with dynamic tabs, and Moodle allows a single sticky
- * footer per page, so the Structure and Plans tabs both drive this one surface
- * through here. The active tab calls show() with its rendered button markup and a
- * dispatch callback; a single delegated click listener routes footer clicks to
- * whichever dispatch is current. Switching tabs clears the footer (the entering
- * tab's own init re-asserts it, since dynamic tabs re-run init on every entry).
+ * footer per page, so all three tabs — Frameworks, Structure and Plans — drive
+ * this one surface through here. The active tab calls show() with its rendered
+ * button markup and a dispatch callback; a single delegated click listener routes
+ * footer clicks to whichever dispatch is current. Switching tabs clears the footer
+ * (the entering tab's own init re-asserts it, since dynamic tabs re-run init on
+ * every entry).
+ *
+ * This surface is a launcher, not decoration: it reaches 10 of the hub's 17 modals
+ * and is the only door to 7 of them (8 counting enrol_methods, which lives inside
+ * participants). Dropping a tab's footer does not simplify a layout — it removes
+ * the only way to act on the selected row. See docs/design-kit/sticky-footer.html.
  *
  * The footer's inner HTML is replaced wholesale (the theme-agnostic approach core
  * bulkactions uses); callers supply the sticky-footer inner layout in their markup.
