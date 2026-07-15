@@ -87,7 +87,7 @@ escolha** (desvincular, padrão; ou excluir os planos). Sem planos, o fluxo cai 
 >   `pln-plans.md:232` já publica o cruzamento `MOD.DELPLANS` ← `PLN-DELETE` **quando há planos**.
 >   Este mapa **reusa** `PLN-DELETE` em vez de cunhar um `MOD.DELPLANS-ACTION`, para não dar duas IDs
 >   ao mesmo botão. **Divergência registrada:** o `mod-browser.md` (Task 14) fez o contrário — cunhou
->   `MOD.BROWSER-ACTION` para `plans.mustache:469-472`, que o `pln-plans.md:220` já chama de
+>   `MOD.BROWSER-ACTION` para `plans.mustache:469-472` (**resolvido em 2026-07-15**: o mapa do browser passou a referenciar), que o `pln-plans.md:220` chama de
 >   `PLN-BROWSE`; aquele botão hoje tem **duas** IDs. Os dois mapas não podem estar certos; fica para
 >   decisão de quem mantém o kit.
 
