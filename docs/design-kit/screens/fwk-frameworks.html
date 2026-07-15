@@ -1,66 +1,372 @@
-<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Aba Frameworks" subtitle="FWK — lista de frameworks, atual vs proposta, com IDs" -->
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Aba Estruturas" subtitle="FWK — cards + 3 ações de cabeçalho + rodapé, atual vs proposta, com IDs" -->
 <style>
 :root{
   --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
   --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
   --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
+  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
   --text-danger:#a32d2d;--bg-danger:#fcebeb;--border-danger:#f09595;
   --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
   --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+  --mds-motion-fast:150ms;--mds-motion-base:250ms;--mds-motion-flash:1500ms;
+  --mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
+  /* Tokens próprios do chip de proveniência: NÃO podem herdar o accent do painel .moodle,
+     que em escuro é #3f89cc e cai para 3,88:1 sobre o tint (medido; mesmo valor que o
+     est-structure e o modal-shell registraram). Estes dão 5,70:1 (claro) e 7,23:1 (escuro). */
+  --prov-fg:#185fa5;--prov-bg:#e6f1fb;
+  /* Preenchimento do botão primário: NÃO pode ser var(--text-accent), que no escuro vira o
+     azul CLARO #85b7eb — texto branco sobre ele dá 2,11:1 (medido). Mesma armadilha que o
+     --mds-bg-interactive-* registrou: o token de accent é feito para TEXTO sobre fundo
+     escuro, não para virar fundo. Este par é fixo nos dois modos e dá 6,53:1 (medido). */
+  --prim-bg:#185fa5;--prim-fg:#fff;
 }
 @media (prefers-color-scheme:dark){:root{
   --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
   --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
   --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
+  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
   --text-danger:#f09595;--bg-danger:#2a1313;--border-danger:#791f1f;
   --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+  --prov-fg:#85b7eb;--prov-bg:#0c2740;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
 .screens{display:flex;flex-wrap:wrap;gap:18px;}
-.panel{flex:1 1 400px;min-width:320px;}
-.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:10px;}
-.pdot{width:8px;height:8px;border-radius:50%;}
+.panel{flex:1 1 460px;min-width:340px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
 .idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
+.prov{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:10px;background:var(--prov-bg);color:var(--prov-fg);border:0.5px solid var(--prov-fg);white-space:nowrap;}
 .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.sw{display:inline-flex;align-items:center;gap:7px;font-size:12px;}
-.cbtn{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);}
-.card{border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);overflow:hidden;}
-.frow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:0.5px solid var(--border);font-size:12px;}
-.frow:last-child{border-bottom:0;}
-.mini{font-size:10px;padding:1px 6px;border-radius:6px;border:0.5px solid var(--border-strong);}
-.badge{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--surface-1);color:var(--text-secondary);}
-.ico{width:22px;height:22px;border:0.5px solid var(--border-strong);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;}
+.col{display:flex;flex-direction:column;gap:4px;}
 .note{font-size:10px;color:var(--text-muted);}
-.chip{font-size:10px;padding:1px 7px;border-radius:10px;background:var(--bg-accent);color:var(--text-accent);}
-.screens>.panel:last-child{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
-@media (prefers-color-scheme:dark){.screens>.panel:last-child{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
+.divlbl{font-size:11px;color:var(--text-muted);margin:12px 0 5px;border-top:0.5px solid var(--border);padding-top:9px;}
+.ic{width:1.1rem;height:1.1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ic.sm{width:0.85rem;height:0.85rem;}
+
+/* ---- toggle "mostrar ocultas" ---- */
+.sw{display:inline-flex;align-items:center;gap:9px;font-size:12px;cursor:pointer;}
+.tgl{position:relative;display:inline-block;width:32px;height:18px;flex:none;}
+.tgl input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;}
+.tgl-track{position:absolute;inset:0;background:var(--border-stronger);border-radius:9px;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);pointer-events:none;}
+.tgl-track::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform var(--mds-motion-fast) var(--mds-motion-ease);}
+.tgl input:checked+.tgl-track{background:var(--text-accent);}
+.tgl input:checked+.tgl-track::after{transform:translateX(14px);}
+
+/* ---- toolbar ---- */
+.tbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0;}
+.cnt{font-size:12px;color:var(--text-secondary);white-space:nowrap;}
+.cnt b{color:var(--text-primary);}
+.excl{color:var(--text-muted);}
+.bprim{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border:0;border-radius:10px;background:var(--prim-bg);color:var(--prim-fg);white-space:nowrap;}
+.bout{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border:0.5px solid var(--border-strong);border-radius:10px;background:var(--surface-2);color:var(--text-secondary);white-space:nowrap;}
+
+/* ---- cards de estrutura ---- */
+.fwlist{display:flex;flex-direction:column;gap:8px;}
+.fwcard{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:10px;padding:10px 12px;}
+.fwcard.is-hidden{opacity:0.6;}
+.fwcard.active{border-color:var(--text-accent);background:var(--bg-accent);box-shadow:0 0 0 1px var(--text-accent);}
+.fwbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.fwhead{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.fwname{font-size:13px;font-weight:700;letter-spacing:-0.01em;}
+.fwid{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);background:var(--surface-1);border:0.5px solid var(--border);border-radius:5px;padding:0 6px;}
+.fwhid{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;color:var(--text-secondary);background:var(--surface-1);border:0.5px solid var(--border);border-radius:999px;padding:1px 8px;}
+.fwdesc{font-size:10px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fwpill{flex:none;display:inline-flex;align-items:baseline;gap:5px;font-size:10px;color:var(--text-secondary);background:var(--bg-accent);border:0.5px solid var(--border-accent);border-radius:999px;padding:3px 10px;white-space:nowrap;}
+.fwpill b{font-size:12px;color:var(--text-accent);}
+
+/* O toggle governa de verdade a lista e o contador, espelhando a regra do servidor
+   (excludedcount = showhidden ? 0 : hiddencount, dynamictabs/frameworks.php:110): com o
+   toggle DESLIGADO a card oculta some e o sufixo "· N ocultas" aparece; LIGADO, a card
+   aparece e o sufixo some — os dois estados nunca coexistem, porque no plugin não podem.
+   Sem :has() o card degrada para exatamente o estado padrão (desligado), que é honesto. */
+.fwcard.hid-only{display:none;}
+.asis:has(#fwk-showhidden:checked) .fwcard.hid-only{display:flex;}
+.n-on{display:none;}
+.asis:has(#fwk-showhidden:checked) .n-on{display:inline;}
+.asis:has(#fwk-showhidden:checked) .n-off{display:none;}
+.asis:has(#fwk-showhidden:checked) .excl{display:none;}
+
+/* ---- sticky footer ---- */
+.foot{display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;padding:7px;border:0.5px solid var(--border-strong);border-top-width:2px;border-radius:var(--radius);background:var(--surface-2);margin-top:8px;}
+.fbtn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;padding:3px 7px;border-radius:6px;color:var(--text-primary);text-align:center;}
+
+/* ---- modais ---- */
+.mshell{border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);overflow:hidden;}
+.m-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:0.5px solid var(--border);}
+.m-title{font-size:12px;font-weight:500;flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.m-body{padding:10px;display:flex;flex-direction:column;gap:8px;}
+.m-x{display:inline-flex;align-items:center;justify-content:center;width:1.4rem;height:1.4rem;padding:0;border:0;border-radius:6px;background:var(--surface-1);color:var(--text-secondary);font-size:10px;flex:none;}
+.hlink{display:inline-flex;align-items:center;gap:4px;font-size:9px;padding:2px 7px;border:0.5px solid var(--border-strong);border-radius:6px;background:var(--surface-2);color:var(--text-secondary);flex:none;}
+.banner{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:var(--radius);background:var(--bg-accent);border:0.5px solid var(--border-accent);color:var(--text-accent);font-size:11px;}
+.fld{display:flex;flex-direction:column;gap:4px;}
+.csel{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;padding:5px 8px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-secondary);}
+
+/* ---- spinner real (compartilhado as-is / to-be) ---- */
+@keyframes fwk-spin{to{transform:rotate(360deg);}}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:fwk-spin 750ms linear infinite;flex:none;}
+.spin.sm{width:11px;height:11px;}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:1.5s;}}
+.load{display:flex;align-items:center;justify-content:center;gap:8px;height:96px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);color:var(--text-accent);font-size:11px;}
+.rbtn{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);}
+.rbtn[disabled]{opacity:0.65;color:var(--text-secondary);}
+.flash{border:0.5px solid var(--border);border-radius:var(--radius);padding:5px 7px;font-size:11px;background:var(--bg-warning);color:var(--text-warning);}
+.warn{margin-top:6px;background:var(--bg-warning);color:var(--text-warning);border:0.5px solid var(--border-warning);border-radius:var(--radius);padding:6px 8px;font-size:10px;}
+
+/* ---- to-be: abas com ícone + indicador (IMP-10) ---- */
+.tabs{display:flex;gap:2px;border-bottom:0.5px solid var(--border);}
+.tb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:8px 12px;color:var(--text-secondary);background:none;border:0;}
+.tb.active{color:var(--text-accent);font-weight:500;box-shadow:inset 0 -2px 0 var(--text-accent);}
+
+.screens>.panel.moodle{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+@media (prefers-color-scheme:dark){.screens>.panel.moodle{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
 </style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="f-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="f-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="f-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="f-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="f-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="f-eye-slash" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></symbol>
+  <symbol id="f-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></symbol>
+  <symbol id="f-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></symbol>
+  <symbol id="f-rotate" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></symbol>
+  <symbol id="f-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6M10 14L21 3"/></symbol>
+  <symbol id="f-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="f-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="f-cap" viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+</defs></svg>
 <div class="screens">
 
-  <section class="panel">
+  <section class="panel asis">
     <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o que está no ar</div>
-    <div class="row" style="justify-content:space-between;margin-bottom:8px;">
-      <span style="font-size:12px;color:var(--text-secondary)">Frameworks: <strong style="color:var(--text-primary)">3</strong> <span class="idb">FWK-COUNT</span></span>
-      <span class="cbtn" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">＋ Novo framework <span class="idb">FWK-NEW</span></span>
+
+    <label class="sw">
+      <span class="tgl"><input type="checkbox" id="fwk-showhidden"><span class="tgl-track"></span></span>
+      Mostrar estruturas ocultas <span class="idb">FWK-SHOWHIDDEN</span>
+    </label>
+    <div class="note" style="margin-top:5px;">
+      O toggle acima <b>funciona</b>: ele governa a card oculta e o sufixo do contador, como no plugin.
+      Partial compartilhado com <code>EST</code>/<code>PLN</code>; só é renderizado quando existe alguma
+      oculta (<code>showhiddentoggle</code> nulo → nada, <code>dynamictabs/frameworks.php:132</code>).
     </div>
-    <div class="row" style="justify-content:space-between;margin-bottom:8px;"><span class="sw">☐ Mostrar frameworks ocultos</span><span class="idb">FWK-SHOWHIDDEN</span></div>
-    <div class="card">
-      <div class="frow"><span style="flex:1;"><strong style="font-weight:500;">Competências Gerais</strong> <span style="font-family:var(--font-mono);color:var(--text-secondary)">CG-EP</span> <span class="badge">12 competências</span></span><span class="ico">👁</span><span class="cbtn">✎</span><span class="cbtn">⧉</span><span class="cbtn" style="color:var(--text-danger);border-color:var(--border-danger)">🗑</span></div>
-      <div class="frow"><span style="flex:1;"><strong style="font-weight:500;">Matemática</strong> <span style="font-family:var(--font-mono);color:var(--text-secondary)">MAT</span> <span class="badge">8 competências</span></span><span class="ico">👁</span><span class="cbtn">✎</span><span class="cbtn">⧉</span><span class="cbtn" style="color:var(--text-danger);border-color:var(--border-danger)">🗑</span></div>
-      <div class="frow" style="color:var(--text-muted)"><span style="flex:1;"><strong style="font-weight:500;">Catálogo antigo</strong> <span class="badge" style="background:var(--surface-1)">Oculto</span></span><span class="ico">🚫</span><span class="cbtn">✎</span><span class="cbtn">⧉</span><span class="cbtn" style="color:var(--text-danger);border-color:var(--border-danger)">🗑</span></div>
+
+    <div class="tbar">
+      <span class="cnt">
+        Estruturas listadas: <b class="n-off">2</b><b class="n-on">3</b><span class="excl"> · 1 ocultas</span>
+        <span class="idb">FWK-COUNT</span> <span class="idb">FWK-HIDDENCOUNT</span>
+      </span>
+      <span class="row" style="gap:6px;">
+        <span class="bprim"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-plus"/></svg>Nova estrutura</span>
+        <span class="bout"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-upload"/></svg>Importar</span>
+        <span class="bout"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-download"/></svg>Exportar</span>
+      </span>
     </div>
-    <div class="row" style="margin-top:6px;"><span class="idb">FWK-ROW-VIS · só ícone</span><span class="idb">FWK-ROW-EDIT</span><span class="idb">FWK-ROW-DUP</span><span class="idb">FWK-ROW-DEL</span></div>
+    <div class="row" style="margin-bottom:8px;gap:5px;">
+      <span class="idb">FWK-NEW</span><span class="idb">FWK-IMPORT</span><span class="idb">FWK-EXPORT · canexport</span>
+    </div>
+    <div class="note" style="margin-bottom:8px;">
+      São <b>três</b> ações de cabeçalho, não uma (<code>frameworks.mustache:80-90</code>). O grupo todo é
+      gated por <code>canmanage</code>; o <b>Exportar</b> tem gate duplo — <code>{{#canexport}}</code> aninhado,
+      e no servidor <code>canexport = canmanage &amp;&amp; !empty($rows)</code> (<code>dynamictabs/frameworks.php:130</code>),
+      então some quando não há o que exportar.
+    </div>
+
+    <div class="fwlist">
+      <div class="fwcard active">
+        <span class="fwbody">
+          <span class="fwhead"><span class="fwname">Competências Gerais</span><span class="fwid">CG-EP</span></span>
+          <span class="fwdesc">Competências de base para a coorte atual.</span>
+        </span>
+        <span class="fwpill"><b>12</b>competências</span>
+      </div>
+      <div class="fwcard">
+        <span class="fwbody">
+          <span class="fwhead"><span class="fwname">Matemática</span><span class="fwid">MAT</span></span>
+          <span class="fwdesc">Trilha de raciocínio quantitativo do ensino médio.</span>
+        </span>
+        <span class="fwpill"><b>8</b>competências</span>
+      </div>
+      <div class="fwcard is-hidden hid-only">
+        <span class="fwbody">
+          <span class="fwhead"><span class="fwname">Catálogo antigo</span>
+            <span class="fwhid"><svg class="ic sm" style="width:0.6rem;height:0.6rem;" aria-hidden="true" focusable="false"><use href="#f-eye-slash"/></svg>Oculto</span>
+          </span>
+        </span>
+        <span class="fwpill"><b>0</b>competências</span>
+      </div>
+    </div>
+    <div class="row" style="margin-top:6px;gap:5px;">
+      <span class="idb">FWK-ROW</span><span class="idb">FWK-ROW-NAME</span><span class="idb">FWK-ROW-ID</span>
+      <span class="idb">FWK-ROW-DESC</span><span class="idb">FWK-ROW-HIDDEN</span><span class="idb">FWK-ROW-COUNT</span>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      O card <b>inteiro</b> é um botão de seleção (<code>FWK-ROW-SELECT</code>,
+      <code>frameworks_row.mustache:44</code>) — a primeira card está <code>.active</code> acima, e é por isso
+      que o rodapé abaixo existe. Não há ação nenhuma <b>dentro</b> da card.
+    </div>
+
+    <div class="divlbl">Ações da estrutura selecionada · <b>sticky-footer da página</b>, não a card</div>
+    <div class="foot">
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#f-pencil"/></svg>Editar detalhes</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#f-eye"/></svg>Alternar visibilidade</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#f-copy"/></svg>Duplicar</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#f-trash"/></svg>Excluir</span>
+    </div>
+    <div class="row" style="margin-top:5px;gap:5px;">
+      <span class="idb">FWK-ROW-EDIT</span><span class="idb">FWK-ROW-VIS</span><span class="idb">FWK-ROW-DUP</span><span class="idb">FWK-ROW-DEL</span>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      Quatro botões de rodapé (<code>frameworks_footer_actions.mustache:41-56</code>), <b>não</b> badges na
+      linha. Sem dataset: agem sobre o card <code>.active</code> guardado no módulo
+      (<code>frameworks.js:431-449</code>), por isso funcionam de fora da região da aba. O olho mostra
+      <b>fa-eye</b> porque a card selecionada está visível (<code>:46</code>, alimentado por
+      <code>frameworks.js:470</code>). <b>Excluir sem variante de cor</b> — o padrão cru do sticky-footer do
+      core não usa <code>btn-outline-danger</code>.
+    </div>
+
+    <div class="divlbl">Modal de import · <b>a forma de referência</b> do loading</div>
+    <div class="mshell">
+      <div class="m-head"><span class="m-title">Importar estrutura de CSV</span><button type="button" class="m-x" aria-label="Fechar">✕</button></div>
+      <div class="m-body">
+        <div class="banner" role="status" aria-live="polite" aria-label="Importando…">
+          <span class="spin sm" aria-hidden="true"></span><span aria-hidden="true">Importando…</span>
+        </div>
+        <div class="note">corpo do <code>dynamic_form</code> — seletor de arquivo CSV…</div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:5px;"><span class="idb">FWK-IMP-BANNER</span></div>
+    <div class="note" style="margin-top:6px;">
+      <b>Este é o único tratamento de loading em corpo que o plugin shipa</b> (<code>alert alert-info</code> +
+      <code>spinner-border spinner-border-sm</code>, <code>frameworks.js:231-237</code>) — o hub já sabe fazer,
+      só não faz onde importa. O anel acima gira de verdade.
+    </div>
+    <div class="warn">
+      <b>Não copiar o ARIA daqui.</b> O banner e o loader do export chamam o <b>mesmo</b>
+      <code>makeSpinner()</code> (<code>frameworks.js:211-217</code>), que põe <code>role="status"</code>
+      (<code>:214</code>) <b>e</b> <code>aria-hidden="true"</code> (<code>:215</code>) no mesmo elemento — o
+      <code>aria-hidden</code> <b>anula</b> o <code>role</code> e o conjunto não anuncia nada. O desenho acima já
+      aplica a forma correta do <code>states.html</code>: nome no container, anel <code>aria-hidden</code>.
+    </div>
+
+    <div class="divlbl">Modal de export</div>
+    <div class="mshell">
+      <div class="m-head">
+        <span class="m-title">Exportar estrutura para CSV</span>
+        <button type="button" class="m-x" aria-label="Fechar">✕</button>
+      </div>
+      <div class="m-body">
+        <div class="fld">
+          <span class="note">Estrutura a exportar</span>
+          <span class="csel">Competências Gerais<span aria-hidden="true">▾</span></span>
+        </div>
+        <div class="row" style="gap:8px;">
+          <span class="bprim"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-download"/></svg>Exportar</span>
+          <span class="note">loader <code>hidden</code> até clicar</span>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:5px;gap:5px;">
+      <span class="idb">FWK-EXP-LABEL</span><span class="idb">FWK-EXP-SELECT</span><span class="idb">FWK-EXP-DOWNLOAD</span><span class="idb">FWK-EXP-LOADER</span>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      O select nasce <b>vazio</b> e é populado das cards da aba no <code>ModalEvents.shown</code>
+      (<code>frameworks.js:347-356</code>) — o modal só conhece o que a aba já listou. O
+      <code>downloadFramework</code> desabilita o botão, mostra o anel e <b>restaura os dois num
+      <code>finally</code></b> (<code>:326-330</code>).
+    </div>
+
+    <div class="divlbl">Atalho de escalas · injetado no cabeçalho do form</div>
+    <div class="mshell">
+      <div class="m-head">
+        <span class="m-title">Editar estrutura</span>
+        <span class="hlink"><svg class="ic sm" style="width:0.6rem;height:0.6rem;" aria-hidden="true" focusable="false"><use href="#f-ext"/></svg>Abrir página de escalas</span>
+        <button type="button" class="m-x" aria-label="Fechar">✕</button>
+      </div>
+      <div class="m-body"><div class="note">corpo do form — nome, idnumber, escala (<code>MOD.SCALE</code>)…</div></div>
+    </div>
+    <div class="row" style="margin-top:5px;"><span class="idb">FWK-SCALES-LINK</span></div>
+    <div class="note" style="margin-top:6px;">
+      Injetado por JS <b>à esquerda do botão de fechar</b> (<code>frameworks.js:162</code>), no evento
+      <code>LOADED</code>, e gated por <code>data-canscalespage</code> (<code>:144</code>) — a posição
+      acima é a que o código produz. Vem de <code>a2112fe</code>.
+    </div>
   </section>
 
-  <section class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · linha enxuta + ações no hover</div>
-    <div class="row" style="justify-content:space-between;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-secondary)">3 frameworks</span><span class="cbtn" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">＋ Novo framework</span></div>
-    <div class="card">
-      <div class="frow"><span style="flex:1;"><strong style="font-weight:500;">Competências Gerais</strong></span><span class="chip">12</span><span class="note">CG-EP</span><span class="ico">⋯</span></div>
-      <div class="frow"><span style="flex:1;"><strong style="font-weight:500;">Matemática</strong></span><span class="chip">8</span><span class="note">MAT</span><span class="ico">⋯</span></div>
-      <div class="frow" style="color:var(--text-muted)"><span style="flex:1;">Catálogo antigo <span class="badge" style="background:var(--surface-1)">oculto</span></span><span class="chip" style="background:var(--surface-1);color:var(--text-secondary)">0</span><span class="ico">⋯</span></div>
+  <section class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · as três melhorias que caem nesta tela</div>
+
+    <div class="divlbl" style="border-top:0;padding-top:0;margin-top:0;">1 · Loading no <code>reloadPane</code> <span class="prov">mtube: carregando</span></div>
+    <div class="load" role="status" aria-busy="true" aria-live="polite" aria-label="Carregando estruturas…">
+      <span class="spin" aria-hidden="true"></span><span aria-hidden="true">Carregando estruturas…</span>
     </div>
-    <span class="note">to-be: contagem como chip, idnumber discreto, ações (editar/duplicar/visibilidade/excluir) num menu ⋯ — mapeia FWK-ROW-*</span>
+    <div class="note" style="margin-top:6px;">
+      O anel gira de verdade (<code>@keyframes</code> + <code>animation</code>), e o
+      <code>aria-busy="true"</code> está <b>neste</b> elemento — não só na legenda.
+    </div>
+    <div class="warn">
+      <b>Correção medida:</b> o alvo <b>não</b> é a troca de aba — essa <b>já tem loading, e vem do core</b>
+      (<code>dynamic_tabs.js:92-97</code> → <code>loadTab</code> → <code>addIconToContainer</code>,
+      <code>:153</code>; e <code>:88</code> esvazia o pane anterior). A lacuna é o <code>reloadPane</code> do
+      plugin (<code>tabs.js:51-66</code>), que refaz o caminho do <code>loadTab</code> <b>sem</b> o ícone — e é
+      ele que roda nas <b>23</b> chamadas de 5 módulos.
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>Esta aba é o melhor caso da mudança:</b> as <b>6</b> chamadas dela
+      (<code>frameworks.js:181, 272, 376, 388, 421, 524</code>) são <b>100% do CRUD</b> da aba — salvar,
+      importar, visibilidade, duplicar, excluir, toggle — e <b>nenhuma</b> é in-place. Não há aqui a ressalva
+      do <code>refreshNode</code> que restringe o <code>EST</code>. Hoje todo clique de ação reconstrói a lista
+      sem aviso nenhum.
+    </div>
+    <div class="row" style="margin-top:7px;align-items:stretch;gap:7px;">
+      <div class="col" style="flex:1 1 150px;gap:3px;">
+        <span class="note"><b>Pane recarregado → spinner</b> (os 6 daqui)</span>
+        <div class="load" style="height:44px;font-size:10px;"><span class="spin sm" aria-hidden="true"></span><span aria-hidden="true">reloadPane</span></div>
+      </div>
+      <div class="col" style="flex:1 1 150px;gap:3px;">
+        <span class="note"><b>Linha trocada → flash</b> (nenhum aqui)</span>
+        <div class="flash">Regra da casa — vale para o <code>EST</code></div>
+      </div>
+    </div>
+
+    <div class="divlbl">2 · Atualizar na contextbar <span class="prov">mtube: atualizar</span></div>
+    <div class="row" style="gap:10px;">
+      <div class="col" style="gap:3px;"><span class="note">repouso</span><span class="rbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-rotate"/></svg>Atualizar</span></div>
+      <div class="col" style="gap:3px;"><span class="note">em curso · <code>disabled</code> + ícone girando</span>
+        <button type="button" class="rbtn" disabled><span class="spin sm" aria-hidden="true"></span>Atualizar</button>
+      </div>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      O botão da direita é um <code>&lt;button disabled&gt;</code> de verdade e o anel gira — a disciplina do
+      mtube (<code>disabled</code> + <code>fa-spin</code>, restaurados num <code>finally</code>) está
+      demonstrada, não descrita. Sem string nova: o pane de inscrição já shipa
+      <code>{{#str}}refresh, moodle{{/str}}</code> + <code>fa fa-rotate</code>.
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>Precisão:</b> não é verdade que "nada expõe <code>reloadPane</code>" — ele tem <b>23 chamadas em 5
+      módulos</b> (<code>structure</code> 9, <code>frameworks</code> 6, <code>plans</code> 6,
+      <code>competency_browser</code> 1, <code>context</code> 1). O que é verdade é que <b>nenhum controle de
+      UI</b> o dispara: as 23 são refresh automático pós-ação.
+    </div>
+
+    <div class="divlbl">3 · Ícones + indicador nas abas <span class="prov">mtube: ícones nas abas</span></div>
+    <div class="tabs">
+      <span class="tb active"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-grid"/></svg>Estruturas</span>
+      <span class="tb"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-list"/></svg>Competências</span>
+      <span class="tb"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-cap"/></svg>Planos de aprendizagem</span>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      O indicador da aba ativa é <code>box-shadow: inset 0 -2px 0</code> — é o que está pintado acima, não uma
+      legenda. O ícone entra pelo <b>rótulo</b>: <code>core/dynamic_tabs</code> faz triple-stash de
+      <code>displayname</code> (<code>dynamic_tabs.mustache:53</code>), então <b>nenhum template do core
+      muda</b>. Escopar sob <code>.local-dimensions-central-page</code> (já no <code>&lt;body&gt;</code>,
+      <code>central.php:57</code>).
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>Estruturas está ativa acima porque é a aba que nasce ativa</b> no plugin
+      (<code>central.php:105</code>) — é ela que exibe o indicador no primeiro paint. E os rótulos são os
+      reais: quem se chama <code>frameworks</code> no código aparece como <b>"Estruturas"</b>, e quem se chama
+      <code>structure</code> aparece como <b>"Competências"</b> (<code>central.php:99-100</code>).
+    </div>
   </section>
 
 </div>
