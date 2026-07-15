@@ -37,6 +37,20 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .tbl thead th{font-size:11px;color:var(--text-secondary);font-weight:500;}
 .num{width:52px;font-size:12px;padding:3px 6px;border:0.5px solid var(--border-strong);border-radius:6px;background:var(--surface-2);text-align:center;}
 .note{font-size:10px;color:var(--text-muted);}
+/* MOD.RULE-ERROR: nasce hidden e só o JS o liga (js:176). Escondido por padrao aqui tambem. */
+.alert-err{display:none;align-items:flex-start;gap:7px;font-size:11px;padding:7px 9px;border-radius:var(--radius);color:var(--text-danger);background:var(--bg-danger);border:0.5px solid var(--border-danger);}
+.drv{display:flex;align-items:center;gap:6px;margin-top:9px;font-size:10px;color:var(--text-muted);}
+.drv input{margin:0;}
+/* O :has() do mod-delplans: estado real, dirigido por um controle real, sem JS.
+   Padrao = estado valido (exige 2, soma 2), que e como o modal abre. */
+.num-bad{display:none;}
+.panel:has(#rule-err:checked) .num-ok{display:none;}
+.panel:has(#rule-err:checked) .num-bad{display:inline-block;}
+.panel:has(#rule-err:checked) .num-bad{border-color:var(--border-danger);color:var(--text-danger);}
+.panel:has(#rule-err:checked) .alert-err{display:flex;}
+/* refresh() (js:155-156) esconde tipo+pontos quando o resultado e Nenhum — e NAO toca no alerta. */
+.panel:has(#rule-none:checked) .typewrap,
+.panel:has(#rule-none:checked) .pts{display:none;}
 .screens>.panel:last-child{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
 @media (prefers-color-scheme:dark){.screens>.panel:last-child{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
 </style>
@@ -45,31 +59,38 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   <section class="panel">
     <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o que está no ar</div>
     <div class="m">
-      <div class="m-head"><span class="m-title">Regra de conclusão · Resolução de problemas</span><span class="m-x">✕</span></div>
+      <div class="m-head"><span class="m-title">Regra de competência</span><span class="m-x">✕</span></div>
       <div class="m-body">
+        <div class="row"><span class="idb">MOD.RULE-TITLE · str competencyrule, tool_lp — sem nome de competência</span></div>
         <div class="col"><span class="lbl">Resultado</span><span class="ctrl" style="max-width:230px;"><span>Marcar como concluída</span><span style="color:var(--text-secondary)">⌄</span></span><span class="idb">MOD.RULE-OUTCOME</span></div>
-        <div class="col"><span class="lbl">Tipo de regra</span><span class="ctrl" style="max-width:230px;"><span>Pontos</span><span style="color:var(--text-secondary)">⌄</span></span><span class="idb">MOD.RULE-TYPE · wrap hidden se sem regra</span></div>
-        <div class="col">
+        <div class="col typewrap"><span class="lbl">Regra</span><span class="ctrl" style="max-width:230px;"><span>Pontos</span><span style="color:var(--text-secondary)">⌄</span></span><span class="idb">MOD.RULE-TYPE · str central_rule_type = "Regra"</span></div>
+        <div class="col pts">
           <table class="tbl">
             <thead><tr><th></th><th>Pontos</th><th>Obrigatório</th></tr></thead>
             <tbody>
               <tr><th style="font-weight:400;">Pensamento analítico</th><td><span class="num">1</span></td><td>☑</td></tr>
               <tr><th style="font-weight:400;">Comunicação escrita</th><td><span class="num">1</span></td><td>☐</td></tr>
-              <tr><th style="font-weight:500;">Total necessário para concluir</th><td><span class="num">2</span></td><td></td></tr>
+              <tr><th style="font-weight:500;">Total necessário para concluir</th><td><span class="num num-ok">2</span><span class="num num-bad">3</span></td><td></td></tr>
             </tbody>
           </table>
-          <div class="row"><span class="idb">MOD.RULE-POINTS-HEAD · 1ª col sem rótulo</span><span class="idb">MOD.RULE-POINTS-ROW</span><span class="idb">MOD.RULE-POINTS-TOTAL</span></div>
+          <div class="row"><span class="idb">MOD.RULE-POINTS-HEAD · 1ª col sem rótulo</span><span class="idb">MOD.RULE-POINTS-ROW</span><span class="idb">MOD.RULE-POINTS-TOTAL · min=1 não protege</span></div>
         </div>
-        <span class="note">Erro "pontos inválidos" aparece aqui quando o total &gt; soma <span class="idb">MOD.RULE-ERROR · hidden</span></span>
+        <div class="alert-err" role="alert">
+          <span aria-hidden="true">⚠</span>
+          <span>O total de pontos disponíveis deve ser ao menos igual aos pontos necessários.</span>
+        </div>
+        <div class="row"><span class="idb">MOD.RULE-ERROR · nasce hidden · só o js:176 o liga</span></div>
       </div>
       <div class="m-foot"><span class="btn">Cancelar</span><span class="btn btn-primary">Salvar</span></div>
     </div>
+    <label class="drv" for="rule-err"><input type="checkbox" id="rule-err"><span>salvar inválido (exige 3, soma 2) → o alerta liga</span></label>
+    <label class="drv" for="rule-none"><input type="checkbox" id="rule-none"><span>agora resultado = Nenhum → regra e pontos somem, <b>e o alerta fica</b> (write-once, js:176)</span></label>
   </section>
 
   <section class="panel">
     <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · resultado + tipo em destaque</div>
     <div class="m">
-      <div class="m-head"><span class="m-title">Regra de conclusão · Resolução de problemas</span><span class="m-x">✕</span></div>
+      <div class="m-head"><span class="m-title">Regra de competência</span><span class="m-x">✕</span></div>
       <div class="m-body">
         <div class="row" style="gap:10px;">
           <div class="col" style="flex:1;"><span class="lbl">Resultado</span><span class="ctrl"><span>Marcar como concluída</span><span style="color:var(--text-secondary)">⌄</span></span></div>
@@ -84,7 +105,8 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
             </tbody>
           </table>
         </div>
-        <span class="note">to-be: regra resumida em uma frase + tabela enxuta — mapeia MOD.RULE-OUTCOME/TYPE/POINTS</span>
+        <span class="note">to-be: par lado a lado + a soma dita <b>antes</b> do erro (é o mesmo total do js:123) — mapeia MOD.RULE-OUTCOME/TYPE/POINTS.
+        "Quando" é <b>proposta</b> de rótulo: a str shipada é "Regra" (central_rule_type), desenhada no painel as-is.</span>
       </div>
       <div class="m-foot"><span class="btn">Cancelar</span><span class="btn btn-primary">Salvar</span></div>
     </div>

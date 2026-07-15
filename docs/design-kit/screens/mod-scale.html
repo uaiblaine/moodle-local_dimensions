@@ -5,6 +5,7 @@
   --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
   --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
   --text-success:#0f6e56;--bg-success:#e1f5ee;--border-success:#5dcaa5;
+  --text-danger:#a32d2d;--bg-danger:#fcebeb;--border-danger:#f09595;
   --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
   --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
 }
@@ -13,6 +14,7 @@
   --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
   --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
   --text-success:#5dcaa5;--bg-success:#0a2a24;--border-success:#085041;
+  --text-danger:#f09595;--bg-danger:#2a1313;--border-danger:#791f1f;
   --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
@@ -35,6 +37,22 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .scol-prof{width:80px;text-align:center;}
 .note{font-size:10px;color:var(--text-muted);}
 .pill{font-size:10px;padding:1px 7px;border-radius:10px;border:0.5px solid;}
+/* Notification.alert('', incomplete) — js:147. Um TERCEIRO nivel por cima do modal, e SEM titulo. */
+.m{position:relative;}
+.pop{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.32);align-items:center;justify-content:center;padding:14px;}
+.pop-box{background:var(--surface-2);border:0.5px solid var(--border);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.18);max-width:290px;width:100%;overflow:hidden;}
+.pop-head{height:26px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;padding:0 10px;}
+.pop-empty{font-size:9px;color:var(--text-muted);font-style:italic;}
+.pop-body{padding:11px 12px;font-size:11.5px;}
+.pop-foot{display:flex;justify-content:flex-end;padding:8px 12px;border-top:0.5px solid var(--border);}
+.drv{display:flex;align-items:center;gap:6px;margin-top:9px;font-size:10px;color:var(--text-muted);}
+.drv input{margin:0;}
+/* O :has() do mod-delplans: estado real, dirigido por um controle real, sem JS.
+   Padrao = configuracao completa (1 padrao + 1 proficiente), que e como o modal salva. */
+.prof-off{display:none;}
+.panel:has(#scale-inc:checked) .prof-on{display:none;}
+.panel:has(#scale-inc:checked) .prof-off{display:inline;}
+.panel:has(#scale-inc:checked) .pop{display:flex;}
 .screens>.panel:last-child{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
 @media (prefers-color-scheme:dark){.screens>.panel:last-child{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
 </style>
@@ -43,28 +61,39 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   <section class="panel">
     <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o que está no ar</div>
     <div class="m">
-      <div class="m-head"><span class="m-title">Novo framework · escala de proficiência</span><span class="m-x">✕</span></div>
+      <div class="m-head"><span class="m-title">Configurar escala</span><span class="m-x">✕</span></div>
       <div class="m-body">
-        <div class="srow head"><span style="flex:1;">Valor da escala</span><span class="scol-def">Padrão</span><span class="scol-prof">Proficiente</span></div>
+        <div class="row" style="margin-bottom:8px;"><span class="idb">MOD.SCALE-TITLE · str central_frameworks_configurescale — sem nome de escala</span></div>
+        <div class="srow head"><span style="flex:1;">Valor</span><span class="scol-def">Padrão</span><span class="scol-prof">Proficiente</span></div>
         <div class="srow"><span style="flex:1;">Ainda não competente</span><span class="scol-def">◉</span><span class="scol-prof">☐</span></div>
         <div class="srow"><span style="flex:1;">Em desenvolvimento</span><span class="scol-def">◯</span><span class="scol-prof">☐</span></div>
-        <div class="srow" style="border-bottom:0;"><span style="flex:1;">Competente</span><span class="scol-def">◯</span><span class="scol-prof">☑</span></div>
-        <div class="row" style="margin-top:8px;"><span class="idb">MOD.SCALE-HEAD</span><span class="idb">MOD.SCALE-DEFAULT · radio</span><span class="idb">MOD.SCALE-PROFICIENT · checkbox</span></div>
+        <div class="srow" style="border-bottom:0;"><span style="flex:1;">Competente</span><span class="scol-def">◯</span><span class="scol-prof"><span class="prof-on">☑</span><span class="prof-off">☐</span></span></div>
+        <div class="row" style="margin-top:8px;"><span class="idb">MOD.SCALE-HEAD · str …scalevalue = "Valor"</span><span class="idb">MOD.SCALE-DEFAULT · name fixo = 1 só padrão</span><span class="idb">MOD.SCALE-PROFICIENT · sem name</span></div>
       </div>
       <div class="m-foot"><span class="btn">Cancelar</span><span class="btn btn-primary">Salvar</span></div>
+      <div class="pop">
+        <div class="pop-box">
+          <div class="pop-head"><span class="pop-empty">[sem título — o 1º arg do alert é '' (js:147)]</span></div>
+          <div class="pop-body">Selecione pelo menos um valor padrão e um valor de proficiência.</div>
+          <div class="pop-foot"><span class="btn btn-primary">OK</span></div>
+        </div>
+      </div>
     </div>
+    <label class="drv" for="scale-inc"><input type="checkbox" id="scale-inc"><span>salvar sem nenhum proficiente → <b>popup</b> por cima do modal (isComplete, js:145-148)</span></label>
+    <div class="note" style="margin-top:6px;">O irmão MOD.RULE resolve o mesmo caso com um alerta <b>inline</b>. Dois modais do mesmo hub, um dia de diferença, dois idiomas.</div>
   </section>
 
   <section class="panel">
     <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · estados como pills</div>
     <div class="m">
-      <div class="m-head"><span class="m-title">Escala de proficiência</span><span class="m-x">✕</span></div>
+      <div class="m-head"><span class="m-title">Configurar escala</span><span class="m-x">✕</span></div>
       <div class="m-body">
         <div class="srow head"><span style="flex:1;">Valor</span><span class="scol-def">Inicial</span><span class="scol-prof">Proficiente</span></div>
         <div class="srow"><span style="flex:1;">Ainda não competente</span><span class="scol-def"><span class="pill" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">inicial</span></span><span class="scol-prof">—</span></div>
         <div class="srow"><span style="flex:1;">Em desenvolvimento</span><span class="scol-def">—</span><span class="scol-prof">—</span></div>
         <div class="srow" style="border-bottom:0;"><span style="flex:1;">Competente</span><span class="scol-def">—</span><span class="scol-prof"><span class="pill" style="background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)">✓ proficiente</span></span></div>
-        <span class="note">to-be: "inicial" (radio) e "proficiente" (toggle) viram pills legíveis — mapeia MOD.SCALE-DEFAULT/PROFICIENT</span>
+        <span class="note">to-be: "inicial" (radio) e "proficiente" (toggle) viram pills legíveis — mapeia MOD.SCALE-DEFAULT/PROFICIENT.
+        "Inicial" é <b>proposta</b> de rótulo: a str shipada é "Padrão" (…scaledefault), desenhada no painel as-is.</span>
       </div>
       <div class="m-foot"><span class="btn">Cancelar</span><span class="btn btn-primary">Salvar</span></div>
     </div>
