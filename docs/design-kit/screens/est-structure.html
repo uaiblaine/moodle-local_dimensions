@@ -1,4 +1,4 @@
-<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Estrutura" subtitle="Contextbar + árvore + detalhe — atual vs proposta, com IDs" -->
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Estrutura" subtitle="EST — árvore + detalhe + rodapé, atual vs proposta, com IDs" -->
 <style>
 :root{
   --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
@@ -9,6 +9,12 @@
   --text-danger:#a32d2d;--bg-danger:#fcebeb;--border-danger:#f09595;
   --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
   --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+  --mds-motion-fast:150ms;--mds-motion-base:250ms;--mds-motion-flash:1500ms;
+  --mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
+  /* Tokens próprios do chip de proveniência: NÃO podem herdar o accent do painel .moodle,
+     que em escuro é #3f89cc e cai para 3,88:1 sobre o tint (medido; mesma reprovação que o
+     modal-shell registrou). Estes dão 5,70:1 (claro) e 7,23:1 (escuro). */
+  --prov-fg:#185fa5;--prov-bg:#e6f1fb;
 }
 @media (prefers-color-scheme:dark){:root{
   --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
@@ -18,370 +24,304 @@
   --text-success:#5dcaa5;--bg-success:#0a2a24;--border-success:#085041;
   --text-danger:#f09595;--bg-danger:#2a1313;--border-danger:#791f1f;
   --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+  --prov-fg:#85b7eb;--prov-bg:#0c2740;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
 .screens{display:flex;flex-wrap:wrap;gap:18px;}
-.panel{flex:1 1 440px;min-width:330px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
+.panel{flex:1 1 460px;min-width:340px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
 .plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
-.pdot{width:8px;height:8px;border-radius:50%;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
 .idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
+.prov{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:10px;background:var(--prov-bg);color:var(--prov-fg);border:0.5px solid var(--prov-fg);white-space:nowrap;}
 .lbl{font-size:11px;color:var(--text-secondary);}
 .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .col{display:flex;flex-direction:column;gap:4px;}
+.note{font-size:10px;color:var(--text-muted);}
+.divlbl{font-size:11px;color:var(--text-muted);margin:12px 0 5px;border-top:0.5px solid var(--border);padding-top:9px;}
 .cbtn{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);}
 .cbtn.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent);}
 .csel{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;min-width:150px;font-size:12px;padding:6px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);}
-.pane{border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);padding:8px;}
-.tnode{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:6px;font-size:12px;}
-.tnode.sel{background:var(--bg-accent);}.tnode.sel .nm{color:var(--text-accent);}
-.tw{color:var(--text-muted);width:12px;display:inline-block;text-align:center;}
-.chip{font-size:10px;padding:1px 7px;border-radius:10px;background:var(--bg-accent);color:var(--text-accent);}
-.tag{font-size:10px;padding:1px 6px;border-radius:10px;border:0.5px solid;}
-.act{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 8px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);}
+.pane{border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);}
+
+/* ---- sub-cabeçalho ---- */
+.sub{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;}
 .sw{display:inline-flex;align-items:center;gap:7px;font-size:12px;}
-.divlbl{font-size:11px;color:var(--text-muted);margin:10px 0 4px;}
+.tgl{position:relative;display:inline-block;width:32px;height:18px;flex:none;}
+.tgl input{position:absolute;inset:0;opacity:0;margin:0;}
+.tgl-track{position:absolute;inset:0;background:var(--border-stronger);border-radius:9px;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
+.tgl-track::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform var(--mds-motion-fast) var(--mds-motion-ease);}
+.tgl input:checked+.tgl-track{background:var(--text-accent);}
+.tgl input:checked+.tgl-track::after{transform:translateX(14px);}
+
+/* ---- painel da árvore ---- */
+.split{display:flex;align-items:stretch;gap:0;margin-top:8px;}
+.treecard{flex:1 1 210px;min-width:0;display:flex;flex-direction:column;}
+.tbar{display:flex;align-items:center;gap:14px;padding:8px 10px;border-bottom:0.5px solid var(--border);}
+.tbtn{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-primary);}
+.tgear{margin-left:auto;color:var(--text-secondary);}
+.opts{display:flex;flex-direction:column;gap:8px;padding:10px;border-bottom:0.5px solid var(--border);}
+.optrow{display:flex;align-items:center;justify-content:space-between;font-size:12px;gap:8px;}
+.searchwrap{padding:9px 10px;border-bottom:0.5px solid var(--border);}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface-1);border:0.5px solid var(--border-strong);border-radius:var(--radius);padding:6px 9px;font-size:12px;color:var(--text-muted);}
+.tree{padding:6px;}
+.tnode{display:flex;align-items:center;gap:6px;padding:4px 5px;border-radius:6px;font-size:12px;white-space:nowrap;}
+.tnode.sel{background:var(--bg-accent);outline:0.5px solid var(--border-accent);}
+.tnode.sel .nm{color:var(--text-accent);font-weight:500;}
+.nm{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.tw{color:var(--text-muted);width:11px;flex:none;text-align:center;}
+.grip{margin-left:auto;padding-left:4px;color:var(--text-muted);font-size:10px;flex:none;}
+.ntax{flex:none;font-size:9px;padding:0 5px;border-radius:9px;background:var(--surface-1);border:0.5px solid var(--border);color:var(--text-secondary);}
+.nid{flex:none;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);}
+.nrule{flex:none;font-size:9px;padding:0 5px;border-radius:9px;background:var(--bg-success);color:var(--text-success);border:0.5px solid var(--border-success);}
+/* Os três toggles governam de verdade os badges da árvore, espelhando DISPLAY_CLASSES
+   ({tax:'show-tax', id:'show-id', rule:'show-rule'}, structure.js:113): taxonomia e
+   identificador nascem DESLIGADOS e regra nasce LIGADA, como no plugin. Sem :has() o card
+   degrada para exatamente esse mesmo estado padrão — nunca para um estado que ele não afirma. */
+.ntax,.nid{display:none;}
+.treecard:has(#est-disp-tax:checked) .ntax{display:inline-block;}
+.treecard:has(#est-disp-id:checked) .nid{display:inline;}
+.treecard:has(#est-disp-rule:not(:checked)) .nrule{display:none;}
+.rez{flex:none;width:22px;display:flex;align-items:center;justify-content:center;}
+.rez span{width:2px;height:44px;border-radius:2px;background:var(--border-stronger);}
+
+/* ---- painel de detalhe ---- */
+.detcard{flex:1 1 210px;min-width:0;overflow:hidden;}
+.dhead{padding:10px 11px;background:linear-gradient(135deg,#1f5fa9,#2a7bc8);color:#fff;}
+.dtitle{font-size:14px;font-weight:500;}
+.dtax{font-size:9px;padding:1px 6px;border-radius:9px;background:rgba(255,255,255,0.2);border:0.5px solid rgba(255,255,255,0.4);}
+.dchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.dchip{display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:1px 6px;border-radius:9px;background:rgba(255,255,255,0.16);border:0.5px solid rgba(255,255,255,0.3);color:#fff;}
+.dchip.acc{background:rgba(255,255,255,0.9);color:#14497f;border-color:transparent;}
+.dbody{padding:10px 11px;display:flex;flex-direction:column;gap:8px;}
+.metrics{display:flex;gap:6px;}
+.metric{flex:1;border:0.5px solid var(--border);border-radius:var(--radius);padding:6px;text-align:center;background:var(--surface-1);}
+.mlbl{font-size:9px;color:var(--text-secondary);line-height:1.3;}
+.mval{font-size:15px;font-weight:500;color:var(--text-accent);}
+.refs{border:0.5px solid var(--border);border-radius:var(--radius);padding:7px;}
+.refhead{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;}
+.refcount{margin-left:auto;font-size:9px;padding:0 6px;border-radius:9px;background:var(--surface-1);border:0.5px solid var(--border);color:var(--text-secondary);}
+.refchip{font-size:10px;padding:1px 7px;border-radius:10px;background:var(--bg-accent);color:var(--text-accent);border:0.5px solid var(--border-accent);}
+
+/* ---- sticky footer ---- */
+.foot{display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;padding:7px;border:0.5px solid var(--border-strong);border-top-width:2px;border-radius:var(--radius);background:var(--surface-2);margin-top:8px;}
+.fbtn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;padding:3px 7px;border-radius:6px;color:var(--text-primary);text-align:center;}
+/* Mesmo conjunto de símbolos SVG do card sticky-footer (idioma do kit): monocromático,
+   herda currentColor e renderiza igual em qualquer fonte — diferente de emoji. */
+.ic{width:1.1rem;height:1.1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ic.sm{width:0.85rem;height:0.85rem;}
+
+/* ---- to-be: abas com ícone + indicador (IMP-10) ---- */
+.tabs{display:flex;gap:2px;border-bottom:0.5px solid var(--border);}
+.tb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:8px 12px;color:var(--text-secondary);background:none;border:0;}
+.tb.active{color:var(--text-accent);font-weight:500;box-shadow:inset 0 -2px 0 var(--text-accent);}
+
+/* ---- to-be: spinner real (IMP-03 / IMP-05) ---- */
+@keyframes est-spin{to{transform:rotate(360deg);}}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:est-spin 750ms linear infinite;flex:none;}
+.spin.sm{width:11px;height:11px;border-width:2px;}
+.load{display:flex;align-items:center;justify-content:center;gap:8px;height:96px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);color:var(--text-accent);font-size:11px;}
+.rbtn{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);}
+.rbtn[disabled]{opacity:0.65;color:var(--text-secondary);}
+.flash{border:0.5px solid var(--border);border-radius:var(--radius);padding:5px 7px;font-size:11px;background:var(--bg-warning);color:var(--text-warning);}
+
 .screens>.panel.moodle{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
 @media (prefers-color-scheme:dark){.screens>.panel.moodle{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
-
-/* ---- Proposta v3: painel de hierarquia (ref. imagem + comentários) ---- */
-.v3-card{display:flex;flex-direction:column;flex:1 1 300px;padding:0;overflow:hidden;}
-.v3-toolbar{display:flex;align-items:center;gap:20px;padding:10px 12px;border-bottom:0.5px solid var(--border);}
-.v3-tbtn{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:13px;color:var(--text-primary);background:none;border:0;cursor:pointer;padding:2px 0;}
-.v3-tbtn:hover{color:var(--text-accent);}
-.v3-tbtn .g{font-size:12px;color:var(--text-secondary);}
-.v3-gear{margin-left:auto;font-size:16px;line-height:1;background:none;border:0;cursor:pointer;color:var(--text-secondary);width:28px;height:28px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;}
-.v3-gear:hover,.v3-gear.active{background:var(--bg-accent);color:var(--text-accent);}
-.v3-toggles{display:flex;flex-direction:column;gap:11px;padding:13px 12px;border-bottom:0.5px solid var(--border);}
-.v3-toggles.collapsed{display:none;}
-.tgl-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;cursor:pointer;}
-.tgl{position:relative;display:inline-block;width:36px;height:20px;flex:none;}
-.tgl input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1;}
-.tgl-track{position:absolute;inset:0;background:var(--border-stronger);border-radius:10px;transition:.15s;}
-.tgl-track::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.2);}
-.tgl input:checked+.tgl-track{background:var(--text-accent);}
-.tgl input:checked+.tgl-track::after{transform:translateX(16px);}
-.v3-search-wrap{padding:11px 12px;border-bottom:0.5px solid var(--border);position:relative;}
-.v3-search{display:flex;align-items:center;gap:9px;background:var(--surface-1);border:0.5px solid var(--border-strong);border-radius:var(--radius);padding:8px 11px;}
-.v3-search-ic{color:var(--text-muted);font-size:14px;}
-.v3-search input{flex:1;border:0;background:none;font:inherit;font-size:13px;color:var(--text-primary);outline:none;}
-.v3-results{display:none;flex-direction:column;margin-top:8px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);overflow:hidden;}
-.v3-results.open{display:flex;}
-.v3-res{padding:8px 11px;border-bottom:0.5px solid var(--border);cursor:pointer;}
-.v3-res:last-child{border-bottom:0;}
-.v3-res:hover{background:var(--bg-accent);}
-.v3-res-top{display:flex;align-items:baseline;gap:7px;}
-.v3-res-nm{font-size:13px;color:var(--text-primary);}
-.v3-res-id{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);font-weight:400;}
-.v3-res-path{font-size:11px;color:var(--text-secondary);margin-top:2px;}
-.v3-res-empty{padding:9px 11px;font-size:12px;color:var(--text-muted);}
-.v3-tree{max-height:300px;min-height:130px;overflow-y:auto;padding:6px;}
-.v3-children{margin-left:16px;}
-.v3-branch.collapsed>.v3-children{display:none;}
-.v3-node{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:6px;font-size:14px;cursor:pointer;border-left:2px solid transparent;}
-.v3-node:hover{background:var(--surface-1);}
-.v3-node.sel{background:var(--bg-accent);border-left-color:var(--text-accent);}
-.v3-node.sel .v3-nm{color:var(--text-accent);font-weight:600;}
-.v3-chev{width:12px;text-align:center;color:var(--text-secondary);font-size:12px;flex:none;}
-.v3-bullet{width:12px;text-align:center;color:var(--text-muted);flex:none;font-size:13px;line-height:1;}
-.v3-nm{color:var(--text-primary);}
-.v3-tax{display:none;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);background:var(--surface-1);border-radius:4px;padding:1px 6px;}
-.v3-id{display:none;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);font-weight:400;}
-.v3-rule{display:none;font-size:10px;color:var(--text-success);background:var(--bg-success);border:0.5px solid var(--border-success);border-radius:8px;padding:1px 7px;white-space:nowrap;}
-.v3-tree.show-tax .v3-tax{display:inline-block;}
-.v3-tree.show-id .v3-id{display:inline-block;}
-.v3-tree.show-rule .v3-rule{display:inline-block;}
-/* container redimensionável: começa 50/50, usuário ajusta a proporção */
-.v3-split{display:flex;align-items:stretch;margin-top:10px;--split:50%;}
-.v3-split>.v3-card{flex:0 0 calc(var(--split) - 7px);min-width:0;}
-.v3-split>.v3-detail{flex:1 1 0;min-width:0;}
-.v3-resizer{flex:0 0 14px;display:flex;align-items:center;justify-content:center;cursor:col-resize;touch-action:none;align-self:stretch;}
-.v3-grip{width:5px;height:30px;border-left:2px dotted var(--border-stronger);border-right:2px dotted var(--border-stronger);border-radius:2px;}
-.v3-resizer:hover .v3-grip{border-color:var(--text-accent);}
-/* detalhe rotulado (visual as-is) */
-.v3-detail{display:flex;flex-direction:column;}
-.v3-d-field{display:flex;flex-direction:column;gap:1px;padding:6px 0;border-bottom:0.5px solid var(--border);}
-.v3-d-field:first-child{padding-top:0;}
-.v3-d-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);}
-.v3-d-val{font-size:13px;color:var(--text-primary);}
-.v3-d-val.v3-d-title{font-size:16px;font-weight:600;line-height:1.2;}
-.v3-d-val.mono{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);}
-.v3-d-grid{display:flex;gap:14px;}
-.v3-d-grid>.v3-d-field{flex:1;}
-.v3-d-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
 </style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="e-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="e-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="e-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="e-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="e-exchange" viewBox="0 0 24 24"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></symbol>
+  <symbol id="e-move" viewBox="0 0 24 24"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></symbol>
+  <symbol id="e-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></symbol>
+  <symbol id="e-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></symbol>
+  <symbol id="e-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+  <symbol id="e-expand" viewBox="0 0 24 24"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></symbol>
+  <symbol id="e-collapse" viewBox="0 0 24 24"><path d="M17 11l-5-5-5 5M17 18l-5-5-5 5"/></symbol>
+  <symbol id="e-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+  <symbol id="e-rotate" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></symbol>
+  <symbol id="e-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="e-cap" viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+  <symbol id="e-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><path d="M7 7h.01"/></symbol>
+  <symbol id="e-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+</defs></svg>
 <div class="screens">
 
   <section class="panel">
     <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o que está no ar</div>
 
-    <div class="divlbl">Contextbar <span class="idb">BAR</span></div>
-    <div class="row" style="align-items:flex-end;gap:14px;">
-      <div class="col"><span class="lbl">Contexto</span>
-        <div class="row"><span class="cbtn">◍ Sistema</span><span class="cbtn on">▣ Categoria do curso</span></div>
-        <div class="row"><span class="idb">BAR-CTX-01</span><span class="idb">BAR-CTX-02</span></div>
-      </div>
-      <div class="col"><span class="lbl">Categoria</span>
-        <span class="csel"><span>Educação Profissional</span><span style="color:var(--text-secondary)">(4) ⌄</span></span>
-        <span class="idb">BAR-CAT-01</span>
-      </div>
-      <div class="col"><span style="font-size:13px;"><strong style="font-weight:500;">4</strong> <span style="color:var(--text-secondary)">frameworks</span></span>
-        <span class="idb">BAR-COUNT-01 · alterna</span>
-      </div>
-    </div>
+    <div class="note" style="margin-bottom:8px;">A contextbar (<span class="idb">BAR</span>) é renderizada
+      <b>acima</b> das abas, fora do pane — card próprio: <code>bar-contextbar</code>.</div>
 
-    <div class="divlbl">Aba Estrutura <span class="idb">EST</span></div>
     <div class="row" style="justify-content:space-between;">
-      <span class="sw">☐ <span>Mostrar frameworks ocultos</span></span><span class="idb">EST-SHOWHIDDEN</span>
+      <label class="sw"><span class="tgl"><input type="checkbox"><span class="tgl-track"></span></span><span>Mostrar estruturas ocultas</span></label>
+      <span class="idb">EST-SHOWHIDDEN · partial compartilhado</span>
     </div>
-    <div class="row" style="align-items:flex-end;gap:12px;margin-top:8px;">
-      <div class="col"><span class="lbl">Framework de competências</span>
-        <span class="csel" style="min-width:190px;"><span>Competências Gerais · CG-EP</span><span style="color:var(--text-secondary)">⌄</span></span>
+
+    <div class="sub" style="margin-top:9px;">
+      <div class="col"><span class="lbl">Estrutura</span>
+        <span class="csel" style="min-width:180px;"><span>Competências Gerais · CG-EP</span><span style="color:var(--text-secondary)">⌄</span></span>
         <span class="idb">EST-FW-SELECT</span>
       </div>
-      <div class="col"><span style="font-size:12px;color:var(--text-secondary)">Itens: <strong style="font-weight:500;color:var(--text-primary)">12</strong></span><span class="idb">EST-FW-COUNT</span></div>
-      <div class="col" style="margin-left:auto;"><span class="cbtn" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">＋ Adicionar competência raiz</span><span class="idb">EST-ADDROOT</span></div>
-    </div>
-
-    <div class="row" style="gap:10px;align-items:stretch;margin-top:10px;">
-      <div class="pane" style="flex:1 1 180px;">
-        <div class="tnode"><span class="tw">⌄</span><span class="nm">Comunicação</span></div>
-        <div class="tnode" style="padding-left:24px;"><span class="tw">•</span><span class="nm">Comunicação escrita</span></div>
-        <div class="tnode sel"><span class="tw">⌄</span><span class="nm">Resolução de problemas</span></div>
-        <div class="tnode" style="padding-left:24px;"><span class="tw">•</span><span class="nm">Pensamento analítico</span></div>
-        <div class="row" style="margin-top:4px;"><span class="tw"></span><span class="idb">EST-NODE-TOGGLE</span><span class="idb">EST-NODE-ROW</span></div>
-        <div style="font-size:11px;color:var(--text-accent);margin-top:6px;">Carregar mais <span class="idb">EST-TREE-LOADMORE</span></div>
-      </div>
-      <div class="pane" style="flex:1 1 180px;">
-        <div style="font-size:11px;color:var(--text-accent);">Competência <span class="idb">EST-DETAIL-TAXONOMY · sem rótulo</span></div>
-        <div style="font-size:14px;font-weight:500;">Resolução de problemas <span class="idb">EST-DETAIL-TITLE · sem rótulo</span></div>
-        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);">RP-001 <span class="idb">EST-DETAIL-IDNUMBER</span></div>
-        <div style="font-size:12px;margin-top:4px;">8 cursos <span class="idb">EST-DETAIL-COURSES · sem rótulo</span></div>
-        <div class="row" style="margin-top:10px;gap:5px;">
-          <span class="act">✎ Editar</span><span class="act">＋ Adicionar filha</span>
-          <span class="act">⚙ Regra</span><span class="act" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">🔗 Vínculos</span>
-          <span class="act">↑</span><span class="act">↓</span>
-          <span class="act" style="color:var(--text-danger);border-color:var(--border-danger)">🗑 Excluir</span>
-        </div>
-        <div class="row" style="margin-top:6px;"><span class="idb">EST-DETAIL-RULES</span><span class="idb">EST-DETAIL-LINKS</span><span class="idb">EST-DETAIL-MOVEUP/DOWN · só ícone</span><span class="idb">EST-DETAIL-DELETE</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · alinhada ao redesenho do kit</div>
-
-    <div class="divlbl">Contextbar — trilha adaptativa <span class="idb">BAR</span></div>
-    <div class="row"><span class="cbtn">◍ Sistema</span><span class="cbtn on">▣ Categoria do curso</span></div>
-    <div class="pane" style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span style="font-size:11px;"><span style="color:var(--text-muted)">Contexto</span><br>Ed. Profissional</span><span style="color:var(--text-muted)">▸</span>
-      <span style="font-size:11px;color:var(--text-accent)"><span style="color:var(--text-muted)">Framework</span><br>Competências Gerais ⌄</span><span style="color:var(--text-muted)">▸</span>
-      <span style="font-size:11px;"><span style="color:var(--text-muted)">Competência</span><br>Resolução de problemas</span>
-      <span class="idb" style="margin-left:auto;">BAR-COUNT-01 · contexto na trilha</span>
-    </div>
-
-    <div class="row" style="gap:10px;align-items:stretch;margin-top:12px;">
-      <div class="pane" style="flex:1 1 180px;">
-        <div style="font-size:12px;font-weight:500;margin-bottom:4px;">Estrutura do framework</div>
-        <div class="tnode"><span class="tw">⌄</span><span class="nm">Comunicação</span></div>
-        <div class="tnode sel"><span class="tw">⌄</span><span class="nm">Resolução de problemas</span></div>
-        <div class="tnode" style="padding-left:24px;"><span class="tw">•</span><span class="nm">Pensamento analítico</span></div>
-        <div class="tnode"><span class="tw">⌄</span><span class="nm">Trabalho em equipe</span></div>
-      </div>
-      <div class="pane" style="flex:1 1 180px;">
-        <div style="font-size:11px;color:var(--text-accent)">Competência</div>
-        <div style="font-size:14px;font-weight:500;">Resolução de problemas</div>
-        <div class="row" style="margin:6px 0;"><span class="chip">8 cursos · 21 atividades</span><span class="chip" style="background:var(--surface-1);color:var(--text-secondary)">em 2 planos</span></div>
-        <div class="row"><span class="tag" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">CG-EP</span><span class="tag" style="background:var(--bg-warning);color:var(--text-warning);border-color:var(--border-warning)">MAT</span><span class="tag" style="background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)">TI-SEC</span></div>
-        <div class="col" style="margin-top:10px;gap:6px;">
-          <span class="act" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">🔗 Vincular a cursos e atividades</span>
-          <span class="act">✎ Editar competência</span>
-        </div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">to-be: detalhe enriquecido (contagens + planos + tags) — mapeia EST-DETAIL-*</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:var(--text-success)"></span>Proposta v3 (as-is + comentários) · hierarquia refinada</div>
-
-    <div class="divlbl">Contextbar <span class="idb">BAR</span></div>
-    <div class="row"><span class="cbtn">◍ Sistema</span><span class="cbtn on">▣ Categoria do curso</span></div>
-    <div class="row" style="align-items:flex-end;gap:12px;margin-top:8px;">
-      <div class="col"><span class="lbl">Categoria</span>
-        <span class="csel"><span>Educação Profissional</span><span style="color:var(--text-secondary)">(4) ⌄</span></span>
-        <span class="idb">BAR-CAT-01 · só visíveis</span>
-      </div>
-      <label class="sw" style="margin-bottom:7px;cursor:pointer;gap:8px;">
-        <span class="tgl"><input type="checkbox" id="v3-hidden-cats"><span class="tgl-track"></span></span>
-        <span>Mostrar categorias ocultas</span>
-      </label>
-      <span class="idb" style="margin-bottom:7px;">BAR-CAT-HIDDEN · AJAX</span>
-    </div>
-
-    <div class="divlbl">Aba Estrutura <span class="idb">EST</span></div>
-    <div class="row" style="align-items:flex-end;gap:12px;">
-      <div class="col"><span class="lbl">Framework de competências</span>
-        <span class="csel" style="min-width:190px;"><span>Competências Gerais · CG-EP</span><span style="color:var(--text-secondary)">⌄</span></span>
-        <span class="idb">EST-FW-SELECT</span>
-      </div>
+      <div class="col" style="padding-bottom:18px;"><span style="font-size:12px;color:var(--text-secondary)">itens: <strong style="font-weight:500;color:var(--text-primary)">12</strong></span><span class="idb">EST-FW-COUNT</span></div>
       <div class="col" style="margin-left:auto;align-items:flex-end;">
-        <span class="cbtn on" id="v3-add">＋ Adicionar competência</span>
-        <span class="idb" id="v3-add-hint">EST-ADDROOT · sensível ao nível</span>
+        <span class="cbtn on"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-plus"/></svg>Adicionar competência</span>
+        <span class="note">Nova filha de "Comunicação"</span>
+        <span class="idb">EST-ADDROOT + EST-ADDHINT · sensível ao nível</span>
       </div>
     </div>
 
-    <div class="v3-split" id="v3-split">
-      <div class="pane v3-card">
-        <div class="v3-toolbar">
-          <button class="v3-tbtn" id="v3-expand"><span class="g">↕</span> Expandir</button>
-          <button class="v3-tbtn" id="v3-collapse"><span class="g">✕</span> Contrair</button>
-          <button class="v3-gear" id="v3-gear" title="Opções de exibição">⚙</button>
+    <div class="split">
+      <div class="pane treecard">
+        <div class="tbar">
+          <span class="tbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-expand"/></svg>Expandir tudo</span>
+          <span class="tbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-collapse"/></svg>Recolher tudo</span>
+          <span class="tbtn tgear"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-cog"/></svg></span>
         </div>
-        <div class="v3-toggles" id="v3-toggles">
-          <label class="tgl-row"><span>Exibir taxonomia</span><span class="tgl"><input type="checkbox" data-t="tax"><span class="tgl-track"></span></span></label>
-          <label class="tgl-row"><span>Exibir identificação</span><span class="tgl"><input type="checkbox" data-t="id"><span class="tgl-track"></span></span></label>
-          <label class="tgl-row"><span>Exibir regra de competência</span><span class="tgl"><input type="checkbox" data-t="rule" checked><span class="tgl-track"></span></span></label>
+        <div class="opts">
+          <label class="optrow" for="est-disp-tax"><span>Exibir taxonomia</span><span class="tgl"><input type="checkbox" id="est-disp-tax"><span class="tgl-track"></span></span></label>
+          <label class="optrow" for="est-disp-id"><span>Mostrar identificadores</span><span class="tgl"><input type="checkbox" id="est-disp-id"><span class="tgl-track"></span></span></label>
+          <label class="optrow" for="est-disp-rule"><span>Exibir regra de competência</span><span class="tgl"><input type="checkbox" id="est-disp-rule" checked><span class="tgl-track"></span></span></label>
         </div>
-        <div class="v3-search-wrap">
-          <div class="v3-search"><span class="v3-search-ic">⌕</span><input id="v3-search" placeholder="Buscar por nome ou identificador"></div>
-          <span class="idb" style="display:inline-block;margin-top:7px;">EST-SEARCH · AJAX</span>
-          <div class="v3-results" id="v3-results"></div>
+        <div class="searchwrap">
+          <div class="search"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-search"/></svg><span>Buscar por nome ou identificador</span></div>
         </div>
-        <!-- HANDOFF: "Regra de competência" só se aplica a nós COM filhas. Nós-folha (último
-             nível hierárquico) NÃO renderizam a tag de regra (.v3-rule) — não exibir "nenhuma",
-             pois confunde (não é possível ter regra sem filhas). No template/back-end: só inclua
-             o badge de regra quando node.children.length > 0. -->
-        <div class="v3-tree show-rule" id="v3-tree">
-          <div class="v3-branch" data-collapsible>
-            <div class="v3-node sel" data-name="Comunicação" data-courses="5" data-acts="21" data-rule="Todas as competências filhas"><span class="v3-chev">⌄</span><span class="v3-tax">Competência</span><span class="v3-nm">Comunicação</span><span class="v3-id">CG-COM</span><span class="v3-rule">regra: todas as filhas</span></div>
-            <div class="v3-children">
-              <div class="v3-node" data-name="Comunicação escrita" data-courses="3" data-acts="12"><span class="v3-bullet">•</span><span class="v3-tax">Indicador</span><span class="v3-nm">Comunicação escrita</span><span class="v3-id">CG-COM-01</span></div>
-              <div class="v3-node" data-name="Comunicação oral" data-courses="2" data-acts="9"><span class="v3-bullet">•</span><span class="v3-tax">Indicador</span><span class="v3-nm">Comunicação oral</span><span class="v3-id">CG-COM-02</span></div>
-            </div>
+        <div class="tree">
+          <div class="tnode sel"><span class="tw">⌄</span><span class="ntax">Competência</span><span class="nm">Comunicação</span><span class="nid">CG-COM</span><span class="nrule">todas as filhas</span><span class="grip"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-move"/></svg></span></div>
+          <div class="tnode" style="padding-left:22px;"><span class="tw">•</span><span class="ntax">Indicador</span><span class="nm">Comunicação escrita</span><span class="nid">CG-COM-01</span><span class="grip"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-move"/></svg></span></div>
+          <div class="tnode"><span class="tw">›</span><span class="ntax">Competência</span><span class="nm">Resolução de problemas</span><span class="nid">CG-RP</span><span class="nrule">1 ponto</span><span class="grip"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-move"/></svg></span></div>
+          <div class="row" style="margin:5px 0 3px;"><span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--text-accent)"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-down"/></svg>Carregar mais <strong style="font-weight:500;">+2</strong></span><span class="note">Mostrando 1 de 3</span></div>
+          <div class="note" style="padding:0 5px;">Os três toggles acima <b>funcionam</b>: a árvore nasce
+            com taxonomia e identificador <b>ocultos</b> e regra <b>visível</b> — os padrões reais do plugin.</div>
+        </div>
+      </div>
+      <div class="rez"><span></span></div>
+      <div class="pane detcard">
+        <div class="dhead">
+          <div class="row" style="justify-content:space-between;"><span class="dtitle">Comunicação</span><span class="dtax">Competência</span></div>
+          <div class="dchips">
+            <span class="dchip acc"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-check"/></svg>todas as filhas</span>
+            <span class="dchip"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-tag"/></svg>Módulo</span>
+            <span class="dchip">Número de identificação: <span style="font-family:var(--font-mono)">CG-COM</span></span>
+            <span class="dchip">Escala padrão</span><span class="dchip">Ano 1</span><span class="dchip">Intermediário</span>
           </div>
-          <div class="v3-branch collapsed" data-collapsible>
-            <div class="v3-node" data-name="Resolução de problemas" data-courses="8" data-acts="34" data-rule="Pelo menos 1 ponto de competência"><span class="v3-chev">›</span><span class="v3-tax">Competência</span><span class="v3-nm">Resolução de problemas</span><span class="v3-id">CG-RP</span><span class="v3-rule">regra: 1 ponto</span></div>
-            <div class="v3-children">
-              <div class="v3-node" data-name="Pensamento analítico" data-courses="4" data-acts="15"><span class="v3-bullet">•</span><span class="v3-tax">Indicador</span><span class="v3-nm">Pensamento analítico</span><span class="v3-id">CG-RP-01</span></div>
-              <div class="v3-branch collapsed" data-collapsible>
-                <div class="v3-node" data-name="Pensamento crítico" data-courses="3" data-acts="11" data-rule="Todas as competências filhas"><span class="v3-chev">›</span><span class="v3-tax">Competência</span><span class="v3-nm">Pensamento crítico</span><span class="v3-id">CG-RP-02</span><span class="v3-rule">regra: todas</span></div>
-                <div class="v3-children">
-                  <div class="v3-node" data-name="Análise de dados" data-courses="2" data-acts="6"><span class="v3-bullet">•</span><span class="v3-tax">Indicador</span><span class="v3-nm">Análise de dados</span><span class="v3-id">CG-RP-02-A</span></div>
-                </div>
-              </div>
-            </div>
+        </div>
+        <div class="dbody">
+          <div class="metrics">
+            <div class="metric"><div class="mlbl">Cursos vinculados</div><div class="mval">5</div></div>
+            <div class="metric"><div class="mlbl">Atividades vinculadas</div><div class="mval">21</div></div>
+            <div class="metric"><div class="mlbl">Planos vinculados</div><div class="mval">2</div></div>
           </div>
-          <div class="v3-branch collapsed" data-collapsible>
-            <div class="v3-node" data-name="Trabalho em equipe" data-courses="6" data-acts="19" data-rule="Pelo menos 2 pontos de competência"><span class="v3-chev">›</span><span class="v3-tax">Competência</span><span class="v3-nm">Trabalho em equipe</span><span class="v3-id">CG-TE</span><span class="v3-rule">regra: 2 pontos</span></div>
-            <div class="v3-children">
-              <div class="v3-node" data-name="Colaboração" data-courses="3" data-acts="8"><span class="v3-bullet">•</span><span class="v3-tax">Indicador</span><span class="v3-nm">Colaboração</span><span class="v3-id">CG-TE-01</span></div>
-            </div>
+          <div class="note">Comunica-se com clareza na escrita e na fala.</div>
+          <div class="refs">
+            <div class="refhead"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-exchange"/></svg><span>Competências referenciadas</span><span class="refcount">2</span></div>
+            <div class="row" style="margin-top:5px;"><span class="refchip">Trabalho em equipe</span><span class="refchip">Pensamento crítico</span></div>
           </div>
         </div>
       </div>
+    </div>
+    <div class="row" style="margin-top:5px;gap:4px;">
+      <span class="idb">EST-TREE-PANE</span><span class="idb">EST-TOOL-EXPAND/COLLAPSE/GEAR</span><span class="idb">EST-DISP-TAX/ID/RULE</span>
+      <span class="idb">EST-SEARCH</span><span class="idb">EST-NODE-ROW · 20 data-*</span><span class="idb">EST-NODE-DRAG</span>
+      <span class="idb">EST-TREE-LOADMORE</span><span class="idb">EST-RESIZER · 22px</span><span class="idb">EST-DETAIL-TITLE/TAXONOMY</span>
+      <span class="idb">EST-DETAIL-RULECHIP/LABEL/IDNUMBER/SCALE/TAG1/TAG2</span>
+      <span class="idb">EST-DETAIL-COURSES/ACTIVITIES/PLANS</span><span class="idb">EST-REFS-PANEL/COUNT/LIST</span>
+    </div>
 
-      <div class="v3-resizer" id="v3-resizer" role="separator" aria-orientation="vertical" title="Arraste para ajustar a proporção dos painéis (começa em 50/50)"><span class="v3-grip"></span></div>
+    <div class="divlbl">Sticky-footer da <b>página</b> — o CRUD do nó <b>saiu do pane</b></div>
+    <div class="foot">
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-pencil"/></svg>Editar detalhes</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-plus"/></svg>Adicionar filha</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-list"/></svg>Regra de competência</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-link"/></svg>Cursos e atividades</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-exchange"/></svg>Competências referenciadas</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-move"/></svg>Mover para posição…</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-trash"/></svg>Excluir</span>
+    </div>
+    <div class="row" style="margin-top:5px;gap:4px;">
+      <span class="idb">EST-DETAIL-EDIT</span><span class="idb">EST-DETAIL-ADDCHILD</span><span class="idb">EST-DETAIL-RULES</span>
+      <span class="idb">EST-DETAIL-LINKS</span><span class="idb">EST-DETAIL-RELATED · novo</span><span class="idb">EST-DETAIL-MOVETO · novo</span>
+      <span class="idb">EST-DETAIL-DELETE</span>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>Aposentados:</b> <code>EST-DETAIL-MOVEUP</code> e <code>EST-DETAIL-MOVEDOWN</code> (as setas ↑↓)
+      não existem mais — viraram <code>EST-DETAIL-MOVETO</code>, que abre <code>MOD.MOVETO</code>.
+      IDs não reaproveitados; a aposentadoria está registrada no mapa.
+    </div>
+  </section>
 
-      <div class="pane v3-detail" id="v3-detail">
-        <div class="v3-d-field"><span class="v3-d-lbl">Taxonomia</span><span class="v3-d-val" id="v3-d-tax">Competência</span></div>
-        <div class="v3-d-field"><span class="v3-d-lbl">Nome</span><span class="v3-d-val v3-d-title" id="v3-d-name">Comunicação</span></div>
-        <div class="v3-d-field"><span class="v3-d-lbl">Número de identificação</span><span class="v3-d-val mono" id="v3-d-id">CG-COM</span></div>
-        <div class="v3-d-grid">
-          <div class="v3-d-field"><span class="v3-d-lbl">Cursos vinculados</span><span class="v3-d-val" id="v3-d-courses">5</span></div>
-          <div class="v3-d-field"><span class="v3-d-lbl">Atividades vinculadas</span><span class="v3-d-val" id="v3-d-acts">21</span></div>
-        </div>
-        <div class="v3-d-field"><span class="v3-d-lbl">Regra de competência</span><span class="v3-d-val" id="v3-d-rule">Todas as competências filhas</span></div>
-        <div class="v3-d-actions">
-          <span class="act">✎ Editar</span>
-          <span class="act">＋ Adicionar filha</span>
-          <span class="act">⚙ Regra</span>
-          <span class="act" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">🔗 Vínculos</span>
-          <span class="act">⇄ Competências referenciadas</span>
-          <span class="act">↑</span>
-          <span class="act">↓</span>
-          <span class="act" style="color:var(--text-danger);border-color:var(--border-danger)">🗑 Excluir</span>
-        </div>
-        <div class="row" style="margin-top:8px;"><span class="idb">EST-DETAIL-* · campos rotulados</span></div>
+  <section class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · as três melhorias que caem nesta tela</div>
+
+    <div class="divlbl" style="border-top:0;padding-top:0;margin-top:0;">1 · Ícones + indicador nas abas <span class="prov">mtube: tab icons</span></div>
+    <div class="tabs">
+      <span class="tb"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-grid"/></svg>Estruturas</span>
+      <span class="tb active"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-list"/></svg>Competências</span>
+      <span class="tb"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-cap"/></svg>Planos de aprendizagem</span>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      O indicador da aba ativa é <code>box-shadow: inset 0 -2px 0</code> — é o que está pintado acima, não uma legenda.
+      O ícone entra pelo <b>rótulo</b>: <code>core/dynamic_tabs</code> faz triple-stash de <code>displayname</code>
+      (<code>dynamic_tabs.mustache:53</code>), então <b>nenhum template do core muda</b>.
+      Escopar sob <code>.local-dimensions-central-page</code> (já no <code>&lt;body&gt;</code>, <code>central.php:57</code>)
+      para não vazar a outros consumidores de <code>dynamic_tabs</code> do site.
+      <b>Não</b> portar o dropdown de overflow por <code>ResizeObserver</code>: ~130 linhas de medição para três rótulos que nunca transbordam.
+    </div>
+
+    <div class="divlbl">2 · Loading no <code>reloadPane</code> <span class="prov">mtube: loading</span></div>
+    <div class="load" role="status" aria-busy="true" aria-live="polite">
+      <span class="spin" aria-hidden="true"></span><span>Carregando competências…</span>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      O anel acima gira de verdade (<code>@keyframes</code> + <code>animation</code>), e o
+      <code>aria-busy="true"</code> está <b>neste</b> elemento — não só na legenda.
+    </div>
+    <div class="note" style="margin-top:6px;background:var(--bg-warning);color:var(--text-warning);border:0.5px solid var(--border-warning);border-radius:var(--radius);padding:6px 8px;">
+      <b>Correção medida:</b> o alvo <b>não</b> é a troca de aba — essa <b>já tem loading, e vem do core</b>
+      (<code>dynamic_tabs.js:92-97</code> → <code>loadTab</code> → <code>addIconToContainer</code>, <code>:153</code>;
+      e <code>:88</code> esvazia o pane anterior). A lacuna é o <code>reloadPane</code> do plugin
+      (<code>tabs.js:51-66</code>), que refaz o caminho do <code>loadTab</code> <b>sem</b> o ícone — e é ele que
+      roda nas <b>23</b> chamadas de 5 módulos.
+    </div>
+    <div class="row" style="margin-top:7px;align-items:stretch;gap:7px;">
+      <div class="col" style="flex:1 1 150px;gap:3px;">
+        <span class="note"><b>Pane recarregado → spinner</b></span>
+        <div class="load" style="height:44px;font-size:10px;"><span class="spin sm" aria-hidden="true"></span><span>reloadPane</span></div>
       </div>
+      <div class="col" style="flex:1 1 150px;gap:3px;">
+        <span class="note"><b>Linha trocada → flash</b> (sem spinner)</span>
+        <div class="flash">Comunicação · linha atualizada in-place</div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>Ressalva:</b> <b>não</b> aplicar em <code>refreshNode</code> (<code>structure.js:725-785</code>) — é caminho
+      in-place <b>deliberado</b>, que troca a linha preservando expansão e seleção. Um spinner de pane inteiro ali
+      destruiria visualmente o estado que a função existe para preservar. Vale igual para <code>persistRule</code>,
+      <code>updateCourseCount</code> e <code>applyShowHidden</code>, que já se confirmam com flash
+      (<code>--mds-motion-flash</code>, via WAAPI).
+    </div>
+
+    <div class="divlbl">3 · Atualizar na contextbar <span class="prov">mtube: refresh</span></div>
+    <div class="row" style="gap:10px;">
+      <div class="col" style="gap:3px;"><span class="note">repouso</span><span class="rbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-rotate"/></svg>Atualizar</span></div>
+      <div class="col" style="gap:3px;"><span class="note">em curso · <code>disabled</code> + ícone girando</span>
+        <button type="button" class="rbtn" disabled><span class="spin sm" aria-hidden="true"></span>Atualizar</button>
+      </div>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      O botão da direita é um <code>&lt;button disabled&gt;</code> de verdade e o anel gira — a disciplina do mtube
+      (<code>disabled</code> + <code>fa-spin</code>, restaurados num <code>finally</code>) está demonstrada, não descrita.
+      Sem string nova: o pane de inscrição já shipa <code>{{#str}}refresh, moodle{{/str}}</code> + <code>fa fa-rotate</code>
+      (<code>enrol_methods.mustache:40,48,109</code>).
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>Precisão:</b> não é verdade que "nada expõe <code>reloadPane</code>" — ele tem <b>23 chamadas em 5 módulos</b>
+      (<code>structure</code> 9, <code>frameworks</code> 6, <code>plans</code> 6, <code>competency_browser</code> 1,
+      <code>context</code> 1). O que é verdade é que <b>nenhum controle de UI</b> o dispara. E o refresh precisa
+      reatualizar as contagens da barra: <code>reloadPane</code> não a re-renderiza (<code>context.js:250-251</code>),
+      então sozinho deixaria <code>BAR-COUNT-01</code> stale — o defeito do subtítulo do mtube, aqui.
     </div>
   </section>
 
 </div>
-
-<script>
-(function(){
-  const tree=document.getElementById('v3-tree');
-  if(!tree)return;
-  // toggles de exibição → classes no container da árvore
-  const map={tax:'show-tax',id:'show-id',rule:'show-rule'};
-  document.querySelectorAll('#v3-toggles input[data-t]').forEach(cb=>{
-    cb.addEventListener('change',()=>tree.classList.toggle(map[cb.dataset.t],cb.checked));
-  });
-  // engrenagem oculta/expande a lista de toggles
-  const gear=document.getElementById('v3-gear'),toggles=document.getElementById('v3-toggles');
-  gear.addEventListener('click',()=>{toggles.classList.toggle('collapsed');gear.classList.toggle('active',!toggles.classList.contains('collapsed'));});
-  gear.classList.add('active');
-  // expandir / contrair tudo
-  function setAll(open){
-    tree.querySelectorAll('.v3-branch[data-collapsible]').forEach(b=>{
-      b.classList.toggle('collapsed',!open);
-      const c=b.querySelector(':scope > .v3-node > .v3-chev');
-      if(c)c.textContent=open?'⌄':'›';
-    });
-  }
-  document.getElementById('v3-expand').addEventListener('click',()=>setAll(true));
-  document.getElementById('v3-collapse').addEventListener('click',()=>setAll(false));
-  // seleção + colapso de nó + detalhe rotulado + nível para "Adicionar competência"
-  const hint=document.getElementById('v3-add-hint');
-  function set(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
-  function fillDetail(node){
-    set('v3-d-tax',node.querySelector('.v3-tax')?.textContent||'Competência');
-    set('v3-d-name',node.getAttribute('data-name'));
-    set('v3-d-id',node.querySelector('.v3-id')?.textContent||'—');
-    set('v3-d-courses',node.dataset.courses||'0');
-    set('v3-d-acts',node.dataset.acts||'0');
-    // Regra só existe em nós com filhas; folhas → não aplicável (ver HANDOFF na árvore)
-    set('v3-d-rule',node.dataset.rule?node.dataset.rule:'Não aplicável (sem filhas)');
-  }
-  tree.addEventListener('click',e=>{
-    const node=e.target.closest('.v3-node');if(!node)return;
-    tree.querySelectorAll('.v3-node.sel').forEach(n=>n.classList.remove('sel'));
-    node.classList.add('sel');
-    hint.textContent='EST-ADDROOT · filha de "'+node.getAttribute('data-name')+'"';
-    fillDetail(node);
-    const chev=node.querySelector('.v3-chev');
-    if(chev){const br=node.parentElement;const col=br.classList.toggle('collapsed');chev.textContent=col?'›':'⌄';}
-  });
-  // redimensionar os dois painéis — começa 50/50, ajustável pelo usuário
-  const split=document.getElementById('v3-split'),rez=document.getElementById('v3-resizer');
-  if(split&&rez){
-    let drag=false;
-    rez.addEventListener('pointerdown',e=>{drag=true;rez.setPointerCapture(e.pointerId);e.preventDefault();});
-    rez.addEventListener('pointermove',e=>{
-      if(!drag)return;
-      const r=split.getBoundingClientRect();
-      let pct=((e.clientX-r.left)/r.width)*100;
-      pct=Math.max(28,Math.min(72,pct));
-      split.style.setProperty('--split',pct+'%');
-    });
-    rez.addEventListener('pointerup',e=>{drag=false;try{rez.releasePointerCapture(e.pointerId);}catch(_){}});
-  }
-  // busca AJAX (demo): nome + idnumber (peso menor) + caminho
-  const DATA=[
-    {nm:'Comunicação escrita',id:'CG-COM-01',path:'Competências Gerais › Comunicação'},
-    {nm:'Comunicação oral',id:'CG-COM-02',path:'Competências Gerais › Comunicação'},
-    {nm:'Pensamento analítico',id:'CG-RP-01',path:'Competências Gerais › Resolução de problemas'},
-    {nm:'Pensamento crítico',id:'CG-RP-02',path:'Competências Gerais › Resolução de problemas'},
-    {nm:'Análise de dados',id:'CG-RP-02-A',path:'Competências Gerais › Resolução de problemas › Pensamento crítico'},
-    {nm:'Colaboração',id:'CG-TE-01',path:'Competências Gerais › Trabalho em equipe'}
-  ];
-  const input=document.getElementById('v3-search'),res=document.getElementById('v3-results');
-  input.addEventListener('input',()=>{
-    const q=input.value.trim().toLowerCase();
-    if(!q){res.classList.remove('open');res.innerHTML='';return;}
-    const hits=DATA.filter(d=>(d.nm+' '+d.id).toLowerCase().includes(q));
-    res.innerHTML=hits.length?hits.map(d=>'<div class="v3-res"><div class="v3-res-top"><span class="v3-res-nm">'+d.nm+'</span><span class="v3-res-id">'+d.id+'</span></div><div class="v3-res-path">'+d.path+'</div></div>').join(''):'<div class="v3-res-empty">Sem resultados</div>';
-    res.classList.add('open');
-  });
-})();
-</script>
