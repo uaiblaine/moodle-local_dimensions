@@ -1,86 +1,404 @@
-<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Procurar em frameworks" subtitle="MOD.BROWSER — atual vs proposta, com IDs" -->
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Procurar em estruturas" subtitle="MOD.BROWSER — seletor de estrutura + árvore compartilhada; contra-exemplo do IMP-06 (o fechar-no-save está certo aqui)" -->
 <style>
 :root{
   --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
   --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
   --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
-  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
   --text-success:#0f6e56;--bg-success:#e1f5ee;--border-success:#5dcaa5;
+  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
+  --text-danger:#a32d2d;--bg-danger:#fcebeb;--border-danger:#f09595;
   --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
   --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+  --mds-motion-fast:150ms;--mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
+  /* Acento FIXO, fora do alcance dos dois painéis — mesmo precedente do mod-related/mod-links.
+     Herdar --text-accent mata no painel .moodle escuro, onde vira #3f89cc. Aqui é só TEXTO
+     (o "Carregar mais" e a info do alert). Medido no DOM. */
+  --acc-fg:#185fa5;
+  /* Preenchimento primário (o "Adicionar selecionadas"). NÃO pode ser var(--text-accent): no
+     escuro do painel DS ele vira o azul CLARO #85b7eb e branco sobre ele dá 2,11:1. O par fixo
+     #185fa5/#fff também não serve sozinho — passa no RÓTULO e reprova no PREENCHIMENTO contra a
+     superfície escura (a armadilha da Task 12). Daí a inversão blue-200 no escuro. */
+  --prim-bg:#185fa5;--prim-fg:#fff;
+  /* Chip de fechar: os três literais que o styles.css:3557-3586 publica, sem variante dark. */
+  --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
+  --prov-fg:#185fa5;--prov-bg:#e6f1fb;
+  /* alert-info do Bootstrap: o vazio de estruturas. Par próprio, medido nos dois temas. */
+  --info-fg:#12596e;--info-bg:#e3f3f7;
 }
 @media (prefers-color-scheme:dark){:root{
   --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
   --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
   --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
-  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
   --text-success:#5dcaa5;--bg-success:#0a2a24;--border-success:#085041;
+  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
+  --text-danger:#f09595;--bg-danger:#2a1313;--border-danger:#791f1f;
   --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+  --acc-fg:#85b7eb;
+  --prov-fg:#85b7eb;--prov-bg:#0c2740;
+  --prim-bg:#85b7eb;--prim-fg:#0c2740;
+  --info-fg:#7fcfe3;--info-bg:#0a2730;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
-.screens{display:flex;flex-wrap:wrap;gap:18px;}
-.panel{flex:1 1 400px;min-width:320px;}
-.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:10px;}
-.pdot{width:8px;height:8px;border-radius:50%;}
+.screens{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;}
+.panel{flex:1 1 470px;min-width:340px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+/* .note usa --text-secondary, NÃO --text-muted: a 10px o muted reprova o AA. Medido. */
+.note{font-size:10px;color:var(--text-secondary);}
 .idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
-.lbl{font-size:11px;color:var(--text-secondary);}
+.prov{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:10px;background:var(--prov-bg);color:var(--prov-fg);border:0.5px solid var(--prov-fg);white-space:nowrap;}
 .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .col{display:flex;flex-direction:column;gap:4px;}
+/* code com cor PRÓPRIA: o --text-secondary do painel .moodle claro sobre o fundo do chip dá
+   4,07:1 e reprova. Com --text-primary passa nos dois painéis e nos dois temas. */
+code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);color:var(--text-primary);border-radius:4px;padding:0 3px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ic.sm{width:0.75rem;height:0.75rem;}
+
+/* ---- casca do modal ---- */
 .m{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
-.m-head{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:0.5px solid var(--border);}
-.m-title{font-size:13px;font-weight:500;}.m-x{margin-left:auto;color:var(--text-muted);}
-.m-body{padding:12px 13px;display:flex;flex-direction:column;gap:9px;}
-.m-foot{display:flex;justify-content:flex-end;gap:8px;padding:9px 13px;border-top:0.5px solid var(--border);}
-.btn{font-size:12px;padding:5px 11px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:var(--surface-2);}
-.btn-primary{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent);}
-.ctrl{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;padding:6px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);}
-.sw{display:inline-flex;align-items:center;gap:7px;font-size:12px;}
-.opt{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:6px;font-size:12px;}
-.opt.on{background:var(--bg-accent);color:var(--text-accent);}
-.tag{font-size:10px;padding:1px 6px;border-radius:10px;border:0.5px solid;}
-.path{font-size:10px;color:var(--text-muted);}
-.pg{min-width:22px;height:22px;border:0.5px solid var(--border-strong);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;padding:0 4px;}
-.pg.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent);}
-.note{font-size:10px;color:var(--text-muted);}
-.screens>.panel:last-child{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
-@media (prefers-color-scheme:dark){.screens>.panel:last-child{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
+.m-head{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:0.5px solid var(--border);}
+.m-title{font-size:13px;font-weight:500;flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.m-x{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;padding:0;border:0;border-radius:8px;background:var(--close-bg);color:var(--close-fg);font-size:0.8rem;line-height:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
+.m-x:hover,.m-x:focus-visible{background:var(--close-bg-hover);}
+.m-body{padding:11px 12px;display:flex;flex-direction:column;gap:8px;}
+/* O rodapé aqui NÃO é fantasma (ao contrário do mod-related): o ModalSaveCancel enche o bloco
+   {{$footer}} com Cancelar + Salvar (lib/templates/modal_save_cancel.mustache:42-45), o core vê
+   filhos e o revela sozinho. É o contra-exemplo do IMP-06, e por isso a barra é desenhada cheia. */
+.m-foot{display:flex;justify-content:flex-end;gap:8px;padding:9px 12px;border-top:0.5px solid var(--border);}
+
+/* ---- controles ---- */
+.lbl{font-size:11px;font-weight:500;}
+/* Contorno de CONTROLE: os 3:1 da 1.4.11 valem, e a régua não é a do texto. Medido nas quatro
+   superfícies (claro/escuro × dois painéis), --border-strong entrega 1,60 / 1,49 / 1,71 / 3,36 —
+   reprova em três, inclusive no CLARO. Só --text-secondary passa nas quatro. Segue a correção do
+   mod-related/mod-links; o conserto do TOKEN no kit inteiro continua pendente (ver a nota final). */
+.ctrl{display:flex;align-items:center;gap:6px;font-size:11px;padding:5px 8px;border:0.5px solid var(--text-secondary);border-radius:var(--radius);background:var(--surface-2);}
+.ph{color:var(--text-secondary);flex:1;}
+.chev{color:var(--text-secondary);flex:none;}
+.bprim{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:4px 9px;border:0;border-radius:var(--radius);background:var(--prim-bg);color:var(--prim-fg);white-space:nowrap;font-family:inherit;cursor:pointer;}
+.bsec{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:4px 9px;border:0.5px solid var(--text-secondary);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);white-space:nowrap;font-family:inherit;cursor:pointer;}
+/* Desabilitado: o :disabled do to-be. .5 de opacidade é o do Bootstrap; o contraste do rótulo
+   desabilitado está FORA da 1.4.3 por isenção explícita (componentes inativos). */
+.bprim:disabled{opacity:0.5;cursor:not-allowed;}
+.sw{display:inline-flex;align-items:center;gap:7px;font-size:11px;}
+/* O switch: quadrado do form-check-input do Bootstrap, desenhado, não interativo. */
+.box{width:12px;height:12px;border:1px solid var(--text-secondary);border-radius:3px;flex:none;display:inline-flex;align-items:center;justify-content:center;color:var(--prim-fg);background:var(--surface-2);}
+.box.on{background:var(--prim-bg);border-color:var(--prim-bg);}
+.box.lock{background:var(--surface-0);border-color:var(--text-secondary);color:var(--text-secondary);}
+
+/* ---- alertas ---- */
+/* A borda do alert é --info-fg, não um --info-bd próprio: medido, o par que eu tinha dava 2,51
+   no claro e 1,94 no escuro — reprovava nos dois. Mesma correção que o .toast do mod-links, e
+   pelo mesmo motivo: no escuro o tint encosta na superfície do modal e quem segura a caixa é a
+   borda. Com --info-fg passa nos dois temas. */
+.info{border:0.5px solid var(--info-fg);background:var(--info-bg);color:var(--info-fg);border-radius:var(--radius);padding:7px 9px;font-size:10.5px;display:flex;align-items:flex-start;gap:6px;}
+.warn{border:0.5px solid var(--text-warning);background:var(--bg-warning);color:var(--text-warning);border-radius:var(--radius);padding:7px 9px;font-size:10px;}
+.ok{border:0.5px solid var(--border-success);background:var(--bg-success);color:var(--text-success);border-radius:var(--radius);padding:7px 9px;font-size:10px;}
+.ok b,.warn b,.info b{font-weight:600;}
+
+/* ---- a árvore ---- */
+.tree{border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);padding:3px;}
+.node{display:flex;align-items:flex-start;gap:5px;padding:3px 4px;border-radius:4px;cursor:pointer;}
+.node:hover{background:var(--surface-1);}
+/* A trava: checked + disabled (tree.js:117-119). NÃO tem cursor:pointer — makeNode só o aplica
+   quando !already (tree.js:140-142). */
+.node.locked{cursor:default;}
+.node.locked:hover{background:transparent;}
+.nchev{color:var(--text-secondary);flex:none;width:12px;display:inline-flex;padding-top:2px;}
+/* Sem filhos o botão FICA no DOM e leva .invisible (tree.js:108) — mantém a coluna alinhada. */
+.nchev.inv{visibility:hidden;}
+/* makeNode empilha nome e caminho em <div>s (tree.js:129-137) — blocos, não inline. */
+.ntext{flex:1;min-width:0;}
+.nname{display:block;font-size:11px;line-height:1.35;}
+.nsuf{color:var(--text-secondary);}
+.npath{display:block;font-size:9.5px;color:var(--text-secondary);line-height:1.3;}
+.more{font-size:10px;color:var(--acc-fg);background:none;border:0;padding:2px 4px;cursor:pointer;font-family:inherit;text-decoration:underline;}
+/* O indent real: 20px por nível (INDENT_STEP, tree.js:48, aplicado em :94). Não é aproximação. */
+.d1{margin-left:20px;}
+.d2{margin-left:40px;}
+
+/* ---- DEMONSTRAÇÃO 1 (as-is): o storyboard da troca de estrutura ----
+   Três PASSOS, não um select vivo: CSS não zera checkbox, e fingir que zera seria afirmar o que a
+   tela não carrega. Como passos, reler o passo 2 e ver a marca de volta é CORRETO — é o passo 2.
+   Os radios são irmãos do .pane e o ~ os alcança (combinador de IRMÃO, nunca :has(): medido no
+   mod-participants, um :has() num ancestral só reavalia um passo depois).
+   O que se demonstra é o ESTADO em cada passo, não o mecanismo — em produção quem limpa é
+   state.checked.clear() (js:115) seguido de applyMode(state,'tree','') (js:116). */
+.dchk{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+.steps{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;}
+.step{font-size:9.5px;padding:2px 7px;border-radius:10px;border:0.5px solid var(--text-secondary);color:var(--text-secondary);cursor:pointer;background:var(--surface-2);}
+#s1:checked ~ .steps .st1,#s2:checked ~ .steps .st2,#s3:checked ~ .steps .st3{background:var(--prim-bg);color:var(--prim-fg);border-color:var(--prim-bg);}
+#s1:focus-visible ~ .steps .st1,#s2:focus-visible ~ .steps .st2,#s3:focus-visible ~ .steps .st3{outline:2px solid var(--acc-fg);outline-offset:2px;}
+/* Passo 1 e 2 = Estrutura A; passo 3 = Estrutura B. */
+#s3:checked ~ .pane .fw-a{display:none;}
+#s1:checked ~ .pane .fw-b,#s2:checked ~ .pane .fw-b{display:none;}
+/* A marca do passo 2 só existe no passo 2. */
+#s1:checked ~ .pane .pick-on,#s3:checked ~ .pane .pick-on{display:none;}
+#s2:checked ~ .pane .pick-off{display:none;}
+/* A legenda de cada passo. */
+#s1:checked ~ .pane .lg2,#s1:checked ~ .pane .lg3,
+#s2:checked ~ .pane .lg1,#s2:checked ~ .pane .lg3,
+#s3:checked ~ .pane .lg1,#s3:checked ~ .pane .lg2{display:none;}
+
+/* ---- DEMONSTRAÇÃO 2 (to-be): marcar habilita o "Adicionar selecionadas" ----
+   Aqui o mecanismo É o mesmo da proposta: a marca governa o disabled do botão. Um <label> de
+   verdade envolve a linha, então o clique alterna o checkbox nativo; o ~ pinta o resto. */
+#b-pick:checked ~ .dlg .b-off{display:none;}
+#b-pick:not(:checked) ~ .dlg .b-on{display:none;}
+#b-pick:checked ~ .dlg .b-box{background:var(--prim-bg);border-color:var(--prim-bg);}
+#b-pick:checked ~ .dlg .b-tick{visibility:visible;}
+#b-pick:not(:checked) ~ .dlg .b-tick{visibility:hidden;}
+#b-pick:focus-visible ~ .dlg .b-row{outline:2px solid var(--acc-fg);outline-offset:2px;border-radius:4px;}
+.b-row{cursor:pointer;}
+
+.screens>.panel.moodle{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+@media (prefers-color-scheme:dark){.screens>.panel.moodle{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
 </style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="b-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="b-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="b-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="b-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+  <symbol id="b-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="b-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+  <symbol id="b-warn" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="b-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+</svg>
+
 <div class="screens">
 
-  <section class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o que está no ar</div>
-    <div class="m">
-      <div class="m-head"><span class="m-title">Procurar em frameworks</span><span class="m-x">✕</span></div>
-      <div class="m-body">
-        <div class="col"><span class="lbl">Framework</span><span class="ctrl" style="max-width:230px;"><span>Competências Gerais</span><span style="color:var(--text-secondary)">⌄</span></span><span class="idb">MOD.BROWSER-FW</span></div>
-        <div class="col"><span class="ctrl" style="max-width:230px;"><span style="color:var(--text-muted)">🔍 Buscar competência…</span></span><span class="idb">MOD.BROWSER-FILTER · filtro client-side</span></div>
-        <div class="row" style="justify-content:space-between;"><span class="sw">☐ Mostrar caminhos</span><span class="idb">MOD.BROWSER-PATHTOGGLE</span></div>
-        <div class="col" style="gap:2px;">
-          <div class="opt">☐ <span>Comunicação escrita</span></div>
-          <div class="opt on">☑ <span>Pensamento lógico-dedutivo</span></div>
-          <div class="opt">☐ <span>Segurança da informação</span></div>
-          <span class="idb">MOD.BROWSER-LIST · sem rótulo · linhas injetadas por competency_browser.js</span>
+  <section class="panel asis">
+    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o modal shipado — seletor de estrutura + árvore compartilhada, rodapé do ModalSaveCancel</div>
+
+    <div class="row" style="margin-bottom:10px;">
+      <span class="prov">plans.mustache:469-472</span>
+      <span class="bsec"><svg class="ic sm"><use href="#b-plus"/></svg>Adicionar competência</span>
+      <span class="idb">MOD.BROWSER-ACTION · sticky-footer da aba Planos</span>
+    </div>
+
+    <input type="radio" name="s" id="s1" class="dchk" checked>
+    <input type="radio" name="s" id="s2" class="dchk">
+    <input type="radio" name="s" id="s3" class="dchk">
+    <div class="steps">
+      <label class="step st1" for="s1">Passo 1 · Estrutura A</label>
+      <label class="step st2" for="s2">Passo 2 · marca uma</label>
+      <label class="step st3" for="s3">Passo 3 · troca para B</label>
+    </div>
+
+    <div class="pane">
+      <div class="m">
+        <div class="m-head">
+          <span class="m-title">Procurar em estruturas</span>
+          <span class="prov">js:89 · :92</span>
+          <button type="button" class="m-x" aria-label="Fechar">✕</button>
+        </div>
+        <div class="m-body">
+
+          <div class="col">
+            <div class="row"><span class="lbl">Estrutura</span><span class="idb">MOD.BROWSER-FW-LABEL · label com for</span></div>
+            <span class="ctrl"><span class="fw-a" style="flex:1">Competências Gerais</span><span class="fw-b" style="flex:1">Matemática</span><svg class="ic sm chev"><use href="#b-chev-d"/></svg></span>
+            <div class="row"><span class="idb">MOD.BROWSER-FW · form-select</span><span class="prov">mustache:43-47</span></div>
+          </div>
+
+          <div class="note" style="border-left:2px solid var(--border-stronger);padding-left:7px;">
+            <span class="lg1"><b>Passo 1.</b> Estrutura A, nada marcado. A primeira estrutura vem marcada (<code>selected: index === 0</code>, js:83).</span>
+            <span class="lg2"><b>Passo 2.</b> "Pensamento lógico-dedutivo" marcado — o id vive em <code>state.checked</code>.</span>
+            <span class="lg3"><b>Passo 3.</b> Trocou para B: <code>state.checked.clear()</code> (js:115) + <code>applyMode(state,'tree','')</code> (js:116). A marca do passo 2 <b>não</b> atravessou.</span>
+          </div>
+
+          <div class="col">
+            <span class="ctrl"><svg class="ic sm chev"><use href="#b-search"/></svg><span class="ph">Filtrar competências</span></span>
+            <div class="row"><span class="idb">MOD.BROWSER-FILTER · server-side · debounce 250ms · mín. 2 chars</span><span class="prov">tree.mustache:31-35</span></div>
+          </div>
+
+          <div class="row" style="justify-content:space-between;">
+            <span class="sw"><span class="box"></span>Mostrar caminhos</span>
+            <span class="idb">MOD.BROWSER-PATHS · tree.mustache:36-41</span>
+          </div>
+
+          <div class="tree">
+            <div class="fw-a">
+              <div class="node">
+                <span class="nchev"><svg class="ic sm"><use href="#b-chev-d"/></svg></span>
+                <span class="box"></span>
+                <span class="ntext"><span class="nname">Comunicação escrita</span></span>
+              </div>
+              <div class="node d1">
+                <span class="nchev inv"><svg class="ic sm"><use href="#b-chev-r"/></svg></span>
+                <span class="box pick-off"></span>
+                <span class="box on pick-on"><svg class="ic sm" style="width:8px;height:8px"><use href="#b-check"/></svg></span>
+                <span class="ntext"><span class="nname">Pensamento lógico-dedutivo</span></span>
+              </div>
+              <div class="node d1 locked">
+                <span class="nchev inv"><svg class="ic sm"><use href="#b-chev-r"/></svg></span>
+                <span class="box lock"><svg class="ic sm" style="width:8px;height:8px"><use href="#b-check"/></svg></span>
+                <span class="ntext"><span class="nname">Segurança da informação <span class="nsuf">(Já neste plano)</span></span></span>
+              </div>
+              <button type="button" class="more d1">Carregar mais</button>
+            </div>
+            <div class="fw-b">
+              <div class="node">
+                <span class="nchev"><svg class="ic sm"><use href="#b-chev-r"/></svg></span>
+                <span class="box"></span>
+                <span class="ntext"><span class="nname">Álgebra linear</span></span>
+              </div>
+              <div class="node">
+                <span class="nchev inv"><svg class="ic sm"><use href="#b-chev-r"/></svg></span>
+                <span class="box"></span>
+                <span class="ntext"><span class="nname">Lógica matemática</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <span class="idb">MOD.BROWSER-LIST · caixa SOLTA aqui (o cap de 40vh é só do MOD.RELATED)</span>
+            <span class="prov">tree.mustache:42-44</span>
+          </div>
+          <div class="row">
+            <span class="idb">MOD.BROWSER-ROW-TOGGLE · aria-label "Ver mais: {nome}"</span>
+            <span class="idb">MOD.BROWSER-ROW-LOCK · data-excludeids</span>
+            <span class="idb">MOD.BROWSER-MORE · só nos filhos</span>
+          </div>
+          <span class="note">Indent de <b>20px</b> por nível (<code>INDENT_STEP</code>, tree.js:48) · página de <b>25</b> (<code>PAGE_SIZE</code>, tree.js:46) · o topo pagina por <b>sentinela</b> (<code>IntersectionObserver</code>, tree.js:492-497), não por botão <span class="idb">MOD.BROWSER-SENTINEL</span></span>
+
+        </div>
+        <div class="m-foot">
+          <span class="prov" style="margin-right:auto">modal_save_cancel.mustache:43-44</span>
+          <button type="button" class="bsec">Cancelar</button>
+          <button type="button" class="bprim">Adicionar selecionadas</button>
         </div>
       </div>
-      <div class="m-foot"><span class="btn">Cancelar</span><span class="btn btn-primary">Adicionar selecionadas</span></div>
+      <div class="row" style="margin-top:6px;">
+        <span class="idb">MOD.BROWSER-CANCEL</span>
+        <span class="idb">MOD.BROWSER-SAVE · a ÚNICA chamada setSaveButtonText do plugin (js:93)</span>
+      </div>
+    </div>
+
+    <div class="warn" style="margin-top:10px;">
+      <b>O rodapé aqui não é fantasma.</b> Ao contrário do <code>MOD.RELATED</code>, o
+      <code>ModalSaveCancel</code> enche o bloco <code>{{$footer}}</code> do core, então a barra
+      aparece sozinha. E o <b>fechar-no-save está certo</b>: é picker de uma tacada, o resultado
+      aparece no pane atrás (<code>reloadPane</code>, js:55). <b>Este é o contra-exemplo do IMP-06</b>
+      — a chamada se reusa; a fiação do save, não.
+    </div>
+
+    <div style="margin-top:10px;">
+      <div class="note" style="margin-bottom:5px;"><b>Estado alternativo — nenhuma estrutura.</b> Substitui o corpo <b>inteiro</b> (<code>{{^hasframeworks}}</code>): sem seletor, sem árvore, e o JS nem fia nada (<code>if (frameworks.length)</code>, js:108-120).</div>
+      <div class="m">
+        <div class="m-head"><span class="m-title">Procurar em estruturas</span><button type="button" class="m-x" aria-label="Fechar">✕</button></div>
+        <div class="m-body">
+          <div class="info"><svg class="ic sm" style="margin-top:1px"><use href="#b-info"/></svg><span>Nenhuma estrutura de competências disponível.</span></div>
+          <div class="row"><span class="idb">MOD.BROWSER-EMPTY · alert alert-info · role="status"</span><span class="prov">mustache:51-55</span></div>
+        </div>
+        <div class="m-foot"><button type="button" class="bsec">Cancelar</button><button type="button" class="bprim">Adicionar selecionadas</button></div>
+      </div>
+      <div class="warn" style="margin-top:6px;">
+        <svg class="ic sm" style="vertical-align:-2px"><use href="#b-warn"/></svg>
+        <b>Mas o rodapé fica.</b> "Adicionar selecionadas" continua lá e continua <b>habilitado</b>,
+        sobre um corpo sem nada para marcar. É a mesma ponta solta que o to-be endereça.
+      </div>
     </div>
   </section>
 
-  <section class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · busca server-side paginada</div>
-    <div class="m">
-      <div class="m-head"><span class="m-title">Procurar em frameworks</span><span class="m-x">✕</span></div>
-      <div class="m-body">
-        <div class="row"><span class="ctrl" style="flex:1;min-width:150px;"><span style="color:var(--text-muted)">🔍 Buscar competência…</span><span style="color:var(--text-accent);font-size:11px;">buscando…</span></span><span class="ctrl" style="width:160px;"><span>Todos os frameworks</span><span style="color:var(--text-muted)">▾</span></span></div>
-        <span class="note">Busca server-side · framework pode ter centenas de competências <span class="idb">MOD.BROWSER-FILTER → server-side</span></span>
-        <div class="col" style="gap:4px;">
-          <div class="row" style="justify-content:space-between;border:0.5px solid var(--border);border-radius:var(--radius);padding:5px 8px;">☐ <span style="flex:1;">Lógica matemática</span><span class="path">Matemática ▸ Raciocínio</span><span class="tag" style="background:var(--bg-warning);color:var(--text-warning);border-color:var(--border-warning)">MAT</span></div>
-          <div class="row on" style="justify-content:space-between;border:0.5px solid var(--border-accent);background:var(--bg-accent);border-radius:var(--radius);padding:5px 8px;color:var(--text-accent)">☑ <span style="flex:1;">Pensamento lógico-dedutivo</span><span class="path" style="color:var(--text-accent)">Comp. Gerais ▸ Resolução</span><span class="tag" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">CG-EP</span></div>
+  <section class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Proposta (to-be) · a guarda de seleção vazia — o precedente do format_mtube, não uma invenção</div>
+
+    <div class="warn" style="margin-bottom:10px;">
+      <b>O que o to-be antigo propunha já está no ar.</b> Ele pedia "busca server-side paginada"
+      contra um as-is "client-side". O as-is <b>ultrapassou</b>: hoje é
+      <code>local_dimensions_browse_competencies</code> com <code>limitfrom</code>/<code>limitnum</code>,
+      debounce de 250 ms e mínimo de 2 chars. Só a <b>forma</b> diverge — o DS desenhava números de
+      página; o shipado usa scroll infinito. <b>Sobra um gap real</b>, e é este.
+    </div>
+
+    <input type="checkbox" id="b-pick" class="dchk">
+    <div class="dlg">
+      <div class="m">
+        <div class="m-head"><span class="m-title">Procurar em estruturas</span><button type="button" class="m-x" aria-label="Fechar">✕</button></div>
+        <div class="m-body">
+          <div class="col">
+            <span class="lbl">Estrutura</span>
+            <span class="ctrl"><span style="flex:1">Competências Gerais</span><svg class="ic sm chev"><use href="#b-chev-d"/></svg></span>
+          </div>
+          <span class="ctrl"><svg class="ic sm chev"><use href="#b-search"/></svg><span class="ph">Filtrar competências</span></span>
+          <div class="tree">
+            <label class="node b-row" for="b-pick">
+              <span class="nchev inv"><svg class="ic sm"><use href="#b-chev-r"/></svg></span>
+              <span class="box b-box"><svg class="ic sm b-tick" style="width:8px;height:8px"><use href="#b-check"/></svg></span>
+              <span class="ntext"><span class="nname">Pensamento lógico-dedutivo</span><span class="npath">Competências Gerais ▸ Resolução de problemas</span></span>
+            </label>
+            <div class="node locked">
+              <span class="nchev inv"><svg class="ic sm"><use href="#b-chev-r"/></svg></span>
+              <span class="box lock"><svg class="ic sm" style="width:8px;height:8px"><use href="#b-check"/></svg></span>
+              <span class="ntext"><span class="nname">Segurança da informação <span class="nsuf">(Já neste plano)</span></span></span>
+            </div>
+          </div>
+          <span class="note">👆 Clique na linha para marcar — o botão do rodapé acompanha.</span>
         </div>
-        <div class="row" style="justify-content:space-between;"><span class="note">Mostrando 1–20 de 247</span><span class="row" style="gap:4px;"><span class="pg">‹</span><span class="pg on">1</span><span class="pg">2</span><span class="pg">3</span><span style="color:var(--text-muted)">…</span><span class="pg">13</span><span class="pg">›</span></span></div>
-        <span class="idb">MOD.BROWSER-LIST → paginado</span>
+        <div class="m-foot">
+          <button type="button" class="bsec">Cancelar</button>
+          <button type="button" class="bprim b-off" disabled>Adicionar selecionadas</button>
+          <button type="button" class="bprim b-on">Adicionar selecionadas</button>
+        </div>
       </div>
-      <div class="m-foot"><span class="btn">Cancelar</span><span class="btn btn-primary">Adicionar selecionadas</span></div>
+    </div>
+
+    <div class="ok" style="margin-top:10px;">
+      <b>A mudança, em duas linhas.</b> <code>_setSaveEnabled(getCheckedIds(state).length > 0)</code>
+      logo após o <code>setSaveButtonText</code> (js:93), e um <code>event.preventDefault()</code> no
+      <code>ModalEvents.save</code> (js:122) <b>só</b> quando a seleção está vazia — deixando o core
+      fechar no caminho normal, que aqui está certo.
+    </div>
+
+    <div class="note" style="margin-top:8px;border-left:2px solid var(--border-stronger);padding-left:7px;">
+      <b>Por que hoje não basta o <code>if (!calls.length) return</code> (js:52-54).</b> Ele roda
+      <b>dentro</b> do handler do save; o <code>return</code> não impede o fechar do core
+      (<code>registerCloseOnSave</code> → <code>modal.js:1100-1116</code>: sem
+      <code>preventDefault</code>, fecha). Resultado hoje: <b>clicar sem nada marcado fecha o modal,
+      não adiciona nada e não diz nada.</b>
+    </div>
+
+    <div class="note" style="margin-top:8px;border-left:2px solid var(--border-stronger);padding-left:7px;">
+      <b>O precedente está shipado — e não está onde se espera.</b> O
+      <code>competency_picker</code> do <b>format_mtube</b> já faz as duas coisas. Mas o plugin
+      <b>não tem <code>amd/src</code></b>: o fonte só sai do <code>sourcesContent</code> do sourcemap
+      (<code>amd/build/features/competency_picker.min.js.map</code>, 607 linhas). De lá:
+      <code>ModalSaveCancel.create</code> em :137-142, <code>setSaveButtonText</code> em :145,
+      <code>_setSaveEnabled</code> em :146 e :470-475, o <code>preventDefault</code> da seleção vazia
+      em :151-156.
+    </div>
+
+    <div class="note" style="margin-top:10px;border-top:0.5px dashed var(--border-stronger);padding-top:8px;">
+      <b>Nota de medição.</b> <b>38</b> pares medidos por tema (texto, preenchimento e contorno),
+      nos <b>dois</b> painéis, com <code>getAnimations().forEach(a =&gt; a.cancel())</code> antes de
+      ler — sem isso a transição de <code>background-color</code> do <code>.m-x</code> congela em
+      <code>currentTime: 0</code> e o <code>getComputedStyle</code> devolve a cor do tema
+      <b>anterior</b>. <b>Escuro: 0 falhas. Claro: 2</b> — o mesmo chip nos dois painéis, e ele é
+      shipado, não meu:
+      <ul style="margin:4px 0 0;padding-left:16px;">
+        <li><b><code>.m-x</code> preenchimento, 1,15 no claro</b> — é o literal que o
+          <code>styles.css:3557-3586</code> publica (<code>#e7f0f9</code>), e ele <b>não tem
+          variante dark</b>: por isso mede 13,21 no escuro. O tint é decorativo; quem sinaliza o
+          controle é o glifo ✕, que passa a <b>7,53</b> nos dois temas. Reproduzido fiel, igual aos
+          irmãos.</li>
+        <li><b><code>.info</code> corrigido no caminho:</b> o <code>--info-bd</code> que eu tinha
+          inventado dava <b>2,51</b> (claro) e <b>1,94</b> (escuro) — reprovava nos dois. Com
+          <code>--info-fg</code> na borda vai a <b>7,84</b> / <b>11,94</b>. O token morreu.</li>
+      </ul>
+      <div style="margin-top:5px;"><b>Armadilha registrada:</b> a primeira medição do
+        <code>.info</code> deu 2,68 porque o script lia o pai <b>transparente</b>
+        (<code>.m-body</code>) como preto. Contraste de contorno só vale contra a superfície que
+        <b>pinta</b> — o walk-up é obrigatório.</div>
+    </div>
+
+    <div class="note" style="margin-top:8px;">
+      <b>Fora de escopo, registrado:</b> <code>--border-strong</code>/<code>--border-stronger</code>
+      reprovam os 3:1 da 1.4.11 como contorno de controle nas superfícies recentes (medido:
+      1,60 / 1,49 / 1,71 / 3,36 — falha em 3 de 4, <b>inclusive no claro</b>). Esta tela segue os
+      irmãos e usa <code>--text-secondary</code> nos contornos em vez de divergir sozinha; o conserto
+      é do <b>token</b>, no kit inteiro. O <code>README.md:40</code> ainda anuncia "Procurar em
+      frameworks" — a string diz "estruturas" desde o <code>f817430</code>.
     </div>
   </section>
 
