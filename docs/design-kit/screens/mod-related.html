@@ -1,85 +1,438 @@
-<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Competências referenciadas" subtitle="MOD.RELATED — legado (YUI) vs modal do hub, com IDs" -->
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Competências referenciadas" subtitle="MOD.RELATED — árvore compartilhada + relações atuais; caso de referência do IMP-06: a ação primária mora no corpo e o rodapé do core fica oculto" -->
 <style>
 :root{
   --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
   --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
   --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
-  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
   --text-success:#0f6e56;--bg-success:#e1f5ee;--border-success:#5dcaa5;
+  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
+  --text-danger:#a32d2d;--bg-danger:#fcebeb;--border-danger:#f09595;
   --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
   --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+  --mds-motion-fast:150ms;--mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
+  /* Acento FIXO, fora do alcance dos dois painéis — mesmo precedente blue-200 do mod-participants
+     e do mod-enrolmethods. Herdar --text-accent mata no painel .moodle escuro, onde ele vira
+     #3f89cc: 4,37:1 como texto sobre a superfície do modal e 3,88:1 sobre o próprio tint. Aqui ele
+     é só TEXTO — alcança o "Carregar mais" e o contador de selecionadas, e nenhum tint depende
+     dele (por isso não há --acc-bg). Medido no DOM renderizado deste arquivo, nos dois temas —
+     ver a nota de medição no fim do painel to-be. */
+  --acc-fg:#185fa5;
+  /* Preenchimento primário (checkbox marcado + "Adicionar selecionadas"). NÃO pode ser
+     var(--text-accent), que no escuro do painel DS vira o azul CLARO #85b7eb — branco sobre ele dá
+     2,11:1 (a armadilha medida que quase shipou nas Tasks 8/10/11).
+     Mas o par FIXO dos irmãos também não serve, e isso só apareceu medindo o DOM: #185fa5 é ótimo
+     para o RÓTULO (6,52:1 nos dois temas) e é justamente por isso que ele passa numa conferência de
+     texto — só que no ESCURO o preenchimento encosta na superfície do modal a 2,33:1 (painel DS) e
+     2,48:1 (painel .moodle), abaixo dos 3:1 que a 1.4.11 pede para o contorno do controle. A régua
+     do preenchimento não é a do texto, e o par fixo reprova só nela.
+     A suposição confortável — "o Moodle real faz igual" — é FALSA, e conferi: o $primary do Boost
+     (#0f6cbf, preset/default.scss:21) dá 3,02:1 contra a superfície escura #1d2125 e PASSA. Quem
+     não passa é o nosso, escurecido para comprar contraste de texto no claro.
+     Daí o dark ganhar variante de verdade, no precedente blue-200: #0c2740 sobre #85b7eb dá 7,23:1
+     de rótulo e 7,22:1 / 7,69:1 de preenchimento contra as duas superfícies escuras. Medido. */
+  --prim-bg:#185fa5;--prim-fg:#fff;
+  /* Perigo FIXO (o 🗑 de remover a relação), medido no DOM: 7,07:1 nos dois temas. A armadilha da
+     Task 11 era perigo-sobre-TINT, que uma conferência de perigo-sobre-superfície não pega — aqui
+     ela não morde porque o 🗑 não pousa em tint nenhum: ele fica na linha de relação, sobre a
+     superfície do modal. Não existe --err-bg por isso: esta tela não desenha tint de erro. */
+  --err-fg:#a32d2d;
+  /* Chip de fechar: os três literais que o styles.css:3557-3586 publica, sem variante dark. */
+  --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
+  --prov-fg:#185fa5;--prov-bg:#e6f1fb;
 }
 @media (prefers-color-scheme:dark){:root{
   --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
   --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
   --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
-  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
   --text-success:#5dcaa5;--bg-success:#0a2a24;--border-success:#085041;
+  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
+  --text-danger:#f09595;--bg-danger:#2a1313;--border-danger:#791f1f;
   --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+  --acc-fg:#85b7eb;--err-fg:#f09595;
+  --prov-fg:#85b7eb;--prov-bg:#0c2740;
+  /* Inversão do preenchimento primário no escuro (blue-200): fundo claro, glifo/rótulo escuro.
+     É o mesmo par que --acc-fg/--acc-bg já usam, invertido. Números na nota do :root. */
+  --prim-bg:#85b7eb;--prim-fg:#0c2740;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
-.screens{display:flex;flex-wrap:wrap;gap:18px;}
-.panel{flex:1 1 400px;min-width:320px;}
-.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:10px;}
-.pdot{width:8px;height:8px;border-radius:50%;}
+.screens{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;}
+.panel{flex:1 1 460px;min-width:340px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+/* .note usa --text-secondary, NÃO --text-muted: a 10px o muted reprova o AA. Medido. */
+.note{font-size:10px;color:var(--text-secondary);}
 .idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
-.lbl{font-size:11px;color:var(--text-secondary);}
+.prov{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:10px;background:var(--prov-bg);color:var(--prov-fg);border:0.5px solid var(--prov-fg);white-space:nowrap;}
 .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.col{display:flex;flex-direction:column;gap:4px;}
+/* code com cor PRÓPRIA: o --text-secondary do painel .moodle claro sobre o fundo do chip dá
+   4,07:1 e reprova. Com --text-primary passa folgado nos dois painéis e nos dois temas. */
+code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);color:var(--text-primary);border-radius:4px;padding:0 3px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ic.sm{width:0.8rem;height:0.8rem;}
+
+/* ---- casca do modal ---- */
 .m{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
-.m-head{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:0.5px solid var(--border);}
-.m-title{font-size:13px;font-weight:500;}.m-x{margin-left:auto;color:var(--text-muted);}
-.m-body{padding:12px 13px;display:flex;flex-direction:column;gap:9px;}
-.m-foot{display:flex;justify-content:flex-end;gap:8px;padding:9px 13px;border-top:0.5px solid var(--border);}
-.btn{font-size:12px;padding:5px 11px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:var(--surface-2);}
-.btn-primary{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent);}
-.ctrl{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;padding:6px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);}
-.alert{font-size:11px;padding:6px 9px;border-radius:var(--radius);background:var(--bg-warning);color:var(--text-warning);border:0.5px solid var(--border-warning);}
-.crow{display:flex;align-items:center;gap:8px;padding:6px 8px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-1);font-size:12px;}
-.mini{font-size:10px;padding:1px 6px;border-radius:6px;border:0.5px solid var(--border-strong);}
-.mono{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);}
-.path{font-size:10px;color:var(--text-muted);}
-.note{font-size:10px;color:var(--text-muted);}
-.screens>.panel:last-child{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
-@media (prefers-color-scheme:dark){.screens>.panel:last-child{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
+.m-head{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:0.5px solid var(--border);}
+.m-title{font-size:13px;font-weight:500;flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.m-body{padding:11px 12px;display:flex;flex-direction:column;gap:8px;}
+.m-x{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;padding:0;border:0;border-radius:8px;background:var(--close-bg);color:var(--close-fg);font-size:0.8rem;line-height:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
+.m-x:hover,.m-x:focus-visible{background:var(--close-bg-hover);}
+.m-foot{display:flex;justify-content:flex-end;gap:8px;padding:9px 12px;border-top:0.5px solid var(--border);}
+/* O rodapé fantasma do as-is: o .modal-footer EXISTE no DOM (lib/templates/modal.mustache:58-62),
+   com zero filhos, e o core lhe aplica .hidden { display:none } (core.scss:417). Desenhar um bloco
+   vazio mentiria — o usuário não vê barra nenhuma. Este é um RÓTULO sobre a ausência, tracejado. */
+.m-foot-ghost{justify-content:center;border-top:0.5px dashed var(--border-stronger);background:var(--surface-1);}
+.fk{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);}
+
+/* ---- controles ---- */
+.lbl{font-size:11px;font-weight:500;}
+/* O campo de filtro é um CONTROLE, e o contorno dele é a única coisa que diz onde ele começa: os
+   3:1 da 1.4.11 valem. Medido nas quatro superfícies (claro/escuro × dois painéis), o
+   --border-strong dos irmãos entrega 1,60 / 1,49 / 1,71 / 3,36 — reprova em três das quatro, e
+   inclusive no CLARO; o --border-stronger não salva (2,13 / 1,49 / 2,34 / 3,36). Só
+   --text-secondary passa nas quatro (mínimo 4,83:1). As CAIXAS (.sec, .tree, .panel) seguem no
+   --border do kit de propósito: são contêineres, não controles — ver a nota de medição. */
+.ctrl{display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 7px;border:0.5px solid var(--text-secondary);border-radius:var(--radius);background:var(--surface-2);}
+.bprim{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:4px 9px;border:0;border-radius:var(--radius);background:var(--prim-bg);color:var(--prim-fg);white-space:nowrap;font-family:inherit;cursor:pointer;}
+/* Mesma régua do .ctrl, mesmo motivo: "Fechar" é um botão, e a borda é o contorno dele. Com
+   --border-strong o par reprova a 1,49:1 no .moodle CLARO — a armadilha aqui é achar que só o
+   escuro morde. */
+.bsec{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:4px 9px;border:0.5px solid var(--text-secondary);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);white-space:nowrap;font-family:inherit;cursor:pointer;}
+/* Desabilitado: o estado inicial REAL do botão (o atributo `disabled` está no Mustache, :36).
+   Marque uma linha pickable e ele sai daqui — a demonstração é o argumento desta tela. */
+.off{opacity:0.45;}
+.sw{display:inline-flex;align-items:center;gap:6px;font-size:10px;}
+.tgl{position:relative;display:inline-block;width:24px;height:14px;flex:none;}
+/* Mesma armadilha da .cbx, mesma medição: --border-stronger no trilho dá 2,13:1 / 1,49:1 contra a
+   superfície e reprova os 3:1 da 1.4.11 — um switch cujo trilho não se vê não comunica estado. E o
+   botão NÃO pode ser #fff fixo: no escuro o trilho vira claro (--text-secondary é #b4b2a9 / #ced4da)
+   e o branco sobre ele cai para ~1,6:1. Amarrando o botão a --surface-2 o par vira o do próprio
+   modal e sobrevive aos dois temas. */
+.tgl-track{position:absolute;inset:0;background:var(--text-secondary);border-radius:8px;}
+.tgl-track::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--surface-2);}
+
+/* ---- árvore compartilhada ---- */
+.sec{border:0.5px solid var(--border);border-radius:var(--radius);padding:8px;background:var(--surface-2);}
+.seclbl{font-size:9px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
+/* max-height 40vh + overflow-y:auto é o styles.css:5685-5688, exclusivo deste modal. Aqui a caixa é
+   menor (o preview não tem 40vh de diálogo), mas a mecânica desenhada — caixa própria, rolagem
+   própria, sentinela DENTRO dela — é a real. */
+.tree{max-height:132px;overflow-y:auto;border:0.5px solid var(--border);border-radius:var(--radius);padding:3px;background:var(--surface-2);}
+.trow{display:flex;align-items:flex-start;gap:6px;padding:3px 4px;border-radius:4px;font-size:11px;cursor:pointer;}
+.trow:hover{background:var(--surface-1);}
+.tname{flex:1;min-width:0;}
+.tpath{font-size:9px;color:var(--text-secondary);}
+/* A borda da caixa NÃO usa --border-stronger. Medido no DOM renderizado: contra a superfície do
+   modal ele dá 2,13:1 no painel DS e 1,49:1 no .moodle — os dois REPROVAM o mínimo de 3:1 que a
+   WCAG 1.4.11 pede para o contorno de um controle (não é texto; a régua é outra, e uma conferência
+   só de texto não pega). Uma caixa desmarcada que ninguém enxerga é o controle inteiro. Com
+   --text-secondary passa nos dois painéis e nos dois temas — números na nota de medição. */
+.cbx{width:12px;height:12px;flex:none;margin-top:2px;border:1px solid var(--text-secondary);border-radius:3px;display:inline-block;background:var(--surface-2);position:relative;}
+.cbx.on{background:var(--prim-bg);border-color:var(--prim-bg);}
+.cbx.on::after{content:"";position:absolute;left:3.5px;top:0.5px;width:3px;height:6px;border:solid var(--prim-fg);border-width:0 1.5px 1.5px 0;transform:rotate(45deg);}
+/* Linha já-excluída: o core do browser renderiza CHECKED + DISABLED e cola o sufixo no nome
+   (competency_tree_browser.js:117-119, :130). Não é uma linha apagada — é uma linha travada. */
+.trow.lock{cursor:default;opacity:0.55;}
+.trow.lock:hover{background:transparent;}
+.sfx{color:var(--text-secondary);}
+
+/* ---- relações atuais ---- */
+.rrow{display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:0.5px solid var(--border);font-size:11px;}
+.rrow:last-of-type{border-bottom:0;}
+.rname{font-weight:500;}
+.rid{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);margin-left:6px;}
+.btrash{display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--err-fg);padding:0 2px;cursor:pointer;flex:none;font-family:inherit;}
+.hr{border:0;border-top:0.5px solid var(--border);margin:2px 0;}
+
+/* A borda do toast é --text-success, não --border-success, e a medição é o motivo: no escuro do
+   painel DS o tint --bg-success (#0a2a24) encosta na superfície do modal (#26252a) a 1,01:1 — some.
+   Com --border-success a moldura fica em 1,62:1 e não segura a caixa sozinha; o toast vira texto
+   verde flutuando. Com --text-success a moldura vai a 7,57:1 (e 6,20:1 no claro) e o toast volta a
+   ser uma caixa. O tint continua 1,01:1 de propósito: quem separa é a borda. */
+.toast{display:inline-flex;align-items:center;gap:6px;font-size:10px;padding:4px 8px;border-radius:var(--radius);border:0.5px solid var(--text-success);background:var(--bg-success);color:var(--text-success);}
+.ok{border:0.5px solid var(--border-success);background:var(--bg-success);color:var(--text-success);border-radius:var(--radius);padding:7px 9px;font-size:10px;}
+.warn{border:0.5px solid var(--border-warning);background:var(--bg-warning);color:var(--text-warning);border-radius:var(--radius);padding:7px 9px;font-size:10px;}
+.warn b,.ok b{font-weight:600;}
+
+/* ---- a demonstração: marcar habilita a ação ----
+   Os checkboxes reais são IRMÃOS do .pane; o combinador ~ os alcança. Mesma mecânica do
+   mod-enrolmethods (nunca :has(): um :has() num ancestral atrasa um passo). Cada linha pickable
+   tem o seu, e QUALQUER um marcado habilita o botão — que é exatamente o getCheckedIds(state).length
+   === 0 do updateAddButton (related_competencies.js:140-142). */
+.mchk{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+/* O alvo é a .cbx DENTRO do label, não o label. O label AQUI é a própria .trow (a linha inteira é
+   o alvo de clique, como em browser.js:125-126), então mirar em label[for=…] pinta a LINHA de azul
+   e pendura o tique no canto dela, enquanto a caixa continua vazia. Foi o que este arquivo fez até
+   ser dirigido: linha azul, caixa branca, `content:none` no tique. */
+#a-c1:checked ~ .pane label[for="a-c1"] .cbx,
+#a-c2:checked ~ .pane label[for="a-c2"] .cbx,
+#b-c1:checked ~ .pane label[for="b-c1"] .cbx,
+#b-c2:checked ~ .pane label[for="b-c2"] .cbx{background:var(--prim-bg);border-color:var(--prim-bg);}
+#a-c1:checked ~ .pane label[for="a-c1"] .cbx::after,
+#a-c2:checked ~ .pane label[for="a-c2"] .cbx::after,
+#b-c1:checked ~ .pane label[for="b-c1"] .cbx::after,
+#b-c2:checked ~ .pane label[for="b-c2"] .cbx::after{content:"";position:absolute;left:3.5px;top:0.5px;width:3px;height:6px;border:solid var(--prim-fg);border-width:0 1.5px 1.5px 0;transform:rotate(45deg);}
+#a-c1:checked ~ .pane .addbtn,
+#a-c2:checked ~ .pane .addbtn,
+#b-c1:checked ~ .pane .addbtn,
+#b-c2:checked ~ .pane .addbtn{opacity:1;}
+/* O contador de selecionadas nasce escondido e aparece com a 1ª marca — prova que o preview está
+   lendo o estado real dos checkboxes, e não pintando um rótulo fixo. */
+.selcount{display:none;}
+#a-c1:checked ~ .pane .selcount,
+#a-c2:checked ~ .pane .selcount,
+#b-c1:checked ~ .pane .selcount,
+#b-c2:checked ~ .pane .selcount{display:inline;}
+.mchk:focus-visible ~ .pane .tree{outline:2px solid var(--acc-fg);outline-offset:2px;}
+
+.screens>.panel.moodle{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+@media (prefers-color-scheme:dark){.screens>.panel.moodle{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
 </style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="r-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="r-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+  <symbol id="r-exch" viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></symbol>
+  <symbol id="r-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+</svg>
+
 <div class="screens">
 
-  <section class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · legado — só na página antiga</div>
+  <!-- ============ as-is ============ -->
+  <section class="panel asis">
+    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o modal shipado — árvore compartilhada, ação no corpo, rodapé oculto</div>
+
     <div class="m">
-      <div class="m-head"><span class="m-title">Detalhe da competência · Comunicação</span><span class="m-x">✕</span></div>
-      <div class="m-body">
-        <div class="row" style="justify-content:space-between;"><span class="alert">⚠ O hub não tinha ação de referenciadas — só em <b>manage_competencies.php</b> (YUI)</span><span class="idb">MOD.RELATED-GAP · lacuna do hub</span></div>
-        <div class="col"><span class="lbl">Competências relacionadas</span>
-          <div class="crow"><span style="flex:1;">Trabalho em equipe</span><span class="mini" style="color:var(--text-secondary)">✕</span></div>
-          <div class="crow"><span style="flex:1;">Pensamento crítico</span><span class="mini" style="color:var(--text-secondary)">✕</span></div>
-          <span class="idb">MOD.RELATED-ROWS · lista tool_lp/related_competencies (só nome + remover)</span>
-        </div>
-        <div class="row"><span class="btn">＋ Adicionar</span><span class="idb">MOD.RELATED-ADD · abre o YUI competencypicker (mesmo framework)</span></div>
-        <span class="note">Picker YUI em dialog separado · quebra embutido no hub zero-YUI</span>
+      <div class="m-head">
+        <span class="m-title">Competências referenciadas — Comunicação</span>
+        <button type="button" class="m-x" aria-label="Fechar">✕</button>
       </div>
-      <div class="m-foot"><span class="btn">Fechar</span></div>
+
+      <!-- Os checkboxes são IRMÃOS do .pane: o combinador ~ os alcança. -->
+      <input type="checkbox" name="a-pick" id="a-c1" class="mchk">
+      <input type="checkbox" name="a-pick" id="a-c2" class="mchk">
+      <div class="pane m-body">
+
+        <span class="lbl">Adicionar competência referenciada <span class="idb">MOD.RELATED-ADDLABEL · :32</span></span>
+        <span class="note">Somente competências da mesma estrutura podem ser referenciadas. <span class="idb">MOD.RELATED-SAMEFW · :33</span></span>
+
+        <div class="sec">
+          <div class="seclbl">Partial compartilhado · competency_tree_browser <span class="idb">:34</span></div>
+          <div class="ctrl"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#r-search"/></svg><span style="color:var(--text-secondary);flex:1;">Filtrar competências</span></div>
+          <div class="row" style="margin-top:5px;"><span class="idb">MOD.RELATED-FILTER · browser:31-35 · debounce 250 ms · mín. 2 chars</span></div>
+          <div class="row" style="margin-top:6px;">
+            <span class="sw"><span class="tgl"><span class="tgl-track"></span></span>Mostrar caminhos</span>
+            <span class="idb">MOD.RELATED-PATHS · browser:36-41</span>
+          </div>
+          <div class="tree" style="margin-top:6px;">
+            <div class="trow lock"><span class="cbx on"></span><span class="tname">Comunicação <span class="sfx">(Esta competência)</span></span></div>
+            <div class="trow lock"><span class="cbx on"></span><span class="tname">Trabalho em equipe <span class="sfx">(Já referenciada)</span></span></div>
+            <label class="trow" for="a-c1"><span class="cbx"></span><span class="tname">Pensamento crítico</span></label>
+            <label class="trow" for="a-c2"><span class="cbx"></span><span class="tname">Oratória</span></label>
+            <div class="trow" style="cursor:default;"><span style="width:12px;flex:none;"></span><span class="tname" style="color:var(--acc-fg)">Carregar mais</span></div>
+          </div>
+          <div class="row" style="margin-top:6px;">
+            <span class="idb">MOD.RELATED-TREE · browser:42-44 · styles.css:5685-5688 (40vh)</span>
+            <span class="idb">MOD.RELATED-ROW · browser.js:82-135</span>
+            <span class="idb">MOD.RELATED-MORE · página de 25</span>
+          </div>
+          <span class="note" style="display:block;margin-top:5px;">As duas primeiras linhas estão <strong>marcadas e travadas</strong>: o browser renderiza as excluídas com <code>checked</code> + <code>disabled</code> e cola o sufixo no nome (<code>browser.js:117-119</code>, <code>:130</code>). O conjunto é a própria competência + as já referenciadas, reconstruído a cada <code>loadRelations</code> (<code>js:124-130</code>).</span>
+        </div>
+
+        <!-- A VERRUGA: a ação primária, no corpo. -->
+        <div class="row" style="justify-content:flex-end;">
+          <span class="note selcount" style="margin-right:auto;color:var(--acc-fg)">1+ selecionada(s) → o botão saiu de <code>disabled</code></span>
+          <button type="button" class="bprim addbtn off">Adicionar selecionadas</button>
+        </div>
+        <div class="row" style="justify-content:flex-end;"><span class="idb">MOD.RELATED-ADDBTN · :35-39 · no CORPO, nasce disabled</span></div>
+
+        <hr class="hr">
+
+        <div>
+          <div class="rrow">
+            <div style="flex:1;min-width:0;">
+              <div><span class="rname">Trabalho em equipe</span><span class="rid">CG-TE</span></div>
+              <div class="tpath">Comp. Gerais ▸ Colaboração</div>
+            </div>
+            <button type="button" class="btrash" aria-label="Remover competência referenciada"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#r-trash"/></svg></button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="idb">MOD.RELATED-ROWS · :41 · DOM-built · js:70-111</span>
+          <span class="idb">MOD.RELATED-ROW-REMOVE · js:94-106 · confirm js:169-194</span>
+        </div>
+        <span class="note">Estado vazio: "Nenhuma competência referenciada ainda." — <code>hidden</code> até a lista zerar. <span class="idb">MOD.RELATED-EMPTY · :42-44</span></span>
+
+        <div class="row" style="margin-top:2px;">
+          <span class="toast"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#r-check"/></svg>Competência referenciada adicionada</span>
+          <span class="idb">MOD.RELATED-TOAST · js:269-272</span>
+        </div>
+        <span class="note"><code>addToastRegion(modal.getBody()[0])</code> no <code>ModalEvents.shown</code>: o toast precisa nascer <strong>dentro</strong> do corpo. A <code>.toast-wrapper</code> da página é <code>z-index:1051</code> (<code>theme/boost/scss/moodle/core.scss:2432</code>) e o diálogo é <code>1055</code> (<code>$zindex-modal</code>) — um toast disparado daqui pousaria <strong>atrás</strong> do modal. O comentário do core na linha de cima ainda diz "above any modals": ele envelheceu no salto para o Bootstrap 5, que subiu o modal de 1050 para 1055.</span>
+      </div>
+
+      <div class="m-foot m-foot-ghost"><span class="fk">.modal-footer sem filhos → core aplica .hidden → nenhuma barra é desenhada</span></div>
     </div>
+
+    <div class="row" style="margin-top:9px;">
+      <span class="idb">MOD.RELATED-ACTION · structure_footer_actions.mustache:57-60 · fa-exchange</span>
+      <span class="idb">MOD.RELATED-CHIPS · structure_detail_content.mustache:116-125</span>
+    </div>
+    <span class="note" style="display:block;margin-top:5px;"><strong>Marque "Pensamento crítico" ou "Oratória" acima</strong> — o botão sai de <code>disabled</code> e o contador aparece. É a mecânica real: <code>updateAddButton</code> (<code>js:140-142</code>) liga o botão enquanto <code>getCheckedIds(state).length</code> não for 0.</span>
   </section>
 
-  <section class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · modal nativo do hub — implementada (Fase 3)</div>
+  <!-- ============ to-be ============ -->
+  <section class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Proposta (to-be) · IMP-06 — a ação primária desce para o rodapé que o core já cria</div>
+
+    <div class="warn" style="margin-bottom:10px;">
+      <b>O rodapé não está faltando: ele está escondido.</b> <code>lib/templates/modal.mustache:58-62</code>
+      sempre renderiza o <code>.modal-footer</code>, com um bloco <code>{{$footer}}</code> vazio. No
+      <code>show()</code>, o core pergunta <code>hasFooterContent()</code> — que é literalmente
+      <code>getFooter().children().length</code> (<code>lib/amd/src/modal.js:686</code>) — e, com zero
+      filhos, chama <code>hideFooter()</code> (<code>:875-879</code>), que aplica <code>.hidden</code>
+      (<code>display:none</code>, <code>core.scss:417</code>). <b>Dar um filho ao rodapé faz o core
+      revelá-lo sozinho</b> — e é exatamente isso que o <code>ModalSaveCancel</code> é: o mesmo
+      <code>core/modal</code> com o bloco <code>{{$footer}}</code> preenchido
+      (<code>lib/templates/modal_save_cancel.mustache:42-45</code>).
+    </div>
+
     <div class="m">
-      <div class="m-head"><span class="m-title">Competências referenciadas — Comunicação</span><span class="m-x">✕</span></div>
-      <div class="m-body">
-        <span class="note">Aberto pelo botão ⇄ no detalhe da Estrutura (só canmanage) <span class="idb">MOD.RELATED-ACTION · structure.mustache · data-action="related"</span></span>
-        <div class="col"><span class="lbl">Adicionar competência referenciada</span><span class="ctrl" style="max-width:280px;"><span style="color:var(--text-muted)">🔍 Buscar no framework…</span><span style="color:var(--text-secondary)">⌄</span></span><span class="idb">MOD.RELATED-ADD · autocomplete (related_datasource → search_structure)</span></div>
-        <span class="note">Mesmo framework (constraint do core: <b>share_same_framework</b>) · exclui a própria + já-referenciadas <span class="idb">data-frameworkid / data-exclude</span></span>
-        <div class="col" style="gap:5px;">
-          <div class="crow"><div class="col" style="flex:1;gap:2px;"><div class="row" style="gap:6px;"><span>Trabalho em equipe</span><span class="mono">CG-TE</span></div><div class="path">Comp. Gerais ▸ Colaboração</div></div><span class="mini" style="color:var(--text-secondary)">🗑</span></div>
-          <div class="crow"><div class="col" style="flex:1;gap:2px;"><div class="row" style="gap:6px;"><span>Pensamento crítico</span><span class="mono">CG-PC</span></div><div class="path">Comp. Gerais ▸ Raciocínio</div></div><span class="mini" style="color:var(--text-secondary)">🗑</span></div>
-          <span class="idb">MOD.RELATED-ROWS · rows por related_competencies.js (nome · nº id · caminho + 🗑 remover)</span>
-        </div>
-        <span class="note">Estado vazio: "Nenhuma competência referenciada ainda." <span class="idb">MOD.RELATED-EMPTY · str central_related_empty</span></span>
-        <span class="note">Relações simétricas (removem dos 2 lados) · toast in-modal acima do dialog no add/remover <span class="idb">MOD.RELATED-TOAST</span></span>
+      <div class="m-head">
+        <span class="m-title">Competências referenciadas — Comunicação</span>
+        <button type="button" class="m-x" aria-label="Fechar">✕</button>
       </div>
-      <div class="m-foot"><span class="btn">Fechar</span></div>
+
+      <input type="checkbox" name="b-pick" id="b-c1" class="mchk">
+      <input type="checkbox" name="b-pick" id="b-c2" class="mchk">
+      <div class="pane">
+        <div class="m-body">
+          <span class="lbl">Adicionar competência referenciada</span>
+          <span class="note">Somente competências da mesma estrutura podem ser referenciadas.</span>
+
+          <div class="sec">
+            <div class="ctrl"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#r-search"/></svg><span style="color:var(--text-secondary);flex:1;">Filtrar competências</span></div>
+            <div class="row" style="margin-top:6px;">
+              <span class="sw"><span class="tgl"><span class="tgl-track"></span></span>Mostrar caminhos</span>
+            </div>
+            <div class="tree" style="margin-top:6px;">
+              <div class="trow lock"><span class="cbx on"></span><span class="tname">Comunicação <span class="sfx">(Esta competência)</span></span></div>
+              <div class="trow lock"><span class="cbx on"></span><span class="tname">Trabalho em equipe <span class="sfx">(Já referenciada)</span></span></div>
+              <label class="trow" for="b-c1"><span class="cbx"></span><span class="tname">Pensamento crítico</span></label>
+              <label class="trow" for="b-c2"><span class="cbx"></span><span class="tname">Oratória</span></label>
+              <div class="trow" style="cursor:default;"><span style="width:12px;flex:none;"></span><span class="tname" style="color:var(--acc-fg)">Carregar mais</span></div>
+            </div>
+          </div>
+
+          <span class="note selcount" style="color:var(--acc-fg)">1+ selecionada(s) → o rodapé saiu de <code>disabled</code></span>
+
+          <hr class="hr">
+
+          <div class="rrow">
+            <div style="flex:1;min-width:0;">
+              <div><span class="rname">Trabalho em equipe</span><span class="rid">CG-TE</span></div>
+              <div class="tpath">Comp. Gerais ▸ Colaboração</div>
+            </div>
+            <button type="button" class="btrash" aria-label="Remover competência referenciada"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#r-trash"/></svg></button>
+          </div>
+          <span class="note">O corpo perde 5 linhas de Mustache (<code>:35-39</code>) e a árvore ganha a altura delas.</span>
+        </div>
+
+        <div class="m-foot">
+          <button type="button" class="bsec">Fechar</button>
+          <button type="button" class="bprim addbtn off">Adicionar selecionadas</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:8px;">
+      <span class="idb">MOD.RELATED-FOOT · to-be · core/modal_save_cancel</span>
+      <span class="prov">mtube: competency_picker</span>
+    </div>
+
+    <div class="ok" style="margin-top:8px;">
+      <b>Uma construção, não uma migração.</b> O <code>configure()</code> do core já aceita
+      <code>buttons</code> e <code>removeOnClose</code> no mesmo objeto
+      (<code>lib/amd/src/modal.js:246-284</code>), então as duas linhas de hoje —
+      <code>Modal.create({title, body})</code> + <code>setRemoveOnClose(true)</code>
+      (<code>js:248-249</code>) — viram <b>uma</b>:
+      <code>ModalSaveCancel.create({title, body, removeOnClose: true, buttons: {save: addlabel, cancel: closelabel}})</code>.
+      <b>Sem string nova para o botão:</b> <code>central_browseframeworks_add</code> ("Adicionar
+      selecionadas") já é a string que o corpo usa hoje (<code>:37</code>), e "Fechar" é o
+      <code>closebuttontitle</code> do core (<code>lang/en/moodle.php:280</code>).
+    </div>
+
+    <div class="ok" style="margin-top:8px;">
+      <b>O desabilitado-até-marcar sobrevive, e há precedente shipado.</b> O
+      <span class="prov">mtube: competency_picker</span> faz hoje exatamente o que o IMP-06 propõe:
+      <code>ModalSaveCancel</code>, <code>setSaveButtonText</code>, e um
+      <code>_setSaveEnabled(&hellip;)</code> que liga/desliga o botão do rodapé pela contagem da
+      seleção, via <code>getFooter()</code> + <code>getActionSelector('save')</code> — os dois
+      públicos no core (<code>modal.js:411</code>, <code>:1194</code>). O nosso
+      <code>updateAddButton</code> (<code>js:140-142</code>) não muda de forma: só troca
+      <code>state.addbtnEl</code> de um <code>querySelector</code> no corpo por um no rodapé.
+    </div>
+
+    <div class="warn" style="margin-top:8px;">
+      <b>A ressalva que o "quase de graça" esconde — e ela não é opcional.</b> O
+      <code>ModalSaveCancel</code> registra <code>registerCloseOnSave()</code>
+      (<code>modal_save_cancel.js:52-59</code>), e o handler do core <b>fecha o diálogo</b> depois do
+      <code>ModalEvents.save</code> — a menos que alguém chame <code>preventDefault()</code>
+      (<code>modal.js:1100-1116</code>). Este modal <b>não pode fechar</b> no "Adicionar
+      selecionadas": o toast, o flash da linha nova (<code>js:224</code>) e o estado vazio acontecem
+      <b>no lugar</b>, e o usuário volta à árvore para adicionar mais. Então o
+      <code>ModalEvents.save</code> daqui precisa de um <code>preventDefault()</code>
+      <b>incondicional</b>.
+    </div>
+
+    <div class="warn" style="margin-top:8px;">
+      <b>Por isso o IMP-06 não é um copiar-e-colar do vizinho.</b> O
+      <code>competency_browser.js</code> — o arquivo que já faz a única chamada
+      <code>setSaveButtonText</code> do plugin (<code>:93</code>) — liga o save <b>sem</b>
+      <code>preventDefault</code> (<code>:122</code>), e <b>fecha</b>. Está certo para ele: é um
+      picker de uma tacada, que devolve a seleção para um pane. O mtube fecha também, e só
+      <code>preventDefault</code> para <b>barrar</b> a seleção vazia. O modal de referenciadas é o
+      terceiro caso: <b>gerencia</b>, escreve a cada clique e fica. A chamada
+      <code>setSaveButtonText</code> se reusa; a <b>fiação do save, não</b>.
+    </div>
+
+    <div class="ok" style="margin-top:8px;">
+      <b>O que o IMP-06 não conserta.</b> O cap de <code>40vh</code> da caixa da árvore
+      (<code>styles.css:5685-5688</code>) existe para as <b>linhas de relação</b> abaixo dela
+      continuarem alcançáveis — não por causa do botão. Ele fica. E a sentinela do scroll infinito
+      mora <b>dentro</b> da caixa de propósito (<code>browser.js:486-490</code>), então a paginação
+      segue presa à rolagem dela.
+    </div>
+
+    <span class="note" style="display:block;margin-top:8px;"><strong>Marque uma linha em qualquer um dos dois painéis</strong> — o botão habilita no corpo (as-is) e no rodapé (to-be). O que a tela <strong>não</strong> demonstra: o rodapé aqui é desenhado à mão, porque o preview não roda o <code>core/modal</code>. A prova de que o core revela o rodapé sozinho não está no pixel — está em <code>modal.js:875-879</code>, citado acima e conferido linha a linha.</span>
+
+    <div class="ok" style="margin-top:10px;">
+      <b>Nota de medição — 233 pares por tema, no DOM renderizado, não no papel.</b> Varredura dos
+      três tipos nos dois painéis × claro/escuro: <b>213</b> de texto (sempre contra o fundo
+      <i>efetivo</i>, subindo a árvore até achar quem pinta), <b>12</b> de contorno de controle e
+      <b>8</b> de preenchimento. Fecha em <b>zero</b> reprovação nos dois temas. <b>Cinco defeitos
+      apareceram só por medir</b>, e três deles herdados dos irmãos do kit:
+      <br>• <b>Caixa desmarcada invisível</b> — <code>--border-stronger</code> dava 2,13:1 (DS) e
+      1,49:1 (.moodle) contra a superfície: reprova os 3:1 da 1.4.11. Idem o trilho do switch.
+      <br>• <b>Preenchimento primário no escuro</b> — o par fixo <code>#185fa5</code>/branco passa no
+      RÓTULO (6,52:1) e é por isso que uma conferência de texto o aprova; o preenchimento encostava
+      na superfície a 2,33:1 / 2,48:1. Corrigido com a inversão blue-200 (7,22:1 / 7,69:1).
+      <br>• <b>Toast sem caixa no escuro</b> — o tint <code>--bg-success</code> dá <b>1,01:1</b>
+      contra a superfície do painel DS: some. A borda em <code>--border-success</code> (1,62:1) não
+      segurava; em <code>--text-success</code> vai a 7,57:1.
+      <br>• <b>Contorno do campo e do botão secundário</b> — <code>--border-strong</code> entrega
+      1,60 / 1,49 / 1,71 / 3,36 nas quatro superfícies: reprova em três, <b>inclusive no claro</b>.
+      <br><b>Fica registrado o que NÃO foi mexido:</b> o tint do chip de fechar (1,15:1) e o do toast
+      (1,01:1 / 1,14:1) continuam baixos <b>de propósito</b> — quem identifica esses dois é o glifo
+      (7,53:1) e a borda (6,20:1 claro / 7,57:1 escuro), e os literais do chip são os que o
+      <code>styles.css:3557-3586</code> publica. As <b>caixas</b> (<code>.sec</code>,
+      <code>.tree</code>, <code>.panel</code>) seguem no <code>--border</code> do kit: são
+      contêineres, não controles.
+      <br><b>Achado que vaza para o kit inteiro:</b> <code>--border-strong</code> /
+      <code>--border-stronger</code> <b>não servem como contorno de controle em nenhuma das quatro
+      superfícies</b> — e <code>.cbx</code>, <code>.tgl-track</code>, <code>.ctrl</code> e
+      <code>.bsec</code> usam esses tokens, com os mesmos valores, no <code>mod-enrolmethods</code> e
+      no <code>mod-participants</code>. Aqui foram corrigidos; lá continuam. É correção de token, não
+      de tela.
     </div>
   </section>
 
