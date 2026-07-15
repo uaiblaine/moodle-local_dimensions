@@ -367,9 +367,18 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <code>ModalSaveCancel</code>, <code>setSaveButtonText</code>, e um
       <code>_setSaveEnabled(&hellip;)</code> que liga/desliga o botão do rodapé pela contagem da
       seleção, via <code>getFooter()</code> + <code>getActionSelector('save')</code> — os dois
-      públicos no core (<code>modal.js:411</code>, <code>:1194</code>). O nosso
+      públicos no core (<code>modal.js:411</code>, <code>:1194</code>). <b>E desde 2026-07-15 o
+      precedente também é INTERNO</b>, o que esta nota antes só achava fora: o
+      <code>competency_browser.js</code> ganhou o seu próprio <code>updateAddButton(modal, state)</code>
+      (<code>:48-50</code>), que é uma linha —
+      <code>modal.setButtonDisabled('save', getCheckedIds(state).length === 0)</code> —, nasce
+      <b>desabilitado</b> (<code>:110</code>) e recomputa a cada <code>click</code>/<code>change</code>
+      da lista (<code>competency_browser.js:140-141</code>). O <code>setButtonDisabled(action, disabled)</code>
+      é público no core (<code>modal.js:1222</code>) e é <b>rota mais curta</b> que o
+      <code>getFooter()</code> + <code>getActionSelector('save')</code> do mtube. O nosso
       <code>updateAddButton</code> (<code>js:140-142</code>) não muda de forma: só troca
-      <code>state.addbtnEl</code> de um <code>querySelector</code> no corpo por um no rodapé.
+      <code>state.addbtnEl</code> de um <code>querySelector</code> no corpo por um no rodapé — ou,
+      seguindo o vizinho, pelo <code>setButtonDisabled</code> e nenhum <code>querySelector</code>.
     </div>
 
     <div class="warn" style="margin-top:8px;">
@@ -385,14 +394,19 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     </div>
 
     <div class="warn" style="margin-top:8px;">
-      <b>Por isso o IMP-06 não é um copiar-e-colar do vizinho.</b> O
-      <code>competency_browser.js</code> — o arquivo que já faz a única chamada
-      <code>setSaveButtonText</code> do plugin (<code>:93</code>) — liga o save <b>sem</b>
-      <code>preventDefault</code> (<code>:122</code>), e <b>fecha</b>. Está certo para ele: é um
-      picker de uma tacada, que devolve a seleção para um pane. O mtube fecha também, e só
-      <code>preventDefault</code> para <b>barrar</b> a seleção vazia. O modal de referenciadas é o
-      terceiro caso: <b>gerencia</b>, escreve a cada clique e fica. A chamada
-      <code>setSaveButtonText</code> se reusa; a <b>fiação do save, não</b>.
+      <b>Por isso o IMP-06 não é um copiar-e-colar do vizinho · o vizinho MUDOU em 2026-07-15.</b> O
+      <code>competency_browser.js</code> — o arquivo que segue fazendo a única chamada
+      <code>setSaveButtonText</code> do plugin (<code>:107</code>) — <b>ligava o save sem
+      <code>preventDefault</code> nenhum</b> e fechava mesmo com zero marcadas. Foi <b>corrigido</b>:
+      hoje a fiação passa o evento (<code>:144</code>) e o <code>addSelected</code> previne
+      (<code>:66</code>), mas <b>condicionalmente</b> — só dentro do <code>if (!calls.length)</code>
+      (<code>:64-68</code>). Ou seja, ele ganhou exatamente a forma do mtube: <b>barra</b> a seleção
+      vazia e, numa adição real, <b>fecha</b>. Está certo para ele: é um picker de uma tacada, que
+      devolve a seleção para um pane. O contraste com esta tela <b>sobrevive, e ficou mais
+      estreito</b>: não é mais "com <code>preventDefault</code> × sem", é <b>condicional × incondicional</b>.
+      O modal de referenciadas é o terceiro caso — <b>gerencia</b>, escreve a cada clique e <b>fica</b> —,
+      então o <code>preventDefault</code> dele previne <b>sempre</b>, inclusive na adição que deu certo.
+      A chamada <code>setSaveButtonText</code> se reusa; a <b>fiação do save, não</b>.
     </div>
 
     <div class="ok" style="margin-top:8px;">

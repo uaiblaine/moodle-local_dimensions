@@ -125,8 +125,9 @@ pendentes são preservadas para o usuário repetir. Depois, cada linha nova pisc
 
 `related_competencies.js:272` chama `addToastRegion(modal.getBody()[0])` no `ModalEvents.shown`.
 É um dos **4** pontos do plugin com esse padrão (`participants_manager.js:167`,
-`competency_links.js:805`, `frameworks.js:348`, e este) — contados com
-`grep -rn 'addToastRegion' amd/src/`.
+`competency_links.js:808`, `frameworks.js:348`, e este) — contados com
+`grep -rn 'addToastRegion(' amd/src/`, **com o parêntese**: sem ele o grep devolve **8**, porque soma
+as 4 linhas de `import`.
 
 O motivo é aritmética de `z-index`, e vale conferir os dois números:
 
@@ -162,7 +163,7 @@ preenchido com Cancelar + Salvar (`lib/templates/modal_save_cancel.mustache:42-4
 **Censo do garfo** (em `amd/src/central/`, pontos de construção): **7** × `Modal.create` — nenhum
 passa `footer`; **5** × `ModalSaveCancel.create`; **1** × `ModalDeleteCancel.create`; **4** ×
 `new ModalForm`. E `setSaveButtonText` aparece em **1** único ponto do plugin inteiro:
-`competency_browser.js:93`. (Números conferidos com `grep -rn` em `amd/src/`; o `Modal.create` do
+`competency_browser.js:107`. (Números conferidos com `grep -rn` em `amd/src/`; o `Modal.create` do
 `accordion.js:1191` fica de fora por ser view de aluno, não hub — é o que faz o total do hub ser 7 e
 não 8.)
 
@@ -181,11 +182,18 @@ e o Mustache perde as **5** linhas do botão (`:35-39`). **Sem string nova:**
 `central_browseframeworks_add` ("Adicionar selecionadas") já é a que o corpo usa (`:37`), e
 "Fechar" é o `closebuttontitle` do core (`lang/en/moodle.php:280`).
 
-**O desabilitado-até-marcar sobrevive** — e há precedente shipado: o **`competency_picker` do
-format_mtube** faz hoje o que o IMP-06 propõe (`ModalSaveCancel` + `setSaveButtonText` + um
-`_setSaveEnabled` que liga o botão pela contagem da seleção, via `getFooter()` +
-`getActionSelector('save')` — os dois públicos no core, `modal.js:411` e `:1194`). O nosso
-`updateAddButton` não muda de forma: só troca de qual `querySelector` sai o `state.addbtnEl`.
+**O desabilitado-até-marcar sobrevive** — e desde **2026-07-15** o precedente é de casa. O
+`competency_browser.js` passou a fazer exatamente o que o IMP-06 propõe: `ModalSaveCancel` +
+`setSaveButtonText` (`:107`) + um `modal.setButtonDisabled('save', true)` logo depois do
+`setRemoveOnClose` (`:110`), com um `updateAddButton` (`:48-50`) que recalcula pela contagem a cada
+`click`/`change` da lista (`:140-141`). Fora do plugin, o **`competency_picker` do format_mtube** já
+chegava lá por outro caminho (um `_setSaveEnabled` que liga o botão pela contagem da seleção, via
+`getFooter()` + `getActionSelector('save')` — os dois públicos no core, `modal.js:411` e `:1194`).
+
+O caminho de casa é o mais curto dos dois: `setButtonDisabled` também é público e faz o `getFooter()`
++ `getActionSelector()` por dentro (`modal.js:1222-1223`). Então o nosso `updateAddButton`
+(`js:140-142`) não só sobrevive como **encolhe** — perde o `state.addbtnEl` e o `querySelector` que o
+alimenta (`js:277`).
 
 > **A ressalva, e ela não é opcional.** `ModalSaveCancel.registerEventListeners()`
 > (`modal_save_cancel.js:52-59`) chama `registerCloseOnSave()`, e o handler do core **fecha o
@@ -194,11 +202,23 @@ format_mtube** faz hoje o que o IMP-06 propõe (`ModalSaveCancel` + `setSaveButt
 > `flash` da linha nova e o estado vazio acontecem **no lugar**, e o usuário volta à árvore. Logo, o
 > `ModalEvents.save` daqui precisa de um `preventDefault()` **incondicional**.
 >
-> **Por isso o IMP-06 não é copiar o vizinho.** O `competency_browser.js` — dono da única chamada
-> `setSaveButtonText` do plugin — liga o save **sem** `preventDefault` (`:122`) e **fecha**; está
-> certo para ele, que é picker de uma tacada. O `competency_picker` do mtube também fecha, e só usa
-> `preventDefault` para **barrar** seleção vazia. O de referenciadas é o terceiro caso: **gerencia**,
-> escreve a cada clique e **fica**. A chamada se reusa; a **fiação do save, não**.
+> **Por isso o IMP-06 não é copiar o vizinho — e o vizinho mudou em 2026-07-15.** O
+> `competency_browser.js` — dono da única chamada `setSaveButtonText` do plugin (`:107`) — ligava o
+> save **sem `preventDefault` nenhum** e fechava sempre, inclusive quando **nada** estava marcado: o
+> diálogo sumia e não adicionava coisa alguma. O `e14977c` fechou esse buraco, e a fiação de lá hoje
+> é `addSelected(state, event)` (`:144`) com um `preventDefault()` **condicional**, que só dispara no
+> caso vazio (`:64-68`) — atrás de um botão que já **nasce desabilitado** (`:110`). Ou seja: lá o
+> `preventDefault` é **backstop**, não mecanismo. Num add real ele continua **fechando**, e continua
+> certo para ele, que é picker de uma tacada.
+>
+> **A conclusão não muda; o contraste é que ficou mais limpo.** O `competency_browser` convergiu para
+> a forma do `competency_picker` do mtube (fecha; `preventDefault` só para **barrar** seleção vazia)
+> — hoje são **dois** exemplos shipados da **mesma** forma, não duas formas. O de referenciadas
+> segue sendo o caso à parte, e o único: **gerencia**, escreve a cada clique e **fica**. Nele o
+> `preventDefault` é **incondicional** e é o mecanismo, não o backstop — e é justamente disso que
+> nenhum dos dois vizinhos precisa. A chamada `setSaveButtonText` se reusa; o
+> desabilitar-até-marcar agora se reusa também
+> (`:110` + `:48-50`); a **fiação do save, não**.
 
 **O que o IMP-06 não conserta:** o cap de `40vh` (`styles.css:5685-5688`) existe por causa das
 **linhas de relação** abaixo da árvore, não do botão — ele fica. E a sentinela continua dentro da

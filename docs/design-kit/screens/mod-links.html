@@ -182,8 +182,9 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
     <div class="warn" style="margin-bottom:10px;">
       <b>Esta tela foi redesenhada porque a anterior desenhava linhas que não existem mais.</b> O
-      <code>competency_links.js</code> mudou <b>seis</b> vezes depois que ela foi feita
-      (<code>159a800</code>, 2026-06-29). A maior: o <code>93e4f69</code> trouxe atividades com
+      <code>competency_links.js</code> mudou <b>sete</b> vezes depois que ela foi feita
+      (<code>159a800</code>, 2026-06-29) — a sétima é o <code>5d9da31</code> (2026-07-15), o conserto
+      do estado vazio anotado abaixo. A maior: o <code>93e4f69</code> trouxe atividades com
       <b>checkbox</b> e o <code>d7578b3</code> as removeu <b>no mesmo dia</b>, trocando por uma
       <b>busca</b> + <b>✕</b> por linha. Um <code>grep -nE 'checkbox|form-check'</code> no JS de hoje
       devolve <b>nada</b>. O Mustache, esse, não muda desde <code>bcdbea1</code> — e é por isso que
@@ -307,11 +308,11 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
           <span style="font-size:11px;color:var(--acc-fg)">Carregar mais</span>
           <span class="idb">MOD.LINKS-LOADMORE · :50-53 · página de 25</span>
         </div>
-        <span class="note">Estado vazio: "Nenhum curso vinculado." <span class="idb">MOD.LINKS-EMPTY · :47-49</span> — a condição é mais estreita do que "a lista zerou": só sai com <code>offset === 0 &amp;&amp; total === 0</code> (<code>js:460</code>), e <b>não volta</b> ao remover o último card.</span>
+        <span class="note">Estado vazio: "Nenhum curso vinculado." <span class="idb">MOD.LINKS-EMPTY · :47-49</span> — a condição de <b>entrada</b> é mais estreita do que "a lista zerou": só sai com <code>offset === 0 &amp;&amp; total === 0</code> (<code>js:460</code>).<br><b>CORRIGIDO em 2026-07-15.</b> O <code>removeCourse</code> tirava o card e <b>não voltava</b> ao estado vazio: remover o último curso deixava o painel <b>em branco</b>, sem mensagem nenhuma. Das três transições para o estado vazio, duas já estavam ligadas (o <code>loadCourses</code> pela contagem do servidor, <code>js:460</code>; o <code>onAddCourse</code> escondendo no add, <code>js:664</code>) — faltava esta. Agora o <code>removeCourse</code> reavalia a bandeira depois do <code>courseEl.remove()</code> (<code>js:563</code>).<br><b>E o predicado não é o do gêmeo.</b> O <code>related_competencies</code> resolve o mesmo problema com <code>children.length &gt; 0</code> e só; copiar aquela linha aqui teria sido <b>errado</b>. Aquela lista é <b>sem paginação</b> — refaz tudo a cada mudança, então as linhas na tela são a verdade inteira. Esta pagina de <b>25</b> (<code>PAGE_SIZE</code>, <code>js:42</code>): com 30 vínculos, remover os 25 da tela imprimiria "Nenhum curso vinculado." <b>acima de um "Carregar mais" vivo</b>, com 5 cursos ainda atados — troca o painel branco por uma <b>afirmação falsa</b>, que é o pior dos dois. Daí o segundo termo: o contêiner vazio só quer dizer "nenhum curso vinculado" quando não há mais nada a carregar, e o módulo já sabia disso pelo <code>loadMoreEl.hidden</code>.<br><b>O que continua quebrado (não é o mesmo defeito).</b> O <code>state.offset</code> <b>não</b> é decrementado ao remover: o censo completo da variável são quatro linhas (<code>js:447</code> lê, <code>:458</code> soma, <code>:460</code> e <code>:461</code> leem) e nenhuma subtrai. Um "Carregar mais" depois de uma remoção ainda consulta um cursor velho e <b>pula um curso</b>. É aritmética de paginação, defeito separado, deixado para a sua própria mudança.</span>
 
         <div class="row" style="margin-top:2px;">
           <span class="toast"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Salvo</span>
-          <span class="idb">MOD.LINKS-TOAST · js:805</span>
+          <span class="idb">MOD.LINKS-TOAST · js:808</span>
         </div>
       </div>
 
@@ -320,25 +321,27 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
     <div class="row" style="margin-top:9px;">
       <span class="idb">MOD.LINKS-ACTION · structure_footer_actions.mustache:53-56</span>
-      <span class="idb">MOD.LINKS-COUNT-REFRESH · js:828-835 → structure.js:908-920</span>
+      <span class="idb">MOD.LINKS-COUNT-REFRESH · js:831-838 → structure.js:908-920</span>
     </div>
 
     <span class="note" style="display:block;margin-top:6px;"><b>Clique no chevron do primeiro card</b> — as atividades somem e voltam. É a carga preguiçosa real: <code>toggleCourse</code> (<code>js:518-533</code>) só chama o WS na <b>primeira</b> abertura e marca <code>data-loaded="1"</code>; depois disso é só mostrar/esconder. <b>O que a tela não demonstra:</b> aqui quem troca o chevron é o CSS; em produção é um <code>className</code> em JS (<code>js:524</code> / <code>:532</code>). O estado é real; o mecanismo da troca, não.</span>
 
     <div class="ok" style="margin-top:8px;">
       <b>O toast mora dentro do modal, e este arquivo é o caso de referência.</b>
-      <code>js:805</code> chama <code>addToastRegion(modal.getBody()[0])</code> no
-      <code>ModalEvents.shown</code> (<code>:802</code>). O motivo é aritmética de
+      <code>js:808</code> chama <code>addToastRegion(modal.getBody()[0])</code> no
+      <code>ModalEvents.shown</code> (<code>:805</code>). O motivo é aritmética de
       <code>z-index</code>: a <code>.toast-wrapper</code> da página é <b>1051</b>
       (<code>theme/boost/scss/moodle/core.scss:2432</code>) e o diálogo é <b>1055</b>
       (<code>$zindex-modal</code>, <code>bootstrap/_variables.scss:1139</code>) — um toast disparado
       daqui pousaria <b>atrás</b> do modal. O comentário do core na linha de cima ainda diz "above any
       modals": envelheceu no salto para o BS5, que subiu o modal de 1050 para 1055. <b>Este é o
       modal que mais depende disso:</b> são <b>5</b> <code>addToast</code> próprios
-      (<code>:561</code>, <code>:584</code>, <code>:614</code>, <code>:662</code>, <code>:818</code>)
+      (<code>:564</code>, <code>:587</code>, <code>:617</code>, <code>:665</code>, <code>:821</code>)
       mais o de rede do <code>notifyError</code>, e <b>nenhuma</b> dessas ações fecha o diálogo.
-      Quatro delas também <b>piscam</b> o elemento (<code>flash</code>, <code>js:178-186</code>): o
-      toast diz <i>o quê</i>, o flash diz <i>onde</i>.
+      <b>Três</b> delas também <b>piscam</b> o elemento (<code>flash</code>,
+      <code>js:178-186</code>, chamado em <code>:586</code>, <code>:662</code> e <code>:822</code>): o
+      toast diz <i>o quê</i>, o flash diz <i>onde</i>. As duas sem flash são as <b>remoções</b> — não
+      há o que piscar quando o elemento acabou de sair do DOM.
     </div>
   </section>
 
@@ -405,7 +408,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       + nome breve + contador + 🗑, e dentro dele nome da atividade + tipo + ✕ + outcome +
       distintivo + aviso de compartilhada. O nome da atividade já quebra em <b>duas linhas</b> e
       então reticencia (<code>styles.css:5565-5574</code>) — a largura é o recurso escasso. Hoje o
-      único ajuste é <code>large: true</code> (<code>js:760</code>).
+      único ajuste é <code>large: true</code> (<code>js:763</code>).
     </div>
 
     <div class="ok" style="margin-top:8px;">
@@ -451,7 +454,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
     <div class="warn" style="margin-top:8px;">
       <b>O que fica em aberto, e a tela não resolve.</b> O <code>large: true</code> de hoje
-      (<code>js:760</code>) e a classe <code>fullscreen</code> do to-be são <b>dois</b> mecanismos de
+      (<code>js:763</code>) e a classe <code>fullscreen</code> do to-be são <b>dois</b> mecanismos de
       largura. Quem implementar precisa decidir se o <code>fullscreen</code> empilha sobre o
       <code>large</code> ou o substitui. <b>Este preview não decide isso</b>: ele não roda o
       <code>core/modal</code>, e a largura aqui é <code>max-width</code> num
