@@ -451,7 +451,10 @@ const loadCourses = async(state) => {
     state.addsel.disabled = !response.canlink;
 
     response.items.forEach((course) => {
-        state.rowsEl.appendChild(makeCourseRow(state, course));
+        const row = makeCourseRow(state, course);
+        // Only the rows this cursor fetched count towards it; the picker appends its own.
+        row.dataset.paged = '1';
+        state.rowsEl.appendChild(row);
         state.excluded.add(String(course.courseid));
     });
     state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
@@ -558,6 +561,16 @@ const removeCourse = async(state, courseEl) => {
     state.excluded.delete(String(courseid));
     state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
     courseEl.remove();
+    /* Removing a fetched row shifts every later one down, so the cursor has to come back with
+       it or Load more skips the course that took its place. Guarded twice over: the picker
+       appends rows this cursor never counted, and the trash button stays live across the
+       confirm and the unlink, so a re-click can reach the same row again — the second unlink
+       resolves with success false rather than throwing, and would decrement a second time.
+       Consuming the tag makes the step idempotent per row. */
+    if (courseEl.dataset.paged) {
+        delete courseEl.dataset.paged;
+        state.offset -= 1;
+    }
     /* The list is paginated, so an empty rows container only means "no courses linked" once
        there is nothing left to load: with a page still pending the message would be a lie. */
     state.emptyEl.hidden = state.rowsEl.children.length > 0 || !state.loadMoreEl.hidden;
