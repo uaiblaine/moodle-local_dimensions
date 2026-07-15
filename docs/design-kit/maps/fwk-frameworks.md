@@ -62,7 +62,7 @@ O seletor Sistema/Categoria vem da contextbar (`BAR`).
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `FWK-ROW` | `[sem rótulo]` | card (wrapper) | `frameworks_row.mustache:39-43` | `data-framework="{id}"` | carrega `frameworkid`, `name`, `count`, `visible`, `deletable`; a classe `is-hidden` (`:39`) dá `opacity: 0.6` (`styles.css:3700-3702`). O seletor de linha do JS é `[data-framework]` (`frameworks.js:44`) |
+| `FWK-ROW` | `[sem rótulo]` | card (wrapper) | `frameworks_row.mustache:39-43` | `data-framework="{id}"` | carrega `frameworkid`, `name`, `count`, `visible`, `deletable`; a classe `is-hidden` (`:39`) é hook de estado sem CSS desde 2026-07-15 (o `opacity: 0.6` foi removido por travar o AA; ver as regras abaixo). O seletor de linha do JS é `[data-framework]` (`frameworks.js:44`) |
 | `FWK-ROW-SELECT` | `[sem rótulo]` | botão | `frameworks_row.mustache:44` | `data-action="select-framework"` | **o card inteiro é um botão**: `selectFramework` marca `.active` e publica o rodapé (`frameworks.js:460-477`). O `data-action` é **decorativo** — o handler casa por `closest('[data-framework]')` (`:513-516`), não pelo action |
 | `FWK-ROW-NAME` | nome | texto | `frameworks_row.mustache:47` | `shortname` | 17px/700 (`styles.css:3751-3756`) |
 | `FWK-ROW-ID` | idnumber | chip mono | `frameworks_row.mustache:48` | `idnumber` | só se `idnumber`. **Não estava no mapa** |
@@ -153,13 +153,20 @@ o toast disparado de dentro dele renderiza **acima** do diálogo (padrão da cas
 - **i18n · "1 ocultas".** `central_frameworks_hiddencount` é `'{$a} ocultas'` em pt-BR
   (`lang/pt_br:132`) e `'{$a} hidden'` em inglês (`lang/en:132`) — sem forma singular. Com
   `excludedcount = 1` o pt-BR renderiza "**1 ocultas**". O inglês não sofre porque "hidden" é invariável.
-- **a11y · dois textos shipados reprovam no WCAG AA (medido).** `FWK-ROW-DESC` e `FWK-HIDDENCOUNT`
-  usam ambos `#8b939b` sobre o `#fff` da card (`styles.css:3785` e `:3652`) — **3,11:1**, abaixo do
-  mínimo de 4,5:1 para texto normal, e os dois carregam **conteúdo real** (a descrição da estrutura e a
-  contagem de ocultas), não decoração. Para comparação, no mesmo arquivo o `FWK-COUNT` usa `#495057`
-  (**8,18:1**, `:3642`) e o `FWK-NEW` usa `#fff` sobre `#0f6cbf` (**5,36:1**, `:4125-4126`) — ou seja, é
-  desvio pontual destes dois, não o padrão da aba. O painel as-is da tela reproduz o desvio de
-  propósito (**é o que está no ar**); a correção pertence à Camada 3.
+- **a11y · CORRIGIDO em 2026-07-15.** `FWK-ROW-DESC` e `FWK-HIDDENCOUNT` usavam `#8b939b` — **3,11:1**
+  sobre o `#fff` da card, abaixo dos 4,5:1 exigidos, carregando **conteúdo real** (a descrição da
+  estrutura e a contagem de ocultas), não decoração. Era desvio pontual: `#8b939b` só existia nesses
+  dois pontos do arquivo. Ambos usam **`#495057`** agora — o mesmo cinza do `FWK-COUNT`, já usado 26×
+  — e passam em **todos** os fundos reais da card: 8,18:1 normal, 7,69:1 no `:hover` (`#f7f8fa`),
+  7,59:1 no `.active` (`#f2f7fc`). O `#6a737b` (o `--mds-text-muted` do kit) foi descartado por
+  reprovar no card **selecionado** por 0,02 (4,48:1).
+- **a11y · o `opacity: 0.6` do card oculto foi REMOVIDO (2026-07-15).** `opacity` num bloco inteiro
+  comprime **texto e fundo juntos** na direção da página, então nenhuma cor de texto alcançava AA
+  ali: o teto medido era **5,74:1 com preto puro**, e o badge "Oculta" ficava em **2,12:1**. O card
+  oculto já sinalizava explicitamente — `fa-eye-slash` + a palavra "Oculta" (`frameworks_row.mustache:49`)
+  —, então o `opacity` era um **segundo** sinal, redundante, que só destruía contraste. Removido; o
+  badge passou de `#6a737b` para `#495057` (4,15 → **7,03:1**) e agora carrega o estado sozinho.
+  A classe `is-hidden` continua no template como hook de estado (nada mais a lia).
 
 ## to-be
 

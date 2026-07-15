@@ -3649,7 +3649,7 @@
 }
 
 .local-dimensions-central-fwexcluded {
-    color: #8b939b;
+    color: #495057;
 }
 
 .local-dimensions-central-fwactions {
@@ -3695,10 +3695,6 @@
     border-radius: 16px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
-}
-
-.local-dimensions-central-fwcard.is-hidden {
-    opacity: 0.6;
 }
 
 .local-dimensions-central-fwcard:hover {
@@ -3771,7 +3767,7 @@
     gap: 5px;
     font-size: 11.5px;
     font-weight: 600;
-    color: #6a737b;
+    color: #495057;
     background: #eceef1;
     border: 1px solid #dfe3e7;
     border-radius: 999px;
@@ -3782,7 +3778,7 @@
     display: block;
     max-width: 100%;
     font-size: 13.5px;
-    color: #8b939b;
+    color: #495057;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
