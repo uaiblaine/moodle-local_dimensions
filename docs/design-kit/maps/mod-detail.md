@@ -12,7 +12,7 @@ CSS não diz quem aplica a classe. Por isso **o contrato de CSS mora aqui**: é 
 seria escrito.
 
 > **Nome do arquivo × nome do ID — leia isto antes de procurar `MOD.STRUCTRELATED`.**
-> O arquivo se chama `mod-detail.md` porque o template se chama `structure_related_modal`.
+> O arquivo se chama `mod-detail.md` porque o **ID** é `MOD.DETAIL` — batizado antes, no `pln-plans.md`. O **template** ainda se chama `structure_related_modal.mustache`: é o nome do template que envelheceu, não o ID.
 > O **prefixo é `MOD.DETAIL`**, e não `MOD.STRUCTRELATED`, porque **o modal já tinha nome**: o
 > [`pln-plans.md`](pln-plans.md) o batizou em `:234` (`MOD.DETAIL` ← `competency_detail.js:277`) e o
 > referencia de novo em `:186`. Emitir um segundo nome para o mesmo diálogo é exatamente o defeito
