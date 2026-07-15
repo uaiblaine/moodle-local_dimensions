@@ -1,91 +1,602 @@
-<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Aba Planos" subtitle="PLN — templates + competências, atual vs proposta, com IDs" -->
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Aba Planos de aprendizagem" subtitle="PLN — master-detail, o kebab da lista aninhada e o rodapé, atual vs proposta, com IDs" -->
 <style>
 :root{
   --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
   --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
   --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
+  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
   --text-danger:#a32d2d;--bg-danger:#fcebeb;--border-danger:#f09595;
   --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
   --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+  --mds-motion-fast:150ms;--mds-motion-base:250ms;--mds-motion-flash:1500ms;
+  --mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
+  /* Tokens próprios do chip de proveniência: NÃO podem herdar o accent do painel .moodle,
+     que em escuro é #3f89cc e cai para 3,88:1 sobre o tint (medido; mesmo valor que o
+     est-structure, o fwk-frameworks e o modal-shell registraram). Estes dão 5,70:1
+     (claro) e 7,23:1 (escuro). */
+  --prov-fg:#185fa5;--prov-bg:#e6f1fb;
+  /* Preenchimento do botão primário: NÃO pode ser var(--text-accent), que no escuro vira o
+     azul CLARO #85b7eb — texto branco sobre ele dá 2,11:1 (medido). O token de accent é
+     feito para TEXTO sobre fundo escuro, não para virar fundo. Este par é fixo nos dois
+     modos e dá 6,52:1 (medido). */
+  --prim-bg:#185fa5;--prim-fg:#fff;
+  /* Os três stops do cabeçalho do plano: valores REAIS que o PHP calcula para o padrão
+     #0f6cbf — darken_hex(base, 0.16) e darken_hex(base, 0.34) (helper.php:2382-2397,
+     dynamictabs/plans.php:311-313). Fixos nos dois modos, como no plugin: o cabeçalho
+     veste as cores do MODELO, não as do tema. Texto branco sobre o stop mais claro =
+     5,36:1 (medido). */
+  --pln-hdr-0:#0f6cbf;--pln-hdr-48:#0d5ba0;--pln-hdr-100:#0a477e;--pln-hdr-fg:#fff;
 }
 @media (prefers-color-scheme:dark){:root{
   --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
   --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
   --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
+  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
   --text-danger:#f09595;--bg-danger:#2a1313;--border-danger:#791f1f;
   --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+  --prov-fg:#85b7eb;--prov-bg:#0c2740;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
 .screens{display:flex;flex-wrap:wrap;gap:18px;}
-.panel{flex:1 1 440px;min-width:330px;}
-.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:10px;}
-.pdot{width:8px;height:8px;border-radius:50%;}
+.panel{flex:1 1 460px;min-width:340px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
 .idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
-.lbl{font-size:11px;color:var(--text-secondary);}
+.prov{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:10px;background:var(--prov-bg);color:var(--prov-fg);border:0.5px solid var(--prov-fg);white-space:nowrap;}
 .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .col{display:flex;flex-direction:column;gap:4px;}
-.ctrl{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;padding:6px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);}
-.cbtn{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);}
-.pane{border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);padding:8px;}
-.trow{display:flex;align-items:center;gap:7px;padding:5px 7px;border-radius:6px;font-size:12px;}
-.trow.sel{background:var(--bg-accent);}.trow.sel .nm{color:var(--text-accent);}
-.badge{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--surface-1);color:var(--text-secondary);}
-.crow{display:flex;align-items:center;gap:6px;padding:4px 6px;border-bottom:0.5px solid var(--border);font-size:12px;}
-.ico{width:20px;height:20px;border:0.5px solid var(--border-strong);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;}
 .note{font-size:10px;color:var(--text-muted);}
-.fbadge{font-size:10px;padding:1px 7px;border-radius:10px;background:var(--bg-accent);color:var(--text-accent);}
-.screens>.panel:last-child{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
-@media (prefers-color-scheme:dark){.screens>.panel:last-child{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
+.divlbl{font-size:11px;color:var(--text-muted);margin:12px 0 5px;border-top:0.5px solid var(--border);padding-top:9px;}
+.ic{width:1.1rem;height:1.1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ic.sm{width:0.85rem;height:0.85rem;}
+.ic.xs{width:0.6rem;height:0.6rem;}
+
+/* ---- switches (o partial de ocultos + as duas engrenagens) ---- */
+.sw{display:inline-flex;align-items:center;gap:9px;font-size:12px;cursor:pointer;}
+.tgl{position:relative;display:inline-block;width:32px;height:18px;flex:none;}
+.tgl input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;}
+.tgl-track{position:absolute;inset:0;background:var(--border-stronger);border-radius:9px;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);pointer-events:none;}
+.tgl-track::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform var(--mds-motion-fast) var(--mds-motion-ease);}
+.tgl input:checked+.tgl-track{background:var(--text-accent);}
+.tgl input:checked+.tgl-track::after{transform:translateX(14px);}
+.tgl.on-dark input:checked+.tgl-track{background:rgba(255,255,255,0.85);}
+.tgl.on-dark .tgl-track{background:rgba(255,255,255,0.28);}
+.tgl.on-dark .tgl-track::after{background:var(--pln-hdr-100);}
+
+/* ---- master-detail ---- */
+/* flex-wrap deixa mestre e detalhe empilharem quando o painel fica estreito: com os dois
+   flex-basis somando mais que o container, eles quebram em vez de espremer. */
+.md{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;}
+.master{flex:1 1 210px;min-width:0;}
+.detail{flex:1 1 250px;min-width:0;}
+.card{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.chead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:0.5px solid var(--border);}
+.ctitle{font-size:12px;font-weight:700;}
+.gear{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:0;border-radius:6px;background:var(--surface-1);color:var(--text-secondary);flex:none;}
+.cbody{padding:8px 10px;display:flex;flex-direction:column;gap:8px;}
+.optgroup{display:flex;flex-direction:column;gap:5px;padding:7px 8px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-1);}
+.srow{display:flex;align-items:center;gap:6px;}
+.sbox{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden;font-size:11px;padding:5px 8px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-muted);}
+/* Um nó de TEXTO cru num flex vira item anônimo com min-width:auto e NÃO encolhe abaixo do
+   min-content — ele vazava por cima do "Novo modelo". O span explícito pode encolher. */
+.sbox-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bprim{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:5px 9px;border:0;border-radius:10px;background:var(--prim-bg);color:var(--prim-fg);white-space:nowrap;}
+
+/* ---- filtro multi-competência ---- */
+.filt{display:flex;flex-direction:column;gap:5px;padding:7px 8px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-1);}
+.filt-top{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
+.filt-lbl{font-size:10px;font-weight:600;color:var(--text-secondary);}
+.filt-clear{display:inline-flex;align-items:center;gap:3px;font-size:9px;color:var(--text-accent);background:none;border:0;padding:0;text-align:left;}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:2px 4px 2px 8px;border-radius:999px;background:var(--bg-accent);color:var(--text-accent);border:0.5px solid var(--border-accent);}
+.chip-x{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border:0;border-radius:50%;background:none;color:inherit;padding:0;}
+.filt-add{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border:0.5px dashed var(--border-stronger);border-radius:999px;background:var(--surface-2);color:var(--text-secondary);}
+.picker{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;padding:5px 8px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-muted);}
+
+/* ---- linhas de modelo ---- */
+.tlist{display:flex;flex-direction:column;gap:3px;padding:6px;border-top:0.5px solid var(--border);}
+.trow{display:flex;align-items:center;gap:7px;padding:6px 7px;border-radius:8px;font-size:11px;border:0.5px solid transparent;}
+.trow.active{background:var(--bg-accent);border-color:var(--border-accent);}
+.trow.active .tname{color:var(--text-accent);font-weight:600;}
+.tbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.tnameline{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.tname{font-weight:500;}
+.tid{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);background:var(--surface-1);border:0.5px solid var(--border);border-radius:5px;padding:0 5px;}
+.tdue{display:inline-flex;align-items:center;gap:4px;font-size:9px;color:var(--text-secondary);}
+.tcount{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 6px;border-radius:999px;background:var(--surface-1);border:0.5px solid var(--border);font-size:10px;color:var(--text-secondary);}
+.trow.active .tcount{background:var(--prim-bg);border-color:var(--prim-bg);color:var(--prim-fg);}
+.thid{font-size:9px;padding:0 6px;border-radius:999px;background:var(--border-stronger);color:var(--surface-2);}
+
+/* O toggle de ocultos governa de verdade a linha oculta, espelhando a regra do plugin:
+   as linhas ficam no DOM e o toggle só liga a classe show-disabled no container
+   (plans.js:194, :197). Sem :has() degrada para o estado padrão (desligado), honesto. */
+.t-hidonly{display:none;}
+.asis:has(#pln-showdisabled:checked) .t-hidonly{display:flex;}
+/* Os cinco switches das duas engrenagens também governam de verdade — cada um liga a
+   classe show-* que o plugin liga (DISPLAY_CLASSES plans.js:54, LISTDISPLAY plans.js:57). */
+.tid,.tdue,.ctax,.cpath,.cid{display:none;}
+.asis:has(#pln-list-id:checked) .tid{display:inline-block;}
+.asis:has(#pln-list-due:checked) .tdue{display:inline-flex;}
+.asis:has(#pln-disp-tax:checked) .ctax{display:inline;}
+.asis:has(#pln-disp-path:checked) .cpath{display:flex;}
+.asis:has(#pln-disp-id:checked) .cid{display:inline-block;}
+
+/* ---- divisor ---- */
+.resizer{flex:none;width:22px;display:flex;align-items:center;justify-content:center;}
+.grip{width:3px;height:34px;border-radius:2px;background:var(--border-stronger);}
+
+/* ---- cabeçalho gradiente do detalhe (cores do MODELO, fixas nos dois modos) ---- */
+.dhead{position:relative;overflow:hidden;padding:10px 11px 12px;border-radius:12px 12px 0 0;
+  background:linear-gradient(140deg,var(--pln-hdr-0) 0%,var(--pln-hdr-48) 48%,var(--pln-hdr-100) 100%);color:var(--pln-hdr-fg);}
+.dglow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 95% at 8% -12%,rgba(255,255,255,0.22),rgba(255,255,255,0) 55%);}
+.dhead-in{position:relative;display:flex;flex-direction:column;gap:7px;}
+.dtop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.dtitlerow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.dtitle{font-size:13px;font-weight:700;letter-spacing:-0.01em;}
+.status{display:inline-flex;align-items:center;font-size:9px;font-weight:600;padding:1px 8px;border-radius:999px;color:#fff;}
+.status.is-enabled{background:#217a37;}
+.status.is-disabled{background:#6a737b;}
+.dcounts{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:10px;}
+.dcount{display:inline-flex;align-items:center;gap:5px;}
+.dpill{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:17px;padding:0 6px;border-radius:999px;background:#495057;color:#fff;font-size:9px;font-weight:600;}
+.dsep{opacity:0.5;}
+.gear-dark{background:rgba(255,255,255,0.16);color:var(--pln-hdr-fg);}
+.doptpanel{display:flex;flex-direction:column;gap:4px;padding:6px 7px;border-radius:var(--radius);background:rgba(0,0,0,0.16);}
+.dchips{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.dchip{display:inline-flex;align-items:center;gap:5px;font-size:9px;padding:2px 8px;border-radius:999px;}
+.dchip-accent{background:#495057;color:#fff;font-weight:600;}
+.dchip-glass{background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.2);color:inherit;}
+
+/* ---- corpo do detalhe ---- */
+.dbody{background:var(--surface-2);border:0.5px solid var(--border);border-top:0;border-radius:0 0 12px 12px;padding:8px 10px;display:flex;flex-direction:column;gap:7px;}
+.desc{font-size:10px;color:var(--text-secondary);border-left:2px solid var(--border-accent);padding-left:7px;}
+.lhead{display:flex;align-items:center;gap:6px;font-size:9px;font-weight:600;color:var(--text-secondary);border-bottom:0.5px solid var(--border);padding-bottom:4px;text-transform:uppercase;letter-spacing:0.03em;}
+.lgrip{width:1.25rem;flex:none;}
+.ltitle{flex:1;min-width:0;}
+.lcol{flex:none;}
+.lcol-act{width:34px;text-align:center;}
+
+/* ---- linha de competência ---- */
+.clist{display:flex;flex-direction:column;}
+.crow{display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:11px;position:relative;}
+.crow:last-child{border-bottom:0;}
+.cmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.chead2{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.cname{font-weight:500;color:var(--text-accent);background:none;border:0;padding:0;text-align:left;}
+.ctax{font-size:9px;color:var(--text-muted);}
+.cid{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);background:var(--surface-1);border:0.5px solid var(--border);border-radius:5px;padding:0 5px;}
+.cpath{align-items:center;gap:4px;font-size:9px;color:var(--text-muted);}
+.cstruct{flex:none;font-size:9px;font-weight:600;padding:1px 7px;border-radius:5px;background:var(--surface-1);border:0.5px solid var(--border);color:var(--text-secondary);}
+.cmenu{flex:none;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);}
+.cdrag{order:-1;flex:none;width:1.25rem;display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);background:none;border:0;padding:0;opacity:0.55;}
+
+/* ---- kebab desenhado aberto ---- */
+.ddwrap{position:relative;flex:none;}
+.ddmenu{width:172px;padding:4px;border:0.5px solid var(--border-strong);border-radius:10px;background:var(--surface-2);box-shadow:0 6px 20px rgba(0,0,0,0.16);display:flex;flex-direction:column;gap:1px;}
+.dditem{display:flex;align-items:center;gap:7px;font-size:10px;padding:4px 7px;border:0;border-radius:6px;background:none;color:var(--text-primary);text-align:left;}
+.dditem.is-disabled{color:var(--text-muted);}
+.dditem.is-danger{color:var(--text-danger);}
+.dddiv{height:0.5px;background:var(--border);margin:3px 0;}
+
+/* ---- sticky footer ---- */
+.foot{display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;padding:7px;border:0.5px solid var(--border-strong);border-top-width:2px;border-radius:var(--radius);background:var(--surface-2);margin-top:8px;}
+.fbtn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;padding:3px 7px;border-radius:6px;color:var(--text-primary);text-align:center;}
+
+/* ---- destaques ---- */
+.warn{margin-top:6px;background:var(--bg-warning);color:var(--text-warning);border:0.5px solid var(--border-warning);border-radius:var(--radius);padding:6px 8px;font-size:10px;}
+.rule{margin-top:6px;background:var(--bg-accent);color:var(--text-accent);border:0.5px solid var(--border-accent);border-left-width:3px;border-radius:var(--radius);padding:7px 9px;font-size:10px;}
+.rule b{color:var(--text-accent);}
+
+/* ---- spinner real (compartilhado as-is / to-be) ---- */
+@keyframes pln-spin{to{transform:rotate(360deg);}}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:pln-spin 750ms linear infinite;flex:none;}
+.spin.sm{width:11px;height:11px;}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:1.5s;}}
+.load{display:flex;align-items:center;justify-content:center;gap:8px;height:96px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);color:var(--text-accent);font-size:11px;}
+.rbtn{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);}
+.rbtn[disabled]{opacity:0.65;color:var(--text-secondary);}
+.flash{border:0.5px solid var(--border);border-radius:var(--radius);padding:5px 7px;font-size:11px;background:var(--bg-warning);color:var(--text-warning);}
+
+/* ---- to-be: abas com ícone + indicador (IMP-10) ---- */
+.tabs{display:flex;gap:2px;border-bottom:0.5px solid var(--border);}
+.tb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:8px 12px;color:var(--text-secondary);background:none;border:0;}
+.tb.active{color:var(--text-accent);font-weight:500;box-shadow:inset 0 -2px 0 var(--text-accent);}
+
+.screens>.panel.moodle{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+@media (prefers-color-scheme:dark){.screens>.panel.moodle{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
 </style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="p-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="p-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+  <symbol id="p-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.17V21a2 2 0 11-4 0v-.09A1.65 1.65 0 007 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></symbol>
+  <symbol id="p-clipboard" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M8 12h8M8 16h5"/></symbol>
+  <symbol id="p-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="p-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="p-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></symbol>
+  <symbol id="p-clone" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></symbol>
+  <symbol id="p-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></symbol>
+  <symbol id="p-kebab" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="p-move" viewBox="0 0 24 24"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></symbol>
+  <symbol id="p-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="p-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+  <symbol id="p-updown" viewBox="0 0 24 24"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></symbol>
+  <symbol id="p-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="p-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></symbol>
+  <symbol id="p-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="p-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><path d="M7 7h.01"/></symbol>
+  <symbol id="p-rotate" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></symbol>
+  <symbol id="p-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="p-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="p-cap" viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+</defs></svg>
 <div class="screens">
 
-  <section class="panel">
+  <section class="panel asis">
     <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o que está no ar</div>
-    <div class="col" style="margin-bottom:8px;">
-      <span class="lbl">Buscar competência (filtra planos)</span>
-      <div class="row"><span class="ctrl" style="flex:1;min-width:160px;"><span style="color:var(--text-muted)">Buscar competência…</span><span style="color:var(--text-secondary)">⌄</span></span><span class="cbtn" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">＋ Adicionar plano</span></div>
-      <div class="row"><span class="idb">PLN-SEARCH</span><span class="idb">PLN-NEW</span><span class="fbadge">Filtrado por: Comunicação · CORE</span><span style="font-size:11px;color:var(--text-accent)">limpar</span><span class="idb">PLN-FILTER-BADGE / CLEAR</span></div>
+
+    <label class="sw">
+      <span class="tgl"><input type="checkbox" id="pln-showdisabled"><span class="tgl-track"></span></span>
+      Mostrar modelos ocultos <span class="idb">PLN-SHOWDISABLED</span>
+    </label>
+    <div class="note" style="margin-top:5px;">
+      O toggle acima <b>funciona</b>, e os <b>cinco</b> switches das duas engrenagens abaixo também —
+      cada um liga a mesma classe <code>show-*</code> que o plugin liga. Partial compartilhado com
+      <code>EST</code>/<code>FWK</code>; o <code>data-action</code> é variável e aqui vale
+      <code>toggle-disabled</code> (<code>dynamictabs/plans.php:289</code>). Só renderiza se existir algum
+      oculto.
     </div>
-    <div class="row" style="gap:10px;align-items:stretch;">
-      <div class="pane" style="flex:1 1 160px;">
-        <div class="trow sel">📋 <span class="nm" style="flex:1;">Plano de integração</span><span class="badge">6</span></div>
-        <div class="trow">📋 <span class="nm" style="flex:1;">Onboarding técnico</span><span class="badge">4</span></div>
-        <div class="trow" style="color:var(--text-muted)">📋 <span class="nm" style="flex:1;">Trilha de gestão</span><span class="badge" style="background:var(--surface-1)">oculto</span></div>
-        <span class="idb">PLN-TPL-ROW</span>
-      </div>
-      <div class="pane" style="flex:1 1 200px;">
-        <div style="font-size:14px;font-weight:500;">Plano de integração <span class="idb">PLN-DETAIL-TITLE</span></div>
-        <div class="note" style="margin-bottom:6px;">Competências: 6 <span class="idb">PLN-DETAIL-COUNT</span></div>
-        <span class="lbl">Adicionar competência</span>
-        <div class="ctrl" style="margin:3px 0;"><span style="color:var(--text-muted)">Buscar…</span><span style="color:var(--text-secondary)">⌄</span></div>
-        <div class="row"><span style="font-size:11px;color:var(--text-accent)">⌗ Procurar em frameworks</span><span class="idb">PLN-ADD / PLN-BROWSE</span></div>
-        <div style="margin-top:6px;">
-          <div class="crow"><span style="flex:1;">Comunicação</span><span class="badge">CORE</span><span class="ico">↑</span><span class="ico">↓</span><span class="ico" style="color:var(--text-danger)">✕</span></div>
-          <div class="crow" style="border-bottom:0;"><span style="flex:1;">Trabalho em equipe</span><span class="badge">SOFT</span><span class="ico">↑</span><span class="ico">↓</span><span class="ico" style="color:var(--text-danger)">✕</span></div>
-          <span class="idb">PLN-COMP-ROW · PLN-COMP-UP/DOWN/REMOVE</span>
+
+    <div class="md" style="margin-top:9px;">
+      <div class="master">
+        <div class="card">
+          <div class="chead">
+            <span class="ctitle">Modelos <span class="idb">PLN-LIST-TITLE</span></span>
+            <span class="gear"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-cog"/></svg></span>
+          </div>
+          <div class="cbody">
+            <div class="row" style="gap:4px;"><span class="idb">PLN-LIST-GEAR</span><span class="idb">PLN-LIST-OPTS</span></div>
+            <div class="optgroup">
+              <label class="sw" style="font-size:11px;">
+                <span class="tgl"><input type="checkbox" id="pln-list-id"><span class="tgl-track"></span></span>
+                Mostrar identificadores
+              </label>
+              <label class="sw" style="font-size:11px;">
+                <span class="tgl"><input type="checkbox" id="pln-list-due"><span class="tgl-track"></span></span>
+                Mostrar data de entrega
+              </label>
+            </div>
+            <div class="row" style="gap:4px;"><span class="idb">PLN-LIST-OPT-ID</span><span class="idb">PLN-LIST-OPT-DUE</span></div>
+
+            <div class="srow">
+              <span class="sbox"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-search"/></svg><span class="sbox-t">Buscar por nome ou identificador</span></span>
+              <span class="bprim"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-plus"/></svg>Novo modelo</span>
+            </div>
+            <div class="row" style="gap:4px;"><span class="idb">PLN-PLANSEARCH</span><span class="idb">PLN-NEW</span></div>
+
+            <div class="filt">
+              <div class="filt-top">
+                <span class="filt-lbl">Filtrar por competências</span>
+                <span class="filt-clear"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-x"/></svg>Limpar filtro de competência</span>
+              </div>
+              <div class="row" style="gap:4px;">
+                <span class="chip">Comunicação<button type="button" class="chip-x" aria-label="Remover Comunicação do filtro"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-x"/></svg></button></span>
+                <span class="chip">Trabalho em equipe<button type="button" class="chip-x" aria-label="Remover Trabalho em equipe do filtro"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-x"/></svg></button></span>
+                <span class="filt-add"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-plus"/></svg>Adicionar ao filtro</span>
+              </div>
+              <div class="picker">Filtrar planos por competência<span aria-hidden="true">▾</span></div>
+            </div>
+            <div class="row" style="gap:4px;">
+              <span class="idb">PLN-FILTER-CLEAR</span><span class="idb">PLN-FILTER-CHIP</span><span class="idb">PLN-FILTER-ADD</span><span class="idb">PLN-SEARCH</span>
+            </div>
+          </div>
+          <div class="tlist">
+            <div class="trow active">
+              <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-clipboard"/></svg>
+              <span class="tbody">
+                <span class="tnameline"><span class="tname">Plano de integração</span><span class="tid">IND-01</span></span>
+                <span class="tdue"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-calendar"/></svg>31 de dezembro de 2025</span>
+              </span>
+              <span class="tcount">6</span>
+            </div>
+            <div class="trow">
+              <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-clipboard"/></svg>
+              <span class="tbody"><span class="tnameline"><span class="tname">Onboarding técnico</span><span class="tid">ONB-02</span></span></span>
+              <span class="tcount">4</span>
+            </div>
+            <div class="trow t-hidonly">
+              <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-clipboard"/></svg>
+              <span class="tbody"><span class="tnameline"><span class="tname">Trilha de gestão</span></span></span>
+              <span class="tcount">0</span>
+              <span class="thid">Oculto</span>
+            </div>
+          </div>
         </div>
-        <div class="row" style="margin-top:8px;"><span class="cbtn" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">✎ Editar</span><span class="cbtn" style="color:var(--text-danger);border-color:var(--border-danger)">🗑 Excluir</span><span class="cbtn">👥 Participantes</span></div>
-        <div class="row"><span class="idb">PLN-EDIT</span><span class="idb">PLN-DELETE → MOD.DELPLANS</span><span class="idb">PLN-PARTICIPANTS → MOD.PART</span></div>
+        <div class="row" style="margin-top:5px;gap:4px;">
+          <span class="idb">PLN-TPL-ROW</span><span class="idb">PLN-TPL-ID</span><span class="idb">PLN-TPL-DUE</span><span class="idb">PLN-TPL-COUNT</span><span class="idb">PLN-TPL-HIDDEN</span><span class="idb">PLN-RESIZER</span>
+        </div>
       </div>
+
+      <div class="resizer"><span class="grip"></span></div>
+
+      <div class="detail">
+        <div class="dhead">
+          <span class="dglow" aria-hidden="true"></span>
+          <div class="dhead-in">
+            <div class="dtop">
+              <div class="col" style="gap:5px;">
+                <div class="dtitlerow">
+                  <span class="dtitle">Plano de integração</span>
+                  <span class="status is-enabled">Habilitado</span>
+                </div>
+                <div class="dcounts">
+                  <span class="dcount">Competências <span class="dpill">6</span></span>
+                  <span class="dsep" aria-hidden="true">•</span>
+                  <span class="dcount">Planos <span class="dpill">12</span></span>
+                  <span class="dsep" aria-hidden="true">•</span>
+                  <span class="dcount">Coortes <span class="dpill">3</span></span>
+                </div>
+              </div>
+              <span class="gear gear-dark"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-cog"/></svg></span>
+            </div>
+            <div class="doptpanel">
+              <label class="sw" style="font-size:10px;">
+                <span class="tgl on-dark"><input type="checkbox" id="pln-disp-tax"><span class="tgl-track"></span></span>
+                Exibir taxonomia
+              </label>
+              <label class="sw" style="font-size:10px;">
+                <span class="tgl on-dark"><input type="checkbox" id="pln-disp-path"><span class="tgl-track"></span></span>
+                Mostrar caminhos
+              </label>
+              <label class="sw" style="font-size:10px;">
+                <span class="tgl on-dark"><input type="checkbox" id="pln-disp-id"><span class="tgl-track"></span></span>
+                Mostrar identificadores
+              </label>
+            </div>
+            <div class="dchips">
+              <span class="dchip dchip-accent"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-eye"/></svg>Formato de exibição: Visão do plano</span>
+              <span class="dchip dchip-glass"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-tag"/></svg>Rótulo das competências: Módulos</span>
+              <span class="dchip dchip-glass"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-calendar"/></svg>Prazo: 31 de dezembro de 2025</span>
+              <span class="dchip dchip-glass">Ano 1</span>
+            </div>
+          </div>
+        </div>
+        <div class="dbody">
+          <div class="desc">Plano de integração para novos colaboradores.</div>
+          <div class="lhead">
+            <span class="lgrip" aria-hidden="true"></span>
+            <span class="ltitle">Módulos do plano</span>
+            <span class="lcol">Estrutura</span>
+            <span class="lcol lcol-act">Ações</span>
+          </div>
+          <div class="clist">
+            <div class="crow">
+              <span class="cmain">
+                <span class="chead2">
+                  <button type="button" class="cname">Comunicação</button>
+                  <span class="ctax">– Competência</span>
+                  <span class="cid">COMM-01</span>
+                </span>
+                <span class="cpath"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-folder"/></svg>Soft skills / Interpessoal</span>
+              </span>
+              <span class="cstruct">CORE</span>
+              <span class="cmenu"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-kebab"/></svg></span>
+              <button type="button" class="cdrag" aria-label="Mover para posição…: Comunicação"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-move"/></svg></button>
+            </div>
+            <div class="crow">
+              <span class="cmain">
+                <span class="chead2">
+                  <button type="button" class="cname">Trabalho em equipe</button>
+                  <span class="ctax">– Competência</span>
+                </span>
+              </span>
+              <span class="cstruct">SOFT</span>
+              <span class="cmenu"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-kebab"/></svg></span>
+              <button type="button" class="cdrag" aria-label="Mover para posição…: Trabalho em equipe"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-move"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:5px;gap:4px;">
+          <span class="idb">PLN-DETAIL-HEADER</span><span class="idb">PLN-STATUS</span><span class="idb">PLN-DETAIL-COUNT</span><span class="idb">PLN-COUNT-PLANS</span><span class="idb">PLN-COUNT-COHORTS</span>
+        </div>
+        <div class="row" style="margin-top:3px;gap:4px;">
+          <span class="idb">PLN-DETAIL-GEAR</span><span class="idb">PLN-DISP-TAX/PATH/ID</span><span class="idb">PLN-CHIP-*</span><span class="idb">PLN-COMP-ROW</span><span class="idb">PLN-COMP-NAME → MOD.DETAIL</span><span class="idb">PLN-COMP-GRIP</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:7px;">
+      O cabeçalho do detalhe é um <b>gradiente 140deg que veste as cores do modelo</b>
+      (<code>styles.css:4316</code>). Os três stops acima são os <b>reais</b> para o padrão
+      <code>#0f6cbf</code>: <code>#0f6cbf</code> → <code>#0d5ba0</code> → <code>#0a477e</code>,
+      calculados por <code>darken_hex(base, 0.16)</code> e <code>(base, 0.34)</code>
+      (<code>dynamictabs/plans.php:311-313</code>). Ele <b>não segue o tema</b> — nem aqui nem no plugin.
+    </div>
+    <div class="warn">
+      <b>a11y medido — e o problema não é o que parece.</b> O plugin <b>não</b> é omisso: os forms que
+      editam o par cor/texto montam um painel WCAG <b>em tempo real</b>, com razão, badges AA/AAA e até
+      dois consertos de um clique (<code>contrast.js:16-28</code>). Mas ele <b>aconselha, não bloqueia</b>
+      (<code>:22-23</code>; a <code>validation()</code> só checa <code>shortname</code> e SCSS) — e, pior,
+      <b>gradua o par que o cabeçalho não pinta</b>: o que é pintado são três stops derivados e chips
+      translúcidos por cima deles, que ninguém gradua. No padrão, o texto branco dá <b>5,36:1</b> (passa),
+      mas os chips <i>glass</i> (branco a 13%) dão <b>4,22:1 sobre o stop 0</b> — abaixo do AA — e sobem
+      para 6,71:1 no stop 100. <b>O mesmo chip passa ou reprova conforme onde cai no gradiente.</b> Os
+      fixos passam com folga: <code>#495057</code>+<code>#fff</code> = 8,18:1.
+    </div>
+
+    <div class="divlbl">O kebab da competência · desenhado <b>aberto</b> para expor os cinco itens</div>
+    <div class="row" style="align-items:flex-start;gap:10px;">
+      <div class="ddmenu">
+        <button type="button" class="dditem"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-pencil"/></svg>Editar competência</button>
+        <button type="button" class="dditem is-disabled" disabled><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-up"/></svg>Mover para cima</button>
+        <button type="button" class="dditem"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-down"/></svg>Mover para baixo</button>
+        <button type="button" class="dditem"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-updown"/></svg>Mover para posição…</button>
+        <span class="dddiv" aria-hidden="true"></span>
+        <button type="button" class="dditem is-danger"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#p-x"/></svg>Remover competência</button>
+      </div>
+      <div class="col" style="flex:1 1 160px;gap:4px;">
+        <div class="row" style="gap:4px;">
+          <span class="idb">PLN-COMP-MENU</span><span class="idb">PLN-COMP-EDIT</span><span class="idb">PLN-COMP-UP</span>
+        </div>
+        <div class="row" style="gap:4px;">
+          <span class="idb">PLN-COMP-DOWN</span><span class="idb">PLN-COMP-MOVETO</span><span class="idb">PLN-COMP-REMOVE</span>
+        </div>
+        <div class="note">
+          Desenhado <b>aberto</b> — é um dropdown do Bootstrap, dirigido por JS. "Mover para cima" está
+          <code>disabled</code> porque a linha é a <b>primeira</b> (<code>{{#first}}</code>,
+          <code>plans.mustache:412</code>), exatamente como o servidor a renderiza.
+          <b>"Remover" tem <code>text-danger</code></b> (<code>:430</code>) — ao contrário dos botões do
+          rodapé, o item de menu <b>tem</b> variante de cor.
+        </div>
+      </div>
+    </div>
+
+    <div class="rule">
+      <b>A fronteira da regra do sticky-footer (decidida 2026-07-14).</b> A regra "nunca kebab por linha"
+      governa o <b>CRUD da entidade da aba</b> (framework / nó da estrutura / template) — que vai pro
+      sticky-footer porque é o que lança os modais. As ações de <b>competências dentro da lista de um
+      plano</b> são <b>lista aninhada</b> e legitimamente usam kebab
+      (<code>plans.mustache:396-436</code>): o sticky-footer desta aba já está ocupado pelas ações do
+      template selecionado. <b>Este kebab está correto — não "conserte".</b>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>A prova mais forte é o <code>openForm</code> compartilhado.</b> O <code>edit-competency</code> do
+      kebab (<code>plans.mustache:405-408</code>) e o <code>edit-template</code> do rodapé
+      (<code>:465-468</code>) chamam <b>a mesma função</b> — <code>openForm</code>
+      (<code>plans.js:211-219</code>, cujo <code>new ModalForm</code> está em <code>:212</code>) — que o
+      <code>new-template</code> do cabeçalho (<code>:182-184</code>) também chama. Os <b>três</b> convivem
+      porque o <code>openForm</code> é parametrizado pela <code>formclass</code>: o kebab passa
+      <code>COMPETENCY_FORM_CLASS</code> (<code>plans.js:739-745</code>), o rodapé e o cabeçalho passam
+      <code>FORM_CLASS</code> (<code>:732-738</code>, <code>:725-731</code>). <b>Entidades diferentes,
+      mesmo mecanismo</b> — é por isso que kebab e rodapé coexistem sem ambiguidade.
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>E o rodapé segue dominante — números medidos.</b> O hub tem <b>17</b> sítios de construção de
+      modal (4 <code>new ModalForm</code> + 13 <code>Modal*.create</code>, todos sob
+      <code>amd/src/central/</code>). O rodapé <b>alcança 10</b> diretamente, é a <b>única porta de 7</b>,
+      e <b>8 dependem</b> dele (os 7 + <code>enrol_methods</code>, que só existe dentro do modal de
+      participantes). Os outros 3 — form de framework, de competência e de template — têm porta paralela
+      no cabeçalho, <b>mas o botão do rodapé é o único jeito de agir sobre a linha selecionada</b>. São
+      <b>7</b> sem outra porta, não 10.
+    </div>
+
+    <div class="divlbl">Ações do modelo selecionado · <b>sticky-footer da página</b></div>
+    <div class="foot">
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#p-pencil"/></svg>Editar detalhes</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#p-plus"/></svg>Adicionar competência</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#p-users"/></svg>Gerenciar participantes</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#p-clone"/></svg>Duplicar modelo</span>
+      <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#p-trash"/></svg>Excluir modelo</span>
+    </div>
+    <div class="row" style="margin-top:5px;gap:4px;">
+      <span class="idb">PLN-EDIT</span><span class="idb">PLN-BROWSE → MOD.BROWSER</span><span class="idb">PLN-PARTICIPANTS → MOD.PART</span><span class="idb">PLN-DUPLICATE</span><span class="idb">PLN-DELETE → MOD.DELPLANS</span>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>Cinco</b> botões (<code>plans.mustache:462-488</code>), não três: o <b>Duplicar</b> chegou junto
+      com a mudança para o rodapé e chama o WS <b>do plugin</b>, que também copia os custom fields da área
+      lp e os arquivos embutidos (<code>plans.js:615-626</code>). O holder nasce <code>hidden</code> no
+      servidor e o <code>init</code> copia o <code>innerHTML</code> pro <code>#sticky-footer</code> e
+      <b>remove o holder</b> (<code>plans.js:797-800</code>) — senão um duplicado escondido sombrearia os
+      cliques por nome do Behat. Padrão cru do core: ícone sobre rótulo, <b>sem variante de cor</b> nem no
+      Excluir.
+    </div>
+    <div class="warn">
+      <b>O grip é a armadilha de Behat do <code>CLAUDE.md</code>, ao vivo.</b> Ele é renderizado
+      <b>depois</b> do kebab no DOM (<code>plans.mustache:440-445</code>, com o comentário em
+      <code>:437-439</code>) porque o <code>aria-label</code> dele embute o nome da competência e o seletor
+      <code>"button"</code> pega o <b>primeiro hit em ordem de documento</b> — se viesse antes, roubaria o
+      clique do controle real. O <code>order:-1</code> do CSS (<code>styles.css:5343</code>) o pinta na
+      <b>esquerda</b> assim mesmo — e é o que está pintado acima. No plugin ele nasce
+      <code>opacity:0</code> (<code>:5347</code>) e só aparece no hover, <b>mas continua interativo pro
+      WebDriver</b>.
     </div>
   </section>
 
-  <section class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · mesmo master-detail, mais limpo</div>
-    <div class="row" style="margin-bottom:8px;"><span class="ctrl" style="flex:1;"><span style="color:var(--text-muted)">🔍 Buscar plano ou competência…</span></span><span class="cbtn" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">＋ Novo plano</span></div>
-    <div class="row" style="gap:10px;align-items:stretch;">
-      <div class="pane" style="flex:1 1 160px;">
-        <div class="trow sel">📋 <span class="nm" style="flex:1;">Plano de integração</span><span class="fbadge">6</span></div>
-        <div class="trow">📋 <span class="nm" style="flex:1;">Onboarding técnico</span><span class="badge">4</span></div>
+  <section class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · as três melhorias que caem nesta tela</div>
+
+    <div class="divlbl" style="border-top:0;padding-top:0;margin-top:0;">1 · Loading no <code>reloadPane</code> <span class="prov">mtube: carregando</span></div>
+    <div class="load" role="status" aria-busy="true" aria-live="polite" aria-label="Carregando planos…">
+      <span class="spin" aria-hidden="true"></span><span aria-hidden="true">Carregando planos…</span>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      O anel gira de verdade (<code>@keyframes</code> + <code>animation</code>), e o
+      <code>aria-busy="true"</code> está <b>neste</b> elemento — não só na legenda.
+    </div>
+    <div class="warn">
+      <b>Correção medida:</b> o alvo <b>não</b> é a troca de aba — essa <b>já tem loading, e vem do core</b>
+      (<code>dynamic_tabs.js:92-97</code> → <code>loadTab</code> → <code>addIconToContainer</code>,
+      <code>:153</code>; e <code>:88</code> esvazia o pane anterior). A lacuna é o <code>reloadPane</code> do
+      plugin (<code>tabs.js:51-66</code>), que refaz o caminho do <code>loadTab</code> <b>sem</b> o ícone — e é
+      ele que roda nas <b>23</b> chamadas de 5 módulos.
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>Precisão que só esta aba dá:</b> como o <code>PLN</code> <b>nunca nasce ativo</b>
+      (<code>central.php:105</code> só marca <code>frameworks</code>), o pane dele <b>nunca</b> é renderizado
+      no servidor no load — a primeira pintura <i>sempre</i> passa pelo <code>loadTab</code>, que <b>já</b>
+      mostra o ícone. Aqui a lacuna é <b>exclusivamente</b> o <code>reloadPane</code>.
+    </div>
+    <div class="row" style="margin-top:7px;align-items:stretch;gap:7px;">
+      <div class="col" style="flex:1 1 150px;gap:3px;">
+        <span class="note"><b>Pane recarregado → spinner</b> (as 6 daqui)</span>
+        <div class="load" style="height:44px;font-size:10px;"><span class="spin sm" aria-hidden="true"></span><span aria-hidden="true">reloadPane</span></div>
       </div>
-      <div class="pane" style="flex:1 1 200px;">
-        <div style="font-size:14px;font-weight:500;">Plano de integração</div>
-        <div class="row" style="margin:6px 0;"><span class="fbadge">6 competências</span><span class="badge">12 alunos</span></div>
-        <div class="crow"><span style="flex:1;">Comunicação</span><span class="fbadge">CORE</span><span class="ico">⋮</span></div>
-        <div class="crow" style="border-bottom:0;"><span style="flex:1;">Trabalho em equipe</span><span class="badge">SOFT</span><span class="ico">⋮</span></div>
-        <div class="row" style="margin-top:8px;"><span class="cbtn" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)">＋ Adicionar</span><span class="cbtn">👥 Participantes</span><span class="ico" style="width:auto;padding:0 8px;">⋯</span></div>
-        <span class="note">to-be: contagem de alunos visível, mover/remover num menu ⋮, ações secundárias em ⋯ — mapeia PLN-*</span>
+      <div class="col" style="flex:1 1 150px;gap:3px;">
+        <span class="note"><b>Linha trocada → flash</b> (os 3 daqui)</span>
+        <div class="flash">reorder in-place → <code>flashRow</code></div>
       </div>
+    </div>
+    <div class="warn">
+      <b>A ressalva não é a que se supunha.</b> O <code>reloadKeepingScroll</code>
+      (<code>plans.js:92-108</code>) <b>não é caminho in-place</b>: ele <b>aguarda <code>reloadPane</code> na
+      <code>:101</code></b> — é reload de pane inteiro que só captura o <code>scrollTop</code> antes
+      (<code>:95-100</code>) e restaura depois (<code>:102-107</code>). Um spinner no <code>reloadPane</code>
+      <b>cobre ele de graça, e isso é correto</b>. Regressão seria pôr spinner nos <b>três caminhos in-place
+      de verdade</b> — <code>moveCompetency</code> (<code>:636-661</code>), o <code>dragend</code>
+      (<code>:523-527</code>) e o save do <code>MOD.MOVETO</code> (<code>:588-598</code>) — que não
+      recarregam nada e já se confirmam com <code>flashRow</code>.
+    </div>
+    <div class="note" style="margin-top:6px;">
+      Esta aba exibe as <b>duas metades da regra da casa no mesmo arquivo</b>: <b>6</b> reloads
+      (<code>plans.js:101, 244, 625, 679, 684, 836</code>) e <b>3</b> flashes (<code>:526, 597, 660</code>).
+    </div>
+
+    <div class="divlbl">2 · Atualizar na contextbar <span class="prov">mtube: atualizar</span></div>
+    <div class="row" style="gap:10px;">
+      <div class="col" style="gap:3px;"><span class="note">repouso</span><span class="rbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-rotate"/></svg>Atualizar</span></div>
+      <div class="col" style="gap:3px;"><span class="note">em curso · <code>disabled</code> + ícone girando</span>
+        <button type="button" class="rbtn" disabled><span class="spin sm" aria-hidden="true"></span>Atualizar</button>
+      </div>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      O botão da direita é um <code>&lt;button disabled&gt;</code> de verdade e o anel gira — a disciplina do
+      mtube (<code>disabled</code> + <code>fa-spin</code>, restaurados num <code>finally</code>) está
+      demonstrada, não descrita.
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>Precisão:</b> não é verdade que "nada expõe <code>reloadPane</code>" — ele tem <b>23 chamadas em 5
+      módulos</b> (<code>structure</code> 9, <code>frameworks</code> 6, <code>plans</code> 6,
+      <code>competency_browser</code> 1, <code>context</code> 1). O que é verdade é que <b>nenhum controle de
+      UI</b> o dispara: as 23 são refresh automático pós-ação.
+    </div>
+
+    <div class="divlbl">3 · Ícones + indicador nas abas <span class="prov">mtube: ícones nas abas</span></div>
+    <div class="tabs">
+      <span class="tb active"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-grid"/></svg>Estruturas</span>
+      <span class="tb"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-list"/></svg>Competências</span>
+      <span class="tb"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-cap"/></svg>Planos de aprendizagem</span>
+    </div>
+    <div class="note" style="margin-top:6px;">
+      O indicador da aba ativa é <code>box-shadow: inset 0 -2px 0</code> — é o que está pintado, não uma
+      legenda. O ícone entra pelo <b>rótulo</b>: <code>core/dynamic_tabs</code> faz triple-stash de
+      <code>displayname</code> (<code>dynamic_tabs.mustache:53</code>), então <b>nenhum template do core
+      muda</b>. Escopar sob <code>.local-dimensions-central-page</code> (já no <code>&lt;body&gt;</code>,
+      <code>central.php:57</code>).
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>"Planos de aprendizagem" aparece inativa acima porque é o que ela é no primeiro paint</b> — o
+      <code>PLN</code> é a <b>terceira</b> aba e <code>central.php:105</code> só marca
+      <code>frameworks</code> como ativa. O rótulo vem da str <code>learningplans</code>
+      (<code>central.php:101</code>), que <b>não</b> segue a convenção <code>central_&lt;x&gt;_tab</code> do
+      <code>FWK</code>.
     </div>
   </section>
 
