@@ -27,7 +27,7 @@ mapa — **não** é a mesma lacuna do `EST`/`FWK`/`PLN`.
 >   elemento plausível e segue. As outras dez caíam em `</ul>`, `</li>`, `{{#canassignroles}}`,
 >   `<div>`s de layout e uma `{{#str}}` no meio de um `<label>`.
 > - **`PART-TAB-ENROL` estava marcada `_to-be_`.** Ela **shipou** em `3d1d5cb` (2026-07-11 23:03) —
->   **86 minutos** depois de o `0b3782c` (21:37) escrever a linha que a chamava de proposta.
+>   **~70 minutos** depois de o `0b3782c` (21:53) escrever a linha que a chamava de proposta.
 > - **Zero refs de JS**, como no `BAR`. O mapa listava quatro módulos AMD num bullet e não apontava
 >   uma linha sequer para dentro deles: nada de `HEADER_PAGES`, `injectHeaderLinks`, `activateTab`,
 >   `ensureMounted`, roving tabindex, `modal-xl`, região de toast ou `setRemoveOnClose`.
@@ -166,12 +166,12 @@ aparece.
 
 O pane é vazio (`participants_manager.mustache:150-151`) e montado por `enrol_methods.js:1010-1033`.
 O conteúdo tem mapa próprio — ver [`mod-enrolmethods.md`](mod-enrolmethods.md). **Ressalva medida:**
-aquele mapa se declara *"to-be — proposta, ainda sem código"* e foi escrito **86 minutos antes** de o
+aquele mapa se declara *"to-be — proposta, ainda sem código"* e foi escrito **~70 minutos antes** de o
 `3d1d5cb` shipar o código; ele está tão desatualizado quanto este estava. Resync próprio pendente.
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-REFRESH` | Atualizar | botão | `enrol_methods.mustache:39-41`, `:47-49`, `:108-110` | `data-action="enrol-refresh"` | **três** ocorrências (dois `alert`s + a barra de filtros). `<i class="fa fa-rotate me-1">` + `{{#str}}refresh, moodle{{/str}}`. **É o único "atualizar" do modal inteiro** — as outras três abas não têm nenhum. Precedente direto do IMP-01: a string e o ícone já existem, sem string nova |
+| `ENROL-REFRESH` | Atualizar | botão | `enrol_methods.mustache:39-41`, `:47-49`, `:108-110` | `data-action="enrol-refresh"` | **três** ocorrências (dois `alert`s + a barra de filtros). `<i class="fa fa-rotate me-1">` + `{{#str}}refresh, moodle{{/str}}`. **É o único "atualizar" do modal inteiro** — as outras três abas não têm nenhum. Precedente direto do IMP-05: a string e o ícone já existem, sem string nova |
 | `ENROL-SELBAR` | `[sem rótulo]` | barra de seleção | `enrol_methods.mustache:113-127` | `.border-top.pt-2` | contador + "em processamento" (`fa-spinner fa-spin`, `:116`) + Remover método / Aplicar método, ambos `disabled` por padrão (`:120`, `:123`) |
 
 ## Comportamento do host (`participants_manager.js`)
@@ -217,7 +217,7 @@ que o `errors.js` existe para rotear), o toast aparece, o pane fica em branco e 
 `true`**. Clicar em outra aba e voltar **não** tenta de novo: o `if` já falha no `!<flag>mounted`.
 E como **não há nenhum controle de atualizar** nas abas Coortes/Usuários/Papéis (o único do modal é
 o `ENROL-REFRESH` da 4ª aba), e como `setRemoveOnClose(true)` (`:145`) descarta o modal ao fechar,
-**a única recuperação é fechar e reabrir o modal**. É este o achado que amarra o IMP-03 ao IMP-01
+**a única recuperação é fechar e reabrir o modal**. É este o achado que amarra o IMP-03 ao IMP-11
 aqui: um spinner mostra que falhou; **só o "atualizar" deixa tentar de novo**.
 
 **Conclusão para o to-be:** o alvo não é "loading na troca de aba" genérico. É (a) o pane de Coortes
