@@ -154,6 +154,8 @@ export const show = async(competency, children, rulesModules) => {
         const hasrule = Number(outcomeEl.value) !== OUTCOME_NONE;
         ruletypeWrap.hidden = !hasrule;
         pointsEl.hidden = !(hasrule && ruletypeEl.value === RULE_POINTS);
+        // The invalid-points alert outlives the table it is about; drop it with the table.
+        errorEl.hidden = errorEl.hidden || pointsEl.hidden;
     };
     outcomeEl.addEventListener('change', refresh);
     ruletypeEl.addEventListener('change', refresh);
