@@ -1,21 +1,186 @@
-# Mapa de Campos — `MOD.BROWSER` · Modal navegador de competências (as-is)
+# Mapa de Campos — `MOD.BROWSER` · Modal procurar em estruturas (as-is)
 
-Corpo do modal "Procurar em frameworks": seletor de framework + filtro client-side +
-toggle de caminhos. As linhas de competência (checkbox) são **injetadas via JS** (chama
-web services de leitura do core).
+Modal aberto pelo botão **+ Adicionar competência** do **sticky-footer** da aba Planos. Escolhe uma
+**estrutura** num `<select>` e, abaixo dele, monta o **mesmo browser de árvore** do modal
+"Competências referenciadas" (partial compartilhado) — filtro com debounce, toggle de caminhos,
+linhas de checkbox, "Carregar mais" e scroll infinito. As marcadas entram no template do plano e o
+pane recarrega.
 
-- **Mustache:** [`templates/central/competency_browser.mustache`](../../../templates/central/competency_browser.mustache)
-- **AMD:** [`amd/src/central/competency_browser.js`](../../../amd/src/central/competency_browser.js), [`amd/src/central/competency_datasource.js`](../../../amd/src/central/competency_datasource.js)
-- **To-be no DS:** `paginated-picker.html` (propõe busca server-side **paginada** — **diverge** do as-is, que é filtro client-side sobre lista carregada).
+É o **único** ponto do plugin inteiro que chama `setSaveButtonText` — e é, por isso, o
+**contra-exemplo** do IMP-06: aqui o rodapé do `ModalSaveCancel` é reusado **e o fechar-no-save do
+core está certo**. Detalhado no fim deste mapa.
+
+- **Mustache:** [`competency_browser.mustache`](../../../templates/central/competency_browser.mustache) (56, seletor + casca) · [`competency_tree_browser.mustache`](../../../templates/central/competency_tree_browser.mustache) (44, partial compartilhado com o `MOD.RELATED`) · gatilho em [`plans.mustache`](../../../templates/central/plans.mustache) (`:469-472`)
+- **AMD:** [`competency_browser.js`](../../../amd/src/central/competency_browser.js) (126) — monta o browser via [`competency_tree_browser.js`](../../../amd/src/central/competency_tree_browser.js) (510, `initBrowser`/`applyMode`/`getCheckedIds`/`destroyBrowser`); usa `errors.js` (`notifyError`) e `tabs.js` (`reloadPane`, import em `:34`)
+- **WS:** `core_competency_list_competency_frameworks` (`js:73-76`, popula o seletor), `local_dimensions_browse_competencies` (`db/services.php:109-116` → [`classes/external/browse_competencies.php`](../../../classes/external/browse_competencies.php), a árvore/busca), core `core_competency_add_competency_to_template` (`js:49`, escrever)
+- **CSS:** **nenhum**. Um `grep -n 'local-dimensions-cb\|competency-browser' styles.css` devolve **uma** linha — `:5685`, e ela é escopada em `.local-dimensions-central-related`. Ver a nota da caixa solta abaixo.
+- **Tela no DS:** [`screens/mod-browser.html`](../screens/mod-browser.html) (as-is ↔ to-be, com o storyboard da troca de estrutura e a demonstração marcar→habilitar, ambos dirigidos e medidos)
+
+**Abreviações usadas nas tabelas** (o mapa do `MOD.RELATED` usa as mesmas): `js:` =
+`amd/src/central/competency_browser.js` · `tree.js:` = `amd/src/central/competency_tree_browser.js`
+· `tree.mustache:` = `templates/central/competency_tree_browser.mustache`. Caminhos que começam com
+`lib/` são do **core**, relativos a `public/`.
+
+> **Resync 2026-07-15 — o mapa anterior descrevia um filtro client-side que não existe mais, um
+> arquivo AMD que este modal não importa, e um rótulo que o plugin renomeou.** Medido, não estimado:
+>
+> - **6 refs; 4 quebradas (4/6).** Um `grep -oE '[a-z_/.]+\.(php|js|mustache|css):[0-9]+(-[0-9]+)?'`
+>   no arquivo antigo devolve **exatamente 6**, todas em `competency_browser.mustache` — e o arquivo
+>   tem **56 linhas**:
+>   - `:40` (`MOD.BROWSER-FW-LABEL`) e `:43` (`MOD.BROWSER-FW`) **continuam certas**. Sobreviveram
+>     porque o `44ac031` **tirou** linhas do topo do arquivo em vez de pôr: o filtro e o toggle
+>     saíram para o partial e o que ficou acima do seletor não se mexeu.
+>   - `:53-57` (dito `MOD.BROWSER-PATHTOGGLE`) é a pior quebra da série, e vale ler devagar: a
+>     **primeira** linha do intervalo resolve hoje para o `{{#str}}` do
+>     `central_browseframeworks_noframeworks` — ou seja, aponta para o conteúdo do
+>     **`MOD.BROWSER-EMPTY`**, um controle **real, de outra ID** deste mesmo mapa. As três seguintes
+>     são `</div>`, `{{/hasframeworks}}`, `</div>`, e a quinta (`:57`) cai **depois do fim do
+>     arquivo**. Quem confere vê uma string plausível e segue.
+>   - `:59` (`MOD.BROWSER-LIST`) e `:62` (`MOD.BROWSER-EMPTY`) apontam **depois do fim do arquivo**.
+>     O mapa mandava o `EMPTY` para o vazio e o `PATHTOGGLE` para o `EMPTY` — as duas IDs trocadas
+>     de lugar, e nenhuma no lugar certo.
+>   - `:50` (`MOD.BROWSER-FILTER`) resolve para `{{/hasframeworks}}`.
+> - **Zero refs de JS**, como em todos os mapas anteriores da série — e aqui isso apagava **10 dos
+>   20** controles deste mapa: os que só existem numa linha de `.js` são o título, o salvar, a regra
+>   da troca de estrutura, e a linha da árvore inteira (chevron, checkbox, caminho, trava, "Carregar
+>   mais", vazio, sentinela). O próprio mapa antigo admitia a lacuna numa nota de rodapé (*"Injetado
+>   via JS (detalhar ao inventariar `competency_browser.js`)"*) e propunha **uma** ID hipotética,
+>   `MOD.BROWSER-ROW-*`. **O mapa antigo cobria 6 controles; este cobre 20** — contados com
+>   `grep -oE '^\| \`MOD\.BROWSER-[A-Z-]+\`' | sort -u | wc -l`.
+> - **`competency_datasource.js` não é deste modal.** O bullet **AMD** do mapa antigo o linkava; um
+>   `grep -rn 'competency_datasource' amd/src/` devolve **dois** hits — a própria declaração
+>   `@module` (`:19`) e **`plans.js:46`**, que o usa como `DATASOURCE` do autocomplete **da aba
+>   Planos**. O `competency_browser.js` não o importa: os 8 `import` dele (`:27-34`) são `core/ajax`,
+>   `core/modal_save_cancel`, `core/modal_events`, `errors`, `core/templates`, `core/str`,
+>   `competency_tree_browser` e `tabs`.
+> - **O rótulo envelheceu duas vezes.** O mapa e a tela diziam "framework"; o `f817430`
+>   ("reorder + rebrand tabs", 2026-07-07) reescreveu as strings **sem** renomear as chaves:
+>   `central_browseframeworks` = "Procurar em **estruturas**", `central_browseframeworks_framework`
+>   = "**Estrutura**". As chaves ainda dizem `framework` — o usuário lê `estrutura`. (O
+>   `README.md:40` deste kit ainda anuncia "Procurar em frameworks"; fora do escopo desta tarefa,
+>   fica registrado.)
+> - **O placeholder do filtro nunca foi "Buscar competência…".** É
+>   `central_browseframeworks_filter` = "**Filtrar competências**", e serve de `placeholder` **e** de
+>   `aria-label` (`tree.mustache:33-34`).
+> - **O to-be do mapa antigo já está shipado — o as-is o ultrapassou.** O mapa dizia que o as-is era
+>   *"filtro client-side sobre lista carregada"* e que o `paginated-picker.html` propunha
+>   *"busca server-side paginada"* como divergência. Hoje o as-is **é** busca server-side paginada:
+>   `local_dimensions_browse_competencies` com `limitfrom`/`limitnum`
+>   (`browse_competencies.php:60-61`), página de **25** (`PAGE_SIZE`, `tree.js:46`), debounce de
+>   **250 ms** e mínimo de **2** caracteres (`tree.js:379`, `:47`). A única diferença que sobra é a
+>   **forma da paginação**: o DS desenha números de página, o shipado usa **scroll infinito**
+>   (`IntersectionObserver`, `tree.js:492-497`). A tela foi redesenhada em cima disso.
+
+## Gatilho (na aba Planos, fora do modal)
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.BROWSER-FW-LABEL` | Framework | label | `competency_browser.mustache:40` | str `central_browseframeworks_framework` | — |
-| `MOD.BROWSER-FW` | Framework (select) | select | `competency_browser.mustache:43` | `data-region="framework"` | troca de framework recarrega a lista via JS |
-| `MOD.BROWSER-FILTER` | `[placeholder]` | input texto | `competency_browser.mustache:50` | `data-region="filter"` | filtro client-side; placeholder `central_browseframeworks_filter` |
-| `MOD.BROWSER-PATHTOGGLE` | Mostrar caminhos | switch | `competency_browser.mustache:53-57` | `data-region="path-toggle"` | exibe o caminho hierárquico em cada linha |
-| `MOD.BROWSER-LIST` | `[sem rótulo]` | contêiner-JS | `competency_browser.mustache:59` | `data-region="competency-list"` | linhas de checkbox injetadas por `competency_browser.js` |
-| `MOD.BROWSER-EMPTY` | "Sem frameworks" | empty-state | `competency_browser.mustache:62` | str `central_browseframeworks_noframeworks` | — |
+| `MOD.BROWSER-ACTION` | Adicionar competência | botão (gatilho) | `plans.mustache:469-472` | `data-action="browse-frameworks"` · `fa fa-plus` | str **`central_addcompetency`** — **não** `central_browseframeworks` (essa é o título do modal). Mora no holder `data-region="plans-footer-actions"` (`:462`), que nasce `hidden` e é movido para o `#sticky-footer` da página pelo `plans.js` (comentário em `:458-461`); só sai sob `{{#canmanage}}` (`:457`). `plans.js:723` chama `showCompetencyBrowser(pane, region)` (import em `:35`) |
 
-**Injetado via JS (detalhar ao inventariar `competency_browser.js`):**
-linha de competência (checkbox + nome + caminho opcional) → `MOD.BROWSER-ROW-*`.
+## Casca do modal
+
+| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| --- | --- | --- | --- | --- | --- |
+| `MOD.BROWSER-TITLE` | Procurar em estruturas | título | `competency_browser.js:89` (str), `:92` (`ModalSaveCancel.create`) | str `central_browseframeworks` | `setRemoveOnClose(true)` em `:94`. É `ModalSaveCancel`, **não** `Modal` — o oposto do `MOD.RELATED` (`related_competencies.js:248`) |
+| `MOD.BROWSER-ROOT` | `[sem rótulo]` | região/raiz | `competency_browser.mustache:37` | `data-region="competency-browser"` · `.local-dimensions-competency-browser` | **a classe não tem estilo nenhum**: um `grep -n 'local-dimensions-competency-browser' styles.css` não devolve nada. É gancho morto — sobrou de quando o modal era dono da árvore |
+| `MOD.BROWSER-SAVE` | Adicionar selecionadas | botão primário (rodapé) | `competency_browser.js:93` (`setSaveButtonText`), `:88-91` (str) | str `central_browseframeworks_add` · `data-action="save"` (core) | **a única chamada `setSaveButtonText` do plugin** — `grep -rn 'setSaveButtonText' amd/src/` devolve 1 linha. **Nunca é desabilitado**; ver a seção do save vazio abaixo |
+| `MOD.BROWSER-CANCEL` | Cancelar | botão (rodapé) | `lib/templates/modal_save_cancel.mustache:43` | `data-action="cancel"` · str core `cancel` | vem de graça com o `ModalSaveCancel`; o plugin não o toca |
+| `MOD.BROWSER-X` | Fechar | chip de fechar | core (`lib/templates/modal.mustache`) | — | ganha o restyle azul de `1.75rem` do hub (`styles.css:3557-3562`): o root não tem `.local-dimensions-related-modal` e o corpo casa `[class*='local-dimensions-']` — os dois lados do seletor. O casamento **não depende** da classe morta do `MOD.BROWSER-ROOT`: `.local-dimensions-cb-scroll` e `.local-dimensions-competency-browser-list` (`tree.mustache:42-43`) já bastariam. Mesmo caso do `MOD.RELATED`, e pelo mesmo seletor |
+
+## Corpo — o seletor de estrutura e o vazio
+
+| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| --- | --- | --- | --- | --- | --- |
+| `MOD.BROWSER-FW-LABEL` | Estrutura | rótulo | `competency_browser.mustache:40-42` | str `central_browseframeworks_framework` | `<label>` de verdade, com `for="local-dimensions-cb-framework"` — o alvo é um campo, ao contrário do `MOD.RELATED-ADDLABEL`, que é um `<div>` porque aponta para uma árvore |
+| `MOD.BROWSER-FW` | Estrutura (select) | select | `competency_browser.mustache:43-47` | `data-region="framework"` · `class="form-select"` | `form-select`, nunca `custom-select` (as classes BS5 são pontecadas no 4.5). Populado por `core_competency_list_competency_frameworks` (`js:73-76`) com `sort: 'shortname'`, `includes: 'parents'` (estruturas dos contextos-pai entram) e `onlyvisible: true`. A **primeira** vem marcada (`selected: index === 0`, `js:83`) e semeia `state.frameworkid` (`js:98`). **id fixo**, sem `{{uniqid}}` — só não colide porque o modal é `setRemoveOnClose(true)` e nunca há dois |
+| `MOD.BROWSER-FWSWITCH` | `[sem rótulo]` | regra | `competency_browser.js:111-117` | listener de `change` | **trocar de estrutura limpa a seleção** (`state.checked.clear()`, `:115`) e recarrega a árvore do zero (`applyMode(state, 'tree', '')`, `:116`). O motivo está no próprio código (`:113-114`): manter as marcas atravessando a troca **adicionaria** competências de uma estrutura que saiu da tela. É a **única** coisa que limpa o `state.checked` neste modal — o `getCheckedIds` não consome nem zera |
+| `MOD.BROWSER-EMPTY` | Nenhuma estrutura de competências disponível. | estado vazio | `competency_browser.mustache:51-55` (o `alert` em `:52-54`) | `.alert.alert-info` · `role="status"` | str `central_browseframeworks_noframeworks`. **Substitui o corpo inteiro** (`{{^hasframeworks}}`): sem seletor, sem árvore. E o JS acompanha — todo o bloco de fiação está sob `if (frameworks.length)` (`js:108-120`), então nem o listener nem o `initBrowser` rodam. **Mas o rodapé fica**: "Adicionar selecionadas" continua lá, habilitado, sobre um corpo sem nada para marcar |
+
+## A árvore (partial compartilhado com o `MOD.RELATED`)
+
+O `competency_browser.mustache:49` inclui o partial inteiro, **abaixo** do seletor; quem o dirige é
+`competency_tree_browser.js`, com o `state` montado em `js:97-106`.
+
+| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| --- | --- | --- | --- | --- | --- |
+| `MOD.BROWSER-FILTER` | Filtrar competências | campo de busca | `competency_tree_browser.mustache:31-35` | `data-region="filter"` · `placeholder` **e** `aria-label` = mesmo str | str `central_browseframeworks_filter`. Debounce de **250 ms** (`tree.js:379`), mínimo de **2** caracteres (`SEARCH_MIN`, `:47`); abaixo disso volta para o modo árvore (`:383-384`). A busca é **server-side** e **dentro da estrutura escolhida** (`frameworkid` vai no args, `:265`) — não atravessa estruturas |
+| `MOD.BROWSER-PATHS` | Mostrar caminhos | switch | `competency_tree_browser.mustache:36-41` | `data-region="path-toggle"` · id com `{{uniqid}}` | str `central_browseframeworks_showpaths`. Em modo **busca** é forçado `checked` **e** `disabled` (`tree.js:327-328`), porque `pathsVisible` já é sempre verdadeiro ali (`:72`). O `{{uniqid}}` vem do **JS**, não do helper PHP: `Templates.renderForPromise` passa por `lib/amd/src/local/templates/renderer.js:444`, que faz `context.uniqid = (Renderer.uniqInstances++)` — um inteiro novo por render. É o que deixa os dois modais hospedarem o mesmo partial |
+| `MOD.BROWSER-LIST` | `[sem rótulo]` | contêiner-JS | `competency_tree_browser.mustache:42-44` | `data-region="competency-list"` · `.local-dimensions-competency-browser-list` dentro de `.local-dimensions-cb-scroll` | **a caixa aqui é solta**: o `max-height:40vh` + `overflow-y:auto` do `styles.css:5685-5688` está escopado em `.local-dimensions-central-related`, e o comentário do core-do-plugin diz isso com todas as letras (`:5683`: *"the Browse frameworks modal leaves the box uncapped"*). Quem rola, aqui, é o `.modal-body` |
+| `MOD.BROWSER-ROW` | {nome} | linha (checkbox) | `competency_tree_browser.js:82-156` (`makeNode`; o checkbox em `:111-123`) | `input.form-check-input` + nome + caminho | **sem `for`**: a linha inteira é o alvo de clique (`:125-126`, `onListClick` `:415-441`), com seleção por intervalo no Shift (`handleShiftSelect`, `:352-366`). A seleção é **persistente** (`state.checked`) e sobrevive a re-render (`:120-122`), então `getCheckedIds` devolve **também** o que o filtro atual não mostra. Indenta **20px** por nível (`INDENT_STEP`, `:48`, aplicado em `:94`) |
+| `MOD.BROWSER-ROW-TOGGLE` | Ver mais: {nome} | chevron (por linha) | `competency_tree_browser.js:96-109` | `data-action="toggle"` · `aria-expanded` · `fa fa-chevron-right` | `aria-label` = str **`show_more`** ("Ver mais") + `: {nome}` (`:106`), semeado em `initBrowser` (`:463`). Sem filhos, o botão continua no DOM e leva `.invisible` (`:108`) — mantém o alinhamento das colunas. Filhos carregam **na primeira expansão** (`toggleNode` `:229-250` → `loadChildren` `:201-220`), também de 25 em 25 |
+| `MOD.BROWSER-ROW-LOCK` | {nome} (Já neste plano) | linha travada | `competency_tree_browser.js:117-119`, `:130` | `checked` + `disabled` · sufixo no nome | o `state.excluded` sai de `region.dataset.excludeids` (`js:66`, `:99`) — os ids já no template, publicados pelo `plans.mustache:131` (`data-excludeids`, documentado em `:54`). O sufixo vem de `state.excludedsuffix` (`js:100`) → str `central_browseframeworks_alreadyadded` ("Já neste plano"); aqui é **constante**, enquanto o `MOD.RELATED` passa uma função que escolhe entre dois rótulos. `getCheckedIds` filtra as excluídas de novo na saída (`tree.js:451`) |
+| `MOD.BROWSER-ROW-PATH` | `[sem rótulo]` | caminho de ancestrais | `competency_tree_browser.js:132-137` | `.local-dimensions-cb-path.text-muted.small` · `hidden` conforme `pathsVisible` | vem do WS (`browse_competencies.php:136` → `helper::competency_breadcrumbs`), **vazio para raízes** (`execute_returns`, `:176`). Alternado em massa por `applyPathVisibility` (`:337-342`) |
+| `MOD.BROWSER-MORE` | Carregar mais | botão | `competency_tree_browser.js:180-192` | `data-role="load-more"` | str `central_browseframeworks_loadmore` (`js:69`). Aparece **só nos filhos** (`loadChildren` `:217-219`): o topo da lista não o usa — lá quem pagina é a sentinela. Some ao ser clicado (`:188`) |
+| `MOD.BROWSER-TREE-EMPTY` | Nenhuma competência nesta estrutura. | estado vazio | `competency_tree_browser.js:306-311` (str em `competency_browser.js:70`) | `.text-muted.small` | str `central_browseframeworks_empty`. É o vazio **da árvore** (estrutura sem competências, ou busca sem acerto) — não confundir com o `MOD.BROWSER-EMPTY`, que é o vazio **de estruturas** e vem do Mustache |
+| `MOD.BROWSER-SENTINEL` | `[sem rótulo]` | scroll infinito | `competency_tree_browser.js:489-497` | `<div>` vazio + `IntersectionObserver` | inserido **depois** da lista mas **dentro** da caixa de rolagem (`insertAdjacentElement('afterend')`, `:490`), com o motivo no comentário `:486-488`. Desconectado no `ModalEvents.hidden` (`js:123` → `destroyBrowser`, `tree.js:506-510`) |
+
+## O add — e o que ele não faz
+
+`addSelected` (`js:47-56`) dispara **N chamadas em paralelo**, uma
+`core_competency_add_competency_to_template` por id marcado (`:48-51`), com o `templateid` lido do
+**`pane.dataset`** (`:50`) — não do `region`, ao contrário do `contextid` e do `excludeids` (`:66`,
+`:75`). No sucesso, `reloadPane(state.pane)` (`:55`) redesenha a aba Planos inteira; no erro,
+`notifyError`.
+
+Três ausências, todas verificadas, todas deliberadas ou consequentes:
+
+- **Sem toast, sem `flash`.** O feedback é o pane recarregado com a competência na lista. Faz sentido
+  aqui e não faria no `MOD.RELATED`: este modal **fecha**, então não há "lugar" para o qual o usuário
+  volte.
+- **Sem desfazer parcial.** Como no `MOD.RELATED`, uma chamada que falha no meio do lote não desfaz
+  as anteriores. Diferente do `MOD.RELATED`, aqui não há `finally` re-sincronizando — o `.catch`
+  (`:55`) só notifica, e o pane **não** recarrega. O modal já fechou.
+- **Sem guarda de seleção vazia.** `if (!calls.length) { return; }` (`:52-54`) sai calado — mas o
+  `return` acontece **dentro** do handler do `ModalEvents.save`, e é aí que a mecânica do core
+  morde. Ver a seção seguinte.
+
+## Por que este é o contra-exemplo do IMP-06
+
+`ModalSaveCancel.registerEventListeners()` (`lib/amd/src/modal_save_cancel.js:57`) chama
+`registerCloseOnSave()`. O handler do core (`lib/amd/src/modal.js:1100-1116`) dispara o
+`ModalEvents.save` e, **se ninguém chamou `preventDefault()`**, fecha o diálogo (`:1106-1112` —
+`destroy()` quando `removeOnClose`, senão `hide()`).
+
+Este modal liga o save **sem** `preventDefault` (`js:122`) — um `grep -n 'preventDefault'
+amd/src/central/competency_browser.js` devolve **zero**. Ele **fecha**, e está **certo**: é picker de
+uma tacada, o resultado aparece no pane atrás.
+
+**É exatamente por isso que o IMP-06 não é copiar este vizinho.** O `MOD.RELATED` **gerencia** —
+escreve a cada clique, dá toast, pisca a linha nova, alterna o estado vazio e o usuário **fica**.
+Migrá-lo para `ModalSaveCancel` para ganhar o rodapé exige um `preventDefault()` **incondicional** no
+`ModalEvents.save`, que este mapa não precisa e não tem. **A chamada se reusa; a fiação do save,
+não.**
+
+> **A ponta solta que a comparação revela.** O `if (!calls.length) return` (`js:52-54`) roda **dentro**
+> do handler; o `return` não impede o fechar do core. Consequência, lida direto da cadeia acima:
+> **clicar "Adicionar selecionadas" sem nada marcado fecha o modal, não adiciona nada e não diz
+> nada.** O botão nunca desabilita — `grep -n 'disabled' amd/src/central/competency_browser.js`
+> devolve zero, e o único `disabled` da árvore (`tree.js:119`) é o das linhas travadas.
+>
+> **O precedente para consertar já está shipado, e é o mesmo que o IMP-06 cita.** O
+> `competency_picker` do **format_mtube** faz as duas coisas que faltam aqui:
+> `_setSaveEnabled(this._selectedCompetencies.length > 0)` logo após o `setSaveButtonText`, e um
+> `ModalEvents.save` que chama `event.preventDefault()` **só** quando a seleção está vazia, deixando
+> o core fechar no caminho normal. O `_setSaveEnabled` é três linhas
+> (`this._modal.getFooter().find(this._modal.getActionSelector('save')).prop('disabled', !enabled)`)
+> sobre duas APIs públicas do core (`modal.js` `getFooter` e `getActionSelector`).
+>
+> **Onde ler esse código, porque não é onde se espera.** O `format_mtube` **não tem `amd/src`** — um
+> `ls` da raiz do plugin mostra `amd/` com **`build/` e mais nada**. O fonte só é recuperável pelo
+> `sourcesContent` do sourcemap (`amd/build/features/competency_picker.min.js.map`, cujo
+> `sources[0]` é `../../src/features/competency_picker.js`, 607 linhas). É de lá que saem os números
+> acima: `ModalSaveCancel.create` em `:137-142` (com `removeOnClose: true` **no config**, o que
+> confirma a economia de linha que o IMP-06 propõe), `setSaveButtonText` em `:145`, `_setSaveEnabled`
+> em `:146` e `:470-475`, o `preventDefault` da seleção vazia em `:151-156`.
+
+## Resumo das divergências as-is ↔ DS
+
+| O que o DS/mapa antigo dizia | O que está no ar |
+| --- | --- |
+| "Procurar em frameworks" · rótulo "Framework" | "Procurar em estruturas" · rótulo "Estrutura" (`f817430` reescreveu as strings, manteve as chaves) |
+| Filtro **client-side** sobre lista carregada | Busca **server-side** (`local_dimensions_browse_competencies`), debounce 250 ms, mínimo 2 chars |
+| Placeholder "Buscar competência…" | "Filtrar competências" (`central_browseframeworks_filter`), também `aria-label` |
+| Lista plana de checkboxes | **Árvore** lazy com chevron por linha, indent de 20px, filhos de 25 em 25 |
+| `paginated-picker.html`: paginação numerada (to-be) | **Scroll infinito** com sentinela + `IntersectionObserver` (a paginação já é server-side; só a **forma** diverge) |
+| Sem menção a linhas travadas | `data-excludeids` trava as já no plano, com sufixo "(Já neste plano)" |
+| `competency_datasource.js` como AMD deste modal | é o datasource do autocomplete da **aba Planos** (`plans.js:46`); este modal não o importa |
