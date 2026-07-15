@@ -1,4 +1,4 @@
-<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Excluir template com planos" subtitle="MOD.DELPLANS — atual vs proposta, com IDs" -->
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Excluir template com planos" subtitle="MOD.DELPLANS — os dois caminhos do has_related_data; to-be: o estado marcado acompanha a consequência" -->
 <style>
 :root{
   --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
@@ -7,6 +7,22 @@
   --text-danger:#a32d2d;--bg-danger:#fcebeb;--border-danger:#f09595;
   --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
   --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+  /* Acento FIXO, fora do alcance dos dois painéis — mesmo precedente do mod-related/mod-browser.
+     Herdar --text-accent mata no painel .moodle escuro, onde vira #3f89cc. Aqui é só TEXTO. */
+  --acc-fg:#185fa5;
+  /* Preenchimento do botão destrutivo (o "Excluir" do rodapé do core). NÃO pode ser
+     var(--text-danger): no escuro do painel DS ele vira o vermelho CLARO #f09595 e branco sobre
+     ele reprova. Daí a inversão no escuro — mesmo precedente blue-200 do mod-browser, e a razão
+     de medir o PREENCHIMENTO e não só o rótulo (a armadilha da Task 12). */
+  --dgr-bg:#a32d2d;--dgr-fg:#fff;
+  /* Estado marcado do as-is: os literais que o styles.css:5452-5455 publica, SEM variante dark
+     (o comentário do :5412-5413 assume que o modal nasce fora do .local-dimensions-manage).
+     Aqui ganham par escuro só para o preview ficar legível; a nota abaixo do painel registra
+     que o shipado não tem. */
+  --sel-bg:#e6f0fb;--sel-bd:#cee0f3;
+  /* Borda da opção não marcada: styles.css:5447, literal #cdc3b0. */
+  --opt-bd:#cdc3b0;
+  --prov-fg:#185fa5;--prov-bg:#e6f1fb;
 }
 @media (prefers-color-scheme:dark){:root{
   --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
@@ -14,52 +30,272 @@
   --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
   --text-danger:#f09595;--bg-danger:#2a1313;--border-danger:#791f1f;
   --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+  --acc-fg:#85b7eb;
+  --dgr-bg:#f09595;--dgr-fg:#2a1313;
+  --sel-bg:#0c2740;--sel-bd:#185fa5;
+  --opt-bd:#5f5e5a;
+  --prov-fg:#85b7eb;--prov-bg:#0c2740;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
-.screens{display:flex;flex-wrap:wrap;gap:18px;}
-.panel{flex:1 1 360px;min-width:290px;}
+.screens{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;}
+.panel{flex:1 1 440px;min-width:330px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
 .plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:10px;}
-.pdot{width:8px;height:8px;border-radius:50%;}
-.idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;margin-left:auto;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
+.prov{font-family:var(--font-mono);font-size:9.5px;color:var(--prov-fg);background:var(--prov-bg);border-radius:5px;padding:0 4px;white-space:nowrap;}
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.spacer{margin-left:auto;}
+
+/* ---- casca do modal (mesma do modal-shell.html) ---- */
 .m{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
 .m-head{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:0.5px solid var(--border);}
-.m-title{font-size:13px;font-weight:500;}.m-x{margin-left:auto;color:var(--text-muted);}
-.m-body{padding:12px 13px;display:flex;flex-direction:column;gap:9px;}
+.m-title{font-size:13px;font-weight:500;}
+.m-x{margin-left:auto;color:var(--text-muted);background:none;border:0;font-size:12px;padding:0;line-height:1;cursor:pointer;}
+.m-body{padding:12px 13px;display:flex;flex-direction:column;gap:8px;}
 .m-foot{display:flex;justify-content:flex-end;gap:8px;padding:9px 13px;border-top:0.5px solid var(--border);}
-.btn{font-size:12px;padding:5px 11px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:var(--surface-2);}
-.btn-danger{background:var(--bg-danger);color:var(--text-danger);border-color:var(--border-danger);}
-.opt{display:flex;align-items:center;gap:8px;padding:8px 10px;border:0.5px solid var(--border-strong);border-radius:var(--radius);font-size:12px;}
-.opt.on{border-color:var(--border-accent);background:var(--bg-accent);}
-.note{font-size:10px;color:var(--text-muted);}
-.screens>.panel:last-child{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
-@media (prefers-color-scheme:dark){.screens>.panel:last-child{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
+.btn{font-size:12px;padding:5px 11px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);cursor:pointer;font-family:inherit;}
+.btn-danger{background:var(--dgr-bg);color:var(--dgr-fg);border-color:var(--dgr-bg);}
+
+/* ---- corpo do delete_template_modal ---- */
+.dt-name{font-size:11.5px;color:var(--text-secondary);margin:0;}
+.dt-short{font-size:13px;font-weight:600;color:var(--text-primary);}
+.dt-inplans{font-size:12px;color:var(--text-secondary);margin:0;}
+.dt-inplans strong{color:var(--text-primary);}
+.legend{font-size:10px;color:var(--text-muted);font-style:italic;}
+.opts{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;border:0;}
+.opt{display:flex;align-items:flex-start;gap:8px;margin:0;padding:7px 9px;border:1px solid var(--opt-bd);border-radius:var(--radius);cursor:pointer;}
+.opt:has(input:checked){border-color:var(--sel-bd);background:var(--sel-bg);}
+.opt:has(input:focus-visible){outline:2px solid var(--acc-fg);outline-offset:1px;}
+.opt input{margin:2px 0 0;flex:none;accent-color:var(--acc-fg);}
+.opt-text{display:flex;flex-direction:column;}
+.opt-title{font-weight:500;font-size:12px;}
+.opt-title.dgr{color:var(--text-danger);}
+.opt-note{font-size:10.5px;color:var(--text-secondary);}
+
+/* ---- to-be: o marcado destrutivo herda o vermelho (a regra que falta) ---- */
+.tobe .opt:has(input.dgr-in:checked){border-color:var(--border-danger);background:var(--bg-danger);}
+/* O par de perigo do Moodle NÃO serve para texto sobre o próprio preenchimento: medido,
+   --text-danger #ca3120 sobre --bg-danger #f4d6d2 dá 3,88:1 e reprova o 4,5:1. Daí o par
+   PRÓPRIO, medido nos dois temas — mesmo precedente do --info-fg do mod-browser. */
+.tobe .opt:has(input.dgr-in:checked) .opt-title.dgr{color:var(--dgr-on);}
+.tobe .opt:has(input.dgr-in:checked) .opt-note{color:var(--dgr-on);}
+
+/* ---- storyboard do has_related_data (o gate) ---- */
+.gate{display:flex;gap:0;margin:0 0 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);overflow:hidden;}
+.gchk{position:absolute;opacity:0;pointer-events:none;}
+.gstep{flex:1;font-size:11px;text-align:center;padding:5px 6px;cursor:pointer;color:var(--text-secondary);background:var(--surface-2);}
+.gstep+.gstep{border-left:0.5px solid var(--border-strong);}
+#g1:checked~.gate .gs1,#g2:checked~.gate .gs2{background:var(--acc-fg);color:var(--surface-2);font-weight:500;}
+.path{display:none;}
+#g1:checked~.paths .p1,#g2:checked~.paths .p2{display:block;}
+
+.note{font-size:10.5px;color:var(--text-secondary);background:var(--surface-2);border:0.5px solid var(--border);border-left:2px solid var(--acc-fg);border-radius:6px;padding:7px 9px;margin-top:9px;}
+.note b{color:var(--text-primary);}
+.note code{font-family:var(--font-mono);font-size:9.5px;color:var(--acc-fg);}
+
+.screens>.panel.moodle{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--dgr-bg:#ca3120;--dgr-fg:#fff;--sel-bg:#e7f0f9;--sel-bd:#9fc4e5;--opt-bd:#ced4da;--dgr-on:#8a1e12;}
+@media (prefers-color-scheme:dark){.screens>.panel.moodle{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;--dgr-bg:#df8379;--dgr-fg:#51140d;--sel-bg:#062b4c;--sel-bd:#0f6cbf;--opt-bd:#6a737b;--dgr-on:#e89b93;}}
 </style>
+
 <div class="screens">
 
-  <section class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o que está no ar</div>
-    <div class="m">
-      <div class="m-head"><span class="m-title">Excluir template</span><span class="m-x">✕</span></div>
-      <div class="m-body">
-        <div style="font-size:12px;">Este template tem planos de aprendizagem. O que fazer com eles? <span class="idb">DELPLANS-MSG</span></div>
-        <label class="opt on"><input type="radio" checked> <span>Desvincular os planos do template</span><span class="idb">DELPLANS-UNLINK · padrão</span></label>
-        <label class="opt"><input type="radio"> <span>Excluir os planos</span><span class="idb">DELPLANS-DELETE</span></label>
+  <section class="panel asis">
+    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o modal shipado em 820a449 — nome, contagem real e consequência por opção</div>
+
+    <div class="row" style="margin-bottom:9px;">
+      <span class="prov">plans.mustache:481-485</span>
+      <span class="btn" style="display:inline-flex;align-items:center;gap:5px;"><span aria-hidden="true">🗑</span>Excluir modelo</span>
+      <span class="idb">PLN-DELETE · sticky-footer da aba Planos</span>
+    </div>
+
+    <input type="radio" name="gate" id="g1" class="gchk" checked>
+    <input type="radio" name="gate" id="g2" class="gchk">
+    <div class="gate">
+      <label class="gstep gs1" for="g1">has_related_data → <b>true</b> (12 planos)</label>
+      <label class="gstep gs2" for="g2">→ <b>false</b> (sem planos)</label>
+    </div>
+    <div class="row" style="margin-bottom:9px;">
+      <span class="idb">MOD.DELPLANS-GATE · clique para trocar de caminho</span><span class="prov">js:236-239 · :246</span>
+    </div>
+
+    <div class="paths">
+
+      <div class="path p1">
+        <div class="m">
+          <div class="m-head">
+            <span class="m-title">Excluir modelo</span>
+            <span class="idb">MOD.DELPLANS-TITLE</span>
+            <span class="prov">js:252 · :251-256</span>
+            <button type="button" class="m-x" aria-label="Fechar">✕</button>
+          </div>
+          <div class="m-body">
+            <p class="dt-name">Modelo: <span class="dt-short">Plano de integração</span></p>
+            <div class="row"><span class="idb">MOD.DELPLANS-NAME</span><span class="prov">mustache:41-44</span></div>
+
+            <p class="dt-inplans">Este modelo está em <strong>12 planos</strong> de alunos.</p>
+            <div class="row"><span class="idb">MOD.DELPLANS-INPLANS</span><span class="prov">mustache:45-47</span></div>
+
+            <div class="row"><span class="legend">legend sr-only: “O que fazer com os planos de aprendizagem?”</span><span class="idb">MOD.DELPLANS-LEGEND</span></div>
+
+            <fieldset class="opts">
+              <label class="opt">
+                <input type="radio" name="asis-choice" value="unlink" checked>
+                <span class="opt-text">
+                  <span class="opt-title">Desvincular</span>
+                  <span class="opt-note">Os 12 planos continuam existindo, sem modelo.</span>
+                </span>
+              </label>
+              <div class="row"><span class="idb">MOD.DELPLANS-UNLINK · padrão (checked)</span><span class="prov">mustache:50-60</span></div>
+
+              <label class="opt">
+                <input type="radio" name="asis-choice" value="delete">
+                <span class="opt-text">
+                  <span class="opt-title dgr">Excluir os planos</span>
+                  <span class="opt-note">Remove os 12 planos dos alunos — irreversível.</span>
+                </span>
+              </label>
+              <div class="row"><span class="idb">MOD.DELPLANS-DELETE</span><span class="prov">mustache:61-71</span></div>
+            </fieldset>
+          </div>
+          <div class="m-foot">
+            <span class="btn">Cancelar</span>
+            <span class="btn btn-danger">Excluir</span>
+          </div>
+        </div>
+        <div class="row" style="margin-top:6px;justify-content:flex-end;">
+          <span class="idb">MOD.DELPLANS-CANCEL / MOD.DELPLANS-CONFIRM</span><span class="prov">modal_delete_cancel.mustache:43-44</span>
+        </div>
       </div>
-      <div class="m-foot"><span class="btn">Cancelar</span><span class="btn btn-danger">Excluir</span></div>
+
+      <div class="path p2">
+        <div class="m">
+          <div class="m-head">
+            <span class="m-title">Excluir</span>
+            <span class="prov">js:267 · str core delete</span>
+            <button type="button" class="m-x" aria-label="Fechar">✕</button>
+          </div>
+          <div class="m-body">
+            <p class="dt-inplans">Excluir o modelo de plano de aprendizagem ‘Descartável’?</p>
+            <div class="row"><span class="idb">MOD.DELPLANS-FALLBACK</span><span class="prov">js:265 · tool_lp: deletetemplate</span></div>
+          </div>
+          <div class="m-foot">
+            <span class="btn">Cancelar</span>
+            <span class="btn btn-danger">Excluir</span>
+          </div>
+        </div>
+        <div class="note" style="margin-top:6px;">
+          <b>O caminho que o mapa antigo não tinha.</b> Sem planos, não há modal do plugin: o fluxo cai
+          num <code>Notification.deleteCancelPromise</code> do core (<code>js:265-271</code>), cujo
+          título é a str core <code>delete</code> e cujo corpo é <code>deletetemplate</code> do
+          <b>tool_lp</b> — string do core, aqui na tradução do langpack. Confirmar chama
+          <code>remove(false)</code> (<code>js:271</code>): <b>sempre desvincular</b> — o argumento é
+          inócuo, já que não há plano para desvincular. É <b>este</b> o caminho que o Behat cobre
+          (<code>manage_plans.feature:33-42</code>, cenário “Delete a template that has no plans”);
+          o caminho com planos <b>não tem cobertura</b>.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="note">
+      <b>O rodapé é a única porta</b> — o botão nasce no holder <code>data-region="plans-footer-actions"</code>
+      (<code>plans.mustache:462</code>, sob <code>{{#canmanage}}</code> em <code>:457</code>), que o
+      <code>plans.js</code> move para o <code>#sticky-footer</code> da página. Ele carrega
+      <code>data-plancount="{{selectedtemplateplancount}}"</code> (<code>:482</code>), exportado por
+      <code>plans.php:319-321</code> via <code>helper::count_plans_by_template</code> — <b>a contagem já
+      chega no clique</b>, e o WS do gate só decide o caminho, não o número.
+    </div>
+
+    <div class="note">
+      <b>O contraste do estado marcado, medido nos literais shipados.</b> A nota da opção
+      (<code>#6c7787</code>, <code>styles.css:5477</code>) dá <b>4,54:1</b> sobre o branco — passa por
+      0,04 — mas <b>3,94:1</b> sobre o <code>#e6f0fb</code> que o próprio marcado pinta
+      (<code>:5454</code>): <b>reprova o 4,5:1</b>. E como “Desvincular” nasce <code>checked</code>
+      (<code>mustache:51</code>), esse é o estado <b>padrão</b>, não um caso de borda. A borda também
+      inverte: marcada (<code>#cee0f3</code>) dá <b>1,35:1</b> contra o branco, <b>menos</b> que a não
+      marcada (<code>#cdc3b0</code>, <b>1,75:1</b>) — marcar deixa a caixa <b>menos</b> visível. O rádio
+      nativo é que carrega o estado de fato, então não é reprovação de controle; é o reforço visual
+      andando para trás.
+    </div>
+
+    <div class="note">
+      <b>O confirmar fecha antes de escrever.</b> O handler (<code>js:257-261</code>) lê o rádio marcado
+      e chama <code>remove()</code>, mas <b>não</b> dá <code>preventDefault()</code> — então o
+      <code>registerCloseOnDelete</code> do core (<code>modal.js:1124-1139</code>) destrói o diálogo
+      (<code>removeOnClose:true</code>, <code>js:255</code>) e o <code>core_competency_delete_template</code>
+      (<code>js:241-244</code>) resolve com o modal já fora da tela: erro vira toast de página
+      (<code>notifyError</code>), não erro no diálogo. Mesma mecânica do <code>MOD.BROWSER</code>, e
+      aqui também está <b>certa</b> — é confirmação de uma tacada, o resultado aparece no pane atrás
+      (<code>reloadPane</code>, <code>js:244</code>).
     </div>
   </section>
 
-  <section class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · consequência explícita</div>
+  <section class="panel moodle tobe">
+    <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Proposta (to-be) · o estado marcado acompanha a consequência</div>
+
     <div class="m">
-      <div class="m-head"><span class="m-title">Excluir "Plano de integração"?</span><span class="m-x">✕</span></div>
-      <div class="m-body">
-        <div style="font-size:12px;color:var(--text-secondary)">Este template está em <strong style="color:var(--text-primary);font-weight:500;">12 planos</strong> de alunos.</div>
-        <label class="opt on"><input type="radio" checked> <span><strong style="font-weight:500;">Desvincular</strong><br><span class="note">os 12 planos continuam existindo, sem template</span></span></label>
-        <label class="opt"><input type="radio"> <span><strong style="font-weight:500;color:var(--text-danger)">Excluir os planos</strong><br><span class="note">remove os 12 planos dos alunos — irreversível</span></span></label>
-        <span class="note">to-be: nome do template no título + contagem real + consequência por opção — mapeia DELPLANS-UNLINK/DELETE</span>
+      <div class="m-head">
+        <span class="m-title">Excluir modelo</span>
+        <button type="button" class="m-x" aria-label="Fechar">✕</button>
       </div>
-      <div class="m-foot"><span class="btn">Cancelar</span><span class="btn btn-danger">Excluir</span></div>
+      <div class="m-body">
+        <p class="dt-name">Modelo: <span class="dt-short">Plano de integração</span></p>
+        <p class="dt-inplans">Este modelo está em <strong>12 planos</strong> de alunos.</p>
+        <fieldset class="opts">
+          <label class="opt">
+            <input type="radio" name="tobe-choice" value="unlink" checked>
+            <span class="opt-text">
+              <span class="opt-title">Desvincular</span>
+              <span class="opt-note">Os 12 planos continuam existindo, sem modelo.</span>
+            </span>
+          </label>
+          <label class="opt">
+            <input type="radio" name="tobe-choice" value="delete" class="dgr-in">
+            <span class="opt-text">
+              <span class="opt-title dgr">Excluir os planos</span>
+              <span class="opt-note">Remove os 12 planos dos alunos — irreversível.</span>
+            </span>
+          </label>
+        </fieldset>
+        <div class="row"><span class="idb">marque “Excluir os planos” — a caixa vira vermelha</span></div>
+      </div>
+      <div class="m-foot">
+        <span class="btn">Cancelar</span>
+        <span class="btn btn-danger">Excluir</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>O achado, lido no CSS shipado.</b> O <code>styles.css:5452-5455</code> é <b>uma</b> regra —
+      <code>.local-dimensions-delete-template-option:has(input:checked)</code> — e ela vale para as
+      <b>duas</b> opções. Marcar “Excluir os planos”, que é <b>irreversível</b>, pinta a caixa do
+      <b>mesmo azul</b> de “Desvincular”, que é seguro. O único sinal de perigo é o
+      <code>.text-danger</code> do título (<code>mustache:64</code>) — cor de <b>texto</b>, num modal
+      cujo botão de confirmar já é vermelho nos dois casos. O corpo diz a consequência em prosa; a
+      <b>cor</b> não a acompanha.
+    </div>
+    <div class="note">
+      <b>A correção são três linhas, sem JS.</b> Um segundo seletor
+      <code>:has(input[value="delete"]:checked)</code> com o par de perigo, depois da regra atual.
+      O valor <code>"delete"</code> já está no markup (<code>mustache:62</code>) e já é o que o JS lê
+      (<code>js:260</code>), então não há atributo novo, nem classe nova, nem contrato novo entre
+      Mustache e AMD. O <code>:has()</code> já é a mecânica da regra existente — não é dependência nova.
+    </div>
+    <div class="note">
+      <b>O vermelho do to-be precisa de par próprio.</b> Medido: o <code>--text-danger</code> do Moodle
+      (<code>#ca3120</code>) sobre o <code>--bg-danger</code> (<code>#f4d6d2</code>) dá <b>3,88:1</b> no
+      claro e <b>reprova</b> — o par do tema não serve para texto sobre o próprio preenchimento. Este
+      painel usa <code>#8a1e12</code> (<b>6,77:1</b>); no escuro o par do tema já passa
+      (<code>#df8379</code> sobre <code>#51140d</code> = <b>5,26:1</b>) e aqui vira <code>#e89b93</code>
+      (<b>6,55:1</b>). O preenchimento vermelho sozinho é fraco contra a superfície (<b>1,36:1</b>) —
+      quem carrega a caixa é a <b>borda</b> (<code>#51140d</code>, <b>14,43:1</b>), como no azul do as-is.
+    </div>
+    <div class="note">
+      <b>O shipado não tem variante dark.</b> O <code>styles.css:5410-5414</code> diz que o corpo nasce
+      fora do <code>.local-dimensions-manage</code> e por isso usa <b>literais</b> — os mesmos que o
+      painel as-is reproduz (<code>#e6f0fb</code>/<code>#cee0f3</code> no marcado, <code>#cdc3b0</code>
+      na borda solta, <code>#6c7787</code> nas notas). Os painéis desta tela usam o par do tema para o
+      preview ficar legível nos dois; os literais e seus números estão nas notas e no mapa.
     </div>
   </section>
 
