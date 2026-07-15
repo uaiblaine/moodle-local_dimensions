@@ -72,18 +72,30 @@ single quotes, short hex, and `selector-class-pattern ^[a-z0-9\-]+$`. The repo's
 own `package.json` has only stylelint devDeps — **don't** run `npm run build`
 here; the canonical artefacts come from Moodle's Gruntfile.
 
-CI's stylelint is **Moodle's own config** — stricter than `.stylelintrc.json`
-and not reproducible by the local `npx stylelint` run. Two of its rules must be
-pre-empted at write time:
+CI's stylelint is **Moodle's own config** (`/Volumes/N1TB/dev/github/moodle/.stylelintrc`) —
+stricter than the plugin's `.stylelintrc.json`, which carries none of the rules below.
+**It IS reproducible locally** — point stylelint at core's config, from the Moodle root:
+
+```sh
+npx stylelint --config .stylelintrc public/local/dimensions/styles.css
+```
+
+Not byte-identical to grunt's invocation (grunt adds an `at-rule-no-unknown` override for
+raw CSS), so treat its `max-line-length` warnings as advisory — but all three rules below
+are **errors**, and this reproduces them exactly. Run it before pushing CSS:
 
 - `declaration-no-important` — never write `!important`. When a Bootstrap
   utility in the markup (`.d-flex`, `.d-block` — both `!important`) would fight
   a `display` you need to toggle, drop the utility from the template and own
   the property in a plugin class instead (see the plan-row visibility rules).
+  `keyframe-declaration-no-important` closes the same door inside `@keyframes`.
 - `csstree/validator` — rejects property values its (older) grammar doesn't
-  know: `clamp()`/`min()`/`max()` in `height`-like properties fail with
-  "Invalid value". Use plain `height` + `min-height`/`max-height` pairs;
-  `calc()` is accepted.
+  know: `clamp()`/`min()`/`max()` fail with "Invalid value" in **every
+  length-valued property** — not just `height`-like ones: `width`, `max-width`,
+  `font-size`, `padding`, `margin`, `gap`, `flex-basis` all reject them. Use plain
+  `height` + `min-height`/`max-height` pairs; `calc()` is accepted, as is grid `minmax()`.
+- `time-min-milliseconds: 100` — a transition/animation under 100ms is a hard error.
+  The kit's motion scale (150/250/1500ms) clears it, but "80ms, snappier" fails CI.
 
 ### Test deploy / dev loop
 
