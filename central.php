@@ -134,8 +134,8 @@ echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_dimensions/central/contextbar', $contextbar->export_for_template($OUTPUT));
 echo $OUTPUT->render_from_template('core/dynamic_tabs', $tabsdata);
 
-// One page-level sticky footer shared by the Structure and Plans tabs; rendered
-// disabled so it stays hidden until a tab enables it on selection.
+// One page-level sticky footer shared by all three tabs; rendered disabled so it
+// stays hidden until a tab enables it on selection.
 $stickyfooter = new \core\output\sticky_footer();
 $stickyfooter->set_auto_enable(false);
 echo $OUTPUT->render($stickyfooter);
