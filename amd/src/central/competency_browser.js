@@ -39,17 +39,31 @@ const SELECTORS = {
 };
 
 /**
- * Add the checked-and-enabled competencies to the template, then refresh the pane.
+ * Enable the Add button only while at least one pickable competency is checked.
  *
+ * @param {Object} modal The browse-frameworks modal.
  * @param {Object} state Browser state.
  * @return {void}
  */
-const addSelected = (state) => {
+const updateAddButton = (modal, state) => {
+    modal.setButtonDisabled('save', getCheckedIds(state).length === 0);
+};
+
+/**
+ * Add the checked-and-enabled competencies to the template, then refresh the pane.
+ *
+ * @param {Object} state Browser state.
+ * @param {Event} event The modal save event.
+ * @return {void}
+ */
+const addSelected = (state, event) => {
     const calls = getCheckedIds(state).map((competencyid) => ({
         methodname: 'core_competency_add_competency_to_template',
         args: {templateid: Number(state.pane.dataset.templateid), competencyid: competencyid},
     }));
     if (!calls.length) {
+        // Core closes the dialogue on save unless the save event is prevented.
+        event.preventDefault();
         return;
     }
     Promise.all(Ajax.call(calls)).then(() => reloadPane(state.pane)).catch(notifyError);
@@ -92,10 +106,13 @@ export const show = async(pane, region) => {
     const modal = await ModalSaveCancel.create({title, body: html});
     modal.setSaveButtonText(addlabel);
     modal.setRemoveOnClose(true);
+    // Nothing is checked yet, and with no frameworks there is nothing to check at all.
+    modal.setButtonDisabled('save', true);
 
     const root = modal.getRoot()[0];
     const state = {
         frameworkid: frameworks.length ? Number(frameworks[0].id) : 0,
+        checked: new Set(),
         excluded: new Set(raw.split(',').filter((id) => id !== '')),
         excludedsuffix: () => addedlabel,
         loadmorelabel: loadmorelabel,
@@ -113,13 +130,18 @@ export const show = async(pane, region) => {
                 // Selections are per framework: keeping them across a switch would silently
                 // add competencies from a framework no longer on screen.
                 state.checked.clear();
+                updateAddButton(modal, state);
                 applyMode(state, 'tree', '').catch(notifyError);
             });
         }
         await initBrowser(state);
+        // Registered after the browser's own click handler so row-click toggles are
+        // already applied when the button state is recomputed.
+        state.listEl.addEventListener('click', () => updateAddButton(modal, state));
+        state.listEl.addEventListener('change', () => updateAddButton(modal, state));
     }
 
-    modal.getRoot().on(ModalEvents.save, () => addSelected(state));
+    modal.getRoot().on(ModalEvents.save, (event) => addSelected(state, event));
     modal.getRoot().on(ModalEvents.hidden, () => destroyBrowser(state));
 
     modal.show();
