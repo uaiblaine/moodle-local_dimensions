@@ -558,6 +558,9 @@ const removeCourse = async(state, courseEl) => {
     state.excluded.delete(String(courseid));
     state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
     courseEl.remove();
+    /* The list is paginated, so an empty rows container only means "no courses linked" once
+       there is nothing left to load: with a page still pending the message would be a lie. */
+    state.emptyEl.hidden = state.rowsEl.children.length > 0 || !state.loadMoreEl.hidden;
     addToast(state.courseremovedlabel);
 };
 
