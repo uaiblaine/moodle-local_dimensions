@@ -88,7 +88,7 @@ métrica, a descrição e as competências referenciadas; é `position: sticky`.
 | `EST-NODE-TAX` | taxonomia | badge | `structure_node.mustache:97` | `taxonomy` | visível só com `show-tax` (`EST-DISP-TAX`) |
 | `EST-NODE-ID` | idnumber | badge | `structure_node.mustache:99` | `idnumber` | só se `idnumber`; visível só com `show-id` |
 | `EST-NODE-RULE` | rótulo da regra | badge | `structure_node.mustache:103` | `rulelabel` | **duplo gate**: só se `haschildren` **e** `ruletype` (`:101-105`) — folha não pode ter regra, então não exibe "nenhuma" |
-| `EST-NODE-DRAG` | "Mover para posição…: {nome}" | botão ícone | `structure_node.mustache:111-116` | `data-region="node-drag-handle"` | só `canmanage`. Fica **depois** da linha no DOM e é puxado com `order:-1` no CSS: o `aria-label` embute o nome e o Behat clica no primeiro hit em ordem de documento (comentário no template, `:109-110`) |
+| `EST-NODE-DRAG` | "Mover para posição…: {nome}" | botão ícone | `structure_node.mustache:111-116` | `data-region="node-drag-handle"` | só `canmanage`. Fica **depois** da linha no DOM e é puxado com `order:-1` no CSS: o `aria-label` embute o nome e o Behat clica no primeiro hit em ordem de documento (comentário no template, `:109-110`). **Acumula duas funções:** arrastar reordena direto; **clicar abre o [`MOD.MOVETO`](mod-moveto.md)** — e não por `data-action` (não tem nenhum), mas por um galho próprio do listener da região (`structure.js:1373-1381`, com `preventDefault()` para o clique não selecionar a linha) |
 | `EST-NODE-CHILDREN` | `[sem rótulo]` | contêiner-JS | `structure_node.mustache:119` | `data-children="{id}"` | `data-offset="0"`, `hidden`; `loadChildPage` pagina de 25 (`structure.js:227-246`) |
 
 ## Detalhe (painel direito) — `structure_detail_content`
@@ -137,7 +137,7 @@ entregues a `ActionFooter.show(html, dispatchStructureAction)` (`structure.js:55
 | `EST-DETAIL-RULES` | Regra de competência | botão rodapé | `structure_footer_actions.mustache:49-52` | `data-action="rules"` | `fa-list`; str `competencyrule, tool_lp`; abre `MOD.RULE`; salvar grava **in-place** + flash (`persistRule`, `structure.js:847-879`) |
 | `EST-DETAIL-LINKS` | Cursos e atividades | botão rodapé | `structure_footer_actions.mustache:53-56` | `data-action="links"` | `fa-link`; abre `MOD.LINKS`; ao fechar atualiza a contagem **in-place** (`updateCourseCount`, `structure.js:908-920`) |
 | `EST-DETAIL-RELATED` | Competências referenciadas | botão rodapé | `structure_footer_actions.mustache:57-60` | `data-action="related"` | `fa-exchange`; abre `MOD.RELATED`. **Novo** desde o congelamento do mapa |
-| `EST-DETAIL-MOVETO` | Mover para posição… | botão rodapé | `structure_footer_actions.mustache:61-64` | `data-action="moveto"` | `fa-arrows-up-down-left-right`; abre `MOD.MOVETO` (`openNodeMoveModal`, `structure.js:972-1007`). **Substitui** `EST-DETAIL-MOVEUP`/`-MOVEDOWN` |
+| `EST-DETAIL-MOVETO` | Mover para posição… | botão rodapé | `structure_footer_actions.mustache:61-64` | `data-action="moveto"` | `fa-arrows-up-down-left-right`; abre [`MOD.MOVETO`](mod-moveto.md) (`openNodeMoveModal`, `structure.js:972-1007`). **Substitui** `EST-DETAIL-MOVEUP`/`-MOVEDOWN`. **Não é a única porta** — o `EST-NODE-DRAG` abre o mesmo modal no clique |
 | `EST-DETAIL-DELETE` | Excluir | botão rodapé | `structure_footer_actions.mustache:65-68` | `data-action="delete"` | `fa-trash`; `confirmDelete` (`structure.js:819-838`) → recarrega o pane. **Sem variante de cor** — o padrão cru do sticky-footer do core não usa `btn-outline-danger` |
 
 ## IDs aposentados
@@ -146,8 +146,8 @@ entregues a `ActionFooter.show(html, dispatchStructureAction)` (`structure.js:55
 
 | ID | Situação | Substituto | Nota |
 | --- | --- | --- | --- |
-| `EST-DETAIL-MOVEUP` | **Aposentado** (2026-07-14) | `EST-DETAIL-MOVETO` → `MOD.MOVETO` | Era `data-action="moveup"`, botão-ícone de reordenar entre irmãos. Não existe em nenhum template nem em `structure.js` |
-| `EST-DETAIL-MOVEDOWN` | **Aposentado** (2026-07-14) | `EST-DETAIL-MOVETO` → `MOD.MOVETO` | idem `movedown`. As duas setas viraram **um** botão que abre o modal de mover, e o arrasto direto (`EST-NODE-DRAG`) cobre o caso rápido |
+| `EST-DETAIL-MOVEUP` | **Aposentado** (2026-07-14) | `EST-DETAIL-MOVETO` → [`MOD.MOVETO`](mod-moveto.md) | Era `data-action="moveup"`, botão-ícone de reordenar entre irmãos. Não existe em nenhum template nem em `structure.js` |
+| `EST-DETAIL-MOVEDOWN` | **Aposentado** (2026-07-14) | `EST-DETAIL-MOVETO` → [`MOD.MOVETO`](mod-moveto.md) | idem `movedown`. As duas setas viraram **um** botão que abre o modal de mover, e o arrasto direto (`EST-NODE-DRAG`) cobre o caso rápido |
 
 ## Estados vazios
 
