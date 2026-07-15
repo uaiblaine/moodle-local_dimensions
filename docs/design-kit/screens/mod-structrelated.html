@@ -1,0 +1,215 @@
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Card da competência (headless)" subtitle="MOD.DETAIL — o card É o diálogo: cabeçalho do core oculto, conteúdo transparente, fechar próprio. Painel único: nada proposto." -->
+<style>
+:root{
+  --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
+  --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
+  --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
+  --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
+  --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --font-mono:ui-monospace,Menlo,monospace;
+  /* Acento FIXO, fora do alcance do painel — mesmo precedente do mod-related/mod-browser/mod-delplans:
+     herdar --text-accent mata quando o painel troca de tema. Aqui é só TEXTO. */
+  --acc-fg:#185fa5;
+  --prov-fg:#185fa5;--prov-bg:#e6f1fb;
+  /* Backdrop do core: rgba(0,0,0,.5) sobre o fundo da página. Literal, como o Bootstrap publica. */
+  --backdrop:rgba(0,0,0,0.5);
+  /* Anel de foco do navegador no .modal-dialog. O core foca esse elemento ao abrir
+     (lib/amd/src/modal.js:899 + tabindex=0 em lib/templates/modal.mustache:44). */
+  --focus:#185fa5;
+  --warn-fg:#7a4b00;--warn-bg:#fdf3e0;--warn-bd:#e8c583;
+}
+@media (prefers-color-scheme:dark){:root{
+  --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
+  --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
+  --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
+  --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+  --acc-fg:#85b7eb;
+  --prov-fg:#85b7eb;--prov-bg:#0c2740;
+  --focus:#85b7eb;
+  --warn-fg:#f0c987;--warn-bg:#2b2214;--warn-bd:#7a5c22;
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
+.screens{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;}
+.panel{flex:1 1 560px;min-width:340px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:10px;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
+.prov{font-family:var(--font-mono);font-size:9.5px;color:var(--prov-fg);background:var(--prov-bg);border-radius:5px;padding:0 4px;white-space:nowrap;}
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.sec{font-size:11px;font-weight:500;color:var(--text-secondary);margin:12px 0 6px;}
+
+/* ---- portas de entrada (fora do modal — IDs de outros mapas) ---- */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:3px 9px;border:1px solid var(--border-accent);border-radius:999px;background:var(--bg-accent);color:var(--acc-fg);cursor:pointer;font-family:inherit;}
+.pname{font-size:12px;font-weight:500;color:var(--acc-fg);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-family:inherit;}
+
+/* ---- o palco: backdrop do core + o diálogo ---- */
+.stage{position:relative;border-radius:10px;background:var(--backdrop);padding:22px 14px;display:flex;justify-content:center;}
+
+/* MOD.DETAIL-MODAL -> .modal-dialog. css:5150-5156 = max-width 620 + radius 24.
+   css:5162-5166 apaga borda/fundo/sombra do .modal-content; css:5168-5170 zera o padding do
+   .modal-body. Resultado: o diálogo tem EXATAMENTE o tamanho do card. */
+.dlg{width:100%;max-width:620px;border-radius:24px;background:transparent;border:0;box-shadow:none;padding:0;}
+/* O raio acima só existe por causa DESTE anel: sem ele, o foco desenha um retângulo
+   em volta de um card redondo. Tabule ate aqui para ver. */
+.dlg:focus-visible{outline:3px solid var(--focus);outline-offset:3px;}
+
+/* MOD.DETAIL-CARD. As duas primeiras classes do mustache:36 sao emprestadas do painel inline:
+   css:4300-4304 (raio 24 + fundo + sombra). A terceira e' so' dele: css:5172-5175. */
+.card{border-radius:24px;background:#fff;overflow:hidden;position:relative;
+      box-shadow:0 3px 8px rgba(13,60,110,0.1),0 22px 46px rgba(13,60,110,0.17);}
+
+/* Gradiente 140deg (css:4310-4316). Os stops sao dirigidos pelos radios abaixo. */
+.chead{background:linear-gradient(140deg,var(--h0) 0%,var(--h48) 48%,var(--h100) 100%);
+       color:var(--tc);padding:18px 18px 15px;}
+.ctitle{font-size:16px;font-weight:600;margin:0;padding-right:44px;}
+.ctax{font-size:11px;opacity:0.85;margin-top:1px;}
+.cchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.gchip{font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.28);background:rgba(255,255,255,0.16);}
+
+/* MOD.DETAIL-CLOSE — css:5177-5194. Mora no CORPO, nao no cabecalho.
+   A cor vem do dado (js:294: data.textcolor || '#fff'), nao do tema. */
+.cx{position:absolute;top:18px;right:18px;z-index:3;display:inline-flex;align-items:center;justify-content:center;
+    width:36px;height:36px;padding:0;border:1px solid rgba(255,255,255,0.28);border-radius:10px;
+    background:rgba(255,255,255,0.16);color:var(--tc);cursor:pointer;font-size:14px;line-height:1;
+    font-family:inherit;transition:background 0.15s ease;}
+.cx:hover,.cx:focus{background:rgba(255,255,255,0.3);}
+
+.cbody{padding:14px 18px 16px;background:#fff;color:#1d2125;}
+.mets{display:flex;gap:10px;flex-wrap:wrap;}
+.met{flex:1 1 120px;border:1px solid #dee2e6;border-radius:10px;padding:8px 10px;}
+.met-l{font-size:10px;color:#6a737b;}
+/* linksclickable:false -> o contador e' uma <div> inerte (detail:84-86). Nao e' botao:
+   sem cursor, sem hover, sem foco. E' o que impede empilhar o MOD.USAGE sobre este modal. */
+.met-v{font-size:19px;font-weight:600;color:#1d2125;}
+.cdesc{font-size:12px;color:#3d4145;margin-top:12px;}
+
+/* ---- o que NAO pinta ---- */
+.ghost{margin-top:9px;border:1px dashed var(--border-stronger);border-radius:8px;padding:8px 10px;background:var(--surface-2);}
+.ghost-h{font-size:10.5px;color:var(--text-muted);font-style:italic;}
+.ghost-b{display:flex;align-items:center;gap:8px;margin-top:5px;opacity:0.42;}
+.ghost-t{font-size:13px;font-weight:500;}
+.ghost-x{margin-left:auto;width:28px;height:28px;border-radius:8px;background:#e7f0f9;color:#0f4d85;
+         display:inline-flex;align-items:center;justify-content:center;font-size:12px;}
+
+/* ---- driver de cor ---- */
+.drv{display:flex;gap:0;margin:10px 0 8px;border:0.5px solid var(--border-strong);border-radius:var(--radius);overflow:hidden;}
+.dchk{position:absolute;opacity:0;pointer-events:none;}
+.dstep{flex:1;font-size:11px;text-align:center;padding:5px 6px;cursor:pointer;color:var(--text-secondary);background:var(--surface-2);}
+.dstep+.dstep{border-left:0.5px solid var(--border-strong);}
+#c1:checked~.drv .ds1,#c2:checked~.drv .ds2,#c3:checked~.drv .ds3{background:var(--acc-fg);color:var(--surface-2);font-weight:500;}
+/* Os tres presets. Stops calculados como o darkenHex (js:102-112): 16% e 34% para preto.
+   O preset 1 usa os LITERAIS de fallback do css:4316 (o que pinta quando nao ha bgcolor). */
+#c1:checked~.stage{--h0:#0f6cbf;--h48:#0d5a9f;--h100:#0a4680;--tc:#fff;}
+#c2:checked~.stage{--h0:#7b2d8e;--h48:#672677;--h100:#511e5e;--tc:#ffe9b0;}
+#c3:checked~.stage{--h0:#1a2b3c;--h48:#162432;--h100:#111c27;--tc:#2c3e50;}
+.mrow{display:none;}
+#c1:checked~.mnotes .m1,#c2:checked~.mnotes .m2,#c3:checked~.mnotes .m3{display:block;}
+
+.note{font-size:10.5px;color:var(--text-secondary);background:var(--surface-2);border:0.5px solid var(--border);border-left:2px solid var(--acc-fg);border-radius:6px;padding:7px 9px;margin-top:9px;}
+.note b{color:var(--text-primary);}
+.note code{font-family:var(--font-mono);font-size:9.5px;color:var(--acc-fg);}
+.warn{border-left-color:var(--warn-bd);background:var(--warn-bg);color:var(--warn-fg);}
+.warn b{color:var(--warn-fg);}
+.warn code{color:var(--warn-fg);}
+.tbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;}
+.tbl th,.tbl td{text-align:left;padding:4px 7px;border-bottom:0.5px solid var(--border);vertical-align:top;}
+.tbl thead th{font-size:10px;color:var(--text-secondary);font-weight:500;}
+.tbl code{font-family:var(--font-mono);font-size:9.5px;color:var(--acc-fg);}
+</style>
+
+<div class="screens">
+
+  <section class="panel asis">
+    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o diálogo shipado em <code style="font-family:var(--font-mono);font-size:11px">47677dd</code> + <code style="font-family:var(--font-mono);font-size:11px">a59d5fb</code> — painel único: <b style="font-weight:600">nada está proposto para mudar</b></div>
+
+    <div class="sec">Portas de entrada — <b style="font-weight:600">nenhuma é rodapé</b> (IDs de outros mapas)</div>
+    <div class="row">
+      <span class="prov">structure_related_chips.mustache:36-43</span>
+      <button class="chip">Comunicação Assertiva <span aria-hidden="true">↗</span></button>
+      <span class="idb">MOD.RELATED-CHIP · data-action="open-related"</span>
+    </div>
+    <div class="row" style="margin-top:5px;">
+      <span class="prov">plans.mustache:381-382</span>
+      <button class="pname">Comunicação Assertiva</button>
+      <span class="idb">PLN-COMP-NAME · data-action="open-competency-detail"</span>
+    </div>
+    <div class="note">As duas chamam o <b>mesmo</b> <code>openCompetencyDetailModal(id)</code> (<code>structure.js:1244-1248</code> · <code>plans.js:754-755</code>), que <b>sempre</b> busca o nó fresco pelo WS antes de renderizar — o chip só carrega <code>id</code> e <code>name</code>, e o card precisa dos contadores.</div>
+
+    <input type="radio" name="col" id="c1" class="dchk" checked>
+    <input type="radio" name="col" id="c2" class="dchk">
+    <input type="radio" name="col" id="c3" class="dchk">
+    <div class="sec" style="margin-bottom:0;">Cor da competência — dirige o gradiente <b>e</b> o glifo do fechar (<code style="font-family:var(--font-mono);font-size:10px">js:294</code>)</div>
+    <div class="drv">
+      <label class="dstep ds1" for="c1">Sem bgcolor (fallback do CSS)</label>
+      <label class="dstep ds2" for="c2">bgcolor + textcolor claros</label>
+      <label class="dstep ds3" for="c3">bgcolor + textcolor escuros</label>
+    </div>
+
+    <div class="stage">
+      <div class="dlg" tabindex="0">
+        <div class="card">
+          <button class="cx" aria-label="Fechar"><span aria-hidden="true">✕</span></button>
+          <div class="chead">
+            <h3 class="ctitle">Comunicação Assertiva</h3>
+            <div class="ctax">Competência</div>
+            <div class="cchips">
+              <span class="gchip">COM-02</span>
+              <span class="gchip">Escala: Padrão</span>
+              <span class="gchip">Tipo: Transversal</span>
+            </div>
+          </div>
+          <div class="cbody">
+            <div class="mets">
+              <div class="met"><div class="met-l">Cursos vinculados</div><div class="met-v">3</div></div>
+              <div class="met"><div class="met-l">Atividades vinculadas</div><div class="met-v">7</div></div>
+              <div class="met"><div class="met-l">Planos de aprendizagem vinculados</div><div class="met-v">2</div></div>
+            </div>
+            <div class="cdesc">Expressar posições e necessidades com clareza e respeito, sustentando o próprio ponto de vista sem hostilidade.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:7px;">
+      <span class="idb">MOD.DETAIL-MODAL · .modal-dialog 620px / raio 24</span>
+      <span class="idb">MOD.DETAIL-CARD · mustache:36</span>
+      <span class="idb">MOD.DETAIL-CLOSE · mustache:37-40</span>
+      <span class="idb">MOD.DETAIL-CONTENT · data-region="detail-content"</span>
+    </div>
+    <div class="row" style="margin-top:4px;">
+      <span class="idb">EST-DETAIL-COURSES/-ACTIVITIES/-PLANS — inertes aqui (linksclickable:false)</span>
+    </div>
+
+    <div class="note"><b>O anel de foco é o motivo do raio de 24px.</b> Tabule até o card: o anel acima é real — ele é desenhado no <b>diálogo</b>, não no card, e só coincide com a borda arredondada porque o <code>css:5155</code> dá ao <code>.modal-dialog</code> o mesmo raio do card (<code>css:4301</code>) e o <code>css:5168-5170</code> zera o padding do corpo. O core foca esse elemento ao abrir (<code>lib/amd/src/modal.js:899</code>, com <code>tabindex="0"</code> em <code>lib/templates/modal.mustache:44</code>). Sem o raio, um retângulo em volta de um card redondo.</div>
+
+    <div class="sec">O que <b style="font-weight:600">não</b> pinta — e mesmo assim faz falta</div>
+    <div class="ghost">
+      <div class="ghost-h">O <code style="font-family:var(--font-mono)">.modal-header</code> do core, com o <code style="font-family:var(--font-mono)">title</code> que o <code style="font-family:var(--font-mono)">js:278</code> passa e o <code style="font-family:var(--font-mono)">.btn-close</code> que o restyle do plugin pintaria. <b>Nada disto renderiza</b> — <code style="font-family:var(--font-mono)">css:5158-5160</code> o esconde inteiro. Desenhado aqui só para mostrar o que foi retirado:</div>
+      <div class="ghost-b">
+        <span class="ghost-t">Comunicação Assertiva</span>
+        <span class="ghost-x" aria-hidden="true">✕</span>
+      </div>
+    </div>
+    <div class="note"><b>Mas o título não é código morto.</b> O core liga <code>aria-labelledby</code> (<code>lib/templates/modal.mustache:43</code>) ao <code>&lt;h5&gt;</code> do <code>:49</code> — dentro do cabeçalho oculto. <b>Medido em Chromium</b>, na árvore de acessibilidade real: a subárvore do cabeçalho sai como <code>ignored</code> (o <code>h5</code> não chega à árvore) e o diálogo ainda assim sai <b>nomeado</b> — <code>dialog "Comunicação Assertiva" modal</code>. Controle negativo (<code>aria-labelledby</code> apontando para id inexistente): <code>dialog modal</code>, <b>sem</b> nome. Tirar o <code>title</code> deixaria o card idêntico e o diálogo anônimo.</div>
+    <div class="note"><b>E o <code>:not()</code>?</b> A classe <code>.local-dimensions-related-modal</code> é aplicada em <code>js:285</code> a <b>este</b> modal (não ao <code>MOD.RELATED</code>, que é o gerenciador). O <code>css:3557</code> exclui exatamente ele do restyle de chip azul do <code>.btn-close</code>. <b>Ressalva:</b> hoje a exclusão não protege nada pintado — o <code>.btn-close</code> mora no cabeçalho <code>display:none</code>, e um ancestral oculto apaga a subárvore. É intenção declarada + seguro para o dia em que o cabeçalho voltar.</div>
+
+    <div class="sec">Contraste do glifo do fechar — medido no <b style="font-weight:600">preenchimento composto</b>, não no pai transparente</div>
+    <table class="tbl">
+      <thead><tr><th>Preset</th><th>Glifo</th><th>Gradiente sob o botão</th><th>Preenchimento real (vidro 0.16 sobre o gradiente)</th><th>Glifo × preenchimento</th></tr></thead>
+      <tbody>
+        <tr><td>Sem bgcolor</td><td><code>#ffffff</code></td><td><code>#0a4c89</code></td><td><code>#31699c</code></td><td><b style="font-weight:600">5,81:1</b> ✅</td></tr>
+        <tr><td>Claro</td><td><code>#ffe9b0</code></td><td><code>#572065</code></td><td><code>#72447e</code></td><td><b style="font-weight:600">6,19:1</b> ✅</td></tr>
+        <tr><td>Escuro</td><td><code>#2c3e50</code></td><td><code>#121e2a</code></td><td><code>#38424c</code></td><td><b style="font-weight:600">1,07:1</b> ❌</td></tr>
+      </tbody>
+    </table>
+    <div class="note"><b>Como foi medido.</b> <code>getAnimations().forEach(a =&gt; a.cancel())</code> antes de ler (transição congelada devolve a cor do tema anterior); o gradiente 140deg foi reconstruído em <code>&lt;canvas&gt;</code> com a geometria real do cabeçalho e <b>amostrado no pixel do centro do botão</b> (<code>584, 36</code> — o botão fica a 18px da direita num diálogo de 620px, então cai bem depois do stop de 48%); o vidro <code>rgba(255,255,255,0.16)</code> foi composto sobre essa amostra. Medir contra o <code>.cx</code> "como está" devolveria o pai transparente e um número falso. <b>O preenchimento em si</b> fica em 1,50–1,65:1 contra o gradiente — abaixo de 3:1 —, mas quem identifica o controle é o <b>glifo</b>, e ele carrega a razão da tabela.</div>
+    <div class="mnotes">
+      <div class="note mrow m1"><b>Padrão passa.</b> O <code>#fff</code> sobre o vidro composto no gradiente de marca é o caso que o plugin entrega quando a competência não tem <code>bgcolor</code>.</div>
+      <div class="note mrow m2"><b>Cor livre, ainda legível.</b> Um <code>textcolor</code> claro sobre <code>bgcolor</code> escuro mantém o glifo destacado — é o caso que o campo personalizado foi feito para servir.</div>
+      <div class="note mrow m3 warn"><b>Aqui o as-is reprova — 1,07:1, medido — e não há guarda.</b> <code>textcolor</code> escuro sobre <code>bgcolor</code> escuro produz um "✕" que some no cabeçalho (olhe o card acima: o botão ainda está lá). O <code>js:294</code> só tem <code>|| '#fff'</code>, que cobre o <b>vazio</b>, não o ilegível: nenhum contraste é calculado, em nenhum ponto do plugin. Não é regressão deste modal — é a política de cor dos campos personalizados, e o cabeçalho inteiro corre o mesmo risco —, mas aqui ela alcança o <b>único</b> controle do diálogo. Registrado como medição, não como proposta.</div>
+    </div>
+
+    <div class="note"><b>Por que não há painel to-be.</b> Nada está proposto. As duas medições acima são as-is: uma passa, a outra descreve um risco que a política de cor do plugin já carrega em toda a Central. Mudar isso é decisão de produto sobre os campos personalizados, não sobre este diálogo.</div>
+  </section>
+
+</div>
