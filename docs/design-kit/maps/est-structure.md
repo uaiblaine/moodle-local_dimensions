@@ -187,7 +187,7 @@ entregues a `ActionFooter.show(html, dispatchStructureAction)` (`structure.js:55
 
 ## to-be
 
-### IMP-03 (`mtube: loading`) — **o alvo é `reloadPane`, não a troca de aba**
+### IMP-03 (`mtube: carregando`) — **o alvo é `reloadPane`, não a troca de aba**
 
 > **Correção medida.** O plano descreve o IMP-03 como "loading na troca de aba". **A troca de aba já
 > tem loading, e vem do core**: `dynamic_tabs.js:92-97` ouve `shown.bs.tab` → `loadTab`, e `loadTab`
@@ -211,7 +211,7 @@ Forma de referência: o `alert alert-info` + `spinner-border spinner-border-sm` 
 (ver `fwk-frameworks.md`). Marcar o pane com `aria-busy="true"` enquanto carrega (padrão do
 `states.html`).
 
-### IMP-05 (`mtube: refresh`) — controle de atualizar na contextbar
+### IMP-05 (`mtube: atualizar`) — controle de atualizar na contextbar
 
 Ver `bar-contextbar.md` (a decisão e as verificações moram lá). Precisão que este mapa confirma
 de forma independente: `reloadPane` tem **23 chamadas em 5 módulos** — `structure` 9, `frameworks` 6,
@@ -219,7 +219,7 @@ de forma independente: `reloadPane` tem **23 chamadas em 5 módulos** — `struc
 que é verdade é que **nenhum controle de UI** o dispara — as 23 são refresh automático pós-ação.
 Aqui na aba Estrutura são as 9 de `structure.js` (`:729,738,747,763,807,835,959,1035,1471`).
 
-### IMP-10 (`mtube: tab icons`) — ícones + indicador nas abas
+### IMP-10 (`mtube: ícones nas abas`) — ícones + indicador nas abas
 
 Ver `hierarchy-nav.html`. O que a aba Estrutura confirma: `central.php:114` passa `displayname` e o
 `core/dynamic_tabs.mustache:53` faz **triple-stash** (`{{{displayname}}}`) — o ícone entra pelo
