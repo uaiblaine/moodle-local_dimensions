@@ -75,7 +75,7 @@ core está certo**. Detalhado no fim deste mapa.
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.BROWSER-ACTION` | Adicionar competência | botão (gatilho) | `plans.mustache:469-472` | `data-action="browse-frameworks"` · `fa fa-plus` | str **`central_addcompetency`** — **não** `central_browseframeworks` (essa é o título do modal). Mora no holder `data-region="plans-footer-actions"` (`:462`), que nasce `hidden` e é movido para o `#sticky-footer` da página pelo `plans.js` (comentário em `:458-461`); só sai sob `{{#canmanage}}` (`:457`). `plans.js:723` chama `showCompetencyBrowser(pane, region)` (import em `:35`) |
+| `PLN-BROWSE` ↗ | Adicionar competência | botão (gatilho) — **ID de `pln-plans.md`, não deste mapa**: o gatilho pertence à superfície onde mora, e este mapa só o referencia (mesma convenção de `MOD.DELPLANS ← PLN-DELETE`) | `plans.mustache:469-472` | `data-action="browse-frameworks"` · `fa fa-plus` | str **`central_addcompetency`** — **não** `central_browseframeworks` (essa é o título do modal). Mora no holder `data-region="plans-footer-actions"` (`:462`), que nasce `hidden` e é movido para o `#sticky-footer` da página pelo `plans.js` (comentário em `:458-461`); só sai sob `{{#canmanage}}` (`:457`). `plans.js:723` chama `showCompetencyBrowser(pane, region)` (import em `:35`) |
 
 ## Casca do modal
 
