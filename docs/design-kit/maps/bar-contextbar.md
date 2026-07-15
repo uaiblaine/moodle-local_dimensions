@@ -72,7 +72,7 @@ recarrega o ativo. O select de categoria é sempre renderizado (oculto em modo s
 | # | Onde | Origem | Conta |
 | --- | --- | --- | --- |
 | 1 | contextbar (`BAR-COUNT-01`) | `contextbar.mustache:81-86` | estruturas/planos **visíveis do contexto** |
-| 2 | toolbar da aba Estruturas | `frameworks.mustache:75-76` | `central_frameworks_listed` ("Estruturas listadas"): `frameworkcount` + "· N ocultas" |
+| 2 | toolbar da aba Estruturas | `frameworks.mustache:77-78` | `central_frameworks_listed` ("Estruturas listadas"): `frameworkcount` + "· N ocultas" |
 | 3 | subheader da aba Competências | `structure.mustache:121-122` | `managecompetencies_items` ("itens"): `competencycount` do framework selecionado |
 
 ## to-be (IMP-05, `mtube: atualizar`)

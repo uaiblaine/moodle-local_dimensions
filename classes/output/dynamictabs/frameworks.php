@@ -102,12 +102,29 @@ class frameworks extends \core\output\dynamic_tabs\base {
                     continue;
                 }
             }
+            // Two literal keys picked with an if, because get_string has no plural forms and pt-BR
+            // inflects the noun. Only the noun varies; the count keeps its own <strong> in the pill.
+            if ((int) $row['competencycount'] === 1) {
+                $row['competencylabel'] = get_string('central_frameworks_competencieslabel_one', 'local_dimensions');
+            } else {
+                $row['competencylabel'] = get_string('central_frameworks_competencieslabel', 'local_dimensions');
+            }
             $rows[] = $row;
         }
         $hashiddenframeworks = $hiddencount > 0;
         // Structures hidden from the current view (only when the toggle is off) — surfaced as
         // the "· N hidden" suffix on the count so the number stays honest.
         $excludedcount = $showhidden ? 0 : $hiddencount;
+        /*
+         * Same plural rule as the card label above — two literal keys, never a constructed key,
+         * which the string checker cannot verify. Here pt-BR inflects the adjective instead
+         * ("1 oculta" vs "2 ocultas"), and the count is interpolated into the plural form.
+         */
+        if ($excludedcount === 1) {
+            $hiddenlabel = get_string('central_frameworks_hiddencount_one', 'local_dimensions');
+        } else {
+            $hiddenlabel = get_string('central_frameworks_hiddencount', 'local_dimensions', $excludedcount);
+        }
         $canmanage = !$needscategory && competency_framework::can_manage_context($pagecontext);
         // The create/edit modal's "Open scales page" header shortcut mirrors the page's own gate.
         $canscalespage = has_capability('moodle/course:managescales', \context_system::instance());
@@ -124,7 +141,7 @@ class frameworks extends \core\output\dynamic_tabs\base {
             'frameworks' => $rows,
             'frameworkcount' => count($rows),
             'hasexcluded' => $excludedcount > 0,
-            'excludedcount' => $excludedcount,
+            'hiddenlabel' => $hiddenlabel,
             'canmanage' => (int) $canmanage,
             'canscalespage' => (int) $canscalespage,
             'canexport' => (int) ($canmanage && !empty($rows)),

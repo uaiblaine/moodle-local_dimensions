@@ -26,10 +26,11 @@
 
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · contextid (int) · needscategoryselection (bool)
-    * hasframeworks (bool) · frameworkcount (int) · hasexcluded (bool) · excludedcount (int)
+    * hasframeworks (bool) · frameworkcount (int) · hasexcluded (bool) · hiddenlabel (string)
     * canmanage (int) · canscalespage (int) · canexport (int) · showhidden (bool)
     * showhiddentoggle (object|null) {id, label, action, checked}
-    * frameworks (array) {id, shortname, idnumber, description, competencycount, visible, deletable, canmanage}
+    * frameworks (array) {id, shortname, idnumber, description, competencycount, competencylabel,
+      visible, deletable, canmanage}
 
     Example context (json):
     {
@@ -40,7 +41,7 @@
         "hasframeworks": true,
         "frameworkcount": 1,
         "hasexcluded": true,
-        "excludedcount": 1,
+        "hiddenlabel": "1 hidden",
         "canmanage": 1,
         "canscalespage": 1,
         "canexport": 1,
@@ -54,7 +55,8 @@
         "frameworks": [
             {"id": 5, "shortname": "Core skills", "idnumber": "CORE",
              "description": "Baseline competencies for the current cohort.",
-             "competencycount": 12, "visible": true, "deletable": false, "canmanage": true}
+             "competencycount": 12, "competencylabel": "competencies",
+             "visible": true, "deletable": false, "canmanage": true}
         ]
     }
 }}
@@ -73,7 +75,7 @@
 
     <div class="local-dimensions-central-fwtoolbar">
         <span class="local-dimensions-central-fwcount">
-            {{#str}}central_frameworks_listed, local_dimensions{{/str}}: <strong>{{frameworkcount}}</strong>{{#hasexcluded}}<span class="local-dimensions-central-fwexcluded"> · {{#str}}central_frameworks_hiddencount, local_dimensions, {{excludedcount}}{{/str}}</span>{{/hasexcluded}}
+            {{#str}}central_frameworks_listed, local_dimensions{{/str}}: <strong>{{frameworkcount}}</strong>{{#hasexcluded}}<span class="local-dimensions-central-fwexcluded"> · {{hiddenlabel}}</span>{{/hasexcluded}}
         </span>
         {{#canmanage}}
         <div class="local-dimensions-central-fwactions">

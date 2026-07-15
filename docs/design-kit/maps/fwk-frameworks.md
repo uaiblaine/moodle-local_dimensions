@@ -13,7 +13,7 @@ O seletor Sistema/Categoria vem da contextbar (`BAR`).
 - **PHP:** [`classes/output/dynamictabs/frameworks.php`](../../../classes/output/dynamictabs/frameworks.php)
 - **AMD:** [`amd/src/central/frameworks.js`](../../../amd/src/central/frameworks.js) (527 linhas), [`central/tabs.js`](../../../amd/src/central/tabs.js), [`central/action_footer.js`](../../../amd/src/central/action_footer.js)
 - **To-be no DS:** sem componente dedicado — o card já **convergiu** (`fwcard` shipa nome + idnumber +
-  descrição + pill de contagem, `frameworks_row.mustache:44-56`); o que falta é o loading do `reloadPane`.
+  descrição + pill de contagem, `frameworks_row.mustache:46-58`); o que falta é o loading do `reloadPane`.
 
 > **Nota de nome (verificada).** O `FWK` é a **primeira** aba e nasce ativa (`central.php:104-105`), e
 > o rótulo dela é `central_frameworks_tab` = **"Estruturas"** (`central.php:99`; pt-BR `lang/pt_br:157`).
@@ -39,36 +39,36 @@ O seletor Sistema/Categoria vem da contextbar (`BAR`).
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `FWK-ROOT` | `[sem rótulo]` | região/raiz | `frameworks.mustache:61-63` | `data-region="frameworks"` | carrega `contexttype`, `categoryid`, `contextid`, `canmanage`, `canscalespage`; `init` a resolve por seletor (`frameworks.js:485`) e guarda em `activeRegion`/`activePane` (`:490-491`) |
-| `FWK-CANSCALES` | `[sem rótulo]` | flag | `frameworks.mustache:63` | `data-canscalespage` | `has_capability('moodle/course:managescales', system)` (`dynamictabs/frameworks.php:113`); **único** consumidor é `injectScalesLink` (`frameworks.js:144`) → `FWK-SCALES-LINK` |
+| `FWK-ROOT` | `[sem rótulo]` | região/raiz | `frameworks.mustache:63-65` | `data-region="frameworks"` | carrega `contexttype`, `categoryid`, `contextid`, `canmanage`, `canscalespage`; `init` a resolve por seletor (`frameworks.js:485`) e guarda em `activeRegion`/`activePane` (`:490-491`) |
+| `FWK-CANSCALES` | `[sem rótulo]` | flag | `frameworks.mustache:65` | `data-canscalespage` | `has_capability('moodle/course:managescales', system)` (`dynamictabs/frameworks.php:130`); **único** consumidor é `injectScalesLink` (`frameworks.js:144`) → `FWK-SCALES-LINK` |
 
 ## Cabeçalho e toolbar
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `FWK-EMPTY-CAT` | "Escolha primeiro a categoria de curso…" | empty-state | `frameworks.mustache:65-67` | str `managecompetencies_selectcategory_help` | bloqueia a aba inteira (o `{{^needscategoryselection}}` de `:69` embrulha todo o resto) |
-| `FWK-SHOWHIDDEN` | Mostrar estruturas ocultas | switch | `showhidden_toggle.mustache:44-45`, chamado em `frameworks.mustache:70-72` | `data-action="{{action}}"` → `toggle-hidden` | **partial compartilhado** com `EST`/`PLN`: o `data-action` é **variável** no template e o valor literal vem de `dynamictabs/frameworks.php:135` (contexto em `:132-137`; **nulo quando não há nenhuma oculta** → não renderiza). Estado em preferência `frameworksshowhidden` (`frameworks.js:523`) **e** em `pane.dataset.showhidden` (`:522`), depois `reloadPane` (`:524`) |
-| `FWK-TOOLBAR` | `[sem rótulo]` | contêiner | `frameworks.mustache:74` | `.local-dimensions-central-fwtoolbar` | `space-between`; contador à esquerda, ações à direita |
-| `FWK-COUNT` | "Estruturas listadas: N" | contador | `frameworks.mustache:75-76` | `frameworkcount` | str `central_frameworks_listed`; conta as linhas **exibidas** (`count($rows)`, `dynamictabs/frameworks.php:125`) — é o **2º dos três contadores do hub** (ver `bar-contextbar.md`) |
-| `FWK-HIDDENCOUNT` | "· N ocultas" | sufixo | `frameworks.mustache:76` | `hasexcluded` / `excludedcount` | str `central_frameworks_hiddencount`; `excludedcount = showhidden ? 0 : hiddencount` (`dynamictabs/frameworks.php:110`) — some quando o toggle está ligado, porque aí nada está escondido. Existe para manter `FWK-COUNT` **honesto** (comentário em `:108-109`) |
-| `FWK-ACTIONS` | `[sem rótulo]` | grupo | `frameworks.mustache:79` | `.local-dimensions-central-fwactions` | todo o grupo é gated por `{{#canmanage}}` (`:78-92`) |
-| `FWK-NEW` | Nova estrutura | botão | `frameworks.mustache:80-82` | `data-action="new"` | `fa-plus`; primário (`.local-dimensions-central-plans-new`); `createFramework` → modal com `contextid` da região (`frameworks.js:203-204`) |
-| `FWK-IMPORT` | Importar | botão | `frameworks.mustache:83-85` | `data-action="import"` | `fa-upload`; outline; `openImportForm` (`frameworks.js:261-278`) → dynamic form com CSV. **Não estava no mapa** |
-| `FWK-EXPORT` | Exportar | botão | `frameworks.mustache:86-90` | `data-action="export"` | `fa-download`; outline; **duplo gate** — `{{#canexport}}` (`:86`) aninhado dentro do `{{#canmanage}}`, e `canexport = canmanage && !empty($rows)` (`dynamictabs/frameworks.php:130`), então some quando não há nenhuma estrutura para exportar. **Não estava no mapa** |
-| `FWK-LIST` | `[sem rótulo]` | contêiner | `frameworks.mustache:96` | `data-region="framework-rows"` | só com `hasframeworks`; recebe os `FWK-ROW` |
-| `FWK-EMPTY` | "Nenhuma estrutura neste contexto." | empty-state | `frameworks.mustache:103-105` | str `central_frameworks_none` | `alert alert-info role="status"` |
+| `FWK-EMPTY-CAT` | "Escolha primeiro a categoria de curso…" | empty-state | `frameworks.mustache:67-69` | str `managecompetencies_selectcategory_help` | bloqueia a aba inteira (o `{{^needscategoryselection}}` de `:71` embrulha todo o resto) |
+| `FWK-SHOWHIDDEN` | Mostrar estruturas ocultas | switch | `showhidden_toggle.mustache:44-45`, chamado em `frameworks.mustache:72-74` | `data-action="{{action}}"` → `toggle-hidden` | **partial compartilhado** com `EST`/`PLN`: o `data-action` é **variável** no template e o valor literal vem de `dynamictabs/frameworks.php:152` (contexto em `:149-154`; **nulo quando não há nenhuma oculta** → não renderiza). Estado em preferência `frameworksshowhidden` (`frameworks.js:523`) **e** em `pane.dataset.showhidden` (`:522`), depois `reloadPane` (`:524`) |
+| `FWK-TOOLBAR` | `[sem rótulo]` | contêiner | `frameworks.mustache:76` | `.local-dimensions-central-fwtoolbar` | `space-between`; contador à esquerda, ações à direita |
+| `FWK-COUNT` | "Estruturas listadas: N" | contador | `frameworks.mustache:77-78` | `frameworkcount` | str `central_frameworks_listed`; conta as linhas **exibidas** (`count($rows)`, `dynamictabs/frameworks.php:142`) — é o **2º dos três contadores do hub** (ver `bar-contextbar.md`) |
+| `FWK-HIDDENCOUNT` | "· N ocultas" / "· 1 oculta" | sufixo | `frameworks.mustache:78` | `hasexcluded` / `hiddenlabel` | strs `central_frameworks_hiddencount` + `central_frameworks_hiddencount_one`, escolhidas por um `if` literal e **resolvidas no PHP** (`dynamictabs/frameworks.php:118-127`) — o template recebe o texto pronto, não chama `{{#str}}`, porque `get_string` não tem formas plurais e o pt-BR flexiona o adjetivo. `excludedcount = showhidden ? 0 : hiddencount` (`:117`) — some quando o toggle está ligado, porque aí nada está escondido. Existe para manter `FWK-COUNT` **honesto** (comentário em `:115-116`) |
+| `FWK-ACTIONS` | `[sem rótulo]` | grupo | `frameworks.mustache:81` | `.local-dimensions-central-fwactions` | todo o grupo é gated por `{{#canmanage}}` (`:80-94`) |
+| `FWK-NEW` | Nova estrutura | botão | `frameworks.mustache:82-84` | `data-action="new"` | `fa-plus`; primário (`.local-dimensions-central-plans-new`); `createFramework` → modal com `contextid` da região (`frameworks.js:203-204`) |
+| `FWK-IMPORT` | Importar | botão | `frameworks.mustache:85-87` | `data-action="import"` | `fa-upload`; outline; `openImportForm` (`frameworks.js:261-278`) → dynamic form com CSV. **Não estava no mapa** |
+| `FWK-EXPORT` | Exportar | botão | `frameworks.mustache:88-92` | `data-action="export"` | `fa-download`; outline; **duplo gate** — `{{#canexport}}` (`:88`) aninhado dentro do `{{#canmanage}}`, e `canexport = canmanage && !empty($rows)` (`dynamictabs/frameworks.php:147`), então some quando não há nenhuma estrutura para exportar. **Não estava no mapa** |
+| `FWK-LIST` | `[sem rótulo]` | contêiner | `frameworks.mustache:98` | `data-region="framework-rows"` | só com `hasframeworks`; recebe os `FWK-ROW` |
+| `FWK-EMPTY` | "Nenhuma estrutura neste contexto." | empty-state | `frameworks.mustache:105-107` | str `central_frameworks_none` | `alert alert-info role="status"` |
 
 ## Card de estrutura (`frameworks_row`)
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `FWK-ROW` | `[sem rótulo]` | card (wrapper) | `frameworks_row.mustache:39-43` | `data-framework="{id}"` | carrega `frameworkid`, `name`, `count`, `visible`, `deletable`; a classe `is-hidden` (`:39`) é hook de estado sem CSS desde 2026-07-15 (o `opacity: 0.6` foi removido por travar o AA; ver as regras abaixo). O seletor de linha do JS é `[data-framework]` (`frameworks.js:44`) |
-| `FWK-ROW-SELECT` | `[sem rótulo]` | botão | `frameworks_row.mustache:44` | `data-action="select-framework"` | **o card inteiro é um botão**: `selectFramework` marca `.active` e publica o rodapé (`frameworks.js:460-477`). O `data-action` é **decorativo** — o handler casa por `closest('[data-framework]')` (`:513-516`), não pelo action |
-| `FWK-ROW-NAME` | nome | texto | `frameworks_row.mustache:47` | `shortname` | 17px/700 (`styles.css:3751-3756`) |
-| `FWK-ROW-ID` | idnumber | chip mono | `frameworks_row.mustache:48` | `idnumber` | só se `idnumber`. **Não estava no mapa** |
-| `FWK-ROW-HIDDEN` | "Oculto" | badge | `frameworks_row.mustache:49` | `^visible` | `fa-eye-slash` + str `hidden, tool_lp` |
-| `FWK-ROW-DESC` | `[sem rótulo]` | descrição | `frameworks_row.mustache:51` | `description` | só se `description`; uma linha com reticências e o texto cheio no `title` (`styles.css:3781-3789`). Servidor achata para texto puro e corta em 300 (`helper.php:2225-2234`). **Não estava no mapa** |
-| `FWK-ROW-COUNT` | "N competências" | pill | `frameworks_row.mustache:53-55` | `competencycount` | str `central_frameworks_competencieslabel`; pill accent à direita (`styles.css:3791-3809`) |
+| `FWK-ROW` | `[sem rótulo]` | card (wrapper) | `frameworks_row.mustache:41-45` | `data-framework="{id}"` | carrega `frameworkid`, `name`, `count`, `visible`, `deletable`; a classe `is-hidden` (`:41`) é hook de estado sem CSS desde 2026-07-15 (o `opacity: 0.6` foi removido por travar o AA; ver as regras abaixo). O seletor de linha do JS é `[data-framework]` (`frameworks.js:44`) |
+| `FWK-ROW-SELECT` | `[sem rótulo]` | botão | `frameworks_row.mustache:46` | `data-action="select-framework"` | **o card inteiro é um botão**: `selectFramework` marca `.active` e publica o rodapé (`frameworks.js:460-477`). O `data-action` é **decorativo** — o handler casa por `closest('[data-framework]')` (`:513-516`), não pelo action |
+| `FWK-ROW-NAME` | nome | texto | `frameworks_row.mustache:49` | `shortname` | 17px/700 (`styles.css:3751-3756`) |
+| `FWK-ROW-ID` | idnumber | chip mono | `frameworks_row.mustache:50` | `idnumber` | só se `idnumber`. **Não estava no mapa** |
+| `FWK-ROW-HIDDEN` | "Oculto" | badge | `frameworks_row.mustache:51` | `^visible` | `fa-eye-slash` + str `hidden, tool_lp` |
+| `FWK-ROW-DESC` | `[sem rótulo]` | descrição | `frameworks_row.mustache:53` | `description` | só se `description`; uma linha com reticências e o texto cheio no `title` (`styles.css:3781-3789`). Servidor achata para texto puro e corta em 300 (`helper.php:2225-2234`). **Não estava no mapa** |
+| `FWK-ROW-COUNT` | "N competências" / "1 competência" | pill | `frameworks_row.mustache:55-57` | `competencycount` / `competencylabel` | **só o substantivo** vem pronto do PHP (strs `central_frameworks_competencieslabel` + `_one`, escolhidas por um `if` literal em `dynamictabs/frameworks.php:105-111`); o número fica no `<strong>` dele, porque o pill é 15px azul negrito + `gap: 6px` + substantivo 13.5px cinza — resolver a frase inteira mataria esse contraste. Pill accent à direita (`styles.css:3791-3809`) |
 
 ## Ações da estrutura — **sticky-footer da página**, não o card
 
@@ -127,9 +127,9 @@ o toast disparado de dentro dele renderiza **acima** do diálogo (padrão da cas
   **ainda** trata `success === false` do WS do core como bloqueio (`:417-420`). O dataset é um retrato
   do render; entre render e clique a estrutura pode ter entrado em uso. `deletable` sai de
   `competency::can_all_be_deleted()` (`helper.php:2237`).
-- **`hashiddenframeworks` é chave morta nesta aba.** `dynamictabs/frameworks.php:123` a exporta, mas
+- **`hashiddenframeworks` é chave morta nesta aba.** `dynamictabs/frameworks.php:140` a exporta, mas
   `frameworks.mustache` **não a usa** em lugar nenhum — o gate do toggle virou "`showhiddentoggle` é
-  nulo ou não" (`:132`). Os únicos consumidores do nome são o `structure.mustache` (`:36`, `:55`), que
+  nulo ou não" (`:149`). Os únicos consumidores do nome são o `structure.mustache` (`:36`, `:55`), que
   tem contexto próprio.
 - **A delegação do scale-config é global e de uma vez por página** (`setupScaleConfigDelegation`,
   `frameworks.js:95-123`), em **fase de captura** (`:107`): o form nasce dentro de um `modalform` cujo
@@ -150,9 +150,21 @@ o toast disparado de dentro dele renderiza **acima** do diálogo (padrão da cas
 - **`showhidden` tem duas fontes, e o arg ganha** (`dynamictabs/frameworks.php:88-90`): o arg do pane
   (escrito no toggle) vence; sem ele, cai na preferência `frameworksshowhidden`. Assim a escolha
   sobrevive a um reload de página inteira.
-- **i18n · "1 ocultas".** `central_frameworks_hiddencount` é `'{$a} ocultas'` em pt-BR
-  (`lang/pt_br:132`) e `'{$a} hidden'` em inglês (`lang/en:132`) — sem forma singular. Com
-  `excludedcount = 1` o pt-BR renderiza "**1 ocultas**". O inglês não sofre porque "hidden" é invariável.
+- **i18n · os dois contadores flexionavam errado no singular · CORRIGIDO em 2026-07-15.** `get_string`
+  não tem formas plurais, então ambos usavam **uma** chave plural e quebravam em `N = 1`:
+  - `FWK-HIDDENCOUNT` era `'{$a} ocultas'` → "**1 ocultas**". O inglês nunca sofreu ("hidden" é invariável).
+  - `FWK-ROW-COUNT` era o substantivo cru `'competências'` → "**1 competências**" — e aqui o **inglês
+    também errava** ("1 competencies"), porque "competencies" é contável.
+  Os dois agora escolhem entre **duas chaves literais** com um `if` — nunca chave construída, que o
+  verificador de strings não consegue validar: `central_frameworks_hiddencount` + `_one`
+  (`lang/*:132-133`, resolvido em `dynamictabs/frameworks.php:118-127`) e
+  `central_frameworks_competencieslabel` + `_one` (`lang/*:121-122`, resolvido em `:105-111`).
+  A diferença de forma entre os dois é **deliberada**: o sufixo resolve a frase inteira (`hiddenlabel`),
+  mas o pill resolve **só o substantivo** (`competencylabel`), porque o número precisa continuar no
+  `<strong>` para manter o contraste 15px azul / 13.5px cinza do `FWK-ROW-COUNT`.
+  `excludedcount` **deixou de ser exportado** (nada mais o lia depois que o `{{#str}}` saiu do template),
+  e a chave `central_frameworks_competencies` (`'{$a} competências'`) foi **removida** — era morta,
+  sem nenhum uso em PHP, Mustache ou JS, e carregava o mesmo defeito latente.
 - **a11y · CORRIGIDO em 2026-07-15.** `FWK-ROW-DESC` e `FWK-HIDDENCOUNT` usavam `#8b939b` — **3,11:1**
   sobre o `#fff` da card, abaixo dos 4,5:1 exigidos, carregando **conteúdo real** (a descrição da
   estrutura e a contagem de ocultas), não decoração. Era desvio pontual: `#8b939b` só existia nesses
@@ -163,7 +175,7 @@ o toast disparado de dentro dele renderiza **acima** do diálogo (padrão da cas
 - **a11y · o `opacity: 0.6` do card oculto foi REMOVIDO (2026-07-15).** `opacity` num bloco inteiro
   comprime **texto e fundo juntos** na direção da página, então nenhuma cor de texto alcançava AA
   ali: o teto medido era **5,74:1 com preto puro**, e o badge "Oculta" ficava em **2,12:1**. O card
-  oculto já sinalizava explicitamente — `fa-eye-slash` + a palavra "Oculta" (`frameworks_row.mustache:49`)
+  oculto já sinalizava explicitamente — `fa-eye-slash` + a palavra "Oculta" (`frameworks_row.mustache:51`)
   —, então o `opacity` era um **segundo** sinal, redundante, que só destruía contraste. Removido; o
   badge passou de `#6a737b` para `#495057` (4,15 → **7,03:1**) e agora carrega o estado sozinho.
   A classe `is-hidden` continua no template como hook de estado (nada mais a lia).

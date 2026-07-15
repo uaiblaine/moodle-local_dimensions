@@ -77,7 +77,7 @@ O que sustenta a fronteira, verificado no código:
     (`manage-participants`), `competency_browser.js:92` (`browse-frameworks`) e `plans.js:251`
     (`delete-template` com planos), os três só em `plans.mustache:462-488`.
   - **Os outros 3 têm porta paralela no cabeçalho:** o form de framework (`frameworks.js:174` ←
-    `frameworks.mustache:80`), o form de competência (`structure.js:797` ← `structure.mustache:127`)
+    `frameworks.mustache:82`), o form de competência (`structure.js:797` ← `structure.mustache:127`)
     e o form de template (`plans.js:212` ← `plans.mustache:182`). **Mas o botão do rodapé é o único
     jeito de agir sobre a linha selecionada** — o do cabeçalho só cria.
   - **Não inflar:** são **7** sem outra porta, não 10. Os 7 que o rodapé **não** alcança direto são
