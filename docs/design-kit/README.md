@@ -44,7 +44,7 @@ Formato `@dsCard`, grupo "Telas (as-is ↔ to-be)" no índice do DS.
 | `screens/mod-participants.html` | Modal `MOD.PART` (+ `MOD.COHORT`/`MOD.ROLES`) |
 | `screens/mod-enrolmethods.html` | Modal `MOD.ENROL` · Métodos de inscrição (nova 4ª aba de `MOD.PART`) |
 | `screens/mod-delplans.html` | Modal `MOD.DELPLANS` · Excluir template com planos |
-| `screens/mod-structrelated.html` | Modal `MOD.DETAIL` · O card é o diálogo (**painel único as-is** — nada proposto) |
+| `screens/mod-detail.html` | Modal `MOD.DETAIL` · O card é o diálogo (**painel único as-is** — nada proposto) |
 
 **Cobertura (2026-07-15):** toda superfície da Central tem **mapa**. Três modais têm mapa e **não têm
 tela**, de propósito: `MOD.USAGE` e `MOD.MOVETO` não carregam decisão de design (uma lista `<li>`; um
@@ -73,7 +73,7 @@ tipo, **origem** (`mustache:linha` ou módulo `amd`), dados e regra de negócio.
 | `maps/mod-delplans.md` | `MOD.DELPLANS` · Excluir template com planos |
 | `maps/mod-usage.md` | `MOD.USAGE` · Onde a competência é usada (**sem tela** — ver o mapa) |
 | `maps/mod-moveto.md` | `MOD.MOVETO` · Mover para posição — um template, duas abas (**sem tela**) |
-| `maps/mod-structrelated.md` | **`MOD.DETAIL`** · O card da competência como diálogo (headless) — o arquivo tem o nome do template (`structure_related_modal`), o ID é o que o `pln-plans.md` já usava |
+| `maps/mod-detail.md` | **`MOD.DETAIL`** · O card da competência como diálogo (headless) — o arquivo tem o nome do template (`structure_related_modal`), o ID é o que o `pln-plans.md` já usava |
 
 ### Convenção de IDs
 Formato `PREFIXO-SECAO-NN`. Prefixos: `BAR` (contextbar), `EST`/`FWK`/`PLN` (abas),

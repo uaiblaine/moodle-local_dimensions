@@ -12,7 +12,7 @@ CSS não diz quem aplica a classe. Por isso **o contrato de CSS mora aqui**: é 
 seria escrito.
 
 > **Nome do arquivo × nome do ID — leia isto antes de procurar `MOD.STRUCTRELATED`.**
-> O arquivo se chama `mod-structrelated.md` porque o template se chama `structure_related_modal`.
+> O arquivo se chama `mod-detail.md` porque o template se chama `structure_related_modal`.
 > O **prefixo é `MOD.DETAIL`**, e não `MOD.STRUCTRELATED`, porque **o modal já tinha nome**: o
 > [`pln-plans.md`](pln-plans.md) o batizou em `:234` (`MOD.DETAIL` ← `competency_detail.js:277`) e o
 > referencia de novo em `:186`. Emitir um segundo nome para o mesmo diálogo é exatamente o defeito
@@ -36,7 +36,7 @@ seria escrito.
   **exclusão** em `:3557`, `:3571`, `:3581-3582`, e o card herdado em `:4300-4304` (raio 24px) e
   `:4310-4316` (o gradiente 140deg)
 - **Behat:** nenhum
-- **Tela no DS:** [`screens/mod-structrelated.html`](../screens/mod-structrelated.html) — **um painel
+- **Tela no DS:** [`screens/mod-detail.html`](../screens/mod-detail.html) — **um painel
   as-is só**: nada está proposto para mudar
 
 **Abreviações usadas nas tabelas:** `js:` = `amd/src/central/competency_detail.js` · `mustache:` =
