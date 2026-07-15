@@ -71,10 +71,10 @@ O que sustenta a fronteira, verificado no código:
   visão do aluno, **fora** do hub). Destes 17, o rodapé **alcança 10** diretamente; é a **única
   porta** de **7**; e **8 dependem** dele (os 7 + `enrol_methods.js:799`, que só é montado de dentro
   do modal de participantes — `participants_manager.js:33`, importador único).
-  - **Os 7 sem outra porta:** `rule_config.js:144` (`rules`), `competency_links.js:760` (`links`),
+  - **Os 7 sem outra porta:** `rule_config.js:144` (`rules`), `competency_links.js:763` (`links`),
     `related_competencies.js:248` (`related`), `structure.js:987` (`moveto`) — os quatro só existem
     em `structure_footer_actions.mustache` — mais `participants_manager.js:144`
-    (`manage-participants`), `competency_browser.js:92` (`browse-frameworks`) e `plans.js:251`
+    (`manage-participants`), `competency_browser.js:106` (`browse-frameworks`) e `plans.js:251`
     (`delete-template` com planos), os três só em `plans.mustache:462-488`.
   - **Os outros 3 têm porta paralela no cabeçalho:** o form de framework (`frameworks.js:174` ←
     `frameworks.mustache:82`), o form de competência (`structure.js:797` ← `structure.mustache:127`)
@@ -226,7 +226,7 @@ cru do core (`btn py-0 d-flex flex-column`): ícone sobre rótulo centrado, **se
 
 | ID | Origem | Regra / notas |
 | --- | --- | --- |
-| `MOD.BROWSER` | `competency_browser.js:92` | ← `PLN-BROWSE`. Ver [`mod-browser.md`](mod-browser.md) |
+| `MOD.BROWSER` | `competency_browser.js:106` | ← `PLN-BROWSE`. Ver [`mod-browser.md`](mod-browser.md) |
 | `MOD.PART` | `participants_manager.js:144` | ← `PLN-PARTICIPANTS`. Ver [`mod-participants.md`](mod-participants.md) |
 | `MOD.ENROL` | `enrol_methods.js:799` | montado **só** de dentro do `MOD.PART` (`participants_manager.js:33`). Ver [`mod-enrolmethods.md`](mod-enrolmethods.md) |
 | `MOD.DELPLANS` | `plans.js:251-256` | ← `PLN-DELETE` **quando há planos**. Ver [`mod-delplans.md`](mod-delplans.md) |

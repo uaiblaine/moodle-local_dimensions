@@ -10,7 +10,7 @@ que **quem chamou** persiste.
 - **Mustache:** [`rule_config.mustache`](../../../templates/central/rule_config.mustache) (98) ·
   gatilho em [`structure_footer_actions.mustache`](../../../templates/central/structure_footer_actions.mustache)
   (`:49-52`)
-- **AMD:** [`rule_config.js`](../../../amd/src/central/rule_config.js) (155) — `show` em `:138-184`,
+- **AMD:** [`rule_config.js`](../../../amd/src/central/rule_config.js) (186) — `show` em `:138-186`,
   `readPointsConfig` em `:115-128`, `buildContext` em `:82-107`. Importado por
   [`structure.js`](../../../amd/src/central/structure.js) (`:36`), que abre (`:895`) e persiste (`:896`)
 - **WS: nenhum.** Este módulo não chama `Ajax` — um `grep -n "core/ajax" amd/src/central/rule_config.js`
@@ -42,16 +42,17 @@ Caminhos que começam com `admin/` ou `lang/` são do **core**, relativos a `pub
 >   validação, nem a regra que decide o erro.
 > - **O `MOD.RULE-TYPE-LABEL` estava rotulado "Tipo de regra" — a string é "Regra".** O mapa antigo
 >   dava o rótulo *e* a chave (`central_rule_type`) na mesma linha, e os dois não batem:
->   `lang/en:274` e `lang/pt_br:274` dizem `'Rule'` / `'Regra'`. O rótulo era a chave parafraseada,
+>   `lang/en:275` e `lang/pt_br:275` dizem `'Rule'` / `'Regra'`. O rótulo era a chave parafraseada,
 >   não a string. A tela repetia o mesmo texto (`:51`). Corrigido nos dois.
 > - **O `MOD.RULE-ERROR` não dizia quando dispara**, e a condição real tem **dois** ramos, não um:
 >   `js:124` é `requiredpoints < 1 || total < requiredpoints`. A tela só desenhava o segundo
 >   (*"quando o total > soma"*, `:63`) e ignorava o primeiro. Ver "A validação".
-> - **O erro é _write-once_ — nunca volta a esconder.** Um `grep -n 'errorEl\|showerror'` no módulo
->   devolve **3** linhas e só **uma** escreve: `js:176`, `errorEl.hidden = false`. O `refresh`
->   (`js:153-157`) não toca no alerta. Consequência lida direto da cadeia: uma vez visível, o alerta
->   fica — inclusive depois de o usuário trocar o resultado para **Nenhum** e a tabela de pontos
->   inteira sumir. Ver "A validação".
+> - **O erro era _write-once_ — o mapa antigo não dizia, e o defeito foi CORRIGIDO em 2026-07-15**
+>   (`d343716`). **Era:** um `grep -n 'errorEl\|showerror'` no módulo devolvia **3** linhas e só **uma**
+>   escrevia (`errorEl.hidden = false`); o `refresh` não tocava no alerta, então uma vez visível ele
+>   ficava — inclusive depois de o usuário trocar o resultado para **Nenhum** e a tabela de pontos
+>   inteira sumir. **É:** o mesmo grep devolve **4** linhas e **duas** escrevem — `js:178` liga o
+>   alerta, `js:158` o apaga junto com a tabela que ele descreve. Ver "A validação".
 > - **O `showerror` do Mustache é sempre `false`.** `buildContext` (`js:89`) o fixa em `false` e nada
 >   mais o escreve — o `{{^showerror}}hidden{{/showerror}}` (`mustache:68`) portanto **sempre**
 >   renderiza `hidden`. A variável não é um estado do servidor: existe só para semear o atributo, e
@@ -60,7 +61,7 @@ Caminhos que começam com `admin/` ou `lang/` são do **core**, relativos a `pub
 > - **O to-be apontava para um card que não tem o controle citado.** O mapa antigo dizia *"To-be no
 >   DS: parcialmente em `paginated-picker.html` (controle `ruleoutcome`)"*. Um
 >   `grep -n 'ruleoutcome\|rule' docs/design-kit/paginated-picker.html` devolve **nada** — o arquivo
->   existe (55 linhas) e é o *"Picker paginado · Busca server-side + resultados AJAX + paginação"*, que
+>   existe (133 linhas) e é o *"Picker paginado · Busca server-side + resultados AJAX + paginação"*, que
 >   não tem nem regra nem outcome. A ref era falsa. A casca certa é o `modal-shell.html`.
 > - **O gatilho não ganha ID nova aqui.** O `est-structure.md:137` já mapeia `EST-DETAIL-RULES` em
 >   `structure_footer_actions.mustache:49-52` e já diz "abre `MOD.RULE`". Este mapa **referencia**, em
@@ -80,7 +81,7 @@ Caminhos que começam com `admin/` ou `lang/` são do **core**, relativos a `pub
 | `MOD.RULE-TITLE` | Regra de competência | título | `js:140` (str), `:144` (`ModalSaveCancel.create`) | str `competencyrule, tool_lp` | `admin/tool/lp/lang/en/tool_lp.php:71` = `'Competency rule'`. **Sem nome de competência**: o `create` recebe `{title, body}` (`:144`) e o `title` é a string **crua** — nada concatena o alvo, ao contrário do `MOD.LINKS-TITLE`, que tem `$a`. `ModalSaveCancel` (import `:28`), então o rodapé já vem com Cancelar + Salvar e não há `setSaveButtonText`. `setRemoveOnClose(true)` em `:145` |
 | `MOD.RULE-ROOT` | `[sem rótulo]` | região/raiz | `mustache:51` | `data-region="rule-config"` · `.local-dimensions-rule-config` | wrapper do corpo. **Os cinco `querySelector` do módulo (`js:147-151`) partem do root do _modal_** (`modal.getRoot()[0]`, `:146`), não deste nó — o `data-region="rule-config"` é, hoje, gancho sem leitor: um `grep -n 'rule-config' amd/src/ styles.css` fora do `build/` não devolve nenhum uso. Registrado, não removido |
 | `MOD.RULE-SAVE` | Salvar | botão (rodapé) | `lib/templates/modal_save_cancel.mustache` | `data-action="save"` | vem de graça com o `ModalSaveCancel`. **É o único ponto de validação do modal** — ver "A validação" |
-| `MOD.RULE-CANCEL` | Cancelar | botão (rodapé) | `lib/templates/modal_save_cancel.mustache` | `data-action="cancel"` | fechar por Cancelar, pelo X ou por ESC cai todo no `ModalEvents.hidden` (`js:181`) → `resolve(null)` → o `structure.js:896` vê `null` e **não persiste** |
+| `MOD.RULE-CANCEL` | Cancelar | botão (rodapé) | `lib/templates/modal_save_cancel.mustache` | `data-action="cancel"` | fechar por Cancelar, pelo X ou por ESC cai todo no `ModalEvents.hidden` (`js:183`) → `resolve(null)` → o `structure.js:896` vê `null` e **não persiste** |
 
 ## Corpo — a cascata
 
@@ -89,9 +90,9 @@ Caminhos que começam com `admin/` ou `lang/` são do **core**, relativos a `pub
 | `MOD.RULE-OUTCOME-LABEL` | Resultado | rótulo | `mustache:53` | str `outcome, tool_lp` · `for="local-dimensions-rule-outcome"` | `<label>` de verdade, com `for` |
 | `MOD.RULE-OUTCOME` | Resultado (select) | select | `mustache:54` | `data-region="outcome"` · `.form-select` | **o topo da cascata**. 4 opções, do `OUTCOMES` (`js:37-42`): `0` Nenhum · `1` Anexar uma evidência · `3` Recomendar a competência · `2` Marcar como concluída — **a ordem do vetor não é a ordem numérica** (`0,1,3,2`), e é ela que o usuário vê. Rótulos são strs do **core** (`competencyoutcome_*`, `tool_lp:66-69`), pedidas em lote (`getStrings`, `js:139`) e casadas **por índice** (`js:92-96`), não por chave — reordenar `OUTCOMES` sem reordenar nada mais continua correto, mas trocar o `getStrings` por um lote com outra ordem embaralharia os rótulos calado. `.form-select` (nunca `custom-select`) |
 | `MOD.RULE-TYPE-WRAP` | — | wrapper | `mustache:60` | `data-region="ruletype-wrap"` | nasce `hidden` se `{{^hasrule}}` — `hasrule` é `ruleoutcome !== 0` (`js:87`). Depois do render quem manda é o `refresh` (`js:155`) |
-| `MOD.RULE-TYPE-LABEL` | **Regra** | rótulo | `mustache:61` | str `central_rule_type` · `for="local-dimensions-rule-type"` | `lang/en:274` = `'Rule'`; `lang/pt_br:274` = `'Regra'`. **Não é "Tipo de regra"** — era o rótulo inventado do mapa antigo. A string é do **plugin**, não do `tool_lp`: o core não expõe uma equivalente |
+| `MOD.RULE-TYPE-LABEL` | **Regra** | rótulo | `mustache:61` | str `central_rule_type` · `for="local-dimensions-rule-type"` | `lang/en:275` = `'Rule'`; `lang/pt_br:275` = `'Regra'`. **Não é "Tipo de regra"** — era o rótulo inventado do mapa antigo. A string é do **plugin**, não do `tool_lp`: o core não expõe uma equivalente |
 | `MOD.RULE-TYPE` | Regra (select) | select | `mustache:62` | `data-region="ruletype"` · `.form-select` | opções do `EST-JSON-RULES`, via `rulesModules` (`js:97-101`); `value` = a **classe** do core (`core_competency\competency_rule_all`, `…_points`). Só o `…_points` (`RULE_POINTS`, `js:34`) abre a tabela |
-| `MOD.RULE-ERROR` | O total de pontos disponíveis deve ser ao menos igual aos pontos necessários. | alerta **inline** | `mustache:68-70` (nó), `js:176` (única escrita) | `data-region="error"` · `role="alert"` · `.alert-danger` | str `central_rule_invalidpoints`. Nasce **sempre** `hidden` (o `showerror` é fixo em `false`, `js:89`). Ligado só no salvar inválido, e **nunca desligado** — ver "A validação". Idioma **inline**; o irmão `MOD.SCALE` usa um `Notification.alert` de popup para o mesmo papel |
+| `MOD.RULE-ERROR` | O total de pontos disponíveis deve ser ao menos igual aos pontos necessários. | alerta **inline** | `mustache:68-70` (nó), `js:178` (liga), `js:158` (apaga) | `data-region="error"` · `role="alert"` · `.alert-danger` | str `central_rule_invalidpoints`. Nasce **sempre** `hidden` (o `showerror` é fixo em `false`, `js:89`). Ligado só no salvar inválido (`js:178`) e apagado pelo `refresh` (`js:158`) junto com a tabela de pontos que ele descreve — era _write-once_ até 2026-07-15; ver "A validação". É irmão **acima** do `MOD.RULE-POINTS` (`mustache:68-70` vs `:71`), não filho: por isso esconder a tabela nunca levou a mensagem junto sozinho. Idioma **inline**; o irmão `MOD.SCALE` usa um `Notification.alert` de popup para o mesmo papel |
 | `MOD.RULE-POINTS` | — | wrapper | `mustache:71` | `data-region="points"` | nasce `hidden` se `{{^ispoints}}` — e **`ispoints` (`js:88`) não olha o `hasrule`**, enquanto o `refresh` (`js:156`) olha os dois. Ver "A divergência do primeiro render" |
 | `MOD.RULE-POINTS-TABLE` | tabela de pontos | tabela | `mustache:73` | `.table.table-sm` | só sob `{{#haschildren}}` (`:72`) = `children.length > 0` (`js:90`). **Competência-folha não tem tabela** — o wrapper existe vazio, e um salvar com regra de pontos cai no `requiredpoints < 1` (não há input) → erro. Ver "A validação" |
 | `MOD.RULE-POINTS-HEAD` | `[col 1 sem rótulo]` · Pontos · Obrigatório | cabeçalho | `mustache:74-79` | strs `points, tool_lp` (`:77`) / `required` (`:78`) | a 1ª coluna (nome da filha) é um `<th scope="col">` **vazio** (`:76`). O `required` é do **core** (`lang/en/moodle.php:1848`), sem componente; o `points` é do `tool_lp` (`:183`) |
@@ -100,7 +101,7 @@ Caminhos que começam com `admin/` ou `lang/` são do **core**, relativos a `pub
 
 ## A validação — o único ponto onde o modal diz "não"
 
-`readPointsConfig` (`js:115-128`) é chamado **só** no ramo de pontos (`js:173`) e é a única coisa que
+`readPointsConfig` (`js:115-128`) é chamado **só** no ramo de pontos (`js:175`) e é a única coisa que
 pode devolver `null`:
 
 ```
@@ -119,35 +120,58 @@ if (requiredpoints < 1 || total < requiredpoints) { return null; }              
    descarta ponto negativo antes de somar, então o `min="0"` do `MOD.RULE-POINTS-ROW` também é
    redundante como proteção.
 
-O caminho inválido faz **duas** coisas e nada mais (`js:174-177`):
+O caminho inválido faz **duas** coisas e nada mais (`js:176-179`):
 
 ```
-event.preventDefault();     // js:175 — segura o modal aberto
-errorEl.hidden = false;     // js:176 — liga o alerta inline
+event.preventDefault();     // js:177 — segura o modal aberto
+errorEl.hidden = false;     // js:178 — liga o alerta inline
 ```
 
 O `preventDefault()` é o que impede o `registerCloseOnSave` do core de destruir o diálogo — é o
 contraponto exato do `MOD.DELPLANS`, onde a **ausência** dessa chamada faz o modal fechar antes da
 escrita voltar. Aqui o estado precisa sobreviver, e sobrevive.
 
-**O alerta é _write-once_.** `js:176` é a **única** escrita em `errorEl` no arquivo inteiro, e o
-`refresh` (`js:153-157`) só mexe em `ruletypeWrap.hidden` e `pointsEl.hidden`. Uma vez ligado, o
-alerta fica ligado **até o modal ser destruído** — inclusive depois de o usuário trocar o resultado
-para **Nenhum**, o que esconde a tabela de pontos inteira e deixa na tela um alerta sobre pontos que
-não estão mais visíveis. Salvar nesse estado **funciona** (o ramo `outcome === 0`, `js:164-167`,
-resolve antes de qualquer validação) e o modal fecha com o alerta ainda aceso. Registrado, não
-consertado: a correção é uma linha (`errorEl.hidden = true` no topo do `refresh`), mas mexe em
-comportamento shipado.
+**O alerta era _write-once_ · CORRIGIDO em 2026-07-15** (`d343716`).
+
+**Era:** `js:178` (`errorEl.hidden = false`) era a **única** escrita em `errorEl` no arquivo inteiro, e
+o `refresh` só mexia em `ruletypeWrap.hidden` e `pointsEl.hidden`. Uma vez ligado, o alerta ficava
+ligado **até o modal ser destruído** — inclusive depois de o usuário trocar o resultado para
+**Nenhum**, o que esconde a tabela de pontos inteira e deixava na tela um alerta sobre pontos que não
+estavam mais visíveis. Salvar nesse estado **funcionava** (o ramo `outcome === 0`, `js:166-169`,
+resolve antes de qualquer validação) e o modal fechava com o alerta ainda aceso, tendo avisado sobre
+nada.
+
+**É:** o `refresh` (`js:153-159`) termina apagando o alerta junto com a tabela que ele descreve:
+
+```
+errorEl.hidden = errorEl.hidden || pointsEl.hidden;   // js:158
+```
+
+Os **dois** caminhos que tiram o assunto do alerta escondem a tabela — resultado = **Nenhum** e tipo
+de regra ≠ pontos, os dois ramos do `js:156` —, então derrubá-lo por `pointsEl.hidden` cobre ambos sem
+um segundo teste.
+
+**Apaga _condicionalmente_, e isto é a decisão, não um detalhe de escrita.** Enquanto a tabela está na
+tela o alerta **continua verdadeiro**: trocar o resultado entre dois resultados **reais** (p. ex.
+*Anexar uma evidência* → *Marcar como concluída*) mantém a tabela visível e deixa os mesmos pontos
+inválidos no lugar. Um `errorEl.hidden = true` no topo do `refresh` — a "correção de uma linha" que
+este mapa chegou a propor — apagaria um veredito que **ainda vale**, fazendo um formulário inválido
+parecer limpo. O `errorEl.hidden ||` é exatamente o que preserva o veredito.
+
+O `grep -n 'errorEl\|showerror'` no módulo agora devolve **4** linhas (eram 3) e **duas** escrevem:
+`js:178` liga, `js:158` apaga. O alerta é irmão **acima** da região de pontos (`mustache:68-70` vs
+`:71`), não filho dela — é por isso que esconder a tabela nunca levou a mensagem junto por markup, e
+por isso a correção é de `.js`.
 
 ## Os três desfechos do salvar
 
-O handler (`js:162-180`) escuta `ModalEvents.save` e tem **três** saídas, nesta ordem:
+O handler (`js:164-182`) escuta `ModalEvents.save` e tem **três** saídas, nesta ordem:
 
 | Ordem | Condição | Resolve | Nota |
 | --- | --- | --- | --- |
-| 1 | `outcome === OUTCOME_NONE` (`js:164`) | `{ruletype: null, ruleoutcome: 0, ruleconfig: null}` | **limpa a regra inteira** — o `ruletype` vai a `null` junto com o outcome, mesmo que o select de tipo mostre "Pontos". É o que impede o estado `ruletype` sem `ruleoutcome` de nascer por aqui |
-| 2 | `ruletype !== RULE_POINTS` (`js:169`) | `{ruletype, ruleoutcome: outcome, ruleconfig: null}` | regra "todas as filhas" e afins não têm config — `ruleconfig` **é** `null`, não `'{}'` |
-| 3 | pontos (`js:173`) | `{ruletype, ruleoutcome, ruleconfig: <json>}` ou **erro** | o JSON é `{base: {points: requiredpoints}, competencies: [...]}` (`js:127`) — o formato do core, montado à mão |
+| 1 | `outcome === OUTCOME_NONE` (`js:166`) | `{ruletype: null, ruleoutcome: 0, ruleconfig: null}` | **limpa a regra inteira** — o `ruletype` vai a `null` junto com o outcome, mesmo que o select de tipo mostre "Pontos". É o que impede o estado `ruletype` sem `ruleoutcome` de nascer por aqui |
+| 2 | `ruletype !== RULE_POINTS` (`js:171`) | `{ruletype, ruleoutcome: outcome, ruleconfig: null}` | regra "todas as filhas" e afins não têm config — `ruleconfig` **é** `null`, não `'{}'` |
+| 3 | pontos (`js:175`) | `{ruletype, ruleoutcome, ruleconfig: <json>}` ou **erro** | o JSON é `{base: {points: requiredpoints}, competencies: [...]}` (`js:127`) — o formato do core, montado à mão |
 
 Quem recebe é o `structure.js:896`, que só chama `persistRule` se o valor **não** for `null`
 (cancelar) — e o `persistRule` (`:847-879`) lê a competência inteira do core (`read_competency`,
@@ -164,7 +188,7 @@ O Mustache e o `refresh` **não usam a mesma regra** para a tabela de pontos:
 | Mustache (1º render) | `{{^ispoints}}hidden` → visível quando `ruletype === points` | `mustache:71`, `js:88` |
 | `refresh` (todo o resto) | `!(hasrule && ruletype === points)` → visível quando **as duas** | `js:156` |
 
-`refresh` **não roda no init** — só é ligado ao `change` dos dois selects (`js:158-159`). Então uma
+`refresh` **não roda no init** — só é ligado ao `change` dos dois selects (`js:160-161`). Então uma
 competência com `ruletype = points` **e** `ruleoutcome = 0` abriria com a tabela de pontos visível e
 o select de tipo escondido, até o primeiro `change`. **O caminho é estreito**: o desfecho 1 do salvar
 (acima) zera os dois juntos, então o par não nasce por este modal. Fica registrado como divergência
@@ -173,7 +197,7 @@ entre as duas fontes da mesma verdade, não como bug observado.
 ## Contraste — medido no alerta que a tela agora desenha
 
 O `MOD.RULE-ERROR` do as-is é o par `--text-danger`/`--bg-danger` do kit. Medido no DOM com o alerta
-**ligado** (o estado que o `js:176` produz), animações canceladas antes de ler:
+**ligado** (o estado que o `js:178` produz), animações canceladas antes de ler:
 
 | Par | Tema | Razão | Veredito |
 | --- | --- | --- | --- |
@@ -212,21 +236,28 @@ O painel to-be da tela mantém as três IDs (`MOD.RULE-OUTCOME`/`-TYPE`/`-POINTS
 **O as-is agora é dirigido.** Os dois controles ao pé do painel são reais (`<input type="checkbox">` +
 `:has()`, o precedente do `mod-delplans`, **sem JS**): o primeiro troca o total exigido para 3, pinta
 o campo de perigo e liga o alerta — o ramo `total < requiredpoints` do `js:124`; o segundo esconde a
-regra e a tabela (o que o `refresh` faz com resultado = Nenhum) e **deixa o alerta aceso**, que é o
-achado _write-once_ desenhado em vez de descrito.
+regra e a tabela, o que o `refresh` faz com resultado = Nenhum.
 
-**O que o to-be não conserta e a tela não finge que conserta:** o alerta _write-once_ e a divergência
-do primeiro render são de `.js`, não de layout.
+> **Resync pendente na tela (2026-07-15).** O segundo driver desenha o alerta **ficando aceso** —
+> `screens/mod-rule.html:87` ("e o alerta fica (write-once, js:176)") e o comentário em `:51` ("NAO
+> toca no alerta"). Esse é o comportamento **anterior** ao `d343716`: hoje o `refresh` apaga o alerta
+> junto com a tabela (`js:158`), então o painel dirigido desenha um as-is que não está mais no ar.
+> Medido no arquivo da tela nesta data, não presumido. **O mapa é a fonte; a tela ainda não foi
+> resincada** — e o achado que ela dramatizava deixou de existir, então o driver precisa mudar de
+> comportamento, não só de rótulo.
+
+**O que o to-be não conserta e a tela não finge que conserta:** a divergência do primeiro render é de
+`.js`, não de layout.
 
 ## Resumo das divergências as-is ↔ mapa/tela antigos
 
 | O que o mapa/tela antigos diziam | O que está no ar |
 | --- | --- |
-| `MOD.RULE-TYPE-LABEL` = "Tipo de regra" | a str `central_rule_type` é **"Regra"** (`lang/pt_br:274`) |
+| `MOD.RULE-TYPE-LABEL` = "Tipo de regra" | a str `central_rule_type` é **"Regra"** (`lang/pt_br:275`) |
 | Título "Regra de conclusão · Resolução de problemas" (tela `:48`, `:72`) | str **core** `competencyrule, tool_lp` = "Regra de competência", **sem** nome de competência (`js:140`, `:144`) — e é a **mesma str** do botão que abre |
 | Erro "quando o total > soma" | **dois** ramos: `requiredpoints < 1 \|\| total < requiredpoints` (`js:124`) — o 1º também pega a competência-folha |
 | Erro nomeado `Erro "pontos inválidos"` | a str `central_rule_invalidpoints` = "O total de pontos disponíveis deve ser ao menos igual aos pontos necessários." |
-| `showerror` como condição de render | é **sempre `false`** (`js:89`); quem liga o alerta é o JS (`js:176`), e **nunca** o desliga |
+| `showerror` como condição de render | é **sempre `false`** (`js:89`); quem liga o alerta é o JS (`js:178`) — e quem o desliga é o `refresh` (`js:158`), desde `d343716` (2026-07-15); até lá **nada** o desligava |
 | Nenhuma ref de `.js` (0 de 11) | 4 comportamentos mapeados: título, cascata, validação, desfechos do salvar |
-| To-be "parcialmente em `paginated-picker.html` (controle `ruleoutcome`)" | o card **não tem** `rule` nem `ruleoutcome` (`grep` devolve nada em 55 linhas); a casca é o `modal-shell.html` |
+| To-be "parcialmente em `paginated-picker.html` (controle `ruleoutcome`)" | o card **não tem** `rule` nem `ruleoutcome` (`grep` devolve nada em 133 linhas); a casca é o `modal-shell.html` |
 | 11 controles, todos de Mustache | 15 IDs + 2 gatilhos reusados (`EST-DETAIL-RULES`, `EST-JSON-RULES`) |
