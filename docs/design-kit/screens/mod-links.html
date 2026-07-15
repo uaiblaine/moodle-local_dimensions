@@ -1,91 +1,514 @@
-<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Cursos e atividades" subtitle="MOD.LINKS — atual vs proposta, com IDs" -->
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Cursos e atividades" subtitle="MOD.LINKS — outcome em dois níveis, card de curso com atividades preguiçosas; caso de referência do toast hospedado no modal" -->
 <style>
 :root{
   --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
   --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
   --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
-  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
   --text-success:#0f6e56;--bg-success:#e1f5ee;--border-success:#5dcaa5;
+  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
+  --text-danger:#a32d2d;--bg-danger:#fcebeb;--border-danger:#f09595;
   --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
   --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+  --mds-motion-fast:150ms;--mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
+  /* Acento FIXO, fora do alcance dos dois painéis — mesmo precedente do mod-related. Herdar
+     --text-accent mata no painel .moodle escuro, onde ele vira #3f89cc. Aqui ele é só TEXTO
+     (o "Carregar mais" e o nome do curso), e nenhum tint depende dele. Medido no DOM. */
+  --acc-fg:#185fa5;
+  /* Preenchimento primário (o distintivo de conclusão OK e o botão do to-be). NÃO pode ser
+     var(--text-accent): no escuro do painel DS ele vira o azul CLARO #85b7eb, e branco sobre ele
+     dá 2,11:1. O par fixo #185fa5/#fff também não serve sozinho — passa no RÓTULO e reprova no
+     PREENCHIMENTO contra a superfície escura (a armadilha da Task 12). Daí a inversão blue-200 no
+     escuro. Números na nota de medição. */
+  --prim-bg:#185fa5;--prim-fg:#fff;
+  /* Perigo FIXO: o 🗑 do curso e o ✕ da atividade. Nenhum dos dois pousa em tint. */
+  --err-fg:#a32d2d;
+  /* Chip de fechar: os três literais que o styles.css:3557-3586 publica, sem variante dark. */
+  --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
+  --prov-fg:#185fa5;--prov-bg:#e6f1fb;
 }
 @media (prefers-color-scheme:dark){:root{
   --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
   --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
   --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
-  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
   --text-success:#5dcaa5;--bg-success:#0a2a24;--border-success:#085041;
+  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
+  --text-danger:#f09595;--bg-danger:#2a1313;--border-danger:#791f1f;
   --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+  --acc-fg:#85b7eb;--err-fg:#f09595;
+  --prov-fg:#85b7eb;--prov-bg:#0c2740;
+  --prim-bg:#85b7eb;--prim-fg:#0c2740;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
-.screens{display:flex;flex-wrap:wrap;gap:18px;}
-.panel{flex:1 1 400px;min-width:320px;}
-.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:10px;}
-.pdot{width:8px;height:8px;border-radius:50%;}
+.screens{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;}
+.panel{flex:1 1 470px;min-width:340px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+/* .note usa --text-secondary, NÃO --text-muted: a 10px o muted reprova o AA. Medido. */
+.note{font-size:10px;color:var(--text-secondary);}
 .idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
-.lbl{font-size:11px;color:var(--text-secondary);}
+.prov{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:10px;background:var(--prov-bg);color:var(--prov-fg);border:0.5px solid var(--prov-fg);white-space:nowrap;}
 .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.col{display:flex;flex-direction:column;gap:4px;}
+/* code com cor PRÓPRIA: o --text-secondary do painel .moodle claro sobre o fundo do chip dá
+   4,07:1 e reprova. Com --text-primary passa nos dois painéis e nos dois temas. */
+code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);color:var(--text-primary);border-radius:4px;padding:0 3px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ic.sm{width:0.75rem;height:0.75rem;}
+
+/* ---- casca do modal ---- */
 .m{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
-.m-head{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:0.5px solid var(--border);}
-.m-title{font-size:13px;font-weight:500;}.m-x{margin-left:auto;color:var(--text-muted);}
-.m-body{padding:12px 13px;display:flex;flex-direction:column;gap:9px;}
-.m-foot{display:flex;justify-content:flex-end;gap:8px;padding:9px 13px;border-top:0.5px solid var(--border);}
-.btn{font-size:12px;padding:5px 11px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:var(--surface-2);}
-.btn-primary{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent);}
-.ctrl{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;padding:6px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);}
-.alert{font-size:11px;padding:6px 9px;border-radius:var(--radius);background:var(--bg-warning);color:var(--text-warning);border:0.5px solid var(--border-warning);}
-.crow{display:flex;align-items:center;gap:8px;padding:6px 8px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-1);font-size:12px;}
-.arow{display:flex;align-items:center;gap:8px;padding:4px 8px 4px 24px;font-size:11px;color:var(--text-secondary);}
-.mini{font-size:10px;padding:1px 6px;border-radius:6px;border:0.5px solid var(--border-strong);}
-.note{font-size:10px;color:var(--text-muted);}
-.screens>.panel:last-child{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
-@media (prefers-color-scheme:dark){.screens>.panel:last-child{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
+.m-head{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:0.5px solid var(--border);}
+.m-title{font-size:13px;font-weight:500;flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.m-x{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;padding:0;border:0;border-radius:8px;background:var(--close-bg);color:var(--close-fg);font-size:0.8rem;line-height:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
+.m-x:hover,.m-x:focus-visible{background:var(--close-bg-hover);}
+.m-body{padding:11px 12px;display:flex;flex-direction:column;gap:8px;}
+.m-foot{display:flex;justify-content:flex-end;gap:8px;padding:9px 12px;border-top:0.5px solid var(--border);}
+/* O rodapé fantasma: o .modal-footer EXISTE no DOM (lib/templates/modal.mustache:58-62) com zero
+   filhos, e o core lhe aplica .hidden { display:none } (core.scss:417). Desenhar uma barra vazia
+   mentiria — o usuário não vê barra nenhuma. Este é um RÓTULO sobre a ausência, tracejado. */
+.m-foot-ghost{justify-content:center;border-top:0.5px dashed var(--border-stronger);background:var(--surface-1);padding:6px 12px;}
+.fk{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);}
+
+/* ---- controles ---- */
+.lbl{font-size:11px;font-weight:500;}
+/* Contorno de CONTROLE: os 3:1 da 1.4.11 valem, e a régua não é a do texto. Medido nas quatro
+   superfícies (claro/escuro × dois painéis), --border-strong entrega 1,60 / 1,49 / 1,71 / 3,36 —
+   reprova em três, inclusive no CLARO. Só --text-secondary passa nas quatro. Segue a correção do
+   mod-related; o conserto do TOKEN no kit inteiro continua pendente (ver a nota de medição). */
+.ctrl{display:flex;align-items:center;gap:6px;font-size:11px;padding:5px 8px;border:0.5px solid var(--text-secondary);border-radius:var(--radius);background:var(--surface-2);}
+.ph{color:var(--text-secondary);flex:1;}
+.chev{color:var(--text-secondary);flex:none;}
+.bprim{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:4px 9px;border:0;border-radius:var(--radius);background:var(--prim-bg);color:var(--prim-fg);white-space:nowrap;font-family:inherit;cursor:pointer;}
+.bsec{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:4px 9px;border:0.5px solid var(--text-secondary);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);white-space:nowrap;font-family:inherit;cursor:pointer;}
+/* O <select> de outcome: mesmo motivo, mesma régua. */
+.sel{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:2px 6px;border:0.5px solid var(--text-secondary);border-radius:6px;background:var(--surface-2);color:var(--text-primary);white-space:nowrap;}
+
+/* ---- alertas e caixas de prosa ---- */
+.alert{border:0.5px solid var(--text-warning);background:var(--bg-warning);color:var(--text-warning);border-radius:var(--radius);padding:6px 8px;font-size:10px;display:flex;align-items:flex-start;gap:6px;}
+.ok{border:0.5px solid var(--border-success);background:var(--bg-success);color:var(--text-success);border-radius:var(--radius);padding:7px 9px;font-size:10px;}
+.warn{border:0.5px solid var(--border-warning);background:var(--bg-warning);color:var(--text-warning);border-radius:var(--radius);padding:7px 9px;font-size:10px;}
+.ok b,.warn b,.alert b{font-weight:600;}
+/* A borda do toast é --text-success, não --border-success: no escuro do painel DS o tint
+   --bg-success encosta na superfície do modal a 1,01:1 e some — quem segura a caixa é a borda. */
+.toast{display:inline-flex;align-items:center;gap:6px;font-size:10px;padding:4px 8px;border-radius:var(--radius);border:0.5px solid var(--text-success);background:var(--bg-success);color:var(--text-success);}
+
+/* ---- card de curso ---- */
+.card{border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);padding:7px 8px;}
+.card+.card{margin-top:6px;}
+.chead{display:flex;align-items:center;gap:5px;}
+.cname{font-size:11.5px;font-weight:500;color:var(--acc-fg);display:inline-flex;align-items:center;gap:3px;min-width:0;}
+.cshort{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);}
+.ccount{font-size:9.5px;color:var(--text-secondary);margin-left:auto;white-space:nowrap;}
+.icobtn{display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;padding:0 2px;cursor:pointer;flex:none;font-family:inherit;color:var(--err-fg);}
+.tgbtn{display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;padding:0;cursor:pointer;flex:none;color:var(--text-secondary);width:14px;}
+.orow{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px;padding-left:18px;}
+.opfx{font-size:9.5px;color:var(--text-secondary);}
+.wnote{font-size:9.5px;color:var(--text-secondary);padding-left:18px;margin-top:4px;}
+/* O distintivo de conclusão: verde = tem regra, âmbar = criar. Vira <a> só com url. */
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:1px 6px;border-radius:10px;white-space:nowrap;}
+.badge-ok{background:var(--bg-success);color:var(--text-success);border:0.5px solid var(--text-success);}
+.badge-warn{background:var(--bg-warning);color:var(--text-warning);border:0.5px solid var(--text-warning);}
+
+/* ---- atividades dentro do card ---- */
+.acts{margin-top:6px;padding-left:18px;border-top:0.5px dashed var(--border);padding-top:6px;}
+.actshdr{font-size:9.5px;color:var(--text-secondary);margin-bottom:5px;}
+.alist{border:0.5px solid var(--border);border-radius:6px;background:var(--surface-1);margin-top:4px;padding:2px;}
+.aitem{display:flex;align-items:center;gap:5px;font-size:10px;padding:3px 5px;border-radius:4px;cursor:pointer;}
+.aitem:hover{background:var(--surface-2);}
+.aitem .an{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.act{padding:5px 0;}
+.act+.act{border-top:0.5px dashed var(--border);}
+.aname{display:flex;align-items:flex-start;gap:5px;}
+/* O nome real quebra em DUAS linhas e então reticencia, com o nome inteiro no title
+   (styles.css:5565-5574). Aqui a mecânica é a mesma; não é clamp(), é line-clamp. */
+.antext{flex:1;min-width:0;font-size:11px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;word-break:break-word;}
+.mtype{font-size:9px;padding:0 5px;border:0.5px solid var(--text-secondary);border-radius:6px;color:var(--text-secondary);white-space:nowrap;flex:none;}
+.actrl{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px;}
+.shared{border:0.5px solid var(--text-warning);background:var(--bg-warning);color:var(--text-warning);border-radius:6px;padding:3px 6px;font-size:9px;display:flex;align-items:center;gap:6px;margin-top:4px;}
+.slink{color:var(--text-warning);white-space:nowrap;display:inline-flex;align-items:center;gap:2px;flex:none;}
+
+/* ---- ações do cabeçalho no to-be ---- */
+.m-acts{display:flex;align-items:center;gap:3px;flex:none;}
+.m-acts .act2{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease),color var(--mds-motion-fast) var(--mds-motion-ease);}
+.m-acts .act2:hover,.m-acts .act2:focus-visible{background:var(--surface-0);color:var(--text-primary);}
+
+/* ---- DEMONSTRAÇÃO 1 (as-is): o chevron expande o card ----
+   Combinador de IRMÃO, nunca :has(): medido no mod-participants, um :has() num ancestral só
+   reavalia um passo depois. Os checkboxes são irmãos do .pane e o ~ os alcança.
+   DIVERGÊNCIA HONESTA: aqui quem troca o chevron é o CSS; em PRODUÇÃO é um className em JS
+   (js:524 / :532). O que se demonstra é o estado, não o mecanismo da troca. */
+.dchk{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+#a-exp:not(:checked) ~ .pane .acts{display:none;}
+#a-exp:not(:checked) ~ .pane .chev-down{display:none;}
+#a-exp:checked ~ .pane .chev-right{display:none;}
+/* O contador NÃO muda ao expandir: updateCourseMeta só o repinta com o dado fresco do WS
+   (js:507). Nada aqui toca a .ccount — de propósito. */
+#a-exp:focus-visible ~ .pane .card-1{outline:2px solid var(--acc-fg);outline-offset:2px;}
+
+/* ---- DEMONSTRAÇÃO 2 (to-be): expandir/restaurar ----
+   Dois botões SEMPRE presentes; o CSS escolhe qual aparece — é literalmente o par de regras do
+   mtube (styles.css:4329-4335), zero troca de ícone em JS. A largura muda de verdade: calc(),
+   nunca clamp/min/max. SEM transition em max-width — o Chrome não interpola calc(100% - 40px)
+   para 100% e a largura travaria no valor inicial. */
+#b-exp:not(:checked) ~ .dlg .exp-in{display:none;}
+#b-exp:checked ~ .dlg .exp-out{display:none;}
+.dlg{width:100%;max-width:calc(100% - 40px);margin:0 auto;}
+#b-exp:checked ~ .dlg{max-width:100%;}
+#b-exp:focus-visible ~ .dlg{outline:2px solid var(--acc-fg);outline-offset:2px;}
+
+.screens>.panel.moodle{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+@media (prefers-color-scheme:dark){.screens>.panel.moodle{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
 </style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="l-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="l-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="l-cap" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+  <symbol id="l-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+  <symbol id="l-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="l-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="l-warn" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="l-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="l-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="l-exp" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></symbol>
+  <symbol id="l-res" viewBox="0 0 24 24"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></symbol>
+  <symbol id="l-rot" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+</svg>
+
 <div class="screens">
 
-  <section class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o que está no ar</div>
+  <!-- as-is -->
+  <section class="panel asis">
+    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o modal shipado — card de curso, outcome em dois níveis, atividades preguiçosas</div>
+
+    <div class="warn" style="margin-bottom:10px;">
+      <b>Esta tela foi redesenhada porque a anterior desenhava linhas que não existem mais.</b> O
+      <code>competency_links.js</code> mudou <b>seis</b> vezes depois que ela foi feita
+      (<code>159a800</code>, 2026-06-29). A maior: o <code>93e4f69</code> trouxe atividades com
+      <b>checkbox</b> e o <code>d7578b3</code> as removeu <b>no mesmo dia</b>, trocando por uma
+      <b>busca</b> + <b>✕</b> por linha. Um <code>grep -nE 'checkbox|form-check'</code> no JS de hoje
+      devolve <b>nada</b>. O Mustache, esse, não muda desde <code>bcdbea1</code> — e é por isso que
+      as 6 refs do mapa antigo estavam todas certas.
+    </div>
+
     <div class="m">
-      <div class="m-head"><span class="m-title">Cursos e atividades · Resolução de problemas</span><span class="m-x">✕</span></div>
-      <div class="m-body">
-        <div class="row" style="justify-content:space-between;"><span class="alert">⚠ Framework oculto — vínculos não aparecem para alunos</span><span class="idb">MOD.LINKS-HIDDENFW · hidden até JS</span></div>
-        <div class="col"><span class="lbl">Adicionar curso</span><span class="ctrl" style="max-width:240px;"><span style="color:var(--text-muted)">Buscar curso…</span><span style="color:var(--text-secondary)">⌄</span></span><span class="idb">MOD.LINKS-ADD · autocomplete (course_datasource)</span></div>
-        <div class="col" style="gap:5px;">
-          <div class="crow"><span>⌄</span><span style="flex:1;">Matemática Aplicada</span><span class="mini">2 atividades</span><span class="mini" style="color:var(--text-secondary)">remover</span></div>
-          <div class="arow">☑ Prova diagnóstica <span class="mini" style="margin-left:auto;">vinculada</span></div>
-          <div class="arow">☐ Lista de exercícios 3 <span class="mini" style="margin-left:auto;">vincular</span></div>
-          <div class="crow"><span>›</span><span style="flex:1;">Lógica e Algoritmos</span><span class="mini">0 atividades</span><span class="mini" style="color:var(--text-secondary)">remover</span></div>
-          <span class="idb">MOD.LINKS-ROWS · sem rótulo · cursos + atividades injetados por competency_links.js</span>
-        </div>
-        <div class="row"><span style="font-size:11px;color:var(--text-accent)">Carregar mais</span><span class="idb">MOD.LINKS-LOADMORE</span></div>
-        <span class="note">Estado vazio: "Nenhum curso vinculado" <span class="idb">MOD.LINKS-EMPTY</span></span>
+      <div class="m-head">
+        <span class="m-title">Cursos e atividades — Resolução de problemas</span>
+        <button type="button" class="m-x" aria-label="Fechar">✕</button>
       </div>
-      <div class="m-foot"><span class="btn">Fechar</span></div>
+
+      <input type="checkbox" id="a-exp" class="dchk" checked aria-label="Expandir o card do curso">
+      <div class="pane m-body">
+
+        <div class="alert">
+          <svg class="ic sm" aria-hidden="true" focusable="false" style="margin-top:1px;"><use href="#l-warn"/></svg>
+          <span>Esta competência pertence a uma estrutura oculta e não pode ser vinculada a cursos.</span>
+        </div>
+        <div class="row"><span class="idb">MOD.LINKS-HIDDENFW · :33-35 · nasce hidden</span></div>
+        <span class="note"><b>Não é decorativo:</b> o mesmo par de linhas que liga o alerta <b>desabilita o picker</b> (<code>js:450-451</code>). O <code>canlink</code> do WS é literalmente a visibilidade da estrutura (<code>get_competency_links.php:91</code>). Os vínculos <b>existentes</b> continuam listados e com outcome editável — o bloqueio é só para <b>novos</b>.</span>
+
+        <span class="lbl">Adicionar curso <span class="idb">MOD.LINKS-ADD-LABEL · :37-39</span></span>
+        <div class="ctrl"><span class="ph">Vincular curso — busque por nome, nome breve ou número de ID…</span><span class="chev">⌄</span></div>
+        <div class="row"><span class="idb">MOD.LINKS-ADD · :40-44 · course_datasource.js</span><span class="idb">MOD.LINKS-ADD-CHEVRON · styles.css:5659-5672</span></div>
+
+        <!-- card 1: expandido -->
+        <div class="card card-1">
+          <div class="chead">
+            <label class="tgbtn" for="a-exp" title="Expandir/recolher">
+              <svg class="ic sm chev-right" aria-hidden="true" focusable="false"><use href="#l-chev-r"/></svg>
+              <svg class="ic sm chev-down" aria-hidden="true" focusable="false"><use href="#l-chev-d"/></svg>
+            </label>
+            <svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-cap"/></svg>
+            <span class="cname">Matemática Aplicada <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+            <span class="cshort">MAT-101</span>
+            <span class="ccount">2 atividades</span>
+            <button type="button" class="icobtn" aria-label="Remover curso"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-trash"/></svg></button>
+          </div>
+          <div class="orow">
+            <span class="opfx">Outcome:</span>
+            <span class="sel">Concluir a competência <span class="chev">⌄</span></span>
+            <span class="badge badge-ok"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Possui regra de conclusão <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+          </div>
+
+          <div class="acts">
+            <div class="actshdr">Atividades vinculadas · outcome ao concluir a atividade</div>
+            <div class="ctrl" style="padding:3px 6px;"><svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-search"/></svg><span class="ph">Adicionar atividade — buscar por nome…</span></div>
+            <div class="alist">
+              <div class="aitem"><span class="an">Lista de exercícios 3</span><span class="mtype">Tarefa</span></div>
+              <div class="aitem"><span class="an">Fórum de dúvidas</span><span class="mtype">Fórum</span></div>
+            </div>
+            <div class="row" style="margin-top:5px;">
+              <span class="idb">MOD.LINKS-ACTSEARCH · js:282-341</span>
+              <span class="idb">MOD.LINKS-ACTSEARCH-ITEM · js:311-324</span>
+            </div>
+            <span class="note" style="display:block;margin:4px 0 7px;">Busca <b>client-side</b>, sem WS: filtra o <code>available</code> que já veio na mesma leitura. <b>Dobra acento dos dois lados</b> (<code>fold</code>, <code>js:61</code>) — "pratica" acha "Prática". <b>Só o nome</b> casa; o tipo é exibido e não é buscável.</span>
+
+            <div class="act">
+              <div class="aname">
+                <span class="antext">Prova diagnóstica de raciocínio lógico</span>
+                <span class="mtype">Questionário</span>
+                <button type="button" class="icobtn" aria-label="Remover atividade"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-x"/></svg></button>
+              </div>
+              <div class="actrl">
+                <span class="sel">Concluir a competência <span class="chev">⌄</span></span>
+                <span class="badge badge-ok"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Possui regra de conclusão <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+              </div>
+            </div>
+
+            <div class="act">
+              <div class="aname">
+                <span class="antext">Trabalho final</span>
+                <span class="mtype">Tarefa</span>
+                <button type="button" class="icobtn" aria-label="Remover atividade"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-x"/></svg></button>
+              </div>
+              <div class="actrl">
+                <span class="sel">Sugerir a competência <span class="chev">⌄</span></span>
+                <span class="badge badge-warn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-warn"/></svg>Criar regra de conclusão <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+              </div>
+              <div class="shared">
+                <span>Outras 3 competências estão vinculadas a esta atividade — a regra de conclusão é compartilhada e afeta todas.</span>
+                <span class="slink">Abrir atividade › Competências <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:6px;">
+              <span class="idb">MOD.LINKS-ACT · js:222-271</span>
+              <span class="idb">MOD.LINKS-ACT-SHARED · js:252-269</span>
+              <span class="idb">MOD.LINKS-ACTS · js:424-428 · data-loaded</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- card 2: recolhido, sem atividade vinculada -->
+        <div class="card">
+          <div class="chead">
+            <span class="tgbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-chev-r"/></svg></span>
+            <svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-cap"/></svg>
+            <span class="cname">Lógica e Algoritmos <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+            <span class="cshort">LOG-200</span>
+            <span class="ccount">Curso inteiro</span>
+            <button type="button" class="icobtn" aria-label="Remover curso"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-trash"/></svg></button>
+          </div>
+          <div class="orow">
+            <span class="opfx">Outcome:</span>
+            <span class="sel">Nenhum <span class="chev">⌄</span></span>
+            <span class="badge badge-warn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-warn"/></svg>Criar regra de conclusão <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+          </div>
+          <div class="wnote">Vínculo no nível do curso, sem atividade específica.</div>
+        </div>
+
+        <div class="row">
+          <span class="idb">MOD.LINKS-CARD · js:351-436</span>
+          <span class="idb">MOD.LINKS-CARD-COUNT · js:196-209</span>
+          <span class="idb">MOD.LINKS-WHOLENOTE · js:418-422</span>
+        </div>
+        <span class="note"><b>O contador tem três estados, não dois.</b> Com 0 atividades vinculadas ele <b>deixa de ser contagem</b> e vira o rótulo <b>"Curso inteiro"</b>, e a nota aparece embaixo — é o segundo card. Com 1, "1 atividade" (string própria). Com 2+, "{n} atividades". O total do curso <b>nunca</b> é mostrado: não existe "2 / 5".</span>
+
+        <div class="row" style="margin-top:2px;">
+          <span style="font-size:11px;color:var(--acc-fg)">Carregar mais</span>
+          <span class="idb">MOD.LINKS-LOADMORE · :50-53 · página de 25</span>
+        </div>
+        <span class="note">Estado vazio: "Nenhum curso vinculado." <span class="idb">MOD.LINKS-EMPTY · :47-49</span> — a condição é mais estreita do que "a lista zerou": só sai com <code>offset === 0 &amp;&amp; total === 0</code> (<code>js:460</code>), e <b>não volta</b> ao remover o último card.</span>
+
+        <div class="row" style="margin-top:2px;">
+          <span class="toast"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Salvo</span>
+          <span class="idb">MOD.LINKS-TOAST · js:805</span>
+        </div>
+      </div>
+
+      <div class="m-foot m-foot-ghost"><span class="fk">.modal-footer sem filhos → core aplica .hidden → nenhuma barra é desenhada</span></div>
+    </div>
+
+    <div class="row" style="margin-top:9px;">
+      <span class="idb">MOD.LINKS-ACTION · structure_footer_actions.mustache:53-56</span>
+      <span class="idb">MOD.LINKS-COUNT-REFRESH · js:828-835 → structure.js:908-920</span>
+    </div>
+
+    <span class="note" style="display:block;margin-top:6px;"><b>Clique no chevron do primeiro card</b> — as atividades somem e voltam. É a carga preguiçosa real: <code>toggleCourse</code> (<code>js:518-533</code>) só chama o WS na <b>primeira</b> abertura e marca <code>data-loaded="1"</code>; depois disso é só mostrar/esconder. <b>O que a tela não demonstra:</b> aqui quem troca o chevron é o CSS; em produção é um <code>className</code> em JS (<code>js:524</code> / <code>:532</code>). O estado é real; o mecanismo da troca, não.</span>
+
+    <div class="ok" style="margin-top:8px;">
+      <b>O toast mora dentro do modal, e este arquivo é o caso de referência.</b>
+      <code>js:805</code> chama <code>addToastRegion(modal.getBody()[0])</code> no
+      <code>ModalEvents.shown</code> (<code>:802</code>). O motivo é aritmética de
+      <code>z-index</code>: a <code>.toast-wrapper</code> da página é <b>1051</b>
+      (<code>theme/boost/scss/moodle/core.scss:2432</code>) e o diálogo é <b>1055</b>
+      (<code>$zindex-modal</code>, <code>bootstrap/_variables.scss:1139</code>) — um toast disparado
+      daqui pousaria <b>atrás</b> do modal. O comentário do core na linha de cima ainda diz "above any
+      modals": envelheceu no salto para o BS5, que subiu o modal de 1050 para 1055. <b>Este é o
+      modal que mais depende disso:</b> são <b>5</b> <code>addToast</code> próprios
+      (<code>:561</code>, <code>:584</code>, <code>:614</code>, <code>:662</code>, <code>:818</code>)
+      mais o de rede do <code>notifyError</code>, e <b>nenhuma</b> dessas ações fecha o diálogo.
+      Quatro delas também <b>piscam</b> o elemento (<code>flash</code>, <code>js:178-186</code>): o
+      toast diz <i>o quê</i>, o flash diz <i>onde</i>.
     </div>
   </section>
 
-  <section class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · novo card (curso → atividades)</div>
-    <div class="m">
-      <div class="m-head"><span class="m-title">Cursos e atividades · Resolução de problemas</span><span class="m-x">✕</span></div>
+  <!-- to-be -->
+  <section class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Proposta (to-be) · expandir/restaurar — o segundo candidato do hub, depois do mod-participants</div>
+
+    <input type="checkbox" id="b-exp" class="dchk" aria-label="Expandir o modal">
+    <div class="m dlg">
+      <div class="m-head">
+        <span class="m-title">Cursos e atividades — Resolução de problemas</span>
+        <span class="m-acts">
+          <button type="button" class="act2" aria-label="Atualizar" title="Atualizar"><svg class="ic" aria-hidden="true" focusable="false"><use href="#l-rot"/></svg></button>
+          <label class="act2 exp-out" for="b-exp" title="Expandir"><svg class="ic" aria-hidden="true" focusable="false"><use href="#l-exp"/></svg></label>
+          <label class="act2 exp-in" for="b-exp" title="Restaurar"><svg class="ic" aria-hidden="true" focusable="false"><use href="#l-res"/></svg></label>
+          <button type="button" class="m-x" aria-label="Fechar">✕</button>
+        </span>
+      </div>
       <div class="m-body">
-        <div class="ctrl" style="max-width:260px;"><span style="color:var(--text-muted)">＋ Vincular curso…</span><span style="color:var(--text-secondary)">⌄</span></div>
-        <div class="col" style="gap:6px;">
-          <div style="border:0.5px solid var(--border-accent);border-radius:var(--radius);background:var(--bg-accent);padding:7px 9px;">
-            <div class="row" style="justify-content:space-between;"><span style="font-size:12px;font-weight:500;color:var(--text-accent)">Matemática Aplicada</span><span class="mini" style="background:var(--surface-2)">2 / 5 atividades</span></div>
-            <div class="arow" style="color:var(--text-accent)">☑ Prova diagnóstica</div>
-            <div class="arow" style="color:var(--text-accent)">☑ Trabalho final</div>
-            <div class="arow">☐ Lista de exercícios 3</div>
+        <div class="ctrl"><span class="ph">Vincular curso — busque por nome, nome breve ou número de ID…</span><span class="chev">⌄</span></div>
+
+        <div class="card">
+          <div class="chead">
+            <span class="tgbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-chev-d"/></svg></span>
+            <svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-cap"/></svg>
+            <span class="cname">Matemática Aplicada <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+            <span class="cshort">MAT-101</span>
+            <span class="ccount">2 atividades</span>
+            <button type="button" class="icobtn" aria-label="Remover curso"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-trash"/></svg></button>
           </div>
-          <div style="border:0.5px solid var(--border);border-radius:var(--radius);padding:7px 9px;">
-            <div class="row" style="justify-content:space-between;"><span style="font-size:12px;font-weight:500;">Lógica e Algoritmos</span><span class="mini">curso inteiro</span></div>
-            <span class="note">vínculo no nível do curso, sem atividade específica</span>
+          <div class="orow">
+            <span class="opfx">Outcome:</span>
+            <span class="sel">Concluir a competência <span class="chev">⌄</span></span>
+            <span class="badge badge-ok"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Possui regra de conclusão</span>
+          </div>
+          <div class="acts">
+            <div class="act">
+              <div class="aname">
+                <span class="antext">Prova diagnóstica de raciocínio lógico</span>
+                <span class="mtype">Questionário</span>
+                <button type="button" class="icobtn" aria-label="Remover atividade"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-x"/></svg></button>
+              </div>
+              <div class="actrl">
+                <span class="sel">Concluir a competência <span class="chev">⌄</span></span>
+                <span class="badge badge-ok"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Possui regra de conclusão</span>
+              </div>
+            </div>
           </div>
         </div>
-        <span class="note">to-be: curso como card com sub-linhas de atividade + contador — mapeia MOD.LINKS-ROWS</span>
       </div>
-      <div class="m-foot"><span class="btn">Fechar</span></div>
+      <div class="m-foot m-foot-ghost"><span class="fk">o rodapé segue oculto — o expandir não mexe nele</span></div>
+    </div>
+
+    <div class="row" style="margin-top:9px;">
+      <span class="idb">MOD.LINKS-EXPAND · to-be</span>
+      <span class="prov">mtube: expandir</span>
+      <span class="prov">mtube: atualizar</span>
+    </div>
+
+    <span class="note" style="display:block;margin-top:6px;"><b>Clique em ⤢ acima</b> — o ícone vira ⤡ e o diálogo <b>alarga de verdade</b>: os 40 px que o <code>calc(100% - 40px)</code> devolve (medido neste preview, 543 → 583 px), e volta no ⤡. São <b>dois botões sempre presentes</b>; o CSS escolhe qual aparece, como no mtube. <b>O que a tela NÃO demonstra:</b> o <i>reflow</i> que a largura compra. Conferido antes de afirmar — nesta amostra o nome da atividade ocupa <b>uma</b> linha nos dois estados, então expandir aqui não desfaz quebra nenhuma. O ganho real aparece com nome longo + tela estreita, e o diálogo deste preview está preso ao painel de comparação.</span>
+
+    <div class="ok" style="margin-top:8px;">
+      <b>Por que esta tela é candidata.</b> É o modal do hub com mais coisa por linha: nome do curso
+      + nome breve + contador + 🗑, e dentro dele nome da atividade + tipo + ✕ + outcome +
+      distintivo + aviso de compartilhada. O nome da atividade já quebra em <b>duas linhas</b> e
+      então reticencia (<code>styles.css:5565-5574</code>) — a largura é o recurso escasso. Hoje o
+      único ajuste é <code>large: true</code> (<code>js:760</code>).
+    </div>
+
+    <div class="ok" style="margin-top:8px;">
+      <b>O precedente é shipado, e é zero-JS na parte visual.</b> Do <code>format_mtube</code>,
+      citado <b>por símbolo</b> — o plugin não versiona <code>amd/src</code> (só
+      <code>amd/build</code>), então o fonte só sobrevive no <code>sourcesContent</code> dos
+      <code>.map</code> e uma ref <code>arquivo:linha</code> de JS não resolveria para ninguém:
+      <br>• <code>getFullscreenButtonsHtml(expandLabel, narrowLabel)</code> emite <b>dois botões
+      sempre presentes</b>: <code>.enterfullscreen</code> (<code>fa fa-expand</code>) e
+      <code>.exitfullscreen</code> (<code>fa fa-compress</code>), cada um com <code>aria-label</code>
+      + <code>title</code>.
+      <br>• <code>renderFullscreenButtons()</code> pede as strings <code>expand</code> /
+      <code>narrow</code> e devolve o markup.
+      <br>• <code>setModalFullscreen(root, enabled, storageKey)</code> faz <b>uma</b> coisa visual:
+      <code>root.toggleClass('fullscreen', enabled)</code>. O <code>.each</code> acima dele só
+      descarta o tooltip do botão que vai sumir — <b>não troca ícone</b>.
+      <br>• Quem escolhe é o CSS, e ele existe:
+      <code>.modal.mtube-modal-fullscreen-capable:not(.fullscreen) .exitfullscreen</code> e
+      <code>.modal…fullscreen .enterfullscreen</code>
+      (<code>format_mtube/styles.css:4329-4335</code>). A largura sai de
+      <code>.modal…fullscreen .modal-dialog</code> (<code>:4337</code>).
+    </div>
+
+    <div class="warn" style="margin-top:8px;">
+      <b>A divergência é a persistência, e ela não é cosmética.</b> O mtube grava em
+      <code>localStorage</code> (<code>STORAGE_PREFIX = 'format_mtube.modal.fullscreen.'</code>), que
+      <b>não sai do navegador</b>. O hub já resolveu esse problema uma vez, e a solução está no
+      repositório: <code>amd/src/central/preferences.js</code> usa <code>setUserPreference</code> do
+      <code>core_user/repository</code> (<code>:28</code>) com <b>debounce de 400 ms</b>
+      (<code>SAVE_DELAY</code>, <code>:36</code>), e o docblock diz por quê (<code>:20-21</code>):
+      <i>"across sessions and devices — replaces the previous per-session sessionStorage
+      persistence"</i>. As prefs são declaradas em <code>lib.php:140-151</code>, com
+      <code>permissioncallback</code> = <code>\core_user::is_current_user</code>.
+    </div>
+
+    <div class="ok" style="margin-top:8px;">
+      <b>E não precisa de pref nova.</b> O <code>PREF_CENTRAL_DISPLAY</code> já é um objeto JSON com
+      sub-objetos por área (<code>preferences.js:41-48</code>), e
+      <code>local_dimensions_user_preferences()</code> já aceita o nome
+      (<code>constants.php:84</code>). O expandir cabe como <b>uma chave</b> ali. <b>Sem WS novo, sem
+      string de setting nova, sem bump de <code>version.php</code></b> — prefs não são serviços.
+    </div>
+
+    <div class="warn" style="margin-top:8px;">
+      <b>O que fica em aberto, e a tela não resolve.</b> O <code>large: true</code> de hoje
+      (<code>js:760</code>) e a classe <code>fullscreen</code> do to-be são <b>dois</b> mecanismos de
+      largura. Quem implementar precisa decidir se o <code>fullscreen</code> empilha sobre o
+      <code>large</code> ou o substitui. <b>Este preview não decide isso</b>: ele não roda o
+      <code>core/modal</code>, e a largura aqui é <code>max-width</code> num
+      <code>&lt;div&gt;</code> — a prova do mecanismo real está no CSS do mtube, citado acima e
+      conferido linha a linha.
+    </div>
+
+    <div class="ok" style="margin-top:10px;">
+      <b>Nota de medição — 2.768 pares no DOM renderizado, não no papel.</b> Por tema, no estado
+      padrão: <b>367</b> pares — <b>331</b> de texto (sempre contra o fundo <i>efetivo</i>, subindo a
+      árvore e compondo as camadas translúcidas até achar quem pinta), <b>23</b> de contorno de
+      controle e <b>13</b> de glifo. Repetido nos <b>4 estados</b> da UI (card expandido/recolhido ×
+      diálogo normal/expandido): <b>1.384</b> por tema, <b>2.768</b> no total. Fecha em <b>zero</b>
+      reprovação nos dois temas. Mais estreitos: claro — texto <b>4,58:1</b>, contorno
+      <b>4,83:1</b>, glifo <b>4,83:1</b>; escuro — texto <b>5,21:1</b>, contorno <b>6,54:1</b>, glifo
+      <b>6,84:1</b>.
+      <br>• <b>Contorno de controle — o achado que se confirma medindo, não lendo.</b> Medi
+      <code>--border-strong</code> contra a superfície do modal nas <b>quatro</b> superfícies:
+      <b>1,60</b> (DS claro) / <b>1,49</b> (.moodle claro) / <b>1,71</b> (DS escuro) / <b>3,36</b>
+      (.moodle escuro) — <b>reprova em três das quatro, inclusive no CLARO</b>; só passa no escuro do
+      painel Moodle. O <code>--border-stronger</code> não salva (2,13 / 1,49 / 2,34 / 3,36). O
+      <code>--text-secondary</code> passa nas quatro, com mínimo de <b>4,83:1</b> — e é o que
+      <code>.ctrl</code>, <code>.sel</code>, <code>.bsec</code> e <code>.mtype</code> usam aqui,
+      seguindo a correção do <code>mod-related</code>.
+      <br>• <b>Preenchimento primário no escuro</b> — o par fixo <code>#185fa5</code>/branco passa no
+      <b>rótulo</b> e é por isso que uma conferência de texto o aprova; contra a superfície escura o
+      <b>preenchimento</b> reprova. A régua do preenchimento não é a do texto. Daí a inversão
+      blue-200 no escuro (<code>--prim-bg</code>/<code>--prim-fg</code>).
+      <br><b>Fica registrado o que NÃO foi mexido, com número:</b> os tints continuam baixos <b>de
+      propósito</b> — quem identifica essas caixas é a <b>borda</b> e o <b>glifo</b>, nunca o
+      preenchimento. O distintivo verde e o toast dão fill <b>1,14:1</b> no claro e <b>1,01:1</b> no
+      escuro (o tint <i>some</i> na superfície) enquanto a borda entrega <b>6,20</b> / <b>7,57</b>; o
+      alerta e o aviso de compartilhada, fill 1,15 / 1,06 com borda 6,73 / 7,00; o chip de fechar,
+      fill 1,15 no claro com o glifo em <b>7,53:1</b> nos dois temas, e os literais são os que o
+      <code>styles.css:3557-3586</code> publica. O <code>.ctrl</code> e o <code>.sel</code> dão fill
+      <b>1:1</b> por definição: o fundo deles <i>é</i> a superfície do modal. As <b>caixas</b>
+      (<code>.card</code>, <code>.panel</code>, <code>.alist</code>) seguem no <code>--border</code>
+      do kit: são contêineres, não controles.
+      <br>• <b>Armadilha de medição — custou três diagnósticos errados, fica registrada para a
+      próxima tela.</b> Trocar o tema no preview deixa uma <code>CSSTransition</code> de
+      <code>color</code> <b>congelada</b> no <code>.act2</code> — o único elemento do arquivo com
+      <code>transition</code> em <code>color</code>. Ela fica em <code>playState: "running"</code> com
+      <code>currentTime: 0</code> <b>para sempre</b>, porque a aba do preview não está pintando e
+      ninguém avança o relógio; o <code>getComputedStyle</code> então devolve a cor <b>do tema
+      anterior</b>. O fantasma tem dois valores, e os dois <i>parecem</i> achados de verdade:
+      <b>1,49:1</b> no claro (o <code>#ced4da</code> do escuro sobre o branco) e <b>3,36:1</b> no
+      escuro (o <code>#6a737b</code> do claro sobre a superfície escura). <b>Esperar não resolve</b>
+      (o relógio não anda) e <b>injetar <code>transition:none</code> também não</b> — uma regra nova
+      não cancela transição já em curso. O que resolve é
+      <code>document.getAnimations().forEach(a =&gt; a.cancel())</code> antes de amostrar: aí o
+      <code>.act2</code> volta para <b>4,83:1</b> (claro) e <b>10,84:1</b> (escuro). Confirmado
+      lendo o <code>getAnimations()</code> do elemento, não por dedução.
+      <br><b>Achado que vaza para o kit inteiro (follow-up, não consertado aqui):</b>
+      <code>--border-strong</code> / <code>--border-stronger</code> <b>não servem como contorno de
+      controle em três das quatro superfícies</b>, e seguem em uso no
+      <code>mod-enrolmethods</code> e no <code>mod-participants</code>. É correção de <b>token</b>,
+      não de tela.
     </div>
   </section>
 
