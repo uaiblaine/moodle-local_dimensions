@@ -71,7 +71,7 @@ O que sustenta a fronteira, verificado no código:
   visão do aluno, **fora** do hub). Destes 17, o rodapé **alcança 10** diretamente; é a **única
   porta** de **7**; e **8 dependem** dele (os 7 + `enrol_methods.js:799`, que só é montado de dentro
   do modal de participantes — `participants_manager.js:33`, importador único).
-  - **Os 7 sem outra porta:** `rule_config.js:144` (`rules`), `competency_links.js:763` (`links`),
+  - **Os 7 sem outra porta:** `rule_config.js:144` (`rules`), `competency_links.js:852` (`links`),
     `related_competencies.js:248` (`related`), `structure.js:987` (`moveto`) — os quatro só existem
     em `structure_footer_actions.mustache` — mais `participants_manager.js:144`
     (`manage-participants`), `competency_browser.js:106` (`browse-frameworks`) e `plans.js:251`
