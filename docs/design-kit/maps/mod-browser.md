@@ -68,9 +68,10 @@ core está certo no caminho normal**. Detalhado no fim deste mapa.
 >   *"busca server-side paginada"* como divergência. Hoje o as-is **é** busca server-side paginada:
 >   `local_dimensions_browse_competencies` com `limitfrom`/`limitnum`
 >   (`browse_competencies.php:60-61`), página de **25** (`PAGE_SIZE`, `tree.js:46`), debounce de
->   **250 ms** e mínimo de **2** caracteres (`tree.js:379`, `:47`). A única diferença que sobra é a
->   **forma da paginação**: o DS desenha números de página, o shipado usa **scroll infinito**
->   (`IntersectionObserver`, `tree.js:492-497`). A tela foi redesenhada em cima disso.
+>   **250 ms** e mínimo de **2** caracteres (`tree.js:379`, `:47`). O shipado usa **scroll infinito**
+>   (`IntersectionObserver`, `tree.js:492-497`); o `paginated-picker.html` chegou a esboçar números de
+>   página como divergência de **forma**, mas isso caiu quando ele virou o aviso de overflow do
+>   form-autocomplete (outro controle, ver o card). A tela foi redesenhada em cima disso.
 
 ## Gatilho (na aba Planos, fora do modal)
 
@@ -210,7 +211,7 @@ reusa; a fiação do save, não.**
 | Filtro **client-side** sobre lista carregada | Busca **server-side** (`local_dimensions_browse_competencies`), debounce 250 ms, mínimo 2 chars |
 | Placeholder "Buscar competência…" | "Filtrar competências" (`central_browseframeworks_filter`), também `aria-label` |
 | Lista plana de checkboxes | **Árvore** lazy com chevron por linha, indent de 20px, filhos de 25 em 25 |
-| `paginated-picker.html`: paginação numerada (to-be) | **Scroll infinito** com sentinela + `IntersectionObserver` (a paginação já é server-side; só a **forma** diverge) |
+| `paginated-picker.html` chegou a esboçar paginação numerada — aposentada quando o card virou o aviso de overflow do form-autocomplete | **Scroll infinito** com sentinela + `IntersectionObserver` (a paginação já é server-side) |
 | Sem menção a linhas travadas | `data-excludeids` trava as já no plano, com sufixo "(Já neste plano)" |
 | `competency_datasource.js` como AMD deste modal | é o datasource do autocomplete da **aba Planos** (`plans.js:46`); este modal não o importa |
 | `mod-browser.html`: marcar→habilitar como **to-be** (`:144`); rodapé "sempre habilitado" (`:298-299`) | **shipado** em 2026-07-15 (`e14977c`): o Adicionar nasce desabilitado (`js:110`), segue a seleção (`updateAddButton`) e o `preventDefault` (`:66`) é backstop — a tela é que está atrasada agora |

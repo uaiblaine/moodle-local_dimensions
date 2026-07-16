@@ -308,8 +308,9 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <b>O que o to-be antigo propunha já está no ar.</b> Ele pedia "busca server-side paginada"
       contra um as-is "client-side". O as-is <b>ultrapassou</b>: hoje é
       <code>local_dimensions_browse_competencies</code> com <code>limitfrom</code>/<code>limitnum</code>,
-      debounce de 250 ms e mínimo de 2 chars. Só a <b>forma</b> diverge — o DS desenhava números de
-      página; o shipado usa scroll infinito. <b>Sobra um gap real</b>, e é este.
+      debounce de 250 ms e mínimo de 2 chars. O shipado usa scroll infinito; o
+      <code>paginated-picker.html</code> chegou a esboçar números de página, mas foi reescrito para o
+      aviso de overflow do form-autocomplete (outro controle). <b>Sobra um gap real</b>, e é este.
     </div>
 
     <input type="checkbox" id="b-pick" class="dchk">

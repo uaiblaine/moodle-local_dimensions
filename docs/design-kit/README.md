@@ -20,7 +20,7 @@ Este kit é a **fonte única do Design System** da Central, espelhado em dois lu
 | `image-dropzone.html` | Formulário | Anexo de imagem padrão Moodle (arrasta e solta) — vazio e com arquivo. |
 | `hierarchy-nav.html` | Navegação | Seletor de contexto (Sistema/Categoria + contador), trilha adaptativa, abas Estrutura/Planos. |
 | `master-detail.html` | Dados | Árvore de competências + painel de detalhe (chips do cabeçalho + três métricas). |
-| `paginated-picker.html` | Dados | Busca server-side cross-framework + resultados AJAX + paginação; chip da estrutura de origem. |
+| `paginated-picker.html` | Dados | Busca server-side cross-framework + resultados AJAX + aviso de overflow quando passa de uma página; chip da estrutura de origem. |
 | `cohort-assign.html` | Dados | Atribuição de plano a coortes/usuários (estilo gestão de grupos do mtube) + sync. |
 
 > Estes componentes expressam a **visão to-be** e divergem em pontos da UI shipada hoje
