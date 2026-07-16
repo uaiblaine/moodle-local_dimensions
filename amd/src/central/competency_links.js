@@ -449,7 +449,11 @@ const loadCourses = async(state) => {
     }])[0];
 
     state.hiddenframeworkEl.hidden = response.canlink;
-    state.addsel.disabled = !response.canlink;
+    /* Core's enhance() swapped the select for its own always-typeable input plus a separate
+       downarrow that opens the list on click, so disabling the select does nothing. Hide the whole
+       add-course block instead — that takes the input, the downarrow and the label out of view
+       and out of the tab order; the hiddenframework alert shown alongside says why. */
+    state.addsel.parentElement.hidden = !response.canlink;
 
     response.items.forEach((course) => {
         const row = makeCourseRow(state, course);
@@ -553,10 +557,16 @@ const restoreFocus = (state, preferred) => {
        original select, so it is not focusable. Load more comes first while it is still on
        screen — with a page pending it, and not the picker, is the way on. */
     const container = state.addsel ? state.addsel.parentElement : null;
+    /* The picker input is a home only while its block is shown; when the framework is hidden the
+       block is gone, so its input is a dead display:none node — fall through to the visible alert. */
+    const picker = container && !container.hidden ? container.querySelector(SELECTORS.addInput) : null;
+    const frameworkalert = state.hiddenframeworkEl && !state.hiddenframeworkEl.hidden
+        ? state.hiddenframeworkEl
+        : null;
     const loadmore = state.loadMoreEl && !state.loadMoreEl.hidden
         ? state.loadMoreEl.querySelector('[data-action="loadmore"]')
         : null;
-    const target = preferred || loadmore || (container && container.querySelector(SELECTORS.addInput));
+    const target = preferred || loadmore || picker || frameworkalert;
     if (target) {
         target.focus();
     }
