@@ -96,6 +96,7 @@ $string['central_enrol_hint_self'] = 'Lets cohort members enrol themselves. Enro
 $string['central_enrol_info'] = 'Details';
 $string['central_enrol_instance_disabled'] = 'Enrolment disabled';
 $string['central_enrol_instance_enabled'] = 'Enrolment enabled';
+$string['central_enrol_loadfailed'] = 'Couldn\'t load the enrolment methods. Try again.';
 $string['central_enrol_loadmore'] = 'Load more';
 $string['central_enrol_method'] = 'Method';
 $string['central_enrol_method_cohort'] = 'Cohort sync';

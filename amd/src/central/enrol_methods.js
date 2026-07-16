@@ -42,6 +42,7 @@ const POLL_MS = 5000;
 const SELECTORS = {
     empty: '[data-region="enrol-empty"]',
     disabled: '[data-region="enrol-disabled"]',
+    error: '[data-region="enrol-error"]',
     main: '[data-region="enrol-main"]',
     cohort: '[data-region="enrol-cohort"]',
     methodgroup: '[data-region="enrol-method"]',
@@ -851,23 +852,38 @@ const init = async(state) => {
     state.pending.clear();
     state.selected.clear();
     state.root.querySelector(SELECTORS.tree).textContent = '';
-    const [cohortdata, compdata] = await Promise.all(Ajax.call([
-        {
-            methodname: 'local_dimensions_list_template_cohorts',
-            args: {templateid: state.templateid},
-        },
-        {
-            methodname: 'local_dimensions_list_enrol_competencies',
-            args: {
-                templateid: state.templateid,
-                categoryid: state.categoryid,
-                includehidden: state.showhidden,
-                includebootstrap: true,
-                query: state.query,
-                limitnum: PAGE_COMPETENCIES,
+    const error = state.root.querySelector(SELECTORS.error);
+    let cohortdata;
+    let compdata;
+    try {
+        [cohortdata, compdata] = await Promise.all(Ajax.call([
+            {
+                methodname: 'local_dimensions_list_template_cohorts',
+                args: {templateid: state.templateid},
             },
-        },
-    ]));
+            {
+                methodname: 'local_dimensions_list_enrol_competencies',
+                args: {
+                    templateid: state.templateid,
+                    categoryid: state.categoryid,
+                    includehidden: state.showhidden,
+                    includebootstrap: true,
+                    query: state.query,
+                    limitnum: PAGE_COMPETENCIES,
+                },
+            },
+        ]));
+    } catch (e) {
+        // This load runs before any region is revealed, so a failure here would otherwise leave the
+        // pane blank with its refresh buttons trapped inside the still-hidden regions. Show the error
+        // region, whose own refresh sits outside them, then rethrow so mount's swallow still toasts.
+        error.hidden = false;
+        state.root.querySelector(SELECTORS.empty).hidden = true;
+        state.root.querySelector(SELECTORS.disabled).hidden = true;
+        state.root.querySelector(SELECTORS.main).hidden = true;
+        throw e;
+    }
+    error.hidden = true;
     const empty = state.root.querySelector(SELECTORS.empty);
     const disabled = state.root.querySelector(SELECTORS.disabled);
     const main = state.root.querySelector(SELECTORS.main);
