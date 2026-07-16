@@ -3,10 +3,10 @@
 **4ª aba** do modal Participantes (`MOD.PART`), depois de Coortes / Usuários / Atribuir papéis.
 Configura **em massa** os métodos de inscrição dos cursos vinculados às competências do template,
 sempre amarrado a um coorte do plano. O pane nasce **vazio** no host
-(`participants_manager.mustache:150-151`) e é montado por `enrol_methods.js:1010-1033`.
+(`participants_manager.mustache:150-151`) e é montado por `enrol_methods.js:1010-1037`.
 
 - **Mustache:** [`enrol_methods.mustache`](../../../templates/central/enrol_methods.mustache) (129, esqueleto da aba), [`enrol_group.mustache`](../../../templates/central/enrol_group.mustache) (65, um grupo do accordion), [`enrol_detail.mustache`](../../../templates/central/enrol_detail.mustache) (82, corpo do modal de detalhe)
-- **AMD:** [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1033) — reusa `action_button.js` (`iconButton`, `:38-49`) e `errors.js` (`notifyError`)
+- **AMD:** [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1037) — reusa `action_button.js` (`iconButton`, `:38-49`) e `errors.js` (`notifyError`)
 - **WS (5, todos em `db/services.php:346-386`):** `list_enrol_competencies` (raízes paginadas + *bootstrap* de mount), `list_enrol_courses` (linhas com o status dos **dois** métodos), `queue_enrol_action`, `get_enrol_queue_status`, `set_enrol_instance_status`
 - **Task:** [`process_enrol_method`](../../../classes/task/process_enrol_method.php) — adhoc por `(courseid, método, cohortid)`
 - **Helper:** [`classes/local/enrol_methods.php`](../../../classes/local/enrol_methods.php) — `eligible_roles()` (`:58-73`), `default_roleid()` (`:81-89`)
@@ -94,7 +94,7 @@ visíveis. Grupos via `renderGroupHtml` → `appendNodeContents` (`enrol_methods
 | `ENROL-GROUP-CB` | Selecionar todos os cursos de {competência} | checkbox | `enrol_group.mustache:38-39` | `data-groupcheck={id}` | `aria-label` via `central_enrol_selectall`. Só alcança as linhas **já carregadas** do grupo e **pula as em processamento** (`enrol_methods.js:991-998`) |
 | `ENROL-TOGGLE` | {nome da competência} | botão | `enrol_group.mustache:40-47` | `data-action="enrol-toggle"` · `aria-expanded` | chevron (`:44`) + nome (`:45`) + badge de contagem (`:46`). **O nome é o `shortname`** (`enrol_methods.js:298`), não o `fullname`. Rotação do chevron e o *fade/slide* são **CSS puro** keyed no `aria-expanded` (`styles.css:5704-5714`) |
 | `ENROL-GROUP-COUNT` | N cursos | badge | `enrol_group.mustache:46` | `badge bg-secondary text-dark` | `central_enrol_courses` / `_coursesone` (singular próprio, `enrol_methods.js:291-293`). O par `bg-secondary` + `text-dark` é deliberado — ver a nota de contraste |
-| `ENROL-CHILDREN` | `[sem rótulo]` | contêiner | `enrol_group.mustache:49` | `data-children={id}` · `data-offset="0"` · `hidden` | **carga preguiçosa na 1ª expansão**, com trava `data-loaded` que é **revertida no erro** (`enrol_methods.js:510-518`) — ao contrário da trava do host, esta se recupera |
+| `ENROL-CHILDREN` | `[sem rótulo]` | contêiner | `enrol_group.mustache:49` | `data-children={id}` · `data-offset="0"` · `hidden` | **carga preguiçosa na 1ª expansão**, com trava `data-loaded` que é **revertida no erro** (`enrol_methods.js:510-518`), então re-expandir sempre tenta de novo. A trava do host **também** passou a se recuperar (`c96a3e9`), mas só numa rejeição pré-fiação — ver a seção da trava de montagem |
 | `ENROL-CAPTION` | {nome da competência} | caption | `enrol_group.mustache:51` | `visually-hidden` | — |
 | `ENROL-HEAD` | Selecionar · Curso · Categoria · Papel · Status · Ações | cabeçalho | `enrol_group.mustache:53-60` | — | **6 colunas** (`545ba17` trocou o accordion solto por `table generaltable` listrada). A 1ª é `{{#str}}select{{/str}}` **`visually-hidden`** (`:54`); as outras cinco são strings do core (`course`, `category`, `role`, `status`, `actions`) |
 | `ENROL-ROWS` | `[sem rótulo]` | contêiner-JS | `enrol_group.mustache:62` | `data-region="enrol-rows"` | `<tbody>`; linhas via `makeRow` |
@@ -147,31 +147,59 @@ conserto que o `ENROL-DISABLED` pede. Os 5 WSes reexigem `templatemanage` no con
 (p.ex. `list_enrol_competencies.php:104`, `queue_enrol_action.php:108-109`), então a fechadura da
 aba é a real; a do link só decide se o atalho aparece. Não está documentado em nenhum outro lugar.
 
-### A trava de montagem é definitiva — e aqui ela cega os três atualizar
+### A trava de montagem já não é definitiva — CORRIGIDO em 2026-07-16 (a metade do pane em branco na 1ª montagem do enrol continua aberta)
 
-Em `participants_manager.js:183-185`, `enrolmounted = true` é escrito **antes** do await e
-`mountEnrol(...)` **não é aguardado** (`.catch(notifyError)`). Se o mount rejeitar, o toast aparece
-e a trava fica `true`: voltar na aba **não** tenta de novo, e com `setRemoveOnClose(true)` (`:145`)
-a única recuperação é **fechar e reabrir o modal**.
+**Como era.** Em `participants_manager.js`, `enrolmounted = true` (como `usersmounted`/`rolesmounted`)
+era escrito **antes** do await e `mountEnrol(...)` **não era aguardado** (`.catch(notifyError)`). Se o
+mount rejeitasse, o toast aparecia e a trava ficava `true`: voltar na aba **não** tentava de novo, e com
+`setRemoveOnClose(true)` (`:145`) a única recuperação era **fechar e reabrir o modal**. O pane de Coortes
+era pior — montado uma vez no `shown`, **sem trava nenhuma**, e como a própria aba de Coortes não roda o
+`ensureMounted`, um pane-padrão que falhasse não tinha recuperação alguma dentro do modal.
 
-**A agravante é desta aba, e é verificável no código.** `mount` (`enrol_methods.js:1010-1033`)
-renderiza o esqueleto (`:1012-1013`), liga os eventos (`:1031`) e **só então** faz `await
-init(state)` (`:1032`). As três regiões nascem `hidden` e quem as revela é o `init`
-(`:880-892`). Se o `Promise.all` de `:854-870` rejeitar — WS fora, rede caindo — o `init` sai por
-exceção **antes** de qualquer `hidden = false`:
+**Como ficou (`c96a3e9`).** As quatro montagens passam por um só `startMount(key, mountfn, selector)`
+(`participants_manager.js:166-175`) sobre uma tabela única `mounted = {cohorts, users, roles, enrol}`
+(`:161`). Ele **reivindica a trava de forma síncrona** (`mounted[key] = true`, `:170`) — um duplo-clique
+ainda dispara um único mount — e a **libera no `.catch`** (`mounted[key] = false`, `:172`), então a
+**próxima ativação da aba tenta de novo**. Coortes entrou na tabela (`:180`, e via `ensureMounted` em
+`:189`), logo re-clicar a aba-padrão também a recupera. Liberar-no-catch só é seguro porque uma trava
+liberada sempre significa um pane **não-fiado**: Coortes e Papéis dão `replaceNodeContents`-clear e fiam
+**nós-filhos frescos**, então um remount descarta os listeners antigos e começa limpo.
+
+**Correção que este mapa faz contra si mesmo: o enrol NÃO é idempotente sob `replaceNodeContents`.** `mount`
+(`enrol_methods.js:1010-1037`) limpa o container com `replaceNodeContents` (`:1013`), mas isso esvazia só
+os **filhos** — o `wireEvents` (`:1031`) **delega** o listener de `click` no **próprio elemento container**
+(`state.root`, `:914`), que **sobrevive** ao clear. Um remount ingênuo empilharia um segundo jogo de
+listeners. Por isso o único await pós-fiação foi **engolido para um toast**: `await init(state)` virou
+`await init(state).catch(notifyError)` (`:1036`). Uma falha **pós-fiação** agora **resolve** o mount — a
+trava fica `true`, nenhum re-clique refaz, e existe **exatamente um** estado fiado. É por isto que o enrol
+não pode simplesmente liberar-e-remontar como Coortes/Papéis, e por que o *swallow* de `:1036` é
+**obrigatório**, não opcional.
+
+**O que NÃO foi fechado — o pane em branco na 1ª montagem (chip aberto).** As três regiões nascem `hidden`
+e quem revela **uma** é o `init` (`:880-892`). Se o `Promise.all` de `:854-870` rejeitar — WS fora, rede
+caindo — o `init` sai por exceção **antes** de qualquer `hidden = false`, e esse erro agora é **engolido**
+pelo `.catch` de `:1036` (resolve o mount, a trava fica `true`, re-clicar a aba é no-op). Resultado idêntico
+ao de antes, para a falha **precoce**:
 
 - as três regiões continuam `hidden`;
-- os **três** botões `enrol-refresh` estão **dentro** delas (`:39-41` e `:47-49` nos alerts,
-  `:108-110` dentro do `enrol-main`) — logo **nenhum dos três é alcançável**;
-- a trava do host já é `true`.
+- os **três** botões `enrol-refresh` estão **dentro** delas (`enrol_methods.mustache:39-41` e `:47-49` nos
+  alerts, `:108-110` dentro do `enrol-main`) — logo **nenhum dos três é alcançável**;
+- a trava fica `true` — não mais pelo bug antigo, mas porque o *swallow* é **deliberado** (a alternativa,
+  liberar e remontar, duplicaria os listeners na 1ª falha).
 
-Resultado: **o pane fica uma caixa em branco e o "atualizar" que existiria para salvá-lo está
-escondido atrás do mesmo `init` que falhou.** A ressalva importa para o IMP-03: a conclusão do
-`mod-participants.md` ("só o atualizar deixa tentar de novo") **não vale para a falha que mais
-importa aqui** — ela vale para os estados `ENROL-EMPTY`/`ENROL-DISABLED`, em que o `init`
-**teve sucesso** e revelou um alerta. Uma falha **tardia** (`loadCompetencies`, `:904`) é
-recuperável, porque `main.hidden = false` já rodou em `:892`. O portão que falta é o **quarto**:
-uma região de erro, revelada no `catch`, com um atualizar **fora** das outras três.
+A recuperação continua sendo **reabrir o modal**. Ou seja, a agravante "cega os três atualizar" está
+**meio-fechada**: a metade da *trava definitiva* caiu — uma rejeição **pré-fiação** (`loadLabels` `:1011`,
+o render `:1012`, o `replaceNodeContents` `:1013`) rejeita, libera a trava e um re-clique tenta de novo;
+a metade do *pane em branco na 1ª montagem* — falha **pós-fiação** dentro do `init`, antes de revelar
+uma região — **não**. O portão que ainda falta é o **quarto**: uma região de erro, revelada no `catch` do
+`init`, com um atualizar **fora** das outras três — registrado como follow-up no próprio commit.
+
+A ressalva importa para o IMP-03: uma falha **tardia** (`loadCompetencies`, `:904`) segue **recuperável**,
+porque `main.hidden = false` já rodou em `:892` e o `enrol-refresh` do `enrol-main`
+(`enrol_methods.mustache:108-110`) fica visível — seu handler (`enrol_methods.js:915-918`) chama
+`init(state)` de novo. A conclusão do `mod-participants.md` ("só o atualizar deixa tentar de novo") vale
+para os estados `ENROL-EMPTY`/`ENROL-DISABLED`, em que o `init` **teve sucesso** e revelou um alerta, e
+para essa falha tardia — não para a falha **precoce**, que é o resíduo em aberto.
 
 ### Concorrência — dedup por `(curso, método, coorte)`
 

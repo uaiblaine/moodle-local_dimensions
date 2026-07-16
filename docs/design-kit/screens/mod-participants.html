@@ -331,36 +331,63 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <b>Não é "loading na troca de aba".</b> São três coisas distintas, todas lidas do código:
     </div>
     <div class="note" style="margin-top:4px;">
-      <b>(a) O primeiro paint.</b> <code>modal.show()</code> é <code>:240</code>; só <b>depois</b> o
-      <code>ModalEvents.shown</code> (<code>:164</code>) dispara <code>mountCohorts</code>
-      (<code>:168</code>), que ainda precisa de strings + render + WS
+      <b>(a) O primeiro paint.</b> <code>modal.show()</code> é <code>:250</code>; só <b>depois</b> o
+      <code>ModalEvents.shown</code> (<code>:176</code>) dispara <code>mountCohorts</code>
+      (<code>:180</code>), que ainda precisa de strings + render + WS
       (<code>cohort_manager.js:209-232</code>). Como o pane de Coortes <b>nasce vazio</b>
       (<code>:75-76</code>) e é a aba que <b>nasce ativa</b> (<code>:42</code>), o modal abre com as 4 abas
       desenhadas e <b>o corpo em branco embaixo</b>. Não é troca de aba — é a abertura.
     </div>
     <div class="note" style="margin-top:4px;">
       <b>(b) A troca é assimétrica.</b> <code>selectTab</code> chama <code>activateTab</code>
-      (<code>:192</code>) <b>antes</b> de <code>ensureMounted</code> (<code>:195</code>) → o pane fica
+      (<code>:202</code>) <b>antes</b> de <code>ensureMounted</code> (<code>:205</code>) → o pane fica
       <b>visível e vazio</b>. Vale para Coortes, Papéis e Inscrição, os três <code>&lt;div&gt;&lt;/div&gt;</code>.
       <b>Usuários é a exceção</b>: vem renderizado do servidor (<code>:77-144</code>), então só faltam as
       <b>linhas</b>. Tratar as 4 abas igual é resolver 3 problemas e 1 não-problema.
     </div>
+    <div class="ok">
+      <b>(c) CORRIGIDO em 2026-07-16 (<code>c96a3e9</code>) — a trava que era definitiva.</b>
+      <b>Era assim:</b> em <code>ensureMounted</code> cada <code>&lt;flag&gt;mounted = true</code> rodava
+      <b>antes</b> do await e o mount ia <b>sem ser aguardado</b> (só <code>.catch(notifyError)</code>);
+      se ele rejeitasse — WS fora, rede caindo, o que o <code>errors.js</code> existe para rotear — o
+      toast aparecia, o pane ficava em branco e a trava <b>continuava <code>true</code></b>. Sair da aba
+      e voltar <b>não</b> tentava de novo, e como <code>setRemoveOnClose(true)</code> (<code>:145</code>)
+      descarta o modal ao fechar, a única saída era fechar e reabrir. Coortes era pior: montava no
+      <code>shown</code> <b>sem trava nenhuma</b> e a sua própria aba não roda <code>ensureMounted</code>
+      → o pane default falho não tinha recuperação alguma dentro do modal.
+      <b>Agora:</b> as quatro panes passam por um <code>startMount</code> (<code>:166-175</code>) que
+      <b>reivindica a trava de forma síncrona</b> (o duplo-clique ainda dispara <b>um</b> mount) e a
+      <b>solta no <code>.catch</code></b> — a próxima ativação da aba tenta de novo. Coortes entrou na
+      tabela <code>mounted</code> (<code>:161</code>), então re-clicar a aba default também recupera; o
+      <code>ensureMounted</code> agora é <code>:186-197</code>.
+      <b>Por que é seguro:</b> soltar a trava só vale se o mount falho deixou o pane <b>sem fios</b>.
+      Coortes e Papéis fazem <code>replaceNodeContents</code> e religam <b>nós-filho novos</b> — remount
+      limpo. Usuários e Inscrição <b>não</b>: Usuários vem renderizado do servidor e ligado no lugar, e a
+      Inscrição delega os listeners no <b>próprio contêiner</b>, que o <code>replaceNodeContents</code>
+      <b>não</b> descarta (esvazia só os filhos) — um remount ingênuo empilharia um segundo jogo de
+      listeners. Por isso o <b>único</b> await pós-fio dos dois é <b>engolido para toast</b>
+      (<code>participants_users.js:310</code>, <code>enrol_methods.js:1036</code>): a falha pós-fio
+      <b>resolve</b> o mount (a trava fica setada, ninguém re-tenta, existe <b>exatamente um</b> estado
+      com fios). Usuários segue usável porque os seus controles de filtro re-rodam
+      <code>applyFilters</code> nesse mesmo estado.
+    </div>
     <div class="warn">
-      <b>(c) O defeito que ninguém tinha registrado — a trava é definitiva.</b> Em
-      <code>ensureMounted</code> (<code>:174-187</code>) cada <code>&lt;flag&gt;mounted = true</code> roda
-      <b>antes</b> do await, e o mount é disparado <b>sem ser aguardado</b> (só
-      <code>.catch(notifyError)</code>). Se ele rejeitar — WS fora, rede caindo, exatamente o que o
-      <code>errors.js</code> existe para rotear — o toast aparece, o pane fica em branco e a trava
-      <b>continua <code>true</code></b>. Sair da aba e voltar <b>não</b> tenta de novo. E como
-      <code>setRemoveOnClose(true)</code> (<code>:145</code>) descarta o modal ao fechar, <b>a única
-      recuperação hoje é fechar e reabrir</b>.
+      <b>Resíduo ainda aberto (chip filado) — só metade da aflição fechou.</b> Se o <code>init</code> da
+      Inscrição rejeitar no <b>primeiro</b> mount, <b>antes</b> de revelar qualquer região
+      (<code>enrol_methods.js:1036</code>), o pane fica em branco e o seu botão "Atualizar" — que mora
+      <b>dentro</b> das regiões ainda ocultas — fica <b>inalcançável</b>: a recuperação continua sendo
+      fechar e reabrir o modal. A trava travada foi consertada; <b>este</b> branco de primeiro-mount da
+      Inscrição <b>não</b>. Uma região de erro dedicada da Inscrição é o próximo passo.
     </div>
     <div class="ok">
-      <b>É isto que amarra o loading ao "atualizar".</b> O spinner mostra que <b>falhou</b>; só o
-      <b>atualizar</b> deixa <b>tentar de novo</b> — liberando a trava no erro, não só no sucesso. E não
-      custa string nova: o pane de inscrição já shipa <code>{{#str}}refresh, moodle{{/str}}</code> +
-      <code>fa fa-rotate</code> em <b>três</b> lugares (<code>enrol_methods.mustache:39, 47, 108</code>).
-      O botão do cabeçalho <b>substitui</b> esses três, em vez de virar um quarto.
+      <b>É isto que ainda amarra o loading ao "atualizar" — por outro motivo agora.</b> O spinner mostra
+      que está carregando (ou que <b>falhou</b>); com a trava se soltando sozinha no erro, quem recupera
+      Coortes/Papéis é <b>re-clicar a aba</b>. Quem <b>não</b> re-tenta é a Inscrição (a falha pós-fio foi
+      engolida de propósito) — ela depende do <b>atualizar</b>, desde que uma região esteja à vista (o
+      resíduo acima). E não custa string nova: o pane de inscrição já shipa
+      <code>{{#str}}refresh, moodle{{/str}}</code> + <code>fa fa-rotate</code> em <b>três</b> lugares
+      (<code>enrol_methods.mustache:39, 47, 108</code>). O botão do cabeçalho <b>substitui</b> esses três,
+      em vez de virar um quarto.
     </div>
     <div class="row" style="gap:10px;margin-top:7px;">
       <div class="col" style="gap:3px;"><span class="note">repouso</span><span class="bsec"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-rotate"/></svg>Atualizar</span></div>
@@ -385,7 +412,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <code>{{#str}}</code> diretos no Mustache</b> (<code>:45</code>, <code>:52</code>, <code>:60</code>,
       <code>:69</code>) — o ícone é markup nosso, dentro do <code>&lt;button role="tab"&gt;</code>, e precisa
       de <code>aria-hidden="true"</code> para não sujar o nome acessível que o roving tabindex
-      (<code>:194</code>, <code>:202</code>, <code>:217-238</code>) anuncia.
+      (<code>:204</code>, <code>:212</code>, <code>:227-248</code>) anuncia.
     </div>
   </section>
 
