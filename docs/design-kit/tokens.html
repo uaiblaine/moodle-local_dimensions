@@ -30,6 +30,7 @@
   --mds-bg-surface-default:#1d2125;--mds-bg-surface-subtle:#16191c;--mds-bg-surface-strong:#343a40;
   --mds-text-default:#f8f9fa;--mds-text-muted:#ced4da;--mds-text-subtle:#dee2e6;--mds-text-inverse:#1d2125;
   --mds-border-default:#495057;--mds-border-subtle:#343a40;
+  --mds-bg-interactive-secondary-default:#343a40;--mds-bg-interactive-secondary-hover:#495057;
   --mds-bg-feedback-info-subtle:#00343c;--mds-text-feedback-info:#cce6ea;
   --mds-bg-feedback-success-subtle:#153114;--mds-text-feedback-success:#d7e4d6;
   --mds-bg-feedback-warning-subtle:#60451f;--mds-text-feedback-warning:#fcefdc;
@@ -44,7 +45,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .sw .lab{padding:5px 7px;font-size:10px;color:var(--mds-text-muted);font-family:var(--font-mono);}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .btn{font-size:12px;padding:6px 12px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid transparent;color:var(--mds-color-white);}
-.btn-sec{background:var(--mds-bg-surface-default);color:var(--mds-text-default);border-color:var(--mds-border-default);}
+.btn-sec{background:var(--mds-bg-interactive-secondary-default);color:var(--mds-text-default);border-color:var(--mds-bg-interactive-secondary-hover);}
 .fb{font-size:12px;padding:4px 10px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid;}
 .note{font-size:11px;color:var(--mds-text-muted);}
 .mo{cursor:pointer;background:var(--mds-bg-surface-default);}
@@ -83,6 +84,14 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
   <span class="btn btn-sec">Secondary</span>
   <span class="btn" style="background:var(--mds-bg-interactive-danger-default)">Danger</span>
   <span class="btn" style="background:var(--mds-bg-interactive-danger-hover)">Danger hover</span>
+</div>
+<div class="note" style="margin-top:6px;">
+  <code>secondary</code> é o único fill <b>não</b> saturado — cinza com texto adaptativo
+  (<code>--mds-text-default</code>), então <b>precisa</b> de variante dark: default/hover viram
+  cinzas escuros no <code>prefers-color-scheme:dark</code>, senão dá branco sobre cinza claro.
+  <code>primary</code> e <code>danger</code> são fills saturados com texto branco fixo — mesma
+  leitura nos dois esquemas, sem variante. O swatch acima consome o token real (não a superfície),
+  para o card demonstrar o que afirma.
 </div>
 
 <div class="h">Feedback — tints de status (texto no stop 800)</div>
