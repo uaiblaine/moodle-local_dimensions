@@ -158,31 +158,41 @@ export const show = async(pane, region) => {
         contextid: Number(region.dataset.contextid),
     };
 
-    let usersmounted = false;
-    let rolesmounted = false;
-    let enrolmounted = false;
+    const mounted = {cohorts: false, users: false, roles: false, enrol: false};
+    // Claim the latch synchronously so a concurrent double-click cannot fire a second mount, and
+    // release it if the mount rejects so the next tab activation retries. A released latch always
+    // means an unwired pane: cohorts and roles clear and rewire fresh children on remount, and
+    // users and enrol reject only before they wire (their sole post-wire failure resolves instead).
+    const startMount = (key, mountfn, selector) => {
+        if (mounted[key]) {
+            return;
+        }
+        mounted[key] = true;
+        mountfn(root.querySelector(selector), opts).catch((error) => {
+            mounted[key] = false;
+            notifyError(error);
+        });
+    };
     modal.getRoot().on(ModalEvents.shown, () => {
         // Host a toast region inside the modal body so the cohort/user managers' success toasts
         // render above the dialog, not behind it. Core removes it on close.
         addToastRegion(modal.getBody()[0]).catch(notifyError);
-        mountCohorts(root.querySelector(SELECTORS.paneCohorts), opts).catch(notifyError);
+        startMount('cohorts', mountCohorts, SELECTORS.paneCohorts);
 
         const tablist = root.querySelector(SELECTORS.tabs);
         const tabs = () => Array.from(tablist.querySelectorAll('.nav-link'));
 
-        // Lazy-mount a tab's pane the first time it is shown.
+        // Lazy-mount a tab's pane the first time it is shown; a re-click retries a released latch.
         const ensureMounted = (button) => {
-            if (button.dataset.region === 'tab-users' && !usersmounted) {
-                usersmounted = true;
-                mountUsers(root.querySelector(SELECTORS.paneUsers), opts).catch(notifyError);
-            }
-            if (button.dataset.region === 'tab-roles' && !rolesmounted) {
-                rolesmounted = true;
-                mountRoles(root.querySelector(SELECTORS.paneRoles), opts).catch(notifyError);
-            }
-            if (button.dataset.region === 'tab-enrol' && !enrolmounted) {
-                enrolmounted = true;
-                mountEnrol(root.querySelector(SELECTORS.paneEnrol), opts).catch(notifyError);
+            const region = button.dataset.region;
+            if (region === 'tab-cohorts') {
+                startMount('cohorts', mountCohorts, SELECTORS.paneCohorts);
+            } else if (region === 'tab-users') {
+                startMount('users', mountUsers, SELECTORS.paneUsers);
+            } else if (region === 'tab-roles') {
+                startMount('roles', mountRoles, SELECTORS.paneRoles);
+            } else if (region === 'tab-enrol') {
+                startMount('enrol', mountEnrol, SELECTORS.paneEnrol);
             }
         };
 

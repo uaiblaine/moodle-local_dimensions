@@ -304,5 +304,8 @@ export const mount = async(pane, opts) => {
     });
     state.observer.observe(pane.querySelector(SELECTORS.sentinel));
 
-    await applyFilters(state);
+    // The pane is wired now, so a first-page load failure still leaves it usable: the filter
+    // controls re-run applyFilters on this same state. Swallow to a toast so mount() rejects only
+    // before wire(), where the caller's retry is a clean remount rather than a double-wire.
+    await applyFilters(state).catch(notifyError);
 };
