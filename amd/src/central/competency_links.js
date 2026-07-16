@@ -437,36 +437,67 @@ const makeCourseRow = (state, course) => {
 };
 
 /**
+ * Sync the empty-state message and the Load more button with the current counts. The empty message
+ * means "no courses linked", which is total zero; Load more is offered while fewer cards are shown
+ * than the server reports linked.
+ *
+ * @param {Object} state Modal state.
+ * @return {void}
+ */
+const refreshListState = (state) => {
+    state.emptyEl.hidden = state.total > 0;
+    state.loadMoreEl.hidden = state.rowsEl.children.length >= state.total;
+};
+
+/**
  * Fetch a page of linked courses and append them.
  *
  * @param {Object} state Modal state.
  * @return {Promise<void>}
  */
 const loadCourses = async(state) => {
-    const response = await Ajax.call([{
-        methodname: 'local_dimensions_get_competency_links',
-        args: {competencyid: state.competencyid, query: '', limitfrom: state.offset, limitnum: PAGE_SIZE},
-    }])[0];
+    // Ignore a re-entrant call (a double-clicked Load more): both would request the same page from
+    // the same exclusion snapshot and append it twice.
+    if (state.loading) {
+        return;
+    }
+    state.loading = true;
+    try {
+        const response = await Ajax.call([{
+            methodname: 'local_dimensions_get_competency_links',
+            // The server omits the courses already on screen, so this always fetches the next
+            // unshown page — no numeric cursor to drift as the picker and the trash mutate the list.
+            args: {
+                competencyid: state.competencyid,
+                query: '',
+                excludecourseids: Array.from(state.excluded).join(','),
+                limitnum: PAGE_SIZE,
+            },
+        }])[0];
 
-    state.hiddenframeworkEl.hidden = response.canlink;
-    /* Core's enhance() swapped the select for its own always-typeable input plus a separate
-       downarrow that opens the list on click, so disabling the select does nothing. Hide the whole
-       add-course block instead — that takes the input, the downarrow and the label out of view
-       and out of the tab order; the hiddenframework alert shown alongside says why. */
-    state.addsel.parentElement.hidden = !response.canlink;
+        state.hiddenframeworkEl.hidden = response.canlink;
+        /* Core's enhance() swapped the select for its own always-typeable input plus a separate
+           downarrow that opens the list on click, so disabling the select does nothing. Hide the
+           whole add-course block instead — that takes the input, the downarrow and the label out
+           of view and out of the tab order; the hiddenframework alert shown alongside says why. */
+        state.addsel.parentElement.hidden = !response.canlink;
 
-    response.items.forEach((course) => {
-        const row = makeCourseRow(state, course);
-        // Only the rows this cursor fetched count towards it; the picker appends its own.
-        row.dataset.paged = '1';
-        state.rowsEl.appendChild(row);
-        state.excluded.add(String(course.courseid));
-    });
-    state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
-    state.offset += response.items.length;
+        response.items.forEach((course) => {
+            // Defensive against a picker add that landed mid-fetch: the server built this page
+            // before the new link committed, so it may still carry a course already on screen.
+            if (state.excluded.has(String(course.courseid))) {
+                return;
+            }
+            state.rowsEl.appendChild(makeCourseRow(state, course));
+            state.excluded.add(String(course.courseid));
+        });
+        state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
+        state.total = response.total;
 
-    state.emptyEl.hidden = !(state.offset === 0 && response.total === 0);
-    state.loadMoreEl.hidden = state.offset >= response.total;
+        refreshListState(state);
+    } finally {
+        state.loading = false;
+    }
 };
 
 /**
@@ -595,22 +626,16 @@ const removeCourse = async(state, courseEl) => {
         methodname: 'local_dimensions_unlink_competency_course',
         args: {competencyid: state.competencyid, courseid: courseid},
     }])[0];
-    state.excluded.delete(String(courseid));
+    // The trash stays live across the confirm and the unlink, so a re-click can drive this twice
+    // for one card; the delete returning false marks the second pass, which must not decrement the
+    // count again. The set is the source of truth for what is on screen.
+    if (!state.excluded.delete(String(courseid))) {
+        return;
+    }
     state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
     courseEl.remove();
-    /* Removing a fetched row shifts every later one down, so the cursor has to come back with
-       it or Load more skips the course that took its place. Guarded twice over: the picker
-       appends rows this cursor never counted, and the trash button stays live across the
-       confirm and the unlink, so a re-click can reach the same row again — the second unlink
-       resolves with success false rather than throwing, and would decrement a second time.
-       Consuming the tag makes the step idempotent per row. */
-    if (courseEl.dataset.paged) {
-        delete courseEl.dataset.paged;
-        state.offset -= 1;
-    }
-    /* The list is paginated, so an empty rows container only means "no courses linked" once
-       there is nothing left to load: with a page still pending the message would be a lie. */
-    state.emptyEl.hidden = state.rowsEl.children.length > 0 || !state.loadMoreEl.hidden;
+    state.total -= 1;
+    refreshListState(state);
     /* The confirm dialog handed focus back to the trash button of the card just detached. The
        toggle is preferred over the next trash because only the toggle is always rendered — the
        trash is capability-gated per course. */
@@ -715,13 +740,18 @@ const onAddCourse = (state) => {
         args: {competencyid: state.competencyid, courseid: courseid},
     }])[0]
         .then((course) => {
-            const row = makeCourseRow(state, course);
-            state.rowsEl.appendChild(row);
-            row.scrollIntoView({block: 'nearest'});
-            flash(row);
-            state.excluded.add(String(course.courseid));
-            state.emptyEl.hidden = true;
-            addToast(state.courseaddedlabel);
+            // A double-submit returns the same course; only the first shows a card and counts it,
+            // so the server total and the displayed set never drift on a re-add.
+            if (!state.excluded.has(String(course.courseid))) {
+                const row = makeCourseRow(state, course);
+                state.rowsEl.appendChild(row);
+                row.scrollIntoView({block: 'nearest'});
+                flash(row);
+                state.excluded.add(String(course.courseid));
+                state.total += 1;
+                refreshListState(state);
+                addToast(state.courseaddedlabel);
+            }
             return Templates.replaceNodeContents(state.addsel.parentElement, state.addshtml, '');
         })
         .then(() => bindPicker(state))
@@ -834,7 +864,8 @@ export const open = async(opts) => {
         hiddenframeworkEl: null,
         addsel: null,
         addshtml: '',
-        offset: 0,
+        total: 0,
+        loading: false,
         excluded: new Set(),
         addcourseplaceholder: labels[0],
         addactivitylabel: labels[1],
