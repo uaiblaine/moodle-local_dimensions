@@ -1029,5 +1029,9 @@ export const mount = async(container, opts) => {
     };
 
     wireEvents(state);
-    await init(state);
+    // The wireEvents listeners are delegated onto the container, which a remount would not discard,
+    // so mount() must reject only before it. Swallow the initial load to a toast so a failure here
+    // does not release the latch and let a re-click double-wire; a load that failed before revealing
+    // any region leaves the pane blank until the modal is reopened (a known gap for the enrol tab).
+    await init(state).catch(notifyError);
 };
