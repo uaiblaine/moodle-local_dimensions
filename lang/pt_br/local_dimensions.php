@@ -96,6 +96,7 @@ $string['central_enrol_hint_self'] = 'Permite que membros do coorte se inscrevam
 $string['central_enrol_info'] = 'Detalhes';
 $string['central_enrol_instance_disabled'] = 'Inscrição desabilitada';
 $string['central_enrol_instance_enabled'] = 'Inscrição habilitada';
+$string['central_enrol_loadfailed'] = 'Não foi possível carregar os métodos de inscrição. Tente novamente.';
 $string['central_enrol_loadmore'] = 'Carregar mais';
 $string['central_enrol_method'] = 'Método';
 $string['central_enrol_method_cohort'] = 'Sincronização de coortes';

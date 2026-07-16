@@ -49,6 +49,14 @@
             </button>
         </div>
     </div>
+    <div class="alert alert-warning" data-region="enrol-error" hidden>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="me-auto">{{#str}}central_enrol_loadfailed, local_dimensions{{/str}}</span>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="enrol-refresh">
+                <i class="fa fa-rotate me-1" aria-hidden="true"></i>{{#str}}refresh, moodle{{/str}}
+            </button>
+        </div>
+    </div>
     <div data-region="enrol-main" hidden>
         <div class="d-flex flex-wrap gap-2 align-items-end justify-content-between mb-2">
             <div>
