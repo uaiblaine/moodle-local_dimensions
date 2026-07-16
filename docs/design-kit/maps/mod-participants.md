@@ -10,9 +10,9 @@ Três dos quatro panes nascem **vazios** no Mustache e são montados por JS; só
 renderizado do servidor. Essa assimetria é a origem do achado de loading registrado no fim deste
 mapa — **não** é a mesma lacuna do `EST`/`FWK`/`PLN`.
 
-- **Mustache:** [`templates/central/participants_manager.mustache`](../../../templates/central/participants_manager.mustache) (154 linhas, host), [`cohort_manager.mustache`](../../../templates/central/cohort_manager.mustache) (50), [`roles_manager.mustache`](../../../templates/central/roles_manager.mustache) (77), [`enrol_methods.mustache`](../../../templates/central/enrol_methods.mustache) (129)
+- **Mustache:** [`templates/central/participants_manager.mustache`](../../../templates/central/participants_manager.mustache) (154 linhas, host), [`cohort_manager.mustache`](../../../templates/central/cohort_manager.mustache) (50), [`roles_manager.mustache`](../../../templates/central/roles_manager.mustache) (77), [`enrol_methods.mustache`](../../../templates/central/enrol_methods.mustache) (137)
 - **PHP:** [`classes/output/dynamictabs/plans.php`](../../../classes/output/dynamictabs/plans.php) — o modal **não tem renderable próprio**; ele lê tudo do `data-*` da região do `PLN` (`:329-333`)
-- **AMD:** [`participants_manager.js`](../../../amd/src/central/participants_manager.js) (251, host), [`cohort_manager.js`](../../../amd/src/central/cohort_manager.js), [`participants_users.js`](../../../amd/src/central/participants_users.js), [`roles_manager.js`](../../../amd/src/central/roles_manager.js), [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1037)
+- **AMD:** [`participants_manager.js`](../../../amd/src/central/participants_manager.js) (251, host), [`cohort_manager.js`](../../../amd/src/central/cohort_manager.js), [`participants_users.js`](../../../amd/src/central/participants_users.js), [`roles_manager.js`](../../../amd/src/central/roles_manager.js), [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1053)
 - **To-be no DS:** [`modal-shell.html`](../modal-shell.html) (cabeçalho D2 + links no rodapé), [`cohort-assign.html`](../cohort-assign.html) (estilo gestão de grupos + sync)
 
 > **Resync 2026-07-14.** A versão anterior deste mapa congelou em `159a800` (2026-06-29) — a mesma
@@ -167,20 +167,25 @@ aparece.
 
 ## Aba Métodos de inscrição (`MOD.ENROL`)
 
-O pane é vazio (`participants_manager.mustache:150-151`) e montado por `enrol_methods.js:1010-1037`.
-Desde `c96a3e9`, o `mount` **engole a carga inicial (`init`) num toast** (`:1036`) porque os
+O pane é vazio (`participants_manager.mustache:150-151`) e montado por `enrol_methods.js:1026-1053`.
+Desde `c96a3e9`, o `mount` **engole a carga inicial (`init`) num toast** (`:1052`) porque os
 listeners são delegados no **próprio contêiner** (`state.root`) e sobrevivem ao `replaceNodeContents`
-— logo o "ele limpa, logo re-monta seguro" **não** vale para o enrol. Isso deixa um resíduo aberto
-(chip filado): se o `init` rejeitar **antes** de revelar qualquer região, o pane fica em branco e o
-`ENROL-REFRESH` (que mora **dentro** das regiões ocultas) fica inalcançável — ver o achado IMP-03,
-item 4. O conteúdo tem mapa próprio — ver [`mod-enrolmethods.md`](mod-enrolmethods.md). **Ressalva medida:**
+— logo o "ele limpa, logo re-monta seguro" **não** vale para o enrol. Isso deixava um resíduo aberto
+(chip filado): se o `init` rejeitasse **antes** de revelar qualquer região, o pane ficava em branco e o
+`ENROL-REFRESH` (que morava **dentro** das regiões ocultas) ficava inalcançável. **ENTREGUE em
+2026-07-16 (`c2d9471`):** o `init` embrulha essa primeira carga num `try/catch`
+(`enrol_methods.js:858-885`) e, na falha, revela uma região de erro dedicada `enrol-error`
+(`enrol_methods.mustache:52-59`; `:880` revela, `:881-883` oculta empty/disabled/main) cujo próprio
+`ENROL-REFRESH` (`enrol_methods.mustache:55-57`) mora **fora** das três ocultas e re-roda o `init`
+(`:931-932`); o re-lançamento (`:884`) mantém o toast do `mount` (`:1052`). O chip está feito — ver o
+achado IMP-03, item 4. O conteúdo tem mapa próprio — ver [`mod-enrolmethods.md`](mod-enrolmethods.md). **Ressalva medida:**
 aquele mapa se declara *"to-be — proposta, ainda sem código"* e foi escrito **~70 minutos antes** de o
 `3d1d5cb` shipar o código; ele está tão desatualizado quanto este estava. Resync próprio pendente.
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-REFRESH` | Atualizar | botão | `enrol_methods.mustache:39-41`, `:47-49`, `:108-110` | `data-action="enrol-refresh"` | **três** ocorrências (dois `alert`s + a barra de filtros). `<i class="fa fa-rotate me-1">` + `{{#str}}refresh, moodle{{/str}}`. **É o único "atualizar" do modal inteiro** — as outras três abas não têm nenhum. Precedente direto do IMP-05: a string e o ícone já existem, sem string nova |
-| `ENROL-SELBAR` | `[sem rótulo]` | barra de seleção | `enrol_methods.mustache:113-127` | `.border-top.pt-2` | contador + "em processamento" (`fa-spinner fa-spin`, `:116`) + Remover método / Aplicar método, ambos `disabled` por padrão (`:120`, `:123`) |
+| `ENROL-REFRESH` | Atualizar | botão | `enrol_methods.mustache:39-41`, `:47-49`, `:55-57`, `:116-118` | `data-action="enrol-refresh"` | **quatro** ocorrências (três `alert`s + a barra de filtros; a do `enrol-error` — `:55-57` — chegou em `c2d9471`, e é a que reabilita a recuperação: seu `alert` é o único revelado quando o `init` falha antes das demais regiões). `<i class="fa fa-rotate me-1">` + `{{#str}}refresh, moodle{{/str}}`. **É o único "atualizar" do modal inteiro** — as outras três abas não têm nenhum. Precedente direto do IMP-05: a string e o ícone já existem, sem string nova |
+| `ENROL-SELBAR` | `[sem rótulo]` | barra de seleção | `enrol_methods.mustache:121-135` | `.border-top.pt-2` | contador + "em processamento" (`fa-spinner fa-spin`, `:124`) + Remover método / Aplicar método, ambos `disabled` por padrão (`:128`, `:131`) |
 
 ## Comportamento do host (`participants_manager.js`)
 
@@ -219,7 +224,7 @@ filtros e cabeçalho da tabela aparecem na hora e só as **linhas** faltam. Uma 
 4 abas igual está tratando 3 problemas e 1 não-problema.
 
 **4. CORRIGIDO em 2026-07-16 (`c96a3e9`) — a trava era definitiva; deixou de ser (com uma ressalva
-no enrol).** *Era assim:* em `ensureMounted` cada `<flag>mounted = true` corria **antes** do `await`
+no enrol, fechada depois em `c2d9471`).** *Era assim:* em `ensureMounted` cada `<flag>mounted = true` corria **antes** do `await`
 e o mount ia fire-and-forget (`.catch(notifyError)`); se ele rejeitasse (WS fora, rede caindo — o
 que o `errors.js` roteia), o toast aparecia, o pane ficava em branco e **a trava continuava `true`**.
 Reclicar a aba **não** tentava de novo (o `if` já falhava no `!<flag>mounted`), e como não há
@@ -231,23 +236,28 @@ pelo `ensureMounted` — pane default sem recuperação alguma. *Agora:* os quat
 a **libera no `.catch`** (`:172`), então a próxima ativação da aba re-monta; o Coortes entrou na
 tabela, então reclicar a aba default (`:188-189`) o recupera também.
 
-*Ressalva medida — o enrol ainda tem um buraco:* liberar-no-erro só é seguro se o mount rejeitado
+*Ressalva medida — o enrol tinha um buraco, fechado em `c2d9471`:* liberar-no-erro só é seguro se o mount rejeitado
 deixou o pane **sem fios**. Coortes e Papéis fazem `replaceNodeContents` e religam nós-filhos frescos
 (re-montagem limpa), mas Usuários e enrol **não** — o de Usuários é renderizado no servidor e religado
 no lugar, e o enrol **delega os listeners no próprio contêiner** (`state.root`), que o
 `replaceNodeContents` **não** descarta (o "ele limpa, logo re-monta seguro" é **falso** para o enrol).
 Por isso o único `await` pós-fios de cada um é engolido num toast (`participants_users.js:310`,
-`enrol_methods.js:1036`): uma falha de **primeira carga resolve** o mount (a trava fica cravada, sem
+`enrol_methods.js:1052`): uma falha de **primeira carga resolve** o mount (a trava fica cravada, sem
 retry, um só estado com fios). Usuários segue usável — os controles de filtro visíveis re-rodam
-`applyFilters` sobre esse estado. **O enrol, não:** se o `init` rejeitar na primeira montagem
-**antes** de revelar qualquer região, o pane fica em branco e o `ENROL-REFRESH` (que mora **dentro**
-das regiões ocultas) é inalcançável — a recuperação continua sendo reabrir o modal. Ou seja: a
-trava-presa foi fechada para as quatro abas; **o pane-em-branco de primeira-carga do enrol não** — é
-o resíduo que segue aberto (chip filado).
+`applyFilters` sobre esse estado. **O enrol era o buraco:** se o `init` rejeitasse na primeira montagem
+**antes** de revelar qualquer região, o pane ficava em branco e o `ENROL-REFRESH` (que morava
+**dentro** das regiões ocultas) era inalcançável — a recuperação era reabrir o modal. **ENTREGUE em
+2026-07-16 (`c2d9471`):** o `init` embrulha essa primeira carga num `try/catch`
+(`enrol_methods.js:858-885`) e, na falha, revela a região de erro dedicada `enrol-error`
+(`enrol_methods.mustache:52-59`; `:880` revela, `:881-883` oculta empty/disabled/main) e re-lança
+(`:884`) para o toast do `mount` (`:1052`) ainda disparar; o `ENROL-REFRESH` dessa região
+(`enrol_methods.mustache:55-57`) mora **fora** das três ocultas e re-roda o `init` (`:931-932`). Ou
+seja: a trava-presa foi fechada para as quatro abas em `c96a3e9`; **o pane-em-branco de primeira-carga
+do enrol foi fechado em `c2d9471`** — o chip está feito.
 
 **Conclusão para o to-be:** o alvo não é "loading na troca de aba" genérico. É (a) o pane de Coortes
 no primeiro paint, (b) os 3 panes vazios na troca — **não** o de Usuários, que precisa no máximo de
 um esqueleto de linhas — e (c) a trava liberada no erro, **entregue em `c96a3e9`** (libera no `.catch`
-e a aba re-monta), restando só o pane-em-branco de primeira-carga do enrol, cujo `ENROL-REFRESH` fica
-inalcançável dentro das regiões ocultas — o resíduo que uma região de erro dedicada ao enrol ainda
-precisa cobrir.
+e a aba re-monta), e o pane-em-branco de primeira-carga do enrol, **entregue em `c2d9471`**
+(2026-07-16): uma região de erro dedicada `enrol-error`, revelada no `catch` do `init`, cujo
+`ENROL-REFRESH` mora **fora** das regiões ocultas. Ambos os resíduos estão fechados.

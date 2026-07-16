@@ -17,10 +17,9 @@
      REPROVAM o AA. Este par passa nas 8 superfícies que ele alcança: 6,04..6,52:1 no claro e
      7,22..8,38:1 no escuro; como tint, 5,70:1 / 7,23:1. Mesmo precedente blue-200 do mod-participants. */
   --acc-fg:#185fa5;--acc-bg:#e6f1fb;
-  /* Tint de ERRO fixo (o alerta do 4º portão): MESMA armadilha, e esta só apareceu ao auditar os
-     pixels renderizados — o par de perigo do painel .moodle CLARO (#ca3120 sobre #f4d6d2) dá
-     3,88:1 e REPROVA a 10px. O par fixo passa nos dois modos: 6,13:1 (claro) e 7,86:1 (escuro). */
-  --err-fg:#a32d2d;--err-bg:#fcebeb;
+  /* O 4º portão SHIPOU (c2d9471) como alert-warning — transitório/repetível —, NÃO danger. Por isso
+     não precisa de tint fixo: o par de aviso do painel .moodle (marrom escuro sobre creme) é legível
+     nos dois modos, ao contrário do par de perigo (#ca3120 sobre #f4d6d2 dava 3,88:1, reprovava a 10px). */
   /* Preenchimento primário (segmento ativo + "Aplicar método"): NÃO pode ser var(--text-accent),
      que no escuro do painel DS vira o azul CLARO #85b7eb — branco sobre ele dá 2,11:1 (medido, a
      armadilha que quase shipou duas vezes). Par fixo nos dois modos: 6,52:1 (medido). */
@@ -37,7 +36,7 @@
   --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
   --text-danger:#f09595;--bg-danger:#2a1313;--border-danger:#791f1f;
   --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
-  --acc-fg:#85b7eb;--acc-bg:#0c2740;--err-fg:#f09595;--err-bg:#2a1313;
+  --acc-fg:#85b7eb;--acc-bg:#0c2740;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
 .screens{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;}
@@ -87,13 +86,12 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .alert{border-radius:var(--radius);padding:7px 9px;font-size:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .a-warn{border:0.5px solid var(--border-warning);background:var(--bg-warning);color:var(--text-warning);}
 .a-info{border:0.5px solid var(--acc-fg);background:var(--acc-bg);color:var(--acc-fg);}
-.a-dang{border:0.5px solid var(--err-fg);background:var(--err-bg);color:var(--err-fg);}
 .sw{display:inline-flex;align-items:center;gap:6px;font-size:10px;}
 .tgl{position:relative;display:inline-block;width:24px;height:14px;flex:none;}
 .tgl-track{position:absolute;inset:0;background:var(--border-stronger);border-radius:8px;}
 .tgl-track::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:#fff;}
 /* Ligado: sem ele a tela se contradiz — um curso oculto (eye-slash) não pode estar listado com
-   "Mostrar cursos ocultos" desligado, que é o padrão (enrol_methods.js:1023). */
+   "Mostrar cursos ocultos" desligado, que é o padrão (enrol_methods.js:1039). */
 .tgl.on .tgl-track{background:var(--prim-bg);}
 .tgl.on .tgl-track::after{left:auto;right:2px;}
 
@@ -123,7 +121,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
 /* ---- segmento de método: radio + combinador de IRMÃO (~), nunca :has() ----
    Os dois radios são irmãos do .pane; cada linha carrega AS DUAS colunas de status (.s-cohort e
-   .s-self) e o CSS esconde uma. É a mecânica real do pane: enrol_methods.js:697-720 repinta das
+   .s-self) e o CSS esconde uma. É a mecânica real do pane: enrol_methods.js:698-721 repinta das
    data-* da linha, sem refetch. O `~` reavalia na hora; um :has() num ancestral atrasa um passo. */
 .mchk{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
 .seg{display:inline-flex;border-radius:var(--radius);overflow:hidden;border:0.5px solid var(--border-strong);}
@@ -163,7 +161,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
   <!-- ============ as-is ============ -->
   <section class="panel asis">
-    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · 4ª aba shipada — 3 portões, busca, tabela rotulada</div>
+    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · 4ª aba shipada — 4 portões (o 4º, de erro, entrou em c2d9471), busca, tabela rotulada</div>
 
     <div class="m">
       <div class="m-head">
@@ -188,7 +186,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
         <div class="pane">
 
           <div class="sec">
-            <div class="seclbl">Barra de configuração <span class="idb">:53</span></div>
+            <div class="seclbl">Barra de configuração <span class="idb">:61</span></div>
             <div class="row" style="align-items:flex-end;justify-content:space-between;">
               <span class="col"><span class="flbl">Coorte do plano</span><span class="ctrl" style="min-width:120px;"><span>Marketing 2026</span><span style="color:var(--text-secondary)">⌄</span></span></span>
               <span class="col"><span class="flbl" id="e-mlbl">Método</span>
@@ -199,15 +197,15 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
               <span class="col"><span class="flbl">Papel atribuído</span><span class="ctrl" style="min-width:82px;"><span>Estudante</span><span style="color:var(--text-secondary)">⌄</span></span></span>
             </div>
             <div class="row" style="margin-top:6px;">
-              <span class="idb">ENROL-COHORT · :58</span><span class="idb">ENROL-METHOD · :64-74</span><span class="idb">ENROL-ROLE · :80</span>
+              <span class="idb">ENROL-COHORT · :66</span><span class="idb">ENROL-METHOD · :72-82</span><span class="idb">ENROL-ROLE · :88</span>
             </div>
-            <p class="note hint-cohort" style="margin:6px 0 0;">Mantém os membros do coorte inscritos nos cursos selecionados com o papel escolhido. <span class="idb">ENROL-HINT · :83</span></p>
-            <p class="note hint-self" style="margin:6px 0 0;">Permite que membros do coorte se inscrevam sozinhos. A inscrição é sempre restrita ao coorte selecionado. <span class="idb">ENROL-HINT · :83</span></p>
+            <p class="note hint-cohort" style="margin:6px 0 0;">Mantém os membros do coorte inscritos nos cursos selecionados com o papel escolhido. <span class="idb">ENROL-HINT · :91</span></p>
+            <p class="note hint-self" style="margin:6px 0 0;">Permite que membros do coorte se inscrevam sozinhos. A inscrição é sempre restrita ao coorte selecionado. <span class="idb">ENROL-HINT · :91</span></p>
             <span class="note" style="display:block;margin-top:5px;"><code>data-method</code> é <code>cohort</code> | <code>self</code> — <strong>nunca <code>sync</code></strong>. "Sincronização de coortes" é só o rótulo visível.</span>
           </div>
 
           <div class="sec" style="margin-top:9px;">
-            <div class="seclbl">Barra de filtros <span class="idb">:84</span></div>
+            <div class="seclbl">Barra de filtros <span class="idb">:92</span></div>
             <div class="row">
               <span class="ctrl" style="width:112px;"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-search"/></svg><span style="color:var(--text-secondary);flex:1;">Pesquisar competências</span></span>
               <span class="ctrl"><span>Todas as categorias</span><span style="color:var(--text-secondary)">⌄</span></span>
@@ -216,13 +214,13 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
               <span class="bsec"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-rot"/></svg>Atualizar</span>
             </div>
             <div class="row" style="margin-top:6px;">
-              <span class="idb">ENROL-SEARCH · :89-91 · debounce 300 ms</span><span class="idb">ENROL-CAT · :97</span><span class="idb">ENROL-HIDDEN · :101</span><span class="idb">ENROL-VISCOUNT · :107</span><span class="idb">ENROL-REFRESH 3/3 · :108-110</span>
+              <span class="idb">ENROL-SEARCH · :97-99 · debounce 300 ms</span><span class="idb">ENROL-CAT · :105</span><span class="idb">ENROL-HIDDEN · :109</span><span class="idb">ENROL-VISCOUNT · :115</span><span class="idb">ENROL-REFRESH 4/4 · :116-118</span>
             </div>
-            <span class="note" style="display:block;margin-top:5px;">O switch está desenhado <strong>ligado</strong> (o padrão é <strong>desligado</strong>, <code>js:1023</code>) — é o que permite o curso oculto aparecer na tabela abaixo com o <code>fa-eye-slash</code>. Busca, categoria e switch disparam <code>reload</code>; o <strong>papel não</strong>.</span>
+            <span class="note" style="display:block;margin-top:5px;">O switch está desenhado <strong>ligado</strong> (o padrão é <strong>desligado</strong>, <code>js:1039</code>) — é o que permite o curso oculto aparecer na tabela abaixo com o <code>fa-eye-slash</code>. Busca, categoria e switch disparam <code>reload</code>; o <strong>papel não</strong>.</span>
           </div>
 
           <div class="sec" style="margin-top:9px;">
-            <div class="seclbl">Accordion · caixa de rolagem própria (max-height 50vh) <span class="idb">ENROL-TREE · :112</span></div>
+            <div class="seclbl">Accordion · caixa de rolagem própria (max-height 50vh) <span class="idb">ENROL-TREE · :120</span></div>
 
             <div class="grp">
               <div class="grp-head">
@@ -276,9 +274,9 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
               </div>
             </div>
             <div class="row">
-              <span class="idb">ENROL-GROUP · enrol_group:36</span><span class="idb">ENROL-GROUP-CB · :38</span><span class="idb">ENROL-TOGGLE · :40-47</span><span class="idb">ENROL-HEAD · 6 col · :53-60</span><span class="idb">ENROL-ROW · DOM-built · js:315-405</span>
+              <span class="idb">ENROL-GROUP · enrol_group:36</span><span class="idb">ENROL-GROUP-CB · :38</span><span class="idb">ENROL-TOGGLE · :40-47</span><span class="idb">ENROL-HEAD · 6 col · :53-60</span><span class="idb">ENROL-ROW · DOM-built · js:316-406</span>
             </div>
-            <span class="note" style="display:block;margin-top:5px;">Grupo fechado <strong>não carrega</strong> cursos: a carga é preguiçosa na 1ª expansão (<code>data-loaded</code>, <code>js:510-518</code>) e a trava é <strong>revertida no erro</strong>. O nome do grupo é o <strong>shortname</strong> da competência.</span>
+            <span class="note" style="display:block;margin-top:5px;">Grupo fechado <strong>não carrega</strong> cursos: a carga é preguiçosa na 1ª expansão (<code>data-loaded</code>, <code>js:511-519</code>) e a trava é <strong>revertida no erro</strong>. O nome do grupo é o <strong>shortname</strong> da competência.</span>
           </div>
 
           <div class="row" style="justify-content:space-between;border-top:0.5px solid var(--border);padding-top:8px;margin-top:9px;">
@@ -291,87 +289,107 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
             </span>
           </div>
           <div class="row">
-            <span class="idb">ENROL-SELCOUNT · :114</span><span class="idb">ENROL-PROC · :115-118</span><span class="idb">ENROL-REMOVE · :120</span><span class="idb">ENROL-APPLY · :123</span>
+            <span class="idb">ENROL-SELCOUNT · :122</span><span class="idb">ENROL-PROC · :123-126</span><span class="idb">ENROL-REMOVE · :128</span><span class="idb">ENROL-APPLY · :131</span>
           </div>
         </div>
 
         <div class="sec">
-          <div class="seclbl">Os outros dois portões — o <code>init</code> revela exatamente um</div>
+          <div class="seclbl">Os outros três portões — no sucesso o <code>init</code> revela exatamente um; o de erro sai no <code>catch</code></div>
           <div class="alert a-warn" style="margin-bottom:6px;">
             <span style="flex:1;">A Sincronização de coortes e a Autoinscrição estão desabilitadas neste site.</span>
             <span class="bsec"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-rot"/></svg>Atualizar</span>
           </div>
-          <div class="row" style="margin-bottom:6px;"><span class="idb">ENROL-DISABLED · :36-43</span><span class="idb">ENROL-REFRESH 1/3 · :39-41</span></div>
+          <div class="row" style="margin-bottom:6px;"><span class="idb">ENROL-DISABLED · :36-43</span><span class="idb">ENROL-REFRESH 1/4 · :39-41</span></div>
           <div class="alert a-info">
             <span style="flex:1;">Nenhum coorte vinculado a este plano. Adicione um na aba Coortes primeiro.</span>
             <span class="bsec"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-rot"/></svg>Atualizar</span>
           </div>
-          <div class="row" style="margin-top:6px;"><span class="idb">ENROL-EMPTY · :44-51</span><span class="idb">ENROL-REFRESH 2/3 · :47-49</span></div>
+          <div class="row" style="margin-top:6px;"><span class="idb">ENROL-EMPTY · :44-51</span><span class="idb">ENROL-REFRESH 2/4 · :47-49</span></div>
+          <div class="alert a-warn" style="margin-top:6px;">
+            <span style="flex:1;">Não foi possível carregar os métodos de inscrição. Tente novamente.</span>
+            <span class="bsec"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-rot"/></svg>Atualizar</span>
+          </div>
+          <div class="row" style="margin-top:6px;"><span class="idb">ENROL-ERROR · :52-59 · alert-warning</span><span class="idb">ENROL-REFRESH 3/4 · :55-57</span></div>
+          <span class="note" style="display:block;margin-top:5px;"><strong>Novo em 2026-07-16</strong> (<code>c2d9471</code>): o 4º portão. Ao contrário dos outros três, o <code>init</code> o revela no <code>catch</code> da primeira carga (<code>js:880</code>), não num caminho de sucesso — e é um <code>alert-warning</code> (falha transitória/repetível), não danger. Seu atualizar é o <strong>único</strong> que mora <strong>fora</strong> das três regiões de dados, então sobrevive à falha que as esconde. String da mensagem nova: <code>central_enrol_loadfailed</code>.</span>
         </div>
 
-        <span class="note"><strong>Clique nos dois segmentos de método acima:</strong> o status, o papel e o toggle da linha trocam sem nenhuma requisição — é a mecânica real (<code>applyMethodChange</code>, <code>js:697-720</code>), porque cada linha carrega os <strong>dois</strong> métodos nas suas <code>data-*</code> (<code>js:319-333</code>).</span>
+        <span class="note"><strong>Clique nos dois segmentos de método acima:</strong> o status, o papel e o toggle da linha trocam sem nenhuma requisição — é a mecânica real (<code>applyMethodChange</code>, <code>js:698-721</code>), porque cada linha carrega os <strong>dois</strong> métodos nas suas <code>data-*</code> (<code>js:320-334</code>).</span>
       </div>
     </div>
   </section>
 
   <!-- ============ to-be ============ -->
   <section class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Proposta (to-be) · IMP-03 — o 4º portão, para o <code>init</code> que falha</div>
+    <div class="plabel"><span class="pdot" style="background:var(--text-success)"></span>IMP-03 · o 4º portão, para o <code>init</code> que falha — <strong>ENTREGUE em 2026-07-16</strong> (<code>c2d9471</code>) · IMP-05 (disciplina do atualizar) segue proposto</div>
 
-    <div class="warn" style="margin-bottom:10px;">
-      <b>Hoje, quando o <code>init</code> rejeita cedo, o pane fica cego.</b> O <code>mount</code>
-      (<code>js:1010-1037</code>) renderiza o esqueleto, liga os eventos e só então faz
-      <code>await init(state).catch(notifyError)</code> (<code>:1036</code>) — o <code>catch</code>
-      vira toast, mas não acende região nenhuma. As três regiões nascem <code>hidden</code> e quem as
-      revela é o <code>init</code> (<code>:880-892</code>). Se o <code>Promise.all</code> de
-      <code>:854-870</code> rejeitar, ele sai por exceção <b>antes</b> de qualquer
-      <code>hidden = false</code>.
+    <div class="ok" style="margin-bottom:10px;">
+      <b>Era assim: quando o <code>init</code> rejeitava cedo, o pane ficava cego — corrigido em
+      2026-07-16</b> (<code>c2d9471</code>). O <code>mount</code> (<code>js:1026-1053</code>) renderiza o
+      esqueleto, liga os eventos e só então faz <code>await init(state).catch(notifyError)</code>
+      (<code>:1052</code>) — o <code>catch</code> vira toast, mas não acendia região nenhuma. As três
+      regiões <b>de dados</b> nascem <code>hidden</code> e quem as revela é o <code>init</code>
+      (<code>:896-908</code>); se o <code>Promise.all</code> de <code>:859-875</code> rejeitasse, ele saía
+      por exceção <b>antes</b> de qualquer <code>hidden = false</code>. Agora essa primeira carga vem
+      dentro de um <code>try/catch</code> (<code>:858-885</code>) que, na falha, revela a 4ª região
+      (<code>ENROL-ERROR</code>) e <b>relança</b> — o toast do <code>mount</code> continua disparando.
     </div>
 
     <div class="m">
       <div class="m-head"><span class="m-title">Gerenciar participantes</span><button type="button" class="m-x" aria-label="Fechar">✕</button></div>
       <div class="m-body">
         <div class="tabs"><span class="tab">Coortes</span><span class="tab">Usuários</span><span class="tab">Atribuir papéis</span><span class="tab on">Métodos de inscrição</span></div>
-        <div class="blank">o pane, hoje, depois de um <code>init</code> que rejeitou</div>
+        <div class="blank">o pane <strong>antes de <code>c2d9471</code></strong>, depois de um <code>init</code> que rejeitou</div>
         <div class="col" style="gap:4px;">
-          <span class="gate"><span class="strike">ENROL-DISABLED</span><span class="idb">hidden</span><span class="strike">+ Atualizar 1/3</span></span>
-          <span class="gate"><span class="strike">ENROL-EMPTY</span><span class="idb">hidden</span><span class="strike">+ Atualizar 2/3</span></span>
-          <span class="gate"><span class="strike">ENROL-MAIN</span><span class="idb">hidden</span><span class="strike">+ Atualizar 3/3</span></span>
+          <span class="gate"><span class="strike">ENROL-DISABLED</span><span class="idb">hidden</span><span class="strike">+ Atualizar 1/4</span></span>
+          <span class="gate"><span class="strike">ENROL-EMPTY</span><span class="idb">hidden</span><span class="strike">+ Atualizar 2/4</span></span>
+          <span class="gate"><span class="strike">ENROL-MAIN</span><span class="idb">hidden</span><span class="strike">+ Atualizar 4/4</span></span>
         </div>
-        <span class="note">Os <strong>três</strong> atualizar moram <strong>dentro</strong> das regiões que o <code>init</code> não revelou — <strong>nenhum é alcançável</strong>. E, para esta aba, a trava do host não solta sozinha: um <code>init</code> que falha cedo deixa o pane em branco, voltar na aba não retenta, e com <code>setRemoveOnClose(true)</code> (<code>participants_manager.js:145</code>) reabrir o modal é a única saída.<br><strong>CORRIGIDO em parte, em 2026-07-16</strong> (<code>c96a3e9</code>). <strong>O que era:</strong> a trava do host virava <code>true</code> <strong>antes</strong> do <code>await</code>, e o <code>mount</code> era disparo-e-esquece — um <code>init</code> que rejeitava deixava a trava <strong>presa em <code>true</code></strong>, então voltar na aba <strong>nunca</strong> retentava, e o <code>setRemoveOnClose</code> fazia de reabrir o modal a única recuperação. Valia para Usuários, Papéis e este Métodos de inscrição — e a de Coortes era pior: montada no <code>shown</code> sem trava, e nem reabrir sua aba a remontava. <strong>O que é:</strong> uma tabela única <code>mounted</code> (<code>participants_manager.js:161</code>) e um <code>startMount</code> (<code>:166-175</code>) que <strong>reivindica</strong> a trava de forma síncrona (<code>:170</code>, barra o duplo-clique) e a <strong>solta no <code>catch</code></strong> (<code>:172</code>), então a próxima ativação da aba retenta. Coortes e Papéis limpam e religam filhos novos, e por isso retentam limpo pela aba. <strong>Mas o residual desta aba NÃO fechou:</strong> o <code>enrol</code> delega os ouvintes no <strong>contêiner</strong>, que o <code>replaceNodeContents</code> não descarta — retentar duplicaria os ouvintes. Por isso a falha do seu <code>init</code> é <strong>engolida a um toast</strong> (<code>enrol_methods.js:1036</code>): o <code>mount</code> <strong>resolve</strong>, a trava fica <code>true</code> de propósito, voltar na aba <strong>continua</strong> não retentando, e um <code>init</code> que falhou <strong>antes de revelar qualquer região</strong> deixa o pane em branco até o modal ser reaberto. É exatamente o que o 4º portão abaixo fecha.</span>
+        <span class="note">Os <strong>três</strong> atualizar das regiões de dados moram <strong>dentro</strong> das regiões que o <code>init</code> não revelou — <strong>nenhum deles era alcançável</strong>. E, para esta aba, a trava do host não soltava sozinha: um <code>init</code> que falhava cedo deixava o pane em branco, voltar na aba não retentava, e com <code>setRemoveOnClose(true)</code> (<code>participants_manager.js:145</code>) reabrir o modal era a única saída.<br><strong>CORRIGIDO em parte, em 2026-07-16</strong> (<code>c96a3e9</code>). <strong>O que era:</strong> a trava do host virava <code>true</code> <strong>antes</strong> do <code>await</code>, e o <code>mount</code> era disparo-e-esquece — um <code>init</code> que rejeitava deixava a trava <strong>presa em <code>true</code></strong>, então voltar na aba <strong>nunca</strong> retentava, e o <code>setRemoveOnClose</code> fazia de reabrir o modal a única recuperação. Valia para Usuários, Papéis e este Métodos de inscrição — e a de Coortes era pior: montada no <code>shown</code> sem trava, e nem reabrir sua aba a remontava. <strong>O que é:</strong> uma tabela única <code>mounted</code> (<code>participants_manager.js:161</code>) e um <code>startMount</code> (<code>:166-175</code>) que <strong>reivindica</strong> a trava de forma síncrona (<code>:170</code>, barra o duplo-clique) e a <strong>solta no <code>catch</code></strong> (<code>:172</code>), então a próxima ativação da aba retenta. Coortes e Papéis limpam e religam filhos novos, e por isso retentam limpo pela aba. <strong>O residual desta aba fechou depois, em 2026-07-16</strong> (<code>c2d9471</code>). <strong>O que continua valendo:</strong> o <code>enrol</code> delega os ouvintes no <strong>contêiner</strong>, que o <code>replaceNodeContents</code> não descarta — retentar duplicaria os ouvintes, então a falha do seu <code>init</code> segue <strong>engolida a um toast</strong> (<code>enrol_methods.js:1052</code>), o <code>mount</code> <strong>resolve</strong>, a trava fica <code>true</code> de propósito e voltar na aba <strong>não</strong> retenta. <strong>O que mudou:</strong> o <code>init</code> ganhou uma 4ª região (<code>ENROL-ERROR</code>), revelada no <code>catch</code> da primeira carga (<code>:880</code>), com um atualizar <strong>fora</strong> das outras três — então um <code>init</code> que falha <strong>antes de revelar qualquer região</strong> não deixa mais o pane cego: o pane em branco agora é <strong>recuperável no lugar</strong>, sem reabrir o modal. É o 4º portão logo abaixo, agora <strong>shipado</strong>.</span>
 
-        <div class="alert a-dang" style="margin-top:4px;">
-          <span style="flex:1;">Não foi possível carregar os métodos de inscrição.</span>
+        <div class="alert a-warn" style="margin-top:4px;">
+          <span style="flex:1;">Não foi possível carregar os métodos de inscrição. Tente novamente.</span>
           <span class="bsec"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-rot"/></svg>Atualizar</span>
         </div>
-        <div class="row"><span class="idb">ENROL-ERROR · novo · revelado no catch do init</span></div>
+        <div class="row"><span class="idb">ENROL-ERROR · mustache:52-59 · alert-warning · revelado no catch (js:880)</span><span class="idb">ENROL-REFRESH 3/4 · mustache:55-57</span></div>
       </div>
     </div>
 
     <div class="ok" style="margin-top:10px;">
-      <b>O 4º portão.</b> Uma região de erro, irmã das outras três, revelada no <code>catch</code> do
-      <code>init</code>, com um atualizar <b>fora</b> das três — o único que sobrevive à falha que o
-      esconde. Sem string nova para o botão: o ícone (<code>fa fa-rotate me-1</code>) e a string
-      (<code>refresh, moodle</code>) já shipam aqui.
+      <b>O 4º portão — ENTREGUE em 2026-07-16</b> (<code>c2d9471</code>). <b>O que se propôs:</b> uma
+      região de erro, irmã das outras três, revelada no <code>catch</code> do <code>init</code>, com um
+      atualizar <b>fora</b> das três — o único que sobrevive à falha que o esconde. <b>O que shipou:</b>
+      exatamente isso. <code>ENROL-ERROR</code> existe no template (<code>enrol_methods.mustache:52-59</code>),
+      um <code>alert-warning</code> com <code>data-action="enrol-refresh"</code> (<code>:55-57</code>) logo
+      depois do <code>enrol-empty</code> e antes do <code>enrol-main</code>; o <code>init</code> o revela no
+      <code>catch</code> (<code>enrol_methods.js:880</code>) e <b>relança</b>, e todo caminho de sucesso o
+      apaga antes (<code>error.hidden = true</code>, <code>:886</code>). O atualizar reusa o mesmo ouvinte
+      delegado (<code>:931-933</code>) para re-rodar o <code>init</code> no lugar. O botão não precisou de
+      string nova — o ícone (<code>fa fa-rotate me-1</code>) e a string (<code>refresh, moodle</code>) já
+      shipavam —, mas a <b>mensagem</b> sim: <code>central_enrol_loadfailed</code>, nova nas duas línguas.
     </div>
 
     <div class="warn" style="margin-top:8px;">
       <b>A ressalva que o <code>mod-participants.md</code> não faz.</b> A conclusão de lá — "só o
-      atualizar deixa tentar de novo" — <b>não vale para a falha que mais importa</b>. Ela vale para
+      atualizar deixa tentar de novo" — <b>não valia para a falha que mais importa</b>. Ela vale para
       <code>ENROL-EMPTY</code>/<code>ENROL-DISABLED</code>, em que o <code>init</code>
       <b>teve sucesso</b> e revelou um alerta, e para a falha <b>tardia</b>
-      (<code>loadCompetencies</code>, <code>:904</code>), que é recuperável porque
-      <code>main.hidden = false</code> já rodou em <code>:892</code>.
+      (<code>loadCompetencies</code>, <code>:920</code>), recuperável porque
+      <code>main.hidden = false</code> já rodou em <code>:908</code>. A <b>falha que mais importa</b> — a
+      carga inicial, que rejeitava <b>antes</b> de qualquer região — é justamente a que o 4º portão passou
+      a cobrir: só ela é envolvida pelo <code>try/catch</code> (<code>:858-885</code>); a tardia seguiu
+      como estava, de propósito.
     </div>
 
     <div class="ok" style="margin-top:8px;">
-      <b>IMP-05 nasce daqui.</b> Os três botões desta aba são a <b>única</b> afordância de atualizar
+      <b>IMP-05 nasce daqui.</b> Os <b>quatro</b> botões de atualizar desta aba (o 4º é o do
+      <code>ENROL-ERROR</code>, ligado em <code>c2d9471</code>) são a <b>única</b> afordância de atualizar
       do hub inteiro — nem a contextbar, nem as outras três abas do modal têm uma. O IMP-05 herda o
-      ícone e a string. <b>Mas não a disciplina:</b> estes três não desabilitam nem giram o ícone
-      enquanto carregam (o mtube faz, em <code>refreshActiveTab</code>, com
+      ícone e a string. <b>Mas não a disciplina:</b> nenhum deles desabilita nem gira o ícone
+      enquanto carrega (o mtube faz, em <code>refreshActiveTab</code>, com
       <code>disabled = true</code> + <code>fa-spin</code> revertidos num <code>finally</code>) —
-      clicar duas vezes aqui dispara dois <code>init</code> concorrentes. A aba deveria ganhar a
-      disciplina junto com o IMP-05.
+      clicar duas vezes dispara dois <code>init</code> concorrentes, e o do <code>ENROL-ERROR</code> reusa
+      o <b>mesmo</b> ouvinte delegado (<code>enrol_methods.js:931-933</code>), então herda a mesma lacuna.
+      A aba deveria ganhar a disciplina junto com o IMP-05.
     </div>
 
     <span class="note" style="display:block;margin-top:8px;">Este pane <strong>não</strong> usa <code>reloadPane</code>, e não é exceção a nada: ele é pane de <strong>modal</strong>, não pane de aba do <code>core/dynamic_tabs</code>. <code>reloadPane</code> (<code>tabs.js:51</code>) tem <strong>23 chamadas em 5 módulos</strong>, todas refresh automático pós-ação: <strong>nenhum controle de UI</strong> o dispara.</span>

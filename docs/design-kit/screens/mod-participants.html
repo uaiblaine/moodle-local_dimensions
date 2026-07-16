@@ -366,28 +366,41 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       Inscrição delega os listeners no <b>próprio contêiner</b>, que o <code>replaceNodeContents</code>
       <b>não</b> descarta (esvazia só os filhos) — um remount ingênuo empilharia um segundo jogo de
       listeners. Por isso o <b>único</b> await pós-fio dos dois é <b>engolido para toast</b>
-      (<code>participants_users.js:310</code>, <code>enrol_methods.js:1036</code>): a falha pós-fio
+      (<code>participants_users.js:310</code>, <code>enrol_methods.js:1052</code>): a falha pós-fio
       <b>resolve</b> o mount (a trava fica setada, ninguém re-tenta, existe <b>exatamente um</b> estado
       com fios). Usuários segue usável porque os seus controles de filtro re-rodam
       <code>applyFilters</code> nesse mesmo estado.
     </div>
-    <div class="warn">
-      <b>Resíduo ainda aberto (chip filado) — só metade da aflição fechou.</b> Se o <code>init</code> da
-      Inscrição rejeitar no <b>primeiro</b> mount, <b>antes</b> de revelar qualquer região
-      (<code>enrol_methods.js:1036</code>), o pane fica em branco e o seu botão "Atualizar" — que mora
-      <b>dentro</b> das regiões ainda ocultas — fica <b>inalcançável</b>: a recuperação continua sendo
-      fechar e reabrir o modal. A trava travada foi consertada; <b>este</b> branco de primeiro-mount da
-      Inscrição <b>não</b>. Uma região de erro dedicada da Inscrição é o próximo passo.
+    <div class="ok">
+      <b>ENTREGUE em 2026-07-16 (<code>c2d9471</code>) — a outra metade da aflição fechou.</b>
+      <b>Era o resíduo (chip filado):</b> se o <code>init</code> da Inscrição rejeitasse no <b>primeiro</b>
+      mount, <b>antes</b> de revelar qualquer região, o pane ficava em branco e o seu "Atualizar" — que morava
+      <b>dentro</b> das regiões ainda ocultas — ficava <b>inalcançável</b>; a recuperação era fechar e reabrir
+      o modal. Propunha-se uma <b>região de erro dedicada</b> como próximo passo.
+      <b>Shipou:</b> a região <code>enrol-error</code> (<code>enrol_methods.mustache:52-59</code>) — um
+      <code>alert-warning</code> com <code>{{#str}}central_enrol_loadfailed, local_dimensions{{/str}}</code>
+      e um <code>data-action="enrol-refresh"</code> que mora <b>fora</b> das três regiões ocultas, logo
+      <b>depois</b> de <code>enrol-empty</code> e <b>antes</b> de <code>enrol-main</code>. O <code>init</code>
+      agora embrulha o primeiro load (o <code>Promise.all</code> de <code>list_template_cohorts</code> +
+      <code>list_enrol_competencies</code>) num <code>try/catch</code> (<code>enrol_methods.js:858-885</code>):
+      na falha ele <b>revela a região de erro</b> e esconde empty/disabled/main (<code>:880-883</code>), e
+      <b>relança</b> — então o <code>await init(state).catch(notifyError)</code> do <code>mount</code>
+      (<code>:1052</code>) ainda solta o toast. O "Atualizar" da região re-roda <code>init</code>
+      (<code>:931-932</code>), então o primeiro-mount da Inscrição agora <b>recupera no lugar</b>; cada caminho
+      de sucesso zera <code>error.hidden</code> antes de revelar a região certa (<code>:886</code>). Alerta
+      <b>warning</b>, não danger: a falha é transitória e re-tentável. Sem bump (versão congelada até a 2.0);
+      a string nova só pede purge do cache de strings.
     </div>
     <div class="ok">
       <b>É isto que ainda amarra o loading ao "atualizar" — por outro motivo agora.</b> O spinner mostra
       que está carregando (ou que <b>falhou</b>); com a trava se soltando sozinha no erro, quem recupera
       Coortes/Papéis é <b>re-clicar a aba</b>. Quem <b>não</b> re-tenta é a Inscrição (a falha pós-fio foi
-      engolida de propósito) — ela depende do <b>atualizar</b>, desde que uma região esteja à vista (o
-      resíduo acima). E não custa string nova: o pane de inscrição já shipa
-      <code>{{#str}}refresh, moodle{{/str}}</code> + <code>fa fa-rotate</code> em <b>três</b> lugares
-      (<code>enrol_methods.mustache:39, 47, 108</code>). O botão do cabeçalho <b>substitui</b> esses três,
-      em vez de virar um quarto.
+      engolida de propósito) — ela depende do <b>atualizar</b>, e agora <b>sempre</b> há uma região à vista
+      para clicar: a região de erro que o <code>c2d9471</code> passou a revelar cobre até o primeiro-mount (o
+      resíduo fechado acima). E não custa string nova: o pane de inscrição já shipa
+      <code>{{#str}}refresh, moodle{{/str}}</code> + <code>fa fa-rotate</code> em <b>quatro</b> lugares
+      (<code>enrol_methods.mustache:39, 47, 55, 116</code>) — o quarto é o "Atualizar" da própria região de
+      erro. O botão do cabeçalho <b>substitui</b> esses quatro, em vez de virar um quinto.
     </div>
     <div class="row" style="gap:10px;margin-top:7px;">
       <div class="col" style="gap:3px;"><span class="note">repouso</span><span class="bsec"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-rotate"/></svg>Atualizar</span></div>
