@@ -508,6 +508,7 @@ $string['rules_tab'] = 'Regras';
 $string['rules_todo'] = 'A fazer';
 $string['rules_total_competencies'] = '{$a} itens no total';
 $string['search_competencies'] = 'Pesquisar...';
+$string['search_toomany'] = 'Muitos resultados. Refine a busca para restringir a lista.';
 $string['show_less'] = 'Ver menos';
 $string['show_more'] = 'Ver mais';
 $string['showdescription'] = 'Mostrar descrição da competência';

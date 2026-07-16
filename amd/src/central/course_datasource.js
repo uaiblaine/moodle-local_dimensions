@@ -28,22 +28,33 @@
  */
 
 import Ajax from 'core/ajax';
+import {getString} from 'core/str';
 
 /**
  * Fetch courses matching the query for the select's competency.
  *
  * @param {String} selector The originating select's selector.
  * @param {String} query The user's search text.
- * @param {Function} success Callback receiving the items list.
+ * @param {Function} success Callback receiving the items list, or an overflow-notice string.
  * @param {Function} failure Callback receiving an error.
  */
-export const transport = (selector, query, success, failure) => {
+export const transport = async(selector, query, success, failure) => {
     const source = document.querySelector(selector);
     const competencyid = source && source.dataset.competencyid ? Number(source.dataset.competencyid) : 0;
-    Ajax.call([{
-        methodname: 'local_dimensions_search_linkable_courses',
-        args: {competencyid: competencyid, query: query, limitfrom: 0, limitnum: 25},
-    }])[0].then((response) => success(response.items)).catch(failure);
+    try {
+        const response = await Ajax.call([{
+            methodname: 'local_dimensions_search_linkable_courses',
+            args: {competencyid: competencyid, query: query, limitfrom: 0, limitnum: 25},
+        }])[0];
+        if (response.total > response.items.length) {
+            // More matches than one page holds: form-autocomplete shows this notice instead of options.
+            success(await getString('search_toomany', 'local_dimensions'));
+            return;
+        }
+        success(response.items);
+    } catch (error) {
+        failure(error);
+    }
 };
 
 /**
@@ -63,10 +74,14 @@ const escapeHtml = (text) => {
  * The label shows the course full name plus the short name in monospace.
  *
  * @param {String} selector The originating select's selector.
- * @param {Array} results Raw items from transport().
- * @return {Array}
+ * @param {Array|String} results Raw items from transport(), or an overflow-notice string.
+ * @return {Array|String}
  */
 export const processResults = (selector, results) => {
+    if (!Array.isArray(results)) {
+        // The transport passed the overflow-notice string straight through.
+        return results;
+    }
     const source = document.querySelector(selector);
     const raw = source && source.dataset.exclude ? source.dataset.exclude : '';
     const excluded = new Set(raw.split(',').filter((id) => id !== ''));
