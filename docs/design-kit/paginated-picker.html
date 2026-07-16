@@ -1,4 +1,4 @@
-<!-- @dsCard group="Dados" name="Picker paginado" subtitle="Busca server-side cross-framework + resultados AJAX + paginação (to-be sobre o autocomplete shipado) · Moodle DS" -->
+<!-- @dsCard group="Dados" name="Picker de busca" subtitle="Busca server-side cross-framework + resultados AJAX + aviso de overflow quando passa de uma página (shipado) · Moodle DS" -->
 <style>
 :root{
   --mds-color-blue-50:#e7f0f9;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;--mds-color-blue-800:#062b4c;
@@ -43,9 +43,9 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .nm{font-size:12px;}
 .path{font-size:10px;color:var(--mds-text-subtle);}
 .tag{font-size:10px;padding:1px 6px;border-radius:var(--mds-radius-pill);border:var(--mds-stroke-sm) solid;font-family:var(--font-mono);flex:none;}
-.pg{min-width:26px;height:26px;padding:0 5px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-sm);display:inline-flex;align-items:center;justify-content:center;font-size:11px;background:var(--mds-bg-surface-default);}
-.pg.on{background:var(--mds-accent-bg);color:var(--mds-accent-text);border-color:var(--mds-accent-border);font-weight:500;}
-.foot{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.statelabel{font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--mds-text-subtle);margin:16px 0 6px;display:flex;align-items:center;gap:6px;}
+.ship{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:var(--mds-radius-pill);background:var(--mds-bg-feedback-success-subtle);color:var(--mds-text-feedback-success);border:var(--mds-stroke-sm) solid var(--mds-text-feedback-success);white-space:nowrap;text-transform:none;letter-spacing:0;}
+.notice{padding:12px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);color:var(--mds-text-muted);font-size:12px;text-align:center;}
 .count{font-size:11px;color:var(--mds-text-subtle);}
 .note{font-size:11px;color:var(--mds-text-subtle);margin-top:12px;}
 .note + .note{margin-top:6px;}
@@ -58,7 +58,6 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface
   <symbol id="e-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
   <symbol id="e-box" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></symbol>
   <symbol id="e-boxcheck" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></symbol>
-  <symbol id="e-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
 </defs></svg>
 
 <div class="wrap">
@@ -75,6 +74,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface
   </div>
   <div class="count">Busca server-side · uma estrutura pode ter centenas de competências</div>
 
+  <div class="statelabel">Até 25 casando a busca</div>
   <div class="res">
     <svg class="ic" aria-hidden="true" focusable="false" style="color:var(--mds-text-subtle)"><use href="#e-box"/></svg>
     <div style="flex:1;min-width:0;"><div class="nm">Lógica matemática</div><div class="path">Matemática ▸ Raciocínio</div></div>
@@ -91,43 +91,46 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface
     <span class="tag" style="background:var(--mds-bg-feedback-success-subtle);color:var(--mds-text-feedback-success);border-color:var(--mds-text-feedback-success)">TI-SEC</span>
   </div>
 
-  <div class="foot">
-    <span class="count">Mostrando 1–25 de 247</span>
-    <div style="margin-left:auto;display:flex;gap:5px;align-items:center;">
-      <span class="pg">‹</span><span class="pg on">1</span><span class="pg">2</span><span class="pg">3</span><span class="ph">…</span><span class="pg">10</span><span class="pg">›</span>
-    </div>
-  </div>
+  <div class="statelabel">Mais de 25 casando a busca <span class="ship">shipado</span></div>
+  <div class="notice">Muitos resultados. Refine a busca para restringir a lista.</div>
 
   <div class="note">
     <b>A busca, o chip de origem e a trilha são reais.</b>
     <code>local_dimensions_search_competencies</code> varre <b>todas</b> as estruturas legíveis
     (<code>competencyframeworkid IN (…)</code>), devolve por resultado a <b>tag da estrutura de
     origem</b> — o <code>idnumber</code>, ou o <code>shortname</code> se ele for vazio
-    (<code>search_competencies.php:92-97</code>) — e a <b>trilha de ancestrais</b> da raiz até o pai.
-    Só dispara a partir de <code>MIN_QUERY_LENGTH = 2</code> caracteres.
+    (<code>search_competencies.php:93-96</code>) — e a <b>trilha de ancestrais</b> da raiz até o pai.
+    Só dispara a partir de <code>MIN_QUERY_LENGTH = 2</code> caracteres (<code>search_competencies.php:45</code>).
   </div>
   <div class="note">
-    <b>A paginação é a proposta — e o buraco que ela fecha é real.</b> O controle shipado é um
+    <b>O buraco dos 26+ era real — e o fix shipado é um aviso, não um paginador.</b> O controle é um
     <code>core/form-autocomplete</code> na aba Planos, alimentado pelo
-    <code>competency_datasource.js:36-38</code> com <code>limitfrom: 0, limitnum: 25</code>
-    <b>fixos</b>: não há pager, não há "Carregar mais", e o resultado 26 em diante é
-    <b>inalcançável</b>. O <code>total</code> já vem na resposta do WS e é <b>descartado</b> — é
-    exatamente ele que alimenta o "de 247" acima. Os números batem com o shipado: página de
-    <b>25</b> (o default do WS, teto <code>MAX_LIMIT = 100</code>) → 247 dá 10 páginas.
+    <code>competency_datasource.js:39</code> com <code>limitfrom: 0, limitnum: 25</code> <b>fixos</b>.
+    O widget do core <b>não pagina</b>: reconstrói a lista inteira a cada tecla e não expõe hook de
+    scroll nem "Carregar mais". O sinal idiomático dele para excedente é o <code>data-notice</code> —
+    quando o datasource devolve uma <b>string</b> no lugar do array, o widget a mostra no lugar das
+    sugestões (<code>form-autocomplete.js:748-750</code>, <code>:556-558</code>). Então o
+    <code>transport</code> agora testa <code>response.total &gt; response.items.length</code> e, se
+    passa de uma página, chama <code>success(getString('search_toomany'))</code>
+    (<code>competency_datasource.js:41-44</code>); o <code>processResults</code> deixa a string passar
+    com um guard <code>Array.isArray</code> (<code>:76</code>). Espelha o
+    <code>core_user/form_user_selector</code>. O <code>total</code> que a WS devolve alimenta a
+    <b>detecção de overflow</b>, não uma paginação.
   </div>
   <div class="note">
-    <b>Divergências deliberadas, marcadas acima:</b> (1) o filtro de estrutura — o WS <b>não</b> tem
+    <b>Divergências deliberadas, ainda to-be:</b> (1) o filtro de estrutura — a WS <b>não</b> tem
     parâmetro de framework hoje (só <code>query</code>, <code>limitfrom</code>,
     <code>limitnum</code>), então essa caixa exige um parâmetro novo; (2) a seleção múltipla por
     checkbox — o autocomplete shipado é <b>single-select</b>. O que ele já faz e o desenho preserva:
-    excluir o que já está no template via <code>data-exclude</code>
-    (<code>competency_datasource.js:65-69</code>).
+    excluir o que já está no template via <code>data-exclude</code>, lido fresco a cada busca
+    (<code>competency_datasource.js:80-84</code>).
   </div>
   <div class="note">
-    Não confundir com o <b>MOD.BROWSER</b> (<code>competency_browser.mustache</code>), que é outro
-    controle: lá há um <code>&lt;select&gt;</code> de <b>uma</b> estrutura por vez (rótulo
-    "Estrutura"), filtro de texto "Filtrar competências", um toggle "Mostrar caminhos" e um botão
-    <b>"Carregar mais"</b> — o padrão de paginação que o resto do hub usa
-    (<code>central_structure_loadmoreshown</code> = "Mostrando {$a->shown} de {$a->total}").
+    <b>A paginação de verdade mora em outro controle.</b> Não confundir com o <b>MOD.BROWSER</b>
+    (<code>competency_browser.mustache</code>): lá há um <code>&lt;select&gt;</code> de <b>uma</b>
+    estrutura por vez (rótulo "Estrutura"), filtro de texto "Filtrar competências", um toggle
+    "Mostrar caminhos" e um botão <b>"Carregar mais"</b> — o padrão de paginação que o resto do hub
+    usa (<code>central_structure_loadmoreshown</code> = "Mostrando {$a->shown} de {$a->total}",
+    <code>lang/en:279</code>). Ele pode paginar porque <b>não</b> é o <code>form-autocomplete</code>.
   </div>
 </div>

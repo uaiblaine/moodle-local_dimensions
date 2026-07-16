@@ -61,7 +61,7 @@ Caminhos que começam com `admin/` ou `lang/` são do **core**, relativos a `pub
 > - **O to-be apontava para um card que não tem o controle citado.** O mapa antigo dizia *"To-be no
 >   DS: parcialmente em `paginated-picker.html` (controle `ruleoutcome`)"*. Um
 >   `grep -n 'ruleoutcome\|rule' docs/design-kit/paginated-picker.html` devolve **nada** — o arquivo
->   existe (133 linhas) e é o *"Picker paginado · Busca server-side + resultados AJAX + paginação"*, que
+>   existe (136 linhas) e é o *"Picker de busca · Busca server-side + resultados AJAX + aviso de overflow"*, que
 >   não tem nem regra nem outcome. A ref era falsa. A casca certa é o `modal-shell.html`.
 > - **O gatilho não ganha ID nova aqui.** O `est-structure.md:137` já mapeia `EST-DETAIL-RULES` em
 >   `structure_footer_actions.mustache:49-52` e já diz "abre `MOD.RULE`". Este mapa **referencia**, em
@@ -259,5 +259,5 @@ regra e a tabela, o que o `refresh` faz com resultado = Nenhum.
 | Erro nomeado `Erro "pontos inválidos"` | a str `central_rule_invalidpoints` = "O total de pontos disponíveis deve ser ao menos igual aos pontos necessários." |
 | `showerror` como condição de render | é **sempre `false`** (`js:89`); quem liga o alerta é o JS (`js:178`) — e quem o desliga é o `refresh` (`js:158`), desde `d343716` (2026-07-15); até lá **nada** o desligava |
 | Nenhuma ref de `.js` (0 de 11) | 4 comportamentos mapeados: título, cascata, validação, desfechos do salvar |
-| To-be "parcialmente em `paginated-picker.html` (controle `ruleoutcome`)" | o card **não tem** `rule` nem `ruleoutcome` (`grep` devolve nada em 133 linhas); a casca é o `modal-shell.html` |
+| To-be "parcialmente em `paginated-picker.html` (controle `ruleoutcome`)" | o card **não tem** `rule` nem `ruleoutcome` (`grep` devolve nada em 136 linhas); a casca é o `modal-shell.html` |
 | 11 controles, todos de Mustache | 15 IDs + 2 gatilhos reusados (`EST-DETAIL-RULES`, `EST-JSON-RULES`) |
