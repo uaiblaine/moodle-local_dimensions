@@ -28,22 +28,33 @@
  */
 
 import Ajax from 'core/ajax';
+import {getString} from 'core/str';
 
 /**
  * Search users assignable to the select's template.
  *
  * @param {String} selector The originating select's selector.
  * @param {String} query The user's search text.
- * @param {Function} success Callback receiving the raw user list.
+ * @param {Function} success Callback receiving the raw user list, or an overflow-notice string.
  * @param {Function} failure Callback receiving an error.
  */
-export const transport = (selector, query, success, failure) => {
+export const transport = async(selector, query, success, failure) => {
     const source = document.querySelector(selector);
     const templateid = source && source.dataset.templateid ? Number(source.dataset.templateid) : 0;
-    Ajax.call([{
-        methodname: 'local_dimensions_search_assignable_users',
-        args: {templateid: templateid, query: query, limitfrom: 0, limitnum: 25},
-    }])[0].then((response) => success(response.items)).catch(failure);
+    try {
+        const response = await Ajax.call([{
+            methodname: 'local_dimensions_search_assignable_users',
+            args: {templateid: templateid, query: query, limitfrom: 0, limitnum: 25},
+        }])[0];
+        if (response.total > response.items.length) {
+            // More matches than one page holds: form-autocomplete shows this notice instead of options.
+            success(await getString('search_toomany', 'local_dimensions'));
+            return;
+        }
+        success(response.items);
+    } catch (error) {
+        failure(error);
+    }
 };
 
 /**
@@ -62,14 +73,20 @@ const escapeHtml = (text) => {
  * Map users to autocomplete {value, label} pairs (full name plus identity in monospace).
  *
  * @param {String} selector Unused (autocomplete contract).
- * @param {Array} results Raw users from transport().
- * @return {Array}
+ * @param {Array|String} results Raw users from transport(), or an overflow-notice string.
+ * @return {Array|String}
  */
-export const processResults = (selector, results) => results.map((user) => {
-    let label = escapeHtml(user.fullname);
-    if (user.identity) {
-        label += ` <span class="font-monospace small local-dimensions-central-links-code">`
-            + `${escapeHtml(user.identity)}</span>`;
+export const processResults = (selector, results) => {
+    if (!Array.isArray(results)) {
+        // The transport passed the overflow-notice string straight through.
+        return results;
     }
-    return {value: user.id, label: label};
-});
+    return results.map((user) => {
+        let label = escapeHtml(user.fullname);
+        if (user.identity) {
+            label += ` <span class="font-monospace small local-dimensions-central-links-code">`
+                + `${escapeHtml(user.identity)}</span>`;
+        }
+        return {value: user.id, label: label};
+    });
+};

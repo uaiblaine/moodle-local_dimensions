@@ -22,20 +22,31 @@
  */
 
 import Ajax from 'core/ajax';
+import {getString} from 'core/str';
 
 /**
  * Fetch competencies matching the query from the server.
  *
  * @param {String} selector Unused (autocomplete contract).
  * @param {String} query The user's search text.
- * @param {Function} success Callback receiving the raw result items.
+ * @param {Function} success Callback receiving the raw result items, or an overflow-notice string.
  * @param {Function} failure Callback receiving an error.
  */
-export const transport = (selector, query, success, failure) => {
-    Ajax.call([{
-        methodname: 'local_dimensions_search_competencies',
-        args: {query: query, limitfrom: 0, limitnum: 25},
-    }])[0].then((response) => success(response.items)).catch(failure);
+export const transport = async(selector, query, success, failure) => {
+    try {
+        const response = await Ajax.call([{
+            methodname: 'local_dimensions_search_competencies',
+            args: {query: query, limitfrom: 0, limitnum: 25},
+        }])[0];
+        if (response.total > response.items.length) {
+            // More matches than one page holds: form-autocomplete shows this notice instead of options.
+            success(await getString('search_toomany', 'local_dimensions'));
+            return;
+        }
+        success(response.items);
+    } catch (error) {
+        failure(error);
+    }
 };
 
 /**
@@ -58,10 +69,14 @@ const escapeHtml = (text) => {
  * (used by the add picker to hide competencies already on the template).
  *
  * @param {String} selector The originating select's selector (autocomplete contract).
- * @param {Array} results Raw items from transport().
- * @return {Array}
+ * @param {Array|String} results Raw items from transport(), or an overflow-notice string.
+ * @return {Array|String}
  */
 export const processResults = (selector, results) => {
+    if (!Array.isArray(results)) {
+        // The transport passed the overflow-notice string straight through.
+        return results;
+    }
     const source = document.querySelector(selector);
     const raw = source && source.dataset.exclude ? source.dataset.exclude : '';
     const excluded = new Set(raw.split(',').filter((id) => id !== ''));
