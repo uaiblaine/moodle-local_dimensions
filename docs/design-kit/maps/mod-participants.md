@@ -12,7 +12,7 @@ mapa — **não** é a mesma lacuna do `EST`/`FWK`/`PLN`.
 
 - **Mustache:** [`templates/central/participants_manager.mustache`](../../../templates/central/participants_manager.mustache) (154 linhas, host), [`cohort_manager.mustache`](../../../templates/central/cohort_manager.mustache) (50), [`roles_manager.mustache`](../../../templates/central/roles_manager.mustache) (77), [`enrol_methods.mustache`](../../../templates/central/enrol_methods.mustache) (129)
 - **PHP:** [`classes/output/dynamictabs/plans.php`](../../../classes/output/dynamictabs/plans.php) — o modal **não tem renderable próprio**; ele lê tudo do `data-*` da região do `PLN` (`:329-333`)
-- **AMD:** [`participants_manager.js`](../../../amd/src/central/participants_manager.js) (241, host), [`cohort_manager.js`](../../../amd/src/central/cohort_manager.js), [`participants_users.js`](../../../amd/src/central/participants_users.js), [`roles_manager.js`](../../../amd/src/central/roles_manager.js), [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1033)
+- **AMD:** [`participants_manager.js`](../../../amd/src/central/participants_manager.js) (251, host), [`cohort_manager.js`](../../../amd/src/central/cohort_manager.js), [`participants_users.js`](../../../amd/src/central/participants_users.js), [`roles_manager.js`](../../../amd/src/central/roles_manager.js), [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1037)
 - **To-be no DS:** [`modal-shell.html`](../modal-shell.html) (cabeçalho D2 + links no rodapé), [`cohort-assign.html`](../cohort-assign.html) (estilo gestão de grupos + sync)
 
 > **Resync 2026-07-14.** A versão anterior deste mapa congelou em `159a800` (2026-06-29) — a mesma
@@ -59,7 +59,7 @@ mapa — **não** é a mesma lacuna do `EST`/`FWK`/`PLN`.
 | `PART-MODAL` | Gerenciar participantes | modal | `participants_manager.js:144` | `Modal.create({title, body})` | `core/modal` puro — **não** passa `footer`. `setRemoveOnClose(true)` (`:145`): o modal é descartado ao fechar, então **todo o estado montado morre junto** (ver `PART-LATCH`). Título via `central_participants_title` (`:137`) |
 | `PART-DIALOG` | `[sem rótulo]` | classes no `.modal-dialog` | `participants_manager.js:151-154` | `modal-xl` + `local-dimensions-participants-modal` + `local-dimensions-headerlink-modal` | as **três** de uma vez. `modal-xl` é do **próprio Bootstrap** (800px em `lg`, 1140px em `xl`, idêntico em 4 e 5) — a API do core só expõe `setLarge()`, daí a classe na mão |
 | `PART-FOOT` | `[sem rótulo]` | rodapé oculto | — | `.modal-footer.hidden` | o core chama `hideFooter()` no `show()` quando o rodapé não tem filhos (`public/lib/amd/src/modal.js:875-879`; `hasFooterContent` = `getFooter().children().length`, `:686-688`). O rodapé **existe** no DOM, só está `hidden` — **basta um filho para o core revelá-lo sozinho** (é o que o D2 explora) |
-| `PART-TOAST` | `[sem rótulo]` | região de toast | `participants_manager.js:167` | `addToastRegion(modal.getBody()[0])` | padrão da casa: sem ela, o toast dos gerenciadores renderiza **atrás** do diálogo (`.toast-wrapper` é `z-index:1051`, o modal é `1055`). O **host** é dono da região; `cohort_manager` e `participants_users` **não** criam a sua. O core remove no fechamento |
+| `PART-TOAST` | `[sem rótulo]` | região de toast | `participants_manager.js:179` | `addToastRegion(modal.getBody()[0])` | padrão da casa: sem ela, o toast dos gerenciadores renderiza **atrás** do diálogo (`.toast-wrapper` é `z-index:1051`, o modal é `1055`). O **host** é dono da região; `cohort_manager` e `participants_users` **não** criam a sua. O core remove no fechamento |
 | `PART-CLOSE` | Fechar | chip | `styles.css:3557-3586` | `.btn-close` do core, reestilizado | `1.75rem`, raio `8px`, fundo `#e7f0f9`, glifo FA `\f00d` em `#0f4d85` (**7,53:1** medido), hover `#d4e6fb` (**6,82:1**). Literais, sem variante dark |
 
 > **A segunda função de `local-dimensions-headerlink-modal` — não apague a classe ao mover os
@@ -127,7 +127,10 @@ Montada por `cohort_manager.js:208-233`: strings → `renderForPromise` → `rep
 ## Aba Usuários (renderizada no servidor)
 
 Montada por `participants_users.js:262+`: **não** faz `replaceNodeContents` — o markup já existe, o
-mount só liga os eventos e busca as linhas.
+mount só liga os eventos e busca as linhas. Desde `c96a3e9`, essa busca inicial (`applyFilters`) é
+**engolida num toast** (`:310`): os fios já estão no lugar, então uma falha de primeira carga não
+trava o pane — os controles de filtro visíveis re-rodam `applyFilters` sobre o mesmo estado (é o que
+mantém a re-montagem via trava liberada segura para este pane; ver `PART-LATCH` e o achado IMP-03).
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
@@ -164,8 +167,13 @@ aparece.
 
 ## Aba Métodos de inscrição (`MOD.ENROL`)
 
-O pane é vazio (`participants_manager.mustache:150-151`) e montado por `enrol_methods.js:1010-1033`.
-O conteúdo tem mapa próprio — ver [`mod-enrolmethods.md`](mod-enrolmethods.md). **Ressalva medida:**
+O pane é vazio (`participants_manager.mustache:150-151`) e montado por `enrol_methods.js:1010-1037`.
+Desde `c96a3e9`, o `mount` **engole a carga inicial (`init`) num toast** (`:1036`) porque os
+listeners são delegados no **próprio contêiner** (`state.root`) e sobrevivem ao `replaceNodeContents`
+— logo o "ele limpa, logo re-monta seguro" **não** vale para o enrol. Isso deixa um resíduo aberto
+(chip filado): se o `init` rejeitar **antes** de revelar qualquer região, o pane fica em branco e o
+`ENROL-REFRESH` (que mora **dentro** das regiões ocultas) fica inalcançável — ver o achado IMP-03,
+item 4. O conteúdo tem mapa próprio — ver [`mod-enrolmethods.md`](mod-enrolmethods.md). **Ressalva medida:**
 aquele mapa se declara *"to-be — proposta, ainda sem código"* e foi escrito **~70 minutos antes** de o
 `3d1d5cb` shipar o código; ele está tão desatualizado quanto este estava. Resync próprio pendente.
 
@@ -179,10 +187,10 @@ aquele mapa se declara *"to-be — proposta, ainda sem código"* e foi escrito *
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
 | `PART-ACTIVATE` | `[sem rótulo]` | troca de aba | `participants_manager.js:116-127` | `activateTab` | **abas artesanais** (`:110`: "no Bootstrap tab JS dependency in the modal"): alterna `.active` + `aria-selected` nos botões (`:118-121`) e `.show`/`.active` nos panes (`:122-126`). **Síncrono** |
-| `PART-ROVING` | `[sem rótulo]` | teclado | `participants_manager.js:194`, `:202`, `:217-238` | `tabindex` 0/-1 | roving tabindex WAI-ARIA: a aba ativa é o **único** ponto de tabulação (`:202`). `ArrowRight` (`:225`), `ArrowLeft` (`:227`), `Home` (`:229`), `End` (`:231`) — circulares, com `preventDefault` e foco movido (`:236`) |
-| `PART-MOUNT` | `[sem rótulo]` | montagem preguiçosa | `participants_manager.js:174-187` | `ensureMounted` | um `if` por aba, casando `button.dataset.region` |
-| `PART-LATCH` | `[sem rótulo]` | trava de montagem | `participants_manager.js:161-163`, `:175-176`, `:179-180`, `:183-184` | `usersmounted` / `rolesmounted` / `enrolmounted` | **a trava é levantada _antes_ do await** e o mount é disparado sem ser aguardado (`.catch(notifyError)`). Ver o achado abaixo |
-| `PART-COHORTMOUNT` | `[sem rótulo]` | montagem inicial | `participants_manager.js:168` | `mountCohorts(...)` | roda no `ModalEvents.shown` — **sem trava nenhuma** (só é chamado uma vez) |
+| `PART-ROVING` | `[sem rótulo]` | teclado | `participants_manager.js:204`, `:212`, `:227-248` | `tabindex` 0/-1 | roving tabindex WAI-ARIA: a aba ativa é o **único** ponto de tabulação (`:212`). `ArrowRight` (`:235`), `ArrowLeft` (`:237`), `Home` (`:239`), `End` (`:241`) — circulares, com `preventDefault` e foco movido (`:246`) |
+| `PART-MOUNT` | `[sem rótulo]` | montagem preguiçosa | `participants_manager.js:186-197` | `ensureMounted` | lê `button.dataset.region` (`:187`) e roteia por aba (`switch` if/else-if) para `startMount` — `tab-cohorts`/`tab-users`/`tab-roles`/`tab-enrol` (`:188-196`). Não monta mais direto: quem crava/libera a trava é o `startMount` (ver `PART-LATCH`), então **um re-clique numa aba com a trava liberada re-monta** |
+| `PART-LATCH` | `[sem rótulo]` | trava de montagem | `participants_manager.js:161`, `:166-175` | `mounted = {cohorts, users, roles, enrol}` + `startMount` | **CORRIGIDO em 2026-07-16 (`c96a3e9`).** *Era:* três booleanos (`usersmounted`/`rolesmounted`/`enrolmounted`) levantados **antes** do await, mount fire-and-forget (`.catch(notifyError)`) — uma rejeição deixava a trava presa em `true` para sempre (ver o achado abaixo). *Agora:* uma tabela `mounted` (`:161`) e um `startMount(key, mountfn, selector)` (`:166-175`) que **crava** a trava de forma síncrona (`:170`, bloqueia o duplo-clique) e a **libera no `.catch`** (`:172`) — a próxima ativação da aba re-monta |
+| `PART-COHORTMOUNT` | `[sem rótulo]` | montagem inicial | `participants_manager.js:180` | `startMount('cohorts', mountCohorts, …)` | roda no `ModalEvents.shown`. **CORRIGIDO em 2026-07-16 (`c96a3e9`):** era `mountCohorts(...)` fire-and-forget **sem trava e sem gatilho de retry** (o pane default falhava sem recuperação alguma); agora entra na tabela `mounted` via `startMount`, e reclicar a aba Coortes (`ensureMounted`, `:188-189`) o re-monta |
 
 ## Achado IMP-03 — a lacuna de loading **deste** modal (derivada do `ensureMounted`)
 
@@ -197,30 +205,49 @@ página** (`EST`/`FWK`/`PLN`). As abas **deste modal** são artesanais (`activat
 herdar: a lacuna é real e é nossa.
 
 **2. A lacuna maior não é a troca de aba — é o _primeiro paint_.** `Modal.create` recebe o corpo
-renderizado e `modal.show()` é chamado em `:240`; só **depois** o `ModalEvents.shown` (`:164`)
-dispara `mountCohorts` (`:168`), que ainda precisa de strings + `renderForPromise` +
-`replaceNodeContents` + um WS (`cohort_manager.js:209-232`). Como o pane de Coortes **nasce vazio**
+renderizado e `modal.show()` é chamado em `:250`; só **depois** o `ModalEvents.shown` (`:176`)
+dispara `startMount('cohorts', …)` (`:180`) → `mountCohorts`, que ainda precisa de strings +
+`renderForPromise` + `replaceNodeContents` + um WS (`cohort_manager.js:209-232`). Como o pane de Coortes **nasce vazio**
 (`participants_manager.mustache:75-76`) e é a aba que **nasce ativa** (`:42`), o modal abre com as
 quatro abas desenhadas e **o corpo em branco embaixo delas**. Não é uma troca de aba — é a abertura.
 
 **3. Na troca de aba, a lacuna é assimétrica — 3 panes de 4.** `selectTab` chama `activateTab`
-(`:192`) **antes** de `ensureMounted` (`:195`), então o pane fica **visível e vazio** enquanto o
+(`:202`) **antes** de `ensureMounted` (`:205`), então o pane fica **visível e vazio** enquanto o
 mount corre. Vale para Coortes, Papéis (`:146-147`) e Métodos de inscrição (`:150-151`), os três
 `<div></div>`. **Usuários é a exceção**: o pane vem renderizado do servidor (`:77-144`), então
 filtros e cabeçalho da tabela aparecem na hora e só as **linhas** faltam. Uma correção que trate as
 4 abas igual está tratando 3 problemas e 1 não-problema.
 
-**4. O defeito que ninguém tinha registrado: a trava é definitiva.** Em `ensureMounted`
-(`:174-187`) cada `<flag>mounted = true` é executado **antes** do `await` — o mount é disparado e
-**não** é aguardado, só `.catch(notifyError)`. Se ele rejeitar (WS fora, rede caindo — exatamente o
-que o `errors.js` existe para rotear), o toast aparece, o pane fica em branco e **a trava continua
-`true`**. Clicar em outra aba e voltar **não** tenta de novo: o `if` já falha no `!<flag>mounted`.
-E como **não há nenhum controle de atualizar** nas abas Coortes/Usuários/Papéis (o único do modal é
-o `ENROL-REFRESH` da 4ª aba), e como `setRemoveOnClose(true)` (`:145`) descarta o modal ao fechar,
-**a única recuperação é fechar e reabrir o modal**. É este o achado que amarra o IMP-03 ao IMP-11
-aqui: um spinner mostra que falhou; **só o "atualizar" deixa tentar de novo**.
+**4. CORRIGIDO em 2026-07-16 (`c96a3e9`) — a trava era definitiva; deixou de ser (com uma ressalva
+no enrol).** *Era assim:* em `ensureMounted` cada `<flag>mounted = true` corria **antes** do `await`
+e o mount ia fire-and-forget (`.catch(notifyError)`); se ele rejeitasse (WS fora, rede caindo — o
+que o `errors.js` roteia), o toast aparecia, o pane ficava em branco e **a trava continuava `true`**.
+Reclicar a aba **não** tentava de novo (o `if` já falhava no `!<flag>mounted`), e como não há
+"atualizar" nas abas Coortes/Usuários/Papéis (o único é o `ENROL-REFRESH` da 4ª aba) e
+`setRemoveOnClose(true)` (`:145`) descarta o modal ao fechar, **só reabrir o modal recuperava**. O
+Coortes era pior: montava fire-and-forget no `shown`, **sem trava**, e sua própria aba não passava
+pelo `ensureMounted` — pane default sem recuperação alguma. *Agora:* os quatro panes passam por um
+`startMount` (`:166-175`) que **crava** a trava de forma síncrona (`:170`, bloqueia o duplo-clique) e
+a **libera no `.catch`** (`:172`), então a próxima ativação da aba re-monta; o Coortes entrou na
+tabela, então reclicar a aba default (`:188-189`) o recupera também.
+
+*Ressalva medida — o enrol ainda tem um buraco:* liberar-no-erro só é seguro se o mount rejeitado
+deixou o pane **sem fios**. Coortes e Papéis fazem `replaceNodeContents` e religam nós-filhos frescos
+(re-montagem limpa), mas Usuários e enrol **não** — o de Usuários é renderizado no servidor e religado
+no lugar, e o enrol **delega os listeners no próprio contêiner** (`state.root`), que o
+`replaceNodeContents` **não** descarta (o "ele limpa, logo re-monta seguro" é **falso** para o enrol).
+Por isso o único `await` pós-fios de cada um é engolido num toast (`participants_users.js:310`,
+`enrol_methods.js:1036`): uma falha de **primeira carga resolve** o mount (a trava fica cravada, sem
+retry, um só estado com fios). Usuários segue usável — os controles de filtro visíveis re-rodam
+`applyFilters` sobre esse estado. **O enrol, não:** se o `init` rejeitar na primeira montagem
+**antes** de revelar qualquer região, o pane fica em branco e o `ENROL-REFRESH` (que mora **dentro**
+das regiões ocultas) é inalcançável — a recuperação continua sendo reabrir o modal. Ou seja: a
+trava-presa foi fechada para as quatro abas; **o pane-em-branco de primeira-carga do enrol não** — é
+o resíduo que segue aberto (chip filado).
 
 **Conclusão para o to-be:** o alvo não é "loading na troca de aba" genérico. É (a) o pane de Coortes
 no primeiro paint, (b) os 3 panes vazios na troca — **não** o de Usuários, que precisa no máximo de
-um esqueleto de linhas — e (c) uma trava que precisa ser **liberada no erro**, não só no sucesso,
-com um "atualizar" que dê a segunda chance.
+um esqueleto de linhas — e (c) a trava liberada no erro, **entregue em `c96a3e9`** (libera no `.catch`
+e a aba re-monta), restando só o pane-em-branco de primeira-carga do enrol, cujo `ENROL-REFRESH` fica
+inalcançável dentro das regiões ocultas — o resíduo que uma região de erro dedicada ao enrol ainda
+precisa cobrir.

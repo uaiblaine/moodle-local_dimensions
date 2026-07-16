@@ -320,10 +320,12 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
     <div class="warn" style="margin-bottom:10px;">
       <b>Hoje, quando o <code>init</code> rejeita cedo, o pane fica cego.</b> O <code>mount</code>
-      (<code>js:1010-1033</code>) renderiza o esqueleto, liga os eventos e só então faz
-      <code>await init(state)</code>. As três regiões nascem <code>hidden</code> e quem as revela é o
-      <code>init</code> (<code>:880-892</code>). Se o <code>Promise.all</code> de <code>:854-870</code>
-      rejeitar, ele sai por exceção <b>antes</b> de qualquer <code>hidden = false</code>.
+      (<code>js:1010-1037</code>) renderiza o esqueleto, liga os eventos e só então faz
+      <code>await init(state).catch(notifyError)</code> (<code>:1036</code>) — o <code>catch</code>
+      vira toast, mas não acende região nenhuma. As três regiões nascem <code>hidden</code> e quem as
+      revela é o <code>init</code> (<code>:880-892</code>). Se o <code>Promise.all</code> de
+      <code>:854-870</code> rejeitar, ele sai por exceção <b>antes</b> de qualquer
+      <code>hidden = false</code>.
     </div>
 
     <div class="m">
@@ -336,7 +338,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
           <span class="gate"><span class="strike">ENROL-EMPTY</span><span class="idb">hidden</span><span class="strike">+ Atualizar 2/3</span></span>
           <span class="gate"><span class="strike">ENROL-MAIN</span><span class="idb">hidden</span><span class="strike">+ Atualizar 3/3</span></span>
         </div>
-        <span class="note">Os <strong>três</strong> atualizar moram <strong>dentro</strong> das regiões que o <code>init</code> não revelou — <strong>nenhum é alcançável</strong>. E a trava do host já é <code>true</code> (<code>participants_manager.js:183-185</code>): voltar na aba não tenta de novo; com <code>setRemoveOnClose(true)</code> (<code>:145</code>) a única saída é fechar o modal.</span>
+        <span class="note">Os <strong>três</strong> atualizar moram <strong>dentro</strong> das regiões que o <code>init</code> não revelou — <strong>nenhum é alcançável</strong>. E, para esta aba, a trava do host não solta sozinha: um <code>init</code> que falha cedo deixa o pane em branco, voltar na aba não retenta, e com <code>setRemoveOnClose(true)</code> (<code>participants_manager.js:145</code>) reabrir o modal é a única saída.<br><strong>CORRIGIDO em parte, em 2026-07-16</strong> (<code>c96a3e9</code>). <strong>O que era:</strong> a trava do host virava <code>true</code> <strong>antes</strong> do <code>await</code>, e o <code>mount</code> era disparo-e-esquece — um <code>init</code> que rejeitava deixava a trava <strong>presa em <code>true</code></strong>, então voltar na aba <strong>nunca</strong> retentava, e o <code>setRemoveOnClose</code> fazia de reabrir o modal a única recuperação. Valia para Usuários, Papéis e este Métodos de inscrição — e a de Coortes era pior: montada no <code>shown</code> sem trava, e nem reabrir sua aba a remontava. <strong>O que é:</strong> uma tabela única <code>mounted</code> (<code>participants_manager.js:161</code>) e um <code>startMount</code> (<code>:166-175</code>) que <strong>reivindica</strong> a trava de forma síncrona (<code>:170</code>, barra o duplo-clique) e a <strong>solta no <code>catch</code></strong> (<code>:172</code>), então a próxima ativação da aba retenta. Coortes e Papéis limpam e religam filhos novos, e por isso retentam limpo pela aba. <strong>Mas o residual desta aba NÃO fechou:</strong> o <code>enrol</code> delega os ouvintes no <strong>contêiner</strong>, que o <code>replaceNodeContents</code> não descarta — retentar duplicaria os ouvintes. Por isso a falha do seu <code>init</code> é <strong>engolida a um toast</strong> (<code>enrol_methods.js:1036</code>): o <code>mount</code> <strong>resolve</strong>, a trava fica <code>true</code> de propósito, voltar na aba <strong>continua</strong> não retentando, e um <code>init</code> que falhou <strong>antes de revelar qualquer região</strong> deixa o pane em branco até o modal ser reaberto. É exatamente o que o 4º portão abaixo fecha.</span>
 
         <div class="alert a-dang" style="margin-top:4px;">
           <span style="flex:1;">Não foi possível carregar os métodos de inscrição.</span>
