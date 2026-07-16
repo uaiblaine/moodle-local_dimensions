@@ -57,6 +57,12 @@ class get_competency_links extends external_api {
             'query' => new external_value(PARAM_RAW_TRIMMED, 'Filter by course name', VALUE_DEFAULT, ''),
             'limitfrom' => new external_value(PARAM_INT, 'Offset for pagination', VALUE_DEFAULT, 0),
             'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, 25),
+            'excludecourseids' => new external_value(
+                PARAM_SEQUENCE,
+                'Comma-separated course ids already shown; the page omits them so the client can fetch the next unshown ones',
+                VALUE_DEFAULT,
+                ''
+            ),
         ]);
     }
 
@@ -67,9 +73,16 @@ class get_competency_links extends external_api {
      * @param string $query Filter by course fullname/shortname.
      * @param int $limitfrom Offset.
      * @param int $limitnum Page size.
+     * @param string $excludecourseids Comma-separated course ids already shown, omitted from the page.
      * @return array Keys: items (list of course rows), total (int), canlink (bool).
      */
-    public static function execute(int $competencyid, string $query = '', int $limitfrom = 0, int $limitnum = 25): array {
+    public static function execute(
+        int $competencyid,
+        string $query = '',
+        int $limitfrom = 0,
+        int $limitnum = 25,
+        string $excludecourseids = ''
+    ): array {
         global $DB;
 
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -77,11 +90,13 @@ class get_competency_links extends external_api {
             'query' => $query,
             'limitfrom' => $limitfrom,
             'limitnum' => $limitnum,
+            'excludecourseids' => $excludecourseids,
         ]);
         $competencyid = $params['competencyid'];
         $query = $params['query'];
         $limitfrom = max(0, $params['limitfrom']);
         $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : 25;
+        $excludeids = array_filter(array_map('intval', explode(',', $params['excludecourseids'])));
 
         $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
@@ -108,24 +123,33 @@ class get_competency_links extends external_api {
         $where .= $coursefilter[0];
         $sqlparams += $coursefilter[1];
 
+        // Total is the full count of links; the client compares it against the number shown to
+        // know whether more remain. The exclusion below narrows only the page, never this count.
         $countsql = "SELECT COUNT(1)
                        FROM {competency_coursecomp} cc
                        JOIN {course} c ON c.id = cc.courseid
                       WHERE $where";
         $total = (int) $DB->count_records_sql($countsql, $sqlparams);
 
-        /*
-         * The id breaks fullname ties so the sort is total. Course names repeat, and a partial
-         * order lets the database return tied rows in a different sequence per call, which is
-         * enough on its own to make an offset cursor skip or duplicate a row between pages.
-         */
+        // Drop the courses the client already shows, so a page returns only unshown links. This is
+        // what keeps Load more from duplicating a picker-added row that sorts into a later page.
+        $recordwhere = $where;
+        $recordparams = $sqlparams;
+        if ($excludeids) {
+            [$exsql, $exparams] = $DB->get_in_or_equal($excludeids, SQL_PARAMS_NAMED, 'ex', false);
+            $recordwhere .= " AND c.id $exsql";
+            $recordparams += $exparams;
+        }
+
+        // The id breaks fullname ties so the page order is stable across loads; correctness against
+        // skips and duplicates comes from the exclusion above, not from the ordering.
         $recordsql = "SELECT cc.id AS linkid, cc.ruleoutcome, c.id AS courseid, c.fullname, c.shortname, c.visible,
                              c.enablecompletion
                         FROM {competency_coursecomp} cc
                         JOIN {course} c ON c.id = cc.courseid
-                       WHERE $where
+                       WHERE $recordwhere
                     ORDER BY c.fullname ASC, c.id ASC";
-        $records = $DB->get_records_sql($recordsql, $sqlparams, $limitfrom, $limitnum);
+        $records = $DB->get_records_sql($recordsql, $recordparams, $limitfrom, $limitnum);
 
         // Grouped queries across the page's courses: linked-activity counts and whether
         // course completion criteria exist (drives the completion-rule badge).

@@ -68,6 +68,45 @@ final class competency_course_links_test extends \advanced_testcase {
     }
 
     /**
+     * excludecourseids omits the courses already shown while total stays the full count, so the
+     * client fetches the next unshown page without a numeric cursor.
+     *
+     * @return void
+     */
+    public function test_get_links_excludes_shown_courses(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework(['visible' => 1]);
+        $competency = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $competencyid = (int) $competency->get('id');
+        $courseid1 = (int) $this->getDataGenerator()->create_course()->id;
+        $courseid2 = (int) $this->getDataGenerator()->create_course()->id;
+        $courseid3 = (int) $this->getDataGenerator()->create_course()->id;
+        link_competency_course::execute($competencyid, $courseid1);
+        link_competency_course::execute($competencyid, $courseid2);
+        link_competency_course::execute($competencyid, $courseid3);
+
+        // No exclusion returns every link.
+        $all = get_competency_links::execute($competencyid, '', 0, 25, '');
+        $this->assertSame(3, $all['total']);
+        $this->assertCount(3, $all['items']);
+
+        // Excluding one keeps the full total but drops it from the page.
+        $some = get_competency_links::execute($competencyid, '', 0, 25, (string) $courseid1);
+        $this->assertSame(3, $some['total']);
+        $this->assertCount(2, $some['items']);
+        $shownids = array_map(static fn($item): int => (int) $item['courseid'], $some['items']);
+        $this->assertNotContains($courseid1, $shownids);
+
+        // A garbled list (empty element, stray zero) excludes only the real ids and never throws.
+        $rest = get_competency_links::execute($competencyid, '', 0, 25, $courseid1 . ',,' . $courseid2 . ',0');
+        $this->assertSame(3, $rest['total']);
+        $this->assertCount(1, $rest['items']);
+        $this->assertSame($courseid3, (int) $rest['items'][0]['courseid']);
+    }
+
+    /**
      * The course row exposes completion-rule state and the linked-activity count.
      *
      * @return void
