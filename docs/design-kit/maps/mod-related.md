@@ -125,7 +125,7 @@ pendentes são preservadas para o usuário repetir. Depois, cada linha nova pisc
 
 `related_competencies.js:272` chama `addToastRegion(modal.getBody()[0])` no `ModalEvents.shown`.
 É um dos **4** pontos do plugin com esse padrão (`participants_manager.js:167`,
-`competency_links.js:808`, `frameworks.js:348`, e este) — contados com
+`competency_links.js:898`, `frameworks.js:348`, e este) — contados com
 `grep -rn 'addToastRegion(' amd/src/`, **com o parêntese**: sem ele o grep devolve **8**, porque soma
 as 4 linhas de `import`.
 
