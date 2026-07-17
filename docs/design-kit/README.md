@@ -129,14 +129,14 @@ havia refs que caíam num controle **real de outro ID** — o pior tipo, porque 
 alguém conferir.
 
 ## Pontos cegos conhecidos
-Duas lacunas que a auditoria expôs e que **nenhum artefato do kit cobre** hoje:
+Uma lacuna **fechada** (2026-07-17) e uma **pendente**:
 
-1. **Nenhum corpo de `dynamic_form` é mapeado.** Um `ls classes/form/` devolve **quatro**
-   (`framework_`, `import_framework_`, `competency_`, `template_dynamic_form.php`) e nenhum tem mapa
-   ou tela — os mapas só os citam de passagem. É por isso que o **lado formulário** do `MOD.SCALE`
-   é invisível mesmo com o modal coberto: os três commits de escala de julho (`a2112fe`, `8ab5635`,
-   `c8901c0`) caíram **todos** no `framework_dynamic_form.php`, nenhum no modal. Ver "A lacuna dos
-   `dynamic_form`" em [`maps/mod-scale.md`](maps/mod-scale.md).
+1. ✅ **~~Nenhum corpo de `dynamic_form` é mapeado~~ — FECHADA.** Os quatro corpos ganharam mapa em
+   [`maps/mod-forms.md`](maps/mod-forms.md) (fidelidade cheia: `FORM-FWK`/`FORM-COMP`/`FORM-TPL`/`FORM-IMP`,
+   inventário de campos, gating, validação e controles de design), e as IDs provisórias do `MOD.SCALE`
+   migraram para lá (`FORM-FWK-SCALE-*`). No mesmo passo, o `structure_related_modal` — o único modal
+   sem mapa — ganhou [`maps/mod-structrelated.md`](maps/mod-structrelated.md). Os mapas do kit agora
+   cobrem **toda** superfície administrativa.
 2. **O toast virou o padrão de confirmação da casa e não está em nenhum componente.**
    `addToastRegion(modal.getBody()[0])` no `ModalEvents.shown`, porque a `.toast-wrapper` da página é
    `z-index:1051` e o modal é `1055` — um toast disparado de dentro do modal cai **atrás** dele.
