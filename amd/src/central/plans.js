@@ -99,7 +99,7 @@ const reloadKeepingScroll = async(pane, selectors) => {
             positions[selector] = el.scrollTop;
         }
     });
-    await reloadPane(pane);
+    await reloadPane(pane, undefined, {quiet: true});
     regions.forEach((selector) => {
         const el = pane.querySelector(selector);
         if (el && positions[selector]) {
