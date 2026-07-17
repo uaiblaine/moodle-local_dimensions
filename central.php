@@ -100,6 +100,15 @@ $tablabels = [
     'structure' => get_string('managecompetencies_structure', 'local_dimensions'),
     'plans' => get_string('learningplans', 'local_dimensions'),
 ];
+/*
+ * A leading FontAwesome glyph per tab (decorative; the label carries the accessible name).
+ * Core dynamic_tabs triple-stashes displayname, so the icon rides in the label, no template change.
+ */
+$tabicons = [
+    'frameworks' => 'fa-th-large',
+    'structure' => 'fa-list-ul',
+    'plans' => 'fa-graduation-cap',
+];
 $tabs = [];
 foreach (['frameworks', 'structure', 'plans'] as $shortname) {
     $isactive = ($shortname === 'frameworks');
@@ -109,9 +118,10 @@ foreach (['frameworks', 'structure', 'plans'] as $shortname) {
         $tab->require_access();
         $content = $OUTPUT->render_from_template($tab->get_template(), $tab->export_for_template($OUTPUT));
     }
+    $icon = '<i class="fa ' . $tabicons[$shortname] . ' me-1" aria-hidden="true"></i>';
     $tabs[] = [
         'shortname' => $shortname,
-        'displayname' => $tablabels[$shortname],
+        'displayname' => $icon . $tablabels[$shortname],
         'tabclass' => get_class($tab),
         'enabled' => true,
         'active' => $isactive,
