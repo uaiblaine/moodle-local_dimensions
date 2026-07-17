@@ -29,7 +29,7 @@
 
 import Ajax from 'core/ajax';
 import {flashRow} from 'local_dimensions/central/flash';
-import Modal from 'core/modal';
+import ModalSaveCancel from 'core/modal_save_cancel';
 import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
@@ -41,7 +41,6 @@ import {applyMode, destroyBrowser, getCheckedIds, initBrowser} from 'local_dimen
 const SELECTORS = {
     region: '[data-region="related-competencies"]',
     pickerList: '[data-region="competency-list"]',
-    addSelected: '[data-action="add-selected"]',
     relations: '[data-region="related-list"]',
     empty: '[data-region="related-empty"]',
 };
@@ -118,13 +117,13 @@ const loadRelations = async(state) => {
 };
 
 /**
- * Enable the "Add selected" button only while at least one pickable row is checked.
+ * Enable the footer "Add selected" button only while at least one pickable row is checked.
  *
  * @param {Object} state Modal state.
  * @return {void}
  */
 const updateAddButton = (state) => {
-    state.addbtnEl.disabled = getCheckedIds(state).length === 0;
+    state.modal.setButtonDisabled('save', getCheckedIds(state).length === 0);
 };
 
 /**
@@ -190,7 +189,7 @@ const addSelected = async(state) => {
     if (!ids.length) {
         return;
     }
-    state.addbtnEl.disabled = true;
+    state.modal.setButtonDisabled('save', true);
     try {
         await Promise.all(Ajax.call(ids.map((relatedid) => ({
             methodname: 'core_competency_add_related_competency',
@@ -219,9 +218,12 @@ const addSelected = async(state) => {
  */
 export const open = async(opts) => {
     const competencyid = Number(opts.competencyid);
-    const [title, removelabel, addedlabel, removedlabel, selflabel, relatedlabel, loadmorelabel, emptylabel] =
+    const [title, addlabel, closelabel, removelabel, addedlabel, removedlabel, selflabel, relatedlabel,
+        loadmorelabel, emptylabel] =
         await Promise.all([
             getString('central_related_title', 'local_dimensions', opts.competencyname),
+            getString('central_browseframeworks_add', 'local_dimensions'),
+            getString('closebuttontitle', 'core'),
             getString('central_related_remove', 'local_dimensions'),
             getString('central_related_added', 'local_dimensions'),
             getString('central_related_removed', 'local_dimensions'),
@@ -231,18 +233,27 @@ export const open = async(opts) => {
             getString('central_browseframeworks_empty', 'local_dimensions'),
         ]);
     const {html} = await Templates.renderForPromise('local_dimensions/central/related_competencies', {});
-    const modal = await Modal.create({title, body: html});
-    modal.setRemoveOnClose(true);
+    // The primary action ("Add selected") lives in the footer the core reveals as soon as it has
+    // children — ModalSaveCancel fills it with Cancel (relabelled Close, this modal manages in place
+    // and has nothing to cancel) + the save button. See the ModalEvents.save wiring below.
+    const modal = await ModalSaveCancel.create({
+        title,
+        body: html,
+        removeOnClose: true,
+        buttons: {save: addlabel, cancel: closelabel},
+    });
+    // Nothing is checked yet, so the primary action starts disabled.
+    modal.setButtonDisabled('save', true);
 
     const root = modal.getRoot()[0];
     const state = {
         competencyid: competencyid,
         frameworkid: Number(opts.frameworkid),
+        modal: modal,
         root: root,
         listEl: null,
         relationsEl: null,
         emptyEl: null,
-        addbtnEl: null,
         excluded: new Set([String(competencyid)]),
         excludedsuffix: (id) => (id === String(competencyid) ? selflabel : relatedlabel),
         loadmorelabel: loadmorelabel,
@@ -260,13 +271,11 @@ export const open = async(opts) => {
         state.listEl = region.querySelector(SELECTORS.pickerList);
         state.relationsEl = region.querySelector(SELECTORS.relations);
         state.emptyEl = region.querySelector(SELECTORS.empty);
-        state.addbtnEl = region.querySelector(SELECTORS.addSelected);
         region.addEventListener('click', (event) => {
             if (event.target.closest('[data-action="remove-related"]')) {
                 removeRelated(state, event.target.closest('[data-relatedid]')).catch(notifyError);
             }
         });
-        state.addbtnEl.addEventListener('click', () => addSelected(state).catch(notifyError));
         loadRelations(state)
             .then(() => initBrowser(state))
             .then(() => {
@@ -277,6 +286,13 @@ export const open = async(opts) => {
                 return null;
             })
             .catch(notifyError);
+    });
+    modal.getRoot().on(ModalEvents.save, (event) => {
+        // Adding never closes the dialog — the confirmation toast, the row flash and the refreshed
+        // relation list all land in it, and the user returns to the tree — so prevent the core's
+        // close-on-save unconditionally (unlike the browse modal, which closes on a real add).
+        event.preventDefault();
+        addSelected(state).catch(notifyError);
     });
     modal.getRoot().on(ModalEvents.hidden, () => destroyBrowser(state));
     modal.show();
