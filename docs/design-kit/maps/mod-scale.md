@@ -65,7 +65,7 @@ grava num campo oculto do formulário.
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.SCALE-ACTION` | Configurar escala | botão (gatilho) | `form.php:191-195` | `data-action="configure-scale"` · `.btn.btn-secondary.btn-sm` | str `central_frameworks_configurescale` — **a mesma str do título do modal** (`js:135`), como no `MOD.RULE`/`EST-DETAIL-RULES`. **ID provisória**: pela convenção da casa o gatilho pertence à superfície onde mora, e ele mora no corpo do `framework_dynamic_form` — que **nenhum mapa do kit cobre**. Deve migrar quando o mapa do formulário existir; ver "A lacuna dos `dynamic_form`". Não é duplicata: um `grep -rn 'MOD\.SCALE' docs/design-kit/` não devolve nenhuma outra ID para este botão |
+| `MOD.SCALE-ACTION` | Configurar escala | botão (gatilho) | `form.php:191-195` | `data-action="configure-scale"` · `.btn.btn-secondary.btn-sm` | str `central_frameworks_configurescale` — **a mesma str do título do modal** (`js:135`), como no `MOD.RULE`/`EST-DETAIL-RULES`. **ID provisória**: pela convenção da casa o gatilho pertence à superfície onde mora, e ele mora no corpo do `framework_dynamic_form` — que **nenhum mapa do kit cobre**. **Migrada** (2026-07-17) para `FORM-FWK-SCALE-ACTION` em [`mod-forms.md`](mod-forms.md), onde o corpo do form é mapeado; este modal fica com o **filho** que o botão abre |
 | `MOD.SCALE-SUMMARY` | Configurada / `[vazio]` | texto | `form.php:194` (nó), `:189-190` (valor inicial) | `data-region="scaleconfig-summary"` · `.text-muted.small.ms-2` | str `central_frameworks_scaleconfigured` = "Configurada". **É a única coisa que o `$configured` muda.** O `form.php:195` adiciona o botão **incondicionalmente** — o `$configured` (`:189`, via `helper::scaleconfig_is_complete`) só escolhe o texto do resumo (`:190`). Consequência: **o botão existe no caminho de criar**, não só no de editar, e este modal **não depende do sticky-footer** de jeito nenhum. Depois do salvar, quem escreve o resumo é o `frameworks.js:77-82` |
 | `MOD.SCALE-HIDDEN` | `[sem rótulo]` | campo oculto | `form.php:186-187` | `name="scaleconfiguration"` · `PARAM_RAW` | **o destino real do modal.** O `open` resolve uma string e o `frameworks.js:76` a grava aqui; é o formulário que persiste, no seu próprio salvar. Se o usuário fechar o `ModalForm` sem salvar, a configuração escolhida **se perde** — o modal de escala não escreve nada no servidor |
 
@@ -166,7 +166,13 @@ Quem recebe é o `frameworks.js:71-85`: `null` (cancelar) → sai (`:73-75`); st
 para `notifyError` (`:85`). **Nada é persistido aqui** — o `scaleconfiguration` só chega ao banco
 quando o `framework_dynamic_form` for salvo.
 
-## A lacuna dos `dynamic_form` — não é deste mapa
+## A lacuna dos `dynamic_form` — FECHADA em `maps/mod-forms.md`
+
+> **Resolvido (2026-07-17).** A lacuna abaixo era real e agora está mapeada: os quatro corpos de
+> `dynamic_form` ganharam mapa próprio em [`maps/mod-forms.md`](mod-forms.md). As três IDs provisórias
+> deste modal — `MOD.SCALE-ACTION`, `-SUMMARY`, `-HIDDEN` — **migraram** para lá como
+> `FORM-FWK-SCALE-ACTION`/`-HIDDEN` (o gatilho, o resumo e o hidden são do **corpo do framework form**;
+> o que fica aqui é o **modal filho** que o gatilho abre). O texto original fica abaixo como registro.
 
 O `MOD.SCALE-ACTION`, o `MOD.SCALE-SUMMARY` e o `MOD.SCALE-HIDDEN` moram nos `form.php:186-195`, no
 corpo de um `core_form\dynamic_form` — e **o kit não mapeia nenhum corpo de `dynamic_form`**. Um
@@ -178,7 +184,7 @@ corpo de um `core_form\dynamic_form` — e **o kit não mapeia nenhum corpo de `
 julho da escala — `a2112fe` (atalho no cabeçalho de escalas + paridade com a escala nativa),
 `8ab5635` (congelar o select de escala) e `c8901c0` (select congelado não tropeça na regra de
 obrigatório) — caíram **todos** no `framework_dynamic_form.php`, nenhum aqui. O lado **formulário** do
-`MOD.SCALE` é território não coberto. **Registrado para o README, não consertado aqui.**
+`MOD.SCALE` agora está coberto em [`maps/mod-forms.md`](mod-forms.md) (seção `FORM-FWK`).
 
 ## to-be — o estado vira pill, o rótulo vira o real
 
