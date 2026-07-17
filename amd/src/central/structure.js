@@ -26,6 +26,7 @@
  */
 
 import Ajax from 'core/ajax';
+import {flashRow} from 'local_dimensions/central/flash';
 import Modal from 'core/modal';
 import ModalEvents from 'core/modal_events';
 import ModalForm from 'core_form/modalform';
@@ -461,7 +462,7 @@ const revealNode = async(region, targetid, pathids) => {
     }
     selectRow(region, row);
     row.scrollIntoView({block: 'nearest', behavior: 'smooth'});
-    row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+    flashRow(row);
 };
 
 /**
@@ -872,7 +873,7 @@ const persistRule = (row, config) => {
             row.dataset.ruletype = config.ruletype || '';
             row.dataset.ruleoutcome = String(config.ruleoutcome || 0);
             row.dataset.ruleconfig = config.ruleconfig || '';
-            row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+            flashRow(row);
             addToast(message);
             return null;
         });
@@ -916,7 +917,7 @@ const updateCourseCount = (region, row, count) => {
             detail.textContent = String(count);
         }
     }
-    row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+    flashRow(row);
 };
 
 /**
@@ -950,7 +951,7 @@ const persistNodeMove = (pane, node, from, to) => {
         args: {id: Number(row.dataset.id)},
     }));
     Promise.all(Ajax.call(requests)).then(() => {
-        row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+        flashRow(row);
         return null;
     }).catch((error) => {
         notifyError(error);

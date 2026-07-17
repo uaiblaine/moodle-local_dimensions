@@ -28,6 +28,7 @@
  */
 
 import Ajax from 'core/ajax';
+import {flashRow} from 'local_dimensions/central/flash';
 import Modal from 'core/modal';
 import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
@@ -43,21 +44,6 @@ const SELECTORS = {
     addSelected: '[data-action="add-selected"]',
     relations: '[data-region="related-list"]',
     empty: '[data-region="related-empty"]',
-};
-
-/**
- * Briefly highlight an element so an in-place change is visible without leaving the modal.
- *
- * @param {HTMLElement} el The element to flash.
- */
-const flash = (el) => {
-    if (!el || typeof el.animate !== 'function') {
-        return;
-    }
-    el.animate(
-        [{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}],
-        {duration: 1500, easing: 'ease-out'}
-    );
 };
 
 /**
@@ -221,7 +207,7 @@ const addSelected = async(state) => {
         // Disabling the focused button dropped focus to <body>.
         restoreFocus(state, null);
     }
-    ids.forEach((relatedid) => flash(state.relationsEl.querySelector(`[data-relatedid="${relatedid}"]`)));
+    ids.forEach((relatedid) => flashRow(state.relationsEl.querySelector(`[data-relatedid="${relatedid}"]`)));
     addToast(state.addedlabel);
 };
 

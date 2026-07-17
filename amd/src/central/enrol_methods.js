@@ -27,6 +27,7 @@
  */
 
 import Ajax from 'core/ajax';
+import {flashRow} from 'local_dimensions/central/flash';
 import Modal from 'core/modal';
 import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
@@ -566,7 +567,7 @@ const onToggleStatus = async(state, row) => {
                 twin.dataset.selfActive = value;
             }
             paintRow(state, twin);
-            twin.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+            flashRow(twin);
         });
         const toastkey = data.active ? 'central_enrol_toast_enabled' : 'central_enrol_toast_disabled';
         addToast(await getString(toastkey, 'local_dimensions', row.dataset.shortname));
@@ -647,7 +648,7 @@ const poll = async(state) => {
         state.root.querySelectorAll(`${SELECTORS.row}[data-courseid="${courseid}"]`).forEach((row) => {
             setRowStatus(state, row, status);
             paintRow(state, row);
-            row.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+            flashRow(row);
         });
     });
     updateFooter(state);
