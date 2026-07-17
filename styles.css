@@ -5716,6 +5716,47 @@ a.local-dimensions-central-links-badge-warn:focus {
     font-size: 1rem;
 }
 
+/*
+ * IMP-10: the hub's three tabs get an icon (in the label, built in central.php) and a flat accent
+ * indicator on the active tab, scoped to the hub page so the restyle never leaks to the many other
+ * core dynamic_tabs consumers site-wide. The accent (Boost primary) sits only on the 2px underline
+ * and the keyboard focus ring; the text uses Boost's own gray palette, exactly as core renders its
+ * muted and body text. 250ms is the tokens.html base motion.
+ */
+.local-dimensions-central-page .dynamictabs .nav-tabs .nav-link {
+    color: #6a737b;
+    background-color: transparent;
+    border: 0;
+    box-shadow: inset 0 -2px 0 transparent;
+    transition: box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1), color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.local-dimensions-central-page .dynamictabs .nav-tabs .nav-link:hover {
+    color: #1d2125;
+}
+
+/*
+ * Our base box-shadow outranks Boost's focus ring and border:0 removes its focus border, so restore
+ * a visible keyboard focus indicator with the plugin's own outline pattern (mouse focus is untouched).
+ */
+.local-dimensions-central-page .dynamictabs .nav-tabs .nav-link:focus-visible {
+    color: #1d2125;
+    outline: 2px solid var(--bs-primary, #0f6cbf);
+    outline-offset: -2px;
+}
+
+.local-dimensions-central-page .dynamictabs .nav-tabs .nav-link.active {
+    color: #1d2125;
+    font-weight: 500;
+    box-shadow: inset 0 -2px 0 var(--bs-primary, #0f6cbf);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-central-page .dynamictabs .nav-tabs .nav-link {
+        transition: none;
+    }
+}
+
 /* Filters dropdown on the participants users grid (core filters-dropdown pattern). */
 .local-dimensions-participants-filters {
     min-width: 18rem;
