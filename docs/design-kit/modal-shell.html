@@ -170,6 +170,14 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
       preview quem dirige é um checkbox; em produção é uma classe no <code>.modal-dialog</code> e o mesmo par de regras.
     </div>
     <div class="note">
+      <b>Expandir shipou desacoplado</b> (<code>8ea9daf</code>, <span class="prov">mtube: expandir</span>): os dois
+      botões, o swap por CSS e a persistência em preferência de usuário estão nos modais de <b>participantes</b> e
+      <b>links</b> (<code>central/modal_expander.js</code>, chave <code>modalexpanded</code> no
+      <code>PREF_CENTRAL_DISPLAY</code>; largura expandida <code>96vw</code>). Mas <b>a 1.75rem</b>, casando o chip de
+      fechar que já existe — <b>não</b> a 36×36 deste painel: os 36×36 só fecham quando o cabeçalho inteiro reformar
+      junto (atualizar + fechar), e isso segue <b>to-be</b>. Ver <code>maps/mod-links.md</code>.
+    </div>
+    <div class="note">
       <b>Caixa de 36×36</b> (30×30 abaixo de <code>768px</code>) para os três — o <code>.btn-close</code> cresce de
       <code>1.75rem</code> e mantém o chip azul; atualizar e expandir são neutros
       (<code>--mds-bg-surface-strong</code> no hover: 13,66:1 claro / 10,91:1 escuro). As regras vivem sob

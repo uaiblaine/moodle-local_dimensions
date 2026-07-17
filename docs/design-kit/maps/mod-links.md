@@ -116,7 +116,7 @@ controles — o `competency_links.js` tem **930** e entrega o resto.
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.LINKS-TITLE` | Cursos e atividades — {nome} | título | `competency_links.js:822` (str), `:852` (`Modal.create`) | str `central_links_title`, `$a` = nome | `core/modal` **puro**, sem `footer` no config — o 7º do censo do IMP-06. **`large: true`** (`:852`) é o único ajuste de largura que este modal tem hoje. `setRemoveOnClose(true)` em `:853` |
+| `MOD.LINKS-TITLE` | Cursos e atividades — {nome} | título | `competency_links.js:822` (str), `:852` (`Modal.create`) | str `central_links_title`, `$a` = nome | `core/modal` **puro**, sem `footer` no config — o 7º do censo do IMP-06. **`large: true`** (`:852`, `modal-lg`) é a largura de base; o `MOD.LINKS-EXPAND` a leva a 96vw quando expandido. `setRemoveOnClose(true)` em `:853` |
 | `MOD.LINKS-ROOT` | `[sem rótulo]` | região/raiz | `competency_links.mustache:32` | `data-region="competency-links"` · `.local-dimensions-central-links` | os dois listeners delegados (click e change) pousam aqui (`js:905-917`), **não** no root do modal |
 | `MOD.LINKS-HIDDENFW` | Esta competência pertence a uma estrutura oculta e não pode ser vinculada a cursos. | alerta | `competency_links.mustache:33-35` | `data-region="hiddenframework"` · `role="status"` · `tabindex="-1"` · nasce `hidden` | str `central_links_hiddenframework`. **Não é uma nota decorativa:** `js:478` liga o alerta e `js:483` **oculta o bloco inteiro** de adicionar curso (`hiddenframeworkEl.hidden = response.canlink` / `addsel.parentElement.hidden = !response.canlink`). **CORRIGIDO em 2026-07-16** (`7bd9729`) — **o que era:** a segunda linha era `addsel.disabled = !response.canlink`, e este mapa a chamava de "desabilita o picker". Era **inerte**: o `enhance()` do core troca o `<select>` por um input próprio + um downarrow que abre a lista de sugestões **ignorando** o `disabled` do select, então o usuário digitava, escolhia um curso e só então batia na parede — `api::add_competency_to_course` lança em estrutura oculta, e a falha vinha como exceção crua pelo `notifyError`, não como um controle que nunca foi oferecido. **O que é:** esconde o `.mb-3` inteiro (input + downarrow + label saem da vista **e** da ordem de tabulação); o `tabindex="-1"` novo no alerta o torna o destino de foco quando o bloco some (ver "A aritmética do cursor"). **Não era brecha de segurança** — o core barra no servidor —, era a UI prometer o que não entrega. O `canlink` do WS é literalmente a visibilidade da estrutura — `get_competency_links.php:106`: `(bool) $competency->get_framework()->get('visible')`. Os vínculos **existentes** continuam listados, com outcome editável: o bloqueio é só para **novos** |
 | `MOD.LINKS-ADD-LABEL` | Adicionar curso | rótulo | `competency_links.mustache:37-39` | str `central_links_addcourse` · `for="local-dimensions-links-add"` | é um `<label>` de verdade, com `for` — ao contrário do `MOD.RELATED-ADDLABEL`, que mira numa árvore e por isso é um `<div>` |
@@ -323,10 +323,15 @@ Conferido commit a commit contra o código de hoje, não contra a mensagem:
 | `c10acd0` | chevron unificado | **sim, e alcança este modal** — `styles.css:5655-5668` sob uma classe de **body** (`central.php:57`), e o modal do core é filho do `body` (`modal.js:133`) |
 | `e0fe81d` | toast ao remover curso | **sim** — `js:643` |
 
-## To-be — `MOD.LINKS-EXPAND`, expandir/restaurar (`mtube: expandir`)
+## `MOD.LINKS-EXPAND` — expandir/restaurar (shipado `8ea9daf`, `mtube: expandir`)
 
-Este é o **segundo** candidato do hub, depois do `mod-participants`; a mecânica desenhada é a mesma,
-e o precedente é shipado.
+Entregue nos **dois** modais densos do hub (este e o `mod-participants`) pelo módulo compartilhado
+`central/modal_expander.js` (`attach(dialog)`), chamado aqui em `competency_links.js:848` e no de
+participantes em `participants_manager.js:160`. A mecânica é a do mtube; o precedente já era shipado.
+Os dois botões (`makeButton`, `modal_expander.js:46`) entram antes do `.btn-close` (`:82-83`); o CSS
+escolhe qual aparece (`styles.css:3615`/`:3619`/`:3623`), zero troca de ícone em JS; o clique alterna
+a classe no `.modal-dialog` (`:92`) e persiste (`:93`), e a largura vem da classe
+(`.modal-dialog.local-dimensions-modal-expanded{max-width:96vw}`, `styles.css:3627`).
 
 > **Nota de nomenclatura.** O kit **não tem um `IMP-08`** — um
 > `grep -rnoE 'IMP-[0-9]{2}' docs/design-kit/ | grep -v 'maps/mod-links.md'` devolve `IMP-03`,
@@ -364,12 +369,21 @@ previous per-session sessionStorage persistence"*. As duas prefs são declaradas
 `lib.php:140-151` (`local_dimensions_user_preferences()`), com `permissioncallback` =
 `\core_user::is_current_user`, e os nomes moram em `constants.php:81` / `:84`.
 
-Portanto o expandir **não precisa de pref nova**: cabe como uma chave no `PREF_CENTRAL_DISPLAY` que
-já existe — o `display` já é um objeto JSON com sub-objetos por área (`preferences.js:41-48`), e
-`local_dimensions_user_preferences()` já aceita o nome. **Sem WS novo, sem string de setting nova,
-sem bump de `version.php`** (as prefs não são serviços).
+E o expandir **não precisou de pref nova**: coube como a chave `modalexpanded` no
+`PREF_CENTRAL_DISPLAY` que já existia — entrou no `DISPLAY_DEFAULTS` (`preferences.js:48`), no `init`
+(`:95`) e, porque o servidor **valida** o JSON e só copia chaves conhecidas, também em
+`helper::get_central_prefs()` (`helper.php:1744`), senão a chave seria descartada no reload. **Sem WS
+novo, sem string de setting nova, sem bump de `version.php`.** O `seed` é síncrono
+(`modal_expander.js:74`), então o modal abre já no tamanho salvo; e a pref é **compartilhada** —
+expandir um modal expande o outro na próxima abertura (preferência global de tamanho).
 
-**O que fica registrado como não resolvido:** o `large: true` de hoje (`js:852`) e a classe
-`fullscreen` do to-be são **dois** mecanismos de largura; quem desenhar isso precisa decidir se o
-`fullscreen` empilha sobre o `large` ou o substitui. A tela **não** demonstra isso — o preview não
-roda o `core/modal`.
+**A dúvida de largura que esta seção registrava está resolvida.** O `large: true` (`js:852`, =
+`modal-lg`, 800px) e a classe expandida não empilham: `.modal-dialog.local-dimensions-modal-expanded`
+(0,2,0) **vence** `.modal-lg` (0,1,0), então expandido = 96vw, restaurado = `modal-lg`. Só a largura
+muda (não a altura).
+
+**Duas decisões que a varredura adversarial forçou** (o mtube não as tem): os botões **não** usam
+`.btn` — um `.btn` sem variante tem `--bs-btn-focus-shadow-rgb` indefinido, então o anel de foco do
+core é inválido e o `outline:0` dele apaga o nativo; o shipado desenha o próprio anel no
+`:focus-visible` (`styles.css:3610`). E o clique **devolve o foco** ao botão contrário recém-revelado
+(`modal_expander.js:94-101`), porque o acionado se esconde no swap de CSS e largaria o foco no `<body>`.
