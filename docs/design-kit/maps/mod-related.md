@@ -6,55 +6,47 @@ browser de árvore** do modal "Consultar estruturas" (partial compartilhado), **
 estrutura — uma relação só alcança competências da mesma estrutura. As linhas de relação e as da
 árvore são **todas construídas em JS**; o Mustache é só a casca.
 
-É um `core/modal` **sem rodapé**, e a ação primária ("Adicionar selecionadas") mora **no corpo** —
-é o **caso de referência do IMP-06**, detalhado no fim deste mapa.
+É um `core/modal_save_cancel`: a ação primária ("Adicionar selecionadas") é o **botão de salvar do
+rodapé** (Cancelar rerrotulado "Fechar", porque o modal gerencia no lugar e não tem o que cancelar).
+Foi o **caso de referência do IMP-06** — agora **shipado** (`0898acf`); a seção ao fim registra a
+mecânica.
 
-- **Mustache:** [`related_competencies.mustache`](../../../templates/central/related_competencies.mustache) (45, casca), [`competency_tree_browser.mustache`](../../../templates/central/competency_tree_browser.mustache) (44, partial compartilhado com o `MOD.BROWSER`)
-- **AMD:** [`related_competencies.js`](../../../amd/src/central/related_competencies.js) (297) — monta o browser via [`competency_tree_browser.js`](../../../amd/src/central/competency_tree_browser.js) (510, `initBrowser`/`applyMode`/`getCheckedIds`/`destroyBrowser`) e usa `errors.js` (`notifyError`)
+- **Mustache:** [`related_competencies.mustache`](../../../templates/central/related_competencies.mustache) (40, casca), [`competency_tree_browser.mustache`](../../../templates/central/competency_tree_browser.mustache) (44, partial compartilhado com o `MOD.BROWSER`)
+- **AMD:** [`related_competencies.js`](../../../amd/src/central/related_competencies.js) (299) — monta o browser via [`competency_tree_browser.js`](../../../amd/src/central/competency_tree_browser.js) (510, `initBrowser`/`applyMode`/`getCheckedIds`/`destroyBrowser`), pisca a linha nova com o helper compartilhado [`flash.js`](../../../amd/src/central/flash.js) (import `:31`) e usa `errors.js` (`notifyError`)
 - **WS:** `local_dimensions_list_related_competencies` (`db/services.php:133-134` → [`classes/external/list_related_competencies.php`](../../../classes/external/list_related_competencies.php), relações + caminho de ancestrais), `local_dimensions_browse_competencies` (`db/services.php:109-110`, a árvore/busca), core `core_competency_add_related_competency` e `core_competency_remove_related_competency` (escrever)
 - **CSS:** [`styles.css:5685-5688`](../../../styles.css) (cap de 40vh da caixa da árvore, exclusivo deste modal), [`styles.css:5076-5145`](../../../styles.css) (os chips do detalhe)
-- **Tela no DS:** [`screens/mod-related.html`](../screens/mod-related.html) (as-is ↔ to-be, com a demonstração de marcar→habilitar dirigida e medida)
+- **Tela no DS:** [`screens/mod-related.html`](../screens/mod-related.html) (as-is ↔ histórico do IMP-06, com a demonstração de marcar→habilitar dirigida e medida)
 
-> **Resync 2026-07-15 — o mapa anterior descrevia um autocomplete que não existe mais, e o arquivo
-> que o alimentava foi deletado.** Medido, não estimado:
+> **Resync 2026-07-17 — o IMP-06 shipou; o modal virou `ModalSaveCancel` e a ação desceu para o
+> rodapé.** O que mudou desde a última varredura:
 >
-> - **4 refs no mapa antigo; 4 quebradas (4/4).** Um
->   `grep -oE '[a-z_/.]+\.(php|js|mustache|css):[0-9]+(-[0-9]+)?'` no arquivo antigo devolve
->   **exatamente 4**, todas em `related_competencies.mustache` — e o arquivo tem **45 linhas**:
->   - `:36-38` (dito `MOD.RELATED-ADDLABEL`) resolve hoje para o **botão "Adicionar selecionadas"** —
->     o tipo pior de quebra, a mesma do `mod-participants`: aponta para um controle **real, de outra
->     ID**. Quem confere vê um elemento plausível e segue.
->   - `:39-44` (dito `MOD.RELATED-ADD`, o autocomplete) resolve para o `</button>`, o `<hr>`, a
->     região de linhas e o estado vazio — quatro IDs diferentes de uma vez.
->   - `:46` e `:47-49` (`MOD.RELATED-ROWS`, `MOD.RELATED-EMPTY`) apontam **depois do fim do
->     arquivo**. Não existem.
-> - **Zero refs de JS**, como em todos os mapas anteriores. Oito IDs, e nenhuma linha apontava para
->   dentro dos módulos AMD: nada de `makeRow`, `loadRelations`, `updateAddButton`, `addToastRegion`,
->   `excludedsuffix`, `restoreFocus`.
-> - **`related_datasource.js` não existe.** `ls` devolve nada; o `git log` do caminho mostra o
->   arquivo nascendo em `da4489a` e sendo **deletado em `44ac031`** ("related modal adds via the
->   shared framework tree browser", −61 linhas em `amd/src/central/related_datasource.js`). O bullet
->   **AMD** do mapa antigo linkava para ele.
-> - **O WS do picker está trocado.** O mapa dizia `search_structure`; quem a árvore chama é
->   **`local_dimensions_browse_competencies`** (`competency_tree_browser.js:61-64`). O
->   `search_structure` continua existindo e continua sendo usado — mas pela **busca da própria aba
->   Estrutura** (`structure.js:382`), não por este modal.
-> - **O gatilho não está onde o mapa dizia.** Ele apontava `structure.mustache`; um
->   `grep -n 'data-action="related"' templates/` devolve **`structure_footer_actions.mustache:57`**.
->   O `structure.mustache` só passa a flag `detailconfig.showrelated` (`:46`, `:51`) para o partial
->   de detalhe.
-> - **Faltava inteiro:** os **chips de referenciadas no detalhe** da aba Estrutura
->   (`structure_detail_content.mustache:116-125` + `structure_related_chips.mustache`), com contador
->   e ação `open-related` que abre a competência referenciada em outro modal — um sub-recurso
->   completo que o mapa não mencionava; e **toda a árvore** (filtro com debounce, toggle de
->   caminhos, linhas travadas com sufixo, "Carregar mais", scroll infinito com sentinela).
-> - **A relação é simétrica por uma razão mecânica que o mapa não registrava.** O core **normaliza**
->   o par: `related_competency::get_relation()` (`:107-130`) sempre grava o **id menor** como
->   `competencyid` (`:112-118`), porque o validador **exige** `competencyid < relatedcompetencyid`
->   (`:82-84`). Como a linha é gravada uma vez só, numa direção canônica, a leitura simétrica **tem
->   de** ser um `UNION ALL` dos dois sentidos — e é
->   (`related_competency::get_related_competencies()`, `:142-153`). O mapa antigo creditava o UNION à
->   `api::list_related_competencies`; ela existe (`api.php:3726`) mas delega.
+> - A casca deixou de ser `Modal.create` (corpo com botão) e virou `ModalSaveCancel.create`
+>   (`related_competencies.js:239-244`), com a ação primária no **rodapé** e o `preventDefault`
+>   **incondicional** no `ModalEvents.save` (`:290-296`). O ID `MOD.RELATED-ADDBTN` (botão no corpo,
+>   `:35-39` do Mustache) foi **aposentado**; entra `MOD.RELATED-FOOT` (o mesmo ID que a tela já usava
+>   para o to-be). O `<button data-action="add-selected">` e o `SELECTORS.addSelected` saíram.
+> - O Mustache encolheu de 45 para **40** linhas (as 5 do botão), e o `.js` cresceu de 284 para **299**
+>   (as duas strings novas — `central_browseframeworks_add` para o rótulo do save e `closebuttontitle`
+>   do core para "Fechar" — mais a fiação do `ModalEvents.save`). **Todas** as refs de `.js` e de
+>   `.mustache` abaixo foram re-varridas contra esse estado.
+>
+> **Resync 2026-07-15 (histórico) — o mapa anterior descrevia um autocomplete que não existe mais.**
+> Os fatos ainda válidos daquela varredura, preservados:
+>
+> - **`related_datasource.js` não existe.** Nasceu em `da4489a` e foi **deletado em `44ac031`** ("related
+>   modal adds via the shared framework tree browser", −61 linhas). A árvore chama
+>   **`local_dimensions_browse_competencies`** (`competency_tree_browser.js:61-64`), não `search_structure`
+>   (que segue vivo, mas para a **busca da própria aba Estrutura**, `structure.js:382`).
+> - **O gatilho** é `structure_footer_actions.mustache:57` (`grep -n 'data-action="related"' templates/`),
+>   não `structure.mustache` — este só passa a flag `detailconfig.showrelated` (`:46`, `:51`) ao partial de detalhe.
+> - **Os chips de referenciadas no detalhe** da aba Estrutura (`structure_detail_content.mustache:116-125` +
+>   `structure_related_chips.mustache`) são um sub-recurso completo, com contador e ação `open-related`.
+> - **A relação é simétrica por uma razão mecânica.** O core **normaliza** o par:
+>   `related_competency::get_relation()` (`:107-130`) sempre grava o **id menor** como `competencyid`
+>   (`:112-118`), porque o validador **exige** `competencyid < relatedcompetencyid` (`:82-84`). Gravada uma
+>   vez só, numa direção canônica, a leitura simétrica **tem de** ser um `UNION ALL` dos dois sentidos — e é
+>   (`related_competency::get_related_competencies()`, `:142-153`). A `api::list_related_competencies` existe
+>   (`api.php:3726`) mas delega.
 
 ## Gatilho e chips (na aba Estrutura, fora do modal)
 
@@ -70,8 +62,8 @@ estrutura — uma relação só alcança competências da mesma estrutura. As li
 > (`structure_related_modal.mustache`), cujo `.modal-header` é escondido de propósito
 > (`styles.css:5158-5160`) porque o card traz o **próprio** botão de fechar
 > (`data-action="close-related-modal"`, `structure_related_modal.mustache:37`). O modal
-> "Competências referenciadas" **não recebe classe nenhuma** no root — `related_competencies.js:248`
-> é um `Modal.create` seco.
+> "Competências referenciadas" **não recebe classe nenhuma** no root — `related_competencies.js:239`
+> é um `ModalSaveCancel.create` seco.
 >
 > A consequência é fácil de ler ao contrário: o restyle do chip de fechar do hub é
 > `.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-'])`
@@ -84,11 +76,11 @@ estrutura — uma relação só alcança competências da mesma estrutura. As li
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.RELATED-TITLE` | Competências referenciadas — {nome} | título | `related_competencies.js:238` (str), `:248` (`Modal.create`) | str `central_related_title`, `$a` = nome | `core/modal` **puro** — sem `footer` no config. `setRemoveOnClose(true)` em `:249` |
-| `MOD.RELATED-ROOT` | `[sem rótulo]` | região/raiz | `related_competencies.mustache:31` | `data-region="related-competencies"` · `.local-dimensions-central-related` | a classe é o gancho do cap de 40vh (`styles.css:5685`). O listener delegado de remover pousa aqui (`js:278-282`) |
+| `MOD.RELATED-TITLE` | Competências referenciadas — {nome} | título | `related_competencies.js:224` (str), `:239-244` (`ModalSaveCancel.create`) | str `central_related_title`, `$a` = nome | rodapé Cancelar/Salvar preenchido pelo core; `removeOnClose: true` vai no próprio `configure()` (`:242`), e o save nasce desabilitado (`setButtonDisabled('save', true)`, `:246`) |
+| `MOD.RELATED-ROOT` | `[sem rótulo]` | região/raiz | `related_competencies.mustache:31` | `data-region="related-competencies"` · `.local-dimensions-central-related` | a classe é o gancho do cap de 40vh (`styles.css:5685`). O listener delegado de remover pousa aqui (`js:274-278`) |
 | `MOD.RELATED-ADDLABEL` | Adicionar competência referenciada | rótulo | `related_competencies.mustache:32` | str `central_related_add` | é um `<div class="small fw-medium">`, **não** um `<label>` — não há `for`, porque o alvo é uma árvore, não um campo |
 | `MOD.RELATED-SAMEFW` | Somente competências da mesma estrutura podem ser referenciadas. | nota | `related_competencies.mustache:33` | str `central_related_sameframework` | é a constraint do core em prosa: `competency::share_same_framework` (`related_competency.php:89-91`, via `competency.php:679`). Por isso o partial entra **sem** seletor de estrutura |
-| `MOD.RELATED-TOAST` | `[sem rótulo]` | feedback | `related_competencies.js:269-272` | `addToastRegion(modal.getBody()[0])` no `ModalEvents.shown` | strs `central_related_added` / `central_related_removed`. Ver a seção do toast abaixo |
+| `MOD.RELATED-TOAST` | `[sem rótulo]` | feedback | `related_competencies.js:266-269` | `addToastRegion(modal.getBody()[0])` no `ModalEvents.shown` | strs `central_related_added` / `central_related_removed`. Ver a seção do toast abaixo |
 
 ## A árvore (partial compartilhado com o `MOD.BROWSER`)
 
@@ -101,33 +93,32 @@ O `related_competencies.mustache:34` inclui o partial inteiro; quem o dirige é
 | `MOD.RELATED-PATHS` | Mostrar caminhos | switch | `competency_tree_browser.mustache:36-41` | `data-region="path-toggle"` · id com `{{uniqid}}` | str `central_browseframeworks_showpaths`. Em modo **busca** ele é forçado `checked` **e** `disabled` (`browser.js:327-328`), porque `pathsVisible` já é sempre verdadeiro ali (`:72`). Governa **só a árvore** — as linhas de relação mostram o caminho sempre |
 | `MOD.RELATED-TREE` | `[sem rótulo]` | contêiner-JS | `competency_tree_browser.mustache:42-44` | `data-region="competency-list"` · `.local-dimensions-cb-scroll` | `styles.css:5685-5688` dá `max-height:40vh` + `overflow-y:auto` **só aqui** (o `MOD.BROWSER` deixa solto): é o que mantém as linhas de relação, abaixo, alcançáveis. A sentinela do scroll infinito é inserida **dentro** da caixa de propósito (`browser.js:486-490`) |
 | `MOD.RELATED-ROW` | {nome} | linha (checkbox) | `competency_tree_browser.js:82-135` (`makeNode`; o checkbox em `:111-123`) | `input.form-check-input` + nome + caminho | **sem `for`**: a linha inteira é o alvo de clique (`:125-126`, `onListClick` `:432-437`), com seleção por intervalo no Shift (`:354-361`). A seleção é **persistente** (`state.checked`) e sobrevive a re-render (`:120-122`). Indenta `20px` por nível (`INDENT_STEP`, `:48`, aplicado em `:94`) |
-| `MOD.RELATED-ROW-LOCK` | {nome} (Esta competência) / (Já referenciada) | linha travada | `competency_tree_browser.js:117-119`, `:130` | `checked` + `disabled` · sufixo no nome | o conjunto é `state.excluded`: a própria competência + as já referenciadas, reconstruído a cada `loadRelations` (`js:124-130`). O sufixo vem de `state.excludedsuffix` (`js:261`) → strs `central_related_self` / `central_related_alreadyrelated`. `getCheckedIds` filtra as excluídas (`browser.js:450-451`) |
+| `MOD.RELATED-ROW-LOCK` | {nome} (Esta competência) / (Já referenciada) | linha travada | `competency_tree_browser.js:117-119`, `:130` | `checked` + `disabled` · sufixo no nome | o conjunto é `state.excluded`: a própria competência + as já referenciadas, reconstruído a cada `loadRelations` (`js:110-117`). O sufixo vem de `state.excludedsuffix` (`js:258`) → strs `central_related_self` / `central_related_alreadyrelated`. `getCheckedIds` filtra as excluídas (`browser.js:450-451`) |
 | `MOD.RELATED-MORE` | Carregar mais | botão | `competency_tree_browser.js:186` | str `central_browseframeworks_loadmore` | página de **25** (`PAGE_SIZE`, `:46`) |
-| `MOD.RELATED-TREE-EMPTY` | Nenhuma competência nesta estrutura. | estado vazio | `related_competencies.js:245` (str) | str `central_browseframeworks_empty` | passa no `state.emptylabel`; é o vazio **da árvore**, não o das relações |
+| `MOD.RELATED-TREE-EMPTY` | Nenhuma competência nesta estrutura. | estado vazio | `related_competencies.js:233` (str), `:260` (state) | str `central_browseframeworks_empty` | passa no `state.emptylabel`; é o vazio **da árvore**, não o das relações |
 
 ## Ação e relações atuais
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.RELATED-ADDBTN` | Adicionar selecionadas | botão primário | `related_competencies.mustache:35-39` | `data-action="add-selected"` · nasce `disabled` | str **`central_browseframeworks_add`** (reusada do `MOD.BROWSER`, não tem string própria). Mora **no corpo** — a verruga que o IMP-06 endereça. `updateAddButton` (`js:140-142`) o liga enquanto `getCheckedIds(state).length !== 0`; os listeners são registrados **depois** dos do browser, de propósito, para o toggle da linha já ter sido aplicado quando o estado é recalculado (`js:287-290`) |
-| `MOD.RELATED-ROWS` | `[sem rótulo]` | contêiner-JS | `related_competencies.mustache:41` | `data-region="related-list"` | linhas por `makeRow` (`js:70-111`): nome + `idnumber` mono + caminho de ancestrais. O caminho vem do WS (`list_related_competencies` → `helper::competency_breadcrumbs`) e é renderizado **sempre** (`js:87-92`) — o `MOD.RELATED-PATHS` não o alcança |
-| `MOD.RELATED-ROW-REMOVE` | Remover competência referenciada | botão (por linha) | `related_competencies.js:94-106` | `data-action="remove-related"` · `data-relatedid` na linha | ícone `fa fa-trash` + `.visually-hidden` com o rótulo. `removeRelated` (`js:169-194`): confirm `deleteCancelPromise` (strs `central_related_remove` / `central_related_remove_confirm`) → WS core → tira a linha → **re-renderiza a árvore** para a competência voltar a ser pickável (`:189`) → devolve o foco (`:192`), porque o confirm o tinha devolvido para um botão já destacado do DOM |
-| `MOD.RELATED-EMPTY` | Nenhuma competência referenciada ainda. | estado vazio | `related_competencies.mustache:42-44` | `data-region="related-empty"` · nasce `hidden` | str `central_related_empty`. Alternado em `js:131` e `:187` |
+| `MOD.RELATED-FOOT` | Adicionar selecionadas · Fechar | rodapé do modal | `related_competencies.js:239-244` (`buttons: {save, cancel}`), `:290-296` (`ModalEvents.save`) | save = str **`central_browseframeworks_add`** (reusada do `MOD.BROWSER`); cancel = str `closebuttontitle` do core ("Fechar") | o core revela o `.modal-footer` (sempre renderizado, escondido quando vazio) porque o `ModalSaveCancel` o preenche. `updateAddButton` (`js:125-127`) liga o save via `state.modal.setButtonDisabled('save', …)` enquanto `getCheckedIds(state).length !== 0`; os listeners são registrados **depois** dos do browser, de propósito (`js:284-285`). O `preventDefault()` do save é **incondicional** (`:294`) — ver a seção do IMP-06 |
+| `MOD.RELATED-ROWS` | `[sem rótulo]` | contêiner-JS | `related_competencies.mustache:36` | `data-region="related-list"` | linhas por `makeRow` (`js:55-97`): nome + `idnumber` mono + caminho de ancestrais. O caminho vem do WS (`list_related_competencies` → `helper::competency_breadcrumbs`) e é renderizado **sempre** (`js:72-77`) — o `MOD.RELATED-PATHS` não o alcança |
+| `MOD.RELATED-ROW-REMOVE` | Remover competência referenciada | botão (por linha) | `related_competencies.js:79-96` | `data-action="remove-related"` · `data-relatedid` na linha | ícone `fa fa-trash` + `.visually-hidden` com o rótulo. `removeRelated` (`js:154-180`): confirm `deleteCancelPromise` (`:162`, strs `central_related_remove` / `central_related_remove_confirm`) → WS core → tira a linha → **re-renderiza a árvore** para a competência voltar a ser pickável (`:174`) → devolve o foco (`:177`), porque o confirm o tinha devolvido para um botão já destacado do DOM |
+| `MOD.RELATED-EMPTY` | Nenhuma competência referenciada ainda. | estado vazio | `related_competencies.mustache:37-39` | `data-region="related-empty"` · nasce `hidden` · `role="status"` | str `central_related_empty`. Alternado em `js:116` (loadRelations) e `:172` (removeRelated) |
 
-**Fluxo do add (`addSelected`, `js:202-226`).** Dispara **N chamadas em paralelo** (uma
-`core_competency_add_related_competency` por id marcado, `:209-212`). O `finally` (`:214-223`)
+**Fluxo do add (`addSelected`, `js:187-211`).** Dispara **N chamadas em paralelo** (uma
+`core_competency_add_related_competency` por id marcado, `:194-197`). O `finally` (`:199-208`)
 re-sincroniza linhas **e** árvore com o servidor **mesmo no erro**, com o motivo registrado no
 próprio código: uma chamada que falha no meio do lote **não desfaz** as anteriores. As marcas ainda
-pendentes são preservadas para o usuário repetir. Depois, cada linha nova pisca (`flash`, `js:53-61`,
-`:224`) e sai um toast (`:225`).
+pendentes são preservadas para o usuário repetir. Depois, cada linha nova pisca (`flashRow`, do
+helper `flash.js`, `:209`) e sai um toast (`:210`).
 
 ## O toast — por que a região mora dentro do modal
 
-`related_competencies.js:272` chama `addToastRegion(modal.getBody()[0])` no `ModalEvents.shown`.
-É um dos **4** pontos do plugin com esse padrão (`participants_manager.js:167`,
-`competency_links.js:898`, `frameworks.js:348`, e este) — contados com
-`grep -rn 'addToastRegion(' amd/src/`, **com o parêntese**: sem ele o grep devolve **8**, porque soma
-as 4 linhas de `import`.
+`related_competencies.js:269` chama `addToastRegion(modal.getBody()[0])` no `ModalEvents.shown`.
+É um dos **4** pontos do plugin com esse padrão (`participants_manager.js`, `competency_links.js`,
+`frameworks.js`, e este) — contados com `grep -rn 'addToastRegion(' amd/src/`, **com o parêntese**:
+sem ele o grep devolve **8**, porque soma as 4 linhas de `import`.
 
 O motivo é aritmética de `z-index`, e vale conferir os dois números:
 
@@ -143,33 +134,24 @@ wrapper por baixo, sem que o comentário mudasse. O padrão da casa existe por c
 O core remove a região sozinho ao fechar (`removeToastRegion` no `core/modal`), então não há
 vazamento e **não** se mexe em `z-index` global.
 
-## IMP-06 — a ação primária desce para o rodapé que o core já cria
+## IMP-06 — a ação primária desceu para o rodapé que o core já cria (shipado, `0898acf`)
 
-**O rodapé não está faltando: está escondido.** A cadeia inteira, conferida linha a linha:
+**O rodapé não estava faltando: estava escondido.** A cadeia inteira, conferida linha a linha:
 
 1. `lib/templates/modal.mustache:58-62` **sempre** renderiza o `div.modal-footer` com
    `data-region="footer"`, e um bloco `{{$footer}}` vazio por padrão.
 2. `Modal.show()` (`lib/amd/src/modal.js:868`) pergunta `hasFooterContent()` — que é literalmente
    `this.getFooter().children().length ? true : false` (`:686`).
-3. Com zero filhos, cai no `else` e chama `hideFooter()` (`:875-879`), que aplica a classe `.hidden`
-   (`:695`).
+3. Com zero filhos, cai no `else` e chama `hideFooter()` (`:875-879`), que aplica a classe `.hidden`.
 4. `.hidden { display: none; }` (`theme/boost/scss/moodle/core.scss:417-419`) — o rodapé **colapsa**.
-   Não é uma barra vazia: é barra nenhuma.
 
 **Portanto: dar um filho ao rodapé faz o core revelá-lo sozinho** (`showFooter()`, `:704`). E é
 exatamente isso que o `ModalSaveCancel` é — o **mesmo** `core/modal` com o bloco `{{$footer}}`
 preenchido com Cancelar + Salvar (`lib/templates/modal_save_cancel.mustache:42-45`).
 
-**Censo do garfo** (em `amd/src/central/`, pontos de construção): **7** × `Modal.create` — nenhum
-passa `footer`; **5** × `ModalSaveCancel.create`; **1** × `ModalDeleteCancel.create`; **4** ×
-`new ModalForm`. E `setSaveButtonText` aparece em **1** único ponto do plugin inteiro:
-`competency_browser.js:107`. (Números conferidos com `grep -rn` em `amd/src/`; o `Modal.create` do
-`accordion.js:1191` fica de fora por ser view de aluno, não hub — é o que faz o total do hub ser 7 e
-não 8.)
-
-**A troca é menos código, não mais.** O `configure()` do core aceita `buttons` e `removeOnClose` no
-mesmo objeto (`lib/amd/src/modal.js:246-284`, o `buttons` é aplicado em `:284` via `setButtonText`),
-então as duas linhas de hoje (`js:248-249`) viram uma:
+**A troca foi menos código, não mais.** O `configure()` do core aceita `buttons` e `removeOnClose` no
+mesmo objeto (`lib/amd/src/modal.js:247-288`, o `buttons` é aplicado via `setButtonText`), então as
+duas linhas de antes (`Modal.create({title, body})` + `setRemoveOnClose(true)`) viraram uma:
 
 ```js
 const modal = await ModalSaveCancel.create({
@@ -178,47 +160,33 @@ const modal = await ModalSaveCancel.create({
 });
 ```
 
-e o Mustache perde as **5** linhas do botão (`:35-39`). **Sem string nova:**
-`central_browseframeworks_add` ("Adicionar selecionadas") já é a que o corpo usa (`:37`), e
-"Fechar" é o `closebuttontitle` do core (`lang/en/moodle.php:280`).
+(`related_competencies.js:239-244`) e o Mustache perdeu as **5** linhas do botão. **Sem string nova
+para o botão:** `central_browseframeworks_add` ("Adicionar selecionadas") já era a que o corpo usava,
+e "Fechar" é o `closebuttontitle` do core (`lang/en/moodle.php:280`).
 
-**O desabilitado-até-marcar sobrevive** — e desde **2026-07-15** o precedente é de casa. O
-`competency_browser.js` passou a fazer exatamente o que o IMP-06 propõe: `ModalSaveCancel` +
-`setSaveButtonText` (`:107`) + um `modal.setButtonDisabled('save', true)` logo depois do
-`setRemoveOnClose` (`:110`), com um `updateAddButton` (`:48-50`) que recalcula pela contagem a cada
-`click`/`change` da lista (`:140-141`). Fora do plugin, o **`competency_picker` do format_mtube** já
-chegava lá por outro caminho (um `_setSaveEnabled` que liga o botão pela contagem da seleção, via
-`getFooter()` + `getActionSelector('save')` — os dois públicos no core, `modal.js:411` e `:1194`).
+**O desabilitado-até-marcar sobreviveu e encolheu.** O `setButtonDisabled(action, disabled)` é público
+no core (`modal.js:1222-1223`) e faz o `getFooter()` + `getActionSelector()` por dentro. O
+`updateAddButton` (`js:125-127`) virou uma linha —
+`state.modal.setButtonDisabled('save', getCheckedIds(state).length === 0)` — e perdeu o `state.addbtnEl`
+e o `querySelector` do corpo que o alimentavam. O `state.modal` guardado no `state` (`:252`) é o único
+gancho.
 
-O caminho de casa é o mais curto dos dois: `setButtonDisabled` também é público e faz o `getFooter()`
-+ `getActionSelector()` por dentro (`modal.js:1222-1223`). Então o nosso `updateAddButton`
-(`js:140-142`) não só sobrevive como **encolhe** — perde o `state.addbtnEl` e o `querySelector` que o
-alimenta (`js:277`).
-
-> **A ressalva, e ela não é opcional.** `ModalSaveCancel.registerEventListeners()`
-> (`modal_save_cancel.js:52-59`) chama `registerCloseOnSave()`, e o handler do core **fecha o
-> diálogo** depois do `ModalEvents.save` — a menos que alguém chame `preventDefault()`
-> (`modal.js:1100-1116`). Este modal **não pode fechar** no "Adicionar selecionadas": o toast, o
-> `flash` da linha nova e o estado vazio acontecem **no lugar**, e o usuário volta à árvore. Logo, o
-> `ModalEvents.save` daqui precisa de um `preventDefault()` **incondicional**.
+> **A ressalva, e é o motivo de o IMP-06 não ter sido um copiar-e-colar do vizinho.** O
+> `ModalSaveCancel.registerEventListeners()` (`modal_save_cancel.js:52-59`) chama
+> `registerCloseOnSave()`, e o handler do core **fecha o diálogo** depois do `ModalEvents.save` — a
+> menos que se chame `preventDefault()` **síncrono** (`modal.js:1100-1107`: ele dispara o
+> `ModalEvents.save` e só fecha se `!saveEvent.isDefaultPrevented()`). Este modal **não pode fechar**
+> no "Adicionar selecionadas": o toast, o `flash` da linha nova (`js:209`) e o estado vazio acontecem
+> **no lugar**, e o usuário volta à árvore. Logo, o `ModalEvents.save` daqui (`js:290-296`) chama
+> `event.preventDefault()` **incondicional** (`:294`) como primeira instrução, e só então dispara o
+> `addSelected` assíncrono.
 >
-> **Por isso o IMP-06 não é copiar o vizinho — e o vizinho mudou em 2026-07-15.** O
-> `competency_browser.js` — dono da única chamada `setSaveButtonText` do plugin (`:107`) — ligava o
-> save **sem `preventDefault` nenhum** e fechava sempre, inclusive quando **nada** estava marcado: o
-> diálogo sumia e não adicionava coisa alguma. O `e14977c` fechou esse buraco, e a fiação de lá hoje
-> é `addSelected(state, event)` (`:144`) com um `preventDefault()` **condicional**, que só dispara no
-> caso vazio (`:64-68`) — atrás de um botão que já **nasce desabilitado** (`:110`). Ou seja: lá o
-> `preventDefault` é **backstop**, não mecanismo. Num add real ele continua **fechando**, e continua
-> certo para ele, que é picker de uma tacada.
->
-> **A conclusão não muda; o contraste é que ficou mais limpo.** O `competency_browser` convergiu para
-> a forma do `competency_picker` do mtube (fecha; `preventDefault` só para **barrar** seleção vazia)
-> — hoje são **dois** exemplos shipados da **mesma** forma, não duas formas. O de referenciadas
-> segue sendo o caso à parte, e o único: **gerencia**, escreve a cada clique e **fica**. Nele o
-> `preventDefault` é **incondicional** e é o mecanismo, não o backstop — e é justamente disso que
-> nenhum dos dois vizinhos precisa. A chamada `setSaveButtonText` se reusa; o
-> desabilitar-até-marcar agora se reusa também
-> (`:110` + `:48-50`); a **fiação do save, não**.
+> **O contraste com os vizinhos, mais estreito depois do `e14977c`.** O `competency_browser.js`
+> (`MOD.BROWSER`) e o `competency_picker` do mtube fazem o `preventDefault` **condicional** — só para
+> **barrar** a seleção vazia; numa adição real, **fecham**, e está certo para eles, que são pickers de
+> uma tacada. O de referenciadas é o terceiro caso, e o único: **gerencia**, escreve a cada clique e
+> **fica**. Nele o `preventDefault` é **incondicional** e é o mecanismo, não o backstop. A chamada
+> `ModalSaveCancel` + `setButtonDisabled` se reusa; a **fiação do save, não**.
 
 **O que o IMP-06 não conserta:** o cap de `40vh` (`styles.css:5685-5688`) existe por causa das
 **linhas de relação** abaixo da árvore, não do botão — ele fica. E a sentinela continua dentro da

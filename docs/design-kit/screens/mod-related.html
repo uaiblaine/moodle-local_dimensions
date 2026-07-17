@@ -1,4 +1,4 @@
-<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Competências referenciadas" subtitle="MOD.RELATED — árvore compartilhada + relações atuais; caso de referência do IMP-06: a ação primária mora no corpo e o rodapé do core fica oculto" -->
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Competências referenciadas" subtitle="MOD.RELATED — árvore compartilhada + relações atuais; IMP-06 shipado (0898acf): a ação primária mora no rodapé do modal (ModalSaveCancel). O painel esquerdo é o histórico de como era." -->
 <style>
 :root{
   --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
@@ -15,7 +15,7 @@
      #3f89cc: 4,37:1 como texto sobre a superfície do modal e 3,88:1 sobre o próprio tint. Aqui ele
      é só TEXTO — alcança o "Carregar mais" e o contador de selecionadas, e nenhum tint depende
      dele (por isso não há --acc-bg). Medido no DOM renderizado deste arquivo, nos dois temas —
-     ver a nota de medição no fim do painel to-be. */
+     ver a nota de medição no fim do painel shipado. */
   --acc-fg:#185fa5;
   /* Preenchimento primário (checkbox marcado + "Adicionar selecionadas"). NÃO pode ser
      var(--text-accent), que no escuro do painel DS vira o azul CLARO #85b7eb — branco sobre ele dá
@@ -158,7 +158,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
    Os checkboxes reais são IRMÃOS do .pane; o combinador ~ os alcança. Mesma mecânica do
    mod-enrolmethods (nunca :has(): um :has() num ancestral atrasa um passo). Cada linha pickable
    tem o seu, e QUALQUER um marcado habilita o botão — que é exatamente o getCheckedIds(state).length
-   === 0 do updateAddButton (related_competencies.js:140-142). */
+   === 0 do updateAddButton (related_competencies.js:125-127). */
 .mchk{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
 /* O alvo é a .cbx DENTRO do label, não o label. O label AQUI é a própria .trow (a linha inteira é
    o alvo de clique, como em browser.js:125-126), então mirar em label[for=…] pinta a LINHA de azul
@@ -200,7 +200,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
   <!-- ============ as-is ============ -->
   <section class="panel asis">
-    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o modal shipado — árvore compartilhada, ação no corpo, rodapé oculto</div>
+    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Antes do IMP-06 (histórico) · como era — ação primária no corpo, rodapé do core oculto</div>
 
     <div class="m">
       <div class="m-head">
@@ -244,7 +244,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
           <span class="note selcount" style="margin-right:auto;color:var(--acc-fg)">1+ selecionada(s) → o botão saiu de <code>disabled</code></span>
           <button type="button" class="bprim addbtn off">Adicionar selecionadas</button>
         </div>
-        <div class="row" style="justify-content:flex-end;"><span class="idb">MOD.RELATED-ADDBTN · :35-39 · no CORPO, nasce disabled</span></div>
+        <div class="row" style="justify-content:flex-end;"><span class="idb">MOD.RELATED-ADDBTN (hoje aposentado) · era :35-39 · no CORPO, nascia disabled</span></div>
 
         <hr class="hr">
 
@@ -277,12 +277,12 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <span class="idb">MOD.RELATED-ACTION · structure_footer_actions.mustache:57-60 · fa-exchange</span>
       <span class="idb">MOD.RELATED-CHIPS · structure_detail_content.mustache:116-125</span>
     </div>
-    <span class="note" style="display:block;margin-top:5px;"><strong>Marque "Pensamento crítico" ou "Oratória" acima</strong> — o botão sai de <code>disabled</code> e o contador aparece. É a mecânica real: <code>updateAddButton</code> (<code>js:140-142</code>) liga o botão enquanto <code>getCheckedIds(state).length</code> não for 0.</span>
+    <span class="note" style="display:block;margin-top:5px;"><strong>Marque "Pensamento crítico" ou "Oratória" acima</strong> — o botão sai de <code>disabled</code> e o contador aparece. A mecânica sobreviveu ao IMP-06: <code>updateAddButton</code> (<code>js:125-127</code>) segue ligando o botão — hoje o do rodapé — enquanto <code>getCheckedIds(state).length</code> não for 0.</span>
   </section>
 
-  <!-- ============ to-be ============ -->
+  <!-- ============ shipado (as-is) ============ -->
   <section class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Proposta (to-be) · IMP-06 — a ação primária desce para o rodapé que o core já cria</div>
+    <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Shipado (as-is) · IMP-06 — a ação primária no rodapé que o core cria (0898acf)</div>
 
     <div class="warn" style="margin-bottom:10px;">
       <b>O rodapé não está faltando: ele está escondido.</b> <code>lib/templates/modal.mustache:58-62</code>
@@ -334,7 +334,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
             </div>
             <button type="button" class="btrash" aria-label="Remover competência referenciada"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#r-trash"/></svg></button>
           </div>
-          <span class="note">O corpo perde 5 linhas de Mustache (<code>:35-39</code>) e a árvore ganha a altura delas.</span>
+          <span class="note">O corpo perdeu 5 linhas de Mustache (as antigas <code>:35-39</code>) e a árvore ganhou a altura delas.</span>
         </div>
 
         <div class="m-foot">
@@ -345,25 +345,25 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     </div>
 
     <div class="row" style="margin-top:8px;">
-      <span class="idb">MOD.RELATED-FOOT · to-be · core/modal_save_cancel</span>
+      <span class="idb">MOD.RELATED-FOOT · as-is · core/modal_save_cancel</span>
       <span class="prov">mtube: competency_picker</span>
     </div>
 
     <div class="ok" style="margin-top:8px;">
-      <b>Uma construção, não uma migração.</b> O <code>configure()</code> do core já aceita
+      <b>Uma construção, não uma migração.</b> O <code>configure()</code> do core aceita
       <code>buttons</code> e <code>removeOnClose</code> no mesmo objeto
-      (<code>lib/amd/src/modal.js:246-284</code>), então as duas linhas de hoje —
-      <code>Modal.create({title, body})</code> + <code>setRemoveOnClose(true)</code>
-      (<code>js:248-249</code>) — viram <b>uma</b>:
-      <code>ModalSaveCancel.create({title, body, removeOnClose: true, buttons: {save: addlabel, cancel: closelabel}})</code>.
-      <b>Sem string nova para o botão:</b> <code>central_browseframeworks_add</code> ("Adicionar
-      selecionadas") já é a string que o corpo usa hoje (<code>:37</code>), e "Fechar" é o
-      <code>closebuttontitle</code> do core (<code>lang/en/moodle.php:280</code>).
+      (<code>lib/amd/src/modal.js:247-288</code>), então as duas linhas de antes —
+      <code>Modal.create({title, body})</code> + <code>setRemoveOnClose(true)</code> — viraram
+      <b>uma</b>:
+      <code>ModalSaveCancel.create({title, body, removeOnClose: true, buttons: {save: addlabel, cancel: closelabel}})</code>
+      (<code>related_competencies.js:239-244</code>). <b>Sem string nova para o botão:</b>
+      <code>central_browseframeworks_add</code> ("Adicionar selecionadas") já era a string que o corpo
+      usava, e "Fechar" é o <code>closebuttontitle</code> do core (<code>lang/en/moodle.php:280</code>).
     </div>
 
     <div class="ok" style="margin-top:8px;">
       <b>O desabilitado-até-marcar sobrevive, e há precedente shipado.</b> O
-      <span class="prov">mtube: competency_picker</span> faz hoje exatamente o que o IMP-06 propõe:
+      <span class="prov">mtube: competency_picker</span> faz exatamente o que o IMP-06 propôs:
       <code>ModalSaveCancel</code>, <code>setSaveButtonText</code>, e um
       <code>_setSaveEnabled(&hellip;)</code> que liga/desliga o botão do rodapé pela contagem da
       seleção, via <code>getFooter()</code> + <code>getActionSelector('save')</code> — os dois
@@ -376,21 +376,22 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       da lista (<code>competency_browser.js:140-141</code>). O <code>setButtonDisabled(action, disabled)</code>
       é público no core (<code>modal.js:1222</code>) e é <b>rota mais curta</b> que o
       <code>getFooter()</code> + <code>getActionSelector('save')</code> do mtube. O nosso
-      <code>updateAddButton</code> (<code>js:140-142</code>) não muda de forma: só troca
-      <code>state.addbtnEl</code> de um <code>querySelector</code> no corpo por um no rodapé — ou,
-      seguindo o vizinho, pelo <code>setButtonDisabled</code> e nenhum <code>querySelector</code>.
+      <code>updateAddButton</code> (<code>related_competencies.js:125-127</code>) virou uma linha —
+      <code>state.modal.setButtonDisabled('save', getCheckedIds(state).length === 0)</code> — e
+      perdeu o <code>state.addbtnEl</code> e o <code>querySelector</code> do corpo que o alimentavam.
     </div>
 
     <div class="warn" style="margin-top:8px;">
       <b>A ressalva que o "quase de graça" esconde — e ela não é opcional.</b> O
       <code>ModalSaveCancel</code> registra <code>registerCloseOnSave()</code>
       (<code>modal_save_cancel.js:52-59</code>), e o handler do core <b>fecha o diálogo</b> depois do
-      <code>ModalEvents.save</code> — a menos que alguém chame <code>preventDefault()</code>
-      (<code>modal.js:1100-1116</code>). Este modal <b>não pode fechar</b> no "Adicionar
-      selecionadas": o toast, o flash da linha nova (<code>js:224</code>) e o estado vazio acontecem
+      <code>ModalEvents.save</code> — a menos que alguém chame <code>preventDefault()</code> síncrono
+      (<code>modal.js:1100-1107</code>: dispara o <code>ModalEvents.save</code> e só fecha se
+      <code>!saveEvent.isDefaultPrevented()</code>). Este modal <b>não pode fechar</b> no "Adicionar
+      selecionadas": o toast, o flash da linha nova (<code>js:209</code>) e o estado vazio acontecem
       <b>no lugar</b>, e o usuário volta à árvore para adicionar mais. Então o
-      <code>ModalEvents.save</code> daqui precisa de um <code>preventDefault()</code>
-      <b>incondicional</b>.
+      <code>ModalEvents.save</code> daqui (<code>js:290-296</code>) chama <code>preventDefault()</code>
+      <b>incondicional</b> como primeira instrução (<code>:294</code>).
     </div>
 
     <div class="warn" style="margin-top:8px;">
@@ -417,7 +418,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       segue presa à rolagem dela.
     </div>
 
-    <span class="note" style="display:block;margin-top:8px;"><strong>Marque uma linha em qualquer um dos dois painéis</strong> — o botão habilita no corpo (as-is) e no rodapé (to-be). O que a tela <strong>não</strong> demonstra: o rodapé aqui é desenhado à mão, porque o preview não roda o <code>core/modal</code>. A prova de que o core revela o rodapé sozinho não está no pixel — está em <code>modal.js:875-879</code>, citado acima e conferido linha a linha.</span>
+    <span class="note" style="display:block;margin-top:8px;"><strong>Marque uma linha em qualquer um dos dois painéis</strong> — o botão habilita no corpo (histórico) e no rodapé (shipado). O que a tela <strong>não</strong> demonstra: o rodapé aqui é desenhado à mão, porque o preview não roda o <code>core/modal</code>. A prova de que o core revela o rodapé sozinho não está no pixel — está em <code>modal.js:875-879</code>, citado acima e conferido linha a linha.</span>
 
     <div class="ok" style="margin-top:10px;">
       <b>Nota de medição — 233 pares por tema, no DOM renderizado, não no papel.</b> Varredura dos
