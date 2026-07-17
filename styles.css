@@ -20,6 +20,19 @@
   */
 
 /* ============================================
+      MOTION TOKENS (--mds-motion-*)
+      Named durations + Material easing, mirroring the design kit's tokens.html. --mds-motion-flash
+      is consumed by JS (central/flash.js via WAAPI); the rest by CSS transitions. Adopted on new or
+      reformed surfaces only — shipped CSS is not retro-tokenized.
+      ============================================ */
+:root {
+    --mds-motion-fast: 150ms;
+    --mds-motion-base: 250ms;
+    --mds-motion-flash: 1500ms;
+    --mds-motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
       PAGE-SPECIFIC OVERRIDES
       Hide empty default header on view-plan / view-competency pages
       ============================================ */
@@ -3577,8 +3590,8 @@
  * Expand/restore control for the data-dense hub modals (participants, links). Two buttons ride in
  * the header (injected by central/modal_expander); the CSS shows whichever matches the dialog's
  * .local-dimensions-modal-expanded state, so nothing swaps an icon in JS, and the widened width
- * overrides modal-xl / modal-lg. The size persists in the display preference. 150ms is the
- * tokens.html fast motion; the .btn base keeps the keyboard focus ring.
+ * overrides modal-xl / modal-lg. The size persists in the display preference. The transition uses
+ * --mds-motion-fast / --mds-motion-ease; the buttons carry no .btn, so :focus-visible draws its own ring.
  */
 .local-dimensions-modal-sizetoggle {
     display: inline-flex;
@@ -3594,7 +3607,7 @@
     color: #6a737b;
     font-size: 0.875rem;
     cursor: pointer;
-    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color var(--mds-motion-fast) var(--mds-motion-ease), color var(--mds-motion-fast) var(--mds-motion-ease);
 }
 
 .local-dimensions-modal-sizetoggle:hover,
@@ -5776,14 +5789,14 @@ a.local-dimensions-central-links-badge-warn:focus {
  * indicator on the active tab, scoped to the hub page so the restyle never leaks to the many other
  * core dynamic_tabs consumers site-wide. The accent (Boost primary) sits only on the 2px underline
  * and the keyboard focus ring; the text uses Boost's own gray palette, exactly as core renders its
- * muted and body text. 250ms is the tokens.html base motion.
+ * muted and body text. The transition uses --mds-motion-base / --mds-motion-ease.
  */
 .local-dimensions-central-page .dynamictabs .nav-tabs .nav-link {
     color: #6a737b;
     background-color: transparent;
     border: 0;
     box-shadow: inset 0 -2px 0 transparent;
-    transition: box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1), color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: box-shadow var(--mds-motion-base) var(--mds-motion-ease), color var(--mds-motion-base) var(--mds-motion-ease);
 }
 
 .local-dimensions-central-page .dynamictabs .nav-tabs .nav-link:hover {
