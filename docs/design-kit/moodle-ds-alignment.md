@@ -39,7 +39,7 @@ Eixos semânticos do MDS:
 | Texto padrão | `text-default` | gray-900 `#1d2125` |
 | Texto muted | `text-muted` | gray-600 `#6a737b` |
 | **Primary** | `bg-interactive-primary-default` | blue-500 `#0f6cbf` (hover blue-600 `#0c5699`, active blue-700 `#094173`) |
-| Info | `bg-feedback-info-default` | cyan-600 `#006778` (tint cyan-100 `#cce6ea`) |
+| Info | `bg-feedback-info-subtle` / `text-feedback-info` | Boost `$info` = `$cyan` cyan-600 `#008196`; tint cyan-100 `#cce6ea`, texto cyan-800 `#00343c` |
 | Success | `bg-feedback-success-default` | green-500 `#357a32` |
 | Warning | `bg-feedback-warning-default` | yellow-500 `#f0ad4e` |
 | Danger | `bg-interactive-danger-default` | red-500 `#ca3120` |
@@ -53,6 +53,14 @@ Stroke: sm=**1px**, md=2px, lg=3px.
 Tipografia: **Noto Sans** / Menlo; h1=2.5rem … h6=1rem; parágrafo 1rem (lead 1.25, small 0.875);
 pesos light 300 / regular 400 / medium 500 / semibold 600 / bold 700; margem heading=8px, parágrafo=16px.
 Sombras: cor sm/md/lg = preto 8%/15%/17%; md ≈ `0 8px 16px rgba(0,0,0,.15)`.
+
+**Proveniência (auditado 2026-07-16 contra `theme/boost/scss/preset/default.scss`):** os **9 grays**
+(`#f8f9fa`→`#1d2125`) e as bases de marca **blue `#0f6cbf`**, **red `#ca3120`**, **yellow `#f0ad4e`**,
+**green `#357a32`** batem com o preset **exatamente**; as conversões rem→px conferem (0.5rem=8px,
+0.0625rem=1px, 2.5rem=40px); os tints de feedback são cores reais do Moodle (`#fcefdc` aparece literal
+em `theme/boost/scss/moodle/modules.scss`). A única divergência achada foi o **cyan** — o kit trazia
+`#006778`, que não existe no Moodle; corrigido para o `$cyan` real `#008196`. Escala de espaço e raio
+são T-shirt próprias (rotuladas como tais), não valores Boost.
 
 ## Mapeamento: MDS → Boost/Bootstrap (hoje) → React do MDS (Moodle 5.3 LTS)
 
