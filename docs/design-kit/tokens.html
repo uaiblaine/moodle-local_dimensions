@@ -139,7 +139,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
   <span class="fb" style="border:0;box-shadow:var(--mds-shadow-lg);background:var(--mds-bg-surface-default)">shadow-lg</span>
 </div>
 
-<div class="h">Movimento (o kit não tinha vocabulário; o código tem 12 durações soltas)</div>
+<div class="h">Movimento — o vocabulário agora vive no styles.css :root (7dc956b), adotado nas superfícies desta sessão</div>
 <div class="row">
   <span class="fb mo mo-fast" style="border-color:var(--mds-border-default)">fast 150ms · hover, foco, cor</span>
   <span class="fb mo mo-base" style="border-color:var(--mds-border-default)">base 250ms · layout, indicador de aba</span>
@@ -169,7 +169,9 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
     <li>Nomenclatura <b>flat → semântica <code>--mds-*</code></b> (primitive→semantic) → port para React do MDS (Moodle 5.3 LTS) vira rename.</li>
     <li><b>Movimento</b>: <code>--mds-motion-flash</code> é consumido por <b>JS (WAAPI)</b>, não por CSS — é a
         referência para deduplicar as <b>10 cópias</b> do <code>flashRow</code> num helper só.</li>
-    <li>Estes tokens são consumidos por <b>zero</b> regras shipadas hoje. Escopo de adoção: superfícies
-        <b>novas ou reformuladas</b> — retro-tokenizar todo o CSS shipado briga com a regra de menos código.</li>
+    <li>Estes tokens <b>já são consumidos</b>: o <code>styles.css :root</code> os define (<code>7dc956b</code>) e o
+        <b>indicador de aba</b> (base), o <b>expandir/restaurar</b> (fast) e o <code>flash.js</code> (flash, lido
+        via WAAPI) os usam. O escopo de adoção segue superfícies <b>novas ou reformuladas</b> — retro-tokenizar
+        todo o CSS shipado briga com a regra de menos código.</li>
   </ul>
 </div>
