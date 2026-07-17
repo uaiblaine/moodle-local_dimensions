@@ -363,6 +363,7 @@ const makeCourseRow = (state, course) => {
     toggle.className = 'btn btn-sm btn-link p-0 me-1';
     toggle.dataset.action = 'toggle-course';
     toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', state.toggleactivitieslabel);
     const chevron = document.createElement('i');
     chevron.className = 'fa fa-chevron-right';
     chevron.setAttribute('aria-hidden', 'true');
@@ -844,6 +845,7 @@ export const open = async(opts) => {
             getString('central_links_modulecountone', 'local_dimensions'),
             getString('central_links_modulecount', 'local_dimensions', '{count}'),
             getString('central_links_courseremoved', 'local_dimensions'),
+            getString('central_links_toggleactivities', 'local_dimensions'),
         ]),
     ]);
     const {html} = await Templates.renderForPromise('local_dimensions/central/competency_links', {
@@ -890,6 +892,7 @@ export const open = async(opts) => {
         modulecountonelabel: labels[20],
         modulecounttemplate: labels[21],
         courseremovedlabel: labels[22],
+        toggleactivitieslabel: labels[23],
     };
 
     modal.getRoot().on(ModalEvents.shown, () => {

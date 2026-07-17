@@ -188,6 +188,7 @@ $string['central_links_saved'] = 'Saved';
 $string['central_links_sharedwarning'] = '{$a} other competencies are linked to this activity — the completion rule is shared and affects them all.';
 $string['central_links_sharedwarningone'] = '1 other competency is linked to this activity — the completion rule is shared and affects it too.';
 $string['central_links_title'] = 'Courses & activities — {$a}';
+$string['central_links_toggleactivities'] = 'Course activities';
 $string['central_links_wholecourse'] = 'Whole course';
 $string['central_links_wholecoursenote'] = 'Linked at course level, without a specific activity.';
 $string['central_noplanswithcompetency'] = 'No learning plans contain this competency.';
