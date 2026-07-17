@@ -70,8 +70,9 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 <div class="note" style="margin-bottom:8px;">
   O hub fala <b>dois idiomas</b> para a mesma ideia: <code>spinner-border</code> (frameworks.js, via um
   <code>makeSpinner()</code> compartilhado — banner do import + loader do export) e <code>fa fa-spinner fa-spin</code>
-  (enrol_methods, na linha e no contador). A troca de aba (<code>reloadPane</code>) não mostra estado nenhum, e
-  <code>aria-busy</code> não aparece em nenhum arquivo de código do plugin. Padrão do MDS: <b>só
+  (enrol_methods, na linha e no contador). A troca de aba <b>do core</b> já mostra o ícone de loading; a lacuna era o
+  <code>reloadPane</code> do plugin (os ~20 refreshes pós-ação), <b>fechada em <code>976006d</code></b>: ele cobre o pane
+  com veil + spinner e marca <code>aria-busy</code>. Padrão do MDS: <b>só
   <code>spinner-border</code></b>, nos dois formatos abaixo, e o pane marcado com <code>aria-busy</code> +
   <code>aria-live="polite"</code> + <code>aria-label</code> — os três que o <code>format_mtube</code> já põe no
   placeholder dele — mais um <code>role="status"</code>, que é <b>adição do hub</b>: o
@@ -82,8 +83,10 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
   region (anúncio de live region vem do conteúdo, e enquanto <code>aria-busy="true"</code> o anúncio fica adiado de
   qualquer jeito); ele dá <b>nome</b>, e um <code>status</code> anônimo não diz nada a quem esbarra nele navegando.
   Requisito para quem for implementar o pane: o placeholder entra no lugar do conteúdo em que o foco podia estar, então
-  precisa receber o foco — e o nome é o que o usuário ouve ao aterrissar. (Passo que o <code>reloadPane</code> de hoje
-  não tem: ele troca conteúdo pronto por conteúdo pronto, sem placeholder no meio.) O
+  precisa receber o foco — e o nome é o que o usuário ouve ao aterrissar. (O <code>reloadPane</code> shipou a forma de
+  <b>cover</b> — o conteúdo velho fica sob o veil, então o foco não migra para um placeholder; ele recupera o foco
+  <b>depois</b> da troca. A forma de <b>placeholder</b> abaixo é para o <b>primeiro paint</b>, quando não há conteúdo —
+  o mount do modal de participantes, IMP-11.) O
   <code>aria-live</code> é redundante — <code>role="status"</code> já implica <code>polite</code> — e fica explícito de
   propósito, porque o suporte a live region implícita varia entre leitores. (O <code>makeSpinner()</code> põe
   <code>role="status"</code> <i>e</i> <code>aria-hidden</code> no mesmo elemento — o <code>aria-hidden</code> anula o
