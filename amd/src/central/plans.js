@@ -23,6 +23,7 @@
  */
 
 import Ajax from 'core/ajax';
+import {flashRow} from 'local_dimensions/central/flash';
 import ModalForm from 'core_form/modalform';
 import ModalDeleteCancel from 'core/modal_delete_cancel';
 import ModalSaveCancel from 'core/modal_save_cancel';
@@ -105,18 +106,6 @@ const reloadKeepingScroll = async(pane, selectors) => {
             el.scrollTop = positions[selector];
         }
     });
-};
-
-/**
- * Briefly flash a row so an in-place change is visible where the user is looking.
- *
- * @param {HTMLElement} row
- */
-const flashRow = (row) => {
-    row.animate(
-        [{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}],
-        {duration: 1500}
-    );
 };
 
 /**

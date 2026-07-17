@@ -24,6 +24,7 @@
  */
 
 import Ajax from 'core/ajax';
+import {flashRow} from 'local_dimensions/central/flash';
 import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
@@ -168,7 +169,7 @@ const onAdd = (state) => {
         .then(() => {
             const last = state.root.querySelector(`${SELECTORS.rows} tr:last-child`);
             if (last) {
-                last.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500});
+                flashRow(last);
             }
             return null;
         })

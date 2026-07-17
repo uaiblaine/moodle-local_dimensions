@@ -29,6 +29,7 @@
  */
 
 import Ajax from 'core/ajax';
+import {flashRow} from 'local_dimensions/central/flash';
 import Modal from 'core/modal';
 import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
@@ -169,21 +170,6 @@ const makeCompletionBadge = (state, hascompletion, url) => {
         decorateExternalLink(badge, state.newwindowlabel);
     }
     return badge;
-};
-
-/**
- * Briefly highlight an element so an in-place change is visible without leaving the modal.
- *
- * @param {HTMLElement} el The element to flash.
- */
-const flash = (el) => {
-    if (!el || typeof el.animate !== 'function') {
-        return;
-    }
-    el.animate(
-        [{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}],
-        {duration: 1500, easing: 'ease-out'}
-    );
 };
 
 /**
@@ -663,7 +649,7 @@ const addModule = async(state, courseEl, cmid) => {
     const container = courseEl.querySelector('[data-role="activities"]');
     container.dataset.loaded = '0';
     await loadActivities(state, courseEl);
-    flash(container.querySelector('[data-cmid="' + cmid + '"]'));
+    flashRow(container.querySelector('[data-cmid="' + cmid + '"]'));
     addToast(state.activityaddedlabel);
 };
 
@@ -747,7 +733,7 @@ const onAddCourse = (state) => {
                 const row = makeCourseRow(state, course);
                 state.rowsEl.appendChild(row);
                 row.scrollIntoView({block: 'nearest'});
-                flash(row);
+                flashRow(row);
                 state.excluded.add(String(course.courseid));
                 state.total += 1;
                 refreshListState(state);
@@ -912,7 +898,7 @@ export const open = async(opts) => {
                 saveOutcome(state, select)
                     .then(() => {
                         addToast(state.savedlabel);
-                        flash(select.closest('[data-cmid]') || select.closest('[data-courseid]'));
+                        flashRow(select.closest('[data-cmid]') || select.closest('[data-courseid]'));
                         return null;
                     })
                     .catch(notifyError);
