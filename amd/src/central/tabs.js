@@ -28,6 +28,15 @@ import {getContent} from 'core/local/repository/dynamic_tabs';
 import $ from 'jquery';
 
 /**
+ * Per-pane monotonic reload counter. A newer reloadPane() for the same pane supersedes an
+ * in-flight one, so a slow response cannot overwrite fresher content that started after it.
+ * Held as a symbol property — never a data-* attribute, which paneArgs would forward to the WS.
+ *
+ * @type {Symbol}
+ */
+const RELOAD_GENERATION = Symbol('reloadGeneration');
+
+/**
  * The getContent arguments for a tab, read from the pane dataset (mirrors core
  * dynamic_tabs: every data-* attribute except the tab class/content markers).
  *
@@ -52,9 +61,19 @@ export const reloadPane = async(pane, args) => {
     const useargs = args || paneArgs(pane);
     // Capture whether keyboard focus is inside the content we are about to replace.
     const refocus = pane.contains(document.activeElement);
+    // Claim this reload's generation; a later reload for the same pane bumps it and wins.
+    const generation = (pane[RELOAD_GENERATION] || 0) + 1;
+    pane[RELOAD_GENERATION] = generation;
     const response = await getContent(pane.dataset.tabClass, JSON.stringify(useargs));
+    if (pane[RELOAD_GENERATION] !== generation) {
+        // A newer reload started while this one was fetching; drop the stale result.
+        return;
+    }
     const responseJs = $.parseHTML(response.javascript, null, true).map((node) => node.innerHTML).join('\n');
     const {html, js} = await Templates.renderForPromise(response.template, JSON.parse(response.content));
+    if (pane[RELOAD_GENERATION] !== generation) {
+        return;
+    }
     await Templates.replaceNodeContents(pane, html, js + responseJs);
     if (refocus) {
         // The focused element was replaced; move focus into the refreshed pane so keyboard and
