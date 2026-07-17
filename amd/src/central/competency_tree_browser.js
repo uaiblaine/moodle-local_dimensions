@@ -306,6 +306,7 @@ export const applyMode = async(state, mode, query) => {
     if (!state.listEl.querySelector('.local-dimensions-cb-node')) {
         const empty = document.createElement('div');
         empty.className = 'text-muted small';
+        empty.setAttribute('role', 'status');
         empty.textContent = state.emptylabel;
         state.listEl.appendChild(empty);
     }

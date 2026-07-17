@@ -292,6 +292,7 @@ const makeActivitySearch = (state, courseid, available) => {
         if (!matches.length) {
             const none = document.createElement('div');
             none.className = 'text-muted small px-2 py-1';
+            none.setAttribute('role', 'status');
             none.textContent = state.nomatcheslabel;
             list.appendChild(none);
         } else {
@@ -526,6 +527,7 @@ const loadActivities = async(state, courseEl) => {
     } else {
         const none = document.createElement('div');
         none.className = 'text-muted small py-1';
+        none.setAttribute('role', 'status');
         none.textContent = state.noactivitieslabel;
         container.appendChild(none);
     }
