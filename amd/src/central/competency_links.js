@@ -38,6 +38,7 @@ import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'core/toast';
+import {attach as attachExpander} from 'local_dimensions/central/modal_expander';
 
 const DATASOURCE = 'local_dimensions/central/course_datasource';
 const PAGE_SIZE = 25;
@@ -843,6 +844,8 @@ export const open = async(opts) => {
     modal.setRemoveOnClose(true);
 
     const root = modal.getRoot()[0];
+    // A header expand/restore control lets the user widen this dense modal; the choice persists.
+    attachExpander(root.querySelector('.modal-dialog')).catch(notifyError);
     const state = {
         competencyid: Number(opts.competencyid),
         courseoutcomes: opts.courseoutcomes,
