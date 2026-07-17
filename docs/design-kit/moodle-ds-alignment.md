@@ -173,6 +173,24 @@ dimensionava a si mesmo com `--bs-modal-width`: indefinida no 4.5, ele encolhia 
 (**500px**) com quatro abas e grids dentro. Nenhum dos dois quebra visivelmente no 5.x — só somem
 no branch mais antigo, que é exatamente onde ninguém olha.
 
+**Contraste dos tokens de accent do Moodle no escuro (WCAG AA)**
+
+Um terceiro boundary, de acessibilidade e não de build: o `--text-accent` **do próprio Moodle** no
+escuro é `#3f89cc`, e a texto pequeno sobre superfície escura ele **reprova o AA**. Medido: o
+`.load` a 11px sobre `#1d2125` dá **4,37:1**, e o mesmo accent sobre o tint (`#062b4c`) dos
+cabeçalhos dá **3,88:1** — abaixo dos 4,5:1 que o AA exige para texto normal. Não é defeito de uma
+tela nem escolha do kit: é o token escuro do Moodle sobre a surface do Moodle. As três telas
+`est-structure`, `fwk-frameworks` e `pln-plans` o **depictam fiel** (as-is) e registram a medição no
+comentário do próprio arquivo — não as divergimos da cor real, senão o kit mentiria sobre o que o
+Moodle mostra. A correção de fundo (o accent pequeno do Moodle passar no AA) é **upstream**, não do
+plugin.
+
+O que o kit **prescreve** para superfícies **novas ou reformuladas** é outro par: no escuro,
+`--mds-accent-text` é `blue-200` (`#9fc4e5`), bem acima do AA sobre `#1d2125` — é o que `tokens.html`,
+`states.html` e `paginated-picker.html` já usam. **Regra:** texto de accent em superfície nova, no
+escuro, usa `blue-200`; só a depição as-is de um elemento que o Moodle já pinta com o accent cru
+mantém `#3f89cc`, sempre com a ressalva medida ao lado.
+
 ## Reflexo no kit
 
 - `tokens.html` reescrito para o modelo MDS (semântico, valores Moodle, estados, foco, elevação, escalas) — feito.
