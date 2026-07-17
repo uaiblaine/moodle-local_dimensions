@@ -55,8 +55,8 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
    O indicador é o mesmo do mtube (styles.css:6300-6307) — box-shadow inset, sem borda. A transição
    usa o motion-base (250ms) do tokens.html, a duração que o kit reserva para indicador de aba. */
 .tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);}
-.tb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:8px 12px;color:var(--mds-text-subtle);background:none;border:0;transition:box-shadow var(--mds-motion-base) var(--mds-motion-ease),color var(--mds-motion-base) var(--mds-motion-ease);}
-.tb.on{color:var(--mds-accent-text);font-weight:500;box-shadow:inset 0 -2px 0 var(--mds-accent-text);}
+.tb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:8px 12px;color:var(--mds-text-muted);background:none;border:0;transition:box-shadow var(--mds-motion-base) var(--mds-motion-ease),color var(--mds-motion-base) var(--mds-motion-ease);}
+.tb.on{color:var(--mds-text-default);font-weight:500;box-shadow:inset 0 -2px 0 var(--mds-accent-text);}
 @media (prefers-reduced-motion:reduce){.tb{transition:none;}}
 
 .note{font-size:11px;color:var(--mds-text-subtle);}
@@ -112,7 +112,7 @@ code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--md
   </div>
 
   <div>
-    <div class="h">IMP-10 · abas com ícone + indicador <span class="prov">mtube: ícones nas abas</span></div>
+    <div class="h">IMP-10 · abas com ícone + indicador · shipado (514d246) <span class="prov">mtube: ícones nas abas</span></div>
     <div class="tabs" role="tablist">
       <span class="tb" role="tab"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-grid"/></svg>Estruturas</span>
       <span class="tb on" role="tab" aria-selected="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-list"/></svg>Competências</span>
@@ -130,23 +130,31 @@ code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--md
       é a de <code>central.php:104</code>: frameworks, structure, plans.
     </div>
     <div class="note" style="margin-top:6px;">
-      <b>Onde entra o ícone:</b> <code>central.php:98-102</code> monta <code>displayname</code> à mão e
-      <code>core/dynamic_tabs.mustache:53</code> faz triple-stash — o ícone entra no <b>rótulo</b>,
-      então <b>nada muda</b> no template do core nem em <code>get_tab_label()</code> (que esta página
-      sequer chama: ela renderiza <code>core/dynamic_tabs</code> direto em <code>central.php:135</code>).
-      Forma do mtube: <code>tabIcon('fa fa-list-ul') + strings.outline</code> — uma
-      <code>&lt;i class="fa fa-… me-1" aria-hidden="true"&gt;</code> colada antes do rótulo.
-      Aqui: <code>fa-th-large</code> (Estruturas), <code>fa-list-ul</code> (Competências),
-      <code>fa-graduation-cap</code> (Planos) — os SVG acima só substituem a FontAwesome, que este
-      preview não carrega.
+      <b>Onde entra o ícone (shipado):</b> <code>central.php</code> monta o <code>$tabicons</code>
+      (<code>:107</code>) e cola uma <code>&lt;i class="fa fa-… me-1" aria-hidden="true"&gt;</code> no
+      <code>displayname</code> dentro do loop (<code>:121</code>, <code>:124</code>);
+      <code>core/dynamic_tabs.mustache:53</code> faz triple-stash, então o ícone entra no <b>rótulo</b>
+      e <b>nada muda</b> no template do core (a página renderiza <code>core/dynamic_tabs</code> direto
+      em <code>central.php:145</code>). Os glifos: <code>fa-th-large</code> (Estruturas),
+      <code>fa-list-ul</code> (Competências), <code>fa-graduation-cap</code> (Planos) — os SVG acima só
+      substituem a FontAwesome, que este preview não carrega.
     </div>
     <div class="note" style="margin-top:6px;">
-      <b>Escopo obrigatório:</b> <code>.local-dimensions-central-page</code> — já é classe de
-      <code>&lt;body&gt;</code> (<code>central.php:57</code>), e o <code>styles.css:5659</code> já a usa
-      como ancestral, então o seletor descendente alcança até modal preso ao <code>body</code>. Sem
-      isso o indicador vaza para todo consumidor de <code>dynamic_tabs</code> do site.
-      Hoje <b>nenhuma</b> regra do <code>styles.css</code> toca <code>.dynamictabs</code>,
-      <code>.nav-tabs</code> ou <code>.nav-link</code>: as abas do hub são Boost puro.
+      <b>Escopo (shipado):</b> a regra vive sob <code>.local-dimensions-central-page .dynamictabs
+      .nav-tabs .nav-link</code> (<code>styles.css:5725</code>) — a classe de <code>&lt;body&gt;</code>
+      (<code>central.php:57</code>) contém o restyle no hub. O ancestral <code>.dynamictabs</code> é o
+      que importa: as abas do modal de participantes (<code>nav nav-tabs</code> <b>sem</b>
+      <code>.dynamictabs</code>) não são alcançadas. Antes do IMP-10 <b>nenhuma</b> regra do
+      <code>styles.css</code> tocava <code>.dynamictabs</code>/<code>.nav-tabs</code> — as abas eram
+      Boost puro; hoje só esta regra as toca.
+    </div>
+    <div class="note" style="margin-top:6px;">
+      <b>Duas decisões que uma varredura adversarial forçou (o card acima já as reflete):</b> o texto da
+      aba ativa é <b>escuro</b> (paleta cinza da Boost, como o core), <b>não</b> o azul de acento — o
+      acento fica só no sublinhado de 2px e no anel de foco, porque <code>var(--bs-body-color)</code> é
+      indefinido no Bootstrap 4 (Moodle 4.5) e o azul como texto reprova o AA no escuro. E o
+      <code>border:0</code> + o <code>box-shadow</code> da base derrubavam o anel de foco de teclado do
+      core (WCAG 2.4.7); o shipado restaura um <code>outline</code> no <code>:focus-visible</code>.
     </div>
     <div class="note" style="margin-top:6px;">
       <b>Não</b> portar o dropdown de overflow por <code>ResizeObserver</code> do mtube:
