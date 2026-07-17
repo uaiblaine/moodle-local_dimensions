@@ -45,6 +45,7 @@ const DISPLAY_DEFAULTS = {
     panels: {structure: true, planslist: true, plansdetail: true},
     plansshowdisabled: false,
     frameworksshowhidden: false,
+    modalexpanded: false,
 };
 
 /**
@@ -91,6 +92,7 @@ export const init = (state) => {
         panels: {...DISPLAY_DEFAULTS.panels, ...(incoming.panels || {})},
         plansshowdisabled: Boolean(incoming.plansshowdisabled),
         frameworksshowhidden: Boolean(incoming.frameworksshowhidden),
+        modalexpanded: Boolean(incoming.modalexpanded),
     };
 };
 

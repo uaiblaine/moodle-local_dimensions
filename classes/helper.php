@@ -1741,6 +1741,7 @@ class helper {
             ],
             'plansshowdisabled' => $dispbool($displayraw, 'plansshowdisabled', false),
             'frameworksshowhidden' => $dispbool($displayraw, 'frameworksshowhidden', false),
+            'modalexpanded' => $dispbool($displayraw, 'modalexpanded', false),
         ];
 
         return ['nav' => $nav, 'display' => $display];

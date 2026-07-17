@@ -31,6 +31,7 @@ import {mount as mountCohorts} from 'local_dimensions/central/cohort_manager';
 import {mount as mountUsers} from 'local_dimensions/central/participants_users';
 import {mount as mountRoles} from 'local_dimensions/central/roles_manager';
 import {mount as mountEnrol} from 'local_dimensions/central/enrol_methods';
+import {attach as attachExpander} from 'local_dimensions/central/modal_expander';
 
 const SELECTORS = {
     tabs: '[data-region="participant-tabs"]',
@@ -153,6 +154,10 @@ export const show = async(pane, region) => {
         dialog.classList.add('modal-xl', 'local-dimensions-participants-modal', 'local-dimensions-headerlink-modal');
     }
     const headerlinks = await injectHeaderLinks(root, region);
+    // A header expand/restore control lets the user widen this dense modal; the choice persists.
+    // Started after the header links resolve so the size toggle groups with the close button on
+    // the right rather than racing the links for insertion order.
+    attachExpander(dialog).catch(notifyError);
     const opts = {
         templateid: Number(pane.dataset.templateid),
         contextid: Number(region.dataset.contextid),

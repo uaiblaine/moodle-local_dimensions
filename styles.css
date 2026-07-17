@@ -3574,6 +3574,61 @@
 }
 
 /*
+ * Expand/restore control for the data-dense hub modals (participants, links). Two buttons ride in
+ * the header (injected by central/modal_expander); the CSS shows whichever matches the dialog's
+ * .local-dimensions-modal-expanded state, so nothing swaps an icon in JS, and the widened width
+ * overrides modal-xl / modal-lg. The size persists in the display preference. 150ms is the
+ * tokens.html fast motion; the .btn base keeps the keyboard focus ring.
+ */
+.local-dimensions-modal-sizetoggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-right: 0.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background-color: transparent;
+    color: #6a737b;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.local-dimensions-modal-sizetoggle:hover,
+.local-dimensions-modal-sizetoggle:focus-visible {
+    background-color: #e9ecef;
+    color: #1d2125;
+}
+
+/*
+ * The buttons carry no .btn variant, so there is no Bootstrap focus ring to inherit (and the base
+ * .btn one resolves to an undefined custom property anyway). Draw a dedicated keyboard focus ring.
+ */
+.local-dimensions-modal-sizetoggle:focus-visible {
+    outline: 2px solid var(--bs-primary, #0f6cbf);
+    outline-offset: 1px;
+}
+
+.local-dimensions-modal-restore {
+    display: none;
+}
+
+.local-dimensions-modal-expanded .local-dimensions-modal-restore {
+    display: inline-flex;
+}
+
+.local-dimensions-modal-expanded .local-dimensions-modal-expand {
+    display: none;
+}
+
+.modal-dialog.local-dimensions-modal-expanded {
+    max-width: 96vw;
+}
+
+/*
  * Shared header-link modals (participants tabs, framework form): the "open the core admin
  * page" link sits at the header's right edge, just left of the close button — let the title
  * take the remaining width so both controls group on the right.

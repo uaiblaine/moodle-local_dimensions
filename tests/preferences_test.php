@@ -66,6 +66,7 @@ final class preferences_test extends advanced_testcase {
         $this->assertTrue($prefs['display']['structure']['rule']);
         $this->assertFalse($prefs['display']['structure']['tax']);
         $this->assertFalse($prefs['display']['frameworksshowhidden']);
+        $this->assertFalse($prefs['display']['modalexpanded']);
         $this->assertTrue($prefs['display']['panels']['structure']);
         $this->assertTrue($prefs['display']['panels']['planslist']);
         $this->assertTrue($prefs['display']['panels']['plansdetail']);
@@ -88,6 +89,7 @@ final class preferences_test extends advanced_testcase {
             'structure' => ['tax' => true, 'rule' => false],
             'panels' => ['structure' => false, 'plansdetail' => 0],
             'plansshowdisabled' => true,
+            'modalexpanded' => true,
         ]), $USER->id);
         $prefs = helper::get_central_prefs();
         $this->assertSame('plans', $prefs['nav']['tab']);
@@ -102,6 +104,7 @@ final class preferences_test extends advanced_testcase {
         $this->assertFalse($prefs['display']['panels']['plansdetail']);
         $this->assertTrue($prefs['display']['panels']['planslist']);
         $this->assertTrue($prefs['display']['plansshowdisabled']);
+        $this->assertTrue($prefs['display']['modalexpanded']);
     }
 
     /**
