@@ -41,7 +41,7 @@ recarrega o ativo. O select de categoria é sempre renderizado (oculto em modo s
 | --- | --- | --- | --- | --- | --- |
 | `BAR-COUNT-01` | `[sem rótulo]` | região contador | `contextbar.mustache:81-82` | `data-region="context-count"` | `hidden` se `needscategory`; `renderCounter` (`context.js:101-117`) oculta/reexibe conforme `selectedCounts` (`context.js:78-94`) |
 | `BAR-COUNT-VALUE` | `[sem rótulo]` | número | `contextbar.mustache:83` | `selectedframeworkcount` | valor inicial vem do servidor; depois `renderCounter` escreve `plans`→templates, senão frameworks (`context.js:116`) |
-| `BAR-COUNT-NOUN` | estruturas / planos | substantivo | `contextbar.mustache:84-85` | str `central_frameworks` / `central_plans` | dois `span[data-mode]`; `renderCounter` mostra só o do modo ativo (`context.js:107-109`) |
+| `BAR-COUNT-NOUN` | estruturas neste contexto / planos neste contexto | substantivo | `contextbar.mustache:84-85` | str `central_frameworks` / `central_plans` | dois `span[data-mode]`; `renderCounter` mostra só o do modo ativo (`context.js:107-109`). Substantivo **explícito do contexto** (D5 resolvido) — declara que conta o contexto Sistema/Categoria, não a aba |
 
 **Regras de negócio**
 
@@ -52,11 +52,16 @@ recarrega o ativo. O select de categoria é sempre renderizado (oculto em modo s
 - Troca de aba é ouvida por **jQuery** `shown.bs.tab` sobre `.dynamictabs a[data-toggle="tab"], .dynamictabs a[data-bs-toggle="tab"]` (`context.js:58,323-331`) — o Bootstrap 4 (Moodle 4.5) só emite o evento via jQuery. A restauração da aba salva filtra o mesmo seletor (`context.js:337-344`).
 - A barra vive fora dos panes e **não** é re-renderizada num refresh de aba (`context.js:286-287`), então suas contagens permanecem nos valores do page load.
 
-## Decisão (D5, 2026-07-14) — o contador
+## Decisão (D5, 2026-07-14) — o contador · resolvido (2026-07-17)
 
-> A contextbar conta o **contexto** (Sistema/Categoria), não a aba — logo o número está certo e o
-> **substantivo** é que erra na aba Competências, onde `activeMode()` cai para `'structure'` e o
-> rótulo diz "estruturas" enquanto o subheader da aba mostra a contagem de competências.
+> A contextbar conta o **contexto** (Sistema/Categoria), não a aba — logo o número sempre esteve
+> certo; o **substantivo** é que lia como se descrevesse a aba. Na aba Competências, `activeMode()`
+> cai para `'structure'` e o contador mostra as **estruturas** do contexto enquanto o subheader da
+> aba mostra a contagem de **competências** — dois números de escopos diferentes lado a lado.
+> **Fix shipado:** o substantivo passou a ser **explícito do contexto** — `central_frameworks` =
+> "estruturas neste contexto", `central_plans` = "planos neste contexto" (ambas usadas **só** aqui) —
+> então o contador declara o próprio escopo em vez de parecer descrever a aba. O número **não** mudou:
+> D5 preserva contar o contexto, e só o rótulo ficou honesto. Foi lang-only (sem bump).
 > **Alternativa registrada e descartada:** fazer o contador seguir a aba ativa. Descartada porque
 > contraria o propósito declarado da contextbar. Não re-litigar sem mudar esta nota.
 > **Contexto:** o hub tem **três** contadores onde o mtube tem um.
@@ -65,8 +70,8 @@ recarrega o ativo. O select de categoria é sempre renderizado (oculto em modo s
 
 - A aba de `data-tab-content="structure"` é **rotulada "Competências"** (`managecompetencies_structure`, via `dynamictabs/structure.php:48-49`) — o shortname diz `structure`, o rótulo diz Competências.
 - `activeMode()` (`context.js:66-69`) devolve `'plans'` só quando `tabContent === 'plans'`; a aba Competências cai no ramo padrão `'structure'`.
-- Logo `BAR-COUNT-VALUE` = `selectedframeworkcount` e `BAR-COUNT-NOUN` = `central_frameworks` = "estruturas".
-- O substantivo **casa com o número** (ambos falam de estruturas do contexto); o que diverge é o substantivo **em relação ao assunto da aba** — é essa a leitura que D5 fixa.
+- Logo `BAR-COUNT-VALUE` = `selectedframeworkcount` e `BAR-COUNT-NOUN` = `central_frameworks` = "estruturas neste contexto".
+- O substantivo **casa com o número** (ambos falam de estruturas do contexto) e agora **declara o escopo**, então não lê mais como um número da aba — é essa a leitura que D5 fixa, e o "neste contexto" a torna literal.
 
 **Os três contadores:**
 
