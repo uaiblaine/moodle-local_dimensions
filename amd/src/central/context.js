@@ -44,6 +44,7 @@ let pristineCategoryNode = null;
 const SELECTORS = {
     bar: '[data-region="contextbar"]',
     context: '[data-action="context"]',
+    refresh: '[data-action="refresh"]',
     categoryWrapper: '[data-region="category-wrapper"]',
     categorySelect: '[data-region="category-select"]',
     count: '[data-region="context-count"]',
@@ -160,6 +161,41 @@ const refreshActive = () => {
 };
 
 /**
+ * Reload the active tab pane on demand, showing the refresh control busy while it fetches.
+ * Mirrors the enrol pane's discipline — disable and spin in a finally so a failed reload still
+ * releases the control (never spins forever) and can be retried. reloadPane already covers the
+ * pane itself with its busy overlay; this only signals the control the user pressed.
+ *
+ * @param {HTMLElement} button The refresh control.
+ * @return {Promise<void>}
+ */
+const refresh = async(button) => {
+    const pane = document.querySelector(SELECTORS.activePane);
+    if (!pane) {
+        return;
+    }
+    const icon = button.querySelector('.fa');
+    button.disabled = true;
+    if (icon) {
+        icon.classList.add('fa-spin');
+    }
+    try {
+        await reloadPane(pane);
+    } finally {
+        button.disabled = false;
+        if (icon) {
+            icon.classList.remove('fa-spin');
+        }
+        // Disabling the button blurred it to <body>; reloadPane only re-homes focus when it was
+        // inside the pane, so a keyboard user who pressed the control would land nowhere. Return
+        // focus to the now-enabled control unless focus has meanwhile moved elsewhere.
+        if (document.activeElement === document.body) {
+            button.focus();
+        }
+    }
+};
+
+/**
  * Switch the System / Course category context.
  *
  * @param {HTMLElement} bar
@@ -258,9 +294,14 @@ export const init = () => {
     bar.dataset.initialised = '1';
 
     bar.addEventListener('click', (event) => {
-        const button = event.target.closest(SELECTORS.context);
-        if (button && button.dataset.context !== bar.dataset.contexttype) {
-            setContext(bar, button.dataset.context);
+        const contextbtn = event.target.closest(SELECTORS.context);
+        if (contextbtn && contextbtn.dataset.context !== bar.dataset.contexttype) {
+            setContext(bar, contextbtn.dataset.context);
+            return;
+        }
+        const refreshbtn = event.target.closest(SELECTORS.refresh);
+        if (refreshbtn) {
+            refresh(refreshbtn).catch(notifyError);
         }
     });
 
