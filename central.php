@@ -105,8 +105,8 @@ $tablabels = [
  * Core dynamic_tabs triple-stashes displayname, so the icon rides in the label, no template change.
  */
 $tabicons = [
-    'frameworks' => 'fa-th-large',
-    'structure' => 'fa-list-ul',
+    'frameworks' => 'fa-sitemap',
+    'structure' => 'fa-crosshairs',
     'plans' => 'fa-graduation-cap',
 ];
 $tabs = [];
