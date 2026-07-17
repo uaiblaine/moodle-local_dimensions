@@ -513,9 +513,9 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </section>
 
   <section class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · as três melhorias que caem nesta tela</div>
+    <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Shipado (as-is) · as três melhorias que caíram nesta tela</div>
 
-    <div class="divlbl" style="border-top:0;padding-top:0;margin-top:0;">1 · Loading no <code>reloadPane</code> <span class="prov">mtube: carregando</span></div>
+    <div class="divlbl" style="border-top:0;padding-top:0;margin-top:0;">1 · Loading no <code>reloadPane</code> · shipado (976006d) <span class="prov">mtube: carregando</span></div>
     <div class="load" role="status" aria-busy="true" aria-live="polite" aria-label="Carregando planos…">
       <span class="spin" aria-hidden="true"></span><span aria-hidden="true">Carregando planos…</span>
     </div>
@@ -524,17 +524,17 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
       <code>aria-busy="true"</code> está <b>neste</b> elemento — não só na legenda.
     </div>
     <div class="warn">
-      <b>Correção medida:</b> o alvo <b>não</b> é a troca de aba — essa <b>já tem loading, e vem do core</b>
+      <b>Correção medida:</b> o alvo <b>não era</b> a troca de aba — essa <b>já tem loading, e vem do core</b>
       (<code>dynamic_tabs.js:92-97</code> → <code>loadTab</code> → <code>addIconToContainer</code>,
-      <code>:153</code>; e <code>:88</code> esvazia o pane anterior). A lacuna é o <code>reloadPane</code> do
-      plugin (<code>tabs.js:51-66</code>), que refaz o caminho do <code>loadTab</code> <b>sem</b> o ícone — e é
-      ele que roda nas <b>23</b> chamadas de 5 módulos.
+      <code>:153</code>; e <code>:88</code> esvazia o pane anterior). A lacuna que se fechou foi o <code>reloadPane</code> do
+      plugin (<code>tabs.js:69-108</code>), que refaz o caminho do <code>loadTab</code> <b>sem</b> o ícone — e é
+      ele que roda nas <b>24</b> chamadas de 5 módulos.
     </div>
     <div class="note" style="margin-top:6px;">
       <b>Precisão que só esta aba dá:</b> como o <code>PLN</code> <b>nunca nasce ativo</b>
-      (<code>central.php:105</code> só marca <code>frameworks</code>), o pane dele <b>nunca</b> é renderizado
+      (<code>central.php:114</code> só marca <code>frameworks</code>), o pane dele <b>nunca</b> é renderizado
       no servidor no load — a primeira pintura <i>sempre</i> passa pelo <code>loadTab</code>, que <b>já</b>
-      mostra o ícone. Aqui a lacuna é <b>exclusivamente</b> o <code>reloadPane</code>.
+      mostra o ícone. Aqui a lacuna era <b>exclusivamente</b> o <code>reloadPane</code>.
     </div>
     <div class="row" style="margin-top:7px;align-items:stretch;gap:7px;">
       <div class="col" style="flex:1 1 150px;gap:3px;">
@@ -547,21 +547,22 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
       </div>
     </div>
     <div class="warn">
-      <b>A ressalva não é a que se supunha.</b> O <code>reloadKeepingScroll</code>
-      (<code>plans.js:92-108</code>) <b>não é caminho in-place</b>: ele <b>aguarda <code>reloadPane</code> na
-      <code>:101</code></b> — é reload de pane inteiro que só captura o <code>scrollTop</code> antes
-      (<code>:95-100</code>) e restaura depois (<code>:102-107</code>). Um spinner no <code>reloadPane</code>
-      <b>cobre ele de graça, e isso é correto</b>. Regressão seria pôr spinner nos <b>três caminhos in-place
-      de verdade</b> — <code>moveCompetency</code> (<code>:636-661</code>), o <code>dragend</code>
-      (<code>:523-527</code>) e o save do <code>MOD.MOVETO</code> (<code>:588-598</code>) — que não
-      recarregam nada e já se confirmam com <code>flashRow</code>.
+      <b>A ressalva shipou ao contrário do que esta tela supunha.</b> O <code>reloadKeepingScroll</code>
+      (<code>plans.js:93-108</code>) <b>é</b> reload de pane inteiro (aguarda <code>reloadPane</code> na
+      <code>:102</code>, capturando o <code>scrollTop</code> antes e restaurando depois), mas passa
+      <code>{quiet: true}</code> — então <b>suprime</b> a capa de ocupado de propósito: um spinner de pane
+      inteiro destruiria a preservação de rolagem que essa função existe para dar. Logo o cover <b>não</b>
+      cobre este caminho, e é o certo. Os <b>três caminhos in-place de verdade</b> —
+      <code>moveCompetency</code> (<code>:636-661</code>), o <code>dragend</code> (<code>:523-527</code>)
+      e o save do <code>MOD.MOVETO</code> (<code>:588-598</code>) — não recarregam nada e já se confirmam
+      com <code>flashRow</code>.
     </div>
     <div class="note" style="margin-top:6px;">
       Esta aba exibe as <b>duas metades da regra da casa no mesmo arquivo</b>: <b>6</b> reloads
       (<code>plans.js:101, 244, 625, 679, 684, 836</code>) e <b>3</b> flashes (<code>:526, 597, 660</code>).
     </div>
 
-    <div class="divlbl">2 · Atualizar na contextbar <span class="prov">mtube: atualizar</span></div>
+    <div class="divlbl">2 · Atualizar na contextbar · shipado (7ed2a99) <span class="prov">mtube: atualizar</span></div>
     <div class="row" style="gap:10px;">
       <div class="col" style="gap:3px;"><span class="note">repouso</span><span class="rbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-rotate"/></svg>Atualizar</span></div>
       <div class="col" style="gap:3px;"><span class="note">em curso · <code>disabled</code> + ícone girando</span>
@@ -574,13 +575,14 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
       demonstrada, não descrita.
     </div>
     <div class="note" style="margin-top:6px;">
-      <b>Precisão:</b> não é verdade que "nada expõe <code>reloadPane</code>" — ele tem <b>23 chamadas em 5
+      <b>Precisão:</b> não é verdade que "nada expõe <code>reloadPane</code>" — ele tem <b>24 chamadas em 5
       módulos</b> (<code>structure</code> 9, <code>frameworks</code> 6, <code>plans</code> 6,
-      <code>competency_browser</code> 1, <code>context</code> 1). O que é verdade é que <b>nenhum controle de
-      UI</b> o dispara: as 23 são refresh automático pós-ação.
+      <code>competency_browser</code> 1, <code>context</code> 2). Antes desta melhoria, <b>nenhum controle de
+      UI dedicado</b> o disparava — as chamadas eram refresh automático pós-ação; a "Atualizar" da contextbar
+      (<code>context.js:172</code>, ligada ao clique em <code>:302-304</code>) passou a ser o primeiro.
     </div>
 
-    <div class="divlbl">3 · Ícones + indicador nas abas <span class="prov">mtube: ícones nas abas</span></div>
+    <div class="divlbl">3 · Ícones + indicador nas abas · shipado (514d246) <span class="prov">mtube: ícones nas abas</span></div>
     <div class="tabs">
       <span class="tb active"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-sitemap"/></svg>Estruturas</span>
       <span class="tb"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-target"/></svg>Competências</span>
@@ -590,12 +592,12 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
       O indicador da aba ativa é <code>box-shadow: inset 0 -2px 0</code> — é o que está pintado, não uma
       legenda. O ícone entra pelo <b>rótulo</b>: <code>core/dynamic_tabs</code> faz triple-stash de
       <code>displayname</code> (<code>dynamic_tabs.mustache:53</code>), então <b>nenhum template do core
-      muda</b>. Escopar sob <code>.local-dimensions-central-page</code> (já no <code>&lt;body&gt;</code>,
+      muda</b>. Escopado sob <code>.local-dimensions-central-page</code> (já no <code>&lt;body&gt;</code>,
       <code>central.php:57</code>).
     </div>
     <div class="note" style="margin-top:6px;">
       <b>"Planos de aprendizagem" aparece inativa acima porque é o que ela é no primeiro paint</b> — o
-      <code>PLN</code> é a <b>terceira</b> aba e <code>central.php:105</code> só marca
+      <code>PLN</code> é a <b>terceira</b> aba e <code>central.php:114</code> só marca
       <code>frameworks</code> como ativa. O rótulo vem da str <code>learningplans</code>
       (<code>central.php:101</code>), que <b>não</b> segue a convenção <code>central_&lt;x&gt;_tab</code> do
       <code>FWK</code>.
