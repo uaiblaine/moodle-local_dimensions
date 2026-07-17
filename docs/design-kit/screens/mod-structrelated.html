@@ -1,0 +1,115 @@
+<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Espiar competência referenciada" subtitle="MOD.STRUCTREL — o diálogo SEM cabeçalho onde o card é o diálogo; único painel as-is (nada é proposto)" -->
+<style>
+:root{
+  --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
+  --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
+  --text-accent:#185fa5;--bg-accent:#e6f1fb;
+  --text-success:#0f6e56;--bg-success:#e1f5ee;--border-success:#5dcaa5;
+  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
+  --text-info:#12596e;--bg-info:#e3f3f7;--border-info:#6fb9cc;
+  --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
+  --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+  --acc-fg:#185fa5;
+  /* A cor do CABEÇALHO é da competência (bgcolor/textcolor persistidos), não um token do kit —
+     aqui uma amostra medida: #0f4d85 sobre branco dá 8,59:1 de texto. O card afirma o contrato,
+     não uma paleta fixa. */
+  --card-bg:#0f4d85;--card-fg:#ffffff;
+}
+@media (prefers-color-scheme:dark){:root{
+  --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
+  --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
+  --text-accent:#85b7eb;--bg-accent:#0c2740;
+  --text-success:#5dcaa5;--bg-success:#0a2a24;--border-success:#085041;
+  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
+  --text-info:#7fcfe3;--bg-info:#0a2730;--border-info:#12596e;
+  --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
+  --acc-fg:#85b7eb;
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
+.wrap{max-width:680px;margin:0 auto;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--border-stronger);}
+.stage{position:relative;border-radius:16px;background:var(--surface-1);border:0.5px solid var(--border);padding:24px;overflow:hidden;}
+/* o diálogo: capado em 620, radius 24, SEM moldura de modal (content transparente) — só o card. */
+.dlg{max-width:620px;margin:0 auto;border-radius:24px;}
+.card{position:relative;overflow:hidden;border-radius:24px;background:var(--surface-2);border:0.5px solid var(--border);box-shadow:0 1rem 3rem rgba(0,0,0,.17);}
+.card-head{background:var(--card-bg);color:var(--card-fg);padding:20px 22px;}
+.card-name{font-size:18px;font-weight:600;margin:0;padding-right:44px;}
+.card-crumb{font-size:11px;opacity:0.85;font-family:var(--font-mono);margin-top:3px;}
+/* o fechar real: absoluto, 36×36, branco translúcido, COR vinda do textcolor da competência em JS. */
+.close{position:absolute;top:18px;right:18px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.28);border-radius:10px;background:rgba(255,255,255,0.16);color:var(--card-fg);cursor:pointer;}
+.close .ic{width:1rem;height:1rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;}
+.card-body{padding:16px 22px 20px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.chip{font-size:10px;font-family:var(--font-mono);padding:2px 8px;border-radius:50rem;border:0.5px solid;}
+.desc{font-size:13px;color:var(--text-secondary);margin-bottom:14px;}
+.metrics{display:flex;gap:10px;flex-wrap:wrap;}
+.metric{flex:1;min-width:120px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-1);padding:10px 12px;}
+.metric .n{font-size:20px;font-weight:600;}
+.metric .l{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;}
+.idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;}
+.note{font-size:10.5px;color:var(--text-secondary);margin-top:12px;}
+.note b{color:var(--text-primary);font-weight:600;}
+code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);color:var(--text-primary);border-radius:4px;padding:0 3px;}
+.warn{border:0.5px solid var(--border-warning);background:var(--bg-warning);color:var(--text-warning);border-radius:var(--radius);padding:7px 9px;font-size:10.5px;margin-top:10px;}
+</style>
+
+<div class="wrap">
+  <div class="plabel"><span class="pdot"></span>Atual (as-is) · o modal shipado — nada é proposto aqui (a superfície mais incomum do plugin)</div>
+
+  <div class="stage">
+    <div class="dlg">
+      <div class="card">
+        <div class="card-head">
+          <button type="button" class="close" aria-label="Fechar"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+          <div class="card-name">Pensamento lógico-dedutivo</div>
+          <div class="card-crumb">Competências Gerais ▸ Resolução de problemas</div>
+        </div>
+        <div class="card-body">
+          <div class="chips">
+            <span class="chip" style="background:var(--bg-info);color:var(--text-info);border-color:var(--border-info)">CG-EP</span>
+            <span class="chip" style="background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)">Etapa</span>
+            <span class="chip" style="background:var(--bg-accent);color:var(--text-accent);border-color:var(--text-accent)">Ano 1</span>
+          </div>
+          <div class="desc">Capacidade de encadear premissas e derivar conclusões válidas — a competência referenciada, mostrada aqui apenas para consulta.</div>
+          <div class="metrics">
+            <div class="metric"><div class="n">3</div><div class="l">Cursos</div></div>
+            <div class="metric"><div class="n">7</div><div class="l">Atividades</div></div>
+            <div class="metric"><div class="n">2</div><div class="l">Referenciadas</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <span class="idb">MOD.STRUCTREL-MODAL · core/modal · large · removeOnClose</span>
+    <span class="idb">MOD.STRUCTREL-CARD · o card É o diálogo</span>
+    <span class="idb">MOD.STRUCTREL-CLOSE · cor = textcolor da competência (JS)</span>
+    <span class="idb">MOD.STRUCTREL-CONTENT · linksclickable/showrelated OFF</span>
+  </div>
+
+  <div class="note">
+    <b>O card é o diálogo.</b> A classe <code>local-dimensions-related-modal</code> no <code>root</code>
+    reescreve a casca do <code>core/modal</code>: <code>.modal-header</code> vira <code>display:none</code>,
+    <code>.modal-content</code> fica <code>border:0; background:transparent; box-shadow:none</code>,
+    <code>.modal-body</code> zera o padding, e o <code>.modal-dialog</code> cabe em <b>620px</b> com
+    <b>radius 24px</b> (o outline de foco do core abraça o card, então o raio casa). O título <b>é</b>
+    passado ao <code>Modal.create</code>, mas o cabeçalho oculto o esconde — o nome vive no card.
+  </div>
+  <div class="note">
+    <b>As duas travas são de propósito.</b> <code>linksclickable:false</code> deixa os três contadores
+    como número puro (senão um clique abriria o <code>MOD.USAGE</code> <b>por cima</b> deste modal);
+    <code>showrelated:false</code> <b>omite</b> a seção de referenciadas (senão um chip abriria outro
+    <code>MOD.STRUCTREL</code>). É read-only — <b>espiar</b>, não editar (o editor é o
+    <code>MOD.RELATED</code>).
+  </div>
+  <div class="warn">
+    <b>O fechar é o próprio, não o do core.</b> O <code>.btn-close</code> do core está oculto com o
+    cabeçalho, e o restyle global do chip de fechar <b>exclui</b> este modal
+    (<code>:not(.local-dimensions-related-modal)</code>). Este botão é 36×36 branco translúcido no canto,
+    e sua <b>cor de ícone</b> vem do <code>textcolor</code> da competência em JS — para contrastar com o
+    cabeçalho colorido, seja ele qual for.
+  </div>
+</div>

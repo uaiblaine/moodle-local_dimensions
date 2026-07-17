@@ -1,0 +1,106 @@
+<!-- @dsCard group="Fundações" name="Toast (confirmação)" subtitle="core/toast — o padrão de confirmação da casa; success/info/warning/danger + a região hospedada no corpo do modal (z-index)" -->
+<style>
+:root{
+  --mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;
+  --mds-color-cyan-100:#cce6ea;--mds-color-cyan-800:#00343c;
+  --mds-color-green-100:#d7e4d6;--mds-color-green-800:#153114;
+  --mds-color-yellow-100:#fcefdc;--mds-color-yellow-800:#60451f;
+  --mds-color-red-100:#f4d6d2;--mds-color-red-800:#51140d;
+  --mds-color-gray-100:#f8f9fa;--mds-color-gray-200:#e9ecef;--mds-color-gray-300:#dee2e6;--mds-color-gray-600:#6a737b;--mds-color-gray-700:#495057;--mds-color-gray-900:#1d2125;--mds-color-white:#fff;
+  --mds-bg-surface-default:var(--mds-color-white);--mds-bg-surface-subtle:var(--mds-color-gray-100);
+  --mds-text-default:var(--mds-color-gray-900);--mds-text-muted:var(--mds-color-gray-600);
+  --mds-border-default:var(--mds-color-gray-300);
+  --mds-bg-feedback-info-subtle:var(--mds-color-cyan-100);--mds-text-feedback-info:var(--mds-color-cyan-800);
+  --mds-bg-feedback-success-subtle:var(--mds-color-green-100);--mds-text-feedback-success:var(--mds-color-green-800);
+  --mds-bg-feedback-warning-subtle:var(--mds-color-yellow-100);--mds-text-feedback-warning:var(--mds-color-yellow-800);
+  --mds-bg-feedback-danger-subtle:var(--mds-color-red-100);--mds-text-feedback-danger:var(--mds-color-red-800);
+  --mds-radius-md:0.5rem;--mds-radius-lg:0.75rem;--mds-stroke-sm:0.0625rem;
+  --mds-shadow-md:0 0.5rem 1rem rgba(0,0,0,.15);
+  --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --mds-bg-surface-default:#1d2125;--mds-bg-surface-subtle:#16191c;
+  --mds-text-default:#f8f9fa;--mds-text-muted:#ced4da;
+  --mds-border-default:#495057;
+  --mds-bg-feedback-info-subtle:#00343c;--mds-text-feedback-info:#cce6ea;
+  --mds-bg-feedback-success-subtle:#153114;--mds-text-feedback-success:#d7e4d6;
+  --mds-bg-feedback-warning-subtle:#60451f;--mds-text-feedback-warning:#fcefdc;
+  --mds-bg-feedback-danger-subtle:#51140d;--mds-text-feedback-danger:#f4d6d2;
+}}
+body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
+.h{font-size:12px;font-weight:500;color:var(--mds-text-muted);margin:18px 0 8px;}
+.h:first-of-type{margin-top:2px;}
+.col{display:flex;flex-direction:column;gap:8px;align-items:flex-start;}
+.toast{display:flex;align-items:center;gap:9px;min-width:240px;max-width:340px;padding:10px 12px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid;box-shadow:var(--mds-shadow-md);font-size:13px;}
+.toast .ic{width:1.05rem;height:1.05rem;flex:none;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+.toast .msg{flex:1;}
+.toast .x{flex:none;opacity:0.55;font-size:15px;line-height:1;}
+.t-success{background:var(--mds-bg-feedback-success-subtle);color:var(--mds-text-feedback-success);border-color:var(--mds-text-feedback-success);}
+.t-info{background:var(--mds-bg-feedback-info-subtle);color:var(--mds-text-feedback-info);border-color:var(--mds-text-feedback-info);}
+.t-warning{background:var(--mds-bg-feedback-warning-subtle);color:var(--mds-text-feedback-warning);border-color:var(--mds-text-feedback-warning);}
+.t-danger{background:var(--mds-bg-feedback-danger-subtle);color:var(--mds-text-feedback-danger);border-color:var(--mds-text-feedback-danger);}
+.tag{font-family:var(--font-mono);font-size:10px;color:var(--mds-text-muted);}
+.note{font-size:11px;color:var(--mds-text-muted);margin-top:10px;}
+.note b{color:var(--mds-text-default);}
+code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface-subtle);color:var(--mds-text-default);border-radius:4px;padding:0 3px;}
+/* A demonstração da região hospedada: um mini-modal com um toast por cima. */
+.stage{position:relative;margin-top:6px;border-radius:var(--mds-radius-lg);background:var(--mds-bg-surface-subtle);border:var(--mds-stroke-sm) dashed var(--mds-border-default);padding:26px 18px 18px;overflow:hidden;}
+.backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.32);}
+.dlg{position:relative;margin:0 auto;max-width:360px;background:var(--mds-bg-surface-default);border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:12px;box-shadow:var(--mds-shadow-md);}
+.dlg-head{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);font-size:13px;font-weight:500;}
+.dlg-body{padding:12px;font-size:12px;color:var(--mds-text-muted);}
+.zwrap{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:center;z-index:5;}
+.zlabel{position:absolute;bottom:6px;right:10px;font-family:var(--font-mono);font-size:9px;color:var(--mds-text-muted);}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="ic-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+  <symbol id="ic-warn" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="ic-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></symbol>
+</defs></svg>
+
+<div class="h">Os quatro tipos · <span class="tag">core/toast add(msg, {type})</span></div>
+<div class="col">
+  <div class="toast t-success"><svg class="ic"><use href="#ic-check"/></svg><span class="msg">Estrutura salva.</span><svg class="ic x"><use href="#ic-x"/></svg></div>
+  <div class="toast t-info"><svg class="ic"><use href="#ic-info"/></svg><span class="msg">Ação enfileirada.</span><svg class="ic x"><use href="#ic-x"/></svg></div>
+  <div class="toast t-warning"><svg class="ic"><use href="#ic-warn"/></svg><span class="msg">Verifique a configuração antes de salvar.</span><svg class="ic x"><use href="#ic-x"/></svg></div>
+  <div class="toast t-danger"><svg class="ic"><use href="#ic-warn"/></svg><span class="msg">Não foi possível remover o vínculo.</span><svg class="ic x"><use href="#ic-x"/></svg></div>
+</div>
+<div class="note">
+  Texto no stop 800 sobre o tint 100 do mesmo status (o mesmo par do card de feedback dos <code>tokens.html</code>),
+  com a borda no stop 800 para segurar a caixa quando o tint encosta na superfície no escuro. O tipo default
+  (sem <code>{type}</code>) sai neutro; sucesso é o mais comum no hub (<code>central_frameworks_saved</code>,
+  <code>central_links_courseadded</code>…).
+</div>
+
+<div class="h">A região hospedada no corpo do modal · <span class="tag">addToastRegion(modal.getBody())</span></div>
+<div class="stage">
+  <div class="backdrop"></div>
+  <div class="zwrap"><div class="toast t-success" style="min-width:0"><svg class="ic"><use href="#ic-check"/></svg><span class="msg">Curso adicionado.</span></div></div>
+  <div class="dlg">
+    <div class="dlg-head">Cursos e atividades — Lógica matemática</div>
+    <div class="dlg-body">…corpo do modal, onde a ação aconteceu…</div>
+  </div>
+  <span class="zlabel">toast z &gt; modal z</span>
+</div>
+<div class="note">
+  <b>O padrão da casa, e por que ele existe.</b> Um toast disparado <b>de dentro</b> de um
+  <code>core/modal</code> cairia <b>atrás</b> dele: a <code>.toast-wrapper</code> da página é
+  <code>z-index:1051</code> e o modal é <code>1055</code>. Então, no <code>ModalEvents.shown</code>, o
+  modal <b>hospeda a sua própria região</b> — <code>addToastRegion(modal.getBody()[0])</code> (de
+  <code>core/toast</code>) — e o toast renderiza <b>acima</b> do diálogo, sem override global de z-index.
+  O core <b>remove a região sozinho</b> ao fechar (<code>removeToastRegion</code>), então não vaza.
+</div>
+<div class="note">
+  <b>Quem hospeda é o modal-host.</b> Ligado em <code>competency_links</code>, <code>participants_manager</code>,
+  <code>related_competencies</code> e <code>frameworks_export</code>; módulos que só <code>mount()</code> dentro
+  deles (<code>cohort_manager</code>, <code>participants_users</code>) <b>não</b> adicionam a sua própria.
+</div>
+<div class="note">
+  <b>Par com o flash.</b> Para uma mudança <b>in-place</b> (linha adicionada/editada sem recarregar a lista),
+  o toast vem junto de um <b>flash</b> da linha afetada — o helper único <code>central/flash.js</code>
+  (<code>1500ms</code> = <code>--mds-motion-flash</code>, respeita <code>prefers-reduced-motion</code>) — para a
+  confirmação aparecer <b>onde o usuário está olhando</b>, não só no canto. <code>&lt;select&gt;</code>/inputs
+  construídos em JS precisam de <code>id</code> ou <code>name</code>, senão o browser loga aviso de autofill.
+</div>

@@ -14,6 +14,7 @@ Este kit é a **fonte única do Design System** da Central, espelhado em dois lu
 |---|---|---|
 | `tokens.html` | Fundações | Tokens **alinhados ao Moodle DS** (semântico `--mds-*`, estados, foco, elevação, escalas). |
 | `states.html` | Fundações | Estados interativos (default/hover/active/disabled) + foco visível (WCAG 2.2 AA). |
+| `toast.html` | Fundações | Toast de confirmação da casa (success/info/warning/danger) + a região hospedada no corpo do modal (`addToastRegion`, z-index) e o par com o flash. |
 | `modal-shell.html` | Shell | Cabeçalho + corpo + rodapé de modal (base de todo modal `dynamic_form`) — as-is ↔ to-be (D2). |
 | `sticky-footer.html` | Shell | As **3 variantes reais** + o invariante: o hub constrói **17** modais (4 `ModalForm` + 13 `Modal*.create`); o rodapé alcança **10** direto, é a **única** porta de **7** e **8** dependem dele. |
 | `form-section.html` | Formulário | Seção com título + descrição (explicação) e linhas de campo (texto, select, colorpicker). |
@@ -129,7 +130,7 @@ havia refs que caíam num controle **real de outro ID** — o pior tipo, porque 
 alguém conferir.
 
 ## Pontos cegos conhecidos
-Uma lacuna **fechada** (2026-07-17) e uma **pendente**:
+As **duas** lacunas que a auditoria expôs — ambas **fechadas** (2026-07-17):
 
 1. ✅ **~~Nenhum corpo de `dynamic_form` é mapeado~~ — FECHADA.** Os quatro corpos ganharam mapa em
    [`maps/mod-forms.md`](maps/mod-forms.md) (fidelidade cheia: `FORM-FWK`/`FORM-COMP`/`FORM-TPL`/`FORM-IMP`,
@@ -137,12 +138,13 @@ Uma lacuna **fechada** (2026-07-17) e uma **pendente**:
    migraram para lá (`FORM-FWK-SCALE-*`). No mesmo passo, o `structure_related_modal` — o único modal
    sem mapa — ganhou [`maps/mod-structrelated.md`](maps/mod-structrelated.md). Os mapas do kit agora
    cobrem **toda** superfície administrativa.
-2. **O toast virou o padrão de confirmação da casa e não está em nenhum componente.**
-   `addToastRegion(modal.getBody()[0])` no `ModalEvents.shown`, porque a `.toast-wrapper` da página é
-   `z-index:1051` e o modal é `1055` — um toast disparado de dentro do modal cai **atrás** dele.
-   Está ligado em `competency_links`, `participants_manager`, `related_competencies` e
-   `frameworks_export`; aparece em mapas e telas (com peso em `mod-links` e `mod-related`), mas
-   **nenhum dos 10 componentes** o modela.
+2. ✅ **~~O toast virou o padrão de confirmação da casa e não está em nenhum componente~~ — FECHADA.**
+   Agora modelado em [`toast.html`](toast.html): os quatro tipos (success/info/warning/danger), a
+   **região hospedada no corpo do modal** (`addToastRegion(modal.getBody()[0])` no `ModalEvents.shown`,
+   porque a `.toast-wrapper` da página é `z-index:1051` e o modal é `1055` — o toast cairia **atrás**
+   dele; o core remove a região sozinho no fechar) e o **par com o flash** para mudanças in-place.
+   Ligado em `competency_links`, `participants_manager`, `related_competencies` e `frameworks_export`.
+   No mesmo passo, o `MOD.STRUCTREL` ganhou tela em [`screens/mod-structrelated.html`](screens/mod-structrelated.html).
 
 ## Mapeamento para código
 - Cada componente → um partial **Mustache** + estilos **SCSS (Boost)**; os tokens deste kit → variáveis SCSS.
