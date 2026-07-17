@@ -72,6 +72,8 @@ code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--md
   <symbol id="e-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
   <symbol id="e-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
   <symbol id="e-cap" viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+  <symbol id="e-sitemap" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="1" y="17" width="6" height="5" rx="1"/><rect x="9" y="17" width="6" height="5" rx="1"/><rect x="17" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M4 12h16M4 12v5M12 12v5M20 12v5"/></symbol>
+  <symbol id="e-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></symbol>
 </defs></svg>
 
 <div class="wrap">
@@ -114,8 +116,8 @@ code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--md
   <div>
     <div class="h">IMP-10 · abas com ícone + indicador · shipado (514d246) <span class="prov">mtube: ícones nas abas</span></div>
     <div class="tabs" role="tablist">
-      <span class="tb" role="tab"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-grid"/></svg>Estruturas</span>
-      <span class="tb on" role="tab" aria-selected="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-list"/></svg>Competências</span>
+      <span class="tb" role="tab"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-sitemap"/></svg>Estruturas</span>
+      <span class="tb on" role="tab" aria-selected="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-target"/></svg>Competências</span>
       <span class="tb" role="tab"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-cap"/></svg>Planos de aprendizagem</span>
     </div>
     <div class="note" style="margin-top:8px;">
@@ -135,8 +137,8 @@ code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--md
       <code>displayname</code> dentro do loop (<code>:121</code>, <code>:124</code>);
       <code>core/dynamic_tabs.mustache:53</code> faz triple-stash, então o ícone entra no <b>rótulo</b>
       e <b>nada muda</b> no template do core (a página renderiza <code>core/dynamic_tabs</code> direto
-      em <code>central.php:145</code>). Os glifos: <code>fa-th-large</code> (Estruturas),
-      <code>fa-list-ul</code> (Competências), <code>fa-graduation-cap</code> (Planos) — os SVG acima só
+      em <code>central.php:145</code>). Os glifos padronizados: <code>fa-sitemap</code> (Estruturas),
+      <code>fa-crosshairs</code> (Competências), <code>fa-graduation-cap</code> (Planos) — os SVG acima só
       substituem a FontAwesome, que este preview não carrega.
     </div>
     <div class="note" style="margin-top:6px;">
