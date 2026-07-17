@@ -2650,6 +2650,55 @@
     font-size: 1.5rem;
 }
 
+/*
+ * Busy cover for a dynamic-tab pane while reloadPane() fetches from the server. The old content
+ * stays under a veil + centred spinner so an automatic post-action refresh is not a silent swap;
+ * the class is removed in reloadPane's finally (never success-only), so a failed load never spins
+ * forever. Its own keyframe, so it does not depend on Bootstrap's spinner-border being present.
+ */
+.local-dimensions-central-tab-loading {
+    position: relative;
+    min-height: 12rem;
+}
+
+.local-dimensions-central-tab-loading::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+    background-color: rgba(255, 255, 255, 0.55);
+}
+
+.local-dimensions-central-tab-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+    width: 2rem;
+    height: 2rem;
+    margin: -1rem 0 0 -1rem;
+    border: 0.25rem solid #0f6cbf;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: 750ms linear infinite local-dimensions-central-spin;
+}
+
+@keyframes local-dimensions-central-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-central-tab-loading::after {
+        animation-duration: 1500ms;
+    }
+}
+
 /* Progress header: label left, score right */
 .local-dimensions-rules-progress-header {
     display: flex;

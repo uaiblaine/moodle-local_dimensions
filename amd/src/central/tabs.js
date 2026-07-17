@@ -37,6 +37,13 @@ import $ from 'jquery';
 const RELOAD_GENERATION = Symbol('reloadGeneration');
 
 /**
+ * The busy-cover class reloadPane toggles on a pane while it fetches from the server.
+ *
+ * @type {String}
+ */
+const LOADING_CLASS = 'local-dimensions-central-tab-loading';
+
+/**
  * The getContent arguments for a tab, read from the pane dataset (mirrors core
  * dynamic_tabs: every data-* attribute except the tab class/content markers).
  *
@@ -55,31 +62,47 @@ export const paneArgs = (pane) => {
  *
  * @param {HTMLElement} pane The tab pane ([data-tab-content]).
  * @param {Object} [args] Override arguments; defaults to the pane dataset.
+ * @param {Object} [options] Reload options.
+ * @param {Boolean} [options.quiet] Suppress the busy cover — for the in-place, scroll-preserving reloads.
  * @return {Promise<void>}
  */
-export const reloadPane = async(pane, args) => {
+export const reloadPane = async(pane, args, {quiet = false} = {}) => {
     const useargs = args || paneArgs(pane);
     // Capture whether keyboard focus is inside the content we are about to replace.
     const refocus = pane.contains(document.activeElement);
     // Claim this reload's generation; a later reload for the same pane bumps it and wins.
     const generation = (pane[RELOAD_GENERATION] || 0) + 1;
     pane[RELOAD_GENERATION] = generation;
-    const response = await getContent(pane.dataset.tabClass, JSON.stringify(useargs));
-    if (pane[RELOAD_GENERATION] !== generation) {
-        // A newer reload started while this one was fetching; drop the stale result.
-        return;
+    // Show the busy cover unless the caller keeps it quiet (the in-place, scroll-preserving paths).
+    if (!quiet) {
+        pane.classList.add(LOADING_CLASS);
+        pane.setAttribute('aria-busy', 'true');
     }
-    const responseJs = $.parseHTML(response.javascript, null, true).map((node) => node.innerHTML).join('\n');
-    const {html, js} = await Templates.renderForPromise(response.template, JSON.parse(response.content));
-    if (pane[RELOAD_GENERATION] !== generation) {
-        return;
-    }
-    await Templates.replaceNodeContents(pane, html, js + responseJs);
-    if (refocus) {
-        // The focused element was replaced; move focus into the refreshed pane so keyboard and
-        // screen-reader users are not dropped to the document body.
-        const target = pane.querySelector('[data-region]') || pane;
-        target.setAttribute('tabindex', '-1');
-        target.focus({preventScroll: true});
+    try {
+        const response = await getContent(pane.dataset.tabClass, JSON.stringify(useargs));
+        if (pane[RELOAD_GENERATION] !== generation) {
+            // A newer reload started while this one was fetching; drop the stale result.
+            return;
+        }
+        const responseJs = $.parseHTML(response.javascript, null, true).map((node) => node.innerHTML).join('\n');
+        const {html, js} = await Templates.renderForPromise(response.template, JSON.parse(response.content));
+        if (pane[RELOAD_GENERATION] !== generation) {
+            return;
+        }
+        await Templates.replaceNodeContents(pane, html, js + responseJs);
+        if (refocus) {
+            // The focused element was replaced; move focus into the refreshed pane so keyboard and
+            // screen-reader users are not dropped to the document body.
+            const target = pane.querySelector('[data-region]') || pane;
+            target.setAttribute('tabindex', '-1');
+            target.focus({preventScroll: true});
+        }
+    } finally {
+        // Clear the cover on both success and failure (never spin forever), but only the generation
+        // that still owns the pane clears it — a superseded reload must not unspin the newer one.
+        if (!quiet && pane[RELOAD_GENERATION] === generation) {
+            pane.classList.remove(LOADING_CLASS);
+            pane.removeAttribute('aria-busy');
+        }
     }
 };
