@@ -211,7 +211,6 @@ const createFramework = (pane, region) =>
 const makeSpinner = () => {
     const spinner = document.createElement('span');
     spinner.className = 'spinner-border spinner-border-sm';
-    spinner.setAttribute('role', 'status');
     spinner.setAttribute('aria-hidden', 'true');
     return spinner;
 };
@@ -231,6 +230,7 @@ const showImportLoading = async(form) => {
     const banner = document.createElement('div');
     banner.dataset.region = 'import-loading';
     banner.className = 'alert alert-info d-flex align-items-center gap-2 mb-3';
+    banner.setAttribute('role', 'status');
     const text = document.createElement('span');
     text.textContent = label;
     banner.append(makeSpinner(), text);
