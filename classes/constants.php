@@ -95,6 +95,9 @@ class constants {
     /** @var string Enrollment filter: show only courses with active enrollments */
     const ENROLLMENTFILTER_ACTIVE = 'active';
 
+    /** @var string Enrollment filter: show enrolled courses plus courses the user can self-enrol into */
+    const ENROLLMENTFILTER_ENROLLEDORSELF = 'enrolledorself';
+
     /** @var string Single-course redirect: inherit the global setting */
     const SINGLECOURSEREDIRECT_INHERIT = 'inherit';
 
@@ -175,6 +178,8 @@ class constants {
             self::ENROLLMENTFILTER_ALL => new \lang_string('enrollmentfilter_all', 'local_dimensions'),
             self::ENROLLMENTFILTER_ENROLLED => new \lang_string('enrollmentfilter_enrolled', 'local_dimensions'),
             self::ENROLLMENTFILTER_ACTIVE => new \lang_string('enrollmentfilter_active', 'local_dimensions'),
+            self::ENROLLMENTFILTER_ENROLLEDORSELF =>
+                new \lang_string('enrollmentfilter_enrolledorself', 'local_dimensions'),
         ];
     }
 
