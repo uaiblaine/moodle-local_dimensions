@@ -43,7 +43,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .btn-primary{background:var(--mds-bg-interactive-primary-default);color:var(--mds-color-white);border-color:var(--mds-bg-interactive-primary-default);transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
 .btn-primary:hover{background:var(--mds-bg-interactive-primary-hover);border-color:var(--mds-bg-interactive-primary-hover);}
 
-/* ---- O chip de fechar que o plugin REALMENTE publica (styles.css:3557-3586) ---- */
+/* ---- O chip de fechar que o plugin REALMENTE publica (styles.css:3702-3731) ---- */
 .m-x-ship{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;padding:0;border:0;border-radius:8px;background-color:var(--ship-close-bg);color:var(--ship-close-fg);font-size:0.9rem;line-height:1;opacity:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
 .m-x-ship:hover,.m-x-ship:focus-visible{background-color:var(--ship-close-bg-hover);}
 
@@ -91,7 +91,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
 
   <!-- Painel as-is -->
   <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--mds-text-muted)"></span>as-is — o que a Central publica hoje</div>
+    <div class="plabel"><span class="pdot" style="background:var(--mds-text-muted)"></span>antes do D2 — links no cabeçalho (pré-<code>0598289</code>)</div>
 
     <div class="divlbl">Cabeçalho — título elástico, link de aba, chip de fechar</div>
     <div class="m">
@@ -105,7 +105,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
       <div class="m-foot m-foot-ghost"><span class="fk">.modal-footer vazio → core aplica .hidden</span></div>
     </div>
     <div class="note">
-      <b>Chip de fechar</b>: <code>.btn-close</code> do core, reestilizado em <code>styles.css:3557-3586</code> —
+      <b>Chip de fechar</b>: <code>.btn-close</code> do core, reestilizado em <code>styles.css:3702-3731</code> —
       <code>1.75rem</code>, raio <code>8px</code>, fundo <code>#e7f0f9</code>, glifo FA <code>\f00d</code> em
       <code>#0f4d85</code> (7,53:1), hover <code>#d4e6fb</code> (6,82:1). Os três valores são <b>literais</b>, sem
       variante dark — o par se mantém nos dois temas. Passe o mouse: o hover acima é o mesmo do código.
@@ -136,7 +136,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
 
   <!-- Painel to-be (D2) -->
   <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--mds-accent)"></span>to-be (D2) — cabeçalho ganha ações, links descem</div>
+    <div class="plabel"><span class="pdot" style="background:var(--mds-accent)"></span>D2 — expandir + links no rodapé SHIPADOS (8ea9daf, 0598289); atualizar segue to-be</div>
 
     <div class="divlbl">Cabeçalho — <code>[ícone] Título … [atualizar] [expandir] [fechar]</code></div>
     <div class="m">
@@ -185,10 +185,15 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
       <b>sem <code>!important</code></b>.
     </div>
     <div class="note">
-      <b>Rodapé</b>: <code>justify-content-between</code> — links administrativos à esquerda
+      <b>Rodapé (shipou, <code>0598289</code>)</b>: os links administrativos ficam à esquerda
       (<code>btn btn-link p-0</code> + <code>fa fa-external-link</code>, <code>target="_blank" rel="noopener"</code>),
-      ação primária à direita. Nos <b>7</b> modais que hoje não passam rodapé, o link vira o primeiro filho — o core
-      então <b>mostra</b> o rodapé em vez de aplicar <code>.hidden</code>.
+      num grupo <code>.local-dimensions-modal-footer-links</code> com <code>margin-right:auto</code> — <b>não</b>
+      <code>justify-content-between</code>: o auto-margin empurra qualquer ação primária (o Salvar/Cancelar do form de
+      framework) para a direita e funciona tanto no rodapé vazio quanto no que já tem botões, no BS4 e no BS5. A regra
+      é escopada sob <code>.modal-footer</code> (<code>styles.css:3666</code>) para vencer o <code>&gt; *{margin}</code>
+      do core em qualquer ordem de folha. No modal de participantes (rodapé sem filhos) o grupo vira o primeiro filho e
+      o core <b>revela</b> o rodapé em vez de aplicar <code>.hidden</code>. E os <b>quatro</b> links de participantes
+      aparecem <b>todos de uma vez</b> — o toggle por aba (<code>showHeaderLinkFor</code>) foi aposentado.
     </div>
   </div>
 </div>
@@ -216,20 +221,23 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
       (<code>csstree/validator</code>): use pares <code>height</code>/<code>max-height</code> e <code>calc()</code>.</li>
   </ul>
 
-  <h4>O que o D2 aposenta — e o que não pode ir junto</h4>
+  <h4>O que o D2 aposentou (<code>0598289</code>) — e o que foi re-alojado, não deletado</h4>
   <ul>
-    <li><b>Aposenta</b>: as regras de cabeçalho de <code>styles.css:3532-3540</code> — o
-      <code>.modal-title{flex-grow:1;min-width:0}</code> e as margens de <code>.local-dimensions-headerlink</code>.
-      Elas só existem para o link caber à direita do título; sem link no cabeçalho, elas ficam empurrando o título sem
-      motivo. Some junto a classe <code>.local-dimensions-headerlink</code> e o <code>d-none</code> alternado por
-      <code>showHeaderLinkFor</code>.</li>
-    <li><b>Não aposenta</b>: a classe <code>local-dimensions-headerlink-modal</code> tem <b>duas</b> funções, e os seus
-      2 consumidores (<code>participants_manager.js:153</code>, <code>frameworks.js:142</code>) a aplicam por motivos
-      diferentes. Além do link, ela é o gancho do chip de fechar para modais cujo <b>corpo não carrega classe
-      <code>local-dimensions-*</code></b> — o caso do <code>ModalForm</code> de framework, que renderiza markup de
-      formulário do core e por isso escapa do seletor
-      <code>:has(.modal-body [class*='local-dimensions-'])</code>. Remover a classe apaga o chip lá. Ao mover os links,
-      <b>mantenha o gancho</b> (renomeie-o para o que ele de fato faz, se quiser) e retire só as regras de título e
-      margem.</li>
+    <li><b>Saíram</b>: as margens de <code>.local-dimensions-headerlink</code>, a classe
+      <code>.local-dimensions-headerlink</code> e o <code>d-none</code> alternado por <code>showHeaderLinkFor</code> —
+      os links vivem no rodapé e <b>todos</b> aparecem de uma vez, sem toggle por aba.</li>
+    <li><b>Correção medida — o <code>.modal-title{flex-grow:1;min-width:0}</code> NÃO era sem motivo, e por isso NÃO foi
+      deletado.</b> Além de encaixar o link, ele agrupava os botões de expandir/restaurar à direita: o core dá
+      <code>margin-left:auto</code> ao <code>.btn-close</code> (<code>bootstrap/_modal.scss</code>), o que <b>sozinho
+      encalha</b> os size-toggles ao lado de um título curto (verificado adversarialmente antes do commit). A regra foi
+      <b>re-alojada</b> de <code>.local-dimensions-headerlink-modal .modal-title</code> para
+      <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code> (<code>styles.css:3653</code>) —
+      keyed no próprio botão do expander, cobrindo os modais de participantes <b>e</b> de links sem a classe de
+      header-link.</li>
+    <li><b>O gancho do chip que ficou.</b> A classe <code>local-dimensions-headerlink-modal</code> <b>saiu</b> do modal
+      de participantes (o corpo carrega <code>.local-dimensions-participants</code>, então o chip de fechar segue pelo
+      braço <code>:has(.modal-body [class*='local-dimensions-'])</code>), mas <b>ficou</b> no <code>ModalForm</code> de
+      framework (<code>frameworks.js:142</code>), cujo corpo é markup de formulário do core e <b>escapa</b> do
+      <code>:has()</code>: ali a classe é o <b>único</b> gancho do chip.</li>
   </ul>
 </div>
