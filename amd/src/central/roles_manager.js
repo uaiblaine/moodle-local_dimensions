@@ -214,7 +214,7 @@ const onRemove = async(state, row) => {
  *
  * @param {HTMLElement} container The pane element.
  * @param {Object} opts Options: templateid, contextid.
- * @return {Promise<void>}
+ * @return {Promise<Object>} A refresh handle: {refresh} reloads the role assignments.
  */
 export const mount = async(container, opts) => {
     const [addlabel, removelabel, nonelabel, queuedlabel, pendinglabel, syncedlabel] = await Promise.all([
@@ -248,4 +248,5 @@ export const mount = async(container, opts) => {
     await refresh(state);
     // Enhance the user picker (the pane is already attached + visible when mounted).
     enhance(SELECTORS.user, false, USER_DATASOURCE, addlabel).catch(notifyError);
+    return {refresh: () => refresh(state)};
 };

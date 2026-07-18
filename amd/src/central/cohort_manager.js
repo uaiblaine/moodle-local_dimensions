@@ -203,7 +203,7 @@ const setup = (state) => {
  *
  * @param {HTMLElement} container The element to render the cohort UI into.
  * @param {Object} opts Options: templateid, contextid.
- * @return {Promise<void>}
+ * @return {Promise<Object>} A refresh handle: {refresh} reloads the cohort table.
  */
 export const mount = async(container, opts) => {
     const [addlabel, synclabel, removelabel, nonelabel, queuedlabel] = await Promise.all([
@@ -230,4 +230,5 @@ export const mount = async(container, opts) => {
     };
     await Templates.replaceNodeContents(container, html, '');
     await setup(state);
+    return {refresh: () => refresh(state)};
 };

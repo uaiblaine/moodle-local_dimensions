@@ -32,6 +32,7 @@ import {mount as mountUsers} from 'local_dimensions/central/participants_users';
 import {mount as mountRoles} from 'local_dimensions/central/roles_manager';
 import {mount as mountEnrol} from 'local_dimensions/central/enrol_methods';
 import {attach as attachExpander} from 'local_dimensions/central/modal_expander';
+import {attach as attachRefresh} from 'local_dimensions/central/modal_refresh';
 
 const SELECTORS = {
     tabs: '[data-region="participant-tabs"]',
@@ -39,6 +40,14 @@ const SELECTORS = {
     paneUsers: '[data-region="pane-users"]',
     paneRoles: '[data-region="pane-roles"]',
     paneEnrol: '[data-region="pane-enrol"]',
+};
+
+// Each tab region -> [latch key, mount fn, pane selector]; shared by the lazy-mount and refresh paths.
+const MOUNTS = {
+    'tab-cohorts': ['cohorts', mountCohorts, SELECTORS.paneCohorts],
+    'tab-users': ['users', mountUsers, SELECTORS.paneUsers],
+    'tab-roles': ['roles', mountRoles, SELECTORS.paneRoles],
+    'tab-enrol': ['enrol', mountEnrol, SELECTORS.paneEnrol],
 };
 
 // Each allowed admin page becomes a footer escape link that opens the matching core admin page in
@@ -143,28 +152,53 @@ export const show = async(pane, region) => {
     }
     // Admin escape links live in the footer (D2); giving it a child makes core reveal the footer.
     await injectFooterLinks(root, region);
-    // A header expand/restore control lets the user widen this dense modal; the choice persists.
-    attachExpander(dialog).catch(notifyError);
     const opts = {
         templateid: Number(pane.dataset.templateid),
         contextid: Number(region.dataset.contextid),
     };
 
     const mounted = {cohorts: false, users: false, roles: false, enrol: false};
+    // Each pane's mount resolves with a {refresh} handle; the header refresh calls it (or re-mounts).
+    const handles = {};
     // Claim the latch synchronously so a concurrent double-click cannot fire a second mount, and
     // release it if the mount rejects so the next tab activation retries. A released latch always
     // means an unwired pane: cohorts and roles clear and rewire fresh children on remount, and
     // users and enrol reject only before they wire (their sole post-wire failure resolves instead).
     const startMount = (key, mountfn, selector) => {
         if (mounted[key]) {
-            return;
+            return Promise.resolve();
         }
         mounted[key] = true;
-        mountfn(root.querySelector(selector), opts).catch((error) => {
+        return mountfn(root.querySelector(selector), opts).then((handle) => {
+            handles[key] = handle;
+            return null;
+        }).catch((error) => {
             mounted[key] = false;
             notifyError(error);
         });
     };
+    // Reload the active tab: its stored refresh handle if mounted, else a re-mount to recover a
+    // pane whose mount failed (this subsumes the enrol pane's old in-pane recovery button).
+    const refreshActiveTab = () => {
+        const activetab = root.querySelector(`${SELECTORS.tabs} .nav-link.active`);
+        const entry = activetab && MOUNTS[activetab.dataset.region];
+        if (!entry) {
+            return Promise.resolve();
+        }
+        const handle = handles[entry[0]];
+        if (handle && handle.refresh) {
+            return handle.refresh();
+        }
+        // No handle yet. An in-flight mount no-ops on startMount's latch, so a mid-mount refresh
+        // never starts a second (double-wiring) one. A rejected mount released the latch, so
+        // startMount re-mounts to recover — always safe: every latch-releasing rejection happens
+        // before the pane wires its listeners (users/enrol post-wire failures resolve instead and
+        // keep the handle), so a recovery re-mount is always the first wiring, never a double.
+        return startMount(...entry);
+    };
+    // Header controls: the expander seeds the saved size synchronously, then the refresh button
+    // slots in to its left (order: refresh, expand, close). Both widen this dense modal.
+    attachExpander(dialog).then(() => attachRefresh(dialog, refreshActiveTab)).catch(notifyError);
     modal.getRoot().on(ModalEvents.shown, () => {
         // Host a toast region inside the modal body so the cohort/user managers' success toasts
         // render above the dialog, not behind it. Core removes it on close.
@@ -176,15 +210,9 @@ export const show = async(pane, region) => {
 
         // Lazy-mount a tab's pane the first time it is shown; a re-click retries a released latch.
         const ensureMounted = (button) => {
-            const region = button.dataset.region;
-            if (region === 'tab-cohorts') {
-                startMount('cohorts', mountCohorts, SELECTORS.paneCohorts);
-            } else if (region === 'tab-users') {
-                startMount('users', mountUsers, SELECTORS.paneUsers);
-            } else if (region === 'tab-roles') {
-                startMount('roles', mountRoles, SELECTORS.paneRoles);
-            } else if (region === 'tab-enrol') {
-                startMount('enrol', mountEnrol, SELECTORS.paneEnrol);
+            const entry = MOUNTS[button.dataset.region];
+            if (entry) {
+                startMount(...entry);
             }
         };
 

@@ -3589,13 +3589,16 @@
 }
 
 /*
- * Expand/restore control for the data-dense hub modals (participants, links). Two buttons ride in
- * the header (injected by central/modal_expander); the CSS shows whichever matches the dialog's
- * .local-dimensions-modal-expanded state, so nothing swaps an icon in JS, and the widened width
- * overrides modal-xl / modal-lg. The size persists in the display preference. The transition uses
- * --mds-motion-fast / --mds-motion-ease; the buttons carry no .btn, so :focus-visible draws its own ring.
+ * Header controls for the data-dense hub modals (participants, links): the refresh button (injected
+ * by central/modal_refresh) and the expand/restore pair (central/modal_expander). All three carry
+ * the close chip's blue look — same 1.75rem size and colours — so the header reads as one set. The
+ * expander shows whichever of its two buttons matches the .local-dimensions-modal-expanded state, so
+ * nothing swaps an icon in JS, and the widened width overrides modal-xl / modal-lg (persisted in the
+ * display preference). Neither carries a .btn, so :focus-visible draws its own keyboard ring (the
+ * base .btn ring resolves to an undefined custom property anyway).
  */
-.local-dimensions-modal-sizetoggle {
+.local-dimensions-modal-sizetoggle,
+.local-dimensions-modal-refresh {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -3605,26 +3608,30 @@
     padding: 0;
     border: 0;
     border-radius: 8px;
-    background-color: transparent;
-    color: #6a737b;
+    background-color: #e7f0f9;
+    color: #0f4d85;
     font-size: 0.875rem;
     cursor: pointer;
     transition: background-color var(--mds-motion-fast) var(--mds-motion-ease), color var(--mds-motion-fast) var(--mds-motion-ease);
 }
 
 .local-dimensions-modal-sizetoggle:hover,
-.local-dimensions-modal-sizetoggle:focus-visible {
-    background-color: #e9ecef;
-    color: #1d2125;
+.local-dimensions-modal-sizetoggle:focus-visible,
+.local-dimensions-modal-refresh:hover,
+.local-dimensions-modal-refresh:focus-visible {
+    background-color: #d4e6fb;
+    color: #0f4d85;
 }
 
-/*
- * The buttons carry no .btn variant, so there is no Bootstrap focus ring to inherit (and the base
- * .btn one resolves to an undefined custom property anyway). Draw a dedicated keyboard focus ring.
- */
-.local-dimensions-modal-sizetoggle:focus-visible {
+.local-dimensions-modal-sizetoggle:focus-visible,
+.local-dimensions-modal-refresh:focus-visible {
     outline: 2px solid var(--bs-primary, #0f6cbf);
     outline-offset: 1px;
+}
+
+/* While a refresh runs the button is disabled and its icon spins (Font Awesome fa-spin). */
+.local-dimensions-modal-refresh[disabled] {
+    cursor: default;
 }
 
 .local-dimensions-modal-restore {
