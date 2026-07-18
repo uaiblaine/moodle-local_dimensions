@@ -116,7 +116,7 @@ controles — o `competency_links.js` tem **930** e entrega o resto.
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.LINKS-TITLE` | Cursos e atividades — {nome} | título | `competency_links.js:822` (str), `:852` (`Modal.create`) | str `central_links_title`, `$a` = nome | `core/modal` **puro**, sem `footer` no config — o 7º do censo do IMP-06. **`large: true`** (`:852`, `modal-lg`) é a largura de base; o `MOD.LINKS-EXPAND` a leva a 96vw quando expandido. `setRemoveOnClose(true)` em `:853` |
+| `MOD.LINKS-TITLE` | Cursos e atividades — {nome} | título | `competency_links.js:822` (str), `:852` (`Modal.create`) | str `central_links_title`, `$a` = nome | `core/modal` **puro**, sem `footer` no config — o 7º do censo do IMP-06. **`large: true`** (`:852`, `modal-lg`) é a largura de base; o `MOD.LINKS-EXPAND` a leva a fullscreen (100vw, altura cheia, cantos retos) quando expandido. `setRemoveOnClose(true)` em `:853` |
 | `MOD.LINKS-ROOT` | `[sem rótulo]` | região/raiz | `competency_links.mustache:32` | `data-region="competency-links"` · `.local-dimensions-central-links` | os dois listeners delegados (click e change) pousam aqui (`js:905-917`), **não** no root do modal |
 | `MOD.LINKS-HIDDENFW` | Esta competência pertence a uma estrutura oculta e não pode ser vinculada a cursos. | alerta | `competency_links.mustache:33-35` | `data-region="hiddenframework"` · `role="status"` · `tabindex="-1"` · nasce `hidden` | str `central_links_hiddenframework`. **Não é uma nota decorativa:** `js:478` liga o alerta e `js:483` **oculta o bloco inteiro** de adicionar curso (`hiddenframeworkEl.hidden = response.canlink` / `addsel.parentElement.hidden = !response.canlink`). **CORRIGIDO em 2026-07-16** (`7bd9729`) — **o que era:** a segunda linha era `addsel.disabled = !response.canlink`, e este mapa a chamava de "desabilita o picker". Era **inerte**: o `enhance()` do core troca o `<select>` por um input próprio + um downarrow que abre a lista de sugestões **ignorando** o `disabled` do select, então o usuário digitava, escolhia um curso e só então batia na parede — `api::add_competency_to_course` lança em estrutura oculta, e a falha vinha como exceção crua pelo `notifyError`, não como um controle que nunca foi oferecido. **O que é:** esconde o `.mb-3` inteiro (input + downarrow + label saem da vista **e** da ordem de tabulação); o `tabindex="-1"` novo no alerta o torna o destino de foco quando o bloco some (ver "A aritmética do cursor"). **Não era brecha de segurança** — o core barra no servidor —, era a UI prometer o que não entrega. O `canlink` do WS é literalmente a visibilidade da estrutura — `get_competency_links.php:106`: `(bool) $competency->get_framework()->get('visible')`. Os vínculos **existentes** continuam listados, com outcome editável: o bloqueio é só para **novos** |
 | `MOD.LINKS-ADD-LABEL` | Adicionar curso | rótulo | `competency_links.mustache:37-39` | str `central_links_addcourse` · `for="local-dimensions-links-add"` | é um `<label>` de verdade, com `for` — ao contrário do `MOD.RELATED-ADDLABEL`, que mira numa árvore e por isso é um `<div>` |
@@ -349,7 +349,7 @@ Conferido commit a commit contra o código de hoje, não contra a mensagem:
 > **Visual — os três controles agora compartilham o chip azul do fechar.** A regra base combinada
 > `.local-dimensions-modal-sizetoggle, .local-dimensions-modal-refresh` (`styles.css:3600-3616`) dá
 > aos dois o mesmo `1.75rem`, `background-color:#e7f0f9` e `color:#0f4d85` do `.btn-close` restilizado
-> (`:3709-3738`); o hover dos dois (`:3618-3624`) é `#d4e6fb`; o anel de foco dedicado (`:3626-3630`)
+> (`:3740-3769`); o hover dos dois (`:3618-3624`) é `#d4e6fb`; o anel de foco dedicado (`:3626-3630`)
 > desenha o próprio `:focus-visible` (nenhum carrega `.btn`). Os size toggles foram **restilizados**
 > para esse chip azul — não são mais o visual neutro anterior (fundo transparente / glifo `#6a737b`).
 > O ocupado do refresh tem regra própria `.local-dimensions-modal-refresh[disabled]` (`:3633`). **Sem
@@ -358,10 +358,10 @@ Conferido commit a commit contra o código de hoje, não contra a mensagem:
 Entregue nos **dois** modais densos do hub (este e o `mod-participants`) pelo módulo compartilhado
 `central/modal_expander.js` (`attach(dialog)`), chamado aqui em `competency_links.js:909` (cabeça da cadeia que encadeia o refresh) e no de
 participantes em `participants_manager.js:201`. A mecânica é a do mtube; o precedente já era shipado.
-Os dois botões (`makeButton`, `modal_expander.js:46`) entram antes do `.btn-close` (`:82-83`) e o título cede a largura para eles pela regra re-alojada `.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title` (`styles.css:3660`, uma robustez de `0598289` — antes o modal dependia implicitamente do título longo para empurrar expandir+fechar à direita); o CSS
+Os dois botões (`makeButton`, `modal_expander.js:46`) entram antes do `.btn-close` (`:82-83`) e o título cede a largura para eles pela regra re-alojada `.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title` (`styles.css:3683`, uma robustez de `0598289` — antes o modal dependia implicitamente do título longo para empurrar expandir+fechar à direita); o CSS
 escolhe qual aparece (`styles.css:3637`/`:3641`/`:3645`), zero troca de ícone em JS; o clique alterna
-a classe no `.modal-dialog` (`:92`) e persiste (`:93`), e a largura vem da classe
-(`.modal-dialog.local-dimensions-modal-expanded{max-width:96vw}`, `styles.css:3649`).
+a classe no `.modal-dialog` (`:92`) e persiste (`:93`), e o tamanho vem da classe
+(`.modal-dialog.local-dimensions-modal-expanded{width:100vw;max-width:none;height:100%;margin:0}`, `styles.css:3654`) — fullscreen de borda a borda, altura cheia e cantos retos desde `3c91646` (o `.modal-content` zera borda e raio, `styles.css:3661`).
 
 > **Nota de nomenclatura.** O kit **não tem um `IMP-08`** — um
 > `grep -rnoE 'IMP-[0-9]{2}' docs/design-kit/ | grep -v 'maps/mod-links.md'` devolve `IMP-03`,
@@ -409,8 +409,8 @@ expandir um modal expande o outro na próxima abertura (preferência global de t
 
 **A dúvida de largura que esta seção registrava está resolvida.** O `large: true` (`js:852`, =
 `modal-lg`, 800px) e a classe expandida não empilham: `.modal-dialog.local-dimensions-modal-expanded`
-(0,2,0) **vence** `.modal-lg` (0,1,0), então expandido = 96vw, restaurado = `modal-lg`. Só a largura
-muda (não a altura).
+(0,2,0) **vence** `.modal-lg` (0,1,0), então expandido = fullscreen (`width:100vw`, `max-width:none`), restaurado = `modal-lg` (800px). **Mudam
+largura e altura** (`height:100%`) e os cantos ficam retos, desde `3c91646`.
 
 **Duas decisões que a varredura adversarial forçou** (o mtube não as tem): os botões **não** usam
 `.btn` — um `.btn` sem variante tem `--bs-btn-focus-shadow-rgb` indefinido, então o anel de foco do
