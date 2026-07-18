@@ -3646,8 +3646,31 @@
     display: none;
 }
 
+/*
+ * Expanded = true fullscreen: edge to edge, full height, square corners. Mirrors Bootstrap 5's
+ * .modal-fullscreen without the class (4.5 lacks it) and without !important — specificity 0,2,0
+ * beats modal-xl / modal-lg and .modal-content. Header and footer drop their radius too.
+ */
 .modal-dialog.local-dimensions-modal-expanded {
-    max-width: 96vw;
+    width: 100vw;
+    max-width: none;
+    height: 100%;
+    margin: 0;
+}
+
+.local-dimensions-modal-expanded .modal-content {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+}
+
+.local-dimensions-modal-expanded .modal-header,
+.local-dimensions-modal-expanded .modal-footer {
+    border-radius: 0;
+}
+
+.local-dimensions-modal-expanded .modal-body {
+    overflow-y: auto;
 }
 
 /*
@@ -3687,6 +3710,14 @@
     outline: 2px solid var(--bs-primary, #0f6cbf);
     outline-offset: 1px;
     box-shadow: none;
+}
+
+/*
+ * Collapse the footer bar when the active participants tab has no allowed escape link — the JS adds
+ * this class so a link-less tab shows no empty bar (the core .hidden path only runs once, at show).
+ */
+.modal-footer.local-dimensions-modal-footer-empty {
+    display: none;
 }
 
 /* Row action buttons carry me-1 as a horizontal gap to the next button; add a little bottom

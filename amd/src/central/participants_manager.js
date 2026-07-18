@@ -50,24 +50,51 @@ const MOUNTS = {
     'tab-enrol': ['enrol', mountEnrol, SELECTORS.paneEnrol],
 };
 
-// Each allowed admin page becomes a footer escape link that opens the matching core admin page in
-// a new tab. The capability flag names the data attribute the server sets on the plans region (a
-// "1" when the user can reach that page); only allowed links are rendered.
+// Each allowed admin page becomes a footer escape link that opens the matching core admin page in a
+// new tab, shown only while its own tab is active (pane -> the tab it belongs to). The capability
+// flag names the data attribute the server sets on the plans region (a "1" when the user can reach
+// that page); only allowed links are rendered.
 const ADMIN_PAGES = [
-    {path: '/cohort/index.php', flag: 'cancohortpage',
+    {pane: 'pane-cohorts', path: '/cohort/index.php', flag: 'cancohortpage',
         strkey: 'central_participants_openpage_cohorts'},
-    {path: '/admin/user.php', flag: 'canuserpage',
+    {pane: 'pane-users', path: '/admin/user.php', flag: 'canuserpage',
         strkey: 'central_participants_openpage_users'},
-    {path: '/admin/roles/manage.php', flag: 'canassignroles',
+    {pane: 'pane-roles', path: '/admin/roles/manage.php', flag: 'canassignroles',
         strkey: 'central_participants_openpage_roles'},
-    {path: '/admin/settings.php?section=manageenrols', flag: 'canenrolpage',
+    {pane: 'pane-enrol', path: '/admin/settings.php?section=manageenrols', flag: 'canenrolpage',
         strkey: 'central_participants_openpage_enrol'},
 ];
 
 /**
- * Inject the "open the matching core admin page" links into the modal footer, left-aligned. Each
- * link is only added when the user can reach its page; giving the otherwise-empty footer a child
- * makes core reveal it (this is a management modal, so there is no primary action on the right).
+ * Reveal only the footer admin link whose pane matches the active tab, and collapse the footer bar
+ * when the active tab has no allowed link (so a tab without an escape link shows no empty bar).
+ *
+ * @param {HTMLElement} root The modal root.
+ * @param {String} activepane The active tab's target pane (e.g. 'pane-users'), or null.
+ * @return {void}
+ */
+const showFooterLinkFor = (root, activepane) => {
+    const footer = root.querySelector('.modal-footer');
+    const group = footer && footer.querySelector('.local-dimensions-modal-footer-links');
+    if (!group) {
+        return;
+    }
+    let anyvisible = false;
+    group.querySelectorAll('a[data-pane]').forEach((link) => {
+        const show = link.dataset.pane === activepane;
+        link.classList.toggle('d-none', !show);
+        if (show) {
+            anyvisible = true;
+        }
+    });
+    footer.classList.toggle('local-dimensions-modal-footer-empty', !anyvisible);
+};
+
+/**
+ * Inject the "open the matching core admin page" links into the modal footer, one per allowed tab.
+ * Each link is only added when the user can reach its page; giving the otherwise-empty footer a
+ * child makes core reveal it. Only the active tab's link shows (showFooterLinkFor); a management
+ * modal has no primary action on the right.
  *
  * @param {HTMLElement} root The modal root.
  * @param {HTMLElement} region The plans region (carries the capability flags).
@@ -90,7 +117,8 @@ const injectFooterLinks = async(root, region) => {
         link.href = M.cfg.wwwroot + page.path;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        link.className = 'btn btn-link p-0';
+        link.className = 'btn btn-link p-0 d-none';
+        link.dataset.pane = page.pane;
         const icon = document.createElement('i');
         icon.className = 'fa fa-external-link me-1';
         icon.setAttribute('aria-hidden', 'true');
@@ -100,6 +128,9 @@ const injectFooterLinks = async(root, region) => {
         group.appendChild(link);
     });
     footer.appendChild(group);
+    // Show only the link for the initially-active tab.
+    const activetab = root.querySelector(`${SELECTORS.tabs} .nav-link.active`);
+    showFooterLinkFor(root, activetab ? activetab.dataset.targetPane : null);
 };
 
 /**
@@ -220,6 +251,7 @@ export const show = async(pane, region) => {
         // and optionally move focus to it (keyboard activation).
         const selectTab = (button, setfocus) => {
             activateTab(root, button);
+            showFooterLinkFor(root, button.dataset.targetPane);
             tabs().forEach((tab) => tab.setAttribute('tabindex', tab === button ? '0' : '-1'));
             ensureMounted(button);
             if (setfocus) {
