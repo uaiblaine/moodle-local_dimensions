@@ -64,17 +64,17 @@ mapa — **não** é a mesma lacuna do `EST`/`FWK`/`PLN`.
 | `PART-TOAST` | `[sem rótulo]` | região de toast | `participants_manager.js:205` | `addToastRegion(modal.getBody()[0])` | padrão da casa: sem ela, o toast dos gerenciadores renderiza **atrás** do diálogo (`.toast-wrapper` é `z-index:1051`, o modal é `1055`). O **host** é dono da região; `cohort_manager` e `participants_users` **não** criam a sua. O core remove no fechamento |
 | `PART-CLOSE` | Fechar | chip | `styles.css:3740-3769` | `.btn-close` do core, reestilizado | `1.75rem`, raio `8px`, fundo `#e7f0f9`, glifo FA `\f00d` em `#0f4d85` (**7,53:1** medido), hover `#d4e6fb` (**6,82:1**). Literais, sem variante dark |
 
-> **A segunda função de `local-dimensions-headerlink-modal` — largada no participants, mantida no
-> framework (D2, shipado).** O chip de fechar sai de um **grupo de dois seletores** em
-> `styles.css:3740-3741`: o primeiro (`.modal:not(...):has(.modal-body [class*='local-dimensions-'])`)
-> pega os modais cujo **corpo** carrega classe do plugin; o segundo
-> (`.local-dimensions-headerlink-modal .btn-close`) é um gancho **independente**, para os modais que
-> **escapam** do `:has()`. O D2 **largou** a classe do modal de participantes — o corpo carrega
-> `.local-dimensions-participants`, então a arm `:has()` já dá o chip (comentário em
-> `participants_manager.js:140-142`). Ela **ficou** no `ModalForm` de framework, que renderiza markup
-> de formulário do core e por isso escapa do `:has()`: `frameworks.js:139-143` a aplica **antes** do
-> teste de capability de `:144`, com um comentário dizendo exatamente isso — pousa **mesmo quando
-> nenhum link é renderizado** e é o **único** gancho de chip que sobrou para aquele form. O D2 também
+> **A segunda arm do chip — de classe própria para `.modal-form-dialogue` (`025c2f6`).** O chip de fechar
+> sai de um **grupo de dois seletores** em `styles.css:3740-3741`: o primeiro
+> (`.modal:not(...):has(.modal-body [class*='local-dimensions-'])`) pega os modais cujo **corpo** carrega
+> classe do plugin — é como o modal de participantes ganha o chip (corpo com `.local-dimensions-participants`,
+> comentário em `participants_manager.js:149-150`), e o D2 por isso **largou** aqui a antiga classe
+> `local-dimensions-headerlink-modal`. O segundo seletor
+> (`.local-dimensions-central-page .modal-form-dialogue .btn-close`) cobre os **modais de formulário**
+> (framework/competência/plano): o corpo deles é markup de form do core e **escapa** do `:has()`, então antes
+> o chip só entrava quando o corpo async chegava (o flash). O `.modal-form-dialogue` que o core põe no diálogo
+> **síncrono antes do `show()`** paga o chip desde o primeiro quadro; a antiga classe **saiu de vez**
+> (`frameworks.js` não injeta mais nada no diálogo). O D2 também
 > aposentou as regras de título/margem que a classe carregava no cabeçalho; o `flex-grow` do título
 > foi **re-alojado** em `.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title`
 > (`styles.css:3683`), agrupando expander + fechar sem depender daquela classe.

@@ -228,13 +228,16 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       própria flag <code>canenrolpage</code> (<code>:64</code>) — podem divergir.
     </div>
     <div class="ok">
-      <b>O que o D2 preservou (<code>0598289</code>).</b> <code>styles.css:3740-3741</code> é um <b>grupo de
-      dois seletores</b>, e o segundo — <code>.local-dimensions-headerlink-modal .btn-close</code> — é gancho
-      <b>independente</b> do chip de fechar, para modais cujo corpo não carrega classe
-      <code>local-dimensions-*</code> (o <code>ModalForm</code> de framework escapa do <code>:has()</code>).
-      Prova: <code>frameworks.js:139-143</code> aplica a classe <b>antes</b> do teste de capability de
-      <code>:144</code> — ela pousa mesmo sem link nenhum, e por isso o D2 <b>manteve</b> a classe: hoje ela
-      é o <b>único</b> gancho do chip para o form de framework. As antigas regras de título do cabeçalho
+      <b>O que o D2 preservou (<code>0598289</code>) e o que o <code>025c2f6</code> refez.</b>
+      <code>styles.css:3740-3741</code> é um <b>grupo de dois seletores</b>: o primeiro
+      (<code>:has(.modal-body [class*='local-dimensions-'])</code>) dá o chip aos modais cujo corpo carrega classe
+      do plugin (o de participantes). O segundo virou
+      <code>.local-dimensions-central-page .modal-form-dialogue .btn-close</code> — cobre os <b>modais de
+      formulário</b> (framework/competência/plano), cujo corpo de form do core <b>escapa</b> do
+      <code>:has()</code>. O <code>.modal-form-dialogue</code> que o core põe no diálogo <b>síncrono antes do
+      <code>show()</code></b> paga o chip desde o primeiro quadro — a antiga classe
+      <code>local-dimensions-headerlink-modal</code> (injetada no <code>LOADED</code>) chegava tarde e dava
+      flash, e foi <b>removida</b>. As antigas regras de título do cabeçalho
       <b>saíram</b>; o <code>flex-grow</code> foi <b>re-alojado</b> em
       <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code>
       (<code>styles.css:3683</code>), agrupando os expansores com o botão de fechar.

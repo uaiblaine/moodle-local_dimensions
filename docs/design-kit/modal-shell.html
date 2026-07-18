@@ -244,10 +244,13 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
       <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code> (<code>styles.css:3683</code>) —
       keyed no próprio botão do expander, cobrindo os modais de participantes <b>e</b> de links sem a classe de
       header-link.</li>
-    <li><b>O gancho do chip que ficou.</b> A classe <code>local-dimensions-headerlink-modal</code> <b>saiu</b> do modal
-      de participantes (o corpo carrega <code>.local-dimensions-participants</code>, então o chip de fechar segue pelo
-      braço <code>:has(.modal-body [class*='local-dimensions-'])</code>), mas <b>ficou</b> no <code>ModalForm</code> de
-      framework (<code>frameworks.js:142</code>), cujo corpo é markup de formulário do core e <b>escapa</b> do
-      <code>:has()</code>: ali a classe é o <b>único</b> gancho do chip.</li>
+    <li><b>O gancho do chip, agora sem classe própria (<code>025c2f6</code>).</b> A classe
+      <code>local-dimensions-headerlink-modal</code> <b>saiu de vez</b>. O chip do modal de participantes segue pelo
+      braço <code>:has(.modal-body [class*='local-dimensions-'])</code> (o corpo carrega
+      <code>.local-dimensions-participants</code>); os <b>modais de formulário</b> (framework, competência, plano)
+      pegam o chip por <code>.local-dimensions-central-page .modal-form-dialogue .btn-close</code> — o
+      <code>.modal-form-dialogue</code> que o core põe no diálogo <b>síncrono, antes do <code>show()</code></b>,
+      então o chip pinta desde o primeiro quadro (sem o flash que o <code>:has()</code> dava ao esperar o corpo
+      async do form).</li>
   </ul>
 </div>
