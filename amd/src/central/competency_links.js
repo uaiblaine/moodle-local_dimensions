@@ -39,6 +39,7 @@ import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'core/toast';
 import {attach as attachExpander} from 'local_dimensions/central/modal_expander';
+import {attach as attachRefresh} from 'local_dimensions/central/modal_refresh';
 
 const DATASOURCE = 'local_dimensions/central/course_datasource';
 const PAGE_SIZE = 25;
@@ -490,6 +491,24 @@ const loadCourses = async(state) => {
 };
 
 /**
+ * Reload the course list from scratch (the modal header refresh): drop the shown cards and the
+ * exclusion cursor, then fetch the first page again. Card expansion and lazily-loaded activities
+ * reset. A no-op while a page load is already in flight, so a reset never blanks the list.
+ *
+ * @param {Object} state Modal state.
+ * @return {Promise<void>}
+ */
+const reloadCourses = (state) => {
+    if (state.loading) {
+        return Promise.resolve();
+    }
+    state.rowsEl.textContent = '';
+    state.excluded.clear();
+    state.total = 0;
+    return loadCourses(state);
+};
+
+/**
  * Lazily load a course's activities into its container (search first, then the linked rows),
  * refreshing the card's linked count from the fresh data.
  *
@@ -844,8 +863,7 @@ export const open = async(opts) => {
     modal.setRemoveOnClose(true);
 
     const root = modal.getRoot()[0];
-    // A header expand/restore control lets the user widen this dense modal; the choice persists.
-    attachExpander(root.querySelector('.modal-dialog')).catch(notifyError);
+    const dialog = root.querySelector('.modal-dialog');
     const state = {
         competencyid: Number(opts.competencyid),
         courseoutcomes: opts.courseoutcomes,
@@ -885,6 +903,10 @@ export const open = async(opts) => {
         courseremovedlabel: labels[22],
         toggleactivitieslabel: labels[23],
     };
+
+    // Header controls: the expander seeds the saved size synchronously, then the refresh button
+    // slots in to its left and reloads the course list from scratch (order: refresh, expand, close).
+    attachExpander(dialog).then(() => attachRefresh(dialog, () => reloadCourses(state))).catch(notifyError);
 
     modal.getRoot().on(ModalEvents.shown, () => {
         // Host a toast region inside the modal body so success toasts render above the dialog,

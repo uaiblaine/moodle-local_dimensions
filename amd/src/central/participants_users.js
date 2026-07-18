@@ -257,7 +257,7 @@ const wire = (state, pane) => {
  *
  * @param {HTMLElement} pane The users tab pane.
  * @param {Object} opts Options: templateid, contextid.
- * @return {Promise<void>}
+ * @return {Promise<Object>} A refresh handle: {refresh} re-applies the filters (reloads the rows).
  */
 export const mount = async(pane, opts) => {
     const labels = await Promise.all([
@@ -308,4 +308,5 @@ export const mount = async(pane, opts) => {
     // controls re-run applyFilters on this same state. Swallow to a toast so mount() rejects only
     // before wire(), where the caller's retry is a clean remount rather than a double-wire.
     await applyFilters(state).catch(notifyError);
+    return {refresh: () => applyFilters(state)};
 };

@@ -929,10 +929,6 @@ const init = async(state) => {
  */
 const wireEvents = (state) => {
     state.root.addEventListener('click', (event) => {
-        if (event.target.closest('[data-action="enrol-refresh"]')) {
-            init(state).catch(notifyError);
-            return;
-        }
         const toggle = event.target.closest('[data-action="enrol-toggle"]');
         if (toggle) {
             toggleGroup(state, toggle).catch(notifyError);
@@ -1022,7 +1018,7 @@ const wireEvents = (state) => {
  *
  * @param {HTMLElement} container The pane element.
  * @param {Object} opts Options: templateid, contextid.
- * @return {Promise<void>}
+ * @return {Promise<Object>} A refresh handle: {refresh} reloads the pane in place.
  */
 export const mount = async(container, opts) => {
     const labels = await loadLabels();
@@ -1051,4 +1047,7 @@ export const mount = async(container, opts) => {
     // does not release the latch and let a re-click double-wire; a load that failed before revealing
     // any region leaves the pane blank until the modal is reopened (a known gap for the enrol tab).
     await init(state).catch(notifyError);
+    // The host's header refresh re-runs init, which reloads in place (the delegated listeners
+    // survive) — so it never re-wires and never releases the latch.
+    return {refresh: () => init(state)};
 };
