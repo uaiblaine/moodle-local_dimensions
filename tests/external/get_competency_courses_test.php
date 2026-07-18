@@ -86,4 +86,66 @@ final class get_competency_courses_test extends \advanced_testcase {
         $this->assertContains((int) $enrolledcourse->id, $resultids);
         $this->assertNotContains((int) $othercourse->id, $resultids);
     }
+
+    /**
+     * enrolledorself returns enrolled AND self-enrolable linked courses, and drops the rest.
+     *
+     * @return void
+     */
+    public function test_execute_enrolledorself_includes_self_enrolable(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+        helper::ensure_custom_fields_exist(helper::AREA_COMPETENCY);
+
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework(['visible' => 1]);
+        $competency = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $competencyid = (int) $competency->get('id');
+
+        $template = $ccg->create_template();
+        $templateid = (int) $template->get('id');
+        $ccg->create_template_competency([
+            'templateid' => $templateid,
+            'competencyid' => $competencyid,
+        ]);
+
+        $user = $this->getDataGenerator()->create_user();
+        $plan = $ccg->create_plan([
+            'userid' => $user->id,
+            'templateid' => $templateid,
+            'status' => \core_competency\plan::STATUS_ACTIVE,
+        ]);
+        $planid = (int) $plan->get('id');
+
+        $enrolledcourse = $this->getDataGenerator()->create_course();
+        $selfcourse = $this->getDataGenerator()->create_course();
+        $hiddencourse = $this->getDataGenerator()->create_course();
+        \core_competency\api::add_competency_to_course((int) $enrolledcourse->id, $competencyid);
+        \core_competency\api::add_competency_to_course((int) $selfcourse->id, $competencyid);
+        \core_competency\api::add_competency_to_course((int) $hiddencourse->id, $competencyid);
+
+        $this->getDataGenerator()->enrol_user((int) $user->id, (int) $enrolledcourse->id, 'student');
+
+        // Enable self-enrolment on the second course only.
+        $self = enrol_get_plugin('self');
+        $selfinstance = $DB->get_record('enrol', ['courseid' => $selfcourse->id, 'enrol' => 'self'], '*', MUST_EXIST);
+        $self->update_status($selfinstance, ENROL_INSTANCE_ENABLED);
+
+        // Set the template's enrollmentfilter to "enrolledorself" via the plugin's own customfield path.
+        $keys = array_keys(constants::enrollmentfilter_options());
+        $data = (object) ['id' => $templateid];
+        $data->{'customfield_' . constants::CFIELD_ENROLLMENTFILTER} =
+            array_search(constants::ENROLLMENTFILTER_ENROLLEDORSELF, $keys, true) + 1;
+        lp_handler::create()->instance_form_save($data, true);
+
+        $this->setUser($user);
+        $result = get_competency_courses::execute($competencyid, $planid);
+        $resultids = array_map('intval', array_column($result, 'id'));
+
+        $this->assertContains((int) $enrolledcourse->id, $resultids);
+        $this->assertContains((int) $selfcourse->id, $resultids);
+        $this->assertNotContains((int) $hiddencourse->id, $resultids);
+    }
 }
