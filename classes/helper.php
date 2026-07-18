@@ -1709,6 +1709,7 @@ class helper {
             'categoryid' => (int) ($navraw['categoryid'] ?? 0),
             'frameworkid' => (int) ($navraw['frameworkid'] ?? 0),
             'templateid' => (int) ($navraw['templateid'] ?? 0),
+            'showhiddencats' => (bool) ($navraw['showhiddencats'] ?? false),
         ];
 
         $dispbool = static function (array $src, string $key, bool $default): bool {
@@ -1822,6 +1823,7 @@ class helper {
      * @return array The list of category options.
      */
     public static function central_category_options(int $selectedid): array {
+        global $DB;
         $catids = [];
         $catnames = [];
         foreach (\core_course_category::make_categories_list() as $catid => $catname) {
@@ -1838,6 +1840,16 @@ class helper {
         $frameworkcounts = self::count_frameworks_by_category($catids);
         $templatecounts = self::count_templates_by_category($catids);
 
+        // Which of the readable categories are hidden (visible = 0). make_categories_list()
+        // already includes a hidden category when the viewer holds viewhiddencategories, so
+        // the flag lets the context bar hide it behind the "show hidden" toggle by default.
+        $visiblemap = [];
+        if (!empty($catids)) {
+            foreach ($DB->get_records_list('course_categories', 'id', $catids, '', 'id, visible') as $rec) {
+                $visiblemap[(int) $rec->id] = (int) $rec->visible;
+            }
+        }
+
         $options = [];
         foreach ($catids as $catid) {
             $frameworkcount = (int) ($frameworkcounts[$catid] ?? 0);
@@ -1850,6 +1862,7 @@ class helper {
                 'templatecount' => $templatecount,
                 'hasframeworks' => $frameworkcount > 0,
                 'hastemplates' => $templatecount > 0,
+                'hidden' => empty($visiblemap[$catid]),
             ];
         }
         return $options;

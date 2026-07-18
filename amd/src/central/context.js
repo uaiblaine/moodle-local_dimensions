@@ -51,6 +51,8 @@ const SELECTORS = {
     countValue: '[data-region="count-value"]',
     countNoun: '[data-mode]',
     categoryOption: '[data-region="category-select"] option[data-name]',
+    hiddenCatsBlock: '[data-region="hidden-cats"]',
+    hiddenCatsToggle: '[data-action="toggle-hidden-cats"]',
     activePane: '.dynamictabs .tab-pane.active',
     pane: '.dynamictabs [data-tab-content]',
     // Core's dynamic_tabs template emits data-toggle on Moodle 4.5 (Bootstrap 4) and
@@ -126,6 +128,38 @@ const renderOptionLabels = (bar) => {
     bar.querySelectorAll(SELECTORS.categoryOption).forEach((option) => {
         const count = mode === 'plans' ? option.dataset.templatecount : option.dataset.frameworkcount;
         option.textContent = `${option.dataset.name} (${count})`;
+    });
+};
+
+/**
+ * Whether hidden course categories are currently shown (the toggle is on). False when the
+ * toggle is absent (no hidden category is reachable).
+ *
+ * @param {HTMLElement} bar
+ * @return {Boolean}
+ */
+const showHiddenCats = (bar) => {
+    const toggle = bar.querySelector(SELECTORS.hiddenCatsToggle);
+    return !!(toggle && toggle.checked);
+};
+
+/**
+ * Drop hidden category options from the select unless the "show hidden" toggle is on. The
+ * currently selected option is always kept, so turning the toggle off never yanks away the
+ * context the user is on. Rebuilt from the pristine clone each time, so this is non-destructive.
+ *
+ * @param {HTMLElement} bar
+ * @param {HTMLSelectElement} select
+ */
+const filterHiddenOptions = (bar, select) => {
+    if (showHiddenCats(bar)) {
+        return;
+    }
+    const keep = select.value;
+    select.querySelectorAll('option[data-hidden="1"]').forEach((option) => {
+        if (option.value !== keep) {
+            option.remove();
+        }
     });
 };
 
@@ -213,6 +247,10 @@ const setContext = (bar, contexttype) => {
     if (wrapper) {
         wrapper.hidden = contexttype !== 'coursecat';
     }
+    const hiddenblock = bar.querySelector(SELECTORS.hiddenCatsBlock);
+    if (hiddenblock) {
+        hiddenblock.hidden = contexttype !== 'coursecat';
+    }
     bar.dataset.categoryid = 0;
 
     // Context switch starts the guided category flow afresh: entering coursecat resets and
@@ -256,9 +294,10 @@ const setCategory = (bar, select) => {
  *
  * @param {HTMLElement} bar
  * @param {Boolean} reset Whether to drop the current selection before enhancing.
+ * @param {String|null} keepvalue On reset, the category value to restore (null resets to none).
  * @return {Promise<void>}
  */
-const enhanceCategory = async(bar, reset) => {
+const enhanceCategory = async(bar, reset, keepvalue = null) => {
     const wrapper = bar.querySelector(SELECTORS.categoryWrapper);
     if (!wrapper || pristineCategoryNode === null) {
         return;
@@ -272,14 +311,29 @@ const enhanceCategory = async(bar, reset) => {
         return;
     }
     if (reset) {
-        select.value = '0';
+        select.value = keepvalue !== null ? keepvalue : '0';
     }
-    // Match the option labels to the active tab's count before the autocomplete reads them.
+    // Drop hidden categories unless the toggle is on (keeping the selected one), then match the
+    // option labels to the active tab's count, both before the autocomplete reads the options.
+    filterHiddenOptions(bar, select);
     renderOptionLabels(bar);
     const placeholder = await getString('managecompetencies_category_placeholder', 'local_dimensions');
     await enhance(SELECTORS.categorySelect, false, '', placeholder, false, true, placeholder, true);
     wrapper.querySelector(SELECTORS.categorySelect)
         .addEventListener('change', (event) => setCategory(bar, event.target));
+};
+
+/**
+ * Apply the "show hidden categories" toggle: rebuild the picker from the pristine options,
+ * filtered by the new toggle state, keeping the current selection, then persist the choice.
+ *
+ * @param {HTMLElement} bar
+ */
+const applyHiddenCats = (bar) => {
+    const select = bar.querySelector(SELECTORS.categorySelect);
+    const keepvalue = select ? select.value : '0';
+    enhanceCategory(bar, true, keepvalue).catch(notifyError);
+    Preferences.saveNav({showhiddencats: showHiddenCats(bar)});
 };
 
 /**
@@ -315,6 +369,13 @@ export const init = () => {
         } else {
             select.addEventListener('change', () => setCategory(bar, select));
         }
+    }
+
+    // The "show hidden categories" toggle rebuilds the picker client-side; it lives outside the
+    // category wrapper, so it survives the wrapper reset that a context switch performs.
+    const hiddencb = bar.querySelector(SELECTORS.hiddenCatsToggle);
+    if (hiddencb) {
+        hiddencb.addEventListener('change', () => applyHiddenCats(bar));
     }
 
     // Tab switches keep the counter and option labels in step with the active mode. Bound via

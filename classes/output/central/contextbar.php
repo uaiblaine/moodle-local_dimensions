@@ -54,17 +54,22 @@ class contextbar implements renderable, templatable {
     /** @var bool Whether course-category mode is active without a chosen category. */
     private $needscategory;
 
+    /** @var bool Whether the "show hidden categories" toggle starts on (persisted preference). */
+    private $showhiddencats;
+
     /**
      * Constructor.
      *
      * @param string $contexttype Either 'system' or 'coursecat'.
      * @param int $categoryid Selected course category id (course-category mode only).
+     * @param bool $showhiddencats Whether the "show hidden categories" toggle starts on.
      */
-    public function __construct(string $contexttype, int $categoryid) {
+    public function __construct(string $contexttype, int $categoryid, bool $showhiddencats = false) {
         $resolved = helper::resolve_central_context($contexttype, $categoryid);
         $this->contexttype = $resolved['contexttype'];
         $this->categoryid = (int) $resolved['categoryid'];
         $this->needscategory = (bool) $resolved['needscategory'];
+        $this->showhiddencats = $showhiddencats;
     }
 
     /**
@@ -96,6 +101,30 @@ class contextbar implements renderable, templatable {
             }
         }
 
+        // The "show hidden categories" toggle renders only when a hidden category is actually
+        // reachable (null otherwise, so the template skips it). It starts on when the user last
+        // left it on, or when the selected category is itself hidden (else that context would
+        // vanish from the picker). It reuses the shared showhidden_toggle partial.
+        $hashidden = false;
+        $selectedhidden = false;
+        foreach ($categoryoptions as $option) {
+            if (!empty($option['hidden'])) {
+                $hashidden = true;
+                if ($option['id'] === $this->categoryid) {
+                    $selectedhidden = true;
+                }
+            }
+        }
+        $hiddencatstoggle = null;
+        if ($hashidden) {
+            $hiddencatstoggle = [
+                'id' => 'local-dimensions-central-showhiddencats',
+                'label' => get_string('central_bar_showhiddencategories', 'local_dimensions'),
+                'action' => 'toggle-hidden-cats',
+                'checked' => $this->showhiddencats || $selectedhidden,
+            ];
+        }
+
         return [
             'contexttype' => $this->contexttype,
             'issystem' => $this->contexttype === 'system',
@@ -104,6 +133,7 @@ class contextbar implements renderable, templatable {
             'selectedcategoryid' => $this->categoryid,
             'hascategories' => !empty($categoryoptions),
             'categoryoptions' => $categoryoptions,
+            'hiddencatstoggle' => $hiddencatstoggle,
             'systemframeworkcount' => (int) $systemframeworkcount,
             'systemtemplatecount' => (int) $systemtemplatecount,
             'selectedframeworkcount' => (int) $selectedframeworkcount,

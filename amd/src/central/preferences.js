@@ -36,7 +36,9 @@ const PREF_DISPLAY = 'local_dimensions_central_display';
 const SAVE_DELAY = 400;
 
 /** @type {Object} Default navigation state. */
-const NAV_DEFAULTS = {tab: 'frameworks', contexttype: 'system', categoryid: 0, frameworkid: 0, templateid: 0};
+const NAV_DEFAULTS = {
+    tab: 'frameworks', contexttype: 'system', categoryid: 0, frameworkid: 0, templateid: 0, showhiddencats: false,
+};
 /** @type {Object} Default display state. */
 const DISPLAY_DEFAULTS = {
     structure: {tax: false, id: false, rule: true, showhidden: false},

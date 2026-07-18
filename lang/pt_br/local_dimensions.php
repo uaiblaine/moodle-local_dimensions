@@ -59,6 +59,7 @@ $string['cascade_help'] = 'Os campos “{$a->enrol}” e “{$a->redirect}” ab
 $string['cascade_help_competency'] = 'Os campos “{$a->enrol}” e “{$a->redirect}” abaixo sobrepõem o plano e o padrão global para esta competência. Deixe-os em “herdar” para usar a configuração do plano, ou o global quando o plano também herdar.';
 $string['central'] = 'Central de Competências';
 $string['central_addcompetency'] = 'Adicionar competência';
+$string['central_bar_showhiddencategories'] = 'Mostrar categorias ocultas';
 $string['central_browseframeworks'] = 'Procurar em estruturas';
 $string['central_browseframeworks_add'] = 'Adicionar selecionadas';
 $string['central_browseframeworks_alreadyadded'] = 'Já neste plano';

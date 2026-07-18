@@ -59,6 +59,7 @@ $string['cascade_help'] = 'The “{$a->enrol}” and “{$a->redirect}” settin
 $string['cascade_help_competency'] = 'The “{$a->enrol}” and “{$a->redirect}” settings below override the plan and the global default for this competency. Leave them on “inherit” to use the plan’s setting, or the global default when the plan also inherits.';
 $string['central'] = 'Competency hub';
 $string['central_addcompetency'] = 'Add competency';
+$string['central_bar_showhiddencategories'] = 'Show hidden categories';
 $string['central_browseframeworks'] = 'Browse structures';
 $string['central_browseframeworks_add'] = 'Add selected';
 $string['central_browseframeworks_alreadyadded'] = 'Already on this plan';

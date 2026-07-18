@@ -37,8 +37,9 @@ recarrega o ativo. O select de categoria é sempre renderizado (oculto em modo s
 
 ## Categorias ocultas — `BAR-CATHIDDEN` (to-be · proposto 2026-07-18)
 
-> **Proposta, ainda não no código.** Fecha o item 3 do backlog da Central: o irmão do "Mostrar
-> estruturas ocultas" (FWK/EST), agora para **categorias de curso** no picker da barra. Design em
+> **Implementado (local; pendente push + validação runtime — resync deste mapa para as-is com
+> refs após CI verde).** Fecha o item 3 do backlog da Central: o irmão do "Mostrar estruturas
+> ocultas" (FWK/EST), agora para **categorias de curso** no picker da barra. Design em
 > `bar-contextbar.html`; spec em `docs/superpowers/specs/2026-07-18-central-bar-hidden-categories-design.md` (local).
 
 | ID | Rótulo | Tipo | Origem (to-be) | Dados | Regra / notas |
