@@ -104,19 +104,22 @@ from the plugin clone. `git archive` packages a **commit** (a tree), never the
 working tree — so commit first; uncommitted edits never enter the zip.
 
 To test local work **before it is pushed**, archive `HEAD` (the current branch
-tip, pushed or not); name the zip after the plugin version so each test install
-is traceable:
+tip, pushed or not); name the zip `dimensions-<version>-<shortSHA>.zip` so each
+test install is traceable. The short SHA is **required**, not optional: the
+`version.php` version is frozen (many slices share one version number), so the
+version alone can't tell two builds apart — the commit SHA is what does:
 
 ```sh
 ver=$(grep -oE '\$plugin->version[[:space:]]*=[[:space:]]*[0-9]+' \
   /Volumes/N1TB/dev/github/moodle/public/local/dimensions/version.php | grep -oE '[0-9]+')
+sha=$(git -C /Volumes/N1TB/dev/github/moodle/public/local/dimensions rev-parse --short HEAD)
 git -C /Volumes/N1TB/dev/github/moodle/public/local/dimensions archive \
-  --format=zip --prefix=dimensions/ HEAD -o ~/Downloads/dimensions-$ver.zip
+  --format=zip --prefix=dimensions/ HEAD -o ~/Downloads/dimensions-$ver-$sha.zip
 ```
 
 To package the **published** state instead, `git fetch origin` first and archive
-`origin/main` in place of `HEAD` — the fetch is only needed there, to refresh the
-remote ref `origin/main` resolves to. For the JS dev loop, set *Site admin →
+`origin/main` in place of `HEAD` (and read the SHA from `origin/main`) — the fetch
+is only needed there, to refresh the remote ref `origin/main` resolves to. For the JS dev loop, set *Site admin →
 Development → Debug = DEVELOPER* and *cachejs = off* so Moodle serves `amd/src`
 directly without a rebuild.
 
