@@ -135,12 +135,6 @@ const injectScalesLink = async(form) => {
         return;
     }
     const root = form.modal.getRoot()[0];
-    const dialog = root.querySelector('.modal-dialog');
-    if (dialog) {
-        // Kept even without the link: the class standardises the close-button chip for this
-        // ModalForm, whose core form body carries no plugin class and so escapes the :has() rule.
-        dialog.classList.add('local-dimensions-headerlink-modal');
-    }
     if (!activeRegion || activeRegion.dataset.canscalespage !== '1') {
         return;
     }
