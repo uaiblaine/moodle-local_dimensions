@@ -3589,15 +3589,18 @@
 }
 
 /*
- * Lock the page scroll behind an open hub modal. core/modal sets overflow:hidden only on <body>,
- * relying on the browser propagating it to <html> — the real scrolling element here. When the
- * property is applied dynamically via JS the browser does not re-run that propagation, so <html>
- * keeps its own scrollbar and the page scrolls behind the modal: a second scrollbar beside it (or,
- * when the dialog is expanded, under it). Setting overflow:hidden on <html> removes it; core's own
- * body padding-right (added on show) still compensates, so nothing shifts. Scoped to the hub
- * (central.php adds .local-dimensions-central-page) so it never touches other site modals.
+ * Kill the spurious second scrollbar on our two data-dense modals. The .modal container is
+ * position:fixed over the viewport with overflow-y:auto; when it is tall that auto shows its own
+ * scrollbar at the viewport edge, reading as a "page" scroll on top of the modal-body's internal
+ * one. Both modals are scrollable so the dialog always fits the container — the container scroll is
+ * never needed, so hide it. (An earlier attempt locked <html> instead: core/modal only sets
+ * overflow:hidden on <body> and relies on body->html propagation, which the browser does not re-run
+ * for a property set dynamically, so that had no effect.) Scoped via :has(.local-dimensions-modal-
+ * sizetoggle) — the expander marker present ONLY on the links + participants modals — so the
+ * filepicker, TinyMCE media and confirmation modals that also live on the hub keep their own
+ * overflow-y:auto and are never clipped.
  */
-html:has(body.local-dimensions-central-page.modal-open) {
+.local-dimensions-central-page .modal:has(.local-dimensions-modal-sizetoggle) {
     overflow: hidden;
 }
 
