@@ -93,6 +93,16 @@ final class helper_cascade_test extends \advanced_testcase {
             constants::ENROLLMENTFILTER_ACTIVE,
             helper::resolve_enrollmentfilter_for_view($compid, 0)
         );
+
+        // Competency = enrolledorself -> resolves to the new aggregate value.
+        $cdata2 = (object) ['id' => $compid];
+        $cdata2->{'customfield_' . constants::CFIELD_ENROLLMENTFILTER} =
+            array_search(constants::ENROLLMENTFILTER_ENROLLEDORSELF, $efkeys, true) + 1;
+        competency_handler::create()->instance_form_save($cdata2, true);
+        $this->assertSame(
+            constants::ENROLLMENTFILTER_ENROLLEDORSELF,
+            helper::resolve_enrollmentfilter_for_view($compid, $templateid)
+        );
     }
 
     /**
