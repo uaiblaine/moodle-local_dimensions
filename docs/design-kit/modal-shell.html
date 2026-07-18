@@ -43,7 +43,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .btn-primary{background:var(--mds-bg-interactive-primary-default);color:var(--mds-color-white);border-color:var(--mds-bg-interactive-primary-default);transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
 .btn-primary:hover{background:var(--mds-bg-interactive-primary-hover);border-color:var(--mds-bg-interactive-primary-hover);}
 
-/* ---- O chip de fechar que o plugin REALMENTE publica (styles.css:3709-3738) ---- */
+/* ---- O chip de fechar que o plugin REALMENTE publica (styles.css:3740-3769) ---- */
 .m-x-ship{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;padding:0;border:0;border-radius:8px;background-color:var(--ship-close-bg);color:var(--ship-close-fg);font-size:0.9rem;line-height:1;opacity:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
 .m-x-ship:hover,.m-x-ship:focus-visible{background-color:var(--ship-close-bg-hover);}
 
@@ -105,7 +105,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
       <div class="m-foot m-foot-ghost"><span class="fk">.modal-footer vazio → core aplica .hidden</span></div>
     </div>
     <div class="note">
-      <b>Chip de fechar</b>: <code>.btn-close</code> do core, reestilizado em <code>styles.css:3709-3738</code> —
+      <b>Chip de fechar</b>: <code>.btn-close</code> do core, reestilizado em <code>styles.css:3740-3769</code> —
       <code>1.75rem</code>, raio <code>8px</code>, fundo <code>#e7f0f9</code>, glifo FA <code>\f00d</code> em
       <code>#0f4d85</code> (7,53:1), hover <code>#d4e6fb</code> (6,82:1). Os três valores são <b>literais</b>, sem
       variante dark — o par se mantém nos dois temas. Passe o mouse: o hover acima é o mesmo do código.
@@ -173,7 +173,9 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
       <b>Expandir shipou desacoplado</b> (<code>8ea9daf</code>, <span class="prov">mtube: expandir</span>): os dois
       botões, o swap por CSS e a persistência em preferência de usuário estão nos modais de <b>participantes</b> e
       <b>links</b> (<code>central/modal_expander.js</code>, chave <code>modalexpanded</code> no
-      <code>PREF_CENTRAL_DISPLAY</code>; largura expandida <code>96vw</code>). Mas <b>a 1.75rem</b>, casando o chip de
+      <code>PREF_CENTRAL_DISPLAY</code>; expandido = tela cheia real — <code>100vw</code>, altura total e cantos retos
+      (<code>styles.css:3654</code>/<code>3661</code>, <code>3c91646</code>), espelhando o <code>.modal-fullscreen</code>
+      do BS5 sem a classe e sem <code>!important</code>). Mas <b>a 1.75rem</b>, casando o chip de
       fechar que já existe — <b>não</b> a 36×36 deste painel. O <b>atualizar</b> depois shipou (<code>7d69197</code>) no
       mesmo <code>1.75rem</code> e mesmo chip azul; os 36×36 deste painel são só o esquema do mock, nunca foram
       publicados. Ver <code>maps/mod-links.md</code>.
@@ -194,10 +196,13 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
       num grupo <code>.local-dimensions-modal-footer-links</code> com <code>margin-right:auto</code> — <b>não</b>
       <code>justify-content-between</code>: o auto-margin empurra qualquer ação primária (o Salvar/Cancelar do form de
       framework) para a direita e funciona tanto no rodapé vazio quanto no que já tem botões, no BS4 e no BS5. A regra
-      é escopada sob <code>.modal-footer</code> (<code>styles.css:3673</code>) para vencer o <code>&gt; *{margin}</code>
+      é escopada sob <code>.modal-footer</code> (<code>styles.css:3696</code>) para vencer o <code>&gt; *{margin}</code>
       do core em qualquer ordem de folha. No modal de participantes (rodapé sem filhos) o grupo vira o primeiro filho e
-      o core <b>revela</b> o rodapé em vez de aplicar <code>.hidden</code>. E os <b>quatro</b> links de participantes
-      aparecem <b>todos de uma vez</b> — o toggle por aba (<code>showHeaderLinkFor</code>) foi aposentado.
+      o core <b>revela</b> o rodapé em vez de aplicar <code>.hidden</code>. E o rodapé é <b>por aba</b>: só o link da aba
+      ativa aparece — <code>showFooterLinkFor(root, activepane)</code> alterna o <code>d-none</code> de cada link por
+      <code>data-pane</code>, e quando a aba ativa não tem link permitido o rodapé recolhe com
+      <code>.local-dimensions-modal-footer-empty</code> (<code>styles.css:3719</code>, <code>display:none</code>,
+      <code>3c91646</code>).
     </div>
   </div>
 </div>
@@ -227,15 +232,16 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
 
   <h4>O que o D2 aposentou (<code>0598289</code>) — e o que foi re-alojado, não deletado</h4>
   <ul>
-    <li><b>Saíram</b>: as margens de <code>.local-dimensions-headerlink</code>, a classe
-      <code>.local-dimensions-headerlink</code> e o <code>d-none</code> alternado por <code>showHeaderLinkFor</code> —
-      os links vivem no rodapé e <b>todos</b> aparecem de uma vez, sem toggle por aba.</li>
+    <li><b>Saíram</b>: as margens de <code>.local-dimensions-headerlink</code> e a classe
+      <code>.local-dimensions-headerlink</code> — os links desceram para o rodapé. Mas o toggle <code>d-none</code> por
+      aba <b>não</b> foi aposentado: voltou como <code>showFooterLinkFor</code> (<code>3c91646</code>), agora sobre o
+      link do rodapé — só o da aba ativa aparece.</li>
     <li><b>Correção medida — o <code>.modal-title{flex-grow:1;min-width:0}</code> NÃO era sem motivo, e por isso NÃO foi
       deletado.</b> Além de encaixar o link, ele agrupava os botões de expandir/restaurar à direita: o core dá
       <code>margin-left:auto</code> ao <code>.btn-close</code> (<code>bootstrap/_modal.scss</code>), o que <b>sozinho
       encalha</b> os size-toggles ao lado de um título curto (verificado adversarialmente antes do commit). A regra foi
       <b>re-alojada</b> de <code>.local-dimensions-headerlink-modal .modal-title</code> para
-      <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code> (<code>styles.css:3660</code>) —
+      <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code> (<code>styles.css:3683</code>) —
       keyed no próprio botão do expander, cobrindo os modais de participantes <b>e</b> de links sem a classe de
       header-link.</li>
     <li><b>O gancho do chip que ficou.</b> A classe <code>local-dimensions-headerlink-modal</code> <b>saiu</b> do modal
