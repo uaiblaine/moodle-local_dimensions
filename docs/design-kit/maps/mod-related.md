@@ -60,14 +60,14 @@ mecânica.
 > **Armadilha de nome — `.local-dimensions-related-modal` não é este modal.** A classe parece ser a
 > deste mapa e **não é**: quem a aplica é `competency_detail.js:285`, no modal que **o chip** abre
 > (`structure_related_modal.mustache`), cujo `.modal-header` é escondido de propósito
-> (`styles.css:5158-5160`) porque o card traz o **próprio** botão de fechar
+> (`styles.css:5337-5339`) porque o card traz o **próprio** botão de fechar
 > (`data-action="close-related-modal"`, `structure_related_modal.mustache:37`). O modal
 > "Competências referenciadas" **não recebe classe nenhuma** no root — `related_competencies.js:239`
 > é um `ModalSaveCancel.create` seco.
 >
 > A consequência é fácil de ler ao contrário: o restyle do chip de fechar do hub é
 > `.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-'])`
-> (`styles.css:3557`), e o comentário acima dele (`:3554-3556`) diz que "a referenced-competency
+> (`styles.css:3740`), e o comentário acima dele (`:3735-3736`) diz que "a referenced-competency
 > modal" está **excluída**. Ele fala do modal do **chip**, não deste. Este modal **casa** os dois
 > lados do seletor (não tem a classe; o corpo tem `.local-dimensions-central-related`) e **ganha** o
 > chip azul de `1.75rem` normalmente.
