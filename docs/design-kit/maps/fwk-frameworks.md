@@ -118,7 +118,7 @@ o toast disparado de dentro dele renderiza **acima** do diálogo (padrão da cas
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
 | `FWK-SCALES-LINK` | "Abrir página de escalas" | link (JS) | `frameworks.js:151-162` | str `central_frameworks_openscales` | injetado no `.modal-header` do form, **à esquerda do `.btn-close`** (`:162`), no evento `LOADED` (`:183`); `target="_blank"` + `rel="noopener noreferrer"`. Gated por `FWK-CANSCALES` (`:144`). Vem de `a2112fe`. **Não estava no mapa** |
-| `FWK-SCALES-MODALCLASS` | `[sem rótulo]` | classe | `frameworks.js:142` | `.local-dimensions-headerlink-modal` | aplicada **mesmo sem o link** (`:140-143`): padroniza também o chip do botão de fechar, que senão só estiliza modais cujo corpo carrega classes do plugin |
+| `FWK-SCALES-CHIP` | `[sem rótulo]` | chip de fechar | `styles.css:3740-3769` | `.local-dimensions-central-page .modal-form-dialogue .btn-close` | **CSS puro, sem classe em JS (`025c2f6`).** O chip do form vem do `.modal-form-dialogue` que o core põe no diálogo **síncrono antes do `show()`** — pinta desde o primeiro quadro. A antiga classe `local-dimensions-headerlink-modal` (injetada por `frameworks.js` no `LOADED`) foi **removida**: chegava tarde e dava flash |
 
 ## Regras de negócio (verificadas no código)
 

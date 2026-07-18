@@ -73,9 +73,10 @@ sai do POST mas o constant abastece o `get_data()` e o JS ainda lê `.value` (a 
 select, [[moodle-hub-ui-gotchas]]); a troca de escala **não** zera o config quando congelado. Duas
 telas visuais (dropdown editável × cadeado), e o valor cinza não pode ler como vazio. (b) **Gatilho
 `MOD.SCALE`** (migrado, acima). (c) **Link "Abrir escalas" no cabeçalho** — injetado por
-`injectScalesLink` (`frameworks.js:133-163`) no `LOADED`, à esquerda do fechar, **só** quando
-`canscalespage==='1'`; a classe `.local-dimensions-headerlink-modal` entra no diálogo sempre (contrato
-do restyle do fechar). (d) Descrição URL-só.
+`injectScalesLink` (`frameworks.js:133-161`) no `LOADED`, à esquerda do fechar, **só** quando
+`canscalespage==='1'`. O chip de fechar do form vem do `.modal-form-dialogue` (CSS puro,
+`styles.css:3740-3769`), não mais de uma classe injetada em JS — `injectScalesLink` deixou de tocar o
+diálogo (`025c2f6`); antes a classe chegava no `LOADED` e dava flash. (d) Descrição URL-só.
 
 ---
 
