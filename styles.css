@@ -5677,6 +5677,33 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 
 
 /* ============================================
+      COMPETENCY USAGE MODAL (CENTRAL HUB)
+      ============================================ */
+
+/*
+ * Read-only usage lists (linked courses / activities / learning plans) opened from
+ * the Structure-tab counters. Rendered at body level (core/modal), outside
+ * .local-dimensions-manage. Striped tables mirroring the Manage participants grid,
+ * with a touch more cell padding for breathing room; the new-tab glyph sits small
+ * and quiet beside the course/activity name.
+ */
+.local-dimensions-central-usage .table {
+    margin-bottom: 0;
+}
+
+.local-dimensions-central-usage .table th,
+.local-dimensions-central-usage .table td {
+    padding: 0.625rem 0.75rem;
+    vertical-align: middle;
+}
+
+.local-dimensions-central-usage a .fa-external-link {
+    font-size: 0.75em;
+    opacity: 0.75;
+}
+
+
+/* ============================================
       COURSES & ACTIVITIES MODAL (CENTRAL HUB)
       ============================================ */
 
