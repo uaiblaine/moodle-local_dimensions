@@ -58,11 +58,11 @@
                      aria-labelledby="local-dimensions-enrol-method-label">
                     <button type="button" class="btn btn-primary active" data-method="cohort"
                             aria-pressed="true">
-                        {{#str}}central_enrol_method_cohort, local_dimensions{{/str}}
+                        <i class="fa fa-users me-1" aria-hidden="true"></i>{{#str}}central_enrol_method_cohort, local_dimensions{{/str}}
                     </button>
                     <button type="button" class="btn btn-outline-secondary" data-method="self"
                             aria-pressed="false">
-                        {{#str}}central_enrol_method_self, local_dimensions{{/str}}
+                        <i class="fa fa-user-plus me-1" aria-hidden="true"></i>{{#str}}central_enrol_method_self, local_dimensions{{/str}}
                     </button>
                 </div>
             </div>
@@ -108,10 +108,12 @@
             </span>
             <span class="ms-auto">
                 <button type="button" class="btn btn-outline-danger me-1" data-action="enrol-remove" disabled>
-                    {{#str}}central_enrol_remove, local_dimensions{{/str}}
+                    <i class="fa fa-users me-1" aria-hidden="true" data-region="enrol-remove-icon"></i><span
+                        data-region="enrol-remove-text">{{#str}}central_enrol_remove, local_dimensions{{/str}}</span>
                 </button>
                 <button type="button" class="btn btn-primary" data-action="enrol-apply" disabled>
-                    {{#str}}central_enrol_apply, local_dimensions{{/str}}
+                    <i class="fa fa-users me-1" aria-hidden="true" data-region="enrol-apply-icon"></i><span
+                        data-region="enrol-apply-text">{{#str}}central_enrol_apply, local_dimensions{{/str}}</span>
                 </button>
             </span>
         </div>

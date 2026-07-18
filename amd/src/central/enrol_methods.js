@@ -59,12 +59,29 @@ const SELECTORS = {
     proccounttext: '[data-region="enrol-proccount-text"]',
     apply: '[data-action="enrol-apply"]',
     remove: '[data-action="enrol-remove"]',
+    applyicon: '[data-region="enrol-apply-icon"]',
+    applytext: '[data-region="enrol-apply-text"]',
+    removeicon: '[data-region="enrol-remove-icon"]',
+    removetext: '[data-region="enrol-remove-text"]',
     rowcheck: 'input[data-rowcheck]',
     row: '.local-dimensions-enrol-row',
     status: '[data-region="row-status"]',
+    statusicon: '[data-region="row-status-icon"]',
+    statustext: '[data-region="row-status-text"]',
     rolenote: '[data-region="row-role"]',
     spinner: '[data-region="row-spinner"]',
     statustoggle: '[data-action="enrol-toggle-status"]',
+};
+
+/**
+ * The FontAwesome icon class for an enrolment method, shared by the segment, the status
+ * pills and the footer buttons so the eye ties status to method to action.
+ *
+ * @param {String} method 'cohort' or 'self'.
+ * @return {String} The fa-* icon class.
+ */
+const methodIcon = (method) => {
+    return method === 'cohort' ? 'fa-users' : 'fa-user-plus';
 };
 
 /* Boost's secondary is a light grey while the default badge text is white, so the neutral
@@ -108,6 +125,15 @@ const loadLabels = async() => {
         {key: 'role', component: 'moodle'},
         {key: 'hiddenfromstudents', component: 'moodle'},
     ]);
+    // The footer buttons name the method ("Apply · <method>"); resolve both methods' labels up
+    // front so a method switch repaints the button text synchronously (no per-switch fetch, no
+    // out-of-order paint on rapid switching).
+    const [applycohort, applyself, removecohort, removeself] = await getStrings([
+        {key: 'central_enrol_apply_method', component: 'local_dimensions', param: methodcohort},
+        {key: 'central_enrol_apply_method', component: 'local_dimensions', param: methodself},
+        {key: 'central_enrol_remove_method', component: 'local_dimensions', param: methodcohort},
+        {key: 'central_enrol_remove_method', component: 'local_dimensions', param: methodself},
+    ]);
     return {
         'status_configured': configured,
         'status_processing': processing,
@@ -132,6 +158,10 @@ const loadLabels = async() => {
         'inactive': inactive,
         'role': role,
         'hiddenlabel': hiddenfromstudents,
+        'applycohort': applycohort,
+        'applyself': applyself,
+        'removecohort': removecohort,
+        'removeself': removeself,
     };
 };
 
@@ -191,7 +221,8 @@ const paintRow = (state, row) => {
     const status = rowStatus(state, row) || 'notconfigured';
     const pill = row.querySelector(SELECTORS.status);
     pill.className = STATUS_BADGES[status] || STATUS_BADGES.notconfigured;
-    pill.textContent = state.labels['status_' + status] || '';
+    pill.querySelector(SELECTORS.statusicon).className = 'fa ' + methodIcon(state.method) + ' me-1';
+    pill.querySelector(SELECTORS.statustext).textContent = state.labels['status_' + status] || '';
     const rolename = (state.method === 'cohort' ? row.dataset.cohortRole : row.dataset.selfRole) || '';
     const rolenote = row.querySelector(SELECTORS.rolenote);
     rolenote.textContent = (status === 'configured' && rolename) ? rolename : '';
@@ -259,6 +290,24 @@ const updateFooter = (state) => {
     const disabled = state.selected.size === 0;
     state.root.querySelector(SELECTORS.apply).disabled = disabled;
     state.root.querySelector(SELECTORS.remove).disabled = disabled;
+};
+
+/**
+ * Set the footer Apply/Remove buttons' method icon and label from the current method, so the
+ * action itself names the method it will apply or remove.
+ *
+ * @param {Object} state Tab state.
+ * @return {void}
+ */
+const setActionLabels = (state) => {
+    const cohort = state.method === 'cohort';
+    const icon = 'fa ' + methodIcon(state.method) + ' me-1';
+    state.root.querySelector(SELECTORS.applyicon).className = icon;
+    state.root.querySelector(SELECTORS.removeicon).className = icon;
+    state.root.querySelector(SELECTORS.applytext).textContent =
+        cohort ? state.labels.applycohort : state.labels.applyself;
+    state.root.querySelector(SELECTORS.removetext).textContent =
+        cohort ? state.labels.removecohort : state.labels.removeself;
 };
 
 /**
@@ -378,6 +427,13 @@ const makeRow = async(state, item, competencyname) => {
     const pill = document.createElement('span');
     pill.className = 'badge';
     pill.dataset.region = 'row-status';
+    const statusicon = document.createElement('i');
+    statusicon.setAttribute('aria-hidden', 'true');
+    statusicon.dataset.region = 'row-status-icon';
+    const statustext = document.createElement('span');
+    statustext.dataset.region = 'row-status-text';
+    pill.appendChild(statusicon);
+    pill.appendChild(statustext);
     statuscell.appendChild(pill);
 
     const actionscell = document.createElement('td');
@@ -589,9 +645,10 @@ const queueAction = async(state, action) => {
         return;
     }
     if (action === 'remove') {
+        const methodname = state.method === 'cohort' ? state.labels.methodcohort : state.labels.methodself;
         const [title, body, label] = await Promise.all([
             getString('central_enrol_confirm_remove_title', 'local_dimensions'),
-            getString('central_enrol_confirm_remove', 'local_dimensions', courseids.length),
+            getString('central_enrol_confirm_remove', 'local_dimensions', {method: methodname, count: courseids.length}),
             getString('remove', 'moodle'),
         ]);
         try {
@@ -708,6 +765,7 @@ const applyMethodChange = (state, method) => {
     });
     state.root.querySelector(SELECTORS.hint).textContent =
         method === 'cohort' ? state.labels.hintcohort : state.labels.hintself;
+    setActionLabels(state);
     state.pending.clear();
     state.root.querySelectorAll(SELECTORS.row).forEach((row) => {
         paintRow(state, row);
@@ -917,6 +975,7 @@ const init = async(state) => {
     applyBootstrap(state, bootstrap);
     state.root.querySelector(SELECTORS.hint).textContent =
         state.method === 'cohort' ? state.labels.hintcohort : state.labels.hintself;
+    setActionLabels(state);
     updateFooter(state);
     await loadCompetencies(state, 0, compdata);
 };
