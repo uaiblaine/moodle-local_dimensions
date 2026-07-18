@@ -3755,9 +3755,11 @@
  * modal keeps its own close button (its header is hidden), so it is excluded. The second selector
  * keys off .modal-form-dialogue, which core adds to every ModalForm dialog synchronously before
  * show(): the plugin's form modals get the chip from the first frame (the :has() arm alone flashes).
+ * Targeted at the modal header so a core toast hosted in the modal body (the addToastRegion pattern)
+ * keeps its own core .btn-close — the chip looks wrong on the smaller toast.
  */
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close,
-.local-dimensions-central-page .modal-form-dialogue .btn-close {
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close,
+.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -3770,8 +3772,8 @@
     opacity: 1;
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close::before,
-.local-dimensions-central-page .modal-form-dialogue .btn-close::before {
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close::before,
+.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close::before {
     content: '\f00d';
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
@@ -3780,10 +3782,10 @@
     color: #0f4d85;
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close:hover,
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close:focus,
-.local-dimensions-central-page .modal-form-dialogue .btn-close:hover,
-.local-dimensions-central-page .modal-form-dialogue .btn-close:focus {
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:hover,
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:focus,
+.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:hover,
+.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:focus {
     background-color: #d4e6fb;
 }
 
