@@ -37,7 +37,7 @@ import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
-import {add as addToast, addToastRegion} from 'core/toast';
+import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
 import {attach as attachExpander} from 'local_dimensions/central/modal_expander';
 import {attach as attachRefresh} from 'local_dimensions/central/modal_refresh';
 
