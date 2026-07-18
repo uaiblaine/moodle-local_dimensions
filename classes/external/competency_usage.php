@@ -33,6 +33,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use moodle_url;
 
 /**
  * Web service: read-only usage lists for one competency, backing the clickable
@@ -96,6 +97,7 @@ class competency_usage extends external_api {
                 'id' => (int) $course->id,
                 'name' => $coursename,
                 'shortname' => $courseshortname,
+                'url' => (new moodle_url('/course/view.php', ['id' => $course->id]))->out(false),
             ];
 
             // Activities linked within this course, labelled with their course.
@@ -105,11 +107,13 @@ class competency_usage extends external_api {
                 if (!$cm) {
                     continue;
                 }
+                $cmurl = $cm->url;
                 $activities[] = [
                     'cmid' => (int) $cmid,
                     'name' => format_string($cm->name, true, ['context' => $coursecontext]),
                     'coursename' => $coursename,
                     'courseshortname' => $courseshortname,
+                    'url' => $cmurl ? $cmurl->out(false) : '',
                 ];
             }
         }
@@ -138,12 +142,14 @@ class competency_usage extends external_api {
                 'id' => new external_value(PARAM_INT, 'Course id'),
                 'name' => new external_value(PARAM_TEXT, 'Course full name'),
                 'shortname' => new external_value(PARAM_TEXT, 'Course short name'),
+                'url' => new external_value(PARAM_URL, 'Course view URL'),
             ])),
             'activities' => new external_multiple_structure(new external_single_structure([
                 'cmid' => new external_value(PARAM_INT, 'Course module id'),
                 'name' => new external_value(PARAM_TEXT, 'Activity name'),
                 'coursename' => new external_value(PARAM_TEXT, 'Course full name'),
                 'courseshortname' => new external_value(PARAM_TEXT, 'Course short name'),
+                'url' => new external_value(PARAM_URL, 'Activity view URL, empty when the module has no view page'),
             ])),
             'templates' => new external_multiple_structure(new external_single_structure([
                 'id' => new external_value(PARAM_INT, 'Template id'),
