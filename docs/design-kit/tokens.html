@@ -156,7 +156,9 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 <div class="note" style="margin-top:6px;">
   Sem token de spinner: usamos o <code>spinner-border</code> do Bootstrap, que traz o próprio
   <code>.75s linear infinite</code> — nenhuma keyframe para escrever e nenhuma dívida de reduced-motion.
-  Entra só <code>--mds-loading-min-height: 12rem</code>, para o pane não colapsar enquanto carrega.
+  O único token é <code>--mds-loading-min-height: 12rem</code> — agora vive no <code>styles.css :root</code>
+  (<code>b33c2d2</code>) e a capa de carregamento do <code>reloadPane</code> o consome, para o pane não colapsar
+  enquanto carrega.
 </div>
 
 <div class="callout">
