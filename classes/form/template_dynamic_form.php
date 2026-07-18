@@ -152,6 +152,8 @@ class template_dynamic_form extends \core_form\dynamic_form {
             get_string('cascade_help', 'local_dimensions', (object) [
                 'enrol' => get_string('enrollmentfilter', 'local_dimensions'),
                 'redirect' => get_string('singlecourseredirect', 'local_dimensions'),
+                'lockedcard' => get_string('lockedcardmode', 'local_dimensions'),
+                'showdate' => get_string('showlockeddate', 'local_dimensions'),
                 'displaymode' => get_string('displaymode', 'local_dimensions'),
                 'tracker' => get_string('displaymode_competencies', 'local_dimensions'),
             ])
@@ -166,9 +168,22 @@ class template_dynamic_form extends \core_form\dynamic_form {
         // Show each cascade setting only for the display mode it affects. The displaymode select
         // submits the 1-based option index, which equals the DISPLAYMODE_* constant by construction.
         $displaymode = 'customfield_' . constants::CFIELD_DISPLAYMODE;
-        // Singlecourseredirect only affects the Trilha (Competency Tracker) view.
+        // Singlecourseredirect + the locked-card settings only affect the Trilha
+        // (Competency Tracker) view, so hide them when Panorama (plan) is selected.
         $mform->hideIf(
             'customfield_' . constants::CFIELD_SINGLECOURSEREDIRECT,
+            $displaymode,
+            'eq',
+            (string) constants::DISPLAYMODE_PLAN
+        );
+        $mform->hideIf(
+            'customfield_' . constants::CFIELD_LOCKEDCARDMODE,
+            $displaymode,
+            'eq',
+            (string) constants::DISPLAYMODE_PLAN
+        );
+        $mform->hideIf(
+            'customfield_' . constants::CFIELD_SHOWLOCKEDDATE,
             $displaymode,
             'eq',
             (string) constants::DISPLAYMODE_PLAN

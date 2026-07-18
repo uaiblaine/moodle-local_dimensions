@@ -27,6 +27,8 @@ use local_dimensions\customfield\lp_handler;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \local_dimensions\helper::resolve_enrollmentfilter_for_view
  * @covers     \local_dimensions\helper::resolve_singlecourseredirect_for_view
+ * @covers     \local_dimensions\helper::resolve_lockedcardmode_for_view
+ * @covers     \local_dimensions\helper::resolve_showlockeddate_for_view
  * @covers     \local_dimensions\helper::resolve_showrelated_for_template
  * @covers     \local_dimensions\helper::resolve_showrelatedlink_for_template
  */
@@ -103,6 +105,92 @@ final class helper_cascade_test extends \advanced_testcase {
             constants::ENROLLMENTFILTER_ENROLLEDORSELF,
             helper::resolve_enrollmentfilter_for_view($compid, $templateid)
         );
+    }
+
+    /**
+     * lockedcardmode resolves competency -> plan -> global, and templateid=0 skips the plan.
+     *
+     * @return void
+     */
+    public function test_lockedcardmode_cascade(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+        helper::ensure_custom_fields_exist(helper::AREA_COMPETENCY);
+        set_config('lockedcardmode', constants::LOCKEDCARDMODE_BLOCKED, 'local_dimensions');
+
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework();
+        $comp = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $compid = (int) $comp->get('id');
+        $templateid = (int) $ccg->create_template()->get('id');
+        $keys = array_keys(constants::lockedcardmode_options());
+
+        // Both inherit -> global (blocked).
+        $this->assertSame(
+            constants::LOCKEDCARDMODE_BLOCKED,
+            helper::resolve_lockedcardmode_for_view($compid, $templateid)
+        );
+
+        // Plan = learnmore, competency inherits -> plan.
+        $this->set_lp($templateid, constants::CFIELD_LOCKEDCARDMODE, $keys, constants::LOCKEDCARDMODE_LEARNMORE);
+        $this->assertSame(
+            constants::LOCKEDCARDMODE_LEARNMORE,
+            helper::resolve_lockedcardmode_for_view($compid, $templateid)
+        );
+
+        // Competency = blocked -> competency wins over the plan's learnmore.
+        $cdata = (object) ['id' => $compid];
+        $cdata->{'customfield_' . constants::CFIELD_LOCKEDCARDMODE} =
+            array_search(constants::LOCKEDCARDMODE_BLOCKED, $keys, true) + 1;
+        competency_handler::create()->instance_form_save($cdata, true);
+        $this->assertSame(
+            constants::LOCKEDCARDMODE_BLOCKED,
+            helper::resolve_lockedcardmode_for_view($compid, $templateid)
+        );
+
+        // A templateid of 0 skips the plan; competency still wins.
+        $this->assertSame(
+            constants::LOCKEDCARDMODE_BLOCKED,
+            helper::resolve_lockedcardmode_for_view($compid, 0)
+        );
+    }
+
+    /**
+     * showlockeddate resolves competency -> plan -> global, and templateid=0 skips the plan.
+     *
+     * @return void
+     */
+    public function test_showlockeddate_cascade(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+        helper::ensure_custom_fields_exist(helper::AREA_COMPETENCY);
+        set_config('showlockeddate', 1, 'local_dimensions');
+
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework();
+        $comp = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $compid = (int) $comp->get('id');
+        $templateid = (int) $ccg->create_template()->get('id');
+        $keys = array_keys(constants::showlockeddate_options());
+
+        // Both inherit -> global (true).
+        $this->assertTrue(helper::resolve_showlockeddate_for_view($compid, $templateid));
+
+        // Plan = no, competency inherits -> plan (false).
+        $this->set_lp($templateid, constants::CFIELD_SHOWLOCKEDDATE, $keys, constants::SHOWLOCKEDDATE_NO);
+        $this->assertFalse(helper::resolve_showlockeddate_for_view($compid, $templateid));
+
+        // Competency = yes -> competency wins over the plan's no.
+        $cdata = (object) ['id' => $compid];
+        $cdata->{'customfield_' . constants::CFIELD_SHOWLOCKEDDATE} =
+            array_search(constants::SHOWLOCKEDDATE_YES, $keys, true) + 1;
+        competency_handler::create()->instance_form_save($cdata, true);
+        $this->assertTrue(helper::resolve_showlockeddate_for_view($compid, $templateid));
+
+        // A templateid of 0 skips the plan; competency still wins.
+        $this->assertTrue(helper::resolve_showlockeddate_for_view($compid, 0));
     }
 
     /**

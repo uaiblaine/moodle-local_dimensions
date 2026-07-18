@@ -398,6 +398,17 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071800, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071801) {
+        // Bring lockedcardmode + showlockeddate to the plan/competency level: two new
+        // cascade select customfields (both areas), plus a reorganization of every
+        // plugin customfield into the localized "Feel"/"Look" categories. Both the
+        // provisioning and the categorization run through the catch-all's
+        // ensure_custom_fields_exist() below; purge so the new strings are served fresh.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026071801, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint

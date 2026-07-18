@@ -188,10 +188,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
             'static',
             'local_dimensions_cascadehelp',
             '',
-            get_string('cascade_help_competency', 'local_dimensions', (object) [
-                'enrol' => get_string('enrollmentfilter', 'local_dimensions'),
-                'redirect' => get_string('singlecourseredirect', 'local_dimensions'),
-            ])
+            get_string('cascade_help_competency', 'local_dimensions')
         );
         $cascadetarget = 'customfield_' . constants::CFIELD_ENROLLMENTFILTER;
         if ($mform->elementExists($cascadetarget)) {
