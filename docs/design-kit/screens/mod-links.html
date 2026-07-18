@@ -22,7 +22,7 @@
   --prim-bg:#185fa5;--prim-fg:#fff;
   /* Perigo FIXO: o 🗑 do curso e o ✕ da atividade. Nenhum dos dois pousa em tint. */
   --err-fg:#a32d2d;
-  /* Chip de fechar: os três literais que o styles.css:3702-3731 publica, sem variante dark. */
+  /* Chip de fechar: os três literais que o styles.css:3709-3738 publica, sem variante dark. */
   --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
   --prov-fg:#185fa5;--prov-bg:#e6f1fb;
 }
@@ -366,7 +366,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
   <!-- to-be -->
   <section class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Expandir/restaurar · SHIPADO (8ea9daf, a 1.75rem via central/modal_expander) — o atualizar no cabeçalho segue to-be</div>
+    <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Expandir/restaurar + atualizar · SHIPADO (expander 8ea9daf; atualizar 7d69197, via central/modal_refresh) — os três controles do cabeçalho a 1.75rem, no chip azul do fechar</div>
 
     <input type="checkbox" id="b-exp" class="dchk" aria-label="Expandir o modal">
     <div class="m dlg">
@@ -417,10 +417,14 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     <div class="row" style="margin-top:9px;">
       <span class="idb">MOD.LINKS-EXPAND · to-be</span>
       <span class="prov">mtube: expandir</span>
-      <span class="prov">mtube: atualizar</span>
+      <span class="prov">modal_refresh: atualizar</span>
     </div>
 
     <span class="note" style="display:block;margin-top:6px;"><b>Clique em ⤢ acima</b> — o ícone vira ⤡ e o diálogo <b>alarga de verdade</b>: os 40 px que o <code>calc(100% - 40px)</code> devolve (medido neste preview, 543 → 583 px), e volta no ⤡. São <b>dois botões sempre presentes</b>; o CSS escolhe qual aparece, como no mtube. <b>O que a tela NÃO demonstra:</b> o <i>reflow</i> que a largura compra. Conferido antes de afirmar — nesta amostra o nome da atividade ocupa <b>uma</b> linha nos dois estados, então expandir aqui não desfaz quebra nenhuma. O ganho real aparece com nome longo + tela estreita, e o diálogo deste preview está preso ao painel de comparação.</span>
+
+    <span class="note" style="display:block;margin-top:6px;"><b>O ⟳ atualizar TAMBÉM shipou — <code>7d69197</code>.</b> O <code>central/modal_refresh</code> injeta <b>um</b> botão no cabeçalho (<code>&lt;button class="local-dimensions-modal-refresh" data-action="modal-refresh"&gt;</code> com <code>&lt;i class="fa fa-rotate"&gt;</code>), ancorado <b>antes</b> do primeiro <code>.local-dimensions-modal-sizetoggle</code> (ou do <code>.btn-close</code> se não houver) — a ordem final é <b>[atualizar][expandir][restaurar][fechar]</b>. Os dois hosts fazem <code>attachExpander(dialog).then(() =&gt; attachRefresh(dialog, cb))</code> (<code>competency_links.js:909</code>). No clique o botão se desabilita, gira o ícone (<code>fa-spin</code>), roda o callback e limpa os dois num <code>finally</code>. A string é o core <code>refresh</code> — <b>sem string de lang nova, sem bump de version.php</b>. Aqui o refresh <b>recarrega a lista de cursos</b>: o <code>reloadCourses</code> (<code>competency_links.js:501-509</code>) zera <code>rowsEl</code>/<code>excluded</code>/<code>total</code> e chama <code>loadCourses</code> pela página 1 — <b>no-op</b> enquanto <code>state.loading</code>, então um reset nunca esvazia a lista.</span>
+
+    <span class="note" style="display:block;margin-top:6px;"><b>Os três controles do cabeçalho compartilham o chip AZUL do fechar.</b> Atualizar, expandir/restaurar e fechar agora dão o mesmo 1.75rem <b>e</b> as mesmas cores — fundo <code>#e7f0f9</code>, glifo <code>#0f4d85</code>, hover <code>#d4e6fb</code> (<code>styles.css:3600-3630</code>). Os toggles de tamanho foram <b>restilizados</b> do antigo look neutro (fundo transparente / cinza <code>#6a737b</code>) para este chip azul. Nenhum dos três carrega <code>.btn</code>, então o <code>:focus-visible</code> desenha o próprio anel. <b>O mock acima desenha o <code>.act2</code> neutro</b> só para a demonstração; a régua azul do shipado é a do chip de fechar.</span>
 
     <div class="ok" style="margin-top:8px;">
       <b>Por que esta tela é candidata.</b> É o modal do hub com mais coisa por linha: nome do curso
@@ -508,7 +512,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       escuro (o tint <i>some</i> na superfície) enquanto a borda entrega <b>6,20</b> / <b>7,57</b>; o
       alerta e o aviso de compartilhada, fill 1,15 / 1,06 com borda 6,73 / 7,00; o chip de fechar,
       fill 1,15 no claro com o glifo em <b>7,53:1</b> nos dois temas, e os literais são os que o
-      <code>styles.css:3702-3731</code> publica. O <code>.ctrl</code> e o <code>.sel</code> dão fill
+      <code>styles.css:3709-3738</code> publica. O <code>.ctrl</code> e o <code>.sel</code> dão fill
       <b>1:1</b> por definição: o fundo deles <i>é</i> a superfície do modal. As <b>caixas</b>
       (<code>.card</code>, <code>.panel</code>, <code>.alist</code>) seguem no <code>--border</code>
       do kit: são contêineres, não controles.

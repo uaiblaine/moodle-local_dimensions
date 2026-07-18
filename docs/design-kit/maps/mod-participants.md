@@ -2,7 +2,7 @@
 
 Modal hospedeiro (`core/modal`, **com rodapé** — o D2 moveu os links de admin para lá, ver `PART-FOOT`) com um `<h5>` de nome do template e **quatro** abas:
 **Coortes / Usuários / Atribuir papéis / Métodos de inscrição**. As abas são **artesanais** — não há
-dependência do JS de abas do Bootstrap dentro do modal (`participants_manager.js:97`): o
+dependência do JS de abas do Bootstrap dentro do modal (`participants_manager.js:106`): o
 `activateTab` alterna `.active`/`.show` e `aria-selected` na mão, com um *roving tabindex*
 WAI-ARIA (Setas/Home/End) por cima.
 
@@ -10,9 +10,9 @@ Três dos quatro panes nascem **vazios** no Mustache e são montados por JS; só
 renderizado do servidor. Essa assimetria é a origem do achado de loading registrado no fim deste
 mapa — **não** é a mesma lacuna do `EST`/`FWK`/`PLN`.
 
-- **Mustache:** [`templates/central/participants_manager.mustache`](../../../templates/central/participants_manager.mustache) (154 linhas, host), [`cohort_manager.mustache`](../../../templates/central/cohort_manager.mustache) (50), [`roles_manager.mustache`](../../../templates/central/roles_manager.mustache) (77), [`enrol_methods.mustache`](../../../templates/central/enrol_methods.mustache) (137)
+- **Mustache:** [`templates/central/participants_manager.mustache`](../../../templates/central/participants_manager.mustache) (154 linhas, host), [`cohort_manager.mustache`](../../../templates/central/cohort_manager.mustache) (50), [`roles_manager.mustache`](../../../templates/central/roles_manager.mustache) (77), [`enrol_methods.mustache`](../../../templates/central/enrol_methods.mustache) (119)
 - **PHP:** [`classes/output/dynamictabs/plans.php`](../../../classes/output/dynamictabs/plans.php) — o modal **não tem renderable próprio**; ele lê tudo do `data-*` da região do `PLN` (`:329-333`)
-- **AMD:** [`participants_manager.js`](../../../amd/src/central/participants_manager.js) (237, host), [`cohort_manager.js`](../../../amd/src/central/cohort_manager.js), [`participants_users.js`](../../../amd/src/central/participants_users.js), [`roles_manager.js`](../../../amd/src/central/roles_manager.js), [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1053)
+- **AMD:** [`participants_manager.js`](../../../amd/src/central/participants_manager.js) (265, host), [`cohort_manager.js`](../../../amd/src/central/cohort_manager.js), [`participants_users.js`](../../../amd/src/central/participants_users.js), [`roles_manager.js`](../../../amd/src/central/roles_manager.js), [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1053)
 - **To-be no DS:** [`modal-shell.html`](../modal-shell.html) (cabeçalho D2 + links no rodapé), [`cohort-assign.html`](../cohort-assign.html) (estilo gestão de grupos + sync)
 
 > **Resync 2026-07-14.** A versão anterior deste mapa congelou em `159a800` (2026-06-29) — a mesma
@@ -56,16 +56,17 @@ mapa — **não** é a mesma lacuna do `EST`/`FWK`/`PLN`.
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `PART-MODAL` | Gerenciar participantes | modal | `participants_manager.js:131` | `Modal.create({title, body})` | `core/modal` puro — **não** passa `footer` ao `create`; o rodapé vazio do core é revelado depois pelos links de admin (D2, ver `PART-FOOT`). `setRemoveOnClose(true)` (`:132`): o modal é descartado ao fechar, então **todo o estado montado morre junto** (ver `PART-LATCH`). Título via `central_participants_title` (`:124`) |
-| `PART-DIALOG` | `[sem rótulo]` | classes no `.modal-dialog` | `participants_manager.js:138-142` | `modal-xl` + `local-dimensions-participants-modal` | as **duas** de uma vez — o D2 **largou** `local-dimensions-headerlink-modal`: o chip de fechar já chega pela arm `:has(.modal-body [class*='local-dimensions-'])`, porque o corpo carrega `.local-dimensions-participants` (comentário em `:140-142`). `modal-xl` é do **próprio Bootstrap** (800px em `lg`, 1140px em `xl`, idêntico em 4 e 5) — a API do core só expõe `setLarge()`, daí a classe na mão |
-| `PART-EXPAND` | Expandir / Restaurar tamanho | par de botões (cabeçalho) | `participants_manager.js:147` → `modal_expander.js:68` | `data-action="modal-expand"` / `="modal-restore"` · `fa fa-expand`/`fa-compress` | shipado (`8ea9daf`, `mtube: expandir`). Dois botões sempre presentes, injetados antes do `.btn-close` (`modal_expander.js:82-83`); com os links movidos ao rodapé (D2) o agrupamento com o fechar vem agora da regra re-alojada `.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title` (`styles.css:3653`), não da ordem de inserção. O CSS mostra o que casa com `.local-dimensions-modal-expanded` no `.modal-dialog` (`styles.css:3634`+), sem troca de ícone em JS. Expandido = `max-width:96vw` sobre o `modal-xl` (`styles.css:3642`). O tamanho persiste na chave `modalexpanded` do `PREF_CENTRAL_DISPLAY` (**compartilhada com o `mod-links`**) — ver `mod-links.md` para a mecânica e as duas decisões de a11y (anel de foco próprio, foco devolvido ao contrário no toggle) |
-| `PART-FOOT` | `[sem rótulo]` | rodapé revelado | `participants_manager.js:145` | `.modal-footer` + `.local-dimensions-modal-footer-links` | o core chama `hideFooter()` no `show()` quando o rodapé não tem filhos (`public/lib/amd/src/modal.js:875-879`; `hasFooterContent` = `getFooter().children().length`, `:686-688`). O D2 explora exatamente isso: `injectFooterLinks` (`:67-94`) é **aguardado antes** do `show()` (`:145` → `:236`), então o grupo de links já é filho do rodapé no `show()` e o core o revela sozinho (a mecânica `hasFooterContent` continua valendo) |
-| `PART-TOAST` | `[sem rótulo]` | região de toast | `participants_manager.js:171` | `addToastRegion(modal.getBody()[0])` | padrão da casa: sem ela, o toast dos gerenciadores renderiza **atrás** do diálogo (`.toast-wrapper` é `z-index:1051`, o modal é `1055`). O **host** é dono da região; `cohort_manager` e `participants_users` **não** criam a sua. O core remove no fechamento |
-| `PART-CLOSE` | Fechar | chip | `styles.css:3702-3731` | `.btn-close` do core, reestilizado | `1.75rem`, raio `8px`, fundo `#e7f0f9`, glifo FA `\f00d` em `#0f4d85` (**7,53:1** medido), hover `#d4e6fb` (**6,82:1**). Literais, sem variante dark |
+| `PART-MODAL` | Gerenciar participantes | modal | `participants_manager.js:140` | `Modal.create({title, body})` | `core/modal` puro — **não** passa `footer` ao `create`; o rodapé vazio do core é revelado depois pelos links de admin (D2, ver `PART-FOOT`). `setRemoveOnClose(true)` (`:141`): o modal é descartado ao fechar, então **todo o estado montado morre junto** (ver `PART-LATCH`). Título via `central_participants_title` (`:133`) |
+| `PART-DIALOG` | `[sem rótulo]` | classes no `.modal-dialog` | `participants_manager.js:147-152` | `modal-xl` + `local-dimensions-participants-modal` | as **duas** de uma vez — o D2 **largou** `local-dimensions-headerlink-modal`: o chip de fechar já chega pela arm `:has(.modal-body [class*='local-dimensions-'])`, porque o corpo carrega `.local-dimensions-participants` (comentário em `:149-150`). `modal-xl` é do **próprio Bootstrap** (800px em `lg`, 1140px em `xl`, idêntico em 4 e 5) — a API do core só expõe `setLarge()`, daí a classe na mão |
+| `PART-EXPAND` | Expandir / Restaurar tamanho | par de botões (cabeçalho) | `participants_manager.js:201` → `modal_expander.js:68` | `data-action="modal-expand"` / `="modal-restore"` · `fa fa-expand`/`fa-compress` | shipado (`8ea9daf`, `mtube: expandir`). Dois botões sempre presentes, injetados antes do `.btn-close` (`modal_expander.js:82-83`); **desde `7d69197` dividem o cabeçalho com o `PART-REFRESH`** — a ordem final é [refresh][expand][restore][close], porque o refresh se ancora **antes** do primeiro `.local-dimensions-modal-sizetoggle`. **Os dois toggles foram re-estilizados (`7d69197`) para o mesmo chip azul do fechar**: `1.75rem`, fundo `#e7f0f9`, glifo `#0f4d85`, hover `#d4e6fb` — regra-base combinada `.local-dimensions-modal-sizetoggle, .local-dimensions-modal-refresh` (`styles.css:3600`), hover (`styles.css:3618-3624`). O texto antigo "atualizar e expandir são neutros / `--mds-bg-surface-strong` no hover" **não vale mais**. Anel de foco próprio via `:focus-visible` (`styles.css:3626`), sem `.btn`. Com os links movidos ao rodapé (D2) o agrupamento com o fechar vem da regra re-alojada `.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title` (`styles.css:3660`), não da ordem de inserção. O CSS mostra o que casa com `.local-dimensions-modal-expanded` no `.modal-dialog` (`styles.css:3641`/`:3645`), sem troca de ícone em JS. Expandido = `max-width:96vw` sobre o `modal-xl` (`styles.css:3649`). O expander **semeia o tamanho salvo de forma síncrona** (`modal_expander.js:74`, antes do primeiro `await`), então o modal abre no tamanho certo mesmo com o refresh encadeado depois. O tamanho persiste na chave `modalexpanded` do `PREF_CENTRAL_DISPLAY` (**compartilhada com o `mod-links`**) — ver `mod-links.md` para a mecânica e as duas decisões de a11y (anel de foco próprio, foco devolvido ao contrário no toggle) |
+| `PART-REFRESH` | Atualizar | botão (cabeçalho) | `participants_manager.js:201` → `modal_refresh.js:58` | `data-action="modal-refresh"` · `fa fa-rotate` | **Novo em `7d69197` (2026-07-18).** `central/modal_refresh` injeta **um** botão no cabeçalho, ancorado **antes** do primeiro `.local-dimensions-modal-sizetoggle` (senão antes do `.btn-close`) → ordem [refresh][expand][restore][close] (`modal_refresh.js:67-68`). Encadeado **depois** do expander: `attachExpander(dialog).then(() => attachRefresh(dialog, refreshActiveTab))` (`:201`). Rótulo do core `{{#str}}refresh{{/str}}` (`modal_refresh.js:63`) — **sem string nova**. Dono do estado *busy*: no clique **desabilita + põe `fa-spin`** no ícone, roda o callback e **limpa os dois num `finally`** (`modal_refresh.js:70-84`), então uma falha de reload nunca prende o botão. Mesmo chip azul dos toggles (`styles.css:3600`), anel de foco próprio (`styles.css:3626`), estado desabilitado em `styles.css:3633`. O callback `refreshActiveTab` (`participants_manager.js:182-198`) despacha o **handle por aba** — enrol→`init`, cohorts/roles→`refresh`, users→`applyFilters` (cada `mount` resolve com `{refresh}`); se o pane não montou, **re-monta** (recuperação, seguro contra duplo-fio) |
+| `PART-FOOT` | `[sem rótulo]` | rodapé revelado | `participants_manager.js:154` | `.modal-footer` + `.local-dimensions-modal-footer-links` | o core chama `hideFooter()` no `show()` quando o rodapé não tem filhos (`public/lib/amd/src/modal.js:875-879`; `hasFooterContent` = `getFooter().children().length`, `:686-688`). O D2 explora exatamente isso: `injectFooterLinks` (`:76-103`) é **aguardado antes** do `show()` (`:154` → `:264`), então o grupo de links já é filho do rodapé no `show()` e o core o revela sozinho (a mecânica `hasFooterContent` continua valendo) |
+| `PART-TOAST` | `[sem rótulo]` | região de toast | `participants_manager.js:205` | `addToastRegion(modal.getBody()[0])` | padrão da casa: sem ela, o toast dos gerenciadores renderiza **atrás** do diálogo (`.toast-wrapper` é `z-index:1051`, o modal é `1055`). O **host** é dono da região; `cohort_manager` e `participants_users` **não** criam a sua. O core remove no fechamento |
+| `PART-CLOSE` | Fechar | chip | `styles.css:3709-3738` | `.btn-close` do core, reestilizado | `1.75rem`, raio `8px`, fundo `#e7f0f9`, glifo FA `\f00d` em `#0f4d85` (**7,53:1** medido), hover `#d4e6fb` (**6,82:1**). Literais, sem variante dark |
 
 > **A segunda função de `local-dimensions-headerlink-modal` — largada no participants, mantida no
 > framework (D2, shipado).** O chip de fechar sai de um **grupo de dois seletores** em
-> `styles.css:3702-3703`: o primeiro (`.modal:not(...):has(.modal-body [class*='local-dimensions-'])`)
+> `styles.css:3709-3710`: o primeiro (`.modal:not(...):has(.modal-body [class*='local-dimensions-'])`)
 > pega os modais cujo **corpo** carrega classe do plugin; o segundo
 > (`.local-dimensions-headerlink-modal .btn-close`) é um gancho **independente**, para os modais que
 > **escapam** do `:has()`. O D2 **largou** a classe do modal de participantes — o corpo carrega
@@ -76,28 +77,28 @@ mapa — **não** é a mesma lacuna do `EST`/`FWK`/`PLN`.
 > nenhum link é renderizado** e é o **único** gancho de chip que sobrou para aquele form. O D2 também
 > aposentou as regras de título/margem que a classe carregava no cabeçalho; o `flex-grow` do título
 > foi **re-alojado** em `.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title`
-> (`styles.css:3653`), agrupando expander + fechar sem depender daquela classe.
+> (`styles.css:3660`), agrupando expander + fechar sem depender daquela classe.
 
 ## Links de rodapé (injetados por JS, todos de uma vez)
 
-`ADMIN_PAGES` (`participants_manager.js:47-56`) declara **4** destinos — um por aba; cada objeto
+`ADMIN_PAGES` (`participants_manager.js:56-65`) declara **4** destinos — um por aba; cada objeto
 carrega só `path`/`flag`/`strkey` (a chave `pane:` do desenho antigo de cabeçalho **caiu** com o D2).
-`injectFooterLinks` (`:67-94`) filtra os permitidos (`region.dataset[flag] === '1'`, `:72`) e, se algum
-sobra, monta um `<div class="local-dimensions-modal-footer-links">` (`:78`) com um `<a target="_blank"
-rel="noopener noreferrer" class="btn btn-link p-0">` (`:84`) + `<i class="fa fa-external-link me-1">`
-(`:86`) por destino e faz `footer.appendChild(group)` (`:93`) — o rodapé antes oculto ganha filho e o
-core o revela (ver `PART-FOOT`). Ficam **à esquerda** (`margin-right:auto`, `styles.css:3666`), com a
+`injectFooterLinks` (`:76-103`) filtra os permitidos (`region.dataset[flag] === '1'`, `:81`) e, se algum
+sobra, monta um `<div class="local-dimensions-modal-footer-links">` (`:87`) com um `<a target="_blank"
+rel="noopener noreferrer" class="btn btn-link p-0">` (`:89`) + `<i class="fa fa-external-link me-1">`
+(`:95`) por destino e faz `footer.appendChild(group)` (`:102`) — o rodapé antes oculto ganha filho e o
+core o revela (ver `PART-FOOT`). Ficam **à esquerda** (`margin-right:auto`, `styles.css:3673`), com a
 ação primária — quando há — à direita. **Não** há mais alternância `d-none` por aba: **todos os
-permitidos aparecem de uma vez**. O rótulo visível **é** o nome acessível (`:89-90`: sem
+permitidos aparecem de uma vez**. O rótulo visível **é** o nome acessível (`:98-99`: sem
 `title`/`aria-label` extra).
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `PART-LINK-COHORTS` | Abrir página de coortes | link | `participants_manager.js:48-49` | `/cohort/index.php` · flag `cancohortpage` | `moodle/cohort:view` **ou** `:manage` no sistema (`dynamictabs/plans.php:239-240`) |
-| `PART-LINK-USERS` | Abrir página de usuários | link | `participants_manager.js:50-51` | `/admin/user.php` · flag `canuserpage` | `moodle/user:update` **ou** `:delete` (`:241-242`) |
-| `PART-LINK-ROLES` | Abrir página de papéis | link | `participants_manager.js:52-53` | `/admin/roles/manage.php` · flag `canassignroles` | `moodle/role:manage` (`:238`) |
-| `PART-LINK-ENROL` | Gerenciar plugins de inscrição | link | `participants_manager.js:54-55` | `/admin/settings.php?section=manageenrols` · flag `canenrolpage` | `moodle/site:config` (`:243`) |
-| `PART-LINK-ALL` | `[sem rótulo]` | regra de exibição | `participants_manager.js:72-93` | `ADMIN_PAGES.filter(dataset[flag] === '1')` | **todos os permitidos de uma vez** — não há mais um-por-aba nem toggle. `injectFooterLinks` devolve cedo se o rodapé não existir (`:69-71`) ou se nenhum link for permitido (`:73-75`); `showHeaderLinkFor` foi **removido** |
+| `PART-LINK-COHORTS` | Abrir página de coortes | link | `participants_manager.js:57-58` | `/cohort/index.php` · flag `cancohortpage` | `moodle/cohort:view` **ou** `:manage` no sistema (`dynamictabs/plans.php:239-240`) |
+| `PART-LINK-USERS` | Abrir página de usuários | link | `participants_manager.js:59-60` | `/admin/user.php` · flag `canuserpage` | `moodle/user:update` **ou** `:delete` (`:241-242`) |
+| `PART-LINK-ROLES` | Abrir página de papéis | link | `participants_manager.js:61-62` | `/admin/roles/manage.php` · flag `canassignroles` | `moodle/role:manage` (`:238`) |
+| `PART-LINK-ENROL` | Gerenciar plugins de inscrição | link | `participants_manager.js:63-64` | `/admin/settings.php?section=manageenrols` · flag `canenrolpage` | `moodle/site:config` (`:243`) |
+| `PART-LINK-ALL` | `[sem rótulo]` | regra de exibição | `participants_manager.js:81-102` | `ADMIN_PAGES.filter(dataset[flag] === '1')` | **todos os permitidos de uma vez** — não há mais um-por-aba nem toggle. `injectFooterLinks` devolve cedo se o rodapé não existir (`:78-80`) ou se nenhum link for permitido (`:82-84`); `showHeaderLinkFor` foi **removido** |
 
 > **Aba e link são portas com fechaduras diferentes — e em duas abas elas divergem.** A aba Papéis e
 > o link de papéis compartilham a **mesma** flag (`canassignroles`), então andam juntos. Já a aba
@@ -110,7 +111,7 @@ permitidos aparecem de uma vez**. O rótulo visível **é** o nome acessível (`
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `PART-ROOT` | `[sem rótulo]` | região/raiz | `participants_manager.mustache:36` | `data-region="participants"` · `data-contextid` | o contexto vem do `data-contextid` da região do `PLN` (`participants_manager.js:127`) |
+| `PART-ROOT` | `[sem rótulo]` | região/raiz | `participants_manager.mustache:36` | `data-region="participants"` · `data-contextid` | o contexto vem do `data-contextid` da região do `PLN` (`participants_manager.js:136`) |
 | `PART-HEADER` | nome do template | heading | `participants_manager.mustache:38` | `{{templatename}}` | `<h5 class="mb-0">`, dentro de `.local-dimensions-participants-header` (`:37`). **Duplica** o nome que já está no título do modal — o modal se chama "Gerenciar participantes" e o `<h5>` diz de qual plano |
 | `PART-TABLIST` | `[sem rótulo]` | tablist | `participants_manager.mustache:40` | `data-region="participant-tabs"` | `<ul class="nav nav-tabs" role="tablist">`; os `<li>` são `role="presentation"` e o `<button>` é quem tem `role="tab"` |
 | `PART-TAB-COHORTS` | Coortes | aba | `participants_manager.mustache:42-46` | `data-target-pane="pane-cohorts"` · `data-region="tab-cohorts"` | **nasce ativa** (`aria-selected="true"`, `.active` em `:42`, `:44`); incondicional |
@@ -124,7 +125,7 @@ permitidos aparecem de uma vez**. O rótulo visível **é** o nome acessível (`
 
 ## Aba Coortes (`MOD.COHORT`)
 
-Montada por `cohort_manager.js:208-233`: strings → `renderForPromise` → `replaceNodeContents` →
+Montada por `cohort_manager.js:208-234`: strings → `renderForPromise` → `replaceNodeContents` →
 `setup`.
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
@@ -154,7 +155,7 @@ mantém a re-montagem via trava liberada segura para este pane; ver `PART-LATCH`
 | `PART-HEAD` | Usuário · Status · Modelo · Coorte · Individual · Ações | cabeçalho | `participants_manager.mustache:133-138` | — | 6 colunas, a última é "Ações" (`{{#str}}actions{{/str}}`, `:138`) |
 | `PART-ROWS` | `[sem rótulo]` | contêiner-JS | `participants_manager.mustache:141` | `data-region="participant-rows"` | `<tbody>` |
 | `PART-SENTINEL` | `[sem rótulo]` | sentinela | `participants_manager.mustache:143` | `data-region="participant-sentinel"` | scroll infinito via `IntersectionObserver` (`participants_users.js`, `state.observer`) |
-| `PART-ROWBTN` | `[sem rótulo]` | regra de CSS | `styles.css:3689-3691` | `#local-dimensions-pane-users button.btn...me-1` | `margin-bottom: 5px` **escopado só neste pane** — nas outras abas a margem extra desalinhava botões solitários |
+| `PART-ROWBTN` | `[sem rótulo]` | regra de CSS | `styles.css:3696-3698` | `#local-dimensions-pane-users button.btn...me-1` | `margin-bottom: 5px` **escopado só neste pane** — nas outras abas a margem extra desalinhava botões solitários |
 
 ## Aba Atribuir papéis (`MOD.ROLES`)
 
@@ -177,8 +178,8 @@ aparece.
 
 ## Aba Métodos de inscrição (`MOD.ENROL`)
 
-O pane é vazio (`participants_manager.mustache:150-151`) e montado por `enrol_methods.js:1026-1053`.
-Desde `c96a3e9`, o `mount` **engole a carga inicial (`init`) num toast** (`:1052`) porque os
+O pane é vazio (`participants_manager.mustache:150-151`) e montado por `enrol_methods.js:1023-1053`.
+Desde `c96a3e9`, o `mount` **engole a carga inicial (`init`) num toast** (`:1049`) porque os
 listeners são delegados no **próprio contêiner** (`state.root`) e sobrevivem ao `replaceNodeContents`
 — logo o "ele limpa, logo re-monta seguro" **não** vale para o enrol. Isso deixava um resíduo aberto
 (chip filado): se o `init` rejeitasse **antes** de revelar qualquer região, o pane ficava em branco e o
@@ -192,20 +193,30 @@ achado IMP-03, item 4. O conteúdo tem mapa próprio — ver [`mod-enrolmethods.
 aquele mapa se declara *"to-be — proposta, ainda sem código"* e foi escrito **~70 minutos antes** de o
 `3d1d5cb` shipar o código; ele está tão desatualizado quanto este estava. Resync próprio pendente.
 
+> **Atualização `7d69197` (2026-07-18).** Os quatro botões `data-action="enrol-refresh"` **foram
+> removidos** — as três regiões de alerta `enrol-disabled`/`enrol-empty`/`enrol-error` viraram **blocos
+> só-mensagem** (`enrol_methods.mustache:36-38`/`:39-41`/`:42-44`) e o handler de clique saiu do
+> `enrol_methods.js`. A `enrol-error` ainda é revelada no `catch` do `init` (`enrol_methods.js:881`
+> revela; `:882-884` ocultam empty/disabled/main; `:885` re-lança), mas a **recuperação** passou para o
+> **refresh do cabeçalho do modal** (`PART-REFRESH`): o `mount` do enrol devolve `{refresh: () =>
+> init(state)}` (`enrol_methods.js:1052`) e o refresh o chama. Os `enrol_methods.mustache:52-59` /
+> `:55-57` e o `:931-932` citados no parágrafo acima são **históricos** (estado `c2d9471`) — hoje a
+> `enrol-error` é `enrol_methods.mustache:42-44`, sem botão.
+
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-REFRESH` | Atualizar | botão | `enrol_methods.mustache:39-41`, `:47-49`, `:55-57`, `:116-118` | `data-action="enrol-refresh"` | **quatro** ocorrências (três `alert`s + a barra de filtros; a do `enrol-error` — `:55-57` — chegou em `c2d9471`, e é a que reabilita a recuperação: seu `alert` é o único revelado quando o `init` falha antes das demais regiões). `<i class="fa fa-rotate me-1">` + `{{#str}}refresh, moodle{{/str}}`. **É o único "atualizar" do modal inteiro** — as outras três abas não têm nenhum. Precedente direto do IMP-05: a string e o ícone já existem, sem string nova |
-| `ENROL-SELBAR` | `[sem rótulo]` | barra de seleção | `enrol_methods.mustache:121-135` | `.border-top.pt-2` | contador + "em processamento" (`fa-spinner fa-spin`, `:124`) + Remover método / Aplicar método, ambos `disabled` por padrão (`:128`, `:131`) |
+| `ENROL-REFRESH` | `[removido em 7d69197]` | — | `enrol_methods.mustache` (ausente desde `7d69197`) | — | **REMOVIDO em `7d69197` (2026-07-18).** Eram **quatro** botões `data-action="enrol-refresh"` (os três `alert`s + a barra de filtros) mais o handler de clique no `enrol_methods.js` — **todos saíram**. As três regiões de alerta agora são **blocos só-mensagem** (`enrol-disabled` `enrol_methods.mustache:36-38`, `enrol-empty` `:39-41`, `enrol-error` `:42-44`). A recuperação passou para o **refresh do cabeçalho do modal** (`PART-REFRESH`): o handle do enrol re-roda `init`. Sem string nova, sem bump de versão |
+| `ENROL-SELBAR` | `[sem rótulo]` | barra de seleção | `enrol_methods.mustache:103-117` | `.border-top.pt-2` | contador + "em processamento" (`fa-spinner fa-spin`, `:106`) + Remover método / Aplicar método, ambos `disabled` por padrão (`:110`, `:113`) |
 
 ## Comportamento do host (`participants_manager.js`)
 
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `PART-ACTIVATE` | `[sem rótulo]` | troca de aba | `participants_manager.js:103-114` | `activateTab` | **abas artesanais** (`:97`: "no Bootstrap tab JS dependency in the modal"): alterna `.active` + `aria-selected` nos botões (`:105-108`) e `.show`/`.active` nos panes (`:109-113`). **Síncrono** |
-| `PART-ROVING` | `[sem rótulo]` | teclado | `participants_manager.js:203`, `:213-234` | `tabindex` 0/-1 | roving tabindex WAI-ARIA: a aba ativa é o **único** ponto de tabulação (`:203`). `ArrowRight` (`:221`), `ArrowLeft` (`:223`), `Home` (`:225`), `End` (`:227`) — circulares, com `preventDefault` e foco movido (`:232`) |
-| `PART-MOUNT` | `[sem rótulo]` | montagem preguiçosa | `participants_manager.js:178-189` | `ensureMounted` | lê `button.dataset.region` (`:179`) e roteia por aba (`switch` if/else-if) para `startMount` — `tab-cohorts`/`tab-users`/`tab-roles`/`tab-enrol` (`:180-187`). Não monta mais direto: quem crava/libera a trava é o `startMount` (ver `PART-LATCH`), então **um re-clique numa aba com a trava liberada re-monta** |
-| `PART-LATCH` | `[sem rótulo]` | trava de montagem | `participants_manager.js:153`, `:158-167` | `mounted = {cohorts, users, roles, enrol}` + `startMount` | **CORRIGIDO em 2026-07-16 (`c96a3e9`).** *Era:* três booleanos (`usersmounted`/`rolesmounted`/`enrolmounted`) levantados **antes** do await, mount fire-and-forget (`.catch(notifyError)`) — uma rejeição deixava a trava presa em `true` para sempre (ver o achado abaixo). *Agora:* uma tabela `mounted` (`:153`) e um `startMount(key, mountfn, selector)` (`:158-167`) que **crava** a trava de forma síncrona (`:162`, bloqueia o duplo-clique) e a **libera no `.catch`** (`:164`) — a próxima ativação da aba re-monta |
-| `PART-COHORTMOUNT` | `[sem rótulo]` | montagem inicial | `participants_manager.js:172` | `startMount('cohorts', mountCohorts, …)` | roda no `ModalEvents.shown`. **CORRIGIDO em 2026-07-16 (`c96a3e9`):** era `mountCohorts(...)` fire-and-forget **sem trava e sem gatilho de retry** (o pane default falhava sem recuperação alguma); agora entra na tabela `mounted` via `startMount`, e reclicar a aba Coortes (`ensureMounted`, `:180-181`) o re-monta |
+| `PART-ACTIVATE` | `[sem rótulo]` | troca de aba | `participants_manager.js:112-123` | `activateTab` | **abas artesanais** (`:106`: "no Bootstrap tab JS dependency in the modal"): alterna `.active` + `aria-selected` nos botões (`:114-117`) e `.show`/`.active` nos panes (`:118-122`). **Síncrono** |
+| `PART-ROVING` | `[sem rótulo]` | teclado | `participants_manager.js:231`, `:241-262` | `tabindex` 0/-1 | roving tabindex WAI-ARIA: a aba ativa é o **único** ponto de tabulação (`:231`). `ArrowRight` (`:249`), `ArrowLeft` (`:251`), `Home` (`:253`), `End` (`:255`) — circulares, com `preventDefault` e foco movido (`:260`) |
+| `PART-MOUNT` | `[sem rótulo]` | montagem preguiçosa | `participants_manager.js:212-217` | `ensureMounted` | lê `button.dataset.region` (`:213`) e **procura a linha na tabela `MOUNTS`** (`:46-51`, `[chave, mountfn, seletor]` por região — `7d69197` trocou o antigo `switch` if/else-if por esse mapa) para chamar `startMount` (`:213-216`). Não monta mais direto: quem crava/libera a trava é o `startMount` (ver `PART-LATCH`), então **um re-clique numa aba com a trava liberada re-monta** |
+| `PART-LATCH` | `[sem rótulo]` | trava de montagem | `participants_manager.js:160`, `:167-179` | `mounted = {cohorts, users, roles, enrol}` + `startMount` | **CORRIGIDO em 2026-07-16 (`c96a3e9`).** *Era:* três booleanos (`usersmounted`/`rolesmounted`/`enrolmounted`) levantados **antes** do await, mount fire-and-forget (`.catch(notifyError)`) — uma rejeição deixava a trava presa em `true` para sempre (ver o achado abaixo). *Agora:* uma tabela `mounted` (`:160`) e um `startMount(key, mountfn, selector)` (`:167-179`, que desde `7d69197` também guarda o handle `{refresh}` de cada pane em `handles[key]` — ver `PART-REFRESH`) que **crava** a trava de forma síncrona (`:171`, bloqueia o duplo-clique) e a **libera no `.catch`** (`:175`) — a próxima ativação da aba re-monta |
+| `PART-COHORTMOUNT` | `[sem rótulo]` | montagem inicial | `participants_manager.js:206` | `startMount('cohorts', mountCohorts, …)` | roda no `ModalEvents.shown`. **CORRIGIDO em 2026-07-16 (`c96a3e9`):** era `mountCohorts(...)` fire-and-forget **sem trava e sem gatilho de retry** (o pane default falhava sem recuperação alguma); agora entra na tabela `mounted` via `startMount`, e reclicar a aba Coortes (`ensureMounted`, `:212-217`) o re-monta |
 
 ## Achado IMP-03 — a lacuna de loading **deste** modal (derivada do `ensureMounted`)
 
@@ -216,18 +227,18 @@ código diz o seguinte:
 pronto — mas ele é do `core/dynamic_tabs` (`public/lib/amd/src/dynamic_tabs.js:92-97` → `loadTab` →
 `addIconToContainer` em `:153`; `:85-89` esvazia o pane anterior), e ele governa as **abas da
 página** (`EST`/`FWK`/`PLN`). As abas **deste modal** são artesanais (`activateTab`,
-`participants_manager.js:103-114`) e **não passam nem perto** do `dynamic_tabs`. Aqui não há nada a
+`participants_manager.js:112-123`) e **não passam nem perto** do `dynamic_tabs`. Aqui não há nada a
 herdar: a lacuna é real e é nossa.
 
 **2. A lacuna maior não é a troca de aba — é o _primeiro paint_.** `Modal.create` recebe o corpo
-renderizado e `modal.show()` é chamado em `:236`; só **depois** o `ModalEvents.shown` (`:168`)
-dispara `startMount('cohorts', …)` (`:172`) → `mountCohorts`, que ainda precisa de strings +
+renderizado e `modal.show()` é chamado em `:264`; só **depois** o `ModalEvents.shown` (`:202`)
+dispara `startMount('cohorts', …)` (`:206`) → `mountCohorts`, que ainda precisa de strings +
 `renderForPromise` + `replaceNodeContents` + um WS (`cohort_manager.js:209-232`). Como o pane de Coortes **nasce vazio**
 (`participants_manager.mustache:75-76`) e é a aba que **nasce ativa** (`:42`), o modal abre com as
 quatro abas desenhadas e **o corpo em branco embaixo delas**. Não é uma troca de aba — é a abertura.
 
 **3. Na troca de aba, a lacuna é assimétrica — 3 panes de 4.** `selectTab` chama `activateTab`
-(`:194`) **antes** de `ensureMounted` (`:196`), então o pane fica **visível e vazio** enquanto o
+(`:222`) **antes** de `ensureMounted` (`:224`), então o pane fica **visível e vazio** enquanto o
 mount corre. Vale para Coortes, Papéis (`:146-147`) e Métodos de inscrição (`:150-151`), os três
 `<div></div>`. **Usuários é a exceção**: o pane vem renderizado do servidor (`:77-144`), então
 filtros e cabeçalho da tabela aparecem na hora e só as **linhas** faltam. Uma correção que trate as
@@ -239,12 +250,12 @@ e o mount ia fire-and-forget (`.catch(notifyError)`); se ele rejeitasse (WS fora
 que o `errors.js` roteia), o toast aparecia, o pane ficava em branco e **a trava continuava `true`**.
 Reclicar a aba **não** tentava de novo (o `if` já falhava no `!<flag>mounted`), e como não há
 "atualizar" nas abas Coortes/Usuários/Papéis (o único é o `ENROL-REFRESH` da 4ª aba) e
-`setRemoveOnClose(true)` (`:132`) descarta o modal ao fechar, **só reabrir o modal recuperava**. O
+`setRemoveOnClose(true)` (`:141`) descarta o modal ao fechar, **só reabrir o modal recuperava**. O
 Coortes era pior: montava fire-and-forget no `shown`, **sem trava**, e sua própria aba não passava
 pelo `ensureMounted` — pane default sem recuperação alguma. *Agora:* os quatro panes passam por um
-`startMount` (`:158-167`) que **crava** a trava de forma síncrona (`:162`, bloqueia o duplo-clique) e
-a **libera no `.catch`** (`:164`), então a próxima ativação da aba re-monta; o Coortes entrou na
-tabela, então reclicar a aba default (`:180-181`) o recupera também.
+`startMount` (`:167-179`) que **crava** a trava de forma síncrona (`:171`, bloqueia o duplo-clique) e
+a **libera no `.catch`** (`:175`), então a próxima ativação da aba re-monta; o Coortes entrou na
+tabela, então reclicar a aba default (`:212-217`) o recupera também.
 
 *Ressalva medida — o enrol tinha um buraco, fechado em `c2d9471`:* liberar-no-erro só é seguro se o mount rejeitado
 deixou o pane **sem fios**. Coortes e Papéis fazem `replaceNodeContents` e religam nós-filhos frescos
@@ -252,7 +263,7 @@ deixou o pane **sem fios**. Coortes e Papéis fazem `replaceNodeContents` e reli
 no lugar, e o enrol **delega os listeners no próprio contêiner** (`state.root`), que o
 `replaceNodeContents` **não** descarta (o "ele limpa, logo re-monta seguro" é **falso** para o enrol).
 Por isso o único `await` pós-fios de cada um é engolido num toast (`participants_users.js:310`,
-`enrol_methods.js:1052`): uma falha de **primeira carga resolve** o mount (a trava fica cravada, sem
+`enrol_methods.js:1049`): uma falha de **primeira carga resolve** o mount (a trava fica cravada, sem
 retry, um só estado com fios). Usuários segue usável — os controles de filtro visíveis re-rodam
 `applyFilters` sobre esse estado. **O enrol era o buraco:** se o `init` rejeitasse na primeira montagem
 **antes** de revelar qualquer região, o pane ficava em branco e o `ENROL-REFRESH` (que morava
@@ -271,3 +282,10 @@ um esqueleto de linhas — e (c) a trava liberada no erro, **entregue em `c96a3e
 e a aba re-monta), e o pane-em-branco de primeira-carga do enrol, **entregue em `c2d9471`**
 (2026-07-16): uma região de erro dedicada `enrol-error`, revelada no `catch` do `init`, cujo
 `ENROL-REFRESH` mora **fora** das regiões ocultas. Ambos os resíduos estão fechados.
+
+> **Atualização `7d69197` (2026-07-18).** O item (c) mudou: a recuperação do enrol **não depende mais
+> do botão `ENROL-REFRESH` interno** — ele foi removido (ver `## Aba Métodos de inscrição` e a linha
+> `ENROL-REFRESH`). A `enrol-error` continua sendo revelada no `catch` do `init`, mas quem re-roda o
+> `init` é o **refresh do cabeçalho do modal** (`PART-REFRESH`), via o handle `{refresh}` que o `mount`
+> do enrol devolve (`enrol_methods.js:1052`). Esse mesmo refresh cobre as quatro abas: enrol→`init`,
+> cohorts/roles→`refresh`, users→`applyFilters`.
