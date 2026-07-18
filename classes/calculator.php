@@ -338,12 +338,22 @@ class calculator {
      *
      * @param array $courses Array of course records (must have ->id property)
      * @param int $userid The user ID to check enrollment for
-     * @param string $filtermode One of 'all', 'enrolled', 'active'
+     * @param string $filtermode One of 'all', 'enrolled', 'active', 'enrolledorself'
      * @return array Filtered array of course records
      */
     public static function filter_courses_by_enrollment(array $courses, int $userid, string $filtermode): array {
         if ($filtermode === 'all' || empty($courses)) {
             return $courses;
+        }
+
+        if ($filtermode === constants::ENROLLMENTFILTER_ENROLLEDORSELF) {
+            $filtered = [];
+            foreach ($courses as $key => $course) {
+                if (self::user_enrolled_or_self_enrolable($course, $userid)) {
+                    $filtered[$key] = $course;
+                }
+            }
+            return $filtered;
         }
 
         // Active mode: only actively enrolled (is_enrolled with onlyactive=true).
@@ -364,17 +374,14 @@ class calculator {
     /**
      * Whether the user can actually open a course: actively enrolled, or able to self-enrol.
      *
-     * Self-enrolment is checked via the core self plugin's can_self_enrol(), which is scoped to the
-     * current user ($USER) and already enforces the instance status, dates, max-enrolled and the
-     * cohort restriction (customint5) — so a plan's synced restriction cohort is honoured with no
-     * extra code. The self branch therefore only answers for the current user.
+     * The self branch only answers for the current $USER (core's can_self_enrol is $USER-scoped).
      *
      * @param \stdClass $course A course record with at least an id.
      * @param int $userid The user id.
      * @return bool
      */
     public static function user_can_access_course(\stdClass $course, int $userid): bool {
-        global $CFG, $USER;
+        global $USER;
 
         $coursecontext = \core\context\course::instance($course->id);
         if (is_enrolled($coursecontext, $userid, '', true)) {
@@ -385,16 +392,59 @@ class calculator {
             return false;
         }
 
+        return self::current_user_can_self_enrol((int) $course->id);
+    }
+
+    /**
+     * Whether the current $USER can self-enrol into the course via an enabled self instance.
+     *
+     * Scoped to $USER by core's can_self_enrol(); callers must gate on $userid === $USER->id.
+     * The self plugin already enforces the instance status, dates, max-enrolled and cohort
+     * restriction (customint5), so a plan's synced restriction cohort is honoured for free.
+     *
+     * @param int $courseid The course id.
+     * @return bool
+     */
+    private static function current_user_can_self_enrol(int $courseid): bool {
+        global $CFG;
+
         require_once($CFG->dirroot . '/enrol/self/lib.php');
         $selfplugin = enrol_get_plugin('self');
         if (!$selfplugin) {
             return false;
         }
-        foreach (enrol_get_instances($course->id, true) as $instance) {
+        foreach (enrol_get_instances($courseid, true) as $instance) {
             if ($instance->enrol === 'self' && $selfplugin->can_self_enrol($instance, false) === true) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Whether the user is enrolled (incl. future/suspended) or — for the current $USER — can self-enrol.
+     *
+     * Membership test for the 'enrolledorself' display filter: the existing 'enrolled' semantics
+     * (is_enrolled onlyactive=false, so future-dated and suspended enrolments count) plus the linked
+     * courses the current viewer could self-enrol into. The self leg is evaluable only for $USER, so
+     * when staff view another learner's plan it degrades to enrolled-only.
+     *
+     * @param \stdClass $course A course record with at least an id.
+     * @param int $userid The user id.
+     * @return bool
+     */
+    public static function user_enrolled_or_self_enrolable(\stdClass $course, int $userid): bool {
+        global $USER;
+
+        $coursecontext = \core\context\course::instance($course->id);
+        if (is_enrolled($coursecontext, $userid, '', false)) {
+            return true;
+        }
+
+        if ($userid !== (int) $USER->id) {
+            return false;
+        }
+
+        return self::current_user_can_self_enrol((int) $course->id);
     }
 }
