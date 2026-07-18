@@ -23,7 +23,7 @@
      texto pequeno, não texto grande). Token próprio, fora do alcance do .moodle: 6,52:1 (claro) e
      7,69:1 (escuro). */
   --link-fg:#185fa5;
-  /* Chip de fechar: os três literais que o styles.css:3702-3731 publica, sem variante dark.
+  /* Chip de fechar: os três literais que o styles.css:3709-3738 publica, sem variante dark.
      #0f4d85 sobre #e7f0f9 = 7,53:1; hover #d4e6fb = 6,82:1 (medidos). */
   --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
 }
@@ -194,8 +194,8 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
         <div class="sec">
           <div class="seclbl">Aba Métodos de inscrição · MOD.ENROL · pane VAZIO (:150-151)</div>
           <div class="row" style="justify-content:space-between;"><span style="font-size:10px;color:var(--text-secondary)">árvore competências × cursos + busca + categoria + barra de seleção</span><span class="bsec"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-rotate"/></svg>Atualizar</span></div>
-          <div class="row" style="margin-top:4px;"><span class="idb">ENROL-REFRESH · :39,:47,:108</span></div>
-          <span class="note" style="margin-top:4px;display:block;">O <b>único</b> "atualizar" do modal inteiro está aqui — e há <b>três</b> deles neste pane. As outras três abas não têm nenhum.</span>
+          <div class="row" style="margin-top:4px;"><span class="idb">ENROL-REFRESH · removido em 7d69197 (era :39,:47,:108)</span></div>
+          <span class="note" style="margin-top:4px;display:block;">Este pane <b>trazia</b> o único "atualizar" do modal — <b>três</b> botões, e as outras abas nenhum. O <b>7d69197</b> removeu <b>os quatro</b> (o quarto era o da região de erro); o "atualizar" agora é <b>um só</b>, no cabeçalho do modal (<code>central/modal_refresh</code>), e serve as <b>quatro</b> abas.</span>
         </div>
       </div>
       <div class="m-foot m-foot-ghost">.modal-footer sem filhos → o core aplica .hidden no show() <span class="idb">PART-FOOT</span></div>
@@ -226,7 +226,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       própria flag <code>canenrolpage</code> (<code>:54</code>) — podem divergir.
     </div>
     <div class="ok">
-      <b>O que o D2 preservou (<code>0598289</code>).</b> <code>styles.css:3702-3703</code> é um <b>grupo de
+      <b>O que o D2 preservou (<code>0598289</code>).</b> <code>styles.css:3709-3710</code> é um <b>grupo de
       dois seletores</b>, e o segundo — <code>.local-dimensions-headerlink-modal .btn-close</code> — é gancho
       <b>independente</b> do chip de fechar, para modais cujo corpo não carrega classe
       <code>local-dimensions-*</code> (o <code>ModalForm</code> de framework escapa do <code>:has()</code>).
@@ -235,7 +235,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       é o <b>único</b> gancho do chip para o form de framework. As antigas regras de título do cabeçalho
       <b>saíram</b>; o <code>flex-grow</code> foi <b>re-alojado</b> em
       <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code>
-      (<code>styles.css:3653</code>), agrupando os expansores com o botão de fechar.
+      (<code>styles.css:3660</code>), agrupando os expansores com o botão de fechar.
     </div>
   </section>
 
@@ -243,7 +243,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
   <section class="panel moodle">
     <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · as três melhorias que caem nesta tela</div>
 
-    <div class="divlbl" style="border-top:0;padding-top:0;margin-top:0;">1 · Cabeçalho ganha ações, links descem — expandir SHIPADO (8ea9daf, desacoplado a 1.75rem via central/modal_expander) e links no rodapé SHIPADO (0598289 — D2, via injectFooterLinks); só atualizar segue to-be <span class="prov">mtube: expandir</span> <span class="prov">mtube: atualizar</span> <span class="prov">mtube: links no rodapé</span></div>
+    <div class="divlbl" style="border-top:0;padding-top:0;margin-top:0;">1 · Cabeçalho ganha ações, links descem — expandir SHIPADO (8ea9daf, desacoplado a 1.75rem via central/modal_expander), atualizar SHIPADO (7d69197 — D2, via central/modal_refresh) e links no rodapé SHIPADO (0598289 — D2, via injectFooterLinks); todo o painel entregue <span class="prov">mtube: expandir</span> <span class="prov">mtube: atualizar</span> <span class="prov">mtube: links no rodapé</span></div>
     <div class="expwrap">
       <input type="checkbox" id="part-exp" class="expchk" aria-label="Expandir o modal">
       <div class="m dlg">
@@ -314,7 +314,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <code>hasFooterContent = getFooter().children().length</code>, <code>:686-688</code>). Nada a
       instrumentar: <b>é o mecanismo do core que já está lá</b>. O grupo fica à esquerda por
       <code>margin-right:auto</code> em <code>.local-dimensions-modal-footer-links</code>
-      (<code>styles.css:3666</code>) — <b>não</b> por <code>justify-content:space-between</code> —, deixando
+      (<code>styles.css:3673</code>) — <b>não</b> por <code>justify-content:space-between</code> —, deixando
       qualquer ação primária (o Salvar/Cancelar do form de framework) à direita. <b>Esta maquete desenha um
       link</b>, mas o modal de participantes injeta <b>todos</b> os destinos permitidos de uma vez
       (<code>injectFooterLinks</code>, <code>participants_manager.js:67-94</code>); o
@@ -391,30 +391,34 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       mount, <b>antes</b> de revelar qualquer região, o pane ficava em branco e o seu "Atualizar" — que morava
       <b>dentro</b> das regiões ainda ocultas — ficava <b>inalcançável</b>; a recuperação era fechar e reabrir
       o modal. Propunha-se uma <b>região de erro dedicada</b> como próximo passo.
-      <b>Shipou:</b> a região <code>enrol-error</code> (<code>enrol_methods.mustache:52-59</code>) — um
-      <code>alert-warning</code> com <code>{{#str}}central_enrol_loadfailed, local_dimensions{{/str}}</code>
-      e um <code>data-action="enrol-refresh"</code> que mora <b>fora</b> das três regiões ocultas, logo
-      <b>depois</b> de <code>enrol-empty</code> e <b>antes</b> de <code>enrol-main</code>. O <code>init</code>
-      agora embrulha o primeiro load (o <code>Promise.all</code> de <code>list_template_cohorts</code> +
-      <code>list_enrol_competencies</code>) num <code>try/catch</code> (<code>enrol_methods.js:858-885</code>):
-      na falha ele <b>revela a região de erro</b> e esconde empty/disabled/main (<code>:880-883</code>), e
+      <b>Shipou (c2d9471):</b> a região <code>enrol-error</code> (<code>enrol_methods.mustache:42-44</code>) — um
+      <code>alert-warning</code> com <code>{{#str}}central_enrol_loadfailed, local_dimensions{{/str}}</code>,
+      logo <b>depois</b> de <code>enrol-empty</code> e <b>antes</b> de <code>enrol-main</code>. O <code>init</code>
+      embrulha o primeiro load (o <code>Promise.all</code> de <code>list_template_cohorts</code> +
+      <code>list_enrol_competencies</code>) num <code>try/catch</code> (<code>enrol_methods.js:859-886</code>):
+      na falha ele <b>revela a região de erro</b> e esconde empty/disabled/main (<code>:881-884</code>), e
       <b>relança</b> — então o <code>await init(state).catch(notifyError)</code> do <code>mount</code>
-      (<code>:1052</code>) ainda solta o toast. O "Atualizar" da região re-roda <code>init</code>
-      (<code>:931-932</code>), então o primeiro-mount da Inscrição agora <b>recupera no lugar</b>; cada caminho
-      de sucesso zera <code>error.hidden</code> antes de revelar a região certa (<code>:886</code>). Alerta
+      (<code>:1049</code>) ainda solta o toast; cada caminho de sucesso zera <code>error.hidden</code> antes
+      de revelar a região certa (<code>:887</code>). <b>Depois, o 7d69197 tirou o "atualizar" de dentro do
+      alerta</b> (e os outros três do pane) — a região agora é <b>só mensagem</b>, e quem re-roda
+      <code>init</code> é o <b>refresh do cabeçalho</b> (<code>central/modal_refresh</code>), cujo handle da
+      Inscrição expõe <code>{refresh: () =&gt; init(state)}</code> (<code>:1052</code>). Alerta
       <b>warning</b>, não danger: a falha é transitória e re-tentável. Sem bump (versão congelada até a 2.0);
       a string nova só pede purge do cache de strings.
     </div>
     <div class="ok">
-      <b>É isto que ainda amarra o loading ao "atualizar" — por outro motivo agora.</b> O spinner mostra
+      <b>SHIPADO (<code>7d69197</code>, D2) — o "atualizar" virou um só, no cabeçalho.</b> O spinner mostra
       que está carregando (ou que <b>falhou</b>); com a trava se soltando sozinha no erro, quem recupera
       Coortes/Papéis é <b>re-clicar a aba</b>. Quem <b>não</b> re-tenta é a Inscrição (a falha pós-fio foi
-      engolida de propósito) — ela depende do <b>atualizar</b>, e agora <b>sempre</b> há uma região à vista
-      para clicar: a região de erro que o <code>c2d9471</code> passou a revelar cobre até o primeiro-mount (o
-      resíduo fechado acima). E não custa string nova: o pane de inscrição já shipa
-      <code>{{#str}}refresh, moodle{{/str}}</code> + <code>fa fa-rotate</code> em <b>quatro</b> lugares
-      (<code>enrol_methods.mustache:39, 47, 55, 116</code>) — o quarto é o "Atualizar" da própria região de
-      erro. O botão do cabeçalho <b>substitui</b> esses quatro, em vez de virar um quinto.
+      engolida de propósito) — ela depende do <b>atualizar</b>, e continua havendo uma região à vista para
+      clicar: a região de erro que o <code>c2d9471</code> revela cobre até o primeiro-mount. Antes, o pane de
+      inscrição shipava <code>{{#str}}refresh, moodle{{/str}}</code> + <code>fa fa-rotate</code> em <b>quatro</b>
+      lugares (o filtro + as três regiões de alerta); o <code>7d69197</code> <b>removeu os quatro</b> — as três
+      regiões viraram <b>blocos só-mensagem</b> (<code>enrol_methods.mustache:36-44</code>) e o botão da barra de
+      filtros saiu. No lugar, <b>um</b> refresh de cabeçalho (<code>central/modal_refresh</code>) injeta <b>um</b>
+      botão <code>.local-dimensions-modal-refresh</code> com <code>fa fa-rotate</code> e a string core
+      <code>{{#str}}refresh{{/str}}</code> (sem string nova, sem bump); o handle da Inscrição re-roda
+      <code>init</code>, então o refresh do cabeçalho recupera o pane que dependia daqueles botões.
     </div>
     <div class="row" style="gap:10px;margin-top:7px;">
       <div class="col" style="gap:3px;"><span class="note">repouso</span><span class="bsec"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-rotate"/></svg>Atualizar</span></div>

@@ -325,13 +325,43 @@ Conferido commit a commit contra o código de hoje, não contra a mensagem:
 
 ## `MOD.LINKS-EXPAND` — expandir/restaurar (shipado `8ea9daf`, `mtube: expandir`)
 
+> **Resync 2026-07-18 — o cabeçalho ganhou um botão de ATUALIZAR, e os três controles do cabeçalho
+> passaram a ser o chip azul do fechar (shipado `7d69197`, `D2`).** O módulo novo
+> `central/modal_refresh.js` (`attach(dialog, onrefresh)`) injeta **um** botão
+> `.local-dimensions-modal-refresh` (`data-action="modal-refresh"`, ícone `<i class="fa fa-rotate">`,
+> `modal_refresh.js:36-48`), ancorado **antes** do primeiro `.local-dimensions-modal-sizetoggle` — ou,
+> na falta dele, antes do `.btn-close` (`:67-68`) —, então a ordem do cabeçalho é agora
+> **[atualizar][expandir][restaurar][fechar]**. O rótulo é o core `{{#str}}refresh{{/str}}` via
+> `getString('refresh')` (`:63`) — **sem string de lang nova**. O botão é dono do **estado ocupado**:
+> no clique ele desabilita e põe `fa-spin` no ícone, roda `onrefresh()` e limpa os dois num `finally`
+> (`:70-84`, disciplina do `states.html`), então um reload que falha nunca deixa o botão travado. Não
+> carrega `.btn`, logo desenha o próprio anel de foco no `:focus-visible`.
+>
+> **A fiação encadeia o refresh DEPOIS do expander**, nos dois modais:
+> `attachExpander(dialog).then(() => attachRefresh(dialog, () => reloadCourses(state))).catch(notifyError)`
+> (`competency_links.js:909`); o de participantes faz o mesmo com `refreshActiveTab`
+> (`participants_manager.js:201`). O expander semeia o tamanho salvo **síncrono** (antes do primeiro
+> `await`, `modal_expander.js:74`), então o modal ainda abre no tamanho certo. Aqui o reload é o
+> `reloadCourses` (`competency_links.js:501-509`): **no-op enquanto `state.loading`** (`:502-504`),
+> senão zera o contêiner (`rowsEl.textContent = ''`, `:505`), limpa o `Set` de exclusão (`:506`),
+> zera o `total` (`:507`) e chama o `loadCourses`, que busca a **página 1** (`:508`).
+>
+> **Visual — os três controles agora compartilham o chip azul do fechar.** A regra base combinada
+> `.local-dimensions-modal-sizetoggle, .local-dimensions-modal-refresh` (`styles.css:3600-3616`) dá
+> aos dois o mesmo `1.75rem`, `background-color:#e7f0f9` e `color:#0f4d85` do `.btn-close` restilizado
+> (`:3709-3738`); o hover dos dois (`:3618-3624`) é `#d4e6fb`; o anel de foco dedicado (`:3626-3630`)
+> desenha o próprio `:focus-visible` (nenhum carrega `.btn`). Os size toggles foram **restilizados**
+> para esse chip azul — não são mais o visual neutro anterior (fundo transparente / glifo `#6a737b`).
+> O ocupado do refresh tem regra própria `.local-dimensions-modal-refresh[disabled]` (`:3633`). **Sem
+> bump de `version.php`, sem string nova.**
+
 Entregue nos **dois** modais densos do hub (este e o `mod-participants`) pelo módulo compartilhado
-`central/modal_expander.js` (`attach(dialog)`), chamado aqui em `competency_links.js:848` e no de
-participantes em `participants_manager.js:160`. A mecânica é a do mtube; o precedente já era shipado.
-Os dois botões (`makeButton`, `modal_expander.js:46`) entram antes do `.btn-close` (`:82-83`) e o título cede a largura para eles pela regra re-alojada `.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title` (`styles.css:3653`, uma robustez de `0598289` — antes o modal dependia implicitamente do título longo para empurrar expandir+fechar à direita); o CSS
-escolhe qual aparece (`styles.css:3630`/`:3634`/`:3638`), zero troca de ícone em JS; o clique alterna
+`central/modal_expander.js` (`attach(dialog)`), chamado aqui em `competency_links.js:909` (cabeça da cadeia que encadeia o refresh) e no de
+participantes em `participants_manager.js:201`. A mecânica é a do mtube; o precedente já era shipado.
+Os dois botões (`makeButton`, `modal_expander.js:46`) entram antes do `.btn-close` (`:82-83`) e o título cede a largura para eles pela regra re-alojada `.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title` (`styles.css:3660`, uma robustez de `0598289` — antes o modal dependia implicitamente do título longo para empurrar expandir+fechar à direita); o CSS
+escolhe qual aparece (`styles.css:3637`/`:3641`/`:3645`), zero troca de ícone em JS; o clique alterna
 a classe no `.modal-dialog` (`:92`) e persiste (`:93`), e a largura vem da classe
-(`.modal-dialog.local-dimensions-modal-expanded{max-width:96vw}`, `styles.css:3642`).
+(`.modal-dialog.local-dimensions-modal-expanded{max-width:96vw}`, `styles.css:3649`).
 
 > **Nota de nomenclatura.** O kit **não tem um `IMP-08`** — um
 > `grep -rnoE 'IMP-[0-9]{2}' docs/design-kit/ | grep -v 'maps/mod-links.md'` devolve `IMP-03`,
@@ -385,5 +415,5 @@ muda (não a altura).
 **Duas decisões que a varredura adversarial forçou** (o mtube não as tem): os botões **não** usam
 `.btn` — um `.btn` sem variante tem `--bs-btn-focus-shadow-rgb` indefinido, então o anel de foco do
 core é inválido e o `outline:0` dele apaga o nativo; o shipado desenha o próprio anel no
-`:focus-visible` (`styles.css:3625`). E o clique **devolve o foco** ao botão contrário recém-revelado
+`:focus-visible` (`styles.css:3626`). E o clique **devolve o foco** ao botão contrário recém-revelado
 (`modal_expander.js:94-101`), porque o acionado se esconde no swap de CSS e largaria o foco no `<body>`.
