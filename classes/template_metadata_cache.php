@@ -36,8 +36,8 @@ namespace local_dimensions;
  * - templatecardimageurl
  * - displaymode
  * - idnumber
- * - enrollmentfilter_raw   (stored option key: inherit|all|enrolled|active)
- * - enrollmentfilter       (resolved at read time: all|enrolled|active)
+ * - enrollmentfilter_raw   (stored option key: inherit|all|enrolled|active|enrolledorself)
+ * - enrollmentfilter       (resolved at read time: all|enrolled|active|enrolledorself)
  * - singlecourseredirect_raw (stored option key: inherit|yes|no)
  * - singlecourseredirect   (resolved at read time: bool)
  * - timemodified

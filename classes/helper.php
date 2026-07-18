@@ -783,12 +783,12 @@ class helper {
     /**
      * Resolve the effective enrollment filter for a learning plan template.
      *
-     * Returns one of `all` / `enrolled` / `active`. When the template stores
+     * Returns one of `all` / `enrolled` / `active` / `enrolledorself`. When the template stores
      * `inherit` (or no row exists), falls back to the global
      * `local_dimensions/enrollmentfilter` setting, defaulting to `all`.
      *
      * @param int $templateid Learning plan template ID
-     * @return string One of constants::ENROLLMENTFILTER_ALL|ENROLLED|ACTIVE
+     * @return string One of constants::ENROLLMENTFILTER_ALL|ENROLLED|ACTIVE|ENROLLEDORSELF
      */
     public static function get_template_enrollmentfilter(int $templateid): string {
         $global = (string) (get_config('local_dimensions', 'enrollmentfilter') ?: constants::ENROLLMENTFILTER_ALL);
@@ -1211,7 +1211,7 @@ class helper {
      *
      * @param int $competencyid Competency being viewed
      * @param int $templateid Template of the plan the competency is being viewed through (0 for manual plans)
-     * @return string One of constants::ENROLLMENTFILTER_ALL|ENROLLED|ACTIVE
+     * @return string One of constants::ENROLLMENTFILTER_ALL|ENROLLED|ACTIVE|ENROLLEDORSELF
      */
     public static function resolve_enrollmentfilter_for_view(int $competencyid, int $templateid): string {
         $compraw = self::get_competency_select_raw(
@@ -1476,6 +1476,11 @@ class helper {
      * available; otherwise it falls back to an accent-sensitive comparison); on other databases
      * it relies on the collation via core sql_like(). The bound parameter value must still be
      * built with sql_like_escape() and the surrounding wildcards by the caller.
+     *
+     * The PostgreSQL unaccent() approach (which core otherwise reports as unsupported) follows
+     * the technique of the local_aise plugin, "Accent Insensitive Search Enabler", copyright
+     * 2023 Austrian Federal Ministry of Education, released under the GNU GPL v3 or later:
+     * https://github.com/Bildungsportal/moodle-local_aise
      *
      * @param string $fieldname The column or SQL expression to match.
      * @param string $param The bound parameter placeholder (e.g. ':q1').
