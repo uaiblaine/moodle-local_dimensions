@@ -26,7 +26,9 @@
     Context variables required:
     * contexttype (string) · issystem (bool) · iscoursecat (bool) · needscategory (bool)
     * selectedcategoryid (int) · hascategories (bool)
-    * categoryoptions (array) {id, name, selected, frameworkcount, templatecount}
+    * categoryoptions (array) {id, name, selected, frameworkcount, templatecount, hidden}
+    * hiddencatstoggle (object|null) {id, label, action, checked} · shared showhidden_toggle partial,
+      rendered only when a hidden category is reachable
     * systemframeworkcount (int) · systemtemplatecount (int)
     * selectedframeworkcount (int) · selectedtemplatecount (int)
 
@@ -39,8 +41,14 @@
         "selectedcategoryid": 3,
         "hascategories": true,
         "categoryoptions": [
-            {"id": 3, "name": "Sciences", "selected": true, "frameworkcount": 4, "templatecount": 2}
+            {"id": 3, "name": "Sciences", "selected": true, "frameworkcount": 4, "templatecount": 2, "hidden": false}
         ],
+        "hiddencatstoggle": {
+            "id": "local-dimensions-central-showhiddencats",
+            "label": "Show hidden categories",
+            "action": "toggle-hidden-cats",
+            "checked": false
+        },
         "systemframeworkcount": 7,
         "systemtemplatecount": 5,
         "selectedframeworkcount": 4,
@@ -73,10 +81,17 @@
         <select id="local-dimensions-central-category" class="form-select" data-region="category-select">
             <option value="0">{{#str}}managecompetencies_category_placeholder, local_dimensions{{/str}}</option>
             {{#categoryoptions}}
-            <option value="{{id}}" data-name="{{name}}" data-frameworkcount="{{frameworkcount}}" data-templatecount="{{templatecount}}"{{#selected}} selected{{/selected}}>{{name}} ({{frameworkcount}})</option>
+            <option value="{{id}}" data-name="{{name}}" data-frameworkcount="{{frameworkcount}}" data-templatecount="{{templatecount}}"{{#hidden}} data-hidden="1"{{/hidden}}{{#selected}} selected{{/selected}}>{{name}} ({{frameworkcount}})</option>
             {{/categoryoptions}}
         </select>
     </div>
+
+    {{#hiddencatstoggle}}
+    <div data-region="hidden-cats"{{^iscoursecat}} hidden{{/iscoursecat}}>
+        <span class="d-block small text-muted mb-1" aria-hidden="true">&nbsp;</span>
+        {{> local_dimensions/central/showhidden_toggle }}
+    </div>
+    {{/hiddencatstoggle}}
 
     <div class="text-muted small" data-region="context-count"
          data-frameworkcount="{{selectedframeworkcount}}" data-templatecount="{{selectedtemplatecount}}"{{#needscategory}} hidden{{/needscategory}}>

@@ -70,11 +70,12 @@ $prefs['nav'] = [
     'categoryid' => $categoryid,
     'frameworkid' => $frameworkid,
     'templateid' => $templateid,
+    'showhiddencats' => (bool) $nav['showhiddencats'],
 ];
 $PAGE->requires->js_call_amd('local_dimensions/central/preferences', 'init', [$prefs]);
 
 // The context selector is page-level (governs both tabs); init it once on load.
-$contextbar = new contextbar($contexttype, $categoryid);
+$contextbar = new contextbar($contexttype, $categoryid, (bool) $nav['showhiddencats']);
 $PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
 // The page-level sticky footer is shared by both tabs; init its coordinator once.
 $PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
