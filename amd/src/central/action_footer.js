@@ -115,8 +115,9 @@ export const init = () => {
         }
     });
     // Switching to a different tab clears the footer for a clean slate; the entering
-    // tab's own init re-asserts it. This also covers the Frameworks tab (no footer) with
-    // no Frameworks-side code. A native click is used rather than show.bs.tab because
+    // tab's own init re-asserts it. Frameworks is selection-driven like Structure: it
+    // enters with no footer until a row is chosen, then drives it from frameworks.js.
+    // A native click is used rather than show.bs.tab because
     // Moodle 4.5 runs Bootstrap 4, which dispatches tab events via jQuery — native
     // 'show.bs.tab' listeners never fire there. The active-tab guard reads the pre-click
     // state (this direct listener runs before Bootstrap's delegated one), so re-clicking
