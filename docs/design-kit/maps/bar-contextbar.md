@@ -44,7 +44,15 @@ recarrega o ativo. O select de categoria é sempre renderizado (oculto em modo s
 
 | ID | Rótulo | Tipo | Origem (to-be) | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
-| `BAR-CATHIDDEN` | Mostrar categorias ocultas | toggle (partial `showhidden_toggle`) | `contextbar.mustache` (novo bloco após `category-wrapper`) | `data-action="toggle-hidden-cats"` | **reusa o partial compartilhado** `local_dimensions/central/showhidden_toggle` (`{id,label,action,checked}`, mesmo de EST/FWK) via seção `{{#hiddencatstoggle}}` (null → não renderiza = gate de `hashiddencategories`); bloco próprio após o select, oculto no modo Sistema (`^iscoursecat`); `<label>` envolvente **real** (o named selector "checkbox" do Behat exige for/envolvente, não `aria-label`); str nova `central_bar_showhiddencategories` |
+| `BAR-CATHIDDEN` | Mostrar categorias ocultas | toggle (partial `showhidden_toggle`) | `contextbar.mustache` (bloco dentro da coluna de Contexto, abaixo dos botões) | `data-action="toggle-hidden-cats"` | **reusa o partial compartilhado** `local_dimensions/central/showhidden_toggle` (`{id,label,action,checked}`, mesmo de EST/FWK) via seção `{{#hiddencatstoggle}}` (null → não renderiza = gate de `hashiddencategories`); fica **abaixo do grupo de botões Sistema/Categoria** (`.mt-2`), oculto no modo Sistema (`^iscoursecat`); `<label>` envolvente **real** (o named selector "checkbox" do Behat exige for/envolvente, não `aria-label`); str nova `central_bar_showhiddencategories` |
+
+**Alinhamento (correção pós-runtime, 2026-07-18).** A barra passou de `align-items-end` para
+`align-items-start` (rótulos "Contexto"/"Categoria de curso" alinham pelo topo); o toggle desceu
+para **dentro da coluna de Contexto** (antes ficava solto à direita do select); `BAR-COUNT-01` e
+`BAR-REFRESH` ganharam `align-self-center` (centrados na barra alta); e o **chip da categoria
+selecionada** do autocomplete foi reposicionado **abaixo** do input via CSS escopado (styles.css:
+`.local-dimensions-central-contextbar [data-region='category-wrapper']` vira coluna +
+`.form-autocomplete-selection { order: 1 }`) — depende do DOM do core, revalidar no upgrade.
 
 **Semântica.** Por padrão o picker mostra só categorias visíveis; o toggle revela as `visible=0`
 **que o usuário já pode ver** (`make_categories_list()` só as traz para quem tem
