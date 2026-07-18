@@ -3589,6 +3589,19 @@
 }
 
 /*
+ * Lock the page scroll behind an open hub modal. core/modal sets overflow:hidden only on <body>,
+ * relying on the browser propagating it to <html> — the real scrolling element here. When the
+ * property is applied dynamically via JS the browser does not re-run that propagation, so <html>
+ * keeps its own scrollbar and the page scrolls behind the modal: a second scrollbar beside it (or,
+ * when the dialog is expanded, under it). Setting overflow:hidden on <html> removes it; core's own
+ * body padding-right (added on show) still compensates, so nothing shifts. Scoped to the hub
+ * (central.php adds .local-dimensions-central-page) so it never touches other site modals.
+ */
+html:has(body.local-dimensions-central-page.modal-open) {
+    overflow: hidden;
+}
+
+/*
  * Header controls for the data-dense hub modals (participants, links): the refresh button (injected
  * by central/modal_refresh) and the expand/restore pair (central/modal_expander). All three carry
  * the close chip's blue look — same 1.75rem size and colours — so the header reads as one set. The
