@@ -3734,11 +3734,11 @@
  * the theme's Font Awesome (Moodle stylelint forbids inline SVG image data, and the glyph lets us
  * colour it precisely). Scoped to modals holding this plugin's content; the referenced-competency
  * modal keeps its own close button (its header is hidden), so it is excluded. The second selector
- * (.local-dimensions-headerlink-modal) is the hook for modals whose body carries no plugin class
- * and so escape the :has() arm — the framework form (a core dynamic_form) is the sole such case.
+ * keys off .modal-form-dialogue, which core adds to every ModalForm dialog synchronously before
+ * show(): the plugin's form modals get the chip from the first frame (the :has() arm alone flashes).
  */
 .modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close,
-.local-dimensions-headerlink-modal .btn-close {
+.local-dimensions-central-page .modal-form-dialogue .btn-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -3752,7 +3752,7 @@
 }
 
 .modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close::before,
-.local-dimensions-headerlink-modal .btn-close::before {
+.local-dimensions-central-page .modal-form-dialogue .btn-close::before {
     content: '\f00d';
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
@@ -3763,8 +3763,8 @@
 
 .modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close:hover,
 .modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close:focus,
-.local-dimensions-headerlink-modal .btn-close:hover,
-.local-dimensions-headerlink-modal .btn-close:focus {
+.local-dimensions-central-page .modal-form-dialogue .btn-close:hover,
+.local-dimensions-central-page .modal-form-dialogue .btn-close:focus {
     background-color: #d4e6fb;
 }
 
