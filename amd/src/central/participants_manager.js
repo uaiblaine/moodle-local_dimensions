@@ -41,70 +41,56 @@ const SELECTORS = {
     paneEnrol: '[data-region="pane-enrol"]',
 };
 
-// Each tab can offer a header shortcut that opens the matching core admin page in a new tab.
-// The capability flag names the data attribute the server sets on the plans region (a "1" when
-// the user can reach that page); only allowed links are rendered.
-const HEADER_PAGES = [
-    {pane: 'pane-cohorts', path: '/cohort/index.php', flag: 'cancohortpage',
+// Each allowed admin page becomes a footer escape link that opens the matching core admin page in
+// a new tab. The capability flag names the data attribute the server sets on the plans region (a
+// "1" when the user can reach that page); only allowed links are rendered.
+const ADMIN_PAGES = [
+    {path: '/cohort/index.php', flag: 'cancohortpage',
         strkey: 'central_participants_openpage_cohorts'},
-    {pane: 'pane-users', path: '/admin/user.php', flag: 'canuserpage',
+    {path: '/admin/user.php', flag: 'canuserpage',
         strkey: 'central_participants_openpage_users'},
-    {pane: 'pane-roles', path: '/admin/roles/manage.php', flag: 'canassignroles',
+    {path: '/admin/roles/manage.php', flag: 'canassignroles',
         strkey: 'central_participants_openpage_roles'},
-    {pane: 'pane-enrol', path: '/admin/settings.php?section=manageenrols', flag: 'canenrolpage',
+    {path: '/admin/settings.php?section=manageenrols', flag: 'canenrolpage',
         strkey: 'central_participants_openpage_enrol'},
 ];
 
 /**
- * Inject the per-tab "open the matching core admin page" links into the modal header, just to
- * the left of the close button. Each link is only added when the user can reach its page. They
- * start hidden; the tab switcher reveals the one matching the active tab.
+ * Inject the "open the matching core admin page" links into the modal footer, left-aligned. Each
+ * link is only added when the user can reach its page; giving the otherwise-empty footer a child
+ * makes core reveal it (this is a management modal, so there is no primary action on the right).
  *
  * @param {HTMLElement} root The modal root.
  * @param {HTMLElement} region The plans region (carries the capability flags).
- * @return {Promise<Object>} Map of pane region name -> the injected link element.
+ * @return {Promise<void>}
  */
-const injectHeaderLinks = async(root, region) => {
-    const header = root.querySelector('.modal-header');
-    if (!header) {
-        return {};
+const injectFooterLinks = async(root, region) => {
+    const footer = root.querySelector('.modal-footer');
+    if (!footer) {
+        return;
     }
-    const allowed = HEADER_PAGES.filter((page) => region.dataset[page.flag] === '1');
+    const allowed = ADMIN_PAGES.filter((page) => region.dataset[page.flag] === '1');
     if (!allowed.length) {
-        return {};
+        return;
     }
-    const closebtn = header.querySelector('.btn-close');
     const labels = await getStrings(allowed.map((page) => ({key: page.strkey, component: 'local_dimensions'})));
-    const links = {};
+    const group = document.createElement('div');
+    group.className = 'local-dimensions-modal-footer-links';
     allowed.forEach((page, index) => {
         const link = document.createElement('a');
         link.href = M.cfg.wwwroot + page.path;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        link.className = 'btn btn-outline-secondary btn-sm local-dimensions-headerlink d-none';
+        link.className = 'btn btn-link p-0';
         const icon = document.createElement('i');
-        icon.className = 'fa fa-arrow-up-right-from-square me-1';
+        icon.className = 'fa fa-external-link me-1';
         icon.setAttribute('aria-hidden', 'true');
         link.appendChild(icon);
         // The visible label is the accessible name; no separate title/aria-label needed.
         link.appendChild(document.createTextNode(labels[index]));
-        header.insertBefore(link, closebtn);
-        links[page.pane] = link;
+        group.appendChild(link);
     });
-    return links;
-};
-
-/**
- * Reveal the header link matching the active tab's pane and hide the rest.
- *
- * @param {Object} links Map of pane region name -> link element (from injectHeaderLinks).
- * @param {String} paneregion The active tab's target pane (e.g. 'pane-users').
- * @return {void}
- */
-const showHeaderLinkFor = (links, paneregion) => {
-    Object.keys(links).forEach((pane) => {
-        links[pane].classList.toggle('d-none', pane !== paneregion);
-    });
+    footer.appendChild(group);
 };
 
 /**
@@ -148,15 +134,16 @@ export const show = async(pane, region) => {
     const root = modal.getRoot()[0];
     // Widen this data-dense modal (tabs + grids) responsively. Bootstrap's own modal-xl carries
     // the sizing (identical on 4 and 5); core's modal API only exposes setLarge(), so add the
-    // class directly. The plugin classes below only hook the height and header-link rules.
+    // class directly. The local-dimensions-participants-modal class only hooks the height rule.
     const dialog = root.querySelector('.modal-dialog');
     if (dialog) {
-        dialog.classList.add('modal-xl', 'local-dimensions-participants-modal', 'local-dimensions-headerlink-modal');
+        // The close-button chip comes via the :has(.modal-body .local-dimensions-*) rule (the body
+        // carries .local-dimensions-participants), so no header-link class is needed here.
+        dialog.classList.add('modal-xl', 'local-dimensions-participants-modal');
     }
-    const headerlinks = await injectHeaderLinks(root, region);
+    // Admin escape links live in the footer (D2); giving it a child makes core reveal the footer.
+    await injectFooterLinks(root, region);
     // A header expand/restore control lets the user widen this dense modal; the choice persists.
-    // Started after the header links resolve so the size toggle groups with the close button on
-    // the right rather than racing the links for insertion order.
     attachExpander(dialog).catch(notifyError);
     const opts = {
         templateid: Number(pane.dataset.templateid),
@@ -205,7 +192,6 @@ export const show = async(pane, region) => {
         // and optionally move focus to it (keyboard activation).
         const selectTab = (button, setfocus) => {
             activateTab(root, button);
-            showHeaderLinkFor(headerlinks, button.dataset.targetPane);
             tabs().forEach((tab) => tab.setAttribute('tabindex', tab === button ? '0' : '-1'));
             ensureMounted(button);
             if (setfocus) {
@@ -215,11 +201,6 @@ export const show = async(pane, region) => {
 
         // The active tab is the tablist's single tab-stop (WAI-ARIA tabs roving tabindex).
         tabs().forEach((tab) => tab.setAttribute('tabindex', tab.classList.contains('active') ? '0' : '-1'));
-        // Reveal the header link that belongs to the initially-active (Cohorts) tab.
-        const activetab = tablist.querySelector('.nav-link.active');
-        if (activetab) {
-            showHeaderLinkFor(headerlinks, activetab.dataset.targetPane);
-        }
 
         tablist.addEventListener('click', (event) => {
             const button = event.target.closest('.nav-link');
