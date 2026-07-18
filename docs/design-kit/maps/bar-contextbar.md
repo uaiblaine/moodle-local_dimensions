@@ -8,7 +8,7 @@ recarrega o ativo. O select de categoria é sempre renderizado (oculto em modo s
 - **Mustache:** [`templates/central/contextbar.mustache`](../../../templates/central/contextbar.mustache)
 - **AMD:** [`amd/src/central/context.js`](../../../amd/src/central/context.js)
 - **Renderable:** [`classes/output/central/contextbar.php`](../../../classes/output/central/contextbar.php)
-- **To-be no DS:** `hierarchy-nav.html` (propõe trilha adaptativa + contexto em card — **diverge** do as-is).
+- **To-be no DS:** `hierarchy-nav.html` (propõe trilha adaptativa + contexto em card — **diverge** do as-is); `bar-contextbar.html` (as-is ↔ to-be do toggle `BAR-CATHIDDEN`, abaixo).
 
 ## Barra
 
@@ -34,6 +34,35 @@ recarrega o ativo. O select de categoria é sempre renderizado (oculto em modo s
 | `BAR-CAT-01` | Categoria de curso (select) | select → autocomplete | `contextbar.mustache:73` | `data-region="category-select"` | `form-select`; vira autocomplete via `enhance` (`context.js:280`); `change` → `setCategory` (`context.js:242-249`) |
 | `BAR-CAT-PLACEHOLDER` | "Selecione uma categoria de curso" | option | `contextbar.mustache:74` | `value="0"` | placeholder; 0 = sem categoria → `selectedCounts` devolve `null` e o contador some |
 | `BAR-CAT-OPTION` | `nome (contagem)` | option (loop) | `contextbar.mustache:76` | `categoryoptions` | `data-name`/`data-frameworkcount`/`data-templatecount`; renderizado com `frameworkcount`, **reescrito** por `renderOptionLabels` conforme a aba ativa (`context.js:124-130`) |
+
+## Categorias ocultas — `BAR-CATHIDDEN` (to-be · proposto 2026-07-18)
+
+> **Proposta, ainda não no código.** Fecha o item 3 do backlog da Central: o irmão do "Mostrar
+> estruturas ocultas" (FWK/EST), agora para **categorias de curso** no picker da barra. Design em
+> `bar-contextbar.html`; spec em `docs/superpowers/specs/2026-07-18-central-bar-hidden-categories-design.md` (local).
+
+| ID | Rótulo | Tipo | Origem (to-be) | Dados | Regra / notas |
+| --- | --- | --- | --- | --- | --- |
+| `BAR-CATHIDDEN` | Mostrar categorias ocultas | toggle (partial `showhidden_toggle`) | `contextbar.mustache` (novo bloco após `category-wrapper`) | `data-action="toggle-hidden-cats"` | **reusa o partial compartilhado** `local_dimensions/central/showhidden_toggle` (`{id,label,action,checked}`, mesmo de EST/FWK) via seção `{{#hiddencatstoggle}}` (null → não renderiza = gate de `hashiddencategories`); bloco próprio após o select, oculto no modo Sistema (`^iscoursecat`); `<label>` envolvente **real** (o named selector "checkbox" do Behat exige for/envolvente, não `aria-label`); str nova `central_bar_showhiddencategories` |
+
+**Semântica.** Por padrão o picker mostra só categorias visíveis; o toggle revela as `visible=0`
+**que o usuário já pode ver** (`make_categories_list()` só as traz para quem tem
+`moodle/category:viewhiddencategories`). Sem categoria oculta visível → sem toggle.
+
+**Comportamento (client-side, sem `reloadPane`).** Espelha `applyShowHidden`: o servidor renderiza
+todas as options marcando as ocultas com `data-hidden="1"`; o `<select>` mostra só visíveis por
+padrão; ligar reconstrói as `<option>` de um snapshot, preservando a seleção. Só a **lista** muda —
+`BAR-COUNT-01` é independente (conta o contexto, não categorias).
+
+**Edge.** Categoria selecionada persistida oculta → toggle **inicia ligado** (senão o contexto atual
+sumiria da lista).
+
+**Persistência.** Pref `central_nav` (já guarda contexto+categoria), chave `showhiddencats`;
+sobrevive sessões/dispositivos. Sanitizar no `helper::get_central_prefs` (toda chave nova entra no
+sanitizador). Privacidade já cobre `central_nav`.
+
+**Backend.** `central_category_options()` marca `hidden` por opção; `contextbar.php` expõe
+`hashiddencategories` + semeia o estado inicial (pref + edge). Sem WS nova.
 
 ## Contador
 
