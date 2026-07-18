@@ -645,6 +645,47 @@ class helper {
     }
 
     /**
+     * Append the "enrolled and self-enrolable" option to an already-provisioned
+     * enrollmentfilter select field, if missing.
+     *
+     * The provisioning path short-circuits on an existing field and never re-syncs its
+     * option list, so sites installed before the option existed keep a four-option select.
+     * This appends the fifth option (index 5), leaving the first four indices — and therefore
+     * every stored override — untouched. Idempotent: a re-run with the option already present
+     * is a no-op. Reads configdata fresh from the DB by field id so a stale cached controller
+     * cannot mask the real state; quietly returns when the field was never provisioned.
+     *
+     * @param string $area One of self::AREA_LP or self::AREA_COMPETENCY.
+     * @return void
+     */
+    public static function sync_enrollmentfilter_option(string $area): void {
+        global $DB;
+
+        $field = self::find_field_by_shortname(constants::CFIELD_ENROLLMENTFILTER, $area);
+        if (!$field) {
+            return;
+        }
+        $fieldid = (int) $field->get('id');
+
+        $configjson = $DB->get_field('customfield_field', 'configdata', ['id' => $fieldid]);
+        $config = json_decode((string) $configjson, true);
+        if (!is_array($config) || !isset($config['options'])) {
+            return;
+        }
+
+        $lines = explode("\n", (string) $config['options']);
+        $label = (string) new \lang_string('enrollmentfilter_enrolledorself', 'local_dimensions');
+        if (in_array($label, $lines, true)) {
+            return;
+        }
+
+        $lines[] = $label;
+        $config['options'] = implode("\n", $lines);
+        $DB->set_field('customfield_field', 'configdata', json_encode($config), ['id' => $fieldid]);
+        self::get_handler($area)->reset_configuration_cache();
+    }
+
+    /**
      * Get or create the single-course redirect select field for the given area.
      *
      * Storage: select customfield. Default option is `inherit`, which resolves
