@@ -160,15 +160,17 @@ if (!empty($templatedata['hascustomcss'])) {
 
 // Load AMD module for hero repositioning and progress loading.
 if ($competency) {
-    // Prepare locked card settings for JavaScript.
-    $lockedcardmode = get_config('local_dimensions', 'lockedcardmode');
-    if (empty($lockedcardmode)) {
-        $lockedcardmode = 'blocked';
-    }
-    // Default to true when the setting has never been saved: get_config returns
-    // boolean false only when the key is absent; an unchecked checkbox stores '0'.
-    $rawshowlockeddate = get_config('local_dimensions', 'showlockeddate');
-    $showlockeddate = ($rawshowlockeddate === false) ? true : (bool) $rawshowlockeddate;
+    // Prepare locked card settings for JavaScript. Both cascade competency -> plan
+    // -> global; the resolvers already apply the same "blocked"/true defaults the
+    // global settings use, so no local fallback is needed here.
+    $lockedcardmode = \local_dimensions\helper::resolve_lockedcardmode_for_view(
+        $competencyid,
+        $effectivetemplateid
+    );
+    $showlockeddate = \local_dimensions\helper::resolve_showlockeddate_for_view(
+        $competencyid,
+        $effectivetemplateid
+    );
     $cardicon = get_config('local_dimensions', 'cardicon');
     $learnmorebuttoncolor = get_config('local_dimensions', 'learnmorebuttoncolor');
     if (empty($learnmorebuttoncolor)) {

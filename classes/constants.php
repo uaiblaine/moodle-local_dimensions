@@ -71,6 +71,12 @@ class constants {
     /** @var string Custom field shortname for per-template single-course redirect (cascade select — provisioned for both areas) */
     const CFIELD_SINGLECOURSEREDIRECT = 'local_dimensions_singlecourseredirect';
 
+    /** @var string Custom field shortname for locked-card display mode (cascade select — both areas) */
+    const CFIELD_LOCKEDCARDMODE = 'local_dimensions_lockedcardmode';
+
+    /** @var string Custom field shortname for the "show availability date" toggle (cascade select — both areas) */
+    const CFIELD_SHOWLOCKEDDATE = 'local_dimensions_showlockeddate';
+
     /** @var string Custom field shortname for per-template "show related competencies" (lp area only) */
     const CFIELD_SHOWRELATED = 'local_dimensions_showrelated';
 
@@ -106,6 +112,24 @@ class constants {
 
     /** @var string Single-course redirect: disable for this template */
     const SINGLECOURSEREDIRECT_NO = 'no';
+
+    /** @var string Locked-card mode: inherit the next cascade layer (plan, then global) */
+    const LOCKEDCARDMODE_INHERIT = 'inherit';
+
+    /** @var string Locked-card mode: show a static "locked content" message */
+    const LOCKEDCARDMODE_BLOCKED = 'blocked';
+
+    /** @var string Locked-card mode: show a "Learn more" button linking to the course */
+    const LOCKEDCARDMODE_LEARNMORE = 'learnmore';
+
+    /** @var string Show availability date: inherit the next cascade layer (plan, then global) */
+    const SHOWLOCKEDDATE_INHERIT = 'inherit';
+
+    /** @var string Show availability date: show the date on locked cards */
+    const SHOWLOCKEDDATE_YES = 'yes';
+
+    /** @var string Show availability date: hide the date on locked cards */
+    const SHOWLOCKEDDATE_NO = 'no';
 
     /** @var string Show-related toggle: inherit the global setting */
     const SHOWRELATED_INHERIT = 'inherit';
@@ -196,6 +220,38 @@ class constants {
             self::SINGLECOURSEREDIRECT_INHERIT => new \lang_string('singlecourseredirect_inherit', 'local_dimensions'),
             self::SINGLECOURSEREDIRECT_YES => new \lang_string('singlecourseredirect_yes', 'local_dimensions'),
             self::SINGLECOURSEREDIRECT_NO => new \lang_string('singlecourseredirect_no', 'local_dimensions'),
+        ];
+    }
+
+    /**
+     * Localized options for the per-instance locked-card display mode select.
+     *
+     * The leading "inherit" option resolves to the next cascade layer (plan,
+     * then the site-wide `local_dimensions/lockedcardmode` setting) at read time.
+     *
+     * @return array<string, \lang_string> keyed by option identifier
+     */
+    public static function lockedcardmode_options(): array {
+        return [
+            self::LOCKEDCARDMODE_INHERIT => new \lang_string('lockedcardmode_inherit', 'local_dimensions'),
+            self::LOCKEDCARDMODE_BLOCKED => new \lang_string('lockedcardmode_blocked', 'local_dimensions'),
+            self::LOCKEDCARDMODE_LEARNMORE => new \lang_string('lockedcardmode_learnmore', 'local_dimensions'),
+        ];
+    }
+
+    /**
+     * Localized options for the per-instance "show availability date" select.
+     *
+     * The leading "inherit" option resolves to the next cascade layer (plan,
+     * then the site-wide `local_dimensions/showlockeddate` setting) at read time.
+     *
+     * @return array<string, \lang_string> keyed by option identifier
+     */
+    public static function showlockeddate_options(): array {
+        return [
+            self::SHOWLOCKEDDATE_INHERIT => new \lang_string('showlockeddate_inherit', 'local_dimensions'),
+            self::SHOWLOCKEDDATE_YES => new \lang_string('showlockeddate_yes', 'local_dimensions'),
+            self::SHOWLOCKEDDATE_NO => new \lang_string('showlockeddate_no', 'local_dimensions'),
         ];
     }
 

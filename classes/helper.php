@@ -29,6 +29,7 @@ use core_competency\competency;
 use core_competency\competency_framework;
 use core_competency\course_competency;
 use core_competency\course_module_competency;
+use core_customfield\category_controller;
 use core_customfield\field_controller;
 use core_customfield\handler;
 use cache;
@@ -461,11 +462,13 @@ class helper {
                 self::get_showrelatedlink_field();
             }
 
-            // Enrollment filter + single-course redirect: provisioned for both
-            // templates and competencies so the cascade competency -> template ->
-            // global has a place to read each layer from.
+            // Enrollment filter + single-course redirect + locked-card settings:
+            // provisioned for both templates and competencies so the cascade
+            // competency -> template -> global has a place to read each layer from.
             self::get_enrollmentfilter_field($area);
             self::get_singlecourseredirect_field($area);
+            self::get_lockedcardmode_field($area);
+            self::get_showlockeddate_field($area);
 
             // Image fields: only create if using external customfield_picture plugin.
             // In built-in mode, images are managed by picture_manager directly.
@@ -485,9 +488,150 @@ class helper {
             if (get_config('local_dimensions', 'enablecustomscss')) {
                 self::get_customscss_field($area);
             }
+
+            // Sort every provisioned field into the localized Feel/Look categories
+            // (self-healing: also fixes installs provisioned before the split).
+            self::organize_customfield_categories($area);
         } finally {
             $lock->release();
         }
+    }
+
+    /**
+     * Ordered "Feel" custom-field shortnames (behaviour settings).
+     *
+     * Fields absent in a given area (e.g. the lp-only display mode on competencies)
+     * are skipped by {@see self::organize_customfield_categories()}. The order here is
+     * the order they appear inside the category accordion.
+     *
+     * @return string[] Shortnames in display order.
+     */
+    private static function feel_category_fields(): array {
+        return [
+            constants::CFIELD_DISPLAYMODE,
+            constants::CFIELD_SUBLINE_SOURCE,
+            constants::CFIELD_TEMPLATE_IDNUMBER,
+            constants::CFIELD_ENROLLMENTFILTER,
+            constants::CFIELD_SINGLECOURSEREDIRECT,
+            constants::CFIELD_LOCKEDCARDMODE,
+            constants::CFIELD_SHOWLOCKEDDATE,
+            constants::CFIELD_SHOWRELATED,
+            constants::CFIELD_SHOWRELATEDLINK,
+        ];
+    }
+
+    /**
+     * Ordered "Look" custom-field shortnames (visual styling).
+     *
+     * The two picture fields exist only in external image-handler mode; in built-in
+     * mode the filemanagers are appended to the form after the last category, which is
+     * why "Look" is kept last (see {@see self::organize_customfield_categories()}).
+     *
+     * @return string[] Shortnames in display order.
+     */
+    private static function look_category_fields(): array {
+        return [
+            constants::CFIELD_CUSTOMBGCOLOR,
+            constants::CFIELD_CUSTOMTEXTCOLOR,
+            constants::CFIELD_TAG1,
+            constants::CFIELD_TAG2,
+            constants::CFIELD_TYPE,
+            constants::CFIELD_CUSTOMSCSS,
+            constants::CFIELD_CUSTOMBGIMAGE,
+            constants::CFIELD_CUSTOMCARD,
+        ];
+    }
+
+    /**
+     * Find or create one of the plugin's managed field categories for an area.
+     *
+     * The category name is localized from a lang string at creation time (mirroring
+     * how the tag option lists are seeded), so it reflects the provisioning admin's
+     * language. Because the stored name is not re-synced and can differ per language,
+     * the created id is remembered in plugin config (`cfcat_<slug>_<area>`): a later
+     * provisioning run under a different language reuses it instead of creating a
+     * duplicate. Admin renames of the category also survive (we track by id, not name).
+     *
+     * @param string $area The area (lp or competency)
+     * @param string $slug Short category identifier ('feel' or 'look')
+     * @param string $langkey Lang string key for the category name
+     * @return category_controller
+     */
+    private static function get_managed_category(string $area, string $slug, string $langkey): category_controller {
+        $handler = self::get_handler($area);
+        $configname = 'cfcat_' . $slug . '_' . $area;
+        $storedid = (int) get_config('local_dimensions', $configname);
+
+        if ($storedid > 0) {
+            foreach ($handler->get_categories_with_fields() as $category) {
+                if ((int) $category->get('id') === $storedid) {
+                    return $category;
+                }
+            }
+        }
+
+        $newid = $handler->create_category((string) new \lang_string($langkey, 'local_dimensions'));
+        set_config($configname, $newid, 'local_dimensions');
+        $handler->reset_configuration_cache();
+
+        return category_controller::create($newid);
+    }
+
+    /**
+     * Sort the plugin's provisioned custom fields into the Feel/Look categories.
+     *
+     * Idempotent and self-healing: creates the two categories (once), moves each
+     * managed field that exists into its category in the declared order, drops the
+     * leftover default category once it is empty, then orders Feel before Look.
+     * "Look" is deliberately ordered last so the built-in image filemanagers — which
+     * the handlers append after the core fields — land inside its accordion section.
+     *
+     * @param string $area The area (lp or competency)
+     * @return void
+     */
+    public static function organize_customfield_categories(string $area): void {
+        $handler = self::get_handler($area);
+        $feel = self::get_managed_category($area, 'feel', 'fieldcategory_feel');
+        $look = self::get_managed_category($area, 'look', 'fieldcategory_look');
+        $feelid = (int) $feel->get('id');
+        $lookid = (int) $look->get('id');
+
+        // Move each managed field into its category, in the declared display order.
+        // On the first run every field is still in the auto-created default category,
+        // so they all move here in sequence and end up in list order. Only moving when
+        // the category actually differs keeps later (throttled) runs write-free — an
+        // append-always call would rewrite sortorders on every provisioning pass.
+        foreach ([$feelid => self::feel_category_fields(), $lookid => self::look_category_fields()] as $categoryid => $shortnames) {
+            foreach ($shortnames as $shortname) {
+                $field = self::find_field_by_shortname($shortname, $area);
+                if ($field && (int) $field->get('categoryid') !== $categoryid) {
+                    \core_customfield\api::move_field($field, $categoryid);
+                }
+            }
+        }
+
+        // Drop any now-empty category (e.g. the auto-created "Other fields" default),
+        // but never the two we manage. Re-read fresh so the moves above are visible.
+        // get_categories_with_fields() also merges in core's shared categories; those
+        // keep their real stored component/area (core_customfield/shared) even though
+        // their original_* is cloned to this handler, so the guard below skips them.
+        $handler->reset_configuration_cache();
+        foreach ($handler->get_categories_with_fields() as $category) {
+            $categoryid = (int) $category->get('id');
+            if ($categoryid === $feelid || $categoryid === $lookid) {
+                continue;
+            }
+            if ($category->get('component') !== 'local_dimensions' || $category->get('area') !== $area) {
+                continue;
+            }
+            if (count($category->get_fields()) === 0) {
+                $handler->delete_category($category);
+            }
+        }
+
+        // Feel first, Look last (Look last keeps the appended image filemanagers in it).
+        $handler->move_category($feel, $lookid);
+        $handler->move_category($look, 0);
     }
 
     /** @var int Re-check window for the lazy-provisioning hook fallback (seconds). */
@@ -723,6 +867,80 @@ class helper {
     }
 
     /**
+     * Get or create the locked-card display mode select field for the given area.
+     *
+     * Storage: select customfield. Default option is `inherit`, which resolves to
+     * the next layer (template, then the site-wide `local_dimensions/lockedcardmode`
+     * setting) at read time. Only meaningful in the Competency Tracker view.
+     *
+     * @param string $area The area (lp or competency)
+     * @return field_controller|null
+     */
+    public static function get_lockedcardmode_field(string $area = self::AREA_LP): ?field_controller {
+        $shortname = constants::CFIELD_LOCKEDCARDMODE;
+        $field = self::find_field_by_shortname($shortname, $area);
+
+        if ($field) {
+            return $field;
+        }
+
+        $options = constants::lockedcardmode_options();
+        $optionstext = [];
+        foreach ($options as $key => $langstring) {
+            $optionstext[] = (string) $langstring;
+        }
+
+        return self::create_custom_field(
+            $shortname,
+            'select',
+            $area,
+            new \lang_string('lockedcardmode', 'local_dimensions'),
+            [
+                'options' => join("\n", $optionstext),
+                'defaultvalue' => (string) $options[constants::LOCKEDCARDMODE_INHERIT],
+            ],
+            ''
+        );
+    }
+
+    /**
+     * Get or create the "show availability date" select field for the given area.
+     *
+     * Storage: select customfield. Default option is `inherit`, which resolves to
+     * the next layer (template, then the site-wide `local_dimensions/showlockeddate`
+     * setting) at read time. Only meaningful in the Competency Tracker view.
+     *
+     * @param string $area The area (lp or competency)
+     * @return field_controller|null
+     */
+    public static function get_showlockeddate_field(string $area = self::AREA_LP): ?field_controller {
+        $shortname = constants::CFIELD_SHOWLOCKEDDATE;
+        $field = self::find_field_by_shortname($shortname, $area);
+
+        if ($field) {
+            return $field;
+        }
+
+        $options = constants::showlockeddate_options();
+        $optionstext = [];
+        foreach ($options as $key => $langstring) {
+            $optionstext[] = (string) $langstring;
+        }
+
+        return self::create_custom_field(
+            $shortname,
+            'select',
+            $area,
+            new \lang_string('showlockeddate', 'local_dimensions'),
+            [
+                'options' => join("\n", $optionstext),
+                'defaultvalue' => (string) $options[constants::SHOWLOCKEDDATE_INHERIT],
+            ],
+            ''
+        );
+    }
+
+    /**
      * Get or create the per-template "show related competencies" select field (lp area).
      *
      * @return field_controller|null
@@ -871,6 +1089,97 @@ class helper {
         }
 
         return $resolved === constants::SINGLECOURSEREDIRECT_YES;
+    }
+
+    /**
+     * Resolve the effective locked-card display mode for a learning plan template.
+     *
+     * Returns one of `blocked` / `learnmore`. When the template stores `inherit`
+     * (or no row exists), falls back to the global `local_dimensions/lockedcardmode`
+     * setting, defaulting to `blocked`.
+     *
+     * @param int $templateid Learning plan template ID
+     * @return string One of constants::LOCKEDCARDMODE_BLOCKED|LEARNMORE
+     */
+    public static function get_template_lockedcardmode(int $templateid): string {
+        $global = (string) (get_config('local_dimensions', 'lockedcardmode') ?: constants::LOCKEDCARDMODE_BLOCKED);
+
+        if ($templateid <= 0) {
+            return $global;
+        }
+
+        $field = self::get_lockedcardmode_field();
+        if (!$field) {
+            return $global;
+        }
+
+        $allowed = array_keys(constants::lockedcardmode_options());
+        $resolved = constants::LOCKEDCARDMODE_INHERIT;
+
+        $fields = \core_customfield\api::get_instance_fields_data([$field->get('id') => $field], $templateid);
+        foreach ($fields as $data) {
+            $value = $data->get_value();
+            if (is_int($value) && isset($allowed[$value - 1])) {
+                $value = $allowed[$value - 1];
+            }
+            $value = (string) $value;
+            if ($value !== '' && in_array($value, $allowed, true)) {
+                $resolved = $value;
+                break;
+            }
+        }
+
+        if ($resolved === constants::LOCKEDCARDMODE_INHERIT) {
+            return $global;
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * Resolve the effective "show availability date" flag for a learning plan template.
+     *
+     * Returns a bool. When the template stores `inherit` (or no row exists), falls back
+     * to the global `local_dimensions/showlockeddate`, which itself defaults to true
+     * (the setting stores boolean false only when it has never been saved).
+     *
+     * @param int $templateid Learning plan template ID
+     * @return bool true to show the availability date on locked cards
+     */
+    public static function get_template_showlockeddate(int $templateid): bool {
+        $raw = get_config('local_dimensions', 'showlockeddate');
+        $global = ($raw === false) ? true : (bool) $raw;
+
+        if ($templateid <= 0) {
+            return $global;
+        }
+
+        $field = self::get_showlockeddate_field();
+        if (!$field) {
+            return $global;
+        }
+
+        $allowed = array_keys(constants::showlockeddate_options());
+        $resolved = constants::SHOWLOCKEDDATE_INHERIT;
+
+        $fields = \core_customfield\api::get_instance_fields_data([$field->get('id') => $field], $templateid);
+        foreach ($fields as $data) {
+            $value = $data->get_value();
+            if (is_int($value) && isset($allowed[$value - 1])) {
+                $value = $allowed[$value - 1];
+            }
+            $value = (string) $value;
+            if ($value !== '' && in_array($value, $allowed, true)) {
+                $resolved = $value;
+                break;
+            }
+        }
+
+        if ($resolved === constants::SHOWLOCKEDDATE_INHERIT) {
+            return $global;
+        }
+
+        return $resolved === constants::SHOWLOCKEDDATE_YES;
     }
 
     /**
@@ -1253,6 +1562,62 @@ class helper {
             return self::get_template_singlecourseredirect($templateid);
         }
         return (bool) get_config('local_dimensions', 'singlecourseredirect');
+    }
+
+    /**
+     * Resolve the effective locked-card display mode when viewing a competency through a plan.
+     *
+     * Cascade: competency-level customfield -> template-level customfield ->
+     * site-wide `local_dimensions/lockedcardmode` (default `blocked`). Pass `templateid = 0`
+     * to skip the template layer (competency -> global), as callers do for a competency that
+     * is not in the plan (a related-competency link).
+     *
+     * @param int $competencyid Competency being viewed
+     * @param int $templateid Template of the plan the competency is being viewed through (0 for manual plans)
+     * @return string One of constants::LOCKEDCARDMODE_BLOCKED|LEARNMORE
+     */
+    public static function resolve_lockedcardmode_for_view(int $competencyid, int $templateid): string {
+        $compraw = self::get_competency_select_raw(
+            $competencyid,
+            constants::CFIELD_LOCKEDCARDMODE,
+            array_keys(constants::lockedcardmode_options()),
+            constants::LOCKEDCARDMODE_INHERIT
+        );
+        if ($compraw !== constants::LOCKEDCARDMODE_INHERIT) {
+            return $compraw;
+        }
+        if ($templateid > 0) {
+            return self::get_template_lockedcardmode($templateid);
+        }
+        return (string) (get_config('local_dimensions', 'lockedcardmode') ?: constants::LOCKEDCARDMODE_BLOCKED);
+    }
+
+    /**
+     * Resolve the effective "show availability date" flag when viewing a competency through a plan.
+     *
+     * Cascade: competency-level customfield -> template-level customfield ->
+     * site-wide `local_dimensions/showlockeddate` (default true). Pass `templateid = 0`
+     * to skip the template layer (competency -> global).
+     *
+     * @param int $competencyid Competency being viewed
+     * @param int $templateid Template of the plan the competency is being viewed through (0 for manual plans)
+     * @return bool true when the availability date should be shown on locked cards
+     */
+    public static function resolve_showlockeddate_for_view(int $competencyid, int $templateid): bool {
+        $compraw = self::get_competency_select_raw(
+            $competencyid,
+            constants::CFIELD_SHOWLOCKEDDATE,
+            array_keys(constants::showlockeddate_options()),
+            constants::SHOWLOCKEDDATE_INHERIT
+        );
+        if ($compraw !== constants::SHOWLOCKEDDATE_INHERIT) {
+            return $compraw === constants::SHOWLOCKEDDATE_YES;
+        }
+        if ($templateid > 0) {
+            return self::get_template_showlockeddate($templateid);
+        }
+        $raw = get_config('local_dimensions', 'showlockeddate');
+        return ($raw === false) ? true : (bool) $raw;
     }
 
     /**
