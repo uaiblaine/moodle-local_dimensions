@@ -173,6 +173,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
             'all' => get_string('enrollmentfilter_all', 'local_dimensions'),
             'enrolled' => get_string('enrollmentfilter_enrolled', 'local_dimensions'),
             'active' => get_string('enrollmentfilter_active', 'local_dimensions'),
+            'enrolledorself' => get_string('enrollmentfilter_enrolledorself', 'local_dimensions'),
         ]
     ));
 
