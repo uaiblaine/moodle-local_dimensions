@@ -16,7 +16,7 @@ Criado em `47677dd`; sem mapa até aqui (lacuna registrada na Seção 3 do desig
 
 - **Mustache:** [`structure_related_modal.mustache`](../../../templates/central/structure_related_modal.mustache) (casca) + o partial compartilhado [`structure_detail_content.mustache`](../../../templates/central/structure_detail_content.mustache) (o card, o mesmo do painel inline)
 - **JS:** [`competency_detail.js`](../../../amd/src/central/competency_detail.js) (`openCompetencyDetailModal`, 265-296) · [`structure.js`](../../../amd/src/central/structure.js) (gatilho, 64 + 1247)
-- **CSS:** [`styles.css`](../../../styles.css) (5146-5190, o contrato do diálogo; + a exclusão em 3557)
+- **CSS:** [`styles.css`](../../../styles.css) (5146-5190, o contrato do diálogo; + a exclusão em 3740)
 
 ## IDs
 
@@ -42,7 +42,7 @@ para que **o card seja o diálogo**, sem moldura de modal em volta (`styles.css:
 
 **A exclusão que fecha o contrato:** o restyle global do `.btn-close` (o chip azul-claro que o
 plugin aplica ao fechar de **todo** modal com conteúdo do plugin) traz um
-`:not(.local-dimensions-related-modal)` em cada seletor (`styles.css:3557, 3571, 3581-3582`) —
+`:not(.local-dimensions-related-modal)` em cada seletor (`styles.css:3740, 3754, 3764-3765`) —
 ou seja, este modal é **explicitamente retirado** do restyle, porque ele tem o **seu** botão de
 fechar (`MOD.STRUCTREL-CLOSE`), colorido pela competência, e o `.btn-close` do core está escondido
 de qualquer forma. Sem essa exclusão, dois botões de fechar disputariam o canto.
@@ -54,6 +54,6 @@ de qualquer forma. Sem essa exclusão, dois botões de fechar disputariam o cant
 | É **espiar**, não **editar** — o card, não o `MOD.RELATED` | `competency_detail.js:265` vs `related_competencies.mustache` |
 | O gatilho vive **fora** do modal (só no painel inline, `showrelated` on) | `structure.js:64` + `:1247` |
 | As duas travas (`linksclickable`/`showrelated` off) existem para **não empilhar** modais | `competency_detail.js:275` |
-| O `title` é passado mas o cabeçalho é `display:none` — o nome vive no card | `:279` + `styles.css:5154` |
-| É o único diálogo **sem cabeçalho** e **fora** do restyle global do `.btn-close` | `styles.css:3557` (`:not(...)`) + `5154` |
+| O `title` é passado mas o cabeçalho é `display:none` — o nome vive no card | `:279` + `styles.css:5337` |
+| É o único diálogo **sem cabeçalho** e **fora** do restyle global do `.btn-close` | `styles.css:3740` (`:not(...)`) + `5337` |
 | Cor do fechar vem do `textcolor` da competência, em JS | `competency_detail.js:294` |

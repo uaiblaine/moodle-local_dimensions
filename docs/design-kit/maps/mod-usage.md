@@ -63,7 +63,7 @@ aquele** — é o mecanismo, não uma convenção.
 | ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
 | --- | --- | --- | --- | --- | --- |
 | `MOD.USAGE-TITLE` | {seção} — {nome} | título | `js:1225-1226` | str de `USAGE_SECTIONS[labelkey]` + `' — '` + `row.dataset.name` | o `title` recebe a **Promise** do `getString` (`Modal.create` aceita); o travessão é **literal no JS**, não vem de string. É o único lugar que diz **qual** seção está aberta — o corpo não tem cabeçalho |
-| `MOD.USAGE-MODAL` | — | `core/modal` | `js:1224-1231` | `large: true`, `show: true`, `removeOnClose: true` | `core/modal` **puro** — sem `footer`, sem save/cancel: é leitura. Fecha só pelo `.btn-close` do cabeçalho do core (que **recebe** o restyle de chip azul do plugin, `styles.css:3557` — este modal **não** está no `:not()` da exclusão; quem está é o `MOD.DETAIL`) |
+| `MOD.USAGE-MODAL` | — | `core/modal` | `js:1224-1231` | `large: true`, `show: true`, `removeOnClose: true` | `core/modal` **puro** — sem `footer`, sem save/cancel: é leitura. Fecha só pelo `.btn-close` do cabeçalho do core (que **recebe** o restyle de chip azul do plugin, `styles.css:3740` — este modal **não** está no `:not()` da exclusão; quem está é o `MOD.DETAIL`) |
 | `MOD.USAGE-ROOT` | `[sem rótulo]` | região/raiz | `mustache:51` | `.local-dimensions-central-usage` | **sem CSS**. Único filho do corpo; as três seções são irmãs dentro dele |
 
 ## Seção "Cursos" (`showcourses`)
