@@ -53,6 +53,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);color:var(--text-primary);border-radius:4px;padding:0 3px;}
 .ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .ic.sm{width:0.8rem;height:0.8rem;}
+.ic.xs{width:0.7rem;height:0.7rem;}
 
 /* ---- casca do modal ---- */
 .m{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
@@ -78,7 +79,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .bsec{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:4px 8px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);white-space:nowrap;font-family:inherit;cursor:pointer;}
 .bdang{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:4px 8px;border:0.5px solid var(--border-danger);border-radius:var(--radius);background:var(--surface-2);color:var(--text-danger);white-space:nowrap;}
 .bsec.off,.bprim.off,.bdang.off{opacity:0.5;}
-.pill{font-size:9px;padding:1px 6px;border-radius:10px;white-space:nowrap;}
+.pill{display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:1px 6px;border-radius:10px;white-space:nowrap;vertical-align:middle;}
 .p-ok{background:var(--bg-success);color:var(--text-success);border:0.5px solid var(--border-success);}
 .p-proc{background:var(--acc-bg);color:var(--acc-fg);border:0.5px solid var(--acc-fg);}
 .p-no{background:var(--surface-1);color:var(--text-secondary);border:0.5px solid var(--border-strong);}
@@ -125,7 +126,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
    data-* da linha, sem refetch. O `~` reavalia na hora; um :has() num ancestral atrasa um passo. */
 .mchk{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
 .seg{display:inline-flex;border-radius:var(--radius);overflow:hidden;border:0.5px solid var(--border-strong);}
-.segb{font-size:10px;padding:4px 8px;color:var(--text-secondary);background:var(--surface-2);cursor:pointer;white-space:nowrap;}
+.segb{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:4px 8px;color:var(--text-secondary);background:var(--surface-2);cursor:pointer;white-space:nowrap;}
 #e-cohort:checked ~ .pane label[for="e-cohort"],
 #e-self:checked ~ .pane label[for="e-self"]{background:var(--prim-bg);color:var(--prim-fg);font-weight:500;}
 #e-cohort:checked ~ .pane .s-self,
@@ -155,6 +156,8 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
   <symbol id="e-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="e-eyeoff" viewBox="0 0 24 24"><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.5 0 10 7 10 7a18 18 0 0 1-2.16 3.19"/><path d="M6.6 6.6A17.8 17.8 0 0 0 2 11s3.5 7 10 7a9 9 0 0 0 5.4-1.6"/><path d="m2 2 20 20"/></symbol>
   <symbol id="e-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="e-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="e-userplus" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></symbol>
 </svg>
 
 <div class="screens">
@@ -191,7 +194,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
               <span class="col"><span class="flbl">Coorte do plano</span><span class="ctrl" style="min-width:120px;"><span>Marketing 2026</span><span style="color:var(--text-secondary)">⌄</span></span></span>
               <span class="col"><span class="flbl" id="e-mlbl">Método</span>
                 <span class="seg" role="group" aria-labelledby="e-mlbl">
-                  <label class="segb" for="e-cohort">Sincronização de coortes</label><label class="segb" for="e-self">Autoinscrição</label>
+                  <label class="segb" for="e-cohort"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-users"/></svg>Sincronização de coortes</label><label class="segb" for="e-self"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-userplus"/></svg>Autoinscrição</label>
                 </span>
               </span>
               <span class="col"><span class="flbl">Papel atribuído</span><span class="ctrl" style="min-width:82px;"><span>Estudante</span><span style="color:var(--text-secondary)">⌄</span></span></span>
@@ -238,8 +241,8 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
                   <span class="c-name"><span class="sn">MKT-101</span> · Fundamentos de comunicação</span>
                   <span class="c-cat">Marketing</span>
                   <span class="c-role s-cohort">Estudante</span><span class="c-role s-self">—</span>
-                  <span class="c-stat s-cohort"><span class="pill p-ok">Configurado</span></span>
-                  <span class="c-stat s-self"><span class="pill p-no">Não config.</span></span>
+                  <span class="c-stat s-cohort"><span class="pill p-ok"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#e-users"/></svg>Configurado</span></span>
+                  <span class="c-stat s-self"><span class="pill p-no"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#e-userplus"/></svg>Não config.</span></span>
                   <span class="c-act">
                     <span class="bsec s-cohort" style="padding:2px 5px;"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-eye"/></svg>Inscrição habilitada</span>
                     <span class="bsec" style="padding:2px 5px;"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-info"/></svg>Detalhes</span>
@@ -250,7 +253,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
                   <span class="c-name"><span class="sn">MKT-205</span> · Estratégia de comunicação <svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#e-eyeoff"/></svg></span>
                   <span class="c-cat">Marketing</span>
                   <span class="c-role">—</span>
-                  <span class="c-stat"><span class="pill p-no">Não config.</span></span>
+                  <span class="c-stat"><span class="pill p-no"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#e-users"/></svg>Não config.</span></span>
                   <span class="c-act"><span class="bsec" style="padding:2px 5px;"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-info"/></svg>Detalhes</span></span>
                 </div>
                 <div class="trow">
@@ -258,7 +261,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
                   <span class="c-name" style="color:var(--text-secondary)"><span class="sn">RH-330</span> · Comunicação interna</span>
                   <span class="c-cat">RH</span>
                   <span class="c-role">—</span>
-                  <span class="c-stat"><span class="pill p-proc">Processando</span></span>
+                  <span class="c-stat"><span class="pill p-proc"><svg class="ic xs" aria-hidden="true" focusable="false"><use href="#e-users"/></svg>Processando</span></span>
                   <span class="c-act"><span class="bsec" style="padding:2px 5px;"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-info"/></svg>Detalhes</span></span>
                 </div>
                 <div class="trow"><span class="note" style="color:var(--acc-fg)">Carregar mais</span><span class="idb">ENROL-MORECOURSES · página de 25</span></div>
@@ -285,11 +288,11 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
               <span class="row" style="gap:4px;color:var(--acc-fg);font-size:10px;"><span class="spin"></span>1 em processamento</span>
             </span>
             <span class="row" style="gap:4px;">
-              <span class="bdang">Remover método</span><span class="bprim">Aplicar método</span>
+              <span class="bdang"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-users"/></svg>Remover · Sincronização de coortes</span><span class="bprim"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-users"/></svg>Aplicar · Sincronização de coortes</span>
             </span>
           </div>
           <div class="row">
-            <span class="idb">ENROL-SELCOUNT · :122</span><span class="idb">ENROL-PROC · :123-126</span><span class="idb">ENROL-REMOVE · :128</span><span class="idb">ENROL-APPLY · :131</span>
+            <span class="idb">ENROL-SELCOUNT · :122</span><span class="idb">ENROL-PROC · :123-126</span><span class="idb">ENROL-REMOVE · :128</span><span class="idb">ENROL-APPLY · :131</span><span class="idb">central_enrol_remove_method / central_enrol_apply_method · «Remover · {$a}» / «Aplicar · {$a}»</span>
           </div>
         </div>
 
@@ -313,7 +316,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
           <span class="note" style="display:block;margin-top:5px;"><strong>Novo em 2026-07-16</strong> (<code>c2d9471</code>): o 4º portão. Ao contrário dos outros três, o <code>init</code> o revela no <code>catch</code> da primeira carga (<code>js:880</code>), não num caminho de sucesso — e é um <code>alert-warning</code> (falha transitória/repetível), não danger. Seu atualizar é o <strong>único</strong> que mora <strong>fora</strong> das três regiões de dados, então sobrevive à falha que as esconde. String da mensagem nova: <code>central_enrol_loadfailed</code>.</span>
         </div>
 
-        <span class="note"><strong>Clique nos dois segmentos de método acima:</strong> o status, o papel e o toggle da linha trocam sem nenhuma requisição — é a mecânica real (<code>applyMethodChange</code>, <code>js:698-721</code>), porque cada linha carrega os <strong>dois</strong> métodos nas suas <code>data-*</code> (<code>js:320-334</code>).</span>
+        <span class="note"><strong>Clique nos dois segmentos de método acima:</strong> o status, o papel e o toggle da linha trocam sem nenhuma requisição — é a mecânica real (<code>applyMethodChange</code>, <code>js:698-721</code>), porque cada linha carrega os <strong>dois</strong> métodos nas suas <code>data-*</code> (<code>js:320-334</code>). Trocam junto o <strong>ícone da pill</strong> (<code>fa-users</code> ↔ <code>fa-user-plus</code>, pintado por <code>paintRow</code>, <code>js:220-224</code>) e o <strong>rótulo do botão do rodapé</strong> («Aplicar · <em>método</em>» / «Remover · <em>método</em>», por <code>setActionLabels</code>, <code>js:302-304</code>) — ambos derivados do próprio método/linha, e o segmento carrega o mesmo ícone.</span>
       </div>
     </div>
   </section>
