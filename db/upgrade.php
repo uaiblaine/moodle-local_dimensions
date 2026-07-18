@@ -387,6 +387,17 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071115, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026071800) {
+        // Append the new "enrolled and self-enrolable" option to the existing
+        // enrollmentfilter select fields (lp + competency). The provisioning
+        // catch-all below short-circuits on the existing field and never re-syncs
+        // its option list, so this reconcile is required on upgraded sites.
+        \local_dimensions\helper::sync_enrollmentfilter_option(\local_dimensions\helper::AREA_LP);
+        \local_dimensions\helper::sync_enrollmentfilter_option(\local_dimensions\helper::AREA_COMPETENCY);
+
+        upgrade_plugin_savepoint(true, 2026071800, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
