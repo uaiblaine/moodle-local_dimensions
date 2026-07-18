@@ -3647,12 +3647,15 @@
 }
 
 /*
- * Expanded = true fullscreen: edge to edge, full height, square corners. Mirrors Bootstrap 5's
+ * Expanded = true fullscreen: edge to edge, full height, square corners. Like Bootstrap 5's
  * .modal-fullscreen without the class (4.5 lacks it) and without !important — specificity 0,2,0
  * beats modal-xl / modal-lg and .modal-content. Header and footer drop their radius too.
+ * Width is 100% (not 100vw): the dialog then matches its position:fixed .modal parent, whose
+ * width already excludes any viewport scrollbar column, so the dialog stays beside the scrollbar
+ * instead of extending under it (100vw includes the scrollbar, painting it over the dialog edge).
  */
 .modal-dialog.local-dimensions-modal-expanded {
-    width: 100vw;
+    width: 100%;
     max-width: none;
     height: 100%;
     margin: 0;
