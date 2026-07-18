@@ -29,7 +29,7 @@ import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
-import {add as addToast} from 'core/toast';
+import {add as addToast} from 'local_dimensions/central/toast';
 import {iconButton} from 'local_dimensions/central/action_button';
 
 const PAGE_SIZE = 25;

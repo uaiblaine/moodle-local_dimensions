@@ -26,7 +26,7 @@ import ModalEvents from 'core/modal_events';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {getString, getStrings} from 'core/str';
-import {addToastRegion} from 'core/toast';
+import {addToastRegion} from 'local_dimensions/central/toast';
 import {mount as mountCohorts} from 'local_dimensions/central/cohort_manager';
 import {mount as mountUsers} from 'local_dimensions/central/participants_users';
 import {mount as mountRoles} from 'local_dimensions/central/roles_manager';

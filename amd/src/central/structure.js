@@ -38,7 +38,7 @@ import {show as showRuleConfigModal} from 'local_dimensions/central/rule_config'
 import {open as openLinksModal} from 'local_dimensions/central/competency_links';
 import {open as openRelatedModal} from 'local_dimensions/central/related_competencies';
 import {getString} from 'core/str';
-import {add as addToast} from 'core/toast';
+import {add as addToast} from 'local_dimensions/central/toast';
 import {renderDetailInto, openCompetencyDetailModal} from 'local_dimensions/central/competency_detail';
 import {initMasterResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';

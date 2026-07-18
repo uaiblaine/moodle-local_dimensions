@@ -35,7 +35,7 @@ import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {getString} from 'core/str';
-import {add as addToast, addToastRegion} from 'core/toast';
+import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
 import {applyMode, destroyBrowser, getCheckedIds, initBrowser} from 'local_dimensions/central/competency_tree_browser';
 
 const SELECTORS = {

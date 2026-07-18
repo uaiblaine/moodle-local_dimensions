@@ -32,7 +32,7 @@
  */
 
 import Notification from 'core/notification';
-import {add as addToast} from 'core/toast';
+import {add as addToast} from 'local_dimensions/central/toast';
 import {getString} from 'core/str';
 
 /**

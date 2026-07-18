@@ -30,7 +30,7 @@ import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {getString} from 'core/str';
-import {add as addToast, addToastRegion} from 'core/toast';
+import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import {open as openScaleConfig} from 'local_dimensions/central/framework_scaleconfig';
 import * as ActionFooter from 'local_dimensions/central/action_footer';
