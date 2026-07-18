@@ -5899,6 +5899,24 @@ a.local-dimensions-central-links-badge-warn:focus {
 }
 
 /*
+ * Contextbar category picker: stack the wrapper as a column and push the autocomplete's
+ * selection chip BELOW the search input (core renders it above by default). Scoped to the
+ * contextbar so no other hub autocomplete is affected; the label stays on top. This is a
+ * layout preference — re-verify against core's live autocomplete DOM on a Moodle upgrade.
+ * The :not([hidden]) guard is required: this rule outweighs the UA [hidden]{display:none},
+ * so without it the wrapper would show in System mode (the .d-block-vs-[hidden] trap).
+ */
+.local-dimensions-central-contextbar [data-region='category-wrapper']:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+}
+
+.local-dimensions-central-contextbar [data-region='category-wrapper'] .form-autocomplete-selection {
+    order: 1;
+    margin-top: 0.25rem;
+}
+
+/*
  * IMP-10: the hub's three tabs get an icon (in the label, built in central.php) and a flat accent
  * indicator on the active tab, scoped to the hub page so the restyle never leaks to the many other
  * core dynamic_tabs consumers site-wide. The accent (Boost primary) sits only on the 2px underline
