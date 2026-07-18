@@ -55,7 +55,7 @@
         "selectedtemplatecount": 2
     }
 }}
-<div class="local-dimensions-central-contextbar d-flex flex-wrap align-items-end gap-3 mb-4"
+<div class="local-dimensions-central-contextbar d-flex flex-wrap align-items-start gap-3 mb-4"
      data-region="contextbar"
      data-contexttype="{{contexttype}}"
      data-categoryid="{{selectedcategoryid}}"
@@ -72,6 +72,11 @@
                 <i class="fa fa-folder-open-o me-1" aria-hidden="true"></i>{{#str}}managecompetencies_context_coursecat, local_dimensions{{/str}}
             </button>
         </div>
+        {{#hiddencatstoggle}}
+        <div data-region="hidden-cats" class="mt-2"{{^iscoursecat}} hidden{{/iscoursecat}}>
+            {{> local_dimensions/central/showhidden_toggle }}
+        </div>
+        {{/hiddencatstoggle}}
     </div>
 
     <div data-region="category-wrapper"{{^iscoursecat}} hidden{{/iscoursecat}}>
@@ -86,21 +91,14 @@
         </select>
     </div>
 
-    {{#hiddencatstoggle}}
-    <div data-region="hidden-cats"{{^iscoursecat}} hidden{{/iscoursecat}}>
-        <span class="d-block small text-muted mb-1" aria-hidden="true">&nbsp;</span>
-        {{> local_dimensions/central/showhidden_toggle }}
-    </div>
-    {{/hiddencatstoggle}}
-
-    <div class="text-muted small" data-region="context-count"
+    <div class="text-muted small align-self-center" data-region="context-count"
          data-frameworkcount="{{selectedframeworkcount}}" data-templatecount="{{selectedtemplatecount}}"{{#needscategory}} hidden{{/needscategory}}>
         <strong data-region="count-value">{{selectedframeworkcount}}</strong>
         <span data-mode="structure">{{#str}}central_frameworks, local_dimensions{{/str}}</span>
         <span data-mode="plans" hidden>{{#str}}central_plans, local_dimensions{{/str}}</span>
     </div>
 
-    <div class="ms-auto">
+    <div class="ms-auto align-self-center">
         <button type="button" class="btn btn-outline-secondary btn-sm" data-action="refresh">
             <i class="fa fa-rotate me-1" aria-hidden="true"></i>{{#str}}refresh, moodle{{/str}}
         </button>
