@@ -22,7 +22,7 @@
   --prim-bg:#185fa5;--prim-fg:#fff;
   /* Perigo FIXO: o 🗑 do curso e o ✕ da atividade. Nenhum dos dois pousa em tint. */
   --err-fg:#a32d2d;
-  /* Chip de fechar: os três literais que o styles.css:3557-3586 publica, sem variante dark. */
+  /* Chip de fechar: os três literais que o styles.css:3702-3731 publica, sem variante dark. */
   --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
   --prov-fg:#185fa5;--prov-bg:#e6f1fb;
 }
@@ -119,7 +119,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .act+.act{border-top:0.5px dashed var(--border);}
 .aname{display:flex;align-items:flex-start;gap:5px;}
 /* O nome real quebra em DUAS linhas e então reticencia, com o nome inteiro no title
-   (styles.css:5561-5570). Aqui a mecânica é a mesma; não é clamp(), é line-clamp. */
+   (styles.css:5706-5715). Aqui a mecânica é a mesma; não é clamp(), é line-clamp. */
 .antext{flex:1;min-width:0;font-size:11px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;word-break:break-word;}
 .mtype{font-size:9px;padding:0 5px;border:0.5px solid var(--text-secondary);border-radius:6px;color:var(--text-secondary);white-space:nowrap;flex:none;}
 .actrl{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px;}
@@ -214,7 +214,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
         <span class="lbl">Adicionar curso <span class="idb">MOD.LINKS-ADD-LABEL · :37-39</span></span>
         <div class="ctrl"><span class="ph">Vincular curso — busque por nome, nome breve ou número de ID…</span><span class="chev">⌄</span></div>
-        <div class="row"><span class="idb">MOD.LINKS-ADD · :40-44 · course_datasource.js</span><span class="idb">MOD.LINKS-ADD-CHEVRON · styles.css:5655-5668</span></div>
+        <div class="row"><span class="idb">MOD.LINKS-ADD · :40-44 · course_datasource.js</span><span class="idb">MOD.LINKS-ADD-CHEVRON · styles.css:5800-5813</span></div>
 
         <!-- card 1: expandido -->
         <div class="card card-1">
@@ -426,7 +426,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <b>Por que esta tela é candidata.</b> É o modal do hub com mais coisa por linha: nome do curso
       + nome breve + contador + 🗑, e dentro dele nome da atividade + tipo + ✕ + outcome +
       distintivo + aviso de compartilhada. O nome da atividade já quebra em <b>duas linhas</b> e
-      então reticencia (<code>styles.css:5561-5570</code>) — a largura é o recurso escasso. Hoje o
+      então reticencia (<code>styles.css:5706-5715</code>) — a largura é o recurso escasso. Hoje o
       único ajuste é <code>large: true</code> (<code>js:852</code>).
     </div>
 
@@ -508,7 +508,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       escuro (o tint <i>some</i> na superfície) enquanto a borda entrega <b>6,20</b> / <b>7,57</b>; o
       alerta e o aviso de compartilhada, fill 1,15 / 1,06 com borda 6,73 / 7,00; o chip de fechar,
       fill 1,15 no claro com o glifo em <b>7,53:1</b> nos dois temas, e os literais são os que o
-      <code>styles.css:3557-3586</code> publica. O <code>.ctrl</code> e o <code>.sel</code> dão fill
+      <code>styles.css:3702-3731</code> publica. O <code>.ctrl</code> e o <code>.sel</code> dão fill
       <b>1:1</b> por definição: o fundo deles <i>é</i> a superfície do modal. As <b>caixas</b>
       (<code>.card</code>, <code>.panel</code>, <code>.alist</code>) seguem no <code>--border</code>
       do kit: são contêineres, não controles.

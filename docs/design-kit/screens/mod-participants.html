@@ -23,7 +23,7 @@
      texto pequeno, não texto grande). Token próprio, fora do alcance do .moodle: 6,52:1 (claro) e
      7,69:1 (escuro). */
   --link-fg:#185fa5;
-  /* Chip de fechar: os três literais que o styles.css:3557-3586 publica, sem variante dark.
+  /* Chip de fechar: os três literais que o styles.css:3702-3731 publica, sem variante dark.
      #0f4d85 sobre #e7f0f9 = 7,53:1; hover #d4e6fb = 6,82:1 (medidos). */
   --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
 }
@@ -139,7 +139,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
   <!-- Painel as-is -->
   <section class="panel asis">
-    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · 4 abas, links no cabeçalho, sem rodapé</div>
+    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Antes do D2 (pré-0598289) · 4 abas, links no cabeçalho, sem rodapé</div>
 
     <div class="m">
       <div class="m-head">
@@ -202,32 +202,40 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     </div>
 
     <div class="note" style="margin-top:8px;">
-      <b>Largura</b> (pós-<code>f84d30a</code>): o diálogo recebe <b>três</b> classes de uma vez —
-      <code>modal-xl</code> + <code>local-dimensions-participants-modal</code> +
-      <code>local-dimensions-headerlink-modal</code> (<code>participants_manager.js:153</code>). O
+      <b>Largura</b> (pós-<code>f84d30a</code>, ajustada no D2 <code>0598289</code>): o diálogo recebe
+      <b>duas</b> classes de uma vez — <code>modal-xl</code> +
+      <code>local-dimensions-participants-modal</code> (<code>participants_manager.js:142</code>); a antiga
+      <code>local-dimensions-headerlink-modal</code> <b>saiu</b>, e o chip de fechar agora vem pela regra
+      <code>:has(.modal-body .local-dimensions-*)</code> (o corpo carrega
+      <code>.local-dimensions-participants</code>). O
       <code>modal-xl</code> é do <b>próprio Bootstrap</b> (800px em <code>lg</code>, 1140px em <code>xl</code>,
       idêntico em 4 e 5). O <code>--bs-modal-width</code> que o mapa antigo poderia esperar <b>não existe
       mais</b>: era variável só do BS5, e o 4.5 não define nenhuma custom property <code>--bs-*</code> de
       modal — a modal caía para 500px lá.
     </div>
     <div class="note" style="margin-top:6px;">
-      <b>Links de cabeçalho</b>: <code>HEADER_PAGES</code> declara <b>4</b> destinos
-      (<code>participants_manager.js:46-55</code>) — coortes, usuários, papéis, inscrição — cada um atrás da
-      sua capability, e <b>só 1 fica visível por vez</b>, o da aba ativa (<code>showHeaderLinkFor</code>
-      alterna <code>d-none</code>, <code>:103-107</code>). Inseridos com
-      <code>header.insertBefore(link, closebtn)</code> (<code>:90</code>).
-      <b>Aba e link não têm a mesma fechadura:</b> a aba de inscrição quer
-      <code>competency:templatemanage</code> <b>no contexto</b>, o link dela quer <code>site:config</code>
-      <b>no sistema</b> — um gestor de template vê a aba e não vê o link.
+      <b>Links de cabeçalho (antes do D2)</b>: <code>HEADER_PAGES</code> declarava <b>4</b> destinos —
+      coortes, usuários, papéis, inscrição — cada um atrás da sua capability, e <b>só 1 ficava visível por
+      vez</b>, o da aba ativa (<code>showHeaderLinkFor</code> alternava <code>d-none</code>), inserido com
+      <code>header.insertBefore(link, closebtn)</code>. No <b>D2 (<code>0598289</code>)</b> viraram
+      <code>ADMIN_PAGES</code> (<code>participants_manager.js:47-56</code>) e <b>descem para o rodapé</b> via
+      <code>injectFooterLinks</code> — o <code>showHeaderLinkFor</code> foi <b>removido</b>, então
+      <b>todos</b> os permitidos aparecem juntos, sem alternância por aba.
+      <b>Aba e link seguem com fechaduras distintas:</b> a aba de inscrição é gated por
+      <code>canmanageenrol</code> (<code>participants_manager.js:129</code>), o link de rodapé pela sua
+      própria flag <code>canenrolpage</code> (<code>:54</code>) — podem divergir.
     </div>
     <div class="ok">
-      <b>O que o D2 não pode levar junto.</b> <code>styles.css:3557-3558</code> é um <b>grupo de dois
-      seletores</b>, e o segundo — <code>.local-dimensions-headerlink-modal .btn-close</code> — é gancho
+      <b>O que o D2 preservou (<code>0598289</code>).</b> <code>styles.css:3702-3703</code> é um <b>grupo de
+      dois seletores</b>, e o segundo — <code>.local-dimensions-headerlink-modal .btn-close</code> — é gancho
       <b>independente</b> do chip de fechar, para modais cujo corpo não carrega classe
       <code>local-dimensions-*</code> (o <code>ModalForm</code> de framework escapa do <code>:has()</code>).
       Prova: <code>frameworks.js:139-143</code> aplica a classe <b>antes</b> do teste de capability de
-      <code>:144</code> — ela pousa mesmo sem link nenhum. Mover os links aposenta as regras de
-      <code>:3532-3540</code>, <b>não</b> a classe.
+      <code>:144</code> — ela pousa mesmo sem link nenhum, e por isso o D2 <b>manteve</b> a classe: hoje ela
+      é o <b>único</b> gancho do chip para o form de framework. As antigas regras de título do cabeçalho
+      <b>saíram</b>; o <code>flex-grow</code> foi <b>re-alojado</b> em
+      <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code>
+      (<code>styles.css:3653</code>), agrupando os expansores com o botão de fechar.
     </div>
   </section>
 
@@ -235,7 +243,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
   <section class="panel moodle">
     <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Proposta (to-be) · as três melhorias que caem nesta tela</div>
 
-    <div class="divlbl" style="border-top:0;padding-top:0;margin-top:0;">1 · Cabeçalho ganha ações, links descem — expandir SHIPADO (8ea9daf, desacoplado a 1.75rem via central/modal_expander); atualizar + links no rodapé seguem to-be <span class="prov">mtube: expandir</span> <span class="prov">mtube: atualizar</span> <span class="prov">mtube: links no rodapé</span></div>
+    <div class="divlbl" style="border-top:0;padding-top:0;margin-top:0;">1 · Cabeçalho ganha ações, links descem — expandir SHIPADO (8ea9daf, desacoplado a 1.75rem via central/modal_expander) e links no rodapé SHIPADO (0598289 — D2, via injectFooterLinks); só atualizar segue to-be <span class="prov">mtube: expandir</span> <span class="prov">mtube: atualizar</span> <span class="prov">mtube: links no rodapé</span></div>
     <div class="expwrap">
       <input type="checkbox" id="part-exp" class="expchk" aria-label="Expandir o modal">
       <div class="m dlg">
@@ -299,12 +307,18 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       especificidade.
     </div>
     <div class="note" style="margin-top:6px;">
-      <b>Rodapé</b>: o link desce e vira o <b>primeiro filho</b> do <code>.modal-footer</code> — e aí o core
-      <b>revela o rodapé sozinho</b>, porque <code>show()</code> só chama <code>hideFooter()</code> quando
-      ele não tem filhos (<code>public/lib/amd/src/modal.js:875-879</code>;
+      <b>Rodapé — SHIPADO (<code>0598289</code>, D2).</b> Os links descem para o
+      <code>.modal-footer</code> — e aí o core <b>revela o rodapé sozinho</b>, porque <code>show()</code> só
+      chama <code>hideFooter()</code> quando ele não tem filhos
+      (<code>public/lib/amd/src/modal.js:875-879</code>;
       <code>hasFooterContent = getFooter().children().length</code>, <code>:686-688</code>). Nada a
-      instrumentar: <b>é o mecanismo do core que já está lá</b>. Com 4 destinos possíveis, um rótulo textual
-      ao lado de três botões não cabe no cabeçalho.
+      instrumentar: <b>é o mecanismo do core que já está lá</b>. O grupo fica à esquerda por
+      <code>margin-right:auto</code> em <code>.local-dimensions-modal-footer-links</code>
+      (<code>styles.css:3666</code>) — <b>não</b> por <code>justify-content:space-between</code> —, deixando
+      qualquer ação primária (o Salvar/Cancelar do form de framework) à direita. <b>Esta maquete desenha um
+      link</b>, mas o modal de participantes injeta <b>todos</b> os destinos permitidos de uma vez
+      (<code>injectFooterLinks</code>, <code>participants_manager.js:67-94</code>); o
+      <code>showHeaderLinkFor</code>, que mostrava só o da aba ativa, foi <b>aposentado</b>.
     </div>
 
     <div class="divlbl">2 · Loading — <b>a premissa do plano estava errada</b> <span class="prov">mtube: carregando</span></div>
