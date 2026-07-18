@@ -123,9 +123,9 @@ const setupScaleConfigDelegation = () => {
 };
 
 /**
- * Inject the "Open scales page" shortcut into the framework form modal header, just left of
- * the close button — same pattern and classes as the participants modal header links. Only
- * shown when the user can reach the scales admin page.
+ * Inject the "Open scales page" shortcut into the framework form modal footer, left of the
+ * Save/Cancel buttons — same footer-link pattern as the participants modal. Only shown when the
+ * user can reach the scales admin page.
  *
  * @param {ModalForm} form The modal form (after its LOADED event).
  * @return {Promise<void>}
@@ -137,29 +137,33 @@ const injectScalesLink = async(form) => {
     const root = form.modal.getRoot()[0];
     const dialog = root.querySelector('.modal-dialog');
     if (dialog) {
-        // Applied even without the link: the shared class also standardises the close-button
-        // chip, which otherwise only styles modals whose body carries plugin classes.
+        // Kept even without the link: the class standardises the close-button chip for this
+        // ModalForm, whose core form body carries no plugin class and so escapes the :has() rule.
         dialog.classList.add('local-dimensions-headerlink-modal');
     }
     if (!activeRegion || activeRegion.dataset.canscalespage !== '1') {
         return;
     }
-    const header = root.querySelector('.modal-header');
-    if (!header || header.querySelector('.local-dimensions-headerlink')) {
+    const footer = root.querySelector('.modal-footer');
+    if (!footer || footer.querySelector('.local-dimensions-modal-footer-links')) {
         return;
     }
     const label = await getString('central_frameworks_openscales', 'local_dimensions');
+    const group = document.createElement('div');
+    group.className = 'local-dimensions-modal-footer-links';
     const link = document.createElement('a');
     link.href = M.cfg.wwwroot + '/grade/edit/scale/index.php';
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.className = 'btn btn-outline-secondary btn-sm local-dimensions-headerlink';
+    link.className = 'btn btn-link p-0';
     const icon = document.createElement('i');
-    icon.className = 'fa fa-arrow-up-right-from-square me-1';
+    icon.className = 'fa fa-external-link me-1';
     icon.setAttribute('aria-hidden', 'true');
     link.appendChild(icon);
     link.appendChild(document.createTextNode(label));
-    header.insertBefore(link, header.querySelector('.btn-close'));
+    group.appendChild(link);
+    // First child so margin-right:auto pushes the form's Save/Cancel to the right.
+    footer.insertBefore(group, footer.firstChild);
 };
 
 /**

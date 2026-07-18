@@ -3644,18 +3644,42 @@
 }
 
 /*
- * Shared header-link modals (participants tabs, framework form): the "open the core admin
- * page" link sits at the header's right edge, just left of the close button — let the title
- * take the remaining width so both controls group on the right.
+ * Group the header controls (expand/restore + close) on the right of any modal carrying the
+ * expander — let the title take the remaining width. Keyed off the expander's own button so it
+ * covers the participants and links modals without the retired header-link class. Core gives
+ * .modal-header .btn-close margin-left:auto, which alone would strand the size toggles beside a
+ * short title.
  */
-.local-dimensions-headerlink-modal .modal-header .modal-title {
+.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title {
     flex-grow: 1;
     min-width: 0;
 }
 
-.local-dimensions-headerlink-modal .local-dimensions-headerlink {
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
+/*
+ * Admin escape links in the footer of the data-dense hub modals (participants: the matching core
+ * admin page per allowed tab; framework form: the scales page). Moved here from the header (D2) so
+ * the header carries only expand + close. margin-right:auto keeps the group left while any primary
+ * action (the framework form's Save/Cancel) stays right, on Bootstrap 4 and 5; scoped under
+ * .modal-footer so the longhand beats core's `.modal-footer > * { margin }` shorthand whatever the
+ * stylesheet order.
+ */
+.modal-footer .local-dimensions-modal-footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem 0.875rem;
+    margin-right: auto;
+}
+
+/*
+ * btn-link draws a focus ring on Bootstrap 5 (it defines --bs-btn-focus-shadow-rgb) but none on
+ * Bootstrap 4 (Moodle 4.5: .btn-link:focus forces box-shadow:none). Draw one outline ring for both
+ * so 4.5 keyboard focus stays visible and 5.x does not stack two rings.
+ */
+.modal-footer .local-dimensions-modal-footer-links .btn-link:focus-visible {
+    outline: 2px solid var(--bs-primary, #0f6cbf);
+    outline-offset: 1px;
+    box-shadow: none;
 }
 
 /* Row action buttons carry me-1 as a horizontal gap to the next button; add a little bottom
@@ -3671,7 +3695,9 @@
  * a faint, low-contrast glyph. Give it a light-blue chip with a dark-blue "times" icon drawn with
  * the theme's Font Awesome (Moodle stylelint forbids inline SVG image data, and the glyph lets us
  * colour it precisely). Scoped to modals holding this plugin's content; the referenced-competency
- * modal keeps its own close button (its header is hidden), so it is excluded.
+ * modal keeps its own close button (its header is hidden), so it is excluded. The second selector
+ * (.local-dimensions-headerlink-modal) is the hook for modals whose body carries no plugin class
+ * and so escape the :has() arm — the framework form (a core dynamic_form) is the sole such case.
  */
 .modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close,
 .local-dimensions-headerlink-modal .btn-close {
