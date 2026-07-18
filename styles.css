@@ -20,16 +20,18 @@
   */
 
 /* ============================================
-      MOTION TOKENS (--mds-motion-*)
+      MOTION & LOADING TOKENS (--mds-motion-* / --mds-loading-min-height)
       Named durations + Material easing, mirroring the design kit's tokens.html. --mds-motion-flash
-      is consumed by JS (central/flash.js via WAAPI); the rest by CSS transitions. Adopted on new or
-      reformed surfaces only — shipped CSS is not retro-tokenized.
+      is consumed by JS (central/flash.js via WAAPI); the rest by CSS transitions.
+      --mds-loading-min-height reserves height so a pane does not collapse behind the busy cover.
+      Adopted on new or reformed surfaces only — shipped CSS is not retro-tokenized.
       ============================================ */
 :root {
     --mds-motion-fast: 150ms;
     --mds-motion-base: 250ms;
     --mds-motion-flash: 1500ms;
     --mds-motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --mds-loading-min-height: 12rem;
 }
 
 /* ============================================
@@ -2671,7 +2673,7 @@
  */
 .local-dimensions-central-tab-loading {
     position: relative;
-    min-height: 12rem;
+    min-height: var(--mds-loading-min-height);
 }
 
 .local-dimensions-central-tab-loading::before {
