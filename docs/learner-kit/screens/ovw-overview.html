@@ -1,4 +1,4 @@
-<!-- @dsCard group="Learner screens · Plan (OVW)" name="Plan overview" subtitle="view-plan.php — filter bar (tabs+counts, search, chips), accordion list collapsed · as-is │ to-be" -->
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Plan overview" subtitle="view-plan.php — as-is accordion │ to-be mtube-style: favourites-first toolbar, list↔grid, ghost card, paginated detail modal" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -22,7 +22,7 @@
   color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
 }
 .kit *{box-sizing:border-box;}
-.panel.moodle{
+.panel.moodle,.fullsec.moodle{
   --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
   --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
   --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
@@ -51,8 +51,6 @@
 .leg .rule{color:#8a8980;}
 
 /* ==== Screen-specific: Plan overview (view-plan.php) ==================== */
-
-/* ---- Hero + chips reference strip (badged in full on their own cards) ---- */
 .ovw-hero{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem;margin:2px 20px 0;padding:.9rem 1.1rem;background:var(--lk-accent);color:#fff;border-radius:.5rem;}
 .ovw-hero-title{font-size:1.05rem;font-weight:700;margin:0;}
 .ovw-due{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .7rem;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);border-radius:.5rem;font-size:.72rem;letter-spacing:.03em;}
@@ -64,29 +62,25 @@
 .ovw-chip-tab{display:inline-flex;align-items:center;padding:.4rem .9rem;border:none;background:transparent;border-radius:999px;font-size:.8125rem;font-weight:500;color:var(--lk-pill-text);cursor:pointer;}
 .ovw-chip-tab.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 3px rgba(0,0,0,.12);}
 
-/* ---- Filter bar: tabs + counts + search (view_plan_summary.mustache:76-99) ---- */
+/* Filter bar (as-is): tabs + counts + search */
 .fbar{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:0 20px;margin:.9rem 0 .2rem;}
 .ftabs{display:inline-flex;background:var(--lk-pill-platter);border-radius:999px;padding:4px;flex-shrink:0;}
 .ftab{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:none;background:transparent;border-radius:999px;font-size:.875rem;font-weight:500;color:var(--lk-pill-text);cursor:pointer;white-space:nowrap;}
 .ftab.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 3px rgba(0,0,0,.12);}
-.ftab:focus-visible{outline:2px solid var(--lk-pill-active-fg);outline-offset:2px;}
 .fcount{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--lk-counter-bg);color:var(--lk-pill-text);border-radius:999px;font-size:.75rem;font-weight:600;}
 .ftab.on .fcount{background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);}
 .fsearch{position:relative;display:flex;align-items:center;min-width:0;max-width:240px;flex-shrink:1;}
 .fs-ic{position:absolute;left:.75rem;width:.9rem;height:.9rem;color:var(--lk-search-icon);stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;z-index:1;}
 .fsearch input{width:100%;padding:.5rem 2rem .5rem 2.125rem;border:1px solid var(--lk-search-border);border-radius:999px;background:var(--lk-surface-2);font-size:.8125rem;color:var(--lk-text);outline:none;line-height:1.3;}
 .fsearch input::placeholder{color:var(--lk-search-icon);}
-.fsearch.foc input{border-color:var(--lk-pill-active-fg);background:var(--lk-surface);box-shadow:0 0 0 3px var(--lk-search-glow);}
-.fs-clear{position:absolute;right:.375rem;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:50%;background:transparent;color:var(--lk-pill-text);cursor:pointer;padding:0;}
-.fs-clear svg{width:.7rem;height:.7rem;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
 
-/* ---- Accordion list, collapsed (view_plan_summary.mustache:108-187) ---- */
+/* Accordion list */
 .acc-list{padding:.7rem 20px 2px;}
 .acc-item{margin-bottom:14px;border-radius:.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);border-top:1px solid #e5e0e0;border-right:1px solid #e5e0e0;border-bottom:1px solid #e5e0e0;overflow:hidden;background:var(--lk-surface);}
 .acc-item.completed{border-left:4px solid var(--lk-success);}
 .acc-item.rated{border-left:4px solid var(--lk-amber-rated);}
 .acc-item.plain{border-left:4px solid var(--lk-line-2);}
-.acc-toggle{width:100%;display:flex;align-items:center;gap:.75rem;padding:1rem 1.125rem;background:var(--lk-surface);border:none;cursor:pointer;text-align:left;}
+.acc-toggle{width:100%;display:flex;align-items:center;gap:.5rem;padding:1rem 1.125rem;background:var(--lk-surface);border:none;cursor:pointer;text-align:left;}
 .acc-hc{flex-grow:1;display:flex;flex-direction:column;gap:.25rem;min-width:0;}
 .acc-title{font-weight:600;font-size:1rem;color:var(--lk-text);line-height:1.3;}
 .gbadge{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .625rem;border-radius:999px;font-size:.75rem;font-weight:600;line-height:1.3;width:fit-content;}
@@ -97,7 +91,90 @@
 .gbadge.cfield{background:rgba(13,110,253,.1);color:#0d6efd;}
 .acc-chev{flex-shrink:0;width:1rem;height:1rem;color:var(--lk-muted);stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .pctwrap{padding-bottom:2px;}
-.pcttag{display:inline-block;font-family:var(--mono);font-size:9px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:5px;padding:0 5px;margin-left:6px;}
+
+/* ==== to-be redesign: mtube-inspired toolbar + list/grid + detail modal ==== */
+/* Toolbar */
+.otb{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;padding:.3rem 20px .3rem;}
+.otb-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--lk-line-2);border-radius:.5rem;background:var(--lk-surface);color:var(--lk-text-2);cursor:pointer;flex:none;}
+.otb-btn svg{width:1rem;height:1rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.otb-btn.fav.on{background:rgb(253 126 20 / 8%);border-color:var(--lk-orange);color:var(--lk-orange);}
+.otb-btn.fav.on svg{fill:currentColor;}
+.otb-seg{display:inline-flex;background:var(--lk-pill-platter);border-radius:.5rem;padding:3px;flex:none;}
+.otb-seg button{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .6rem;border:none;background:transparent;border-radius:.4rem;font-size:.76rem;font-weight:500;color:var(--lk-pill-text);cursor:pointer;white-space:nowrap;}
+.otb-seg button.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 2px rgba(0,0,0,.12);}
+.otb-seg .fcount{min-width:18px;height:18px;}
+.otb-search{position:relative;display:flex;align-items:center;flex:1 1 120px;min-width:100px;}
+.otb-search .fs-ic{left:.6rem;}
+.otb-search input{width:100%;padding:.45rem .6rem .45rem 1.9rem;border:1px solid var(--lk-search-border);border-radius:.5rem;background:var(--lk-surface-2);font-size:.78rem;color:var(--lk-text);outline:none;}
+.otb-search input::placeholder{color:var(--lk-search-icon);}
+.otb-view{display:inline-flex;background:var(--lk-pill-platter);border-radius:.5rem;padding:3px;flex:none;}
+.otb-view button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:28px;border:none;background:transparent;border-radius:.4rem;color:var(--lk-pill-text);cursor:pointer;}
+.otb-view button svg{width:.95rem;height:.95rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.otb-view button.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 2px rgba(0,0,0,.12);}
+.otb-sort{position:relative;flex:none;}
+.otb-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:5;min-width:180px;background:var(--lk-surface);border:1px solid var(--lk-line-2);border-radius:.6rem;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:.3rem;}
+.otb-menu-lbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--lk-muted);padding:.35rem .5rem .15rem;}
+.otb-menu button{display:flex;align-items:center;gap:.5rem;width:100%;padding:.4rem .5rem;border:none;background:transparent;border-radius:.4rem;font-size:.8rem;color:var(--lk-text);cursor:pointer;text-align:left;}
+.otb-menu button .chk{width:.85rem;height:.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:0;}
+.otb-menu button.on{background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);font-weight:600;}
+.otb-menu button.on .chk{opacity:1;}
+/* Star on accordion row / card */
+.acc-star,.card-star{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:none;background:transparent;color:var(--lk-line-2);cursor:pointer;flex:none;}
+.acc-star svg,.card-star svg{width:1.25rem;height:1.25rem;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.acc-star.on,.card-star.on{color:var(--lk-orange);}
+.acc-star.on svg,.card-star.on svg{fill:currentColor;}
+/* Ghost card — "more to explore" */
+.ghost{display:flex;align-items:center;gap:.7rem;margin:0 0 14px;padding:.85rem 1.1rem;border:1.5px dashed var(--lk-line-2);border-radius:.75rem;background:var(--lk-surface-2);cursor:pointer;}
+.ghost-ic{flex:none;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--lk-surface);border:1px solid var(--lk-line-2);color:var(--lk-accent);}
+.ghost-ic svg{width:1.1rem;height:1.1rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ghost-body{flex:1;min-width:0;}
+.ghost-body b{display:block;font-size:.85rem;color:var(--lk-text);}
+.ghost-body span{font-size:.72rem;color:var(--lk-muted);}
+.ghost-arrow{flex:none;color:var(--lk-accent);}
+.ghost-arrow svg{width:1.05rem;height:1.05rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* Full-width to-be sections (grid, modal) */
+.fullsec{max-width:1100px;margin:16px auto 0;background:var(--lk-page);border:1px solid #dcdfe3;border-radius:14px;overflow:hidden;padding-bottom:16px;}
+.fullsec .plabel .pdot{background:#0f6cbf;}
+/* Grid */
+.ovw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.8rem;padding:.6rem 20px 4px;}
+.ovw-card{position:relative;background:var(--lk-surface);border:1px solid var(--lk-line);border-radius:.75rem;padding:.85rem;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer;border-left:4px solid var(--lk-line-2);}
+.ovw-card.completed{border-left-color:var(--lk-success);}
+.ovw-card.rated{border-left-color:var(--lk-amber-rated);}
+.ovw-card .card-star{position:absolute;top:.35rem;right:.3rem;width:28px;height:28px;}
+.ovw-card-title{font-size:.86rem;font-weight:600;color:var(--lk-text);margin:.1rem 1.9rem .55rem 0;line-height:1.3;}
+.ovw-card-sub{min-height:1.3rem;display:flex;align-items:center;}
+.ghost-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;text-align:center;border:1.5px dashed var(--lk-line-2);border-radius:.75rem;background:var(--lk-surface-2);padding:.85rem;cursor:pointer;min-height:118px;}
+.ghost-card .ghost-ic{margin-bottom:.1rem;}
+.ghost-card b{font-size:.82rem;color:var(--lk-text);}
+.ghost-card span{font-size:.7rem;color:var(--lk-muted);}
+/* Detail modal */
+.omodal{max-width:560px;margin:.6rem auto 4px;border-radius:.9rem;background:var(--lk-surface);box-shadow:0 14px 46px rgba(0,0,0,.2);overflow:hidden;border:1px solid var(--lk-line);}
+.omodal-head{display:flex;align-items:center;gap:.5rem;padding:.6rem .7rem;border-bottom:1px solid var(--lk-line);}
+.omodal-nav{display:inline-flex;align-items:center;gap:.25rem;flex:none;}
+.omodal-navbtn{width:30px;height:30px;border:1px solid var(--lk-line-2);border-radius:.45rem;background:var(--lk-surface);color:var(--lk-text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.omodal-navbtn svg{width:.85rem;height:.85rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.omodal-pos{font-size:.7rem;color:var(--lk-muted);white-space:nowrap;padding:0 .15rem;font-variant-numeric:tabular-nums;}
+.omodal-title{flex:1;font-size:.92rem;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.omodal-act{width:30px;height:30px;border:none;border-radius:.45rem;background:var(--lk-surface-2);color:var(--lk-text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;}
+.omodal-act svg{width:.9rem;height:.9rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.omodal-body{padding:.85rem;}
+.omodal-tabs{display:flex;gap:2px;border-bottom:1px solid var(--lk-line);margin-bottom:.7rem;}
+.omodal-tab{padding:.45rem .7rem;font-size:.8rem;color:var(--lk-muted);background:none;border:none;cursor:pointer;}
+.omodal-tab.on{color:var(--lk-accent);font-weight:600;box-shadow:inset 0 -2px 0 var(--lk-accent);}
+.omodal-ph{height:74px;border-radius:.5rem;background:var(--lk-surface-2);border:1px dashed var(--lk-line-2);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--lk-muted);}
+/* --- refinements: list star inline with title (as-is padding), ghost + icon & hover (block_dimensions) --- */
+.acc-item.withstar{display:flex;align-items:flex-start;gap:.55rem;padding:1rem 1.125rem;}
+.acc-item.withstar .acc-star{width:1.6rem;height:1.6rem;margin-top:-.1rem;}
+.acc-item.withstar .acc-toggle{flex:1;width:auto;min-width:0;padding:0;background:transparent;align-items:flex-start;gap:.5rem;}
+.acc-item.withstar .acc-hc{gap:.25rem;}
+.acc-item.withstar .acc-chev{margin-top:.2rem;}
+.ghost,.ghost-card{transition:border-color .2s ease,background .2s ease,transform .15s ease;}
+.ghost:hover,.ghost:focus-visible,.ghost-card:hover,.ghost-card:focus-visible{border-color:var(--lk-accent);background:var(--lk-surface);transform:translateY(-2px);outline:none;}
+.ghost:hover .ghost-ic,.ghost:focus-visible .ghost-ic,.ghost-card:hover .ghost-ic,.ghost-card:focus-visible .ghost-ic{border-color:var(--lk-accent);color:var(--lk-accent);}
+/* Card hover lift — same as block_dimensions .competency-card / .plan-card */
+.acc-item.withstar,.ovw-card{transition:transform .15s ease,box-shadow .15s ease;}
+.acc-item.withstar:hover,.ovw-card:hover{transform:translateY(-2px);box-shadow:0 .5rem 1rem rgba(0,0,0,.15);}
+.acc-item.withstar:focus-within,.ovw-card:focus-within{outline:3px solid var(--lk-focus-ring);outline-offset:2px;}
 </style>
 <div class="kit"><div class="screens">
 
@@ -113,96 +190,52 @@
         <span>DUE&nbsp;<b>31 January 2026</b></span>
       </span>
     </div>
-    <div class="ovw-chips">
-      <div class="ovw-chip-grp"><span class="ovw-chip-lbl">Category</span>
-        <div class="ovw-chip-platter"><button class="ovw-chip-tab on" aria-pressed="true">Cognitive</button><button class="ovw-chip-tab">Social-emotional</button></div>
+
+    <div class="lk-cap">Filter bar — tabs + counts · search · <span class="idb">OVW-BAR-TABS</span></div>
+    <div class="fbar">
+      <div class="ftabs" role="tablist" aria-label="Filter competencies">
+        <button class="ftab on" role="tab" aria-selected="true" type="button">Not completed <span class="fcount">3</span></button>
+        <button class="ftab" role="tab" aria-selected="false" type="button">All <span class="fcount">8</span></button>
+      </div>
+      <div class="fsearch">
+        <svg class="fs-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" placeholder="Search competency" aria-label="Search competency" autocomplete="off">
       </div>
     </div>
-    <div class="note">Hero (title / description / due-date / background) and chips are badged in full on their own kit cards; shown compact here for context.</div>
 
-    <div class="divlbl">Plan summary — wrapped by <span class="idb">OVW-PCTMODE</span> <code>.percentagemode-hover</code></div>
-    <div class="percentagemode-hover pctwrap">
-
-      <div class="lk-cap">Filter bar — tabs + counts · search · <span class="idb">OVW-BAR-TABS</span></div>
-      <div class="fbar">
-        <div class="ftabs" role="tablist" aria-label="Filter competencies">
-          <button class="ftab on" role="tab" aria-selected="true" type="button">Not completed <span class="fcount">3</span></button>
-          <button class="ftab" role="tab" aria-selected="false" type="button">All <span class="fcount">8</span></button>
-        </div>
-        <div class="fsearch foc">
-          <svg class="fs-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" value="communi" aria-label="Search competency" autocomplete="off">
-          <button class="fs-clear" type="button" aria-label="Clear"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-        </div>
+    <div class="lk-cap">Accordion — collapsed, one opens at a time · <span class="idb">OVW-ACC-ITEM</span></div>
+    <div class="acc-list" role="list" aria-live="polite" aria-relevant="additions removals">
+      <div class="acc-item completed" role="listitem">
+        <button class="acc-toggle" type="button" aria-expanded="false">
+          <span class="acc-hc"><span class="acc-title">Written communication</span><span class="gbadge prof"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>Very good</span></span>
+          <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
       </div>
-      <div class="lk-ids">
-        <span class="idb">OVW-BAR-TABS · incompletecount / competencycount · starts on Not completed</span>
-        <span class="idb">OVW-BAR-SEARCH · 100ms debounce + accent-normalize</span>
-        <span class="idb">OVW-BAR-SEARCHCLEAR · shown only when text present</span>
+      <div class="acc-item rated" role="listitem">
+        <button class="acc-toggle" type="button" aria-expanded="false">
+          <span class="acc-hc"><span class="acc-title">Analytical thinking</span><span class="gbadge nprof"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 4l-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0Z"/></svg>Good</span></span>
+          <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
       </div>
-      <div class="note">Search rendered focused, with text, to reveal the clear (×) control and the focus glow — both empty by default.</div>
-
-      <div class="lk-cap">Accordion — collapsed items, subline variations · <span class="idb">OVW-ACC-ITEM</span></div>
-      <div class="acc-list" role="list" aria-live="polite" aria-relevant="additions removals">
-
-        <div class="acc-item completed" role="listitem" data-filtervalues="{&quot;category&quot;:[&quot;cognitive&quot;]}">
-          <button class="acc-toggle" type="button" aria-expanded="false" aria-controls="ovw-c1">
-            <span class="acc-hc">
-              <span class="acc-title">Written communication</span>
-              <span class="gbadge prof"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>Very good</span>
-            </span>
-            <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-        </div>
-
-        <div class="acc-item rated" role="listitem" data-filtervalues="{&quot;category&quot;:[&quot;cognitive&quot;]}">
-          <button class="acc-toggle" type="button" aria-expanded="false" aria-controls="ovw-c2">
-            <span class="acc-hc">
-              <span class="acc-title">Analytical thinking</span>
-              <span class="gbadge nprof"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 4l-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0Z"/></svg>Good</span>
-            </span>
-            <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-        </div>
-
-        <div class="acc-item plain" role="listitem" data-filtervalues="{&quot;category&quot;:[&quot;social&quot;]}">
-          <button class="acc-toggle" type="button" aria-expanded="false" aria-controls="ovw-c3">
-            <span class="acc-hc">
-              <span class="acc-title">Negotiation and mediation</span>
-              <span class="gbadge todo">To do</span>
-            </span>
-            <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-        </div>
-
-        <div class="acc-item plain" role="listitem" data-filtervalues="{&quot;category&quot;:[&quot;cognitive&quot;]}">
-          <button class="acc-toggle" type="button" aria-expanded="false" aria-controls="ovw-c4">
-            <span class="acc-hc">
-              <span class="acc-title">Data analysis</span>
-              <span class="gbadge cfield">IT Track</span>
-            </span>
-            <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-        </div>
+      <div class="acc-item plain" role="listitem">
+        <button class="acc-toggle" type="button" aria-expanded="false">
+          <span class="acc-hc"><span class="acc-title">Negotiation and mediation</span><span class="gbadge todo">To do</span></span>
+          <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
       </div>
-      <div class="lk-ids">
-        <span class="idb">OVW-ACC-TITLE · competency shortname</span>
-        <span class="idb">OVW-ACC-SUBLINE · status: ✓ rating / ⚠ rating / To&nbsp;do</span>
-        <span class="idb">subline: rating (text only)</span>
-        <span class="idb">subline: tag1/tag2 (cfield badge)</span>
-        <span class="idb r">subline: none (no badge)</span>
-        <span class="idb">OVW-ACC-TOGGLE · AJAX-loads detail on open, closes others</span>
-        <span class="idb">OVW-ACC-LIVE · role=list · aria-live=polite</span>
-      </div>
-      <div class="note">Subline source is one site setting; the items mix status-mode branches + a text-mode tag to show every badge shape.</div>
     </div>
+    <div class="lk-ids">
+      <span class="idb">OVW-BAR-TABS · Not completed / All + counts</span>
+      <span class="idb">OVW-ACC-SUBLINE · status badge</span>
+      <span class="idb">OVW-ACC-TOGGLE · lazy detail, closes others</span>
+    </div>
+    <div class="note">Today: no favourites, no sort, no grid — proficiency is the only cut, status is a single subline, and the learner can't mark what to prioritise.</div>
   </div>
 
   <!-- ============ TO-BE ============ -->
   <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · list mode (proposed)</div>
 
-    <div class="lk-cap">Hero + chips — reference strip · <span class="idb">OVW-HERO</span> <span class="idb">OVW-CHIP</span></div>
     <div class="ovw-hero">
       <h2 class="ovw-hero-title">Development Plan 2026</h2>
       <span class="ovw-due">
@@ -210,105 +243,161 @@
         <span>DUE&nbsp;<b>31 January 2026</b></span>
       </span>
     </div>
-    <div class="ovw-chips">
-      <div class="ovw-chip-grp"><span class="ovw-chip-lbl">Category</span>
-        <div class="ovw-chip-platter"><button class="ovw-chip-tab on" aria-pressed="true">Cognitive</button><button class="ovw-chip-tab">Social-emotional</button></div>
+
+    <div class="lk-cap">Toolbar — favourites · not-completed|all · search · sort · filter · view · <span class="idb r">OVW-TOOLBAR · to-be</span></div>
+    <div class="otb">
+      <button class="otb-btn fav on" type="button" aria-pressed="true" aria-label="Show favourites"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+      <div class="otb-seg" role="tablist" aria-label="Completion filter">
+        <button class="on" role="tab" aria-selected="true" type="button">Not completed <span class="fcount">3</span></button>
+        <button role="tab" aria-selected="false" type="button">All <span class="fcount">8</span></button>
+      </div>
+      <div class="otb-search">
+        <svg class="fs-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" placeholder="Search…" aria-label="Search competency" autocomplete="off">
+      </div>
+      <div class="otb-sort">
+        <button class="otb-btn" type="button" aria-haspopup="true" aria-expanded="true" aria-label="Sort"><svg viewBox="0 0 24 24"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 4v16"/></svg></button>
+        <div class="otb-menu" role="menu">
+          <div class="otb-menu-lbl">Sort by</div>
+          <button class="on" role="menuitem" type="button"><svg class="chk" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Favourites first</button>
+          <button role="menuitem" type="button"><svg class="chk" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Name</button>
+          <button role="menuitem" type="button"><svg class="chk" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Plan order</button>
+          <button role="menuitem" type="button"><svg class="chk" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Recently updated</button>
+        </div>
+      </div>
+      <button class="otb-btn" type="button" aria-label="Filter"><svg viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg></button>
+      <div class="otb-view" role="group" aria-label="View">
+        <button class="on" type="button" aria-label="List view"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+        <button type="button" aria-label="Grid view"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
       </div>
     </div>
     <div class="lk-ids">
-      <span class="idb">hero bg / active pill → primary</span>
-      <span class="idb">platter → grey-200</span>
+      <span class="idb r">OVW-FAV · star toggle (per plan)</span>
+      <span class="idb r">OVW-SORT · Favourites/Name/Plan order/Recent</span>
+      <span class="idb r">OVW-VIEW · list ↔ grid</span>
+      <span class="idb">OVW-BAR-TABS · moved into the toolbar</span>
     </div>
 
-    <div class="divlbl">Plan summary — wrapped by <span class="idb">OVW-PCTMODE</span> <code>.percentagemode-hover</code></div>
-    <div class="percentagemode-hover pctwrap">
-
-      <div class="lk-cap">Filter bar — tabs + counts · search · <span class="idb">OVW-BAR-TABS</span></div>
-      <div class="fbar">
-        <div class="ftabs" role="tablist" aria-label="Filter competencies">
-          <button class="ftab on" role="tab" aria-selected="true" type="button">Not completed <span class="fcount">3</span></button>
-          <button class="ftab" role="tab" aria-selected="false" type="button">All <span class="fcount">8</span></button>
-        </div>
-        <div class="fsearch foc">
-          <svg class="fs-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" value="communi" aria-label="Search competency" autocomplete="off">
-          <button class="fs-clear" type="button" aria-label="Clear"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-        </div>
+    <div class="lk-cap">List — favourites first, star per item, then the ghost card · <span class="idb r">OVW-GHOST · to-be</span></div>
+    <div class="acc-list" role="list" aria-live="polite">
+      <div class="acc-item completed withstar" role="listitem">
+        <button class="acc-star on" type="button" aria-pressed="true" aria-label="Unfavourite"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+        <button class="acc-toggle" type="button" aria-expanded="false">
+          <span class="acc-hc"><span class="acc-title">Written communication</span><span class="gbadge prof"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>Very good</span></span>
+          <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
       </div>
-      <div class="lk-ids">
-        <span class="idb">counter bg → grey-200</span>
-        <span class="idb">active counter → primary-100</span>
-        <span class="idb">active text + focus → primary</span>
+      <div class="acc-item plain withstar" role="listitem">
+        <button class="acc-star on" type="button" aria-pressed="true" aria-label="Unfavourite"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+        <button class="acc-toggle" type="button" aria-expanded="false">
+          <span class="acc-hc"><span class="acc-title">Data analysis</span><span class="gbadge cfield">IT Track</span></span>
+          <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
       </div>
-      <div class="note">Counter pills, active text and search focus follow <code>--primary</code>; greys align to Bootstrap.</div>
 
-      <div class="lk-cap">Accordion — collapsed items, subline variations · <span class="idb">OVW-ACC-ITEM</span></div>
-      <div class="acc-list" role="list" aria-live="polite" aria-relevant="additions removals">
-
-        <div class="acc-item completed" role="listitem" data-filtervalues="{&quot;category&quot;:[&quot;cognitive&quot;]}">
-          <button class="acc-toggle" type="button" aria-expanded="false" aria-controls="ovwm-c1">
-            <span class="acc-hc">
-              <span class="acc-title">Written communication</span>
-              <span class="gbadge prof"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>Very good</span>
-            </span>
-            <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-        </div>
-
-        <div class="acc-item rated" role="listitem" data-filtervalues="{&quot;category&quot;:[&quot;cognitive&quot;]}">
-          <button class="acc-toggle" type="button" aria-expanded="false" aria-controls="ovwm-c2">
-            <span class="acc-hc">
-              <span class="acc-title">Analytical thinking</span>
-              <span class="gbadge nprof"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 4l-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0Z"/></svg>Good</span>
-            </span>
-            <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-        </div>
-
-        <div class="acc-item plain" role="listitem" data-filtervalues="{&quot;category&quot;:[&quot;social&quot;]}">
-          <button class="acc-toggle" type="button" aria-expanded="false" aria-controls="ovwm-c3">
-            <span class="acc-hc">
-              <span class="acc-title">Negotiation and mediation</span>
-              <span class="gbadge todo">To do</span>
-            </span>
-            <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-        </div>
-
-        <div class="acc-item plain" role="listitem" data-filtervalues="{&quot;category&quot;:[&quot;cognitive&quot;]}">
-          <button class="acc-toggle" type="button" aria-expanded="false" aria-controls="ovwm-c4">
-            <span class="acc-hc">
-              <span class="acc-title">Data analysis</span>
-              <span class="gbadge cfield">IT Track</span>
-            </span>
-            <svg class="acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-        </div>
+      <div class="ghost" role="button" tabindex="0">
+        <span class="ghost-ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span class="ghost-body"><b>6 more competencies to explore</b><span>Not favourited yet — tap to reveal the rest of your plan</span></span>
       </div>
-      <div class="lk-ids">
-        <span class="idb">completed left border → success #198754</span>
-        <span class="idb">amber / grey borders unchanged</span>
-        <span class="idb">status / cfield badges already Moodle</span>
-      </div>
-      <div class="note">Only the completed (green) left border migrates (BS4→BS5 success); amber, grey and the badge palette are unchanged.</div>
     </div>
+    <div class="note">Favourites load first (no anxiety bar — just what you chose to prioritise); the <b>ghost card</b> invites the rest, with the count of not-yet-favourited items. Star colour = <code>--lk-orange</code> (kept). Accordion stays one-open-at-a-time.</div>
   </div>
 
+</div>
+
+<!-- ============ TO-BE · GRID MODE (full width) ============ -->
+<div class="fullsec moodle">
+  <div class="plabel"><span class="pdot"></span>To-be · grid mode — more competencies on screen; card opens the detail modal</div>
+  <div class="lk-cap">Compact cards — title + subline indicator (respects <code>subline_source</code>) + star · <span class="idb r">OVW-GRID · OVW-CARD · to-be</span></div>
+  <div class="ovw-grid">
+    <div class="ovw-card completed">
+      <button class="card-star on" type="button" aria-pressed="true" aria-label="Unfavourite"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+      <div class="ovw-card-title">Written communication</div>
+      <div class="ovw-card-sub"><span class="gbadge prof"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>Very good</span></div>
+    </div>
+    <div class="ovw-card plain">
+      <button class="card-star on" type="button" aria-pressed="true" aria-label="Unfavourite"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+      <div class="ovw-card-title">Data analysis</div>
+      <div class="ovw-card-sub"><span class="gbadge cfield">IT Track</span></div>
+    </div>
+    <div class="ovw-card rated">
+      <button class="card-star" type="button" aria-pressed="false" aria-label="Favourite"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+      <div class="ovw-card-title">Analytical thinking</div>
+      <div class="ovw-card-sub"><span class="gbadge nprof"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 4l-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0Z"/></svg>Good</span></div>
+    </div>
+    <div class="ovw-card plain">
+      <button class="card-star" type="button" aria-pressed="false" aria-label="Favourite"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+      <div class="ovw-card-title">Negotiation and mediation</div>
+      <div class="ovw-card-sub"><span class="gbadge todo">To do</span></div>
+    </div>
+    <div class="ovw-card plain">
+      <button class="card-star" type="button" aria-pressed="false" aria-label="Favourite"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+      <div class="ovw-card-title">Team leadership</div>
+      <div class="ovw-card-sub"><span class="note" style="padding:0;font-size:.66rem">subline: none → no indicator</span></div>
+    </div>
+    <div class="ghost-card" role="button" tabindex="0">
+      <span class="ghost-ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+      <b>6 more to explore</b>
+      <span>Not favourited yet</span>
+    </div>
+  </div>
+  <div class="lk-ids">
+    <span class="idb r">OVW-CARD · title + subline indicator + star</span>
+    <span class="idb r">OVW-GHOST · ghost card here too</span>
+    <span class="idb">indicator respects subline_source (status/rating/tag/none)</span>
+  </div>
+  <div class="note">Grid packs more competencies per screen; the card indicator mirrors the accordion subline (so <code>none</code> shows nothing). Clicking a card opens the detail in a modal — the accordion doesn't fit a grid.</div>
+</div>
+
+<!-- ============ TO-BE · DETAIL MODAL (full width) ============ -->
+<div class="fullsec moodle">
+  <div class="plabel"><span class="pdot"></span>To-be · detail modal — linear prev/next between competencies + expand (mobile)</div>
+  <div class="lk-cap">Modal shell — paginate competencies, expand full-screen · <span class="idb r">OVW-MODAL-DETAIL · OVW-MODAL-NAV · OVW-MODAL-EXPAND · to-be</span></div>
+  <div class="omodal">
+    <div class="omodal-head">
+      <div class="omodal-nav">
+        <button class="omodal-navbtn" type="button" aria-label="Previous competency"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+        <span class="omodal-pos">3 of 8</span>
+        <button class="omodal-navbtn" type="button" aria-label="Next competency"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+      <span class="omodal-title">Analytical thinking</span>
+      <button class="omodal-act" type="button" aria-label="Expand to full screen"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+      <button class="omodal-act" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="omodal-body">
+      <div class="omodal-tabs">
+        <button class="omodal-tab on" type="button">Status</button>
+        <button class="omodal-tab" type="button">Description</button>
+        <button class="omodal-tab" type="button">Evidence</button>
+        <button class="omodal-tab" type="button">Rules</button>
+        <button class="omodal-tab" type="button">Courses</button>
+      </div>
+      <div class="omodal-ph">Same lazy-loaded detail as the accordion (Status / Description / Evidence / Rules / Courses)</div>
+    </div>
+  </div>
+  <div class="lk-ids">
+    <span class="idb r">OVW-MODAL-NAV · prev/next paginate competencies (mtube pattern)</span>
+    <span class="idb r">OVW-MODAL-EXPAND · full-screen, important on mobile</span>
+    <span class="idb">detail content = the existing accordion tabs, lazy-loaded</span>
+  </div>
+  <div class="note">Reuses the hub's expand approach, polished to match the kit (rounded, soft shadow, our tokens). The modal navigates competencies linearly in the current sort order; detail is still lazy-fetched per competency (heavy — not pre-loaded). Same shell serves the grid click and, on mobile, the list.</div>
 </div>
 
 <div class="legend">
   <h3>ID legend — Plan overview (view-plan.php)</h3>
   <div class="leg">
-    <span class="k">OVW-PCTMODE</span><span class="v"><b>Percentage-mode wrapper</b> — <code>.percentagemode-{hover|inline}</code> around the whole plan summary; sets whether course progress % shows on hover or inline <span class="rule">view_plan_summary.mustache:70</span></span>
-    <span class="k">OVW-BAR-TABS</span><span class="v"><b>Not-completed / All pills</b> with counter pills <code>incompletecount</code> / <code>competencycount</code>; renders active on "Not completed" (getActiveFilter defaults to <code>incomplete</code>) — the two counters + platter migrate to Moodle DS <span class="rule">mustache:77-86 · accordion.js getActiveFilter/initFilterTabs</span></span>
-    <span class="k">OVW-BAR-SEARCH</span><span class="v"><b>Title search</b> — 100ms debounced input; matches on <code>normalizeText</code> (NFD, strips diacritics, lowercases) against the accordion title text <span class="rule">mustache:87-98 · accordion.js initSearch:2359-2368 / normalizeText:2293</span></span>
-    <span class="k">OVW-BAR-SEARCHCLEAR</span><span class="v"><b>Clear (×) button</b> — <code>display:none</code> in markup; JS flips to <code>flex</code> when <code>input.value.length &gt; 0</code>, and clicking it empties + refocuses the field then re-filters <span class="rule">mustache:95-97 · accordion.js:2361-2377</span></span>
-    <span class="k">OVW-ACC-ITEM</span><span class="v"><b>Competency card</b> — left border by state: green when <code>isproficient</code> (via --lk-success), amber when <code>hasrating &amp;&amp; !isproficient</code> (--lk-amber-rated), grey otherwise; carries <code>data-filtervalues</code> for chip matching <span class="rule">mustache:114-118 · styles.css:1087-1097</span></span>
-    <span class="k">OVW-ACC-TITLE</span><span class="v">Competency shortname (<code>format_string</code>'d server-side) <span class="rule">view_plan_summary.mustache:128</span></span>
-    <span class="k">OVW-ACC-SUBLINE</span><span class="v"><b>Configurable subline</b> — one site setting picks the source: <code>status</code> (rating badge with ✓/⚠ icon when graded, else "To do"), <code>rating</code> (rating text only), <code>tag1/tag2</code> (custom-field <code>badge-cfield</code>), or <code>none</code> <span class="rule">mustache:129-160 (subline_is_status/rating/text)</span></span>
-    <span class="k">OVW-ACC-TOGGLE</span><span class="v"><b>Header button</b> — <code>aria-expanded</code>/<code>aria-controls</code>; on open it collapses every other item, then lazy-loads the detail (summary + courses web services) once, cached thereafter <span class="rule">mustache:122-126 · accordion.js init:2226-2250 · loadCompetencySummary</span></span>
-    <span class="k">OVW-ACC-LIVE</span><span class="v"><b>List region</b> — the accordion container is <code>role="list"</code> <code>aria-live="polite"</code> <code>aria-relevant="additions removals"</code> so filter/search changes are announced <span class="rule">view_plan_summary.mustache:108-113</span></span>
-    <span class="k">OVW-HERO / OVW-CHIP</span><span class="v">Hero (title / description / due-date / background) and chip filters — referenced here as a compact strip; badged in full on their own kit cards <span class="rule">hero_header.mustache · chip_filters.mustache (OVW-CHIP = viewplan_filter_fields)</span></span>
+    <span class="k">OVW-BAR-TABS</span><span class="v"><b>Not-completed / All + counts</b> (<code>incompletecount</code>/<code>competencycount</code>, starts on Not completed). In the to-be it moves into the toolbar, between favourites and search. <span class="rule">mustache:77-86 · accordion.js getActiveFilter/initFilterTabs</span></span>
+    <span class="k">OVW-ACC-SUBLINE</span><span class="v"><b>Configurable subline</b> — <code>subline_source</code>: <code>status</code> (✓/⚠ rating or "To do") · <code>rating</code> · <code>tag1/tag2</code> (cfield badge) · <code>none</code>. The grid card indicator mirrors this exactly. <span class="rule">mustache:129-160</span></span>
+    <span class="k">OVW-ACC-TOGGLE</span><span class="v"><b>Header button</b> — collapses others, then lazy-loads detail once (summary + courses WS), cached. Kept in list mode (one-open-at-a-time = deliberate focus). <span class="rule">mustache:122-126 · accordion.js:2226-2250</span></span>
+    <span class="k">OVW-TOOLBAR</span><span class="v"><b>(to-be) mtube-style toolbar</b> — favourites · not-completed|all · search · sort · filter · list/grid. Ported from <code>format_mtube database-search.mustache</code>; the filter opens the existing <code>chip_filters</code>, not select2. <span class="rule">reuse: course/format/mtube/templates/database-search.mustache</span></span>
+    <span class="k">OVW-FAV</span><span class="v"><b>(to-be) Favourite star</b> — per-plan, stored in a <code>user_preference</code> JSON (the plugin owns no tables); toggled by a small write WS modelled on <code>block_dimensions_toggle_favourite</code>. Colour = <code>--lk-orange</code> (the priority accent, kept). Drives "Favourites first" sort + the favourites filter. <span class="rule">precedent: blocks/dimensions toggle_favourite + state.js isfavourite</span></span>
+    <span class="k">OVW-SORT</span><span class="v"><b>(to-be) Sort menu</b> — Favourites first / Name / Plan order / Recently updated. Client-side over the already-loaded rows (no re-fetch); drops mtube's logstore Popularity/Last-access. Persisted in a <code>user_preference</code> (house style), not localStorage. <span class="rule">reuse: mtube sort dropdown data-sort/data-sortorder</span></span>
+    <span class="k">OVW-VIEW</span><span class="v"><b>(to-be) List ↔ grid toggle</b> — a <code>view</code> param branch (mtube cmitem.php:365-374). List = accordion; grid = cards + modal. Same loaded rows, client-side re-layout. <span class="rule">reuse: mtube view toggle #viewBtn</span></span>
+    <span class="k">OVW-GHOST</span><span class="v"><b>(to-be) Ghost card</b> — in list and grid: an inviting placeholder with the count of not-yet-favourited items ("N more to explore"). Precedent: block_dimensions <code>hasnonfavouritecompetencies</code> + <code>favouriteCountCompetency</code>. Exploration, not pressure. <span class="rule">precedent: blocks/dimensions/amd/src/state.js:83,161</span></span>
+    <span class="k">OVW-GRID / OVW-CARD</span><span class="v"><b>(to-be) Grid + compact card</b> — title + subline indicator (respects <code>subline_source</code>, so <code>none</code> = nothing) + star; same left-border state colour as the accordion. Card click opens the detail modal. <span class="rule">reuse: mtube grid/list branch + cmitem card</span></span>
+    <span class="k">OVW-MODAL-DETAIL</span><span class="v"><b>(to-be) Detail modal</b> — hosts the existing accordion detail (Status/Description/Evidence/Rules/Courses), lazy-loaded per competency (heavy — not pre-loaded, unlike mtube's light cm metadata). Opened from a grid card, and on mobile from the list. <span class="rule">reuse: mtube info-modal pattern (core/modal), but lazy not cached</span></span>
+    <span class="k">OVW-MODAL-NAV</span><span class="v"><b>(to-be) Prev/next pagination</b> — navigate competencies linearly from inside the modal, in the current sort order ("3 of 8"). <span class="rule">reuse: mtube database.js modal pager</span></span>
+    <span class="k">OVW-MODAL-EXPAND</span><span class="v"><b>(to-be) Expand / full-screen</b> — important on mobile; reuses the hub's expand approach, polished to the kit's rounded/shadow/token language.</span>
   </div>
 </div>
 </div>
