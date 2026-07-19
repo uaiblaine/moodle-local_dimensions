@@ -1,4 +1,4 @@
-<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Locked card" subtitle="progress_card_body lock overlay — blocked / learn-more / date / dashed border / section lock · as-is │ to-be" -->
+<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Locked card" subtitle="progress_card_body lock overlay — as-is (blocked/learn-more/date/border) │ to-be: self-enrol state, blurred sections, 'Opens' date, polished chrome" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -48,7 +48,7 @@
 .cwrap{width:100%;max-width:260px;padding:0 6px 1rem;}
 .card{background:var(--lk-card-bg);border:1px solid rgba(0,0,0,.06);border-radius:.375rem;box-shadow:0 .125rem .25rem rgba(0,0,0,.075);overflow:hidden;position:relative;}
 .card.locked{border:none;box-shadow:none;}
-.card-head{background:var(--lk-card-bg);border:0;padding:.75rem 1.25rem;}
+.card-head{background:transparent;border:0;padding:.75rem 1.25rem;position:relative;z-index:11;}
 .card-head a{font-size:20px;color:var(--lk-card-title);text-decoration:none;font-weight:700;}
 .card-head .muted{font-size:20px;color:#6c757d;font-weight:700;}
 .prog{position:relative;min-height:150px;padding:30px 30px 30px 10px;}
@@ -67,7 +67,7 @@
 .learnmore{display:inline-block;font-weight:bold;font-size:1rem;color:#fff;padding:8px 24px;border-radius:10px;text-decoration:none;background:var(--lk-accent);box-shadow:rgba(50,50,93,.25) 0 2px 5px -1px,rgba(0,0,0,.3) 0 1px 3px -1px;margin-bottom:.5rem;}
 .lock-date{font-size:.9rem;color:#555;background:#fff;padding:4px 12px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.1);}
 
-/* timeline (only for the per-section lock demo, styles.css:850-1045) */
+/* timeline (per-section lock demo + the blurred sections behind the overlay) */
 .tl{position:relative;padding-left:10px;}
 .tl-item{position:relative;padding-left:40px;padding-bottom:20px;display:flex;align-items:center;}
 .tl-item::before{content:'';position:absolute;left:11px;top:24px;bottom:-4px;width:2px;background:var(--lk-line);}
@@ -79,6 +79,24 @@
 .tl-txt a.muted,.tl-txt .muted{color:#6c757d;}
 .ic-locksm{width:20px;height:20px;stroke:#6c757d;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
+/* ==== to-be: blurred sections behind + polished chrome + 'Opens' date + self-enrol ==== */
+/* the payload brings the sections; show them (the overlay's backdrop-filter blurs them),
+   plus a direct blur so the hint reads even where backdrop-filter is weak */
+.tl.behind{filter:blur(2px);opacity:.55;pointer-events:none;user-select:none;}
+/* polished overlay: lighter veil (reveals the sections), NEUTRAL shadows (drop Stripe tint) */
+.lock-ov.pol{background:rgba(255,255,255,.42);}
+.lock-ov.pol .lock-ic{border-color:var(--lk-line-2);color:var(--lk-text-2);box-shadow:0 3px 10px rgba(0,0,0,.1);}
+.lock-ov.pol .lock-msg{background:var(--lk-surface);color:var(--lk-text);box-shadow:0 3px 10px rgba(0,0,0,.12);}
+.lock-ov.pol .learnmore{box-shadow:0 3px 10px rgba(0,0,0,.16);}
+/* reframed availability date — anticipatory, soft accent tint, calendar icon, no heavy shadow */
+.unlock-date{display:inline-flex;align-items:center;gap:.4rem;padding:.32rem .8rem;background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);border-radius:999px;font-size:.8rem;font-weight:600;box-shadow:none;}
+.unlock-date svg{width:.85rem;height:.85rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* self-enrol state (can_self_enrol) — enter icon + enrol invitation (positive, not a lock) */
+.lock-ic.enrol{border-color:rgba(15,108,191,.35);color:var(--lk-accent);background:rgba(15,108,191,.06);}
+.enrol-btn{display:inline-flex;align-items:center;gap:.45rem;font-weight:700;font-size:1rem;color:#fff;padding:8px 22px;border-radius:10px;text-decoration:none;background:var(--lk-accent);box-shadow:0 3px 10px rgba(0,0,0,.16);margin-bottom:.5rem;}
+.enrol-btn svg{width:1rem;height:1rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.enrol-cap{font-size:.78rem;color:var(--lk-text-2);}
+
 .legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
 .legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
 .leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
@@ -86,6 +104,21 @@
 .leg .v b{color:var(--lk-text);font-weight:600;}
 .leg .v{color:var(--lk-text-2);}
 .leg .rule{color:#8a8980;}
+/* ==== to-be: min-height so short courses don't clip the icon + single-activity card ==== */
+.panel.moodle .card.locked{min-height:320px;}
+.card.single-course{min-height:320px;}
+.single-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;padding:1.5rem 1.25rem;text-align:center;min-height:266px;}
+.single-mark svg{width:56px;height:56px;}
+.single-ring{position:relative;width:56px;height:56px;}
+.single-ring svg{transform:rotate(-90deg);display:block;}
+.single-ring .s-bg{fill:none;stroke:var(--lk-line);stroke-width:4;}
+.single-ring .s-fg{fill:none;stroke:var(--lk-success);stroke-width:4;stroke-linecap:round;}
+.single-ring .s-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:.85rem;font-weight:700;color:var(--lk-success);}
+.single-name{font-size:1.05rem;font-weight:600;color:var(--lk-text);line-height:1.3;}
+.single-status{font-size:.85rem;color:var(--lk-muted);}
+.single-status.done{color:#0f5132;font-weight:600;}
+.single-go{display:inline-flex;align-items:center;gap:.35rem;font-size:.85rem;font-weight:600;color:var(--lk-accent);text-decoration:none;margin-top:.2rem;}
+.single-go svg{width:.9rem;height:.9rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 </style>
 <div class="kit"><div class="screens">
 
@@ -137,7 +170,7 @@
       <span class="idb">TRK-LOCK-DATE · enrolment_starts</span>
       <span class="idb">TRK-LOCK-BORDER · static dashed (animation off)</span>
     </div>
-    <div class="note">The dashed border is injected on every locked card; only its marching-ants animation is optional (animatelockedborder). When showlockeddate is off, the date line is absent.</div>
+    <div class="note">Empty progress body behind the overlay; heavy Stripe-style shadows on the pills; "Available on / Enrolment starts" reads as a restriction; no self-enrol affordance.</div>
 
     <div class="divlbl">Per-section lock — inside an unlocked, completion-enabled card <span class="idb">TRK-TL-LOCK</span></div>
     <div class="grid">
@@ -172,53 +205,119 @@
 
   <!-- ============ TO-BE ============ -->
   <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · self-enrol · blurred sections · 'Opens' date · polished</div>
 
-    <div class="lk-cap">Learn-more mode · <span class="idb">TRK-LOCK</span></div>
+    <div class="lk-cap">Self-enrol available — enter icon, join now · <span class="idb r">TRK-LOCK-ENROL · to-be</span></div>
+    <div class="grid">
+      <div class="cwrap">
+        <div class="card locked">
+          <div class="card-head"><span class="muted">Intro to Public Speaking</span></div>
+          <div class="prog">
+            <div class="tl behind" aria-hidden="true">
+              <div class="tl-item done"><div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="var(--lk-success)"/><path d="M7 12.5l3 3 6.5-6.5" fill="none" stroke="#fff" stroke-width="2.2"/></svg></div><div class="tl-txt"><span>Getting started</span></div></div>
+              <div class="tl-item"><div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg></div><div class="tl-txt"><span>Voice &amp; posture</span></div></div>
+              <div class="tl-item"><div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg></div><div class="tl-txt"><span>First talk</span></div></div>
+            </div>
+          </div>
+          <div class="lock-ov pol" data-animate="0">
+            <div class="lock-ic enrol">
+              <svg viewBox="0 0 24 24" style="width:36px;height:36px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+            </div>
+            <a href="#" class="enrol-btn"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>Enrol to start</a>
+            <div class="enrol-cap">Self-enrolment is open</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb r">TRK-LOCK-ENROL · can_self_enrol → enter icon + Enrol</span>
+      <span class="idb">precedes blocked / learn-more</span>
+      <span class="idb">sections visible (blurred) behind</span>
+    </div>
+    <div class="note">Uses the existing <code>calculator::current_user_can_self_enrol()</code>. When the learner can join, the lock becomes an <b>invitation</b> — no date (it's open now).</div>
+
+    <div class="divlbl">Learn-more mode — blurred sections, 'Opens' date (future only) <span class="idb">TRK-LOCK</span></div>
     <div class="grid">
       <div class="cwrap">
         <div class="card locked">
           <div class="card-head"><span class="muted">Advanced Oratory</span></div>
-          <div class="prog"></div>
-          <div class="lock-ov" data-animate="1">
-            <div class="lock-ic">
-              <svg class="ic-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div class="prog">
+            <div class="tl behind" aria-hidden="true">
+              <div class="tl-item"><div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg></div><div class="tl-txt"><span>Persuasive structure</span></div></div>
+              <div class="tl-item"><div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg></div><div class="tl-txt"><span>Handling questions</span></div></div>
             </div>
+          </div>
+          <div class="lock-ov pol" data-animate="1">
+            <div class="lock-ic"><svg class="ic-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
             <a href="#" class="learnmore">Learn more</a>
-            <div class="lock-date">Available on 1 Mar 2026</div>
+            <div class="unlock-date"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Opens 1 Mar 2026</div>
           </div>
         </div>
       </div>
     </div>
     <div class="lk-ids">
-      <span class="idb">learn-more bg → primary</span>
-      <span class="idb">card bg → grey-100</span>
-      <span class="idb">title → body</span>
+      <span class="idb r">TRK-LOCK-DATE · "Opens {date}" · future only</span>
+      <span class="idb">learn-more bg → primary · card bg → grey-100</span>
     </div>
+    <div class="note">In learn-more mode a <b>past</b> date is dropped (not useful); a future date shows as "Opens {date}" — anticipatory. Sections read (blurred) behind the lighter veil.</div>
 
-    <div class="divlbl">Blocked mode — "Locked content" text · custom FA icon · static border <span class="idb">TRK-LOCK-MSG</span></div>
+    <div class="divlbl">Blocked mode — polished chrome, neutral shadows <span class="idb">TRK-LOCK-MSG</span></div>
     <div class="grid">
       <div class="cwrap">
         <div class="card locked">
           <div class="card-head"><span class="muted">Public Speaking II</span></div>
-          <div class="prog"></div>
-          <div class="lock-ov" data-animate="0">
-            <div class="lock-ic">
-              <svg class="ic-custom" viewBox="0 0 24 24"><path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17.8 5.7 21l1.3-6.7-5-4.6 6.8-.8z"/></svg>
+          <div class="prog">
+            <div class="tl behind" aria-hidden="true">
+              <div class="tl-item"><div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg></div><div class="tl-txt"><span>Stagecraft</span></div></div>
+              <div class="tl-item"><div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg></div><div class="tl-txt"><span>Improvisation</span></div></div>
             </div>
+          </div>
+          <div class="lock-ov pol" data-animate="0">
+            <div class="lock-ic"><svg class="ic-custom" viewBox="0 0 24 24"><path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17.8 5.7 21l1.3-6.7-5-4.6 6.8-.8z"/></svg></div>
             <div class="lock-msg">Locked content</div>
-            <div class="lock-date">Enrolment starts 15 Feb 2026</div>
+            <div class="unlock-date"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Opens 15 Feb 2026</div>
           </div>
         </div>
       </div>
     </div>
     <div class="lk-ids">
-      <span class="idb">msg / date / icon = neutral (unchanged)</span>
+      <span class="idb">msg / icon = neutral tokens (Stripe shadow → neutral)</span>
       <span class="idb">border stroke #ddd (unchanged)</span>
     </div>
-    <div class="note">Only the learn-more button follows the accent token to <code>--primary</code>; the overlay chrome (icon ring, message box, date) is already neutral.</div>
+    <div class="note">Pills lose the Stripe-blue shadow (<code>rgba(50 50 93/.25)</code>) for a neutral one; custom FA icon + message kept. The dashed border stays (animation optional).</div>
 
-    <div class="divlbl">Per-section lock — inside an unlocked, completion-enabled card <span class="idb">TRK-TL-LOCK</span></div>
+    <div class="divlbl">Single-activity course — no sections, no timeline · <span class="idb r">TRK-CARD-SINGLE · to-be</span></div>
+    <div class="grid">
+      <div class="cwrap">
+        <div class="card single-course">
+          <div class="card-head"><a href="#">Reflective Journal</a></div>
+          <div class="single-body">
+            <span class="single-ring"><svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><circle class="s-bg" cx="28" cy="28" r="24"/><circle class="s-fg" cx="28" cy="28" r="24" style="stroke-dasharray:90.5 150.8"/></svg><span class="s-pct">60%</span></span>
+            <span class="single-name">Weekly reflection</span>
+            <span class="single-status">In progress</span>
+            <a href="#" class="single-go">Go to activity <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+      </div>
+      <div class="cwrap">
+        <div class="card single-course">
+          <div class="card-head"><a href="#">Final Assessment</a></div>
+          <div class="single-body">
+            <span class="single-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--lk-success)"/><path d="M7 12.5l3 3 6.5-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="single-name">Submit portfolio</span>
+            <span class="single-status done">Completed</span>
+            <a href="#" class="single-go">Go to activity <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb r">TRK-CARD-SINGLE · activity name + completion (no timeline)</span>
+      <span class="idb">min-height 320px so the card/icon isn't clipped</span>
+    </div>
+    <div class="note">A single-activity course has no sections to compute — the calculator uses the <b>activity name + its completion status</b> instead of a timeline: one prominent status (ring&nbsp;% / green check / grey circle), the activity name, and a direct "Go to activity". All tracker cards get a <b>min-height of 320px</b> so short courses (few sections / single activity) don't clip the icon.</div>
+
+    <div class="divlbl">Per-section lock — inside an unlocked card <span class="idb">TRK-TL-LOCK</span></div>
     <div class="grid">
       <div class="cwrap">
         <div class="card">
@@ -252,15 +351,17 @@
 <div class="legend">
   <h3>ID legend — Locked card (view-competency Tracker · progress_card_body)</h3>
   <div class="leg">
-    <span class="k">TRK-LOCK</span><span class="v"><b>Locked overlay</b> — the <code>locked</code> block; absolute inset:0, <code>backdrop-filter: blur(2px)</code>, z-index 10. The JS moves it out of the progress body onto the <code>.card</code> (<code>overlay.appendTo(card)</code>) so it covers the whole card <span class="rule">progress_card_body.mustache:70-100 · competency_view.js:148 · styles.css:735-746</span></span>
-    <span class="k">TRK-LOCK-ICON</span><span class="v"><b>Lock icon</b> — custom Font Awesome <code>&lt;i class="{customicon}"&gt;</code> when a custom icon is set (colour <code>#343a40</code>), else the default lock image from <code>pix/status/lock.svg</code> at 40px, stroke <code>#6c757d</code>, inside an 80px ring <span class="rule">progress_card_body.mustache:73-80 · styles.css:786-797,844-848,923-927</span></span>
-    <span class="k">TRK-LOCK-LEARNMORE</span><span class="v"><b>"Learn more" button</b> — shown when <code>lockedcardmode == 'learnmore'</code> (<code>data.islearnmore</code>); links to the course, inline <code>background: {learnmorebuttoncolor}</code> whose setting default is <code>#667eea</code> → tokenised to <code>var(--lk-accent)</code>, migrating to <code>#0f6cbf</code> <span class="rule">progress_card_body.mustache:82-84 · competency_view.js:134,139 · settings.php:135-139</span></span>
-    <span class="k">TRK-LOCK-MSG</span><span class="v"><b>Blocked-mode text</b> — the <code>locked_content</code> string ("Locked content") in a white pill; rendered when <b>not</b> <code>islearnmore</code> <span class="rule">progress_card_body.mustache:85-87 · lang/en:422 · styles.css:799-808</span></span>
-    <span class="k">TRK-LOCK-DATE</span><span class="v"><b>Availability line</b> — only if the <code>showlockeddate</code> setting is on; <code>enrolment_starts</code> ("Enrolment starts {a}") when <code>is_enrolment_start</code>, else <code>available_at</code> ("Available on {a}") <span class="rule">progress_card_body.mustache:89-98 · competency_view.js:135 · lang/en:42,357</span></span>
-    <span class="k">TRK-LOCK-BORDER</span><span class="v"><b>Dashed SVG border</b> — injected on <b>every</b> locked card via <code>injectAnimatedBorder</code>: a <code>&lt;rect&gt;</code> stroke <code>#ddd</code>, width 2, <code>stroke-dasharray "8 8"</code>, <code>rx 6</code>, sized to the card by a <code>ResizeObserver</code>. The <code>animatelockedborder</code> setting gates <b>only</b> the marching-ants animation (the 3rd arg), never the border itself <span class="rule">competency_view.js:71,149,314-366 · styles.css:749-768</span></span>
-    <span class="k">TRK-TL-LOCK</span><span class="v"><b>Per-section lock marker</b> — for a locked section inside an unlocked card: a small lock icon (<code>icon-lock-sm</code>, 20px) + a <code>text-muted</code> section name. Top of the marker priority order <i>locked &gt; completed &gt; started &gt; activities/info</i>, so it wins even if the section would otherwise be complete <span class="rule">progress_card_body.mustache:111-116,150-157 · styles.css:929-933</span></span>
+    <span class="k">TRK-LOCK</span><span class="v"><b>Locked overlay</b> — the <code>locked</code> block; absolute inset:0, <code>backdrop-filter: blur(2px)</code>, z-index 10. The JS moves it out of the progress body onto the <code>.card</code> so it covers the whole card. <b>To-be:</b> the payload brings the sections, so the timeline renders behind and reads blurred through a lighter veil. <span class="rule">progress_card_body.mustache:70-100 · competency_view.js:148 · styles.css:735-746</span></span>
+    <span class="k">TRK-LOCK-ENROL</span><span class="v"><b>(to-be) Self-enrol state</b> — when the learner can join (<code>calculator::current_user_can_self_enrol()</code>, already in the plugin), the cadeado becomes a <code>fa-right-to-bracket</code> (enter) icon + an <b>"Enrol to start"</b> button — an invitation, not a lock. Takes precedence over blocked/learn-more; no date (it's open now). <span class="rule">calculator.php:375,408 (user_enrolled_or_self_enrolable / current_user_can_self_enrol)</span></span>
+    <span class="k">TRK-LOCK-ICON</span><span class="v"><b>Lock icon</b> — custom Font Awesome when set (colour <code>#343a40</code>), else the default lock at 40px inside an 80px ring. In the self-enrol state it swaps to the enter icon. <span class="rule">progress_card_body.mustache:73-80 · styles.css:786-797</span></span>
+    <span class="k">TRK-LOCK-LEARNMORE</span><span class="v"><b>"Learn more" button</b> — <code>lockedcardmode == 'learnmore'</code>; links to the course; inline <code>background: {learnmorebuttoncolor}</code> (default <code>#667eea</code>) → <code>var(--lk-accent)</code> → <code>#0f6cbf</code>. <span class="rule">progress_card_body.mustache:82-84 · settings.php:135-139</span></span>
+    <span class="k">TRK-LOCK-MSG</span><span class="v"><b>Blocked-mode text</b> — the <code>locked_content</code> string; rendered when not <code>islearnmore</code>. <b>To-be:</b> the pill drops the Stripe-blue shadow for a neutral one. <span class="rule">progress_card_body.mustache:85-87 · styles.css:799-808</span></span>
+    <span class="k">TRK-LOCK-DATE</span><span class="v"><b>Availability line</b> — only if <code>showlockeddate</code>. <b>To-be:</b> reframed as <b>"Opens {date}"</b> with a calendar icon in a soft accent chip (anticipatory, not a restriction); a <b>past</b> date is dropped in learn-more mode. <span class="rule">progress_card_body.mustache:89-98 · lang/en:42,357</span></span>
+    <span class="k">TRK-LOCK-BORDER</span><span class="v"><b>Dashed SVG border</b> — injected on <b>every</b> locked card via <code>injectAnimatedBorder</code>: <code>&lt;rect&gt;</code> stroke <code>#ddd</code>, dasharray "8 8", rx 6, sized by a <code>ResizeObserver</code>. <code>animatelockedborder</code> gates only the marching-ants animation. <span class="rule">competency_view.js:71,149,314-366 · styles.css:749-768</span></span>
+    <span class="k">TRK-TL-LOCK</span><span class="v"><b>Per-section lock marker</b> — a locked section inside an unlocked card: small lock icon + <code>text-muted</code> name. Top of the marker priority <i>locked &gt; completed &gt; started &gt; activities/info</i>. <span class="rule">progress_card_body.mustache:111-116,150-157</span></span>
+    <span class="k">TRK-CARD-SINGLE</span><span class="v"><b>(to-be) Single-activity course</b> — a course with no real sections has no timeline; the calculator surfaces the <b>activity name + its completion status</b> instead: one prominent status marker (progress ring % / green check / grey circle), the activity name, and a direct "Go to activity". All tracker cards get <code>min-height: 320px</code> so short courses (few sections / single activity) don't clip the lock icon or the marker. <span class="rule">new calculator branch when get_course_section_progress finds no trackable sections</span></span>
   </div>
-  <p class="note" style="padding:8px 0 0">Referenced (badged on the Tracker screen, viewcompetency.html): <span class="idb">TRK-CARD</span> <span class="idb">TRK-CARD-HEAD</span> <span class="idb">TRK-CARD-PROG</span> <span class="idb">TRK-TL-DONE</span> <span class="idb">TRK-TL-CIRCLE</span>. Migrating tokens visible here: <b>--lk-accent</b> (learn-more button #667eea→#0f6cbf), <b>--lk-card-bg</b>, <b>--lk-card-title</b>, <b>--lk-success</b> (done connector + check #28a745→#198754).</p>
+  <p class="note" style="padding:8px 0 0">Referenced (badged on the Tracker screen): <span class="idb">TRK-CARD</span> <span class="idb">TRK-CARD-HEAD</span> <span class="idb">TRK-CARD-PROG</span> <span class="idb">TRK-TL-DONE</span> <span class="idb">TRK-TL-CIRCLE</span>. Migrating tokens: <b>--lk-accent</b> (learn-more/enrol button #667eea→#0f6cbf), <b>--lk-card-bg</b>, <b>--lk-card-title</b>, <b>--lk-success</b>.</p>
 </div>
 <script>
 /* Faithful port of competency_view.js injectAnimatedBorder (~314-366): a dashed SVG
