@@ -22,7 +22,8 @@
   color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
 }
 .kit *{box-sizing:border-box;}
-.panel.moodle{
+.panel.moodle,
+.fullsec.moodle{
   --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
   --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
   --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
@@ -114,6 +115,41 @@
 .tg-lock-ic{width:56px;height:56px;border:1px solid #b0b2b5;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;color:#343a40;}
 .tg-lock-msg{font-weight:700;font-size:.95rem;color:#333;}
 .tg-badge-note{font-size:10px;color:#8a8980;padding:2px 20px 0;}
+/* ==== to-be additions: full-width section, filter bar, completed seal + collapse, continue ==== */
+.fullsec{max-width:1100px;margin:16px auto 0;background:var(--lk-page);border:1px solid #dcdfe3;border-radius:14px;overflow:hidden;padding-bottom:16px;}
+.fullsec .plabel .pdot{background:#0f6cbf;}
+.tg-fbar{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;padding:.4rem 20px .2rem;}
+.tg-tabs{display:inline-flex;background:var(--lk-pill-platter);border-radius:.5rem;padding:3px;}
+.tg-tab{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .7rem;border:none;background:transparent;border-radius:.4rem;font-size:.8rem;font-weight:500;color:var(--lk-pill-text);cursor:pointer;white-space:nowrap;}
+.tg-tab.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 2px rgba(0,0,0,.12);}
+.tg-tab .fcount{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;background:var(--lk-counter-bg);color:var(--lk-pill-text);border-radius:999px;font-size:.72rem;font-weight:600;}
+.tg-tab.on .fcount{background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);}
+.tg-sortbtn,.tg-filterbtn{display:inline-flex;align-items:center;gap:.35rem;height:32px;padding:0 .7rem;border:1px solid var(--lk-line-2);border-radius:.5rem;background:var(--lk-surface);color:var(--lk-text-2);font-size:.78rem;cursor:pointer;}
+.tg-sortbtn svg,.tg-filterbtn svg{width:.9rem;height:.9rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* completed course card: seal + collapsed summary */
+.tg-card.done{border:1px solid rgba(25,135,84,.4);box-shadow:0 1px 3px rgba(25,135,84,.1);}
+.tg-card.done .tg-head{background:rgba(25,135,84,.06);border-bottom:1px solid rgba(25,135,84,.15);overflow:hidden;}
+.tg-seal{float:right;margin:.05rem 0 .2rem .5rem;display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .55rem;background:#d1e7dd;color:#0f5132;border-radius:999px;font-size:.7rem;font-weight:700;}
+.tg-seal svg{width:.8rem;height:.8rem;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;}
+.tg-done-sum{display:flex;align-items:center;gap:.6rem;width:100%;padding:.9rem 1.1rem;background:transparent;border:none;cursor:pointer;text-align:left;}
+.tg-done-check{width:2rem;height:2rem;border-radius:50%;background:#d1e7dd;color:#0f5132;display:flex;align-items:center;justify-content:center;flex:none;}
+.tg-done-check svg{width:1.1rem;height:1.1rem;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+.tg-done-txt{flex:1;min-width:0;font-size:.85rem;font-weight:600;color:var(--lk-text);}
+.tg-done-txt small{display:block;font-size:.72rem;font-weight:400;color:var(--lk-muted);}
+.tg-done-chev{color:var(--lk-muted);flex:none;}
+.tg-done-chev svg{width:1rem;height:1rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* continue shortcut on an in-progress card */
+.tg-continue{display:flex;align-items:center;gap:.5rem;margin:0 .75rem .75rem;padding:.5rem .7rem;background:var(--lk-surface-2);border:1px solid var(--lk-line);border-radius:.5rem;text-decoration:none;color:var(--lk-accent);transition:border-color .15s ease,background .15s ease;}
+.tg-continue:hover{border-color:var(--lk-accent);background:var(--lk-surface);}
+.tg-continue .cont-ic{flex:none;display:flex;}
+.tg-continue .cont-ic svg{width:1rem;height:1rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tg-continue .cont-lbl{flex:1;min-width:0;font-size:.8rem;font-weight:600;}
+.tg-continue .cont-lbl small{display:block;font-weight:400;color:var(--lk-muted);font-size:.68rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tg-continue .cont-arrow{flex:none;color:var(--lk-accent);}
+.tg-continue .cont-arrow svg{width:.9rem;height:.9rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* locked course card (a "not completed" state) — dashed border + availability date */
+.tg-card.locked{border:1.5px dashed var(--lk-line-2);}
+.tg-lock-date{font-size:.72rem;color:var(--lk-muted);margin-top:.15rem;}
 </style>
 <div class="kit"><div class="screens">
 
@@ -351,6 +387,79 @@
 
 </div>
 
+<!-- ============ TO-BE · TRACKER ADDITIONS (full width) ============ -->
+<div class="fullsec moodle">
+  <div class="plabel"><span class="pdot"></span>To-be · filter by course completion · sort · completed-course seal · continue</div>
+
+  <div class="lk-cap">Filter — Not completed | All (by course completion) + sort · <span class="idb r">TRK-FILTER · TRK-SORT · to-be</span></div>
+  <div class="tg-fbar">
+    <div class="tg-tabs" role="tablist" aria-label="Course completion filter">
+      <button class="tg-tab on" role="tab" aria-selected="true" type="button">Not completed <span class="fcount">2</span></button>
+      <button class="tg-tab" role="tab" aria-selected="false" type="button">All <span class="fcount">3</span></button>
+    </div>
+    <button class="tg-sortbtn" type="button" aria-haspopup="true"><svg viewBox="0 0 24 24"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 4v16"/></svg>Completed first</button>
+    <button class="tg-filterbtn" type="button" aria-haspopup="true" aria-label="Filter by custom fields"><svg viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>Filter</button>
+    <span class="note" style="padding:0;align-self:center">chips (custom fields) open from the Filter button — aligned with view-plan, less on-screen clutter</span>
+  </div>
+
+  <div class="tg-grid" style="padding-top:.5rem">
+
+    <!-- in-progress card: timeline + Continue -->
+    <div class="tg-col">
+      <div class="tg-card">
+        <h3 class="tg-head"><a href="#">Technical Writing I</a></h3>
+        <div class="tg-prog">
+          <div class="tg-tl">
+            <div class="tg-item completed"><span class="tg-mark"><svg class="tg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--lk-success)"/><path d="M7 12.5l3 3 6.5-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tg-content"><a href="#">Fundamentals of writing</a></span></div>
+            <div class="tg-item started"><span class="tg-mark"><span class="tg-ring" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="Section progress: 60%"><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><circle class="tg-bg" cx="16" cy="16" r="12"/><circle class="tg-fg" cx="16" cy="16" r="12" style="stroke-dasharray:45.24 75.4;stroke-dashoffset:0;"/></svg><span class="tg-pct" aria-hidden="true">60</span></span></span><span class="tg-content"><a href="#">Cohesion and coherence</a></span></div>
+            <div class="tg-item"><span class="tg-mark"><svg class="tg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg></span><span class="tg-content"><a href="#">Text genres</a></span></div>
+          </div>
+        </div>
+        <a class="tg-continue" href="#">
+          <span class="cont-ic"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span>
+          <span class="cont-lbl">Continue<small>Cohesion and coherence &middot; 60%</small></span>
+          <span class="cont-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- locked card: locked is also a "not completed" state -->
+    <div class="tg-col">
+      <div class="tg-card locked">
+        <h3 class="tg-head"><span class="muted">Advanced Public Speaking</span></h3>
+        <div class="tg-prog">
+          <div class="tg-lock-body">
+            <span class="tg-lock-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#343a40" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+            <span class="tg-lock-msg">Locked content</span>
+            <span class="tg-lock-date">Available on 01/03/2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- completed card: seal + collapsed summary -->
+    <div class="tg-col">
+      <div class="tg-card done">
+        <h3 class="tg-head"><span class="tg-seal"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Completed</span><a href="#">Business Writing Essentials</a></h3>
+        <button class="tg-done-sum" type="button" aria-expanded="false">
+          <span class="tg-done-check"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="tg-done-txt">All sections complete<small>5 of 5 &middot; course finished</small></span>
+          <span class="tg-done-chev"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+  <div class="lk-ids">
+    <span class="idb r">TRK-FILTER · Not completed|All (course completion)</span>
+    <span class="idb r">TRK-SORT · Completed first / Name / Recent</span>
+    <span class="idb r">TRK-CARD-DONE · seal + collapsed summary</span>
+    <span class="idb r">TRK-CONTINUE · jump to the current section</span>
+    <span class="idb">TRK-LOCK · locked = not completed → trk-locked.html</span>
+  </div>
+  <div class="note">Under "Not completed" the grid shows the two unfinished courses — the <b>in-progress</b> one (with Continue) and the <b>locked</b> one (a locked course is still "not completed": dashed border + availability date; the full lock states — blur, learn-more, animated border — live on <code>trk-locked.html</code>). The <b>completed</b> course (green seal + collapsed timeline) is what "All" reveals. The % ring stays admin-controlled (<code>percentagedisplaymode</code>); the filter is by <b>course completion</b>, not competency proficiency — the competency-proficient highlight lives in the hero.</div>
+</div>
+
 <div class="legend">
   <h3>ID legend — Tracker grid &amp; timeline (view-competency.php)</h3>
   <div class="leg">
@@ -369,6 +478,10 @@
     <span class="k">TRK-TL-SEC-SPAN</span><span class="v">Plain <code>&lt;span&gt;</code> (no link) when the section has no URL <span class="rule">progress_card_body.mustache:163-165</span></span>
     <span class="k" style="color:#8a8980">disabled</span><span class="v">Completion-tracking-off card renders "<code>completion_disabled</code>" text instead of the timeline <span class="rule">progress_card_body.mustache:102-106 · lang:303</span></span>
     <span class="k" style="color:#8a8980">TRK-LOCK</span><span class="v">Locked overlay (icon, learn-more / message, availability date, dashed border) — <b>detailed on the locked-card screen</b>; here only the muted head is shown <span class="rule">progress_card_body.mustache:70-100 · competency_view.js:314-366</span></span>
+    <span class="k">TRK-FILTER</span><span class="v"><b>(to-be) Not completed / All</b> — filters the course grid by <b>course completion</b> (the course's own completion rule, not competency proficiency). Client-side over the loaded cards — <code>data-completed</code> is already stamped by the batch status call. <span class="rule">reuse: competency_view.js data-completed:281</span></span>
+    <span class="k">TRK-SORT</span><span class="v"><b>(to-be) Sort</b> — Completed first / Name / Recently updated. Today the grid is date-ordered only. Client-side over the loaded cards.</span>
+    <span class="k">TRK-CARD-DONE</span><span class="v"><b>(to-be) Completed course card</b> — a green "Completed" seal + the timeline collapsed to a summary ("All sections complete", tap to expand). Celebrates completion and cuts the "what's left" noise. Course-level completion, distinct from the competency being proficient (which lives in the hero).</span>
+    <span class="k">TRK-CONTINUE</span><span class="v"><b>(to-be) Continue</b> — a discreet shortcut on an in-progress card to the current section (first <code>is_started &amp;&amp; !is_completed</code>) — quick access to the next activity, no progress bar. <span class="rule">derive from sections[]</span></span>
   </div>
 </div>
 </div>
