@@ -52,13 +52,15 @@ class framework_csv_serializer {
 
     /**
      * The plugin custom-field columns, in export order. cf_customscss is emitted only
-     * when the custom SCSS feature is enabled. Kept in sync with helper's CF mapping.
+     * when the custom SCSS feature is enabled (kept last so the array_diff in headers()
+     * drops it cleanly). Kept in sync with helper's CF mapping.
      *
      * @var string[]
      */
     const CF_HEADERS = [
         'cf_bgcolor', 'cf_textcolor', 'cf_tag1', 'cf_tag2', 'cf_type',
-        'cf_enrollmentfilter', 'cf_singlecourseredirect', 'cf_customscss',
+        'cf_enrollmentfilter', 'cf_singlecourseredirect', 'cf_lockedcardmode', 'cf_showlockeddate',
+        'cf_customscss',
     ];
 
     /**
