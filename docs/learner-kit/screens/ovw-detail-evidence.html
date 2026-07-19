@@ -1,0 +1,284 @@
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Evidence tab" subtitle="accordion.js — evidence slider (6 types), nav arrows, detail button, submit, empty · as-is │ to-be" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+
+/* ---- Evidence tab pane (accordion.js renderEvidencePane / renderEvidenceSlider) ---- */
+.ev-body{padding:2px 20px 0;}
+/* Slider wrapper: position:relative + 3rem bottom pad reserves room for the controls pill. */
+.ev-wrap{position:relative;width:100%;padding-bottom:3rem;}
+/* Track: horizontal snap-scroll; here clipped to show a couple of cards + a peek. */
+.ev-track{display:flex;gap:.75rem;overflow-x:hidden;padding:.25rem 0 1rem;}
+/* Real cards are flex:0 0 320px; narrowed here so >1 shows in the panel. */
+.ev-card{flex:0 0 230px;width:230px;display:flex;gap:.75rem;padding:1rem;background:var(--lk-surface);border-radius:.75rem;border:none;
+  box-shadow:rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;}
+.ev-icon{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:.375rem;margin-top:.125rem;}
+.ev-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* Evidence type palette — Bootstrap alert tints (already-Moodle, KEPT identical in both panels). */
+/* Card-scoped colours (styles.css:1778-1806): note .t-prior is recoloured to the manual yellow inside a card. */
+.t-activity{background:#d1e7dd;color:#0f5132;}
+.t-grade{background:#cfe2ff;color:#084298;}
+.t-manual{background:#fff3cd;color:#664d03;}
+.t-file{background:#e2e3e5;color:#41464b;}
+.t-prior{background:#fff3cd;color:#664d03;}
+.t-other{background:#e9ecef;color:#6c757d;}
+.ev-content{flex-grow:1;min-width:0;}
+.ev-title{font-size:.875rem;font-weight:600;color:var(--lk-text);margin:0 0 .25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ev-desc{font-size:.75rem;color:var(--lk-muted);line-height:1.4;margin:0 0 .25rem;}
+.ev-meta{display:flex;align-items:center;flex-wrap:wrap;gap:.375rem;font-size:.7rem;color:var(--lk-muted);margin-top:.25rem;}
+.ev-meta svg{width:.8rem;height:.8rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ev-meta a{color:inherit;text-decoration:none;font-weight:500;}
+.ev-sep{color:#adb5bd;}
+/* Detail button — only when note/url/grade present. */
+.ev-detail{display:inline-flex;align-items:center;gap:.35rem;margin-top:.5rem;margin-left:auto;padding:.2rem .55rem;font-size:.7rem;
+  font-weight:500;color:var(--lk-muted);background:transparent;border:1px solid var(--lk-line-2);border-radius:.375rem;cursor:pointer;line-height:1.4;}
+.ev-detail svg{width:.65rem;height:.65rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* Focused state → outline follows --lk-focus-ring (MIGRATES #005fcc → #0f6cbf). */
+.ev-detail.foc{color:#0d6efd;border-color:#0d6efd;background:rgb(13 110 253 / 4%);outline:3px solid var(--lk-focus-ring);outline-offset:2px;}
+/* Control group: pill, bottom-right of the wrapper. */
+.ev-controls{position:absolute;right:.5rem;bottom:.25rem;display:inline-flex;align-items:center;border-radius:999px;overflow:hidden;
+  background:var(--lk-surface);box-shadow:rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;}
+.ev-btn{display:flex;align-items:center;justify-content:center;width:42px;height:42px;border:none;border-radius:0;background:transparent;color:#1d2125;cursor:pointer;}
+.ev-btn svg{width:.875rem;height:.875rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ev-btn+.ev-btn{border-left:1px solid rgb(17 24 39 / 8%);}
+.ev-btn.disabled{opacity:.45;color:#8da1b6;pointer-events:none;}
+/* Focused nav arrow → outline follows --lk-accent (MIGRATES #667eea → #0f6cbf). */
+.ev-btn.foc{outline:2px solid var(--lk-accent);outline-offset:-2px;}
+/* Six-type reference strip. */
+.ev-types{display:flex;flex-wrap:wrap;gap:6px;padding:2px 20px 2px;}
+.ev-type{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .55rem;border-radius:999px;font-size:.72rem;font-weight:600;}
+.ev-type svg{width:.85rem;height:.85rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ev-type code{font-family:var(--mono);font-size:.62rem;font-weight:400;opacity:.75;}
+/* Submit-evidence button — orange, KEPT identical in both panels. */
+.ev-submit-wrap{padding:4px 20px 0;}
+.ev-submit{display:inline-block;padding:10px 28px;font-weight:600;font-size:.9rem;color:#fff;background:var(--lk-orange);border:none;border-radius:8px;text-decoration:none;}
+/* Empty state. */
+.ev-empty{font-size:.875rem;color:var(--lk-muted);padding:2px 20px 0;margin:0;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+
+    <div class="lk-cap">Evidence tab — card slider · <span class="idb">OVW-EVID-CARD</span></div>
+    <div class="ev-body">
+      <div class="ev-wrap">
+        <div class="ev-track">
+
+          <!-- Card 1: Activity completion — meta + focused detail button (focus ring visible). -->
+          <div class="ev-card">
+            <div class="ev-icon t-activity"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg></div>
+            <div class="ev-content">
+              <h3 class="ev-title">Activity completion</h3>
+              <p class="ev-desc">Completed &ldquo;Reflective essay&rdquo;</p>
+              <div class="ev-meta">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <a href="#">A. Learner</a><span class="ev-sep">&middot;</span><span>12 Jan 2026</span>
+              </div>
+              <button type="button" class="ev-detail foc" aria-label="View details: Activity completion">
+                <svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span>View details</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 2: Course grade — meta, NO detail button (no note/url/grade extra). -->
+          <div class="ev-card">
+            <div class="ev-icon t-grade"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg></div>
+            <div class="ev-content">
+              <h3 class="ev-title">Course grade</h3>
+              <p class="ev-desc">Course completed</p>
+              <div class="ev-meta">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <a href="#">System</a><span class="ev-sep">&middot;</span><span>10 Jan 2026</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Manual rating — author/date HIDDEN for manual override; detail button present. -->
+          <div class="ev-card">
+            <div class="ev-icon t-manual"><svg viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>
+            <div class="ev-content">
+              <h3 class="ev-title">Manual rating</h3>
+              <p class="ev-desc">Rated &ldquo;Excellent&rdquo; by assessor</p>
+              <button type="button" class="ev-detail" aria-label="View details: Manual rating">
+                <svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span>View details</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Nav control group: prev disabled at start, next focused (accent focus ring visible). -->
+        <div class="ev-controls" role="group" aria-label="Evidence">
+          <button type="button" class="ev-btn disabled" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button type="button" class="ev-btn foc" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">OVW-EVID-CARD · icon+title+desc+meta</span>
+      <span class="idb r">OVW-EVID-DETAIL · note/url/grade only</span>
+      <span class="idb">OVW-EVID-NAV · prev disabled at edge</span>
+    </div>
+    <div class="note">Track drag-scrolls with snap; nav honours reduced-motion. Card 2 shows no &ldquo;View details&rdquo; (no extra info); manual card hides author/date.</div>
+
+    <div class="divlbl">Six evidence types — descidentifier &rarr; icon + colour (Bootstrap alert palette, kept) <span class="idb">OVW-EVID-CARD</span></div>
+    <div class="ev-types">
+      <span class="ev-type t-activity"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>Activity completion <code>coursemodulecompleted</code></span>
+      <span class="ev-type t-grade"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg>Course grade <code>coursecompleted</code></span>
+      <span class="ev-type t-manual"><svg viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Manual rating <code>manualoverride</code></span>
+      <span class="ev-type t-file"><svg viewBox="0 0 24 24"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>File attachment <code>priorlearninglinked+file</code></span>
+      <span class="ev-type t-prior"><svg viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.9 18.8 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.1.6 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>Prior learning <code>priorlearninglinked</code></span>
+      <span class="ev-type t-other"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Other evidence <code>fallback</code></span>
+    </div>
+    <div class="note">Palette is Moodle&rsquo;s Bootstrap alert tints &mdash; identical in both panels. Inside a card, <code>prior</code> is recoloured to the manual yellow (base is red #f8d7da/#842029).</div>
+
+    <div class="divlbl">Submit evidence &mdash; needs setting + capability <span class="idb r">OVW-EVID-SUBMIT</span></div>
+    <div class="ev-submit-wrap"><a class="ev-submit" href="#">Submit prior learning evidence</a></div>
+    <div class="note">&rarr; /admin/tool/lp/user_evidence_list.php?userid=&hellip; Orange button &mdash; kept in both panels.</div>
+
+    <div class="divlbl">Empty &mdash; showevidence on, zero rows <span class="idb">OVW-EVID-EMPTY</span></div>
+    <p class="ev-empty">No evidence recorded</p>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+
+    <div class="lk-cap">Evidence tab — card slider · <span class="idb">OVW-EVID-CARD</span></div>
+    <div class="ev-body">
+      <div class="ev-wrap">
+        <div class="ev-track">
+
+          <div class="ev-card">
+            <div class="ev-icon t-activity"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg></div>
+            <div class="ev-content">
+              <h3 class="ev-title">Activity completion</h3>
+              <p class="ev-desc">Completed &ldquo;Reflective essay&rdquo;</p>
+              <div class="ev-meta">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <a href="#">A. Learner</a><span class="ev-sep">&middot;</span><span>12 Jan 2026</span>
+              </div>
+              <button type="button" class="ev-detail foc" aria-label="View details: Activity completion">
+                <svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span>View details</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="ev-card">
+            <div class="ev-icon t-grade"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg></div>
+            <div class="ev-content">
+              <h3 class="ev-title">Course grade</h3>
+              <p class="ev-desc">Course completed</p>
+              <div class="ev-meta">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <a href="#">System</a><span class="ev-sep">&middot;</span><span>10 Jan 2026</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ev-card">
+            <div class="ev-icon t-manual"><svg viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>
+            <div class="ev-content">
+              <h3 class="ev-title">Manual rating</h3>
+              <p class="ev-desc">Rated &ldquo;Excellent&rdquo; by assessor</p>
+              <button type="button" class="ev-detail" aria-label="View details: Manual rating">
+                <svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span>View details</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="ev-controls" role="group" aria-label="Evidence">
+          <button type="button" class="ev-btn disabled" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button type="button" class="ev-btn foc" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">detail focus ring &rarr; primary</span>
+      <span class="idb">nav focus ring &rarr; primary</span>
+    </div>
+    <div class="note">Only the two focus rings migrate here (#005fcc / #667eea &rarr; <code>--primary</code>). Cards, palette and orange are unchanged.</div>
+
+    <div class="divlbl">Six evidence types — descidentifier &rarr; icon + colour (Bootstrap alert palette, kept) <span class="idb">OVW-EVID-CARD</span></div>
+    <div class="ev-types">
+      <span class="ev-type t-activity"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>Activity completion <code>coursemodulecompleted</code></span>
+      <span class="ev-type t-grade"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg>Course grade <code>coursecompleted</code></span>
+      <span class="ev-type t-manual"><svg viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Manual rating <code>manualoverride</code></span>
+      <span class="ev-type t-file"><svg viewBox="0 0 24 24"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>File attachment <code>priorlearninglinked+file</code></span>
+      <span class="ev-type t-prior"><svg viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.9 18.8 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.1.6 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>Prior learning <code>priorlearninglinked</code></span>
+      <span class="ev-type t-other"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Other evidence <code>fallback</code></span>
+    </div>
+    <div class="note">Already Moodle DS &mdash; no change. The <code>prior</code>/<code>manual</code> yellow overlap and red base are identical to as-is.</div>
+
+    <div class="divlbl">Submit evidence &mdash; needs setting + capability <span class="idb r">OVW-EVID-SUBMIT</span></div>
+    <div class="ev-submit-wrap"><a class="ev-submit" href="#">Submit prior learning evidence</a></div>
+    <div class="note">Orange <code>--lk-orange</code> is a deliberate brand accent &mdash; kept, not migrated to <code>--primary</code>.</div>
+
+    <div class="divlbl">Empty &mdash; showevidence on, zero rows <span class="idb">OVW-EVID-EMPTY</span></div>
+    <p class="ev-empty">No evidence recorded</p>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Plan (OVW) · Detail — Evidence tab</h3>
+  <div class="leg">
+    <span class="k">OVW-EVID-CARD</span><span class="v"><b>Evidence card</b> in a horizontal slider — icon + title + description + author/date meta. Six types keyed by <code>descidentifier</code> (from core_competency <code>evidence_exporter</code>) &rarr; icon + colour class in <code>getEvidenceTypeInfo</code>: <code>evidence_coursemodulecompleted</code>&rarr;check/activity, <code>evidence_coursecompleted</code>&rarr;cap/grade, <code>evidence_manualoverride(inplan)</code>&rarr;pencil/manual, <code>evidence_evidenceofpriorlearninglinked</code>+<code>desca~file</code>&rarr;clip/file else trophy/prior, fallback&rarr;info/other. Manual override hides the author/date meta. Palette is the Bootstrap alert tint set (already-Moodle, <b>kept</b>); the card-scoped rule recolours <code>prior</code> to the manual yellow. <span class="rule">accordion.js renderEvidenceSlider:1041-1087, getEvidenceTypeInfo:1919-2017; styles.css:1778-1806</span></span>
+    <span class="k">OVW-EVID-DETAIL</span><span class="v"><b>&ldquo;View details&rdquo; button</b> — rendered <b>only</b> when <code>hasExtraDetails = note || url || (grade &amp;&amp; gradename!=='-')</code>; opens the evidence detail modal (note / link / rating / author / date) via the slider click delegate &rarr; <code>openEvidenceDetailModal</code>. Focus outline follows <code>--lk-focus-ring</code>. <span class="rule">accordion.js:1043,1077-1083, initSliders:1527-1537, openEvidenceDetailModal:1146; evidence_detail_modal.mustache</span></span>
+    <span class="k">OVW-EVID-NAV</span><span class="v"><b>Prev/next control group</b> (<code>role="group"</code>, pill, bottom-right) — prev pre-marked <code>disabled</code>; <code>updateScrollableArrows</code> toggles each arrow&rsquo;s <code>disabled</code> at the track edges and hides the whole group (<code>controls-hidden</code>, <code>display:none</code>) when the cards fit. Focus outline follows <code>--lk-accent</code>. <span class="rule">accordion.js renderEvidenceSlider:1092-1102, updateScrollableArrows:1399-1428</span></span>
+    <span class="k">OVW-EVID-SUBMIT</span><span class="v"><b>&ldquo;Submit prior learning evidence&rdquo;</b> link &rarr; <code>/admin/tool/lp/user_evidence_list.php?userid=</code>. Shown only when <code>enableevidencesubmitbutton</code> is set <b>and</b> the plan owner has <code>moodle/competency:userevidencemanageown</code> on their user context. Orange button, <b>kept</b> in both panels. <span class="rule">accordion.js renderEvidencePane:508-517; view-plan.php:83-88</span></span>
+    <span class="k">OVW-EVID-EMPTY</span><span class="v"><b>Muted &ldquo;No evidence recorded&rdquo;</b> — when <code>evidence.length===0</code> the slider returns a single muted paragraph. The Evidence tab still exists because <code>hasEvidence = ucs &amp;&amp; showevidence</code> (independent of row count). <span class="rule">accordion.js renderEvidenceSlider:1031-1034, hasEvidence:307; string no_evidence</span></span>
+  </div>
+</div>
+</div>

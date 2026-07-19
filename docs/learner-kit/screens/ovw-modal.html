@@ -1,0 +1,225 @@
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Evidence detail modal" subtitle="evidence_detail_modal.mustache — type badge, description, note, link, grade, author, date · as-is │ to-be" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+
+/* ---- evidence detail modal (evidence_detail_modal.mustache; opened by accordion.js openEvidenceDetailModal ~1146) ---- */
+/* Base core/modal shell: Modal.create({title, body, large:false, removeOnClose:true}) →
+   header (title + close X) + body; no action buttons in the footer. */
+.mshell{margin:12px 20px 6px;}
+.mdialog{background:var(--lk-surface);border:1px solid var(--lk-line-2);border-radius:.5rem;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;max-width:420px;}
+.mhead{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1rem .75rem;border-bottom:1px solid var(--lk-line);}
+.mtitle{font-size:1.05rem;font-weight:700;color:var(--lk-text);margin:0;}
+.mclose{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--lk-muted);border-radius:.375rem;cursor:pointer;}
+.mbody{padding:1rem;}
+
+/* .local-dimensions-ev-modal-type / -type-badge (styles.css 1915-1927) */
+.evtype{margin-bottom:1rem;}
+.evbadge{display:inline-flex;align-items:center;gap:.5rem;padding:.375rem .75rem;border-radius:.5rem;font-size:.8rem;font-weight:600;}
+.evbadge .ic{width:.85rem;height:.85rem;}
+/* .local-dimensions-ev-modal-section (styles.css 1929-1939) — hairline divider, dropped on last child */
+.evsec{margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #f0f0f0;}
+.evsec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+/* .local-dimensions-ev-modal-label (styles.css 1941-1954) */
+.evlabel{font-size:.75rem;font-weight:600;color:var(--lk-muted);letter-spacing:.02em;margin-bottom:.375rem;display:flex;align-items:center;gap:.375rem;}
+.evlabel .ic{width:.85rem;height:.85rem;}
+/* .local-dimensions-ev-modal-value / -description (styles.css 1956-1974) — neutral text, identical both panels */
+.evval{font-size:.875rem;color:var(--lk-text);line-height:1.5;}
+.evdesc{font-size:.875rem;color:var(--lk-text-2);line-height:1.6;}
+.evdesc p{margin:0;}
+/* .local-dimensions-ev-modal-note (styles.css 1976-1984) — FLAGGED REVIEW: Tailwind yellow → BS warning-light */
+.evnote{background:var(--lk-modal-note-bg);color:var(--lk-modal-note-fg);border-left:3px solid var(--lk-modal-note-accent);padding:.75rem 1rem;border-radius:.5rem;font-size:.85rem;line-height:1.5;}
+/* .local-dimensions-ev-modal-link a (styles.css 1986-2004) — raw BS link blue #0d6efd (not in migration set); focus ring migrates */
+.evlink a{display:inline-flex;align-items:center;gap:.375rem;color:#0d6efd;text-decoration:none;font-size:.85rem;font-weight:500;}
+.evlink a.kbd{outline:3px solid var(--lk-focus-ring);outline-offset:2px;border-radius:2px;}
+/* .local-dimensions-ev-modal-grade-badge (+.proficient) (styles.css 2006-2021) — already-Moodle status tints, unchanged */
+.evgrade{display:inline-flex;align-items:center;gap:.375rem;padding:.25rem .625rem;background:#e9ecef;color:var(--lk-text-2);border-radius:.375rem;font-size:.8rem;font-weight:600;}
+.evgrade .ic{width:.8rem;height:.8rem;}
+.evgrade.prof{background:#d1e7dd;color:#0f5132;}
+/* .local-dimensions-ev-modal-author / -avatar (styles.css 2023-2051) */
+.evauthor{display:flex;align-items:center;gap:.5rem;}
+.evavatar{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#8da1b6,#6c757d);}
+.evauthor a{color:var(--lk-text);text-decoration:none;font-size:.85rem;font-weight:500;}
+
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+
+    <div class="lk-cap">Evidence detail modal — Manual rating example · <span class="idb">OVW-MODAL</span></div>
+    <div class="mshell">
+      <div class="mdialog" role="dialog" aria-modal="true" aria-labelledby="ldx-evmodal-title-a">
+        <div class="mhead">
+          <h2 class="mtitle" id="ldx-evmodal-title-a">Evidence details</h2>
+          <button type="button" class="mclose" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="mbody local-dimensions-ev-modal-body">
+          <div class="evtype">
+            <span class="evbadge" style="background:#fff3cd;color:#664d03">
+              <svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              Manual rating
+            </span>
+          </div>
+          <div class="evsec">
+            <div class="evval evdesc"><p>Demonstrated the competency during the end-of-term oral assessment.</p></div>
+          </div>
+          <div class="evsec">
+            <div class="evlabel"><svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>Note</div>
+            <div class="evnote">Confident delivery; minor hesitation on follow-up questions. Recommend a short refresher before the next review cycle.</div>
+          </div>
+          <div class="evsec">
+            <div class="evlabel"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Related activity</div>
+            <div class="evlink"><a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>Open activity</a></div>
+          </div>
+          <div class="evsec">
+            <div class="evlabel"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Rating</div>
+            <div class="evval"><span class="evgrade prof"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Competent</span></div>
+          </div>
+          <div class="evsec">
+            <div class="evlabel"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>Registered by</div>
+            <div class="evauthor"><span class="evavatar" aria-hidden="true">JD</span><a href="#">Jane Doe</a></div>
+          </div>
+          <div class="evsec">
+            <div class="evlabel"><svg class="ic" viewBox="0 0 24 24"><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Date</div>
+            <div class="evval">31 Jan 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">OVW-MODAL-TYPE · 6-type badge (icon + colour)</span>
+      <span class="idb">OVW-MODAL-DESC · {{#description}}</span>
+      <span class="idb r">OVW-MODAL-NOTE · REVIEW · Tailwind yellow</span>
+      <span class="idb">OVW-MODAL-LINK · hasurl</span>
+      <span class="idb">OVW-MODAL-GRADE · hasgrade + proficient</span>
+      <span class="idb">OVW-MODAL-AUTHOR · hasactionuser</span>
+      <span class="idb">OVW-MODAL-DATE · datestring</span>
+      <span class="idb">opened by OVW-EVID-DETAIL</span>
+    </div>
+
+    <div class="divlbl">Keyboard focus — "Open activity" link ring <span class="idb">focus-visible</span></div>
+    <div class="mshell"><div class="evlink"><a href="#" class="kbd"><svg class="ic" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>Open activity</a></div></div>
+    <div class="note">Each optional section renders only when its flag is set; sections divide with a hairline and the last one drops its border. Note block uses the Tailwind yellow <code>#fef9c3 / #713f12 / #eab308</code>.</div>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+
+    <div class="lk-cap">Evidence detail modal — Manual rating example · <span class="idb">OVW-MODAL</span></div>
+    <div class="mshell">
+      <div class="mdialog" role="dialog" aria-modal="true" aria-labelledby="ldx-evmodal-title-b">
+        <div class="mhead">
+          <h2 class="mtitle" id="ldx-evmodal-title-b">Evidence details</h2>
+          <button type="button" class="mclose" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="mbody local-dimensions-ev-modal-body">
+          <div class="evtype">
+            <span class="evbadge" style="background:#fff3cd;color:#664d03">
+              <svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              Manual rating
+            </span>
+          </div>
+          <div class="evsec">
+            <div class="evval evdesc"><p>Demonstrated the competency during the end-of-term oral assessment.</p></div>
+          </div>
+          <div class="evsec">
+            <div class="evlabel"><svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>Note</div>
+            <div class="evnote">Confident delivery; minor hesitation on follow-up questions. Recommend a short refresher before the next review cycle.</div>
+          </div>
+          <div class="evsec">
+            <div class="evlabel"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Related activity</div>
+            <div class="evlink"><a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>Open activity</a></div>
+          </div>
+          <div class="evsec">
+            <div class="evlabel"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Rating</div>
+            <div class="evval"><span class="evgrade prof"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Competent</span></div>
+          </div>
+          <div class="evsec">
+            <div class="evlabel"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>Registered by</div>
+            <div class="evauthor"><span class="evavatar" aria-hidden="true">JD</span><a href="#">Jane Doe</a></div>
+          </div>
+          <div class="evsec">
+            <div class="evlabel"><svg class="ic" viewBox="0 0 24 24"><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Date</div>
+            <div class="evval">31 Jan 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">note bg → warning-light #fff3cd</span>
+      <span class="idb">note text → #664d03</span>
+      <span class="idb">note accent → warning #ffc107</span>
+      <span class="idb">link focus ring → primary</span>
+    </div>
+
+    <div class="divlbl">Keyboard focus — "Open activity" link ring <span class="idb">focus-visible</span></div>
+    <div class="mshell"><div class="evlink"><a href="#" class="kbd"><svg class="ic" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>Open activity</a></div></div>
+    <div class="note">Note block migrates Tailwind yellow → Bootstrap warning-light — landing on the same <code>#fff3cd</code> the Manual badge already uses; the link focus ring follows <code>--primary</code>. Type, grade, author and date colours are already Moodle-native and unchanged.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Plan (OVW) · Evidence detail modal</h3>
+  <div class="leg">
+    <span class="k">OVW-MODAL</span><span class="v"><b>Evidence detail dialog</b> — a base <code>core/modal</code> built by <code>openEvidenceDetailModal</code> via <code>Modal.create({title, body, large:false, removeOnClose:true})</code>. Title = <code>evidence_details</code> "Evidence details"; body = <code>Templates.render('local_dimensions/evidence_detail_modal', context)</code> (root <code>.local-dimensions-ev-modal-body</code>). Header carries the title + a close button; there are no action buttons. Opened by the "View details" button on an evidence card (<b>OVW-EVID-DETAIL</b>). <span class="rule">accordion.js openEvidenceDetailModal:1146-1200; evidence_detail_modal.mustache:78</span></span>
+    <span class="k">OVW-MODAL-TYPE</span><span class="v"><b>Evidence type badge</b> — <code>getEvidenceTypeInfo</code> resolves <code>{icon, label, colorClass}</code> from <code>evidence.descidentifier</code> (activity / course grade / manual / file / prior), falling back to <code>url</code>/<code>action</code>/<code>desca</code> heuristics, else "Other". Rendered as <code>&lt;span .local-dimensions-ev-modal-type-badge {colorclass}&gt;</code> with the FA icon. The six tints are already-Moodle status colours (Manual = <code>#fff3cd / #664d03</code>) and are <b>identical in both panels</b>. <span class="rule">accordion.js getEvidenceTypeInfo:1919-2018; template:80-85; styles.css:1441-1469, 1919-1927</span></span>
+    <span class="k">OVW-MODAL-DESC</span><span class="v"><b>Description</b> — <code>{{#description}}</code> block; <code>{{{description}}}</code> is raw server HTML from <code>ev.description</code>, rendered in <code>.local-dimensions-ev-modal-description</code> (<code>#495057</code>, neutral, unchanged). <span class="rule">template:88-92; styles.css:1962-1974</span></span>
+    <span class="k">OVW-MODAL-NOTE</span><span class="v"><b>Note / annotation</b> — <code>{{#hasnote}}</code> where <code>hasnote = !!ev.note?.trim()</code>; plain-text <code>ev.note</code> in <code>.local-dimensions-ev-modal-note</code>. <b>FLAGGED REVIEW</b>: as-is is Tailwind yellow — bg <code>#fef9c3</code>, text <code>#713f12</code>, <code>border-left 3px #eab308</code> (<code>--lk-modal-note-*</code>); to-be maps to Bootstrap warning-light <code>#fff3cd / #664d03 / #ffc107</code>. <span class="rule">accordion.js:1148, 1164-1165; template:95-105; styles.css:1976-1984</span></span>
+    <span class="k">OVW-MODAL-LINK</span><span class="v"><b>Related activity link</b> — <code>{{#hasurl}}</code> where <code>hasurl = !!ev.url</code>; label "Related activity", anchor <code>target="_blank" rel="noopener noreferrer"</code> reading "Open activity" (<code>evidence_open_link</code>). Link colour is raw Bootstrap blue <code>#0d6efd</code> (not in the migration set); the <code>:focus-visible</code> ring <code>#005fcc</code> maps to <code>--lk-focus-ring</code> (migrates to <code>--primary</code>). <span class="rule">accordion.js:1149, 1166-1168; template:108-121; styles.css:1986-2004</span></span>
+    <span class="k">OVW-MODAL-GRADE</span><span class="v"><b>Rating badge</b> — <code>{{#hasgrade}}</code> where <code>hasgrade = !!(ev.grade &amp;&amp; ev.gradename &amp;&amp; ev.gradename !== '-')</code>; badge text = <code>ev.gradename</code>. <code>.grade-proficient</code> is added when <code>isGradeProficient(ev.grade, scaleConfig)</code> parses the competency's <code>scaleconfiguration</code> JSON and finds that value's <code>proficient</code> flag set. Proficient = green <code>#d1e7dd / #0f5132</code>, default = <code>#e9ecef / #495057</code> — already-Moodle, unchanged. <span class="rule">accordion.js hasGrade:1150, isGradeProficient:1121-1137; template:124-134; styles.css:2006-2021</span></span>
+    <span class="k">OVW-MODAL-AUTHOR</span><span class="v"><b>Registered by</b> — <code>{{#hasactionuser}}</code> where <code>hasactionuser = !!ev.actionuser?.fullname</code>; avatar from <code>ev.actionuser.profileimageurlsmall</code> + name link to <code>profileurl</code> (fallback <code>wwwroot/user/profile.php?id={usermodified}</code>). Neutral text, unchanged. <span class="rule">accordion.js:1151, 1172-1179; template:137-148; styles.css:2023-2051</span></span>
+    <span class="k">OVW-MODAL-DATE</span><span class="v"><b>Date</b> — <code>{{#datestring}}</code>; <code>datestring = ev.userdate</code> (server-localized) with a client fallback of <code>formatTimestamp(ev.timecreated, strMap.dateFormat)</code> where <code>dateFormat = strftimedaydate</code> (core_langconfig). Neutral text, unchanged. <span class="rule">accordion.js:1182; template:151-159</span></span>
+  </div>
+</div>
+</div>

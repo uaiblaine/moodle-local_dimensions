@@ -1,0 +1,308 @@
+<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Locked card" subtitle="progress_card_body lock overlay — blocked / learn-more / date / dashed border / section lock · as-is │ to-be" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+
+/* ---- locked card (progress_card_body.mustache + competency_view.js) ---- */
+.grid{display:flex;flex-wrap:wrap;gap:0;padding:.5rem 20px 0;}
+.cwrap{width:100%;max-width:260px;padding:0 6px 1rem;}
+.card{background:var(--lk-card-bg);border:1px solid rgba(0,0,0,.06);border-radius:.375rem;box-shadow:0 .125rem .25rem rgba(0,0,0,.075);overflow:hidden;position:relative;}
+.card.locked{border:none;box-shadow:none;}
+.card-head{background:var(--lk-card-bg);border:0;padding:.75rem 1.25rem;}
+.card-head a{font-size:20px;color:var(--lk-card-title);text-decoration:none;font-weight:700;}
+.card-head .muted{font-size:20px;color:#6c757d;font-weight:700;}
+.prog{position:relative;min-height:150px;padding:30px 30px 30px 10px;}
+
+/* locked overlay (styles.css:735-848) — appended to .card by the JS, absolute inset:0 */
+.lock-ov{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:center;align-items:center;background:rgba(255,255,255,.65);backdrop-filter:blur(2px);border-radius:inherit;}
+/* TRK-LOCK-BORDER: dashed SVG rect injected on EVERY locked card. The setting gates
+   only the marching-ants animation, never the border itself (competency_view.js:149). */
+.lk-lock-border-svg{position:absolute;inset:0;pointer-events:none;z-index:0;}
+.lock-ov > *:not(.lk-lock-border-svg){position:relative;z-index:1;}
+@keyframes lk-dashoffset-move{to{stroke-dashoffset:-16;}}
+.lock-ic{display:flex;align-items:center;justify-content:center;width:80px;height:80px;border:1px solid #b0b2b5;border-radius:50%;margin-bottom:1rem;background:#fff;color:#343a40;}
+.lock-ic .ic-lock{width:40px;height:40px;stroke:#6c757d;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.lock-ic .ic-custom{width:32px;height:32px;fill:currentColor;}
+.lock-msg{font-weight:bold;font-size:1.1rem;color:#333;margin-bottom:.5rem;padding:5px 20px;background:#fff;border-radius:10px;box-shadow:rgba(50,50,93,.25) 0 2px 5px -1px,rgba(0,0,0,.3) 0 1px 3px -1px;}
+.learnmore{display:inline-block;font-weight:bold;font-size:1rem;color:#fff;padding:8px 24px;border-radius:10px;text-decoration:none;background:var(--lk-accent);box-shadow:rgba(50,50,93,.25) 0 2px 5px -1px,rgba(0,0,0,.3) 0 1px 3px -1px;margin-bottom:.5rem;}
+.lock-date{font-size:.9rem;color:#555;background:#fff;padding:4px 12px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.1);}
+
+/* timeline (only for the per-section lock demo, styles.css:850-1045) */
+.tl{position:relative;padding-left:10px;}
+.tl-item{position:relative;padding-left:40px;padding-bottom:20px;display:flex;align-items:center;}
+.tl-item::before{content:'';position:absolute;left:11px;top:24px;bottom:-4px;width:2px;background:var(--lk-line);}
+.tl-item:last-child::before{display:none;}
+.tl-item.done::before{background:var(--lk-success);}
+.tl-mark{position:absolute;left:0;top:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:#fafafa;z-index:1;}
+.tl-txt{font-size:1rem;line-height:1.5;}
+.tl-txt a{color:#333;text-decoration:none;font-weight:500;}
+.tl-txt a.muted,.tl-txt .muted{color:#6c757d;}
+.ic-locksm{width:20px;height:20px;stroke:#6c757d;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+
+    <div class="lk-cap">Learn-more mode · <span class="idb">TRK-LOCK</span></div>
+    <div class="grid">
+      <div class="cwrap">
+        <div class="card locked">
+          <div class="card-head"><span class="muted">Advanced Oratory</span></div>
+          <div class="prog"></div>
+          <div class="lock-ov" data-animate="1">
+            <div class="lock-ic">
+              <svg class="ic-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <a href="#" class="learnmore">Learn more</a>
+            <div class="lock-date">Available on 1 Mar 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">TRK-LOCK-ICON · default lock (pix)</span>
+      <span class="idb">TRK-LOCK-LEARNMORE · learnmorebuttoncolor</span>
+      <span class="idb">TRK-LOCK-DATE · available_at</span>
+      <span class="idb">TRK-LOCK-BORDER · animated (marching ants)</span>
+    </div>
+
+    <div class="divlbl">Blocked mode — "Locked content" text · custom FA icon · static border <span class="idb">TRK-LOCK-MSG</span></div>
+    <div class="grid">
+      <div class="cwrap">
+        <div class="card locked">
+          <div class="card-head"><span class="muted">Public Speaking II</span></div>
+          <div class="prog"></div>
+          <div class="lock-ov" data-animate="0">
+            <div class="lock-ic">
+              <svg class="ic-custom" viewBox="0 0 24 24"><path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17.8 5.7 21l1.3-6.7-5-4.6 6.8-.8z"/></svg>
+            </div>
+            <div class="lock-msg">Locked content</div>
+            <div class="lock-date">Enrolment starts 15 Feb 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">TRK-LOCK-ICON · custom FA (customicon)</span>
+      <span class="idb">TRK-LOCK-DATE · enrolment_starts</span>
+      <span class="idb">TRK-LOCK-BORDER · static dashed (animation off)</span>
+    </div>
+    <div class="note">The dashed border is injected on every locked card; only its marching-ants animation is optional (animatelockedborder). When showlockeddate is off, the date line is absent.</div>
+
+    <div class="divlbl">Per-section lock — inside an unlocked, completion-enabled card <span class="idb">TRK-TL-LOCK</span></div>
+    <div class="grid">
+      <div class="cwrap">
+        <div class="card">
+          <div class="card-head"><a href="#">Business Writing</a></div>
+          <div class="prog">
+            <div class="tl">
+              <div class="tl-item locked">
+                <div class="tl-mark"><svg class="ic-locksm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div class="tl-txt"><a href="#" class="muted">Module 3 — Prerequisites</a></div>
+              </div>
+              <div class="tl-item done">
+                <div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="var(--lk-success)"/><path d="M7 12.5l3 3 6.5-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div class="tl-txt"><a href="#">Module 1 — Basics</a></div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg></div>
+                <div class="tl-txt"><a href="#">Module 2 — Drafting</a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">TRK-TL-LOCK · lock beats completed/started</span>
+      <span class="idb">TRK-TL-DONE · ref</span>
+      <span class="idb">TRK-TL-CIRCLE · ref</span>
+    </div>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+
+    <div class="lk-cap">Learn-more mode · <span class="idb">TRK-LOCK</span></div>
+    <div class="grid">
+      <div class="cwrap">
+        <div class="card locked">
+          <div class="card-head"><span class="muted">Advanced Oratory</span></div>
+          <div class="prog"></div>
+          <div class="lock-ov" data-animate="1">
+            <div class="lock-ic">
+              <svg class="ic-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <a href="#" class="learnmore">Learn more</a>
+            <div class="lock-date">Available on 1 Mar 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">learn-more bg → primary</span>
+      <span class="idb">card bg → grey-100</span>
+      <span class="idb">title → body</span>
+    </div>
+
+    <div class="divlbl">Blocked mode — "Locked content" text · custom FA icon · static border <span class="idb">TRK-LOCK-MSG</span></div>
+    <div class="grid">
+      <div class="cwrap">
+        <div class="card locked">
+          <div class="card-head"><span class="muted">Public Speaking II</span></div>
+          <div class="prog"></div>
+          <div class="lock-ov" data-animate="0">
+            <div class="lock-ic">
+              <svg class="ic-custom" viewBox="0 0 24 24"><path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17.8 5.7 21l1.3-6.7-5-4.6 6.8-.8z"/></svg>
+            </div>
+            <div class="lock-msg">Locked content</div>
+            <div class="lock-date">Enrolment starts 15 Feb 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">msg / date / icon = neutral (unchanged)</span>
+      <span class="idb">border stroke #ddd (unchanged)</span>
+    </div>
+    <div class="note">Only the learn-more button follows the accent token to <code>--primary</code>; the overlay chrome (icon ring, message box, date) is already neutral.</div>
+
+    <div class="divlbl">Per-section lock — inside an unlocked, completion-enabled card <span class="idb">TRK-TL-LOCK</span></div>
+    <div class="grid">
+      <div class="cwrap">
+        <div class="card">
+          <div class="card-head"><a href="#">Business Writing</a></div>
+          <div class="prog">
+            <div class="tl">
+              <div class="tl-item locked">
+                <div class="tl-mark"><svg class="ic-locksm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div class="tl-txt"><a href="#" class="muted">Module 3 — Prerequisites</a></div>
+              </div>
+              <div class="tl-item done">
+                <div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="var(--lk-success)"/><path d="M7 12.5l3 3 6.5-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div class="tl-txt"><a href="#">Module 1 — Basics</a></div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-mark"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg></div>
+                <div class="tl-txt"><a href="#">Module 2 — Drafting</a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">done connector → success BS5</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Locked card (view-competency Tracker · progress_card_body)</h3>
+  <div class="leg">
+    <span class="k">TRK-LOCK</span><span class="v"><b>Locked overlay</b> — the <code>locked</code> block; absolute inset:0, <code>backdrop-filter: blur(2px)</code>, z-index 10. The JS moves it out of the progress body onto the <code>.card</code> (<code>overlay.appendTo(card)</code>) so it covers the whole card <span class="rule">progress_card_body.mustache:70-100 · competency_view.js:148 · styles.css:735-746</span></span>
+    <span class="k">TRK-LOCK-ICON</span><span class="v"><b>Lock icon</b> — custom Font Awesome <code>&lt;i class="{customicon}"&gt;</code> when a custom icon is set (colour <code>#343a40</code>), else the default lock image from <code>pix/status/lock.svg</code> at 40px, stroke <code>#6c757d</code>, inside an 80px ring <span class="rule">progress_card_body.mustache:73-80 · styles.css:786-797,844-848,923-927</span></span>
+    <span class="k">TRK-LOCK-LEARNMORE</span><span class="v"><b>"Learn more" button</b> — shown when <code>lockedcardmode == 'learnmore'</code> (<code>data.islearnmore</code>); links to the course, inline <code>background: {learnmorebuttoncolor}</code> whose setting default is <code>#667eea</code> → tokenised to <code>var(--lk-accent)</code>, migrating to <code>#0f6cbf</code> <span class="rule">progress_card_body.mustache:82-84 · competency_view.js:134,139 · settings.php:135-139</span></span>
+    <span class="k">TRK-LOCK-MSG</span><span class="v"><b>Blocked-mode text</b> — the <code>locked_content</code> string ("Locked content") in a white pill; rendered when <b>not</b> <code>islearnmore</code> <span class="rule">progress_card_body.mustache:85-87 · lang/en:422 · styles.css:799-808</span></span>
+    <span class="k">TRK-LOCK-DATE</span><span class="v"><b>Availability line</b> — only if the <code>showlockeddate</code> setting is on; <code>enrolment_starts</code> ("Enrolment starts {a}") when <code>is_enrolment_start</code>, else <code>available_at</code> ("Available on {a}") <span class="rule">progress_card_body.mustache:89-98 · competency_view.js:135 · lang/en:42,357</span></span>
+    <span class="k">TRK-LOCK-BORDER</span><span class="v"><b>Dashed SVG border</b> — injected on <b>every</b> locked card via <code>injectAnimatedBorder</code>: a <code>&lt;rect&gt;</code> stroke <code>#ddd</code>, width 2, <code>stroke-dasharray "8 8"</code>, <code>rx 6</code>, sized to the card by a <code>ResizeObserver</code>. The <code>animatelockedborder</code> setting gates <b>only</b> the marching-ants animation (the 3rd arg), never the border itself <span class="rule">competency_view.js:71,149,314-366 · styles.css:749-768</span></span>
+    <span class="k">TRK-TL-LOCK</span><span class="v"><b>Per-section lock marker</b> — for a locked section inside an unlocked card: a small lock icon (<code>icon-lock-sm</code>, 20px) + a <code>text-muted</code> section name. Top of the marker priority order <i>locked &gt; completed &gt; started &gt; activities/info</i>, so it wins even if the section would otherwise be complete <span class="rule">progress_card_body.mustache:111-116,150-157 · styles.css:929-933</span></span>
+  </div>
+  <p class="note" style="padding:8px 0 0">Referenced (badged on the Tracker screen, viewcompetency.html): <span class="idb">TRK-CARD</span> <span class="idb">TRK-CARD-HEAD</span> <span class="idb">TRK-CARD-PROG</span> <span class="idb">TRK-TL-DONE</span> <span class="idb">TRK-TL-CIRCLE</span>. Migrating tokens visible here: <b>--lk-accent</b> (learn-more button #667eea→#0f6cbf), <b>--lk-card-bg</b>, <b>--lk-card-title</b>, <b>--lk-success</b> (done connector + check #28a745→#198754).</p>
+</div>
+<script>
+/* Faithful port of competency_view.js injectAnimatedBorder (~314-366): a dashed SVG
+   rect sized to the card by a ResizeObserver, stroke #ddd 2px, dasharray "8 8", rx 6.
+   Injected on EVERY locked card; data-animate="1" adds the marching-ants animation
+   (the setting animatelockedborder), data-animate="0" leaves it static. */
+(function(){
+  var NS = 'http://www.w3.org/2000/svg';
+  document.querySelectorAll('.card.locked .lock-ov').forEach(function(overlay){
+    var card = overlay.closest('.card.locked');
+    var animate = overlay.dataset.animate === '1';
+    var SW = 2, BR = 6;
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'lk-lock-border-svg');
+    svg.setAttribute('aria-hidden', 'true');
+    var rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', '#ddd');
+    rect.setAttribute('stroke-width', SW);
+    rect.setAttribute('stroke-dasharray', '8 8');
+    rect.setAttribute('rx', BR);
+    rect.setAttribute('ry', BR);
+    if (animate) {
+      rect.style.animation = 'lk-dashoffset-move 2s linear infinite';
+    }
+    svg.appendChild(rect);
+    overlay.insertBefore(svg, overlay.firstChild);
+    function upd(){
+      var w = card.offsetWidth, h = card.offsetHeight;
+      if (!w || !h) { return; }
+      svg.setAttribute('width', w);
+      svg.setAttribute('height', h);
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      var half = SW / 2;
+      rect.setAttribute('x', half);
+      rect.setAttribute('y', half);
+      rect.setAttribute('width', w - SW);
+      rect.setAttribute('height', h - SW);
+    }
+    upd();
+    if (window.ResizeObserver) { new ResizeObserver(upd).observe(card); }
+  });
+})();
+</script>
+</div>

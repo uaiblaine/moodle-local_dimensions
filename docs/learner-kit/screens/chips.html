@@ -1,0 +1,150 @@
+<!-- @dsCard group="Shared" name="Filter chips" subtitle="chip_filters + filter_tabs_nav — groups, pressed state, scroll paddles/indicator, clear · as-is │ to-be, with IDs" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+
+/* ---- chip filters (chip_filters.mustache) ---- */
+.chips{display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;align-items:center;padding:1rem 20px .25rem;}
+.chip-grp{display:inline-flex;align-items:center;gap:.5rem;}
+.chip-lbl{font-weight:600;font-size:.85rem;color:var(--lk-text-2);white-space:nowrap;}
+.chip-nav{position:relative;display:inline-flex;align-items:center;}
+.chip-platter{display:inline-flex;height:36px;padding:4px;background:var(--lk-pill-platter);border-radius:999px;}
+.chip-tab{display:inline-flex;align-items:center;padding:.5rem 1rem;border:none;background:transparent;border-radius:999px;font-size:.8125rem;font-weight:500;color:var(--lk-pill-text);cursor:pointer;white-space:nowrap;}
+.chip-tab.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+.chip-tab:focus-visible{outline:2px solid var(--lk-pill-active-fg);outline-offset:1px;}
+.chip-clear{display:inline-flex;align-items:center;gap:.35rem;font-size:.8rem;color:var(--lk-pill-text);background:none;border:none;cursor:pointer;}
+/* filter_tabs_nav: scroll paddles + sliding indicator (shown when a group overflows) */
+.pad{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;border:1px solid var(--lk-line-2);background:var(--lk-surface);color:var(--lk-pill-text);cursor:pointer;}
+.chip-scroll{position:relative;overflow:hidden;max-width:230px;}
+.chip-ind{position:absolute;bottom:1px;height:2px;background:var(--lk-pill-active-fg);border-radius:2px;transition:transform .2s,width .2s;}
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+
+    <div class="lk-cap">Tracker — two chip groups · <span class="idb">TRK-CHIP</span></div>
+    <div class="chips">
+      <div class="chip-grp"><span class="chip-lbl">Year</span>
+        <div class="chip-platter"><button class="chip-tab">2024</button><button class="chip-tab on" aria-pressed="true">2025</button></div>
+      </div>
+      <div class="chip-grp"><span class="chip-lbl">Category</span>
+        <div class="chip-platter"><button class="chip-tab on" aria-pressed="true">Core</button><button class="chip-tab">Elective</button></div>
+      </div>
+      <button class="chip-clear"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>Clear filters</button>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">TRK-CHIP-COMP · competency fields</span>
+      <span class="idb">TRK-CHIP-COURSE · course fields (course: prefix)</span>
+      <span class="idb">TRK-CHIP-ACTIVE · aria-pressed</span>
+      <span class="idb">TRK-CHIP-CLEAR · hidden until a chip is pressed</span>
+    </div>
+
+    <div class="divlbl">Overflowing group — scroll paddles + indicator + arrow-key nav <span class="idb">TRK-CHIP-NAV</span></div>
+    <div class="chips">
+      <div class="chip-grp"><span class="chip-lbl">Skill</span>
+        <span class="chip-nav">
+          <button class="pad" aria-label="Scroll left"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span class="chip-scroll"><span class="chip-platter"><button class="chip-tab on" aria-pressed="true">Writing</button><button class="chip-tab">Speaking</button><button class="chip-tab">Reading</button></span><span class="chip-ind" style="left:8px;width:62px"></span></span>
+          <button class="pad" aria-label="Scroll right"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        </span>
+      </div>
+    </div>
+    <div class="note">Plan (OVW) uses one group; the platter, pressed state, paddles and clear are shared. <span class="idb">OVW-CHIP</span> <span class="idb">OVW-CHIP-CLEAR</span></div>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+
+    <div class="lk-cap">Tracker — two chip groups · <span class="idb">TRK-CHIP</span></div>
+    <div class="chips">
+      <div class="chip-grp"><span class="chip-lbl">Year</span>
+        <div class="chip-platter"><button class="chip-tab">2024</button><button class="chip-tab on" aria-pressed="true">2025</button></div>
+      </div>
+      <div class="chip-grp"><span class="chip-lbl">Category</span>
+        <div class="chip-platter"><button class="chip-tab on" aria-pressed="true">Core</button><button class="chip-tab">Elective</button></div>
+      </div>
+      <button class="chip-clear"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>Clear filters</button>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">platter → grey-200</span>
+      <span class="idb">active text → primary</span>
+    </div>
+
+    <div class="divlbl">Overflowing group — scroll paddles + indicator + arrow-key nav <span class="idb">TRK-CHIP-NAV</span></div>
+    <div class="chips">
+      <div class="chip-grp"><span class="chip-lbl">Skill</span>
+        <span class="chip-nav">
+          <button class="pad" aria-label="Scroll left"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span class="chip-scroll"><span class="chip-platter"><button class="chip-tab on" aria-pressed="true">Writing</button><button class="chip-tab">Speaking</button><button class="chip-tab">Reading</button></span><span class="chip-ind" style="left:8px;width:62px"></span></span>
+          <button class="pad" aria-label="Scroll right"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        </span>
+      </div>
+    </div>
+    <div class="note">Indicator + focus ring follow <code>--primary</code>; greys align to Bootstrap.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Filter chips (shared: view-competency + view-plan)</h3>
+  <div class="leg">
+    <span class="k">TRK-CHIP-COMP</span><span class="v"><b>Competency-field chips</b> — <code>viewcompetency_filter_fields_competency</code>; single page value repeated on every card <span class="rule">chip_filters.mustache</span></span>
+    <span class="k">TRK-CHIP-COURSE</span><span class="v"><b>Course-field chips</b> — <code>viewcompetency_filter_fields_course</code>; shortname prefixed <code>course:</code> to avoid collision</span>
+    <span class="k">OVW-CHIP</span><span class="v"><b>Plan chips</b> — <code>viewplan_filter_fields</code>, per competency <span class="rule">chip_filters.mustache</span></span>
+    <span class="k">TRK-CHIP-ACTIVE</span><span class="v">Chip pressed state (<code>aria-pressed</code>); AND across groups, OR within a group <span class="rule">chip_filters.js</span></span>
+    <span class="k">TRK-CHIP-NAV</span><span class="v"><b>Overflow nav</b> — scroll paddles, sliding indicator, ArrowLeft/Right focus move; honours reduced-motion <span class="rule">filter_tabs_nav.js</span></span>
+    <span class="k">TRK-CHIP-CLEAR</span><span class="v">Clear button — hidden until a chip is pressed <span class="rule">chip_filters.js</span></span>
+    <span class="k">OVW-CHIP-CLEAR</span><span class="v">Plan clear button + per-group label element <span class="rule">chip_filters.mustache:51,64-71</span></span>
+  </div>
+</div>
+</div>

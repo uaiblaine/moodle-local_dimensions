@@ -1,0 +1,193 @@
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Empty & no-results" subtitle="view_plan_summary.mustache empty + proposed no-results state · as-is │ to-be" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+
+/* ==== Screen-specific: Plan empty & no-results (view-plan.php) ============ */
+
+/* ---- Empty-plan alert (view_plan_summary.mustache:192-196) ----
+   Bootstrap semantic alert-info — already Moodle DS, so it is held FIXED and
+   renders identically in both panels; NO --lk-* token migrates here. */
+.alert{margin:1rem 20px 0;padding:.75rem 1.25rem;border-radius:.375rem;font-size:.9rem;border:1px solid transparent;}
+.alert.info{background:#cff4fc;color:#055160;border-color:#b6effb;}
+.pctwrap{padding-bottom:2px;}
+
+/* ---- Filter bar: tabs + counts + search (view_plan_summary.mustache:76-99) ----
+   Same classes/tokens as the OVW overview card; here the filters resolve to zero
+   matches. Every migrating colour goes through a --lk-* token. */
+.fbar{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:0 20px;margin:.9rem 0 .2rem;}
+.ftabs{display:inline-flex;background:var(--lk-pill-platter);border-radius:999px;padding:4px;flex-shrink:0;}
+.ftab{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:none;background:transparent;border-radius:999px;font-size:.875rem;font-weight:500;color:var(--lk-pill-text);cursor:pointer;white-space:nowrap;}
+.ftab.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+.ftab:focus-visible{outline:2px solid var(--lk-pill-active-fg);outline-offset:2px;}
+.fcount{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--lk-counter-bg);color:var(--lk-pill-text);border-radius:999px;font-size:.75rem;font-weight:600;}
+.ftab.on .fcount{background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);}
+.fsearch{position:relative;display:flex;align-items:center;min-width:0;max-width:240px;flex-shrink:1;}
+.fs-ic{position:absolute;left:.75rem;width:.9rem;height:.9rem;color:var(--lk-search-icon);stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;z-index:1;}
+.fsearch input{width:100%;padding:.5rem 2rem .5rem 2.125rem;border:1px solid var(--lk-search-border);border-radius:999px;background:var(--lk-surface-2);font-size:.8125rem;color:var(--lk-text);outline:none;line-height:1.3;}
+.fsearch input::placeholder{color:var(--lk-search-icon);}
+.fsearch.foc input{border-color:var(--lk-pill-active-fg);background:var(--lk-surface);box-shadow:0 0 0 3px var(--lk-search-glow);}
+.fs-clear{position:absolute;right:.375rem;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:50%;background:transparent;color:var(--lk-pill-text);cursor:pointer;padding:0;}
+.fs-clear svg{width:.7rem;height:.7rem;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ---- Accordion list region (view_plan_summary.mustache:108-113) ---- */
+.acc-list{padding:.7rem 20px 2px;}
+
+/* ---- As-is: silently empty. applyFilter sets every non-matching item to
+   display:none and stops — the role=list region stays in the DOM but renders
+   nothing, with no message. The dashed frame is a KIT annotation marking that
+   void; it is NOT part of the real UI. */
+.silent-void{border:1.5px dashed var(--lk-line-2);border-radius:.75rem;padding:20px 16px;text-align:center;color:var(--lk-muted);font-size:.78rem;background:repeating-linear-gradient(45deg,transparent,transparent 9px,rgba(0,0,0,.02) 9px,rgba(0,0,0,.02) 18px);}
+.silent-void .vt{font-style:italic;}
+.silent-void .vk{font-family:var(--mono);font-size:10px;color:var(--lk-text-2);}
+
+/* ---- To-be PROPOSAL: muted no-results message. Does NOT exist in code today;
+   applyFilter would need to count visible items and render this when none pass. */
+.noresults{display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:26px 16px 22px;text-align:center;color:var(--lk-muted);}
+.noresults svg{width:1.75rem;height:1.75rem;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.7;}
+.noresults .nr-title{font-size:.95rem;font-weight:600;color:var(--lk-text-2);}
+.noresults .nr-sub{font-size:.8rem;}
+.prop{display:inline-block;font-family:var(--mono);font-size:9px;color:#a3552d;background:#fbeee6;border:1px solid #e6c3ab;border-radius:10px;padding:1px 7px;margin-left:4px;white-space:nowrap;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+
+    <div class="lk-cap">A · Plan has no competencies — server-rendered · <span class="idb">OVW-EMPTY</span></div>
+    <div class="pctwrap">
+      <div class="alert info" role="alert">No competencies in this learning plan.</div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">alert-info · rendered when <code>hascompetencies</code> is false</span>
+      <span class="idb">whole plan summary (filter bar + accordion) is suppressed</span>
+    </div>
+    <div class="note">The filter bar and accordion live inside the <code>{{#hascompetencies}}</code> block, so an empty plan shows only this alert — no tabs, no search.</div>
+
+    <div class="divlbl">B · Plan has competencies, but search / chips match none <span class="idb r">OVW-FILTER-NORESULTS</span></div>
+    <div class="fbar">
+      <div class="ftabs" role="tablist" aria-label="Filter competencies">
+        <button class="ftab on" role="tab" aria-selected="true" type="button">Not completed <span class="fcount">3</span></button>
+        <button class="ftab" role="tab" aria-selected="false" type="button">All <span class="fcount">8</span></button>
+      </div>
+      <div class="fsearch foc">
+        <svg class="fs-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" value="governance" aria-label="Search competency" autocomplete="off">
+        <button class="fs-clear" type="button" aria-label="Clear"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+    </div>
+    <div class="acc-list" role="list" aria-live="polite" aria-relevant="additions removals">
+      <div class="silent-void">
+        <div class="vt">Silently empty — no message today.</div>
+        <div class="vk">every .local-dimensions-accordion-item → display:none</div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">counters stay at server totals (3 / 8) — filtering never updates them</span>
+      <span class="idb r">no empty-state text exists in code</span>
+    </div>
+    <div class="note">The dashed frame is a kit annotation, not real UI: <code>applyFilter</code> just hides the non-matching items and returns, so the list region renders nothing and the learner sees a blank area under a bar that still reads "3 / 8".</div>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+
+    <div class="lk-cap">A · Plan has no competencies — server-rendered · <span class="idb">OVW-EMPTY</span></div>
+    <div class="pctwrap">
+      <div class="alert info" role="alert">No competencies in this learning plan.</div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">alert-info unchanged — already Bootstrap / Moodle DS</span>
+      <span class="idb">no <code>--lk-*</code> token migrates on this alert</span>
+    </div>
+    <div class="note">This empty state already speaks Bootstrap semantic colours (<code>alert-info</code>); the token slice touches the hero, chips, filter bar and cards, never this alert — so both panels are identical here.</div>
+
+    <div class="divlbl">B · Plan has competencies, but search / chips match none <span class="idb r">OVW-FILTER-NORESULTS</span> <span class="prop">proposed — not in code today</span></div>
+    <div class="fbar">
+      <div class="ftabs" role="tablist" aria-label="Filter competencies">
+        <button class="ftab on" role="tab" aria-selected="true" type="button">Not completed <span class="fcount">3</span></button>
+        <button class="ftab" role="tab" aria-selected="false" type="button">All <span class="fcount">8</span></button>
+      </div>
+      <div class="fsearch foc">
+        <svg class="fs-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" value="governance" aria-label="Search competency" autocomplete="off">
+        <button class="fs-clear" type="button" aria-label="Clear"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+    </div>
+    <div class="acc-list" role="list" aria-live="polite" aria-relevant="additions removals">
+      <div class="noresults">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></svg>
+        <span class="nr-title">No competencies match your filters</span>
+        <span class="nr-sub">Try a different search term, or clear the filters.</span>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb r">new: applyFilter counts visible items → renders this when 0</span>
+      <span class="idb">announced via the existing <code>aria-live="polite"</code> region</span>
+      <span class="idb r">needs a new lang string (none exists yet)</span>
+    </div>
+    <div class="note">Proposal only — nothing in <code>accordion.js</code> renders this today. Filter-bar tokens (platter, counters, search focus) still migrate to Moodle DS; the message itself uses neutral greys (<code>--lk-muted</code> / <code>--lk-text-2</code>), no new brand colour.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Plan empty &amp; no-results (view_plan_summary.mustache + accordion.js)</h3>
+  <div class="leg">
+    <span class="k">OVW-EMPTY</span><span class="v"><b>alert-info</b> — string <code>no_competencies_in_plan</code> = &ldquo;No competencies in this learning plan.&rdquo; Rendered inside <code>{{^hascompetencies}}</code>, so the entire plan-summary block (filter bar + accordion) is suppressed and only this alert shows. <code>hascompetencies</code> is <code>!empty($data['competencies'])</code> — false when the plan has zero competencies <span class="rule">view_plan_summary.mustache:192-196 · lang/en:473 · view_plan_summary_page.php:237</span></span>
+    <span class="k">OVW-FILTER-NORESULTS</span><span class="v"><b>Proposed, to-be only — does NOT exist in code today.</b> When the active tab + search query + chip selection match no competency, <code>applyFilter</code> sets every <code>.local-dimensions-accordion-item</code> to <code>display:none</code> and returns; there is no visible-count check and no empty-state branch, so the learner sees a blank region under a bar whose counters still read the server totals. Proposal: after the loop, count survivors and, when zero, render a muted &ldquo;No competencies match your filters&rdquo; message into the existing <code>aria-live="polite"</code> list region (also needs a new lang string) <span class="rule">accordion.js:2384-2427 (applyFilter, no empty branch) · region: view_plan_summary.mustache:108-113</span></span>
+    <span class="k">counters</span><span class="v">The tab counts <code>incompletecount</code> / <code>competencycount</code> are static server values; <code>applyFilter</code> never updates them, so they stay at 3 / 8 even when the filtered list is empty — the exact confusion OVW-FILTER-NORESULTS resolves <span class="rule">view_plan_summary.mustache:80,84 · accordion.js:2384-2427</span></span>
+    <span class="k">OVW-BAR-TABS / OVW-BAR-SEARCH</span><span class="v">Filter-bar tabs + counts and the search field — badged in full on the Plan overview card; referenced here as the controls that produce the no-results state <span class="rule">view_plan_summary.mustache:76-99 · accordion.js applyFilter / initSearch</span></span>
+    <span class="k">tokens</span><span class="v">The <b>alert-info</b> is held fixed (already Moodle DS, no migration). The <b>filter bar</b> migrates: platter (<code>--lk-pill-platter</code>), counter bg / active (<code>--lk-counter-bg</code> / <code>--lk-counter-active-bg</code>), active text (<code>--lk-pill-active-fg</code>), search border / icon / glow (<code>--lk-search-border</code> / <code>--lk-search-icon</code> / <code>--lk-search-glow</code>) <span class="rule">token-migration.md · styles.css:1272-1366</span></span>
+  </div>
+</div>
+</div>
