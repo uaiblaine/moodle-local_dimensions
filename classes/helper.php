@@ -1295,8 +1295,9 @@ class helper {
      *
      * Only real stored values are emitted (never a synthesised default): text for the
      * colours and SCSS, the option label for the admin-defined selects (tag1/tag2/type),
-     * and the canonical option key for the cascade selects (enrollmentfilter/singlecourseredirect).
-     * The picture fields are file-backed and deliberately skipped (not round-trippable in CSV).
+     * and the canonical option key for the cascade selects (enrollmentfilter,
+     * singlecourseredirect, lockedcardmode, showlockeddate). The picture fields are
+     * file-backed and deliberately skipped (not round-trippable in CSV).
      *
      * @param int $competencyid Competency id.
      * @return array<string, string> Keyed by cf_* column token (see framework_csv_serializer::CF_HEADERS).
@@ -1304,7 +1305,8 @@ class helper {
     public static function export_competency_customfields(int $competencyid): array {
         $result = array_fill_keys([
             'cf_bgcolor', 'cf_textcolor', 'cf_tag1', 'cf_tag2', 'cf_type',
-            'cf_enrollmentfilter', 'cf_singlecourseredirect', 'cf_customscss',
+            'cf_enrollmentfilter', 'cf_singlecourseredirect', 'cf_lockedcardmode', 'cf_showlockeddate',
+            'cf_customscss',
         ], '');
         if ($competencyid <= 0) {
             return $result;
@@ -1324,6 +1326,16 @@ class helper {
             $competencyid,
             constants::CFIELD_SINGLECOURSEREDIRECT,
             array_keys(constants::singlecourseredirect_options())
+        );
+        $result['cf_lockedcardmode'] = self::read_competency_select_key(
+            $competencyid,
+            constants::CFIELD_LOCKEDCARDMODE,
+            array_keys(constants::lockedcardmode_options())
+        );
+        $result['cf_showlockeddate'] = self::read_competency_select_key(
+            $competencyid,
+            constants::CFIELD_SHOWLOCKEDDATE,
+            array_keys(constants::showlockeddate_options())
         );
         return $result;
     }
@@ -1371,6 +1383,18 @@ class helper {
             $data['customfield_' . constants::CFIELD_SINGLECOURSEREDIRECT] = self::select_key_to_index(
                 array_keys(constants::singlecourseredirect_options()),
                 (string) $cfrow['cf_singlecourseredirect']
+            );
+        }
+        if (array_key_exists('cf_lockedcardmode', $cfrow)) {
+            $data['customfield_' . constants::CFIELD_LOCKEDCARDMODE] = self::select_key_to_index(
+                array_keys(constants::lockedcardmode_options()),
+                (string) $cfrow['cf_lockedcardmode']
+            );
+        }
+        if (array_key_exists('cf_showlockeddate', $cfrow)) {
+            $data['customfield_' . constants::CFIELD_SHOWLOCKEDDATE] = self::select_key_to_index(
+                array_keys(constants::showlockeddate_options()),
+                (string) $cfrow['cf_showlockeddate']
             );
         }
         if (array_key_exists('cf_customscss', $cfrow)) {

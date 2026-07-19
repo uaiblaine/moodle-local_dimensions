@@ -17,6 +17,7 @@
 namespace local_dimensions\local;
 
 use core_competency\api;
+use local_dimensions\constants;
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\helper;
 
@@ -59,6 +60,8 @@ final class framework_csv_serializer_test extends \advanced_testcase {
             'cf_bgcolor' => 'ff0000',
             'cf_tag1' => $tag1label,
             'cf_type' => $typelabel,
+            'cf_lockedcardmode' => constants::LOCKEDCARDMODE_LEARNMORE,
+            'cf_showlockeddate' => constants::SHOWLOCKEDDATE_NO,
         ]));
         competency_handler::create()->instance_form_save($formdata, true);
 
@@ -91,6 +94,9 @@ final class framework_csv_serializer_test extends \advanced_testcase {
         $this->assertSame('ff0000', $cf['cf_bgcolor']);
         $this->assertSame($tag1label, $cf['cf_tag1']);
         $this->assertSame($typelabel, $cf['cf_type']);
+        // The cascade selects round-trip as their canonical option key.
+        $this->assertSame(constants::LOCKEDCARDMODE_LEARNMORE, $cf['cf_lockedcardmode']);
+        $this->assertSame(constants::SHOWLOCKEDDATE_NO, $cf['cf_showlockeddate']);
 
         // The related-competency idnumber is carried on the child row.
         $this->assertSame('R1', $parsed['competencies']['C1']->relatedidnumbers);
