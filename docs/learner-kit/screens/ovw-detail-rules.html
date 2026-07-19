@@ -1,4 +1,4 @@
-<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Rules tab" subtitle="accordion.js — info box, progress bar (orange), All/Required filter, children, missing-mandatory alert, loading · as-is │ to-be" -->
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Rules tab" subtitle="accordion.js Rules — as-is (info box + orange X/Y bar + children) │ to-be (C): rule as a sentence, earned/started chips, details + sub-rules as modals" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -44,19 +44,13 @@
 .ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
 
 /* ---- Rules-tab specifics (accordion.js renderRulesSection ~731, styles.css 2656-3047) ---- */
-.rwrap{padding:2px 20px 0;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;}
-
-/* Rule info box — kept orange in BOTH panels (styles.css 2941). */
 .rinfo{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;background:rgba(253,126,20,.08);border-radius:10px;margin:6px 20px 4px;}
 .rinfo-icon{flex-shrink:0;margin-top:1px;color:var(--lk-orange);}
 .rinfo-icon svg{display:block;width:18px;height:18px;fill:currentColor;}
 .rinfo-text{font-size:.8125rem;color:var(--lk-text-2);line-height:1.5;}
 .rinfo-title{font-weight:700;color:var(--lk-orange);margin-bottom:.15rem;}
 .rinfo-desc{color:#343a40;}
-.rinfo-note{margin-top:.5rem;color:#343a40;}
-
-/* Progress header + bar + context (styles.css 2718-2807). Bar/label alert = orange, KEPT. */
 .rhead{display:flex;justify-content:space-between;align-items:baseline;margin:8px 20px 8px;}
 .rlabwrap{display:inline-flex;align-items:center;gap:.5rem;}
 .rlab{font-weight:700;font-size:1rem;color:var(--lk-text);}
@@ -68,28 +62,16 @@
 .rbar{margin:0 20px 12px;}
 .rtrack{height:10px;background:var(--lk-line);border-radius:5px;overflow:hidden;}
 .rfill{height:100%;background:linear-gradient(90deg,var(--lk-orange),var(--lk-orange-2));border-radius:5px;}
-.rfill.striped{
-  background-color:var(--lk-orange);
-  background-image:
-    linear-gradient(45deg,rgba(255,255,255,.25) 25%,transparent 25%,transparent 50%,
-      rgba(255,255,255,.25) 50%,rgba(255,255,255,.25) 75%,transparent 75%,transparent),
-    linear-gradient(90deg,var(--lk-orange),var(--lk-orange-2));
-  background-size:1rem 1rem,100% 100%;
-}
+.rfill.striped{background-color:var(--lk-orange);background-image:linear-gradient(45deg,rgba(255,255,255,.25) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.25) 50%,rgba(255,255,255,.25) 75%,transparent 75%,transparent),linear-gradient(90deg,var(--lk-orange),var(--lk-orange-2));background-size:1rem 1rem,100% 100%;}
 .rctx{font-size:.8rem;margin:0 20px 14px;}
 .rctx.muted{color:var(--lk-muted);}
 .rctx.alert{display:flex;align-items:center;gap:.5rem;color:var(--lk-orange-dark);font-weight:600;}
-
-/* All / Required pill filter (styles.css 1269-1325 + 3314). These MIGRATE. */
 .rfilter-wrap{margin:2px 20px 14px;}
 .rfilter{display:inline-flex;height:36px;padding:4px;background:var(--lk-pill-platter);border-radius:999px;}
 .rfpill{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .85rem;border:none;background:transparent;border-radius:999px;font-size:.8125rem;font-weight:500;color:var(--lk-pill-text);cursor:pointer;white-space:nowrap;}
 .rfpill.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 3px rgba(0,0,0,.12);}
-.rfpill:focus-visible{box-shadow:inset 0 0 0 2px var(--lk-pill-active-fg);outline:none;}
 .rfcount{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--lk-counter-bg);color:var(--lk-pill-text);border-radius:999px;font-size:.75rem;font-weight:600;}
 .rfpill.on .rfcount{background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);}
-
-/* Children list + rows (styles.css 2822-2938). */
 .rlist{display:flex;flex-direction:column;gap:12px;margin:2px 20px 10px;padding:0;list-style:none;}
 .rchild{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--lk-line);border-radius:10px;background:var(--lk-surface);}
 .rchild.req{border-color:rgba(253,126,20,.22);}
@@ -99,16 +81,51 @@
 .rname{font-weight:600;font-size:.95rem;color:var(--lk-text);text-decoration:none;}
 .rname:hover{text-decoration:underline;color:var(--lk-orange);}
 .rtag{display:inline-block;padding:2px 10px;font-size:.7rem;font-weight:700;letter-spacing:.03em;color:#fff;background:var(--lk-orange);border-radius:12px;vertical-align:middle;margin-left:6px;}
-.rassess{font-size:.8rem;color:var(--lk-muted);margin-top:2px;}
+.rassess{display:block;font-size:.8rem;color:var(--lk-muted);margin-top:2px;}
 .rpts-col{flex-shrink:0;text-align:right;white-space:nowrap;}
 .rpts{font-weight:700;font-size:1.25rem;color:var(--lk-text);}
 .rpts.pending{color:#adb5bd;}
 .rpts-unit{font-size:.7rem;font-weight:600;color:var(--lk-muted);letter-spacing:.04em;}
-
-/* Lazy-load spinner (styles.css 2661). */
 .rloading{text-align:center;padding:22px 0 6px;color:var(--lk-muted);}
 .rspin{width:30px;height:30px;animation:lk-spin 1s linear infinite;}
 @keyframes lk-spin{to{transform:rotate(360deg);}}
+
+/* ==== to-be (C): the rule as a plain sentence + status chips, progress emergent ==== */
+.rc-block{margin:6px 20px 4px;}
+.reyebrow{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lk-orange);margin-bottom:.25rem;}
+.rsentence{font-size:1.05rem;line-height:1.5;color:var(--lk-text);}
+.rsentence b{color:var(--lk-orange);font-weight:800;}
+.rstatus{font-size:.85rem;color:var(--lk-muted);margin-top:.4rem;}
+.rstatus b{color:var(--lk-text-2);font-weight:700;}
+.rchips{display:flex;flex-wrap:wrap;gap:.5rem;margin:.75rem 0 .2rem;}
+.rchip{display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .75rem;border-radius:999px;font-size:.82rem;font-weight:600;border:1px solid transparent;}
+.rchip .rchip-ic{display:flex;flex:none;}
+.rchip .rchip-ic svg{width:1rem;height:1rem;}
+.rchip .rchip-pts{font-size:.72rem;font-weight:800;opacity:.7;margin-left:.05rem;white-space:nowrap;}
+.rchip .rchip-req{display:inline-flex;align-items:center;gap:.15rem;font-size:.64rem;font-weight:800;color:var(--lk-orange);text-transform:uppercase;letter-spacing:.03em;}
+.rchip .rchip-req svg{width:.7rem;height:.7rem;fill:currentColor;}
+.rchip .rchip-sub{display:inline-flex;align-items:center;margin-left:.05rem;opacity:.7;}
+.rchip .rchip-sub svg{width:.85rem;height:.85rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.rchip.done{background:#d1e7dd;color:#0f5132;}
+.rchip.prog{background:#fff3cd;color:#856404;}
+.rchip.todo{background:var(--lk-surface);color:var(--lk-text-2);border-color:var(--lk-line-2);}
+.rchip.link{cursor:pointer;}
+.rchip.link:hover{filter:brightness(.97);}
+.rchip.link:focus-visible{outline:2px solid var(--lk-focus-ring);outline-offset:1px;}
+.rchip.req-pending{box-shadow:0 0 0 1.6px rgba(253,126,20,.45);}
+.rc-actions{margin-top:.75rem;}
+.rc-viewall{display:inline-flex;align-items:center;gap:.45rem;padding:.45rem .8rem;border:1px solid var(--lk-line-2);border-radius:.5rem;background:var(--lk-surface);color:var(--lk-text-2);font-size:.82rem;font-weight:600;cursor:pointer;}
+.rc-viewall svg{width:.9rem;height:.9rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.rc-alert{display:flex;align-items:center;gap:.5rem;font-size:.85rem;font-weight:600;color:var(--lk-orange-dark);margin:.5rem 0 .1rem;}
+.rc-alert svg{width:1rem;height:1rem;flex:none;fill:currentColor;}
+/* detail / sub-rule as a modal (house pattern — no accordion-in-accordion) */
+.rmodal{margin:.4rem 20px 4px;border:1px solid var(--lk-line);border-radius:.9rem;background:var(--lk-surface);box-shadow:0 14px 40px rgba(0,0,0,.18);overflow:hidden;}
+.rmodal-head{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:1px solid var(--lk-line);}
+.rmodal-title{flex:1;font-size:.95rem;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rmodal-x,.rmodal-back{width:28px;height:28px;border:none;border-radius:.4rem;background:var(--lk-surface-2);color:var(--lk-text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;}
+.rmodal-x svg,.rmodal-back svg{width:.85rem;height:.85rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.rmodal-body{padding:.9rem;}
+.rmodal .rlist{max-height:200px;overflow-y:auto;padding-right:.2rem;}
 
 .legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
 .legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
@@ -132,8 +149,6 @@
         <span class="rinfo-desc">Once the sum of points reaches the required value, will be automatically validated and marked as complete.</span>
       </span>
     </div>
-
-    <div class="divlbl">Progress bar — orange, kept in both panels · <span class="idb">OVW-RULES-PROGRESS</span> <span class="idb">OVW-RULES-ARIA</span></div>
     <div class="rhead">
       <span class="rlabwrap"><span class="rlab">Progress</span></span>
       <span class="rscore"><span class="rearn hl">45</span> / 60 pts</span>
@@ -145,7 +160,7 @@
     </div>
     <div class="rctx muted">4 items in total</div>
 
-    <div class="divlbl">All / Required filter — only when required &gt; 0 · <span class="idb">OVW-RULES-FILTER</span></div>
+    <div class="divlbl">All / Required filter · <span class="idb">OVW-RULES-FILTER</span></div>
     <div class="rfilter-wrap">
       <div class="rfilter" role="tablist" aria-label="Filter rule items">
         <button type="button" class="rfpill on" role="tab" aria-selected="true" data-filter="all">All <span class="rfcount">4</span></button>
@@ -153,51 +168,31 @@
       </div>
     </div>
 
-    <div class="divlbl">Children — one row per child, three status icons · <span class="idb">OVW-RULES-CHILD</span></div>
+    <div class="divlbl">Children — one row per child · <span class="idb">OVW-RULES-CHILD</span></div>
     <ul class="rlist" role="list">
       <li class="rchild req" data-required="true">
         <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#198754"/><path d="m7 12 3 3 7-7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Proficient</span></span>
-        <span class="rbody">
-          <a href="#" class="rname">Written communication</a> <span class="rtag">Required</span>
-          <span class="rassess">Assessment: Competent</span>
-        </span>
+        <span class="rbody"><a href="#" class="rname">Written communication</a> <span class="rtag">Required</span><span class="rassess">Assessment: Competent</span></span>
         <span class="rpts-col"><span class="rpts">20</span> <span class="rpts-unit">pts</span></span>
       </li>
       <li class="rchild req" data-required="true">
         <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#e5a100" stroke-width="2.4"/><path d="M12 12V4a8 8 0 0 1 8 8z" fill="#e5a100"/></svg><span class="sr-only">Graded, not yet proficient</span></span>
-        <span class="rbody">
-          <a href="#" class="rname">Oral presentation</a> <span class="rtag">Required</span>
-          <span class="rassess">Assessment: Developing</span>
-        </span>
+        <span class="rbody"><a href="#" class="rname">Oral presentation</a> <span class="rtag">Required</span><span class="rassess">Assessment: Developing</span></span>
         <span class="rpts-col"><span class="rpts pending">25</span> <span class="rpts-unit">pts</span></span>
       </li>
       <li class="rchild" data-required="false">
         <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#adb5bd" stroke-width="2.2" stroke-dasharray="3 3"/></svg><span class="sr-only">Not yet evaluated</span></span>
-        <span class="rbody">
-          <a href="#" class="rname">Active listening</a>
-          <span class="rassess">Assessment: To do</span>
-        </span>
+        <span class="rbody"><a href="#" class="rname">Active listening</a><span class="rassess">Assessment: To do</span></span>
         <span class="rpts-col"><span class="rpts pending">15</span> <span class="rpts-unit">pts</span></span>
       </li>
       <li class="rchild" data-required="false">
         <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#198754"/><path d="m7 12 3 3 7-7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Proficient</span></span>
-        <span class="rbody">
-          <a href="#" class="rname">Team feedback</a>
-          <span class="rassess">Assessment: Competent</span>
-        </span>
+        <span class="rbody"><a href="#" class="rname">Team feedback</a><span class="rassess">Assessment: Competent</span></span>
         <span class="rpts-col"><span class="rpts">25</span> <span class="rpts-unit">pts</span></span>
       </li>
     </ul>
 
-    <div class="divlbl">Missing-mandatory alert — score reached, required item pending · <span class="idb">OVW-RULES-ALERT</span></div>
-    <div class="rinfo" role="note">
-      <span class="rinfo-icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8zM11 11h2v6h-2z"/></svg></span>
-      <span class="rinfo-text">
-        <span class="rinfo-title">Validation rule</span>
-        <span class="rinfo-desc">Once the sum of points reaches the required value, will be automatically validated and marked as complete.</span>
-        <span class="rinfo-note"><strong>Pay attention to required items.</strong></span>
-      </span>
-    </div>
+    <div class="divlbl">Missing-mandatory alert · <span class="idb">OVW-RULES-ALERT</span></div>
     <div class="rhead">
       <span class="rlabwrap"><span class="rlab">Progress</span>
         <span class="ralert" aria-label="Score reached with required items still pending"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 22.5 20.5H1.5L12 2z"/><rect x="11" y="9" width="2" height="5.5" rx="1" fill="#fff"/><circle cx="12" cy="17" r="1.2" fill="#fff"/></svg></span>
@@ -205,121 +200,106 @@
       <span class="rscore"><span class="rearn hl">60</span> / 60 pts</span>
     </div>
     <div class="rbar">
-      <div class="rtrack" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="60" aria-label="60 of 60 points earned">
-        <div class="rfill striped" style="width:100%"></div>
-      </div>
+      <div class="rtrack" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="60" aria-label="60 of 60 points earned"><div class="rfill striped" style="width:100%"></div></div>
     </div>
     <div class="rctx alert">Although the score has been reached, there are still required items pending.</div>
-
-    <div class="divlbl">First tab activation — lazy AJAX load · <span class="idb">OVW-RULES-LOADING</span></div>
-    <div class="rloading" role="status" aria-live="polite">
-      <svg class="rspin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3" stroke-opacity=".18"/><path d="M21 12a9 9 0 0 0-9-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-      <span class="sr-only">Rules</span>
-    </div>
-    <div class="lk-ids">
-      <span class="idb">points: earned = Σ points of proficient children</span>
-      <span class="idb">earned &gt; 0 → highlighted orange</span>
-      <span class="idb">all-rule: X / Y items, no pts unit</span>
-    </div>
+    <div class="note">Two orange bars + a separate info box + a per-child list — "X of Y" stacked. Reads as a dashboard that demands, not an explanation.</div>
   </div>
 
-  <!-- ============ TO-BE ============ -->
+  <!-- ============ TO-BE (C: the rule as a sentence + status chips) ============ -->
   <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · the rule as a sentence + chips</div>
 
-    <div class="lk-cap">Rules tab — points rule, in progress · <span class="idb">OVW-RULES-INFO</span></div>
-    <div class="rinfo" role="note">
-      <span class="rinfo-icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8zM11 11h2v6h-2z"/></svg></span>
-      <span class="rinfo-text">
-        <span class="rinfo-title">Validation rule</span>
-        <span class="rinfo-desc">Once the sum of points reaches the required value, will be automatically validated and marked as complete.</span>
-      </span>
-    </div>
-
-    <div class="divlbl">Progress bar — orange, kept in both panels · <span class="idb">OVW-RULES-PROGRESS</span> <span class="idb">OVW-RULES-ARIA</span></div>
-    <div class="rhead">
-      <span class="rlabwrap"><span class="rlab">Progress</span></span>
-      <span class="rscore"><span class="rearn hl">45</span> / 60 pts</span>
-    </div>
-    <div class="rbar">
-      <div class="rtrack" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="60" aria-label="45 of 60 points earned">
-        <div class="rfill" style="width:75%"></div>
+    <div class="lk-cap">Points rule, in progress — the rule stated plainly · <span class="idb r">OVW-RULES-SENTENCE · to-be</span></div>
+    <div class="rc-block">
+      <div class="reyebrow">How it's earned</div>
+      <div class="rsentence">Earn <b>60 points</b> across these dimensions — once you reach it, this competency is validated automatically.</div>
+      <div class="rstatus"><b>45</b> of 60 points so far · 15 to go</div>
+      <div class="rchips">
+        <span class="rchip done"><span class="rchip-ic"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Written communication<span class="rchip-pts">20 pts</span></span>
+        <span class="rchip prog link" role="button" tabindex="0"><span class="rchip-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></span>Oral presentation<span class="rchip-pts">25 pts</span><span class="rchip-sub" title="Has its own rule — open"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></span>
+        <span class="rchip done"><span class="rchip-ic"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Team feedback<span class="rchip-pts">25 pts</span></span>
+      </div>
+      <div class="rc-actions">
+        <button class="rc-viewall" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>View all 4 dimensions</button>
       </div>
     </div>
-    <div class="rctx muted">4 items in total</div>
+    <div class="lk-ids">
+      <span class="idb r">OVW-RULES-SENTENCE · outcometext as a sentence</span>
+      <span class="idb r">OVW-RULES-CHIP · earned/started only · "N pts" · clickable</span>
+      <span class="idb r">OVW-RULES-SUBRULE · child-with-rule → nested modal</span>
+    </div>
+    <div class="note">Chips show only what's <b>earned or started</b> (the positive) — a to-do dimension isn't a chip; it lives in the full list. Points read "20&nbsp;pts". A chip whose child has its <b>own</b> rule (sub-competencies) carries a chevron, is clickable, and opens that competency's Rules in a modal. Progress emerges from the chips + the soft "45 of 60" line — no bar.</div>
 
-    <div class="divlbl">All / Required filter — only when required &gt; 0 · <span class="idb">OVW-RULES-FILTER</span></div>
-    <div class="rfilter-wrap">
-      <div class="rfilter" role="tablist" aria-label="Filter rule items">
-        <button type="button" class="rfpill on" role="tab" aria-selected="true" data-filter="all">All <span class="rfcount">4</span></button>
-        <button type="button" class="rfpill" role="tab" aria-selected="false" data-filter="required">Required <span class="rfcount">2</span></button>
+    <div class="lk-cap">View all dimensions — opens a MODAL (no accordion-in-accordion); All/Required inside · <span class="idb">OVW-RULES-FILTER</span></div>
+    <div class="rmodal">
+      <div class="rmodal-head"><span class="rmodal-title">Dimensions · Written Communication</span><button class="rmodal-x" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="rmodal-body">
+        <div class="rfilter-wrap" style="margin:0 0 10px">
+          <div class="rfilter" role="tablist" aria-label="Filter rule items">
+            <button type="button" class="rfpill on" role="tab" aria-selected="true">All <span class="rfcount">4</span></button>
+            <button type="button" class="rfpill" role="tab" aria-selected="false">Required <span class="rfcount">2</span></button>
+          </div>
+        </div>
+        <ul class="rlist" role="list" style="margin:0">
+          <li class="rchild req">
+            <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#198754"/><path d="m7 12 3 3 7-7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="rbody"><a href="#" class="rname">Written communication</a> <span class="rtag">Required</span><span class="rassess">Assessment: Competent</span></span>
+            <span class="rpts-col"><span class="rpts">20</span> <span class="rpts-unit">pts</span></span>
+          </li>
+          <li class="rchild req">
+            <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#e5a100" stroke-width="2.4"/><path d="M12 12V4a8 8 0 0 1 8 8z" fill="#e5a100"/></svg></span>
+            <span class="rbody"><a href="#" class="rname">Oral presentation</a> <span class="rtag">Required</span><span class="rassess">Assessment: Developing · has its own rule</span></span>
+            <span class="rpts-col"><span class="rpts pending">25</span> <span class="rpts-unit">pts</span></span>
+          </li>
+          <li class="rchild">
+            <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#adb5bd" stroke-width="2.2" stroke-dasharray="3 3"/></svg></span>
+            <span class="rbody"><a href="#" class="rname">Active listening</a><span class="rassess">Assessment: To do</span></span>
+            <span class="rpts-col"><span class="rpts pending">15</span> <span class="rpts-unit">pts</span></span>
+          </li>
+          <li class="rchild">
+            <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#198754"/><path d="m7 12 3 3 7-7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="rbody"><a href="#" class="rname">Team feedback</a><span class="rassess">Assessment: Competent</span></span>
+            <span class="rpts-col"><span class="rpts">25</span> <span class="rpts-unit">pts</span></span>
+          </li>
+        </ul>
       </div>
     </div>
+    <div class="note">The full list (incl. to-do) opens in a <b>core/modal</b> — the house pattern (same as the evidence modal and the plan competency modal), not a nested accordion. The <b>All/Required</b> filter lives inside it; the row list <b>scrolls</b> (there can be many children) and follows the <b>enrolment filter</b> (dev-plan item: a child with no accessible course is gated, not a dead click).</div>
 
-    <div class="divlbl">Children — one row per child, three status icons · <span class="idb">OVW-RULES-CHILD</span></div>
-    <ul class="rlist" role="list">
-      <li class="rchild req" data-required="true">
-        <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#198754"/><path d="m7 12 3 3 7-7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Proficient</span></span>
-        <span class="rbody">
-          <a href="#" class="rname">Written communication</a> <span class="rtag">Required</span>
-          <span class="rassess">Assessment: Competent</span>
-        </span>
-        <span class="rpts-col"><span class="rpts">20</span> <span class="rpts-unit">pts</span></span>
-      </li>
-      <li class="rchild req" data-required="true">
-        <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#e5a100" stroke-width="2.4"/><path d="M12 12V4a8 8 0 0 1 8 8z" fill="#e5a100"/></svg><span class="sr-only">Graded, not yet proficient</span></span>
-        <span class="rbody">
-          <a href="#" class="rname">Oral presentation</a> <span class="rtag">Required</span>
-          <span class="rassess">Assessment: Developing</span>
-        </span>
-        <span class="rpts-col"><span class="rpts pending">25</span> <span class="rpts-unit">pts</span></span>
-      </li>
-      <li class="rchild" data-required="false">
-        <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#adb5bd" stroke-width="2.2" stroke-dasharray="3 3"/></svg><span class="sr-only">Not yet evaluated</span></span>
-        <span class="rbody">
-          <a href="#" class="rname">Active listening</a>
-          <span class="rassess">Assessment: To do</span>
-        </span>
-        <span class="rpts-col"><span class="rpts pending">15</span> <span class="rpts-unit">pts</span></span>
-      </li>
-      <li class="rchild" data-required="false">
-        <span class="rico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#198754"/><path d="m7 12 3 3 7-7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Proficient</span></span>
-        <span class="rbody">
-          <a href="#" class="rname">Team feedback</a>
-          <span class="rassess">Assessment: Competent</span>
-        </span>
-        <span class="rpts-col"><span class="rpts">25</span> <span class="rpts-unit">pts</span></span>
-      </li>
-    </ul>
-
-    <div class="divlbl">Missing-mandatory alert — score reached, required item pending · <span class="idb">OVW-RULES-ALERT</span></div>
-    <div class="rinfo" role="note">
-      <span class="rinfo-icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8zM11 11h2v6h-2z"/></svg></span>
-      <span class="rinfo-text">
-        <span class="rinfo-title">Validation rule</span>
-        <span class="rinfo-desc">Once the sum of points reaches the required value, will be automatically validated and marked as complete.</span>
-        <span class="rinfo-note"><strong>Pay attention to required items.</strong></span>
-      </span>
-    </div>
-    <div class="rhead">
-      <span class="rlabwrap"><span class="rlab">Progress</span>
-        <span class="ralert" aria-label="Score reached with required items still pending"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 22.5 20.5H1.5L12 2z"/><rect x="11" y="9" width="2" height="5.5" rx="1" fill="#fff"/><circle cx="12" cy="17" r="1.2" fill="#fff"/></svg></span>
-      </span>
-      <span class="rscore"><span class="rearn hl">60</span> / 60 pts</span>
-    </div>
-    <div class="rbar">
-      <div class="rtrack" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="60" aria-label="60 of 60 points earned">
-        <div class="rfill striped" style="width:100%"></div>
+    <div class="lk-cap">Sub-competency with a rule — its own Rules in a modal (one level) · <span class="idb r">OVW-RULES-SUBRULE · to-be</span></div>
+    <div class="rmodal">
+      <div class="rmodal-head"><button class="rmodal-back" type="button" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><span class="rmodal-title">Oral presentation</span><button class="rmodal-x" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="rmodal-body">
+        <div class="reyebrow">How it's earned</div>
+        <div class="rsentence" style="font-size:.95rem">Become proficient in <b>all 3</b> of these dimensions.</div>
+        <div class="rstatus"><b>1</b> of 3 so far</div>
+        <div class="rchips" style="margin-bottom:0">
+          <span class="rchip done"><span class="rchip-ic"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Voice projection</span>
+        </div>
+        <div class="rc-actions"><button class="rc-viewall" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>View all 3 dimensions</button></div>
       </div>
     </div>
-    <div class="rctx alert">Although the score has been reached, there are still required items pending.</div>
+    <div class="note">A competency's rule can nest one level — its children may themselves have children + a rule. The chip opens the same Rules layout for that child in a modal (back-button returns). Deeper nesting is intentionally not followed; this first level is enough.</div>
 
-    <div class="divlbl">First tab activation — lazy AJAX load · <span class="idb">OVW-RULES-LOADING</span></div>
+    <div class="divlbl">Missing-mandatory — reached, but a required dimension pending · <span class="idb">OVW-RULES-ALERT</span></div>
+    <div class="rc-block">
+      <div class="reyebrow">How it's earned</div>
+      <div class="rsentence">Earn <b>60 points</b> across these dimensions, <b>including every required one</b>.</div>
+      <div class="rc-alert"><svg viewBox="0 0 24 24"><path d="M12 2 22.5 20.5H1.5L12 2z"/><rect x="11" y="9" width="2" height="5.5" rx="1" fill="#fff"/><circle cx="12" cy="17" r="1.2" fill="#fff"/></svg>You've reached 60 points, but a required dimension is still pending.</div>
+      <div class="rchips">
+        <span class="rchip done"><span class="rchip-ic"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Written communication<span class="rchip-pts">20 pts</span></span>
+        <span class="rchip prog req-pending link" role="button" tabindex="0"><span class="rchip-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></span>Oral presentation<span class="rchip-req"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>req</span><span class="rchip-pts">25 pts</span></span>
+        <span class="rchip done"><span class="rchip-ic"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Team feedback<span class="rchip-pts">25 pts</span></span>
+      </div>
+    </div>
+    <div class="note">Missing-mandatory keeps the orange (eyebrow, bold rule, one-line alert) but drops the striped bar; the pending required chip gets a soft orange ring.</div>
+
+    <div class="lk-cap">First activation — lazy load · <span class="idb">OVW-RULES-LOADING</span></div>
     <div class="rloading" role="status" aria-live="polite">
       <svg class="rspin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3" stroke-opacity=".18"/><path d="M21 12a9 9 0 0 0-9-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
       <span class="sr-only">Rules</span>
     </div>
-    <div class="note">Only the <strong>All / Required pills</strong> migrate here — platter, active-pill text and the two count bubbles shift to Moodle greys / <code>--primary</code>. The <strong>orange</strong> (info title/icon, progress fill, striped alert, required tag, alert text) is deliberately identical to the as-is panel. Status icons are pix images (<code>status/rules-*</code>), untokenized.</div>
   </div>
 
 </div>
@@ -327,13 +307,13 @@
 <div class="legend">
   <h3>ID legend — Plan detail · Rules tab</h3>
   <div class="leg">
-    <span class="k">OVW-RULES-INFO</span><span class="v"><b>Rule info box</b> (<code>renderRuleInfoBox</code>) — rendered only when <code>data.outcometext</code> is non-empty. Title is <code>rules_info_title</code> = "Validation rule" (the task's "How it's completed" is a paraphrase; the shipped string is used here). Description = <code>outcometext</code>, composed server-side by <code>helper::get_rule_outcome_text($simpleruletype, $ruleoutcome, $competency, $framework)</code> → <code>rules_{points|all}_outcome_{attach|complete|recommend}</code> keyed on the competency's <code>ruleoutcome</code> (1/2/3; empty when 0). Box tint <code>rgba(253 126 20 / 8%)</code>, title + <code>fa-info-circle</code> both <b>--lk-orange</b> — <b>kept identical both panels</b>. <span class="rule">accordion.js renderRuleInfoBox:904-926; helper.php get_rule_outcome_text:1895-1919; styles.css:2941-2976</span></span>
-    <span class="k">OVW-RULES-PROGRESS</span><span class="v"><b>Progress header + bar</b> (<code>renderRulesSection</code>) — label <code>rules_progress</code> ("Progress") left, score right: <code>earnedpoints</code> in <code>.rules-earned</code> (highlighted <b>--lk-orange</b> via <code>-earned-highlight</code> when <code>earnedpoints &gt; 0</code>) then <code>" / " + totalrequired</code>, with <code>" pts"</code> appended only for points rules (<code>isPoints</code>). Fill width = <code>min(100, round(earned/total*100))</code>%, track <code>#e9ecef</code> (<b>--lk-line</b>), fill <code>linear-gradient(90deg,#fd7e14,#ff922b)</code> (<b>--lk-orange → --lk-orange-2</b>) — <b>kept identical both panels</b>. For points: <code>earnedpoints</code> = Σ child points where <code>isproficient</code>, <code>totalrequired</code> = <code>ruleconfig.base.points</code>; for all-rules: earned = proficient child count, total = child count, <code>hasrequired=false</code>. <span class="rule">accordion.js renderRulesSection:744-785 (get_competency_rule_data.php build_points_rule_data:222 / build_all_rule_data:272); styles.css:2718-2794</span></span>
-    <span class="k">OVW-RULES-ARIA</span><span class="v"><b>Progressbar semantics</b> — track carries <code>role="progressbar"</code> with <code>aria-valuenow=earnedpoints</code>, <code>aria-valuemin="0"</code>, <code>aria-valuemax=totalrequired</code>, and <code>aria-label</code> = <code>rules_sr_progress</code> "{$a-&gt;earned} of {$a-&gt;total} points earned" (interpolated). Each child status icon carries an <code>alt=""</code>/<code>aria-hidden</code> image plus an <code>sr-only</code> label; the loading region is <code>role="status" aria-live="polite"</code> with an <code>sr-only</code> "Rules". Purely semantic — no colour, unchanged both panels. <span class="rule">accordion.js renderRulesSection:776-780; lang rules_sr_progress</span></span>
-    <span class="k">OVW-RULES-FILTER</span><span class="v"><b>All / Required pills</b> (<code>renderRulesFilterTabs</code>) — emitted only when <code>mandatoryCount &gt; 0</code>. <code>role="tablist"</code> (<code>aria-label</code> = <code>rules_filter_label</code>) of two <code>.local-dimensions-filter-tab</code> buttons: "All" (<code>data-filter="all"</code>, <code>active</code>, count = <code>childcount</code>) and "Required" (<code>data-filter="required"</code>, count = <code>mandatorycount</code>); <code>initRulesFilters</code> toggles <code>.active</code>/<code>aria-selected</code> and hides non-required cards. Platter <b>--lk-pill-platter</b>, active pill text <b>--lk-pill-active-fg</b>, counts <b>--lk-counter-bg</b> → active <b>--lk-counter-active-bg</b> — <b>these MIGRATE</b>. <span class="rule">accordion.js renderRulesFilterTabs:936-954 + initRulesFilters:961; styles.css:1269-1325, 3314-3469</span></span>
-    <span class="k">OVW-RULES-CHILD</span><span class="v"><b>Child row</b> (<code>renderRulesChild</code>) — <code>&lt;li&gt;</code> per child with <code>data-required</code>: status icon (<code>isproficient</code> → proficient / <code>hasgrade</code> → in-progress / else → todo pix image + <code>sr-only</code>), name link to <code>view-competency.php?id={planid}&amp;competencyid={child.id}</code>, a <b>Required tag</b> (<code>rules_required_tag</code>, orange <b>--lk-orange</b>) when <code>child.required</code>, an "Assessment: {gradename|To do}" line, and — for points rules only — a points column (<code>.points-pending</code> grey <code>#adb5bd</code> until proficient). Required rows border <code>rgba(253 126 20 / 22%)</code> (orange, kept). Card border/name/points colours are neutral tokens — unchanged. <span class="rule">accordion.js renderRulesChild:821-895; styles.css:2822-2938</span></span>
-    <span class="k">OVW-RULES-ALERT</span><span class="v"><b>Missing-mandatory state</b> — active when <code>hasmissingmandatory</code> = <code>earnedpoints &gt;= totalrequired &amp;&amp; pendingmandatorycount &gt; 0</code> (computed server-side). Three effects: (1) an <code>fa-exclamation-triangle</code> beside the "Progress" label (<code>aria-label</code> = <code>rules_sr_alert</code>), orange <b>--lk-orange</b>; (2) the fill gains <code>-progress-fill-striped progress-bar-striped</code> — white 45° stripes over the orange gradient; (3) the context line swaps the "{$a} items in total" count for <code>rules_missing_mandatory_notice</code> and swaps <code>text-muted</code> for <code>-progress-context-alert</code> (bold, <b>--lk-orange-dark #e8590c</b>). The info box's bold <code>&lt;strong&gt;</code> note (<code>rules_required_warning</code>, gated on <code>hasrequired &amp;&amp; requiredwarningtext</code>) accompanies required rules. All orange — <b>kept identical both panels</b>. <span class="rule">accordion.js renderRulesSection:748-792 + renderRuleInfoBox:918-921; get_competency_rule_data.php:100-101; styles.css:2779-2807</span></span>
-    <span class="k">OVW-RULES-LOADING</span><span class="v"><b>Lazy load</b> — the Rules pane ships with a centred <code>fa-spinner fa-spin</code> (<code>role="status" aria-live="polite"</code>) and an empty hidden content div; <code>loadRulesTabIfNeeded</code> fires <code>local_dimensions_get_competency_rule_data</code> on the tab's <b>first</b> activation (cached in <code>loadedRulesPanes</code> by <code>competencyId-planId</code>), hides the spinner and injects <code>renderRulesSection</code> on resolve, or on error hides the spinner, drops the cache key (<code>loadedRulesPanes.delete</code>, so re-opening re-fetches) and calls <code>Notification.exception</code>. Spinner colour <b>--lk-muted</b> — unchanged. <span class="rule">accordion.js renderRulesPane:533-547, attachTabListeners:598-602, loadRulesTabIfNeeded:677-721; styles.css:2661-2666</span></span>
+    <span class="k">OVW-RULES-SENTENCE</span><span class="v"><b>(to-be) Rule as a sentence</b> — the <code>outcometext</code> (server-composed by <code>helper::get_rule_outcome_text</code>) stated plainly, rule <b>bolded in orange</b>: "Earn <b>60 points</b>…" (points) / "Become proficient in <b>any 3</b>…" (all-rule). Replaces the info box + big bar; the score survives as a soft "45 of 60 so far · 15 to go" line. <span class="rule">reframes renderRuleInfoBox + renderRulesSection (accordion.js:904-926, 744-785)</span></span>
+    <span class="k">OVW-RULES-CHIP</span><span class="v"><b>(to-be) Status chip</b> — only <b>earned or started</b> children (proficient = green, in-progress = amber); a to-do child is not a chip. Points inline as "<b>N pts</b>"; required marker (orange) when <code>child.required</code>. All chips clickable → the child's detail. <span class="rule">recomposes renderRulesChild (accordion.js:821-895) — filters out to-do for the summary</span></span>
+    <span class="k">OVW-RULES-SUBRULE</span><span class="v"><b>(to-be) Nested rule</b> — a competency's rule is over its child competencies, which may themselves have children + a rule (one more level). A child-with-rule chip carries a chevron and opens the <b>same Rules layout for that child in a modal</b> (back-button returns). Deeper nesting is not followed. <b>Code:</b> the child data needs a <code>hasrule</code> flag (its <code>ruletype</code>/<code>ruleoutcome</code>); the modal re-runs <code>get_competency_rule_data</code> for the child. <span class="rule">get_competency_rule_data.php per child.id; core/modal</span></span>
+    <span class="k">OVW-RULES-FILTER</span><span class="v"><b>All / Required pills</b> — emitted when <code>mandatoryCount &gt; 0</code>; <b>to-be:</b> lives <b>inside the "View all dimensions" modal</b>, filtering the full row list. Platter / active text / counts <b>MIGRATE</b> to Moodle DS. <span class="rule">accordion.js:936-954 + initRulesFilters:961</span></span>
+    <span class="k">OVW-RULES-CHILD</span><span class="v"><b>Child row</b> (<code>renderRulesChild</code>) — status icon + name link + Required tag + "Assessment: {gradename|To do}" + points. <b>To-be:</b> the full rows (incl. to-do) live in the modal; the chip is the summary. <span class="rule">accordion.js:821-895; styles.css:2822-2938</span></span>
+    <span class="k">OVW-RULES-ALERT</span><span class="v"><b>Missing-mandatory</b> — <code>hasmissingmandatory = earnedpoints &gt;= totalrequired &amp;&amp; pendingmandatorycount &gt; 0</code>. <b>To-be:</b> the sentence adds "including every required one", a one-line orange note replaces the striped bar, and the pending required chip gets a soft orange ring. <span class="rule">get_competency_rule_data.php:100-101; accordion.js:748-792</span></span>
+    <span class="k">OVW-RULES-LOADING</span><span class="v"><b>Lazy load</b> — the pane ships a centred spinner (<code>role=status</code>) on first tab activation; <code>loadRulesTabIfNeeded</code> fetches <code>local_dimensions_get_competency_rule_data</code>, caches by <code>competencyId-planId</code>. Unchanged. <span class="rule">accordion.js:533-547, 677-721</span></span>
   </div>
 </div>
 </div>
