@@ -1,0 +1,145 @@
+<!-- @dsCard group="Foundations" name="Tokens (learner views) — as-is │ to-be" subtitle="Real styles.css palette tokenized as --lk-*; to-be migrates Material/Google to Moodle DS, keeps the rules orange" -->
+<style>
+.lk-tok{
+  /* ---- Canonical --lk-* token block (AS-IS = Material/Google, faithful to styles.css) ---- */
+  /* Neutrals (shared with Moodle, unchanged in to-be) */
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;
+  --lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  /* MIGRATE — differ between as-is and to-be */
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;
+  --lk-success:#28a745;
+  /* REVIEW — to-be value proposed, needs annotation */
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  /* KEEP — rules orange, identical in both panels */
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  font-family:var(--font);color:var(--lk-text);background:var(--lk-page);margin:0;padding:22px;line-height:1.5;
+}
+/* ---- to-be override: Moodle DS. This block IS the proposed styles.css change. ---- */
+.lk-tok.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;
+  --lk-success:#198754;
+  /* REVIEW proposals (annotate) */
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.lk-tok h1{font-size:17px;font-weight:700;margin:0 0 2px;}
+.lk-tok .sub{font-size:12px;color:var(--lk-muted);margin:0 0 18px;}
+.lk-tok h2{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--lk-muted);margin:22px 0 8px;}
+.lk-cols{display:flex;flex-wrap:wrap;gap:22px;}
+.lk-col{flex:1 1 340px;min-width:300px;}
+.lk-col h3{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);margin:0 0 10px;}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;}
+.tk{display:grid;grid-template-columns:34px 1fr auto;gap:8px 10px;align-items:center;margin:5px 0;}
+.tk .sw{width:34px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.12);}
+.tk .nm{font-size:11px;font-weight:600;}
+.tk .nm small{display:block;font-weight:400;color:var(--lk-muted);}
+.tk .hex{font-family:var(--mono);font-size:10px;color:var(--lk-muted);text-align:right;}
+.flag{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:10px;white-space:nowrap;}
+.flag.mig{background:#e7f0f9;color:#0f6cbf;border:1px solid #9fc4e5;}
+.flag.keep{background:rgba(253,126,20,.1);color:#e8590c;border:1px solid rgba(253,126,20,.3);}
+.flag.rev{background:#fcefdc;color:#8a5a1f;border:1px solid #e6b877;}
+.note{font-size:11px;color:var(--lk-muted);margin-top:8px;}
+.line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0;}
+.pair{display:flex;align-items:center;gap:8px;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:600;width:fit-content;}
+.radii{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+.rad{width:88px;text-align:center;font-size:11px;color:var(--lk-muted);}
+.rad .box{height:48px;background:#e7ecff;border:1px solid #c9d6ff;}
+</style>
+<div class="lk-tok">
+  <h1>Tokens — Learner views</h1>
+  <p class="sub">Real values from <code>local/dimensions/styles.css</code> (Boost, light mode), tokenized as <code>--lk-*</code>. The <b>to-be</b> column applies the <code>.moodle</code> override — that block is exactly the proposed <code>styles.css</code> change. The rules <b>orange</b> is kept.</p>
+
+  <h2>Migrate — Material/Google → Moodle DS</h2>
+  <div class="lk-cols">
+    <div class="lk-col">
+      <h3><span class="dot" style="background:#8a8980"></span>As-is (Material/Google)</h3>
+      <div class="tk"><span class="sw" style="background:#667eea"></span><span class="nm">accent <small>tab underline · focus ring · FAB · placeholder · learn-more</small></span><span class="hex">#667eea</span></div>
+      <div class="tk"><span class="sw" style="background:linear-gradient(135deg,#667eea,#764ba2)"></span><span class="nm">accent gradient end <small>course placeholder</small></span><span class="hex">#764ba2</span></div>
+      <div class="tk"><span class="sw" style="background:#1a73e8"></span><span class="nm">pill active text <small>active tab/counter, search focus</small></span><span class="hex">#1a73e8</span></div>
+      <div class="tk"><span class="sw" style="background:#f1f3f4"></span><span class="nm">pill platter</span><span class="hex">#f1f3f4</span></div>
+      <div class="tk"><span class="sw" style="background:#5f6368"></span><span class="nm">pill text/icon</span><span class="hex">#5f6368</span></div>
+      <div class="tk"><span class="sw" style="background:#e8eaed"></span><span class="nm">counter bg</span><span class="hex">#e8eaed</span></div>
+      <div class="tk"><span class="sw" style="background:#e8f0fe"></span><span class="nm">counter active bg</span><span class="hex">#e8f0fe</span></div>
+      <div class="tk"><span class="sw" style="background:#e1e3e6"></span><span class="nm">search border</span><span class="hex">#e1e3e6</span></div>
+      <div class="tk"><span class="sw" style="background:#9aa0a6"></span><span class="nm">search icon/placeholder</span><span class="hex">#9aa0a6</span></div>
+      <div class="tk"><span class="sw" style="background:#f9fafb"></span><span class="nm">competency card bg</span><span class="hex">#f9fafb</span></div>
+      <div class="tk"><span class="sw" style="background:#212121"></span><span class="nm">card title text</span><span class="hex">#212121</span></div>
+      <div class="tk"><span class="sw" style="background:#28a745"></span><span class="nm">success green <small>BS4</small></span><span class="hex">#28a745</span></div>
+    </div>
+    <div class="lk-col">
+      <h3><span class="dot" style="background:#0f6cbf"></span>To-be (Moodle DS) <span class="flag mig">.moodle</span></h3>
+      <div class="tk"><span class="sw" style="background:#0f6cbf"></span><span class="nm">accent → <code>var(--primary)</code></span><span class="hex">#0f6cbf</span></div>
+      <div class="tk"><span class="sw" style="background:linear-gradient(135deg,#0f6cbf,#0a5aa0)"></span><span class="nm">gradient end → primary shade</span><span class="hex">#0a5aa0</span></div>
+      <div class="tk"><span class="sw" style="background:#0f6cbf"></span><span class="nm">pill active text → primary</span><span class="hex">#0f6cbf</span></div>
+      <div class="tk"><span class="sw" style="background:#e9ecef"></span><span class="nm">platter → grey-200</span><span class="hex">#e9ecef</span></div>
+      <div class="tk"><span class="sw" style="background:#6c757d"></span><span class="nm">pill text → secondary</span><span class="hex">#6c757d</span></div>
+      <div class="tk"><span class="sw" style="background:#e9ecef"></span><span class="nm">counter bg → grey-200</span><span class="hex">#e9ecef</span></div>
+      <div class="tk"><span class="sw" style="background:#cfe2ff"></span><span class="nm">counter active → primary-100</span><span class="hex">#cfe2ff</span></div>
+      <div class="tk"><span class="sw" style="background:#dee2e6"></span><span class="nm">search border → grey-300</span><span class="hex">#dee2e6</span></div>
+      <div class="tk"><span class="sw" style="background:#6c757d"></span><span class="nm">search icon → secondary</span><span class="hex">#6c757d</span></div>
+      <div class="tk"><span class="sw" style="background:#f8f9fa"></span><span class="nm">card bg → grey-100</span><span class="hex">#f8f9fa</span></div>
+      <div class="tk"><span class="sw" style="background:#212529"></span><span class="nm">card title → body</span><span class="hex">#212529</span></div>
+      <div class="tk"><span class="sw" style="background:#198754"></span><span class="nm">success → <small>BS5 (unify)</small></span><span class="hex">#198754</span></div>
+    </div>
+  </div>
+
+  <h2>Keep — rules orange (identical both panels) <span class="flag keep">keep</span></h2>
+  <div class="line">
+    <span class="pair" style="background:linear-gradient(90deg,#fd7e14,#ff922b);color:#fff">Progress bar</span>
+    <span class="pair" style="background:#fd7e14;color:#fff">Mandatory / button</span>
+    <span class="pair" style="background:rgba(253,126,20,.08);color:#e8590c">Info box</span>
+  </div>
+  <p class="note">Orange <code>#fd7e14</code> → <code>#ff922b</code>; hover/dark <code>#e8590c</code>; the deliberate brand accent for "how a competency is earned".</p>
+
+  <h2>Review — to-be proposed, annotate <span class="flag rev">review</span></h2>
+  <div class="lk-cols">
+    <div class="lk-col">
+      <div class="tk"><span class="sw" style="background:#356df3"></span><span class="nm">taxonomy label</span><span class="hex">#356df3 → #0f6cbf?</span></div>
+      <div class="tk"><span class="sw" style="background:#005fcc"></span><span class="nm">focus ring (unify?)</span><span class="hex">#005fcc → #0f6cbf?</span></div>
+      <div class="tk"><span class="sw" style="background:#e5a100"></span><span class="nm">amber "rated/pending"</span><span class="hex">#e5a100 → warning?</span></div>
+    </div>
+    <div class="lk-col">
+      <div class="tk"><span class="sw" style="background:#fef9c3"></span><span class="nm">modal note bg (Tailwind)</span><span class="hex">#fef9c3 → #fff3cd?</span></div>
+      <div class="tk"><span class="sw" style="background:#eab308"></span><span class="nm">modal note accent</span><span class="hex">#eab308 → #ffc107?</span></div>
+      <div class="tk"><span class="sw" style="background:#713f12"></span><span class="nm">modal note text</span><span class="hex">#713f12 → #664d03?</span></div>
+    </div>
+  </div>
+
+  <h2>Already-Moodle — evidence &amp; status (unchanged)</h2>
+  <div class="line">
+    <span class="pair" style="background:#d1e7dd;color:#0f5132">● Activity</span>
+    <span class="pair" style="background:#cfe2ff;color:#084298">● Course grade</span>
+    <span class="pair" style="background:#fff3cd;color:#664d03">● Manual</span>
+    <span class="pair" style="background:#e2e3e5;color:#41464b">● File</span>
+    <span class="pair" style="background:#f8d7da;color:#842029">● Prior learning</span>
+    <span class="pair" style="background:#e9ecef;color:#6c757d">● Other</span>
+  </div>
+  <div class="line" style="margin-top:8px">
+    <span class="pair" style="background:#d4edda;color:#155724">✓ Proficient</span>
+    <span class="pair" style="background:#fff3cd;color:#856404">⚠ Not proficient</span>
+    <span class="pair" style="background:#e9ecef;color:#6c757d">To do</span>
+  </div>
+
+  <h2>Radii &amp; type</h2>
+  <div class="radii">
+    <div class="rad"><div class="box" style="border-radius:.375rem"></div>0.375rem<br>small</div>
+    <div class="rad"><div class="box" style="border-radius:.5rem"></div>0.5rem<br>cell/badge</div>
+    <div class="rad"><div class="box" style="border-radius:.75rem"></div>0.75rem<br>card/accordion</div>
+    <div class="rad"><div class="box" style="border-radius:1rem"></div>1rem<br>taxonomy</div>
+    <div class="rad"><div class="box" style="border-radius:999px"></div>999px<br>pill</div>
+  </div>
+  <p class="note">Font = Boost stack (Noto Sans / system-ui). Hero title 2rem/700 · accordion title 1rem/600 · tab 0.8125rem · badge 0.75rem. Descriptions collapse at 30vh (<code>--collapsible-max-vh</code>).</p>
+</div>

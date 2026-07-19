@@ -1,0 +1,112 @@
+<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Empty states" subtitle="view_competency.mustache — no linked courses / missing competency id · as-is │ to-be" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+
+/* ---- empty-state alerts (view_competency.mustache:69-81) ----
+   Bootstrap semantic alerts (.alert-info / .alert-warning). These are
+   already Moodle DS — identical in both panels — so NO --lk-* token
+   migrates here; the two colours are held fixed on purpose. */
+.alert{margin:1rem 20px;padding:.75rem 1.25rem;border-radius:.375rem;font-size:.9rem;border:1px solid transparent;}
+.alert.info{background:#cff4fc;color:#055160;border-color:#b6effb;}
+.alert.warn{background:#fff3cd;color:#664d03;border-color:#ffecb5;}
+.cond{font-family:var(--mono);}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+
+    <div class="lk-cap">Tracker — empty states (course grid renders nothing)</div>
+
+    <div class="divlbl">Competency exists, no visible linked courses <span class="idb">TRK-EMPTY-NOCOURSES</span></div>
+    <div class="alert info" role="alert">No courses linked to this competency.</div>
+
+    <div class="divlbl">Competency id invalid — record not found <span class="idb r">TRK-EMPTY-NOCOMP</span></div>
+    <div class="alert warn" role="alert">Competency ID not provided.</div>
+
+    <div class="lk-ids">
+      <span class="idb"><span class="cond">alert-info</span> · hascompetency &amp;&amp; !hascourses</span>
+      <span class="idb"><span class="cond">alert-warning</span> · !hascompetency</span>
+    </div>
+    <div class="note">Both are Bootstrap semantic alerts (already Moodle DS): no <code>--lk-*</code> token migrates, so this panel and the to-be one render identically. Per request the two are mutually exclusive — a missing competency also yields empty courses, but the info alert is gated inside <span class="cond">hascompetency</span>, so only the warning shows.</div>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+
+    <div class="lk-cap">Tracker — empty states (course grid renders nothing)</div>
+
+    <div class="divlbl">Competency exists, no visible linked courses <span class="idb">TRK-EMPTY-NOCOURSES</span></div>
+    <div class="alert info" role="alert">No courses linked to this competency.</div>
+
+    <div class="divlbl">Competency id invalid — record not found <span class="idb r">TRK-EMPTY-NOCOMP</span></div>
+    <div class="alert warn" role="alert">Competency ID not provided.</div>
+
+    <div class="lk-ids">
+      <span class="idb"><span class="cond">alert-info</span> · hascompetency &amp;&amp; !hascourses</span>
+      <span class="idb"><span class="cond">alert-warning</span> · !hascompetency</span>
+    </div>
+    <div class="note">Unchanged from as-is. The empty states already speak Bootstrap/Moodle semantic colours (<code>alert-info</code>, <code>alert-warning</code>) — nothing to migrate. The token slice touches the hero, chips and cards, never these alerts.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Tracker empty states (view_competency.mustache)</h3>
+  <div class="leg">
+    <span class="k">TRK-EMPTY-NOCOURSES</span><span class="v"><b>alert-info</b> — string <code>no_courses_linked</code> = &ldquo;No courses linked to this competency.&rdquo; Rendered when <code>hascompetency</code> is true but <code>hascourses</code> is false — zero visible <code>{competency_coursecomp}</code> joins (<code>c.visible = 1</code>), or every linked course dropped by the enrolment filter <span class="rule">view_competency.mustache:69-75; flags view_competency_page.php:83-84; courses view-competency.php:78-96</span></span>
+    <span class="k">TRK-EMPTY-NOCOMP</span><span class="v"><b>alert-warning</b> — string <code>competency_id_missing</code> = &ldquo;Competency ID not provided.&rdquo; Rendered when <code>hascompetency</code> is false — <code>$DB->get_record('competency', ['id' =&gt; $competencyid])</code> returned false (no such/hidden competency). A truly absent param 400s earlier via <code>required_param</code> <span class="rule">view_competency.mustache:77-81; view-competency.php:35,70 → view_competency_page.php:83</span></span>
+    <span class="k">gate</span><span class="v">Mutual exclusivity — <code>{{^hascourses}}</code> wraps the info alert but nests it inside <code>{{#hascompetency}}</code>, so a missing competency shows only the warning; the two never co-render <span class="rule">view_competency.mustache:69-81</span></span>
+  </div>
+</div>
+</div>

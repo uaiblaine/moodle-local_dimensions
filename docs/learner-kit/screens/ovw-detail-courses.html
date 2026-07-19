@@ -1,0 +1,310 @@
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Linked courses" subtitle="accordion.js — scrollable linked-course cards, scroll arrows, 100% check · as-is │ to-be" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+
+/* ---- linked-courses section (accordion.js renderCourseCardsScrollable ~1619; styles.css 1488-1672, 2393-2497) ---- */
+.crs-sec{background:var(--lk-pill-platter);padding:1.25rem;margin:0;} /* .local-dimensions-courses-section — bg #f1f3f4 platter (2492) */
+.crs-title{display:flex;align-items:center;gap:.5rem;font-size:.9375rem;font-weight:600;color:var(--lk-text);margin:0 0 .75rem;line-height:1.2;} /* 1488 */
+.crs-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--lk-surface);color:var(--lk-pill-text);border-radius:999px;font-size:.7rem;font-weight:600;} /* 1500 — text #5f6368 */
+/* scroll wrapper: 3.7rem bottom pad reserves the control-pill lane (2393) */
+.crs-wrap{position:relative;width:100%;padding-bottom:3.7rem;}
+.crs-scroll{display:flex;gap:1rem;overflow-x:hidden;padding:.25rem 0;} /* real: overflow-x:auto + scroll-snap + grab (2404) — clipped here */
+/* card (1570) + horizontal-scroll sizing (2431) */
+.crs-card{display:flex;flex-direction:column;flex-shrink:0;min-width:260px;max-width:280px;background:var(--lk-surface);border-radius:.75rem;overflow:hidden;border:none;box-shadow:0 4px 6px -1px rgb(0 0 0 / 10%),0 2px 4px -2px rgb(0 0 0 / 10%);}
+.crs-img{height:128px;overflow:hidden;background:var(--lk-line);} /* 1590 — bg #e9ecef behind lazy img */
+.crs-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.crs-ph{display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--lk-accent) 0%,var(--lk-accent-grad-end) 100%);} /* 1602 — MIGRATES #667eea→#764ba2 */
+.crs-body{padding:1rem;flex:1;display:flex;flex-direction:column;} /* 1613 */
+.crs-name{font-size:.9375rem;font-weight:600;color:var(--lk-text);margin:0 0 .5rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;} /* 1620 — 3-line clamp */
+.crs-prog{display:flex;align-items:center;gap:.5rem;margin-top:auto;margin-bottom:.75rem;} /* 1634 */
+.crs-track{flex-grow:1;height:8px;background:var(--lk-line);border-radius:4px;overflow:hidden;} /* 1642 — bg #e9ecef */
+.crs-fill{height:100%;background:var(--lk-success);border-radius:4px;} /* 1650 — MIGRATES #28a745→#198754 */
+.crs-pct{font-size:.75rem;color:var(--lk-muted);font-weight:500;min-width:2rem;text-align:right;} /* 1657 */
+/* fa-check-circle carries JS class .local-dimensions-course-check, which has NO CSS rule
+   (the styled .local-dimensions-course-progress-check #198754 at 1250 is a different tracker
+   class) → the icon inherits body colour. Rendered here in --lk-text to match reality. */
+.crs-check{width:.95rem;height:.95rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--lk-text);}
+/* Access button = core Boost .btn.btn-secondary (theme-driven, identical both panels); plugin adds full-width (1666) */
+.crs-btn{display:block;width:100%;text-align:center;font-size:.8125rem;font-weight:500;padding:.375rem .75rem;border-radius:.375rem;text-decoration:none;background:#e9ecef;color:#212529;border:1px solid #dee2e6;}
+/* scroll control pill (2439) + arrow buttons (2457) */
+.crs-ctrls{position:absolute;right:.5rem;bottom:.25rem;display:inline-flex;align-items:center;border-radius:999px;overflow:hidden;background:var(--lk-surface);box-shadow:rgb(50 50 93 / 25%) 0 2px 5px -1px,rgb(0 0 0 / 30%) 0 1px 3px -1px;z-index:3;}
+.crs-nav{display:flex;align-items:center;justify-content:center;width:42px;height:42px;border:none;border-radius:0;background:transparent;color:#1d2125;cursor:pointer;} /* 2457 */
+.crs-nav + .crs-nav{border-left:1px solid rgb(17 24 39 / 8%);} /* 2452 */
+.crs-nav.disabled{opacity:.45;color:#8da1b6;pointer-events:none;} /* 2481 */
+.crs-nav.kbd{outline:2px solid var(--lk-accent);outline-offset:-2px;} /* :focus — var(--primary,#667eea) fallback → --lk-accent (2476) */
+.crs-nav .ic{width:.875rem;height:.875rem;} /* .fa 0.875rem (2487) */
+/* ≤2 courses → .local-dimensions-courses-no-scroll: wrap, no controls (2500) */
+.crs-noscroll{flex-wrap:wrap;overflow-x:visible;}
+.crs-noscroll .crs-card{flex:1 1 0;min-width:200px;max-width:calc(50% - .5rem);}
+
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+
+    <div class="lk-cap">Competency detail — linked-course scroller (&gt;2 courses) · <span class="idb">OVW-CRS</span></div>
+    <div class="crs-sec">
+      <h2 class="crs-title">Linked courses <span class="crs-badge">3</span></h2>
+      <div class="crs-wrap">
+        <div class="crs-scroll">
+
+          <!-- card 1 — has course image, partial progress -->
+          <div class="crs-card">
+            <div class="crs-img">
+              <img alt="" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='128'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%232f6fb0'/><stop offset='1' stop-color='%235aa0d8'/></linearGradient></defs><rect width='280' height='128' fill='url(%23g)'/><circle cx='210' cy='38' r='22' fill='%23ffffff' opacity='.28'/><rect x='24' y='92' width='150' height='10' rx='5' fill='%23ffffff' opacity='.55'/></svg>">
+            </div>
+            <div class="crs-body">
+              <h3 class="crs-name">Foundations of Academic Writing</h3>
+              <div class="crs-prog">
+                <div class="crs-track"><div class="crs-fill" style="width:65%"></div></div>
+                <span class="crs-pct">65%</span>
+              </div>
+              <a href="#" class="crs-btn">Access</a>
+            </div>
+          </div>
+
+          <!-- card 2 — no image → gradient placeholder + initials; progress 100% → check -->
+          <div class="crs-card">
+            <div class="crs-img crs-ph"><span>DS</span></div>
+            <div class="crs-body">
+              <h3 class="crs-name">Data Structures</h3>
+              <div class="crs-prog">
+                <div class="crs-track"><div class="crs-fill" style="width:100%"></div></div>
+                <span class="crs-pct">100%</span>
+                <svg class="crs-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>
+              </div>
+              <a href="#" class="crs-btn">Access</a>
+            </div>
+          </div>
+
+          <!-- card 3 — clipped by the scroller (demonstrates horizontal overflow) -->
+          <div class="crs-card">
+            <div class="crs-img crs-ph"><span>WA</span></div>
+            <div class="crs-body">
+              <h3 class="crs-name">Web Accessibility Essentials</h3>
+              <div class="crs-prog">
+                <div class="crs-track"><div class="crs-fill" style="width:30%"></div></div>
+                <span class="crs-pct">30%</span>
+              </div>
+              <a href="#" class="crs-btn">Access</a>
+            </div>
+          </div>
+
+        </div>
+        <!-- control pill: prev disabled at scroll start, next enabled -->
+        <div class="crs-ctrls" role="group" aria-label="Linked courses">
+          <button type="button" class="crs-nav disabled" aria-label="Previous"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button type="button" class="crs-nav" aria-label="Next"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">OVW-CRS · card = image|initials + progress + Access</span>
+      <span class="idb">OVW-CRS-NAV · prev/next pill + 100% check</span>
+      <span class="idb">DATA · local_dimensions_get_competency_courses (own SQL)</span>
+    </div>
+
+    <div class="divlbl">≤2 courses → no-scroll (wrap, control pill hidden) <span class="idb">OVW-CRS</span></div>
+    <div class="crs-sec">
+      <h2 class="crs-title">Linked courses <span class="crs-badge">2</span></h2>
+      <div class="crs-wrap" style="padding-bottom:0">
+        <div class="crs-scroll crs-noscroll">
+          <div class="crs-card">
+            <div class="crs-img crs-ph"><span>RM</span></div>
+            <div class="crs-body">
+              <h3 class="crs-name">Research Methods</h3>
+              <div class="crs-prog">
+                <div class="crs-track"><div class="crs-fill" style="width:45%"></div></div>
+                <span class="crs-pct">45%</span>
+              </div>
+              <a href="#" class="crs-btn">Access</a>
+            </div>
+          </div>
+          <div class="crs-card">
+            <div class="crs-img crs-ph"><span>ET</span></div>
+            <div class="crs-body">
+              <h3 class="crs-name">Ethics &amp; Practice</h3>
+              <div class="crs-prog">
+                <div class="crs-track"><div class="crs-fill" style="width:80%"></div></div>
+                <span class="crs-pct">80%</span>
+              </div>
+              <a href="#" class="crs-btn">Access</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divlbl">Nav — keyboard focus on Next (focus ring) <span class="idb">OVW-CRS-NAV</span></div>
+    <div style="padding:6px 20px 2px">
+      <span class="crs-ctrls" style="position:static;display:inline-flex">
+        <button type="button" class="crs-nav" aria-label="Previous"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button type="button" class="crs-nav kbd" aria-label="Next"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+      </span>
+    </div>
+    <div class="note">Placeholder gradient = <code>#667eea → #764ba2</code>; progress fill green <code>#28a745</code>; focus ring <code>#667eea</code>; section platter <code>#f1f3f4</code>. The check <code>#212529</code> is inherited (no rule on <code>.local-dimensions-course-check</code>).</div>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+
+    <div class="lk-cap">Competency detail — linked-course scroller (&gt;2 courses) · <span class="idb">OVW-CRS</span></div>
+    <div class="crs-sec">
+      <h2 class="crs-title">Linked courses <span class="crs-badge">3</span></h2>
+      <div class="crs-wrap">
+        <div class="crs-scroll">
+
+          <div class="crs-card">
+            <div class="crs-img">
+              <img alt="" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='128'><defs><linearGradient id='g2' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%232f6fb0'/><stop offset='1' stop-color='%235aa0d8'/></linearGradient></defs><rect width='280' height='128' fill='url(%23g2)'/><circle cx='210' cy='38' r='22' fill='%23ffffff' opacity='.28'/><rect x='24' y='92' width='150' height='10' rx='5' fill='%23ffffff' opacity='.55'/></svg>">
+            </div>
+            <div class="crs-body">
+              <h3 class="crs-name">Foundations of Academic Writing</h3>
+              <div class="crs-prog">
+                <div class="crs-track"><div class="crs-fill" style="width:65%"></div></div>
+                <span class="crs-pct">65%</span>
+              </div>
+              <a href="#" class="crs-btn">Access</a>
+            </div>
+          </div>
+
+          <div class="crs-card">
+            <div class="crs-img crs-ph"><span>DS</span></div>
+            <div class="crs-body">
+              <h3 class="crs-name">Data Structures</h3>
+              <div class="crs-prog">
+                <div class="crs-track"><div class="crs-fill" style="width:100%"></div></div>
+                <span class="crs-pct">100%</span>
+                <svg class="crs-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>
+              </div>
+              <a href="#" class="crs-btn">Access</a>
+            </div>
+          </div>
+
+          <div class="crs-card">
+            <div class="crs-img crs-ph"><span>WA</span></div>
+            <div class="crs-body">
+              <h3 class="crs-name">Web Accessibility Essentials</h3>
+              <div class="crs-prog">
+                <div class="crs-track"><div class="crs-fill" style="width:30%"></div></div>
+                <span class="crs-pct">30%</span>
+              </div>
+              <a href="#" class="crs-btn">Access</a>
+            </div>
+          </div>
+
+        </div>
+        <div class="crs-ctrls" role="group" aria-label="Linked courses">
+          <button type="button" class="crs-nav disabled" aria-label="Previous"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button type="button" class="crs-nav" aria-label="Next"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">placeholder → primary→primary-shade</span>
+      <span class="idb">progress fill → #198754</span>
+      <span class="idb">badge text → secondary</span>
+    </div>
+
+    <div class="divlbl">≤2 courses → no-scroll (wrap, control pill hidden) <span class="idb">OVW-CRS</span></div>
+    <div class="crs-sec">
+      <h2 class="crs-title">Linked courses <span class="crs-badge">2</span></h2>
+      <div class="crs-wrap" style="padding-bottom:0">
+        <div class="crs-scroll crs-noscroll">
+          <div class="crs-card">
+            <div class="crs-img crs-ph"><span>RM</span></div>
+            <div class="crs-body">
+              <h3 class="crs-name">Research Methods</h3>
+              <div class="crs-prog">
+                <div class="crs-track"><div class="crs-fill" style="width:45%"></div></div>
+                <span class="crs-pct">45%</span>
+              </div>
+              <a href="#" class="crs-btn">Access</a>
+            </div>
+          </div>
+          <div class="crs-card">
+            <div class="crs-img crs-ph"><span>ET</span></div>
+            <div class="crs-body">
+              <h3 class="crs-name">Ethics &amp; Practice</h3>
+              <div class="crs-prog">
+                <div class="crs-track"><div class="crs-fill" style="width:80%"></div></div>
+                <span class="crs-pct">80%</span>
+              </div>
+              <a href="#" class="crs-btn">Access</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divlbl">Nav — keyboard focus on Next (focus ring) <span class="idb">OVW-CRS-NAV</span></div>
+    <div style="padding:6px 20px 2px">
+      <span class="crs-ctrls" style="position:static;display:inline-flex">
+        <button type="button" class="crs-nav" aria-label="Previous"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button type="button" class="crs-nav kbd" aria-label="Next"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+      </span>
+    </div>
+    <div class="note">Placeholder gradient + focus ring follow <code>--primary</code> (<code>#0f6cbf → #0a5aa0</code>); progress fill unifies to BS5 <code>#198754</code>; platter greys to <code>#e9ecef</code>; badge text to <code>#6c757d</code>. Control pill, shadow and the inherited check colour are unchanged.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Plan detail · Linked courses</h3>
+  <div class="leg">
+    <span class="k">OVW-CRS</span><span class="v"><b>Linked-course cards</b> — a horizontal scroller of <code>.local-dimensions-course-card-lg</code>. Each card: a 128px image (first valid <code>get_course_overviewfiles()</code> file) <b>or</b>, when absent, a gradient placeholder with <code>getInitials(name)</code> (first+last word initials, or first two chars if one word); a 3-line-clamped course name (<code>fullname || shortname</code>); an 8px progress track with a <code>width: {progress}%</code> fill; the <code>{progress}%</code> label; and a full-width Access button (core Boost <code>btn btn-secondary</code>) linking to <code>/course/view.php?id={id}</code>. Section title = <code>linked_courses</code> ("Linked courses") + a count badge (<code>courses.length</code>). <b>Data source:</b> the plugin WS <code>local_dimensions_get_competency_courses</code> runs its <b>own</b> SQL — <code>SELECT DISTINCT c.id,… FROM {competency_coursecomp} cc JOIN {course} c ON c.id=cc.courseid WHERE cc.competencyid=:id AND c.visible=1 ORDER BY c.fullname</code> — <b>not</b> <code>tool_lp_list_courses_using_competency</code> (its docblock still says "wraps" that, but <code>execute()</code> queries directly), then applies the enrolment-filter cascade (competency → plan template → global) via <code>calculator::filter_courses_by_enrollment</code>. <span class="rule">accordion.js renderCourseCardsScrollable:1619; get_competency_courses.php:83-103; styles.css:1488-1672 · MIGRATES: placeholder gradient <code>#667eea→#764ba2</code> (--lk-accent/--lk-accent-grad-end), progress fill <code>#28a745</code> (--lk-success), badge text <code>#5f6368</code> (--lk-pill-text), section platter <code>#f1f3f4</code> (--lk-pill-platter)</span></span>
+    <span class="k">OVW-CRS-NAV</span><span class="v"><b>Scroll control group + 100% check.</b> A bottom-right pill (<code>role="group"</code>) of two arrow buttons — Prev (<code>evidence_slider_prev</code> = "Previous") and Next (<code>evidence_slider_next</code> = "Next"), each an <code>aria-label</code>ed icon button. Both are markup-rendered always but <code>initScrollableTrack</code> shows them only when <code>shouldShowScrollableControls(itemCount)</code> is true — <code>itemCount &gt; 2</code> (or mobile); ≤2 courses render <code>.local-dimensions-courses-no-scroll</code> (wrap, controls hidden). <code>updateScrollableArrows</code> toggles <code>.disabled</code> (opacity .45, <code>#8da1b6</code>, pointer-events none) when a track edge is reached — Prev starts disabled at scroll 0. Prev/Next scroll by one card (<code>scrollToTrackAdjacentCard</code>); the track is also drag-scrollable. The green <code>fa-check-circle</code> appears when <code>progress &gt;= 100</code>; note its emitted class <code>.local-dimensions-course-check</code> has no CSS rule (the styled <code>.local-dimensions-course-progress-check</code> <code>#198754</code> at styles.css:1250 is a different tracker class), so it inherits body colour. Focus ring on a nav button = <code>outline:2px solid var(--dimension-custombgcolor, var(--primary, #667eea))</code> → <b>--lk-accent (migrates)</b>. <span class="rule">accordion.js renderCourseCardsScrollable:1664-1689, initCourseScroll:1702 → initScrollableTrack:1436 (shouldShowScrollableControls:1208, updateScrollableArrows:1399); styles.css:2439-2489</span></span>
+  </div>
+</div>
+</div>

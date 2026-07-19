@@ -1,0 +1,374 @@
+<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Tracker — grid & timeline" subtitle="view-competency.php — course grid + progress timeline (done/ring/circle/info/section) · as-is │ to-be" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+
+/* ============================================================================
+   Screen-specific — Tracker grid + progress timeline (view-competency.php).
+   Faithful to styles.css: .card / .card-header (693-709), progress container
+   (711-719), timeline (851-903), icons (911-951), progress ring (954-1006),
+   content (1026-1045). Prefix tg- to avoid clashing with the scaffold.
+   ============================================================================ */
+/* Compact hero+chips reference strip — the real UI is on hero.html / chips.html */
+.tg-ref{margin:6px 20px 2px;border:1px dashed #cfcdc4;border-radius:10px;overflow:hidden;opacity:.9;}
+.tg-ref-hero{background:#0f6cbf;color:#fff;padding:10px 14px;font-weight:700;font-size:.95rem;}
+.tg-ref-hero small{display:block;font-weight:400;font-size:.7rem;opacity:.85;}
+.tg-ref-chips{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 14px;background:var(--lk-surface);}
+.tg-ref-pill{height:22px;padding:0 12px;display:inline-flex;align-items:center;background:var(--lk-pill-platter);color:var(--lk-pill-text);border-radius:999px;font-size:.72rem;font-weight:500;}
+.tg-ref-pill.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+.tg-ref-see{margin-left:auto;font-size:.68rem;color:var(--lk-muted);}
+
+/* Grid — .row mt-4 (course_grid.mustache:42) */
+.tg-grid{display:flex;flex-wrap:wrap;padding:1rem 14px 0;}
+.tg-col{width:33.333%;padding:0 6px 1.5rem;}
+@media(max-width:560px){.tg-col{width:100%;}}
+
+/* Card — .card h-100 shadow-sm (course_card.mustache:44) */
+.tg-card{background:var(--lk-card-bg);border:1px solid rgba(0,0,0,.06);border-radius:.375rem;height:100%;box-shadow:0 .125rem .25rem rgba(0,0,0,.075);overflow:hidden;position:relative;}
+.tg-head{background:var(--lk-card-bg);border:0;padding:.75rem 1.25rem;margin:0;}
+.tg-head a{font-size:20px;color:var(--lk-card-title);text-decoration:none;font-weight:700;}
+.tg-head .muted{font-size:20px;color:var(--lk-muted);font-weight:700;}
+.tg-prog{position:relative;min-height:100px;padding:30px 30px 30px 10px;}
+
+/* Timeline (styles.css:851-903) */
+.tg-tl{position:relative;padding-left:10px;}
+.tg-item{position:relative;padding-left:40px;padding-bottom:20px;display:flex;align-items:center;}
+.tg-item::before{content:'';position:absolute;left:11px;top:24px;bottom:-4px;width:2px;background:var(--lk-line);}
+.tg-item:last-child::before{display:none;}
+.tg-item.completed::before{background:var(--lk-success);}
+.tg-mark{position:absolute;left:0;top:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;z-index:1;background:var(--lk-card-bg);}
+.tg-mark svg.tg-icon{display:block;width:24px;height:24px;}
+
+/* Progress ring (styles.css:954-1006) — bg #e9ecef, fill success, % on hover/focus */
+.tg-ring{position:relative;width:32px;height:32px;margin:-4px;display:flex;align-items:center;justify-content:center;}
+.tg-ring svg{transform:rotate(-90deg);display:block;}
+.tg-ring .tg-bg{fill:transparent;stroke:var(--lk-line);stroke-width:3;}
+.tg-ring .tg-fg{fill:transparent;stroke:var(--lk-success);stroke-width:3;stroke-linecap:round;}
+/* % text is #198754 in source (line 996) already — kept literal so the as-is panel
+   shows the pre-existing BS4/BS5 mix that --lk-success unifies. */
+.tg-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;font-weight:700;color:#198754;opacity:0;transition:opacity .25s ease;pointer-events:none;}
+.tg-ring:hover .tg-pct,.tg-ring:focus-within .tg-pct{opacity:1;}
+
+/* Content (styles.css:1026-1045) */
+.tg-content{font-size:1rem;line-height:1.5;}
+.tg-content a{color:#333;text-decoration:none;font-weight:500;}
+.tg-content a:hover{color:#0056b3;text-decoration:underline;}
+.tg-content .muted{color:var(--lk-muted);}
+
+/* Completion-disabled branch (progress_card_body.mustache:102-106) */
+.tg-disabled{padding:.75rem;color:var(--lk-muted);text-align:center;font-size:.85rem;}
+
+/* Loading placeholder (course_card.mustache:54-57) — initial state before AJAX */
+.tg-load{padding:1rem;text-align:center;color:var(--lk-muted);font-size:.8rem;}
+.tg-spin{display:inline-block;width:22px;height:22px;border:3px solid var(--lk-line);border-top-color:var(--lk-accent);border-radius:50%;}
+
+/* Locked head reference (full overlay lives on the locked-card screen) */
+.tg-lock-body{min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;background:rgb(255 255 255 / 65%);}
+.tg-lock-ic{width:56px;height:56px;border:1px solid #b0b2b5;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;color:#343a40;}
+.tg-lock-msg{font-weight:700;font-size:.95rem;color:#333;}
+.tg-badge-note{font-size:10px;color:#8a8980;padding:2px 20px 0;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+
+    <div class="lk-cap">Hero + chips — reference only</div>
+    <div class="tg-ref">
+      <div class="tg-ref-hero">Written Communication<small>hero title · description · custom bg — full render on hero.html</small></div>
+      <div class="tg-ref-chips">
+        <span class="tg-ref-pill">2024</span><span class="tg-ref-pill on">2025</span>
+        <span class="tg-ref-pill on">Core</span><span class="tg-ref-pill">Elective</span>
+        <span class="tg-ref-see">see hero.html / chips.html</span>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">TRK-HERO · see hero.html</span>
+      <span class="idb">TRK-CHIP · see chips.html</span>
+    </div>
+
+    <div class="lk-cap">Course grid · <span class="idb">TRK-GRID</span> <span class="idb">aria-live=polite</span></div>
+    <div class="tg-grid" id="local-dimensions-viewcompetency-grid" role="region"
+         aria-label="View courses" aria-live="polite" aria-relevant="additions text">
+
+      <!-- Card A: unlocked, completion enabled — full timeline -->
+      <div class="tg-col local-dimensions-course-card-wrapper"
+           data-courseid="42"
+           data-filtervalues='{"year":["2025"],"course:dept":["eng"]}'
+           data-completed="0">
+        <div class="tg-card">
+          <h3 class="tg-head"><a href="#" aria-label="View course: Technical Writing I">Technical Writing I</a></h3>
+          <div class="tg-prog local-dimensions-progress-container" data-courseid="42">
+            <div class="tg-tl">
+              <!-- done -->
+              <div class="tg-item completed">
+                <span class="tg-mark">
+                  <svg class="tg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--lk-success)"/><path d="M7 12.5l3 3 6.5-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="tg-content"><a href="#" aria-label="View section: Fundamentals of writing">Fundamentals of writing</a></span>
+              </div>
+              <!-- ring / in progress -->
+              <div class="tg-item started">
+                <span class="tg-mark">
+                  <span class="tg-ring" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="Section progress: 60%">
+                    <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><circle class="tg-bg" cx="16" cy="16" r="12"/><circle class="tg-fg" cx="16" cy="16" r="12" style="stroke-dasharray:45.24 75.4;stroke-dashoffset:0;"/></svg>
+                    <span class="tg-pct" aria-hidden="true">60</span>
+                  </span>
+                </span>
+                <span class="tg-content"><a href="#" aria-label="View section: Cohesion and coherence">Cohesion and coherence</a></span>
+              </div>
+              <!-- has activities, not started -->
+              <div class="tg-item">
+                <span class="tg-mark">
+                  <svg class="tg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg>
+                </span>
+                <span class="tg-content"><a href="#" aria-label="View section: Text genres">Text genres</a></span>
+              </div>
+              <!-- no completion tracking -->
+              <div class="tg-item">
+                <span class="tg-mark">
+                  <svg class="tg-icon" viewBox="0 0 24 24" aria-hidden="true" title="No completion tracking" style="opacity:.8"><circle cx="12" cy="12" r="10" fill="none" stroke="#adb5bd" stroke-width="2"/><line x1="12" y1="11" x2="12" y2="16" stroke="#adb5bd" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="8" r="1.2" fill="#adb5bd"/></svg>
+                </span>
+                <span class="tg-content"><span class="muted">Final project</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card B: unlocked, completion tracking disabled -->
+      <div class="tg-col local-dimensions-course-card-wrapper"
+           data-courseid="57"
+           data-filtervalues='{"year":["2025"],"course:dept":["eng"]}'
+           data-completed="1">
+        <div class="tg-card">
+          <h3 class="tg-head"><a href="#" aria-label="View course: Business Communication">Business Communication</a></h3>
+          <div class="tg-prog local-dimensions-progress-container" data-courseid="57">
+            <div class="tg-disabled">Completion disabled.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card C: locked — muted-span head (overlay detailed on the locked-card screen) -->
+      <div class="tg-col local-dimensions-course-card-wrapper"
+           data-courseid="63"
+           data-filtervalues='{"year":["2025"],"course:dept":["law"]}'
+           data-completed="0">
+        <div class="tg-card local-dimensions-card-locked">
+          <h3 class="tg-head"><span class="muted">Advanced Public Speaking</span></h3>
+          <div class="tg-prog local-dimensions-progress-container" data-courseid="63">
+            <div class="tg-lock-body">
+              <span class="tg-lock-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#343a40" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+              <span class="tg-lock-msg">Locked content</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="lk-ids">
+      <span class="idb">TRK-CARD · col-md-6 col-lg-4</span>
+      <span class="idb">TRK-CARD-HEAD · link / muted span</span>
+      <span class="idb">TRK-CARD-A11Y · aria-label</span>
+      <span class="idb">TRK-CARD-PROG · AJAX container</span>
+    </div>
+    <div class="tg-badge-note">Container ships a spinner (loading progress...); <code>get_course_progress</code> replaces it with the timeline. Locked overlay detail → locked-card screen <span class="idb r">TRK-LOCK · elsewhere</span></div>
+
+    <div class="divlbl">Progress timeline — marker states (priority: locked &gt; done &gt; ring &gt; circle/info)</div>
+    <div class="lk-ids">
+      <span class="idb">TRK-TL-DONE · check + green connector</span>
+      <span class="idb">TRK-TL-RING · % on hover</span>
+      <span class="idb">TRK-TL-RING-ARIA · role=progressbar</span>
+      <span class="idb">TRK-TL-CIRCLE · has activities</span>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">TRK-TL-INFO · no tracking</span>
+      <span class="idb">TRK-TL-INFO-TIP · title tooltip</span>
+      <span class="idb">TRK-TL-SEC · section link</span>
+      <span class="idb">TRK-TL-SEC-SPAN · plain span, no url</span>
+    </div>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+
+    <div class="lk-cap">Hero + chips — reference only</div>
+    <div class="tg-ref">
+      <div class="tg-ref-hero">Written Communication<small>hero title · description · custom bg — full render on hero.html</small></div>
+      <div class="tg-ref-chips">
+        <span class="tg-ref-pill">2024</span><span class="tg-ref-pill on">2025</span>
+        <span class="tg-ref-pill on">Core</span><span class="tg-ref-pill">Elective</span>
+        <span class="tg-ref-see">see hero.html / chips.html</span>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">TRK-HERO · see hero.html</span>
+      <span class="idb">TRK-CHIP · see chips.html</span>
+    </div>
+
+    <div class="lk-cap">Course grid · <span class="idb">TRK-GRID</span> <span class="idb">aria-live=polite</span></div>
+    <div class="tg-grid" id="local-dimensions-viewcompetency-grid" role="region"
+         aria-label="View courses" aria-live="polite" aria-relevant="additions text">
+
+      <!-- Card A: unlocked, completion enabled — full timeline -->
+      <div class="tg-col local-dimensions-course-card-wrapper"
+           data-courseid="42"
+           data-filtervalues='{"year":["2025"],"course:dept":["eng"]}'
+           data-completed="0">
+        <div class="tg-card">
+          <h3 class="tg-head"><a href="#" aria-label="View course: Technical Writing I">Technical Writing I</a></h3>
+          <div class="tg-prog local-dimensions-progress-container" data-courseid="42">
+            <div class="tg-tl">
+              <!-- done -->
+              <div class="tg-item completed">
+                <span class="tg-mark">
+                  <svg class="tg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--lk-success)"/><path d="M7 12.5l3 3 6.5-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="tg-content"><a href="#" aria-label="View section: Fundamentals of writing">Fundamentals of writing</a></span>
+              </div>
+              <!-- ring / in progress -->
+              <div class="tg-item started">
+                <span class="tg-mark">
+                  <span class="tg-ring" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="Section progress: 60%">
+                    <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><circle class="tg-bg" cx="16" cy="16" r="12"/><circle class="tg-fg" cx="16" cy="16" r="12" style="stroke-dasharray:45.24 75.4;stroke-dashoffset:0;"/></svg>
+                    <span class="tg-pct" aria-hidden="true">60</span>
+                  </span>
+                </span>
+                <span class="tg-content"><a href="#" aria-label="View section: Cohesion and coherence">Cohesion and coherence</a></span>
+              </div>
+              <!-- has activities, not started -->
+              <div class="tg-item">
+                <span class="tg-mark">
+                  <svg class="tg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--lk-line-2)" stroke-width="2"/></svg>
+                </span>
+                <span class="tg-content"><a href="#" aria-label="View section: Text genres">Text genres</a></span>
+              </div>
+              <!-- no completion tracking -->
+              <div class="tg-item">
+                <span class="tg-mark">
+                  <svg class="tg-icon" viewBox="0 0 24 24" aria-hidden="true" title="No completion tracking" style="opacity:.8"><circle cx="12" cy="12" r="10" fill="none" stroke="#adb5bd" stroke-width="2"/><line x1="12" y1="11" x2="12" y2="16" stroke="#adb5bd" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="8" r="1.2" fill="#adb5bd"/></svg>
+                </span>
+                <span class="tg-content"><span class="muted">Final project</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card B: unlocked, completion tracking disabled -->
+      <div class="tg-col local-dimensions-course-card-wrapper"
+           data-courseid="57"
+           data-filtervalues='{"year":["2025"],"course:dept":["eng"]}'
+           data-completed="1">
+        <div class="tg-card">
+          <h3 class="tg-head"><a href="#" aria-label="View course: Business Communication">Business Communication</a></h3>
+          <div class="tg-prog local-dimensions-progress-container" data-courseid="57">
+            <div class="tg-disabled">Completion disabled.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card C: locked — muted-span head (overlay detailed on the locked-card screen) -->
+      <div class="tg-col local-dimensions-course-card-wrapper"
+           data-courseid="63"
+           data-filtervalues='{"year":["2025"],"course:dept":["law"]}'
+           data-completed="0">
+        <div class="tg-card local-dimensions-card-locked">
+          <h3 class="tg-head"><span class="muted">Advanced Public Speaking</span></h3>
+          <div class="tg-prog local-dimensions-progress-container" data-courseid="63">
+            <div class="tg-lock-body">
+              <span class="tg-lock-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#343a40" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+              <span class="tg-lock-msg">Locked content</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="lk-ids">
+      <span class="idb">card + header bg → grey-100 (#f8f9fa)</span>
+      <span class="idb">card title → body (#212529)</span>
+    </div>
+    <div class="tg-badge-note">Same markup; only <code>--lk-card-bg</code> / <code>--lk-card-title</code> / <code>--lk-success</code> differ.</div>
+
+    <div class="divlbl">Progress timeline — marker states (priority: locked &gt; done &gt; ring &gt; circle/info)</div>
+    <div class="lk-ids">
+      <span class="idb">check + connector → BS5 green (#198754)</span>
+      <span class="idb">ring fill → #198754</span>
+      <span class="idb">% text already #198754 (unchanged)</span>
+    </div>
+    <div class="note">Connector, check fill and ring stroke unify BS4 <code>#28a745</code> → BS5 <code>#198754</code>, matching the % text that was already #198754.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Tracker grid &amp; timeline (view-competency.php)</h3>
+  <div class="leg">
+    <span class="k">TRK-GRID</span><span class="v"><b>Course grid</b> — <code>.row mt-4</code>, <code>role=region</code> + <code>aria-live=polite</code> + <code>aria-relevant="additions text"</code> so AJAX-injected cards are announced <span class="rule">course_grid.mustache:41-46</span></span>
+    <span class="k">TRK-CARD</span><span class="v"><b>Card wrapper</b> — <code>col-md-6 col-lg-4 ... local-dimensions-course-card-wrapper</code>; carries <code>data-courseid</code>, <code>data-filtervalues</code> (json); JS stamps <code>data-completed</code> 1/0 after the batch status call <span class="rule">course_card.mustache:41-43 · competency_view.js:281</span></span>
+    <span class="k">TRK-CARD-HEAD</span><span class="v"><b>Card header</b> — <code>&lt;h3 class="card-header"&gt;</code>: a <code>&lt;a href=courseurl&gt;</code> when open, a <code>&lt;span class="text-muted"&gt;</code> when locked <span class="rule">course_card.mustache:45-52</span></span>
+    <span class="k">TRK-CARD-A11Y</span><span class="v">Header link <code>aria-label</code> — <code>view_course</code> = "View course: {fullname}" <span class="rule">course_card.mustache:50 · lang:577</span></span>
+    <span class="k">TRK-CARD-PROG</span><span class="v"><b>Progress container</b> — <code>.local-dimensions-progress-container[data-courseid]</code>; ships a spinner (<code>loading_progress</code>), replaced by <code>local_dimensions_get_course_progress</code> → <code>progress_card_body</code>; not-completed/not-locked cards load first <span class="rule">course_card.mustache:53-58 · competency_view.js:123-154,291-293</span></span>
+    <span class="k">TRK-TL-DONE</span><span class="v"><b>Completed section</b> — <code>is_completed</code> adds <code>.completed</code>: filled check icon + <b>green connector</b> below it (<code>--lk-success</code>) <span class="rule">progress_card_body.mustache:119-121 · styles.css:887-888,919-921</span></span>
+    <span class="k">TRK-TL-RING</span><span class="v"><b>In-progress ring</b> — <code>is_started</code> &amp; not completed; SVG ring, <code>stroke-dasharray = percentage&times;0.754</code> of 75.4; % text fades in on hover/focus <span class="rule">progress_card_body.mustache:124-134 · competency_view.js:127 · styles.css:980-1006</span></span>
+    <span class="k">TRK-TL-RING-ARIA</span><span class="v">Ring container is <code>role=progressbar</code> with <code>aria-valuenow=percentage</code> (0–100) + <code>aria-label</code> "Section progress: {n}%" <span class="rule">progress_card_body.mustache:125 · lang:40</span></span>
+    <span class="k">TRK-TL-CIRCLE</span><span class="v"><b>Has activities, not started</b> — grey outline circle (<code>circle-outline</code>, stroke <code>--lk-line-2</code>) <span class="rule">progress_card_body.mustache:138-140 · styles.css:935-937</span></span>
+    <span class="k">TRK-TL-INFO</span><span class="v"><b>No completion tracking</b> — info-circle icon (stroke #adb5bd, opacity .8) when a section has no trackable activities <span class="rule">progress_card_body.mustache:141-143 · styles.css:939-942</span></span>
+    <span class="k">TRK-TL-INFO-TIP</span><span class="v">Info icon carries <code>title</code> = <code>no_completion_tracking</code> "No completion tracking" (hover tooltip) <span class="rule">progress_card_body.mustache:142 · lang:474</span></span>
+    <span class="k">TRK-TL-SEC</span><span class="v"><b>Section link</b> — <code>&lt;a href=url&gt;</code> with <code>aria-label</code> <code>view_section</code> "View section: {name}" when the section has a URL <span class="rule">progress_card_body.mustache:160-162 · lang:579</span></span>
+    <span class="k">TRK-TL-SEC-SPAN</span><span class="v">Plain <code>&lt;span&gt;</code> (no link) when the section has no URL <span class="rule">progress_card_body.mustache:163-165</span></span>
+    <span class="k" style="color:#8a8980">disabled</span><span class="v">Completion-tracking-off card renders "<code>completion_disabled</code>" text instead of the timeline <span class="rule">progress_card_body.mustache:102-106 · lang:303</span></span>
+    <span class="k" style="color:#8a8980">TRK-LOCK</span><span class="v">Locked overlay (icon, learn-more / message, availability date, dashed border) — <b>detailed on the locked-card screen</b>; here only the muted head is shown <span class="rule">progress_card_body.mustache:70-100 · competency_view.js:314-366</span></span>
+  </div>
+</div>
+</div>

@@ -1,0 +1,192 @@
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Status tab" subtitle="accordion.js — tab strip + 2-col status grid · as-is │ to-be" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+
+/* ---- summary tab strip (accordion.js renderSummaryTabNavigation ~384) ---- */
+/* Underline nav: border-bottom rail + per-tab accent underline on the active tab.
+   Real classes: .local-dimensions-tabs-nav / .local-dimensions-tab-btn (styles.css 2123-2164). */
+.tabnav{display:flex;border-bottom:1px solid var(--lk-line);padding:0 1rem;margin:10px 12px 0;min-width:0;}
+.tab{display:inline-flex;align-items:center;gap:.375rem;padding:.625rem 1rem;border:none;background:transparent;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:.8125rem;font-weight:500;color:var(--lk-muted);cursor:pointer;white-space:nowrap;line-height:1.2;}
+.tab.on{color:var(--lk-text);border-bottom-color:var(--lk-accent);font-weight:600;}
+/* :focus outline 2px solid #005fcc offset -2px (styles.css 2154) → --lk-focus-ring */
+.tab.kbd{outline:2px solid var(--lk-focus-ring);outline-offset:-2px;}
+
+/* ---- status grid (accordion.js renderStatusSection ~2028) ---- */
+.scap{font-size:11px;color:#8a8980;padding:10px 20px 0;}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:6px 20px 4px;}
+.scell{border-radius:.5rem;padding:1rem;text-align:center;border:1px solid #f1f3f5;}
+/* Cell tint driven by ancestor .completed / .rated (view_plan_summary.mustache:115).
+   These are already-Moodle status greens/ambers — unchanged in both panels. */
+.scell.ok{background:#d4edda61;border-color:#d4edda;}
+.scell.warn{background:rgb(255 238 186 / 20%);border-color:#ffeeba;}
+.slabel{font-size:.75rem;color:var(--lk-muted);margin:0 0 .5rem;}
+.sbadge{display:inline-flex;align-items:center;gap:.25rem;padding:.25rem .75rem;border-radius:999px;font-size:.8125rem;font-weight:600;background:var(--lk-success);color:#fff;}
+.sbadge.muted{background:var(--lk-pill-platter);color:var(--lk-muted);}
+.sval{display:flex;align-items:center;justify-content:center;gap:.375rem;font-weight:600;font-size:.9375rem;}
+.sval.ok{color:var(--lk-success);}
+.sval.pending{color:var(--lk-amber-rated);}
+.smuted{font-size:1rem;font-weight:600;color:var(--lk-muted);}
+
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+
+    <div class="lk-cap">Competency detail — summary tab strip (Status active) · <span class="idb">OVW-TAB-NAV</span></div>
+    <div class="tabnav" role="tablist" aria-label="Competency summary">
+      <button type="button" class="tab on" role="tab" aria-selected="true" tabindex="0" id="ldx-tab-status-42" aria-controls="ldx-pane-status-42" data-tab="status">Assessment</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="description">Description</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="evidence">Evidence</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="rules">Rules</button>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">Status tab label = "Assessment" (assessment_status)</span>
+      <span class="idb">tabs gated by data + settings</span>
+      <span class="idb">text-only — icon field unused in nav</span>
+    </div>
+
+    <div class="scap">Keyboard: roving tabindex + Arrow / Home / End — focus &amp; underline move together · <span class="idb">OVW-TAB-KBD</span></div>
+    <div class="tabnav" role="tablist" aria-label="After ArrowRight ×2">
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Assessment</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Description</button>
+      <button type="button" class="tab on kbd" role="tab" aria-selected="true" tabindex="0">Evidence</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Rules</button>
+    </div>
+
+    <div class="divlbl">Status pane — 2-column grid: Rating · Proficiency <span class="idb">OVW-STATUS</span></div>
+    <div class="scap">Proficient — parent item.completed (isproficient)</div>
+    <div class="sgrid">
+      <div class="scell ok">
+        <p class="slabel">Rating</p>
+        <span class="sbadge"><svg class="ic" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Competent</span>
+      </div>
+      <div class="scell ok">
+        <p class="slabel">Proficiency</p>
+        <div class="sval ok"><svg class="ic" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Yes</div>
+      </div>
+    </div>
+    <div class="scap">Rated, not proficient — parent item.rated (hasrating &amp; not isproficient)</div>
+    <div class="sgrid">
+      <div class="scell warn">
+        <p class="slabel">Rating</p>
+        <span class="sbadge muted">Not competent</span>
+      </div>
+      <div class="scell warn">
+        <p class="slabel">Proficiency</p>
+        <div class="sval pending">No</div>
+      </div>
+    </div>
+    <div class="note">No grade yet → Rating shows <span class="smuted" style="font-size:12px">-</span>; with no rating and not proficient the parent gets neither class, so cells stay untinted. Grid collapses to one column below 576px.</div>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+
+    <div class="lk-cap">Competency detail — summary tab strip (Status active) · <span class="idb">OVW-TAB-NAV</span></div>
+    <div class="tabnav" role="tablist" aria-label="Competency summary">
+      <button type="button" class="tab on" role="tab" aria-selected="true" tabindex="0" id="ldx-tab-status-42" aria-controls="ldx-pane-status-42" data-tab="status">Assessment</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="description">Description</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="evidence">Evidence</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="rules">Rules</button>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">active underline → primary</span>
+      <span class="idb">focus ring → primary</span>
+    </div>
+
+    <div class="scap">Keyboard: roving tabindex + Arrow / Home / End — focus &amp; underline move together · <span class="idb">OVW-TAB-KBD</span></div>
+    <div class="tabnav" role="tablist" aria-label="After ArrowRight ×2">
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Assessment</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Description</button>
+      <button type="button" class="tab on kbd" role="tab" aria-selected="true" tabindex="0">Evidence</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Rules</button>
+    </div>
+
+    <div class="divlbl">Status pane — 2-column grid: Rating · Proficiency <span class="idb">OVW-STATUS</span></div>
+    <div class="scap">Proficient — parent item.completed (isproficient)</div>
+    <div class="sgrid">
+      <div class="scell ok">
+        <p class="slabel">Rating</p>
+        <span class="sbadge"><svg class="ic" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Competent</span>
+      </div>
+      <div class="scell ok">
+        <p class="slabel">Proficiency</p>
+        <div class="sval ok"><svg class="ic" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Yes</div>
+      </div>
+    </div>
+    <div class="scap">Rated, not proficient — parent item.rated (hasrating &amp; not isproficient)</div>
+    <div class="sgrid">
+      <div class="scell warn">
+        <p class="slabel">Rating</p>
+        <span class="sbadge muted">Not competent</span>
+      </div>
+      <div class="scell warn">
+        <p class="slabel">Proficiency</p>
+        <div class="sval pending">No</div>
+      </div>
+    </div>
+    <div class="note">Underline + focus ring follow <code>--primary</code>; success green unifies BS4 <code>#28a745</code> → BS5 <code>#198754</code>; muted badge greys to <code>#e9ecef</code>. Pending amber and the green/amber cell tints are unchanged.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Plan detail · Status tab</h3>
+  <div class="leg">
+    <span class="k">OVW-TAB-NAV</span><span class="v"><b>Summary tab strip</b> — <code>role="tablist"</code> of text-only buttons built by <code>buildSummaryTabs</code>: Status (<code>hasStatus</code>), Description (<code>hasDesc || hasTaxonomyCard || hasPath || hasRelated</code>), Evidence (<code>hasEvidence</code>), Rules (<code>hasRules</code>); tab[0] renders <code>active</code>. Status tab's visible label is <code>assessment_status</code> = "Assessment"; the <code>icon</code> field is set but never emitted by the nav. Active underline = <code>border-bottom-color: var(--dimension-custombgcolor, var(--primary, #667eea))</code> → <b>--lk-accent (migrates)</b>. <span class="rule">accordion.js buildSummaryTabs:335 / renderSummaryTabNavigation:384; styles.css:2123-2164</span></span>
+    <span class="k">OVW-TAB-KBD</span><span class="v"><b>Roving tabindex + arrow keys</b> — active tab <code>tabindex="0"</code>, others <code>-1</code>, mirrored by <code>aria-selected</code>. <code>keydown</code>: ArrowRight/ArrowDown → next (wraps), ArrowLeft/ArrowUp → prev (wraps), Home → first, End → last; each calls <code>activateTab(tab, true)</code> so focus + underline move together. Focus ring = <code>outline:2px solid #005fcc</code> → <b>--lk-focus-ring (migrates to primary)</b>. <span class="rule">accordion.js renderSummaryTabNavigation:394 + attachTabListeners keydown:611-634; styles.css:2154-2157</span></span>
+    <span class="k">OVW-STATUS</span><span class="v"><b>2-column status grid</b> (<code>renderStatusSection</code>): left Rating cell, right Proficiency cell; collapses to one column below 576px. <b>Rating</b> — <code>grade &amp;&amp; gradename</code>: proficient → green badge + check (bg <code>#28a745</code> → <b>--lk-success</b>), else muted badge (bg <code>#f1f3f4</code> → <b>--lk-pill-platter</b>); no grade → "-" (<code>.status-value-muted</code>). <b>Proficiency</b> — <code>Number.parseInt(proficiency,10)===1</code>: "Yes" + check in <code>.status-success</code> (<code>#28a745</code> → <b>--lk-success</b>), else "No" in <code>.status-pending</code> (<code>#e5a100</code>, <b>--lk-amber-rated</b>, unchanged). Cell tint comes from the ancestor accordion item: <code>.completed</code> (<code>isproficient</code>, green <code>#d4edda</code>) / <code>.rated</code> (<code>hasrating &amp; !isproficient</code>, amber <code>#ffeeba</code>). <span class="rule">accordion.js renderStatusSection:2028-2078; view_plan_summary.mustache:115; styles.css:1677-1743</span></span>
+  </div>
+</div>
+</div>

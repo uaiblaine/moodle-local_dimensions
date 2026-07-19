@@ -1,0 +1,190 @@
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Accordion load states" subtitle="view_plan_summary / accordion.js — per-item loading spinner and load error · as-is │ to-be" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+
+/* ---- accordion item + load states (view_plan_summary.mustache 114-186 / accordion.js) ---- */
+.acc{padding:2px 20px 0;}
+.acc-item{background:var(--lk-surface);border:1px solid var(--lk-line-2);border-left:4px solid var(--lk-line-2);border-radius:.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);overflow:hidden;}
+.acc-toggle{width:100%;display:flex;align-items:center;gap:.75rem;padding:1rem 1.125rem;background:var(--lk-surface);border:none;text-align:left;cursor:default;}
+/* Boost focus ring: outline 3px, offset -3px. Follows --lk-focus-ring (migrates in .moodle). */
+.acc-toggle.focus{outline:3px solid var(--lk-focus-ring);outline-offset:-3px;}
+.acc-hc{flex-grow:1;display:flex;flex-direction:column;gap:.25rem;min-width:0;}
+.acc-title{font-weight:600;font-size:1rem;color:var(--lk-text);line-height:1.3;}
+.acc-chev{flex-shrink:0;color:var(--lk-muted);transform:rotate(180deg);}
+.acc-content{background:var(--lk-surface);border-top:1px solid var(--lk-line);}
+.acc-body{padding:0;position:relative;}
+/* Loading placeholder — .text-center.py-3 with a Bootstrap spinner-border-sm.text-primary */
+.sum-loading{text-align:center;padding:1rem 0;}
+.spin{display:inline-block;width:1rem;height:1rem;vertical-align:-.125em;border:.2em solid var(--lk-pill-active-fg);border-right-color:transparent;border-radius:50%;animation:lk-spin .75s linear infinite;}
+.sum-loading .lbl{margin-left:.5rem;color:var(--lk-text);font-size:.95rem;}
+.sum-content{display:none;}
+/* Error — core .alert.alert-danger (unchanged by the plugin migration; identical both panels) */
+.sum-error{margin:.9rem 1.125rem;padding:.75rem 1.25rem;border:1px solid #f5c6cb;border-radius:.375rem;background:#f8d7da;color:#842029;font-size:.9rem;}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+@keyframes lk-spin{to{transform:rotate(360deg);}}
+
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+
+    <div class="lk-cap">Expanded item — loading (default before fetch) · <span class="idb">OVW-ACC-LOADING</span></div>
+    <div class="acc">
+      <div class="acc-item" role="listitem" data-competency-id="41">
+        <button class="acc-toggle focus" type="button" aria-expanded="true" aria-controls="competency-content-41" id="competency-header-41">
+          <span class="acc-hc"><span class="acc-title">Teamwork</span></span>
+          <svg class="ic acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="acc-content" id="competency-content-41" aria-labelledby="competency-header-41">
+          <div class="acc-body">
+            <div class="sum-loading">
+              <span class="spin" role="status"><span class="sr">Loading...</span></span>
+              <span class="lbl">Loading...</span>
+            </div>
+            <div class="sum-content"></div>
+            <div class="sum-error" role="alert" style="display:none">Error loading competency summary.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">OVW-ACC · accordion item (open)</span>
+      <span class="idb">spinner-border-sm · text-primary</span>
+      <span class="idb">focus ring on the just-activated header</span>
+    </div>
+
+    <div class="divlbl">Expanded item — load error (WS rejected) <span class="idb">OVW-ACC-ERROR</span></div>
+    <div class="acc">
+      <div class="acc-item" role="listitem" data-competency-id="42">
+        <button class="acc-toggle" type="button" aria-expanded="true" aria-controls="competency-content-42" id="competency-header-42">
+          <span class="acc-hc"><span class="acc-title">Analytical thinking</span></span>
+          <svg class="ic acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="acc-content" id="competency-content-42" aria-labelledby="competency-header-42">
+          <div class="acc-body">
+            <div class="sum-loading" style="display:none">
+              <span class="spin" role="status"><span class="sr">Loading...</span></span>
+              <span class="lbl">Loading...</span>
+            </div>
+            <div class="sum-content"></div>
+            <div class="sum-error" role="alert">Error loading competency summary.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note">A third sibling — <code>.local-dimensions-competency-summary-content</code> (hidden until AJAX) — is where the loaded detail lands: tabs, status, courses (<span class="idb">OVW-TAB-NAV</span> <span class="idb">OVW-STATUS</span> <span class="idb">OVW-CRS</span>). Re-expanding a loaded item never refetches (<code>loadedCompetencies</code> Set).</div>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+
+    <div class="lk-cap">Expanded item — loading (default before fetch) · <span class="idb">OVW-ACC-LOADING</span></div>
+    <div class="acc">
+      <div class="acc-item" role="listitem" data-competency-id="41">
+        <button class="acc-toggle focus" type="button" aria-expanded="true" aria-controls="competency-content-41m" id="competency-header-41m">
+          <span class="acc-hc"><span class="acc-title">Teamwork</span></span>
+          <svg class="ic acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="acc-content" id="competency-content-41m" aria-labelledby="competency-header-41m">
+          <div class="acc-body">
+            <div class="sum-loading">
+              <span class="spin" role="status"><span class="sr">Loading...</span></span>
+              <span class="lbl">Loading...</span>
+            </div>
+            <div class="sum-content"></div>
+            <div class="sum-error" role="alert" style="display:none">Error loading competency summary.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">spinner → primary</span>
+      <span class="idb">focus ring → primary</span>
+    </div>
+
+    <div class="divlbl">Expanded item — load error (WS rejected) <span class="idb">OVW-ACC-ERROR</span></div>
+    <div class="acc">
+      <div class="acc-item" role="listitem" data-competency-id="42">
+        <button class="acc-toggle" type="button" aria-expanded="true" aria-controls="competency-content-42m" id="competency-header-42m">
+          <span class="acc-hc"><span class="acc-title">Analytical thinking</span></span>
+          <svg class="ic acc-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="acc-content" id="competency-content-42m" aria-labelledby="competency-header-42m">
+          <div class="acc-body">
+            <div class="sum-loading" style="display:none">
+              <span class="spin" role="status"><span class="sr">Loading...</span></span>
+              <span class="lbl">Loading...</span>
+            </div>
+            <div class="sum-content"></div>
+            <div class="sum-error" role="alert">Error loading competency summary.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note"><code>alert-danger</code> is a core component — the plugin does not restyle it, so the error box is identical in both panels. Only the spinner blue and the header focus ring follow <code>--primary</code>.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Accordion load states (Plan / OVW)</h3>
+  <div class="leg">
+    <span class="k">OVW-ACC</span><span class="v"><b>Accordion item</b> (referenced) — one per competency; body content is lazy-loaded on first expand <span class="rule">view_plan_summary.mustache:114-118</span></span>
+    <span class="k">OVW-ACC-LOADING</span><span class="v"><b>Loading placeholder</b> — <code>.local-dimensions-competency-summary-loading.text-center.py-3</code> with <code>spinner-border spinner-border-sm text-primary</code>; visible text + <code>sr-only</code> both = <code>loading_competency_summary</code> ("Loading..."). Default markup in every expanded body; shown on expand, hidden once both WS promises resolve <span class="rule">mustache:171-176; accordion.js loadCompetencySummary 62-65 (show) / 103-105 (hide on success)</span></span>
+    <span class="k">OVW-ACC-ERROR</span><span class="v"><b>Load-error alert</b> — <code>.local-dimensions-competency-summary-error.alert.alert-danger</code>, text = <code>error_loading_summary</code> ("Error loading competency summary."). Hidden by default; shown in the <code>.catch</code> when either <code>get_user_competency_summary_in_plan</code> or <code>get_competency_courses</code> rejects — loading is hidden, error unhidden, <code>Notification.exception</code> fired <span class="rule">mustache:180-182; accordion.js catch 110-119</span></span>
+    <span class="k">OVW-ACC · content</span><span class="v"><b>Hidden content sink</b> — <code>.local-dimensions-competency-summary-content</code> (display:none) filled by <code>renderCompetencySummary</code> then shown; holds the loaded detail (<span class="rule">OVW-TAB-NAV / OVW-STATUS / OVW-CRS — mustache:178; accordion.js 253-254</span>)</span>
+    <span class="k">focus ring</span><span class="v">Header <code>.local-dimensions-accordion-toggle:focus</code> — <code>outline:3px solid</code> follows <code>--lk-focus-ring</code>; keyboard-activating a collapsed header expands it while focus stays put <span class="rule">styles.css:1123-1126</span></span>
+  </div>
+</div>
+</div>

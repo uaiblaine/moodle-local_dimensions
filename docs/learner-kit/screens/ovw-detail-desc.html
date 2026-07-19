@@ -1,0 +1,229 @@
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Description / Path / Related / Taxonomy" subtitle="accordion.js — description, competency path, related pills, taxonomy card · as-is │ to-be" -->
+<style>
+/* ============================================================================
+   Canonical learner-kit scaffold (shared by every screen file).
+   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
+   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
+   by token values alone. See tokens.html / token-migration.md.
+   ============================================================================ */
+.kit{
+  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
+  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
+  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
+  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
+  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
+  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
+  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
+}
+.kit *{box-sizing:border-box;}
+.panel.moodle{
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+}
+.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
+.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
+.idb.r{border-color:#c9a3a3;color:#a3552d;}
+.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
+.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+
+/* ---- OVW detail: description tab (renderDescriptionPane ~460) ---- */
+/* Grid: main column + taxonomy aside (.local-dimensions-desc-layout-has-taxonomy). */
+.dlayout{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,200px);gap:1.25rem;align-items:start;padding:14px 20px 4px;}
+.dmain{min-width:0;}
+
+/* Description — reusable collapsible wrapper (30vh cap; here a fixed cap to show overflow). */
+.desc{position:relative;margin-bottom:1rem;}
+.desc-body{position:relative;max-height:6.5rem;overflow:hidden;font-size:.9rem;color:var(--lk-text-2);}
+.desc-body p{margin:0 0 .6rem;}
+.desc-fade{position:absolute;left:0;right:0;bottom:0;height:2.6rem;pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,0),var(--lk-surface) 92%);}
+.desc-toggle{display:inline-flex;align-items:center;gap:.35rem;margin-top:.5rem;padding:.25rem 0;border:none;background:none;font-size:.85rem;font-weight:500;color:var(--lk-text);opacity:.85;cursor:pointer;}
+.desc-toggle:hover{opacity:1;text-decoration:underline;}
+.desc-toggle .ic{width:.72rem;height:.72rem;}
+
+/* Path bar (renderCompetencyPath ~1734). */
+.pathbar{display:flex;align-items:center;flex-wrap:wrap;font-size:.8125rem;color:var(--lk-text-2);margin:0 0 1rem;background:var(--lk-surface-2);padding:.5rem .75rem;border-radius:.375rem;border:1px solid var(--lk-line);}
+.path-label{font-weight:600;color:var(--lk-text);margin-right:.5rem;white-space:nowrap;}
+.crumb{display:flex;align-items:center;flex-wrap:wrap;list-style:none;margin:0;padding:0;}
+.crumb li{display:flex;align-items:center;min-width:0;}
+.crumb li:last-child{font-weight:600;color:var(--lk-text);}
+.sep{width:.6rem;height:.6rem;color:#adb5bd;margin:0 .375rem;}
+
+/* Related pills (renderRelatedCompetencies ~1784). */
+.rel{margin-top:.5rem;}
+.rel-h{font-size:.9375rem;font-weight:600;color:var(--lk-text);margin:0 0 .625rem;line-height:1.3;}
+.rel-pills{display:flex;flex-wrap:wrap;gap:.375rem;}
+.pill{display:inline-flex;align-items:center;padding:.25rem .75rem;background:transparent;color:var(--lk-text-2);font-size:.8125rem;font-weight:500;border-radius:999px;border:1px solid var(--lk-line-2);text-decoration:none;cursor:default;}
+.pill.hov{background:var(--lk-pill-platter);}
+.rel-sub{font-size:10px;color:#8a8980;margin:.55rem 0 .3rem;}
+
+/* Taxonomy aside card (renderTaxonomyCard ~1894). Accent = icon only; no per-type colour. */
+.tax{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;min-height:96px;padding:1.4rem 1.2rem;background:var(--lk-surface);border:1px solid #dfe3e8;border-radius:1rem;box-shadow:0 6px 18px rgba(15,23,42,.04);text-align:center;}
+.tax-label{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--lk-taxonomy-label);}
+.tax-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;color:#273240;}
+.tax-icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.tax-term{max-width:12ch;font-size:1rem;font-weight:700;line-height:1.15;color:#273240;}
+
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
+.leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
+.leg .v b{color:var(--lk-text);font-weight:600;}
+.leg .v{color:var(--lk-text-2);}
+.leg .rule{color:#8a8980;}
+</style>
+<div class="kit"><div class="screens">
+
+  <!-- ============ AS-IS ============ -->
+  <div class="panel">
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+    <div class="lk-cap">Description tab · main column + taxonomy aside</div>
+
+    <div class="dlayout">
+      <div class="dmain">
+
+        <!-- OVW-DESC — collapsible description, overflowing (fade + toggle shown) -->
+        <div class="desc">
+          <div class="desc-body">
+            <p>Communicates ideas clearly and concisely in written form, adapting tone and structure to the audience. Produces well-organised reports, summaries and correspondence that are accurate, complete and free of ambiguity.</p>
+            <p>Reviews and edits own work for clarity, grammar and factual accuracy before submission, and incorporates reviewer feedback to strengthen future writing.</p>
+          </div>
+          <div class="desc-fade" aria-hidden="true"></div>
+          <button type="button" class="desc-toggle" aria-expanded="false" data-label-show="See more" data-label-hide="See less">
+            <span>See more</span><svg class="ic" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+
+        <!-- OVW-PATH — framework › parents breadcrumb -->
+        <nav class="pathbar" aria-label="Path">
+          <span class="path-label">Path:</span>
+          <ol class="crumb">
+            <li>LEAD-24</li>
+            <li><svg class="sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>Communication</li>
+            <li><svg class="sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>Written communication</li>
+          </ol>
+        </nav>
+
+        <!-- OVW-REL — related pills -->
+        <section class="rel">
+          <h3 class="rel-h">Related dimensions</h3>
+          <div class="rel-pills">
+            <span class="pill">Active listening</span>
+            <span class="pill hov">Report writing</span>
+            <span class="pill">Public speaking</span>
+          </div>
+          <div class="rel-sub">showrelatedlink → identical pills, but each is an &lt;a target="_blank" rel="noopener"&gt; (no distinct CSS)</div>
+          <div class="rel-pills">
+            <a class="pill" href="view-competency.php?id=42&competencyid=118" target="_blank" rel="noopener">Active listening</a>
+            <a class="pill" href="view-competency.php?id=42&competencyid=119" target="_blank" rel="noopener">Report writing</a>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- OVW-TAX — taxonomy aside card (accent from icon only) -->
+      <aside class="tax" aria-label="Skill">
+        <div class="tax-label">Dimension</div>
+        <div class="tax-icon"><svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 18a6 6 0 100-12 6 6 0 000 12z"/><path d="M12 14a2 2 0 100-4 2 2 0 000 4z"/></svg></div>
+        <div class="tax-term">Skill</div>
+      </aside>
+    </div>
+
+    <div class="lk-ids">
+      <span class="idb">OVW-DESC · showdescription</span>
+      <span class="idb">OVW-DESC-TOGGLE · See more/less</span>
+      <span class="idb">OVW-PATH · showpath</span>
+      <span class="idb">OVW-REL · showrelated (+link)</span>
+      <span class="idb r">OVW-TAX · showtaxonomycard</span>
+    </div>
+    <div class="note">"Report writing" shown hovered → related-pill hover bg (#f1f3f4) migrates via <code>--lk-pill-platter</code>.</div>
+  </div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="panel moodle">
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+    <div class="lk-cap">Description tab · main column + taxonomy aside</div>
+
+    <div class="dlayout">
+      <div class="dmain">
+
+        <div class="desc">
+          <div class="desc-body">
+            <p>Communicates ideas clearly and concisely in written form, adapting tone and structure to the audience. Produces well-organised reports, summaries and correspondence that are accurate, complete and free of ambiguity.</p>
+            <p>Reviews and edits own work for clarity, grammar and factual accuracy before submission, and incorporates reviewer feedback to strengthen future writing.</p>
+          </div>
+          <div class="desc-fade" aria-hidden="true"></div>
+          <button type="button" class="desc-toggle" aria-expanded="false" data-label-show="See more" data-label-hide="See less">
+            <span>See more</span><svg class="ic" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+
+        <nav class="pathbar" aria-label="Path">
+          <span class="path-label">Path:</span>
+          <ol class="crumb">
+            <li>LEAD-24</li>
+            <li><svg class="sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>Communication</li>
+            <li><svg class="sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>Written communication</li>
+          </ol>
+        </nav>
+
+        <section class="rel">
+          <h3 class="rel-h">Related dimensions</h3>
+          <div class="rel-pills">
+            <span class="pill">Active listening</span>
+            <span class="pill hov">Report writing</span>
+            <span class="pill">Public speaking</span>
+          </div>
+          <div class="rel-sub">showrelatedlink → identical pills, but each is an &lt;a target="_blank" rel="noopener"&gt; (no distinct CSS)</div>
+          <div class="rel-pills">
+            <a class="pill" href="view-competency.php?id=42&competencyid=118" target="_blank" rel="noopener">Active listening</a>
+            <a class="pill" href="view-competency.php?id=42&competencyid=119" target="_blank" rel="noopener">Report writing</a>
+          </div>
+        </section>
+
+      </div>
+
+      <aside class="tax" aria-label="Skill">
+        <div class="tax-label">Dimension</div>
+        <div class="tax-icon"><svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 18a6 6 0 100-12 6 6 0 000 12z"/><path d="M12 14a2 2 0 100-4 2 2 0 000 4z"/></svg></div>
+        <div class="tax-term">Skill</div>
+      </aside>
+    </div>
+
+    <div class="lk-ids">
+      <span class="idb">taxonomy eyebrow → primary</span>
+      <span class="idb">pill hover → grey-200</span>
+    </div>
+    <div class="note">Only the taxonomy eyebrow (<code>--lk-taxonomy-label</code>, review) and the related-pill hover (<code>--lk-pill-platter</code>) migrate; path, pills, card frame and icon are neutral/dark and unchanged.</div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <h3>ID legend — Detail: Description tab (view-plan / OVW)</h3>
+  <div class="leg">
+    <span class="k">OVW-DESC</span><span class="v"><b>Competency description</b> — raw <code>comp.description</code> HTML in a <code>.local-dimensions-collapsible</code> (30vh cap); rendered only when <code>showdescription &amp;&amp; comp.description</code> <span class="rule">accordion.js renderDescriptionSection ~2089; guard :300, :470</span></span>
+    <span class="k">OVW-DESC-TOGGLE</span><span class="v"><b>See more / See less</b> — <code>data-label-show</code>/<code>-hide</code> = show_more ("See more") / show_less ("See less"); starts <code>hidden</code>, unhidden by <code>collapsible_description</code> only when content overflows; toggles <code>aria-expanded</code> + <code>.is-expanded</code>, rotates the chevron <span class="rule">accordion.js:2102-2108</span></span>
+    <span class="k">OVW-PATH</span><span class="v"><b>Path breadcrumb</b> — label from competency_path ("Path"); crumbs = <code>framework.shortname</code> then each <code>compparents[].shortname</code>, chevron-separated; the competency itself is NOT in the trail; last crumb bold (<code>li:last-child</code>). Shown when <code>showpath</code> <span class="rule">accordion.js renderCompetencyPath ~1734; guard :302, :473</span></span>
+    <span class="k">OVW-REL</span><span class="v"><b>Related pills</b> — header from related_dimensions; one <code>&lt;span&gt;</code> per <code>relatedcompetencies[].shortname</code>. When <code>showrelatedlink &amp;&amp; viewcompetencyurl &amp;&amp; planId</code> each becomes <code>&lt;a href="view-competency.php?id={planId}&amp;competencyid={related.id}" target="_blank" rel="noopener"&gt;</code> — <code>.local-dimensions-related-pill-link</code> has no CSS rule, so link pills are visually identical (even cursor:default). Shown when <code>showrelated</code> &amp; list non-empty <span class="rule">accordion.js renderRelatedCompetencies ~1784; useLink :1791; guard :304, :476</span></span>
+    <span class="k">OVW-TAX</span><span class="v"><b>Taxonomy aside card</b> — fixed eyebrow "Dimension" (taxonomycard_label), icon by key, big term = <code>taxonomy.current.term</code>. <code>getTaxonomyCardMeta</code> maps <b>12 keys → 11 distinct icons</b> (behavior aliases behaviour → behaviour.svg; no behavior.svg). The <code>…-taxonomy-card-&lt;type&gt;</code> accentClass names it emits have <b>NO matching rule in styles.css</b> → there is no per-type colour accent; the icon is the sole differentiator. Shown when <code>showtaxonomycard &amp;&amp; primaryTaxonomy.term</code> <span class="rule">accordion.js renderTaxonomyCard ~1894, getTaxonomyCardMeta ~1842, getPrimaryTaxonomy ~1823; guard :301, :482</span></span>
+    <span class="k">migrate</span><span class="v"><code>--lk-taxonomy-label</code> #356df3→#0f6cbf (eyebrow, <b>review</b> · styles.css:2257) · <code>--lk-pill-platter</code> #f1f3f4→#e9ecef (related-pill hover · styles.css:2093). Path bar, pill borders/text, card frame (#dfe3e8), title/icon (#273240) are neutral/dark — no migration <span class="rule">token-migration.md</span></span>
+  </div>
+</div>
+</div>
