@@ -1,0 +1,14 @@
+# Release hygiene — `git archive HEAD` builds the install zip, so every tracked
+# path lands in the package unless it is export-ignore'd here. These paths are
+# versioned for development/CI/collaboration but are NOT needed to run the plugin
+# on a Moodle site, so they are stripped from the release zip.
+#
+# Verify with:  git check-attr export-ignore -- <path>
+# (a path marked "set" is excluded from the archive; "unspecified" ships).
+
+docs                  export-ignore
+.github               export-ignore
+.moodle-plugin-ci.yml export-ignore
+CLAUDE.md             export-ignore
+.gitignore            export-ignore
+.gitattributes        export-ignore

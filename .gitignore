@@ -14,7 +14,6 @@ package-lock.json
 # Linter config
 .stylelintrc.json
 
-# Local-only design/planning docs (not part of the plugin release)
-docs/*
-# ...except the design kit (tracked design system; mirrors the claude.ai/design project)
-!docs/design-kit/
+# Design/planning docs are versioned (design-kit, learner-kit, superpowers specs
+# and plans) for collaboration, but kept OUT of the release zip via .gitattributes
+# (export-ignore) — the plugin ships only what Moodle needs at runtime.
