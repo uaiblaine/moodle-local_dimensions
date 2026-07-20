@@ -1,4 +1,4 @@
-<!-- @dsCard group="Shared" name="Filter chips" subtitle="chip_filters + filter_tabs_nav — groups, pressed state, scroll paddles/indicator, clear · as-is │ to-be, with IDs" -->
+<!-- @dsCard group="Shared" name="Filter chips" subtitle="chip_filters + filter_tabs_nav · as-is (inline chip bar — historical record) │ to-be: RETIRED — filtering moved to the toolbar Filter control (ovw-overview + trk-tracker)" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -57,6 +57,18 @@
 .pad{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;border:1px solid var(--lk-line-2);background:var(--lk-surface);color:var(--lk-pill-text);cursor:pointer;}
 .chip-scroll{position:relative;overflow:hidden;max-width:230px;}
 .chip-ind{position:absolute;bottom:1px;height:2px;background:var(--lk-pill-active-fg);border-radius:2px;transition:transform .2s,width .2s;}
+
+/* ==== to-be: this inline chip bar is retired — filtering moved to the toolbar Filter control ==== */
+.retired{padding:14px 20px 6px;}
+.retired-card{display:flex;gap:.9rem;align-items:flex-start;background:var(--lk-surface-2);border:1px solid var(--lk-line);border-radius:.7rem;padding:1rem 1.1rem;}
+.retired-ic{width:40px;height:40px;flex:none;border-radius:.5rem;background:var(--lk-surface);border:1px solid var(--lk-line-2);display:flex;align-items:center;justify-content:center;color:var(--lk-muted);}
+.retired-ic svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.retired-body{min-width:0;}
+.retired-title{font-size:.95rem;font-weight:700;color:var(--lk-text);margin-bottom:.2rem;}
+.retired-sub{font-size:.83rem;color:var(--lk-text-2);line-height:1.55;}
+.retired-cta{display:inline-flex;align-items:center;gap:.4rem;margin-top:.7rem;padding:.4rem .8rem;border:1px solid var(--lk-line-2);border-radius:.5rem;background:var(--lk-surface);color:var(--lk-text-2);font-size:.8rem;font-weight:600;}
+.retired-cta svg{width:.9rem;height:.9rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
 .legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
 .legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
 .leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
@@ -103,34 +115,24 @@
 
   <!-- ============ TO-BE ============ -->
   <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · retired — filtering moved to the toolbar Filter control</div>
 
-    <div class="lk-cap">Tracker — two chip groups · <span class="idb">TRK-CHIP</span></div>
-    <div class="chips">
-      <div class="chip-grp"><span class="chip-lbl">Year</span>
-        <div class="chip-platter"><button class="chip-tab">2024</button><button class="chip-tab on" aria-pressed="true">2025</button></div>
+    <div class="lk-cap">This inline chip bar no longer exists · <span class="idb r">TRK-CHIP / OVW-CHIP · retired</span></div>
+    <div class="retired">
+      <div class="retired-card">
+        <div class="retired-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg></div>
+        <div class="retired-body">
+          <div class="retired-title">Filtering moved to the toolbar</div>
+          <div class="retired-sub">The always-visible chip bar under the hero is retired. Filtering now lives behind a <b>Filter</b> control in the new toolbars — the Plan overview toolbar (<code>OVW-TOOLBAR</code>, in <code>ovw-overview</code>) and the Tracker filter bar (<code>.tg-filterbtn</code>, in <code>trk-tracker</code>) — next to the completion tabs, search and sort. The chip groups (Year / Category / Skill) open from there instead of occupying the page.</div>
+          <span class="retired-cta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>Filter</span>
+        </div>
       </div>
-      <div class="chip-grp"><span class="chip-lbl">Category</span>
-        <div class="chip-platter"><button class="chip-tab on" aria-pressed="true">Core</button><button class="chip-tab">Elective</button></div>
-      </div>
-      <button class="chip-clear"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>Clear filters</button>
     </div>
     <div class="lk-ids">
-      <span class="idb">platter → grey-200</span>
-      <span class="idb">active text → primary</span>
+      <span class="idb r">superseded by OVW-TOOLBAR (ovw-overview)</span>
+      <span class="idb r">superseded by the Tracker filter button (trk-tracker)</span>
     </div>
-
-    <div class="divlbl">Overflowing group — scroll paddles + indicator + arrow-key nav <span class="idb">TRK-CHIP-NAV</span></div>
-    <div class="chips">
-      <div class="chip-grp"><span class="chip-lbl">Skill</span>
-        <span class="chip-nav">
-          <button class="pad" aria-label="Scroll left"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
-          <span class="chip-scroll"><span class="chip-platter"><button class="chip-tab on" aria-pressed="true">Writing</button><button class="chip-tab">Speaking</button><button class="chip-tab">Reading</button></span><span class="chip-ind" style="left:8px;width:62px"></span></span>
-          <button class="pad" aria-label="Scroll right"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-        </span>
-      </div>
-    </div>
-    <div class="note">Indicator + focus ring follow <code>--primary</code>; greys align to Bootstrap.</div>
+    <div class="note">Design decision: the inline chip groups cease to exist — everything moved to filters in the new bar on <code>ovw-overview</code> and <code>trk-tracker</code>. The as-is panel (left) is kept as the historical record of the component being retired; there's no token migration because the bar is removed, not restyled. The underlying <code>chip_filters</code> may still be reused inside the toolbar's Filter panel.</div>
   </div>
 
 </div>
@@ -138,6 +140,7 @@
 <div class="legend">
   <h3>ID legend — Filter chips (shared: view-competency + view-plan)</h3>
   <div class="leg">
+    <span class="k">retired</span><span class="v"><b>The inline chip bar is retired (to-be).</b> The always-visible chip groups under the hero no longer exist — filtering moved into a <b>Filter</b> control in the new toolbars: the Plan overview toolbar (<code>OVW-TOOLBAR</code>) and the Tracker filter bar (<code>.tg-filterbtn</code>), beside the completion tabs, search and sort. The IDs below document the <b>as-is</b> component (kept as the historical record); the underlying <code>chip_filters</code> may still be reused inside the toolbar's Filter panel. <span class="rule">ovw-overview OVW-TOOLBAR; trk-tracker .tg-filterbtn</span></span>
     <span class="k">TRK-CHIP-COMP</span><span class="v"><b>Competency-field chips</b> — <code>viewcompetency_filter_fields_competency</code>; single page value repeated on every card <span class="rule">chip_filters.mustache</span></span>
     <span class="k">TRK-CHIP-COURSE</span><span class="v"><b>Course-field chips</b> — <code>viewcompetency_filter_fields_course</code>; shortname prefixed <code>course:</code> to avoid collision</span>
     <span class="k">OVW-CHIP</span><span class="v"><b>Plan chips</b> — <code>viewplan_filter_fields</code>, per competency <span class="rule">chip_filters.mustache</span></span>
