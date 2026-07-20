@@ -1,4 +1,4 @@
-<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Card body states" subtitle="course_card / progress_card_body — loading, error+retry, completion-disabled, inline error · as-is │ to-be" -->
+<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Card body states" subtitle="course_card / progress_card_body — card body states · as-is (spinner + red text/alert) │ to-be: skeleton loading + friendly retry error + iconized states (matches accordion)" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -75,6 +75,27 @@
 .retry-arrow{display:flex;align-items:center;gap:6px;font-size:10px;color:#8a8980;margin:8px 0 4px;}
 .srbadge{font-family:var(--mono);font-size:9px;color:#8a5a1f;background:#fcefdc;border:1px solid #e6b877;border-radius:5px;padding:0 4px;}
 .stateflag{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:9px;background:#eef0f2;color:#5f6368;border:1px solid #d7dade;}
+
+/* ==== to-be: skeleton loading + friendly compact retry error + iconized states (card body) ==== */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+@keyframes lk-pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+.tskel{display:flex;flex-direction:column;gap:.5rem;width:100%;padding:.15rem .1rem;}
+.tskel-row{display:flex;align-items:center;gap:.55rem;}
+.tskel-dot{width:14px;height:14px;flex:none;border-radius:50%;background:var(--lk-line);animation:lk-pulse 1.5s ease-in-out infinite;}
+.tskel-bar{height:.6rem;border-radius:.35rem;background:var(--lk-line);animation:lk-pulse 1.5s ease-in-out infinite;}
+.terr{display:flex;flex-direction:column;align-items:center;gap:.4rem;text-align:center;padding:.2rem;}
+.terr-ic{width:32px;height:32px;flex:none;border-radius:50%;background:#f8d7da;color:#842029;display:flex;align-items:center;justify-content:center;}
+.terr-ic svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.terr-msg{font-size:.8rem;color:var(--lk-text-2);}
+.terr-retry{display:inline-flex;align-items:center;gap:.35rem;padding:.28rem .7rem;border:1px solid var(--lk-line-2);border-radius:.4rem;background:var(--lk-surface);color:var(--lk-accent);font-size:.78rem;font-weight:600;cursor:pointer;}
+.terr-retry:hover{border-color:var(--lk-accent);background:var(--lk-counter-active-bg);}
+.terr-retry:focus-visible{outline:2px solid var(--lk-focus-ring);outline-offset:2px;}
+.terr-retry svg{width:.8rem;height:.8rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tnocomp{display:flex;flex-direction:column;align-items:center;gap:.35rem;color:var(--lk-muted);text-align:center;padding:.2rem;}
+.tnocomp svg{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85;}
+.tnocomp span{font-size:.8rem;}
+.tdanger{align-self:stretch;display:flex;align-items:flex-start;gap:.4rem;background:#f8d7da;color:#842029;border-radius:.4rem;padding:.4rem .55rem;margin:.4rem;font-size:.76rem;text-align:left;line-height:1.4;}
+.tdanger svg{width:.85rem;height:.85rem;flex:none;margin-top:.06rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 </style>
 <div class="kit"><div class="screens">
 
@@ -144,66 +165,77 @@
 
   <!-- ============ TO-BE ============ -->
   <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · skeleton loading + friendly retry error + iconized states</div>
 
     <div class="lk-cap">Card body states — all four render inside <span class="idb">TRK-CARD-PROG</span></div>
     <div class="gal">
 
       <!-- 1. LOADING (server-rendered initial state) -->
       <div class="mc-cell">
-        <div class="mc-lbl"><span class="idb">spinner → primary</span></div>
+        <div class="mc-lbl"><span class="idb r">skeleton hints the timeline</span></div>
         <div class="card">
           <h3 class="card-header"><a href="#">Technical Writing I</a></h3>
-          <div class="prog">
-            <svg class="spin" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="3" stroke-opacity=".2"/><path d="M16 3a13 13 0 0 1 13 13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-            <p class="p-load">Loading progress...</p>
+          <div class="prog" role="status">
+            <span class="sr">Loading progress…</span>
+            <div class="tskel" aria-hidden="true">
+              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:70%"></span></div>
+              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:52%"></span></div>
+              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:62%"></span></div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- 2. ERROR + RETRY (JS renderErrorState) -->
       <div class="mc-cell">
-        <div class="mc-lbl"><span class="idb">danger/outline stay Bootstrap</span></div>
+        <div class="mc-lbl"><span class="idb r">friendly error · Retry → skeleton</span></div>
         <div class="card">
           <h3 class="card-header"><a href="#">Business Communication</a></h3>
           <div class="prog" role="alert">
-            <p class="err-msg">Could not load progress.</p>
-            <button type="button" class="btn-outline" aria-label="Retry">Retry</button>
+            <div class="terr">
+              <div class="terr-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+              <span class="terr-msg">Couldn't load progress.</span>
+              <button type="button" class="terr-retry" aria-label="Retry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Retry</button>
+            </div>
           </div>
         </div>
-        <div class="retry-arrow">&rarr; on Retry, body swaps to <span class="srbadge">role=status · aria-live=polite</span></div>
+        <div class="retry-arrow">&rarr; on Retry, body swaps to the loading <span class="srbadge">skeleton · role=status</span></div>
         <div class="card">
           <h3 class="card-header"><a href="#">Business Communication</a></h3>
           <div class="prog" role="status" aria-live="polite">
-            <svg class="spin" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="3" stroke-opacity=".2"/><path d="M16 3a13 13 0 0 1 13 13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-            <p class="p-load"><span class="srbadge">sr-only</span> Loading&hellip;</p>
+            <span class="sr">Loading progress…</span>
+            <div class="tskel" aria-hidden="true">
+              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:66%"></span></div>
+              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:48%"></span></div>
+              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:58%"></span></div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- 3. COMPLETION DISABLED -->
       <div class="mc-cell">
-        <div class="mc-lbl"><span class="idb">card bg → grey-100</span></div>
+        <div class="mc-lbl"><span class="idb r">muted state + clarifying icon</span></div>
         <div class="card">
           <h3 class="card-header"><a href="#">Advanced Rhetoric</a></h3>
-          <div class="prog"><div class="nocomp">Completion disabled.</div></div>
+          <div class="prog"><div class="tnocomp"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span>Completion disabled</span></div></div>
         </div>
       </div>
 
       <!-- 4. INLINE ERROR (payload {{#error}}) -->
       <div class="mc-cell">
-        <div class="mc-lbl"><span class="idb">title → body colour</span></div>
+        <div class="mc-lbl"><span class="idb r">iconized disabled + compact danger note</span></div>
         <div class="card">
           <h3 class="card-header"><a href="#">Public Speaking</a></h3>
           <div class="prog inline">
-            <div class="nocomp" style="padding:1rem;text-align:center">Completion disabled.</div>
-            <div class="alert-danger">Course context not available.</div>
+            <div class="tnocomp" style="padding:.85rem 1rem 0"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span>Completion disabled</span></div>
+            <div class="tdanger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>Course context not available.</div>
           </div>
         </div>
       </div>
 
     </div>
-    <div class="note">Only card bg / header link / spinner shift to Moodle DS; the danger-red alert, outline button and muted text are neutral Bootstrap and identical in both panels.</div>
+    <div class="note">Matches the accordion load states for cross-view consistency: the spinner becomes a compact <b>skeleton</b> hinting the progress timeline (dot + bar rows, gentle pulse; <code>role="status"</code> + sr-only "Loading progress…"), and <b>Retry</b> swaps the body to that same skeleton. The error becomes a <b>friendly compact</b> block (danger-tinted icon + message + accent Retry) instead of bare red text; the muted "Completion disabled" and the inline payload error each gain a small clarifying icon (a slashed circle / a danger triangle). Danger semantics stay in the tints. Retry / disabled strings unchanged; the icons are markup-only.</div>
   </div>
 
 </div>
@@ -212,8 +244,8 @@
   <h3>ID legend — Card body states (Tracker)</h3>
   <div class="leg">
     <span class="k">TRK-CARD-PROG</span><span class="v"><b>Progress container</b> (referenced) — <code>.local-dimensions-progress-container</code>, the AJAX-filled body every state occupies <span class="rule">course_card.mustache:53; styles.css:711-719</span></span>
-    <span class="k">TRK-CARD-LOADING</span><span class="v"><b>Initial state</b> — server-rendered <code>fa-spinner fa-spin fa-2x text-primary</code> + "Loading progress..." (<code>loading_progress</code>); shown until the AJAX render/error replaces it <span class="rule">course_card.mustache:53-57</span></span>
-    <span class="k">TRK-CARD-ERROR</span><span class="v"><b>Load failure</b> — JS-built <code>div role="alert"</code> "Could not load progress." (<code>course_load_error</code>) + <code>btn-outline-secondary</code> "Retry" (<code>course_load_retry</code>, echoed in <code>aria-label</code>). Retry swaps the body to a <code>role="status" aria-live="polite"</code> spinner with sr-only "Loading…" (<code>course_loading</code>) and re-calls the fetch <span class="rule">competency_view.js:162-185; fired from loadCourseWithSoftTimeout empty/fail 208-224</span></span>
+    <span class="k">TRK-CARD-LOADING</span><span class="v"><b>Initial state</b> — server-rendered <code>fa-spinner fa-spin fa-2x text-primary</code> + "Loading progress..." (<code>loading_progress</code>); shown until the AJAX render/error replaces it. <b>To-be:</b> becomes a compact <b>skeleton</b> (dot + bar rows hinting the timeline, 1.5s pulse) — matches the accordion loading; keeps <code>role="status"</code> + an sr-only "Loading progress…". <span class="rule">course_card.mustache:53-57</span></span>
+    <span class="k">TRK-CARD-ERROR</span><span class="v"><b>Load failure</b> — JS-built <code>div role="alert"</code> "Could not load progress." (<code>course_load_error</code>) + <code>btn-outline-secondary</code> "Retry" (<code>course_load_retry</code>, echoed in <code>aria-label</code>). Retry swaps the body to a <code>role="status" aria-live="polite"</code> spinner with sr-only "Loading…" (<code>course_loading</code>) and re-calls the fetch. <b>To-be:</b> a <b>friendly compact</b> block — a danger-tinted triangle icon, the message, and an accent <b>Retry</b> button — and Retry swaps to the <b>skeleton</b> (not a bare spinner); the danger red stays in the icon tint. Strings unchanged. <span class="rule">competency_view.js:162-185; fired from loadCourseWithSoftTimeout empty/fail 208-224</span></span>
     <span class="k">TRK-CARD-NOCOMPLETION</span><span class="v"><b>Tracking off</b> — muted centred "Completion disabled." (<code>completion_disabled</code>) when payload <code>enabled=false</code> and no error <span class="rule">progress_card_body.mustache:102-106</span></span>
     <span class="k">TRK-CARD-ERROR-INLINE</span><span class="v"><b>Payload error</b> — <code>{{#error}}</code> renders <code>alert-danger m-2</code> with the raw <code>$e-&gt;getMessage()</code>; only set on the per-course catch path, where <code>enabled=false</code> too, so "Completion disabled." shows above it <span class="rule">progress_card_body.mustache:173-175; get_course_progress.php:113,125</span></span>
   </div>
