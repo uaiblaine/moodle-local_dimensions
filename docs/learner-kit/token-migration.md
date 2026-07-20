@@ -6,7 +6,7 @@
 > Review decisions taken: taxonomy-label → `#0f6cbf`; focus-ring → `#0f6cbf` (AA ~5.4:1 on white — verify
 > on coloured surfaces); `--lk-amber-rated` `#e5a100` **kept**; modal-note trio → BS warning-light. The
 > ~10 loose greys were **left** (optional future normalisation). Kept as documentation of the change.
-> `version.php` was **not** bumped (version is frozen at `2026071306` until 2.0); cache busts at the
+> `version.php` was **not** bumped (version is frozen at `2026071801` until 2.0); cache busts at the
 > next real bump / purge on the test server.
 
 **As-is** = the real `styles.css` palette (a Material/Google skin over Boost). **To-be** = Moodle
@@ -85,5 +85,5 @@ The custom-SCSS editor textarea (admin template form) uses a Catppuccin theme
 - Prefer introducing the `--lk-*` (or Boost `--primary`/`--bs-*`) vars over scattering new literals,
   so a future theme swap is one block.
 - This is a **visual-parity** change only; no markup/JS/behaviour changes. Normally it would want a
-  `version.php` cache-revision bump, but the repo is under a version freeze (`2026071306` until 2.0) —
+  `version.php` cache-revision bump, but the repo is under a version freeze (`2026071801` until 2.0) —
   so it was **not** bumped; the cache busts at the next real bump, or purge caches on the test server.
