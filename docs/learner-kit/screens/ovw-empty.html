@@ -1,4 +1,4 @@
-<!-- @dsCard group="Learner screens · Plan (OVW)" name="Empty & no-results" subtitle="view_plan_summary empty + no-results · as-is (alert-info box + silent void) │ to-be: one friendly empty state (no dead box) + a Clear-filters action" -->
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Empty & no-results" subtitle="view_plan_summary empty + no-results · as-is (alert-info box + silent void) │ to-be: one friendly empty state (no dead box) + Clear-filters action + label-aware copy ({label} from local_dimensions_type)" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -150,14 +150,15 @@
     <div class="lk-cap">A · Plan has no competencies — server-rendered · <span class="idb r">OVW-EMPTY · to-be</span></div>
     <div class="emp" role="status">
       <div class="emp-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M9 13h6M9 17h4"/></svg></div>
-      <div class="emp-title">No competencies in this plan yet</div>
-      <div class="emp-sub">When competencies are added to this learning plan, they'll appear here to explore and track.</div>
+      <div class="emp-title">No units in this plan yet</div>
+      <div class="emp-sub">When units are added to this learning plan, they'll appear here to explore and track.</div>
     </div>
     <div class="lk-ids">
       <span class="idb r">OVW-EMPTY · friendly empty state replaces the alert-info box</span>
+      <span class="idb r">"units" = {label} from <code>local_dimensions_type</code> · fallback "competencies"</span>
       <span class="idb">server-rendered when <code>hascompetencies</code> is false</span>
     </div>
-    <div class="note">The blunt blue <code>alert-info</code> box becomes a soft, centered empty state (muted icon + title + subtext) consistent with the rest of the redesign — no "dead box". Neutral greys only, no brand colour. <b>Code:</b> a mustache change inside <code>{{^hascompetencies}}</code>, keeping an accessible <code>role="status"</code> and reusing the (reworded) lang string.</div>
+    <div class="note">The blunt blue <code>alert-info</code> box becomes a soft, centered empty state (muted icon + title + subtext) consistent with the rest of the redesign — no "dead box". Neutral greys only, no brand colour. The word "competencies" is a dynamic <b>{label}</b> — the plan's competency label (<code>local_dimensions_type</code>, plural: Activities / Lessons / Cycles / Stages / Modules / Levels / Periods / Units), shown here as "units"; it falls back to "competencies" when no label is set. <b>Code:</b> a mustache change inside <code>{{^hascompetencies}}</code>, keeping <code>role="status"</code> and reusing the (reworded, label-parametrised) lang string; for an empty plan the label comes from the plan's template/framework, else the fallback.</div>
 
     <div class="divlbl">B · Plan has competencies, but search / chips match none <span class="idb r">OVW-FILTER-NORESULTS</span> <span class="prop">proposed — not in code today</span></div>
     <div class="fbar">
@@ -174,8 +175,8 @@
     <div class="acc-list" role="list" aria-live="polite" aria-relevant="additions removals">
       <div class="emp">
         <div class="emp-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
-        <div class="emp-title">No competencies match your filters</div>
-        <div class="emp-sub">Try a different search term, or clear the filters to see all 8.</div>
+        <div class="emp-title">No units match your filters</div>
+        <div class="emp-sub">Try a different search term, or clear the filters to see all 8 units.</div>
         <button type="button" class="emp-action"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>Clear filters</button>
       </div>
     </div>
@@ -183,8 +184,9 @@
       <span class="idb r">new: applyFilter counts survivors → renders this at 0</span>
       <span class="idb r">Clear filters → resets search + chips, shows all</span>
       <span class="idb">announced via the existing <code>aria-live="polite"</code> region</span>
+      <span class="idb r">"units" = {label} from the loaded competencies · fallback "competencies"</span>
     </div>
-    <div class="note">Proposal — nothing in <code>accordion.js</code> renders this today. The muted message now shares the same centered empty pattern as state A, and adds an actionable <b>Clear filters</b> button (resets the search input + chip selection and re-runs the filter, so the full list returns) — the learner recovers in one click instead of being told to. Filter-bar tokens still migrate; the message + button use neutral greys + <code>--lk-accent</code>. Needs new lang strings.</div>
+    <div class="note">Proposal — nothing in <code>accordion.js</code> renders this today. The muted message now shares the same centered empty pattern as state A, and adds an actionable <b>Clear filters</b> button (resets the search input + chip selection and re-runs the filter, so the full list returns) — the learner recovers in one click instead of being told to. "competencies" is the dynamic <b>{label}</b> (<code>local_dimensions_type</code>) — here <b>known</b> because competencies are loaded (just filtered out), shown as "units"; fallback "competencies". Filter-bar tokens still migrate; the message + button use neutral greys + <code>--lk-accent</code>. Needs new (label-parametrised) lang strings.</div>
   </div>
 
 </div>
@@ -192,8 +194,8 @@
 <div class="legend">
   <h3>ID legend — Plan empty &amp; no-results (view_plan_summary.mustache + accordion.js)</h3>
   <div class="leg">
-    <span class="k">OVW-EMPTY</span><span class="v"><b>alert-info</b> — string <code>no_competencies_in_plan</code> = &ldquo;No competencies in this learning plan.&rdquo; Rendered inside <code>{{^hascompetencies}}</code>, so the entire plan-summary block (filter bar + accordion) is suppressed and only this alert shows. <code>hascompetencies</code> is <code>!empty($data['competencies'])</code> — false when the plan has zero competencies. <b>To-be:</b> the flat blue <code>alert-info</code> box becomes a soft, centered <b>friendly empty state</b> (muted icon + title + subtext) matching the redesign's tone — no "dead box"; a mustache change in the <code>{{^hascompetencies}}</code> block, keeping <code>role="status"</code> + the (reworded) lang string. <span class="rule">view_plan_summary.mustache:192-196 · lang/en:473 · view_plan_summary_page.php:237</span></span>
-    <span class="k">OVW-FILTER-NORESULTS</span><span class="v"><b>Proposed, to-be only — does NOT exist in code today.</b> When the active tab + search query + chip selection match no competency, <code>applyFilter</code> sets every <code>.local-dimensions-accordion-item</code> to <code>display:none</code> and returns; there is no visible-count check and no empty-state branch, so the learner sees a blank region under a bar whose counters still read the server totals. Proposal: after the loop, count survivors and, when zero, render the same centered <b>friendly empty state</b> as OVW-EMPTY into the existing <code>aria-live="polite"</code> list region — with an actionable <b>Clear filters</b> button that resets the search input + chip selection and re-runs <code>applyFilter</code>, so the full list returns in one click (needs new lang strings) <span class="rule">accordion.js:2384-2427 (applyFilter, no empty branch) · region: view_plan_summary.mustache:108-113</span></span>
+    <span class="k">OVW-EMPTY</span><span class="v"><b>alert-info</b> — string <code>no_competencies_in_plan</code> = &ldquo;No competencies in this learning plan.&rdquo; Rendered inside <code>{{^hascompetencies}}</code>, so the entire plan-summary block (filter bar + accordion) is suppressed and only this alert shows. <code>hascompetencies</code> is <code>!empty($data['competencies'])</code> — false when the plan has zero competencies. <b>To-be:</b> the flat blue <code>alert-info</code> box becomes a soft, centered <b>friendly empty state</b> (muted icon + title + subtext) matching the redesign's tone — no "dead box"; a mustache change in the <code>{{^hascompetencies}}</code> block, keeping <code>role="status"</code> + the (reworded) lang string. The noun "competencies" is a dynamic <b>{label}</b> — the plan's competency label from <code>local_dimensions_type</code> (plural options: Activities / Lessons / Cycles / Stages / Modules / Levels / Periods / Units), resolved for an empty plan from the plan's template/framework, falling back to "competencies" when unset — so the lang string is <code>{$a-&gt;label}</code>-parametrised. <span class="rule">view_plan_summary.mustache:192-196 · lang/en:473 · view_plan_summary_page.php:237 · constants::CFIELD_TYPE</span></span>
+    <span class="k">OVW-FILTER-NORESULTS</span><span class="v"><b>Proposed, to-be only — does NOT exist in code today.</b> When the active tab + search query + chip selection match no competency, <code>applyFilter</code> sets every <code>.local-dimensions-accordion-item</code> to <code>display:none</code> and returns; there is no visible-count check and no empty-state branch, so the learner sees a blank region under a bar whose counters still read the server totals. Proposal: after the loop, count survivors and, when zero, render the same centered <b>friendly empty state</b> as OVW-EMPTY into the existing <code>aria-live="polite"</code> list region — with an actionable <b>Clear filters</b> button that resets the search input + chip selection and re-runs <code>applyFilter</code>, so the full list returns in one click (needs new lang strings). "competencies" is the same dynamic <b>{label}</b> (<code>local_dimensions_type</code>) — here <b>known</b> from the loaded competencies (shown as "units"), fallback "competencies". <span class="rule">accordion.js:2384-2427 (applyFilter, no empty branch) · region: view_plan_summary.mustache:108-113 · constants::CFIELD_TYPE</span></span>
     <span class="k">counters</span><span class="v">The tab counts <code>incompletecount</code> / <code>competencycount</code> are static server values; <code>applyFilter</code> never updates them, so they stay at 3 / 8 even when the filtered list is empty — the exact confusion OVW-FILTER-NORESULTS resolves <span class="rule">view_plan_summary.mustache:80,84 · accordion.js:2384-2427</span></span>
     <span class="k">OVW-BAR-TABS / OVW-BAR-SEARCH</span><span class="v">Filter-bar tabs + counts and the search field — badged in full on the Plan overview card; referenced here as the controls that produce the no-results state <span class="rule">view_plan_summary.mustache:76-99 · accordion.js applyFilter / initSearch</span></span>
     <span class="k">tokens</span><span class="v">The <b>alert-info</b> is held fixed (already Moodle DS, no migration). The <b>filter bar</b> migrates: platter (<code>--lk-pill-platter</code>), counter bg / active (<code>--lk-counter-bg</code> / <code>--lk-counter-active-bg</code>), active text (<code>--lk-pill-active-fg</code>), search border / icon / glow (<code>--lk-search-border</code> / <code>--lk-search-icon</code> / <code>--lk-search-glow</code>) <span class="rule">token-migration.md · styles.css:1272-1366</span></span>
