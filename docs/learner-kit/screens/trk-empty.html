@@ -1,4 +1,4 @@
-<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Empty states" subtitle="view_competency.mustache — no linked courses / missing competency id · as-is │ to-be" -->
+<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Empty states" subtitle="view_competency.mustache — empty states · as-is (alert-info + alert-warning boxes) │ to-be: friendly empty (neutral) + warning not-found state" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -58,6 +58,14 @@
 .alert.info{background:#cff4fc;color:#055160;border-color:#b6effb;}
 .alert.warn{background:#fff3cd;color:#664d03;border-color:#ffecb5;}
 .cond{font-family:var(--mono);}
+
+/* ==== to-be: friendly empty state — neutral for no-courses; amber-warning for not-found ==== */
+.emp{display:flex;flex-direction:column;align-items:center;gap:.55rem;padding:32px 20px 28px;text-align:center;}
+.emp-ic{width:48px;height:48px;flex:none;border-radius:50%;background:var(--lk-surface-2);border:1px solid var(--lk-line);display:flex;align-items:center;justify-content:center;color:var(--lk-muted);}
+.emp-ic.warn{background:#fff3cd;border-color:#ffecb5;color:#664d03;}
+.emp-ic svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.emp-title{font-size:.98rem;font-weight:600;color:var(--lk-text);}
+.emp-sub{font-size:.83rem;color:var(--lk-muted);max-width:34ch;line-height:1.5;}
 </style>
 <div class="kit"><div class="screens">
 
@@ -82,21 +90,29 @@
 
   <!-- ============ TO-BE ============ -->
   <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · friendly empty state (neutral) + warning not-found</div>
 
     <div class="lk-cap">Tracker — empty states (course grid renders nothing)</div>
 
-    <div class="divlbl">Competency exists, no visible linked courses <span class="idb">TRK-EMPTY-NOCOURSES</span></div>
-    <div class="alert info" role="alert">No courses linked to this competency.</div>
+    <div class="divlbl">Competency exists, no visible linked courses <span class="idb r">TRK-EMPTY-NOCOURSES · to-be</span></div>
+    <div class="emp" role="status">
+      <div class="emp-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.42 10.42 12 5 2.58 10.42 12 15.84z"/><path d="M6 12.5V17c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-4.5"/></svg></div>
+      <div class="emp-title">No courses linked yet</div>
+      <div class="emp-sub">When a course is linked to this competency, it'll appear here to track your progress.</div>
+    </div>
 
-    <div class="divlbl">Competency id invalid — record not found <span class="idb r">TRK-EMPTY-NOCOMP</span></div>
-    <div class="alert warn" role="alert">Competency ID not provided.</div>
+    <div class="divlbl">Competency id invalid — record not found <span class="idb r">TRK-EMPTY-NOCOMP · to-be</span></div>
+    <div class="emp" role="alert">
+      <div class="emp-ic warn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+      <div class="emp-title">Competency not found</div>
+      <div class="emp-sub">This competency isn't available — it may have been removed, or the link is out of date.</div>
+    </div>
 
     <div class="lk-ids">
-      <span class="idb"><span class="cond">alert-info</span> · hascompetency &amp;&amp; !hascourses</span>
-      <span class="idb"><span class="cond">alert-warning</span> · !hascompetency</span>
+      <span class="idb r">NOCOURSES · friendly empty state (neutral) replaces alert-info</span>
+      <span class="idb r">NOCOMP · warning state (amber icon) replaces alert-warning</span>
     </div>
-    <div class="note">Unchanged from as-is. The empty states already speak Bootstrap/Moodle semantic colours (<code>alert-info</code>, <code>alert-warning</code>) — nothing to migrate. The token slice touches the hero, chips and cards, never these alerts.</div>
+    <div class="note">Both flat semantic alert boxes become centered states matching the redesign — <b>no dead box</b>. No-courses is a <b>neutral friendly empty</b> (muted course icon + "No courses linked yet"); the invalid-id is a <b>warning</b> state (amber-tinted alert icon + "Competency not found"), keeping the "something's off" signal without the full box. Same <code>.emp</code> pattern as <code>ovw-empty</code>. <b>Code:</b> a mustache change keeping <code>role="status"</code> / <code>role="alert"</code>; reword the two lang strings. The two stay mutually exclusive.</div>
   </div>
 
 </div>
@@ -104,8 +120,8 @@
 <div class="legend">
   <h3>ID legend — Tracker empty states (view_competency.mustache)</h3>
   <div class="leg">
-    <span class="k">TRK-EMPTY-NOCOURSES</span><span class="v"><b>alert-info</b> — string <code>no_courses_linked</code> = &ldquo;No courses linked to this competency.&rdquo; Rendered when <code>hascompetency</code> is true but <code>hascourses</code> is false — zero visible <code>{competency_coursecomp}</code> joins (<code>c.visible = 1</code>), or every linked course dropped by the enrolment filter <span class="rule">view_competency.mustache:69-75; flags view_competency_page.php:83-84; courses view-competency.php:78-96</span></span>
-    <span class="k">TRK-EMPTY-NOCOMP</span><span class="v"><b>alert-warning</b> — string <code>competency_id_missing</code> = &ldquo;Competency ID not provided.&rdquo; Rendered when <code>hascompetency</code> is false — <code>$DB->get_record('competency', ['id' =&gt; $competencyid])</code> returned false (no such/hidden competency). A truly absent param 400s earlier via <code>required_param</code> <span class="rule">view_competency.mustache:77-81; view-competency.php:35,70 → view_competency_page.php:83</span></span>
+    <span class="k">TRK-EMPTY-NOCOURSES</span><span class="v"><b>alert-info</b> — string <code>no_courses_linked</code> = &ldquo;No courses linked to this competency.&rdquo; Rendered when <code>hascompetency</code> is true but <code>hascourses</code> is false — zero visible <code>{competency_coursecomp}</code> joins (<code>c.visible = 1</code>), or every linked course dropped by the enrolment filter. <b>To-be:</b> the flat blue <code>alert-info</code> box becomes a <b>neutral friendly empty state</b> (muted course icon + "No courses linked yet" + subtext), the same <code>.emp</code> pattern as <code>ovw-empty</code> — no "dead box". <span class="rule">view_competency.mustache:69-75; flags view_competency_page.php:83-84; courses view-competency.php:78-96</span></span>
+    <span class="k">TRK-EMPTY-NOCOMP</span><span class="v"><b>alert-warning</b> — string <code>competency_id_missing</code> = &ldquo;Competency ID not provided.&rdquo; Rendered when <code>hascompetency</code> is false — <code>$DB->get_record('competency', ['id' =&gt; $competencyid])</code> returned false (no such/hidden competency). A truly absent param 400s earlier via <code>required_param</code>. <b>To-be:</b> not just absence but a problem — so it becomes a <b>warning</b> empty state (amber-tinted alert-triangle icon + "Competency not found" + subtext), keeping the "something's off" signal without the full box; <code>role="alert"</code> preserved. Reworded lang string. <span class="rule">view_competency.mustache:77-81; view-competency.php:35,70 → view_competency_page.php:83</span></span>
     <span class="k">gate</span><span class="v">Mutual exclusivity — <code>{{^hascourses}}</code> wraps the info alert but nests it inside <code>{{#hascompetency}}</code>, so a missing competency shows only the warning; the two never co-render <span class="rule">view_competency.mustache:69-81</span></span>
   </div>
 </div>
