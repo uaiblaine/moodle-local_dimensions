@@ -65,7 +65,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         'local_dimensions/returnbuttoncolor',
         get_string('returnbuttoncolor', 'local_dimensions'),
         get_string('returnbuttoncolor_desc', 'local_dimensions'),
-        '#667eea'
+        '#0f6cbf'
     ));
 
     // Image handler mode.
@@ -135,7 +135,7 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         'local_dimensions/learnmorebuttoncolor',
         get_string('learnmorebuttoncolor', 'local_dimensions'),
         get_string('learnmorebuttoncolor_desc', 'local_dimensions'),
-        '#667eea'
+        '#0f6cbf'
     ));
 
     // Show availability date on locked cards.
