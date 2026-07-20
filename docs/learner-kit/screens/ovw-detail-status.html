@@ -1,4 +1,4 @@
-<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Status tab" subtitle="accordion.js — tab strip + 2-col status grid · as-is │ to-be" -->
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Status tab" subtitle="accordion.js — tab strip + status · as-is (2-col grid) │ to-be: rating leads, proficiency qualifier, scale-description modal" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -68,6 +68,39 @@
 .sval.pending{color:var(--lk-amber-rated);}
 .smuted{font-size:1rem;font-weight:600;color:var(--lk-muted);}
 
+/* ---- to-be: rating-primary assessment card + scale-definition modal (replaces .sgrid/.scell/.sbadge/.sval) ---- */
+/* The rating (the scale level — the competency-specific fact) leads in neutral strong text; proficiency
+   is demoted to a small qualifier pill beside it; the scale's own description opens in a modal on
+   demand, and only when a description actually exists. */
+.st-block{margin:2px 20px 8px;padding:.9rem 1rem;background:var(--lk-surface);border:1px solid var(--lk-line);border-radius:.75rem;}
+.st-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.4rem;}
+.st-eyebrow{font-size:.72rem;font-weight:700;color:var(--lk-muted);}
+.st-scale-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .4rem;border:none;border-radius:.4rem;background:none;color:var(--lk-accent);font-size:.76rem;font-weight:600;cursor:pointer;}
+.st-scale-btn:hover{text-decoration:underline;}
+.st-scale-btn:focus-visible{outline:2px solid var(--lk-focus-ring);outline-offset:2px;}
+.st-scale-btn svg{width:.9rem;height:.9rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.st-rating{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem .7rem;}
+.st-level{font-size:1.35rem;font-weight:700;line-height:1.2;color:var(--lk-text);}
+.st-level.none{font-size:1.1rem;font-weight:600;color:var(--lk-muted);}
+.st-prof{display:inline-flex;align-items:center;gap:.3rem;font-size:.76rem;font-weight:700;padding:.2rem .55rem;border-radius:999px;}
+.st-prof svg{width:.85rem;height:.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;}
+.st-prof.ok{background:#d1e7dd;color:#0f5132;}
+.st-prof.no{background:#fff3cd;color:#856404;}
+/* Scale-definition modal (house core/modal pattern) — mocked inline here. */
+.st-modal{margin:.4rem 20px 4px;border:1px solid var(--lk-line);border-radius:.9rem;background:var(--lk-surface);box-shadow:0 14px 40px rgba(0,0,0,.18);overflow:hidden;}
+.st-modal-head{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:1px solid var(--lk-line);}
+.st-modal-title{flex:1;font-size:.95rem;font-weight:700;min-width:0;}
+.st-modal-x{width:28px;height:28px;border:none;border-radius:.4rem;background:var(--lk-surface-2);color:var(--lk-text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;}
+.st-modal-x svg{width:.85rem;height:.85rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.st-modal-body{padding:.9rem;font-size:.85rem;color:var(--lk-text-2);line-height:1.55;}
+.st-modal-body p{margin:0 0 .55rem;}
+.st-levels{list-style:none;margin:.2rem 0 0;padding:0;display:flex;flex-direction:column;gap:.4rem;}
+.st-levels li{display:flex;gap:.55rem;align-items:baseline;}
+.st-levels .dot{flex:none;position:relative;top:.32rem;width:.5rem;height:.5rem;border-radius:50%;background:var(--lk-line-2);}
+.st-levels li.prof .dot{background:#0f5132;}
+.st-levels b{color:var(--lk-text);font-weight:700;}
+.st-levels .prof-tag{margin-left:.3rem;font-size:.7rem;font-weight:700;color:#0f5132;}
+
 .legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
 .legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
 .leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
@@ -131,7 +164,7 @@
 
   <!-- ============ TO-BE ============ -->
   <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · rating leads · proficiency qualifies · scale on demand</div>
 
     <div class="lk-cap">Competency detail — summary tab strip (Status active) · <span class="idb">OVW-TAB-NAV</span></div>
     <div class="tabnav" role="tablist" aria-label="Competency summary">
@@ -153,30 +186,73 @@
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Rules</button>
     </div>
 
-    <div class="divlbl">Status pane — 2-column grid: Rating · Proficiency <span class="idb">OVW-STATUS</span></div>
-    <div class="scap">Proficient — parent item.completed (isproficient)</div>
-    <div class="sgrid">
-      <div class="scell ok">
-        <p class="slabel">Rating</p>
-        <span class="sbadge"><svg class="ic" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Competent</span>
+    <div class="divlbl">Status pane — rating leads, proficiency qualifies, scale on demand <span class="idb r">OVW-STATUS · to-be</span></div>
+
+    <div class="scap">Proficient — grade recorded, isGradeProficient() true</div>
+    <div class="st-block">
+      <div class="st-head">
+        <span class="st-eyebrow">Rating</span>
+        <button type="button" class="st-scale-btn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>About this scale</button>
       </div>
-      <div class="scell ok">
-        <p class="slabel">Proficiency</p>
-        <div class="sval ok"><svg class="ic" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Yes</div>
-      </div>
-    </div>
-    <div class="scap">Rated, not proficient — parent item.rated (hasrating &amp; not isproficient)</div>
-    <div class="sgrid">
-      <div class="scell warn">
-        <p class="slabel">Rating</p>
-        <span class="sbadge muted">Not competent</span>
-      </div>
-      <div class="scell warn">
-        <p class="slabel">Proficiency</p>
-        <div class="sval pending">No</div>
+      <div class="st-rating">
+        <span class="st-level">Competent</span>
+        <span class="st-prof ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Proficient</span>
       </div>
     </div>
-    <div class="note">Underline + focus ring follow <code>--primary</code>; success green unifies BS4 <code>#28a745</code> → BS5 <code>#198754</code>; muted badge greys to <code>#e9ecef</code>. Pending amber and the green/amber cell tints are unchanged.</div>
+
+    <div class="scap">Rated, not proficient — grade recorded, isGradeProficient() false</div>
+    <div class="st-block">
+      <div class="st-head">
+        <span class="st-eyebrow">Rating</span>
+        <button type="button" class="st-scale-btn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>About this scale</button>
+      </div>
+      <div class="st-rating">
+        <span class="st-level">Developing</span>
+        <span class="st-prof no">Not yet proficient</span>
+      </div>
+    </div>
+
+    <div class="scap">No grade yet — no gradename at all (replaces the bare "-")</div>
+    <div class="st-block">
+      <div class="st-head">
+        <span class="st-eyebrow">Rating</span>
+        <button type="button" class="st-scale-btn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>About this scale</button>
+      </div>
+      <div class="st-rating">
+        <span class="st-level none">Not yet rated</span>
+      </div>
+    </div>
+
+    <div class="scap">Scale with no description → the "About this scale" button is simply omitted</div>
+    <div class="st-block">
+      <div class="st-head"><span class="st-eyebrow">Rating</span></div>
+      <div class="st-rating">
+        <span class="st-level">Distinction</span>
+        <span class="st-prof ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Proficient</span>
+      </div>
+    </div>
+
+    <div class="lk-ids">
+      <span class="idb r">OVW-STATUS-RATING · scale level = primary fact</span>
+      <span class="idb r">OVW-STATUS-PROF · proficiency = qualifier pill</span>
+      <span class="idb r">OVW-STATUS-SCALE · "About this scale" → modal, only if description</span>
+    </div>
+    <div class="note">Rating leads: the specific scale level (<code>gradename</code>) is the primary fact, in neutral strong text &mdash; a scale label like "Developing" isn't inherently good or bad, so colour would over-assert. Proficiency (the derived boolean) is demoted to a small qualifier pill beside it &mdash; green "✓ Proficient" or amber "Not yet proficient"; with no grade the hero reads "Not yet rated" (muted) and the pill drops. Because scales are <b>per-competency</b> and a level word isn't self-explanatory, an "About this scale" button opens the scale's own description in a modal &mdash; shown <b>only when that description exists</b> (last card: a scale without one omits the button). The courses/activities that complete this competency are a <b>separate slice</b> (<code>ovw-detail-courses.html</code>), rendered in this same tab below.</div>
+
+    <div class="lk-cap">"About this scale" → modal with the scale's own description · <span class="idb r">OVW-STATUS-SCALE · to-be</span></div>
+    <div class="st-modal" role="dialog" aria-label="About this scale">
+      <div class="st-modal-head"><span class="st-modal-title">About this scale · Skills proficiency</span><button class="st-modal-x" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="st-modal-body">
+        <p>This competency is graded on the institution's four-level skills scale. A learner counts as <b>proficient</b> at Competent or above.</p>
+        <ul class="st-levels">
+          <li><span class="dot"></span><span><b>Emerging</b> — first attempts; core ideas not yet reliably applied.</span></li>
+          <li><span class="dot"></span><span><b>Developing</b> — applies the skill with guidance and some gaps.</span></li>
+          <li class="prof"><span class="dot"></span><span><b>Competent</b><span class="prof-tag">proficient</span> — applies the skill independently and reliably.</span></li>
+          <li class="prof"><span class="dot"></span><span><b>Distinction</b><span class="prof-tag">proficient</span> — adapts the skill to new, unfamiliar situations.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">The modal renders the scale's own <code>description</code> HTML (author-written). The example also lists the levels and marks which count as proficient &mdash; that structured list needs the scale items (<code>mdl_scale.scale</code>) + <code>scaleconfiguration</code>; the minimum is just the raw description blob the admin wrote.</div>
   </div>
 
 </div>
@@ -186,7 +262,8 @@
   <div class="leg">
     <span class="k">OVW-TAB-NAV</span><span class="v"><b>Summary tab strip</b> — <code>role="tablist"</code> of text-only buttons built by <code>buildSummaryTabs</code>: Status (<code>hasStatus</code>), Description (<code>hasDesc || hasTaxonomyCard || hasPath || hasRelated</code>), Evidence (<code>hasEvidence</code>), Rules (<code>hasRules</code>); tab[0] renders <code>active</code>. Status tab's visible label is <code>assessment_status</code> = "Assessment"; the <code>icon</code> field is set but never emitted by the nav. Active underline = <code>border-bottom-color: var(--dimension-custombgcolor, var(--primary, #667eea))</code> → <b>--lk-accent (migrates)</b>. <span class="rule">accordion.js buildSummaryTabs:335 / renderSummaryTabNavigation:384; styles.css:2123-2164</span></span>
     <span class="k">OVW-TAB-KBD</span><span class="v"><b>Roving tabindex + arrow keys</b> — active tab <code>tabindex="0"</code>, others <code>-1</code>, mirrored by <code>aria-selected</code>. <code>keydown</code>: ArrowRight/ArrowDown → next (wraps), ArrowLeft/ArrowUp → prev (wraps), Home → first, End → last; each calls <code>activateTab(tab, true)</code> so focus + underline move together. Focus ring = <code>outline:2px solid #005fcc</code> → <b>--lk-focus-ring (migrates to primary)</b>. <span class="rule">accordion.js renderSummaryTabNavigation:394 + attachTabListeners keydown:611-634; styles.css:2154-2157</span></span>
-    <span class="k">OVW-STATUS</span><span class="v"><b>2-column status grid</b> (<code>renderStatusSection</code>): left Rating cell, right Proficiency cell; collapses to one column below 576px. <b>Rating</b> — <code>grade &amp;&amp; gradename</code>: proficient → green badge + check (bg <code>#28a745</code> → <b>--lk-success</b>), else muted badge (bg <code>#f1f3f4</code> → <b>--lk-pill-platter</b>); no grade → "-" (<code>.status-value-muted</code>). <b>Proficiency</b> — <code>Number.parseInt(proficiency,10)===1</code>: "Yes" + check in <code>.status-success</code> (<code>#28a745</code> → <b>--lk-success</b>), else "No" in <code>.status-pending</code> (<code>#e5a100</code>, <b>--lk-amber-rated</b>, unchanged). Cell tint comes from the ancestor accordion item: <code>.completed</code> (<code>isproficient</code>, green <code>#d4edda</code>) / <code>.rated</code> (<code>hasrating &amp; !isproficient</code>, amber <code>#ffeeba</code>). <span class="rule">accordion.js renderStatusSection:2028-2078; view_plan_summary.mustache:115; styles.css:1677-1743</span></span>
+    <span class="k">OVW-STATUS</span><span class="v"><b>2-column status grid</b> (<code>renderStatusSection</code>): left Rating cell, right Proficiency cell; collapses to one column below 576px. <b>Rating</b> — <code>grade &amp;&amp; gradename</code>: proficient → green badge + check (bg <code>#28a745</code> → <b>--lk-success</b>), else muted badge (bg <code>#f1f3f4</code> → <b>--lk-pill-platter</b>); no grade → "-" (<code>.status-value-muted</code>). <b>Proficiency</b> — <code>Number.parseInt(proficiency,10)===1</code>: "Yes" + check in <code>.status-success</code> (<code>#28a745</code> → <b>--lk-success</b>), else "No" in <code>.status-pending</code> (<code>#e5a100</code>, <b>--lk-amber-rated</b>, unchanged). Cell tint comes from the ancestor accordion item: <code>.completed</code> (<code>isproficient</code>, green <code>#d4edda</code>) / <code>.rated</code> (<code>hasrating &amp; !isproficient</code>, amber <code>#ffeeba</code>). <b>To-be:</b> the two boxed cells collapse into one card where the <b>rating leads</b> — the specific scale level (<code>gradename</code>) as the primary fact in neutral strong text (a per-competency scale label isn't inherently good/bad) — and <b>proficiency is demoted</b> to a small qualifier pill beside it (green "✓ Proficient" / amber "Not yet proficient"; dropped when no grade, hero reads "Not yet rated"). Needs one new lang string for "Not yet proficient" (or reuse the existing no-string) + "Not yet rated". <span class="rule">accordion.js renderStatusSection:2028-2078; view_plan_summary.mustache:115; styles.css:1677-1743</span></span>
+    <span class="k">OVW-STATUS-SCALE</span><span class="v"><b>(to-be) "About this scale" → modal</b> — because the rating scale is <b>per-competency</b> (<code>competency.scaleid &gt; 0</code> else the framework's), a level word like "Developing" isn't self-explanatory. A subtle accent button opens the scale's own <code>description</code> in a <code>core/modal</code>, shown <b>only when that description is non-empty</b>. <b>Code gap:</b> the learner payload carries only <code>gradename</code> today; the scale's <code>description</code> (and, for a structured level list, the scale items + <code>scaleconfiguration</code>) must be added to the WS — <code>mdl_scale.description</code> is fetched admin-side only (helper.php:2406 pulls the name). <span class="rule">new WS field; mdl_scale.description; core/modal (house pattern)</span></span>
   </div>
 </div>
 </div>
