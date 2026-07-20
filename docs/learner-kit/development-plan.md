@@ -56,6 +56,31 @@ where a web service / cache / setting changes.
 - (Brainstorm in progress.) Soften the "X / Y" progress bar; promote the "how it's completed" text.
 - Plus the enrolment-filter item above.
 
+### Status / Assessment (`ovw-detail-status`)
+- Rebuild the status pane so the **rating leads** (the scale level `gradename` as the primary fact,
+  neutral strong text) and **proficiency is a qualifier pill** beside it (green when proficient, amber
+  "Not yet proficient", dropped when there's no grade → hero reads "Not yet rated"). Replaces the
+  two-cell grid in `renderStatusSection` (accordion.js ~2028). One new lang string ("Not yet rated";
+  "Not yet proficient" can reuse the existing no-string or be its own key).
+- **"About this scale" → modal.** Because the rating scale is per-competency, add a button that opens
+  the scale's own `description` in a `core/modal`, rendered **only when that description is non-empty**.
+  Needs a new field on the learner WS carrying `mdl_scale.description` (today only the scale *name* is
+  fetched, admin-side, at `helper.php:2406`); a `version.php` bump since a WS return changes. Optional
+  richer modal: the scale items (`mdl_scale.scale`) + `scaleconfiguration` to render a structured level
+  list with the proficient levels marked, instead of just the raw description blob.
+
+### Linked courses / activities (`ovw-detail-courses`) — grouped under Assessment
+- **Compact chips grouped under the assessment.** On the first (Assessment) tab, render the linked
+  courses/activities as wrapping compact chips (leading course-vs-activity icon, name, compact progress
+  token, whole chip clickable) directly below the assessment card, so tab[0] reads as "where you stand +
+  what completes it". Chips **wrap and fill** the pane (better use of space than the big-card scroller);
+  the empty case degrades to a single soft line instead of a blank tab. The heavy image-card scroller
+  (current `renderCourseCardsScrollable`, always-below the tab widget) is reworked for this role.
+- **Surface activities, not just courses.** Extend the learner WS
+  (`local_dimensions_get_competency_courses`) to also return linked **activities** (course modules) with
+  their completion status — the admin side already counts them (`activitycount`, `helper.php:2443`); the
+  learner WS is courses-only today. `version.php` bump (WS return changes).
+
 ## Styling
 - The Material/Google → Moodle DS token migration lands as its own `styles.css` slice, driven by
   [`token-migration.md`](token-migration.md), with a `version.php` bump for the cache revision.
