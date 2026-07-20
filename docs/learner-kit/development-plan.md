@@ -99,6 +99,13 @@ where a web service / cache / setting changes.
   at the left edge).
 - All of the above is one WS-return extension → a `version.php` bump.
 
-## Styling
-- The Material/Google → Moodle DS token migration lands as its own `styles.css` slice, driven by
-  [`token-migration.md`](token-migration.md), with a `version.php` bump for the cache revision.
+## Styling — DONE (nothing left here)
+- **The Material/Google → Moodle DS token migration has landed** (commit `345ffb4`, CI green): 50
+  value-only literal swaps in `styles.css` plus the two colour-picker defaults in `settings.php`
+  (`returnbuttoncolor`, `learnmorebuttoncolor`). Driven by
+  [`token-migration.md`](token-migration.md), which records the six "review" decisions taken
+  (taxonomy-label and focus-ring → primary, "rated" amber kept, modal-note trio → BS warning-light)
+  and the ~10 loose greys deliberately left for optional future normalisation.
+- `version.php` was **not** bumped — the version is frozen at `2026071801` until 2.0, and this was a
+  visual-parity change (no schema, no WS). The CSS cache busts at the next real bump, or purge caches
+  on the test server.
