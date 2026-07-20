@@ -1,4 +1,4 @@
-<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Description / Path / Related / Taxonomy" subtitle="accordion.js — description, competency path, related pills, taxonomy card · as-is │ to-be" -->
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Description / Path / Related / Taxonomy" subtitle="OVW context — as-is (main + taxonomy aside) │ to-be: description-first (blended fade), clickable relations, taxonomy merged onto the path line (clickable → definition modal)" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -25,8 +25,8 @@
 .panel.moodle{
   --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
   --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
-  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
   --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
   --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
   --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
   --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
@@ -44,41 +44,57 @@
 .ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
 
 /* ---- OVW detail: description tab (renderDescriptionPane ~460) ---- */
-/* Grid: main column + taxonomy aside (.local-dimensions-desc-layout-has-taxonomy). */
 .dlayout{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,200px);gap:1.25rem;align-items:start;padding:14px 20px 4px;}
 .dmain{min-width:0;}
-
-/* Description — reusable collapsible wrapper (30vh cap; here a fixed cap to show overflow). */
 .desc{position:relative;margin-bottom:1rem;}
 .desc-body{position:relative;max-height:6.5rem;overflow:hidden;font-size:.9rem;color:var(--lk-text-2);}
 .desc-body p{margin:0 0 .6rem;}
 .desc-fade{position:absolute;left:0;right:0;bottom:0;height:2.6rem;pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,0),var(--lk-surface) 92%);}
 .desc-toggle{display:inline-flex;align-items:center;gap:.35rem;margin-top:.5rem;padding:.25rem 0;border:none;background:none;font-size:.85rem;font-weight:500;color:var(--lk-text);opacity:.85;cursor:pointer;}
-.desc-toggle:hover{opacity:1;text-decoration:underline;}
 .desc-toggle .ic{width:.72rem;height:.72rem;}
-
-/* Path bar (renderCompetencyPath ~1734). */
 .pathbar{display:flex;align-items:center;flex-wrap:wrap;font-size:.8125rem;color:var(--lk-text-2);margin:0 0 1rem;background:var(--lk-surface-2);padding:.5rem .75rem;border-radius:.375rem;border:1px solid var(--lk-line);}
 .path-label{font-weight:600;color:var(--lk-text);margin-right:.5rem;white-space:nowrap;}
 .crumb{display:flex;align-items:center;flex-wrap:wrap;list-style:none;margin:0;padding:0;}
 .crumb li{display:flex;align-items:center;min-width:0;}
 .crumb li:last-child{font-weight:600;color:var(--lk-text);}
 .sep{width:.6rem;height:.6rem;color:#adb5bd;margin:0 .375rem;}
-
-/* Related pills (renderRelatedCompetencies ~1784). */
 .rel{margin-top:.5rem;}
 .rel-h{font-size:.9375rem;font-weight:600;color:var(--lk-text);margin:0 0 .625rem;line-height:1.3;}
 .rel-pills{display:flex;flex-wrap:wrap;gap:.375rem;}
 .pill{display:inline-flex;align-items:center;padding:.25rem .75rem;background:transparent;color:var(--lk-text-2);font-size:.8125rem;font-weight:500;border-radius:999px;border:1px solid var(--lk-line-2);text-decoration:none;cursor:default;}
 .pill.hov{background:var(--lk-pill-platter);}
 .rel-sub{font-size:10px;color:#8a8980;margin:.55rem 0 .3rem;}
-
-/* Taxonomy aside card (renderTaxonomyCard ~1894). Accent = icon only; no per-type colour. */
 .tax{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;min-height:96px;padding:1.4rem 1.2rem;background:var(--lk-surface);border:1px solid #dfe3e8;border-radius:1rem;box-shadow:0 6px 18px rgba(15,23,42,.04);text-align:center;}
 .tax-label{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--lk-taxonomy-label);}
 .tax-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;color:#273240;}
 .tax-icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
 .tax-term{max-width:12ch;font-size:1rem;font-weight:700;line-height:1.15;color:#273240;}
+
+/* ==== to-be: description-first (no fade) · clickable relations · taxonomy on the path line ==== */
+.dwrap{padding:14px 20px 4px;}
+.desc2{margin-bottom:.4rem;}
+.desc2-body{position:relative;max-height:7rem;overflow:hidden;font-size:.92rem;color:var(--lk-text-2);line-height:1.55;}
+.desc2-body.open{max-height:none;}
+.desc2-body.open .desc2-fade{display:none;}
+.desc2-body p{margin:0 0 .65rem;}
+.desc2-fade{position:absolute;left:0;right:0;bottom:0;height:2.6rem;pointer-events:none;background:linear-gradient(to bottom,rgba(244,245,247,0),var(--lk-page) 88%);}
+.desc2-video{position:relative;aspect-ratio:16/9;background:#1d2530;border-radius:.6rem;overflow:hidden;display:flex;align-items:center;justify-content:center;margin:.2rem 0 .65rem;}
+.desc2-video .play{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;}
+.desc2-video .play svg{width:18px;height:18px;fill:#1d2530;margin-left:2px;}
+.desc2-toggle{display:inline-flex;align-items:center;gap:.4rem;margin-top:.55rem;padding:.42rem .95rem;border:1px solid var(--lk-line-2);border-radius:.5rem;background:var(--lk-surface);color:var(--lk-accent);font-size:.85rem;font-weight:700;cursor:pointer;}
+.desc2-toggle:hover{border-color:var(--lk-accent);background:var(--lk-counter-active-bg);}
+.desc2-toggle svg{width:.85rem;height:.85rem;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+.pill.link{color:var(--lk-accent);border-color:var(--lk-line-2);cursor:pointer;text-decoration:none;}
+.pill.link:hover{background:var(--lk-counter-active-bg);border-color:var(--lk-accent);}
+.pill.link .ext{width:.72rem;height:.72rem;margin-left:.32rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.75;}
+.pathnote{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;margin:1.1rem 20px 0;padding-top:.8rem;border-top:1px solid var(--lk-line);font-size:.75rem;color:var(--lk-muted);}
+.pathnote svg.sitemap{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.pathnote b{color:var(--lk-text-2);font-weight:600;}
+.pathnote .sep2{color:#adb5bd;margin:0 .1rem;}
+.tax-link{margin-left:auto;display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .3rem;border:none;border-radius:.3rem;background:none;font-size:.8rem;font-weight:700;color:var(--lk-accent);cursor:pointer;}
+.tax-link:hover{text-decoration:underline;}
+.tax-link:focus-visible{outline:2px solid var(--lk-focus-ring);outline-offset:2px;}
+.tax-link svg{width:.85rem;height:.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.85;}
 
 .legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
 .legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
@@ -97,8 +113,6 @@
 
     <div class="dlayout">
       <div class="dmain">
-
-        <!-- OVW-DESC — collapsible description, overflowing (fade + toggle shown) -->
         <div class="desc">
           <div class="desc-body">
             <p>Communicates ideas clearly and concisely in written form, adapting tone and structure to the audience. Produces well-organised reports, summaries and correspondence that are accurate, complete and free of ambiguity.</p>
@@ -109,8 +123,6 @@
             <span>See more</span><svg class="ic" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
           </button>
         </div>
-
-        <!-- OVW-PATH — framework › parents breadcrumb -->
         <nav class="pathbar" aria-label="Path">
           <span class="path-label">Path:</span>
           <ol class="crumb">
@@ -119,8 +131,6 @@
             <li><svg class="sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>Written communication</li>
           </ol>
         </nav>
-
-        <!-- OVW-REL — related pills -->
         <section class="rel">
           <h3 class="rel-h">Related dimensions</h3>
           <div class="rel-pills">
@@ -128,89 +138,62 @@
             <span class="pill hov">Report writing</span>
             <span class="pill">Public speaking</span>
           </div>
-          <div class="rel-sub">showrelatedlink → identical pills, but each is an &lt;a target="_blank" rel="noopener"&gt; (no distinct CSS)</div>
-          <div class="rel-pills">
-            <a class="pill" href="view-competency.php?id=42&competencyid=118" target="_blank" rel="noopener">Active listening</a>
-            <a class="pill" href="view-competency.php?id=42&competencyid=119" target="_blank" rel="noopener">Report writing</a>
-          </div>
+          <div class="rel-sub">showrelatedlink → identical pills, but each is an &lt;a target="_blank"&gt; (no distinct CSS — looks non-clickable)</div>
         </section>
-
       </div>
-
-      <!-- OVW-TAX — taxonomy aside card (accent from icon only) -->
       <aside class="tax" aria-label="Skill">
         <div class="tax-label">Dimension</div>
         <div class="tax-icon"><svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 18a6 6 0 100-12 6 6 0 000 12z"/><path d="M12 14a2 2 0 100-4 2 2 0 000 4z"/></svg></div>
         <div class="tax-term">Skill</div>
       </aside>
     </div>
-
     <div class="lk-ids">
-      <span class="idb">OVW-DESC · showdescription</span>
-      <span class="idb">OVW-DESC-TOGGLE · See more/less</span>
-      <span class="idb">OVW-PATH · showpath</span>
-      <span class="idb">OVW-REL · showrelated (+link)</span>
-      <span class="idb r">OVW-TAX · showtaxonomycard</span>
+      <span class="idb">OVW-DESC · fade + faint "See more"</span>
+      <span class="idb">OVW-PATH · boxed breadcrumb, top</span>
+      <span class="idb">OVW-REL · link pills look static</span>
+      <span class="idb r">OVW-TAX · big aside card + per-type icon</span>
     </div>
-    <div class="note">"Report writing" shown hovered → related-pill hover bg (#f1f3f4) migrates via <code>--lk-pill-platter</code>.</div>
+    <div class="note">White fade makes a rectangular edge on a rounded card; "See more" is faded; link pills look static; taxonomy is a heavy aside card with one of 11 per-type icons.</div>
   </div>
 
-  <!-- ============ TO-BE ============ -->
+  <!-- ============ TO-BE (type chip · description-first · clickable links · path footnote) ============ -->
   <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
-    <div class="lk-cap">Description tab · main column + taxonomy aside</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · description-first · clickable links · taxonomy on path line</div>
+    <div class="lk-cap">Description tab — description leads, single column</div>
 
-    <div class="dlayout">
-      <div class="dmain">
-
-        <div class="desc">
-          <div class="desc-body">
-            <p>Communicates ideas clearly and concisely in written form, adapting tone and structure to the audience. Produces well-organised reports, summaries and correspondence that are accurate, complete and free of ambiguity.</p>
-            <p>Reviews and edits own work for clarity, grammar and factual accuracy before submission, and incorporates reviewer feedback to strengthen future writing.</p>
-          </div>
-          <div class="desc-fade" aria-hidden="true"></div>
-          <button type="button" class="desc-toggle" aria-expanded="false" data-label-show="See more" data-label-hide="See less">
-            <span>See more</span><svg class="ic" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
+    <div class="dwrap">
+      <div class="desc2">
+        <div class="desc2-body">
+          <p>Communicates ideas clearly and concisely in written form, adapting tone and structure to the audience. Produces well-organised reports, summaries and correspondence that are accurate, complete and free of ambiguity. Tailors format and register to purpose — from a quick internal note to a formal, evidence-backed report — and keeps a consistent voice across documents.</p>
+          <div class="desc2-video" role="img" aria-label="Intro video"><span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <p>Reviews and edits own work for clarity, grammar and factual accuracy before submission, and incorporates reviewer feedback to strengthen future writing.</p>
+          <div class="desc2-fade" aria-hidden="true"></div>
         </div>
-
-        <nav class="pathbar" aria-label="Path">
-          <span class="path-label">Path:</span>
-          <ol class="crumb">
-            <li>LEAD-24</li>
-            <li><svg class="sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>Communication</li>
-            <li><svg class="sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>Written communication</li>
-          </ol>
-        </nav>
-
-        <section class="rel">
-          <h3 class="rel-h">Related dimensions</h3>
-          <div class="rel-pills">
-            <span class="pill">Active listening</span>
-            <span class="pill hov">Report writing</span>
-            <span class="pill">Public speaking</span>
-          </div>
-          <div class="rel-sub">showrelatedlink → identical pills, but each is an &lt;a target="_blank" rel="noopener"&gt; (no distinct CSS)</div>
-          <div class="rel-pills">
-            <a class="pill" href="view-competency.php?id=42&competencyid=118" target="_blank" rel="noopener">Active listening</a>
-            <a class="pill" href="view-competency.php?id=42&competencyid=119" target="_blank" rel="noopener">Report writing</a>
-          </div>
-        </section>
-
+        <button type="button" class="desc2-toggle" aria-expanded="false" data-label-show="See more" data-label-hide="See less"><span>See more</span><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
       </div>
 
-      <aside class="tax" aria-label="Skill">
-        <div class="tax-label">Dimension</div>
-        <div class="tax-icon"><svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 18a6 6 0 100-12 6 6 0 000 12z"/><path d="M12 14a2 2 0 100-4 2 2 0 000 4z"/></svg></div>
-        <div class="tax-term">Skill</div>
-      </aside>
+      <section class="rel">
+        <h3 class="rel-h">Related dimensions</h3>
+        <div class="rel-pills">
+          <a class="pill link" href="view-competency.php?id=42&competencyid=118" target="_blank" rel="noopener">Active listening<svg class="ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></a>
+          <a class="pill link" href="view-competency.php?id=42&competencyid=119" target="_blank" rel="noopener">Report writing<svg class="ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></a>
+          <a class="pill link" href="view-competency.php?id=42&competencyid=120" target="_blank" rel="noopener">Public speaking<svg class="ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></a>
+        </div>
+      </section>
+    </div>
+
+    <div class="pathnote">
+      <svg class="sitemap" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="4" y1="11" x2="20" y2="11"/><line x1="4" y1="11" x2="4" y2="15"/><line x1="12" y1="11" x2="12" y2="15"/><line x1="20" y1="11" x2="20" y2="15"/><rect x="1" y="15" width="6" height="5" rx="1"/><rect x="9" y="15" width="6" height="5" rx="1"/><rect x="17" y="15" width="6" height="5" rx="1"/></svg>In <b>LEAD-24</b> <span class="sep2">&rsaquo;</span> Communication
+      <button type="button" class="tax-link" aria-haspopup="dialog" title="What's a Competency?">Competency<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
     </div>
 
     <div class="lk-ids">
-      <span class="idb">taxonomy eyebrow → primary</span>
-      <span class="idb">pill hover → grey-200</span>
+      <span class="idb r">OVW-TAX · on the path line, clickable → definition modal</span>
+      <span class="idb r">OVW-DESC · clamp fade blends to panel bg, strong "See more"</span>
+      <span class="idb r">OVW-REL · link pills clickable + external hint</span>
+      <span class="idb r">OVW-PATH · demoted to a footnote</span>
     </div>
-    <div class="note">Only the taxonomy eyebrow (<code>--lk-taxonomy-label</code>, review) and the related-pill hover (<code>--lk-pill-platter</code>) migrate; path, pills, card frame and icon are neutral/dark and unchanged.</div>
+    <div class="note">Description leads (can be long / HTML / <b>video</b>); the fade is redrawn to blend into the panel background instead of the old rectangular white bar — nearly invisible over plain text, but it still softens a hard-clipped video/image edge (no more flat colour bar at the clamp), and "See more" is a clear button. Taxonomy drops the generic "Dimension" eyebrow and the 11 per-type icons — just the term (e.g. "Competency"), bold + accent-coloured for weight, right-aligned on the same line as the path. It's a button: tapping it opens a modal with that taxonomy's definition, pulled from a new per-taxonomy language string. Related link pills read as clickable (hover + external-link hint). The path is demoted to a subtle <b>footnote</b> at the bottom.</div>
   </div>
 
 </div>
@@ -218,12 +201,12 @@
 <div class="legend">
   <h3>ID legend — Detail: Description tab (view-plan / OVW)</h3>
   <div class="leg">
-    <span class="k">OVW-DESC</span><span class="v"><b>Competency description</b> — raw <code>comp.description</code> HTML in a <code>.local-dimensions-collapsible</code> (30vh cap); rendered only when <code>showdescription &amp;&amp; comp.description</code> <span class="rule">accordion.js renderDescriptionSection ~2089; guard :300, :470</span></span>
-    <span class="k">OVW-DESC-TOGGLE</span><span class="v"><b>See more / See less</b> — <code>data-label-show</code>/<code>-hide</code> = show_more ("See more") / show_less ("See less"); starts <code>hidden</code>, unhidden by <code>collapsible_description</code> only when content overflows; toggles <code>aria-expanded</code> + <code>.is-expanded</code>, rotates the chevron <span class="rule">accordion.js:2102-2108</span></span>
-    <span class="k">OVW-PATH</span><span class="v"><b>Path breadcrumb</b> — label from competency_path ("Path"); crumbs = <code>framework.shortname</code> then each <code>compparents[].shortname</code>, chevron-separated; the competency itself is NOT in the trail; last crumb bold (<code>li:last-child</code>). Shown when <code>showpath</code> <span class="rule">accordion.js renderCompetencyPath ~1734; guard :302, :473</span></span>
-    <span class="k">OVW-REL</span><span class="v"><b>Related pills</b> — header from related_dimensions; one <code>&lt;span&gt;</code> per <code>relatedcompetencies[].shortname</code>. When <code>showrelatedlink &amp;&amp; viewcompetencyurl &amp;&amp; planId</code> each becomes <code>&lt;a href="view-competency.php?id={planId}&amp;competencyid={related.id}" target="_blank" rel="noopener"&gt;</code> — <code>.local-dimensions-related-pill-link</code> has no CSS rule, so link pills are visually identical (even cursor:default). Shown when <code>showrelated</code> &amp; list non-empty <span class="rule">accordion.js renderRelatedCompetencies ~1784; useLink :1791; guard :304, :476</span></span>
-    <span class="k">OVW-TAX</span><span class="v"><b>Taxonomy aside card</b> — fixed eyebrow "Dimension" (taxonomycard_label), icon by key, big term = <code>taxonomy.current.term</code>. <code>getTaxonomyCardMeta</code> maps <b>12 keys → 11 distinct icons</b> (behavior aliases behaviour → behaviour.svg; no behavior.svg). The <code>…-taxonomy-card-&lt;type&gt;</code> accentClass names it emits have <b>NO matching rule in styles.css</b> → there is no per-type colour accent; the icon is the sole differentiator. Shown when <code>showtaxonomycard &amp;&amp; primaryTaxonomy.term</code> <span class="rule">accordion.js renderTaxonomyCard ~1894, getTaxonomyCardMeta ~1842, getPrimaryTaxonomy ~1823; guard :301, :482</span></span>
-    <span class="k">migrate</span><span class="v"><code>--lk-taxonomy-label</code> #356df3→#0f6cbf (eyebrow, <b>review</b> · styles.css:2257) · <code>--lk-pill-platter</code> #f1f3f4→#e9ecef (related-pill hover · styles.css:2093). Path bar, pill borders/text, card frame (#dfe3e8), title/icon (#273240) are neutral/dark — no migration <span class="rule">token-migration.md</span></span>
+    <span class="k">OVW-DESC</span><span class="v"><b>Competency description</b> — raw <code>comp.description</code> HTML in a collapsible (30vh cap), rendered when <code>showdescription &amp;&amp; comp.description</code>. Can be long / rich HTML / embedded video. <b>To-be:</b> the fade is redrawn to blend with the panel background rather than the old rectangular white bar — nearly invisible over plain text, but it softens a hard-clipped embedded video/image instead of leaving a flat colour bar at the clamp; "See more" becomes a clear bordered button. <span class="rule">accordion.js renderDescriptionSection ~2089; guard :300, :470</span></span>
+    <span class="k">OVW-DESC-TOGGLE</span><span class="v"><b>See more / See less</b> — <code>data-label-show</code>/<code>-hide</code>; unhidden by <code>collapsible_description</code> only when content overflows; toggles <code>aria-expanded</code> + <code>.is-expanded</code>. <b>To-be:</b> full-opacity bordered button, not a faded link. <span class="rule">accordion.js:2102-2108</span></span>
+    <span class="k">OVW-PATH</span><span class="v"><b>Path</b> — crumbs = <code>framework.shortname</code> then each <code>compparents[].shortname</code> (the competency itself is not in the trail). <b>To-be:</b> demoted from a boxed breadcrumb at the top to a subtle <b>footnote</b> at the bottom ("In {framework} › {parent}", a <b>fa-sitemap</b> glyph — drawn here as inline SVG for a self-contained preview, but the real markup should emit <code>&lt;i class="fa fa-sitemap" aria-hidden="true"&gt;&lt;/i&gt;</code>, same convention as the existing <code>fa-chevron-right</code> separator) — it's secondary "where it sits" context. Shown when <code>showpath</code>. <span class="rule">accordion.js renderCompetencyPath ~1734; guard :302, :473</span></span>
+    <span class="k">OVW-REL</span><span class="v"><b>Related pills</b> — one per <code>relatedcompetencies[].shortname</code>; when <code>showrelatedlink &amp;&amp; viewcompetencyurl &amp;&amp; planId</code> each is an <code>&lt;a target="_blank" rel="noopener"&gt;</code>. <b>Fix (to-be):</b> the link variant currently has no CSS (looks static, even <code>cursor:default</code>) — the link pill now reads clickable (accent text, pointer, hover fill, an external-link glyph). <span class="rule">accordion.js renderRelatedCompetencies ~1784; useLink :1791; .local-dimensions-related-pill-link has no rule</span></span>
+    <span class="k">OVW-TAX</span><span class="v"><b>Taxonomy</b> — the competency's type (<code>taxonomy.current.term</code>) under a fixed label (taxonomycard_label, e.g. "Dimension"). <b>To-be:</b> the fixed eyebrow label and the <code>getTaxonomyCardMeta</code> 11-icon set are <b>dropped</b> — the big aside card + shadow go away and the term alone (e.g. "Competency") moves onto the path footnote, right-aligned, bold + accent-coloured for weight. It becomes a <code>&lt;button&gt;</code>: clicking it opens a modal with that taxonomy's definition, sourced from a new per-taxonomy language string (one per taxonomy, still to be authored) — not yet wired to <code>taxonomy.current</code>. Shown when <code>showtaxonomycard &amp;&amp; primaryTaxonomy.term</code>. <span class="rule">accordion.js renderTaxonomyCard ~1894, getTaxonomyCardMeta ~1842; guard :301, :482</span></span>
+    <span class="k">migrate</span><span class="v"><code>--lk-accent</code> (taxonomy link, link-pill + See-more hover) · <code>--lk-pill-platter</code>/<code>--lk-counter-active-bg</code> → Moodle DS. Path text and body text are neutral — no migration. <span class="rule">token-migration.md</span></span>
   </div>
 </div>
 </div>
