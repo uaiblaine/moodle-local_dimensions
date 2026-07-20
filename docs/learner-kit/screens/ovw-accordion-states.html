@@ -1,4 +1,4 @@
-<!-- @dsCard group="Learner screens · Plan (OVW)" name="Accordion load states" subtitle="view_plan_summary / accordion.js — per-item loading spinner and load error · as-is │ to-be" -->
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Accordion load states" subtitle="view_plan_summary / accordion.js — per-item load states · as-is (spinner + alert-danger) │ to-be: skeleton loader + friendly retry-able error" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -64,6 +64,23 @@
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
 @keyframes lk-spin{to{transform:rotate(360deg);}}
 
+/* ==== to-be: skeleton loader (hints the incoming tab strip + rows) + friendly retry-able error ==== */
+.skel{padding:1rem 1.125rem 1.1rem;}
+.skel-tabs{display:flex;gap:.85rem;margin-bottom:1rem;padding-bottom:.7rem;border-bottom:1px solid var(--lk-line);}
+.skel-tab{height:.6rem;border-radius:999px;background:var(--lk-line);animation:lk-pulse 1.5s ease-in-out infinite;}
+.skel-block{display:flex;flex-direction:column;gap:.6rem;}
+.skel-row{height:.7rem;border-radius:.35rem;background:var(--lk-line);animation:lk-pulse 1.5s ease-in-out infinite;}
+@keyframes lk-pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+.acc-err{display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:26px 20px 24px;text-align:center;}
+.acc-err-ic{width:44px;height:44px;flex:none;border-radius:50%;background:#f8d7da;color:#842029;display:flex;align-items:center;justify-content:center;}
+.acc-err-ic svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.acc-err-title{font-size:.95rem;font-weight:600;color:var(--lk-text);}
+.acc-err-sub{font-size:.82rem;color:var(--lk-muted);max-width:34ch;line-height:1.5;}
+.acc-err-retry{margin-top:.45rem;display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border:1px solid var(--lk-line-2);border-radius:.5rem;background:var(--lk-surface);color:var(--lk-accent);font-size:.82rem;font-weight:600;cursor:pointer;}
+.acc-err-retry:hover{border-color:var(--lk-accent);background:var(--lk-counter-active-bg);}
+.acc-err-retry:focus-visible{outline:2px solid var(--lk-focus-ring);outline-offset:2px;}
+.acc-err-retry svg{width:.9rem;height:.9rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
 .legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
 .legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
 .leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
@@ -127,9 +144,9 @@
 
   <!-- ============ TO-BE ============ -->
   <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · Moodle DS</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · skeleton loader + friendly retry-able error</div>
 
-    <div class="lk-cap">Expanded item — loading (default before fetch) · <span class="idb">OVW-ACC-LOADING</span></div>
+    <div class="lk-cap">Expanded item — loading skeleton (default before fetch) · <span class="idb r">OVW-ACC-LOADING · to-be</span></div>
     <div class="acc">
       <div class="acc-item" role="listitem" data-competency-id="41">
         <button class="acc-toggle focus" type="button" aria-expanded="true" aria-controls="competency-content-41m" id="competency-header-41m">
@@ -138,22 +155,32 @@
         </button>
         <div class="acc-content" id="competency-content-41m" aria-labelledby="competency-header-41m">
           <div class="acc-body">
-            <div class="sum-loading">
-              <span class="spin" role="status"><span class="sr">Loading...</span></span>
-              <span class="lbl">Loading...</span>
+            <div class="skel" role="status">
+              <span class="sr">Loading competency details…</span>
+              <div class="skel-tabs" aria-hidden="true">
+                <span class="skel-tab" style="width:58px"></span>
+                <span class="skel-tab" style="width:72px"></span>
+                <span class="skel-tab" style="width:64px"></span>
+                <span class="skel-tab" style="width:48px"></span>
+              </div>
+              <div class="skel-block" aria-hidden="true">
+                <span class="skel-row" style="width:92%"></span>
+                <span class="skel-row" style="width:78%"></span>
+                <span class="skel-row" style="width:85%"></span>
+                <span class="skel-row" style="width:45%"></span>
+              </div>
             </div>
             <div class="sum-content"></div>
-            <div class="sum-error" role="alert" style="display:none">Error loading competency summary.</div>
           </div>
         </div>
       </div>
     </div>
     <div class="lk-ids">
-      <span class="idb">spinner → primary</span>
-      <span class="idb">focus ring → primary</span>
+      <span class="idb r">OVW-ACC-LOADING · skeleton hints the tab strip + rows</span>
+      <span class="idb">role=status + sr-only "Loading…" (pulse, 1.5s)</span>
     </div>
 
-    <div class="divlbl">Expanded item — load error (WS rejected) <span class="idb">OVW-ACC-ERROR</span></div>
+    <div class="divlbl">Expanded item — load error (WS rejected) <span class="idb r">OVW-ACC-ERROR · to-be</span></div>
     <div class="acc">
       <div class="acc-item" role="listitem" data-competency-id="42">
         <button class="acc-toggle" type="button" aria-expanded="true" aria-controls="competency-content-42m" id="competency-header-42m">
@@ -162,17 +189,18 @@
         </button>
         <div class="acc-content" id="competency-content-42m" aria-labelledby="competency-header-42m">
           <div class="acc-body">
-            <div class="sum-loading" style="display:none">
-              <span class="spin" role="status"><span class="sr">Loading...</span></span>
-              <span class="lbl">Loading...</span>
+            <div class="acc-err" role="alert">
+              <div class="acc-err-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+              <div class="acc-err-title">Couldn't load this competency</div>
+              <div class="acc-err-sub">Something went wrong fetching the details. Check your connection and try again.</div>
+              <button type="button" class="acc-err-retry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Retry</button>
             </div>
             <div class="sum-content"></div>
-            <div class="sum-error" role="alert">Error loading competency summary.</div>
           </div>
         </div>
       </div>
     </div>
-    <div class="note"><code>alert-danger</code> is a core component — the plugin does not restyle it, so the error box is identical in both panels. Only the spinner blue and the header focus ring follow <code>--primary</code>.</div>
+    <div class="note">The lone spinner becomes a <b>skeleton</b> that hints the incoming layout (tab strip + a few content rows, gentle pulse) — better perceived performance and less jarring than a bare spinner; it keeps <code>role="status"</code> + an sr-only "Loading…". The flat red <code>alert-danger</code> box becomes a <b>friendly, retry-able error</b> — a danger-tinted icon, a plain message, and a <b>Retry</b> button that re-runs the fetch — so a failed load has a recovery path instead of a dead red box. Danger semantics stay (the icon tint); the Retry button uses <code>--lk-accent</code>.</div>
   </div>
 
 </div>
@@ -181,8 +209,8 @@
   <h3>ID legend — Accordion load states (Plan / OVW)</h3>
   <div class="leg">
     <span class="k">OVW-ACC</span><span class="v"><b>Accordion item</b> (referenced) — one per competency; body content is lazy-loaded on first expand <span class="rule">view_plan_summary.mustache:114-118</span></span>
-    <span class="k">OVW-ACC-LOADING</span><span class="v"><b>Loading placeholder</b> — <code>.local-dimensions-competency-summary-loading.text-center.py-3</code> with <code>spinner-border spinner-border-sm text-primary</code>; visible text + <code>sr-only</code> both = <code>loading_competency_summary</code> ("Loading..."). Default markup in every expanded body; shown on expand, hidden once both WS promises resolve <span class="rule">mustache:171-176; accordion.js loadCompetencySummary 62-65 (show) / 103-105 (hide on success)</span></span>
-    <span class="k">OVW-ACC-ERROR</span><span class="v"><b>Load-error alert</b> — <code>.local-dimensions-competency-summary-error.alert.alert-danger</code>, text = <code>error_loading_summary</code> ("Error loading competency summary."). Hidden by default; shown in the <code>.catch</code> when either <code>get_user_competency_summary_in_plan</code> or <code>get_competency_courses</code> rejects — loading is hidden, error unhidden, <code>Notification.exception</code> fired <span class="rule">mustache:180-182; accordion.js catch 110-119</span></span>
+    <span class="k">OVW-ACC-LOADING</span><span class="v"><b>Loading placeholder</b> — <code>.local-dimensions-competency-summary-loading.text-center.py-3</code> with <code>spinner-border spinner-border-sm text-primary</code>; visible text + <code>sr-only</code> both = <code>loading_competency_summary</code> ("Loading..."). Default markup in every expanded body; shown on expand, hidden once both WS promises resolve. <b>To-be:</b> the lone spinner becomes a <b>skeleton</b> that hints the incoming layout — a tab-strip row of short pills + a few content rows with a gentle 1.5s pulse — for better perceived performance; keeps <code>role="status"</code> + an sr-only "Loading…". <span class="rule">mustache:171-176; accordion.js loadCompetencySummary 62-65 (show) / 103-105 (hide on success)</span></span>
+    <span class="k">OVW-ACC-ERROR</span><span class="v"><b>Load-error alert</b> — <code>.local-dimensions-competency-summary-error.alert.alert-danger</code>, text = <code>error_loading_summary</code> ("Error loading competency summary."). Hidden by default; shown in the <code>.catch</code> when either <code>get_user_competency_summary_in_plan</code> or <code>get_competency_courses</code> rejects — loading is hidden, error unhidden, <code>Notification.exception</code> fired. <b>To-be:</b> the flat red <code>alert-danger</code> box becomes a <b>friendly, retry-able error</b> — a danger-tinted icon, a plain message, and a <b>Retry</b> button that re-runs the fetch (clears the loaded/failed flag and re-enters <code>loadCompetencySummary</code>) — a recovery path instead of a dead box; danger semantics stay in the icon tint. Needs a Retry lang string + wiring. <span class="rule">mustache:180-182; accordion.js catch 110-119</span></span>
     <span class="k">OVW-ACC · content</span><span class="v"><b>Hidden content sink</b> — <code>.local-dimensions-competency-summary-content</code> (display:none) filled by <code>renderCompetencySummary</code> then shown; holds the loaded detail (<span class="rule">OVW-TAB-NAV / OVW-STATUS / OVW-CRS — mustache:178; accordion.js 253-254</span>)</span>
     <span class="k">focus ring</span><span class="v">Header <code>.local-dimensions-accordion-toggle:focus</code> — <code>outline:3px solid</code> follows <code>--lk-focus-ring</code>; keyboard-activating a collapsed header expands it while focus stays put <span class="rule">styles.css:1123-1126</span></span>
   </div>
