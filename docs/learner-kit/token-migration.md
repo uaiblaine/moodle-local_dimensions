@@ -1,10 +1,18 @@
 # Token migration — learner views (Material/Google → Moodle DS)
 
+> **Status: IMPLEMENTED (2026-07-20).** The 13 clear-cut tokens + the 6 "review" decisions below were
+> applied to the real `styles.css` as a value-only slice (50 literal swaps), plus the two colour-picker
+> **defaults** in `settings.php` (`returnbuttoncolor`, `learnmorebuttoncolor` `#667eea`→`#0f6cbf`).
+> Review decisions taken: taxonomy-label → `#0f6cbf`; focus-ring → `#0f6cbf` (AA ~5.4:1 on white — verify
+> on coloured surfaces); `--lk-amber-rated` `#e5a100` **kept**; modal-note trio → BS warning-light. The
+> ~10 loose greys were **left** (optional future normalisation). Kept as documentation of the change.
+> `version.php` was **not** bumped (version is frozen at `2026071306` until 2.0); cache busts at the
+> next real bump / purge on the test server.
+
 **As-is** = the real `styles.css` palette (a Material/Google skin over Boost). **To-be** = Moodle
 DS parity, achieved by overriding the `--lk-*` token block with the `.moodle` class (see
 [`tokens.html`](tokens.html) — that override block IS the proposed CSS change). The rules **orange
-is kept**. This file is the annotation surface and the checklist for the later `styles.css` slice;
-it does **not** change runtime code yet.
+is kept**.
 
 ## How the kit encodes it
 
@@ -76,5 +84,6 @@ The custom-SCSS editor textarea (admin template form) uses a Catppuccin theme
   `var(--local-dimensions-fab-color, #667eea)` — same treatment.
 - Prefer introducing the `--lk-*` (or Boost `--primary`/`--bs-*`) vars over scattering new literals,
   so a future theme swap is one block.
-- This is a **visual-parity** change only; no markup/JS/behaviour changes, but it still needs a
-  `version.php` bump (cache revision) when it lands. Out of scope for this pass.
+- This is a **visual-parity** change only; no markup/JS/behaviour changes. Normally it would want a
+  `version.php` cache-revision bump, but the repo is under a version freeze (`2026071306` until 2.0) —
+  so it was **not** bumped; the cache busts at the next real bump, or purge caches on the test server.

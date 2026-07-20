@@ -690,13 +690,13 @@
       Cards now live exclusively on the view-competency page.
       ============================================ */
 .local-dimensions-viewcompetency .card-header {
-    background-color: #f9fafb;
+    background-color: #f8f9fa;
     border: 0;
 }
 
 .local-dimensions-viewcompetency .card-header a {
     font-size: 20px;
-    color: #212121;
+    color: #212529;
 }
 
 /* Text muted inside card headers - larger font size */
@@ -705,7 +705,7 @@
 }
 
 .local-dimensions-viewcompetency .card {
-    background-color: #f9fafb;
+    background-color: #f8f9fa;
 }
 
 .local-dimensions-progress-container {
@@ -885,7 +885,7 @@
 
 /* Completed items have green connectors */
 .local-dimensions-timeline-item.completed::before {
-    background-color: #28a745;
+    background-color: #198754;
 }
 
 /* Marker container */
@@ -917,7 +917,7 @@
 }
 
 .local-dimensions-icon-check {
-    fill: #28a745;
+    fill: #198754;
 }
 
 .local-dimensions-icon-lock {
@@ -979,7 +979,7 @@
 /* Progress circle - green fill */
 .local-dimensions-progress-ring__progress {
     fill: transparent;
-    stroke: #28a745;
+    stroke: #198754;
     stroke-width: 3;
     stroke-linecap: round;
     transition: stroke-dasharray 0.5s ease-in-out;
@@ -1085,7 +1085,7 @@
 
 /* Left border colors by competency state */
 .local-dimensions-accordion-item.completed {
-    border-left: 4px solid #28a745;
+    border-left: 4px solid #198754;
 }
 
 .local-dimensions-accordion-item.rated:not(.completed) {
@@ -1121,7 +1121,7 @@
 }
 
 .local-dimensions-accordion-toggle:focus {
-    outline: 3px solid #005fcc;
+    outline: 3px solid #0f6cbf;
     outline-offset: -3px;
 }
 
@@ -1269,7 +1269,7 @@
 .local-dimensions-filter-tabs {
     display: inline-flex;
     gap: 0;
-    background: #f1f3f4;
+    background: #e9ecef;
     border-radius: 999px;
     padding: 4px;
     flex-shrink: 0;
@@ -1285,7 +1285,7 @@
     border-radius: 999px;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #5f6368;
+    color: #6c757d;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -1295,13 +1295,13 @@
 }
 
 .local-dimensions-filter-tab:focus {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: 2px;
 }
 
 .local-dimensions-filter-tab.active {
     background: #fff;
-    color: #1a73e8;
+    color: #0f6cbf;
     box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
 }
 
@@ -1312,16 +1312,16 @@
     min-width: 20px;
     height: 20px;
     padding: 0 6px;
-    background: #e8eaed;
-    color: #5f6368;
+    background: #e9ecef;
+    color: #6c757d;
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
 }
 
 .local-dimensions-filter-tab.active .local-dimensions-filter-count {
-    background: #e8f0fe;
-    color: #1a73e8;
+    background: #cfe2ff;
+    color: #0f6cbf;
 }
 
 /* Search input */
@@ -1337,7 +1337,7 @@
 .local-dimensions-search-icon {
     position: absolute;
     left: 0.75rem;
-    color: #9aa0a6;
+    color: #6c757d;
     font-size: 0.8125rem;
     pointer-events: none;
     z-index: 1;
@@ -1346,7 +1346,7 @@
 .local-dimensions-search-input {
     width: 100%;
     padding: 0.5rem 2rem 0.5rem 2.125rem;
-    border: 1px solid #e1e3e6;
+    border: 1px solid #dee2e6;
     border-radius: 999px;
     background: #f8f9fa;
     font-size: 0.8125rem;
@@ -1357,11 +1357,11 @@
 }
 
 .local-dimensions-search-input::placeholder {
-    color: #9aa0a6;
+    color: #6c757d;
 }
 
 .local-dimensions-search-input:focus {
-    border-color: #1a73e8;
+    border-color: #0f6cbf;
     background: #fff;
     box-shadow: 0 0 0 3px rgb(26 115 232 / 15%);
 }
@@ -1377,7 +1377,7 @@
     border: none;
     border-radius: 50%;
     background: transparent;
-    color: #5f6368;
+    color: #6c757d;
     cursor: pointer;
     padding: 0;
     transition: background 0.15s ease;
@@ -1505,7 +1505,7 @@
     height: 20px;
     padding: 0 6px;
     background: #fff;
-    color: #5f6368;
+    color: #6c757d;
     border-radius: 999px;
     font-size: 0.7rem;
     font-weight: 600;
@@ -1603,7 +1603,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0f6cbf 0%, #0a5aa0 100%);
     color: #fff;
     font-size: 1.5rem;
     font-weight: 700;
@@ -1649,7 +1649,7 @@
 
 .local-dimensions-course-progress-fill-lg {
     height: 100%;
-    background-color: #28a745;
+    background-color: #198754;
     border-radius: 4px;
     transition: width 0.3s ease;
 }
@@ -1711,12 +1711,12 @@
     border-radius: 999px;
     font-size: 0.8125rem;
     font-weight: 600;
-    background-color: #28a745;
+    background-color: #198754;
     color: #fff;
 }
 
 .local-dimensions-status-badge.local-dimensions-status-badge-muted {
-    background-color: #f1f3f4;
+    background-color: #e9ecef;
     color: #6c757d;
 }
 
@@ -1736,7 +1736,7 @@
 }
 
 .local-dimensions-status-success {
-    color: #28a745;
+    color: #198754;
 }
 
 .local-dimensions-status-pending {
@@ -1897,7 +1897,7 @@
 }
 
 .local-dimensions-ev-detail-btn:focus-visible {
-    outline: 3px solid #005fcc;
+    outline: 3px solid #0f6cbf;
     outline-offset: 2px;
 }
 
@@ -1974,11 +1974,11 @@
 }
 
 .local-dimensions-ev-modal-note {
-    background: #fef9c3;
-    color: #713f12;
+    background: #fff3cd;
+    color: #664d03;
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
-    border-left: 3px solid #eab308;
+    border-left: 3px solid #ffc107;
     font-size: 0.85rem;
     line-height: 1.5;
 }
@@ -1999,7 +1999,7 @@
 }
 
 .local-dimensions-ev-modal-link a:focus-visible {
-    outline: 3px solid #005fcc;
+    outline: 3px solid #0f6cbf;
     outline-offset: 2px;
 }
 
@@ -2046,7 +2046,7 @@
 }
 
 .local-dimensions-ev-modal-author a:focus-visible {
-    outline: 3px solid #005fcc;
+    outline: 3px solid #0f6cbf;
     outline-offset: 2px;
 }
 
@@ -2090,7 +2090,7 @@
 }
 
 .local-dimensions-related-pill-v2:hover {
-    background: #f1f3f4;
+    background: #e9ecef;
 }
 
 /* ============================================
@@ -2152,14 +2152,14 @@
 }
 
 .local-dimensions-tab-btn:focus {
-    outline: 2px solid #005fcc;
+    outline: 2px solid #0f6cbf;
     outline-offset: -2px;
 }
 
 /* Active tab — underline accent */
 .local-dimensions-tab-btn.active {
     color: #212529;
-    border-bottom-color: var(--dimension-custombgcolor, var(--primary, #667eea));
+    border-bottom-color: var(--dimension-custombgcolor, var(--primary, #0f6cbf));
     font-weight: 600;
 }
 
@@ -2254,7 +2254,7 @@
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #356df3;
+    color: #0f6cbf;
 }
 
 .local-dimensions-taxonomy-card-icon {
@@ -2373,7 +2373,7 @@
 }
 
 .local-dimensions-ev-slider-btn:focus {
-    outline: 2px solid var(--dimension-custombgcolor, var(--primary, #667eea));
+    outline: 2px solid var(--dimension-custombgcolor, var(--primary, #0f6cbf));
     outline-offset: -2px;
 }
 
@@ -2474,7 +2474,7 @@
 }
 
 .local-dimensions-scroll-btn:focus {
-    outline: 2px solid var(--dimension-custombgcolor, var(--primary, #667eea));
+    outline: 2px solid var(--dimension-custombgcolor, var(--primary, #0f6cbf));
     outline-offset: -2px;
 }
 
@@ -2491,7 +2491,7 @@
 /* Courses section inside accordion */
 .local-dimensions-courses-section {
     padding: 1.25rem;
-    background: #f1f3f4;
+    background: #e9ecef;
     border-radius: 0;
     margin: 0;
 }
@@ -3056,7 +3056,7 @@
     align-items: center;
     gap: 10px;
     padding: 14px 24px;
-    background: var(--local-dimensions-fab-color, #667eea);
+    background: var(--local-dimensions-fab-color, #0f6cbf);
     color: #fff;
     text-decoration: none;
     border-radius: 50px;
@@ -3315,11 +3315,11 @@
     --local-dimensions-tabs-height: 36px;
     --local-dimensions-tabs-inner-height: 28px;
     --local-dimensions-tabs-platter-padding: 4px;
-    --local-dimensions-tabs-platter-bg: #f1f3f4;
+    --local-dimensions-tabs-platter-bg: #e9ecef;
     --local-dimensions-tabs-indicator-bg: #fff;
     --local-dimensions-tabs-indicator-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-    --local-dimensions-tabs-item-color: #5f6368;
-    --local-dimensions-tabs-item-color-active: #1a73e8;
+    --local-dimensions-tabs-item-color: #6c757d;
+    --local-dimensions-tabs-item-color-active: #0f6cbf;
     --local-dimensions-tabs-paddle-color: rgba(0, 0, 0, 0.56);
     --local-dimensions-tabs-paddle-color-hover: rgba(0, 0, 0, 0.72);
     --local-dimensions-tabs-paddle-icon-opacity-disabled: 0.42;
@@ -3438,7 +3438,7 @@
     border-radius: 999px;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--local-dimensions-tabs-item-color, #5f6368);
+    color: var(--local-dimensions-tabs-item-color, #6c757d);
     cursor: pointer;
     white-space: nowrap;
     position: relative;
@@ -3458,13 +3458,13 @@
 }
 
 .local-dimensions-filter-tab:focus-visible {
-    box-shadow: inset 0 0 0 2px #1a73e8;
+    box-shadow: inset 0 0 0 2px #0f6cbf;
     outline: none;
 }
 
 .local-dimensions-filter-tab[aria-pressed='true'] {
     background: transparent;
-    color: var(--local-dimensions-tabs-item-color-active, #1a73e8);
+    color: var(--local-dimensions-tabs-item-color-active, #0f6cbf);
     opacity: 1;
 }
 
@@ -3522,7 +3522,7 @@
 }
 
 .local-dimensions-filter-tabs-paddle:focus-visible {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: -2px;
 }
 
@@ -3572,7 +3572,7 @@
 }
 
 .local-dimensions-chip-clear:focus-visible {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #0f6cbf;
     outline-offset: 2px;
     border-radius: 4px;
 }
