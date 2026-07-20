@@ -34,10 +34,15 @@ where a web service / cache / setting changes.
 - Grid mode = a `view` param branch; detail stays **lazy** per competency (heavy — not pre-loaded).
 - Ghost card ("N more to explore" — the not-yet-favourited count), like `block_dimensions`.
 - Detail modal with prev/next pagination across competencies + full-screen expand (mobile).
+- **Retire the always-visible inline chip bar** (`chip_filters` rendered under the hero). Filtering moves
+  into the toolbar's **Filter** control (`OVW-TOOLBAR`); the `chip_filters` component is reused inside the
+  Filter panel it opens, not rendered inline. Same retirement applies to the Tracker (below). The
+  `chips` kit screen is kept only as the historical record of the retired component.
 
 ### Tracker (`trk-tracker`)
 - Filter `[Not completed | All]` by **course completion**; sort (Completed first / Name / Recent);
-  a Filter button opening the existing `chip_filters` (align with view-plan). All client-side.
+  a Filter button opening the existing `chip_filters` (align with view-plan). All client-side. The
+  inline chip bar is **retired** here too — the chips open from this Filter button, not inline.
 - Completed-course card: a "Completed" seal + the timeline collapsed to a summary (expandable).
 - "Continue" shortcut on an in-progress card → the current section (first `is_started && !is_completed`).
 
