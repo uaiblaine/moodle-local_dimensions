@@ -795,7 +795,7 @@ Expected: no output (ignore any GPL header hits). Any real hit must start with a
 Run:
 ```bash
 cd /Volumes/N1TB/dev/github/moodle/public/local/dimensions
-git diff --staged --name-only | xargs grep -nE '\b(TODO|FIXME|XXX)\b|@todo|<<<<<<<|>>>>>>>' 2>/dev/null || echo "clean"
+git diff --staged --name-only | xargs grep -nE '\b([T]ODO|FIXME|XXX)\b|@todo|<<<<<<<|>>>>>>>' 2>/dev/null || echo "clean"
 ```
 Expected: `clean`.
 

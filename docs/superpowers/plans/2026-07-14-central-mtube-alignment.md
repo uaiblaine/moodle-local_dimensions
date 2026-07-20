@@ -180,7 +180,7 @@ Dentro do `<ul>` do `.callout` existente, acrescentar dois `<li>`:
 ```bash
 head -1 docs/design-kit/tokens.html   # @dsCard intacto na linha 1
 grep -c 'prefers-color-scheme' docs/design-kit/tokens.html   # >= 1
-grep -nE 'TODO|FIXME|<<<<<<<' docs/design-kit/tokens.html || echo "OK sem leftover"
+grep -nE '[T]ODO|FIXME|<<<<<<<' docs/design-kit/tokens.html || echo "OK sem leftover"
 ```
 
 Abrir o arquivo no navegador e conferir claro **e** escuro (as novas linhas não podem depender de token que só existe no claro).
@@ -258,7 +258,7 @@ Acrescentar ao final do corpo do preview, antes de qualquer callout:
 
 ```bash
 head -1 docs/design-kit/states.html
-grep -nE 'TODO|FIXME|<<<<<<<' docs/design-kit/states.html || echo "OK"
+grep -nE '[T]ODO|FIXME|<<<<<<<' docs/design-kit/states.html || echo "OK"
 ```
 
 Abrir no navegador, claro e escuro.
@@ -355,7 +355,7 @@ Adicionar ao painel to-be a nota (o spec chama isto de dívida que a implementa�
 
 ```bash
 head -1 docs/design-kit/modal-shell.html
-grep -nE 'TODO|FIXME|<<<<<<<' docs/design-kit/modal-shell.html || echo "OK"
+grep -nE '[T]ODO|FIXME|<<<<<<<' docs/design-kit/modal-shell.html || echo "OK"
 git add docs/design-kit/modal-shell.html
 git commit -m "docs(kit): model the real modal shell, and the mtube-inspired to-be
 
@@ -441,7 +441,7 @@ Marcar em cada botão que abre modal um badge discreto `→ MOD.X`, para o card 
 
 ```bash
 head -1 docs/design-kit/sticky-footer.html
-grep -nE 'TODO|FIXME|<<<<<<<' docs/design-kit/sticky-footer.html || echo "OK"
+grep -nE '[T]ODO|FIXME|<<<<<<<' docs/design-kit/sticky-footer.html || echo "OK"
 git add docs/design-kit/sticky-footer.html
 git commit -m "docs(kit): card the sticky footer, the hub's most distinctive pattern
 

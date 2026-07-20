@@ -2,7 +2,3 @@ filter:
   notPaths:
     - node_modules
     - vendor
-    # docs/ is committed reference (design kits + brainstorming plans), export-ignored from the
-    # release zip; it is documentation, not code, so exclude it from the file scan / leftover check
-    # (planning docs legitimately contain example grep patterns like TODO/FIXME/conflict markers).
-    - docs
