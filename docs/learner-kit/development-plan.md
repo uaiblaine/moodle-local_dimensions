@@ -69,17 +69,30 @@ where a web service / cache / setting changes.
   richer modal: the scale items (`mdl_scale.scale`) + `scaleconfiguration` to render a structured level
   list with the proficient levels marked, instead of just the raw description blob.
 
-### Linked courses / activities (`ovw-detail-courses`) — grouped under Assessment
-- **Compact chips grouped under the assessment.** On the first (Assessment) tab, render the linked
-  courses/activities as wrapping compact chips (leading course-vs-activity icon, name, compact progress
-  token, whole chip clickable) directly below the assessment card, so tab[0] reads as "where you stand +
-  what completes it". Chips **wrap and fill** the pane (better use of space than the big-card scroller);
-  the empty case degrades to a single soft line instead of a blank tab. The heavy image-card scroller
-  (current `renderCourseCardsScrollable`, always-below the tab widget) is reworked for this role.
-- **Surface activities, not just courses.** Extend the learner WS
-  (`local_dimensions_get_competency_courses`) to also return linked **activities** (course modules) with
-  their completion status — the admin side already counts them (`activitycount`, `helper.php:2443`); the
-  learner WS is courses-only today. `version.php` bump (WS return changes).
+### Linked courses / activities (`ovw-detail-courses`) — kanban-hybrid under Assessment
+- **Keep the course-card scroller; add a decisive outcome badge.** The image-card scroller stays. Each
+  card gains a badge from the link's `ruleoutcome` (`course_competency` / `course_module_competency`):
+  strong accent for the two that conclude/advance the competency — **Completes the competency**
+  (`OUTCOME_COMPLETE`) and **Sends for review** (`OUTCOME_RECOMMEND`) — a subtle grey **Attach evidence**
+  (`OUTCOME_EVIDENCE`), and **no badge** for **Do nothing** (`OUTCOME_NONE`, the default, so most cards
+  stay clean). Accent, not green: green = achieved (progress ring), badge = what finishing it *does*.
+  Mirrors the Evidence tab's decisive/journey line. Add `ruleoutcome` to the courses WS return.
+- **Activities expand from the card.** A course whose modules are linked to *this* competency shows a
+  "N activities" disclosure; expanded, it lists compact rows (icon + name + own decisive badge +
+  done/to-do), each linking straight to the activity. The card links to the course. Extend the WS to
+  also return the competency's **module links** (`competency_modulecomp`, grouped by courseid) with
+  `ruleoutcome` + completion — the admin side already joins this (`helper.php:2373`). Handle activities
+  whose course isn't itself linked (show the course as a neutral container, no course badge).
+- **Label-driven title.** "Linked courses" becomes "Linked **{label}** & activities", where {label} is
+  the competency's `local_dimensions_type` select ("Competency label"; options already plural:
+  Activities / Lessons / Cycles / Stages / Modules / Levels / Periods / Units), read server-side as
+  `cf_type` (`helper.php:1319`). Falls back to "Linked courses" when unset; degrades to "Linked
+  activities" when the label itself is "Activities".
+- **Keep the nav pill (`OVW-CRS-NAV`).** Move the prev/next scroll pill into the section header (stable
+  when a card expands), hide the native horizontal scrollbar (`scrollbar-width:none`) so the pill is the
+  clean nav affordance; keep the existing gates (shown only when itemCount > 2 / mobile, Prev disabled
+  at the left edge).
+- All of the above is one WS-return extension → a `version.php` bump.
 
 ## Styling
 - The Material/Google → Moodle DS token migration lands as its own `styles.css` slice, driven by
