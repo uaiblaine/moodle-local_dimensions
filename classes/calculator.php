@@ -83,6 +83,13 @@ class calculator {
                 $isenrolmentstart = ($enrolstartdate !== null);
             }
 
+            /* A locked card reframes the date as an invitation rather than a restriction, so
+               the client needs to know whether it still lies ahead - and whether the learner
+               can simply join instead of waiting. Both are asked only when the card is locked:
+               the self-enrol answer costs a walk through the course's enrolment instances. */
+            $canselfenrol = $locked && self::current_user_can_self_enrol((int) $course->id);
+            $isfuturedate = $locked && $availabilitydate > time();
+
             $courseurl = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
 
             if (!$completion->is_enabled()) {
@@ -91,6 +98,8 @@ class calculator {
                     'locked' => $locked,
                     'formatted_start_date' => $formattedstartdate,
                     'is_enrolment_start' => $isenrolmentstart,
+                    'can_self_enrol' => $canselfenrol,
+                    'is_future_date' => $isfuturedate,
                     'course_url' => $courseurl,
                     'sections' => [],
                 ];
@@ -225,6 +234,8 @@ class calculator {
                 'locked' => $locked,
                 'formatted_start_date' => $formattedstartdate,
                 'is_enrolment_start' => $isenrolmentstart,
+                'can_self_enrol' => $canselfenrol,
+                'is_future_date' => $isfuturedate,
                 'course_url' => $courseurl,
                 'sections' => $results,
             ];
@@ -423,7 +434,7 @@ class calculator {
      * @param int $courseid The course id.
      * @return bool
      */
-    private static function current_user_can_self_enrol(int $courseid): bool {
+    public static function current_user_can_self_enrol(int $courseid): bool {
         global $CFG;
 
         require_once($CFG->dirroot . '/enrol/self/lib.php');

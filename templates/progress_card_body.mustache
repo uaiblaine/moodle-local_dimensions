@@ -25,6 +25,7 @@
     * locked (bool) - Whether the course is locked for the user
     * formatted_start_date (string) - When the course becomes available
     * is_enrolment_start (bool) - Whether the date is an enrolment start date
+    * can_self_enrol (bool) - Whether the learner may join the locked course right now
     * islearnmore (bool) - Whether to show "Learn More" button instead of "Locked Content"
     * showlockeddate (bool) - Whether to show the availability date
     * customicon (string) - CSS class for custom locked icon (empty = default lock icon from pix)
@@ -45,6 +46,7 @@
         "locked": false,
         "formatted_start_date": "01/02/2026",
         "is_enrolment_start": false,
+        "can_self_enrol": false,
         "islearnmore": false,
         "showlockeddate": true,
         "customicon": "",
@@ -69,33 +71,46 @@
 <div style="position: relative; height: 100%;">
     {{#locked}}
     <div class="local-dimensions-locked-overlay">
-        {{! Icon: custom FA icon or default lock SVG }}
-        <div class="local-dimensions-locked-icon">
-            {{#customicon}}
-                <i class="{{customicon}}" aria-hidden="true"></i>
-            {{/customicon}}
-            {{^customicon}}
-                <img class="local-dimensions-icon local-dimensions-icon-lock local-dimensions-locked-icon-image" src="{{lockiconurl}}" alt="" aria-hidden="true">
-            {{/customicon}}
+        {{! Icon: the enter icon when the learner may simply join, else the custom FA icon or the default lock }}
+        <div class="local-dimensions-locked-icon {{#can_self_enrol}}local-dimensions-locked-icon-enrol{{/can_self_enrol}}">
+            {{#can_self_enrol}}
+                <i class="fa fa-sign-in" aria-hidden="true"></i>
+            {{/can_self_enrol}}
+            {{^can_self_enrol}}
+                {{#customicon}}
+                    <i class="{{customicon}}" aria-hidden="true"></i>
+                {{/customicon}}
+                {{^customicon}}
+                    <img class="local-dimensions-icon local-dimensions-icon-lock local-dimensions-locked-icon-image" src="{{lockiconurl}}" alt="" aria-hidden="true">
+                {{/customicon}}
+            {{/can_self_enrol}}
         </div>
-        {{! Message: "Learn More" button or "Locked Content" text }}
-        {{#islearnmore}}
-            <a href="{{courseurl}}" class="local-dimensions-learnmore-btn" style="background: {{learnmorebuttoncolor}};">{{#str}}learn_more, local_dimensions{{/str}}</a>
-        {{/islearnmore}}
-        {{^islearnmore}}
-            <div class="local-dimensions-locked-message">{{#str}}locked_content, local_dimensions{{/str}}</div>
-        {{/islearnmore}}
-        {{! Date: conditionally shown based on showlockeddate setting }}
-        {{#showlockeddate}}
-            <div class="local-dimensions-locked-date">
-                {{#is_enrolment_start}}
-                    {{#str}}enrolment_starts, local_dimensions, {{formatted_start_date}}{{/str}}
-                {{/is_enrolment_start}}
-                {{^is_enrolment_start}}
-                    {{#str}}available_at, local_dimensions, {{formatted_start_date}}{{/str}}
-                {{/is_enrolment_start}}
-            </div>
-        {{/showlockeddate}}
+        {{! An open self-enrolment makes the card an invitation, so it takes precedence and carries no date }}
+        {{#can_self_enrol}}
+            <a href="{{courseurl}}" class="local-dimensions-enrol-btn"><i class="fa fa-sign-in" aria-hidden="true"></i>{{#str}}enrol_to_start, local_dimensions{{/str}}</a>
+            <div class="local-dimensions-enrol-note">{{#str}}selfenrolment_open, local_dimensions{{/str}}</div>
+        {{/can_self_enrol}}
+        {{^can_self_enrol}}
+            {{! Message: "Learn More" button or "Locked Content" text }}
+            {{#islearnmore}}
+                <a href="{{courseurl}}" class="local-dimensions-learnmore-btn" style="background: {{learnmorebuttoncolor}};">{{#str}}learn_more, local_dimensions{{/str}}</a>
+            {{/islearnmore}}
+            {{^islearnmore}}
+                <div class="local-dimensions-locked-message">{{#str}}locked_content, local_dimensions{{/str}}</div>
+            {{/islearnmore}}
+            {{! Date: the showlockeddate setting, already narrowed by the caller to drop a past date in learn-more mode }}
+            {{#showlockeddate}}
+                <div class="local-dimensions-locked-date">
+                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                    {{#is_enrolment_start}}
+                        {{#str}}enrolment_starts, local_dimensions, {{formatted_start_date}}{{/str}}
+                    {{/is_enrolment_start}}
+                    {{^is_enrolment_start}}
+                        {{#str}}available_at, local_dimensions, {{formatted_start_date}}{{/str}}
+                    {{/is_enrolment_start}}
+                </div>
+            {{/showlockeddate}}
+        {{/can_self_enrol}}
     </div>
     {{/locked}}
 
