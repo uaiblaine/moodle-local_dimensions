@@ -155,7 +155,7 @@ define(
                 {key: 'linked_courses', component: 'local_dimensions'},
                 {key: 'assessment_status', component: 'local_dimensions'},
                 {key: 'description_label', component: 'local_dimensions'},
-                {key: 'taxonomycard_label', component: 'local_dimensions'},
+                {key: 'taxonomy_whatis', component: 'local_dimensions'},
                 {key: 'show_more', component: 'local_dimensions'},
                 {key: 'show_less', component: 'local_dimensions'},
                 {key: 'proficiency', component: 'local_dimensions'},
@@ -200,7 +200,18 @@ define(
                 {key: 'evidence_rule_sendreview', component: 'local_dimensions'},
                 {key: 'evidence_rule_reviewsent', component: 'local_dimensions'},
                 {key: 'scale_about', component: 'local_dimensions'},
-                {key: 'evidence_position', component: 'local_dimensions'}
+                {key: 'evidence_position', component: 'local_dimensions'},
+                {key: 'taxonomy_def_behaviour', component: 'local_dimensions'},
+                {key: 'taxonomy_def_competency', component: 'local_dimensions'},
+                {key: 'taxonomy_def_concept', component: 'local_dimensions'},
+                {key: 'taxonomy_def_domain', component: 'local_dimensions'},
+                {key: 'taxonomy_def_indicator', component: 'local_dimensions'},
+                {key: 'taxonomy_def_level', component: 'local_dimensions'},
+                {key: 'taxonomy_def_outcome', component: 'local_dimensions'},
+                {key: 'taxonomy_def_practice', component: 'local_dimensions'},
+                {key: 'taxonomy_def_proficiency', component: 'local_dimensions'},
+                {key: 'taxonomy_def_skill', component: 'local_dimensions'},
+                {key: 'taxonomy_def_value', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -218,7 +229,7 @@ define(
                     linkedCourses: strings[12],
                     assessmentStatus: strings[13],
                     descriptionLabel: strings[14],
-                    taxonomyCardLabel: strings[15],
+                    taxonomyWhatIs: strings[15],
                     showMore: strings[16],
                     showLess: strings[17],
                     proficiencyLabel: strings[18],
@@ -263,7 +274,21 @@ define(
                     evidenceRuleSendReview: strings[57],
                     evidenceRuleReviewSent: strings[58],
                     scaleAbout: strings[59],
-                    evidencePosition: strings[60]
+                    evidencePosition: strings[60],
+                    taxonomyDefinitions: {
+                        behaviour: strings[61],
+                        competency: strings[62],
+                        concept: strings[63],
+                        domain: strings[64],
+                        indicator: strings[65],
+                        level: strings[66],
+                        outcome: strings[67],
+                        practice: strings[68],
+                        proficiency: strings[69],
+                        skill: strings[70],
+                        value: strings[71],
+                        behavior: strings[61]
+                    }
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -296,6 +321,7 @@ define(
                 initEvidenceList(contentEl, summaryState.ucs ? summaryState.ucs.evidence : [], strMap, scaleConfig,
                     summaryState.ucs);
                 initScaleAbout(contentEl, strMap, summaryState.scaleDescription);
+                initTaxonomyDefinition(contentEl, strMap);
 
                 // Initialize course scroll navigation.
                 initCourseScroll(contentEl);
@@ -494,25 +520,20 @@ define(
                 (isFirst ? ' active' : '') + '"';
             html += ' id="local-dimensions-tabpane-description-' + summaryState.comp.id + '" data-tab="description"';
             html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-description-' + summaryState.comp.id + '">';
-            html += '<div class="local-dimensions-desc-layout' +
-                (summaryState.hasTaxonomyCard ? ' local-dimensions-desc-layout-has-taxonomy' : '') + '">';
-            html += '<div class="local-dimensions-desc-main">';
+            html += '<div class="local-dimensions-desc-layout">';
 
             if (summaryState.hasDesc) {
                 html += renderDescriptionSection(summaryState.comp.description, strMap, summaryState.comp.id);
             }
-            if (summaryState.hasPath) {
-                html += renderCompetencyPath(summaryState.competencyData, strMap);
-            }
             if (summaryState.hasRelated) {
                 html += renderRelatedCompetencies(summaryState.competencyData, strMap, planId);
             }
-
-            html += '</div>';
-
-            if (summaryState.hasTaxonomyCard) {
-                html += renderTaxonomyCard(summaryState.primaryTaxonomy, strMap);
-            }
+            html += renderDescriptionFootnote(
+                summaryState.competencyData,
+                summaryState.hasTaxonomyCard ? summaryState.primaryTaxonomy : null,
+                summaryState.hasPath,
+                strMap
+            );
 
             html += '</div>';
             html += '</div>';
@@ -1233,6 +1254,22 @@ define(
         }
 
         /**
+         * Wire the taxonomy-type button in the description footnote to its definition modal.
+         *
+         * @param {HTMLElement} contentEl The content container element
+         * @param {Object} strMap Language strings map
+         */
+        function initTaxonomyDefinition(contentEl, strMap) {
+            const button = contentEl.querySelector('[data-tax-key]');
+            if (!button) {
+                return;
+            }
+            button.addEventListener('click', function() {
+                openTaxonomyDefinitionModal(button.dataset.taxKey, button.dataset.taxTerm, strMap);
+            });
+        }
+
+        /**
          * Build the evidence-modal template context for one evidence row.
          *
          * @param {Object} ev The evidence object from the API
@@ -1887,52 +1924,55 @@ define(
         }
 
         /**
-         * Render competency path/hierarchy.
+         * Render the description-pane footnote: the competency's place in the framework, and
+         * an accented button that explains its taxonomy type.
+         *
+         * Path and taxonomy share one low-contrast line at the foot of the pane. Either half
+         * may be absent (gated independently by showpath / showtaxonomycard), so the row renders
+         * whenever at least one is present, with the taxonomy button pushed to the right.
          *
          * @param {Object} data The competency data
+         * @param {Object} taxonomy The primary taxonomy ({key, term}) or null
+         * @param {boolean} showPath Whether the path half is enabled
          * @param {Object} strMap Language strings map
-         * @return {string} HTML for the path
+         * @return {string} HTML for the footnote
          */
-        function renderCompetencyPath(data, strMap) {
-            let html = '';
-
-            if (!data.competency) {
-                return html;
+        function renderDescriptionFootnote(data, taxonomy, showPath, strMap) {
+            let pathHtml = '';
+            if (showPath && data.competency) {
+                const pathParts = [];
+                if (data.framework?.shortname) {
+                    pathParts.push(escapeHtml(data.framework.shortname));
+                }
+                if (Array.isArray(data.compparents)) {
+                    data.compparents.forEach(function(parent) {
+                        if (parent.shortname) {
+                            pathParts.push(escapeHtml(parent.shortname));
+                        }
+                    });
+                }
+                if (pathParts.length > 0) {
+                    pathHtml = '<span class="local-dimensions-path-trail">' +
+                        '<i class="fa fa-sitemap" aria-hidden="true"></i> ' +
+                        pathParts.join(' <span class="local-dimensions-path-sep">&rsaquo;</span> ') +
+                        '</span>';
+                }
             }
 
-            let pathParts = [];
-
-            // Framework name.
-            if (data.framework?.shortname) {
-                pathParts.push(escapeHtml(data.framework.shortname));
+            let taxHtml = '';
+            if (taxonomy && taxonomy.term && strMap.taxonomyDefinitions[(taxonomy.key || '').toLowerCase()]) {
+                taxHtml = '<button type="button" class="local-dimensions-tax-link" data-tax-key="' +
+                    escapeHtml((taxonomy.key || '').toLowerCase()) + '" data-tax-term="' + escapeHtml(taxonomy.term) + '">' +
+                    escapeHtml(taxonomy.term) +
+                    ' <i class="fa fa-question-circle" aria-hidden="true"></i></button>';
             }
 
-            // Parent competencies.
-            if (data.compparents && Array.isArray(data.compparents)) {
-                data.compparents.forEach(function(parent) {
-                    if (parent.shortname) {
-                        pathParts.push(escapeHtml(parent.shortname));
-                    }
-                });
+            if (!pathHtml && !taxHtml) {
+                return '';
             }
 
-            if (pathParts.length > 0) {
-                html += '<nav class="local-dimensions-path-bar" aria-label="' + escapeHtml(strMap.pathBreadcrumbLabel) + '">';
-                html += '<span class="local-dimensions-path-label">' + escapeHtml(strMap.pathBreadcrumbLabel) + ':</span>';
-                html += '<ol class="local-dimensions-path-breadcrumb">';
-                pathParts.forEach(function(part, idx) {
-                    html += '<li>';
-                    if (idx > 0) {
-                        html += '<i class="fa fa-chevron-right local-dimensions-path-bar-sep" aria-hidden="true"></i>';
-                    }
-                    html += part;
-                    html += '</li>';
-                });
-                html += '</ol>';
-                html += '</nav>';
-            }
-
-            return html;
+            return '<div class="local-dimensions-desc-footnote">' + pathHtml +
+                '<span class="local-dimensions-desc-footnote-spacer"></span>' + taxHtml + '</div>';
         }
 
         /**
@@ -2001,74 +2041,24 @@ define(
          * @param {string} taxonomyKey Taxonomy key from the payload
          * @return {Object} Icon metadata
          */
-        function getTaxonomyCardMeta(taxonomyKey) {
-            const key = (taxonomyKey || '').toLowerCase();
-            const taxonomyIcons = {
-                behaviour: M.util.image_url('taxonomy/behaviour', 'local_dimensions'),
-                behavior: M.util.image_url('taxonomy/behaviour', 'local_dimensions'),
-                competency: M.util.image_url('taxonomy/competency', 'local_dimensions'),
-                concept: M.util.image_url('taxonomy/concept', 'local_dimensions'),
-                domain: M.util.image_url('taxonomy/domain', 'local_dimensions'),
-                indicator: M.util.image_url('taxonomy/indicator', 'local_dimensions'),
-                level: M.util.image_url('taxonomy/level', 'local_dimensions'),
-                outcome: M.util.image_url('taxonomy/outcome', 'local_dimensions'),
-                practice: M.util.image_url('taxonomy/practice', 'local_dimensions'),
-                proficiency: M.util.image_url('taxonomy/proficiency', 'local_dimensions'),
-                skill: M.util.image_url('taxonomy/skill', 'local_dimensions'),
-                value: M.util.image_url('taxonomy/value', 'local_dimensions')
-            };
-            const meta = {
-                iconurl: taxonomyIcons[key] || '',
-                accentClass: 'local-dimensions-taxonomy-card-neutral'
-            };
-
-            const mapping = {
-                behaviour: {iconurl: taxonomyIcons.behaviour || '', accentClass: 'local-dimensions-taxonomy-card-behaviour'},
-                behavior: {
-                    iconurl: taxonomyIcons.behavior || taxonomyIcons.behaviour || '',
-                    accentClass: 'local-dimensions-taxonomy-card-behaviour'
-                },
-                competency: {iconurl: taxonomyIcons.competency || '', accentClass: 'local-dimensions-taxonomy-card-competency'},
-                concept: {iconurl: taxonomyIcons.concept || '', accentClass: 'local-dimensions-taxonomy-card-concept'},
-                domain: {iconurl: taxonomyIcons.domain || '', accentClass: 'local-dimensions-taxonomy-card-domain'},
-                indicator: {iconurl: taxonomyIcons.indicator || '', accentClass: 'local-dimensions-taxonomy-card-indicator'},
-                level: {iconurl: taxonomyIcons.level || '', accentClass: 'local-dimensions-taxonomy-card-level'},
-                outcome: {iconurl: taxonomyIcons.outcome || '', accentClass: 'local-dimensions-taxonomy-card-outcome'},
-                practice: {iconurl: taxonomyIcons.practice || '', accentClass: 'local-dimensions-taxonomy-card-practice'},
-                proficiency: {
-                    iconurl: taxonomyIcons.proficiency || '',
-                    accentClass: 'local-dimensions-taxonomy-card-proficiency'
-                },
-                skill: {iconurl: taxonomyIcons.skill || '', accentClass: 'local-dimensions-taxonomy-card-skill'},
-                value: {iconurl: taxonomyIcons.value || '', accentClass: 'local-dimensions-taxonomy-card-value'}
-            };
-
-            return mapping[key] || meta;
-        }
-
         /**
-         * Render the main taxonomy card.
+         * Open a modal explaining what a taxonomy type means.
          *
-         * @param {Object} taxonomy Taxonomy metadata from the payload
+         * @param {string} key The core taxonomy key (behaviour, skill, ...)
+         * @param {string} term The localised taxonomy term, for the title
          * @param {Object} strMap Language strings map
-         * @return {string} HTML for taxonomy card
          */
-        function renderTaxonomyCard(taxonomy, strMap) {
-            const meta = getTaxonomyCardMeta(taxonomy.key);
-            let html = '<aside class="local-dimensions-taxonomy-card ' + meta.accentClass + '" aria-label="' +
-                escapeHtml(taxonomy.term) + '">';
-
-            html += '<div class="local-dimensions-taxonomy-card-label">' + escapeHtml(strMap.taxonomyCardLabel) + '</div>';
-            html += '<div class="local-dimensions-taxonomy-card-icon">';
-            if (meta.iconurl) {
-                html += '<img class="local-dimensions-taxonomy-card-icon-image" src="' +
-                    escapeHtml(meta.iconurl) + '" alt="" aria-hidden="true">';
+        function openTaxonomyDefinitionModal(key, term, strMap) {
+            const definition = strMap.taxonomyDefinitions[key];
+            if (!definition) {
+                return;
             }
-            html += '</div>';
-            html += '<div class="local-dimensions-taxonomy-card-title">' + escapeHtml(taxonomy.term) + '</div>';
-            html += '</aside>';
-
-            return html;
+            Modal.create({
+                title: strMap.taxonomyWhatIs.replace('{$a}', term),
+                body: definition,
+                show: true,
+                removeOnClose: true
+            }).catch(Notification.exception);
         }
 
         /**

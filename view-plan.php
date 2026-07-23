@@ -118,7 +118,7 @@ $PAGE->requires->string_for_js('no', 'local_dimensions');
 // Tab strings.
 $PAGE->requires->string_for_js('assessment_status', 'local_dimensions');
 $PAGE->requires->string_for_js('description_label', 'local_dimensions');
-$PAGE->requires->string_for_js('taxonomycard_label', 'local_dimensions');
+$PAGE->requires->string_for_js('taxonomy_whatis', 'local_dimensions');
 
 // Competency path and related strings.
 $PAGE->requires->string_for_js('competency_path', 'local_dimensions');

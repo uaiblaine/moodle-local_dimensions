@@ -430,7 +430,34 @@ it is a deletion.
 
 ---
 
-## 6. Phase 4 — accordion detail-pane rewrites
+## 6. Phase 4 — accordion detail-pane rewrites — **SHIPPED**
+
+| Slice | Commit | |
+|---|---|---|
+| 4.1 Rules — sentence promoted, bar softened | `675f143` | done |
+| 4.3 Status — rating leads, proficiency pill | `231bf1b` | done |
+| 4.4 Evidence — outcome-first list | `bac54d3` | done |
+| — stale-rule explanation + Send for review | `fe10ae2` | done |
+| 4.5b About this scale modal | `110f9e0` | done |
+| 4.5a Evidence pager | `d676aa8` | done |
+| 4.6 Description / path / taxonomy | (this phase) | done |
+| phase-boundary bump | — | `2026072302` |
+
+Notes carried out of the phase:
+
+- **The detail modal (grid-mode) was deferred to Phase 6**, so the DOM-id collision never arose here
+  — Phase 4 rewrote the accordion panes only, as planned.
+- **4.4 grew a slice the backlog did not have:** the stale-rule explanation. A rule completion that
+  does not move the grade (because a manual rating predates it) is a core behaviour the user found in
+  live testing; we surface it and offer core's own `request_review` rather than touching core. The
+  finding is written up in `core-issue-notes.md` for a tracker issue.
+- **4.6 dropped the fade-toggle restyle** the kit drew: the plugin's pane already resolves the fade
+  correctly, so there was nothing to fix. Kept the slice to path / taxonomy / related.
+- **4.6 fixed a real bug in passing:** the related-competency *link* pill had no CSS of its own, so it
+  inherited `cursor: default` and looked un-clickable.
+- **The 11 taxonomy card SVGs were deleted** — the card that used them is gone.
+
+## 6b. Phase 4 — original scope
 
 Five redesigns land in one 2432-line file. Ordering is chosen to minimise re-touching the same lines.
 All **no bump** (both WS involved are `PARAM_RAW`).
