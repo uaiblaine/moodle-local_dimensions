@@ -102,11 +102,14 @@ class get_course_progress extends external_api {
                     }
                 }
 
+                /* When completion tracking is off, the calculator returns only the enabled
+                   flag, so every other key must be defaulted here. Both of the keys below
+                   are required by execute_returns and would otherwise be undefined. */
                 $results[] = [
                     'courseid' => $courseid,
                     'enabled' => $data['enabled'],
-                    'locked' => $data['locked'],
-                    'formatted_start_date' => $data['formatted_start_date'],
+                    'locked' => $data['locked'] ?? false,
+                    'formatted_start_date' => $data['formatted_start_date'] ?? '',
                     'is_enrolment_start' => !empty($data['is_enrolment_start']),
                     'course_url' => $data['course_url'] ?? '',
                     'sections' => $sections,
