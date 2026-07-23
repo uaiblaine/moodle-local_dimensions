@@ -57,9 +57,26 @@
 {{/hascompetency}}
 
 {{#haschipfilters}}
-    {{#chipfilters}}
-        {{> local_dimensions/chip_filters }}
-    {{/chipfilters}}
+    <div class="local-dimensions-filter-bar">
+        {{#chipfilters}}
+        <button type="button"
+                class="local-dimensions-filter-toggle"
+                data-filter-toggle
+                aria-expanded="false"
+                aria-controls="{{id}}">
+            <i class="fa fa-filter" aria-hidden="true"></i>
+            <span>{{#str}}filter_toggle, local_dimensions{{/str}}</span>
+            <span class="local-dimensions-filter-toggle-count" data-chip-count hidden></span>
+        </button>
+        {{/chipfilters}}
+    </div>
+
+    {{! Plain block toggled by the hidden attribute - see chip_filters.js initPanel. }}
+    <div class="local-dimensions-filter-panel" data-filter-panel hidden>
+        {{#chipfilters}}
+            {{> local_dimensions/chip_filters }}
+        {{/chipfilters}}
+    </div>
 {{/haschipfilters}}
 
 {{#hascourses}}

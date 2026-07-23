@@ -62,6 +62,7 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             // Activate chip filters and collapsible hero description; both
             // are no-ops when the host page does not render them.
             ChipFilters.init('local-dimensions-viewcompetency-chip-filters', applyCardChipFilter);
+            ChipFilters.initPanel('local-dimensions-viewcompetency-chip-filters');
             CollapsibleDescription.init();
 
             var lockedcardmode = settings.lockedcardmode || 'blocked';

@@ -2275,10 +2275,9 @@ define(
             // Wire up custom-field chip filters (no-op when none rendered).
             ChipFilters.init('local-dimensions-viewplan-chip-filters', function(selection) {
                 activeChipSelection = selection || {};
-                updateChipCount(activeChipSelection);
                 applyFilter();
             });
-            initFilterPanel();
+            ChipFilters.initPanel('local-dimensions-viewplan-chip-filters');
             initNoResultsClear();
 
             // Apply initial filter (show incomplete only by default).
@@ -2323,62 +2322,6 @@ define(
         function getSearchQuery() {
             const input = document.querySelector('.local-dimensions-search-input');
             return input ? normalizeText(input.value.trim()) : '';
-        }
-
-        /**
-         * Show the number of pressed chips on the Filter button, or hide the badge.
-         *
-         * The panel is closed by default, so this badge is the only closed-state signal
-         * that a chip filter is narrowing the list.
-         *
-         * @param {Object} selection Chip selection map (shortname => string[]).
-         */
-        function updateChipCount(selection) {
-            const badge = document.querySelector('[data-chip-count]');
-            if (!badge) {
-                return;
-            }
-            const total = Object.keys(selection || {}).reduce(function(sum, key) {
-                return sum + (selection[key] ? selection[key].length : 0);
-            }, 0);
-            badge.textContent = total > 0 ? String(total) : '';
-            badge.hidden = total === 0;
-        }
-
-        /**
-         * Wire the Filter button to its panel.
-         *
-         * The panel is a plain block toggled through the hidden attribute rather than a
-         * Bootstrap collapse or dropdown, so nothing here depends on the 4.5 / 5.x split in
-         * data attributes. Revealing it also re-measures the chip groups: they were laid
-         * out inside a display:none ancestor, where widths read as 0 and the pill UI shows
-         * scroll paddles that do not belong.
-         */
-        function initFilterPanel() {
-            const toggle = document.querySelector('[data-filter-toggle]');
-            const panel = document.querySelector('[data-filter-panel]');
-            if (!toggle || !panel) {
-                return;
-            }
-
-            const setOpen = function(open) {
-                panel.hidden = !open;
-                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                if (open) {
-                    ChipFilters.refresh('local-dimensions-viewplan-chip-filters');
-                }
-            };
-
-            toggle.addEventListener('click', function() {
-                setOpen(panel.hidden);
-            });
-
-            panel.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    setOpen(false);
-                    toggle.focus();
-                }
-            });
         }
 
         /**
