@@ -23,8 +23,9 @@
 
 define(
     ['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/modal', 'core/log',
-        'local_dimensions/collapsible_description', 'local_dimensions/chip_filters'],
-    function(Ajax, Templates, Notification, Str, Modal, Log, CollapsibleDescription, ChipFilters) {
+        'local_dimensions/collapsible_description', 'local_dimensions/chip_filters',
+        'local_dimensions/learner_prefs'],
+    function(Ajax, Templates, Notification, Str, Modal, Log, CollapsibleDescription, ChipFilters, LearnerPrefs) {
         'use strict';
 
         // Cache for loaded competency summaries to avoid reloading.
@@ -2555,9 +2556,19 @@ define(
                 });
             });
 
+            /* Seed the preference store from what the server already rendered, before any
+               control can fire a save - otherwise the first click would persist a state
+               assembled from defaults instead of from the learner's own choices. */
+            const summary = document.querySelector('.local-dimensions-plan-summary');
+            LearnerPrefs.init({
+                sort: (summary && summary.dataset.sortmode) || 'planorder',
+                filter: getActiveFilter(),
+            });
+
             // Initialize filter tabs functionality.
             initFilterTabs();
             initSearch();
+            initSort();
 
             // Wire up custom-field chip filters (no-op when none rendered).
             ChipFilters.init('local-dimensions-viewplan-chip-filters', function(selection) {
@@ -2629,6 +2640,7 @@ define(
 
                     // Apply the filter (combined with search).
                     applyFilter();
+                    LearnerPrefs.save({filter: this.dataset.filter});
                 });
 
                 // Keyboard support.
@@ -2728,6 +2740,105 @@ define(
             if (noresults) {
                 noresults.hidden = visiblecount > 0;
             }
+        }
+
+        /**
+         * Reorder the loaded rows.
+         *
+         * Client-side over rows the server already ordered for the first paint, so a change
+         * costs no round trip and every lazily-loaded detail pane stays attached to its row.
+         * Each mode is computed from the plan order rather than from the current DOM order,
+         * so the result never depends on which sort ran before it.
+         *
+         * @param {string} mode One of planorder, name, completed
+         */
+        function applySort(mode) {
+            const container = document.getElementById('local-dimensions-viewplan-accordion');
+            if (!container) {
+                return;
+            }
+
+            const byPlan = Array.prototype.slice
+                .call(container.querySelectorAll('.local-dimensions-accordion-item'))
+                .sort(function(a, b) {
+                    return Number(a.dataset.planorder) - Number(b.dataset.planorder);
+                });
+
+            const titleOf = function(item) {
+                const title = item.querySelector('.local-dimensions-accordion-title');
+                return title ? title.textContent.trim() : '';
+            };
+            const isCompleted = function(item) {
+                return item.classList.contains('completed');
+            };
+
+            let sorted = byPlan;
+            if (mode === 'name') {
+                sorted = byPlan.slice().sort(function(a, b) {
+                    return titleOf(a).localeCompare(titleOf(b));
+                });
+            } else if (mode === 'completed') {
+                sorted = byPlan.filter(isCompleted).concat(byPlan.filter(function(item) {
+                    return !isCompleted(item);
+                }));
+            }
+
+            sorted.forEach(function(item) {
+                container.append(item);
+            });
+        }
+
+        /**
+         * Wire the sort menu.
+         *
+         * A plain block toggled by the hidden attribute, like the chip-filter panel: a
+         * Bootstrap dropdown would need both data-toggle and data-bs-toggle to work on 4.5
+         * and 5.x alike.
+         */
+        function initSort() {
+            const toggle = document.querySelector('[data-sort-toggle]');
+            const menu = document.getElementById('local-dimensions-viewplan-sort-menu');
+            if (!toggle || !menu) {
+                return;
+            }
+
+            const closeMenu = function() {
+                menu.hidden = true;
+                toggle.setAttribute('aria-expanded', 'false');
+            };
+
+            toggle.addEventListener('click', function(event) {
+                event.stopPropagation();
+                const expanded = toggle.getAttribute('aria-expanded') === 'true';
+                menu.hidden = expanded;
+                toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!menu.hidden && !menu.contains(event.target)) {
+                    closeMenu();
+                }
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && !menu.hidden) {
+                    closeMenu();
+                    toggle.focus();
+                }
+            });
+
+            const options = menu.querySelectorAll('[data-sort]');
+            options.forEach(function(option) {
+                option.addEventListener('click', function() {
+                    options.forEach(function(other) {
+                        other.setAttribute('aria-checked', other === option ? 'true' : 'false');
+                    });
+                    applySort(option.dataset.sort);
+                    closeMenu();
+                    toggle.focus();
+                    LearnerPrefs.save({sort: option.dataset.sort});
+                });
+            });
         }
 
         /**

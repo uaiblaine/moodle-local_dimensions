@@ -32,6 +32,9 @@
         - sublinetext, hassublinetext, filtervaluesjson
     * competencycount (int) - Total competencies
     * incompletecount (int) - Number of not-yet-proficient competencies
+    * sortmode (string) - Stored sort: planorder, name or completed
+    * sort_is_planorder / sort_is_name / sort_is_completed (bool) - Which sort is checked
+    * filter_is_incomplete / filter_is_all (bool) - Which completion tab starts active
     * haschipfilters, chipfilters - Chip-filter model
     * hascustomcss, customcss - Compiled template SCSS
 
@@ -54,7 +57,13 @@
         "hascompetencies": false,
         "competencies": [],
         "competencycount": 0,
-        "incompletecount": 0
+        "incompletecount": 0,
+        "sortmode": "planorder",
+        "sort_is_planorder": true,
+        "sort_is_name": false,
+        "sort_is_completed": false,
+        "filter_is_incomplete": true,
+        "filter_is_all": false
     }
 }}
 {{! Custom SCSS compiled CSS from template }}
@@ -70,16 +79,18 @@
 <div class="percentagemode-{{percentagemode}}">
     {{#hascompetencies}}
     <div class="local-dimensions-plan-summary mt-4"
-         data-planid="{{planid}}">
+         data-planid="{{planid}}"
+         data-sortmode="{{sortmode}}">
 
-        {{! Filter bar: tabs + search }}
-        <div class="local-dimensions-filter-bar">
+        {{! Toolbar: completion segment, search, sort, chip filter. The active tab and the
+            checked sort come from the stored preference, resolved server-side. }}
+        <div class="local-dimensions-filter-bar local-dimensions-toolbar">
             <div class="local-dimensions-filter-tabs" role="tablist" aria-label="{{#str}}filter_competencies, local_dimensions{{/str}}">
-                <button class="local-dimensions-filter-tab active" data-filter="incomplete" role="tab" aria-selected="true" type="button">
+                <button class="local-dimensions-filter-tab {{#filter_is_incomplete}}active{{/filter_is_incomplete}}" data-filter="incomplete" role="tab" aria-selected="{{#filter_is_incomplete}}true{{/filter_is_incomplete}}{{^filter_is_incomplete}}false{{/filter_is_incomplete}}" type="button">
                     {{#str}}filter_not_completed, local_dimensions{{/str}}
                     <span class="local-dimensions-filter-count" data-count="incomplete">{{incompletecount}}</span>
                 </button>
-                <button class="local-dimensions-filter-tab" data-filter="all" role="tab" aria-selected="false" type="button">
+                <button class="local-dimensions-filter-tab {{#filter_is_all}}active{{/filter_is_all}}" data-filter="all" role="tab" aria-selected="{{#filter_is_all}}true{{/filter_is_all}}{{^filter_is_all}}false{{/filter_is_all}}" type="button">
                     {{#str}}filter_all, local_dimensions{{/str}}
                     <span class="local-dimensions-filter-count" data-count="all">{{competencycount}}</span>
                 </button>
@@ -95,6 +106,31 @@
                 <button type="button" class="local-dimensions-search-clear" aria-label="{{#str}}clear, core{{/str}}" style="display:none;">
                     <i class="fa fa-times" aria-hidden="true"></i>
                 </button>
+            </div>
+            {{! Same plain-block mechanism as the chip panel below: toggled by the hidden
+                attribute, so no Bootstrap 4 vs 5 data attribute pair is involved. }}
+            <div class="local-dimensions-sort">
+                <button type="button"
+                        class="local-dimensions-sort-toggle"
+                        data-sort-toggle
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="local-dimensions-viewplan-sort-menu"
+                        aria-label="{{#str}}sort_label, local_dimensions{{/str}}">
+                    <i class="fa fa-sort-amount-asc" aria-hidden="true"></i>
+                </button>
+                <div class="local-dimensions-sort-menu" id="local-dimensions-viewplan-sort-menu" role="menu" hidden>
+                    <span class="local-dimensions-sort-heading">{{#str}}sort_by, local_dimensions{{/str}}</span>
+                    <button type="button" role="menuitemradio" data-sort="planorder" aria-checked="{{#sort_is_planorder}}true{{/sort_is_planorder}}{{^sort_is_planorder}}false{{/sort_is_planorder}}">
+                        <i class="fa fa-check" aria-hidden="true"></i>{{#str}}sort_planorder, local_dimensions{{/str}}
+                    </button>
+                    <button type="button" role="menuitemradio" data-sort="name" aria-checked="{{#sort_is_name}}true{{/sort_is_name}}{{^sort_is_name}}false{{/sort_is_name}}">
+                        <i class="fa fa-check" aria-hidden="true"></i>{{#str}}sort_name, local_dimensions{{/str}}
+                    </button>
+                    <button type="button" role="menuitemradio" data-sort="completed" aria-checked="{{#sort_is_completed}}true{{/sort_is_completed}}{{^sort_is_completed}}false{{/sort_is_completed}}">
+                        <i class="fa fa-check" aria-hidden="true"></i>{{#str}}sort_completedfirst, local_dimensions{{/str}}
+                    </button>
+                </div>
             </div>
             {{#haschipfilters}}
             {{#chipfilters}}
@@ -134,6 +170,7 @@
             <div class="local-dimensions-accordion-item {{#isproficient}}completed{{/isproficient}} {{#hasrating}}{{^isproficient}}rated{{/isproficient}}{{/hasrating}}"
                  role="listitem"
                  data-competency-id="{{id}}"
+                 data-planorder="{{planorder}}"
                  data-filtervalues="{{filtervaluesjson}}">
 
                 {{! Accordion content }}
