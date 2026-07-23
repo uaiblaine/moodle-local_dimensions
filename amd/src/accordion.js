@@ -30,6 +30,11 @@ define(
         // Cache for loaded competency summaries to avoid reloading.
         const loadedCompetencies = new Set();
 
+        /* The plan's completion tabs, scoped to the filter bar. The chip filters reuse the
+           .local-dimensions-filter-tab class (chip_filters.mustache), so an unscoped selector
+           binds this handler to every chip as well. */
+        const FILTER_TAB_SELECTOR = '.local-dimensions-filter-bar .local-dimensions-filter-tab';
+
         // Display settings (loaded from page).
         let displaySettings = {
             showdescription: true,
@@ -2300,7 +2305,7 @@ define(
          * @return {string}
          */
         function getActiveFilter() {
-            const active = document.querySelector('.local-dimensions-filter-tab.active');
+            const active = document.querySelector(FILTER_TAB_SELECTOR + '.active');
             return active ? active.dataset.filter : 'incomplete';
         }
 
@@ -2318,7 +2323,7 @@ define(
          * Initialize filter tabs click handlers.
          */
         function initFilterTabs() {
-            const filterTabs = document.querySelectorAll('.local-dimensions-filter-tab');
+            const filterTabs = document.querySelectorAll(FILTER_TAB_SELECTOR);
 
             filterTabs.forEach(function(tab) {
                 tab.addEventListener('click', function() {
