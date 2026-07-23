@@ -100,9 +100,13 @@
     {{/locked}}
 
     {{^enabled}}
+        {{! The lock overlay already explains why there is nothing to see, and it covers
+            this text visually - so only announce it when the card is not locked. }}
+        {{^locked}}
         <div class="p-3 text-muted text-center small">
             {{#str}}completion_disabled, local_dimensions{{/str}}
         </div>
+        {{/locked}}
     {{/enabled}}
 
     {{#enabled}}
