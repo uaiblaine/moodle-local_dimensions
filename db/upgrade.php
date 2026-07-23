@@ -419,6 +419,16 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026072300, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026072301) {
+        // Learner-view redesign, phase 3: the inline chip bar is retired in both views and
+        // filtering moves into a toolbar Filter panel, plus the plan's no-results state.
+        // Nothing structural - this bump moves the cache revision so the rebuilt AMD
+        // modules, the changed CSS and the reworded settings strings are served.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026072301, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
