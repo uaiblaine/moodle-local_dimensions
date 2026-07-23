@@ -129,6 +129,26 @@ define(['local_dimensions/filter_tabs_nav'], function(FilterTabsNav) {
         }
     }
 
+    /**
+     * Show the number of pressed chips on the Filter button, or hide the badge.
+     *
+     * With the chips behind a closed panel this badge is the only signal that a chip
+     * filter is narrowing the list, so it counts pressed chips rather than active groups.
+     *
+     * @param {Object<string, string[]>} selection
+     */
+    function updateCount(selection) {
+        var badge = document.querySelector('[data-chip-count]');
+        if (!badge) {
+            return;
+        }
+        var total = Object.keys(selection || {}).reduce(function(sum, key) {
+            return sum + (selection[key] ? selection[key].length : 0);
+        }, 0);
+        badge.textContent = total > 0 ? String(total) : '';
+        badge.hidden = total === 0;
+    }
+
     return {
         /**
          * Initialise a chip filter container by id.
@@ -142,27 +162,59 @@ define(['local_dimensions/filter_tabs_nav'], function(FilterTabsNav) {
                 return;
             }
             registry[containerId] = {container: container, callback: callback};
-            setupContainer(container, callback);
+            setupContainer(container, function(selection) {
+                updateCount(selection);
+                if (typeof callback === 'function') {
+                    callback(selection);
+                }
+            });
             // Activate the scrollable pill UI on every chip group.
             FilterTabsNav.initAll(container);
         },
 
         /**
-         * Re-measure a container's chip groups.
+         * Wire a Filter button to the panel holding this container.
          *
-         * Call this after revealing a container that was hidden at init time: the pill UI
-         * measures offsetWidth/scrollWidth, which are 0 inside a display:none ancestor, so
-         * it wrongly concludes the strip is scrollable and shows paddles that do not belong.
-         * Do NOT call init() again to achieve this - setupContainer has no dedupe guard and
-         * would bind a second click listener to every chip.
+         * Both learner views open their chips from a toolbar button rather than showing them
+         * inline, so the toggle lives here instead of being written twice in the hosts.
+         *
+         * The panel is a plain block toggled through the hidden attribute: no Bootstrap
+         * component, so nothing depends on the 4.5 / 5.x data-attribute split, and the
+         * display: none it produces is what the re-measure below relies on.
          *
          * @param {string} containerId DOM id of the [data-chip-filters] node.
          */
-        refresh: function(containerId) {
-            var entry = registry[containerId];
-            if (entry) {
-                FilterTabsNav.updateAll(entry.container);
+        initPanel: function(containerId) {
+            var toggle = document.querySelector('[data-filter-toggle]');
+            var panel = document.querySelector('[data-filter-panel]');
+            if (!toggle || !panel) {
+                return;
             }
+
+            var entry = registry[containerId];
+            var setOpen = function(open) {
+                panel.hidden = !open;
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                /* Re-measure on reveal. The pill UI reads offsetWidth/scrollWidth at init;
+                   inside a display:none ancestor both are 0, so it concludes the strip is
+                   scrollable and shows paddles that do not belong. Re-running init() instead
+                   would bind a second click listener to every chip - setupContainer has no
+                   dedupe guard. */
+                if (open && entry) {
+                    FilterTabsNav.updateAll(entry.container);
+                }
+            };
+
+            toggle.addEventListener('click', function() {
+                setOpen(panel.hidden);
+            });
+
+            panel.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    setOpen(false);
+                    toggle.focus();
+                }
+            });
         },
 
         /**
