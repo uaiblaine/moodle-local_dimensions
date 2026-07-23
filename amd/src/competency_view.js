@@ -137,7 +137,10 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                     });
                 }
                 data.islearnmore = (lockedcardmode === 'learnmore');
-                data.showlockeddate = showlockeddate;
+                /* The date reads as an invitation ("Opens ..."), so a past one says nothing
+                   next to a Learn more button and is dropped there. Blocked mode keeps it:
+                   that card offers no way in, so the date is the only fact it has. */
+                data.showlockeddate = showlockeddate && (!data.islearnmore || !!data.is_future_date);
                 data.customicon = cardiconclass;
                 data.lockiconurl = iconurls.lock || '';
                 data.courseurl = data.course_url || '';

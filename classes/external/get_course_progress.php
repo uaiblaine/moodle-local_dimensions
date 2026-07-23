@@ -111,6 +111,8 @@ class get_course_progress extends external_api {
                     'locked' => $data['locked'] ?? false,
                     'formatted_start_date' => $data['formatted_start_date'] ?? '',
                     'is_enrolment_start' => !empty($data['is_enrolment_start']),
+                    'can_self_enrol' => !empty($data['can_self_enrol']),
+                    'is_future_date' => !empty($data['is_future_date']),
                     'course_url' => $data['course_url'] ?? '',
                     'sections' => $sections,
                     'error' => '',
@@ -123,6 +125,8 @@ class get_course_progress extends external_api {
                     'locked' => false,
                     'formatted_start_date' => '',
                     'is_enrolment_start' => false,
+                    'can_self_enrol' => false,
+                    'is_future_date' => false,
                     'course_url' => '',
                     'sections' => [],
                     'error' => $e->getMessage(),
@@ -158,6 +162,16 @@ class get_course_progress extends external_api {
                 'is_enrolment_start' => new external_value(
                     PARAM_BOOL,
                     'Whether the date is an enrolment start date',
+                    VALUE_OPTIONAL,
+                ),
+                'can_self_enrol' => new external_value(
+                    PARAM_BOOL,
+                    'Whether the viewer can self-enrol into this locked course',
+                    VALUE_OPTIONAL,
+                ),
+                'is_future_date' => new external_value(
+                    PARAM_BOOL,
+                    'Whether the availability date still lies ahead',
                     VALUE_OPTIONAL,
                 ),
                 'course_url' => new external_value(

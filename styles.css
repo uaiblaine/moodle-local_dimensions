@@ -828,13 +828,66 @@
     border-radius: 10px;
 }
 
+/* The availability date reads as an invitation, not a restriction: a soft accent
+   chip with a calendar icon rather than a raised white pill. */
 .local-dimensions-locked-date {
-    font-size: 0.9rem;
-    color: #555;
-    background: #fff;
-    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.32rem 0.8rem;
+    border-radius: 999px;
+    background: #cfe2ff;
+    color: #0f6cbf;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.local-dimensions-locked-date .fa {
+    font-size: 0.8rem;
+}
+
+/* Self-enrolment open: the lock becomes a way in. */
+.local-dimensions-locked-icon-enrol {
+    border-color: rgb(15 108 191 / 35%);
+    background-color: rgb(15 108 191 / 6%);
+    color: #0f6cbf;
+}
+
+.local-dimensions-enrol-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.5rem;
+    padding: 8px 22px;
     border-radius: 10px;
-    box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
+    background: var(--primary, #0f6cbf);
+    box-shadow: 0 3px 10px rgb(0 0 0 / 16%);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: filter 0.2s ease, transform 0.15s ease;
+}
+
+.local-dimensions-enrol-btn:hover {
+    color: #fff;
+    text-decoration: none;
+    filter: brightness(0.88);
+    transform: translateY(-1px);
+}
+
+.local-dimensions-enrol-btn:active {
+    transform: translateY(0);
+}
+
+.local-dimensions-enrol-btn:focus-visible {
+    outline: 2px solid #0f6cbf;
+    outline-offset: 3px;
+}
+
+.local-dimensions-enrol-note {
+    color: #495057;
+    font-size: 0.78rem;
 }
 
 /* "Learn More" button for locked cards */
