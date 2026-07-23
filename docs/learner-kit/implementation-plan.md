@@ -331,14 +331,17 @@ Deliberately held for Phase 5: the locked card's date pill keeps its current loo
 accent chip is the visual half of the "Opens {date}" reframing and needs enrolment data that does not
 exist yet.
 
-Two out-of-scope defects found while reading, not fixed here:
+Two out-of-scope defects were found while reading and **fixed straight after the phase**:
 
-1. A locked course with **completion tracking off never shows the lock overlay** — `calculator.php`
-   returns the enabled-flag-only array and bails before computing `$locked`, so the card renders
-   "Completion disabled" instead of the lock.
-2. The marching-ants border animation **cannot be disabled by `prefers-reduced-motion`**, because
-   `competency_view.js` sets it as an inline style that a stylesheet cannot override without
-   `!important` (which CI forbids). The fix belongs in the JS.
+1. A locked course with completion tracking off never showed the lock overlay — the calculator
+   bailed at the completion check before resolving the lock, so the card said "Completion disabled"
+   to a user who could not open the course at all. Fixed in `a82cf8d`, with
+   `tests/calculator_progress_test.php` covering all three paths.
+2. The marching-ants border animation ignored `prefers-reduced-motion`, because it is an inline
+   style that no stylesheet can override without `!important`. Gated in the JS instead — `80b085d`.
+
+Neither needed a further bump: the Phase 2 bump to `2026072300` had not yet been installed anywhere,
+so its `purge_all_caches()` still serves the newer JS.
 
 ## 4b. Phase 2 — original scope
 
