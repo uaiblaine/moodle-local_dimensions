@@ -1,6 +1,13 @@
 name: ci
 
-on: [push, pull_request]
+# workflow_dispatch is the manual escape hatch: this plugin has no local Moodle
+# install, so CI is the only place PHPUnit, Behat and phpcs ever run. Without it,
+# a push whose commits carry a skip-ci marker leaves code unvalidated with no way
+# to launch a run short of pushing another commit.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   # One reusable-workflow call per supported Moodle branch (version.php
