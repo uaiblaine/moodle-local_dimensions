@@ -2279,6 +2279,7 @@ define(
                 applyFilter();
             });
             initFilterPanel();
+            initNoResultsClear();
 
             // Apply initial filter (show incomplete only by default).
             applyFilter();
@@ -2451,6 +2452,7 @@ define(
             const filter = getActiveFilter();
             const query = getSearchQuery();
             const accordionItems = document.querySelectorAll('.local-dimensions-accordion-item');
+            let visiblecount = 0;
 
             accordionItems.forEach(function(item) {
                 const isCompleted = item.classList.contains('completed');
@@ -2485,10 +2487,49 @@ define(
                 if (passesTab && passesSearch && passesChips) {
                     item.style.display = '';
                     item.classList.remove('local-dimensions-hidden');
+                    visiblecount++;
                 } else {
                     item.style.display = 'none';
                     item.classList.add('local-dimensions-hidden');
                 }
+            });
+
+            const noresults = document.getElementById('local-dimensions-viewplan-noresults');
+            if (noresults) {
+                noresults.hidden = visiblecount > 0;
+            }
+        }
+
+        /**
+         * Wire the no-results "Clear filters" button.
+         *
+         * Any of the three inputs can produce the empty list, so the reset has to cover all
+         * of them: the chip selection, the search box, and the completion tab.
+         */
+        function initNoResultsClear() {
+            const button = document.querySelector('[data-noresults-clear]');
+            if (!button) {
+                return;
+            }
+            button.addEventListener('click', function() {
+                const chipClear = document.querySelector('[data-chip-clear]');
+                if (chipClear) {
+                    // Runs the component's own clear, which re-fires the host callback.
+                    chipClear.click();
+                }
+
+                const input = document.querySelector('.local-dimensions-search-input');
+                if (input) {
+                    input.value = '';
+                }
+
+                const allTab = document.querySelector(FILTER_TAB_SELECTOR + '[data-filter="all"]');
+                if (allTab && !allTab.classList.contains('active')) {
+                    allTab.click();
+                    return;
+                }
+
+                applyFilter();
             });
         }
 

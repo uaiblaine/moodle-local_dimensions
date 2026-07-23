@@ -205,6 +205,24 @@
             </div>
             {{/competencies}}
         </div>
+
+        {{! Sits outside the role="list" region, and must not carry
+            local-dimensions-accordion-item - the filter-initialized rules force those to
+            display: block, which would fight the hidden attribute. }}
+        <div id="local-dimensions-viewplan-noresults" class="local-dimensions-empty" role="status" hidden>
+            <span class="local-dimensions-empty-icon">
+                <i class="fa fa-search" aria-hidden="true"></i>
+            </span>
+            <span class="local-dimensions-empty-title">
+                {{#str}}filter_noresults, local_dimensions{{/str}}
+            </span>
+            <span class="local-dimensions-empty-text">
+                {{#str}}filter_noresults_note, local_dimensions{{/str}}
+            </span>
+            <button type="button" class="local-dimensions-empty-action" data-noresults-clear>
+                {{#str}}filter_chip_clear, local_dimensions{{/str}}
+            </button>
+        </div>
     </div>
     {{/hascompetencies}}
 

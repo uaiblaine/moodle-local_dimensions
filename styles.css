@@ -1533,6 +1533,23 @@
     max-width: 32rem;
 }
 
+.local-dimensions-empty-action {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    background: #fff;
+    color: #0f6cbf;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.local-dimensions-empty-action:hover {
+    background: #f8f9fa;
+}
+
 .local-dimensions-path-label {
     color: #6c757d;
     font-weight: 500;
