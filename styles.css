@@ -2077,6 +2077,40 @@
     padding: 0.25rem 0;
 }
 
+/* Pager across a competency's evidence, inside the modal body. */
+.local-dimensions-ev-modal-pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.local-dimensions-ev-modal-pager-pos {
+    font-size: 0.8125rem;
+    color: #6c757d;
+}
+
+.local-dimensions-ev-modal-pager-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #dee2e6;
+    border-radius: 50%;
+    background: #fff;
+    color: #495057;
+    cursor: pointer;
+}
+
+.local-dimensions-ev-modal-pager-btn:disabled {
+    color: #ced4da;
+    cursor: default;
+}
+
 .local-dimensions-ev-modal-type {
     margin-bottom: 1rem;
 }
