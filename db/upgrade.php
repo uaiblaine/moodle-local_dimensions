@@ -429,6 +429,17 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026072301, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026072302) {
+        // Learner-view redesign, phase 4: the accordion detail panes are rewritten
+        // (Rules, Status, Evidence, the evidence + scale modals, and Description /
+        // taxonomy). No schema and no web-service return changed; this bump moves the
+        // cache revision so the rebuilt AMD module and the changed CSS and strings are
+        // served, and it removes the retired taxonomy card icons.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026072302, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
