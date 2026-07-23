@@ -198,7 +198,8 @@ define(
                 {key: 'evidence_rule_viewrule', component: 'local_dimensions'},
                 {key: 'evidence_rule_stale', component: 'local_dimensions'},
                 {key: 'evidence_rule_sendreview', component: 'local_dimensions'},
-                {key: 'evidence_rule_reviewsent', component: 'local_dimensions'}
+                {key: 'evidence_rule_reviewsent', component: 'local_dimensions'},
+                {key: 'scale_about', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -259,7 +260,8 @@ define(
                     evidenceRuleViewRule: strings[55],
                     evidenceRuleStale: strings[56],
                     evidenceRuleSendReview: strings[57],
-                    evidenceRuleReviewSent: strings[58]
+                    evidenceRuleReviewSent: strings[58],
+                    scaleAbout: strings[59]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -291,6 +293,7 @@ define(
                     || null;
                 initEvidenceList(contentEl, summaryState.ucs ? summaryState.ucs.evidence : [], strMap, scaleConfig,
                     summaryState.ucs);
+                initScaleAbout(contentEl, strMap, summaryState.scaleDescription);
 
                 // Initialize course scroll navigation.
                 initCourseScroll(contentEl);
@@ -337,6 +340,8 @@ define(
                 ucs: ucs,
                 competencyData: competencyData,
                 comp: comp,
+                // Injected by the plugin's WS wrapper onto usercompetencysummary.competency.
+                scaleDescription: (competencyData && competencyData.scaledescription) || '',
                 visibleCourses: visibleCourses,
                 primaryTaxonomy: primaryTaxonomy,
                 hasStatus: hasStatus,
@@ -467,7 +472,7 @@ define(
             let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-status' + (isFirst ? ' active' : '') + '"';
             html += ' id="local-dimensions-tabpane-status-' + summaryState.comp.id + '" data-tab="status"';
             html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-status-' + summaryState.comp.id + '">';
-            html += renderStatusSection(summaryState.ucs, strMap);
+            html += renderStatusSection(summaryState.ucs, strMap, summaryState.scaleDescription);
             html += '</div>';
             return html;
         }
@@ -1198,6 +1203,31 @@ define(
                 Log.warn('[local_dimensions] Invalid scale configuration JSON.');
                 return false;
             }
+        }
+
+        /**
+         * Wire the "About this scale" button to a modal showing the scale's own description.
+         *
+         * @param {HTMLElement} contentEl The content container element
+         * @param {Object} strMap Language strings map
+         * @param {string} scaleDescription Formatted description HTML from the web service
+         */
+        function initScaleAbout(contentEl, strMap, scaleDescription) {
+            const button = contentEl.querySelector('[data-about-scale]');
+            if (!button || !scaleDescription) {
+                return;
+            }
+
+            button.addEventListener('click', function() {
+                Modal.create({
+                    title: strMap.scaleAbout,
+                    /* Server-formatted through format_text with the competency's context, so it
+                       is trusted HTML by the same contract the description panes already use. */
+                    body: scaleDescription,
+                    show: true,
+                    removeOnClose: true
+                }).catch(Notification.exception);
+            });
         }
 
         /**
@@ -2127,9 +2157,10 @@ define(
          *
          * @param {Object} ucs The user competency summary
          * @param {Object} strMap Language strings map
+         * @param {string} scaleDescription Formatted scale description, or '' to hide the button
          * @return {string} HTML for the status section
          */
-        function renderStatusSection(ucs, strMap) {
+        function renderStatusSection(ucs, strMap, scaleDescription) {
             const uc = ucs.usercompetency || ucs.usercompetencyplan;
             if (!uc) {
                 return '';
@@ -2161,6 +2192,16 @@ define(
             }
 
             html += '</div>';
+
+            /* Rendered only when the scale actually has a description - most do not, so the
+               button would otherwise open an empty modal. */
+            if (scaleDescription) {
+                html += '<button type="button" class="local-dimensions-status-scale" data-about-scale>';
+                html += '<i class="fa fa-info-circle" aria-hidden="true"></i> ';
+                html += escapeHtml(strMap.scaleAbout);
+                html += '</button>';
+            }
+
             html += '</div>'; // End local-dimensions-status-tab-content.
 
             return html;

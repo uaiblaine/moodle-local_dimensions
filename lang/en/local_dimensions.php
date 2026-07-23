@@ -536,6 +536,7 @@ $string['rules_sr_todo'] = 'Not yet evaluated';
 $string['rules_tab'] = 'Rules';
 $string['rules_todo'] = 'To do';
 $string['rules_total_competencies'] = '{$a} items in total';
+$string['scale_about'] = 'About this scale';
 $string['search_competencies'] = 'Search competencies...';
 $string['search_toomany'] = 'Too many matches. Refine your search to narrow the list.';
 $string['show_less'] = 'See less';

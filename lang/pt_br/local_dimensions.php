@@ -536,6 +536,7 @@ $string['rules_sr_todo'] = 'Ainda não avaliado';
 $string['rules_tab'] = 'Regras';
 $string['rules_todo'] = 'A fazer';
 $string['rules_total_competencies'] = '{$a} itens no total';
+$string['scale_about'] = 'Sobre esta escala';
 $string['search_competencies'] = 'Pesquisar...';
 $string['search_toomany'] = 'Muitos resultados. Refine a busca para restringir a lista.';
 $string['show_less'] = 'Ver menos';
