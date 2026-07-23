@@ -1340,6 +1340,102 @@
     margin-bottom: 1.5rem;
 }
 
+/* Toolbar layout: the controls read left to right and the search takes the slack, so
+   later controls slot in at either end without the row re-flowing around them. */
+.local-dimensions-toolbar {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.local-dimensions-toolbar .local-dimensions-search-wrapper {
+    flex: 1 1 160px;
+    max-width: 320px;
+}
+
+/* Sort menu: a plain block toggled by [hidden], anchored to its icon button. */
+.local-dimensions-sort {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.local-dimensions-sort-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    background: #fff;
+    color: #495057;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.local-dimensions-sort-toggle:hover,
+.local-dimensions-sort-toggle[aria-expanded='true'] {
+    background: #e9ecef;
+}
+
+.local-dimensions-sort-toggle:focus-visible {
+    outline: 2px solid #0f6cbf;
+    outline-offset: 2px;
+}
+
+.local-dimensions-sort-menu {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    right: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    padding: 0.35rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    background: #fff;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 12%);
+}
+
+.local-dimensions-sort-heading {
+    padding: 0.3rem 0.6rem;
+    color: #6c757d;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.local-dimensions-sort-menu [data-sort] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border: none;
+    border-radius: 0.35rem;
+    background: none;
+    color: #212529;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.local-dimensions-sort-menu [data-sort]:hover {
+    background: #e9ecef;
+}
+
+/* The check marks the current choice; every row keeps its slot so the labels stay aligned. */
+.local-dimensions-sort-menu [data-sort] .fa {
+    color: #0f6cbf;
+    visibility: hidden;
+}
+
+.local-dimensions-sort-menu [data-sort][aria-checked='true'] {
+    font-weight: 600;
+}
+
+.local-dimensions-sort-menu [data-sort][aria-checked='true'] .fa {
+    visibility: visible;
+}
+
 .local-dimensions-filter-tabs {
     display: inline-flex;
     gap: 0;

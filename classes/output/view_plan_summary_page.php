@@ -61,6 +61,56 @@ class view_plan_summary_page implements renderable, templatable {
     }
 
     /**
+     * The learner's stored view chrome, validated against what this view actually offers.
+     *
+     * Anything unrecognised falls back to the default rather than being trusted: the
+     * preference is user-writable through core's own repository, and a stale value survives
+     * a redesign that drops an option.
+     *
+     * @return array Keys: sort, filter.
+     */
+    private static function resolve_view_preference(): array {
+        $stored = json_decode((string) get_user_preferences(constants::PREF_LEARNER_VIEW, ''), true);
+        $stored = is_array($stored) ? $stored : [];
+        $sort = $stored['sort'] ?? '';
+        $filter = $stored['filter'] ?? '';
+
+        return [
+            'sort' => in_array($sort, ['planorder', 'name', 'completed'], true) ? $sort : 'planorder',
+            'filter' => ($filter === 'all') ? 'all' : 'incomplete',
+        ];
+    }
+
+    /**
+     * Order the exported competency rows for the first paint.
+     *
+     * @param array $competencies Exported competency rows.
+     * @param string $sort One of planorder, name, completed.
+     * @return array The rows in display order.
+     */
+    private static function sort_competencies(array $competencies, string $sort): array {
+        if ($sort === 'name') {
+            // Sorting the names alone keeps the collator locale-aware without touching the rows.
+            $names = array_column($competencies, 'shortname');
+            \core_collator::asort($names, \core_collator::SORT_STRING);
+            $sorted = [];
+            foreach (array_keys($names) as $index) {
+                $sorted[] = $competencies[$index];
+            }
+            return $sorted;
+        }
+
+        if ($sort === 'completed') {
+            // A stable partition, so each group keeps the plan's own order inside it.
+            $done = array_filter($competencies, fn($c) => !empty($c['isproficient']));
+            $rest = array_filter($competencies, fn($c) => empty($c['isproficient']));
+            return array_merge(array_values($done), array_values($rest));
+        }
+
+        return $competencies;
+    }
+
+    /**
      * Export data for use in a Mustache template.
      *
      * @param renderer_base $output The renderer
@@ -221,6 +271,8 @@ class view_plan_summary_page implements renderable, templatable {
 
             $data['competencies'][] = [
                 'id' => $comp->get('id'),
+                // The plan's own order, stamped before any sort so the client can restore it.
+                'planorder' => count($data['competencies']),
                 'shortname' => format_string($comp->get('shortname')),
                 'isproficient' => $isproficient,
                 'rating' => $ratingtext,
@@ -232,6 +284,18 @@ class view_plan_summary_page implements renderable, templatable {
                 'filtervaluesjson' => json_encode((object) $filtervalues),
             ];
         }
+
+        /* Resolve the learner's stored chrome and apply it here rather than after paint:
+           re-ordering client-side would show the plan order first and then rearrange it
+           under the reader. */
+        $view = self::resolve_view_preference();
+        $data['competencies'] = self::sort_competencies($data['competencies'], $view['sort']);
+        $data['sortmode'] = $view['sort'];
+        $data['sort_is_planorder'] = ($view['sort'] === 'planorder');
+        $data['sort_is_name'] = ($view['sort'] === 'name');
+        $data['sort_is_completed'] = ($view['sort'] === 'completed');
+        $data['filter_is_incomplete'] = ($view['filter'] === 'incomplete');
+        $data['filter_is_all'] = ($view['filter'] === 'all');
 
         $data['competencycount'] = count($data['competencies']);
         $data['hascompetencies'] = !empty($data['competencies']);
