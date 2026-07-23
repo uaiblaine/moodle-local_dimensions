@@ -2569,6 +2569,7 @@ define(
             initFilterTabs();
             initSearch();
             initSort();
+            initFavourites();
 
             // Wire up custom-field chip filters (no-op when none rendered).
             ChipFilters.init('local-dimensions-viewplan-chip-filters', function(selection) {
@@ -2693,17 +2694,26 @@ define(
         function applyFilter() {
             const filter = getActiveFilter();
             const query = getSearchQuery();
+            const favToggle = document.querySelector('[data-fav-toggle]');
+            const favonly = !!favToggle && favToggle.getAttribute('aria-pressed') === 'true';
             const accordionItems = document.querySelectorAll('.local-dimensions-accordion-item');
             let visiblecount = 0;
+            let nonfavcount = 0;
 
             accordionItems.forEach(function(item) {
                 const isCompleted = item.classList.contains('completed');
+                if (!item.classList.contains('local-dimensions-favourite')) {
+                    nonfavcount++;
+                }
 
                 // Tab filter.
                 let passesTab = true;
                 if (filter === 'incomplete' && isCompleted) {
                     passesTab = false;
                 }
+
+                // Favourites-only filter.
+                const passesFav = !favonly || item.classList.contains('local-dimensions-favourite');
 
                 // Search filter.
                 let passesSearch = true;
@@ -2726,7 +2736,7 @@ define(
                     passesChips = ChipFilters.matchesSelection(activeChipSelection, parsed || {});
                 }
 
-                if (passesTab && passesSearch && passesChips) {
+                if (passesTab && passesFav && passesSearch && passesChips) {
                     item.style.display = '';
                     item.classList.remove('local-dimensions-hidden');
                     visiblecount++;
@@ -2736,9 +2746,92 @@ define(
                 }
             });
 
+            /* The ghost card and the no-results block are both empty-state messages, so only
+               one may show: in favourites-only mode the ghost is the more useful of the two,
+               because it names the filter that is hiding everything. */
+            const showghost = favonly && nonfavcount > 0;
+            updateGhost(showghost, nonfavcount);
+
             const noresults = document.getElementById('local-dimensions-viewplan-noresults');
             if (noresults) {
-                noresults.hidden = visiblecount > 0;
+                noresults.hidden = visiblecount > 0 || showghost;
+            }
+        }
+
+        /**
+         * Show or hide the ghost card and refresh its count.
+         *
+         * @param {boolean} show Whether the card belongs on screen at all
+         * @param {number} count How many competencies are not favourited
+         */
+        function updateGhost(show, count) {
+            const ghost = document.querySelector('[data-ghost]');
+            if (!ghost) {
+                return;
+            }
+            ghost.hidden = !show;
+            if (!show) {
+                return;
+            }
+            const label = ghost.querySelector('[data-ghost-count]');
+            if (!label) {
+                return;
+            }
+            Str.get_string('fav_ghost', 'local_dimensions', count).then(function(text) {
+                label.textContent = text;
+                return null;
+            }).catch(Notification.exception);
+        }
+
+        /**
+         * Wire the favourites controls: the per-row stars, the toolbar toggle and the ghost.
+         *
+         * A star toggle deliberately does NOT re-sort, even under "Favourites first": rows
+         * leaping out from under the pointer at the moment of clicking is worse than an order
+         * that settles on the next visit.
+         */
+        function initFavourites() {
+            const summary = document.querySelector('.local-dimensions-plan-summary');
+            if (!summary) {
+                return;
+            }
+
+            let map = {};
+            try {
+                map = JSON.parse(summary.dataset.favourites || '{}');
+            } catch (e) {
+                map = {};
+            }
+            LearnerPrefs.initFavourites(summary.dataset.planid, map);
+
+            document.querySelectorAll('[data-fav-star]').forEach(function(star) {
+                star.addEventListener('click', function() {
+                    const on = LearnerPrefs.toggleFavourite(star.dataset.competencyId);
+                    star.setAttribute('aria-pressed', on ? 'true' : 'false');
+                    const item = star.closest('.local-dimensions-accordion-item');
+                    if (item) {
+                        item.classList.toggle('local-dimensions-favourite', on);
+                    }
+                    applyFilter();
+                });
+            });
+
+            const favToggle = document.querySelector('[data-fav-toggle]');
+            if (favToggle) {
+                favToggle.addEventListener('click', function() {
+                    const on = favToggle.getAttribute('aria-pressed') !== 'true';
+                    favToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+                    LearnerPrefs.save({favonly: on});
+                    applyFilter();
+                });
+            }
+
+            const ghost = document.querySelector('[data-ghost]');
+            if (ghost && favToggle) {
+                // Activating the ghost clears the filter it is there to explain.
+                ghost.addEventListener('click', function() {
+                    favToggle.click();
+                });
             }
         }
 
@@ -2768,8 +2861,15 @@ define(
                 const title = item.querySelector('.local-dimensions-accordion-title');
                 return title ? title.textContent.trim() : '';
             };
-            const isCompleted = function(item) {
-                return item.classList.contains('completed');
+            const hasClass = function(name) {
+                return function(item) {
+                    return item.classList.contains(name);
+                };
+            };
+            const partition = function(name) {
+                return byPlan.filter(hasClass(name)).concat(byPlan.filter(function(item) {
+                    return !item.classList.contains(name);
+                }));
             };
 
             let sorted = byPlan;
@@ -2778,9 +2878,9 @@ define(
                     return titleOf(a).localeCompare(titleOf(b));
                 });
             } else if (mode === 'completed') {
-                sorted = byPlan.filter(isCompleted).concat(byPlan.filter(function(item) {
-                    return !isCompleted(item);
-                }));
+                sorted = partition('completed');
+            } else if (mode === 'favourites') {
+                sorted = partition('local-dimensions-favourite');
             }
 
             sorted.forEach(function(item) {

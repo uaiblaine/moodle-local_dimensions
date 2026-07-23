@@ -27,14 +27,18 @@
     * subline_is_status / subline_is_rating / subline_is_text (bool) - Which accordion subline to render
     * hascompetencies (bool) - Whether there are competencies
     * competencies (array) - Array of competency objects with:
-        - id, shortname, isproficient, rating, hasrating
+        - id, planorder, shortname, isproficient, rating, hasrating, isfavourite
         - badgeproficienticonurl, badgewarningiconurl
         - sublinetext, hassublinetext, filtervaluesjson
     * competencycount (int) - Total competencies
     * incompletecount (int) - Number of not-yet-proficient competencies
-    * sortmode (string) - Stored sort: planorder, name or completed
-    * sort_is_planorder / sort_is_name / sort_is_completed (bool) - Which sort is checked
+    * sortmode (string) - Stored sort: planorder, name, completed or favourites
+    * sort_is_planorder / sort_is_name / sort_is_completed / sort_is_favourites (bool) - Which sort is checked
     * filter_is_incomplete / filter_is_all (bool) - Which completion tab starts active
+    * showstar (bool) - Whether the learner owns this plan, so the favourites controls render
+    * favonly (bool) - Whether the favourites-only filter starts active
+    * favouritesjson (string) - The whole stored favourites map, for the client to merge into
+    * nonfavouritecount (int) - How many competencies are not favourited
     * haschipfilters, chipfilters - Chip-filter model
     * hascustomcss, customcss - Compiled template SCSS
 
@@ -62,8 +66,13 @@
         "sort_is_planorder": true,
         "sort_is_name": false,
         "sort_is_completed": false,
+        "sort_is_favourites": false,
         "filter_is_incomplete": true,
-        "filter_is_all": false
+        "filter_is_all": false,
+        "showstar": true,
+        "favonly": false,
+        "favouritesjson": "{}",
+        "nonfavouritecount": 0
     }
 }}
 {{! Custom SCSS compiled CSS from template }}
@@ -80,11 +89,22 @@
     {{#hascompetencies}}
     <div class="local-dimensions-plan-summary mt-4"
          data-planid="{{planid}}"
-         data-sortmode="{{sortmode}}">
+         data-sortmode="{{sortmode}}"
+         data-favourites="{{favouritesjson}}">
 
-        {{! Toolbar: completion segment, search, sort, chip filter. The active tab and the
-            checked sort come from the stored preference, resolved server-side. }}
+        {{! Toolbar: favourites, completion segment, search, sort, chip filter. The active tab,
+            the checked sort and the favourites state come from the stored preference,
+            resolved server-side. }}
         <div class="local-dimensions-filter-bar local-dimensions-toolbar">
+            {{#showstar}}
+            <button type="button"
+                    class="local-dimensions-fav-toggle"
+                    data-fav-toggle
+                    aria-pressed="{{#favonly}}true{{/favonly}}{{^favonly}}false{{/favonly}}"
+                    aria-label="{{#str}}fav_only, local_dimensions{{/str}}">
+                <i class="fa fa-star" aria-hidden="true"></i>
+            </button>
+            {{/showstar}}
             <div class="local-dimensions-filter-tabs" role="tablist" aria-label="{{#str}}filter_competencies, local_dimensions{{/str}}">
                 <button class="local-dimensions-filter-tab {{#filter_is_incomplete}}active{{/filter_is_incomplete}}" data-filter="incomplete" role="tab" aria-selected="{{#filter_is_incomplete}}true{{/filter_is_incomplete}}{{^filter_is_incomplete}}false{{/filter_is_incomplete}}" type="button">
                     {{#str}}filter_not_completed, local_dimensions{{/str}}
@@ -130,6 +150,11 @@
                     <button type="button" role="menuitemradio" data-sort="completed" aria-checked="{{#sort_is_completed}}true{{/sort_is_completed}}{{^sort_is_completed}}false{{/sort_is_completed}}">
                         <i class="fa fa-check" aria-hidden="true"></i>{{#str}}sort_completedfirst, local_dimensions{{/str}}
                     </button>
+                    {{#showstar}}
+                    <button type="button" role="menuitemradio" data-sort="favourites" aria-checked="{{#sort_is_favourites}}true{{/sort_is_favourites}}{{^sort_is_favourites}}false{{/sort_is_favourites}}">
+                        <i class="fa fa-check" aria-hidden="true"></i>{{#str}}sort_favourites, local_dimensions{{/str}}
+                    </button>
+                    {{/showstar}}
                 </div>
             </div>
             {{#haschipfilters}}
@@ -167,7 +192,7 @@
              aria-live="polite"
              aria-relevant="additions removals">
             {{#competencies}}
-            <div class="local-dimensions-accordion-item {{#isproficient}}completed{{/isproficient}} {{#hasrating}}{{^isproficient}}rated{{/isproficient}}{{/hasrating}}"
+            <div class="local-dimensions-accordion-item {{#isproficient}}completed{{/isproficient}} {{#hasrating}}{{^isproficient}}rated{{/isproficient}}{{/hasrating}} {{#isfavourite}}local-dimensions-favourite{{/isfavourite}}"
                  role="listitem"
                  data-competency-id="{{id}}"
                  data-planorder="{{planorder}}"
@@ -175,6 +200,17 @@
 
                 {{! Accordion content }}
                 <div class="local-dimensions-accordion-wrapper flex-grow-1">
+                    <div class="local-dimensions-accordion-head">
+                    {{#showstar}}
+                    <button type="button"
+                            class="local-dimensions-star"
+                            data-fav-star
+                            data-competency-id="{{id}}"
+                            aria-pressed="{{#isfavourite}}true{{/isfavourite}}{{^isfavourite}}false{{/isfavourite}}"
+                            aria-label="{{#str}}fav_star, local_dimensions{{/str}}">
+                        <i class="fa fa-star" aria-hidden="true"></i>
+                    </button>
+                    {{/showstar}}
                     <button class="local-dimensions-accordion-toggle"
                             type="button"
                             aria-expanded="false"
@@ -217,6 +253,7 @@
                         </div>
                         <i class="local-dimensions-accordion-icon fa fa-chevron-down" aria-hidden="true"></i>
                     </button>
+                    </div>
 
                     <div class="local-dimensions-accordion-content"
                          id="competency-content-{{id}}"
@@ -242,6 +279,22 @@
             </div>
             {{/competencies}}
         </div>
+
+        {{#showstar}}
+        {{! Renders only while the favourites filter is on, so a learner cannot forget it is
+            on and conclude the rest of the plan has vanished. Activating it clears the
+            filter. Like the no-results block below, it must not carry
+            local-dimensions-accordion-item, whose display is forced once the filter runs. }}
+        <button type="button" class="local-dimensions-ghost" data-ghost hidden>
+            <span class="local-dimensions-ghost-icon">
+                <i class="fa fa-plus" aria-hidden="true"></i>
+            </span>
+            <span class="local-dimensions-ghost-body">
+                <span class="local-dimensions-ghost-title" data-ghost-count>{{#str}}fav_ghost, local_dimensions, {{nonfavouritecount}}{{/str}}</span>
+                <span class="local-dimensions-ghost-text">{{#str}}fav_ghost_note, local_dimensions{{/str}}</span>
+            </span>
+        </button>
+        {{/showstar}}
 
         {{! Sits outside the role="list" region, and must not carry
             local-dimensions-accordion-item - the filter-initialized rules force those to

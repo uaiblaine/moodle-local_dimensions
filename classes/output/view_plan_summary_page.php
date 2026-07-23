@@ -76,8 +76,30 @@ class view_plan_summary_page implements renderable, templatable {
         $filter = $stored['filter'] ?? '';
 
         return [
-            'sort' => in_array($sort, ['planorder', 'name', 'completed'], true) ? $sort : 'planorder',
+            'sort' => in_array($sort, ['planorder', 'name', 'completed', 'favourites'], true) ? $sort : 'planorder',
             'filter' => ($filter === 'all') ? 'all' : 'incomplete',
+            'favonly' => !empty($stored['favonly']),
+        ];
+    }
+
+    /**
+     * The learner's favourites, as the whole stored map plus this plan's own list.
+     *
+     * The map is handed to the client intact because a write has to preserve the other
+     * plans' entries: the page only knows about one plan, and writing just its key would
+     * silently drop every favourite the learner set elsewhere.
+     *
+     * @param int $planid The plan being viewed.
+     * @return array Keys: map (plan id => competency ids), ids (this plan's list).
+     */
+    private static function resolve_favourites(int $planid): array {
+        $stored = json_decode((string) get_user_preferences(constants::PREF_LEARNER_FAV, ''), true);
+        $stored = is_array($stored) ? $stored : [];
+        $ids = $stored[(string) $planid] ?? [];
+
+        return [
+            'map' => $stored,
+            'ids' => is_array($ids) ? array_map('intval', $ids) : [],
         ];
     }
 
@@ -89,6 +111,13 @@ class view_plan_summary_page implements renderable, templatable {
      * @return array The rows in display order.
      */
     private static function sort_competencies(array $competencies, string $sort): array {
+        if ($sort === 'favourites') {
+            // A stable partition, so each group keeps the plan's own order inside it.
+            $starred = array_filter($competencies, fn($c) => !empty($c['isfavourite']));
+            $rest = array_filter($competencies, fn($c) => empty($c['isfavourite']));
+            return array_merge(array_values($starred), array_values($rest));
+        }
+
         if ($sort === 'name') {
             // Sorting the names alone keeps the collator locale-aware without touching the rows.
             $names = array_column($competencies, 'shortname');
@@ -117,7 +146,7 @@ class view_plan_summary_page implements renderable, templatable {
      * @return array Template context data
      */
     public function export_for_template(renderer_base $output): array {
-        global $DB;
+        global $DB, $USER;
 
         // Get percentage display mode setting.
         $percentagemode = get_config('local_dimensions', 'percentagedisplaymode');
@@ -285,17 +314,34 @@ class view_plan_summary_page implements renderable, templatable {
             ];
         }
 
+        /* The star is the learner's own shortlist, so it is hidden when staff review someone
+           else's plan - the same own-plan guard view-plan.php uses for the return context.
+           Otherwise a manager would be starring competencies from another learner's plan
+           into their own list. */
+        $isownplan = ((int) $this->plan->get('userid') === (int) $USER->id);
+        $favourites = self::resolve_favourites((int) $this->plan->get('id'));
+        $favouriteids = $isownplan ? $favourites['ids'] : [];
+        foreach ($data['competencies'] as $index => $competency) {
+            $data['competencies'][$index]['isfavourite'] = in_array((int) $competency['id'], $favouriteids, true);
+        }
+
         /* Resolve the learner's stored chrome and apply it here rather than after paint:
            re-ordering client-side would show the plan order first and then rearrange it
            under the reader. */
         $view = self::resolve_view_preference();
-        $data['competencies'] = self::sort_competencies($data['competencies'], $view['sort']);
-        $data['sortmode'] = $view['sort'];
-        $data['sort_is_planorder'] = ($view['sort'] === 'planorder');
-        $data['sort_is_name'] = ($view['sort'] === 'name');
-        $data['sort_is_completed'] = ($view['sort'] === 'completed');
+        $sort = ($view['sort'] === 'favourites' && !$isownplan) ? 'planorder' : $view['sort'];
+        $data['competencies'] = self::sort_competencies($data['competencies'], $sort);
+        $data['sortmode'] = $sort;
+        $data['sort_is_planorder'] = ($sort === 'planorder');
+        $data['sort_is_name'] = ($sort === 'name');
+        $data['sort_is_completed'] = ($sort === 'completed');
+        $data['sort_is_favourites'] = ($sort === 'favourites');
         $data['filter_is_incomplete'] = ($view['filter'] === 'incomplete');
         $data['filter_is_all'] = ($view['filter'] === 'all');
+        $data['showstar'] = $isownplan;
+        $data['favonly'] = $isownplan && $view['favonly'];
+        $data['favouritesjson'] = json_encode((object) $favourites['map']);
+        $data['nonfavouritecount'] = count(array_filter($data['competencies'], fn($c) => empty($c['isfavourite'])));
 
         $data['competencycount'] = count($data['competencies']);
         $data['hascompetencies'] = !empty($data['competencies']);

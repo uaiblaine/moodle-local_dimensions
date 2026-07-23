@@ -32,6 +32,8 @@ import {setUserPreference} from 'core_user/repository';
 
 /** @type {String} User preference name holding the learner view chrome. */
 const PREF_VIEW = 'local_dimensions_learner_view';
+/** @type {String} User preference name holding the per-plan favourites. */
+const PREF_FAV = 'local_dimensions_learner_fav';
 /** @type {Number} Debounce (ms) before a change is written to the server. */
 const SAVE_DELAY = 400;
 /** @type {Object} Default view state, mirrored server-side. */
@@ -39,8 +41,25 @@ const DEFAULTS = {sort: 'planorder', filter: 'incomplete', view: 'list'};
 
 /** @type {Object} Live view state (authoritative for the session). */
 let state = {...DEFAULTS};
-/** @type {Number} Pending debounce timer id. */
-let timer = null;
+/** @type {Object} The whole stored favourites map, plan id => competency ids. */
+let favourites = {};
+/** @type {String} The plan this page is showing. */
+let favplan = '0';
+/** @type {Object} Pending debounce timer ids, keyed by preference name. */
+const timers = {};
+
+/**
+ * Schedule a debounced write of a preference to the server.
+ *
+ * @param {String} name Preference name.
+ * @param {Object} value Value to JSON-encode and store.
+ */
+const scheduleSave = (name, value) => {
+    window.clearTimeout(timers[name]);
+    timers[name] = window.setTimeout(() => {
+        setUserPreference(name, JSON.stringify(value)).catch(Log.error);
+    }, SAVE_DELAY);
+};
 
 /**
  * Seed the store from the server-rendered state. Call once, before any save.
@@ -65,8 +84,38 @@ export const get = () => state;
  */
 export const save = (partial) => {
     state = {...state, ...partial};
-    window.clearTimeout(timer);
-    timer = window.setTimeout(() => {
-        setUserPreference(PREF_VIEW, JSON.stringify(state)).catch(Log.error);
-    }, SAVE_DELAY);
+    scheduleSave(PREF_VIEW, state);
+};
+
+/**
+ * Seed the favourites store with the WHOLE stored map, not just this plan's list.
+ *
+ * A write replaces the entire preference, so anything the page never saw would be lost.
+ * Only the current plan's list is normalised; the other plans are passed back untouched.
+ *
+ * @param {Number|String} planid The plan this page is showing.
+ * @param {Object} map The stored map, plan id => competency ids.
+ */
+export const initFavourites = (planid, map) => {
+    favplan = String(planid);
+    favourites = (map && typeof map === 'object') ? map : {};
+    favourites[favplan] = Array.isArray(favourites[favplan]) ? favourites[favplan].map(Number) : [];
+};
+
+/**
+ * Add or remove a competency from this plan's favourites, and persist (debounced).
+ *
+ * @param {Number|String} competencyid The competency to toggle.
+ * @return {Boolean} Whether it is now a favourite.
+ */
+export const toggleFavourite = (competencyid) => {
+    const list = favourites[favplan];
+    const index = list.indexOf(Number(competencyid));
+    if (index === -1) {
+        list.push(Number(competencyid));
+    } else {
+        list.splice(index, 1);
+    }
+    scheduleSave(PREF_FAV, favourites);
+    return index === -1;
 };
