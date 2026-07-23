@@ -499,7 +499,56 @@ seams clearer. Revisit then.
 
 ---
 
-## 7. Phase 5 — server-data slices
+## 7. Phase 5 — server-data slices — **SHIPPED**
+
+| Slice | Commit | |
+|---|---|---|
+| 5.1a Related content — server payload + tests | `cafd29b` | done |
+| 5.1b Related content — cards, badge, disclosure | `cf5d9c3` | done |
+| 5.2 Locked card — self-enrol + anticipatory date | `d2562f8` | done |
+| 5.3 Single-activity course — server half | (this phase) | done |
+| phase-boundary bump | — | `2026072305` |
+
+Six decisions taken during execution, each because the written slice met the code:
+
+- **5.1 was split**, as the slice itself invited. The server half and the client half fail in
+  different ways, and one commit of nine files makes that ambiguous.
+- **Gate 7 of the activity cascade was dropped.** Its justification is the tracker card's locked
+  overlay, which the plan accordion does not have — and `calculator::is_locked()` also reports
+  true for anyone enrolled *without the student role*, so mirroring it would have stripped the
+  activity links from staff whose course card link right above still works.
+- **Three of the planned returns keys were cut.** `modname` has no consumer (`purpose` is what
+  colours the icon), `has_link` is literally `url !== ''`, and `restriction_info` would have
+  injected core-generated HTML into string-built markup for information the course page already
+  carries — which is where a locked row now leads, exactly as decision L asks.
+- **The date kept its two-branch wording.** The kit collapses "Available on" and "Enrolment
+  starts" into one "Opens {date}" chip; they were reframed to *Opens* / *Enrolment opens*
+  instead, because the distinction is a fact the learner uses and one extra string is a cheap
+  price for it.
+- **`start_date` became `is_future_date`.** Nothing would have consumed a raw timestamp:
+  Mustache cannot compare, and the house contract is to pre-resolve flags server-side. The
+  drop-a-past-date rule is composed in `competency_view.js`, because its two halves arrive from
+  different places — `lockedcardmode` from the page, `is_future_date` from the service.
+- **`tests/external/get_course_progress_test.php` did not exist.** Slice 0.2 shipped the payload
+  guard without it; the file is created here and carries that regression test too.
+
+Two findings worth keeping:
+
+- `.local-dimensions-course-check` — the 100% marker on a course card — **had no CSS rule at
+  all** and inherited the body colour, so it never looked green. Fixed in 5.1b, in the block
+  being rewritten anyway.
+- The scroll track needed `align-items: flex-start`. Under the default `stretch`, expanding one
+  card's activity list would have inflated every sibling card to match.
+
+**Left out deliberately:** `OVW-CRS-EMPTY` (the kit's "nothing linked yet" line). It is not in
+this section's scope, and it would put a muted line under the tabs of every competency that has
+no linked courses — noise, where the kit's rationale was about a tab that reads as broken.
+
+**Retired CSS selectors** (custom SCSS on a site may reference them — [risk R1](#r1-custom-scss-is-customer-code)):
+`.local-dimensions-course-btn` and
+`.local-dimensions-courses-scroll-wrapper.local-dimensions-controls-hidden`.
+
+## 7b. Phase 5 — original scope
 
 The only two slices that touch a **typed** returns structure, and therefore the only genuine
 bump candidates.

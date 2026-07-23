@@ -105,7 +105,7 @@ class get_course_progress extends external_api {
                 /* When completion tracking is off, the calculator returns only the enabled
                    flag, so every other key must be defaulted here. Both of the keys below
                    are required by execute_returns and would otherwise be undefined. */
-                $results[] = [
+                $row = [
                     'courseid' => $courseid,
                     'enabled' => $data['enabled'],
                     'locked' => $data['locked'] ?? false,
@@ -117,6 +117,13 @@ class get_course_progress extends external_api {
                     'sections' => $sections,
                     'error' => '',
                 ];
+
+                // Only a course that resolves to one trackable activity carries this.
+                if (!empty($data['activity'])) {
+                    $row['activity'] = $data['activity'];
+                }
+
+                $results[] = $row;
             } catch (\Exception $e) {
                 // Error fallback.
                 $results[] = [
@@ -182,6 +189,15 @@ class get_course_progress extends external_api {
                 'error' => new external_value(
                     PARAM_TEXT,
                     get_string('api_error_message', 'local_dimensions'),
+                    VALUE_OPTIONAL,
+                ),
+                'activity' => new external_single_structure(
+                    [
+                        'name' => new external_value(PARAM_TEXT, 'Activity name'),
+                        'url' => new external_value(PARAM_URL, 'Activity URL'),
+                        'completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
+                    ],
+                    'The single trackable activity, present only when the course resolves to exactly one',
                     VALUE_OPTIONAL,
                 ),
                 'sections' => new external_multiple_structure(
