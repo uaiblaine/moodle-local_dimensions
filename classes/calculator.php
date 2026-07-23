@@ -58,8 +58,42 @@ class calculator {
             $sections = $modinfo->get_section_info_all();
             $completion = new \completion_info($course);
 
+            /* Resolve the lock and its dates BEFORE the completion check. A course can be
+               locked and have completion tracking switched off at the same time, and the
+               lock is the more important of the two facts: returning early without it left
+               the card claiming "Completion disabled" to a user who cannot open the course
+               at all. */
+
+            // Check centralized lock status.
+            $locked = self::is_locked($course, $USER->id);
+
+            // Keep enrollment check for activity loop (extra security, though locked already covers it).
+            $coursecontext = \core\context\course::instance($course->id);
+            $isenrolled = is_enrolled($coursecontext, $USER->id, '', true);
+
+            // Requested format: %d/%m/%Y.
+            // Use enrollment start date if the user is enrolled with a future timestart.
+            $availabilitydate = self::get_availability_date($course, $USER->id);
+            $formattedstartdate = userdate($availabilitydate, '%d/%m/%Y');
+
+            // Determine if this is an enrollment start date (user enrolled but not yet active).
+            $isenrolmentstart = false;
+            if ($locked) {
+                $enrolstartdate = self::get_enrolment_start_date($course, $USER->id);
+                $isenrolmentstart = ($enrolstartdate !== null);
+            }
+
+            $courseurl = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
+
             if (!$completion->is_enabled()) {
-                return ['enabled' => false];
+                return [
+                    'enabled' => false,
+                    'locked' => $locked,
+                    'formatted_start_date' => $formattedstartdate,
+                    'is_enrolment_start' => $isenrolmentstart,
+                    'course_url' => $courseurl,
+                    'sections' => [],
+                ];
             }
 
             // Map hierarchy (Subsections).
@@ -81,25 +115,6 @@ class calculator {
                         $childrenmap[$cm->section][] = $delegated->id;
                     }
                 }
-            }
-
-            // Check centralized lock status.
-            $locked = self::is_locked($course, $USER->id);
-
-            // Keep enrollment check for activity loop (extra security, though locked already covers it).
-            $coursecontext = \core\context\course::instance($course->id);
-            $isenrolled = is_enrolled($coursecontext, $USER->id, '', true);
-
-            // Requested format: %d/%m/%Y.
-            // Use enrollment start date if the user is enrolled with a future timestart.
-            $availabilitydate = self::get_availability_date($course, $USER->id);
-            $formattedstartdate = userdate($availabilitydate, '%d/%m/%Y');
-
-            // Determine if this is an enrollment start date (user enrolled but not yet active).
-            $isenrolmentstart = false;
-            if ($locked) {
-                $enrolstartdate = self::get_enrolment_start_date($course, $USER->id);
-                $isenrolmentstart = ($enrolstartdate !== null);
             }
 
             $results = [];
@@ -207,7 +222,7 @@ class calculator {
                 'locked' => $locked,
                 'formatted_start_date' => $formattedstartdate,
                 'is_enrolment_start' => $isenrolmentstart,
-                'course_url' => (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false),
+                'course_url' => $courseurl,
                 'sections' => $results,
             ];
         } finally {
