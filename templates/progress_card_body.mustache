@@ -33,6 +33,9 @@
     * checkiconurl (string) - URL do ícone de concluído
     * circleiconurl (string) - URL do ícone neutro com atividades
     * infoiconurl (string) - URL do ícone de informação sem rastreamento
+    * hascontinue (bool) - Whether a section is under way, so the Continue shortcut renders
+    * continueurl (string) - URL of the section the learner left off at
+    * continuename (string) - Name of that section, for the accessible label
     * courseurl (string) - URL to the course page (for "Learn More" button)
     * learnmorebuttoncolor (string) - Hex color for the "Learn More" button background
     * sections (array) - Array of section objects with progress data
@@ -47,6 +50,9 @@
         "formatted_start_date": "01/02/2026",
         "is_enrolment_start": false,
         "can_self_enrol": false,
+        "hascontinue": true,
+        "continueurl": "/course/section.php?id=1",
+        "continuename": "Section 1",
         "islearnmore": false,
         "showlockeddate": true,
         "customicon": "",
@@ -187,6 +193,15 @@
         </div>
         {{/sections}}
     </div>
+    {{! A quiet way back to where the learner left off. Absent on a locked card, and absent
+        once every section is done, because there is then nothing to continue. }}
+    {{#hascontinue}}
+    {{^locked}}
+    <a href="{{continueurl}}" class="local-dimensions-continue" aria-label="{{#str}}continue_to, local_dimensions, {{continuename}}{{/str}}">
+        <i class="fa fa-play-circle" aria-hidden="true"></i>{{#str}}continue_label, local_dimensions{{/str}}
+    </a>
+    {{/locked}}
+    {{/hascontinue}}
     {{/enabled}}
 
     {{#error}}
