@@ -35,6 +35,8 @@
     * sortmode (string) - Stored sort: planorder, name, completed or favourites
     * sort_is_planorder / sort_is_name / sort_is_completed / sort_is_favourites (bool) - Which sort is checked
     * filter_is_incomplete / filter_is_all (bool) - Which completion tab starts active
+    * viewmode (string) - Stored layout: list or grid
+    * view_is_list / view_is_grid (bool) - Which layout starts active
     * showstar (bool) - Whether the learner owns this plan, so the favourites controls render
     * favonly (bool) - Whether the favourites-only filter starts active
     * favouritesjson (string) - The whole stored favourites map, for the client to merge into
@@ -69,6 +71,9 @@
         "sort_is_favourites": false,
         "filter_is_incomplete": true,
         "filter_is_all": false,
+        "viewmode": "list",
+        "view_is_list": true,
+        "view_is_grid": false,
         "showstar": true,
         "favonly": false,
         "favouritesjson": "{}",
@@ -90,6 +95,8 @@
     <div class="local-dimensions-plan-summary mt-4"
          data-planid="{{planid}}"
          data-sortmode="{{sortmode}}"
+         data-viewmode="{{viewmode}}"
+         data-percentagemode="{{percentagemode}}"
          data-favourites="{{favouritesjson}}">
 
         {{! Toolbar: favourites, completion segment, search, sort, chip filter. The active tab,
@@ -170,6 +177,14 @@
             </button>
             {{/chipfilters}}
             {{/haschipfilters}}
+            <div class="local-dimensions-view-toggle" role="group" aria-label="{{#str}}view_label, local_dimensions{{/str}}">
+                <button type="button" data-view="list" aria-pressed="{{#view_is_list}}true{{/view_is_list}}{{^view_is_list}}false{{/view_is_list}}" aria-label="{{#str}}view_list, local_dimensions{{/str}}">
+                    <i class="fa fa-list" aria-hidden="true"></i>
+                </button>
+                <button type="button" data-view="grid" aria-pressed="{{#view_is_grid}}true{{/view_is_grid}}{{^view_is_grid}}false{{/view_is_grid}}" aria-label="{{#str}}view_grid, local_dimensions{{/str}}">
+                    <i class="fa fa-th-large" aria-hidden="true"></i>
+                </button>
+            </div>
         </div>
 
         {{#haschipfilters}}
@@ -186,7 +201,7 @@
 
         {{! Competency accordion }}
         <div id="local-dimensions-viewplan-accordion"
-             class="local-dimensions-competency-accordion"
+             class="local-dimensions-competency-accordion {{#view_is_grid}}local-dimensions-grid-mode{{/view_is_grid}}"
              role="list"
              aria-label="{{#str}}plan_competencies, local_dimensions{{/str}}"
              aria-live="polite"

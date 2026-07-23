@@ -79,6 +79,7 @@ class view_plan_summary_page implements renderable, templatable {
             'sort' => in_array($sort, ['planorder', 'name', 'completed', 'favourites'], true) ? $sort : 'planorder',
             'filter' => ($filter === 'all') ? 'all' : 'incomplete',
             'favonly' => !empty($stored['favonly']),
+            'view' => (($stored['view'] ?? '') === 'grid') ? 'grid' : 'list',
         ];
     }
 
@@ -338,6 +339,9 @@ class view_plan_summary_page implements renderable, templatable {
         $data['sort_is_favourites'] = ($sort === 'favourites');
         $data['filter_is_incomplete'] = ($view['filter'] === 'incomplete');
         $data['filter_is_all'] = ($view['filter'] === 'all');
+        $data['viewmode'] = $view['view'];
+        $data['view_is_list'] = ($view['view'] === 'list');
+        $data['view_is_grid'] = ($view['view'] === 'grid');
         $data['showstar'] = $isownplan;
         $data['favonly'] = $isownplan && $view['favonly'];
         $data['favouritesjson'] = json_encode((object) $favourites['map']);

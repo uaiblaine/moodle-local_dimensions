@@ -24,8 +24,9 @@
 define(
     ['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/modal', 'core/log',
         'local_dimensions/collapsible_description', 'local_dimensions/chip_filters',
-        'local_dimensions/learner_prefs'],
-    function(Ajax, Templates, Notification, Str, Modal, Log, CollapsibleDescription, ChipFilters, LearnerPrefs) {
+        'local_dimensions/learner_prefs', 'local_dimensions/central/modal_expander'],
+    function(Ajax, Templates, Notification, Str, Modal, Log, CollapsibleDescription, ChipFilters,
+        LearnerPrefs, ModalExpander) {
         'use strict';
 
         // Cache for loaded competency summaries to avoid reloading.
@@ -2570,6 +2571,7 @@ define(
             initSearch();
             initSort();
             initFavourites();
+            initViewToggle(planId);
 
             // Wire up custom-field chip filters (no-op when none rendered).
             ChipFilters.init('local-dimensions-viewplan-chip-filters', function(selection) {
@@ -2939,6 +2941,223 @@ define(
                     LearnerPrefs.save({sort: option.dataset.sort});
                 });
             });
+        }
+
+        /**
+         * Empty every accordion detail pane and forget it was ever loaded.
+         *
+         * This is the invariant that lets the grid modal exist at all. A rendered detail
+         * carries ids of the form local-dimensions-tab-{tabid}-{competencyId}, with no
+         * instance suffix, and getElementById returns the FIRST document-order match - so a
+         * pane and a modal holding the same competency would make the tab handler act on the
+         * wrong element. Exactly one surface may hold rendered detail at a time, and switching
+         * layout tears the outgoing one down before the incoming one is built.
+         *
+         * If a future change ever renders both at once, the instance-suffix work returns.
+         */
+        function tearDownAccordionPanes() {
+            document.querySelectorAll('.local-dimensions-accordion-content').forEach(function(content) {
+                const toggle = document.getElementById(content.getAttribute('aria-labelledby'));
+                if (toggle) {
+                    toggle.setAttribute('aria-expanded', 'false');
+                }
+                content.hidden = true;
+
+                const rendered = content.querySelector('.local-dimensions-competency-summary-content');
+                if (rendered) {
+                    rendered.innerHTML = '';
+                    rendered.style.display = 'none';
+                }
+                const error = content.querySelector('.local-dimensions-competency-summary-error');
+                if (error) {
+                    error.style.display = 'none';
+                }
+            });
+            loadedCompetencies.clear();
+        }
+
+        /**
+         * Switch between the accordion list and the card grid.
+         *
+         * The same rows serve both layouts - only their presentation and their detail surface
+         * change - so nothing is re-fetched to change mode, and the filters, the sort and the
+         * favourites all keep working untouched.
+         *
+         * @param {string} mode Either list or grid
+         */
+        function applyViewMode(mode) {
+            const container = document.getElementById('local-dimensions-viewplan-accordion');
+            if (!container) {
+                return;
+            }
+            tearDownAccordionPanes();
+            container.classList.toggle('local-dimensions-grid-mode', mode === 'grid');
+        }
+
+        /**
+         * Open one competency's detail in a modal, with a pager over the visible rows.
+         *
+         * @param {HTMLElement} item The accordion item whose detail to show
+         * @param {number} planId The plan id
+         */
+        function openDetailModal(item, planId) {
+            const competencyId = Number.parseInt(item.dataset.competencyId, 10);
+            const content = document.getElementById('competency-content-' + competencyId);
+            const shell = content && content.querySelector('.local-dimensions-accordion-body');
+            const title = item.querySelector('.local-dimensions-accordion-title');
+            if (!shell) {
+                return;
+            }
+
+            /* Cloned from a torn-down pane, so the copy carries the loading placeholder and its
+               already-translated strings, and no rendered ids come with it. The pager is added
+               to the LIVE modal afterwards: built here it would be serialised to a string
+               before its asynchronous labels ever arrived. */
+            Modal.create({
+                title: title ? title.textContent.trim() : '',
+                body: shell.cloneNode(true).outerHTML,
+                large: true,
+                show: true,
+                removeOnClose: true
+            }).then(function(modal) {
+                const root = modal.getRoot()[0];
+                const modalbody = root.querySelector('.modal-body');
+                const summary = document.querySelector('.local-dimensions-plan-summary');
+
+                // R4: a modal is appended to document.body, outside the percentagemode wrapper.
+                modalbody.classList.add(
+                    'percentagemode-' + ((summary && summary.dataset.percentagemode) || 'hover')
+                );
+
+                const dialog = root.querySelector('.modal-dialog');
+                if (dialog) {
+                    // The expander only decorates the dialog; nothing below waits on its strings.
+                    // eslint-disable-next-line promise/no-nesting
+                    ModalExpander.attach(dialog, {
+                        get: () => Boolean(LearnerPrefs.get().expanded),
+                        set: (expanded) => LearnerPrefs.save({expanded: expanded}),
+                    }).catch(Notification.exception);
+                }
+
+                modalbody.insertBefore(buildModalPager(item, modal, planId), modalbody.firstChild);
+
+                /* The pane cache would otherwise short-circuit a second look at the same
+                   competency, leaving the fresh modal body on its loading placeholder. */
+                loadedCompetencies.delete(competencyId);
+                loadCompetencySummary(modalbody.querySelector('.local-dimensions-accordion-body'), competencyId, planId);
+                return null;
+            }).catch(Notification.exception);
+        }
+
+        /**
+         * The rows the learner can currently see, in their current order.
+         *
+         * @return {HTMLElement[]}
+         */
+        function visibleItems() {
+            return Array.prototype.slice
+                .call(document.querySelectorAll('.local-dimensions-accordion-item'))
+                .filter(function(item) {
+                    return !item.classList.contains('local-dimensions-hidden');
+                });
+        }
+
+        /**
+         * Build the modal's prev / position / next row, live so its labels can arrive late.
+         *
+         * @param {HTMLElement} item The item the modal is opening for
+         * @param {Object} modal The open modal, replaced when the learner steps
+         * @param {number} planId The plan id
+         * @return {HTMLElement}
+         */
+        function buildModalPager(item, modal, planId) {
+            const items = visibleItems();
+            const index = items.indexOf(item);
+            const pager = document.createElement('div');
+            pager.className = 'local-dimensions-modal-pager';
+            if (items.length < 2 || index === -1) {
+                return pager;
+            }
+
+            const step = function(offset, icon, key) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'local-dimensions-modal-step';
+                const glyph = document.createElement('i');
+                glyph.className = 'fa ' + icon;
+                glyph.setAttribute('aria-hidden', 'true');
+                button.appendChild(glyph);
+
+                const target = items[index + offset];
+                if (!target) {
+                    button.disabled = true;
+                } else {
+                    button.addEventListener('click', function() {
+                        modal.destroy();
+                        openDetailModal(target, planId);
+                    });
+                }
+                Str.get_string(key, 'local_dimensions').then(function(label) {
+                    button.setAttribute('aria-label', label);
+                    return null;
+                }).catch(Notification.exception);
+                return button;
+            };
+
+            const position = document.createElement('span');
+            position.className = 'local-dimensions-modal-position';
+            Str.get_string('modal_position', 'local_dimensions', {
+                index: index + 1,
+                total: items.length
+            }).then(function(text) {
+                position.textContent = text;
+                return null;
+            }).catch(Notification.exception);
+
+            pager.appendChild(step(-1, 'fa-chevron-left', 'evidence_slider_prev'));
+            pager.appendChild(position);
+            pager.appendChild(step(1, 'fa-chevron-right', 'evidence_slider_next'));
+            return pager;
+        }
+
+        /**
+         * Wire the list/grid toggle and the grid's card clicks.
+         *
+         * @param {number} planId The plan id
+         */
+        function initViewToggle(planId) {
+            const container = document.getElementById('local-dimensions-viewplan-accordion');
+            if (!container) {
+                return;
+            }
+
+            document.querySelectorAll('[data-view]').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('[data-view]').forEach(function(other) {
+                        other.setAttribute('aria-pressed', other === button ? 'true' : 'false');
+                    });
+                    applyViewMode(button.dataset.view);
+                    LearnerPrefs.save({view: button.dataset.view});
+                });
+            });
+
+            /* One delegated handler rather than one per card: in grid mode the header button
+               opens the modal instead of its own pane, and the star keeps working. */
+            container.addEventListener('click', function(event) {
+                if (!container.classList.contains('local-dimensions-grid-mode')) {
+                    return;
+                }
+                if (event.target.closest('[data-fav-star]')) {
+                    return;
+                }
+                const item = event.target.closest('.local-dimensions-accordion-item');
+                if (!item) {
+                    return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                openDetailModal(item, planId);
+            }, true);
         }
 
         /**

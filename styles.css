@@ -1485,6 +1485,127 @@
     max-width: 320px;
 }
 
+/* List / grid toggle. */
+.local-dimensions-view-toggle {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    background: #fff;
+}
+
+.local-dimensions-view-toggle button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 34px;
+    border: none;
+    background: none;
+    color: #6c757d;
+    cursor: pointer;
+}
+
+.local-dimensions-view-toggle button + button {
+    border-left: 1px solid #dee2e6;
+}
+
+.local-dimensions-view-toggle button[aria-pressed='true'] {
+    background: #cfe2ff;
+    color: #0f6cbf;
+}
+
+.local-dimensions-view-toggle button:focus-visible {
+    outline: 2px solid #0f6cbf;
+    outline-offset: -2px;
+}
+
+/* Grid mode: the same rows, laid out as compact cards. The detail lives in a modal here,
+   so the panes are torn down rather than styled - see tearDownAccordionPanes. */
+.local-dimensions-grid-mode {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.local-dimensions-grid-mode .local-dimensions-accordion-item {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.local-dimensions-grid-mode .local-dimensions-accordion-content {
+    display: none;
+}
+
+.local-dimensions-grid-mode .local-dimensions-accordion-head {
+    flex-direction: row-reverse;
+    align-items: flex-start;
+}
+
+.local-dimensions-grid-mode .local-dimensions-accordion-toggle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    min-height: 108px;
+    padding: 0.85rem;
+}
+
+.local-dimensions-grid-mode .local-dimensions-accordion-icon {
+    display: none;
+}
+
+.local-dimensions-grid-mode .local-dimensions-accordion-header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.local-dimensions-grid-mode .local-dimensions-star {
+    width: 2.25rem;
+    padding-top: 0.6rem;
+    align-items: flex-start;
+}
+
+/* The modal's competency pager. */
+.local-dimensions-modal-pager {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.local-dimensions-modal-step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 28px;
+    border: 1px solid #dee2e6;
+    border-radius: 0.35rem;
+    background: #fff;
+    color: #495057;
+    cursor: pointer;
+}
+
+.local-dimensions-modal-step:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.local-dimensions-modal-step:focus-visible {
+    outline: 2px solid #0f6cbf;
+    outline-offset: 2px;
+}
+
+.local-dimensions-modal-position {
+    color: #6c757d;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
 /* Favourites: the learner's own shortlist, in the priority accent rather than the
    plugin's blue, so it never reads as another completion signal. */
 .local-dimensions-fav-toggle {

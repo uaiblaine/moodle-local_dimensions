@@ -28,6 +28,20 @@ import {getDisplay, saveDisplay} from 'local_dimensions/central/preferences';
 import {getString} from 'core/str';
 
 /**
+ * Where the expanded state is read and written when a caller does not say.
+ *
+ * The hub's own store, so the hub's call sites need no argument. A caller from outside the
+ * hub MUST pass its own: a learner expanding a modal would otherwise write the admin hub's
+ * display preference.
+ *
+ * @type {Object}
+ */
+const HUB_STORE = {
+    get: () => Boolean(getDisplay().modalexpanded),
+    set: (expanded) => saveDisplay({modalexpanded: expanded}),
+};
+
+/**
  * Class the dialog carries while expanded; the CSS keys the widened width and the button swap off it.
  *
  * @type {String}
@@ -63,15 +77,17 @@ const makeButton = (action, iconclass, label, statclass) => {
  * synchronously so the modal opens at the right size before the buttons finish loading.
  *
  * @param {HTMLElement} dialog The modal's .modal-dialog element.
+ * @param {Object} store Optional {get, set} pair for the expanded state; defaults to the hub's.
  * @return {Promise<void>}
  */
-export const attach = async(dialog) => {
+export const attach = async(dialog, store) => {
+    const state = store || HUB_STORE;
     const header = dialog && dialog.querySelector('.modal-header');
     if (!header) {
         return;
     }
     // Open at the size the user last chose.
-    dialog.classList.toggle(EXPANDED_CLASS, Boolean(getDisplay().modalexpanded));
+    dialog.classList.toggle(EXPANDED_CLASS, Boolean(state.get()));
 
     const [expandlabel, restorelabel] = await Promise.all([
         getString('central_modal_expand', 'local_dimensions'),
@@ -90,7 +106,7 @@ export const attach = async(dialog) => {
         const wasfocused = document.activeElement === button;
         const expanded = button.dataset.action === 'modal-expand';
         dialog.classList.toggle(EXPANDED_CLASS, expanded);
-        saveDisplay({modalexpanded: expanded});
+        state.set(expanded);
         if (wasfocused) {
             // The activated button hides itself in the CSS swap, which would drop keyboard focus to
             // the body; move focus to the now-visible counterpart so the control keeps its place.
