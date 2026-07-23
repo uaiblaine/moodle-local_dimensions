@@ -1812,6 +1812,24 @@
       STATUS CARD - Rating + Proficiency
       ============================================ */
 /* Status: the rating leads, proficiency qualifies it. */
+/* Subtle "About this scale" affordance under the rating. */
+.local-dimensions-status-scale {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 1rem;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #0f6cbf;
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+
+.local-dimensions-status-scale:hover {
+    text-decoration: underline;
+}
+
 .local-dimensions-status-headline {
     display: flex;
     align-items: center;

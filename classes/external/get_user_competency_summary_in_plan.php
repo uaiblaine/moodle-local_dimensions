@@ -112,9 +112,43 @@ class get_user_competency_summary_in_plan extends external_api {
         if (!empty($result->usercompetencysummary) && !empty($result->usercompetencysummary->competency)) {
             $result->usercompetencysummary->competency->taxonomy = (object) $taxonomydata;
             $result->usercompetencysummary->competency->taxonomyterm = $taxonomydata['current']['term'];
+            $result->usercompetencysummary->competency->scaledescription = self::get_scale_description($competency);
         }
 
         return json_encode($result);
+    }
+
+    /**
+     * Read the competency's rating scale description, for the "About this scale" modal.
+     *
+     * Core resolves a competency's scale from the competency itself, falling back to its
+     * framework. Most scales have no description at all, in which case this returns '' and the
+     * client renders no button.
+     *
+     * competency::get_scale() fetches and loads the scale unguarded, so a competency pointing
+     * at a deleted scale raises. That would take the whole accordion detail down over an
+     * optional extra, so it is caught here and treated as "no description".
+     *
+     * @param \core_competency\competency $competency The competency being summarised.
+     * @return string Formatted description HTML, or an empty string.
+     */
+    protected static function get_scale_description(\core_competency\competency $competency): string {
+        try {
+            $scale = $competency->get_scale();
+        } catch (\Throwable $e) {
+            return '';
+        }
+
+        if (empty($scale)) {
+            return '';
+        }
+
+        $description = $scale->get_description();
+        if (trim((string) $description) === '') {
+            return '';
+        }
+
+        return format_text($description, FORMAT_HTML, ['context' => $competency->get_context()]);
     }
 
     /**
