@@ -440,6 +440,15 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026072302, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026072303) {
+        // Fix: the taxonomy definition modal's title kept its literal {$a} placeholder
+        // because the lang string stored an escaped backslash. Lang strings are cached, so
+        // the corrected string needs a revision bump to reach sites already on 2026072302.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026072303, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
