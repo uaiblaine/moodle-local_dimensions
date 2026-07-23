@@ -475,6 +475,19 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026072305, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026072306) {
+        /* Phase 6 of the learner-view redesign: the plan overview gains sorting, favourites,
+           a card grid and a detail modal; the tracker gains completion tabs, a Continue
+           shortcut and a folded-away section list on a finished course. All of it is markup,
+           CSS and AMD, and the two user preferences it finally reads were already declared -
+           the callback is discovered at runtime, so nothing needs installing. The bump moves
+           the cache revision, or a site keeps serving the previous accordion against the new
+           template. */
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026072306, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint

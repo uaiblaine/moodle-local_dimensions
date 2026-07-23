@@ -679,7 +679,60 @@ payload, so it ships in 6.7 with no server change. **Case (a) is this slice**, b
 
 ---
 
-## 8. Phase 6 — new interaction surfaces
+## 8. Phase 6 — new interaction surfaces — **SHIPPED**
+
+| Slice | Commit | |
+|---|---|---|
+| 6.1 sort + completion filter + toolbar | `3e4ca4f` | done |
+| 6.2 favourites + star + ghost card | `d566c0c` | done |
+| 6.3 tracker completion tabs | `2ab4a6f` | done |
+| 6.4 Continue shortcut | `2f342ef` | done |
+| 6.5 completed seal + collapsed timeline | `bfa865a` | done |
+| 6.7 single-activity / single-section card | `c336267` | done |
+| 6.6 grid + detail modal + pager + expand | `7411683` | done |
+| phase-boundary bump | — | `2026072306` |
+
+**6.7 shipped before 6.6**, against the sequence: it consumes 5.3, which was already in, and it is
+small — no reason to queue it behind the phase's biggest slice.
+
+Decisions taken during execution:
+
+- **The toolbar was restructured, not rebuilt.** The completion tabs were *already* a segmented
+  pill with a sliding indicator, so the kit's toolbar was mostly a re-layout: the row now flows
+  left to right with the search taking the slack, and the star and the layout toggle land at
+  either end. The class stays `local-dimensions-filter-bar`, so the scoped selector Phase 0 fixed
+  and any customer SCSS both survive.
+- **Sort ships four options, not two.** "Plan order" needs its own entry or there is no way back
+  to the default without a reload; "Favourites first" joins in 6.2. Each mode is computed from a
+  server-stamped `data-planorder`, never from the current DOM order — otherwise "plan order"
+  would come to mean "whatever the last sort produced".
+- **No URL parameters.** Sort, filter and layout persist only as a preference, so `$PAGE->url` is
+  untouched and [risk R5](#r5-pageurl-and-the-fab-return-context) never arises rather than being
+  handled.
+- **The client receives the whole favourites map**, not this plan's list. A preference write
+  replaces the entire value, so a page that knew only its own plan would silently delete every
+  favourite set elsewhere.
+- **A star toggle does not re-sort**, even under "Favourites first". A row leaping out from under
+  the pointer at the moment of the click is worse than an order that settles on the next visit.
+- **The tracker tabs open on All**, where the plan overview opens on Not completed. Each preserves
+  its own long-standing default; the slice adds the ability to narrow, it does not change what a
+  learner sees on arrival. They are also **not** persisted — 6.1's line asks for persistence, 6.3's
+  does not.
+- **`modal_expander` was parameterised, not copied.** It now takes an optional `{get, set}` pair and
+  defaults to the hub's store, so both hub call sites are unchanged — and the parked follow-up
+  (porting this visual back to the hub) is unblocked rather than duplicated.
+
+Two findings worth keeping:
+
+- **The accordion item cannot become a flex row.** `.local-dimensions-filter-initialized` pins it to
+  `display: block` at a specificity the base rule cannot beat — the same class of fight that
+  [risk R3](#r3-bootstrap-display-utilities-vs-hidden) describes. The star sits in a new head row
+  *inside* the wrapper instead; no existing selector is a direct-child one, so nothing noticed.
+- **The `__status` virtual filter key was unreachable.** `competency_view.js` mapped `data-completed`
+  into the chip selection for a chip group no server code ever built, and a custom field cannot be
+  named `__status`. 6.3 implements what it was reaching for and retires it.
+
+## 8b. Phase 6 — original scope
 
 Most new code, highest risk. Sequenced last deliberately — everything above improves the views
 without it. Grid mode and the modal are the substantial items here; the tracker slices are small.
