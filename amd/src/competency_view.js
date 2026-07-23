@@ -173,6 +173,16 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                         section.checkiconurl = iconurls.checkcircle || '';
                         section.circleiconurl = iconurls.circle || '';
                         section.infoiconurl = iconurls.info || '';
+
+                        /* The first section already under way but not finished is where the
+                           learner left off. Locked sections are skipped: their URL points at
+                           the course page, so "continue" there would lead nowhere useful. */
+                        if (!data.hascontinue && section.is_started && !section.is_completed
+                                && !section.locked && section.url) {
+                            data.hascontinue = true;
+                            data.continueurl = section.url;
+                            data.continuename = section.name;
+                        }
                     });
                 }
                 data.islearnmore = (lockedcardmode === 'learnmore');
