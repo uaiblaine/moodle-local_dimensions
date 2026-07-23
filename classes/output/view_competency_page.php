@@ -119,37 +119,23 @@ class view_competency_page implements renderable, templatable {
         }
 
         // Prepare course cards data.
-        // Resolve the chip-filter shortnames once for course + competency
-        // fields, then read both in batch.
+        // Resolve the chip-filter shortnames once, then read the values in batch.
         $courseshortnames = \local_dimensions\chip_filters::parse_shortnames(
             (string) get_config('local_dimensions', 'viewcompetency_filter_fields_course')
-        );
-        $competencyshortnames = \local_dimensions\chip_filters::parse_shortnames(
-            (string) get_config('local_dimensions', 'viewcompetency_filter_fields_competency')
         );
 
         $courseids = array_map('intval', array_keys($this->courses));
         $coursevalues = !empty($courseshortnames)
             ? \local_dimensions\chip_filters::get_course_values($courseids, $courseshortnames)
             : [];
-        $competencyvalues = ($this->competency && !empty($competencyshortnames))
-            ? \local_dimensions\chip_filters::get_competency_values(
-                (int) $this->competency->id,
-                $competencyshortnames
-            )
-            : [];
 
         foreach ($this->courses as $course) {
             $locked = calculator::is_locked($course, $this->userid);
             $cid = (int) $course->id;
-            // Combine course + (constant) competency values for client-side
-            // chip filtering. Competency values repeat for every card so
-            // shortnames sharing the same key would clash; namespace the
-            // course-area keys with a "course:" prefix to avoid collisions.
+            /* Course-area values for client-side chip filtering. The keys keep their
+               historical "course:" prefix so stored selections and the DOM lookups in
+               chip_filters.js continue to match. */
             $combinedvalues = [];
-            foreach ($competencyvalues as $sn => $val) {
-                $combinedvalues[$sn] = $val;
-            }
             foreach (($coursevalues[$cid] ?? []) as $sn => $val) {
                 $combinedvalues['course:' . $sn] = $val;
             }
@@ -163,20 +149,10 @@ class view_competency_page implements renderable, templatable {
             ];
         }
 
-        // Build chip-filter groups (competency-area chips reuse the single
-        // value for the page; course-area chips collect unique values).
+        /* Build the chip-filter groups. Course-area only: a competency-area group was
+           built from the page's single competency, so every card carried the same value
+           and pressing a chip matched all cards or none. */
         $chipgroups = [];
-        if (!empty($competencyshortnames)) {
-            $complabels = \local_dimensions\chip_filters::get_field_labels('competency', $competencyshortnames);
-            $chipgroups = array_merge(
-                $chipgroups,
-                \local_dimensions\chip_filters::build_filterfields_payload(
-                    $competencyshortnames,
-                    [(int) ($this->competency->id ?? 0) => $competencyvalues],
-                    $complabels
-                )
-            );
-        }
         if (!empty($courseshortnames)) {
             $courselabels = \local_dimensions\chip_filters::get_field_labels('course', $courseshortnames);
             $coursegroups = \local_dimensions\chip_filters::build_filterfields_payload(
