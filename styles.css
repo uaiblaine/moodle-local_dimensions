@@ -3251,18 +3251,42 @@
     transition: transform 200ms ease;
 }
 
-/* Hero variant: dark overlay so the fade blends with the hero background. */
-.local-dimensions-hero .local-dimensions-collapsible {
-    --collapsible-fade-color: rgba(0, 0, 0, 0.55);
+/* Hero variant: the clipped description fades via a mask on the text itself, so
+   the shared fade rectangle is suppressed here only. Every other consumer of
+   collapsible_description sits on a light background and keeps its fade. */
+.local-dimensions-hero .local-dimensions-collapsible-fade {
+    display: none;
 }
 
-.local-dimensions-hero .local-dimensions-collapsible-fade {
-    background:
-        linear-gradient(
-            to bottom,
-            rgba(0, 0, 0, 0) 0%,
-            var(--collapsible-fade-color) 100%
-        );
+.local-dimensions-hero .local-dimensions-collapsible.has-overflow:not(.is-expanded) .local-dimensions-collapsible-content {
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+}
+
+/* Hero variant: the toggle reads as a translucent glass pill, matching the
+   due-date card's material, so it is legible against the hero background. */
+.local-dimensions-hero .local-dimensions-collapsible-toggle {
+    margin-top: 0.6rem;
+    padding: 0.32rem 0.75rem;
+    background: rgb(255 255 255 / 16%);
+    border: 1px solid rgb(255 255 255 / 30%);
+    border-radius: 0.45rem;
+    font-weight: 600;
+    opacity: 1;
+    transition: background-color 150ms ease;
+}
+
+.local-dimensions-hero .local-dimensions-collapsible-toggle:hover,
+.local-dimensions-hero .local-dimensions-collapsible-toggle:focus {
+    background: rgb(255 255 255 / 26%);
+    text-decoration: none;
+}
+
+/* The base rule kills the UA ring with outline: none and replaces it only with an
+   underline identical to hover, so keyboard focus is otherwise invisible here. */
+.local-dimensions-hero .local-dimensions-collapsible-toggle:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 2px;
 }
 
 /* ============================================
