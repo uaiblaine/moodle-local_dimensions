@@ -361,7 +361,28 @@ do not edit the shared partial.**
 
 ---
 
-## 5. Phase 3 — the toolbar and the chips retirement
+## 5. Phase 3 — the toolbar and the chips retirement — **SHIPPED**
+
+| Slice | Commit | |
+|---|---|---|
+| 3.1 plan Filter panel | `55aa1f8` | done |
+| 3.2 plan no-results state | `100f52b` | done |
+| 3.3 tracker Filter panel | `a054b24` | done |
+| phase-boundary bump | — | `2026072301` |
+
+The panel toggle was written in `accordion.js` for the plan, then **generalised into
+`chip_filters.js`** when the tracker needed the same thing — about 30 fewer lines than a second
+copy, and it puts the count badge next to the selection map it counts, so `accordion.js` no longer
+computes it at all.
+
+Slice 3.2 is the no-results state carried over from Phase 2, as planned.
+
+**Flagged, not done:** the tracker's competency-area chip group is built from a single instance, so
+every card carries the same value and pressing it matches all cards or none. Harmless inline; more
+prominent behind a Filter button with a count badge. Removing it is a user-visible behaviour change
+and needs a decision.
+
+## 5b. Phase 3 — original scope
 
 Three slices (prerequisite + one per view), not one — the two views have separate templates,
 separate renderables and separate consuming JS, and shipping them together makes a ~10-file commit
