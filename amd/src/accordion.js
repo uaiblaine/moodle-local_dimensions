@@ -744,30 +744,16 @@ define(
             const mandatoryCount = Number.parseInt(data.mandatorycount, 10) || 0;
             let html = '<div class="local-dimensions-rules-section">';
 
-            html += renderRuleInfoBox(data, strMap);
+            html += renderRuleHeadline(data, strMap);
 
-            // === Progress header ===
+            /* Progress reads as a quiet status line, not a scoreboard. The warning triangle
+               that used to sit here is dropped: the missing-mandatory notice below says the
+               same thing in words, and two alarms for one condition read as two problems. */
             html += '<div class="local-dimensions-rules-progress-header">';
-            html += '<span class="local-dimensions-rules-progress-label-wrap">';
             html += '<span class="local-dimensions-rules-progress-label">' + escapeHtml(strMap.rulesProgress) + '</span>';
-            if (hasMissingMandatory) {
-                html += '<span class="local-dimensions-rules-progress-alert" aria-label="' + escapeHtml(strMap.rulesSrAlert) + '">';
-                html += '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>';
-                html += '</span>';
-            }
+            html += '<span class="local-dimensions-rules-progress-score">';
+            html += data.earnedpoints + ' / ' + data.totalrequired + (isPoints ? ' pts' : '');
             html += '</span>';
-            if (isPoints) {
-                const earnedClass = data.earnedpoints > 0 ? ' local-dimensions-rules-earned-highlight' : '';
-                html += '<span class="local-dimensions-rules-progress-score">';
-                html += '<span class="local-dimensions-rules-earned' + earnedClass + '">' + data.earnedpoints + '</span>';
-                html += ' / ' + data.totalrequired + ' pts';
-                html += '</span>';
-            } else {
-                html += '<span class="local-dimensions-rules-progress-score">';
-                html += '<span class="local-dimensions-rules-earned">' + data.earnedpoints + '</span>';
-                html += ' / ' + data.totalrequired;
-                html += '</span>';
-            }
             html += '</div>';
 
             // === Progress bar ===
@@ -783,9 +769,7 @@ define(
             html += ' aria-valuemin="0"';
             html += ' aria-valuemax="' + data.totalrequired + '"';
             html += ' aria-label="' + escapeHtml(srProgressText) + '">';
-            html += '<div class="local-dimensions-rules-progress-fill' +
-                (hasMissingMandatory ? ' local-dimensions-rules-progress-fill-striped progress-bar-striped' : '') +
-                '" style="width: ' + pct + '%;"></div>';
+            html += '<div class="local-dimensions-rules-progress-fill" style="width: ' + pct + '%;"></div>';
             html += '</div>';
             html += '</div>';
 
@@ -900,31 +884,28 @@ define(
         }
 
         /**
-         * Render the rule description info box.
+         * Render the rule headline: how this competency is earned.
+         *
+         * This is the answer the learner actually came for, so it leads the pane as plain
+         * prose rather than sitting in a boxed aside with an info icon.
          *
          * @param {Object} data The rule data
          * @param {Object} strMap Language strings map
-         * @return {string} HTML for the info box
+         * @return {string} HTML for the headline
          */
-        function renderRuleInfoBox(data, strMap) {
+        function renderRuleHeadline(data, strMap) {
             const ruleText = data.outcometext || '';
 
             if (!ruleText) {
                 return '';
             }
 
-            let html = '<div class="local-dimensions-rules-info-box" role="note">';
-            html += '<div class="local-dimensions-rules-info-icon">';
-            html += '<i class="fa fa-info-circle" aria-hidden="true"></i>';
-            html += '</div>';
-            html += '<div class="local-dimensions-rules-info-text">';
-            html += '<div class="local-dimensions-rules-info-title">' + escapeHtml(strMap.rulesInfoTitle) + '</div>';
-            html += '<div class="local-dimensions-rules-info-description">' + escapeHtml(ruleText) + '</div>';
+            let html = '<div class="local-dimensions-rules-headline">';
+            html += '<div class="local-dimensions-rules-eyebrow">' + escapeHtml(strMap.rulesInfoTitle) + '</div>';
+            html += '<p class="local-dimensions-rules-sentence">' + escapeHtml(ruleText) + '</p>';
             if (data.hasrequired && data.requiredwarningtext) {
-                html += '<div class="local-dimensions-rules-info-note"><strong>' +
-                    escapeHtml(data.requiredwarningtext) + '</strong></div>';
+                html += '<p class="local-dimensions-rules-note">' + escapeHtml(data.requiredwarningtext) + '</p>';
             }
-            html += '</div>';
             html += '</div>';
 
             return html;
