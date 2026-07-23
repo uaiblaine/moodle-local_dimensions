@@ -1114,12 +1114,16 @@ define(
         /**
          * Check if a grade value is considered proficient according to the scale configuration.
          *
-         * The scaleconfiguration is a JSON string like:
-         * [{"id":1,"scaledefault":0,"proficient":0},{"id":2,"scaledefault":1,"proficient":1}]
-         * where each entry's position (1-based) corresponds to a scale value, and "proficient"
-         * indicates whether that scale value is considered proficient.
+         * The scaleconfiguration is a JSON string whose FIRST element is a header carrying the
+         * scale id, followed by one entry per configured scale value:
+         * [{"scaleid":7},{"id":3,"scaledefault":1,"proficient":1},{"id":4,"scaledefault":0,"proficient":1}]
          *
-         * @param {number} gradeValue The grade value (1-based index into scale)
+         * Entries are keyed by their "id" (the grade) - position is meaningless, because core
+         * omits any scale value that is neither the default nor proficient, so the array is
+         * often sparse. A grade with no matching entry is not proficient. This mirrors
+         * core_competency\competency_framework::get_proficiency_of_grade_from_scale_configuration().
+         *
+         * @param {number} gradeValue The grade (a scale item id)
          * @param {string} scaleConfig The JSON-encoded scale configuration string
          * @return {boolean} True if the grade is considered proficient
          */
@@ -1129,16 +1133,15 @@ define(
                 if (!Array.isArray(config)) {
                     return false;
                 }
-                // GradeValue is 1-based, array is 0-based.
-                const index = Number.parseInt(gradeValue, 10) - 1;
-                if (index >= 0 && index < config.length) {
-                    return !!(config[index].proficient && Number.parseInt(config[index].proficient, 10) === 1);
-                }
+                const grade = Number.parseInt(gradeValue, 10);
+                // Drop the scale-id header, then match on the entry's own id.
+                return config.slice(1).some(function(part) {
+                    return Number.parseInt(part.id, 10) === grade && Number.parseInt(part.proficient, 10) === 1;
+                });
             } catch (e) {
                 Log.warn('[local_dimensions] Invalid scale configuration JSON.');
                 return false;
             }
-            return false;
         }
 
         /**
