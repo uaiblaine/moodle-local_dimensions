@@ -412,6 +412,7 @@ $string['fieldcategory_look'] = 'Visual';
 $string['filter_all'] = 'Todas';
 $string['filter_chip_clear'] = 'Limpar filtros';
 $string['filter_competencies'] = 'Filtrar competências';
+$string['filter_courses'] = 'Filtrar cursos';
 $string['filter_noresults'] = 'Nenhuma competência corresponde aos seus filtros';
 $string['filter_noresults_note'] = 'Tente outro termo de busca, ou limpe os filtros para ver o plano inteiro.';
 $string['filter_not_completed'] = 'Não concluídas';

@@ -24,12 +24,15 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/str',
     'local_dimensions/chip_filters', 'local_dimensions/collapsible_description'],
 function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
 
+    /** @type {Object} The active chip selection, shortname => values. */
+    var activeChipSelection = {};
+    /** @type {string} The active completion tab: 'all' or 'incomplete'. */
+    var activeCourseTab = 'all';
+
     /**
-     * Apply the active chip selection to all course-card wrappers.
-     *
-     * @param {Object<string, string[]>} selection
+     * Show the course cards that pass both the completion tab and the chip selection.
      */
-    function applyCardChipFilter(selection) {
+    function applyCardFilters() {
         $('.local-dimensions-course-card-wrapper').each(function() {
             var $wrapper = $(this);
             var raw = $wrapper.attr('data-filtervalues');
@@ -41,18 +44,54 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                     values = {};
                 }
             }
-            // Treat data-completed as a virtual filter key so the
-            // "completed/not completed" chip group integrates with the rest.
-            if ($wrapper.attr('data-completed') === '1') {
-                values.__status = 'completed';
-            } else if ($wrapper.attr('data-completed') === '0') {
-                values.__status = 'not_completed';
-            }
-            if (ChipFilters.matchesSelection(selection || {}, values)) {
+            var passestab = activeCourseTab === 'all' || $wrapper.attr('data-completed') !== '1';
+            if (passestab && ChipFilters.matchesSelection(activeChipSelection, values)) {
                 $wrapper.show();
             } else {
                 $wrapper.hide();
             }
+        });
+    }
+
+    /**
+     * Apply the active chip selection to all course-card wrappers.
+     *
+     * @param {Object<string, string[]>} selection
+     */
+    function applyCardChipFilter(selection) {
+        activeChipSelection = selection || {};
+        applyCardFilters();
+    }
+
+    /**
+     * Reveal and wire the completion tabs once the batch status call has answered.
+     *
+     * The counts cannot be server-rendered: whether a course is complete is only known after
+     * get_courses_completion_status resolves. Rather than render a tab strip with unknown
+     * numbers and a disabled state to explain them, the strip stays hidden until it can tell
+     * the truth. Selector scoped to the toolbar - the chip buttons carry the same class.
+     *
+     * @param {number} completed How many courses are complete
+     * @param {number} total How many courses there are
+     */
+    function initCourseTabs(completed, total) {
+        var $tabs = $('[data-course-tabs]');
+        if (!$tabs.length) {
+            return;
+        }
+
+        $tabs.find('[data-count="incomplete"]').text(total - completed);
+        $tabs.find('[data-count="all"]').text(total);
+        $tabs.prop('hidden', false);
+
+        $tabs.find('.local-dimensions-filter-tab').on('click', function() {
+            var $tab = $(this);
+            $tabs.find('.local-dimensions-filter-tab')
+                .removeClass('active')
+                .attr('aria-selected', 'false');
+            $tab.addClass('active').attr('aria-selected', 'true');
+            activeCourseTab = $tab.attr('data-filter');
+            applyCardFilters();
         });
     }
 
@@ -283,16 +322,23 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             }])[0].done(function(statuses) {
                 var notCompletedIds = [];
                 var completedOrLockedIds = [];
+                var completedcount = 0;
                 $.each(statuses, function(i, s) {
                     var $wrapper = $('.local-dimensions-course-card-wrapper[data-courseid="' + s.courseid + '"]');
                     var done = !!s.iscompleted;
                     $wrapper.attr('data-completed', done ? '1' : '0');
+                    if (done) {
+                        completedcount++;
+                    }
                     if (s.islocked || done) {
                         completedOrLockedIds.push(s.courseid);
                     } else {
                         notCompletedIds.push(s.courseid);
                     }
                 });
+
+                // The completion tabs only become truthful here, so this is where they appear.
+                initCourseTabs(completedcount, courseIds.length);
 
                 // PHASE B — sequential FIFO with 2s soft timeout. Not-completed
                 // courses go first so the user sees actionable cards earliest.
