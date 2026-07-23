@@ -422,6 +422,7 @@ $string['filter_not_completed'] = 'Não concluídas';
 $string['filter_toggle'] = 'Filtrar';
 $string['generalsettingsheading'] = 'Configurações gerais';
 $string['generalsettingsheading_desc'] = 'Configurações gerais de exibição e navegação.';
+$string['go_to_activity'] = 'Ir para a atividade';
 $string['iconpicker_clear'] = 'Limpar';
 $string['iconpicker_error_loading'] = 'Erro ao carregar ícones.';
 $string['iconpicker_no_results'] = 'Nenhum ícone encontrado.';

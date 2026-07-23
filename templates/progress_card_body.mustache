@@ -40,6 +40,9 @@
     * continuename (string) - Name of that section, for the accessible label
     * courseurl (string) - URL to the course page (for "Learn More" button)
     * learnmorebuttoncolor (string) - Hex color for the "Learn More" button background
+    * activity (object) - The single trackable activity (name, url, completed), when the
+      course resolves to exactly one; the section timeline is then not rendered at all
+    * issinglesection (bool) - One section only, so the timeline centres its single marker
     * sections (array) - Array of section objects with progress data
 
     @copyright  2026 Anderson Blaine
@@ -135,6 +138,32 @@
     {{/enabled}}
 
     {{#enabled}}
+    {{! A course that resolves to one trackable activity has no sequence to draw. The card
+        shows that activity and its own state instead - the server decides when this applies. }}
+    {{#activity}}
+    <div class="local-dimensions-single">
+        <span class="local-dimensions-single-mark">
+            {{#completed}}
+                <img class="local-dimensions-icon local-dimensions-icon-check" src="{{checkiconurl}}" alt="" aria-hidden="true">
+            {{/completed}}
+            {{^completed}}
+                <img class="local-dimensions-icon local-dimensions-icon-circle" src="{{circleiconurl}}" alt="" aria-hidden="true">
+            {{/completed}}
+        </span>
+        <span class="local-dimensions-single-name">{{name}}</span>
+        <span class="local-dimensions-single-status {{#completed}}local-dimensions-single-done{{/completed}}">
+            {{#completed}}{{#str}}course_completed, local_dimensions{{/str}}{{/completed}}
+            {{^completed}}{{#str}}filter_not_completed, local_dimensions{{/str}}{{/completed}}
+        </span>
+        {{#url}}
+        <a href="{{url}}" class="local-dimensions-single-go">
+            {{#str}}go_to_activity, local_dimensions{{/str}}<i class="fa fa-arrow-right" aria-hidden="true"></i>
+        </a>
+        {{/url}}
+    </div>
+    {{/activity}}
+
+    {{^activity}}
     {{! A finished course earns a seal and folds its section list away: every row would say
         the same thing, and the card's job here is to confirm, not to enumerate. }}
     {{#iscompleted}}
@@ -152,7 +181,7 @@
     </button>
     {{/locked}}
     {{/iscompleted}}
-    <div class="local-dimensions-timeline"
+    <div class="local-dimensions-timeline {{#issinglesection}}local-dimensions-timeline-single{{/issinglesection}}"
          id="local-dimensions-timeline-{{courseid}}"
          {{#iscompleted}}{{^locked}}hidden{{/locked}}{{/iscompleted}}>
         {{#sections}}
@@ -225,6 +254,7 @@
     </a>
     {{/locked}}
     {{/hascontinue}}
+    {{/activity}}
     {{/enabled}}
 
     {{#error}}

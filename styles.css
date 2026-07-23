@@ -921,6 +921,69 @@
     line-height: 1;
 }
 
+/* Single-activity course: one prominent state, the activity's name, and a way in. */
+.local-dimensions-single {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 200px;
+    padding: 1.5rem 1.25rem;
+    text-align: center;
+}
+
+.local-dimensions-single-mark .local-dimensions-icon {
+    width: 56px;
+    height: 56px;
+}
+
+.local-dimensions-single-name {
+    color: #212529;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.local-dimensions-single-status {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.local-dimensions-single-done {
+    color: #0f5132;
+    font-weight: 600;
+}
+
+.local-dimensions-single-go {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.2rem;
+    color: #0f6cbf;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.local-dimensions-single-go:hover {
+    color: #0f6cbf;
+    text-decoration: underline;
+}
+
+/* One section is not a sequence: centre the single marker instead of starting a column. */
+.local-dimensions-timeline-single {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+    padding-left: 0;
+}
+
+.local-dimensions-timeline-single .local-dimensions-timeline-item {
+    padding-bottom: 0;
+}
+
 /* Completed course: the seal states the outcome, the toggle keeps the evidence one click
    away rather than repeating "done" once per section. */
 .local-dimensions-course-seal {
