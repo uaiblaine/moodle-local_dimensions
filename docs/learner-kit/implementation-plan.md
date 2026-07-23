@@ -242,10 +242,21 @@ and `amd/src/central/framework_scaleconfig.js:43` does `.slice(1)`. This one fun
 | **WS / bump / lang** | none / **no bump** / none |
 | **Verify** | site: open an evidence item graded at a proficient level of a scale where some middle level is neither default nor proficient — the badge must read proficient. Fixing it in Phase 0 means 4.4 inherits correct behaviour instead of re-touching it. |
 
-## 3. Phase 1 — substrate
+## 3. Phase 1 — substrate — **SHIPPED** (`e3226d0`)
 
 One slice, after decision J removed the second. Landing it first prevents three later slices from
 each inventing their own preference plumbing.
+
+Shipped as **declaration only** — no reader, no consumer. The JSON shape is settled where it is
+consumed (6.1, 6.2) rather than guessed at here. Both pre-existing tests did fail on the old counts
+as predicted and were updated in the same commit; a third test now asserts that every *declared*
+preference is also *exported*, so the two lists in the provider cannot drift apart.
+
+One deviation from the sketch: `export_user_preferences()` gained a small private helper for the
+fetch-and-skip-if-empty repetition, but **every `get_string()` call stays a literal at the call
+site**. Folding the four into a `foreach` over a name⇒stringid map would have passed a variable to
+`get_string()` — no precedent anywhere in this codebase, and against the house rule on non-literal
+string references, with no local `validate` runner to catch the consequence.
 
 ### 1.1 — User-preference substrate
 
