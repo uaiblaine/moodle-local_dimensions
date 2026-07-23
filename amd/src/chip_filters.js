@@ -148,6 +148,24 @@ define(['local_dimensions/filter_tabs_nav'], function(FilterTabsNav) {
         },
 
         /**
+         * Re-measure a container's chip groups.
+         *
+         * Call this after revealing a container that was hidden at init time: the pill UI
+         * measures offsetWidth/scrollWidth, which are 0 inside a display:none ancestor, so
+         * it wrongly concludes the strip is scrollable and shows paddles that do not belong.
+         * Do NOT call init() again to achieve this - setupContainer has no dedupe guard and
+         * would bind a second click listener to every chip.
+         *
+         * @param {string} containerId DOM id of the [data-chip-filters] node.
+         */
+        refresh: function(containerId) {
+            var entry = registry[containerId];
+            if (entry) {
+                FilterTabsNav.updateAll(entry.container);
+            }
+        },
+
+        /**
          * Helper used by host pages to check whether an item passes the
          * current selection. Selection is AND across fields, OR within a
          * field. Empty selection = pass.

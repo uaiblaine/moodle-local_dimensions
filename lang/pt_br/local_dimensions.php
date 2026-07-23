@@ -400,6 +400,7 @@ $string['filter_all'] = 'Todas';
 $string['filter_chip_clear'] = 'Limpar filtros';
 $string['filter_competencies'] = 'Filtrar competências';
 $string['filter_not_completed'] = 'Não concluídas';
+$string['filter_toggle'] = 'Filtrar';
 $string['generalsettingsheading'] = 'Configurações gerais';
 $string['generalsettingsheading_desc'] = 'Configurações gerais de exibição e navegação.';
 $string['iconpicker_clear'] = 'Limpar';
