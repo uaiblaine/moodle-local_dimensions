@@ -17,9 +17,11 @@
 /**
  * External API to get courses linked to a competency with enrollment filter.
  *
- * This webservice wraps tool_lp_list_courses_using_competency and resolves
+ * This webservice runs its own query over competency_coursecomp and resolves
  * the enrolment-filter cascade (competency -> plan's template -> global
- * setting) to filter courses based on the user's enrollment status.
+ * setting) to filter courses based on the user's enrollment status. Each
+ * surviving course also carries its rule outcome and the competency's
+ * activity links inside it.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -61,7 +63,7 @@ class get_competency_courses extends external_api {
      *
      * @param int $competencyid The competency ID
      * @param int $planid The learning plan ID (drives the enrolment-filter cascade)
-     * @return array Filtered list of courses
+     * @return array Filtered list of courses, each with its rule outcome and linked activities
      */
     public static function execute($competencyid, $planid) {
         global $USER, $DB;
@@ -79,8 +81,10 @@ class get_competency_courses extends external_api {
         self::validate_context($systemcontext);
         require_capability('local/dimensions:view', $systemcontext);
 
-        // Get all courses linked to the competency (visible only).
-        $sql = "SELECT DISTINCT c.id, c.fullname, c.shortname, c.visible
+        /* Get all courses linked to the competency (visible only). The unique index
+           courseidcompetencyid guarantees one row per course, so selecting the link's
+           ruleoutcome alongside cannot multiply the cards. */
+        $sql = "SELECT DISTINCT c.id, c.fullname, c.shortname, c.visible, cc.ruleoutcome
                   FROM {competency_coursecomp} cc
                   JOIN {course} c ON c.id = cc.courseid
                  WHERE cc.competencyid = :competencyid AND c.visible = 1
@@ -101,6 +105,9 @@ class get_competency_courses extends external_api {
         if ($filtermode !== \local_dimensions\constants::ENROLLMENTFILTER_ALL) {
             $courses = \local_dimensions\calculator::filter_courses_by_enrollment($courses, $USER->id, $filtermode);
         }
+
+        // Activity links are resolved only for the courses that survived the filter.
+        $activitiesbycourse = self::get_linked_activities($competencyid, array_keys($courses));
 
         // Build the response with course image and progress.
         $result = [];
@@ -145,7 +152,128 @@ class get_competency_courses extends external_api {
                 'courseimage' => $courseimage,
                 'progress' => $progress,
                 'visible' => 1,
+                'ruleoutcome' => (int) $course->ruleoutcome,
+                'activities' => $activitiesbycourse[(int) $course->id] ?? [],
             ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * The competency's activity links inside the given courses, grouped by course.
+     *
+     * Mirrors the section cascade in calculator::get_course_section_progress(): the raw
+     * visibility flags decide what is skipped, uservisible decides what is locked, and a
+     * locked row links to the course page rather than the activity, where core explains
+     * the restriction. Modules are read from modinfo rather than from the link rows, so a
+     * link that outlived its module simply never matches.
+     *
+     * The course-level lock is deliberately not applied here: unlike the tracker card, the
+     * plan accordion has no locked overlay to carry the message, and calculator::is_locked()
+     * also reports true for anyone enrolled without the student role - which would strip the
+     * links from staff whose course card link right above still works.
+     *
+     * @param int $competencyid The competency id.
+     * @param array $courseids Ids of the courses that survived the enrolment filter.
+     * @return array Course id => list of activity rows.
+     */
+    private static function get_linked_activities(int $competencyid, array $courseids): array {
+        global $CFG, $DB, $USER;
+        require_once($CFG->libdir . '/completionlib.php');
+
+        if (empty($courseids)) {
+            return [];
+        }
+
+        [$insql, $inparams] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED, 'cid');
+        $links = $DB->get_records_sql(
+            "SELECT mc.cmid, mc.ruleoutcome, cm.course
+               FROM {competency_modulecomp} mc
+               JOIN {course_modules} cm ON cm.id = mc.cmid
+              WHERE mc.competencyid = :competencyid AND cm.course $insql",
+            ['competencyid' => $competencyid] + $inparams
+        );
+
+        $outcomesbycourse = [];
+        foreach ($links as $link) {
+            $outcomesbycourse[(int) $link->course][(int) $link->cmid] = (int) $link->ruleoutcome;
+        }
+
+        $result = [];
+        foreach ($outcomesbycourse as $courseid => $outcomes) {
+            $modinfo = get_fast_modinfo($courseid);
+            $sectionbyid = [];
+            foreach ($modinfo->get_section_info_all() as $sectioninfo) {
+                $sectionbyid[(int) $sectioninfo->id] = $sectioninfo;
+            }
+            $completion = new \completion_info(get_course($courseid));
+            $courseurl = (new \moodle_url('/course/view.php', ['id' => $courseid]))->out(false);
+
+            // Walking modinfo rather than the link rows keeps the activities in course order.
+            $rows = [];
+            foreach ($modinfo->get_cms() as $cm) {
+                if (!isset($outcomes[(int) $cm->id]) || $cm->deletioninprogress) {
+                    continue;
+                }
+                $section = $sectionbyid[(int) $cm->section] ?? null;
+                if ($section === null || !$section->visible || !$cm->visible || !$cm->visibleoncoursepage) {
+                    continue;
+                }
+
+                // A section hidden entirely by a restriction takes its activities with it.
+                $sectionlocked = false;
+                if (!$section->uservisible) {
+                    if (empty($section->availableinfo)) {
+                        continue;
+                    }
+                    $sectionlocked = true;
+                }
+
+                $locked = false;
+                if (!$cm->uservisible) {
+                    /* cm_info does not copy a section's availableinfo down to its modules, so a
+                       module under a restricted section arrives here with an empty one. Without
+                       the inherited flag it would be dropped as "hide entirely" when the section
+                       rule shows it greyed. */
+                    if (!$sectionlocked && empty($cm->availableinfo)) {
+                        continue;
+                    }
+                    $locked = true;
+                }
+
+                if (!$cm->has_view()) {
+                    $url = '';
+                } else if ($locked) {
+                    $url = $courseurl;
+                } else {
+                    $url = $cm->url->out(false);
+                }
+
+                $hascompletion = $completion->is_enabled($cm) != COMPLETION_TRACKING_NONE;
+                $iscompleted = false;
+                if ($hascompletion) {
+                    $cmdata = $completion->get_data($cm, true, $USER->id);
+                    $iscompleted = $cmdata->completionstate == COMPLETION_COMPLETE
+                        || $cmdata->completionstate == COMPLETION_COMPLETE_PASS;
+                }
+
+                $rows[] = [
+                    'cmid' => (int) $cm->id,
+                    'name' => $cm->get_formatted_name(),
+                    'modtype' => (string) $cm->modfullname,
+                    'iconurl' => $cm->get_icon_url()->out(false),
+                    // Cast: a module that answers the feature with false rather than null yields a bool.
+                    'purpose' => (string) plugin_supports('mod', $cm->modname, FEATURE_MOD_PURPOSE, MOD_PURPOSE_OTHER),
+                    'url' => $url,
+                    'locked' => $locked,
+                    'ruleoutcome' => $outcomes[(int) $cm->id],
+                    'has_completion' => $hascompletion,
+                    'is_completed' => $iscompleted,
+                ];
+            }
+
+            $result[$courseid] = $rows;
         }
 
         return $result;
@@ -165,6 +293,24 @@ class get_competency_courses extends external_api {
                 'courseimage' => new external_value(PARAM_URL, 'Course image URL', VALUE_OPTIONAL),
                 'progress' => new external_value(PARAM_INT, 'Course completion progress percentage'),
                 'visible' => new external_value(PARAM_INT, 'Course visibility'),
+                'ruleoutcome' => new external_value(PARAM_INT, 'What completing the course does to the competency'),
+                'activities' => new external_multiple_structure(
+                    new external_single_structure([
+                        'cmid' => new external_value(PARAM_INT, 'Course module id'),
+                        'name' => new external_value(PARAM_RAW, 'Activity name'),
+                        'modtype' => new external_value(PARAM_RAW, 'Localised module type name'),
+                        'iconurl' => new external_value(PARAM_URL, 'Activity icon URL'),
+                        'purpose' => new external_value(PARAM_ALPHANUMEXT, 'Module purpose, the icon container class'),
+                        'url' => new external_value(
+                            PARAM_URL,
+                            'Activity URL, the course URL when restricted, empty when the module has no view page'
+                        ),
+                        'locked' => new external_value(PARAM_BOOL, 'Whether an access restriction applies'),
+                        'ruleoutcome' => new external_value(PARAM_INT, 'What completing the activity does to the competency'),
+                        'has_completion' => new external_value(PARAM_BOOL, 'Whether completion is tracked'),
+                        'is_completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
+                    ])
+                ),
             ])
         );
     }
