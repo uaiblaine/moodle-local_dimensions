@@ -199,7 +199,8 @@ define(
                 {key: 'evidence_rule_stale', component: 'local_dimensions'},
                 {key: 'evidence_rule_sendreview', component: 'local_dimensions'},
                 {key: 'evidence_rule_reviewsent', component: 'local_dimensions'},
-                {key: 'scale_about', component: 'local_dimensions'}
+                {key: 'scale_about', component: 'local_dimensions'},
+                {key: 'evidence_position', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -261,7 +262,8 @@ define(
                     evidenceRuleStale: strings[56],
                     evidenceRuleSendReview: strings[57],
                     evidenceRuleReviewSent: strings[58],
-                    scaleAbout: strings[59]
+                    scaleAbout: strings[59],
+                    evidencePosition: strings[60]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -1231,26 +1233,24 @@ define(
         }
 
         /**
-         * Open a modal with full evidence details.
+         * Build the evidence-modal template context for one evidence row.
          *
          * @param {Object} ev The evidence object from the API
+         * @param {number} index Its index in the evidence array
+         * @param {number} total The evidence array length
          * @param {Object} strMap Language strings map
-         * @param {string|null} scaleConfig The scale configuration JSON string from the competency
+         * @param {string|null} scaleConfig The scale configuration JSON string
+         * @return {Object} Template context
          */
-        function openEvidenceDetailModal(ev, strMap, scaleConfig) {
+        function buildEvidenceModalContext(ev, index, total, strMap, scaleConfig) {
             const typeInfo = getEvidenceTypeInfo(ev, strMap);
             const hasNote = !!ev.note?.trim();
             const hasUrl = !!ev.url;
             const hasGrade = !!(ev.grade && ev.gradename && ev.gradename !== '-');
             const hasActionUser = !!ev.actionuser?.fullname;
+            const gradeProficient = hasGrade && scaleConfig ? isGradeProficient(ev.grade, scaleConfig) : false;
 
-            // Determine if the grade value is considered proficient using the scale configuration.
-            let gradeProficient = false;
-            if (hasGrade && scaleConfig) {
-                gradeProficient = isGradeProficient(ev.grade, scaleConfig);
-            }
-
-            const context = {
+            return {
                 typelabel: typeInfo.label,
                 typeicon: typeInfo.icon,
                 colorclass: typeInfo.colorClass,
@@ -1279,15 +1279,51 @@ define(
                 strgrade: strMap.evidenceGrade,
                 strauthor: strMap.evidenceAuthor,
                 strdate: strMap.evidenceDate,
-                stropenlink: strMap.evidenceOpenLink
+                stropenlink: strMap.evidenceOpenLink,
+                haspager: total > 1,
+                pagerlabel: strMap.evidencePosition
+                    .replace('{$a->index}', index + 1)
+                    .replace('{$a->total}', total),
+                prevdisabled: index === 0,
+                nextdisabled: index === total - 1,
+                strprev: strMap.sliderPrev,
+                strnext: strMap.sliderNext
             };
+        }
+
+        /**
+         * Open a modal with full evidence details, paging across the competency's evidence.
+         *
+         * @param {Array} evidenceData The full evidence array from the API
+         * @param {number} startIndex The evidence to open first
+         * @param {Object} strMap Language strings map
+         * @param {string|null} scaleConfig The scale configuration JSON string from the competency
+         */
+        function openEvidenceDetailModal(evidenceData, startIndex, strMap, scaleConfig) {
+            const total = evidenceData.length;
+            let current = startIndex;
 
             Modal.create({
                 title: strMap.evidenceDetails,
-                body: Templates.render('local_dimensions/evidence_detail_modal', context),
+                body: Templates.render('local_dimensions/evidence_detail_modal',
+                    buildEvidenceModalContext(evidenceData[current], current, total, strMap, scaleConfig)),
                 large: false,
                 removeOnClose: true
             }).then(function(modal) {
+                const root = modal.getRoot();
+
+                // Delegated on the root, so the handler survives each body re-render.
+                root.on('click', '[data-ev-prev], [data-ev-next]', function(e) {
+                    const step = e.currentTarget.hasAttribute('data-ev-next') ? 1 : -1;
+                    const next = current + step;
+                    if (next < 0 || next >= total) {
+                        return;
+                    }
+                    current = next;
+                    modal.setBody(Templates.render('local_dimensions/evidence_detail_modal',
+                        buildEvidenceModalContext(evidenceData[current], current, total, strMap, scaleConfig)));
+                });
+
                 modal.show();
                 return modal;
             }).catch(Notification.exception);
@@ -1626,7 +1662,7 @@ define(
             const openRow = function(row) {
                 const idx = Number.parseInt(row.dataset.evidenceIndex, 10);
                 if (!Number.isNaN(idx) && evidenceData?.[idx]) {
-                    openEvidenceDetailModal(evidenceData[idx], strMap, scaleConfig);
+                    openEvidenceDetailModal(evidenceData, idx, strMap, scaleConfig);
                 }
             };
 

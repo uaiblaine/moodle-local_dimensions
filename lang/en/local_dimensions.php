@@ -384,6 +384,7 @@ $string['evidence_label'] = 'Evidence';
 $string['evidence_link'] = 'Related activity';
 $string['evidence_note'] = 'Note';
 $string['evidence_open_link'] = 'Open activity';
+$string['evidence_position'] = 'Evidence {$a->index} of {$a->total}';
 $string['evidence_rule_completed'] = 'Completed by competency rule';
 $string['evidence_rule_reviewsent'] = 'Sent for review';
 $string['evidence_rule_sendreview'] = 'Send for review';

@@ -384,6 +384,7 @@ $string['evidence_label'] = 'Evidências';
 $string['evidence_link'] = 'Atividade relacionada';
 $string['evidence_note'] = 'Anotação';
 $string['evidence_open_link'] = 'Abrir atividade';
+$string['evidence_position'] = 'Evidência {$a->index} de {$a->total}';
 $string['evidence_rule_completed'] = 'Concluída por regra de competência';
 $string['evidence_rule_reviewsent'] = 'Enviada para revisão';
 $string['evidence_rule_sendreview'] = 'Enviar para revisão';

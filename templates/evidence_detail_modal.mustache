@@ -44,6 +44,12 @@
     * strauthor (string) - Localized "Registered by" label
     * strdate (string) - Localized "Date" label
     * stropenlink (string) - Localized "Open activity" label
+    * haspager (bool) - Whether to show the prev/next pager (more than one evidence item)
+    * pagerlabel (string) - Localized position readout, e.g. "Evidence 2 of 5"
+    * prevdisabled (bool) - Whether the previous button is at the start
+    * nextdisabled (bool) - Whether the next button is at the end
+    * strprev (string) - Localized "Previous" label
+    * strnext (string) - Localized "Next" label
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -72,10 +78,30 @@
         "strgrade": "Rating",
         "strauthor": "Registered by",
         "strdate": "Date",
-        "stropenlink": "Open activity"
+        "stropenlink": "Open activity",
+        "haspager": true,
+        "pagerlabel": "Evidence 2 of 5",
+        "prevdisabled": false,
+        "nextdisabled": false,
+        "strprev": "Previous",
+        "strnext": "Next"
     }
 }}
 <div class="local-dimensions-ev-modal-body">
+    {{#haspager}}
+    <div class="local-dimensions-ev-modal-pager" role="group" aria-label="{{pagerlabel}}">
+        <button type="button" class="local-dimensions-ev-modal-pager-btn" data-ev-prev
+                aria-label="{{strprev}}"{{#prevdisabled}} disabled{{/prevdisabled}}>
+            <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        <span class="local-dimensions-ev-modal-pager-pos" aria-live="polite">{{pagerlabel}}</span>
+        <button type="button" class="local-dimensions-ev-modal-pager-btn" data-ev-next
+                aria-label="{{strnext}}"{{#nextdisabled}} disabled{{/nextdisabled}}>
+            <i class="fa fa-chevron-right" aria-hidden="true"></i>
+        </button>
+    </div>
+    {{/haspager}}
+
     {{! Evidence type badge }}
     <div class="local-dimensions-ev-modal-type">
         <span class="local-dimensions-ev-modal-type-badge {{colorclass}}">
