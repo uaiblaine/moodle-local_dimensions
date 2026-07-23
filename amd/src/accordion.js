@@ -35,6 +35,17 @@ define(
            binds this handler to every chip as well. */
         const FILTER_TAB_SELECTOR = '.local-dimensions-filter-bar .local-dimensions-filter-tab';
 
+        /* The two ruleoutcome values that conclude or advance a competency
+           (core_competency\course_competency OUTCOME_RECOMMEND / OUTCOME_COMPLETE). The other
+           two stay unbadged: OUTCOME_EVIDENCE is core's DB default, so badging it would mark
+           nearly every card instead of the few that decide anything. */
+        const OUTCOME_RECOMMEND = 2;
+        const OUTCOME_COMPLETE = 3;
+
+        /* Panels need document-unique ids for aria-controls, and one course can hang off
+           several competencies in the same plan, so the course id alone would collide. */
+        let activitiesPanelSeq = 0;
+
         // Display settings (loaded from page).
         let displaySettings = {
             showdescription: true,
@@ -152,14 +163,14 @@ define(
                 {key: 'evidence_type_prior', component: 'local_dimensions'},
                 {key: 'evidence_type_other', component: 'local_dimensions'},
                 {key: 'no_evidence', component: 'local_dimensions'},
-                {key: 'linked_courses', component: 'local_dimensions'},
+                {key: 'related_content', component: 'local_dimensions'},
                 {key: 'assessment_status', component: 'local_dimensions'},
                 {key: 'description_label', component: 'local_dimensions'},
                 {key: 'taxonomy_whatis', component: 'local_dimensions'},
                 {key: 'show_more', component: 'local_dimensions'},
                 {key: 'show_less', component: 'local_dimensions'},
                 {key: 'proficiency', component: 'local_dimensions'},
-                {key: 'access', component: 'local_dimensions'},
+                {key: 'outcome_complete', component: 'local_dimensions'},
                 {key: 'strftimedaydate', component: 'core_langconfig'},
                 {key: 'evidence_slider_prev', component: 'local_dimensions'},
                 {key: 'evidence_slider_next', component: 'local_dimensions'},
@@ -211,7 +222,10 @@ define(
                 {key: 'taxonomy_def_practice', component: 'local_dimensions'},
                 {key: 'taxonomy_def_proficiency', component: 'local_dimensions'},
                 {key: 'taxonomy_def_skill', component: 'local_dimensions'},
-                {key: 'taxonomy_def_value', component: 'local_dimensions'}
+                {key: 'taxonomy_def_value', component: 'local_dimensions'},
+                {key: 'outcome_recommend', component: 'local_dimensions'},
+                {key: 'activities_count', component: 'local_dimensions'},
+                {key: 'activities_count_one', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -226,14 +240,14 @@ define(
                     evidenceTypePrior: strings[9],
                     evidenceTypeOther: strings[10],
                     noEvidence: strings[11],
-                    linkedCourses: strings[12],
+                    relatedContent: strings[12],
                     assessmentStatus: strings[13],
                     descriptionLabel: strings[14],
                     taxonomyWhatIs: strings[15],
                     showMore: strings[16],
                     showLess: strings[17],
                     proficiencyLabel: strings[18],
-                    accessLabel: strings[19],
+                    outcomeComplete: strings[19],
                     dateFormat: strings[20],
                     sliderPrev: strings[21],
                     sliderNext: strings[22],
@@ -288,7 +302,10 @@ define(
                         skill: strings[70],
                         value: strings[71],
                         behavior: strings[61]
-                    }
+                    },
+                    outcomeRecommend: strings[72],
+                    activitiesCount: strings[73],
+                    activitiesCountOne: strings[74]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -323,8 +340,9 @@ define(
                 initScaleAbout(contentEl, strMap, summaryState.scaleDescription);
                 initTaxonomyDefinition(contentEl, strMap);
 
-                // Initialize course scroll navigation.
+                // Initialize course scroll navigation and the per-card activity disclosures.
                 initCourseScroll(contentEl);
+                initActivityDisclosures(contentEl);
 
                 // If the Rules tab is currently active (first tab), trigger lazy load immediately.
                 const activeRulesPane = contentEl.querySelector('.local-dimensions-tab-pane-rules.active');
@@ -1809,23 +1827,112 @@ define(
         }
 
         /**
-         * Render linked courses as a scrollable horizontal section.
+         * Render the badge saying what completing an item does to the competency.
+         *
+         * @param {number|string} outcome The link's ruleoutcome value
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML for the badge, empty unless the outcome is a decisive one
+         */
+        function renderOutcomeBadge(outcome, strMap) {
+            const value = Number.parseInt(outcome, 10);
+            let label = '';
+            let icon = '';
+
+            if (value === OUTCOME_COMPLETE) {
+                label = strMap.outcomeComplete;
+                icon = 'fa-trophy';
+            } else if (value === OUTCOME_RECOMMEND) {
+                label = strMap.outcomeRecommend;
+                icon = 'fa-paper-plane';
+            } else {
+                return '';
+            }
+
+            return '<span class="local-dimensions-outcome-badge">' +
+                '<i class="fa ' + icon + '" aria-hidden="true"></i>' +
+                escapeHtml(label) + '</span>';
+        }
+
+        /**
+         * Render one linked activity as a compact row.
+         *
+         * A restricted activity keeps its row but carries the course URL, because that is the
+         * page where core explains the restriction; the server has already resolved that.
+         *
+         * @param {Object} activity One entry of a course's activities array
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML for the row
+         */
+        function renderActivityRow(activity, strMap) {
+            const name = activity.name || '';
+            const hasLink = !!activity.url;
+            const label = activity.modtype ? activity.modtype + ': ' + name : name;
+            let marker = '';
+
+            if (activity.locked) {
+                marker = '<i class="fa fa-lock" aria-hidden="true"></i>';
+            } else if (activity.has_completion && activity.is_completed) {
+                marker = '<i class="fa fa-check-circle local-dimensions-act-done" aria-hidden="true"></i>';
+            } else if (activity.has_completion) {
+                marker = '<i class="fa fa-circle-o local-dimensions-act-todo" aria-hidden="true"></i>';
+            }
+
+            let html = '<li class="local-dimensions-course-act' +
+                (activity.locked ? ' local-dimensions-course-act-locked' : '') + '">';
+            html += hasLink
+                ? '<a class="local-dimensions-course-act-row" href="' + escapeHtml(activity.url) +
+                    '" aria-label="' + escapeHtml(label) + '">'
+                : '<span class="local-dimensions-course-act-row">';
+            html += '<span class="local-dimensions-course-act-icon activityiconcontainer smaller ' +
+                escapeHtml(activity.purpose || '') + '">' +
+                '<img class="activityicon" src="' + escapeHtml(activity.iconurl) + '" alt="" loading="lazy">' +
+                '</span>';
+            html += '<span class="local-dimensions-course-act-main">';
+            html += '<span class="local-dimensions-course-act-name">' + escapeHtml(name) + '</span>';
+            html += renderOutcomeBadge(activity.ruleoutcome, strMap);
+            html += '</span>';
+            html += '<span class="local-dimensions-course-act-state">' + marker + '</span>';
+            html += hasLink ? '</a>' : '</span>';
+            html += '</li>';
+
+            return html;
+        }
+
+        /**
+         * Render the related content: linked courses as a scrollable horizontal section, each
+         * card disclosing the competency's activities inside that course.
          *
          * @param {Array} courses Visible courses array
          * @param {Object} strMap Language strings map
-         * @return {string} HTML for the courses scrollable section
+         * @return {string} HTML for the related-content section
          */
         function renderCourseCardsScrollable(courses, strMap) {
             const hasManyCourses = courses.length > 2;
             let html = '<section class="local-dimensions-section local-dimensions-courses-section">';
 
-            // Section title.
+            html += '<div class="local-dimensions-courses-scroll-wrapper" data-course-count="' + courses.length + '">';
+
+            /* The nav pill lives in the header rather than in a reserved lane under the track,
+               so it stays put when a card's activity list expands. It has to remain inside the
+               wrapper: initCourseScroll looks the buttons up from there. */
+            html += '<div class="local-dimensions-courses-head">';
             html += '<h2 class="local-dimensions-section-title">';
-            html += escapeHtml(strMap.linkedCourses);
+            html += escapeHtml(strMap.relatedContent);
             html += ' <span class="local-dimensions-section-badge">' + courses.length + '</span>';
             html += '</h2>';
+            html += '<span class="local-dimensions-courses-scroll-controls" role="group" aria-label="' +
+                escapeHtml(strMap.relatedContent) + '">';
+            html += '<button type="button" class="local-dimensions-scroll-btn local-dimensions-scroll-prev disabled"';
+            html += ' aria-label="' + escapeHtml(strMap.sliderPrev) + '">';
+            html += '<i class="fa fa-chevron-left" aria-hidden="true"></i>';
+            html += '</button>';
+            html += '<button type="button" class="local-dimensions-scroll-btn local-dimensions-scroll-next"';
+            html += ' aria-label="' + escapeHtml(strMap.sliderNext) + '">';
+            html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
+            html += '</button>';
+            html += '</span>';
+            html += '</div>';
 
-            html += '<div class="local-dimensions-courses-scroll-wrapper" data-course-count="' + courses.length + '">';
             html += '<div class="local-dimensions-courses-scroll' +
                 (hasManyCourses ? '' : ' local-dimensions-courses-no-scroll') + '">';
 
@@ -1834,8 +1941,12 @@ define(
                 const courseName = course.fullname || course.shortname || '';
                 const progress = Number.parseInt(course.progress, 10) || 0;
                 const hasImage = course.courseimage && course.courseimage.trim() !== '';
+                const activities = course.activities || [];
 
                 html += '<div class="local-dimensions-course-card-lg">';
+
+                // The whole card is the link to the course; the disclosure below sits outside it.
+                html += '<a href="' + escapeHtml(courseUrl) + '" class="local-dimensions-course-link">';
 
                 // Course image.
                 if (hasImage) {
@@ -1853,6 +1964,7 @@ define(
                 // Course body.
                 html += '<div class="local-dimensions-course-body">';
                 html += '<h3 class="local-dimensions-course-name-lg">' + escapeHtml(courseName) + '</h3>';
+                html += renderOutcomeBadge(course.ruleoutcome, strMap);
 
                 // Progress bar.
                 html += '<div class="local-dimensions-course-progress-lg">';
@@ -1865,32 +1977,59 @@ define(
                 }
                 html += '</div>';
 
-                // Access button (full width).
-                html += '<a href="' + escapeHtml(courseUrl) + '" class="btn btn-secondary local-dimensions-course-btn">';
-                html += escapeHtml(strMap.accessLabel);
-                html += '</a>';
-
                 html += '</div>'; // End local-dimensions-course-body.
+                html += '</a>'; // End local-dimensions-course-link.
+
+                if (activities.length > 0) {
+                    const panelId = 'local-dimensions-course-acts-' + (++activitiesPanelSeq);
+                    const countLabel = activities.length === 1
+                        ? strMap.activitiesCountOne
+                        : strMap.activitiesCount.replace('{$a}', activities.length);
+
+                    html += '<button type="button" class="local-dimensions-course-acts-toggle"';
+                    html += ' aria-expanded="false" aria-controls="' + panelId + '">';
+                    html += '<i class="fa fa-list-ul" aria-hidden="true"></i>';
+                    html += '<span>' + escapeHtml(countLabel) + '</span>';
+                    html += '<i class="fa fa-chevron-down local-dimensions-course-acts-chevron" aria-hidden="true"></i>';
+                    html += '</button>';
+
+                    html += '<ul class="local-dimensions-course-acts" id="' + panelId + '" hidden>';
+                    activities.forEach(function(activity) {
+                        html += renderActivityRow(activity, strMap);
+                    });
+                    html += '</ul>';
+                }
+
                 html += '</div>'; // End local-dimensions-course-card-lg.
             });
 
             html += '</div>'; // End local-dimensions-courses-scroll.
-            html += '<div class="local-dimensions-courses-scroll-controls" role="group" aria-label="' +
-                escapeHtml(strMap.linkedCourses) + '">';
-            html += '<button type="button" class="local-dimensions-scroll-btn local-dimensions-scroll-prev disabled"';
-            html += ' aria-label="' + escapeHtml(strMap.sliderPrev) + '">';
-            html += '<i class="fa fa-chevron-left" aria-hidden="true"></i>';
-            html += '</button>';
-            html += '<button type="button" class="local-dimensions-scroll-btn local-dimensions-scroll-next"';
-            html += ' aria-label="' + escapeHtml(strMap.sliderNext) + '">';
-            html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-            html += '</button>';
-            html += '</div>'; // End local-dimensions-courses-scroll-controls.
-
             html += '</div>'; // End local-dimensions-courses-scroll-wrapper.
             html += '</section>';
 
             return html;
+        }
+
+        /**
+         * Wire the per-card activity disclosures.
+         *
+         * A plain hidden toggle rather than a Bootstrap collapse: the data-API attribute
+         * differs between Bootstrap 4 (4.5) and 5 (5.x) and is not bridged.
+         *
+         * @param {HTMLElement} contentEl The content container element
+         */
+        function initActivityDisclosures(contentEl) {
+            contentEl.querySelectorAll('.local-dimensions-course-acts-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function() {
+                    const panel = contentEl.querySelector('#' + toggle.getAttribute('aria-controls'));
+                    if (!panel) {
+                        return;
+                    }
+                    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+                    toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                    panel.hidden = expanded;
+                });
+            });
         }
 
         /**

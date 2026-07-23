@@ -1731,13 +1731,149 @@
     text-align: right;
 }
 
-/* Course access button - full width */
-.local-dimensions-course-btn {
+/* The whole card is the link to the course, so it carries no button of its own. */
+.local-dimensions-course-link {
     display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+.local-dimensions-course-link:hover,
+.local-dimensions-course-link:focus {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* The 100% marker had no rule at all, so it inherited the body colour. */
+.local-dimensions-course-check {
+    color: #198754;
+}
+
+/* What completing this course or activity does to the competency. */
+.local-dimensions-outcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    align-self: flex-start;
+    margin-bottom: 0.5rem;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid rgb(15 108 191 / 28%);
+    border-radius: 0.4rem;
+    background: #cfe2ff;
+    color: #0f6cbf;
+    font-size: 0.71rem;
+    font-weight: 700;
+}
+
+.local-dimensions-outcome-badge .fa {
+    font-size: 0.7rem;
+}
+
+/* Activities disclosure - the toggle sits outside the card link. */
+.local-dimensions-course-acts-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     width: 100%;
-    text-align: center;
-    font-size: 0.8125rem;
-    font-weight: 500;
+    padding: 0.5rem 0.8rem;
+    border: none;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+    color: #495057;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.local-dimensions-course-acts-toggle:hover {
+    background: #e9ecef;
+}
+
+.local-dimensions-course-acts-toggle:focus-visible {
+    outline: 2px solid var(--dimension-custombgcolor, var(--primary, #0f6cbf));
+    outline-offset: -2px;
+}
+
+.local-dimensions-course-acts-chevron {
+    margin-left: auto;
+    transition: transform 150ms ease;
+}
+
+.local-dimensions-course-acts-toggle[aria-expanded='true'] .local-dimensions-course-acts-chevron {
+    transform: rotate(180deg);
+}
+
+.local-dimensions-course-acts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin: 0;
+    padding: 0.3rem 0.5rem 0.5rem;
+    background: #f8f9fa;
+    list-style: none;
+}
+
+.local-dimensions-course-act-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.45rem;
+    border-radius: 0.45rem;
+    background: #fff;
+    color: #212529;
+    text-decoration: none;
+}
+
+a.local-dimensions-course-act-row:hover,
+a.local-dimensions-course-act-row:focus {
+    background: #cfe2ff;
+    color: #212529;
+    text-decoration: none;
+}
+
+.local-dimensions-course-act-locked .local-dimensions-course-act-row {
+    color: #6c757d;
+}
+
+.local-dimensions-course-act-icon {
+    flex: none;
+}
+
+.local-dimensions-course-act-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.local-dimensions-course-act-name {
+    overflow: hidden;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-course-act .local-dimensions-outcome-badge {
+    margin-bottom: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: 0.66rem;
+}
+
+.local-dimensions-course-act-state {
+    flex: none;
+}
+
+.local-dimensions-act-done {
+    color: #198754;
+}
+
+.local-dimensions-act-todo {
+    color: #adb5bd;
 }
 
 /* ============================================
@@ -2403,15 +2539,29 @@
     position: relative;
     width: 100%;
     min-width: 0;
-    padding-bottom: 3.7rem;
 }
 
-.local-dimensions-courses-scroll-wrapper.local-dimensions-controls-hidden {
-    padding-bottom: 0;
+/* The nav pill rides in the header, so it does not jump when a card expands. */
+.local-dimensions-courses-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.local-dimensions-courses-head .local-dimensions-section-title {
+    margin-bottom: 0;
+}
+
+.local-dimensions-courses-head .local-dimensions-courses-scroll-controls {
+    margin-left: auto;
 }
 
 .local-dimensions-courses-scroll {
     display: flex;
+    /* Cards keep their natural height, so expanding one card's activities
+       does not stretch every sibling to match. */
+    align-items: flex-start;
     gap: 1rem;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -2444,18 +2594,15 @@
     scroll-snap-align: start;
 }
 
-/* Bottom-right control group (pill with two arrows). */
+/* Header control group (pill with two arrows). */
 .local-dimensions-courses-scroll-controls {
-    position: absolute;
-    right: 0.5rem;
-    bottom: 0.25rem;
     display: inline-flex;
     align-items: center;
-    border-radius: 999px;
     overflow: hidden;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
     background: #fff;
-    box-shadow: rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;
-    z-index: 3;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
 }
 
 .local-dimensions-courses-scroll-controls .local-dimensions-scroll-btn + .local-dimensions-scroll-btn {
@@ -2467,8 +2614,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
+    width: 34px;
+    height: 30px;
     border: none;
     border-radius: 0;
     background: transparent;
@@ -2556,14 +2703,9 @@
         padding: 1rem;
     }
 
-    .local-dimensions-courses-scroll-controls {
-        right: 0.25rem;
-        bottom: 0;
-    }
-
     .local-dimensions-scroll-btn {
-        width: 34px;
-        height: 34px;
+        width: 30px;
+        height: 28px;
     }
 
     .local-dimensions-scroll-btn .fa {

@@ -24,7 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['access'] = 'Acessar';
+$string['activities_count'] = '{$a} atividades';
+$string['activities_count_one'] = '1 atividade';
 $string['animatelockedborder'] = 'Animar borda do cartão bloqueado';
 $string['animatelockedborder_desc'] = 'Quando habilitado, a borda tracejada nos cartões de cursos bloqueados terá uma animação de traço em movimento. A borda tracejada está sempre visível; esta configuração controla apenas a animação.';
 $string['api_completion_enabled'] = 'Se a conclusão está ativa';
@@ -426,7 +427,6 @@ $string['learn_more'] = 'Saiba mais';
 $string['learningplans'] = 'Planos de aprendizagem';
 $string['learnmorebuttoncolor'] = 'Cor do botão "Saiba Mais"';
 $string['learnmorebuttoncolor_desc'] = 'Escolha a cor do botão "Saiba Mais" nos cartões de cursos bloqueados.';
-$string['linked_courses'] = 'Cursos vinculados';
 $string['loading_competency_summary'] = 'Carregando...';
 $string['loading_progress'] = 'Carregando progresso...';
 $string['locked'] = 'Bloqueado';
@@ -491,6 +491,8 @@ $string['nocompetencies'] = 'Nenhuma competência nesta estrutura';
 $string['noframeworks'] = 'Nenhuma estrutura de competências encontrada';
 $string['noplans'] = 'Nenhum plano de aprendizagem encontrado.';
 $string['not_evaluated'] = '-';
+$string['outcome_complete'] = 'Conclui a competência';
+$string['outcome_recommend'] = 'Envia para avaliação';
 $string['percentagedisplaymode'] = 'Indicador de progresso das seções do curso';
 $string['percentagedisplaymode_desc'] = 'Escolha como a porcentagem de conclusão será exibida nos cartões de curso.';
 $string['percentagemode_fixed'] = 'Exibir a porcentagem numérica fixa';
@@ -509,6 +511,7 @@ $string['proficiency'] = 'Proficiência';
 $string['proficient'] = 'Proficiente';
 $string['rating'] = 'Avaliação';
 $string['rating_label'] = 'Avaliação';
+$string['related_content'] = 'Conteúdo relacionado';
 $string['related_dimensions'] = 'Dimensões relacionadas';
 $string['returnbuttoncolor'] = 'Cor do botão';
 $string['returnbuttoncolor_desc'] = 'Escolha a cor do botão flutuante "Voltar ao Plano".';

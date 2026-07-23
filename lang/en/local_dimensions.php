@@ -24,7 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['access'] = 'Access';
+$string['activities_count'] = '{$a} activities';
+$string['activities_count_one'] = '1 activity';
 $string['animatelockedborder'] = 'Animate locked card border';
 $string['animatelockedborder_desc'] = 'When enabled, the dashed border on locked course cards will have a marching-ants animation. The dashed border is always visible; this setting only controls the animation.';
 $string['api_completion_enabled'] = 'If completion is enabled';
@@ -426,7 +427,6 @@ $string['learn_more'] = 'Learn more';
 $string['learningplans'] = 'Learning plans';
 $string['learnmorebuttoncolor'] = '"Learn More" button color';
 $string['learnmorebuttoncolor_desc'] = 'Choose the color for the "Learn More" button on locked course cards.';
-$string['linked_courses'] = 'Linked courses';
 $string['loading_competency_summary'] = 'Loading...';
 $string['loading_progress'] = 'Loading progress...';
 $string['locked'] = 'Locked';
@@ -491,6 +491,8 @@ $string['nocompetencies'] = 'No competencies in this structure';
 $string['noframeworks'] = 'No competency structures found';
 $string['noplans'] = 'No learning plans found.';
 $string['not_evaluated'] = '-';
+$string['outcome_complete'] = 'Completes the competency';
+$string['outcome_recommend'] = 'Sends for review';
 $string['percentagedisplaymode'] = 'Course section progress indicator';
 $string['percentagedisplaymode_desc'] = 'Choose how the completion percentage will be displayed on course cards.';
 $string['percentagemode_fixed'] = 'Show percentage fixed (always visible)';
@@ -509,6 +511,7 @@ $string['proficiency'] = 'Proficiency';
 $string['proficient'] = 'Proficient';
 $string['rating'] = 'Rating';
 $string['rating_label'] = 'Rating';
+$string['related_content'] = 'Related content';
 $string['related_dimensions'] = 'Related dimensions';
 $string['returnbuttoncolor'] = 'Button color';
 $string['returnbuttoncolor_desc'] = 'Choose the color for the "Return to Plan" floating button.';
