@@ -96,12 +96,31 @@
                     <i class="fa fa-times" aria-hidden="true"></i>
                 </button>
             </div>
+            {{#haschipfilters}}
+            {{#chipfilters}}
+            <button type="button"
+                    class="local-dimensions-filter-toggle"
+                    data-filter-toggle
+                    aria-expanded="false"
+                    aria-controls="{{id}}">
+                <i class="fa fa-filter" aria-hidden="true"></i>
+                <span>{{#str}}filter_toggle, local_dimensions{{/str}}</span>
+                <span class="local-dimensions-filter-toggle-count" data-chip-count hidden></span>
+            </button>
+            {{/chipfilters}}
+            {{/haschipfilters}}
         </div>
 
         {{#haschipfilters}}
-            {{#chipfilters}}
-                {{> local_dimensions/chip_filters }}
-            {{/chipfilters}}
+            {{! Plain block toggled by the hidden attribute - not a Bootstrap collapse or
+                dropdown, so no data-toggle/data-bs-toggle pair is needed for 4.5 vs 5.x.
+                Must stay a plain block: .d-block and .d-flex are !important and would
+                defeat [hidden]. }}
+            <div class="local-dimensions-filter-panel" data-filter-panel hidden>
+                {{#chipfilters}}
+                    {{> local_dimensions/chip_filters }}
+                {{/chipfilters}}
+            </div>
         {{/haschipfilters}}
 
         {{! Competency accordion }}

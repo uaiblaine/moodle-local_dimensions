@@ -1340,6 +1340,60 @@
     font-weight: 600;
 }
 
+/* Filter button + its panel. The panel must stay a plain block: Bootstrap's
+   display utilities are !important and would defeat the hidden attribute. */
+.local-dimensions-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    padding: 0.5rem 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    background: #fff;
+    color: #495057;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.local-dimensions-filter-toggle:hover {
+    background: #f8f9fa;
+}
+
+.local-dimensions-filter-toggle[aria-expanded='true'] {
+    border-color: #0f6cbf;
+    color: #0f6cbf;
+}
+
+.local-dimensions-filter-toggle-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: #cfe2ff;
+    color: #0f6cbf;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.local-dimensions-filter-panel {
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.local-dimensions-filter-panel .local-dimensions-chip-filters {
+    padding: 0;
+    margin-bottom: 0;
+}
+
 .local-dimensions-filter-tab.active .local-dimensions-filter-count {
     background: #cfe2ff;
     color: #0f6cbf;
