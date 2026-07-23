@@ -21,7 +21,9 @@
     Shows section completion status with visual indicators.
 
     Context variables required:
+    * courseid (int) - Course ID, used to pair the collapse toggle with its timeline
     * enabled (bool) - Whether completion tracking is enabled
+    * iscompleted (bool) - Whether the course itself is complete, from the batch status call
     * locked (bool) - Whether the course is locked for the user
     * formatted_start_date (string) - When the course becomes available
     * is_enrolment_start (bool) - Whether the date is an enrolment start date
@@ -45,7 +47,9 @@
 
     Example context (json):
     {
+        "courseid": 42,
         "enabled": true,
+        "iscompleted": false,
         "locked": false,
         "formatted_start_date": "01/02/2026",
         "is_enrolment_start": false,
@@ -131,7 +135,26 @@
     {{/enabled}}
 
     {{#enabled}}
-    <div class="local-dimensions-timeline">
+    {{! A finished course earns a seal and folds its section list away: every row would say
+        the same thing, and the card's job here is to confirm, not to enumerate. }}
+    {{#iscompleted}}
+    {{^locked}}
+    <div class="local-dimensions-course-seal">
+        <i class="fa fa-check-circle" aria-hidden="true"></i>{{#str}}course_completed, local_dimensions{{/str}}
+    </div>
+    <button type="button"
+            class="local-dimensions-timeline-toggle"
+            data-timeline-toggle
+            aria-expanded="false"
+            aria-controls="local-dimensions-timeline-{{courseid}}">
+        <span>{{#str}}sections_all_complete, local_dimensions{{/str}}</span>
+        <i class="fa fa-chevron-down" aria-hidden="true"></i>
+    </button>
+    {{/locked}}
+    {{/iscompleted}}
+    <div class="local-dimensions-timeline"
+         id="local-dimensions-timeline-{{courseid}}"
+         {{#iscompleted}}{{^locked}}hidden{{/locked}}{{/iscompleted}}>
         {{#sections}}
         <div class="local-dimensions-timeline-item {{#is_completed}}completed{{/is_completed}} {{#is_started}}started{{/is_started}} {{#locked}}locked{{/locked}}">
             <div class="local-dimensions-timeline-marker">

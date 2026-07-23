@@ -185,6 +185,12 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                         }
                     });
                 }
+                /* The course-level completion stamp, from the batch call that ran before this
+                   card was ever requested. It is the course's own completion rule, which is a
+                   different fact from every section happening to be done. */
+                data.iscompleted = container
+                    .closest('.local-dimensions-course-card-wrapper')
+                    .attr('data-completed') === '1';
                 data.islearnmore = (lockedcardmode === 'learnmore');
                 /* The date reads as an invitation ("Opens ..."), so a past one says nothing
                    next to a Learn more button and is dropped there. Blocked mode keeps it:
@@ -198,6 +204,12 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 return Templates.render('local_dimensions/progress_card_body', data)
                     .then(function(html, js) {
                         Templates.replaceNodeContents(container, html, js);
+                        container.find('[data-timeline-toggle]').on('click', function() {
+                            var $toggle = $(this);
+                            var expanded = $toggle.attr('aria-expanded') === 'true';
+                            $toggle.attr('aria-expanded', expanded ? 'false' : 'true');
+                            container.find('#' + $toggle.attr('aria-controls')).prop('hidden', expanded);
+                        });
                         if (data.locked) {
                             var card = container.closest('.card');
                             var overlay = container.find('.local-dimensions-locked-overlay');
