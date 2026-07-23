@@ -1352,6 +1352,128 @@
     max-width: 320px;
 }
 
+/* Favourites: the learner's own shortlist, in the priority accent rather than the
+   plugin's blue, so it never reads as another completion signal. */
+.local-dimensions-fav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    background: #fff;
+    color: #adb5bd;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.local-dimensions-fav-toggle:hover {
+    background: #e9ecef;
+}
+
+.local-dimensions-fav-toggle[aria-pressed='true'] {
+    border-color: rgb(253 126 20 / 35%);
+    background: rgb(253 126 20 / 8%);
+    color: #fd7e14;
+}
+
+.local-dimensions-fav-toggle:focus-visible,
+.local-dimensions-star:focus-visible {
+    outline: 2px solid #0f6cbf;
+    outline-offset: 2px;
+}
+
+/* The head row exists so the star can sit beside the toggle. The item itself cannot become
+   a flex row: the filter-initialized rule pins it to display: block. */
+.local-dimensions-accordion-head {
+    display: flex;
+    align-items: stretch;
+    background: #fff;
+}
+
+.local-dimensions-accordion-head .local-dimensions-accordion-toggle {
+    flex: 1;
+    min-width: 0;
+}
+
+.local-dimensions-star {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.75rem;
+    border: none;
+    background: none;
+    color: #ced4da;
+    cursor: pointer;
+    transition: color 150ms ease;
+}
+
+.local-dimensions-star:hover {
+    color: #fd7e14;
+}
+
+.local-dimensions-star[aria-pressed='true'] {
+    color: #fd7e14;
+}
+
+/* Ghost card: an invitation, not a result - dashed and quiet, never a solid row. */
+.local-dimensions-ghost {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    margin-bottom: 25px;
+    padding: 1rem 1.125rem;
+    border: 1px dashed #ced4da;
+    border-radius: 0.75rem;
+    background: #f8f9fa;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.local-dimensions-ghost:hover {
+    background: #e9ecef;
+}
+
+.local-dimensions-ghost:focus-visible {
+    outline: 2px solid #0f6cbf;
+    outline-offset: 2px;
+}
+
+.local-dimensions-ghost-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.local-dimensions-ghost-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.local-dimensions-ghost-title {
+    color: #212529;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.local-dimensions-ghost-text {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
 /* Sort menu: a plain block toggled by [hidden], anchored to its icon button. */
 .local-dimensions-sort {
     position: relative;
