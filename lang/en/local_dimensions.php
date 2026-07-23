@@ -422,6 +422,7 @@ $string['filter_not_completed'] = 'Not completed';
 $string['filter_toggle'] = 'Filter';
 $string['generalsettingsheading'] = 'General settings';
 $string['generalsettingsheading_desc'] = 'General display and navigation settings.';
+$string['go_to_activity'] = 'Go to activity';
 $string['iconpicker_clear'] = 'Clear';
 $string['iconpicker_error_loading'] = 'Error loading icons.';
 $string['iconpicker_no_results'] = 'No icons found.';

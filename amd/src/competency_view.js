@@ -191,6 +191,12 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 data.iscompleted = container
                     .closest('.local-dimensions-course-card-wrapper')
                     .attr('data-completed') === '1';
+                /* A course with a single section has nothing to sequence, so the timeline
+                   drops its column layout and the one marker is centred instead. The
+                   single-ACTIVITY case is the server's call and arrives as data.activity. */
+                data.issinglesection = !!(data.enabled && data.sections && data.sections.length === 1);
+                data.checkiconurl = iconurls.checkcircle || '';
+                data.circleiconurl = iconurls.circle || '';
                 data.islearnmore = (lockedcardmode === 'learnmore');
                 /* The date reads as an invitation ("Opens ..."), so a past one says nothing
                    next to a Learn more button and is dropped there. Blocked mode keeps it:
