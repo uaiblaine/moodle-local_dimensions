@@ -145,7 +145,10 @@ class calculator {
                     $sectionlocked = true;
                 }
 
-                $sectionname = $section->name;
+                /* An unnamed section stores NULL, not '' - which is the normal case, since
+                   most sections take their displayed name ("Topic 1") from get_section_name.
+                   trim(null) is deprecated in PHP 8.1+. */
+                $sectionname = $section->name ?? '';
                 if (trim($sectionname) === '') {
                     $sectionname = get_section_name($course, $section);
                 }
