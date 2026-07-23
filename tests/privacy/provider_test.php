@@ -46,17 +46,44 @@ final class provider_test extends advanced_testcase {
     }
 
     /**
-     * get_metadata declares exactly the two view-state preferences.
+     * get_metadata declares exactly the four view-state preferences.
      *
      * @return void
      */
-    public function test_get_metadata_declares_both_preferences(): void {
+    public function test_get_metadata_declares_every_preference(): void {
         $collection = new collection('local_dimensions');
         $items = provider::get_metadata($collection)->get_collection();
-        $this->assertCount(2, $items);
+        $this->assertCount(4, $items);
         $names = array_map(static fn($item) => $item->get_name(), $items);
         $this->assertContains(constants::PREF_CENTRAL_NAV, $names);
         $this->assertContains(constants::PREF_CENTRAL_DISPLAY, $names);
+        $this->assertContains(constants::PREF_LEARNER_VIEW, $names);
+        $this->assertContains(constants::PREF_LEARNER_FAV, $names);
+    }
+
+    /**
+     * Every declared preference is also exported, so neither list can drift from the other.
+     *
+     * @return void
+     */
+    public function test_every_declared_preference_is_exported(): void {
+        global $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $collection = new collection('local_dimensions');
+        $names = array_map(
+            static fn($item) => $item->get_name(),
+            provider::get_metadata($collection)->get_collection()
+        );
+        foreach ($names as $name) {
+            set_user_preference($name, json_encode(['x' => 1]), $USER->id);
+        }
+        provider::export_user_preferences((int) $USER->id);
+        $exported = (array) writer::with_context(\context_user::instance($USER->id))
+            ->get_user_preferences('local_dimensions');
+        foreach ($names as $name) {
+            $this->assertArrayHasKey($name, $exported);
+        }
     }
 
     /**

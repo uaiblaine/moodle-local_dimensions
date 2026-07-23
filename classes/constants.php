@@ -89,6 +89,12 @@ class constants {
     /** @var string User preference: Competency hub display-toggle visibility state as JSON */
     const PREF_CENTRAL_DISPLAY = 'local_dimensions_central_display';
 
+    /** @var string User preference: learner view chrome (sort, filter, layout, hero) as JSON */
+    const PREF_LEARNER_VIEW = 'local_dimensions_learner_view';
+
+    /** @var string User preference: learner favourite competencies, keyed by plan id, as JSON */
+    const PREF_LEARNER_FAV = 'local_dimensions_learner_fav';
+
     /** @var string Enrollment filter: inherit the global setting */
     const ENROLLMENTFILTER_INHERIT = 'inherit';
 

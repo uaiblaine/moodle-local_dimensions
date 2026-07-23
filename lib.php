@@ -129,11 +129,13 @@ function local_dimensions_get_return_context_for_course(int $courseid): ?array {
 }
 
 /**
- * Declare the plugin's AJAX-updatable user preferences (Competency hub view state).
+ * Declare the plugin's AJAX-updatable user preferences (hub and learner view state).
  *
- * Registers the two JSON preferences that persist the hub's last-visited view and its
- * display-toggle choices, so core_user's preference web service accepts them from the hub's
- * JavaScript. Each is writable only by its owner. Discovered by get_plugins_with_function().
+ * Registers the four JSON preferences that persist the Competency hub's last-visited view and
+ * display-toggle choices, plus the learner views' chrome (sort, filter, layout, hero) and
+ * favourite competencies. Declaring them here is what lets core_user's preference web service
+ * accept them from the plugin's JavaScript - no plugin web service is involved. Each is writable
+ * only by its owner. Discovered by get_plugins_with_function().
  *
  * @return array Preference definitions keyed by preference name.
  */
@@ -147,5 +149,7 @@ function local_dimensions_user_preferences(): array {
     return [
         \local_dimensions\constants::PREF_CENTRAL_NAV => $definition,
         \local_dimensions\constants::PREF_CENTRAL_DISPLAY => $definition,
+        \local_dimensions\constants::PREF_LEARNER_VIEW => $definition,
+        \local_dimensions\constants::PREF_LEARNER_FAV => $definition,
     ];
 }

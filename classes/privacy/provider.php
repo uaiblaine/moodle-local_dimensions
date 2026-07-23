@@ -17,9 +17,10 @@
 /**
  * Privacy API implementation for local_dimensions.
  *
- * The plugin stores no personal data of its own beyond two per-user preferences that remember
- * the Competency hub's last-visited view and its display-toggle choices. It has no database
- * tables (custom-field data belongs to competencies/templates, not users), so this is a
+ * The plugin stores no personal data of its own beyond four per-user preferences: two that
+ * remember the Competency hub's last-visited view and its display-toggle choices, and two that
+ * remember the learner views' chrome and favourite competencies. It has no database tables
+ * (custom-field data belongs to competencies/templates, not users), so this is a
  * preference-only provider.
  *
  * @package    local_dimensions
@@ -35,7 +36,7 @@ use core_privacy\local\request\writer;
 use local_dimensions\constants;
 
 /**
- * Preference-only privacy provider for the Competency hub view state.
+ * Preference-only privacy provider for the hub and learner view state.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -57,6 +58,14 @@ class provider implements \core_privacy\local\metadata\provider, user_preference
             constants::PREF_CENTRAL_DISPLAY,
             'privacy:metadata:preference:central_display'
         );
+        $collection->add_user_preference(
+            constants::PREF_LEARNER_VIEW,
+            'privacy:metadata:preference:learner_view'
+        );
+        $collection->add_user_preference(
+            constants::PREF_LEARNER_FAV,
+            'privacy:metadata:preference:learner_fav'
+        );
         return $collection;
     }
 
@@ -67,23 +76,44 @@ class provider implements \core_privacy\local\metadata\provider, user_preference
      * @return void
      */
     public static function export_user_preferences(int $userid): void {
-        $nav = get_user_preferences(constants::PREF_CENTRAL_NAV, null, $userid);
-        if ($nav !== null && $nav !== '') {
-            writer::export_user_preference(
-                'local_dimensions',
-                constants::PREF_CENTRAL_NAV,
-                $nav,
-                get_string('privacy:metadata:preference:central_nav', 'local_dimensions')
-            );
+        self::export_preference(
+            $userid,
+            constants::PREF_CENTRAL_NAV,
+            get_string('privacy:metadata:preference:central_nav', 'local_dimensions')
+        );
+        self::export_preference(
+            $userid,
+            constants::PREF_CENTRAL_DISPLAY,
+            get_string('privacy:metadata:preference:central_display', 'local_dimensions')
+        );
+        self::export_preference(
+            $userid,
+            constants::PREF_LEARNER_VIEW,
+            get_string('privacy:metadata:preference:learner_view', 'local_dimensions')
+        );
+        self::export_preference(
+            $userid,
+            constants::PREF_LEARNER_FAV,
+            get_string('privacy:metadata:preference:learner_fav', 'local_dimensions')
+        );
+    }
+
+    /**
+     * Export one preference, skipping it when the user has nothing stored.
+     *
+     * The description is passed already resolved so every get_string() call stays a literal at
+     * the call site, which is what keeps the strings discoverable by the lang checker.
+     *
+     * @param int $userid The id of the user to export for.
+     * @param string $name The preference name.
+     * @param string $description The human-readable description of the preference.
+     * @return void
+     */
+    private static function export_preference(int $userid, string $name, string $description): void {
+        $value = get_user_preferences($name, null, $userid);
+        if ($value === null || $value === '') {
+            return;
         }
-        $display = get_user_preferences(constants::PREF_CENTRAL_DISPLAY, null, $userid);
-        if ($display !== null && $display !== '') {
-            writer::export_user_preference(
-                'local_dimensions',
-                constants::PREF_CENTRAL_DISPLAY,
-                $display,
-                get_string('privacy:metadata:preference:central_display', 'local_dimensions')
-            );
-        }
+        writer::export_user_preference('local_dimensions', $name, $value, $description);
     }
 }
