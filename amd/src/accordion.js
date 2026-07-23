@@ -195,7 +195,10 @@ define(
                 {key: 'status_notyetproficient', component: 'local_dimensions'},
                 {key: 'evidence_type_rule', component: 'local_dimensions'},
                 {key: 'evidence_rule_completed', component: 'local_dimensions'},
-                {key: 'evidence_rule_viewrule', component: 'local_dimensions'}
+                {key: 'evidence_rule_viewrule', component: 'local_dimensions'},
+                {key: 'evidence_rule_stale', component: 'local_dimensions'},
+                {key: 'evidence_rule_sendreview', component: 'local_dimensions'},
+                {key: 'evidence_rule_reviewsent', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -253,7 +256,10 @@ define(
                     statusNotYetProficient: strings[52],
                     evidenceTypeRule: strings[53],
                     evidenceRuleCompleted: strings[54],
-                    evidenceRuleViewRule: strings[55]
+                    evidenceRuleViewRule: strings[55],
+                    evidenceRuleStale: strings[56],
+                    evidenceRuleSendReview: strings[57],
+                    evidenceRuleReviewSent: strings[58]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -283,7 +289,8 @@ define(
                 const scaleConfig = summaryState.comp?.scaleconfiguration
                     || summaryState.competencyData?.scaleconfiguration
                     || null;
-                initEvidenceList(contentEl, summaryState.ucs ? summaryState.ucs.evidence : [], strMap, scaleConfig);
+                initEvidenceList(contentEl, summaryState.ucs ? summaryState.ucs.evidence : [], strMap, scaleConfig,
+                    summaryState.ucs);
 
                 // Initialize course scroll navigation.
                 initCourseScroll(contentEl);
@@ -522,7 +529,7 @@ define(
                 (isFirst ? ' active' : '') + '"';
             html += ' id="local-dimensions-tabpane-evidence-' + summaryState.comp.id + '" data-tab="evidence"';
             html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-evidence-' + summaryState.comp.id + '">';
-            html += renderEvidenceList(summaryState.ucs.evidence, strMap, scaleConfig);
+            html += renderEvidenceList(summaryState.ucs, strMap, scaleConfig);
 
             // Submit evidence button (if enabled by admin + user has capability).
             if (displaySettings.enableevidencesubmitbutton) {
@@ -1089,12 +1096,15 @@ define(
          * rule completion looked exactly like a note. Here a decisive rule completion is
          * lifted out into a result strip and the rest stay as a plain chronological list.
          *
-         * @param {Array} evidence The evidence array
+         * @param {Object} ucs The user competency summary
          * @param {Object} strMap Language strings map
          * @param {string|null} scaleConfig The scale configuration JSON string
          * @return {string} HTML for the evidence tab
          */
-        function renderEvidenceList(evidence, strMap, scaleConfig) {
+        function renderEvidenceList(ucs, strMap, scaleConfig) {
+            const evidence = ucs ? ucs.evidence : [];
+            const uc = (ucs && (ucs.usercompetency || ucs.usercompetencyplan)) || {};
+
             if (!evidence || evidence.length === 0) {
                 return '<p class="local-dimensions-ev-empty">' + escapeHtml(strMap.noEvidence) + '</p>';
             }
@@ -1127,6 +1137,23 @@ define(
                 html += '<button type="button" class="local-dimensions-ev-result-action" data-goto-rules>' +
                     escapeHtml(strMap.evidenceRuleViewRule) + '</button>';
                 html += '</div>';
+
+                /* Core does not let a rule overwrite a grade that is already set, and a rule has
+                   no override option of its own, so a rating made BEFORE the rule fired still
+                   stands. That leaves the learner reading "the rule was met" beside a status that
+                   never moved. Say so, and offer the review request that gets a human to look. */
+                if (Number.parseInt(uc.proficiency, 10) !== 1) {
+                    html += '<div class="local-dimensions-ev-stale" role="note">';
+                    html += '<p class="local-dimensions-ev-stale-text">' + escapeHtml(strMap.evidenceRuleStale) + '</p>';
+                    if (uc.isrequestreviewallowed) {
+                        html += '<button type="button" class="local-dimensions-ev-stale-action" data-request-review>' +
+                            escapeHtml(strMap.evidenceRuleSendReview) + '</button>';
+                    } else if (uc.isstatuswaitingforreview) {
+                        html += '<p class="local-dimensions-ev-stale-sent">' +
+                            escapeHtml(strMap.evidenceRuleReviewSent) + '</p>';
+                    }
+                    html += '</div>';
+                }
             }
 
             evidence.forEach(function(ev, index) {
@@ -1536,12 +1563,35 @@ define(
          * @param {Array} evidenceData The evidence array from the API
          * @param {Object} strMap Language strings map
          * @param {string|null} scaleConfig The scale configuration JSON string from the competency
+         * @param {Object} ucs The user competency summary, for the review request
          */
-        function initEvidenceList(contentEl, evidenceData, strMap, scaleConfig) {
+        function initEvidenceList(contentEl, evidenceData, strMap, scaleConfig, ucs) {
             const list = contentEl.querySelector('.local-dimensions-ev-list');
             if (!list) {
                 return;
             }
+
+            const requestReview = function(button) {
+                const uc = (ucs && (ucs.usercompetency || ucs.usercompetencyplan)) || {};
+                if (!uc.userid || !uc.competencyid) {
+                    return;
+                }
+                button.disabled = true;
+                Ajax.call([{
+                    methodname: 'core_competency_user_competency_request_review',
+                    args: {userid: uc.userid, competencyid: uc.competencyid}
+                }])[0].then(function() {
+                    // Swap the control for the sent state; core rejects a second request anyway.
+                    const sent = document.createElement('p');
+                    sent.className = 'local-dimensions-ev-stale-sent';
+                    sent.textContent = strMap.evidenceRuleReviewSent;
+                    button.replaceWith(sent);
+                    return null;
+                }).catch(function(e) {
+                    button.disabled = false;
+                    Notification.exception(e);
+                });
+            };
 
             const openRow = function(row) {
                 const idx = Number.parseInt(row.dataset.evidenceIndex, 10);
@@ -1551,6 +1601,11 @@ define(
             };
 
             list.addEventListener('click', function(e) {
+                const review = e.target.closest('[data-request-review]');
+                if (review) {
+                    requestReview(review);
+                    return;
+                }
                 const gotoRules = e.target.closest('[data-goto-rules]');
                 if (gotoRules) {
                     /* The tab activator is a closure with no exported handle, so reach the
