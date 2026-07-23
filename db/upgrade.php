@@ -462,6 +462,19 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026072304, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026072305) {
+        /* Phase 5 of the learner-view redesign. It is the only phase that touches typed
+           web-service return structures: the courses payload gains the link's rule outcome
+           and the competency's activities, and the progress payload gains the self-enrolment
+           flag, the future-date flag and the single trackable activity. A returns shape is
+           resolved at call time and never persisted, so no service needs reinstalling - but
+           the phase also ships new AMD builds, lang strings and CSS, and without a revision
+           move the site keeps serving the previous accordion. */
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026072305, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint

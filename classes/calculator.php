@@ -102,6 +102,7 @@ class calculator {
                     'is_future_date' => $isfuturedate,
                     'course_url' => $courseurl,
                     'sections' => [],
+                    'activity' => null,
                 ];
             }
 
@@ -127,6 +128,11 @@ class calculator {
             }
 
             $results = [];
+
+            /* Every trackable activity the loop below meets, keyed by cmid. A course that
+               boils down to exactly one of them has no timeline worth drawing, so the card
+               shows the activity itself instead. */
+            $trackedcms = [];
 
             foreach ($sections as $section) {
                 // Skip delegated sections (subsections) at the root loop - we only want the main ones.
@@ -191,12 +197,12 @@ class calculator {
                         if ($cm->completion != \COMPLETION_TRACKING_NONE && $cm->uservisible) {
                             $total++;
                             $cmdata = $completion->get_data($cm, true, $USER->id);
-                            if (
-                                $cmdata->completionstate == \COMPLETION_COMPLETE
-                                || $cmdata->completionstate == \COMPLETION_COMPLETE_PASS
-                            ) {
+                            $iscomplete = $cmdata->completionstate == \COMPLETION_COMPLETE
+                                || $cmdata->completionstate == \COMPLETION_COMPLETE_PASS;
+                            if ($iscomplete) {
                                 $completed++;
                             }
+                            $trackedcms[(int) $cm->id] = ['cm' => $cm, 'completed' => $iscomplete];
                         }
                     }
 
@@ -229,6 +235,20 @@ class calculator {
                 ];
             }
 
+            /* The kit's stated trigger for this card - "no trackable sections" - cannot occur:
+               the loop above skips only delegated, invisible and hidden-entirely sections, so
+               section 0 always survives and the list is never empty. The real trigger is the
+               activity count. */
+            $activity = null;
+            if (count($trackedcms) === 1) {
+                $only = reset($trackedcms);
+                $activity = [
+                    'name' => $only['cm']->get_formatted_name(),
+                    'url' => $only['cm']->url ? $only['cm']->url->out(false) : '',
+                    'completed' => $only['completed'],
+                ];
+            }
+
             return [
                 'enabled' => true,
                 'locked' => $locked,
@@ -238,6 +258,7 @@ class calculator {
                 'is_future_date' => $isfuturedate,
                 'course_url' => $courseurl,
                 'sections' => $results,
+                'activity' => $activity,
             ];
         } finally {
             $COURSE = $savedcourse;
