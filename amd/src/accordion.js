@@ -189,7 +189,10 @@ define(
                 {key: 'rules_sr_proficient', component: 'local_dimensions'},
                 {key: 'rules_sr_inprogress', component: 'local_dimensions'},
                 {key: 'rules_sr_todo', component: 'local_dimensions'},
-                {key: 'rules_sr_progress', component: 'local_dimensions'}
+                {key: 'rules_sr_progress', component: 'local_dimensions'},
+                {key: 'proficient', component: 'local_dimensions'},
+                {key: 'status_notyetrated', component: 'local_dimensions'},
+                {key: 'status_notyetproficient', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -241,7 +244,10 @@ define(
                     rulesSrProficient: strings[46],
                     rulesSrInprogress: strings[47],
                     rulesSrTodo: strings[48],
-                    rulesSrProgress: strings[49]
+                    rulesSrProgress: strings[49],
+                    proficientLabel: strings[50],
+                    statusNotYetRated: strings[51],
+                    statusNotYetProficient: strings[52]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -2020,47 +2026,32 @@ define(
                 return '';
             }
 
-            let html = '<div class="local-dimensions-status-tab-content">';
-
-            // 2-column grid.
-            html += '<div class="local-dimensions-status-grid">';
-
-            // Rating cell.
-            html += '<div class="local-dimensions-status-cell">';
-            html += '<p class="local-dimensions-status-label">' + escapeHtml(strMap.ratingLabel) + '</p>';
             // JSON-encoded responses return numeric fields as strings; coerce to integer for safe comparison.
             const isProficient = Number.parseInt(uc.proficiency, 10) === 1;
+            const hasGrade = !!(uc.grade && uc.gradename);
 
-            if (uc.grade && uc.gradename) {
+            /* The rating is the fact the learner wants; proficiency only qualifies it. So the
+               scale level leads as plain strong text and proficiency follows as a pill - and
+               with no grade there is nothing to qualify, so the pill is dropped entirely
+               rather than saying "No". */
+            let html = '<div class="local-dimensions-status-tab-content">';
+            html += '<div class="local-dimensions-status-headline">';
+            html += '<span class="local-dimensions-status-rating' +
+                (hasGrade ? '' : ' local-dimensions-status-rating-empty') + '">';
+            html += escapeHtml(hasGrade ? uc.gradename : strMap.statusNotYetRated);
+            html += '</span>';
+
+            if (hasGrade) {
+                html += '<span class="local-dimensions-pill local-dimensions-pill-' +
+                    (isProficient ? 'success' : 'warning') + '">';
                 if (isProficient) {
-                    html += '<span class="local-dimensions-status-badge">';
                     html += '<i class="fa fa-check-circle" aria-hidden="true"></i> ';
-                } else {
-                    html += '<span class="local-dimensions-status-badge local-dimensions-status-badge-muted">';
                 }
-                html += escapeHtml(uc.gradename);
+                html += escapeHtml(isProficient ? strMap.proficientLabel : strMap.statusNotYetProficient);
                 html += '</span>';
-            } else {
-                html += '<span class="local-dimensions-status-value-muted">-</span>';
             }
-            html += '</div>';
 
-            // Proficiency cell.
-            html += '<div class="local-dimensions-status-cell">';
-            html += '<p class="local-dimensions-status-label">' + escapeHtml(strMap.proficiencyLabel) + '</p>';
-            if (isProficient) {
-                html += '<div class="local-dimensions-status-value local-dimensions-status-success">';
-                html += '<i class="fa fa-check-circle" aria-hidden="true"></i> ';
-                html += escapeHtml(strMap.yesStr);
-                html += '</div>';
-            } else {
-                html += '<div class="local-dimensions-status-value local-dimensions-status-pending">';
-                html += escapeHtml(strMap.noStr);
-                html += '</div>';
-            }
             html += '</div>';
-
-            html += '</div>'; // End local-dimensions-status-grid.
             html += '</div>'; // End local-dimensions-status-tab-content.
 
             return html;
