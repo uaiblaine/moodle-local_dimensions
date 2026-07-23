@@ -68,7 +68,11 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             var showlockeddate = settings.showlockeddate !== undefined ? settings.showlockeddate : true;
             var cardicon = settings.cardicon || '';
             var learnmorebuttoncolor = settings.learnmorebuttoncolor || '#0f6cbf';
-            var animatelockedborder = !!settings.animatelockedborder;
+            /* The marching-ants border is applied as an inline style on the injected SVG,
+               which a stylesheet cannot override without !important, so the reduced-motion
+               preference has to be honoured here rather than in a media query. */
+            var reducedmotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var animatelockedborder = !!settings.animatelockedborder && !reducedmotion;
             var iconurls = {
                 lock: M.util.image_url('status/lock', 'local_dimensions'),
                 checkcircle: M.util.image_url('status/check-circle-fill', 'local_dimensions'),
