@@ -117,10 +117,27 @@ No `accessible` flag, no gate, no slice. The backlog's High-priority item is clo
 
 ---
 
-## 2. Phase 0 — prerequisite defect fixes
+## 2. Phase 0 — prerequisite defect fixes — **SHIPPED**
 
-Three live defects, found while grounding. All are small, carry no design dependency, and any of
-them will otherwise be blamed on a redesign slice that merely exposed them. **Ship first.**
+Four live defects, found while grounding. All small, no design dependency, and any of them would
+otherwise be blamed on a redesign slice that merely exposed it.
+
+| Slice | Commit | |
+|---|---|---|
+| 0.1 filter-tab scope | `52a4705` | done |
+| 0.2 progress payload guard | `9a42e72` | done |
+| 0.3 palette tail | `cd89ad1` | done |
+| 0.4 `isGradeProficient` | `a781d75` | done |
+
+Local gates green across all four (eslint 0, stylelint 0 under core's config, `php -l`, leftover-token
+sweep). **Not pushed, and not yet verified on the site** — the version is still frozen at
+`2026071801`, so purge caches or set `cachejs = off` before testing. CI has not run.
+
+One correction landed during execution: slice 0.1's CSS half was **dropped**. The claim that the
+completion tabs have no focus ring was wrong — the chip block supplies
+`:focus-visible {box-shadow: inset 0 0 0 2px #0f6cbf}` at `styles.css:3460`, which does reach them.
+The remaining entanglement (the chip block also wins on padding and font-size) is cosmetic, and
+Phase 3 rewrites that area anyway. The slice shipped as JS-only.
 
 ### 0.1 — Scope the filter-tab click handler *(live bug)*
 
