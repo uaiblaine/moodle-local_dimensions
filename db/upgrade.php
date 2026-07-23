@@ -409,6 +409,16 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071801, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026072300) {
+        // Learner-view redesign, phases 0-2: four defect fixes, two new user
+        // preferences, and the hero / locked-card / empty-state restyles. Nothing
+        // structural - this bump exists to move the cache revision so the rebuilt
+        // AMD modules and the changed CSS and lang strings are actually served.
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026072300, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint

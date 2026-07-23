@@ -304,7 +304,43 @@ Adjust the wording if you prefer a different noun — the point is that it is fi
 
 ---
 
-## 4. Phase 2 — pure CSS and markup
+## 4. Phase 2 — pure CSS and markup — **SHIPPED**
+
+| Slice | Commit | |
+|---|---|---|
+| 2.1 hero mask + glass toggle | `4ee2545` | done |
+| 2.2 locked tracker card | `20c87af` | done |
+| 2.3 empty states | `85cc6ba` | done |
+
+Three findings changed the slices as written:
+
+- **2.1's focus ring was justified** (unlike the Phase 0 case). The toggle has
+  `outline: none` and no `:focus-visible` rule anywhere; Boost's broad ring is opt-in via `.aabtn`,
+  which this bare button does not carry. An underline is a poor indicator on a filled pill, so the
+  ring shipped with the restyle.
+- **2.2 fixed a real defect, not just styling.** Short courses did not merely look sparse — the
+  locked overlay's icon and message **overflowed past the dashed border**, since nothing sets
+  `overflow: hidden`. And the veil covers the card *header*, so the course name sat at ~1.5:1
+  contrast; lowering the veil alone only reaches ~2.2:1, so the header had to be lifted above the
+  overlay or the slice would have half-fixed a legibility defect and made it look intentional.
+- **2.3 lost its fourth state.** The filter/search "no results" message needs a survivor count in
+  `applyFilter` plus Clear-filters wiring across chips, search and the completion tab — JS, not
+  CSS/markup. **Moved to Phase 3**, which is about to own clear-all anyway.
+
+Deliberately held for Phase 5: the locked card's date pill keeps its current look, because the kit's
+accent chip is the visual half of the "Opens {date}" reframing and needs enrolment data that does not
+exist yet.
+
+Two out-of-scope defects found while reading, not fixed here:
+
+1. A locked course with **completion tracking off never shows the lock overlay** — `calculator.php`
+   returns the enabled-flag-only array and bails before computing `$locked`, so the card renders
+   "Completion disabled" instead of the lock.
+2. The marching-ants border animation **cannot be disabled by `prefers-reduced-motion`**, because
+   `competency_view.js` sets it as an inline style that a stylesheet cannot override without
+   `!important` (which CI forbids). The fix belongs in the JS.
+
+## 4b. Phase 2 — original scope
 
 No data movement, lowest risk, immediately visible on the site. All **no bump**.
 
