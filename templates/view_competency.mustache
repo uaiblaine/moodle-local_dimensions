@@ -56,8 +56,22 @@
     {{/hero}}
 {{/hascompetency}}
 
-{{#haschipfilters}}
-    <div class="local-dimensions-filter-bar">
+{{#hascourses}}
+    <div class="local-dimensions-filter-bar local-dimensions-toolbar">
+        {{! Hidden until the batch completion call answers - the counts are unknowable before
+            that, and a tab strip with blank numbers explains nothing. }}
+        <div class="local-dimensions-filter-tabs" role="tablist" data-course-tabs
+             aria-label="{{#str}}filter_courses, local_dimensions{{/str}}" hidden>
+            <button class="local-dimensions-filter-tab" data-filter="incomplete" role="tab" aria-selected="false" type="button">
+                {{#str}}filter_not_completed, local_dimensions{{/str}}
+                <span class="local-dimensions-filter-count" data-count="incomplete"></span>
+            </button>
+            <button class="local-dimensions-filter-tab active" data-filter="all" role="tab" aria-selected="true" type="button">
+                {{#str}}filter_all, local_dimensions{{/str}}
+                <span class="local-dimensions-filter-count" data-count="all"></span>
+            </button>
+        </div>
+        {{#haschipfilters}}
         {{#chipfilters}}
         <button type="button"
                 class="local-dimensions-filter-toggle"
@@ -69,8 +83,11 @@
             <span class="local-dimensions-filter-toggle-count" data-chip-count hidden></span>
         </button>
         {{/chipfilters}}
+        {{/haschipfilters}}
     </div>
+{{/hascourses}}
 
+{{#haschipfilters}}
     {{! Plain block toggled by the hidden attribute - see chip_filters.js initPanel. }}
     <div class="local-dimensions-filter-panel" data-filter-panel hidden>
         {{#chipfilters}}
