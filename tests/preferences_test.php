@@ -34,21 +34,28 @@ use advanced_testcase;
  */
 final class preferences_test extends advanced_testcase {
     /**
-     * The lib callback declares both preferences with the expected type and owner gate.
+     * The lib callback declares every preference with the expected type and owner gate.
      *
      * @return void
      */
-    public function test_user_preferences_callback_declares_both_preferences(): void {
+    public function test_user_preferences_callback_declares_every_preference(): void {
         global $CFG;
         require_once($CFG->dirroot . '/local/dimensions/lib.php');
         $prefs = local_dimensions_user_preferences();
-        $this->assertArrayHasKey(constants::PREF_CENTRAL_NAV, $prefs);
-        $this->assertArrayHasKey(constants::PREF_CENTRAL_DISPLAY, $prefs);
-        $this->assertSame(PARAM_RAW, $prefs[constants::PREF_CENTRAL_NAV]['type']);
-        $this->assertSame(
-            [\core_user::class, 'is_current_user'],
-            $prefs[constants::PREF_CENTRAL_NAV]['permissioncallback']
-        );
+        $expected = [
+            constants::PREF_CENTRAL_NAV,
+            constants::PREF_CENTRAL_DISPLAY,
+            constants::PREF_LEARNER_VIEW,
+            constants::PREF_LEARNER_FAV,
+        ];
+        foreach ($expected as $name) {
+            $this->assertArrayHasKey($name, $prefs);
+            $this->assertSame(PARAM_RAW, $prefs[$name]['type']);
+            $this->assertSame(
+                [\core_user::class, 'is_current_user'],
+                $prefs[$name]['permissioncallback']
+            );
+        }
     }
 
     /**
@@ -149,6 +156,8 @@ final class preferences_test extends advanced_testcase {
         $this->setAdminUser();
         set_user_preference(constants::PREF_CENTRAL_NAV, json_encode(['tab' => 'plans']), $USER->id);
         set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode([]), $USER->id);
+        set_user_preference(constants::PREF_LEARNER_VIEW, json_encode(['sort' => 'name']), $USER->id);
+        set_user_preference(constants::PREF_LEARNER_FAV, json_encode(['7' => [1, 2]]), $USER->id);
         set_user_preference('somethingelse_pref', 'keep', $USER->id);
         helper::purge_user_preferences();
         $remaining = $DB->count_records_select(
