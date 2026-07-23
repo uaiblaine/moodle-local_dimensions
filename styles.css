@@ -1919,6 +1919,43 @@
     cursor: pointer;
 }
 
+/* The rule fired but an older rating still stands - explain, and offer a way out. */
+.local-dimensions-ev-stale {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    border-left: 3px solid #fd7e14;
+    border-radius: 0.25rem;
+    background: #fff9f3;
+}
+
+.local-dimensions-ev-stale-text {
+    font-size: 0.875rem;
+    color: #495057;
+    margin-bottom: 0;
+}
+
+.local-dimensions-ev-stale-action {
+    padding: 0.35rem 0.85rem;
+    border: 1px solid #fd7e14;
+    border-radius: 999px;
+    background: #fff;
+    color: #ad4e00;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.local-dimensions-ev-stale-sent {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #ad4e00;
+    margin-bottom: 0;
+}
+
 .local-dimensions-ev-row {
     display: flex;
     align-items: center;
