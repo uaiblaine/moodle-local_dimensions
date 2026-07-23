@@ -271,14 +271,6 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
     ));
 
     $settings->add(new admin_setting_configtext(
-        'local_dimensions/viewcompetency_filter_fields_competency',
-        get_string('viewcompetency_filter_fields_competency', 'local_dimensions'),
-        get_string('viewcompetency_filter_fields_competency_desc', 'local_dimensions'),
-        \local_dimensions\constants::CFIELD_TAG1 . ',' . \local_dimensions\constants::CFIELD_TAG2,
-        PARAM_TEXT
-    ));
-
-    $settings->add(new admin_setting_configtext(
         'local_dimensions/viewcompetency_filter_fields_course',
         get_string('viewcompetency_filter_fields_course', 'local_dimensions'),
         get_string('viewcompetency_filter_fields_course_desc', 'local_dimensions'),

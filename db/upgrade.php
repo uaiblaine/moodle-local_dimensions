@@ -449,6 +449,19 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026072303, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026072304) {
+        /* The tracker's competency-area chip group is retired: it was built from the page's
+           single competency, so every card carried the same value and pressing a chip
+           matched all cards or none. Its setting goes with it, so drop the now-unread
+           config row rather than leaving it behind. The course-area chips are unaffected,
+           and so are the tag1/tag2 customfields themselves - the setting only ever
+           referenced them by shortname. */
+        unset_config('viewcompetency_filter_fields_competency', 'local_dimensions');
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026072304, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
