@@ -67,7 +67,7 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             var lockedcardmode = settings.lockedcardmode || 'blocked';
             var showlockeddate = settings.showlockeddate !== undefined ? settings.showlockeddate : true;
             var cardicon = settings.cardicon || '';
-            var learnmorebuttoncolor = settings.learnmorebuttoncolor || '#667eea';
+            var learnmorebuttoncolor = settings.learnmorebuttoncolor || '#0f6cbf';
             var animatelockedborder = !!settings.animatelockedborder;
             var iconurls = {
                 lock: M.util.image_url('status/lock', 'local_dimensions'),

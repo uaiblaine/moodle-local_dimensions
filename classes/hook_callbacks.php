@@ -94,7 +94,7 @@ class hook_callbacks {
         }
 
         // Get configured button color.
-        $buttoncolor = get_config('local_dimensions', 'returnbuttoncolor') ?: '#667eea';
+        $buttoncolor = get_config('local_dimensions', 'returnbuttoncolor') ?: '#0f6cbf';
 
         // Render the return button with iframe detection script.
         $renderer = $hook->renderer;

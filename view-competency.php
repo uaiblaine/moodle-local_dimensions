@@ -174,7 +174,7 @@ if ($competency) {
     $cardicon = get_config('local_dimensions', 'cardicon');
     $learnmorebuttoncolor = get_config('local_dimensions', 'learnmorebuttoncolor');
     if (empty($learnmorebuttoncolor)) {
-        $learnmorebuttoncolor = '#667eea';
+        $learnmorebuttoncolor = '#0f6cbf';
     }
 
     $uisettings = [
