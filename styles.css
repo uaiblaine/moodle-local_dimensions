@@ -2859,39 +2859,40 @@
     margin-bottom: 8px;
 }
 
-.local-dimensions-rules-progress-label-wrap {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+/* The rule sentence is the answer the learner came for, so it leads the pane. */
+.local-dimensions-rules-headline {
+    margin-bottom: 1.25rem;
+}
+
+.local-dimensions-rules-eyebrow {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+
+.local-dimensions-rules-sentence {
+    font-size: 1.0625rem;
+    color: #212529;
+    margin-bottom: 0;
+}
+
+.local-dimensions-rules-note {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fd7e14;
+    margin-top: 0.35rem;
+    margin-bottom: 0;
 }
 
 .local-dimensions-rules-progress-label {
-    font-weight: 700;
-    font-size: 1rem;
-    color: #212529;
-}
-
-.local-dimensions-rules-progress-alert {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #fd7e14;
-    font-size: 0.95rem;
+    font-size: 0.875rem;
+    color: #6c757d;
 }
 
 .local-dimensions-rules-progress-score {
-    font-size: 1rem;
+    font-size: 0.875rem;
     color: #6c757d;
-}
-
-.local-dimensions-rules-earned {
-    font-weight: 700;
-    font-size: 1.5rem;
-    color: #6c757d;
-}
-
-.local-dimensions-rules-earned-highlight {
-    color: #fd7e14;
 }
 
 /* Progress bar */
@@ -2900,34 +2901,17 @@
 }
 
 .local-dimensions-rules-progress-track {
-    height: 10px;
+    height: 6px;
     background: #e9ecef;
-    border-radius: 5px;
+    border-radius: 3px;
     overflow: hidden;
 }
 
 .local-dimensions-rules-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #fd7e14, #ff922b);
-    border-radius: 5px;
+    background: #fd7e14;
+    border-radius: 3px;
     transition: width 0.6s ease;
-}
-
-.local-dimensions-rules-progress-fill-striped {
-    background-color: #fd7e14;
-    background-image:
-        linear-gradient(
-            45deg,
-            rgb(255 255 255 / 25%) 25%,
-            transparent 25%,
-            transparent 50%,
-            rgb(255 255 255 / 25%) 50%,
-            rgb(255 255 255 / 25%) 75%,
-            transparent 75%,
-            transparent
-        ),
-        linear-gradient(90deg, #fd7e14, #ff922b);
-    background-size: 1rem 1rem, 100% 100%;
 }
 
 .local-dimensions-rules-progress-context {
@@ -3072,44 +3056,6 @@
     font-weight: 600;
     color: #6c757d;
     letter-spacing: 0.04em;
-}
-
-/* Rule info box */
-.local-dimensions-rules-info-box {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px 20px;
-    background: rgb(253 126 20 / 8%);
-    border-radius: 10px;
-    margin-bottom: 20px;
-}
-
-.local-dimensions-rules-info-icon {
-    flex-shrink: 0;
-    margin-top: 2px;
-    color: #fd7e14;
-    font-size: 1.125rem;
-}
-
-.local-dimensions-rules-info-text {
-    font-size: 0.875rem;
-    color: #495057;
-    line-height: 1.5;
-}
-
-.local-dimensions-rules-info-title {
-    font-weight: 700;
-    color: #fd7e14;
-    margin-bottom: 0.15rem;
-}
-
-.local-dimensions-rules-info-description {
-    color: #343a40;
-}
-
-.local-dimensions-rules-info-note {
-    margin-top: 0.5rem;
 }
 
 /* Submit evidence button */
