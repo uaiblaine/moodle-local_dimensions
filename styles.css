@@ -706,6 +706,11 @@
 
 .local-dimensions-viewcompetency .card {
     background-color: #f8f9fa;
+
+    /* Floor the height so a course with few sections is still tall enough to
+       contain the locked overlay's icon and message, which otherwise overflow
+       past the dashed border (nothing here sets overflow: hidden). */
+    min-height: 320px;
 }
 
 .local-dimensions-progress-container {
@@ -729,6 +734,12 @@
 .local-dimensions-card-locked .card-header {
     background-color: transparent;
     border-bottom: none;
+
+    /* The overlay is inset: 0 on the whole card once the JS re-parents it, so it
+       veils the course name too. Lift the header above it - muted text under the
+       veil composites to roughly 2:1, well under WCAG AA. */
+    position: relative;
+    z-index: 11;
 }
 
 /* Locked Overlay - Covers entire card including header */
@@ -740,9 +751,18 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: rgb(255 255 255 / 65%);
+    background: rgb(255 255 255 / 42%);
     backdrop-filter: blur(2px);
     border-radius: inherit;
+}
+
+/* The payload already carries the sections for a locked course, so let them read
+   as a blurred hint behind the lighter veil rather than a blank body. */
+.local-dimensions-card-locked .local-dimensions-timeline {
+    filter: blur(2px);
+    opacity: 0.55;
+    pointer-events: none;
+    user-select: none;
 }
 
 /* SVG animated dashed border - sits behind overlay content */
@@ -789,20 +809,21 @@
     justify-content: center;
     width: 80px;
     height: 80px;
-    border: 1px solid #b0b2b5;
+    border: 1px solid #dee2e6;
     border-radius: 50%;
     margin-bottom: 1rem;
     background-color: #fff;
-    color: #343a40;
+    color: #495057;
+    box-shadow: 0 3px 10px rgb(0 0 0 / 10%);
 }
 
 .local-dimensions-locked-message {
     font-weight: bold;
     font-size: 1.1rem;
-    color: #333;
+    color: #212529;
     margin-bottom: 0.5rem;
     padding: 5px 20px;
-    box-shadow: rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;
+    box-shadow: 0 3px 10px rgb(0 0 0 / 12%);
     background-color: white;
     border-radius: 10px;
 }
@@ -825,7 +846,7 @@
     padding: 8px 24px;
     border-radius: 10px;
     text-decoration: none;
-    box-shadow: rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;
+    box-shadow: 0 3px 10px rgb(0 0 0 / 16%);
     transition: filter 0.2s ease, transform 0.15s ease;
     margin-bottom: 0.5rem;
 }
@@ -899,12 +920,12 @@
     align-items: center;
     justify-content: center;
     z-index: 1;
-    background-color: #fafafa;
+    background-color: #f8f9fa;
 }
 
 .local-dimensions-timeline-marker .fa-check-circle {
     font-size: 24px;
-    background: #fafafa;
+    background: #f8f9fa;
 }
 
 /* Feather SVG Icons - Consistent sizing and colors */
