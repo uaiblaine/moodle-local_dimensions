@@ -921,6 +921,53 @@
     line-height: 1;
 }
 
+/* Completed course: the seal states the outcome, the toggle keeps the evidence one click
+   away rather than repeating "done" once per section. */
+.local-dimensions-course-seal {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.75rem 10px;
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    background: #d1e7dd;
+    color: #0f5132;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.local-dimensions-timeline-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.35rem 10px;
+    border: none;
+    background: none;
+    color: #6c757d;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.local-dimensions-timeline-toggle:hover {
+    color: #212529;
+}
+
+.local-dimensions-timeline-toggle:focus-visible {
+    outline: 2px solid #0f6cbf;
+    outline-offset: -2px;
+}
+
+.local-dimensions-timeline-toggle .fa-chevron-down {
+    margin-left: auto;
+    transition: transform 150ms ease;
+}
+
+.local-dimensions-timeline-toggle[aria-expanded='true'] .fa-chevron-down {
+    transform: rotate(180deg);
+}
+
 /* Continue shortcut: quiet on purpose - it points at where the learner left off, it is not
    a call to action competing with the section list above it. */
 .local-dimensions-continue {
