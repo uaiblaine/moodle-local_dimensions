@@ -1853,166 +1853,166 @@
     color: #664d03;
 }
 
-.local-dimensions-ev-card {
+/* Evidence type colors (reuse existing color scheme) */
+/* Evidence: the decisive result, then the journey. */
+.local-dimensions-ev-list {
     display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.local-dimensions-ev-empty {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.local-dimensions-ev-result {
+    display: flex;
+    align-items: center;
     gap: 0.75rem;
     padding: 1rem;
-    background: #fff;
-    border-radius: 0.75rem;
-    border: none;
-    box-shadow:
-        rgb(50 50 93 / 25%) 0 2px 5px -1px,
-        rgb(0 0 0 / 30%) 0 1px 3px -1px;
-    transition: box-shadow 0.2s ease;
+    margin-bottom: 0.75rem;
+    border: 1px solid #d1e7dd;
+    border-radius: 0.5rem;
+    background: #f6fbf8;
 }
 
-.local-dimensions-ev-card:hover {
-    box-shadow:
-        0 4px 6px -1px rgb(0 0 0 / 10%),
-        0 2px 4px -2px rgb(0 0 0 / 10%);
-}
-
-.local-dimensions-ev-icon {
-    flex-shrink: 0;
+.local-dimensions-ev-result-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 0.375rem;
-    font-size: 1rem;
-    margin-top: 0.125rem;
-}
-
-/* Evidence type colors (reuse existing color scheme) */
-.local-dimensions-ev-card .local-dimensions-evidence-activity {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
     background: #d1e7dd;
     color: #0f5132;
 }
 
-.local-dimensions-ev-card .local-dimensions-evidence-grade {
-    background: #cfe2ff;
-    color: #084298;
+.local-dimensions-ev-result-body {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0;
 }
 
-.local-dimensions-ev-card .local-dimensions-evidence-manual {
-    background: #fff3cd;
-    color: #664d03;
+.local-dimensions-ev-result-title {
+    font-weight: 600;
+    color: #212529;
 }
 
-.local-dimensions-ev-card .local-dimensions-evidence-file {
-    background: #e2e3e5;
-    color: #41464b;
-}
-
-.local-dimensions-ev-card .local-dimensions-evidence-prior {
-    background: #fff3cd;
-    color: #664d03;
-}
-
-.local-dimensions-ev-card .local-dimensions-evidence-other {
-    background: #e9ecef;
+.local-dimensions-ev-result-desc {
+    font-size: 0.875rem;
     color: #6c757d;
+    overflow-wrap: anywhere;
 }
 
-.local-dimensions-ev-content {
+.local-dimensions-ev-result-action {
+    flex-shrink: 0;
+    padding: 0.35rem 0.85rem;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    background: #fff;
+    color: #0f6cbf;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.local-dimensions-ev-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.local-dimensions-ev-row-clickable {
+    cursor: pointer;
+}
+
+.local-dimensions-ev-row-clickable:hover {
+    background: #f8f9fa;
+}
+
+.local-dimensions-ev-row-clickable:focus-visible {
+    outline: 2px solid #0f6cbf;
+    outline-offset: -2px;
+}
+
+.local-dimensions-ev-row-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    font-size: 0.75rem;
+}
+
+.local-dimensions-ev-row-body {
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
     min-width: 0;
     overflow-wrap: anywhere;
 }
 
-.local-dimensions-ev-title {
-    font-size: 0.875rem;
-    font-weight: 600;
+.local-dimensions-ev-row-desc {
+    font-size: 0.9375rem;
     color: #212529;
-    margin: 0 0 0.25rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-    word-break: break-word;
 }
 
-.local-dimensions-ev-desc {
-    font-size: 0.75rem;
-    color: #6c757d;
-    line-height: 1.4;
-    margin: 0 0 0.25rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-.local-dimensions-ev-desc p {
+.local-dimensions-ev-row-desc p {
     margin: 0;
 }
 
-.local-dimensions-ev-meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.375rem;
-    font-size: 0.7rem;
+.local-dimensions-ev-row-type {
+    font-size: 0.75rem;
     color: #6c757d;
-    margin-top: 0.25rem;
 }
 
-.local-dimensions-ev-meta a {
-    color: inherit;
-    text-decoration: none;
-    font-weight: 500;
-    overflow-wrap: anywhere;
-}
-
-.local-dimensions-ev-meta a:hover {
-    text-decoration: underline;
-    color: #0d6efd;
-}
-
-.local-dimensions-ev-meta-sep {
-    color: #adb5bd;
-}
-
-/* ============================================
-      EVIDENCE DETAIL BUTTON
-      ============================================ */
-.local-dimensions-ev-detail-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin-top: 0.5rem;
-    margin-left: auto;
-    padding: 0.2rem 0.55rem;
-    font-size: 0.7rem;
-    font-weight: 500;
+.local-dimensions-ev-row-date {
+    flex-shrink: 0;
+    font-size: 0.8125rem;
     color: #6c757d;
-    background: transparent;
-    border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
 }
 
-.local-dimensions-ev-detail-btn:hover {
-    color: #0d6efd;
-    border-color: #0d6efd;
-    background: rgb(13 110 253 / 4%);
+.local-dimensions-ev-row-icon.local-dimensions-evidence-activity {
+    background: #d1e7dd;
+    color: #0f5132;
 }
 
-.local-dimensions-ev-detail-btn:focus-visible {
-    outline: 3px solid #0f6cbf;
-    outline-offset: 2px;
+.local-dimensions-ev-row-icon.local-dimensions-evidence-grade {
+    background: #cfe2ff;
+    color: #084298;
 }
 
-.local-dimensions-ev-detail-btn i {
-    font-size: 0.65rem;
+.local-dimensions-ev-row-icon.local-dimensions-evidence-manual {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+.local-dimensions-ev-row-icon.local-dimensions-evidence-file {
+    background: #e2e3e5;
+    color: #41464b;
+}
+
+.local-dimensions-ev-row-icon.local-dimensions-evidence-prior {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+.local-dimensions-ev-row-icon.local-dimensions-evidence-other {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.local-dimensions-ev-row-icon.local-dimensions-evidence-rule {
+    background: #e0cffc;
+    color: #3d0a91;
 }
 
 /* ============================================
@@ -2387,113 +2387,6 @@
 }
 
 /* ============================================
-      EVIDENCE SLIDER - Horizontal with arrows
-      ============================================ */
-.local-dimensions-ev-slider-wrapper {
-    position: relative;
-    width: 100%;
-    min-width: 0;
-    padding-bottom: 3rem;
-}
-
-.local-dimensions-ev-slider-wrapper.local-dimensions-controls-hidden {
-    padding-bottom: 0;
-}
-
-/* Slider track — horizontal scroll, snap */
-.local-dimensions-ev-slider-track {
-    display: flex;
-    gap: 0.75rem;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-
-    /* Firefox */
-    min-width: 0;
-    max-width: 100%;
-    padding: 0.25rem 0 1rem;
-    cursor: grab;
-}
-
-.local-dimensions-ev-slider-track::-webkit-scrollbar {
-    display: none;
-
-    /* Chrome, Safari */
-}
-
-.local-dimensions-ev-slider-track.local-dimensions-dragging {
-    cursor: grabbing;
-    scroll-snap-type: none;
-}
-
-/* Disable snap only during scripted animation to avoid jump/flash. */
-.local-dimensions-ev-slider-track.local-dimensions-animating {
-    scroll-snap-type: none;
-}
-
-/* Cards inside slider */
-.local-dimensions-ev-slider-track .local-dimensions-ev-card {
-    flex: 0 0 320px;
-    width: 320px;
-    max-width: calc(100% - 0.25rem);
-    scroll-snap-align: start;
-}
-
-/* Bottom-right control group (pill with two arrows). */
-.local-dimensions-ev-slider-controls {
-    position: absolute;
-    right: 0.5rem;
-    bottom: 0.25rem;
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    overflow: hidden;
-    background: #fff;
-    box-shadow: rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;
-    z-index: 3;
-}
-
-.local-dimensions-ev-slider-controls .local-dimensions-ev-slider-btn + .local-dimensions-ev-slider-btn {
-    border-left: 1px solid rgb(17 24 39 / 8%);
-}
-
-/* Slider arrow buttons */
-.local-dimensions-ev-slider-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    color: #1d2125;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
-}
-
-.local-dimensions-ev-slider-btn:hover {
-    background: rgb(255 255 255 / 38%);
-    color: #1d2125;
-}
-
-.local-dimensions-ev-slider-btn:focus {
-    outline: 2px solid var(--dimension-custombgcolor, var(--primary, #0f6cbf));
-    outline-offset: -2px;
-}
-
-.local-dimensions-ev-slider-btn.disabled {
-    opacity: 0.45;
-    color: #8da1b6;
-    pointer-events: none;
-}
-
-.local-dimensions-ev-slider-btn .fa {
-    font-size: 0.875rem;
-}
-
-/* ============================================
       COURSES SCROLLABLE - Horizontal scroll grid
       ============================================ */
 .local-dimensions-courses-scroll-wrapper {
@@ -2653,25 +2546,6 @@
         padding: 1rem;
     }
 
-    .local-dimensions-ev-slider-track .local-dimensions-ev-card {
-        flex-basis: 240px;
-        width: 240px;
-    }
-
-    .local-dimensions-ev-slider-wrapper {
-        padding-bottom: 2.5rem;
-    }
-
-    .local-dimensions-ev-slider-controls {
-        right: 0.25rem;
-        bottom: 0;
-    }
-
-    .local-dimensions-ev-slider-btn {
-        width: 34px;
-        height: 34px;
-    }
-
     .local-dimensions-courses-scroll-controls {
         right: 0.25rem;
         bottom: 0;
@@ -2682,7 +2556,6 @@
         height: 34px;
     }
 
-    .local-dimensions-ev-slider-btn .fa,
     .local-dimensions-scroll-btn .fa {
         font-size: 0.75rem;
     }
@@ -2702,26 +2575,12 @@
       HIGH CONTRAST - Evidence detail
       ============================================ */
 @media (prefers-contrast: high) {
-    .local-dimensions-ev-detail-btn {
-        border-width: 2px;
-        font-weight: 700;
-    }
-
     .local-dimensions-ev-modal-note {
         border-left-width: 4px;
     }
 
     .local-dimensions-ev-modal-section {
         border-bottom-width: 2px;
-    }
-}
-
-/* ============================================
-      REDUCED MOTION - Evidence detail
-      ============================================ */
-@media (prefers-reduced-motion: reduce) {
-    .local-dimensions-ev-detail-btn {
-        transition: none;
     }
 }
 

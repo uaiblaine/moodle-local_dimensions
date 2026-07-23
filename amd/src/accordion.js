@@ -192,7 +192,10 @@ define(
                 {key: 'rules_sr_progress', component: 'local_dimensions'},
                 {key: 'proficient', component: 'local_dimensions'},
                 {key: 'status_notyetrated', component: 'local_dimensions'},
-                {key: 'status_notyetproficient', component: 'local_dimensions'}
+                {key: 'status_notyetproficient', component: 'local_dimensions'},
+                {key: 'evidence_type_rule', component: 'local_dimensions'},
+                {key: 'evidence_rule_completed', component: 'local_dimensions'},
+                {key: 'evidence_rule_viewrule', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -247,7 +250,10 @@ define(
                     rulesSrProgress: strings[49],
                     proficientLabel: strings[50],
                     statusNotYetRated: strings[51],
-                    statusNotYetProficient: strings[52]
+                    statusNotYetProficient: strings[52],
+                    evidenceTypeRule: strings[53],
+                    evidenceRuleCompleted: strings[54],
+                    evidenceRuleViewRule: strings[55]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -277,7 +283,7 @@ define(
                 const scaleConfig = summaryState.comp?.scaleconfiguration
                     || summaryState.competencyData?.scaleconfiguration
                     || null;
-                initSliders(contentEl, summaryState.ucs ? summaryState.ucs.evidence : [], strMap, scaleConfig);
+                initEvidenceList(contentEl, summaryState.ucs ? summaryState.ucs.evidence : [], strMap, scaleConfig);
 
                 // Initialize course scroll navigation.
                 initCourseScroll(contentEl);
@@ -508,12 +514,15 @@ define(
          * @return {string} HTML
          */
         function renderEvidencePane(summaryState, tabs, strMap) {
+            const scaleConfig = summaryState.comp?.scaleconfiguration
+                || summaryState.competencyData?.scaleconfiguration
+                || null;
             const isFirst = tabs[0].id === 'evidence';
             let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-evidence' +
                 (isFirst ? ' active' : '') + '"';
             html += ' id="local-dimensions-tabpane-evidence-' + summaryState.comp.id + '" data-tab="evidence"';
             html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-evidence-' + summaryState.comp.id + '">';
-            html += renderEvidenceSlider(summaryState.ucs.evidence, strMap);
+            html += renderEvidenceList(summaryState.ucs.evidence, strMap, scaleConfig);
 
             // Submit evidence button (if enabled by admin + user has capability).
             if (displaySettings.enableevidencesubmitbutton) {
@@ -658,7 +667,7 @@ define(
 
             const refresh = function() {
                 container
-                    .querySelectorAll('.local-dimensions-ev-slider-wrapper, .local-dimensions-courses-scroll-wrapper')
+                    .querySelectorAll('.local-dimensions-courses-scroll-wrapper')
                     .forEach(function(wrapper) {
                         if (typeof wrapper._dimsUpdateArrows === 'function') {
                             wrapper._dimsUpdateArrows();
@@ -1011,90 +1020,123 @@ define(
         }
 
         /**
-         * Render evidence cards in a horizontal slider with arrows.
+         * Decide whether an evidence row is a competency-rule completion.
+         *
+         * Core writes this exact pair only when a rule concludes the competency
+         * (OUTCOME_COMPLETE); the evidence and recommend outcomes are logged with ACTION_LOG.
+         * So the test is a direct read of the payload, never an inference.
+         *
+         * @param {Object} ev An evidence row
+         * @return {boolean}
+         */
+        function isRuleCompletion(ev) {
+            return ev.descidentifier === 'evidence_competencyrule' && Number.parseInt(ev.action, 10) === 2;
+        }
+
+        /**
+         * Render one evidence row in the journey list.
+         *
+         * @param {Object} ev The evidence row
+         * @param {number} index Its index in the payload array
+         * @param {Object} strMap Language strings map
+         * @param {string|null} scaleConfig The scale configuration JSON string
+         * @return {string} HTML for the row
+         */
+        function renderEvidenceRow(ev, index, strMap, scaleConfig) {
+            const typeInfo = getEvidenceTypeInfo(ev, strMap);
+            const hasGrade = !!(ev.grade && ev.gradename && ev.gradename !== '-');
+            const hasExtraDetails = ev.note || ev.url || hasGrade;
+
+            let html = '<div class="local-dimensions-ev-row' + (hasExtraDetails ? ' local-dimensions-ev-row-clickable' : '') +
+                '" data-evidence-index="' + index + '"';
+            if (hasExtraDetails) {
+                html += ' role="button" tabindex="0"';
+                html += ' aria-label="' + escapeHtml(strMap.evidenceViewDetails) + ': ' + escapeHtml(typeInfo.label) + '"';
+            }
+            html += '>';
+
+            html += '<span class="local-dimensions-ev-row-icon ' + typeInfo.colorClass + '">';
+            html += '<i class="fa ' + typeInfo.icon + '" aria-hidden="true"></i>';
+            html += '</span>';
+
+            html += '<span class="local-dimensions-ev-row-body">';
+            if (ev.description) {
+                html += '<span class="local-dimensions-ev-row-desc">' + ev.description + '</span>';
+            }
+            html += '<span class="local-dimensions-ev-row-type">' + escapeHtml(typeInfo.label) + '</span>';
+            html += '</span>';
+
+            if (hasGrade) {
+                const proficient = isGradeProficient(ev.grade, scaleConfig);
+                html += '<span class="local-dimensions-pill local-dimensions-pill-' +
+                    (proficient ? 'success' : 'warning') + '">' + escapeHtml(ev.gradename) + '</span>';
+            }
+
+            html += '<span class="local-dimensions-ev-row-date">';
+            if (ev.timecreated) {
+                html += escapeHtml(formatTimestamp(ev.timecreated, strMap.dateFormat));
+            }
+            html += '</span>';
+
+            html += '</div>';
+            return html;
+        }
+
+        /**
+         * Render the evidence tab: what settled the competency, then how it got there.
+         *
+         * The old slider gave every row the same weight and made the TYPE the headline, so a
+         * rule completion looked exactly like a note. Here a decisive rule completion is
+         * lifted out into a result strip and the rest stay as a plain chronological list.
          *
          * @param {Array} evidence The evidence array
          * @param {Object} strMap Language strings map
-         * @return {string} HTML for evidence slider
+         * @param {string|null} scaleConfig The scale configuration JSON string
+         * @return {string} HTML for the evidence tab
          */
-        function renderEvidenceSlider(evidence, strMap) {
-            let html = '';
-
+        function renderEvidenceList(evidence, strMap, scaleConfig) {
             if (!evidence || evidence.length === 0) {
-                html += '<p class="text-muted" style="font-size: 0.875rem;">' + escapeHtml(strMap.noEvidence) + '</p>';
-                return html;
+                return '<p class="local-dimensions-ev-empty">' + escapeHtml(strMap.noEvidence) + '</p>';
             }
 
-            html += '<div class="local-dimensions-ev-slider-wrapper" data-evidence-count="' + evidence.length + '">';
+            let html = '<div class="local-dimensions-ev-list">';
 
-            // Slider track.
-            html += '<div class="local-dimensions-ev-slider-track">';
-
+            /* The decisive row leads and is then omitted from the journey below, so the same
+               fact is not stated twice. Only the LAST rule completion is decisive - an earlier
+               one was superseded. */
+            let decisiveIndex = -1;
             evidence.forEach(function(ev, index) {
-                const typeInfo = getEvidenceTypeInfo(ev, strMap);
-                const hasExtraDetails = ev.note || ev.url || (ev.grade && ev.gradename && ev.gradename !== '-');
-
-                html += '<div class="local-dimensions-ev-card" data-evidence-index="' + index + '">';
-
-                // Icon.
-                html += '<div class="local-dimensions-ev-icon ' + typeInfo.colorClass + '">';
-                html += '<i class="fa ' + typeInfo.icon + '" aria-hidden="true"></i>';
-                html += '</div>';
-
-                // Content.
-                html += '<div class="local-dimensions-ev-content">';
-                html += '<h3 class="local-dimensions-ev-title">' + escapeHtml(typeInfo.label) + '</h3>';
-
-                if (ev.description) {
-                    html += '<p class="local-dimensions-ev-desc">' + ev.description + '</p>';
+                if (isRuleCompletion(ev)) {
+                    decisiveIndex = index;
                 }
-
-                // Author + date (hidden for manual override evidence — details available in modal).
-                const isManualOverride = typeInfo.colorClass === 'local-dimensions-evidence-manual';
-                if (!isManualOverride && ev.usermodified && ev.actionuser) {
-                    const authorName = escapeHtml(ev.actionuser.fullname || '');
-                    const authorProfileUrl = M.cfg.wwwroot + '/user/profile.php?id=' + ev.usermodified;
-                    html += '<div class="local-dimensions-ev-meta">';
-                    html += '<i class="fa fa-user" aria-hidden="true"></i> ';
-                    html += '<a href="' + escapeHtml(authorProfileUrl) + '" target="_blank">';
-                    html += authorName + '</a>';
-                    if (ev.timecreated) {
-                        html += ' <span class="local-dimensions-ev-meta-sep">&middot;</span> ';
-                        html += '<span>' + formatTimestamp(ev.timecreated, strMap.dateFormat) + '</span>';
-                    }
-                    html += '</div>';
-                }
-
-                // Detail button — shown when extra info is available.
-                if (hasExtraDetails) {
-                    html += '<button type="button" class="local-dimensions-ev-detail-btn" data-evidence-index="' + index + '"';
-                    html += ' aria-label="' + escapeHtml(strMap.evidenceViewDetails) + ': ' + escapeHtml(typeInfo.label) + '">';
-                    html += '<i class="fa fa-expand" aria-hidden="true"></i> ';
-                    html += '<span>' + escapeHtml(strMap.evidenceViewDetails) + '</span>';
-                    html += '</button>';
-                }
-
-                html += '</div>'; // End local-dimensions-ev-content.
-                html += '</div>'; // End local-dimensions-ev-card.
             });
 
-            html += '</div>'; // End local-dimensions-ev-slider-track.
+            if (decisiveIndex >= 0) {
+                const decisive = evidence[decisiveIndex];
+                html += '<div class="local-dimensions-ev-result">';
+                html += '<span class="local-dimensions-ev-result-icon">';
+                html += '<i class="fa fa-gavel" aria-hidden="true"></i>';
+                html += '</span>';
+                html += '<span class="local-dimensions-ev-result-body">';
+                html += '<span class="local-dimensions-ev-result-title">' +
+                    escapeHtml(strMap.evidenceRuleCompleted) + '</span>';
+                if (decisive.description) {
+                    html += '<span class="local-dimensions-ev-result-desc">' + decisive.description + '</span>';
+                }
+                html += '</span>';
+                html += '<button type="button" class="local-dimensions-ev-result-action" data-goto-rules>' +
+                    escapeHtml(strMap.evidenceRuleViewRule) + '</button>';
+                html += '</div>';
+            }
 
-            // Controls block (bottom-right).
-            html += '<div class="local-dimensions-ev-slider-controls" role="group" aria-label="' +
-                escapeHtml(strMap.evidenceLabel) + '">';
-            html += '<button type="button" class="local-dimensions-ev-slider-btn local-dimensions-ev-slider-prev disabled"';
-            html += ' aria-label="' + escapeHtml(strMap.sliderPrev) + '">';
-            html += '<i class="fa fa-chevron-left" aria-hidden="true"></i>';
-            html += '</button>';
-            html += '<button type="button" class="local-dimensions-ev-slider-btn local-dimensions-ev-slider-next"';
-            html += ' aria-label="' + escapeHtml(strMap.sliderNext) + '">';
-            html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
-            html += '</button>';
-            html += '</div>'; // End local-dimensions-ev-slider-controls.
+            evidence.forEach(function(ev, index) {
+                if (index === decisiveIndex) {
+                    return;
+                }
+                html += renderEvidenceRow(ev, index, strMap, scaleConfig);
+            });
 
-            html += '</div>'; // End local-dimensions-ev-slider-wrapper.
-
+            html += '</div>';
             return html;
         }
 
@@ -1488,48 +1530,52 @@ define(
         }
 
         /**
-         * Initialize evidence slider scroll and arrow logic.
+         * Wire the evidence list: open the modal from a row, jump to the Rules tab.
          *
          * @param {HTMLElement} contentEl The content container element
          * @param {Array} evidenceData The evidence array from the API
          * @param {Object} strMap Language strings map
          * @param {string|null} scaleConfig The scale configuration JSON string from the competency
          */
-        function initSliders(contentEl, evidenceData, strMap, scaleConfig) {
-            const sliders = contentEl.querySelectorAll('.local-dimensions-ev-slider-wrapper');
+        function initEvidenceList(contentEl, evidenceData, strMap, scaleConfig) {
+            const list = contentEl.querySelector('.local-dimensions-ev-list');
+            if (!list) {
+                return;
+            }
 
-            sliders.forEach(function(wrapper) {
-                const track = wrapper.querySelector('.local-dimensions-ev-slider-track');
-                const prevBtn = wrapper.querySelector('.local-dimensions-ev-slider-prev');
-                const nextBtn = wrapper.querySelector('.local-dimensions-ev-slider-next');
+            const openRow = function(row) {
+                const idx = Number.parseInt(row.dataset.evidenceIndex, 10);
+                if (!Number.isNaN(idx) && evidenceData?.[idx]) {
+                    openEvidenceDetailModal(evidenceData[idx], strMap, scaleConfig);
+                }
+            };
 
-                if (!track) {
+            list.addEventListener('click', function(e) {
+                const gotoRules = e.target.closest('[data-goto-rules]');
+                if (gotoRules) {
+                    /* The tab activator is a closure with no exported handle, so reach the
+                       Rules tab the same way the user would - by clicking its button. */
+                    const rulesTab = contentEl.querySelector('.local-dimensions-tab-btn[data-tab="rules"]');
+                    if (rulesTab) {
+                        rulesTab.click();
+                    }
                     return;
                 }
+                const row = e.target.closest('.local-dimensions-ev-row-clickable');
+                if (row) {
+                    openRow(row);
+                }
+            });
 
-                const evidenceCount = Number.parseInt(wrapper.dataset.evidenceCount, 10)
-                    || track.querySelectorAll('.local-dimensions-ev-card').length;
-                initScrollableTrack({
-                    wrapper: wrapper,
-                    track: track,
-                    prevBtn: prevBtn,
-                    nextBtn: nextBtn,
-                    cardSelector: '.local-dimensions-ev-card',
-                    itemCount: evidenceCount
-                });
-
-                // Evidence detail button handler — opens modal with full evidence info.
-                wrapper.addEventListener('click', function(e) {
-                    const btn = e.target.closest('.local-dimensions-ev-detail-btn');
-                    if (!btn) {
-                        return;
-                    }
-                    e.stopPropagation();
-                    const idx = Number.parseInt(btn.dataset.evidenceIndex, 10);
-                    if (!Number.isNaN(idx) && evidenceData?.[idx]) {
-                        openEvidenceDetailModal(evidenceData[idx], strMap, scaleConfig);
-                    }
-                });
+            list.addEventListener('keydown', function(e) {
+                if (e.key !== 'Enter' && e.key !== ' ') {
+                    return;
+                }
+                const row = e.target.closest('.local-dimensions-ev-row-clickable');
+                if (row) {
+                    e.preventDefault();
+                    openRow(row);
+                }
             });
         }
 
@@ -1930,6 +1976,14 @@ define(
                     icon: 'fa-graduation-cap',
                     label: strMap.evidenceTypeCoursegrade,
                     colorClass: 'local-dimensions-evidence-grade'
+                };
+            }
+
+            if (descidentifier === 'evidence_competencyrule') {
+                return {
+                    icon: 'fa-gavel',
+                    label: strMap.evidenceTypeRule,
+                    colorClass: 'local-dimensions-evidence-rule'
                 };
             }
 
