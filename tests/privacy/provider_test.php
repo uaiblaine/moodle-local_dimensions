@@ -104,6 +104,56 @@ final class provider_test extends advanced_testcase {
     }
 
     /**
+     * A real favourites value is exported verbatim, under the description that explains it.
+     *
+     * The description carries the whole weight here: the value is nothing but plan ids and
+     * competency ids, so an export whose description does not name that shape is unreadable
+     * to the person who asked for it.
+     *
+     * @return void
+     */
+    public function test_export_user_preferences_describes_the_favourites_value(): void {
+        global $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $value = json_encode(['12' => [45, 67]]);
+        set_user_preference(constants::PREF_LEARNER_FAV, $value, $USER->id);
+        provider::export_user_preferences((int) $USER->id);
+        $exported = (array) writer::with_context(\context_user::instance($USER->id))
+            ->get_user_preferences('local_dimensions');
+        $this->assertArrayHasKey(constants::PREF_LEARNER_FAV, $exported);
+        $this->assertSame($value, $exported[constants::PREF_LEARNER_FAV]->value);
+        $this->assertSame(
+            get_string('privacy:metadata:preference:learner_fav', 'local_dimensions'),
+            $exported[constants::PREF_LEARNER_FAV]->description
+        );
+    }
+
+    /**
+     * The export reads the subject's preferences, never the logged-in user's.
+     *
+     * A data request is processed by whoever runs it, so reading $USER instead of the passed
+     * id would export the wrong person's favourites into the subject's archive.
+     *
+     * @return void
+     */
+    public function test_export_user_preferences_reads_the_target_user(): void {
+        $this->resetAfterTest();
+        $subject = $this->getDataGenerator()->create_user();
+        $other = $this->getDataGenerator()->create_user();
+        $subjectvalue = json_encode(['1' => [2]]);
+        set_user_preference(constants::PREF_LEARNER_FAV, $subjectvalue, $subject->id);
+        set_user_preference(constants::PREF_LEARNER_FAV, json_encode(['9' => [8]]), $other->id);
+
+        $this->setUser($other);
+        provider::export_user_preferences((int) $subject->id);
+
+        $exported = (array) writer::with_context(\context_user::instance($subject->id))
+            ->get_user_preferences('local_dimensions');
+        $this->assertSame($subjectvalue, $exported[constants::PREF_LEARNER_FAV]->value);
+    }
+
+    /**
      * Nothing is exported when the user has no stored preferences.
      *
      * @return void
