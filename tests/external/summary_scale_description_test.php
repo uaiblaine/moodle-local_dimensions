@@ -61,6 +61,25 @@ final class summary_scale_description_test extends \advanced_testcase {
     }
 
     /**
+     * With the setting never written, unset reads as on, so upgrading installs keep their link.
+     *
+     * @return void
+     */
+    public function test_execute_returns_the_scale_description_when_never_configured(): void {
+        $this->resetAfterTest();
+        unset_config('showscaledescription', 'local_dimensions');
+        [$competencyid, $planid, $user] = $this->set_up_plan_with_described_scale();
+
+        $this->setUser($user);
+        $payload = json_decode(get_user_competency_summary_in_plan::execute($competencyid, $planid));
+
+        $this->assertStringContainsString(
+            'Four-level skills scale',
+            $payload->usercompetencysummary->competency->scaledescription
+        );
+    }
+
+    /**
      * A plan holding one competency whose framework scale carries a description.
      *
      * @return array The competency id, the plan id and the plan's owner.
@@ -78,7 +97,8 @@ final class summary_scale_description_test extends \advanced_testcase {
             'scaleid' => $scale->id,
             'scaleconfiguration' => json_encode([
                 ['scaleid' => (int) $scale->id],
-                ['id' => 3, 'scaledefault' => 0, 'proficient' => 1],
+                ['id' => 2, 'scaledefault' => 1, 'proficient' => 1],
+                ['id' => 3, 'proficient' => 1],
             ]),
         ]);
         $competency = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
