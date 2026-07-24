@@ -133,7 +133,7 @@ function local_dimensions_get_return_context_for_course(int $courseid): ?array {
  *
  * Registers the four JSON preferences that persist the Competency hub's last-visited view and
  * display-toggle choices, plus the learner views' chrome (sort, filter, layout) and favourite
- * competencies, and the flag that folds the learner hero to its slim state. Declaring them here
+ * competencies, and the list of learner heroes folded to slim. Declaring them here
  * is what lets core_user's preference web service accept them from the plugin's JavaScript - no
  * plugin web service is involved. Each is writable only by its owner. Discovered by
  * get_plugins_with_function().

@@ -19,7 +19,7 @@
  *
  * The plugin stores no personal data of its own beyond five per-user preferences: two that
  * remember the Competency hub's last-visited view and its display-toggle choices, and three that
- * remember the learner views' chrome, favourite competencies and folded hero. It has no database
+ * remember the learner views' chrome, favourite competencies and folded headers. It has no database
  * tables (custom-field data belongs to competencies/templates, not users), so this is a
  * preference-only provider.
  *
