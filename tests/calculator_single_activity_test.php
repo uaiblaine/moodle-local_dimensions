@@ -109,4 +109,35 @@ final class calculator_single_activity_test extends \advanced_testcase {
 
         $this->assertNull(calculator::resolve_single_activity((int) $course->id, (int) $user->id));
     }
+
+    /**
+     * A completed activity flips the flag the card reads to true.
+     *
+     * @return void
+     */
+    public function test_completed_activity_returns_completed_true(): void {
+        global $CFG;
+        $this->resetAfterTest();
+        require_once($CFG->libdir . '/completionlib.php');
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $page = $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'name' => 'Weekly reflection',
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+
+        $this->setUser($user);
+        $completion = new \completion_info(get_course((int) $course->id));
+        $completion->update_state(
+            get_coursemodule_from_id('page', (int) $page->cmid),
+            COMPLETION_COMPLETE,
+            (int) $user->id
+        );
+
+        $activity = calculator::resolve_single_activity((int) $course->id, (int) $user->id);
+
+        $this->assertIsArray($activity);
+        $this->assertTrue($activity['completed']);
+    }
 }

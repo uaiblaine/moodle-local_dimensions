@@ -80,8 +80,10 @@ $accordionsettings = [
     'showrelatedlink' => \local_dimensions\helper::resolve_showrelatedlink_for_template($templateid),
     'viewcompetencyurl' => (new \moodle_url('/local/dimensions/view-competency.php'))->out(false),
     'showevidence' => (bool) get_config('local_dimensions', 'showevidence'),
-    'showlockeddate' => (bool) get_config('local_dimensions', 'showlockeddate'),
-    'lockedcardmode' => (string) get_config('local_dimensions', 'lockedcardmode'),
+    /* Template layer only (no competency layer): the accordion renders every competency in
+       the plan on one page, so a per-competency override has no single value to resolve to. */
+    'showlockeddate' => \local_dimensions\helper::get_template_showlockeddate($templateid),
+    'lockedcardmode' => \local_dimensions\helper::get_template_lockedcardmode($templateid),
     'enableevidencesubmitbutton' => (bool) get_config('local_dimensions', 'enableevidencesubmitbutton')
         && has_capability(
             'moodle/competency:userevidencemanageown',

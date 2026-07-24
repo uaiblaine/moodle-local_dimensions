@@ -2585,6 +2585,15 @@
     cursor: default;
 }
 
+/* Same specificity as .local-dimensions-course-card-lg:hover above, so source order is what
+   wins here - this rule has to stay after it. Without this an unclickable card still lifts
+   on hover, feeling clickable when it is not. */
+.local-dimensions-course-card-blocked:hover {
+    box-shadow:
+        0 4px 6px -1px rgb(0 0 0 / 10%),
+        0 2px 4px -2px rgb(0 0 0 / 10%);
+}
+
 .local-dimensions-course-state {
     display: flex;
     align-items: center;
@@ -3113,7 +3122,10 @@ a.local-dimensions-course-act-row:focus {
     border-top: 1px solid #e9ecef;
 }
 
-.local-dimensions-ev-row:first-child {
+/* The grid lives on a child of the <li> (see renderEvidenceRow), so :first-child on the row
+   itself would always match - it is the only child of its own <li>. Scope through the list
+   item instead, so only the very first journey row loses its top border. */
+.local-dimensions-ev-journey > li:first-child > .local-dimensions-ev-row {
     border-top: none;
 }
 
@@ -3568,6 +3580,15 @@ a.local-dimensions-course-act-row:focus {
     animation: local-dimensions-fadeIn 0.2s ease;
 }
 
+/* A third clipping ancestor, alongside .local-dimensions-accordion-item and -content: this pane
+   would otherwise cut the downward tooltip at its own bottom edge - the grade chip on the last
+   journey row when no submit button follows, and the rating tooltip when the Progress pane holds
+   only the assessment card. Visibility is gated by display (above), never by overflow, so
+   relaxing it here cannot reveal an inactive pane. */
+.local-dimensions-tab-pane-progress {
+    overflow: visible;
+}
+
 @keyframes local-dimensions-fadeIn {
     from {
         opacity: 0;
@@ -3662,6 +3683,17 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-courses-head .local-dimensions-courses-scroll-controls {
     margin-left: auto;
+}
+
+/* When the cards all fit, updateScrollableArrows() hides both buttons and marks the wrapper
+   local-dimensions-controls-hidden - without this the pill's border/radius/shadow still paint
+   an empty bordered dot floating over an otherwise blank header row. */
+.local-dimensions-controls-hidden .local-dimensions-courses-scroll-controls {
+    display: none;
+}
+
+.local-dimensions-controls-hidden .local-dimensions-courses-head {
+    margin-bottom: 0;
 }
 
 .local-dimensions-courses-scroll {

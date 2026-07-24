@@ -1181,7 +1181,10 @@ define(
             const hasGrade = !!(ev.grade && ev.gradename && ev.gradename !== '-');
             const hasExtraDetails = ev.note || ev.url || hasGrade;
 
-            let html = '<li class="local-dimensions-ev-row' +
+            /* The grid, role="button" and its handlers live on this inner element rather than on
+               the <li> itself - overriding an <li>'s implicit listitem role would drop it out of
+               the journey <ul>, so a screen reader announces a list whose item count is wrong. */
+            let html = '<div class="local-dimensions-ev-row' +
                 (hasExtraDetails ? ' local-dimensions-ev-row-clickable' : '') +
                 '" data-evidence-index="' + index + '"';
             if (hasExtraDetails) {
@@ -1223,8 +1226,8 @@ define(
             }
             html += '</span>';
 
-            html += '</li>';
-            return html;
+            html += '</div>';
+            return '<li>' + html + '</li>';
         }
 
         /**
@@ -2136,16 +2139,23 @@ define(
                 const isReachable = course.access !== 'locked' && course.access !== 'enrol';
                 const isBlocked = course.access === 'locked'
                     && displaySettings.lockedcardmode === 'blocked';
+
+                /* The activity URL only ever arrives alongside access === 'open' (the server
+                   omits it otherwise), so it is never in play for a blocked card - the card's
+                   link target can always follow it without a lock check of its own. */
+                const cardUrl = (course.activity && course.activity.url) ? course.activity.url : courseUrl;
+
                 html += '<div class="local-dimensions-course-card-lg' +
                     (isReachable ? '' : ' local-dimensions-course-card-dim') +
                     (isBlocked ? ' local-dimensions-course-card-blocked' : '') + '">';
 
-                /* The whole card is the link to the course; the disclosure below sits outside it.
-                   In blocked mode a locked card leads nowhere, so it is a span - core would only
-                   show the same restriction message the card already carries. */
+                /* The whole card is the link - to the single activity when the card shows one,
+                   the course otherwise; the disclosure below sits outside it. In blocked mode a
+                   locked card leads nowhere, so it is a span - core would only show the same
+                   restriction message the card already carries. */
                 html += isBlocked
                     ? '<span class="local-dimensions-course-link">'
-                    : '<a href="' + escapeHtml(courseUrl) + '" class="local-dimensions-course-link">';
+                    : '<a href="' + escapeHtml(cardUrl) + '" class="local-dimensions-course-link">';
 
                 // Course image.
                 if (hasImage) {
