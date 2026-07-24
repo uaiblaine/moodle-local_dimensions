@@ -32,10 +32,16 @@ define(
         // Cache for loaded competency summaries to avoid reloading.
         const loadedCompetencies = new Set();
 
-        /* The plan's completion tabs, scoped to the filter bar. The chip filters reuse the
-           .local-dimensions-filter-tab class (chip_filters.mustache), so an unscoped selector
-           binds this handler to every chip as well. */
-        const FILTER_TAB_SELECTOR = '.local-dimensions-filter-bar .local-dimensions-filter-tab';
+        /* The plan's completion tabs. Other controls reuse the .local-dimensions-filter-tab
+           class for its pill styling: the chip filters (chip_filters.mustache), which live in
+           a panel OUTSIDE the bar and so are already excluded by the bar scope, and the two
+           favourites pills (view_plan_summary.mustache), which sit INSIDE the bar and are not.
+           The fav group is excluded by its own class. Without that, clicking a favourites pill
+           runs this completion handler, which strips .active from the real tabs and leaves
+           getActiveFilter reading undefined - the Phase 0 defect, one control further along. */
+        const FILTER_TAB_SELECTOR =
+            '.local-dimensions-filter-bar .local-dimensions-filter-tabs:not(.local-dimensions-fav-group)'
+            + ' .local-dimensions-filter-tab';
 
         /* The two ruleoutcome values that conclude or advance a competency
            (core_competency\course_competency OUTCOME_RECOMMEND / OUTCOME_COMPLETE). The other
