@@ -3330,6 +3330,25 @@ a.local-dimensions-course-act-row:focus {
     font-weight: 600;
 }
 
+.local-dimensions-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #e9ecef;
+    color: #6c757d;
+    font-size: 0.6875rem;
+    font-weight: 700;
+}
+
+.local-dimensions-tab-btn.active .local-dimensions-tab-count {
+    background: #cfe2ff;
+    color: #0f6cbf;
+}
+
 /* Tab pane — hidden by default, visible when active */
 .local-dimensions-tab-pane {
     display: none;
