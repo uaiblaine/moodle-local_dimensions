@@ -343,7 +343,10 @@ class view_plan_summary_page implements renderable, templatable {
         $data['view_is_list'] = ($view['view'] === 'list');
         $data['view_is_grid'] = ($view['view'] === 'grid');
         $data['showstar'] = $isownplan;
-        $data['favonly'] = $isownplan && $view['favonly'];
+        /* The filter appears only once there is something to filter to - the rule the
+           companion block applies to its own favourites pill. */
+        $data['hasfavourites'] = ($favouriteids !== []);
+        $data['favonly'] = $isownplan && $view['favonly'] && $data['hasfavourites'];
         $data['favouritesjson'] = json_encode((object) $favourites['map']);
         $data['nonfavouritecount'] = count(array_filter($data['competencies'], fn($c) => empty($c['isfavourite'])));
 

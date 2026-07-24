@@ -2786,6 +2786,27 @@ define(
         }
 
         /**
+         * Show the favourites filter only once there is a favourite to filter to.
+         *
+         * The same rule the companion block applies (its whole favourites pill group renders
+         * only when the count is above zero): a filter that can only ever return nothing is
+         * not a control, it is a dead end. Unstarring the last one also releases the filter,
+         * or the learner would be left looking at an empty plan with the control gone.
+         */
+        function syncFavouriteToggle() {
+            const favToggle = document.querySelector('[data-fav-toggle]');
+            if (!favToggle) {
+                return;
+            }
+            const any = document.querySelector('.local-dimensions-accordion-item.local-dimensions-favourite');
+            if (!any && favToggle.getAttribute('aria-pressed') === 'true') {
+                favToggle.setAttribute('aria-pressed', 'false');
+                LearnerPrefs.save({favonly: false});
+            }
+            favToggle.hidden = !any;
+        }
+
+        /**
          * Wire the favourites controls: the per-row stars, the toolbar toggle and the ghost.
          *
          * A star toggle deliberately does NOT re-sort, even under "Favourites first": rows
@@ -2814,6 +2835,7 @@ define(
                     if (item) {
                         item.classList.toggle('local-dimensions-favourite', on);
                     }
+                    syncFavouriteToggle();
                     applyFilter();
                 });
             });
@@ -2827,6 +2849,7 @@ define(
                     applyFilter();
                 });
             }
+            syncFavouriteToggle();
 
             const ghost = document.querySelector('[data-ghost]');
             if (ghost && favToggle) {
@@ -2935,12 +2958,41 @@ define(
                     options.forEach(function(other) {
                         other.setAttribute('aria-checked', other === option ? 'true' : 'false');
                     });
+                    widenFilterForSort(option.dataset.sort);
                     applySort(option.dataset.sort);
                     closeMenu();
                     toggle.focus();
                     LearnerPrefs.save({sort: option.dataset.sort});
                 });
             });
+        }
+
+        /**
+         * Let a sort widen the filter that would otherwise make it a no-op.
+         *
+         * Ordering by "completed first" while only the not-completed rows are shown sorts an
+         * empty set, and so does "favourites first" while only favourites are shown. Rather
+         * than hide or disable the option - which leaves the learner holding a control that
+         * does nothing, with no way to make it work - the choice is read as the intent it
+         * expresses and the filter opens far enough to honour it.
+         *
+         * @param {string} mode The sort the learner just picked
+         */
+        function widenFilterForSort(mode) {
+            if (mode === 'completed') {
+                const allTab = document.querySelector(FILTER_TAB_SELECTOR + '[data-filter="all"]');
+                if (allTab && !allTab.classList.contains('active')) {
+                    allTab.click();
+                }
+                return;
+            }
+
+            if (mode === 'favourites') {
+                const favToggle = document.querySelector('[data-fav-toggle]');
+                if (favToggle && favToggle.getAttribute('aria-pressed') === 'true') {
+                    favToggle.click();
+                }
+            }
         }
 
         /**
@@ -3009,23 +3061,18 @@ define(
                 return;
             }
 
-            /* Cloned from a torn-down pane, so the copy carries the loading placeholder and its
-               already-translated strings, and no rendered ids come with it. The pager is added
-               to the LIVE modal afterwards: built here it would be serialised to a string
-               before its asynchronous labels ever arrived. */
             Modal.create({
                 title: title ? title.textContent.trim() : '',
-                body: shell.cloneNode(true).outerHTML,
+                body: '',
                 large: true,
                 show: true,
                 removeOnClose: true
             }).then(function(modal) {
                 const root = modal.getRoot()[0];
-                const modalbody = root.querySelector('.modal-body');
-                const summary = document.querySelector('.local-dimensions-plan-summary');
 
                 // R4: a modal is appended to document.body, outside the percentagemode wrapper.
-                modalbody.classList.add(
+                const summary = document.querySelector('.local-dimensions-plan-summary');
+                root.querySelector('.modal-body').classList.add(
                     'percentagemode-' + ((summary && summary.dataset.percentagemode) || 'hover')
                 );
 
@@ -3039,14 +3086,46 @@ define(
                     }).catch(Notification.exception);
                 }
 
-                modalbody.insertBefore(buildModalPager(item, modal, planId), modalbody.firstChild);
-
-                /* The pane cache would otherwise short-circuit a second look at the same
-                   competency, leaving the fresh modal body on its loading placeholder. */
-                loadedCompetencies.delete(competencyId);
-                loadCompetencySummary(modalbody.querySelector('.local-dimensions-accordion-body'), competencyId, planId);
+                showCompetencyInModal(modal, item, planId);
                 return null;
             }).catch(Notification.exception);
+        }
+
+        /**
+         * Fill an already-open modal with one competency's detail.
+         *
+         * Paging replaces the contents of the SAME modal rather than destroying it and building
+         * the next: a destroy/create pair plays the close and open animations back to back,
+         * which reads as the dialog flashing on every step.
+         *
+         * @param {Object} modal The open modal
+         * @param {HTMLElement} item The accordion item whose detail to show
+         * @param {number} planId The plan id
+         */
+        function showCompetencyInModal(modal, item, planId) {
+            const competencyId = Number.parseInt(item.dataset.competencyId, 10);
+            const content = document.getElementById('competency-content-' + competencyId);
+            const shell = content && content.querySelector('.local-dimensions-accordion-body');
+            const title = item.querySelector('.local-dimensions-accordion-title');
+            const modalbody = modal.getRoot()[0].querySelector('.modal-body');
+            if (!shell || !modalbody) {
+                return;
+            }
+
+            modal.setTitle(title ? title.textContent.trim() : '');
+
+            /* Appended as nodes, never as an HTML string: the shell is cloned from a torn-down
+               pane, so the copy carries the loading placeholder and its already-translated
+               strings, and no rendered ids come with it. The pager has to be live too, or its
+               asynchronous labels would land on a detached copy nobody sees. */
+            modalbody.textContent = '';
+            modalbody.appendChild(buildModalPager(item, modal, planId));
+            modalbody.appendChild(shell.cloneNode(true));
+
+            /* The pane cache would otherwise short-circuit a second look at the same
+               competency, leaving the fresh modal body on its loading placeholder. */
+            loadedCompetencies.delete(competencyId);
+            loadCompetencySummary(modalbody.querySelector('.local-dimensions-accordion-body'), competencyId, planId);
         }
 
         /**
@@ -3093,8 +3172,7 @@ define(
                     button.disabled = true;
                 } else {
                     button.addEventListener('click', function() {
-                        modal.destroy();
-                        openDetailModal(target, planId);
+                        showCompetencyInModal(modal, target, planId);
                     });
                 }
                 Str.get_string(key, 'local_dimensions').then(function(label) {

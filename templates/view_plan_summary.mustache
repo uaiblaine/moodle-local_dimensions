@@ -38,6 +38,7 @@
     * viewmode (string) - Stored layout: list or grid
     * view_is_list / view_is_grid (bool) - Which layout starts active
     * showstar (bool) - Whether the learner owns this plan, so the favourites controls render
+    * hasfavourites (bool) - Whether at least one is starred, so the favourites filter renders
     * favonly (bool) - Whether the favourites-only filter starts active
     * favouritesjson (string) - The whole stored favourites map, for the client to merge into
     * nonfavouritecount (int) - How many competencies are not favourited
@@ -75,6 +76,7 @@
         "view_is_list": true,
         "view_is_grid": false,
         "showstar": true,
+        "hasfavourites": false,
         "favonly": false,
         "favouritesjson": "{}",
         "nonfavouritecount": 0
@@ -108,7 +110,8 @@
                     class="local-dimensions-fav-toggle"
                     data-fav-toggle
                     aria-pressed="{{#favonly}}true{{/favonly}}{{^favonly}}false{{/favonly}}"
-                    aria-label="{{#str}}fav_only, local_dimensions{{/str}}">
+                    aria-label="{{#str}}fav_only, local_dimensions{{/str}}"
+                    {{^hasfavourites}}hidden{{/hasfavourites}}>
                 <i class="fa fa-star" aria-hidden="true"></i>
             </button>
             {{/showstar}}
