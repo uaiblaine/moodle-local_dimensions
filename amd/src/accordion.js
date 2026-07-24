@@ -63,7 +63,9 @@ define(
             showrelatedlink: false,
             viewcompetencyurl: '',
             showevidence: true,
-            enableevidencesubmitbutton: false
+            enableevidencesubmitbutton: false,
+            showlockeddate: false,
+            lockedcardmode: 'blocked'
         };
 
         /**
@@ -235,7 +237,16 @@ define(
                 {key: 'activities_count', component: 'local_dimensions'},
                 {key: 'activities_count_one', component: 'local_dimensions'},
                 {key: 'progress_tab', component: 'local_dimensions'},
-                {key: 'evidence_journey', component: 'local_dimensions'}
+                {key: 'evidence_journey', component: 'local_dimensions'},
+                {key: 'view_detailed_progress', component: 'local_dimensions'},
+                {key: 'enrol_to_start', component: 'local_dimensions'},
+                {key: 'selfenrolment_open', component: 'local_dimensions'},
+                {key: 'locked_content', component: 'local_dimensions'},
+                {key: 'available_at', component: 'local_dimensions'},
+                {key: 'enrolment_starts', component: 'local_dimensions'},
+                {key: 'course_completed', component: 'local_dimensions'},
+                {key: 'filter_not_completed', component: 'local_dimensions'},
+                {key: 'go_to_activity', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -317,7 +328,16 @@ define(
                     activitiesCount: strings[73],
                     activitiesCountOne: strings[74],
                     progressTab: strings[75],
-                    evidenceJourney: strings[76]
+                    evidenceJourney: strings[76],
+                    viewDetailedProgress: strings[77],
+                    enrolToStart: strings[78],
+                    selfEnrolmentOpen: strings[79],
+                    lockedContent: strings[80],
+                    availableAt: strings[81],
+                    enrolmentStarts: strings[82],
+                    courseCompleted: strings[83],
+                    notCompleted: strings[84],
+                    goToActivity: strings[85]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -524,7 +544,7 @@ define(
             let html = '<div class="local-dimensions-tabs-content">';
 
             if (summaryState.hasCourses) {
-                html += renderCoursesPane(summaryState, tabs, strMap);
+                html += renderCoursesPane(summaryState, tabs, strMap, planId);
             }
             if (summaryState.hasDesc || summaryState.hasTaxonomyCard || summaryState.hasPath || summaryState.hasRelated) {
                 html += renderDescriptionPane(summaryState, tabs, strMap, planId);
@@ -546,15 +566,21 @@ define(
          * @param {Object} summaryState Normalized summary state
          * @param {Array} tabs Visible tabs
          * @param {Object} strMap Language strings map
+         * @param {number} planId The plan ID (for the tracker footer link)
          * @return {string} HTML
          */
-        function renderCoursesPane(summaryState, tabs, strMap) {
+        function renderCoursesPane(summaryState, tabs, strMap, planId) {
             const isFirst = tabs[0].id === 'courses';
             let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-courses' +
                 (isFirst ? ' active' : '') + '"';
             html += ' id="local-dimensions-tabpane-courses-' + summaryState.comp.id + '" data-tab="courses"';
             html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-courses-' + summaryState.comp.id + '">';
-            html += renderCourseCardsScrollable(summaryState.visibleCourses, strMap);
+            html += renderCourseCardsScrollable(
+                summaryState.visibleCourses,
+                strMap,
+                summaryState.comp.id,
+                planId
+            );
             html += '</div>';
             return html;
         }
@@ -1981,14 +2007,101 @@ define(
         }
 
         /**
+         * Render the state strip that replaces a card's progress row.
+         *
+         * A progress bar carries no meaning for a learner who cannot open the course, and on a
+         * course with one trackable activity it can only ever read 0% or 100%. So the one row
+         * that is meaningless in each case is the one that is replaced - the image, the name,
+         * the outcome badge and the activities drawer all survive.
+         *
+         * @param {Object} course A course row from the web service
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML, or an empty string when the normal progress bar should render
+         */
+        function renderCourseState(course, strMap) {
+            if (course.access === 'enrol') {
+                let html = '<span class="local-dimensions-course-state local-dimensions-course-state-enrol">';
+                html += '<i class="fa fa-sign-in" aria-hidden="true"></i>';
+                html += escapeHtml(strMap.enrolToStart);
+                html += '</span>';
+                html += '<span class="local-dimensions-course-hint">' +
+                    escapeHtml(strMap.selfEnrolmentOpen) + '</span>';
+                return html;
+            }
+
+            if (course.access === 'locked') {
+                let html = '<span class="local-dimensions-course-state local-dimensions-course-state-locked">';
+                html += '<i class="fa fa-lock" aria-hidden="true"></i>';
+                html += escapeHtml(strMap.lockedContent);
+                html += '</span>';
+
+                /* A date that has already passed explains nothing, so it is dropped rather than
+                   shown as history. showlockeddate is resolved server-side into the payload's
+                   own lockdate, which is 0 whenever there is nothing to say. */
+                const lockdate = Number.parseInt(course.lockdate, 10) || 0;
+                if (displaySettings.showlockeddate && lockdate * 1000 > Date.now()) {
+                    const template = course.isenrolstart ? strMap.enrolmentStarts : strMap.availableAt;
+                    html += '<span class="local-dimensions-course-when">';
+                    html += '<i class="fa fa-calendar" aria-hidden="true"></i>';
+                    html += escapeHtml(template.replace('{$a}', formatTimestamp(lockdate, strMap.dateFormat)));
+                    html += '</span>';
+                }
+                return html;
+            }
+
+            if (course.activity) {
+                let html = '<span class="local-dimensions-course-single">';
+                html += '<i class="fa ' + (course.activity.completed ? 'fa-check-circle' : 'fa-circle-o') +
+                    ' local-dimensions-course-single-mark' +
+                    (course.activity.completed ? ' local-dimensions-course-single-done' : '') +
+                    '" aria-hidden="true"></i>';
+                html += '<span class="local-dimensions-course-single-name">' +
+                    escapeHtml(course.activity.name) + '</span>';
+                html += '<span class="local-dimensions-course-single-state' +
+                    (course.activity.completed ? ' local-dimensions-course-single-done' : '') + '">' +
+                    escapeHtml(course.activity.completed ? strMap.courseCompleted : strMap.notCompleted) +
+                    '</span>';
+                html += '</span>';
+                html += '<span class="local-dimensions-course-go">' +
+                    escapeHtml(strMap.goToActivity) +
+                    '<i class="fa fa-arrow-right" aria-hidden="true"></i></span>';
+                return html;
+            }
+
+            return '';
+        }
+
+        /**
+         * Render the normal progress row of a course card.
+         *
+         * @param {Object} course A course row from the web service
+         * @return {string} HTML
+         */
+        function renderCourseProgress(course) {
+            const progress = Number.parseInt(course.progress, 10) || 0;
+            let html = '<div class="local-dimensions-course-progress-lg">';
+            html += '<div class="local-dimensions-course-progress-track">';
+            html += '<div class="local-dimensions-course-progress-fill-lg" style="width: ' + progress + '%;"></div>';
+            html += '</div>';
+            html += '<span class="local-dimensions-course-progress-pct-lg">' + progress + '%</span>';
+            if (progress >= 100) {
+                html += '<i class="fa fa-check-circle local-dimensions-course-check" aria-hidden="true"></i>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        /**
          * Render the related content: linked courses as a scrollable horizontal section, each
          * card disclosing the competency's activities inside that course.
          *
          * @param {Array} courses Visible courses array
          * @param {Object} strMap Language strings map
+         * @param {number} competencyId The competency ID (for the tracker footer link)
+         * @param {number} planId The plan ID (for the tracker footer link)
          * @return {string} HTML for the related-content section
          */
-        function renderCourseCardsScrollable(courses, strMap) {
+        function renderCourseCardsScrollable(courses, strMap, competencyId, planId) {
             const hasManyCourses = courses.length > 2;
             let html = '<section class="local-dimensions-section local-dimensions-courses-section">';
 
@@ -1998,10 +2111,6 @@ define(
                so it stays put when a card's activity list expands. It has to remain inside the
                wrapper: initCourseScroll looks the buttons up from there. */
             html += '<div class="local-dimensions-courses-head">';
-            html += '<h2 class="local-dimensions-section-title">';
-            html += escapeHtml(strMap.relatedContent);
-            html += ' <span class="local-dimensions-section-badge">' + courses.length + '</span>';
-            html += '</h2>';
             html += '<span class="local-dimensions-courses-scroll-controls" role="group" aria-label="' +
                 escapeHtml(strMap.relatedContent) + '">';
             html += '<button type="button" class="local-dimensions-scroll-btn local-dimensions-scroll-prev disabled"';
@@ -2021,14 +2130,22 @@ define(
             courses.forEach(function(course) {
                 const courseUrl = M.cfg.wwwroot + '/course/view.php?id=' + course.id;
                 const courseName = course.fullname || course.shortname || '';
-                const progress = Number.parseInt(course.progress, 10) || 0;
                 const hasImage = course.courseimage && course.courseimage.trim() !== '';
                 const activities = course.activities || [];
 
-                html += '<div class="local-dimensions-course-card-lg">';
+                const isReachable = course.access !== 'locked' && course.access !== 'enrol';
+                const isBlocked = course.access === 'locked'
+                    && displaySettings.lockedcardmode === 'blocked';
+                html += '<div class="local-dimensions-course-card-lg' +
+                    (isReachable ? '' : ' local-dimensions-course-card-dim') +
+                    (isBlocked ? ' local-dimensions-course-card-blocked' : '') + '">';
 
-                // The whole card is the link to the course; the disclosure below sits outside it.
-                html += '<a href="' + escapeHtml(courseUrl) + '" class="local-dimensions-course-link">';
+                /* The whole card is the link to the course; the disclosure below sits outside it.
+                   In blocked mode a locked card leads nowhere, so it is a span - core would only
+                   show the same restriction message the card already carries. */
+                html += isBlocked
+                    ? '<span class="local-dimensions-course-link">'
+                    : '<a href="' + escapeHtml(courseUrl) + '" class="local-dimensions-course-link">';
 
                 // Course image.
                 if (hasImage) {
@@ -2048,21 +2165,17 @@ define(
                 html += '<h3 class="local-dimensions-course-name-lg">' + escapeHtml(courseName) + '</h3>';
                 html += renderOutcomeBadge(course.ruleoutcome, strMap);
 
-                // Progress bar.
-                html += '<div class="local-dimensions-course-progress-lg">';
-                html += '<div class="local-dimensions-course-progress-track">';
-                html += '<div class="local-dimensions-course-progress-fill-lg" style="width: ' + progress + '%;"></div>';
-                html += '</div>';
-                html += '<span class="local-dimensions-course-progress-pct-lg">' + progress + '%</span>';
-                if (progress >= 100) {
-                    html += '<i class="fa fa-check-circle local-dimensions-course-check" aria-hidden="true"></i>';
-                }
-                html += '</div>';
+                const state = renderCourseState(course, strMap);
+                html += state === '' ? renderCourseProgress(course) : state;
 
                 html += '</div>'; // End local-dimensions-course-body.
-                html += '</a>'; // End local-dimensions-course-link.
+                html += isBlocked ? '</span>' : '</a>';
 
-                if (activities.length > 0) {
+                /* When the card already shows the course's single trackable activity, a drawer
+                   listing that same activity would say it twice. */
+                const repeats = activities.length === 1 && course.activity
+                    && activities[0].name === course.activity.name;
+                if (activities.length > 0 && !repeats) {
                     const panelId = 'local-dimensions-course-acts-' + (++activitiesPanelSeq);
                     const countLabel = activities.length === 1
                         ? strMap.activitiesCountOne
@@ -2086,6 +2199,26 @@ define(
             });
 
             html += '</div>'; // End local-dimensions-courses-scroll.
+
+            /* The way out to the tracker, from three courses up. A card can only summarise a
+               course as one percentage; the tracker shows per-section progress, locked sections
+               and availability dates. The threshold is a plain count of what is shown, not the
+               condition that reveals the scroll arrows - that one also fires with two cards on a
+               narrow screen, so the link would come and go on resize. No noredirect flag is
+               needed: the single-course redirect requires exactly one course to survive the
+               filter, so it cannot fire from three up. */
+            if (courses.length >= 3 && competencyId && planId) {
+                const baseUrl = displaySettings.viewcompetencyurl
+                    || (M.cfg.wwwroot + '/local/dimensions/view-competency.php');
+                const trackerUrl = baseUrl + '?id=' + planId + '&competencyid=' + competencyId;
+                html += '<div class="local-dimensions-courses-foot">';
+                html += '<a class="local-dimensions-courses-more" href="' + escapeHtml(trackerUrl) + '">';
+                html += escapeHtml(strMap.viewDetailedProgress);
+                html += '<i class="fa fa-arrow-right" aria-hidden="true"></i>';
+                html += '</a>';
+                html += '</div>';
+            }
+
             html += '</div>'; // End local-dimensions-courses-scroll-wrapper.
             html += '</section>';
 
