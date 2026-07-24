@@ -1482,12 +1482,24 @@
     position: sticky;
     top: var(--navbar-height, 60px);
     z-index: 5;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    padding: 0.5rem 0.65rem;
-    border-radius: 999px;
+
+    /* Two rows: the filter pills, then search and the controls acting on the result. */
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    padding: 0.6rem 0.65rem;
+    border-radius: 1.25rem;
     background: rgb(255 255 255 / 85%);
     backdrop-filter: blur(8px);
+}
+
+.local-dimensions-toolbar-filters,
+.local-dimensions-toolbar-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    min-width: 0;
 }
 
 .local-dimensions-toolbar .local-dimensions-search-wrapper {
@@ -1495,7 +1507,7 @@
     max-width: 320px;
 }
 
-/* On a wide screen the wrapper is not a box at all: its children sit in the bar. */
+/* On a wide screen the wrapper is not a box at all: its children sit in the row. */
 .local-dimensions-toolbar-more {
     display: contents;
 }
@@ -1506,16 +1518,21 @@
 }
 
 @media (width <= 575.98px) {
+    .local-dimensions-toolbar-filters,
     .local-dimensions-toolbar-more {
         display: none;
+    }
+
+    .local-dimensions-toolbar-open .local-dimensions-toolbar-filters {
+        display: flex;
         flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-        flex-basis: 100%;
+        align-items: stretch;
     }
 
     .local-dimensions-toolbar-open .local-dimensions-toolbar-more {
         display: flex;
+        flex-basis: 100%;
+        gap: 0.6rem;
     }
 
     .local-dimensions-toolbar-adjust {
@@ -1674,17 +1691,19 @@
     flex-shrink: 0;
 }
 
-.local-dimensions-fav-toggle.active {
+/* The selected favourites pill is filled, like the block's. The completion pills keep
+   their own sliding-indicator treatment, so only this group is restyled. */
+.local-dimensions-fav-group .local-dimensions-filter-tab.active {
     background: #0f6cbf;
     color: #fff;
+    opacity: 1;
 }
 
-.local-dimensions-fav-toggle.active .local-dimensions-filter-count {
+.local-dimensions-fav-group .local-dimensions-filter-tab.active .local-dimensions-filter-count {
     background: rgb(255 255 255 / 25%);
     color: #fff;
 }
 
-.local-dimensions-fav-toggle:focus-visible,
 .local-dimensions-star:focus-visible {
     outline: 2px solid #0f6cbf;
     outline-offset: 2px;
@@ -2061,12 +2080,14 @@
 
 /* Responsive — stack on mobile */
 @media (width <= 575.98px) {
-    .local-dimensions-filter-bar {
+    /* The toolbar owns its own stacking; centring every child here is what turned the
+       expanded narrow layout into a column of floating controls. */
+    .local-dimensions-filter-bar:not(.local-dimensions-toolbar) {
         flex-direction: column;
         align-items: center;
     }
 
-    .local-dimensions-filter-tabs {
+    .local-dimensions-filter-bar:not(.local-dimensions-toolbar) .local-dimensions-filter-tabs {
         justify-content: center;
     }
 

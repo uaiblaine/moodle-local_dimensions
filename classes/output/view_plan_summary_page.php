@@ -80,6 +80,7 @@ class view_plan_summary_page implements renderable, templatable {
             'filter' => ($filter === 'all') ? 'all' : 'incomplete',
             'favonly' => !empty($stored['favonly']),
             'view' => (($stored['view'] ?? '') === 'grid') ? 'grid' : 'list',
+            'expanded' => !empty($stored['expanded']),
         ];
     }
 
@@ -347,6 +348,18 @@ class view_plan_summary_page implements renderable, templatable {
            companion block applies to its own favourites pill. */
         $data['favouritecount'] = count(array_filter($data['competencies'], fn($c) => !empty($c['isfavourite'])));
         $data['hasfavourites'] = ($data['favouritecount'] > 0);
+
+        /* The whole resolved state, handed to the client as one object. A write replaces the
+           entire preference, so seeding it key by key means any key the page forgot to read
+           is silently reset on the next save - which is how choosing a sort used to throw
+           away the grid layout. */
+        $data['viewstatejson'] = json_encode([
+            'sort' => $sort,
+            'filter' => $view['filter'],
+            'favonly' => $isownplan && $view['favonly'] && $data['hasfavourites'],
+            'view' => $view['view'],
+            'expanded' => $view['expanded'],
+        ]);
         $data['favonly'] = $isownplan && $view['favonly'] && $data['hasfavourites'];
         $data['favouritesjson'] = json_encode((object) $favourites['map']);
         $data['nonfavouritecount'] = count(array_filter($data['competencies'], fn($c) => empty($c['isfavourite'])));

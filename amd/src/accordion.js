@@ -2557,14 +2557,18 @@ define(
                 });
             });
 
-            /* Seed the preference store from what the server already rendered, before any
-               control can fire a save - otherwise the first click would persist a state
-               assembled from defaults instead of from the learner's own choices. */
+            /* Seed the preference store with the WHOLE state the server resolved, before any
+               control can fire a save. A write replaces the entire preference, so seeding it
+               key by key means any key this page did not read is reset on the next save -
+               which is how choosing a sort used to throw away the grid layout. */
             const summary = document.querySelector('.local-dimensions-plan-summary');
-            LearnerPrefs.init({
-                sort: (summary && summary.dataset.sortmode) || 'planorder',
-                filter: getActiveFilter(),
-            });
+            let viewstate = {};
+            try {
+                viewstate = JSON.parse((summary && summary.dataset.viewstate) || '{}');
+            } catch (e) {
+                viewstate = {};
+            }
+            LearnerPrefs.init(viewstate);
 
             // Initialize filter tabs functionality.
             initFilterTabs();
@@ -2696,8 +2700,7 @@ define(
         function applyFilter() {
             const filter = getActiveFilter();
             const query = getSearchQuery();
-            const favToggle = document.querySelector('[data-fav-toggle]');
-            const favonly = !!favToggle && favToggle.getAttribute('aria-pressed') === 'true';
+            const favonly = isFavouritesOnly();
             const accordionItems = document.querySelectorAll('.local-dimensions-accordion-item');
             let visiblecount = 0;
             let nonfavcount = 0;
@@ -2794,24 +2797,45 @@ define(
          * or the learner would be left looking at an empty plan with the control gone.
          */
         function syncFavouriteToggle() {
-            const favToggle = document.querySelector('[data-fav-toggle]');
             const group = document.querySelector('.local-dimensions-fav-group');
-            if (!favToggle || !group) {
+            if (!group) {
                 return;
             }
             const count = document.querySelectorAll(
                 '.local-dimensions-accordion-item.local-dimensions-favourite'
             ).length;
-            if (!count && favToggle.getAttribute('aria-pressed') === 'true') {
-                favToggle.setAttribute('aria-pressed', 'false');
-                favToggle.classList.remove('active');
+            if (!count && isFavouritesOnly()) {
+                setFavouriteFilter(false);
                 LearnerPrefs.save({favonly: false});
             }
-            const label = favToggle.querySelector('[data-fav-count]');
+            const label = group.querySelector('[data-fav-count]');
             if (label) {
                 label.textContent = count;
             }
             group.hidden = !count;
+        }
+
+        /**
+         * Whether the favourites-only pill is the selected one.
+         *
+         * @return {boolean}
+         */
+        function isFavouritesOnly() {
+            const pill = document.querySelector('[data-fav-filter="fav"]');
+            return !!pill && pill.getAttribute('aria-checked') === 'true';
+        }
+
+        /**
+         * Move the selection between the two favourites pills.
+         *
+         * @param {boolean} favonly Whether to select the favourites-only pill
+         */
+        function setFavouriteFilter(favonly) {
+            document.querySelectorAll('[data-fav-filter]').forEach(function(pill) {
+                const on = (pill.dataset.favFilter === 'fav') === favonly;
+                pill.setAttribute('aria-checked', on ? 'true' : 'false');
+                pill.classList.toggle('active', on);
+            });
         }
 
         /**
@@ -2848,16 +2872,14 @@ define(
                 });
             });
 
-            const favToggle = document.querySelector('[data-fav-toggle]');
-            if (favToggle) {
-                favToggle.addEventListener('click', function() {
-                    const on = favToggle.getAttribute('aria-pressed') !== 'true';
-                    favToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
-                    favToggle.classList.toggle('active', on);
-                    LearnerPrefs.save({favonly: on});
+            document.querySelectorAll('[data-fav-filter]').forEach(function(pill) {
+                pill.addEventListener('click', function() {
+                    const favonly = pill.dataset.favFilter === 'fav';
+                    setFavouriteFilter(favonly);
+                    LearnerPrefs.save({favonly: favonly});
                     applyFilter();
                 });
-            }
+            });
             syncFavouriteToggle();
 
             /* Narrow screens fold the filters behind an adjustments button. A class rather
@@ -2874,10 +2896,11 @@ define(
             }
 
             const ghost = document.querySelector('[data-ghost]');
-            if (ghost && favToggle) {
+            const showall = document.querySelector('[data-fav-filter="all"]');
+            if (ghost && showall) {
                 // Activating the ghost clears the filter it is there to explain.
                 ghost.addEventListener('click', function() {
-                    favToggle.click();
+                    showall.click();
                 });
             }
         }
@@ -3016,9 +3039,9 @@ define(
             }
 
             if (mode === 'favourites') {
-                const favToggle = document.querySelector('[data-fav-toggle]');
-                if (favToggle && favToggle.getAttribute('aria-pressed') === 'true') {
-                    favToggle.click();
+                const showall = document.querySelector('[data-fav-filter="all"]');
+                if (showall && isFavouritesOnly()) {
+                    showall.click();
                 }
             }
         }
