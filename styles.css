@@ -1596,6 +1596,25 @@
         outline-offset: 2px;
     }
 
+    /* Tighten the pills and the filter button so the completion pills and the filter share a
+       line on a common phone width rather than the filter dropping below. Below ~340px the
+       completion group alone leaves no room and the filter wraps, which flex-wrap handles. */
+    .local-dimensions-toolbar {
+        gap: 0.45rem;
+    }
+
+    .local-dimensions-toolbar .local-dimensions-fav-group .local-dimensions-filter-tab,
+    .local-dimensions-toolbar .local-dimensions-completion-group .local-dimensions-filter-tab {
+        padding: 0.3rem 0.65rem;
+        font-size: 0.8rem;
+    }
+
+    .local-dimensions-toolbar .local-dimensions-filter-toggle {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.8rem;
+        gap: 0.3rem;
+    }
+
     .local-dimensions-toolbar .local-dimensions-view-toggle {
         order: 1;
         margin-left: auto;
