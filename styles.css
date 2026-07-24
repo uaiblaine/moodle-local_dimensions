@@ -1483,6 +1483,12 @@
     top: var(--navbar-height, 60px);
     z-index: 5;
 
+    /* Capped and centred: the card below runs full width, but a toolbar that stretched with
+       it would fling the end controls far apart. Within the cap the rows right-align, so the
+       last control of each sits on the same edge. */
+    max-width: 880px;
+    margin-inline: auto;
+
     /* Two rows: the filter pills, then search and the controls acting on the result. */
     flex-direction: column;
     align-items: stretch;
@@ -1498,8 +1504,23 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+    justify-content: space-between;
     gap: 0.6rem;
     min-width: 0;
+}
+
+/* No favourites group: the two rows sit side by side on one line - the completion tabs at
+   content width, then the search row taking the rest. Keeping both wrappers as real boxes
+   (rather than display: contents) leaves the mobile fold rules below untouched. When the line
+   runs out, the search row wraps beneath, so it stays responsive. */
+.local-dimensions-toolbar:not(.local-dimensions-has-fav) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.local-dimensions-toolbar:not(.local-dimensions-has-fav) .local-dimensions-toolbar-row {
+    flex: 1 1 320px;
 }
 
 .local-dimensions-toolbar .local-dimensions-search-wrapper {
@@ -1938,6 +1959,9 @@
     box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
 }
 
+/* White chip on the grey platter: the count shared the platter's own grey and vanished into
+   it. White reads cleanly against it and keeps the greys standard rather than adopting the
+   block's Google tones (a colour-sync of the block is separate work). */
 .local-dimensions-filter-count {
     display: inline-flex;
     align-items: center;
@@ -1945,7 +1969,7 @@
     min-width: 20px;
     height: 20px;
     padding: 0 6px;
-    background: #e9ecef;
+    background: #fff;
     color: #6c757d;
     border-radius: 999px;
     font-size: 0.75rem;
@@ -4238,27 +4262,33 @@ a.local-dimensions-course-act-row:focus {
 }
 
 /* --- Clear button (resets every chip) --- */
+/* Clear filters: the companion block's pill button - bordered, an eraser glyph - rather
+   than a bare text link, so the two plugins offer the same affordance. */
 .local-dimensions-chip-clear {
-    border: none;
-    background: none;
-    color: #6c757d;
-    font-size: 0.85rem;
-    cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.25rem 0.5rem;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    background: transparent;
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
 .local-dimensions-chip-clear:hover {
-    color: #dc3545;
-    text-decoration: underline;
+    border-color: #ced4da;
+    background: #f8f9fa;
+    color: #495057;
 }
 
 .local-dimensions-chip-clear:focus-visible {
     outline: 2px solid #0f6cbf;
     outline-offset: 2px;
-    border-radius: 4px;
 }
 
 /*

@@ -2819,6 +2819,14 @@ define(
                 label.textContent = count;
             }
             group.hidden = !count;
+
+            /* The toolbar is two rows only while the favourites pills are on screen; once the
+               last star is cleared it drops back to a single row, matching the layout a plan
+               with the feature off gets. */
+            const toolbar = document.querySelector('.local-dimensions-toolbar');
+            if (toolbar) {
+                toolbar.classList.toggle('local-dimensions-has-fav', !!count);
+            }
         }
 
         /**
