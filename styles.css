@@ -3580,11 +3580,15 @@ a.local-dimensions-course-act-row:focus {
     animation: local-dimensions-fadeIn 0.2s ease;
 }
 
-/* A third clipping ancestor, alongside .local-dimensions-accordion-item and -content: this pane
-   would otherwise cut the downward tooltip at its own bottom edge - the grade chip on the last
-   journey row when no submit button follows, and the rating tooltip when the Progress pane holds
-   only the assessment card. Visibility is gated by display (above), never by overflow, so
-   relaxing it here cannot reveal an inactive pane. */
+/* One of four clipping ancestors the downward tooltip meets: .local-dimensions-accordion-item,
+   -accordion-content, -tabs-wrapper and this pane. Relaxing the pane buys the balloon this
+   pane's own bottom padding - enough for one line, so the common case reads - and then meets
+   .local-dimensions-tabs-wrapper, which still clips. Residual limit, accepted: a balloon that
+   wraps to two lines still loses the second on the last journey row when no submit button
+   follows it, and on mobile, where the pane's padding is smaller, even one line clips. The
+   balloon is decoration - the full text is always in the DOM - so this is not worth relaxing
+   the wrapper, which is the last containment for all four panes. Visibility is gated by
+   display (above), never by overflow, so relaxing it here cannot reveal an inactive pane. */
 .local-dimensions-tab-pane-progress {
     overflow: visible;
 }
