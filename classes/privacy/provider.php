@@ -17,10 +17,10 @@
 /**
  * Privacy API implementation for local_dimensions.
  *
- * The plugin stores no personal data of its own beyond four per-user preferences: two that
- * remember the Competency hub's last-visited view and its display-toggle choices, and two that
- * remember the learner views' chrome and favourite competencies. It has no database tables
- * (custom-field data belongs to competencies/templates, not users), so this is a
+ * The plugin stores no personal data of its own beyond five per-user preferences: two that
+ * remember the Competency hub's last-visited view and its display-toggle choices, and three that
+ * remember the learner views' chrome, favourite competencies and folded hero. It has no database
+ * tables (custom-field data belongs to competencies/templates, not users), so this is a
  * preference-only provider.
  *
  * Metadata plus user_preference_provider is the whole obligation, and the omissions are
@@ -73,6 +73,10 @@ class provider implements \core_privacy\local\metadata\provider, user_preference
             constants::PREF_LEARNER_FAV,
             'privacy:metadata:preference:learner_fav'
         );
+        $collection->add_user_preference(
+            constants::PREF_LEARNER_HERO,
+            'privacy:metadata:preference:learner_hero'
+        );
         return $collection;
     }
 
@@ -102,6 +106,11 @@ class provider implements \core_privacy\local\metadata\provider, user_preference
             $userid,
             constants::PREF_LEARNER_FAV,
             get_string('privacy:metadata:preference:learner_fav', 'local_dimensions')
+        );
+        self::export_preference(
+            $userid,
+            constants::PREF_LEARNER_HERO,
+            get_string('privacy:metadata:preference:learner_hero', 'local_dimensions')
         );
     }
 

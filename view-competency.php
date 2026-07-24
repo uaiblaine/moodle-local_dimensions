@@ -149,6 +149,9 @@ echo $OUTPUT->render_from_template('local_dimensions/view_competency', $template
 // Initialise the collapsible description for the hero.
 $PAGE->requires->js_call_amd('local_dimensions/collapsible_description', 'init');
 
+// Wire the hero's open/slim handle. The stored state is already rendered.
+$PAGE->requires->js_call_amd('local_dimensions/hero_collapse', 'init');
+
 // Inject compiled custom CSS via AMD (no inline template JS).
 if (!empty($templatedata['hascustomcss'])) {
     $PAGE->requires->js_call_amd(

@@ -115,6 +115,8 @@ class view_competency_page implements renderable, templatable {
                 'hastextcolor' => !empty($textcolor),
                 'bgimage' => $bgimage,
                 'hasbgimage' => !empty($bgimage),
+                // The same stored choice as the plan overview: one hero, one preference.
+                'slim' => \local_dimensions\helper::hero_is_slim(),
             ];
         }
 

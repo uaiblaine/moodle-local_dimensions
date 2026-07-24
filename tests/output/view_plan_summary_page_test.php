@@ -358,6 +358,29 @@ final class view_plan_summary_page_test extends advanced_testcase {
     }
 
     /**
+     * The hero opens by default and stays folded once the learner folded it.
+     *
+     * The state has to reach the first paint: applying it after the page renders would show
+     * the tall header and then snap it shut under the reader.
+     *
+     * @return void
+     */
+    public function test_the_hero_carries_the_stored_open_or_slim_state(): void {
+        $this->resetAfterTest();
+        $fixture = $this->create_plan_with_competencies();
+        $this->setUser($fixture['user']);
+
+        $this->assertFalse($this->export($fixture['plan'])['hero']['slim']);
+
+        set_user_preference(constants::PREF_LEARNER_HERO, '1');
+        $this->assertTrue($this->export($fixture['plan'])['hero']['slim']);
+
+        // Anything the preference could hold other than the stored flag reads as open.
+        set_user_preference(constants::PREF_LEARNER_HERO, 'yes');
+        $this->assertFalse($this->export($fixture['plan'])['hero']['slim']);
+    }
+
+    /**
      * The keys of an array, sorted, so an assertion does not depend on insertion order.
      *
      * @param array $value The array to read.

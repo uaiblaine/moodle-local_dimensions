@@ -184,6 +184,17 @@ define([], function() {
                 ? document.querySelector(rootOrSelector)
                 : rootOrSelector;
             setupAllUnder(root || document);
+        },
+
+        /**
+         * Re-measure every container already initialised.
+         *
+         * refresh() only reaches containers it has not seen before, so a container that was
+         * hidden at init time (the hero description while the hero is slim, which measures as
+         * fitting) needs this once it is back on screen.
+         */
+        remeasure: function() {
+            trackedContainers.forEach(measure);
         }
     };
 });

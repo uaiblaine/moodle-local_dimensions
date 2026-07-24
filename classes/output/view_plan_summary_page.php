@@ -206,6 +206,10 @@ class view_plan_summary_page implements renderable, templatable {
                 'hasduedate' => !empty($duedateformatted),
                 'bgimage' => $bgimage,
                 'hasbgimage' => !empty($bgimage),
+                /* Resolved server-side so the learner's folded hero is already folded on the
+                   first paint - toggling it after paint would show the tall header and then
+                   snap it shut under the reader. */
+                'slim' => \local_dimensions\helper::hero_is_slim(),
                 'duedateiconurl' => $output->image_url('status/calendar-light', 'local_dimensions')->out(false),
             ],
             'competencies' => [],

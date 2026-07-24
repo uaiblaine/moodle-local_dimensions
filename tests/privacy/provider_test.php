@@ -46,19 +46,20 @@ final class provider_test extends advanced_testcase {
     }
 
     /**
-     * get_metadata declares exactly the four view-state preferences.
+     * get_metadata declares exactly the five view-state preferences.
      *
      * @return void
      */
     public function test_get_metadata_declares_every_preference(): void {
         $collection = new collection('local_dimensions');
         $items = provider::get_metadata($collection)->get_collection();
-        $this->assertCount(4, $items);
+        $this->assertCount(5, $items);
         $names = array_map(static fn($item) => $item->get_name(), $items);
         $this->assertContains(constants::PREF_CENTRAL_NAV, $names);
         $this->assertContains(constants::PREF_CENTRAL_DISPLAY, $names);
         $this->assertContains(constants::PREF_LEARNER_VIEW, $names);
         $this->assertContains(constants::PREF_LEARNER_FAV, $names);
+        $this->assertContains(constants::PREF_LEARNER_HERO, $names);
     }
 
     /**

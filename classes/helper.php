@@ -2184,6 +2184,20 @@ class helper {
     }
 
     /**
+     * Whether the learner asked for the hero to stay folded to its slim state.
+     *
+     * One choice covers both learner views: the hero is the same component on the plan overview
+     * and the competency tracker, so a learner who does not want a tall header does not want one
+     * on either page. Anything other than the stored '1' reads as open, which is also what an
+     * absent preference gives - the hero opens by default.
+     *
+     * @return bool True when the hero should render slim.
+     */
+    public static function hero_is_slim(): bool {
+        return get_user_preferences(constants::PREF_LEARNER_HERO, '0') === '1';
+    }
+
+    /**
      * Delete every user preference this plugin owns, for all users.
      *
      * Moodle does not purge a component's user_preferences rows on uninstall (the table has no

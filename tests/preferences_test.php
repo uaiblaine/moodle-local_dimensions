@@ -47,6 +47,7 @@ final class preferences_test extends advanced_testcase {
             constants::PREF_CENTRAL_DISPLAY,
             constants::PREF_LEARNER_VIEW,
             constants::PREF_LEARNER_FAV,
+            constants::PREF_LEARNER_HERO,
         ];
         foreach ($expected as $name) {
             $this->assertArrayHasKey($name, $prefs);
