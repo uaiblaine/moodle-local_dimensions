@@ -1695,7 +1695,13 @@ near a pane's top: the assessment card is the pane's first element, and the jour
 is right behind it. A long scale name — exactly what makes the balloon appear — wraps to two or
 three lines and clips first.
 
-Add the variant to `styles.css`, directly after the `.local-dimensions-tip` trigger rule:
+Add the variant to `styles.css` **after the base `.local-dimensions-tip::after` and
+`::before` rules** — the position is load-bearing, not cosmetic. The variant and the base
+have identical specificity (one class, one pseudo-element), so the later block wins per
+property. Placed earlier, the base re-applies `bottom` after the variant sets it to `auto`,
+leaving the box with both `top` and `bottom` set; with `height: auto` that is
+over-constrained and the balloon collapses to zero height, and the arrow ends up with both
+border colours. The design kit's own stylesheet orders them this way for the same reason:
 
 ```css
 /* Downward, because the accordion's expand/collapse overflow clips an upward balloon
