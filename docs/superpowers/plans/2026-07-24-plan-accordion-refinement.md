@@ -1116,8 +1116,19 @@ git commit -m "feat(learner): fold linked courses into a tab and merge assessmen
 
 - [ ] **Step 1: Rewrite `renderStatusSection`**
 
-Replace the whole function body (keep the docblock, updating its last `@param` line to say
-"or '' to hide the button, which the web service already does when the setting is off"):
+Replace the whole function body. The docblock needs two edits, not one: its last `@param`
+line becomes "or '' to hide the button, which the web service already does when the setting
+is off", **and** its summary line — which currently says no card wrapper is needed — has to
+go, because the first thing the new body emits is exactly that card.
+
+Note on escaping: `escapeHtml()` builds its result by assigning to `textContent` and reading
+`innerHTML`, which encodes `&`, `<` and `>` but **not** quotes — quotes are only encoded in
+attribute-value serialisation, and that is a text-node serialisation. This task is the first
+to put author-written text into a quoted attribute (`data-dim-tip`), so harden `escapeHtml()`
+itself to encode `"` and `'` before relying on it there. Fixing the shared function rather
+than the call site also covers the several pre-existing attribute sinks in the file, and the
+identical `data-dim-tip` line Task 6 adds. Escaping quotes is safe for text sinks: the entity
+decodes back to the literal character when the browser parses the HTML.
 
 ```js
         function renderStatusSection(ucs, strMap, scaleDescription) {
@@ -1313,12 +1324,21 @@ on this wrapper, because a wrapper carrying `overflow: hidden` would clip its ow
 /* Delay on entry only, so brushing past does not flicker. */
 .local-dimensions-tip:hover::after,
 .local-dimensions-tip:hover::before,
+.local-dimensions-tip:focus-visible::after,
+.local-dimensions-tip:focus-visible::before,
 .local-dimensions-tip:focus-within::after,
 .local-dimensions-tip:focus-within::before {
     opacity: 1;
     transition-delay: 250ms;
 }
 ```
+
+The kit also shows an `.is-open` selector and a `.dim-tip-bottom` variant. **Neither ships
+here.** `.is-open` is a forced state the kit uses to photograph the balloon open. The bottom
+variant is documented for "first row of a list, top of a modal" — the journey's first row has
+the assessment card above it and no ancestor clips, so the top-anchored primitive is enough
+for both uses in this slice. Add the variant only if a later layout puts a balloon against a
+clipping edge.
 
 - [ ] **Step 4: Lint and build**
 
