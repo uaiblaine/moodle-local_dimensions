@@ -330,4 +330,106 @@ final class get_competency_courses_test extends \advanced_testcase {
 
         $this->assertSame([(int) $survivor->cmid], $cmids);
     }
+
+    /**
+     * An actively enrolled viewer gets an open card.
+     *
+     * @return void
+     */
+    public function test_execute_reports_open_access_for_an_enrolled_user(): void {
+        $this->resetAfterTest();
+        $competencyid = $this->set_up_competency();
+        $course = $this->getDataGenerator()->create_course();
+        \core_competency\api::add_competency_to_course($course->id, $competencyid);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+
+        $rows = $this->cleaned_result_for($competencyid, $user);
+
+        $this->assertSame('open', $rows[$course->id]['access']);
+        $this->assertSame(0, $rows[$course->id]['lockdate']);
+    }
+
+    /**
+     * Not enrolled but able to self-enrol: the lock becomes an invitation.
+     *
+     * @return void
+     */
+    public function test_execute_reports_enrol_access_when_self_enrolment_is_open(): void {
+        $this->resetAfterTest();
+        $competencyid = $this->set_up_competency();
+        $course = $this->getDataGenerator()->create_course();
+        \core_competency\api::add_competency_to_course($course->id, $competencyid);
+
+        $plugin = enrol_get_plugin('self');
+        $instance = null;
+        foreach (enrol_get_instances($course->id, false) as $candidate) {
+            if ($candidate->enrol === 'self') {
+                $instance = $candidate;
+            }
+        }
+        $this->assertNotNull($instance, 'The self enrolment instance should exist by default.');
+        $plugin->update_status($instance, ENROL_INSTANCE_ENABLED);
+
+        $user = $this->getDataGenerator()->create_user();
+        $rows = $this->cleaned_result_for($competencyid, $user);
+
+        $this->assertSame('enrol', $rows[$course->id]['access']);
+    }
+
+    /**
+     * Neither enrolled nor able to join: locked, and the card gets a date to show.
+     *
+     * @return void
+     */
+    public function test_execute_reports_locked_access_with_the_course_start_date(): void {
+        $this->resetAfterTest();
+        $competencyid = $this->set_up_competency();
+        $startdate = time() + WEEKSECS;
+        $course = $this->getDataGenerator()->create_course(['startdate' => $startdate]);
+        \core_competency\api::add_competency_to_course($course->id, $competencyid);
+
+        $user = $this->getDataGenerator()->create_user();
+        $rows = $this->cleaned_result_for($competencyid, $user);
+
+        $this->assertSame('locked', $rows[$course->id]['access']);
+        $this->assertSame($startdate, $rows[$course->id]['lockdate']);
+        $this->assertFalse($rows[$course->id]['isenrolstart']);
+    }
+
+    /**
+     * A course with one tracked activity carries it; one with two does not.
+     *
+     * @return void
+     */
+    public function test_execute_carries_the_single_trackable_activity(): void {
+        $this->resetAfterTest();
+        $competencyid = $this->set_up_competency();
+
+        $single = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        \core_competency\api::add_competency_to_course($single->id, $competencyid);
+        $this->getDataGenerator()->create_module('page', [
+            'course' => $single->id,
+            'name' => 'Weekly reflection',
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+
+        $many = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        \core_competency\api::add_competency_to_course($many->id, $competencyid);
+        foreach (['First', 'Second'] as $name) {
+            $this->getDataGenerator()->create_module('page', [
+                'course' => $many->id,
+                'name' => $name,
+                'completion' => COMPLETION_TRACKING_MANUAL,
+            ]);
+        }
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($user->id, $single->id, 'student');
+        $this->getDataGenerator()->enrol_user($user->id, $many->id, 'student');
+
+        $rows = $this->cleaned_result_for($competencyid, $user);
+
+        $this->assertSame('Weekly reflection', $rows[$single->id]['activity']['name']);
+        $this->assertArrayNotHasKey('activity', $rows[$many->id]);
+    }
 }
