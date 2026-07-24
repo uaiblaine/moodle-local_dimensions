@@ -233,7 +233,8 @@ define(
                 {key: 'taxonomy_def_value', component: 'local_dimensions'},
                 {key: 'outcome_recommend', component: 'local_dimensions'},
                 {key: 'activities_count', component: 'local_dimensions'},
-                {key: 'activities_count_one', component: 'local_dimensions'}
+                {key: 'activities_count_one', component: 'local_dimensions'},
+                {key: 'progress_tab', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -313,16 +314,13 @@ define(
                     },
                     outcomeRecommend: strings[72],
                     activitiesCount: strings[73],
-                    activitiesCountOne: strings[74]
+                    activitiesCountOne: strings[74],
+                    progressTab: strings[75]
                 };
 
                 const summaryState = getSummaryState(data, courses);
                 let html = '<div class="local-dimensions-competency-detail">';
                 html += renderSummaryTabs(summaryState, strMap, planId);
-
-                if (summaryState.visibleCourses.length > 0) {
-                    html += renderCourseCardsScrollable(summaryState.visibleCourses, strMap);
-                }
 
                 html += '</div>';
 
@@ -363,6 +361,24 @@ define(
         }
 
         /**
+         * Whether the competency has a non-empty ancestry to show in the path footnote.
+         *
+         * The footnote renderer returns an empty string when both halves (framework shortname
+         * and parent breadcrumb) are empty, so a root competency with the setting on would
+         * otherwise open an empty Description tab.
+         *
+         * @param {Object} comp The competency record
+         * @param {Object} competencyData The wrapped competency data (framework + compparents)
+         * @return {boolean} True when there is a framework shortname or at least one parent
+         */
+        function hasCompetencyPath(comp, competencyData) {
+            return !!(comp && displaySettings.showpath && (
+                competencyData?.framework?.shortname
+                || (Array.isArray(competencyData?.compparents) && competencyData.compparents.length > 0)
+            ));
+        }
+
+        /**
          * Build the render state used by the summary tabs.
          *
          * @param {Object} data The competency summary payload
@@ -380,7 +396,7 @@ define(
             const hasStatus = !!(ucs && (ucs.usercompetency || ucs.usercompetencyplan));
             const hasDesc = !!(comp && displaySettings.showdescription && comp.description);
             const hasTaxonomyCard = !!(displaySettings.showtaxonomycard && primaryTaxonomy?.term);
-            const hasPath = !!(comp && displaySettings.showpath);
+            const hasPath = hasCompetencyPath(comp, competencyData);
             const hasRelated = !!(
                 comp && displaySettings.showrelated && competencyData?.relatedcompetencies
                 && competencyData.relatedcompetencies.length > 0
@@ -389,6 +405,7 @@ define(
             const hasRules = !!(
                 comp?.ruleoutcome && Number.parseInt(comp.ruleoutcome, 10) !== 0 && comp.ruletype
             );
+            const hasCourses = visibleCourses.length > 0;
 
             return {
                 ucs: ucs,
@@ -398,6 +415,7 @@ define(
                 scaleDescription: (competencyData && competencyData.scaledescription) || '',
                 visibleCourses: visibleCourses,
                 primaryTaxonomy: primaryTaxonomy,
+                hasCourses: hasCourses,
                 hasStatus: hasStatus,
                 hasDesc: hasDesc,
                 hasTaxonomyCard: hasTaxonomyCard,
@@ -418,17 +436,21 @@ define(
         function buildSummaryTabs(summaryState, strMap) {
             const tabs = [];
 
-            if (summaryState.hasStatus) {
-                tabs.push({id: 'status', label: strMap.assessmentStatus, icon: 'fa-star'});
+            if (summaryState.hasCourses) {
+                tabs.push({
+                    id: 'courses',
+                    label: strMap.relatedContent,
+                    count: summaryState.visibleCourses.length
+                });
             }
             if (summaryState.hasDesc || summaryState.hasTaxonomyCard || summaryState.hasPath || summaryState.hasRelated) {
-                tabs.push({id: 'description', label: strMap.descriptionLabel, icon: 'fa-file-text-o'});
+                tabs.push({id: 'description', label: strMap.descriptionLabel});
             }
-            if (summaryState.hasEvidence) {
-                tabs.push({id: 'evidence', label: strMap.evidenceLabel, icon: 'fa-check-square-o'});
+            if (summaryState.hasStatus || summaryState.hasEvidence) {
+                tabs.push({id: 'progress', label: strMap.progressTab});
             }
             if (summaryState.hasRules) {
-                tabs.push({id: 'rules', label: strMap.rulesTab, icon: 'fa-gavel'});
+                tabs.push({id: 'rules', label: strMap.rulesTab});
             }
 
             return tabs;
@@ -477,6 +499,9 @@ define(
                 html += ' tabindex="' + (isActive ? '0' : '-1') + '"';
                 html += ' data-tab="' + tab.id + '">';
                 html += escapeHtml(tab.label);
+                if (tab.count) {
+                    html += '<span class="local-dimensions-tab-count">' + tab.count + '</span>';
+                }
                 html += '</button>';
             });
 
@@ -496,14 +521,14 @@ define(
         function renderSummaryTabPanes(summaryState, tabs, strMap, planId) {
             let html = '<div class="local-dimensions-tabs-content">';
 
-            if (summaryState.hasStatus) {
-                html += renderStatusPane(summaryState, tabs, strMap);
+            if (summaryState.hasCourses) {
+                html += renderCoursesPane(summaryState, tabs, strMap);
             }
             if (summaryState.hasDesc || summaryState.hasTaxonomyCard || summaryState.hasPath || summaryState.hasRelated) {
                 html += renderDescriptionPane(summaryState, tabs, strMap, planId);
             }
-            if (summaryState.hasEvidence) {
-                html += renderEvidencePane(summaryState, tabs, strMap);
+            if (summaryState.hasStatus || summaryState.hasEvidence) {
+                html += renderProgressPane(summaryState, tabs, strMap);
             }
             if (summaryState.hasRules) {
                 html += renderRulesPane(summaryState, tabs, strMap, planId);
@@ -514,19 +539,20 @@ define(
         }
 
         /**
-         * Render the status tab pane.
+         * Render the related-content tab pane.
          *
          * @param {Object} summaryState Normalized summary state
          * @param {Array} tabs Visible tabs
          * @param {Object} strMap Language strings map
          * @return {string} HTML
          */
-        function renderStatusPane(summaryState, tabs, strMap) {
-            const isFirst = tabs[0].id === 'status';
-            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-status' + (isFirst ? ' active' : '') + '"';
-            html += ' id="local-dimensions-tabpane-status-' + summaryState.comp.id + '" data-tab="status"';
-            html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-status-' + summaryState.comp.id + '">';
-            html += renderStatusSection(summaryState.ucs, strMap, summaryState.scaleDescription);
+        function renderCoursesPane(summaryState, tabs, strMap) {
+            const isFirst = tabs[0].id === 'courses';
+            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-courses' +
+                (isFirst ? ' active' : '') + '"';
+            html += ' id="local-dimensions-tabpane-courses-' + summaryState.comp.id + '" data-tab="courses"';
+            html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-courses-' + summaryState.comp.id + '">';
+            html += renderCourseCardsScrollable(summaryState.visibleCourses, strMap);
             html += '</div>';
             return html;
         }
@@ -567,37 +593,56 @@ define(
         }
 
         /**
-         * Render the evidence tab pane.
+         * Render the progress tab pane: where the learner stands, then what produced it.
          *
          * @param {Object} summaryState Normalized summary state
          * @param {Array} tabs Visible tabs
          * @param {Object} strMap Language strings map
          * @return {string} HTML
          */
-        function renderEvidencePane(summaryState, tabs, strMap) {
+        function renderProgressPane(summaryState, tabs, strMap) {
             const scaleConfig = summaryState.comp?.scaleconfiguration
                 || summaryState.competencyData?.scaleconfiguration
                 || null;
-            const isFirst = tabs[0].id === 'evidence';
-            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-evidence' +
+            const isFirst = tabs[0].id === 'progress';
+            let html = '<div class="local-dimensions-tab-pane local-dimensions-tab-pane-progress' +
                 (isFirst ? ' active' : '') + '"';
-            html += ' id="local-dimensions-tabpane-evidence-' + summaryState.comp.id + '" data-tab="evidence"';
-            html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-evidence-' + summaryState.comp.id + '">';
-            html += renderEvidenceList(summaryState.ucs, strMap, scaleConfig);
+            html += ' id="local-dimensions-tabpane-progress-' + summaryState.comp.id + '" data-tab="progress"';
+            html += ' role="tabpanel" aria-labelledby="local-dimensions-tab-progress-' + summaryState.comp.id + '">';
 
-            // Submit evidence button (if enabled by admin + user has capability).
-            if (displaySettings.enableevidencesubmitbutton) {
-                const uc = summaryState.ucs.usercompetency || summaryState.ucs.usercompetencyplan;
-                if (uc && uc.userid) {
-                    const evidenceUrl = M.cfg.wwwroot + '/admin/tool/lp/user_evidence_list.php?userid=' + uc.userid;
-                    html += '<div class="local-dimensions-evidence-submit-wrapper">';
-                    html += '<a href="' + escapeHtml(evidenceUrl) + '" class="local-dimensions-evidence-submit-btn">';
-                    html += escapeHtml(strMap.evidenceSubmit);
-                    html += '</a>';
-                    html += '</div>';
-                }
+            if (summaryState.hasStatus) {
+                html += renderStatusSection(summaryState.ucs, strMap, summaryState.scaleDescription);
+            }
+            if (summaryState.hasEvidence) {
+                html += renderEvidenceList(summaryState.ucs, strMap, scaleConfig);
+                html += renderEvidenceSubmit(summaryState, strMap);
             }
 
+            html += '</div>';
+            return html;
+        }
+
+        /**
+         * Render the "submit prior learning evidence" button, when the admin enabled it.
+         *
+         * @param {Object} summaryState Normalized summary state
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML, empty when the setting or the capability is off
+         */
+        function renderEvidenceSubmit(summaryState, strMap) {
+            if (!displaySettings.enableevidencesubmitbutton) {
+                return '';
+            }
+            const uc = summaryState.ucs.usercompetency || summaryState.ucs.usercompetencyplan;
+            if (!uc || !uc.userid) {
+                return '';
+            }
+
+            const evidenceUrl = M.cfg.wwwroot + '/admin/tool/lp/user_evidence_list.php?userid=' + uc.userid;
+            let html = '<div class="local-dimensions-evidence-submit-wrapper">';
+            html += '<a href="' + escapeHtml(evidenceUrl) + '" class="local-dimensions-evidence-submit-btn">';
+            html += escapeHtml(strMap.evidenceSubmit);
+            html += '</a>';
             html += '</div>';
             return html;
         }
