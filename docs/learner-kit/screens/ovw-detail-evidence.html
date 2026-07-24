@@ -1,4 +1,4 @@
-<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Evidence tab" subtitle="Evidence tab — as-is slider │ to-be outcome-first: result strip (completed-by-rule) + journey list, aligned dates, counts" -->
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Evidence" subtitle="as-is slider │ to-be journey list inside the Progress tab: 4-column row, short date (12/01/26), truncated grade chip + tooltip" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
@@ -50,7 +50,7 @@
 .leg .v{color:var(--lk-text-2);}
 .leg .rule{color:#8a8980;}
 
-/* ---- Evidence tab pane (accordion.js renderEvidencePane / renderEvidenceSlider) ---- */
+/* ---- Evidence pane, the superseded slider (kept for the type palette) ---- */
 .ev-body{padding:2px 20px 0;}
 /* Slider wrapper: position:relative + 3rem bottom pad reserves room for the controls pill. */
 .ev-wrap{position:relative;width:100%;padding-bottom:3rem;}
@@ -105,15 +105,11 @@
 /* ============================================================================
    TO-BE redesign — outcome-first (Result strip + Journey list).
    Hierarchy: (1) what made it proficient  (2) the journey/attached  (3) type.
+   Lives inside the merged Progress tab — see ovw-detail-progress.html, which
+   owns the pane composition; this file owns the evidence pieces themselves.
    ============================================================================ */
-/* Result strip — the "why proficient" answer, pinned to the top. */
-.ev-result{margin:2px 20px 0;background:var(--lk-surface);border:1px solid var(--lk-line);border-radius:.75rem;padding:.8rem .9rem;}
-.ev-result-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.6rem;}
-.ev-outcome{display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem;font-weight:700;padding:.18rem .6rem;border-radius:999px;background:#d1e7dd;color:#0f5132;}
-.ev-outcome svg{width:.85rem;height:.85rem;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
-.ev-counts{font-size:.72rem;color:var(--lk-muted);}
 /* Completed-by-rule card — ORANGE, tying it to the Rules tab; kept in both panels. */
-.ev-rule{display:flex;align-items:center;gap:.65rem;text-decoration:none;color:inherit;padding:.55rem .65rem;border-radius:.5rem;background:var(--lk-surface-2);border:1px solid rgb(253 126 20 / 25%);}
+.ev-rule{display:flex;align-items:center;gap:.65rem;margin:2px 20px 0;text-decoration:none;color:inherit;padding:.55rem .65rem;border-radius:.5rem;background:var(--lk-surface-2);border:1px solid rgb(253 126 20 / 25%);}
 .ev-rule-icon{flex:none;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:.4rem;background:rgb(253 126 20 / 10%);color:var(--lk-orange-dark);}
 .ev-rule-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .ev-rule-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:.1rem;}
@@ -122,7 +118,8 @@
 .ev-rule-link{flex:none;display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;font-weight:600;color:var(--lk-orange-dark);white-space:nowrap;}
 .ev-rule-link svg{width:.8rem;height:.8rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 /* Journey list — supporting evidence; type demoted to icon + small label; date is an aligned column. */
-.ev-group-lbl{font-size:.78rem;font-weight:700;color:var(--lk-muted);margin:.9rem 20px .1rem;}
+.ev-group-lbl{display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;color:var(--lk-muted);margin:.9rem 20px .1rem;}
+.ev-group-n{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--lk-surface-2);color:var(--lk-muted);font-size:.66rem;font-weight:700;}
 .ev-journey{list-style:none;margin:0 20px;padding:0;}
 .ev-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto 84px;align-items:center;gap:.6rem;padding:.55rem .5rem;border-top:1px solid var(--lk-line);}
 .ev-row:first-child{border-top:none;}
@@ -134,16 +131,30 @@
 .ev-row-main{min-width:0;display:flex;flex-direction:column;}
 .ev-row-desc{font-size:.8rem;color:var(--lk-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ev-row-type{font-size:.66rem;color:var(--lk-muted);}
-.ev-row-assess{font-size:.7rem;font-weight:600;padding:.08rem .4rem;border-radius:.35rem;background:var(--lk-line);color:var(--lk-text-2);white-space:nowrap;justify-self:start;}
+/* Grade chip — a hard cap plus ellipsis, so an author-written scale name can never
+   push the date column out of alignment. Full text stays in the DOM (see the tooltip). */
+.ev-row-assess{display:block;min-width:0;max-width:104px;font-size:.7rem;font-weight:600;padding:.08rem .4rem;border-radius:.35rem;
+  background:var(--lk-line);color:var(--lk-text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ev-row-assess.prof{background:#d1e7dd;color:#0f5132;}
-.ev-row-assess.none{background:transparent;color:#adb5bd;padding:0;}
+.ev-row-assess.none{background:transparent;color:#adb5bd;padding:0;max-width:none;}
 .ev-row-date{font-size:.72rem;color:var(--lk-muted);white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;padding-right:.15rem;}
+/* Tooltip primitive — the DS component (design-kit/tooltip.html). The truncation lives on
+   the child, the balloon on the wrapper; inverting them would clip the balloon. */
+.dim-tip{position:relative;display:inline-flex;align-items:center;min-width:0;max-width:100%;justify-self:start;}
+.dim-tip::after,.dim-tip::before{position:absolute;opacity:0;pointer-events:none;transition:opacity 150ms ease;}
+.dim-tip::after{content:attr(data-dim-tip);bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);max-width:260px;width:max-content;
+  padding:.35rem .55rem;border-radius:.25rem;background:#1d2125;color:#fff;font-size:.75rem;font-weight:400;line-height:1.35;
+  text-align:left;white-space:normal;overflow-wrap:anywhere;box-shadow:0 .5rem 1rem rgba(0,0,0,.15);z-index:20;}
+.dim-tip::before{content:'';bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1d2125;z-index:21;}
+.dim-tip:hover::after,.dim-tip:hover::before{opacity:1;transition-delay:250ms;}
+.dim-tip.is-open::after,.dim-tip.is-open::before{opacity:1;transition-delay:0s;}
 </style>
 <div class="kit"><div class="screens">
 
   <!-- ============ AS-IS ============ -->
   <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>Superseded · the card slider (already removed in code)</div>
+    <div class="note" style="padding-top:6px"><b>Note on this panel.</b> Unlike the other screens, this left panel is no longer the shipped output: the slider was replaced by a flat evidence list (decisive strip + chronological rows) in an earlier slice, and this file was not re-synced. It is kept here as the origin of the type palette and of the IDs, and because the to-be reads against it. What ships today is the right panel minus the four-column grid, the short date and the tooltip — those are what this slice adds.</div>
 
     <div class="lk-cap">Evidence tab — card slider · <span class="idb">OVW-EVID-CARD</span></div>
     <div class="ev-body">
@@ -228,59 +239,54 @@
 
   <!-- ============ TO-BE ============ -->
   <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · outcome-first (proposed)</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · outcome-first, inside the merged Progress tab</div>
 
-    <div class="lk-cap">Result — why proficient · <span class="idb r">OVW-EVID-RESULT · to-be</span></div>
-    <div class="ev-result">
-      <div class="ev-result-head">
-        <span class="ev-outcome"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Proficient</span>
-        <span class="ev-counts">1 decisive &middot; 4 on the journey</span>
-      </div>
-      <a class="ev-rule" href="#rules">
-        <span class="ev-rule-icon"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-2h14v2"/></svg></span>
-        <span class="ev-rule-body"><b>Completed by competency rule</b><span>The competency rule was met &mdash; it overrode the existing grade.</span></span>
-        <span class="ev-rule-link">View rule <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-      </a>
-    </div>
+    <div class="lk-cap">Decisive result — what settled the competency · <span class="idb r">OVW-EVID-RULE · to-be</span></div>
+    <a class="ev-rule" href="#rules">
+      <span class="ev-rule-icon"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-2h14v2"/></svg></span>
+      <span class="ev-rule-body"><b>Completed by competency rule</b><span>The competency rule was met &mdash; it overrode the existing grade.</span></span>
+      <span class="ev-rule-link">View rule <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
     <div class="lk-ids">
       <span class="idb r">OVW-EVID-RULE · evidence_competencyrule</span>
-      <span class="idb r">OVW-EVID-COUNTS · admin toggle</span>
+      <span class="idb r">OVW-EVID-COUNTS · revised — no outcome header</span>
     </div>
-    <div class="note">Precedence: rule completion (<code>evidence_competencyrule</code> + <code>ACTION_COMPLETE</code>) leads and links the Rules tab &mdash; even over a manual/course grade it overrode. With no rule, this strip shows the proficient rating/course evidence instead.</div>
+    <div class="note">Precedence: rule completion (<code>evidence_competencyrule</code> + <code>ACTION_COMPLETE</code>) leads and links the Rules tab &mdash; even over a manual/course grade it overrode. <b>Revised:</b> this strip no longer carries an outcome badge or a &ldquo;1 decisive &middot; 4 on the journey&rdquo; header. In the merged Progress tab the assessment card sits directly above it and already states &ldquo;Competent &middot; Proficient&rdquo;, so the badge would say the same thing twice; the journey count moves onto the group label below. The proposed <code>showevidencecounts</code> setting is dropped with it. See <code>ovw-detail-progress.html</code>.</div>
 
-    <div class="ev-group-lbl">On the journey · <span class="idb r">OVW-EVID-JOURNEY · to-be</span></div>
+    <div class="ev-group-lbl">On the journey <span class="ev-group-n">4</span> <span class="idb r">OVW-EVID-JOURNEY · to-be</span></div>
     <ul class="ev-journey">
       <li class="ev-row clickable" tabindex="0" role="button" aria-label="View details: Manual rating">
         <span class="ev-row-icon t-manual"><svg viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>
         <span class="ev-row-main"><span class="ev-row-desc">Rated &ldquo;Excellent&rdquo; by assessor</span><span class="ev-row-type">Manual rating &middot; overridden by rule</span></span>
-        <span class="ev-row-assess prof">Excellent</span>
-        <span class="ev-row-date">14 Jan 2026</span>
+        <span class="dim-tip is-open" data-dim-tip="Excellent with distinction in written communication"><span class="ev-row-assess prof">Excellent with distinction in written communication</span></span>
+        <span class="ev-row-date">14/01/26</span>
       </li>
       <li class="ev-row clickable" tabindex="0" role="button" aria-label="View details: Activity completion">
         <span class="ev-row-icon t-activity"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg></span>
         <span class="ev-row-main"><span class="ev-row-desc">Completed &ldquo;Reflective essay&rdquo;</span><span class="ev-row-type">Activity completion</span></span>
-        <span class="ev-row-assess prof">Competent</span>
-        <span class="ev-row-date">12 Jan 2026</span>
+        <span class="dim-tip" data-dim-tip="Competent"><span class="ev-row-assess prof">Competent</span></span>
+        <span class="ev-row-date">12/01/26</span>
       </li>
       <li class="ev-row">
         <span class="ev-row-icon t-grade"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg></span>
         <span class="ev-row-main"><span class="ev-row-desc">Course completed</span><span class="ev-row-type">Course grade</span></span>
         <span class="ev-row-assess none">&mdash;</span>
-        <span class="ev-row-date">10 Jan 2026</span>
+        <span class="ev-row-date">10/01/26</span>
       </li>
       <li class="ev-row clickable" tabindex="0" role="button" aria-label="View details: File attachment">
         <span class="ev-row-icon t-file"><svg viewBox="0 0 24 24"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span>
         <span class="ev-row-main"><span class="ev-row-desc">portfolio.pdf</span><span class="ev-row-type">File attachment</span></span>
         <span class="ev-row-assess none">&mdash;</span>
-        <span class="ev-row-date">08 Jan 2026</span>
+        <span class="ev-row-date">08/01/26</span>
       </li>
     </ul>
     <div class="lk-ids">
       <span class="idb">OVW-EVID-CARD · reused as compact row</span>
-      <span class="idb r">OVW-EVID-DATE · right-aligned column</span>
+      <span class="idb r">OVW-EVID-DATE · 12/01/26 · fixed column</span>
+      <span class="idb r">OVW-EVID-TIP · truncated chip + tooltip</span>
       <span class="idb">OVW-EVID-DETAIL · row opens modal</span>
     </div>
-    <div class="note">Type demoted to icon + small label (tertiary); assessment shown compact; <b>date is a fixed right-aligned column</b> (tabular-nums) &rarr; aligned across rows. A row with extra details is a <b>full-row target</b> (hover highlight + pointer, keyboard-focusable) that opens the detail modal &mdash; no chevron. Rows without extras (e.g. Course grade) are not interactive. The slider &amp; its nav arrows are dropped &mdash; <span class="idb">OVW-EVID-NAV</span> no longer applies.</div>
+    <div class="note">Four columns: <code>28px · minmax(0,1fr) · auto · 84px</code>. Type demoted to icon + small label (tertiary); the grade is a compact chip, <b>capped and ellipsised</b> so an author-written scale name can never push the date out of line &mdash; the full text stays in the DOM and a tooltip repeats it on hover (first row, shown open). Dates are <b>abbreviated</b> and sit in a fixed right-aligned column with <code>tabular-nums</code>, so they line up digit for digit. A row with extra details is a <b>full-row target</b> (hover highlight + pointer, keyboard-focusable) that opens the detail modal &mdash; no chevron. Rows without extras (Course grade here) are not interactive. The slider and its nav arrows are dropped &mdash; <span class="idb">OVW-EVID-NAV</span> no longer applies.</div>
 
     <div class="divlbl">Submit evidence &mdash; needs setting + capability <span class="idb r">OVW-EVID-SUBMIT</span></div>
     <div class="ev-submit-wrap"><a class="ev-submit" href="#">Submit prior learning evidence</a></div>
@@ -295,16 +301,17 @@
 <div class="legend">
   <h3>ID legend — Plan (OVW) · Detail — Evidence tab</h3>
   <div class="leg">
-    <span class="k">OVW-EVID-CARD</span><span class="v"><b>Evidence card / row</b> — icon + description + author/date. Six types keyed by <code>descidentifier</code> (core_competency <code>evidence_exporter</code>) &rarr; icon + colour in <code>getEvidenceTypeInfo</code>: <code>coursemodulecompleted</code>&rarr;activity, <code>coursecompleted</code>&rarr;grade, <code>manualoverride(inplan)</code>&rarr;manual, <code>evidenceofpriorlearninglinked</code>&rarr;file/prior, fallback&rarr;other. Manual override hides author/date. Palette = Bootstrap alert tints (<b>kept</b>). <span class="rule">accordion.js renderEvidenceSlider:1041-1087, getEvidenceTypeInfo:1919-2017; styles.css:1778-1806</span></span>
-    <span class="k">OVW-EVID-DETAIL</span><span class="v"><b>&ldquo;View details&rdquo;</b> — only when <code>hasExtraDetails = note || url || (grade &amp;&amp; gradename!=='-')</code>; opens the evidence detail modal. In the to-be, the whole row is the trigger. <span class="rule">accordion.js:1043,1077-1083, openEvidenceDetailModal:1146; evidence_detail_modal.mustache</span></span>
-    <span class="k">OVW-EVID-NAV</span><span class="v"><b>(as-is) Prev/next control group</b> — pill, bottom-right; toggles <code>disabled</code> at edges, hides when cards fit. <b>Dropped in the to-be</b> (no slider). <span class="rule">accordion.js renderEvidenceSlider:1092-1102, updateScrollableArrows:1399-1428</span></span>
-    <span class="k">OVW-EVID-SUBMIT</span><span class="v"><b>&ldquo;Submit prior learning evidence&rdquo;</b> &rarr; <code>/admin/tool/lp/user_evidence_list.php?userid=</code>. Needs <code>enableevidencesubmitbutton</code> + <code>moodle/competency:userevidencemanageown</code>. Orange, <b>kept</b>. <span class="rule">accordion.js renderEvidencePane:508-517; view-plan.php:83-88</span></span>
-    <span class="k">OVW-EVID-EMPTY</span><span class="v"><b>Muted &ldquo;No evidence recorded&rdquo;</b> — when <code>evidence.length===0</code>. The tab still exists because <code>hasEvidence = ucs &amp;&amp; showevidence</code>. <span class="rule">accordion.js renderEvidenceSlider:1031-1034, hasEvidence:307; string no_evidence</span></span>
-    <span class="k">OVW-EVID-RESULT</span><span class="v"><b>(to-be) Result strip</b> — the &ldquo;why proficient&rdquo; at the top: outcome badge (Proficient/Not yet, via <code>isGradeProficient(grade, scaleconfig)</code>, <code>accordion.js:1121</code>) + the decisive source. <b>Precedence:</b> rule completion first, else the proficient rating/course evidence.</span>
+    <span class="k">OVW-EVID-CARD</span><span class="v"><b>Evidence card / row</b> — icon + description + author/date. Six types keyed by <code>descidentifier</code> (core_competency <code>evidence_exporter</code>) &rarr; icon + colour in <code>getEvidenceTypeInfo</code>: <code>coursemodulecompleted</code>&rarr;activity, <code>coursecompleted</code>&rarr;grade, <code>manualoverride(inplan)</code>&rarr;manual, <code>evidenceofpriorlearninglinked</code>&rarr;file/prior, fallback&rarr;other. Manual override hides author/date. Palette = Bootstrap alert tints (<b>kept</b>). <span class="rule">accordion.js renderEvidenceRow / getEvidenceTypeInfo (the slider renderer this entry named is gone)</span></span>
+    <span class="k">OVW-EVID-DETAIL</span><span class="v"><b>&ldquo;View details&rdquo;</b> — only when <code>hasExtraDetails = note || url || (grade &amp;&amp; gradename!=='-')</code>; opens the evidence detail modal. In the to-be, the whole row is the trigger. <span class="rule">accordion.js renderEvidenceRow / openEvidenceDetailModal; evidence_detail_modal.mustache</span></span>
+    <span class="k">OVW-EVID-NAV</span><span class="v"><b>(as-is) Prev/next control group</b> — pill, bottom-right; toggles <code>disabled</code> at edges, hides when cards fit. <b>Dropped in the to-be</b> (no slider). <span class="rule">removed with the slider; the shared updateScrollableArrows survives for the course scroller</span></span>
+    <span class="k">OVW-EVID-SUBMIT</span><span class="v"><b>&ldquo;Submit prior learning evidence&rdquo;</b> &rarr; <code>/admin/tool/lp/user_evidence_list.php?userid=</code>. Needs <code>enableevidencesubmitbutton</code> + <code>moodle/competency:userevidencemanageown</code>. Orange, <b>kept</b>. <span class="rule">accordion.js renderEvidencePane; view-plan.php accordion settings</span></span>
+    <span class="k">OVW-EVID-EMPTY</span><span class="v"><b>Muted &ldquo;No evidence recorded&rdquo;</b> — when <code>evidence.length===0</code>. The tab still exists because <code>hasEvidence = ucs &amp;&amp; showevidence</code>. <span class="rule">accordion.js renderEvidenceList / getSummaryState hasEvidence; string no_evidence</span></span>
+    <span class="k">OVW-EVID-RESULT</span><span class="v"><b>(to-be, revised) Result strip</b> — originally proposed as an outcome badge (Proficient / Not yet, derived from the grade against the scale configuration) plus the decisive source. <b>The badge half is dropped:</b> with Assessment and Evidence merged into one Progress tab the assessment card renders directly above this strip and already carries the level and the proficiency pill, so the badge restated it. What survives is the decisive-source card — see OVW-EVID-RULE. <span class="rule">superseded by ovw-detail-progress.html · OVW-PROG-ORDER</span></span>
     <span class="k">OVW-EVID-RULE</span><span class="v"><b>(to-be) &ldquo;Completed by competency rule&rdquo; card</b> — shown when an <code>evidence_competencyrule</code> row with <code>ACTION_COMPLETE</code> exists (core logs it with the <code>$overridegrade</code>). Links the Rules tab; orange, tying it to the rules language. <b>Code gap:</b> <code>getEvidenceTypeInfo</code> has no case for <code>evidence_competencyrule</code> today (&rarr; Other) — the real change adds this type + the precedence. <span class="rule">core competency/classes/api.php:4617-4639; string evidence_competencyrule</span></span>
-    <span class="k">OVW-EVID-COUNTS</span><span class="v"><b>(to-be) Counts by outcome</b> — e.g. &ldquo;1 decisive &middot; 4 on the journey&rdquo;. Admin-toggleable via a proposed <code>showevidencecounts</code> setting.</span>
-    <span class="k">OVW-EVID-JOURNEY</span><span class="v"><b>(to-be) Journey list</b> — supporting evidence as compact rows; type demoted to icon + small label (tertiary). Replaces the slider.</span>
-    <span class="k">OVW-EVID-DATE</span><span class="v"><b>(to-be) Aligned date column</b> — <code>timecreated</code> as a fixed right-aligned column (tabular-nums), consistent across rows — fixes the current below-text misalignment. <span class="rule">accordion.js formatTimestamp; ev.timecreated</span></span>
+    <span class="k">OVW-EVID-COUNTS</span><span class="v"><b>(to-be, revised) Journey count</b> — originally &ldquo;1 decisive &middot; 4 on the journey&rdquo; in a result header, behind a proposed <code>showevidencecounts</code> setting. Revised to a single badge on the group label, counting the rows below it. <b>The proposed setting is dropped</b> — a row count needs no administrative control, and the decisive half is already stated by the assessment card and the result strip above. <span class="rule">supersedes the earlier proposal; see ovw-detail-progress.html</span></span>
+    <span class="k">OVW-EVID-JOURNEY</span><span class="v"><b>(to-be) Journey list</b> — supporting evidence as compact rows in a four-column grid, <code>28px · minmax(0,1fr) · auto · 84px</code>: type icon, description over a small type label, grade chip, date. Type is demoted to tertiary; the decisive row is lifted out above and omitted here, so the same fact is not stated twice. Replaces the slider. <span class="rule">accordion.js renderEvidenceList / renderEvidenceRow</span></span>
+    <span class="k">OVW-EVID-DATE</span><span class="v"><b>(to-be) Abbreviated, aligned date column</b> — <code>timecreated</code> in a fixed right-aligned column with <code>tabular-nums</code>, so digits line up across rows; fixes the current below-text misalignment. <b>Format changes</b> from the long day-date (&ldquo;12 January 2026&rdquo;) to core's <code>strftimedatefullshort</code> (<code>%d/%m/%y</code> → &ldquo;12/01/26&rdquo;), which every language pack already localises. <b>Two gaps in the client formatter:</b> it has no <code>%y</code> case at all, and its <code>%d</code> is unpadded — strftime specifies <code>%d</code> as zero-padded, so padding it is a fix, not a regression, and it is what keeps the column rectangular. <span class="rule">accordion.js formatTimestamp; core_langconfig strftimedatefullshort</span></span>
+    <span class="k">OVW-EVID-TIP</span><span class="v"><b>(to-be) Truncated grade chip + tooltip</b> — scale names are author-written and unbounded, so an <code>auto</code> column would let one long value push the date out of alignment across every row. The chip takes a hard <code>max-width</code> plus <code>text-overflow: ellipsis</code>, and the DS tooltip repeats the full value above it on hover. The full string stays in the DOM — the clip is visual only — so the balloon is decoration and needs no ARIA. Component and its rules: <code>design-kit/tooltip.html</code>. The same pair applies to the rating level in the assessment card. <span class="rule">new; design-kit/tooltip.html · .dim-tip + .trunc</span></span>
   </div>
 </div>
 </div>

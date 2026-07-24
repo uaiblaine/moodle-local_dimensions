@@ -33,18 +33,20 @@ client-side by `accordion.js` from three plugin web services, called on first op
 ## Expanded detail (client-side, `accordion.js`)
 | ID | Label | Type | Origin | Data | Rule |
 |---|---|---|---|---|---|
-| `OVW-TAB-NAV` | Status / Description / Evidence / Rules | tab strip | `renderSummaryTabNavigation` (`buildSummaryTabs`) | — | tabs shown per available data + settings; `role="tablist"` |
+| `OVW-TAB-NAV` | Assessment / Description / Evidence / Rules | tab strip | `renderSummaryTabNavigation` (`buildSummaryTabs`) | — | tabs shown per available data + settings; `role="tablist"`; `tabs[0]` renders active. The linked-course section is **not** a tab — it renders after the whole wrapper |
 | `OVW-TAB-KBD` | — | roving tabindex | `attachTabListeners` | — | ArrowLeft/Right/Up/Down + Home/End move active tab; active tab `tabindex=0`, rest `-1` (ARIA APG) |
-| `OVW-STATUS` | Rating / Proficiency | 2-col grid | `renderStatusSection` | `usercompetency.grade`/`gradename`, `proficiency` | cells tint by state (success green / pending) |
+| `OVW-STATUS` | Rating | headline + pill | `renderStatusSection` | `usercompetency.grade`/`gradename`, `proficiency` | the scale level as strong text, then a success/warning proficiency pill; with no grade the level reads `status_notyetrated` and the pill is dropped. No card, no label above it |
+| `OVW-STATUS-SCALE` | About this scale | button → modal | `renderStatusSection` + `initScaleAbout` | `scaledescription`, injected onto the payload by the plugin's WS wrapper | rendered below the headline whenever the scale description is non-empty; **no setting gates it** |
 | `OVW-DESC` | — | collapsible HTML | `renderDescriptionSection` | `comp.description` | gated by `showdescription` |
 | `OVW-DESC-TOGGLE` | Show more / Show less | toggle button | `renderDescriptionSection` + `collapsible_description` | `show_more` / `show_less` | shared 30vh collapsible; toggle only when content overflows. Same mechanism wraps the hero desc server-side (`collapsible_description.mustache`, wired by `view-plan.php:101`) |
 | `OVW-PATH` | Competency path | breadcrumb | `renderCompetencyPath` | framework › parents | gated by `showpath` |
 | `OVW-REL` | Related dimensions | pills | `renderRelatedCompetencies` | `relatedcompetencies` | gated by `showrelated`; link (new tab, `rel=noopener`) when `showrelatedlink` |
 | `OVW-TAX` | (taxonomy label) | aside card | `renderTaxonomyCard` / `getTaxonomyCardMeta` | `taxonomy.current.term` | gated by `showtaxonomycard`. **12 keys / 11 icons** (behavior aliases behaviour → same icon); the `taxonomy-card-<type>` accent classes it emits **do not exist in `styles.css`** — the accent is icon-driven only |
-| `OVW-EVID-CARD` | evidence type | card in slider | `renderEvidenceSlider` / `getEvidenceTypeInfo` | `ucs.evidence[]` | 6 type styles (descidentifier → icon + colour class): activity / coursegrade / manual / file / prior / other |
-| `OVW-EVID-DETAIL` | View details | button | `renderEvidenceSlider` | — | shown only when note/URL/grade present → opens modal |
-| `OVW-EVID-NAV` | prev / next | slider controls | `renderEvidenceSlider` + `updateScrollableArrows` | — | `role="group"`; disabled at edges; hidden by `shouldShowScrollableControls` when items fit |
-| `OVW-EVID-EMPTY` | — | muted text | `renderEvidenceSlider` | — | "no evidence" (`no_evidence`) when the evidence array is empty |
+| `OVW-EVID-RULE` | Completed by competency rule | orange strip + "View rule" | `renderEvidenceList` / `isRuleCompletion` | the **last** evidence row whose `descidentifier` is the competency-rule one with the complete action | lifted above the list and omitted from it, so the same fact is not stated twice; followed by a stale-rating note (+ review request) when the rule fired but proficiency is still not 1 |
+| `OVW-EVID-CARD` | evidence type | row in a flat list | `renderEvidenceRow` / `getEvidenceTypeInfo` | `ucs.evidence[]` | icon + description + type label + grade pill + date, in a flex row. 6 type styles (descidentifier → icon + colour class): activity / coursegrade / manual / file / prior / other. **The card slider is already gone** — this is the shipped list |
+| `OVW-EVID-DETAIL` | View details | whole row | `renderEvidenceRow` | — | the row itself gets `role="button"` + `tabindex` only when note/URL/grade is present → opens the modal |
+| `OVW-EVID-NAV` | prev / next | — | — | — | **no longer exists**: the slider and its arrow pill were removed with the list rewrite |
+| `OVW-EVID-EMPTY` | — | muted text | `renderEvidenceList` | — | "no evidence" (`no_evidence`) when the evidence array is empty |
 | `OVW-EVID-SUBMIT` | Submit evidence | button | `renderEvidencePane` | url `user_evidence_list.php?userid=` | `enableevidencesubmitbutton` + `moodle/competency:userevidencemanageown` (resolved in `view-plan.php`) |
 | `OVW-RULES-INFO` | How it is completed | info box | `renderRuleInfoBox` | `outcometext` (+ optional `requiredwarningtext`) | `role="note"`; only when text present |
 | `OVW-RULES-PROGRESS` | Progress | header + bar | `renderRulesSection` | `earnedpoints` / `totalrequired` | points (pts) or count; orange fill |
@@ -53,8 +55,10 @@ client-side by `accordion.js` from three plugin web services, called on first op
 | `OVW-RULES-FILTER` | All / Required | pill tabs | `renderRulesFilterTabs` | `childcount`, `mandatorycount` | rendered only when `mandatorycount > 0` |
 | `OVW-RULES-CHILD` | child name | list item | `renderRulesChild` | `children[]` | icon proficient / in-progress / to-do; required tag; assessment line; points (points rules); links to `view-competency.php` |
 | `OVW-RULES-LOADING` | — | spinner | `renderRulesPane` | — | Rules-tab `fa-spinner` `role="status"` `aria-live="polite"`; lazy-loaded via `loadRulesTabIfNeeded` on first activation |
-| `OVW-CRS` | Linked courses | scrollable cards | `renderCourseCardsScrollable` | `local_dimensions_get_competency_courses` (own SQL on `competency_coursecomp` JOIN `course`, `visible = 1`; **not** `list_courses_using_competency` — the WS docblock is stale) | image / initials placeholder + progress bar + Access button |
-| `OVW-CRS-NAV` | prev / next | scroll controls | `renderCourseCardsScrollable` + `initCourseScroll` | — | arrows disabled at edges (shown only when > 2 cards); `fa-check-circle` when a course hits 100% |
+| `OVW-CRS` | Related content | scrollable cards, **outside the tab wrapper** | `renderCourseCardsScrollable` | `local_dimensions_get_competency_courses` (own SQL on `competency_coursecomp` JOIN `course`, `visible = 1`; **not** `list_courses_using_competency` — the WS docblock is stale) | section heading + count badge, then cards: image / initials placeholder, name, outcome badge, progress bar + `%`. **The whole card is the link** to the course — the per-card Access button is gone. Skipped entirely when no course survives the enrolment filter, leaving a blank below the pane |
+| `OVW-CRS-OUTCOME` | Completes the competency / Sends for review / Attach evidence | badge | `renderOutcomeBadge` | the course link's `ruleoutcome` | nothing rendered for the "do nothing" default |
+| `OVW-CRS-ACT` | N activities | disclosure + rows | `renderCourseCardsScrollable` / `renderActivityRow` + `initActivityDisclosures` | `activities[]` from the same WS (`competency_modulecomp` joined through modinfo) | plain `hidden` toggle, not a Bootstrap collapse; each row is icon + name + its own outcome badge + done/to-do/lock marker. **Course-level lock is deliberately not applied** to these rows |
+| `OVW-CRS-NAV` | prev / next | scroll controls | `renderCourseCardsScrollable` + `initCourseScroll` | — | in the section header; arrows disabled at edges, shown only when the cards overflow; `fa-check-circle` when a course hits 100% |
 | `OVW-MODAL` | Evidence details | modal | `openEvidenceDetailModal` → `evidence_detail_modal.mustache` | type, description, note, link, grade, author, date | `core/modal`; grade badge gains a proficient class when the scale value is proficient |
 
 **Settings that affect this view:** `showdescription`, `showtaxonomycard`, `showpath`, `showrelated`,
@@ -63,3 +67,31 @@ client-side by `accordion.js` from three plugin web services, called on first op
 (`get_template_subline_source`), and the chip-filter fields (`viewplan_filter_fields`). The
 `enrollmentfilter` cascade (competency → plan's template → global) is resolved server-side inside
 `local_dimensions_get_competency_courses`, so it shapes which linked courses appear.
+
+## Planned — accordion refinement slice (not yet in code)
+Proposed IDs, kept separate from the as-is inventory above. Screens:
+`ovw-detail-tabs.html`, `ovw-detail-progress.html`, `ovw-detail-courses.html`,
+`ovw-detail-evidence.html`, plus `../design-kit/tooltip.html`.
+
+| ID | What | Touches |
+|---|---|---|
+| `OVW-TAB-ORDER` | Tab set becomes **Related content · Description · Progress · Rules**; the course scroller stops rendering outside the wrapper, Assessment and Evidence merge | `buildSummaryTabs`, `renderSummaryTabPanes`, `renderCompetencySummary`; one new string for the Progress label |
+| `OVW-TAB-FIRST` | Which tab leads — courses when present, otherwise Description; falls out of the existing `tabs[0]` rule | — |
+| `OVW-TAB-COUNT` | Card count moves from the section heading onto the Related-content tab | `renderSummaryTabNavigation` |
+| `OVW-PROG-PANE` | `renderStatusPane` + `renderEvidencePane` → one `renderProgressPane`, gated `hasStatus \|\| hasEvidence` | `accordion.js` |
+| `OVW-PROG-ORDER` | Pane order: assessment card → decisive strip → stale note → journey label + count → rows → submit | `accordion.js` |
+| `OVW-STATUS-CARD` | The rating headline gains a card, an eyebrow label, and the scale button right-aligned in its header | `renderStatusSection` |
+| `OVW-STATUS-SCALE` | Second gate: new `showscaledescription` checkbox (default on); also lets the WS skip reading the scale | `settings.php`, two lang strings, `get_user_competency_summary_in_plan` |
+| `OVW-EVID-JOURNEY` | Row becomes a 4-column grid: `28px · minmax(0,1fr) · auto · 84px` | `renderEvidenceRow` |
+| `OVW-EVID-DATE` | `strftimedatefullshort` (`12/01/26`), right-aligned, tabular-nums. Needs `%y` support and zero-padded `%d` in the client formatter | `formatTimestamp` |
+| `OVW-EVID-TIP` | Grade chip capped + ellipsised, full value in a CSS-only tooltip; same pair on the rating level | `styles.css`; `design-kit/tooltip.html` |
+| `OVW-EVID-COUNTS` | Journey count as a badge on the group label; the proposed `showevidencecounts` setting is dropped | `renderEvidenceList` |
+| `OVW-CRS-PANE` | The scroller becomes the leading tab pane; heading dropped | `accordion.js` |
+| `OVW-CRS-STATE` | Per-card access state (enrol / locked + date), artwork dimmed; lock rule = not actively enrolled and cannot self-enrol | `get_competency_courses` (new return keys), `calculator` helpers, `accordion.js` |
+| `OVW-CRS-SINGLE` | Single trackable activity replaces the progress bar; activities drawer suppressed when it would repeat it | new lean `calculator` helper, `get_competency_courses`, `accordion.js` |
+| `OVW-CRS-MORE` | "View detailed progress" link in the pane footer, right-aligned, only when `visibleCourses.length >= 3` → `view-competency.php?id={planid}&competencyid={competencyid}` | `accordion.js` (reuses `displaySettings.viewcompetencyurl`); one new lang string |
+
+Dropped from earlier proposals: `OVW-CRS-TITLE` (label-driven section title — the tab
+label replaces the heading) and `OVW-CRS-EMPTY` (empty-state line — no courses now
+means no tab). The web-service return changes require a `version.php` bump, and
+`execute_returns` is an allowlist, so every new key must be declared there.
