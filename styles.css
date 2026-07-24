@@ -7138,20 +7138,6 @@ a.local-dimensions-central-links-badge-warn:focus {
     max-width: 100%;
 }
 
-/* Downward, because the accordion's expand/collapse overflow clips an upward balloon
-   near the top of a pane. Both tooltips in this view sit there. */
-.local-dimensions-tip-bottom::after {
-    bottom: auto;
-    top: calc(100% + 8px);
-}
-
-.local-dimensions-tip-bottom::before {
-    bottom: auto;
-    top: calc(100% + 3px);
-    border-top-color: transparent;
-    border-bottom-color: #1d2125;
-}
-
 .local-dimensions-tip::after,
 .local-dimensions-tip::before {
     position: absolute;
@@ -7189,6 +7175,23 @@ a.local-dimensions-central-links-badge-warn:focus {
     border: 5px solid transparent;
     border-top-color: #1d2125;
     z-index: 21;
+}
+
+/* Position is load-bearing: this variant must stay after the base .local-dimensions-tip
+   ::after/::before rules above, or the equal-specificity base rules win the cascade and
+   re-apply bottom/border-top-color, over-constraining the box. Downward, because the
+   accordion's expand/collapse overflow clips an upward balloon near the top of a pane.
+   Both tooltips in this view sit there. */
+.local-dimensions-tip-bottom::after {
+    bottom: auto;
+    top: calc(100% + 8px);
+}
+
+.local-dimensions-tip-bottom::before {
+    bottom: auto;
+    top: calc(100% + 3px);
+    border-top-color: transparent;
+    border-bottom-color: #1d2125;
 }
 
 /* Delay on entry only, so brushing past does not flicker. */
