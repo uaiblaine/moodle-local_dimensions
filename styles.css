@@ -2773,7 +2773,7 @@ a.local-dimensions-course-act-row:focus {
       STATUS CARD - Rating + Proficiency
       ============================================ */
 /* Status: the rating leads, proficiency qualifies it. */
-/* Subtle "About this scale" affordance under the rating. */
+/* "About this scale" affordance, right-aligned in the card's header row. */
 .local-dimensions-status-card {
     padding: 0.9rem 1rem;
     background: #fff;
@@ -3416,11 +3416,6 @@ a.local-dimensions-course-act-row:focus {
     position: relative;
     z-index: 1;
     min-width: 0;
-}
-
-/* Status tab: reuse status grid inside tab */
-.local-dimensions-status-tab-content {
-    padding: 0;
 }
 
 /* Description tab content */
@@ -7117,6 +7112,8 @@ a.local-dimensions-central-links-badge-warn:focus {
 /* Delay on entry only, so brushing past does not flicker. */
 .local-dimensions-tip:hover::after,
 .local-dimensions-tip:hover::before,
+.local-dimensions-tip:focus-visible::after,
+.local-dimensions-tip:focus-visible::before,
 .local-dimensions-tip:focus-within::after,
 .local-dimensions-tip:focus-within::before {
     opacity: 1;

@@ -2370,8 +2370,8 @@ define(
         }
 
         /**
-         * Render assessment status section (rating + proficiency card).
-         * Now rendered inside a tab pane, so no shadow card wrapper needed.
+         * Render assessment status section: a card with the rating, its proficiency pill and,
+         * in its header row, the "About this scale" button.
          *
          * @param {Object} ucs The user competency summary
          * @param {Object} strMap Language strings map
@@ -2531,10 +2531,18 @@ define(
         }
 
         /**
-         * Escape HTML special characters.
+         * Escape HTML special characters, safe for both text-content and quoted-attribute sinks.
+         *
+         * The textContent/innerHTML round-trip only encodes &, <, > and non-breaking space - that
+         * is text-node serialisation, and quotes are encoded only in attribute-value serialisation.
+         * Several call sites embed the result inside a double-quoted HTML attribute built by string
+         * concatenation, where an unescaped quote would close the attribute early, so both quote
+         * characters are escaped here as well. Doing so is harmless for text-content sinks too: the
+         * entity decodes back to the literal character when the browser parses the resulting HTML.
          *
          * @param {string} text The text to escape
-         * @return {string} The escaped text
+         * @return {string} The escaped text, safe for text content and single- or double-quoted
+         *     attribute values
          */
         function escapeHtml(text) {
             if (!text) {
@@ -2542,7 +2550,7 @@ define(
             }
             const div = document.createElement('div');
             div.textContent = text;
-            return div.innerHTML;
+            return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
         /**
