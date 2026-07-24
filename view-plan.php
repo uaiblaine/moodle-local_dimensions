@@ -80,6 +80,8 @@ $accordionsettings = [
     'showrelatedlink' => \local_dimensions\helper::resolve_showrelatedlink_for_template($templateid),
     'viewcompetencyurl' => (new \moodle_url('/local/dimensions/view-competency.php'))->out(false),
     'showevidence' => (bool) get_config('local_dimensions', 'showevidence'),
+    'showlockeddate' => (bool) get_config('local_dimensions', 'showlockeddate'),
+    'lockedcardmode' => (string) get_config('local_dimensions', 'lockedcardmode'),
     'enableevidencesubmitbutton' => (bool) get_config('local_dimensions', 'enableevidencesubmitbutton')
         && has_capability(
             'moodle/competency:userevidencemanageown',
