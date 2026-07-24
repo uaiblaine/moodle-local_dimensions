@@ -1601,10 +1601,12 @@
     }
 
     /* Search and sort are result controls, kept on line two at every state - sort pinned to
-       the right of the search that grows to fill the rest. */
+       the right of the search that grows to fill the rest. A zero basis (not auto) is what
+       keeps them together: at content width the search already fills the line and pushes sort
+       to wrap, so it starts from nothing and grows into the space sort leaves. */
     .local-dimensions-toolbar-row .local-dimensions-search-wrapper {
         order: 2;
-        flex: 1 1 auto;
+        flex: 1 1 0;
     }
 
     .local-dimensions-sort {
