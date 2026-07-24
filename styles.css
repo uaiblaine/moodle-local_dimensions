@@ -1599,6 +1599,8 @@
         margin-left: auto;
     }
 
+    /* Search and sort are result controls, kept on line two at every state - sort pinned to
+       the right of the search that grows to fill the rest. */
     .local-dimensions-toolbar-row .local-dimensions-search-wrapper {
         order: 2;
         flex: 1 1 auto;
@@ -1606,6 +1608,7 @@
 
     .local-dimensions-sort {
         order: 3;
+        flex: none;
     }
 
     .local-dimensions-fav-group {
@@ -1621,11 +1624,12 @@
         order: 6;
     }
 
-    /* Folded until the adjustments button reveals them. */
-    .local-dimensions-fav-group,
-    .local-dimensions-completion-group,
-    .local-dimensions-sort,
-    .local-dimensions-filter-toggle {
+    /* Folded until the adjustments button reveals them. Scoped under the toolbar so the fold
+       out-specifies the later generic .local-dimensions-filter-tabs display rule, which at
+       equal weight was winning on source order and leaving the pills always visible. */
+    .local-dimensions-toolbar .local-dimensions-fav-group,
+    .local-dimensions-toolbar .local-dimensions-completion-group,
+    .local-dimensions-toolbar .local-dimensions-filter-toggle {
         display: none;
     }
 
@@ -1633,10 +1637,6 @@
     .local-dimensions-toolbar-open .local-dimensions-fav-group:not([hidden]),
     .local-dimensions-toolbar-open .local-dimensions-completion-group {
         display: inline-flex;
-    }
-
-    .local-dimensions-toolbar-open .local-dimensions-sort {
-        display: block;
     }
 
     .local-dimensions-toolbar-open .local-dimensions-filter-toggle {
