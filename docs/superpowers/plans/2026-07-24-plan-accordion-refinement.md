@@ -484,6 +484,7 @@ In `classes/calculator.php`, insert this method between `get_section_cms_recursi
         $data = $completion->get_data($found, true, $userid);
 
         return [
+            'cmid' => (int) $found->id,
             'name' => $found->get_formatted_name(),
             'url' => $found->url ? $found->url->out(false) : '',
             'completed' => $data->completionstate == COMPLETION_COMPLETE
@@ -491,6 +492,11 @@ In `classes/calculator.php`, insert this method between `get_section_cms_recursi
         ];
     }
 ```
+
+`cmid` is what lets Task 7 tell this activity apart from the competency-linked ones it
+renders beside it. Those two lists come from different queries — this one walks every module
+in the course, the other only the modules linked to the competency — so comparing their
+display names can match two unrelated activities that happen to share a label.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
@@ -770,6 +776,7 @@ entries to the `external_single_structure`, after `'ruleoutcome'` and before
                 'isenrolstart' => new external_value(PARAM_BOOL, 'Whether the lock date is an enrolment start date'),
                 'activity' => new external_single_structure(
                     [
+                        'cmid' => new external_value(PARAM_INT, 'Course module id'),
                         'name' => new external_value(PARAM_RAW, 'Activity name'),
                         'url' => new external_value(PARAM_URL, 'Activity URL, empty when it has no view page'),
                         'completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
@@ -1916,7 +1923,12 @@ with:
 
 Delete the `<h2 class="local-dimensions-section-title">…</h2>` block from
 `local-dimensions-courses-head` — the tab label is the heading now and the count rides the
-tab — leaving the head holding only the scroll controls:
+tab — leaving the head holding only the scroll controls. That `<h2>` is the only emitter of
+`.local-dimensions-section-title` and `.local-dimensions-section-badge` anywhere in the
+plugin, so remove their four rules from `styles.css` in the same commit (two definitions of
+the title, the badge, and the `.local-dimensions-courses-head` descendant override) — grep
+`*.js`, `*.php` and `*.mustache` first to confirm, since stylelint does not flag an unused
+selector:
 
 ```js
             html += '<div class="local-dimensions-courses-head">';
@@ -2009,11 +2021,23 @@ with:
 
 ```js
                 /* When the card already shows the course's single trackable activity, a drawer
-                   listing that same activity would say it twice. */
+                   listing that same activity would say it twice. The two lists come from
+                   different queries - this drawer holds the modules linked to the competency,
+                   while course.activity is the course's only trackable module, competency or
+                   not - so identity settles it, never the label: two unrelated activities can
+                   share a name. */
                 const repeats = activities.length === 1 && course.activity
-                    && activities[0].name === course.activity.name;
+                    && activities[0].cmid === course.activity.cmid;
                 if (activities.length > 0 && !repeats) {
 ```
+
+`cmid` reaches the client only because `execute_returns()` declares it. That structure is an
+allowlist, and this is the failure mode to keep in mind: an undeclared key is stripped
+silently, both sides of the comparison become `undefined`, and `undefined === undefined` is
+**true** — so the drawer would vanish from every single-activity course. Comparing `url`
+instead would avoid the round trip but has its own trap: the linked-activity rows carry the
+*course* URL when the activity is restricted and an empty string when the module has no view
+page, so two viewless modules would compare equal.
 
 Finally, after the loop and after `html += '</div>'; // End local-dimensions-courses-scroll.`,
 before the wrapper's closing div, add the footer:
