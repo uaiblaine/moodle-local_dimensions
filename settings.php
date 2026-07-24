@@ -243,6 +243,15 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         0
     ));
 
+    // The "About this scale" link in the assessment card. Off means the web service
+    // does not even read the scale, so the link cannot render.
+    $settings->add(new admin_setting_configcheckbox(
+        'local_dimensions/showscaledescription',
+        get_string('showscaledescription', 'local_dimensions'),
+        get_string('showscaledescription_desc', 'local_dimensions'),
+        1
+    ));
+
     // Show evidence cards.
     $settings->add(new admin_setting_configcheckbox(
         'local_dimensions/showevidence',

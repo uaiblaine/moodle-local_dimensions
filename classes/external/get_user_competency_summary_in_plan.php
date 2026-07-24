@@ -112,10 +112,28 @@ class get_user_competency_summary_in_plan extends external_api {
         if (!empty($result->usercompetencysummary) && !empty($result->usercompetencysummary->competency)) {
             $result->usercompetencysummary->competency->taxonomy = (object) $taxonomydata;
             $result->usercompetencysummary->competency->taxonomyterm = $taxonomydata['current']['term'];
-            $result->usercompetencysummary->competency->scaledescription = self::get_scale_description($competency);
+            $result->usercompetencysummary->competency->scaledescription =
+                self::resolve_show_scale_description()
+                    ? self::get_scale_description($competency)
+                    : '';
         }
 
         return json_encode($result);
+    }
+
+    /**
+     * Whether the "About this scale" link is enabled.
+     *
+     * A setting that has never been written reads as false, which on an install upgrading
+     * into this release would silently remove a link it has today. Unset is therefore
+     * treated as on, matching the checkbox's own default.
+     *
+     * @return bool
+     */
+    protected static function resolve_show_scale_description(): bool {
+        $value = get_config('local_dimensions', 'showscaledescription');
+
+        return $value === false || $value === '' ? true : (bool) $value;
     }
 
     /**
