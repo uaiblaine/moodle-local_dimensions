@@ -2375,7 +2375,8 @@ define(
          *
          * @param {Object} ucs The user competency summary
          * @param {Object} strMap Language strings map
-         * @param {string} scaleDescription Formatted scale description, or '' to hide the button
+         * @param {string} scaleDescription Formatted scale description, or '' to hide the button,
+         *     which the web service already does when the setting is off
          * @return {string} HTML for the status section
          */
         function renderStatusSection(ucs, strMap, scaleDescription) {
@@ -2384,22 +2385,35 @@ define(
                 return '';
             }
 
-            // JSON-encoded responses return numeric fields as strings; coerce to integer for safe comparison.
+            // JSON-encoded responses return numeric fields as strings; coerce for safe comparison.
             const isProficient = Number.parseInt(uc.proficiency, 10) === 1;
             const hasGrade = !!(uc.grade && uc.gradename);
+
+            let html = '<div class="local-dimensions-status-card">';
+
+            /* The header carries the label on the left and the scale explainer on the right, so
+               the button sits with the rating it explains instead of below the whole block. */
+            html += '<div class="local-dimensions-status-head">';
+            html += '<span class="local-dimensions-status-eyebrow">' + escapeHtml(strMap.ratingLabel) + '</span>';
+            if (scaleDescription) {
+                html += '<button type="button" class="local-dimensions-status-scale" data-about-scale';
+                html += ' aria-haspopup="dialog">';
+                html += '<i class="fa fa-info-circle" aria-hidden="true"></i> ';
+                html += escapeHtml(strMap.scaleAbout);
+                html += '</button>';
+            }
+            html += '</div>';
 
             /* The rating is the fact the learner wants; proficiency only qualifies it. So the
                scale level leads as plain strong text and proficiency follows as a pill - and
                with no grade there is nothing to qualify, so the pill is dropped entirely
-               rather than saying "No". */
-            let html = '<div class="local-dimensions-status-tab-content">';
+               rather than saying "No". Scale names are author-written and unbounded, so the
+               level is clipped with the tooltip pair rather than allowed to wrap the row. */
             html += '<div class="local-dimensions-status-headline">';
-            html += '<span class="local-dimensions-status-rating' +
-                (hasGrade ? '' : ' local-dimensions-status-rating-empty') + '">';
-            html += escapeHtml(hasGrade ? uc.gradename : strMap.statusNotYetRated);
-            html += '</span>';
-
             if (hasGrade) {
+                html += '<span class="local-dimensions-tip" data-dim-tip="' + escapeHtml(uc.gradename) + '">';
+                html += '<span class="local-dimensions-status-rating">' + escapeHtml(uc.gradename) + '</span>';
+                html += '</span>';
                 html += '<span class="local-dimensions-pill local-dimensions-pill-' +
                     (isProficient ? 'success' : 'warning') + '">';
                 if (isProficient) {
@@ -2407,20 +2421,14 @@ define(
                 }
                 html += escapeHtml(isProficient ? strMap.proficientLabel : strMap.statusNotYetProficient);
                 html += '</span>';
+            } else {
+                html += '<span class="local-dimensions-status-rating local-dimensions-status-rating-empty">';
+                html += escapeHtml(strMap.statusNotYetRated);
+                html += '</span>';
             }
-
             html += '</div>';
 
-            /* Rendered only when the scale actually has a description - most do not, so the
-               button would otherwise open an empty modal. */
-            if (scaleDescription) {
-                html += '<button type="button" class="local-dimensions-status-scale" data-about-scale>';
-                html += '<i class="fa fa-info-circle" aria-hidden="true"></i> ';
-                html += escapeHtml(strMap.scaleAbout);
-                html += '</button>';
-            }
-
-            html += '</div>'; // End local-dimensions-status-tab-content.
+            html += '</div>';
 
             return html;
         }
