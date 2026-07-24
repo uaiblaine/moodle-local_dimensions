@@ -1549,8 +1549,9 @@
     }
 }
 
-/* The adjustments button exists only where the bar folds. */
-.local-dimensions-toolbar-adjust {
+/* The adjustments button and the fold's line break exist only where the bar folds. */
+.local-dimensions-toolbar-adjust,
+.local-dimensions-toolbar-break {
     display: none;
 }
 
@@ -1611,17 +1612,28 @@
         flex: none;
     }
 
+    /* Each pill group keeps its content width and centres on its own line, rather than
+       stretching to a full-width slab that reads as a button. The break between them drops
+       the completion pills to the next line; margins centre each line's content. */
     .local-dimensions-fav-group {
         order: 4;
+        margin-inline: auto;
+    }
+
+    .local-dimensions-toolbar-break {
+        order: 5;
         flex-basis: 100%;
+        height: 0;
     }
 
     .local-dimensions-completion-group {
-        order: 5;
+        order: 6;
+        margin-left: auto;
     }
 
     .local-dimensions-filter-toggle {
-        order: 6;
+        order: 7;
+        margin-right: auto;
     }
 
     /* Folded until the adjustments button reveals them. Scoped under the toolbar so the fold
@@ -1629,7 +1641,8 @@
        equal weight was winning on source order and leaving the pills always visible. */
     .local-dimensions-toolbar .local-dimensions-fav-group,
     .local-dimensions-toolbar .local-dimensions-completion-group,
-    .local-dimensions-toolbar .local-dimensions-filter-toggle {
+    .local-dimensions-toolbar .local-dimensions-filter-toggle,
+    .local-dimensions-toolbar .local-dimensions-toolbar-break {
         display: none;
     }
 
@@ -1641,6 +1654,12 @@
 
     .local-dimensions-toolbar-open .local-dimensions-filter-toggle {
         display: inline-flex;
+    }
+
+    /* The break is only worth a line when the favourites group above it is actually showing;
+       with no stars the completion pills stand alone and need no separator. */
+    .local-dimensions-toolbar-open:has(.local-dimensions-fav-group:not([hidden])) .local-dimensions-toolbar-break {
+        display: block;
     }
 }
 
