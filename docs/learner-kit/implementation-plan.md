@@ -732,6 +732,49 @@ Two findings worth keeping:
   into the chip selection for a chip group no server code ever built, and a custom field cannot be
   named `__status`. 6.3 implements what it was reaching for and retires it.
 
+### After the phase: three correction rounds
+
+Live testing found four defects and two visual gaps. Commits `39614cb`, `14bfb00`, `21562a2` — all
+**no bump**: the version freeze allows one at a phase boundary, and cache revision is not a reason
+on its own, because purging is routine here.
+
+**The one worth remembering — a partial seed silently erases a whole-value preference.**
+
+`local_dimensions_learner_view` is *one* preference holding *five* keys, and
+`core_user/repository`'s `setUserPreference` replaces the whole value. The store was seeded with
+only the two keys the page happened to read (`sort`, `filter`), so the first save wrote the other
+three back at their **defaults**: choosing a sort in grid mode sent the plan back to the list on
+the next load, and `favonly` and the modal's `expanded` size were being lost the same way, unseen.
+
+The symptom looked like a sort bug. It was not: **any** control that saved would erase **every**
+key the page had not seeded. Two properties make the class hard to spot — the loss is silent (a
+default is a plausible value), and it is delayed (nothing is wrong until the next page load).
+
+**The rule this leaves:** when a preference is a single JSON value, the client store must be seeded
+with *everything it will ever write*, not with what the current screen consumes. The fix hands over
+the whole resolved state as one object (`data-viewstate`) rather than reconstructing it attribute by
+attribute — so adding a sixth key later cannot reintroduce the bug by omission. The same shape was
+already used for the favourites map, for the same reason and one commit earlier; the view state
+simply had not been given it.
+
+The rest, briefly:
+
+- **The modal flashed on every pager step** — paging destroyed the modal and built the next, so the
+  close and open animations played back to back. It now refills the same modal.
+- **Three controls could be chosen and then do nothing**: "Completed first" under the Not-completed
+  tab (the tab the page opens on), "Favourites first" under the favourites-only filter, and the
+  favourites filter itself before anything was starred. The first two now **widen the filter that
+  would make them a no-op** — the choice is read as the intent it expresses. Hiding and disabling
+  were both rejected: a control that vanishes leaves the menu unlearnable, and one greyed out states
+  a problem without a way out. The third has nothing to widen to, so it follows the companion block
+  and renders only once the count is above zero.
+- **Visual unity with `block_dimensions`** — favourites became that block's pill pair ("My favourites"
+  / "Show all"), the toolbar split into two rows, narrow screens fold the filters behind the block's
+  own adjustments button, and the bar is sticky at every width (the block's is narrow-only; a plan
+  runs to dozens of rows on a desktop too). One trap here: the old
+  `.local-dimensions-filter-bar` narrow rule flipped the whole bar to a centred column, which the new
+  toolbar inherited and which stacked every control on its own line. It is now scoped away from it.
+
 ## 8b. Phase 6 — original scope
 
 Most new code, highest risk. Sequenced last deliberately — everything above improves the views
