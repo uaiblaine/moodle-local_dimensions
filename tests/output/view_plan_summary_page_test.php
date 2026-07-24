@@ -76,9 +76,13 @@ final class view_plan_summary_page_test extends advanced_testcase {
         ]);
 
         foreach ($proficient as $shortname) {
+            /* Core's validate_proficiency refuses a proficiency without a grade and a grade
+               without a proficiency, so the pair has to be set together. The generator's
+               default framework scale is A,B,C,D, which makes 4 its top item. */
             $ccg->create_user_competency([
                 'userid' => $user->id,
                 'competencyid' => $ids[$shortname],
+                'grade' => 4,
                 'proficiency' => 1,
             ]);
         }
