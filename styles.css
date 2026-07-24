@@ -1552,6 +1552,7 @@
 /* The adjustments button and the fold's line breaks exist only where the bar folds. */
 .local-dimensions-toolbar-adjust,
 .local-dimensions-toolbar-break,
+.local-dimensions-toolbar-favbreak,
 .local-dimensions-toolbar-searchbreak {
     display: none;
 }
@@ -1644,27 +1645,37 @@
     }
 
     /* Each pill group keeps its content width and centres on its own line, rather than
-       stretching to a full-width slab that reads as a button. The break between them drops
-       the completion pills to the next line; margins centre each line's content. */
-    .local-dimensions-fav-group {
+       stretching to a full-width slab that reads as a button. A break before the favourites
+       pills forces them onto their own line at any width - without it they ride up beside the
+       search whenever they happen to fit - and a second break drops the completion pills below
+       them. margin-inline centres each control whether it sits alone on a line or shares one,
+       so completion and filter read as a centred pair when they fit and each stays centred
+       when a narrow screen wraps them apart. */
+    .local-dimensions-toolbar-favbreak {
         order: 5;
+        flex-basis: 100%;
+        height: 0;
+    }
+
+    .local-dimensions-fav-group {
+        order: 6;
         margin-inline: auto;
     }
 
     .local-dimensions-toolbar-break {
-        order: 6;
+        order: 7;
         flex-basis: 100%;
         height: 0;
     }
 
     .local-dimensions-completion-group {
-        order: 7;
-        margin-left: auto;
+        order: 8;
+        margin-inline: auto;
     }
 
     .local-dimensions-filter-toggle {
-        order: 8;
-        margin-right: auto;
+        order: 9;
+        margin-inline: auto;
     }
 
     /* Folded until the adjustments button reveals them. Scoped under the toolbar so the fold
@@ -1687,8 +1698,9 @@
         display: inline-flex;
     }
 
-    /* The break is only worth a line when the favourites group above it is actually showing;
-       with no stars the completion pills stand alone and need no separator. */
+    /* The pill breaks earn a line only when the favourites group is actually showing; with no
+       stars the completion pills stand alone and need no separators above them. */
+    .local-dimensions-toolbar-open:has(.local-dimensions-fav-group:not([hidden])) .local-dimensions-toolbar-favbreak,
     .local-dimensions-toolbar-open:has(.local-dimensions-fav-group:not([hidden])) .local-dimensions-toolbar-break {
         display: block;
     }

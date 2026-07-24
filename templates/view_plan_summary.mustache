@@ -114,6 +114,10 @@
                 This whole row is what the narrow layout folds behind the adjustments button. }}
             <div class="local-dimensions-toolbar-filters" data-toolbar-more>
             {{#showstar}}
+            {{! Narrow-fold line break: forces the favourites pills onto their own line
+                regardless of width, instead of riding up beside the search when they happen
+                to fit. Inert on wide screens. }}
+            <span class="local-dimensions-toolbar-favbreak" aria-hidden="true"></span>
             <div class="local-dimensions-filter-tabs local-dimensions-fav-group"
                  role="radiogroup"
                  aria-label="{{#str}}fav_only, local_dimensions{{/str}}"
