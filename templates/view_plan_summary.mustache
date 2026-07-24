@@ -41,6 +41,7 @@
     * hasfavourites (bool) - Whether at least one is starred, so the favourites filter renders
     * favouritecount (int) - How many are starred, shown on the favourites pill
     * favonly (bool) - Whether the favourites-only filter starts active
+    * viewstatejson (string) - The whole resolved view state, for the client to seed from
     * favouritesjson (string) - The whole stored favourites map, for the client to merge into
     * nonfavouritecount (int) - How many competencies are not favourited
     * haschipfilters, chipfilters - Chip-filter model
@@ -80,6 +81,7 @@
         "hasfavourites": false,
         "favouritecount": 0,
         "favonly": false,
+        "viewstatejson": "{}",
         "favouritesjson": "{}",
         "nonfavouritecount": 0
     }
@@ -100,6 +102,7 @@
          data-planid="{{planid}}"
          data-sortmode="{{sortmode}}"
          data-viewmode="{{viewmode}}"
+         data-viewstate="{{viewstatejson}}"
          data-percentagemode="{{percentagemode}}"
          data-favourites="{{favouritesjson}}">
 
@@ -107,19 +110,30 @@
             the checked sort and the favourites state come from the stored preference,
             resolved server-side. }}
         <div class="local-dimensions-filter-bar local-dimensions-toolbar">
-            {{! Everything the narrow layout folds behind the adjustments button. On a wide
-                screen the wrapper is display: contents, so these sit in the bar unchanged. }}
-            <div class="local-dimensions-toolbar-more" data-toolbar-more>
+            {{! Row one: the two filter axes as pill pairs, the shape the companion block uses.
+                This whole row is what the narrow layout folds behind the adjustments button. }}
+            <div class="local-dimensions-toolbar-filters" data-toolbar-more>
             {{#showstar}}
             <div class="local-dimensions-filter-tabs local-dimensions-fav-group"
+                 role="radiogroup"
+                 aria-label="{{#str}}fav_only, local_dimensions{{/str}}"
                  {{^hasfavourites}}hidden{{/hasfavourites}}>
                 <button type="button"
-                        class="local-dimensions-filter-tab local-dimensions-fav-toggle {{#favonly}}active{{/favonly}}"
-                        data-fav-toggle
-                        aria-pressed="{{#favonly}}true{{/favonly}}{{^favonly}}false{{/favonly}}">
+                        class="local-dimensions-filter-tab {{#favonly}}active{{/favonly}}"
+                        data-fav-filter="fav"
+                        role="radio"
+                        aria-checked="{{#favonly}}true{{/favonly}}{{^favonly}}false{{/favonly}}">
                     <i class="fa fa-star" aria-hidden="true"></i>
                     {{#str}}fav_only, local_dimensions{{/str}}
                     <span class="local-dimensions-filter-count" data-fav-count>{{favouritecount}}</span>
+                </button>
+                <button type="button"
+                        class="local-dimensions-filter-tab {{^favonly}}active{{/favonly}}"
+                        data-fav-filter="all"
+                        role="radio"
+                        aria-checked="{{^favonly}}true{{/favonly}}{{#favonly}}false{{/favonly}}">
+                    {{#str}}fav_showall, local_dimensions{{/str}}
+                    <span class="local-dimensions-filter-count">{{competencycount}}</span>
                 </button>
             </div>
             {{/showstar}}
@@ -134,6 +148,9 @@
                 </button>
             </div>
             </div>
+
+            {{! Row two: search and the controls that act on the result. }}
+            <div class="local-dimensions-toolbar-row">
             <div class="local-dimensions-search-wrapper">
                 <i class="fa fa-search local-dimensions-search-icon" aria-hidden="true"></i>
                 <input type="text"
@@ -207,6 +224,7 @@
                 <button type="button" data-view="grid" aria-pressed="{{#view_is_grid}}true{{/view_is_grid}}{{^view_is_grid}}false{{/view_is_grid}}" aria-label="{{#str}}view_grid, local_dimensions{{/str}}">
                     <i class="fa fa-th-large" aria-hidden="true"></i>
                 </button>
+            </div>
             </div>
         </div>
 
