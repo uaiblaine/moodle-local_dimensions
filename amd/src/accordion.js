@@ -179,7 +179,7 @@ define(
                 {key: 'show_less', component: 'local_dimensions'},
                 {key: 'proficiency', component: 'local_dimensions'},
                 {key: 'outcome_complete', component: 'local_dimensions'},
-                {key: 'strftimedaydate', component: 'core_langconfig'},
+                {key: 'strftimedatefullshort', component: 'core_langconfig'},
                 {key: 'evidence_slider_prev', component: 'local_dimensions'},
                 {key: 'evidence_slider_next', component: 'local_dimensions'},
                 {key: 'competency_path', component: 'local_dimensions'},
@@ -234,7 +234,8 @@ define(
                 {key: 'outcome_recommend', component: 'local_dimensions'},
                 {key: 'activities_count', component: 'local_dimensions'},
                 {key: 'activities_count_one', component: 'local_dimensions'},
-                {key: 'progress_tab', component: 'local_dimensions'}
+                {key: 'progress_tab', component: 'local_dimensions'},
+                {key: 'evidence_journey', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -315,7 +316,8 @@ define(
                     outcomeRecommend: strings[72],
                     activitiesCount: strings[73],
                     activitiesCountOne: strings[74],
-                    progressTab: strings[75]
+                    progressTab: strings[75],
+                    evidenceJourney: strings[76]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -1153,7 +1155,8 @@ define(
             const hasGrade = !!(ev.grade && ev.gradename && ev.gradename !== '-');
             const hasExtraDetails = ev.note || ev.url || hasGrade;
 
-            let html = '<div class="local-dimensions-ev-row' + (hasExtraDetails ? ' local-dimensions-ev-row-clickable' : '') +
+            let html = '<li class="local-dimensions-ev-row' +
+                (hasExtraDetails ? ' local-dimensions-ev-row-clickable' : '') +
                 '" data-evidence-index="' + index + '"';
             if (hasExtraDetails) {
                 html += ' role="button" tabindex="0"';
@@ -1172,10 +1175,20 @@ define(
             html += '<span class="local-dimensions-ev-row-type">' + escapeHtml(typeInfo.label) + '</span>';
             html += '</span>';
 
+            /* The grade sits in an auto column, so an author-written scale name long enough to
+               widen it would push the date column out of line on every row. It is clipped and
+               the full value is repeated in the tooltip; a row with no grade holds the column
+               open with a dash so the grid stays rectangular. */
             if (hasGrade) {
                 const proficient = isGradeProficient(ev.grade, scaleConfig);
-                html += '<span class="local-dimensions-pill local-dimensions-pill-' +
-                    (proficient ? 'success' : 'warning') + '">' + escapeHtml(ev.gradename) + '</span>';
+                html += '<span class="local-dimensions-tip local-dimensions-tip-bottom" data-dim-tip="' +
+                    escapeHtml(ev.gradename) + '">';
+                html += '<span class="local-dimensions-ev-row-assess' +
+                    (proficient ? ' local-dimensions-ev-row-assess-prof' : '') + '">' +
+                    escapeHtml(ev.gradename) + '</span>';
+                html += '</span>';
+            } else {
+                html += '<span class="local-dimensions-ev-row-assess local-dimensions-ev-row-assess-none">&mdash;</span>';
             }
 
             html += '<span class="local-dimensions-ev-row-date">';
@@ -1184,7 +1197,7 @@ define(
             }
             html += '</span>';
 
-            html += '</div>';
+            html += '</li>';
             return html;
         }
 
@@ -1255,12 +1268,28 @@ define(
                 }
             }
 
-            evidence.forEach(function(ev, index) {
-                if (index === decisiveIndex) {
-                    return;
-                }
-                html += renderEvidenceRow(ev, index, strMap, scaleConfig);
+            /* A heading over an empty list is worse than no heading, so the label and its count
+               render only once it is known that at least one row survives the decisive row's
+               removal. The rows become a real list; the wrapper keeps its class because
+               initEvidenceList delegates every handler from it. */
+            const journey = evidence.filter(function(ev, index) {
+                return index !== decisiveIndex;
             });
+
+            if (journey.length > 0) {
+                html += '<div class="local-dimensions-ev-group">';
+                html += escapeHtml(strMap.evidenceJourney);
+                html += '<span class="local-dimensions-ev-group-count">' + journey.length + '</span>';
+                html += '</div>';
+                html += '<ul class="local-dimensions-ev-journey">';
+                evidence.forEach(function(ev, index) {
+                    if (index === decisiveIndex) {
+                        return;
+                    }
+                    html += renderEvidenceRow(ev, index, strMap, scaleConfig);
+                });
+                html += '</ul>';
+            }
 
             html += '</div>';
             return html;
@@ -2411,7 +2440,8 @@ define(
                level is clipped with the tooltip pair rather than allowed to wrap the row. */
             html += '<div class="local-dimensions-status-headline">';
             if (hasGrade) {
-                html += '<span class="local-dimensions-tip" data-dim-tip="' + escapeHtml(uc.gradename) + '">';
+                html += '<span class="local-dimensions-tip local-dimensions-tip-bottom" data-dim-tip="' +
+                    escapeHtml(uc.gradename) + '">';
                 html += '<span class="local-dimensions-status-rating">' + escapeHtml(uc.gradename) + '</span>';
                 html += '</span>';
                 html += '<span class="local-dimensions-pill local-dimensions-pill-' +
@@ -2519,10 +2549,11 @@ define(
                 return formatStr
                     .replace('%A', weekdayLong)
                     .replace('%a', weekdayShort)
-                    .replace('%d', day)
+                    .replace('%d', ('0' + day).slice(-2))
                     .replace('%B', monthLong)
                     .replace('%b', monthShort)
                     .replace('%Y', year)
+                    .replace('%y', String(year).slice(-2))
                     .replace('%m', ('0' + (date.getMonth() + 1)).slice(-2));
             } catch (e) {
                 Log.warn('[local_dimensions] Falling back to default locale date formatting.');
