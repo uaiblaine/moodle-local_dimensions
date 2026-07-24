@@ -1549,9 +1549,10 @@
     }
 }
 
-/* The adjustments button and the fold's line break exist only where the bar folds. */
+/* The adjustments button and the fold's line breaks exist only where the bar folds. */
 .local-dimensions-toolbar-adjust,
-.local-dimensions-toolbar-break {
+.local-dimensions-toolbar-break,
+.local-dimensions-toolbar-searchbreak {
     display: none;
 }
 
@@ -1600,17 +1601,26 @@
         margin-left: auto;
     }
 
+    /* Always-on line break after the chrome row, so search and sort drop to their own line
+       below the adjustments button and the layout toggle. */
+    .local-dimensions-toolbar-searchbreak {
+        display: block;
+        order: 2;
+        flex-basis: 100%;
+        height: 0;
+    }
+
     /* Search and sort are result controls, kept on line two at every state - sort pinned to
        the right of the search that grows to fill the rest. A zero basis (not auto) is what
        keeps them together: at content width the search already fills the line and pushes sort
        to wrap, so it starts from nothing and grows into the space sort leaves. */
     .local-dimensions-toolbar-row .local-dimensions-search-wrapper {
-        order: 2;
+        order: 3;
         flex: 1 1 0;
     }
 
     .local-dimensions-sort {
-        order: 3;
+        order: 4;
         flex: none;
     }
 
@@ -1618,23 +1628,23 @@
        stretching to a full-width slab that reads as a button. The break between them drops
        the completion pills to the next line; margins centre each line's content. */
     .local-dimensions-fav-group {
-        order: 4;
+        order: 5;
         margin-inline: auto;
     }
 
     .local-dimensions-toolbar-break {
-        order: 5;
+        order: 6;
         flex-basis: 100%;
         height: 0;
     }
 
     .local-dimensions-completion-group {
-        order: 6;
+        order: 7;
         margin-left: auto;
     }
 
     .local-dimensions-filter-toggle {
-        order: 7;
+        order: 8;
         margin-right: auto;
     }
 
