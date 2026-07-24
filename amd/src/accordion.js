@@ -2767,15 +2767,15 @@ define(
          * @param {number} count How many competencies are not favourited
          */
         function updateGhost(show, count) {
-            const ghost = document.querySelector('[data-ghost]');
-            if (!ghost) {
+            const slot = document.querySelector('[data-ghost-slot]');
+            if (!slot) {
                 return;
             }
-            ghost.hidden = !show;
+            slot.hidden = !show;
             if (!show) {
                 return;
             }
-            const label = ghost.querySelector('[data-ghost-count]');
+            const label = slot.querySelector('[data-ghost-count]');
             if (!label) {
                 return;
             }
@@ -2795,15 +2795,23 @@ define(
          */
         function syncFavouriteToggle() {
             const favToggle = document.querySelector('[data-fav-toggle]');
-            if (!favToggle) {
+            const group = document.querySelector('.local-dimensions-fav-group');
+            if (!favToggle || !group) {
                 return;
             }
-            const any = document.querySelector('.local-dimensions-accordion-item.local-dimensions-favourite');
-            if (!any && favToggle.getAttribute('aria-pressed') === 'true') {
+            const count = document.querySelectorAll(
+                '.local-dimensions-accordion-item.local-dimensions-favourite'
+            ).length;
+            if (!count && favToggle.getAttribute('aria-pressed') === 'true') {
                 favToggle.setAttribute('aria-pressed', 'false');
+                favToggle.classList.remove('active');
                 LearnerPrefs.save({favonly: false});
             }
-            favToggle.hidden = !any;
+            const label = favToggle.querySelector('[data-fav-count]');
+            if (label) {
+                label.textContent = count;
+            }
+            group.hidden = !count;
         }
 
         /**
@@ -2845,11 +2853,25 @@ define(
                 favToggle.addEventListener('click', function() {
                     const on = favToggle.getAttribute('aria-pressed') !== 'true';
                     favToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+                    favToggle.classList.toggle('active', on);
                     LearnerPrefs.save({favonly: on});
                     applyFilter();
                 });
             }
             syncFavouriteToggle();
+
+            /* Narrow screens fold the filters behind an adjustments button. A class rather
+               than the hidden attribute, so the media query alone decides whether the
+               wrappers are folded at all - on a wide screen they are always in the bar. */
+            const adjust = document.querySelector('[data-toolbar-adjust]');
+            const bar = document.querySelector('.local-dimensions-toolbar');
+            if (adjust && bar) {
+                adjust.addEventListener('click', function() {
+                    const open = adjust.getAttribute('aria-expanded') !== 'true';
+                    adjust.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    bar.classList.toggle('local-dimensions-toolbar-open', open);
+                });
+            }
 
             const ghost = document.querySelector('[data-ghost]');
             if (ghost && favToggle) {
@@ -2911,6 +2933,12 @@ define(
             sorted.forEach(function(item) {
                 container.append(item);
             });
+
+            // Re-appending the rows moved them all past the ghost; it belongs after them.
+            const slot = container.querySelector('[data-ghost-slot]');
+            if (slot) {
+                container.append(slot);
+            }
         }
 
         /**

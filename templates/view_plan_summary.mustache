@@ -39,6 +39,7 @@
     * view_is_list / view_is_grid (bool) - Which layout starts active
     * showstar (bool) - Whether the learner owns this plan, so the favourites controls render
     * hasfavourites (bool) - Whether at least one is starred, so the favourites filter renders
+    * favouritecount (int) - How many are starred, shown on the favourites pill
     * favonly (bool) - Whether the favourites-only filter starts active
     * favouritesjson (string) - The whole stored favourites map, for the client to merge into
     * nonfavouritecount (int) - How many competencies are not favourited
@@ -77,6 +78,7 @@
         "view_is_grid": false,
         "showstar": true,
         "hasfavourites": false,
+        "favouritecount": 0,
         "favonly": false,
         "favouritesjson": "{}",
         "nonfavouritecount": 0
@@ -105,15 +107,21 @@
             the checked sort and the favourites state come from the stored preference,
             resolved server-side. }}
         <div class="local-dimensions-filter-bar local-dimensions-toolbar">
+            {{! Everything the narrow layout folds behind the adjustments button. On a wide
+                screen the wrapper is display: contents, so these sit in the bar unchanged. }}
+            <div class="local-dimensions-toolbar-more" data-toolbar-more>
             {{#showstar}}
-            <button type="button"
-                    class="local-dimensions-fav-toggle"
-                    data-fav-toggle
-                    aria-pressed="{{#favonly}}true{{/favonly}}{{^favonly}}false{{/favonly}}"
-                    aria-label="{{#str}}fav_only, local_dimensions{{/str}}"
-                    {{^hasfavourites}}hidden{{/hasfavourites}}>
-                <i class="fa fa-star" aria-hidden="true"></i>
-            </button>
+            <div class="local-dimensions-filter-tabs local-dimensions-fav-group"
+                 {{^hasfavourites}}hidden{{/hasfavourites}}>
+                <button type="button"
+                        class="local-dimensions-filter-tab local-dimensions-fav-toggle {{#favonly}}active{{/favonly}}"
+                        data-fav-toggle
+                        aria-pressed="{{#favonly}}true{{/favonly}}{{^favonly}}false{{/favonly}}">
+                    <i class="fa fa-star" aria-hidden="true"></i>
+                    {{#str}}fav_only, local_dimensions{{/str}}
+                    <span class="local-dimensions-filter-count" data-fav-count>{{favouritecount}}</span>
+                </button>
+            </div>
             {{/showstar}}
             <div class="local-dimensions-filter-tabs" role="tablist" aria-label="{{#str}}filter_competencies, local_dimensions{{/str}}">
                 <button class="local-dimensions-filter-tab {{#filter_is_incomplete}}active{{/filter_is_incomplete}}" data-filter="incomplete" role="tab" aria-selected="{{#filter_is_incomplete}}true{{/filter_is_incomplete}}{{^filter_is_incomplete}}false{{/filter_is_incomplete}}" type="button">
@@ -124,6 +132,7 @@
                     {{#str}}filter_all, local_dimensions{{/str}}
                     <span class="local-dimensions-filter-count" data-count="all">{{competencycount}}</span>
                 </button>
+            </div>
             </div>
             <div class="local-dimensions-search-wrapper">
                 <i class="fa fa-search local-dimensions-search-icon" aria-hidden="true"></i>
@@ -137,6 +146,7 @@
                     <i class="fa fa-times" aria-hidden="true"></i>
                 </button>
             </div>
+            <div class="local-dimensions-toolbar-more" data-toolbar-more>
             {{! Same plain-block mechanism as the chip panel below: toggled by the hidden
                 attribute, so no Bootstrap 4 vs 5 data attribute pair is involved. }}
             <div class="local-dimensions-sort">
@@ -180,6 +190,16 @@
             </button>
             {{/chipfilters}}
             {{/haschipfilters}}
+            </div>
+            {{! Narrow screens only: reveals the wrappers above. Never hidden by JS, so the
+                media query alone decides whether it exists. }}
+            <button type="button"
+                    class="local-dimensions-toolbar-adjust"
+                    data-toolbar-adjust
+                    aria-expanded="false"
+                    aria-label="{{#str}}toolbar_adjust, local_dimensions{{/str}}">
+                <i class="fa fa-sliders" aria-hidden="true"></i>
+            </button>
             <div class="local-dimensions-view-toggle" role="group" aria-label="{{#str}}view_label, local_dimensions{{/str}}">
                 <button type="button" data-view="list" aria-pressed="{{#view_is_list}}true{{/view_is_list}}{{^view_is_list}}false{{/view_is_list}}" aria-label="{{#str}}view_list, local_dimensions{{/str}}">
                     <i class="fa fa-list" aria-hidden="true"></i>
@@ -296,23 +316,27 @@
                 </div>
             </div>
             {{/competencies}}
-        </div>
 
-        {{#showstar}}
-        {{! Renders only while the favourites filter is on, so a learner cannot forget it is
-            on and conclude the rest of the plan has vanished. Activating it clears the
-            filter. Like the no-results block below, it must not carry
-            local-dimensions-accordion-item, whose display is forced once the filter runs. }}
-        <button type="button" class="local-dimensions-ghost" data-ghost hidden>
-            <span class="local-dimensions-ghost-icon">
-                <i class="fa fa-plus" aria-hidden="true"></i>
-            </span>
-            <span class="local-dimensions-ghost-body">
-                <span class="local-dimensions-ghost-title" data-ghost-count>{{#str}}fav_ghost, local_dimensions, {{nonfavouritecount}}{{/str}}</span>
-                <span class="local-dimensions-ghost-text">{{#str}}fav_ghost_note, local_dimensions{{/str}}</span>
-            </span>
-        </button>
-        {{/showstar}}
+            {{#showstar}}
+            {{! Renders only while the favourites filter is on, so a learner cannot forget it
+                is on and conclude the rest of the plan has vanished. Activating it clears the
+                filter. It lives inside the list so the grid lays it out as one more cell -
+                it stands for the competencies the filter is holding back - but it must not
+                carry local-dimensions-accordion-item, whose display is forced once the
+                filter runs. }}
+            <div class="local-dimensions-ghost-slot" role="listitem" data-ghost-slot hidden>
+                <button type="button" class="local-dimensions-ghost" data-ghost>
+                    <span class="local-dimensions-ghost-icon">
+                        <i class="fa fa-plus" aria-hidden="true"></i>
+                    </span>
+                    <span class="local-dimensions-ghost-body">
+                        <span class="local-dimensions-ghost-title" data-ghost-count>{{#str}}fav_ghost, local_dimensions, {{nonfavouritecount}}{{/str}}</span>
+                        <span class="local-dimensions-ghost-text">{{#str}}fav_ghost_note, local_dimensions{{/str}}</span>
+                    </span>
+                </button>
+            </div>
+            {{/showstar}}
+        </div>
 
         {{! Sits outside the role="list" region, and must not carry
             local-dimensions-accordion-item - the filter-initialized rules force those to

@@ -1474,15 +1474,75 @@
 }
 
 /* Toolbar layout: the controls read left to right and the search takes the slack, so
-   later controls slot in at either end without the row re-flowing around them. */
+   later controls slot in at either end without the row re-flowing around them.
+   Sticky at every width - the plan runs to dozens of rows on a desktop too, and the
+   filters are worthless once they have scrolled away. Anchored to the theme's own
+   navbar height so it stops below a fixed header rather than under it. */
 .local-dimensions-toolbar {
+    position: sticky;
+    top: var(--navbar-height, 60px);
+    z-index: 5;
     flex-wrap: wrap;
     justify-content: flex-start;
+    padding: 0.5rem 0.65rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 85%);
+    backdrop-filter: blur(8px);
 }
 
 .local-dimensions-toolbar .local-dimensions-search-wrapper {
     flex: 1 1 160px;
     max-width: 320px;
+}
+
+/* On a wide screen the wrapper is not a box at all: its children sit in the bar. */
+.local-dimensions-toolbar-more {
+    display: contents;
+}
+
+/* The adjustments button exists only where the bar folds. */
+.local-dimensions-toolbar-adjust {
+    display: none;
+}
+
+@media (width <= 575.98px) {
+    .local-dimensions-toolbar-more {
+        display: none;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        flex-basis: 100%;
+    }
+
+    .local-dimensions-toolbar-open .local-dimensions-toolbar-more {
+        display: flex;
+    }
+
+    .local-dimensions-toolbar-adjust {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border: 1px solid #dee2e6;
+        border-radius: 50%;
+        background: #fff;
+        color: #495057;
+        cursor: pointer;
+        transition: background-color 150ms ease, color 150ms ease;
+    }
+
+    .local-dimensions-toolbar-adjust[aria-expanded='true'] {
+        border-color: #0f6cbf;
+        background: #cfe2ff;
+        color: #0f6cbf;
+    }
+
+    .local-dimensions-toolbar-adjust:focus-visible {
+        outline: 2px solid #0f6cbf;
+        outline-offset: 2px;
+    }
 }
 
 /* List / grid toggle. */
@@ -1606,31 +1666,22 @@
     font-weight: 600;
 }
 
-/* Favourites: the learner's own shortlist, in the priority accent rather than the
-   plugin's blue, so it never reads as another completion signal. */
-.local-dimensions-fav-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+/* Favourites filter: the same pill, colour and count badge the companion block uses for
+   its own favourites control, so the two plugins read as one product. It stays a toggle
+   rather than a radio pair, because the completion segment beside it is a separate axis -
+   a learner can ask for their favourites that are also not yet done. */
+.local-dimensions-fav-group {
     flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border: 1px solid #dee2e6;
-    border-radius: 999px;
-    background: #fff;
-    color: #adb5bd;
-    cursor: pointer;
-    transition: background-color 150ms ease, color 150ms ease;
 }
 
-.local-dimensions-fav-toggle:hover {
-    background: #e9ecef;
+.local-dimensions-fav-toggle.active {
+    background: #0f6cbf;
+    color: #fff;
 }
 
-.local-dimensions-fav-toggle[aria-pressed='true'] {
-    border-color: rgb(253 126 20 / 35%);
-    background: rgb(253 126 20 / 8%);
-    color: #fd7e14;
+.local-dimensions-fav-toggle.active .local-dimensions-filter-count {
+    background: rgb(255 255 255 / 25%);
+    color: #fff;
 }
 
 .local-dimensions-fav-toggle:focus-visible,
@@ -1673,7 +1724,24 @@
     color: #fd7e14;
 }
 
-/* Ghost card: an invitation, not a result - dashed and quiet, never a solid row. */
+/* Ghost card: an invitation, not a result - dashed and quiet, never a solid row. It sits
+   inside the list, so the grid lays it out as one more cell; in grid mode it turns into
+   the column variant so it matches the cards around it instead of spanning them. */
+.local-dimensions-grid-mode .local-dimensions-ghost {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 108px;
+    margin-bottom: 0;
+    padding: 0.85rem;
+    text-align: center;
+}
+
+.local-dimensions-grid-mode .local-dimensions-ghost-body {
+    align-items: center;
+}
+
 .local-dimensions-ghost {
     display: flex;
     align-items: center;
