@@ -149,6 +149,25 @@
             </div>
             </div>
 
+            {{! Row one, right edge: the layout toggle stays visible at every width, so it does
+                not fold with the filters. The adjustments button is the narrow-screen fold
+                trigger and sits to its left. }}
+            <button type="button"
+                    class="local-dimensions-toolbar-adjust"
+                    data-toolbar-adjust
+                    aria-expanded="false"
+                    aria-label="{{#str}}toolbar_adjust, local_dimensions{{/str}}">
+                <i class="fa fa-sliders" aria-hidden="true"></i>
+            </button>
+            <div class="local-dimensions-view-toggle" role="group" aria-label="{{#str}}view_label, local_dimensions{{/str}}">
+                <button type="button" data-view="list" aria-pressed="{{#view_is_list}}true{{/view_is_list}}{{^view_is_list}}false{{/view_is_list}}" aria-label="{{#str}}view_list, local_dimensions{{/str}}">
+                    <i class="fa fa-list" aria-hidden="true"></i>
+                </button>
+                <button type="button" data-view="grid" aria-pressed="{{#view_is_grid}}true{{/view_is_grid}}{{^view_is_grid}}false{{/view_is_grid}}" aria-label="{{#str}}view_grid, local_dimensions{{/str}}">
+                    <i class="fa fa-th-large" aria-hidden="true"></i>
+                </button>
+            </div>
+
             {{! Row two: search and the controls that act on the result. }}
             <div class="local-dimensions-toolbar-row">
             <div class="local-dimensions-search-wrapper">
@@ -207,23 +226,6 @@
             </button>
             {{/chipfilters}}
             {{/haschipfilters}}
-            </div>
-            {{! Narrow screens only: reveals the wrappers above. Never hidden by JS, so the
-                media query alone decides whether it exists. }}
-            <button type="button"
-                    class="local-dimensions-toolbar-adjust"
-                    data-toolbar-adjust
-                    aria-expanded="false"
-                    aria-label="{{#str}}toolbar_adjust, local_dimensions{{/str}}">
-                <i class="fa fa-sliders" aria-hidden="true"></i>
-            </button>
-            <div class="local-dimensions-view-toggle" role="group" aria-label="{{#str}}view_label, local_dimensions{{/str}}">
-                <button type="button" data-view="list" aria-pressed="{{#view_is_list}}true{{/view_is_list}}{{^view_is_list}}false{{/view_is_list}}" aria-label="{{#str}}view_list, local_dimensions{{/str}}">
-                    <i class="fa fa-list" aria-hidden="true"></i>
-                </button>
-                <button type="button" data-view="grid" aria-pressed="{{#view_is_grid}}true{{/view_is_grid}}{{^view_is_grid}}false{{/view_is_grid}}" aria-label="{{#str}}view_grid, local_dimensions{{/str}}">
-                    <i class="fa fa-th-large" aria-hidden="true"></i>
-                </button>
             </div>
             </div>
         </div>
