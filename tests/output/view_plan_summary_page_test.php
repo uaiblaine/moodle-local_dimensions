@@ -358,26 +358,39 @@ final class view_plan_summary_page_test extends advanced_testcase {
     }
 
     /**
-     * The hero opens by default and stays folded once the learner folded it.
+     * The hero opens by default and stays folded once the learner folded this plan.
      *
      * The state has to reach the first paint: applying it after the page renders would show
-     * the tall header and then snap it shut under the reader.
+     * the tall header and then snap it shut under the reader. The fold is per plan, so another
+     * plan's key must not fold this one - and the whole stored list has to travel to the client,
+     * which writes the preference back entire.
      *
      * @return void
      */
-    public function test_the_hero_carries_the_stored_open_or_slim_state(): void {
+    public function test_the_hero_carries_the_stored_fold_for_this_plan(): void {
         $this->resetAfterTest();
         $fixture = $this->create_plan_with_competencies();
         $this->setUser($fixture['user']);
+        $key = 'p' . (int) $fixture['plan']->get('id');
 
-        $this->assertFalse($this->export($fixture['plan'])['hero']['slim']);
+        $data = $this->export($fixture['plan'])['hero'];
+        $this->assertFalse($data['slim']);
+        $this->assertSame($key, $data['herokey']);
 
-        set_user_preference(constants::PREF_LEARNER_HERO, '1');
+        // A fold on another plan, and on a competency, leaves this hero open.
+        set_user_preference(constants::PREF_LEARNER_HERO, json_encode(['p999', 'c1']));
+        $data = $this->export($fixture['plan'])['hero'];
+        $this->assertFalse($data['slim']);
+        $this->assertSame(['p999', 'c1'], json_decode($data['herostatejson'], true));
+
+        set_user_preference(constants::PREF_LEARNER_HERO, json_encode(['p999', $key]));
         $this->assertTrue($this->export($fixture['plan'])['hero']['slim']);
 
-        // Anything the preference could hold other than the stored flag reads as open.
-        set_user_preference(constants::PREF_LEARNER_HERO, 'yes');
-        $this->assertFalse($this->export($fixture['plan'])['hero']['slim']);
+        // A corrupt value is a lost preference, not a broken page.
+        set_user_preference(constants::PREF_LEARNER_HERO, 'not-json');
+        $data = $this->export($fixture['plan'])['hero'];
+        $this->assertFalse($data['slim']);
+        $this->assertSame([], json_decode($data['herostatejson'], true));
     }
 
     /**

@@ -2184,17 +2184,28 @@ class helper {
     }
 
     /**
-     * Whether the learner asked for the hero to stay folded to its slim state.
+     * The learner's stored hero fold, for the one plan or competency being viewed.
      *
-     * One choice covers both learner views: the hero is the same component on the plan overview
-     * and the competency tracker, so a learner who does not want a tall header does not want one
-     * on either page. Anything other than the stored '1' reads as open, which is also what an
-     * absent preference gives - the hero opens by default.
+     * The fold is per plan and per competency: a learner who knows one plan by heart still
+     * wants the welcome card on a plan they opened today. Only the folded keys are stored, so
+     * an absent key - and an absent preference - reads as open, which is the default.
      *
-     * @return bool True when the hero should render slim.
+     * The whole stored list is handed back with the answer because a write replaces the entire
+     * preference: the page knows about one hero, and writing just its own key would silently
+     * unfold every other plan and competency the learner had folded.
+     *
+     * @param string $key This hero's own key: 'p' plus a plan id, or 'c' plus a competency id.
+     * @return array Keys: key (string), slim (bool), statejson (string, the whole stored list).
      */
-    public static function hero_is_slim(): bool {
-        return get_user_preferences(constants::PREF_LEARNER_HERO, '0') === '1';
+    public static function resolve_hero_state(string $key): array {
+        $stored = json_decode((string) get_user_preferences(constants::PREF_LEARNER_HERO, ''), true);
+        $stored = is_array($stored) ? array_values(array_filter($stored, 'is_string')) : [];
+
+        return [
+            'key' => $key,
+            'slim' => in_array($key, $stored, true),
+            'statejson' => json_encode($stored),
+        ];
     }
 
     /**

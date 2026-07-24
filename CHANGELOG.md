@@ -66,7 +66,8 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
     the first started-but-unfinished section, and a seal on a completed course's card.
   - **Collapsible hero**: a handle on the header's bottom edge folds it to a slim row — the
     title with the plan's due date beside it, no description — and back. The choice is stored
-    per user and applied server-side, so a learner who returns lands on the header they left.
+    per plan and per competency and applied server-side, so a learner who returns lands on the
+    header they left.
   - The toolbar is realigned with `block_dimensions`: sticky at every width, filters folding
     behind an adjustments button on narrow screens, and a "Clear filters" button with an icon.
 - **CI**: moodle-an-hochschulen reusable workflow — static checks plus PHPUnit and Behat

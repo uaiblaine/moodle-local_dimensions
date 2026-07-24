@@ -95,7 +95,7 @@ class constants {
     /** @var string User preference: learner favourite competencies, keyed by plan id, as JSON */
     const PREF_LEARNER_FAV = 'local_dimensions_learner_fav';
 
-    /** @var string User preference: learner hero folded to its slim state ('1') or open ('0') */
+    /** @var string User preference: the plan and competency heroes folded to slim, as a JSON key list */
     const PREF_LEARNER_HERO = 'local_dimensions_learner_hero';
 
     /** @var string Enrollment filter: inherit the global setting */

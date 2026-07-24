@@ -102,6 +102,9 @@ class view_competency_page implements renderable, templatable {
                 $this->competency->descriptionformat
             );
 
+            // The fold is stored per competency, not per plan: this hero is the competency's.
+            $herostate = \local_dimensions\helper::resolve_hero_state('c' . (int) $this->competency->id);
+
             $data['hero'] = [
                 'title' => format_string($this->competency->shortname),
                 'description' => [
@@ -115,8 +118,9 @@ class view_competency_page implements renderable, templatable {
                 'hastextcolor' => !empty($textcolor),
                 'bgimage' => $bgimage,
                 'hasbgimage' => !empty($bgimage),
-                // The same stored choice as the plan overview: one hero, one preference.
-                'slim' => \local_dimensions\helper::hero_is_slim(),
+                'slim' => $herostate['slim'],
+                'herokey' => $herostate['key'],
+                'herostatejson' => $herostate['statejson'],
             ];
         }
 

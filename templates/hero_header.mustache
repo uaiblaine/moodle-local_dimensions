@@ -31,10 +31,14 @@
     * hasduedate (bool) - Whether due date exists
     * duedateiconurl (string) - URL for due date icon
     * slim (bool) - Whether the hero starts folded to its slim state (title + due date only)
+    * herokey (string) - This hero's own key in the stored fold list ('p' or 'c' plus an id)
+    * herostatejson (string) - The whole stored fold list, as JSON
 
     The handle at the hero's bottom edge folds the header between its open and slim states.
-    The choice is the learner's own and is stored as a user preference, so the state below is
-    already resolved server-side; local_dimensions/hero_collapse only flips it from there.
+    The choice is the learner's own, per plan and per competency, and is stored as a user
+    preference, so the state below is already resolved server-side; local_dimensions/hero_collapse
+    only flips it from there. The whole list travels with it because a write replaces the entire
+    preference - see the module.
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -51,7 +55,9 @@
         "duedate": "31 Jan 2026",
         "hasduedate": true,
         "duedateiconurl": "/pluginfile.php/1/local_dimensions/status/calendar-light.svg",
-        "slim": false
+        "slim": false,
+        "herokey": "p12",
+        "herostatejson": "[]"
     }
 }}
 <div class="local-dimensions-hero-wrapper {{#hasbgimage}}local-dimensions-hero-has-image{{/hasbgimage}} {{#slim}}local-dimensions-hero-slim{{/slim}}" id="local-dimensions-hero"
@@ -80,6 +86,8 @@
         <button type="button"
                 class="local-dimensions-hero-collapse"
                 data-hero-collapse
+                data-hero-key="{{herokey}}"
+                data-hero-state="{{herostatejson}}"
                 aria-controls="local-dimensions-hero-content"
                 aria-expanded="{{#slim}}false{{/slim}}{{^slim}}true{{/slim}}"
                 data-label-collapse="{{#str}}hero_collapse, local_dimensions{{/str}}"
