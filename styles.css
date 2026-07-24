@@ -1555,36 +1555,16 @@
 }
 
 @media (width <= 575.98px) {
-    /* Line 1 keeps only the fold trigger and the layout toggle; the pills and the sort/filter
-       group fold away and reveal below on open. Search stays on its own line throughout. */
+    /* Flatten the two row boxes so every control is a direct child of the toolbar's flex
+       context; order then lays them out individually, which the desktop nesting cannot. Line
+       one is the fold trigger and the layout toggle. Search sits on its own line and grows to
+       fill it (the same logic as desktop). The folded controls reveal below on open: sort
+       joins the end of the search line, the favourites pills take a line, and the completion
+       pills sit beside the filter button - which opens its panel just underneath, so the two
+       belong together. */
     .local-dimensions-toolbar-filters,
-    .local-dimensions-toolbar-more {
-        display: none;
-    }
-
     .local-dimensions-toolbar-row {
-        order: 0;
-        flex-basis: 100%;
-    }
-
-    .local-dimensions-toolbar .local-dimensions-view-toggle {
-        order: 0;
-        margin-left: auto;
-    }
-
-    .local-dimensions-toolbar-open .local-dimensions-toolbar-filters {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        flex-basis: 100%;
-        order: 1;
-    }
-
-    .local-dimensions-toolbar-open .local-dimensions-toolbar-more {
-        display: flex;
-        flex-basis: 100%;
-        gap: 0.6rem;
-        order: 2;
+        display: contents;
     }
 
     .local-dimensions-toolbar-adjust {
@@ -1612,6 +1592,55 @@
     .local-dimensions-toolbar-adjust:focus-visible {
         outline: 2px solid #0f6cbf;
         outline-offset: 2px;
+    }
+
+    .local-dimensions-toolbar .local-dimensions-view-toggle {
+        order: 1;
+        margin-left: auto;
+    }
+
+    .local-dimensions-toolbar-row .local-dimensions-search-wrapper {
+        order: 2;
+        flex: 1 1 auto;
+    }
+
+    .local-dimensions-sort {
+        order: 3;
+    }
+
+    .local-dimensions-fav-group {
+        order: 4;
+        flex-basis: 100%;
+    }
+
+    .local-dimensions-completion-group {
+        order: 5;
+    }
+
+    .local-dimensions-filter-toggle {
+        order: 6;
+    }
+
+    /* Folded until the adjustments button reveals them. */
+    .local-dimensions-fav-group,
+    .local-dimensions-completion-group,
+    .local-dimensions-sort,
+    .local-dimensions-filter-toggle {
+        display: none;
+    }
+
+    /* :not([hidden]) so an empty favourites group - no stars yet - stays folded even open. */
+    .local-dimensions-toolbar-open .local-dimensions-fav-group:not([hidden]),
+    .local-dimensions-toolbar-open .local-dimensions-completion-group {
+        display: inline-flex;
+    }
+
+    .local-dimensions-toolbar-open .local-dimensions-sort {
+        display: block;
+    }
+
+    .local-dimensions-toolbar-open .local-dimensions-filter-toggle {
+        display: inline-flex;
     }
 }
 

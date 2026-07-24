@@ -137,7 +137,7 @@
                 </button>
             </div>
             {{/showstar}}
-            <div class="local-dimensions-filter-tabs" role="tablist" aria-label="{{#str}}filter_competencies, local_dimensions{{/str}}">
+            <div class="local-dimensions-filter-tabs local-dimensions-completion-group" role="tablist" aria-label="{{#str}}filter_competencies, local_dimensions{{/str}}">
                 <button class="local-dimensions-filter-tab {{#filter_is_incomplete}}active{{/filter_is_incomplete}}" data-filter="incomplete" role="tab" aria-selected="{{#filter_is_incomplete}}true{{/filter_is_incomplete}}{{^filter_is_incomplete}}false{{/filter_is_incomplete}}" type="button">
                     {{#str}}filter_not_completed, local_dimensions{{/str}}
                     <span class="local-dimensions-filter-count" data-count="incomplete">{{incompletecount}}</span>
