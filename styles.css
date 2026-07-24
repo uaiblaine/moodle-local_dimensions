@@ -1473,25 +1473,23 @@
     margin-bottom: 1.5rem;
 }
 
-/* Toolbar layout: the controls read left to right and the search takes the slack, so
-   later controls slot in at either end without the row re-flowing around them.
-   Sticky at every width - the plan runs to dozens of rows on a desktop too, and the
-   filters are worthless once they have scrolled away. Anchored to the theme's own
-   navbar height so it stops below a fixed header rather than under it. */
+/* Toolbar: one wrapping flex row whose parts line up as two visual rows. Line 1 holds the
+   filter pills (left) and the layout toggle (pushed right); line 2 is forced to wrap by the
+   search row's full-width basis, and there the search takes all the slack so a control that
+   grows - the filter button gaining its active count - only shrinks the search, never moves
+   the right edge. Sticky at every width, since the plan runs to dozens of rows on a desktop
+   too; anchored to the theme's navbar height so it stops below a fixed header. Capped and
+   centred so the end controls do not fling apart on a wide card. */
 .local-dimensions-toolbar {
     position: sticky;
     top: var(--navbar-height, 60px);
     z-index: 5;
-
-    /* Capped and centred: the card below runs full width, but a toolbar that stretched with
-       it would fling the end controls far apart. Within the cap the rows right-align, so the
-       last control of each sits on the same edge. */
     max-width: 880px;
     margin-inline: auto;
-
-    /* Two rows: the filter pills, then search and the controls acting on the result. */
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
     gap: 0.6rem;
     padding: 0.6rem 0.65rem;
     border-radius: 1.25rem;
@@ -1499,38 +1497,56 @@
     backdrop-filter: blur(8px);
 }
 
-.local-dimensions-toolbar-filters,
-.local-dimensions-toolbar-row {
+.local-dimensions-toolbar-filters {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    justify-content: space-between;
     gap: 0.6rem;
     min-width: 0;
 }
 
-/* No favourites group: the two rows sit side by side on one line - the completion tabs at
-   content width, then the search row taking the rest. Keeping both wrappers as real boxes
-   (rather than display: contents) leaves the mobile fold rules below untouched. When the line
-   runs out, the search row wraps beneath, so it stays responsive. */
-.local-dimensions-toolbar:not(.local-dimensions-has-fav) {
-    flex-direction: row;
-    flex-wrap: wrap;
+/* The layout toggle ends line 1, kept off the fold so it is reachable at every width. */
+.local-dimensions-toolbar .local-dimensions-view-toggle {
+    margin-left: auto;
+}
+
+/* Full basis forces the search row onto its own line under the pills. */
+.local-dimensions-toolbar-row {
+    display: flex;
     align-items: center;
+    gap: 0.6rem;
+    flex-basis: 100%;
+    min-width: 0;
 }
 
-.local-dimensions-toolbar:not(.local-dimensions-has-fav) .local-dimensions-toolbar-row {
-    flex: 1 1 320px;
+.local-dimensions-toolbar-row .local-dimensions-search-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
 }
 
-.local-dimensions-toolbar .local-dimensions-search-wrapper {
-    flex: 1 1 160px;
-    max-width: 320px;
-}
-
-/* On a wide screen the wrapper is not a box at all: its children sit in the row. */
+/* Sort and filter sit inline in the search row. */
 .local-dimensions-toolbar-more {
     display: contents;
+}
+
+/* No favourites group: the search row stops claiming its own line and everything folds onto
+   one, ordered completion tabs, search (growing), sort, filter, layout toggle. Desktop only -
+   on a narrow screen the fold layout below governs regardless of the favourites state. */
+@media (width >= 576px) {
+    .local-dimensions-toolbar:not(.local-dimensions-has-fav) .local-dimensions-toolbar-filters {
+        order: 1;
+    }
+
+    .local-dimensions-toolbar:not(.local-dimensions-has-fav) .local-dimensions-toolbar-row {
+        order: 2;
+        flex: 1 1 320px;
+    }
+
+    .local-dimensions-toolbar:not(.local-dimensions-has-fav) .local-dimensions-view-toggle {
+        order: 3;
+        margin-left: 0;
+    }
 }
 
 /* The adjustments button exists only where the bar folds. */
@@ -1539,25 +1555,41 @@
 }
 
 @media (width <= 575.98px) {
+    /* Line 1 keeps only the fold trigger and the layout toggle; the pills and the sort/filter
+       group fold away and reveal below on open. Search stays on its own line throughout. */
     .local-dimensions-toolbar-filters,
     .local-dimensions-toolbar-more {
         display: none;
+    }
+
+    .local-dimensions-toolbar-row {
+        order: 0;
+        flex-basis: 100%;
+    }
+
+    .local-dimensions-toolbar .local-dimensions-view-toggle {
+        order: 0;
+        margin-left: auto;
     }
 
     .local-dimensions-toolbar-open .local-dimensions-toolbar-filters {
         display: flex;
         flex-direction: column;
         align-items: stretch;
+        flex-basis: 100%;
+        order: 1;
     }
 
     .local-dimensions-toolbar-open .local-dimensions-toolbar-more {
         display: flex;
         flex-basis: 100%;
         gap: 0.6rem;
+        order: 2;
     }
 
     .local-dimensions-toolbar-adjust {
         display: inline-flex;
+        order: -1;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
