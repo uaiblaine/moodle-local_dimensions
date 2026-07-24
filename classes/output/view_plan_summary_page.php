@@ -316,13 +316,18 @@ class view_plan_summary_page implements renderable, templatable {
             ];
         }
 
-        /* The star is the learner's own shortlist, so it is hidden when staff review someone
-           else's plan - the same own-plan guard view-plan.php uses for the return context.
-           Otherwise a manager would be starring competencies from another learner's plan
-           into their own list. */
-        $isownplan = ((int) $this->plan->get('userid') === (int) $USER->id);
+        /* The star is the learner's own shortlist, so it is gated twice: by the admin toggle
+           that turns the whole feature off (mirrors block_dimensions/enable_favourites), and
+           by the own-plan guard view-plan.php uses for the return context - a manager reviewing
+           someone else's plan must not star competencies out of it into their own list. When
+           either fails the feature collapses to nothing, since every part keys off showstar. */
+        $enablefavourites = get_config('local_dimensions', 'enablefavourites');
+        // Default on when the config was never written, as the companion block does.
+        $favouritesenabled = ($enablefavourites === false) ? true : (bool) $enablefavourites;
+        $showfavourites = $favouritesenabled
+            && ((int) $this->plan->get('userid') === (int) $USER->id);
         $favourites = self::resolve_favourites((int) $this->plan->get('id'));
-        $favouriteids = $isownplan ? $favourites['ids'] : [];
+        $favouriteids = $showfavourites ? $favourites['ids'] : [];
         foreach ($data['competencies'] as $index => $competency) {
             $data['competencies'][$index]['isfavourite'] = in_array((int) $competency['id'], $favouriteids, true);
         }
@@ -331,7 +336,7 @@ class view_plan_summary_page implements renderable, templatable {
            re-ordering client-side would show the plan order first and then rearrange it
            under the reader. */
         $view = self::resolve_view_preference();
-        $sort = ($view['sort'] === 'favourites' && !$isownplan) ? 'planorder' : $view['sort'];
+        $sort = ($view['sort'] === 'favourites' && !$showfavourites) ? 'planorder' : $view['sort'];
         $data['competencies'] = self::sort_competencies($data['competencies'], $sort);
         $data['sortmode'] = $sort;
         $data['sort_is_planorder'] = ($sort === 'planorder');
@@ -343,7 +348,7 @@ class view_plan_summary_page implements renderable, templatable {
         $data['viewmode'] = $view['view'];
         $data['view_is_list'] = ($view['view'] === 'list');
         $data['view_is_grid'] = ($view['view'] === 'grid');
-        $data['showstar'] = $isownplan;
+        $data['showstar'] = $showfavourites;
         /* The filter appears only once there is something to filter to - the rule the
            companion block applies to its own favourites pill. */
         $data['favouritecount'] = count(array_filter($data['competencies'], fn($c) => !empty($c['isfavourite'])));
@@ -356,11 +361,11 @@ class view_plan_summary_page implements renderable, templatable {
         $data['viewstatejson'] = json_encode([
             'sort' => $sort,
             'filter' => $view['filter'],
-            'favonly' => $isownplan && $view['favonly'] && $data['hasfavourites'],
+            'favonly' => $showfavourites && $view['favonly'] && $data['hasfavourites'],
             'view' => $view['view'],
             'expanded' => $view['expanded'],
         ]);
-        $data['favonly'] = $isownplan && $view['favonly'] && $data['hasfavourites'];
+        $data['favonly'] = $showfavourites && $view['favonly'] && $data['hasfavourites'];
         $data['favouritesjson'] = json_encode((object) $favourites['map']);
         $data['nonfavouritecount'] = count(array_filter($data['competencies'], fn($c) => empty($c['isfavourite'])));
 

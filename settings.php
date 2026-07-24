@@ -194,6 +194,15 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         get_string('plansummaryheading_desc', 'local_dimensions')
     ));
 
+    // Enable the per-plan favourites shortlist (star, "My favourites" filter, ghost card).
+    // Mirrors block_dimensions/enable_favourites, default on, so the companion plugins agree.
+    $settings->add(new admin_setting_configcheckbox(
+        'local_dimensions/enablefavourites',
+        get_string('enablefavourites', 'local_dimensions'),
+        get_string('enablefavourites_desc', 'local_dimensions'),
+        1
+    ));
+
     // Show competency description.
     $settings->add(new admin_setting_configcheckbox(
         'local_dimensions/showdescription',
