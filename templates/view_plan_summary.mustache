@@ -147,6 +147,10 @@
                     <span class="local-dimensions-filter-count" data-count="all">{{competencycount}}</span>
                 </button>
             </div>
+            {{! A flex line break, used only in the narrow fold: it drops the completion pills
+                onto their own line so each pill group keeps its content width. Inert on wide
+                screens. }}
+            <span class="local-dimensions-toolbar-break" aria-hidden="true"></span>
             </div>
 
             {{! Row one, right edge: the layout toggle stays visible at every width, so it does
