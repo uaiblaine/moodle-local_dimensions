@@ -51,19 +51,30 @@ built client-side by `accordion.js`.
 | File | Screen |
 |---|---|
 | `screens/ovw-overview.html` | Plan overview — filter bar (tabs + counts, search, chips) + collapsed accordion |
-| `screens/ovw-detail-status.html` | Detail — Status tab (tab strip + 2-col status grid) |
+| `screens/ovw-detail-tabs.html` | Detail — the tab strip: order, gating matrix, which tab leads, keyboard |
+| `screens/ovw-detail-courses.html` | Detail — Related content (the leading tab; cards, scroll arrows, access states) |
 | `screens/ovw-detail-desc.html` | Detail — Description / Path / Related / Taxonomy |
-| `screens/ovw-detail-evidence.html` | Detail — Evidence tab (6-type slider, nav, detail button, submit, empty) |
+| `screens/ovw-detail-progress.html` | Detail — Progress tab (assessment card, decisive result, journey, submit) |
+| `screens/ovw-detail-evidence.html` | Detail — Evidence pieces (journey row, 6 types, date, tooltip, submit, empty) |
 | `screens/ovw-detail-rules.html` | Detail — Rules tab (info box, orange progress bar, All/Required filter, children, missing-mandatory alert) |
-| `screens/ovw-detail-courses.html` | Detail — Linked courses (scrollable cards, scroll arrows, 100% check) |
 | `screens/ovw-accordion-states.html` | Accordion load states — per-item spinner and load error |
 | `screens/ovw-modal.html` | Evidence detail modal (type badge, description, note, link, grade, author, date) |
 | `screens/ovw-empty.html` | Empty & no-results states |
 
+`ovw-detail-status.html` was **folded into** `ovw-detail-progress.html`, which owns
+the merged tab; its as-is 2-column grid survives as that file's as-is panel, and
+its IDs (`OVW-STATUS`, `OVW-STATUS-SCALE`) carry over unchanged. The tab strip it
+also carried (`OVW-TAB-NAV`, `OVW-TAB-KBD`) moved to `ovw-detail-tabs.html`.
+
+## Borrowed from the admin kit
+| File | Why it is used here |
+|---|---|
+| `../design-kit/tooltip.html` | The truncation↔tooltip pair — used by the evidence journey's grade chip and the assessment card's rating level. It lives in the admin kit because that folder is the single source of the Design System's foundations; this kit references it rather than copying it. |
+
 ## ID convention
 Format `PREFIX-SECTION[-NN]`, **stable** across re-syncs. Prefixes: **`TRK`**
 (view-competency) and **`OVW`** (view-plan). Sections include `HERO`, `CHIP`,
-`GRID`/`CARD`/`TL`/`LOCK` (tracker); `BAR`, `ACC`, `TAB`, `STATUS`,
+`GRID`/`CARD`/`TL`/`LOCK` (tracker); `BAR`, `ACC`, `TAB`, `STATUS`, `PROG`,
 `DESC`/`PATH`/`REL`/`TAX`, `EVID`, `RULES`, `CRS`, `MODAL` (plan). Every
 interactive element and every meaningful static region gets an ID; pure layout
 wrappers do not. A **shared element** (hero, chips) is shown once but **referenced
