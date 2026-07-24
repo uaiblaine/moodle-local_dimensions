@@ -143,9 +143,14 @@ final class summary_scale_description_test extends \advanced_testcase {
         $framework = $ccg->create_framework([
             'visible' => 1,
             'scaleid' => $scale->id,
+            /* core_competency\competency_framework::validate_scaleconfiguration() shifts off
+               the leading scaleid entry and then requires at least one remaining entry with a
+               truthy scaledefault AND at least one with a truthy proficient. Miss either and
+               create_framework() throws before the test reaches an assertion. */
             'scaleconfiguration' => json_encode([
                 ['scaleid' => (int) $scale->id],
-                ['id' => 3, 'scaledefault' => 0, 'proficient' => 1],
+                ['id' => 2, 'scaledefault' => 1, 'proficient' => 1],
+                ['id' => 3, 'proficient' => 1],
             ]),
         ]);
         $competency = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
@@ -168,6 +173,12 @@ final class summary_scale_description_test extends \advanced_testcase {
     }
 }
 ```
+
+Add a third test alongside those two, for the branch `resolve_show_scale_description()`
+exists to serve: a setting that was **never written** must behave as on, so an install
+upgrading into this release keeps the link it has today. It calls
+`unset_config('showscaledescription', 'local_dimensions')` and asserts the description
+still comes back populated — it would fail if the defaulting were removed.
 
 - [ ] **Step 2: Run the test to verify it fails**
 
