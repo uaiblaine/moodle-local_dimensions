@@ -1333,12 +1333,17 @@ on this wrapper, because a wrapper carrying `overflow: hidden` would clip its ow
 }
 ```
 
-The kit also shows an `.is-open` selector and a `.dim-tip-bottom` variant. **Neither ships
-here.** `.is-open` is a forced state the kit uses to photograph the balloon open. The bottom
-variant is documented for "first row of a list, top of a modal" — the journey's first row has
-the assessment card above it and no ancestor clips, so the top-anchored primitive is enough
-for both uses in this slice. Add the variant only if a later layout puts a balloon against a
-clipping edge.
+`.is-open` from the kit does **not** ship — it is a forced state the kit uses to photograph
+the balloon open.
+
+`.dim-tip-bottom` **does** ship, and Task 6 adds it (see there). The reason is a clipping
+ancestor that is easy to miss: `.local-dimensions-accordion-item` (styles.css:1414) and
+`.local-dimensions-accordion-content` (styles.css:1553) both set `overflow: hidden`
+unconditionally, and both wrap the element the panes are injected into. The `overflow` is
+there for the expand/collapse animation, so it cannot simply be relaxed. An upward balloon
+near the top of a pane is therefore clipped regardless of where the page is scrolled — and
+both of this slice's tooltips sit near a pane's top: the assessment card is the pane's first
+element, and the journey's first row is close behind it. Both use the downward variant.
 
 - [ ] **Step 4: Lint and build**
 
@@ -1679,7 +1684,46 @@ The six `.local-dimensions-ev-row-icon.local-dimensions-evidence-*` type-colour 
 follow (2999 onward) are untouched — they still match, and the icon is now a rounded square
 rather than a circle, matching the kit.
 
-- [ ] **Step 7: Lint and build**
+- [ ] **Step 7: Flip both tooltips downward**
+
+Carried from Task 5's review. `.local-dimensions-accordion-item` (styles.css:1414) and
+`.local-dimensions-accordion-content` (styles.css:1553) both set `overflow: hidden`
+unconditionally, and both wrap the element the panes are injected into — the `overflow` drives
+the expand/collapse animation, so it cannot be relaxed. An upward balloon near the top of a
+pane is clipped no matter where the page is scrolled, and **both** of this slice's tooltips sit
+near a pane's top: the assessment card is the pane's first element, and the journey's first row
+is right behind it. A long scale name — exactly what makes the balloon appear — wraps to two or
+three lines and clips first.
+
+Add the variant to `styles.css`, directly after the `.local-dimensions-tip` trigger rule:
+
+```css
+/* Downward, because the accordion's expand/collapse overflow clips an upward balloon
+   near the top of a pane. Both tooltips in this view sit there. */
+.local-dimensions-tip-bottom::after {
+    bottom: auto;
+    top: calc(100% + 8px);
+}
+
+.local-dimensions-tip-bottom::before {
+    bottom: auto;
+    top: calc(100% + 3px);
+    border-top-color: transparent;
+    border-bottom-color: #1d2125;
+}
+```
+
+Then add the class at both emitters — in `renderEvidenceRow` (this task) and in
+`renderStatusSection` (Task 5's function), changing each wrapper from
+`class="local-dimensions-tip"` to
+`class="local-dimensions-tip local-dimensions-tip-bottom"`.
+
+Residual limitation, accepted rather than engineered away: the **last** journey row's balloon
+opens downward and can clip against the pane's bottom edge when the submit button is disabled
+and the balloon wraps to three lines. That is one row in one configuration, against every first
+row in every configuration for the upward variant — a strictly better trade for two CSS rules.
+
+- [ ] **Step 8: Lint and build**
 
 ```bash
 cd /Volumes/N1TB/dev/github/moodle && npx eslint --max-warnings 0 public/local/dimensions/amd/src
@@ -1695,7 +1739,7 @@ Expected: no errors.
 cd /Volumes/N1TB/dev/github/moodle && npx grunt amd --root=public/local/dimensions
 ```
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
 git add amd/src/accordion.js amd/build/accordion.min.js amd/build/accordion.min.js.map styles.css
