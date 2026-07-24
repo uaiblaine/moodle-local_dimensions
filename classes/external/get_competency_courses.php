@@ -20,8 +20,9 @@
  * This webservice runs its own query over competency_coursecomp and resolves
  * the enrolment-filter cascade (competency -> plan's template -> global
  * setting) to filter courses based on the user's enrollment status. Each
- * surviving course also carries its rule outcome and the competency's
- * activity links inside it.
+ * surviving course also carries its rule outcome, the competency's activity
+ * links inside it, what the viewer can do with it (open, enrol or locked) and,
+ * when the course resolves to exactly one trackable activity, that activity.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -46,6 +47,15 @@ use core\context\course as context_course;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class get_competency_courses extends external_api {
+    /** @var string The viewer is actively enrolled and can open the course. */
+    private const ACCESS_OPEN = 'open';
+
+    /** @var string The viewer is not enrolled but self-enrolment is open to them. */
+    private const ACCESS_ENROL = 'enrol';
+
+    /** @var string The viewer can neither open the course nor join it. */
+    private const ACCESS_LOCKED = 'locked';
+
     /**
      * Define input parameters.
      *
@@ -113,6 +123,7 @@ class get_competency_courses extends external_api {
         $result = [];
         foreach ($courses as $course) {
             $coursecontext = context_course::instance($course->id);
+            $fullcourse = get_course($course->id);
 
             // Get course image URL.
             $courseimage = '';
@@ -134,10 +145,10 @@ class get_competency_courses extends external_api {
 
             // Get course progress for the current user.
             $progress = 0;
-            $completion = new \completion_info(get_course($course->id));
+            $completion = new \completion_info($fullcourse);
             if ($completion->is_enabled()) {
                 $progressvalue = \core_completion\progress::get_course_progress_percentage(
-                    get_course($course->id),
+                    $fullcourse,
                     $USER->id
                 );
                 if ($progressvalue !== null) {
@@ -145,7 +156,27 @@ class get_competency_courses extends external_api {
                 }
             }
 
-            $result[] = [
+            /* What the viewer can do with this course. calculator::is_locked() is deliberately
+               not used: it also reports true for anyone enrolled without the student role, which
+               would lock every card for a member of staff reviewing someone's plan. The question
+               here is the one the card's own link is about to answer - can this viewer open it. */
+            $access = self::ACCESS_OPEN;
+            $lockdate = 0;
+            $isenrolstart = false;
+            if (!is_enrolled($coursecontext, $USER->id, '', true)) {
+                $access = \local_dimensions\calculator::current_user_can_self_enrol((int) $course->id)
+                    ? self::ACCESS_ENROL
+                    : self::ACCESS_LOCKED;
+            }
+            if ($access === self::ACCESS_LOCKED) {
+                $lockdate = (int) \local_dimensions\calculator::get_availability_date($fullcourse, $USER->id);
+                $isenrolstart = \local_dimensions\calculator::get_enrolment_start_date(
+                    $fullcourse,
+                    $USER->id
+                ) !== null;
+            }
+
+            $row = [
                 'id' => (int) $course->id,
                 'fullname' => format_string($course->fullname, true, ['context' => $coursecontext]),
                 'shortname' => format_string($course->shortname, true, ['context' => $coursecontext]),
@@ -153,8 +184,27 @@ class get_competency_courses extends external_api {
                 'progress' => $progress,
                 'visible' => 1,
                 'ruleoutcome' => (int) $course->ruleoutcome,
+                'access' => $access,
+                'lockdate' => $lockdate,
+                'isenrolstart' => $isenrolstart,
                 'activities' => $activitiesbycourse[(int) $course->id] ?? [],
             ];
+
+            /* Only a course the viewer can open and that resolves to exactly one trackable
+               activity carries this - naming an activity behind a lock helps nobody. The key is
+               omitted rather than set to null: clean_returnvalue rejects a null where an
+               optional structure is declared. */
+            if ($access === self::ACCESS_OPEN) {
+                $activity = \local_dimensions\calculator::resolve_single_activity(
+                    (int) $course->id,
+                    (int) $USER->id
+                );
+                if ($activity !== null) {
+                    $row['activity'] = $activity;
+                }
+            }
+
+            $result[] = $row;
         }
 
         return $result;
@@ -294,6 +344,21 @@ class get_competency_courses extends external_api {
                 'progress' => new external_value(PARAM_INT, 'Course completion progress percentage'),
                 'visible' => new external_value(PARAM_INT, 'Course visibility'),
                 'ruleoutcome' => new external_value(PARAM_INT, 'What completing the course does to the competency'),
+                'access' => new external_value(
+                    PARAM_ALPHA,
+                    'What the viewer can do with the course: open, enrol or locked'
+                ),
+                'lockdate' => new external_value(PARAM_INT, 'Availability timestamp when locked, 0 otherwise'),
+                'isenrolstart' => new external_value(PARAM_BOOL, 'Whether the lock date is an enrolment start date'),
+                'activity' => new external_single_structure(
+                    [
+                        'name' => new external_value(PARAM_RAW, 'Activity name'),
+                        'url' => new external_value(PARAM_URL, 'Activity URL, empty when it has no view page'),
+                        'completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
+                    ],
+                    'The single trackable activity, present only when the course resolves to exactly one',
+                    VALUE_OPTIONAL
+                ),
                 'activities' => new external_multiple_structure(
                     new external_single_structure([
                         'cmid' => new external_value(PARAM_INT, 'Course module id'),
