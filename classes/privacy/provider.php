@@ -23,6 +23,13 @@
  * (custom-field data belongs to competencies/templates, not users), so this is a
  * preference-only provider.
  *
+ * Metadata plus user_preference_provider is the whole obligation, and the omissions are
+ * deliberate: user_preference_provider extends core_data_provider, which satisfies
+ * core_privacy\manager::component_is_compliant(); core_userlist_provider answers "who has data
+ * in this context", which does not apply to a preference; and core_user's own provider deletes
+ * every user_preferences row for a user being forgotten, so a delete method here would only
+ * repeat it.
+ *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
