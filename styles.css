@@ -508,6 +508,9 @@
     display: flex;
     align-items: center;
     padding: 2rem 0;
+
+    /* Anchors the collapse handle, which is centred on this full-bleed band. */
+    position: relative;
 }
 
 .local-dimensions-hero-content {
@@ -587,6 +590,130 @@
     color: var(--dimension-customtextcolor, rgb(255 255 255 / 100%));
 }
 
+/* ============================================
+      HERO OPEN / SLIM
+      A ghost handle centred on the hero's bottom edge folds the header down to a
+      slim row - title plus due date, no description - and back. The choice is the
+      learner's own user preference, so the state arrives already applied from the
+      server; local_dimensions/hero_collapse only flips it from there.
+      ============================================ */
+.local-dimensions-hero-collapse {
+    position: absolute;
+    bottom: 0.7rem;
+    left: 50%;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.95rem;
+    background: rgb(255 255 255 / 14%);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgb(255 255 255 / 40%);
+    border-radius: 999px;
+    color: var(--dimension-customtextcolor, rgb(255 255 255 / 100%));
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transform: translateX(-50%);
+    transition: background-color 150ms ease;
+}
+
+.local-dimensions-hero-collapse:hover,
+.local-dimensions-hero-collapse:focus {
+    background: rgb(255 255 255 / 26%);
+    text-decoration: none;
+}
+
+.local-dimensions-hero-collapse:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 2px;
+}
+
+.local-dimensions-hero-collapse .fa {
+    font-size: 0.7rem;
+}
+
+/* Slim state: the title and the due date share one row and the band loses its tall
+   padding. The id-prefixed selectors exist only to outrank the id rule that floors the
+   wrapper and the page-specific content padding, both declared above them. */
+#local-dimensions-hero.local-dimensions-hero-slim {
+    min-height: 0;
+}
+
+.local-dimensions-hero-slim .local-dimensions-hero {
+    min-height: 0;
+    padding: 1rem 0 2.75rem;
+}
+
+#page-local-dimensions-view-plan .local-dimensions-hero-slim .local-dimensions-hero-content,
+#page-local-dimensions-view-competency .local-dimensions-hero-slim .local-dimensions-hero-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 1rem;
+    max-width: none;
+    padding: 0.5rem 5rem;
+}
+
+.local-dimensions-hero-slim .local-dimensions-hero-title {
+    font-size: 1.4rem;
+    margin-bottom: 0;
+}
+
+.local-dimensions-hero-slim .local-dimensions-hero-description {
+    display: none;
+}
+
+/* The glass card folds to a pill beside the title. Its standing label is kept for screen
+   readers only - the row has no room for a second line, and the icon alone would leave the
+   date unexplained. */
+.local-dimensions-hero-slim .local-dimensions-duedate-card {
+    flex: none;
+    gap: 0.4rem;
+    margin-top: 0;
+    padding: 0.28rem 0.75rem;
+    border-radius: 999px;
+}
+
+.local-dimensions-hero-slim .local-dimensions-duedate-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.local-dimensions-hero-slim .local-dimensions-duedate-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+.local-dimensions-hero-slim .local-dimensions-duedate-value {
+    font-size: 0.82rem;
+}
+
+/* Folding is a layout change, so only the cheap properties animate. */
+.local-dimensions-hero,
+.local-dimensions-hero-content,
+.local-dimensions-hero-title {
+    transition: padding 150ms ease, min-height 150ms ease, font-size 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-hero,
+    .local-dimensions-hero-content,
+    .local-dimensions-hero-title,
+    .local-dimensions-hero-collapse {
+        transition: none;
+    }
+}
+
 /* Responsive adjustments */
 @media (width <= 991.98px) {
     .local-dimensions-hero {
@@ -602,6 +729,11 @@
     #page-local-dimensions-view-plan .local-dimensions-hero-content,
     #page-local-dimensions-view-competency .local-dimensions-hero-content {
         padding: 2rem;
+    }
+
+    #page-local-dimensions-view-plan .local-dimensions-hero-slim .local-dimensions-hero-content,
+    #page-local-dimensions-view-competency .local-dimensions-hero-slim .local-dimensions-hero-content {
+        padding: 0.5rem 2rem;
     }
 }
 

@@ -100,6 +100,9 @@ echo $OUTPUT->render_from_template('local_dimensions/view_plan_summary', $templa
 // tabs are wired up by accordion.js after AJAX load).
 $PAGE->requires->js_call_amd('local_dimensions/collapsible_description', 'init');
 
+// Wire the hero's open/slim handle. The stored state is already rendered.
+$PAGE->requires->js_call_amd('local_dimensions/hero_collapse', 'init');
+
 // Inject compiled custom CSS via AMD (no inline template JS).
 if (!empty($templatedata['hascustomcss'])) {
     $PAGE->requires->js_call_amd(

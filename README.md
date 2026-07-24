@@ -45,6 +45,8 @@ All competencies of the plan as an expandable accordion, loaded lazily — or as
 
 Learners can sort the plan (plan order, name, completed first, favourites first) and filter it to what is still incomplete; those choices, the list-or-grid layout and the modal size persist per user. With the `enablefavourites` setting on (the default), a learner can star competencies and narrow the plan to that shortlist, with a ghost card counting what the filter hides — the star and the filter appear only on the learner's own plan, never to staff reviewing someone else's.
 
+The header folds on both views: a handle on its bottom edge collapses the hero to a slim row — the title with the plan's due date beside it, no description — and opens it again. That choice is stored per user too and applied before the page paints, so a learner who returns lands on the header they left.
+
 A draggable **"Return to plan"** floating button brings learners back from course pages to the plan they came from.
 
 
@@ -160,7 +162,7 @@ If you want to use this plugin with an RTL language, and it doesn't work as-is, 
 Privacy
 -------
 
-The plugin stores no personal data beyond two per-user preferences that remember the Competency hub's last-visited view and display choices. These are exported by the Privacy API on a data-subject request and removed on plugin uninstall. Custom field data is associated with competencies and learning plan templates, not with individual users. Course progress calculation is performed in real-time, and temporary session cache entries are used only to support navigation and rendering during active sessions.
+The plugin stores no personal data beyond five per-user preferences: two that remember the Competency hub's last-visited view and display choices, and three that remember the learner views' chrome, favourite competencies and folded header. These are exported by the Privacy API on a data-subject request and removed on plugin uninstall. Custom field data is associated with competencies and learning plan templates, not with individual users. Course progress calculation is performed in real-time, and temporary session cache entries are used only to support navigation and rendering during active sessions.
 
 The plugin implements the Moodle Privacy API as a preference-only provider (`core_privacy\local\request\user_preference_provider`).
 
