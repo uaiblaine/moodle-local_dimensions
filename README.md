@@ -37,11 +37,13 @@ Two ways to visualize a learning plan, selectable per template via a custom fiel
 
 ### Competency tracker
 
-The linked courses of one competency as a responsive grid of course cards: real-time section progress (circular indicators, recursive subsection support), lock status with configurable icons and messages, availability dates for future enrolments, and tag-driven chip filters. An optional redirect skips the grid entirely when the learner has a single active enrolment.
+The linked courses of one competency as a responsive grid of course cards: real-time section progress (circular indicators, recursive subsection support), lock status with configurable icons and messages, availability dates for future enrolments, and tag-driven chip filters. Completion tabs narrow the grid to what is still open, a **Continue** shortcut jumps to the first started-but-unfinished section, and a finished course carries a completion seal. A locked card offers **self-enrolment** where the course allows it, or the date it opens. Courses that amount to a single activity or a single section link straight to it. An optional redirect skips the grid entirely when the learner has a single active enrolment.
 
 ### Full plan overview
 
-All competencies of the plan as an expandable accordion, loaded lazily. Each panel can show the competency description, its taxonomy card and hierarchy path, related competencies, evidence cards with detail modals, linked course cards with progress, and a **Rules** tab that turns Moodle's competency completion rules — All/Points, outcome, earned progress, required children, proficiency status — into something learners actually understand at a glance.
+All competencies of the plan as an expandable accordion, loaded lazily — or as a grid whose cards open a detail modal with a pager across competencies and a full-screen expand. Each panel can show the competency description, its taxonomy card and hierarchy path, related competencies, evidence cards with detail modals, linked course cards with progress, and a **Rules** tab that turns Moodle's competency completion rules — All/Points, outcome, earned progress, required children, proficiency status — into something learners actually understand at a glance. **Related content** adds the rule's outcome badge and the activities linked to the competency, grouped by course and drawn with core's own activity icons: a restricted activity is shown locked and leads to the course page, a hidden one is not shown at all.
+
+Learners can sort the plan (plan order, name, completed first, favourites first) and filter it to what is still incomplete; those choices, the list-or-grid layout and the modal size persist per user. With the `enablefavourites` setting on (the default), a learner can star competencies and narrow the plan to that shortlist, with a ghost card counting what the filter hides — the star and the filter appear only on the learner's own plan, never to staff reviewing someone else's.
 
 A draggable **"Return to plan"** floating button brings learners back from course pages to the plan they came from.
 
