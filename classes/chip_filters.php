@@ -144,7 +144,12 @@ class chip_filters {
             foreach ($datas as $data) {
                 $field = $data->get_field();
                 $shortname = $field->get('shortname');
-                $out[$cid][$shortname] = self::stringify_value($data->get_value());
+                // Same select-index-to-label resolution as the lp/competency path.
+                $out[$cid][$shortname] = self::display_value(
+                    (string) $field->get('type'),
+                    (string) $field->get('configdata'),
+                    $data->get_value()
+                );
             }
         }
 
@@ -172,7 +177,9 @@ class chip_filters {
         // batch shape (one round-trip resolves the configured shortnames for a
         // single instance). If core changes the customfield schema (already
         // changed once between 4.x and 5.x), re-validate before upgrading.
-        $sql = "SELECT f.shortname, d.value
+        // configdata carries the select options, so a select value can be mapped
+        // to its label here rather than surfacing the raw 1-based index.
+        $sql = "SELECT f.shortname, f.type, f.configdata, d.value
                   FROM {customfield_field} f
                   JOIN {customfield_category} c ON c.id = f.categoryid
              LEFT JOIN {customfield_data} d ON d.fieldid = f.id AND d.instanceid = :instanceid
@@ -192,9 +199,36 @@ class chip_filters {
             $values[$sn] = '';
         }
         foreach ($rows as $row) {
-            $values[$row->shortname] = self::stringify_value($row->value);
+            $values[$row->shortname] = self::display_value($row->type, $row->configdata, $row->value);
         }
         return $values;
+    }
+
+    /**
+     * The label a chip should carry for a stored custom-field value.
+     *
+     * A select field stores the chosen option as a 1-based index, so the raw value is a
+     * number; every other field type stores what it displays. Both the chip buttons and the
+     * per-instance data-filtervalues run through here, so the two always agree and the exact
+     * match still holds - they simply match on the label now instead of the index.
+     *
+     * @param string $type The custom-field type (e.g. select, text).
+     * @param string|null $configdata The field's JSON config, holding a select's options.
+     * @param mixed $value The stored value.
+     * @return string
+     */
+    protected static function display_value(string $type, ?string $configdata, $value): string {
+        if ($type !== 'select') {
+            return self::stringify_value($value);
+        }
+        $index = (int) $value;
+        if ($index <= 0) {
+            return '';
+        }
+        $config = json_decode((string) $configdata, true);
+        $optstr = is_array($config) ? (string) ($config['options'] ?? '') : '';
+        $options = preg_split("/\s*\n\s*/", trim($optstr), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        return $options[$index - 1] ?? '';
     }
 
     /**
