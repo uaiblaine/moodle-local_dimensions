@@ -44,7 +44,28 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
   fields.
 - **Learner views**: taxonomy card, Rules-tab filters and warnings with backend-provided
   texts, status/taxonomy icon assets, plan-trail session cache, and a draggable Return-to-Plan
-  button.
+  button. Both views were then rebuilt end to end (learner kit, Phases 0–6):
+  - *Related content*: each competency panel carries its completion-rule **outcome badge** and
+    the activities linked to it, grouped by course, drawn with core's own activity icons and
+    purpose colours. A restricted activity is shown locked and leads to the course page; a
+    hidden one is not shown at all.
+  - *Locked course card*: **self-enrolment** where the course offers it, and an anticipatory
+    "Opens" / "Enrolment opens" date instead of a bare lock.
+  - *Single-activity and single-section courses* resolve to the activity or the section itself,
+    rather than to a card leading to a course page with one link on it.
+  - **Sort and completion filter**, persisted per user and resolved server-side so the first
+    paint is already ordered: plan order, name, completed first or favourites first, over
+    "not completed" or "all".
+  - **Per-plan favourites**: a star on each competency, a "My favourites" / "Show all" pill
+    pair, and a ghost card counting what the filter hides so it cannot be left on unnoticed.
+    Own-plan only — staff reviewing someone else's plan get no star — and gated by the new
+    `enablefavourites` admin setting (default on, mirroring `block_dimensions`).
+  - **Grid layout** beside the list, with a competency **detail modal** carrying a pager across
+    competencies and a full-screen expand; both choices persist.
+  - *Competency tracker*: completion tabs (Not completed / All), a **"Continue"** shortcut to
+    the first started-but-unfinished section, and a seal on a completed course's card.
+  - The toolbar is realigned with `block_dimensions`: sticky at every width, filters folding
+    behind an adjustments button on narrow screens, and a "Clear filters" button with an icon.
 - **CI**: moodle-an-hochschulen reusable workflow — static checks plus PHPUnit and Behat
   across the supported PHP × DB matrix (Moodle 4.05–5.02).
 
@@ -68,6 +89,15 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
 - Bootstrap 4 dropdowns dead on Moodle 4.5 (missing `data-toggle` bridges).
 - Web-service return structures silently stripping undeclared fields from lazily-fetched rows.
 - TinyMCE not initialising on template edit; assorted modal heading/labelling issues.
+- Four learner-view defects that predated the rebuild: the filter-tab click handler reaching
+  outside its own toolbar, the course-progress payload tripping on a completion-disabled
+  course, the last hard-coded colours left by the palette migration, and `isGradeProficient`
+  misreading core's scale configuration.
+- A partial seed silently erasing a whole-value preference: `local_dimensions_learner_view`
+  holds five keys in one JSON value, so any control that saved reset every key the page had
+  not seeded — choosing a sort discarded the grid layout, and the favourites filter and the
+  modal size were lost the same way, unseen. The whole resolved state is now handed to the
+  client as a single object.
 
 ## [1.0] - 2026-03-16
 
