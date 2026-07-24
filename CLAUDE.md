@@ -171,7 +171,10 @@ classes/
   output/                    Renderables: learner (view_*_page) + hub
                              (central/, dynamictabs/ tab classes)
   task/                      Adhoc tasks (cohort role + template cohort sync)
-  privacy/                   Null provider (no personal data stored)
+  privacy/                   Preference-only provider (metadata\provider +
+                             user_preference_provider) — no tables, no delete
+                             or context providers: core_user owns preference
+                             deletion (user/classes/privacy/provider.php)
   reportbuilder/             Datasources + entities (competencies, plans)
 db/                          access, caches, events, hooks, services, install,
                              upgrade, uninstall  (NO install.xml — no own tables)
