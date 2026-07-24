@@ -109,7 +109,7 @@
         {{! Toolbar: favourites, completion segment, search, sort, chip filter. The active tab,
             the checked sort and the favourites state come from the stored preference,
             resolved server-side. }}
-        <div class="local-dimensions-filter-bar local-dimensions-toolbar">
+        <div class="local-dimensions-filter-bar local-dimensions-toolbar {{#showstar}}{{#hasfavourites}}local-dimensions-has-fav{{/hasfavourites}}{{/showstar}}">
             {{! Row one: the two filter axes as pill pairs, the shape the companion block uses.
                 This whole row is what the narrow layout folds behind the adjustments button. }}
             <div class="local-dimensions-toolbar-filters" data-toolbar-more>
