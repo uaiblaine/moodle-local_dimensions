@@ -320,7 +320,7 @@ class calculator {
      *
      * @param int $courseid The course id.
      * @param int $userid The user whose completion is read.
-     * @return array|null Keys name, url and completed; null unless exactly one module qualifies.
+     * @return array|null Keys name, url, completed and cmid; null unless exactly one module qualifies.
      */
     public static function resolve_single_activity(int $courseid, int $userid): ?array {
         global $CFG;
@@ -359,6 +359,7 @@ class calculator {
             'url' => $found->url ? $found->url->out(false) : '',
             'completed' => $data->completionstate == \COMPLETION_COMPLETE
                 || $data->completionstate == \COMPLETION_COMPLETE_PASS,
+            'cmid' => (int) $found->id,
         ];
     }
 

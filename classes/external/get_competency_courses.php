@@ -352,6 +352,7 @@ class get_competency_courses extends external_api {
                 'isenrolstart' => new external_value(PARAM_BOOL, 'Whether the lock date is an enrolment start date'),
                 'activity' => new external_single_structure(
                     [
+                        'cmid' => new external_value(PARAM_INT, 'Course module id'),
                         'name' => new external_value(PARAM_RAW, 'Activity name'),
                         'url' => new external_value(PARAM_URL, 'Activity URL, empty when it has no view page'),
                         'completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),

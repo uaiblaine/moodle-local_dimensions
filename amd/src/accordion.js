@@ -2171,10 +2171,15 @@ define(
                 html += '</div>'; // End local-dimensions-course-body.
                 html += isBlocked ? '</span>' : '</a>';
 
-                /* When the card already shows the course's single trackable activity, a drawer
-                   listing that same activity would say it twice. */
+                /* The activities list and course.activity come from two different queries - the
+                   former scoped to modules linked to this competency (get_linked_activities()),
+                   the latter to the course's sole completion-tracked module regardless of any
+                   link (calculator::resolve_single_activity()). They can share a display name
+                   without being the same module, so identity (cmid) is what settles it, not the
+                   label. When the card already shows the course's single trackable activity, a
+                   drawer listing that same activity would say it twice. */
                 const repeats = activities.length === 1 && course.activity
-                    && activities[0].name === course.activity.name;
+                    && activities[0].cmid === course.activity.cmid;
                 if (activities.length > 0 && !repeats) {
                     const panelId = 'local-dimensions-course-acts-' + (++activitiesPanelSeq);
                     const countLabel = activities.length === 1

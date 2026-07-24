@@ -407,7 +407,7 @@ final class get_competency_courses_test extends \advanced_testcase {
 
         $single = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
         \core_competency\api::add_competency_to_course($single->id, $competencyid);
-        $this->getDataGenerator()->create_module('page', [
+        $page = $this->getDataGenerator()->create_module('page', [
             'course' => $single->id,
             'name' => 'Weekly reflection',
             'completion' => COMPLETION_TRACKING_MANUAL,
@@ -430,6 +430,7 @@ final class get_competency_courses_test extends \advanced_testcase {
         $rows = $this->cleaned_result_for($competencyid, $user);
 
         $this->assertSame('Weekly reflection', $rows[$single->id]['activity']['name']);
+        $this->assertSame((int) $page->cmid, $rows[$single->id]['activity']['cmid']);
         $this->assertArrayNotHasKey('activity', $rows[$many->id]);
     }
 }
