@@ -1103,17 +1103,47 @@
     text-decoration: underline;
 }
 
-/* One section is not a sequence: centre the single marker instead of starting a column. */
-.local-dimensions-timeline-single {
+/* The one-section body: a percentage where the activity body puts a state marker. */
+.local-dimensions-single-section {
     display: flex;
     align-items: center;
-    justify-content: center;
-    min-height: 150px;
-    padding-left: 0;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    padding: 1.25rem;
 }
 
-.local-dimensions-timeline-single .local-dimensions-timeline-item {
-    padding-bottom: 0;
+.local-dimensions-single-section-ring {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    flex: none;
+    border: 2px solid #198754;
+    border-radius: 50%;
+    color: #198754;
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.local-dimensions-single-section-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+/* .local-dimensions-single-go already carries the shared link styling for the activity
+   body's centred column layout. The section body is a row: push the link to the end
+   instead of duplicating the base rule, so both bodies keep the same link look. */
+.local-dimensions-single-section .local-dimensions-single-go {
+    margin-top: 0;
+    margin-left: auto;
+    white-space: nowrap;
 }
 
 /* Completed course: the seal states the outcome, the toggle keeps the evidence one click
