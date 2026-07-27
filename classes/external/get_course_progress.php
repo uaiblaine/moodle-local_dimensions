@@ -115,12 +115,19 @@ class get_course_progress extends external_api {
                     'is_future_date' => !empty($data['is_future_date']),
                     'course_url' => $data['course_url'] ?? '',
                     'sections' => $sections,
+                    'cardmode' => $data['cardmode'] ?? '',
                     'error' => '',
                 ];
 
-                // Only a course that resolves to one trackable activity carries this.
+                /* activity and section are null on the shapes that do not name them. A
+                   declared external_single_structure rejects an explicit null, so the key is
+                   omitted rather than sent - mirroring how the 'activity' key above already
+                   worked before this shape existed. */
                 if (!empty($data['activity'])) {
                     $row['activity'] = $data['activity'];
+                }
+                if (!empty($data['section'])) {
+                    $row['section'] = $data['section'];
                 }
 
                 $results[] = $row;
@@ -158,6 +165,11 @@ class get_course_progress extends external_api {
                     PARAM_BOOL,
                     get_string('api_completion_enabled', 'local_dimensions'),
                 ),
+                'cardmode' => new external_value(
+                    PARAM_ALPHA,
+                    'Which shape the card takes: activity, section or timeline',
+                    VALUE_OPTIONAL,
+                ),
                 'locked' => new external_value(
                     PARAM_BOOL,
                     get_string('api_content_locked', 'local_dimensions'),
@@ -193,11 +205,22 @@ class get_course_progress extends external_api {
                 ),
                 'activity' => new external_single_structure(
                     [
+                        'cmid' => new external_value(PARAM_INT, 'Course module id'),
                         'name' => new external_value(PARAM_TEXT, 'Activity name'),
                         'url' => new external_value(PARAM_URL, 'Activity URL'),
                         'completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
+                        'tracked' => new external_value(PARAM_BOOL, 'Whether completion is tracked for it'),
                     ],
-                    'The single trackable activity, present only when the course resolves to exactly one',
+                    'The course\'s single activity, present only when cardmode is activity',
+                    VALUE_OPTIONAL,
+                ),
+                'section' => new external_single_structure(
+                    [
+                        'name' => new external_value(PARAM_TEXT, 'Section name, empty when Moodle generated it'),
+                        'hasownname' => new external_value(PARAM_BOOL, 'Whether a teacher named the section'),
+                        'url' => new external_value(PARAM_URL, 'URL of the section'),
+                    ],
+                    'The course\'s only section, present only when cardmode is section',
                     VALUE_OPTIONAL,
                 ),
                 'sections' => new external_multiple_structure(

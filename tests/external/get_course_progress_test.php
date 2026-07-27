@@ -142,4 +142,58 @@ final class get_course_progress_test extends \advanced_testcase {
         $this->assertTrue($row['can_self_enrol']);
         $this->assertTrue($row['is_future_date']);
     }
+
+    /**
+     * A single-activity course reports the activity shape and names its activity.
+     *
+     * @return void
+     */
+    public function test_execute_reports_the_activity_card_shape(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course([
+            'format' => 'singleactivity',
+            'enablecompletion' => 1,
+        ]);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'name' => 'Submit portfolio',
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+
+        $this->setUser($user);
+        $row = $this->cleaned_row_for((int) $course->id);
+
+        $this->assertSame(\local_dimensions\constants::CARDMODE_ACTIVITY, $row['cardmode']);
+        $this->assertSame('Submit portfolio', $row['activity']['name']);
+        $this->assertTrue($row['activity']['tracked']);
+    }
+
+    /**
+     * A one-section course reports the section shape and carries the section's URL.
+     *
+     * @return void
+     */
+    public function test_execute_reports_the_section_card_shape(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course([
+            'numsections' => 0,
+            'enablecompletion' => 1,
+        ]);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        foreach (['First', 'Second'] as $name) {
+            $this->getDataGenerator()->create_module('page', [
+                'course' => $course->id,
+                'name' => $name,
+                'completion' => COMPLETION_TRACKING_MANUAL,
+            ]);
+        }
+
+        $this->setUser($user);
+        $row = $this->cleaned_row_for((int) $course->id);
+
+        $this->assertSame(\local_dimensions\constants::CARDMODE_SECTION, $row['cardmode']);
+        $this->assertFalse($row['section']['hasownname']);
+        $this->assertStringContainsString('/course/section.php', $row['section']['url']);
+    }
 }
