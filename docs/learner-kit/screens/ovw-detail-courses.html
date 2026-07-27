@@ -151,30 +151,51 @@
 /* Dimmed artwork: the state reads at a glance without a veil over the whole card. */
 .co-img.dim img{filter:grayscale(.55);opacity:.62;}
 .co-ph.dim{opacity:.5;}
-/* Single trackable activity — the activity itself, in place of the bar. The link
-   sits on its own line: sharing one with the name would truncate the name at the
-   card's 255px long before it needed to be. */
-.co-single{display:flex;align-items:center;gap:.5rem;}
-.co-single-mark{flex:none;display:inline-flex;}
-.co-single-mark svg{width:1.25rem;height:1.25rem;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+/* Single trackable activity or single section — the activity or the section's own ring,
+   in place of the bar. A centred column, the same shape the tracker's compact bodies use,
+   so a learner moving between the two views reads one thing. The auto vertical margins
+   centre it in the slack the card's floor leaves below the name (the image cards' progress
+   row uses margin-top:auto for the mirror reason, to sit at the bottom). The call to action
+   sits on its own line: sharing one with the name would truncate the name at the card's
+   255px long before it needed to be. */
+.co-single{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;margin:auto 0;text-align:center;}
+/* One 56px box for the completion icon and one for the ring, so the two compact modes put
+   their mark at the same place and the same size — the icon's circle (r=9 + a 2-unit stroke
+   in a 24-unit viewBox) and the ring's (r=12 + 3 in 32) then paint the same ~47px diameter.
+   In the plugin the icon is a Font Awesome glyph rather than an SVG, so styles.css sizes it
+   by font-size (3.5rem) to land on that same diameter. */
+.co-single-mark{flex:none;display:flex;align-items:center;justify-content:center;width:56px;height:56px;}
+.co-single-mark svg{width:56px;height:56px;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .co-single-mark .done{stroke:#198754;stroke-width:2.4;}
 .co-single-mark .todo{stroke:var(--lk-muted);stroke-width:2;stroke-dasharray:2.5 2.5;}
-.co-single-name{flex:1;min-width:0;font-size:.78rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.co-single-name{max-width:100%;font-size:.78rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .co-single-state{font-size:.7rem;color:var(--lk-muted);flex:none;}
 .co-single-state.done{color:#0f5132;font-weight:600;}
-/* Section shape's own marker: the section's percentage in a plain bordered circle —
-   smaller than the tracker's version (local-dimensions-course-single-pct, 2.25rem vs the
-   tracker's 3rem), same "border + text, no SVG arc" shape. */
-.co-single-pct{display:inline-flex;align-items:center;justify-content:center;width:2.25rem;height:2.25rem;flex:none;border:2px solid #198754;border-radius:50%;color:#198754;font-size:.6875rem;font-weight:700;}
+/* Section shape's own marker: the SAME ring the tracker draws, at the same 56px — the
+   timeline's ring component reused (local-dimensions-progress-ring-container + …-lg), so
+   the 32-unit viewBox and r=12 circle are shared and the arc is percentage × 0.754. */
+.co-single-pct{position:relative;display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:none;}
+.co-single-pct svg{width:56px;height:56px;transform:rotate(-90deg);display:block;}
+.co-single-pct .ring-bg{fill:transparent;stroke:var(--lk-line-2);stroke-width:3;}
+.co-single-pct .ring-fg{fill:transparent;stroke:#198754;stroke-width:3;stroke-linecap:round;}
+.co-single-pct .ring-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1rem;font-weight:700;color:#198754;}
 /* co-go is a REAL link (local-dimensions-course-go), a sibling of co-link rather than
    nested inside it — the card's second target, see the note below. */
 .co-go{display:inline-flex;align-items:center;gap:.25rem;align-self:flex-start;font-size:.72rem;font-weight:600;color:var(--lk-accent);white-space:nowrap;text-decoration:none;}
 .co-go:hover{text-decoration:underline;}
 .co-go svg{width:.8rem;height:.8rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 /* Compact modes (activity/section) carry no cover image, so the body starts at the
-   card's top edge instead of under a 104px image slot. */
+   card's top edge instead of under a 104px image slot. Dropping that slot would leave the
+   card visibly shorter than its image-bearing siblings, and the scroller does not stretch
+   them to match — it sets align-items:flex-start so expanding one card's activities drawer
+   cannot stretch the whole row. So the card carries a floor of its own: the artwork height
+   plus the body of an image card whose name fits one line (220px at the real card's 128px
+   artwork; 176px at this kit's 104px). A floor, not a height — a longer name or an open
+   drawer still runs taller. The card link is what grows into it, so the slack lands inside
+   the body, where the centred mark uses it, not as dead space under the call to action. */
 .co-card.compact .co-body{padding-top:.8rem;}
-.co-card.compact{min-height:96px;}
+.co-card.compact{min-height:176px;}
+.co-card.compact .co-link{display:flex;flex:1;flex-direction:column;}
 /* Blocked mode: the card stops being a link, so it must not look clickable. */
 .co-card.blocked .co-link{cursor:default;}
 /* Pane footer — the way out to the tracker, right-aligned under the track.
@@ -528,7 +549,7 @@
       <span class="idb">card name → course, "Go to activity" → the activity (two targets)</span>
       <span class="idb">drawer suppressed when it would repeat this activity</span>
     </div>
-    <div class="note">Same reasoning as the tracker's single-activity card, applied to a different component: there the timeline had no sequence to draw, here the percentage has only two values it can ever hold, so "0%" or "100%" is noise where the activity's own name and state are the answer. Drawn <b>imageless</b> like every compact card, and with <b>two independent link targets</b>: the outer <code>&lt;a&gt;</code> around the name, badge and state strip goes to the course; "Go to activity" is a second, separate <code>&lt;a&gt;</code> below it, to the activity itself — not a <code>&lt;span&gt;</code> nested inside the first link, which is what this card used to be. When the single activity is also the one the <b>"N activities"</b> drawer would list, the drawer is suppressed — otherwise the card shows the same activity twice. A locked or enrol state wins over this one: there is no point naming an activity the learner cannot open.</div>
+    <div class="note">Same reasoning as the tracker's single-activity card, applied to a different component: there the timeline had no sequence to draw, here the percentage has only two values it can ever hold, so "0%" or "100%" is noise where the activity's own name and state are the answer. Drawn <b>imageless</b> like every compact card, its state marker <b>centred in a 56px box</b> so it lands where the section card's ring lands and matches the tracker's arrangement, and the card carries a <b>minimum height</b> so losing the cover image does not leave it sitting short beside its image-bearing siblings. With <b>two independent link targets</b>: the outer <code>&lt;a&gt;</code> around the name, badge and state strip goes to the course; "Go to activity" is a second, separate <code>&lt;a&gt;</code> below it, to the activity itself — not a <code>&lt;span&gt;</code> nested inside the first link, which is what this card used to be. When the single activity is also the one the <b>"N activities"</b> drawer would list, the drawer is suppressed — otherwise the card shows the same activity twice. A locked or enrol state wins over this one: there is no point naming an activity the learner cannot open.</div>
 
     <div class="divlbl">One qualifying section — a percentage, not a bar <span class="idb">OVW-CRS-SECTION</span></div>
     <div class="co-sec">
@@ -538,7 +559,10 @@
             <div class="co-body">
               <div class="co-name">Orientation Pack</div>
               <div class="co-single">
-                <span class="co-single-pct">25%</span>
+                <span class="co-single-pct">
+                  <svg viewBox="0 0 32 32" aria-hidden="true"><circle class="ring-bg" cx="16" cy="16" r="12"/><circle class="ring-fg" cx="16" cy="16" r="12" style="stroke-dasharray:18.85 75.4;stroke-dashoffset:0;"/></svg>
+                  <span class="ring-txt">25</span>
+                </span>
               </div>
             </div>
           </a>
@@ -550,7 +574,10 @@
               <div class="co-name">Foundations of Academic Writing</div>
               <span class="co-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Sends for review</span>
               <div class="co-single">
-                <span class="co-single-pct">60%</span>
+                <span class="co-single-pct">
+                  <svg viewBox="0 0 32 32" aria-hidden="true"><circle class="ring-bg" cx="16" cy="16" r="12"/><circle class="ring-fg" cx="16" cy="16" r="12" style="stroke-dasharray:45.24 75.4;stroke-dashoffset:0;"/></svg>
+                  <span class="ring-txt">60</span>
+                </span>
                 <span class="co-single-name">Week 1 — Getting started</span>
               </div>
             </div>
@@ -564,7 +591,7 @@
       <span class="idb">^hasownname → name omitted (left card, "General"/"Topic 1")</span>
       <span class="idb">hasownname → name shown (right card)</span>
     </div>
-    <div class="note">The plan's mirror of the tracker's <code>TRK-CARD-SECTION</code>, from the same server call to <code>calculator::resolve_card_shape()</code> — the two views cannot disagree about a course's shape, but the number in the circle is not the same kind of number. <code>calculator::describe_section()</code> returns only <code>name</code>, <code>hasownname</code> and <code>url</code> — no percentage — so the plan card shows the course-wide <code>course.progress</code> instead, the same field the ordinary bar reads; the tracker, by contrast, genuinely computes a per-section percentage. That reuse is sound rather than sloppy: with exactly one qualifying section, every trackable activity in the course sits inside it, so the course-wide figure and a section-scoped one would be the same number — the card reuses the figure it already has rather than computing a second one. A qualifying section counts whether or not it holds any modules (an empty section still takes this shape), so "one section" is the whole precondition, not "one section with several activities." The section's name renders only when a teacher authored one. Imageless and two-target like <code>OVW-CRS-SINGLE</code> above: the card links to the course, "Access content" links to the section. The resolver checks the activity shape first, so a course only ever lands here when it does not already resolve to a single activity — the two states are mutually exclusive, never both on the same card.</div>
+    <div class="note">The plan's mirror of the tracker's <code>TRK-CARD-SECTION</code>, from the same server call to <code>calculator::resolve_card_shape()</code> — the two views cannot disagree about a course's shape, but the number in the ring is not the same kind of number. <code>calculator::describe_section()</code> returns only <code>name</code>, <code>hasownname</code> and <code>url</code> — no percentage — so the plan card shows the course-wide <code>course.progress</code> instead, the same field the ordinary bar reads; the tracker, by contrast, genuinely computes a per-section percentage. That reuse is sound rather than sloppy: with exactly one qualifying section, every trackable activity in the course sits inside it, so the course-wide figure and a section-scoped one would be the same number — the card reuses the figure it already has rather than computing a second one. A qualifying section counts whether or not it holds any modules (an empty section still takes this shape), so "one section" is the whole precondition, not "one section with several activities." The section's name renders only when a teacher authored one. Imageless and two-target like <code>OVW-CRS-SINGLE</code> above: the card links to the course, "Access content" links to the section. Both compact shapes now put their mark — the ring here, the completion icon above — <b>centred in a 56px box</b>, the same arrangement the tracker uses, and the card carries a <b>minimum height</b> so an imageless card lines up with its image-bearing siblings instead of sitting short in the scroller. The ring itself is the tracker's component reused, so the <code>percentagedisplaymode</code> setting reaches it: fixed, on hover, or hidden — and hidden still leaves the arc, which a bare number could not. The resolver checks the activity shape first, so a course only ever lands here when it does not already resolve to a single activity — the two states are mutually exclusive, never both on the same card.</div>
 
     <div class="divlbl">How the states interact with the enrolment filter <span class="idb">enrollmentfilter</span></div>
     <table class="mx">

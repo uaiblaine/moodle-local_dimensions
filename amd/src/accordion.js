@@ -247,7 +247,8 @@ define(
                 {key: 'course_completed', component: 'local_dimensions'},
                 {key: 'filter_not_completed', component: 'local_dimensions'},
                 {key: 'go_to_activity', component: 'local_dimensions'},
-                {key: 'access_content', component: 'local_dimensions'}
+                {key: 'access_content', component: 'local_dimensions'},
+                {key: 'aria_completion_percentage', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -339,7 +340,8 @@ define(
                     courseCompleted: strings[83],
                     notCompleted: strings[84],
                     goToActivity: strings[85],
-                    accessContent: strings[86]
+                    accessContent: strings[86],
+                    ariaSectionProgress: strings[87]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -2012,6 +2014,40 @@ define(
         }
 
         /**
+         * Render the section card's progress ring.
+         *
+         * The same markup the tracker's timeline draws for a started section, scaled up by
+         * CSS rather than by a second geometry: the circle stays r=12 in a 32-unit viewBox,
+         * so the arc length is the percentage times the same 0.754 factor the tracker uses.
+         * Reusing the container is also what makes percentagedisplaymode apply here without
+         * a rule of its own - its selectors target this container and its text - and under
+         * the hidden mode the arc still reports progress where a bare number could not.
+         *
+         * @param {number} percentage The section's completion percentage
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML for the ring
+         */
+        function renderSectionRing(percentage, strMap) {
+            const dasharray = (percentage * 0.754).toFixed(2);
+            const label = strMap.ariaSectionProgress.replace('{$a}', percentage);
+
+            let html = '<span class="local-dimensions-progress-ring-container local-dimensions-progress-ring-lg"';
+            html += ' role="progressbar" aria-valuenow="' + percentage + '" aria-valuemin="0" aria-valuemax="100"';
+            html += ' aria-label="' + escapeHtml(label) + '">';
+            html += '<svg class="local-dimensions-progress-ring" width="32" height="32" viewBox="0 0 32 32"';
+            html += ' aria-hidden="true">';
+            html += '<circle class="local-dimensions-progress-ring__bg" cx="16" cy="16" r="12" />';
+            html += '<circle class="local-dimensions-progress-ring__progress" cx="16" cy="16" r="12"';
+            html += ' style="stroke-dasharray: ' + dasharray + ' 75.4; stroke-dashoffset: 0;" />';
+            html += '</svg>';
+            /* Bare number, like the timeline's own ring: "100%" would not clear the arc, and
+               the accessible label above already carries the unit. */
+            html += '<span class="local-dimensions-progress-text" aria-hidden="true">' + percentage + '</span>';
+            html += '</span>';
+            return html;
+        }
+
+        /**
          * Render the state strip that replaces a card's progress row.
          *
          * A progress bar carries no meaning for a learner who cannot open the course (locked
@@ -2060,8 +2096,7 @@ define(
                 let html = '<span class="local-dimensions-course-single">';
                 // A section with nothing trackable has no percentage to claim.
                 if (course.section.tracked) {
-                    html += '<span class="local-dimensions-course-single-pct">' +
-                        (Number.parseInt(course.progress, 10) || 0) + '%</span>';
+                    html += renderSectionRing(Number.parseInt(course.progress, 10) || 0, strMap);
                 }
                 if (course.section.hasownname) {
                     html += '<span class="local-dimensions-course-single-name">' +
