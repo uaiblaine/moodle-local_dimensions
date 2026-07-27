@@ -200,6 +200,11 @@ final class calculator_card_shape_test extends \advanced_testcase {
     /**
      * A course that boils down to one tracked activity takes the same shape.
      *
+     * This is also the coverage `tests/calculator_single_activity_test.php` carried for a
+     * freshly-enrolled, not-yet-completed activity (completed reads false rather than
+     * defaulting true, and the URL is non-empty) before Task 4 deleted that file - ported
+     * here rather than lost with it.
+     *
      * @return void
      */
     public function test_one_tracked_activity_resolves_to_the_activity(): void {
@@ -224,6 +229,69 @@ final class calculator_card_shape_test extends \advanced_testcase {
 
         $this->assertSame(constants::CARDMODE_ACTIVITY, $shape['mode']);
         $this->assertSame('The only tracked thing', $shape['activity']['name']);
+        $this->assertFalse($shape['activity']['completed']);
+        $this->assertNotSame('', $shape['activity']['url']);
+    }
+
+    /**
+     * A single untracked module leaves zero trackable candidates, the same as two - neither
+     * count resolves to the activity shape. Ported from
+     * `tests/calculator_single_activity_test.php::test_untracked_activity_returns_null`
+     * before Task 4 deleted that file: this exercises the per-module
+     * COMPLETION_TRACKING_NONE guard in collect_trackable_cms(), a different line from the
+     * course-level guard the next test covers.
+     *
+     * @return void
+     */
+    public function test_a_lone_untracked_module_does_not_resolve_to_the_activity(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course([
+            'numsections' => 3,
+            'enablecompletion' => 1,
+        ]);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'name' => 'Untracked',
+            'completion' => COMPLETION_TRACKING_NONE,
+        ]);
+
+        $this->setUser($user);
+        $shape = calculator::resolve_card_shape((int) $course->id, (int) $user->id);
+
+        $this->assertNotSame(constants::CARDMODE_ACTIVITY, $shape['mode']);
+        $this->assertNull($shape['activity']);
+    }
+
+    /**
+     * Course-level completion switched off: nothing is trackable, so the non-format path
+     * cannot resolve to the activity shape either. Ported from
+     * `tests/calculator_single_activity_test.php::test_completion_disabled_returns_null`
+     * before Task 4 deleted that file. Unlike
+     * test_single_activity_format_without_completion_still_names_it above, this course is
+     * NOT in the singleactivity format, so resolve_main_activity() cannot short-circuit
+     * the walk - this is the only surviving coverage of collect_trackable_cms()'s own
+     * course-level completion guard.
+     *
+     * @return void
+     */
+    public function test_completion_disabled_does_not_resolve_to_the_activity(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course([
+            'numsections' => 3,
+            'enablecompletion' => 0,
+        ]);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'name' => 'Anything',
+        ]);
+
+        $this->setUser($user);
+        $shape = calculator::resolve_card_shape((int) $course->id, (int) $user->id);
+
+        $this->assertNotSame(constants::CARDMODE_ACTIVITY, $shape['mode']);
+        $this->assertNull($shape['activity']);
     }
 
     /**

@@ -38,6 +38,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core\context\system as context_system;
 use core\context\course as context_course;
+use local_dimensions\constants;
 
 /**
  * External API to get courses linked to a competency with enrollment filter.
@@ -190,17 +191,21 @@ class get_competency_courses extends external_api {
                 'activities' => $activitiesbycourse[(int) $course->id] ?? [],
             ];
 
-            /* Only a course the viewer can open and that resolves to exactly one trackable
-               activity carries this - naming an activity behind a lock helps nobody. The key is
-               omitted rather than set to null: clean_returnvalue rejects a null where an
-               optional structure is declared. */
+            /* The same resolver the tracker uses, so the two views cannot disagree about
+               the shape of the same course. A locked or enrol-gated card keeps its state
+               strip: naming an activity behind a lock helps nobody. */
+            $row['cardmode'] = constants::CARDMODE_TIMELINE;
             if ($access === self::ACCESS_OPEN) {
-                $activity = \local_dimensions\calculator::resolve_single_activity(
+                $shape = \local_dimensions\calculator::resolve_card_shape(
                     (int) $course->id,
                     (int) $USER->id
                 );
-                if ($activity !== null) {
-                    $row['activity'] = $activity;
+                $row['cardmode'] = $shape['mode'];
+                if ($shape['activity'] !== null) {
+                    $row['activity'] = $shape['activity'];
+                }
+                if ($shape['section'] !== null) {
+                    $row['section'] = $shape['section'];
                 }
             }
 
@@ -350,14 +355,28 @@ class get_competency_courses extends external_api {
                 ),
                 'lockdate' => new external_value(PARAM_INT, 'Availability timestamp when locked, 0 otherwise'),
                 'isenrolstart' => new external_value(PARAM_BOOL, 'Whether the lock date is an enrolment start date'),
+                'cardmode' => new external_value(
+                    PARAM_ALPHA,
+                    'Which shape the card takes: activity, section or timeline'
+                ),
                 'activity' => new external_single_structure(
                     [
                         'cmid' => new external_value(PARAM_INT, 'Course module id'),
                         'name' => new external_value(PARAM_RAW, 'Activity name'),
                         'url' => new external_value(PARAM_URL, 'Activity URL, empty when it has no view page'),
                         'completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
+                        'tracked' => new external_value(PARAM_BOOL, 'Whether completion is tracked for it'),
                     ],
                     'The single trackable activity, present only when the course resolves to exactly one',
+                    VALUE_OPTIONAL
+                ),
+                'section' => new external_single_structure(
+                    [
+                        'name' => new external_value(PARAM_TEXT, 'Section name, empty when Moodle generated it'),
+                        'hasownname' => new external_value(PARAM_BOOL, 'Whether a teacher named the section'),
+                        'url' => new external_value(PARAM_URL, 'URL of the section'),
+                    ],
+                    'The course\'s only section, present only when cardmode is section',
                     VALUE_OPTIONAL
                 ),
                 'activities' => new external_multiple_structure(
