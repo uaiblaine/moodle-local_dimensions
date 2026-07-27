@@ -364,6 +364,208 @@ class calculator {
     }
 
     /**
+     * The shape the course card should take, and the data that shape needs.
+     *
+     * Three shapes, first match wins:
+     * - activity: the course is in the single-activity format, or it boils down to one
+     *   trackable module. Either way there is no sequence to draw, and a progress bar
+     *   could only ever read 0% or 100%.
+     * - section: one visible section holding several activities. A timeline of a single
+     *   row naming a section usually called "General" informs nobody.
+     * - timeline: everything else.
+     *
+     * The course-level lock is the caller's business and takes precedence over all three.
+     *
+     * @param int $courseid The course id.
+     * @param int $userid The user whose completion and visibility are read.
+     * @return array Keys mode, activity and section; activity and section are null unless
+     *               mode names them.
+     */
+    public static function resolve_card_shape(int $courseid, int $userid): array {
+        global $CFG;
+        require_once($CFG->libdir . '/completionlib.php');
+
+        $course = get_course($courseid);
+        $completion = new \completion_info($course);
+        $modinfo = get_fast_modinfo($course, $userid);
+
+        $main = self::resolve_main_activity($course, $modinfo);
+        if ($main !== null) {
+            return [
+                'mode' => constants::CARDMODE_ACTIVITY,
+                'activity' => self::describe_activity($main, $completion, $userid),
+                'section' => null,
+            ];
+        }
+
+        // Two is enough to answer "is there exactly one", and stops the walk early.
+        $tracked = self::collect_trackable_cms($modinfo, $completion, 2);
+        if (count($tracked) === 1) {
+            return [
+                'mode' => constants::CARDMODE_ACTIVITY,
+                'activity' => self::describe_activity($tracked[0], $completion, $userid),
+                'section' => null,
+            ];
+        }
+
+        $sections = self::collect_card_sections($modinfo);
+        if (count($sections) === 1) {
+            return [
+                'mode' => constants::CARDMODE_SECTION,
+                'activity' => null,
+                'section' => self::describe_section($course, $sections[0]),
+            ];
+        }
+
+        return [
+            'mode' => constants::CARDMODE_TIMELINE,
+            'activity' => null,
+            'section' => null,
+        ];
+    }
+
+    /**
+     * The activity of a single-activity-format course, when it has one.
+     *
+     * core_courseformat\main_activity_interface::get_main_activity() answers this
+     * directly, but it arrived in Moodle 5.1 and this plugin supports 4.5 upward. An
+     * instanceof against a missing interface returns false rather than failing, so that
+     * branch would silently never fire on two of the four branches CI runs. The format
+     * string is on the course record everywhere, and the format guarantees a single
+     * activity, so modinfo answers the same question with one code path.
+     *
+     * @param \stdClass $course The course record.
+     * @param \course_modinfo $modinfo Its modinfo for the reading user.
+     * @return \cm_info|null The activity, or null when the format is not single-activity
+     *                       or no visible module is configured yet.
+     */
+    private static function resolve_main_activity(\stdClass $course, \course_modinfo $modinfo): ?\cm_info {
+        if (($course->format ?? '') !== 'singleactivity') {
+            return null;
+        }
+
+        foreach ($modinfo->get_cms() as $cm) {
+            if ($cm->modname === 'subsection' || $cm->deletioninprogress || !$cm->uservisible) {
+                continue;
+            }
+            return $cm;
+        }
+
+        return null;
+    }
+
+    /**
+     * The course's trackable, user-visible modules, up to a limit.
+     *
+     * @param \course_modinfo $modinfo The course modinfo.
+     * @param \completion_info $completion The course completion info.
+     * @param int $limit Stop once this many are found.
+     * @return array List of cm_info.
+     */
+    private static function collect_trackable_cms(
+        \course_modinfo $modinfo,
+        \completion_info $completion,
+        int $limit
+    ): array {
+        if (!$completion->is_enabled()) {
+            return [];
+        }
+
+        $found = [];
+        foreach ($modinfo->get_cms() as $cm) {
+            if ($cm->modname === 'subsection' || $cm->deletioninprogress || !$cm->uservisible) {
+                continue;
+            }
+            if ($completion->is_enabled($cm) == \COMPLETION_TRACKING_NONE) {
+                continue;
+            }
+            $found[] = $cm;
+            if (count($found) >= $limit) {
+                break;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * The sections the card would draw, mirroring the timeline's own filter.
+     *
+     * @param \course_modinfo $modinfo The course modinfo.
+     * @return array List of section_info.
+     */
+    private static function collect_card_sections(\course_modinfo $modinfo): array {
+        $sections = [];
+        foreach ($modinfo->get_section_info_all() as $section) {
+            // A delegated section belongs to its subsection activity, never to the card.
+            if (!empty($section->component)) {
+                continue;
+            }
+            if (!$section->visible) {
+                continue;
+            }
+            // Hidden entirely, with no availability text to show: the timeline skips it too.
+            if (!$section->uservisible && empty($section->availableinfo)) {
+                continue;
+            }
+            $sections[] = $section;
+        }
+
+        return $sections;
+    }
+
+    /**
+     * Describe one activity for the card.
+     *
+     * @param \cm_info $cm The module.
+     * @param \completion_info $completion The course completion info.
+     * @param int $userid The user whose completion is read.
+     * @return array Keys cmid, name, url, completed and tracked.
+     */
+    private static function describe_activity(\cm_info $cm, \completion_info $completion, int $userid): array {
+        $tracked = $completion->is_enabled()
+            && $completion->is_enabled($cm) != \COMPLETION_TRACKING_NONE;
+
+        $completed = false;
+        if ($tracked) {
+            $data = $completion->get_data($cm, true, $userid);
+            $completed = $data->completionstate == \COMPLETION_COMPLETE
+                || $data->completionstate == \COMPLETION_COMPLETE_PASS;
+        }
+
+        return [
+            'cmid' => (int) $cm->id,
+            'name' => $cm->get_formatted_name(),
+            'url' => $cm->url ? $cm->url->out(false) : '',
+            'completed' => $completed,
+            'tracked' => $tracked,
+        ];
+    }
+
+    /**
+     * Describe the card's single section.
+     *
+     * hasownname reports whether a teacher named the section: Moodle stores NULL when the
+     * label is generated ("Topic 1", "General"), and repeating a generated label under the
+     * course name informs nobody. The name is returned empty in that case rather than
+     * filled with the generated label, so the caller cannot render it by accident.
+     *
+     * @param \stdClass $course The course record.
+     * @param \section_info $section The section.
+     * @return array Keys name, hasownname and url.
+     */
+    private static function describe_section(\stdClass $course, \section_info $section): array {
+        $ownname = trim((string) ($section->name ?? ''));
+        $context = \core\context\course::instance($course->id);
+
+        return [
+            'name' => $ownname !== '' ? format_string($ownname, true, ['context' => $context]) : '',
+            'hasownname' => $ownname !== '',
+            'url' => (new \moodle_url('/course/section.php', ['id' => $section->id]))->out(false),
+        ];
+    }
+
+    /**
      * Checks if user has access to content (Enrolled + Student Role)
      *
      * @param stdClass $course Course object

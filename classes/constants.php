@@ -98,6 +98,15 @@ class constants {
     /** @var string User preference: the plan and competency heroes folded to slim, as a JSON key list */
     const PREF_LEARNER_HERO = 'local_dimensions_learner_hero';
 
+    /** @var string Card shape: the course's single activity, with no sequence to draw. */
+    const CARDMODE_ACTIVITY = 'activity';
+
+    /** @var string Card shape: one visible section holding several activities. */
+    const CARDMODE_SECTION = 'section';
+
+    /** @var string Card shape: the full section timeline. */
+    const CARDMODE_TIMELINE = 'timeline';
+
     /** @var string Enrollment filter: inherit the global setting */
     const ENROLLMENTFILTER_INHERIT = 'inherit';
 
