@@ -46,6 +46,11 @@
 /* ---- locked card (progress_card_body.mustache + competency_view.js) ---- */
 .grid{display:flex;flex-wrap:wrap;gap:0;padding:.5rem 20px 0;}
 .cwrap{width:100%;max-width:260px;padding:0 6px 1rem;}
+/* The real tracker card sits in a Bootstrap col-md-6/col-lg-4, comfortably wider than this
+   demo's default 260px. The section body is a row (ring + name + link) rather than the
+   activity body's centred column, so it needs that realistic width to avoid squeezing the
+   name to nothing — a layout artefact of the narrow demo card, not of the real one. */
+.cwrap.wide{max-width:320px;}
 .card{background:var(--lk-card-bg);border:1px solid rgba(0,0,0,.06);border-radius:.375rem;box-shadow:0 .125rem .25rem rgba(0,0,0,.075);overflow:hidden;position:relative;}
 .card.locked{border:none;box-shadow:none;}
 .card-head{background:transparent;border:0;padding:.75rem 1.25rem;position:relative;z-index:11;}
@@ -104,21 +109,25 @@
 .leg .v b{color:var(--lk-text);font-weight:600;}
 .leg .v{color:var(--lk-text-2);}
 .leg .rule{color:#8a8980;}
-/* ==== to-be: min-height so short courses don't clip the icon + single-activity card ==== */
+/* ==== min-height so short courses don't clip the icon + the two compact card bodies ==== */
 .panel.moodle .card.locked{min-height:320px;}
 .card.single-course{min-height:320px;}
-.single-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;padding:1.5rem 1.25rem;text-align:center;min-height:266px;}
+/* activity body (local-dimensions-single, styles.css:1057) — centred column, one state marker */
+.single-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;padding:1.5rem 1.25rem;text-align:center;min-height:200px;}
 .single-mark svg{width:56px;height:56px;}
-.single-ring{position:relative;width:56px;height:56px;}
-.single-ring svg{transform:rotate(-90deg);display:block;}
-.single-ring .s-bg{fill:none;stroke:var(--lk-line);stroke-width:4;}
-.single-ring .s-fg{fill:none;stroke:var(--lk-success);stroke-width:4;stroke-linecap:round;}
-.single-ring .s-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:.85rem;font-weight:700;color:var(--lk-success);}
 .single-name{font-size:1.05rem;font-weight:600;color:var(--lk-text);line-height:1.3;}
 .single-status{font-size:.85rem;color:var(--lk-muted);}
 .single-status.done{color:#0f5132;font-weight:600;}
 .single-go{display:inline-flex;align-items:center;gap:.35rem;font-size:.85rem;font-weight:600;color:var(--lk-accent);text-decoration:none;margin-top:.2rem;}
 .single-go svg{width:.9rem;height:.9rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* section body (local-dimensions-single-section, styles.css:1107) — a row, not a column: a
+   plain bordered circle carrying the section's OWN percentage as text (no SVG arc — that
+   belongs to the multi-section timeline's started marker, a different component), the section
+   name only when authored, the link pushed to the end. */
+.sec-body{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:1.25rem;}
+.sec-ring{display:inline-flex;align-items:center;justify-content:center;width:3rem;height:3rem;flex:none;border:2px solid var(--lk-success);border-radius:50%;color:var(--lk-success);font-size:.8125rem;font-weight:700;}
+.sec-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9375rem;font-weight:600;color:var(--lk-text);}
+.sec-body .single-go{margin-top:0;margin-left:auto;white-space:nowrap;}
 </style>
 <div class="kit"><div class="screens">
 
@@ -286,19 +295,8 @@
     </div>
     <div class="note">Pills lose the Stripe-blue shadow (<code>rgba(50 50 93/.25)</code>) for a neutral one; custom FA icon + message kept. The dashed border stays (animation optional).</div>
 
-    <div class="divlbl">Single-activity course — no sections, no timeline · <span class="idb r">TRK-CARD-SINGLE · to-be</span></div>
+    <div class="divlbl">Single-activity course — course format is <code>singleactivity</code>, or exactly one trackable module · <span class="idb">TRK-CARD-SINGLE</span></div>
     <div class="grid">
-      <div class="cwrap">
-        <div class="card single-course">
-          <div class="card-head"><a href="#">Reflective Journal</a></div>
-          <div class="single-body">
-            <span class="single-ring"><svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><circle class="s-bg" cx="28" cy="28" r="24"/><circle class="s-fg" cx="28" cy="28" r="24" style="stroke-dasharray:90.5 150.8"/></svg><span class="s-pct">60%</span></span>
-            <span class="single-name">Weekly reflection</span>
-            <span class="single-status">In progress</span>
-            <a href="#" class="single-go">Go to activity <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          </div>
-        </div>
-      </div>
       <div class="cwrap">
         <div class="card single-course">
           <div class="card-head"><a href="#">Final Assessment</a></div>
@@ -310,12 +308,50 @@
           </div>
         </div>
       </div>
+      <div class="cwrap">
+        <div class="card single-course">
+          <div class="card-head"><a href="#">Course Overview</a></div>
+          <div class="single-body">
+            <span class="single-name">Orientation video</span>
+            <a href="#" class="single-go">Go to activity <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="lk-ids">
-      <span class="idb r">TRK-CARD-SINGLE · activity name + completion (no timeline)</span>
-      <span class="idb">min-height 320px so the card/icon isn't clipped</span>
+      <span class="idb">TRK-CARD-SINGLE · tracked → check/circle mark + Completed/Not completed</span>
+      <span class="idb">completion off → name + link only, no marker, no state text</span>
     </div>
-    <div class="note">A single-activity course has no sections to compute — the calculator uses the <b>activity name + its completion status</b> instead of a timeline: one prominent status (ring&nbsp;% / green check / grey circle), the activity name, and a direct "Go to activity". All tracker cards get a <b>min-height of 320px</b> so short courses (few sections / single activity) don't clip the icon.</div>
+    <div class="note">The trigger is the course's <b>format</b>, not a count on its own: <code>calculator::resolve_card_shape()</code> lands here first when the course's format is Moodle's own <code>singleactivity</code> (mirroring <code>format_singleactivity::get_main_activity()</code> — the format option's <code>activitytype</code>, section&nbsp;0 only, first module of that type), and only as a fallback, for any other format, when the course happens to resolve to exactly one trackable, visible module. Either way there is no sequence to draw. The right-hand card is that same body with the activity's completion tracking switched off: <code>activity.tracked</code> is false, so the marker and the "Completed" / "Not completed" text are both dropped — the card still names the activity and links to it, which is the case that used to show nothing at all.</div>
+
+    <div class="divlbl">One section, several activities — a percentage, not a timeline · <span class="idb">TRK-CARD-SECTION</span></div>
+    <div class="grid">
+      <div class="cwrap wide">
+        <div class="card single-course">
+          <div class="card-head"><a href="#">Reflective Journal</a></div>
+          <div class="sec-body">
+            <span class="sec-ring">60%</span>
+            <span class="sec-name">Week 1 — Getting started</span>
+            <a href="#" class="single-go">Access content <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+      </div>
+      <div class="cwrap wide">
+        <div class="card single-course">
+          <div class="card-head"><a href="#">Orientation Pack</a></div>
+          <div class="sec-body">
+            <span class="sec-ring">25%</span>
+            <a href="#" class="single-go">Access content <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lk-ids">
+      <span class="idb">TRK-CARD-SECTION · one qualifying section, several activities</span>
+      <span class="idb">hasownname → section name shown (left card)</span>
+      <span class="idb">^hasownname → name omitted, Moodle generated it (right card)</span>
+    </div>
+    <div class="note">Third match of <code>resolve_card_shape()</code>: the course has exactly one qualifying section (visible, and either user-visible or carrying availability text — the same filter the timeline itself applies). A one-row timeline naming a section usually called "General" or "Topic&nbsp;1" would inform nobody, so the card shows the section's <b>own</b> percentage in a plain bordered circle instead — text in a border, not the SVG arc the multi-section timeline draws for a started section — and the section's <b>name only when a teacher authored one</b> (Moodle stores <code>NULL</code> for a generated label; repeating "General" under the course name informs nobody). The call to action is the neutral "Access content", landing on the section. All tracker cards keep the shared <b>min-height of 320px</b> so a short course (one activity / one section) doesn't clip the icon or the badge.</div>
 
     <div class="divlbl">Per-section lock — inside an unlocked card <span class="idb">TRK-TL-LOCK</span></div>
     <div class="grid">
@@ -359,7 +395,8 @@
     <span class="k">TRK-LOCK-DATE</span><span class="v"><b>Availability line</b> — only if <code>showlockeddate</code>. <b>To-be:</b> reframed as <b>"Opens {date}"</b> with a calendar icon in a soft accent chip (anticipatory, not a restriction); a <b>past</b> date is dropped in learn-more mode. <span class="rule">progress_card_body.mustache:89-98 · lang/en:42,357</span></span>
     <span class="k">TRK-LOCK-BORDER</span><span class="v"><b>Dashed SVG border</b> — injected on <b>every</b> locked card via <code>injectAnimatedBorder</code>: <code>&lt;rect&gt;</code> stroke <code>#ddd</code>, dasharray "8 8", rx 6, sized by a <code>ResizeObserver</code>. <code>animatelockedborder</code> gates only the marching-ants animation. <span class="rule">competency_view.js:71,149,314-366 · styles.css:749-768</span></span>
     <span class="k">TRK-TL-LOCK</span><span class="v"><b>Per-section lock marker</b> — a locked section inside an unlocked card: small lock icon + <code>text-muted</code> name. Top of the marker priority <i>locked &gt; completed &gt; started &gt; activities/info</i>. <span class="rule">progress_card_body.mustache:111-116,150-157</span></span>
-    <span class="k">TRK-CARD-SINGLE</span><span class="v"><b>(to-be) Single-activity course</b> — a course with no real sections has no timeline; the calculator surfaces the <b>activity name + its completion status</b> instead: one prominent status marker (progress ring % / green check / grey circle), the activity name, and a direct "Go to activity". All tracker cards get <code>min-height: 320px</code> so short courses (few sections / single activity) don't clip the lock icon or the marker. <span class="rule">new calculator branch when get_course_section_progress finds no trackable sections</span></span>
+    <span class="k">TRK-CARD-SINGLE</span><span class="v"><b>Single-activity course</b> — the first match of <code>calculator::resolve_card_shape()</code>: the course's format is Moodle's own <code>singleactivity</code> (mirrors <code>format_singleactivity::get_main_activity()</code> — the format option's <code>activitytype</code>, section 0 only, first module of that type; deliberately <b>not</b> <code>core_courseformat\main_activity_interface</code>, which arrived in Moodle 5.1 and this plugin supports 4.5 up), or, failing that, the course happens to resolve to exactly one trackable, visible module regardless of format. Either way the card shows one state marker (green check / grey circle, only when <code>activity.tracked</code>), the activity name, and a "Go to activity" link. When that one activity's completion tracking is off, the marker and the "Completed"/"Not completed" text are both dropped — the card still names it and links to it, the case that used to show nothing at all. <span class="rule">calculator.php resolve_card_shape / resolve_main_activity / collect_trackable_cms / describe_activity · progress_card_body.mustache:144-169</span></span>
+    <span class="k">TRK-CARD-SECTION</span><span class="v"><b>One-section course</b> — the third match of <code>resolve_card_shape()</code>, when the course has exactly one qualifying section (the same visibility filter the timeline itself applies). A one-row timeline naming a section usually called "General" or "Topic 1" would inform nobody, so the card shows a plain bordered circle carrying the section's own percentage — no SVG arc, just a border and text — the section's name <b>only when a teacher authored one</b> (<code>hasownname</code>; Moodle stores <code>NULL</code> for a generated label), and the neutral call to action "Access content" (new string <code>access_content</code>), landing on <code>/course/section.php?id=…</code>. <span class="rule">calculator.php resolve_card_shape / collect_card_sections / describe_section · progress_card_body.mustache:190-202 · styles.css local-dimensions-single-section*</span></span>
   </div>
   <p class="note" style="padding:8px 0 0">Referenced (badged on the Tracker screen): <span class="idb">TRK-CARD</span> <span class="idb">TRK-CARD-HEAD</span> <span class="idb">TRK-CARD-PROG</span> <span class="idb">TRK-TL-DONE</span> <span class="idb">TRK-TL-CIRCLE</span>. Migrating tokens: <b>--lk-accent</b> (learn-more/enrol button #667eea→#0f6cbf), <b>--lk-card-bg</b>, <b>--lk-card-title</b>, <b>--lk-success</b>.</p>
 </div>
