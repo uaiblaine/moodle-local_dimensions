@@ -26,6 +26,50 @@ namespace local_dimensions;
  */
 final class calculator_card_shape_test extends \advanced_testcase {
     /**
+     * Writes the singleactivity format's 'activitytype' option straight into
+     * course_format_options and rebuilds the course cache.
+     *
+     * create_course()'s 'activitytype' key is silently dropped: it flows through
+     * base::update_format_options() -> validate_format_options() ->
+     * course_format_options(true), which filters the option's legal values through
+     * has_capability("mod/{$activity}:addinstance", ...). create_course() runs before
+     * setUser(), so $USER->id is still 0 at that point, and has_capability() returns
+     * false unconditionally for user id 0 on any write/risky capability (mod/page:addinstance
+     * is both) - before any role lookup. The option is therefore never in the allowed
+     * select values, validate_format_options() drops it, and the course keeps the site
+     * default (forum). Calling setAdminUser() first sidesteps the capability gate but not
+     * a second trap: format_singleactivity::course_format_options() caches its
+     * capability-filtered list in a function-static that resetAfterTest() never clears, so
+     * in a shared CI process the outcome would depend on whichever test ran first. Writing
+     * the row directly and rebuilding is immune to both: rebuild_course_cache() calls
+     * core_courseformat\base::reset_course_cache(), which clears the per-course format
+     * instance (and its formatoptions cache) so the next get_format_options() call rereads
+     * this row from the database.
+     *
+     * Table shape verified in course/format/classes/base.php (update_format_options(),
+     * the $DB->insert_record('course_format_options', ...) call) and in
+     * lib/db/install.xml: columns are id, courseid, format, sectionid, name, value; a
+     * course-level (non-section) option is stored with sectionid = 0, matching what
+     * update_format_options() passes when its own $sectionid argument is null.
+     *
+     * @param int $courseid the course to set the option on
+     * @param string $activitytype the modname to store, e.g. 'page'
+     * @return void
+     */
+    private function set_singleactivity_type(int $courseid, string $activitytype): void {
+        global $DB;
+
+        $DB->insert_record('course_format_options', (object) [
+            'courseid' => $courseid,
+            'format' => 'singleactivity',
+            'sectionid' => 0,
+            'name' => 'activitytype',
+            'value' => $activitytype,
+        ]);
+        rebuild_course_cache($courseid, true);
+    }
+
+    /**
      * A single-activity course names its activity, tracked or not.
      *
      * @return void
@@ -34,9 +78,9 @@ final class calculator_card_shape_test extends \advanced_testcase {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course([
             'format' => 'singleactivity',
-            'activitytype' => 'page',
             'enablecompletion' => 1,
         ]);
+        $this->set_singleactivity_type((int) $course->id, 'page');
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $this->getDataGenerator()->create_module('page', [
             'course' => $course->id,
@@ -62,9 +106,9 @@ final class calculator_card_shape_test extends \advanced_testcase {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course([
             'format' => 'singleactivity',
-            'activitytype' => 'page',
             'enablecompletion' => 0,
         ]);
+        $this->set_singleactivity_type((int) $course->id, 'page');
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $this->getDataGenerator()->create_module('page', [
             'course' => $course->id,
@@ -93,9 +137,9 @@ final class calculator_card_shape_test extends \advanced_testcase {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course([
             'format' => 'singleactivity',
-            'activitytype' => 'page',
             'enablecompletion' => 1,
         ]);
+        $this->set_singleactivity_type((int) $course->id, 'page');
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $page = $this->getDataGenerator()->create_module('page', [
             'course' => $course->id,
@@ -120,6 +164,9 @@ final class calculator_card_shape_test extends \advanced_testcase {
      * user-visible module it meets. The url module is created before the page module, so
      * it sits earlier in section 0's sequence - the exact ordering the pre-fix code
      * (which walked every module and returned the first match) would have picked wrong.
+     * The decoy is also given manual completion tracking, so two modules are trackable and
+     * the count-based fallback branch cannot land on CARDMODE_ACTIVITY by itself - only
+     * resolve_main_activity() actually matching the configured 'activitytype' can.
      *
      * @return void
      */
@@ -127,13 +174,14 @@ final class calculator_card_shape_test extends \advanced_testcase {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course([
             'format' => 'singleactivity',
-            'activitytype' => 'page',
             'enablecompletion' => 1,
         ]);
+        $this->set_singleactivity_type((int) $course->id, 'page');
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $this->getDataGenerator()->create_module('url', [
             'course' => $course->id,
             'name' => 'Leftover link from the old format',
+            'completion' => COMPLETION_TRACKING_MANUAL,
         ]);
         $this->getDataGenerator()->create_module('page', [
             'course' => $course->id,
