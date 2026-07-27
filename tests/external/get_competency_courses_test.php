@@ -432,5 +432,37 @@ final class get_competency_courses_test extends \advanced_testcase {
         $this->assertSame('Weekly reflection', $rows[$single->id]['activity']['name']);
         $this->assertSame((int) $page->cmid, $rows[$single->id]['activity']['cmid']);
         $this->assertArrayNotHasKey('activity', $rows[$many->id]);
+        $this->assertSame(\local_dimensions\constants::CARDMODE_ACTIVITY, $rows[$single->id]['cardmode']);
+        $this->assertTrue($rows[$single->id]['activity']['tracked']);
+        $this->assertSame(\local_dimensions\constants::CARDMODE_TIMELINE, $rows[$many->id]['cardmode']);
+    }
+
+    /**
+     * A one-section course reports the section shape, with its own URL.
+     *
+     * @return void
+     */
+    public function test_execute_reports_the_section_card_shape(): void {
+        $this->resetAfterTest();
+        $competencyid = $this->set_up_competency();
+        $course = $this->getDataGenerator()->create_course([
+            'numsections' => 0,
+            'enablecompletion' => 1,
+        ]);
+        \core_competency\api::add_competency_to_course($course->id, $competencyid);
+        foreach (['First', 'Second'] as $name) {
+            $this->getDataGenerator()->create_module('page', [
+                'course' => $course->id,
+                'name' => $name,
+                'completion' => COMPLETION_TRACKING_MANUAL,
+            ]);
+        }
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+
+        $rows = $this->cleaned_result_for($competencyid, $user);
+
+        $this->assertSame(\local_dimensions\constants::CARDMODE_SECTION, $rows[$course->id]['cardmode']);
+        $this->assertFalse($rows[$course->id]['section']['hasownname']);
+        $this->assertStringContainsString('/course/section.php', $rows[$course->id]['section']['url']);
     }
 }

@@ -295,63 +295,6 @@ class calculator {
     }
 
     /**
-     * The course's only trackable activity, when it has exactly one.
-     *
-     * get_course_section_progress() answers a superset of this - it walks the subsection
-     * hierarchy and computes a percentage per section - which is far more work than the
-     * plan's card needs. Here the count is the whole question: a course with one trackable
-     * activity has a progress bar that can only ever read 0% or 100%, so the card shows the
-     * activity instead.
-     *
-     * "Trackable" matches the tracker: completion switched on for the module, the module
-     * visible to the user, and the subsection container itself never counted.
-     *
-     * @param int $courseid The course id.
-     * @param int $userid The user whose completion is read.
-     * @return array|null Keys name, url, completed and cmid; null unless exactly one module qualifies.
-     */
-    public static function resolve_single_activity(int $courseid, int $userid): ?array {
-        global $CFG;
-        require_once($CFG->libdir . '/completionlib.php');
-
-        $course = get_course($courseid);
-        $completion = new \completion_info($course);
-        if (!$completion->is_enabled()) {
-            return null;
-        }
-
-        $modinfo = get_fast_modinfo($course, $userid);
-        $found = null;
-        foreach ($modinfo->get_cms() as $cm) {
-            if ($cm->modname === 'subsection' || $cm->deletioninprogress || !$cm->uservisible) {
-                continue;
-            }
-            if ($completion->is_enabled($cm) == \COMPLETION_TRACKING_NONE) {
-                continue;
-            }
-            if ($found !== null) {
-                // A second one: there is a sequence to draw, so the bar stays.
-                return null;
-            }
-            $found = $cm;
-        }
-
-        if ($found === null) {
-            return null;
-        }
-
-        $data = $completion->get_data($found, true, $userid);
-
-        return [
-            'name' => $found->get_formatted_name(),
-            'url' => $found->url ? $found->url->out(false) : '',
-            'completed' => $data->completionstate == \COMPLETION_COMPLETE
-                || $data->completionstate == \COMPLETION_COMPLETE_PASS,
-            'cmid' => (int) $found->id,
-        ];
-    }
-
-    /**
      * The shape the course card should take, and the data that shape needs.
      *
      * Three shapes, first match wins:
