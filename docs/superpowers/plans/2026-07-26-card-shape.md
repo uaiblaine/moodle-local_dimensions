@@ -39,7 +39,7 @@
 
 **Files:**
 - Modify: `classes/constants.php` (add three constants)
-- Modify: `classes/calculator.php` (add one public method and four private helpers, above `is_locked()`)
+- Modify: `classes/calculator.php` (add one public method and five private helpers, above `is_locked()`)
 - Test: `tests/calculator_card_shape_test.php` (create)
 
 **Interfaces:**
@@ -530,7 +530,7 @@ Not runnable here — verify in CI. Expected: all six PASS.
 php -l classes/calculator.php && php -l classes/constants.php && php -l tests/calculator_card_shape_test.php
 ```
 ```bash
-awk 'length($0)>132{print FILENAME":"NR" ("length($0)")"}' classes/calculator.php classes/constants.php tests/calculator_card_shape_test.php
+awk 'length($0)>132{print FILENAME":"FNR" ("length($0)")"}' classes/calculator.php classes/constants.php tests/calculator_card_shape_test.php
 ```
 Expected: no output from `awk`.
 
@@ -745,7 +745,7 @@ still passes.
 php -l classes/calculator.php && php -l classes/external/get_course_progress.php && php -l version.php
 ```
 ```bash
-awk 'length($0)>132{print FILENAME":"NR" ("length($0)")"}' classes/calculator.php classes/external/get_course_progress.php tests/external/get_course_progress_test.php
+awk 'length($0)>132{print FILENAME":"FNR" ("length($0)")"}' classes/calculator.php classes/external/get_course_progress.php tests/external/get_course_progress_test.php
 ```
 
 - [ ] **Step 8: Commit**
@@ -1136,7 +1136,7 @@ the other tests in that file still pass.
 php -l classes/external/get_competency_courses.php && php -l classes/calculator.php
 ```
 ```bash
-awk 'length($0)>132{print FILENAME":"NR" ("length($0)")"}' classes/external/get_competency_courses.php classes/calculator.php tests/external/get_competency_courses_test.php
+awk 'length($0)>132{print FILENAME":"FNR" ("length($0)")"}' classes/external/get_competency_courses.php classes/calculator.php tests/external/get_competency_courses_test.php
 ```
 
 - [ ] **Step 8: Commit**
