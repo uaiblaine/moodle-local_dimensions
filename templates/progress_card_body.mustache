@@ -179,6 +179,11 @@
         {{/locked}}
     {{/enabled}}
 
+    {{! The disabled message above and the two bodies below are alternatives, never both: a
+        course with tracking off has no percentages or sequence to show, so it stops at the
+        message. (The activity body is the deliberate exception - it lives outside this guard,
+        above, so a single untracked activity still gets named and linked to.) }}
+    {{#enabled}}
     {{! One visible section holding several activities: a timeline of a single row naming a
         section usually called "General" would inform nobody, so the card offers a way in
         instead. }}
@@ -288,6 +293,7 @@
     {{/locked}}
     {{/hascontinue}}
     {{/istimeline}}
+    {{/enabled}}
     {{/activity}}
 
     {{#error}}
