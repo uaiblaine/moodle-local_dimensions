@@ -46,11 +46,6 @@
 /* ---- locked card (progress_card_body.mustache + competency_view.js) ---- */
 .grid{display:flex;flex-wrap:wrap;gap:0;padding:.5rem 20px 0;}
 .cwrap{width:100%;max-width:260px;padding:0 6px 1rem;}
-/* The real tracker card sits in a Bootstrap col-md-6/col-lg-4, comfortably wider than this
-   demo's default 260px. The section body is a row (ring + name + link) rather than the
-   activity body's centred column, so it needs that realistic width to avoid squeezing the
-   name to nothing — a layout artefact of the narrow demo card, not of the real one. */
-.cwrap.wide{max-width:320px;}
 .card{background:var(--lk-card-bg);border:1px solid rgba(0,0,0,.06);border-radius:.375rem;box-shadow:0 .125rem .25rem rgba(0,0,0,.075);overflow:hidden;position:relative;}
 .card.locked{border:none;box-shadow:none;}
 .card-head{background:transparent;border:0;padding:.75rem 1.25rem;position:relative;z-index:11;}
@@ -120,14 +115,20 @@
 .single-status.done{color:#0f5132;font-weight:600;}
 .single-go{display:inline-flex;align-items:center;gap:.35rem;font-size:.85rem;font-weight:600;color:var(--lk-accent);text-decoration:none;margin-top:.2rem;}
 .single-go svg{width:.9rem;height:.9rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-/* section body (local-dimensions-single-section, styles.css:1107) — a row, not a column: a
-   plain bordered circle carrying the section's OWN percentage as text (no SVG arc — that
-   belongs to the multi-section timeline's started marker, a different component), the section
-   name only when authored, the link pushed to the end. */
-.sec-body{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:1.25rem;}
-.sec-ring{display:inline-flex;align-items:center;justify-content:center;width:3rem;height:3rem;flex:none;border:2px solid var(--lk-success);border-radius:50%;color:var(--lk-success);font-size:.8125rem;font-weight:700;}
-.sec-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9375rem;font-weight:600;color:var(--lk-text);}
-.sec-body .single-go{margin-top:0;margin-left:auto;white-space:nowrap;}
+/* section body (local-dimensions-single-section, styles.css:1108) — the SAME centred column
+   the activity body uses, with the timeline's SVG ring standing where the activity puts its
+   state marker, at the marker's size (56px). The ring is the timeline's own component reused
+   (local-dimensions-progress-ring-container + …-lg): same 32-unit viewBox, same r=12, so the
+   arc length is the shared percentage × 0.754 and only CSS changes the painted size. Reusing
+   it is also what makes the percentagedisplaymode setting reach this card, and under the
+   hidden mode the arc still reports progress where a bare number could not. */
+.sec-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;padding:1.5rem 1.25rem;text-align:center;min-height:200px;}
+.sec-ring{position:relative;display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:none;}
+.sec-ring svg{width:56px;height:56px;transform:rotate(-90deg);display:block;}
+.sec-ring .ring-bg{fill:transparent;stroke:var(--lk-line-2);stroke-width:3;}
+.sec-ring .ring-fg{fill:transparent;stroke:var(--lk-success);stroke-width:3;stroke-linecap:round;}
+.sec-ring .ring-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1rem;font-weight:700;color:var(--lk-success);}
+.sec-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.05rem;font-weight:600;color:var(--lk-text);line-height:1.3;}
 </style>
 <div class="kit"><div class="screens">
 
@@ -326,21 +327,27 @@
 
     <div class="divlbl">One section, several activities — a percentage, not a timeline · <span class="idb">TRK-CARD-SECTION</span></div>
     <div class="grid">
-      <div class="cwrap wide">
+      <div class="cwrap">
         <div class="card single-course">
           <div class="card-head"><a href="#">Reflective Journal</a></div>
           <div class="sec-body">
-            <span class="sec-ring">60%</span>
+            <span class="sec-ring">
+              <svg viewBox="0 0 32 32"><circle class="ring-bg" cx="16" cy="16" r="12"/><circle class="ring-fg" cx="16" cy="16" r="12" style="stroke-dasharray:45.24 75.4;stroke-dashoffset:0;"/></svg>
+              <span class="ring-txt">60</span>
+            </span>
             <span class="sec-name">Week 1 — Getting started</span>
             <a href="#" class="single-go">Access content <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </div>
         </div>
       </div>
-      <div class="cwrap wide">
+      <div class="cwrap">
         <div class="card single-course">
           <div class="card-head"><a href="#">Orientation Pack</a></div>
           <div class="sec-body">
-            <span class="sec-ring">25%</span>
+            <span class="sec-ring">
+              <svg viewBox="0 0 32 32"><circle class="ring-bg" cx="16" cy="16" r="12"/><circle class="ring-fg" cx="16" cy="16" r="12" style="stroke-dasharray:18.85 75.4;stroke-dashoffset:0;"/></svg>
+              <span class="ring-txt">25</span>
+            </span>
             <a href="#" class="single-go">Access content <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </div>
         </div>
@@ -351,7 +358,7 @@
       <span class="idb">hasownname → section name shown (left card)</span>
       <span class="idb">^hasownname → name omitted, Moodle generated it (right card)</span>
     </div>
-    <div class="note">Third match of <code>resolve_card_shape()</code>: the course has exactly one qualifying section (visible, and either user-visible or carrying availability text — the same filter the timeline itself applies). A one-row timeline naming a section usually called "General" or "Topic&nbsp;1" would inform nobody, so the card shows the section's <b>own</b> percentage in a plain bordered circle instead — text in a border, not the SVG arc the multi-section timeline draws for a started section — and the section's <b>name only when a teacher authored one</b> (Moodle stores <code>NULL</code> for a generated label; repeating "General" under the course name informs nobody). The call to action is the neutral "Access content", landing on the section. All tracker cards keep the shared <b>min-height of 320px</b> so a short course (one activity / one section) doesn't clip the icon or the badge.</div>
+    <div class="note">Third match of <code>resolve_card_shape()</code>: the course has exactly one qualifying section (visible, and either user-visible or carrying availability text — the same filter the timeline itself applies). A one-row timeline naming a section usually called "General" or "Topic&nbsp;1" would inform nobody, so the card shows the section's <b>own</b> percentage as a ring instead — the timeline's own ring component reused at the size of the single-activity card's state marker (56px), so both compact bodies read as one shape; the SVG keeps its 32-unit viewBox and r=12 circle, so the arc length stays the shared percentage&nbsp;×&nbsp;0.754 and only CSS changes the painted size. Reusing the component is also what makes the <code>percentagedisplaymode</code> setting reach this card (fixed / hover / hidden), and under <i>hidden</i> the arc still reports progress where a bare number could not — and the section's <b>name only when a teacher authored one</b> (Moodle stores <code>NULL</code> for a generated label; repeating "General" under the course name informs nobody). The call to action is the neutral "Access content", landing on the section. All tracker cards keep the shared <b>min-height of 320px</b> so a short course (one activity / one section) doesn't clip the icon or the badge.</div>
 
     <div class="divlbl">Per-section lock — inside an unlocked card <span class="idb">TRK-TL-LOCK</span></div>
     <div class="grid">

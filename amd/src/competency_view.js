@@ -200,6 +200,11 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 data.sectionpercentage = (data.sections && data.sections.length === 1)
                     ? (data.sections[0].percentage || 0)
                     : 0;
+                /* The section card draws the same ring the timeline draws for a started
+                   section, only larger, so the arc length uses the same geometry and the
+                   same factor: the r=12 circle's circumference is 75.4. Scaling is CSS's
+                   job, which is why there is no second formula here. */
+                data.sectiondasharray = (data.sectionpercentage * 0.754).toFixed(2);
                 data.checkiconurl = iconurls.checkcircle || '';
                 data.circleiconurl = iconurls.circle || '';
                 data.islearnmore = (lockedcardmode === 'learnmore');

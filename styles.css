@@ -1103,47 +1103,29 @@
     text-decoration: underline;
 }
 
-/* The one-section body: a percentage where the activity body puts a state marker. */
+/* The one-section body: the same centred column the activity body uses, with the
+   progress ring standing where the activity puts its state marker. The two bodies
+   answer the same question - "where am I in this course?" - so they get one shape. */
 .local-dimensions-single-section {
     display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-    padding: 1.25rem;
-}
-
-.local-dimensions-single-section-ring {
-    display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    flex: none;
-    border: 2px solid #198754;
-    border-radius: 50%;
-    color: #198754;
-    font-size: 0.8125rem;
-    font-weight: 700;
+    gap: 0.55rem;
+    min-height: 200px;
+    padding: 1.5rem 1.25rem;
+    text-align: center;
 }
 
 .local-dimensions-single-section-name {
-    flex: 1;
-    min-width: 0;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.9375rem;
-    font-weight: 600;
     color: #212529;
-}
-
-/* .local-dimensions-single-go already carries the shared link styling for the activity
-   body's centred column layout. The section body is a row: push the link to the end
-   instead of duplicating the base rule, so both bodies keep the same link look. */
-.local-dimensions-single-section .local-dimensions-single-go {
-    margin-top: 0;
-    margin-left: auto;
-    white-space: nowrap;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.3;
 }
 
 /* Completed course: the seal states the outcome, the toggle keeps the evidence one click
@@ -1372,6 +1354,28 @@
 .local-dimensions-progress-ring-container:hover .local-dimensions-progress-text,
 .local-dimensions-progress-ring-container:focus-within .local-dimensions-progress-text {
     opacity: 1;
+}
+
+/* The single-section card draws the same ring the timeline draws, at the size of the
+   single-activity card's completion icon (56px), so both card shapes read as one family.
+   Only the painted size changes: the SVG keeps its 32-unit viewBox, so the arc geometry
+   and the dasharray factor are shared, and the width/height here override the element's
+   presentation attributes. The negative margin above centres the ring on a 24px timeline
+   marker; there is no marker here, so it is cleared. */
+.local-dimensions-progress-ring-lg {
+    width: 56px;
+    height: 56px;
+    margin: 0;
+    flex: none;
+}
+
+.local-dimensions-progress-ring-lg .local-dimensions-progress-ring {
+    width: 56px;
+    height: 56px;
+}
+
+.local-dimensions-progress-ring-lg .local-dimensions-progress-text {
+    font-size: 1rem;
 }
 
 /* High contrast mode support */
@@ -2666,22 +2670,42 @@
     font-weight: 600;
 }
 
-/* Single trackable activity: the link sits on its own line, because sharing one with the
-   name would clip the name at 255px long before it needed to be. */
+/* Single trackable activity or single section: the same centred column the tracker's
+   compact bodies use, so a learner moving between the two views reads one shape. The
+   call to action sits on its own line below the card link, because sharing one with the
+   name would clip the name at 255px long before it needed to be.
+   The auto vertical margins centre this block in whatever slack the card's floor leaves
+   below the name - the image cards' progress row uses margin-top: auto for the mirror
+   reason, to sit at the bottom. */
 .local-dimensions-course-single {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    gap: 0.4rem;
+    margin: auto 0;
+    text-align: center;
 }
 
+/* One box for the completion icon and one for the ring, so the two compact modes put
+   their mark at the same place and the same size. The font size is what makes the glyph
+   match the ring rather than the box: the ring paints a 47px circle inside its 56px
+   container (r=12 of a 32-unit viewBox, plus a 3-unit stroke, scaled by 56/32), and a
+   Font Awesome glyph is about 0.86em wide, so 3.5rem lands on the same diameter. */
 .local-dimensions-course-single-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
     flex: none;
     color: #6c757d;
+    font-size: 3.5rem;
+    line-height: 1;
 }
 
 .local-dimensions-course-single-name {
-    flex: 1;
-    min-width: 0;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2705,18 +2729,22 @@
     padding-top: 0.8rem;
 }
 
-.local-dimensions-course-single-pct {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    flex: none;
-    border: 2px solid #198754;
-    border-radius: 50%;
-    color: #198754;
-    font-size: 0.6875rem;
-    font-weight: 700;
+/* Dropping the 128px cover strip leaves a compact card visibly shorter than its
+   image-bearing siblings, and the scroller does not stretch them to match - it sets
+   align-items: flex-start so expanding one card's activities drawer cannot stretch the
+   whole row. So the card carries a floor of its own instead: 128px of artwork plus the
+   body of an image card whose name fits one line. It is a floor, not a height - a longer
+   name or an open drawer still runs taller. */
+.local-dimensions-course-card-compact {
+    min-height: 220px;
+}
+
+/* The card link is what grows into that floor, so the slack lands inside the body - where
+   the centred mark can use it - rather than as dead space under the call to action. */
+.local-dimensions-course-card-compact .local-dimensions-course-link {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
 }
 
 /* A direct child of .local-dimensions-course-card-lg, like .local-dimensions-course-acts-toggle
@@ -3548,6 +3576,11 @@ a.local-dimensions-course-act-row:focus {
 
     .local-dimensions-course-img {
         height: 100px;
+    }
+
+    /* The compact card's floor stands in for the artwork above, so it shrinks with it. */
+    .local-dimensions-course-card-compact {
+        min-height: 192px;
     }
 }
 
