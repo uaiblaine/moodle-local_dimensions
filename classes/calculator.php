@@ -58,6 +58,10 @@ class calculator {
             $sections = $modinfo->get_section_info_all();
             $completion = new \completion_info($course);
 
+            /* One resolver answers the card's shape for both views, so the tracker and the
+               plan can never disagree about the same course. */
+            $shape = self::resolve_card_shape((int) $course->id, $USER->id);
+
             /* Resolve the lock and its dates BEFORE the completion check. A course can be
                locked and have completion tracking switched off at the same time, and the
                lock is the more important of the two facts: returning early without it left
@@ -102,7 +106,9 @@ class calculator {
                     'is_future_date' => $isfuturedate,
                     'course_url' => $courseurl,
                     'sections' => [],
-                    'activity' => null,
+                    'cardmode' => $shape['mode'],
+                    'activity' => $shape['activity'],
+                    'section' => $shape['section'],
                 ];
             }
 
@@ -128,11 +134,6 @@ class calculator {
             }
 
             $results = [];
-
-            /* Every trackable activity the loop below meets, keyed by cmid. A course that
-               boils down to exactly one of them has no timeline worth drawing, so the card
-               shows the activity itself instead. */
-            $trackedcms = [];
 
             foreach ($sections as $section) {
                 // Skip delegated sections (subsections) at the root loop - we only want the main ones.
@@ -202,7 +203,6 @@ class calculator {
                             if ($iscomplete) {
                                 $completed++;
                             }
-                            $trackedcms[(int) $cm->id] = ['cm' => $cm, 'completed' => $iscomplete];
                         }
                     }
 
@@ -235,20 +235,6 @@ class calculator {
                 ];
             }
 
-            /* The kit's stated trigger for this card - "no trackable sections" - cannot occur:
-               the loop above skips only delegated, invisible and hidden-entirely sections, so
-               section 0 always survives and the list is never empty. The real trigger is the
-               activity count. */
-            $activity = null;
-            if (count($trackedcms) === 1) {
-                $only = reset($trackedcms);
-                $activity = [
-                    'name' => $only['cm']->get_formatted_name(),
-                    'url' => $only['cm']->url ? $only['cm']->url->out(false) : '',
-                    'completed' => $only['completed'],
-                ];
-            }
-
             return [
                 'enabled' => true,
                 'locked' => $locked,
@@ -258,7 +244,9 @@ class calculator {
                 'is_future_date' => $isfuturedate,
                 'course_url' => $courseurl,
                 'sections' => $results,
-                'activity' => $activity,
+                'cardmode' => $shape['mode'],
+                'activity' => $shape['activity'],
+                'section' => $shape['section'],
             ];
         } finally {
             $COURSE = $savedcourse;
