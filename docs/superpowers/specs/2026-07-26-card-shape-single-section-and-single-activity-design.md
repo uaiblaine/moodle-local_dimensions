@@ -35,7 +35,7 @@ The code never distinguished them either, and in two ways:
 ## Scope
 
 1. Replace the two independent flags with one server-resolved **`cardmode`**.
-2. Detect `singleactivity` properly, through core's format interface.
+2. Detect `singleactivity` properly, by course format rather than by inference.
 3. Give the single-section course its own compact card body.
 4. Align the plan's card with the tracker's for both compact bodies, **without the
    course cover image**, keeping the outcome badges where they already sit.
@@ -69,10 +69,18 @@ calculator::resolve_card_shape(int $courseid, int $userid): array
 
 Resolution order, first match wins:
 
-1. The course format implements `core_courseformat\main_activity_interface` and
-   `get_main_activity()` returns a `cm_info` → **activity**. `tracked` reports whether
-   completion is on for it; when it is off the card shows the name and the link with no
-   state marker, instead of today's empty card.
+1. `$course->format === 'singleactivity'` and modinfo yields a user-visible module →
+   **activity**. `tracked` reports whether completion is on for it; when it is off the
+   card shows the name and the link with no state marker, instead of today's empty card.
+
+   **Not** through `core_courseformat\main_activity_interface::get_main_activity()`,
+   which would answer this directly: that interface arrived in Moodle 5.1 (MDL-85433,
+   present only on `MOODLE_501_STABLE`, `MOODLE_502_STABLE` and `main`), and this plugin
+   supports 4.5 upward with CI running all four branches. An `instanceof` against a
+   missing interface returns false rather than failing, so the branch would simply never
+   fire on 4.5 and 5.0 — a silent version-dependent difference. The format string is on
+   the course record on every branch, and the format guarantees a single activity, so
+   modinfo answers the same question with one code path.
 2. Exactly one trackable, user-visible module → **activity**, `tracked` true.
 3. Exactly one visible section → **section**.
 4. Otherwise → **timeline**.
@@ -177,9 +185,9 @@ PHPUnit does not run in this checkout; these run in CI.
 
 ## Risks
 
-- **`get_main_activity()` can return null** on a `singleactivity` course that has no
-  activity configured yet. That falls through to the count check and then to the
-  timeline, which is the honest outcome, but it must be handled rather than assumed.
+- **A `singleactivity` course can have no activity configured yet**, and one whose
+  format was switched away could hold several. Both fall through to the count check and
+  then to the timeline, which is the honest outcome, but neither may be assumed away.
 - **A `topics` course with one tracked activity keeps the activity card.** This is now
   deliberate, but it does mean the card can name an activity while the course holds
   other, untracked content. The card's job is progress, and untracked content does not
