@@ -302,7 +302,7 @@ eyeballing and fail CI. **Before pushing, grep the changed PHP for both** — ev
 hit is a CI failure (`phpcs --max-warnings 0`):
 ```sh
 # soft-max 132 line length (rule 6)
-awk 'length($0)>132{print FILENAME":"NR" ("length($0)")"}' <files>
+awk 'length($0)>132{print FILENAME":"FNR" ("length($0)")"}' <files>
 # inline // comment starting lowercase — first line of a block only; continuation
 # lines whose first line is capitalised are fine (rule 3)
 grep -nE '^\s*// [a-z]' <files>   # ignore the GPL header lines 5-15
