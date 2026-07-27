@@ -918,11 +918,27 @@ Expected structure when you are done, outermost first:
 {{#activity}}        … the activity body …           {{/activity}}
 {{^activity}}
   {{^enabled}}{{^locked}} … completion-disabled message … {{/locked}}{{/enabled}}
-  {{#section}}       … the section body …            {{/section}}
-  {{#istimeline}}    … seal, toggle, timeline, continue … {{/istimeline}}
+  {{#enabled}}
+    {{#section}}     … the section body …            {{/section}}
+    {{#istimeline}}  … seal, toggle, timeline, continue … {{/istimeline}}
+  {{/enabled}}
 {{/activity}}
 {{#error}}           … unchanged …                   {{/error}}
 ```
+
+The `{{#enabled}}` wrapper around the section and timeline bodies is **load-bearing**, and
+leaving it out is the mistake this structure exists to prevent. The template it replaces had
+one, which made the completion-disabled message and the card's body alternatives. Without it
+they are independent siblings, and every single-section course with tracking off renders the
+message *and*, directly beneath it, a green ring reading "0%" — text saying nothing is
+measured, above a number implying nothing was done. `resolve_card_shape()` never looks at
+whether completion is enabled, and the completion-disabled early return carries its result
+too, so this is the whole class of such courses, not an edge case.
+
+The activity body stays **outside** the wrapper on purpose: a single-activity-format course
+whose activity is not completion-tracked should still name it and link to it, which is the
+gap this whole slice opened the format branch to close. Its inner `{{#tracked}}` guards
+already suppress the marker and the status text there.
 
 Move the completion-disabled block **out** of the old `{{^enabled}}` position and into
 the structure above, as shown, so a single-activity course with completion off shows its
