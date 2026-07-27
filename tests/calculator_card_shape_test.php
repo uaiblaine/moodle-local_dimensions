@@ -29,6 +29,7 @@ final class calculator_card_shape_test extends \advanced_testcase {
      * Writes the singleactivity format's 'activitytype' option straight into
      * course_format_options and rebuilds the course cache.
      *
+     * The value is written directly rather than passed to create_course() because
      * create_course()'s 'activitytype' key is silently dropped: it flows through
      * base::update_format_options() -> validate_format_options() ->
      * course_format_options(true), which filters the option's legal values through
@@ -37,34 +38,34 @@ final class calculator_card_shape_test extends \advanced_testcase {
      * false unconditionally for user id 0 on any write/risky capability (mod/page:addinstance
      * is both) - before any role lookup. The option is therefore never in the allowed
      * select values, validate_format_options() drops it, and the course keeps the site
-     * default (forum). Calling setAdminUser() first sidesteps the capability gate but not
-     * a second trap: format_singleactivity::course_format_options() caches its
-     * capability-filtered list in a function-static that resetAfterTest() never clears, so
-     * in a shared CI process the outcome would depend on whichever test ran first. Writing
-     * the row directly and rebuilding is immune to both: rebuild_course_cache() calls
+     * default (forum).
+     *
+     * The write below is an update, not an insert, because update_format_options()
+     * already added a row for this option while create_course() was building the
+     * course: it iterates every option the format declares and, for one with no row
+     * yet, writes it unconditionally using the declared default (the site setting,
+     * i.e. forum) - see base::update_format_options() in
+     * course/format/classes/base.php. course_format_options carries a unique index
+     * named 'formatoption' on (courseid, format, sectionid, name) (lib/db/install.xml),
+     * exactly the four columns identifying this row, so writing a second row for them
+     * as a fresh insert throws a dml_write_exception. Updating the existing row and
+     * rebuilding is what makes the write stick: rebuild_course_cache() calls
      * core_courseformat\base::reset_course_cache(), which clears the per-course format
-     * instance (and its formatoptions cache) so the next get_format_options() call rereads
-     * this row from the database.
+     * instance (and its formatoptions cache) so the next get_format_options() call
+     * rereads this row from the database.
      *
-     * Table shape verified in course/format/classes/base.php (update_format_options(),
-     * the $DB->insert_record('course_format_options', ...) call) and in
-     * lib/db/install.xml: columns are id, courseid, format, sectionid, name, value; a
-     * course-level (non-section) option is stored with sectionid = 0, matching what
-     * update_format_options() passes when its own $sectionid argument is null.
-     *
-     * @param int $courseid the course to set the option on
-     * @param string $activitytype the modname to store, e.g. 'page'
+     * @param int $courseid The course id.
+     * @param string $activitytype The modname to store, e.g. 'page'.
      * @return void
      */
     private function set_singleactivity_type(int $courseid, string $activitytype): void {
         global $DB;
 
-        $DB->insert_record('course_format_options', (object) [
+        $DB->set_field('course_format_options', 'value', $activitytype, [
             'courseid' => $courseid,
             'format' => 'singleactivity',
             'sectionid' => 0,
             'name' => 'activitytype',
-            'value' => $activitytype,
         ]);
         rebuild_course_cache($courseid, true);
     }
