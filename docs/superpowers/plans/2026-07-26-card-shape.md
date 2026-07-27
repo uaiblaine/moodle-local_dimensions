@@ -683,13 +683,29 @@ Not runnable here. In CI, expect both to **FAIL** on an undefined `cardmode` key
 - [ ] **Step 3: Return the shape from `get_course_section_progress()`**
 
 In `classes/calculator.php`, inside `get_course_section_progress()`, resolve the shape
-once directly after `$modinfo`, `$sections` and `$completion` are set up:
+once — **after `$locked` is known, never before**:
 
 ```php
-            /* One resolver answers the card's shape for both views, so the tracker and the
-               plan can never disagree about the same course. */
-            $shape = self::resolve_card_shape((int) $course->id, $USER->id);
+            /* The lock outranks every card shape and must be known before the shape is
+               resolved: the activity and section bodies both carry a live link, and neither
+               is hardened for a locked card the way the timeline is - its section URLs are
+               blanked server-side and styles.css gives it pointer-events: none. */
+            $shape = $locked
+                ? ['mode' => constants::CARDMODE_TIMELINE, 'activity' => null, 'section' => null]
+                : self::resolve_card_shape((int) $course->id, $USER->id);
 ```
+
+**The ordering is the whole point.** Resolving before the lock is known looks harmless and
+is not: the template renders the activity body outside every guard, so a locked
+single-activity course draws its overlay and, behind it, the activity's name, its completion
+state and a real anchor to the module. The overlay stops the mouse but not the keyboard —
+Tab reaches the link, and a screen reader announces "Locked content … Submit portfolio …
+Go to activity". Before this slice that could not happen: the activity was derived from a
+set the section loop only populated when `!$locked && $isenrolled`.
+
+It also breaks this plan's own premise. The plan's web service resolves the shape only when
+access is open, so a shape resolved unconditionally here makes the two views disagree about
+the same locked course — the drift one resolver exists to prevent.
 
 Replace the early return used when course completion is off:
 
