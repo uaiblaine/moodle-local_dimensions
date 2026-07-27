@@ -2700,6 +2700,25 @@
     font-weight: 600;
 }
 
+/* The compact modes carry no cover image, so the body starts at the card's top edge. */
+.local-dimensions-course-card-compact .local-dimensions-course-body {
+    padding-top: 0.8rem;
+}
+
+.local-dimensions-course-single-pct {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: none;
+    border: 2px solid #198754;
+    border-radius: 50%;
+    color: #198754;
+    font-size: 0.6875rem;
+    font-weight: 700;
+}
+
 .local-dimensions-course-go {
     display: inline-flex;
     align-items: center;
@@ -2708,7 +2727,13 @@
     font-size: 0.75rem;
     font-weight: 600;
     color: #0f6cbf;
+    text-decoration: none;
     white-space: nowrap;
+}
+
+.local-dimensions-course-go:hover {
+    color: #0f6cbf;
+    text-decoration: underline;
 }
 
 .local-dimensions-courses-foot {

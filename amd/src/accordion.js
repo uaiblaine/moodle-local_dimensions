@@ -246,7 +246,8 @@ define(
                 {key: 'enrolment_starts', component: 'local_dimensions'},
                 {key: 'course_completed', component: 'local_dimensions'},
                 {key: 'filter_not_completed', component: 'local_dimensions'},
-                {key: 'go_to_activity', component: 'local_dimensions'}
+                {key: 'go_to_activity', component: 'local_dimensions'},
+                {key: 'access_content', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -337,7 +338,8 @@ define(
                     enrolmentStarts: strings[82],
                     courseCompleted: strings[83],
                     notCompleted: strings[84],
-                    goToActivity: strings[85]
+                    goToActivity: strings[85],
+                    accessContent: strings[86]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -2052,26 +2054,108 @@ define(
                 return html;
             }
 
+            if (course.cardmode === 'section' && course.section) {
+                let html = '<span class="local-dimensions-course-single">';
+                html += '<span class="local-dimensions-course-single-pct">' +
+                    (Number.parseInt(course.progress, 10) || 0) + '%</span>';
+                if (course.section.hasownname) {
+                    html += '<span class="local-dimensions-course-single-name">' +
+                        escapeHtml(course.section.name) + '</span>';
+                }
+                html += '</span>';
+                return html;
+            }
+
             if (course.activity) {
                 let html = '<span class="local-dimensions-course-single">';
-                html += '<i class="fa ' + (course.activity.completed ? 'fa-check-circle' : 'fa-circle-o') +
-                    ' local-dimensions-course-single-mark' +
-                    (course.activity.completed ? ' local-dimensions-course-single-done' : '') +
-                    '" aria-hidden="true"></i>';
+                if (course.activity.tracked) {
+                    html += '<i class="fa ' + (course.activity.completed ? 'fa-check-circle' : 'fa-circle-o') +
+                        ' local-dimensions-course-single-mark' +
+                        (course.activity.completed ? ' local-dimensions-course-single-done' : '') +
+                        '" aria-hidden="true"></i>';
+                }
                 html += '<span class="local-dimensions-course-single-name">' +
                     escapeHtml(course.activity.name) + '</span>';
-                html += '<span class="local-dimensions-course-single-state' +
-                    (course.activity.completed ? ' local-dimensions-course-single-done' : '') + '">' +
-                    escapeHtml(course.activity.completed ? strMap.courseCompleted : strMap.notCompleted) +
-                    '</span>';
+                if (course.activity.tracked) {
+                    html += '<span class="local-dimensions-course-single-state' +
+                        (course.activity.completed ? ' local-dimensions-course-single-done' : '') + '">' +
+                        escapeHtml(course.activity.completed ? strMap.courseCompleted : strMap.notCompleted) +
+                        '</span>';
+                }
                 html += '</span>';
-                html += '<span class="local-dimensions-course-go">' +
-                    escapeHtml(strMap.goToActivity) +
-                    '<i class="fa fa-arrow-right" aria-hidden="true"></i></span>';
                 return html;
             }
 
             return '';
+        }
+
+        /**
+         * Render the call-to-action link for a compact card (activity or section mode).
+         *
+         * The compact modes split the card's single anchor into two targets: the card itself
+         * (name, image slot) links to the course, and this link is the second target, to the
+         * one activity or the one section the card is summarising.
+         *
+         * @param {Object} course A course row from the web service
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML, empty when the mode has no url to link to
+         */
+        function renderCourseGoLink(course, strMap) {
+            const golabel = course.cardmode === 'activity' ? strMap.goToActivity : strMap.accessContent;
+            const gourl = course.cardmode === 'activity'
+                ? (course.activity && course.activity.url)
+                : (course.section && course.section.url);
+            if (!gourl) {
+                return '';
+            }
+            let html = '<a href="' + escapeHtml(gourl) + '" class="local-dimensions-course-go">';
+            html += escapeHtml(golabel);
+            html += '<i class="fa fa-arrow-right" aria-hidden="true"></i>';
+            html += '</a>';
+            return html;
+        }
+
+        /**
+         * Render a course card's activities disclosure drawer, when there is one to show.
+         *
+         * The activities list and course.activity come from two different queries - the
+         * former scoped to modules linked to this competency (get_linked_activities()), the
+         * latter to the course's card shape regardless of any link
+         * (calculator::resolve_card_shape()). They can share a display name without being the
+         * same module, so identity (cmid) is what settles it, not the label. When the card
+         * already shows the course's single trackable activity, a drawer listing that same
+         * activity would say it twice.
+         *
+         * @param {Object} course A course row from the web service
+         * @param {Array} activities The course's linked activities
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML, empty when there is nothing to disclose
+         */
+        function renderCourseActivitiesDrawer(course, activities, strMap) {
+            const repeats = activities.length === 1 && course.activity
+                && activities[0].cmid === course.activity.cmid;
+            if (activities.length === 0 || repeats) {
+                return '';
+            }
+
+            const panelId = 'local-dimensions-course-acts-' + (++activitiesPanelSeq);
+            const countLabel = activities.length === 1
+                ? strMap.activitiesCountOne
+                : strMap.activitiesCount.replace('{$a}', activities.length);
+
+            let html = '<button type="button" class="local-dimensions-course-acts-toggle"';
+            html += ' aria-expanded="false" aria-controls="' + panelId + '">';
+            html += '<i class="fa fa-list-ul" aria-hidden="true"></i>';
+            html += '<span>' + escapeHtml(countLabel) + '</span>';
+            html += '<i class="fa fa-chevron-down local-dimensions-course-acts-chevron" aria-hidden="true"></i>';
+            html += '</button>';
+
+            html += '<ul class="local-dimensions-course-acts" id="' + panelId + '" hidden>';
+            activities.forEach(function(activity) {
+                html += renderActivityRow(activity, strMap);
+            });
+            html += '</ul>';
+            return html;
         }
 
         /**
@@ -2135,39 +2219,39 @@ define(
                 const courseName = course.fullname || course.shortname || '';
                 const hasImage = course.courseimage && course.courseimage.trim() !== '';
                 const activities = course.activities || [];
+                const iscompact = course.cardmode === 'activity' || course.cardmode === 'section';
 
                 const isReachable = course.access !== 'locked' && course.access !== 'enrol';
                 const isBlocked = course.access === 'locked'
                     && displaySettings.lockedcardmode === 'blocked';
 
-                /* The activity URL only ever arrives alongside access === 'open' (the server
-                   omits it otherwise), so it is never in play for a blocked card - the card's
-                   link target can always follow it without a lock check of its own. */
-                const cardUrl = (course.activity && course.activity.url) ? course.activity.url : courseUrl;
-
                 html += '<div class="local-dimensions-course-card-lg' +
                     (isReachable ? '' : ' local-dimensions-course-card-dim') +
-                    (isBlocked ? ' local-dimensions-course-card-blocked' : '') + '">';
+                    (isBlocked ? ' local-dimensions-course-card-blocked' : '') +
+                    (iscompact ? ' local-dimensions-course-card-compact' : '') + '">';
 
-                /* The whole card is the link - to the single activity when the card shows one,
-                   the course otherwise; the disclosure below sits outside it. In blocked mode a
-                   locked card leads nowhere, so it is a span - core would only show the same
-                   restriction message the card already carries. */
+                /* The whole card links to the course; a compact card (single activity or single
+                   section) adds a second target below for its call to action - see
+                   renderCourseGoLink. In blocked mode a locked card leads nowhere, so it is a
+                   span - core would only show the same restriction message the card already
+                   carries. */
                 html += isBlocked
                     ? '<span class="local-dimensions-course-link">'
-                    : '<a href="' + escapeHtml(cardUrl) + '" class="local-dimensions-course-link">';
+                    : '<a href="' + escapeHtml(courseUrl) + '" class="local-dimensions-course-link">';
 
-                // Course image.
-                if (hasImage) {
-                    html += '<div class="local-dimensions-course-img">';
-                    html += '<img src="' + escapeHtml(course.courseimage) + '" alt="" loading="lazy">';
-                    html += '</div>';
-                } else {
-                    // Gradient placeholder with initials.
-                    const initials = getInitials(courseName);
-                    html += '<div class="local-dimensions-course-img local-dimensions-course-img-placeholder">';
-                    html += '<span>' + escapeHtml(initials) + '</span>';
-                    html += '</div>';
+                // Course image - the compact modes carry no cover image.
+                if (!iscompact) {
+                    if (hasImage) {
+                        html += '<div class="local-dimensions-course-img">';
+                        html += '<img src="' + escapeHtml(course.courseimage) + '" alt="" loading="lazy">';
+                        html += '</div>';
+                    } else {
+                        // Gradient placeholder with initials.
+                        const initials = getInitials(courseName);
+                        html += '<div class="local-dimensions-course-img local-dimensions-course-img-placeholder">';
+                        html += '<span>' + escapeHtml(initials) + '</span>';
+                        html += '</div>';
+                    }
                 }
 
                 // Course body.
@@ -2181,34 +2265,11 @@ define(
                 html += '</div>'; // End local-dimensions-course-body.
                 html += isBlocked ? '</span>' : '</a>';
 
-                /* The activities list and course.activity come from two different queries - the
-                   former scoped to modules linked to this competency (get_linked_activities()),
-                   the latter to the course's card shape regardless of any link
-                   (calculator::resolve_card_shape()). They can share a display name without
-                   being the same module, so identity (cmid) is what settles it, not the label.
-                   When the card already shows the course's single trackable activity, a drawer
-                   listing that same activity would say it twice. */
-                const repeats = activities.length === 1 && course.activity
-                    && activities[0].cmid === course.activity.cmid;
-                if (activities.length > 0 && !repeats) {
-                    const panelId = 'local-dimensions-course-acts-' + (++activitiesPanelSeq);
-                    const countLabel = activities.length === 1
-                        ? strMap.activitiesCountOne
-                        : strMap.activitiesCount.replace('{$a}', activities.length);
-
-                    html += '<button type="button" class="local-dimensions-course-acts-toggle"';
-                    html += ' aria-expanded="false" aria-controls="' + panelId + '">';
-                    html += '<i class="fa fa-list-ul" aria-hidden="true"></i>';
-                    html += '<span>' + escapeHtml(countLabel) + '</span>';
-                    html += '<i class="fa fa-chevron-down local-dimensions-course-acts-chevron" aria-hidden="true"></i>';
-                    html += '</button>';
-
-                    html += '<ul class="local-dimensions-course-acts" id="' + panelId + '" hidden>';
-                    activities.forEach(function(activity) {
-                        html += renderActivityRow(activity, strMap);
-                    });
-                    html += '</ul>';
+                if (iscompact) {
+                    html += renderCourseGoLink(course, strMap);
                 }
+
+                html += renderCourseActivitiesDrawer(course, activities, strMap);
 
                 html += '</div>'; // End local-dimensions-course-card-lg.
             });
