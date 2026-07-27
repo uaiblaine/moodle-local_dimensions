@@ -2014,8 +2014,10 @@ define(
         /**
          * Render the state strip that replaces a card's progress row.
          *
-         * A progress bar carries no meaning for a learner who cannot open the course, and on a
-         * course with one trackable activity it can only ever read 0% or 100%. So the one row
+         * A progress bar carries no meaning for a learner who cannot open the course (locked
+         * or enrol-gated access), on a course with one trackable activity it can only ever
+         * read 0% or 100%, and on a course with one section holding several activities a
+         * single-row timeline would say less than the section's own ring does. So the one row
          * that is meaningless in each case is the one that is replaced - the image, the name,
          * the outcome badge and the activities drawer all survive.
          *
@@ -2056,8 +2058,11 @@ define(
 
             if (course.cardmode === 'section' && course.section) {
                 let html = '<span class="local-dimensions-course-single">';
-                html += '<span class="local-dimensions-course-single-pct">' +
-                    (Number.parseInt(course.progress, 10) || 0) + '%</span>';
+                // A section with nothing trackable has no percentage to claim.
+                if (course.section.tracked) {
+                    html += '<span class="local-dimensions-course-single-pct">' +
+                        (Number.parseInt(course.progress, 10) || 0) + '%</span>';
+                }
                 if (course.section.hasownname) {
                     html += '<span class="local-dimensions-course-single-name">' +
                         escapeHtml(course.section.name) + '</span>';

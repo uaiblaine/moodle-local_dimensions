@@ -58,10 +58,6 @@ class calculator {
             $sections = $modinfo->get_section_info_all();
             $completion = new \completion_info($course);
 
-            /* One resolver answers the card's shape for both views, so the tracker and the
-               plan can never disagree about the same course. */
-            $shape = self::resolve_card_shape((int) $course->id, $USER->id);
-
             /* Resolve the lock and its dates BEFORE the completion check. A course can be
                locked and have completion tracking switched off at the same time, and the
                lock is the more important of the two facts: returning early without it left
@@ -70,6 +66,18 @@ class calculator {
 
             // Check centralized lock status.
             $locked = self::is_locked($course, $USER->id);
+
+            /* The lock outranks every card shape and must be known before the shape is
+               resolved: the activity and section bodies both carry a live link (and section,
+               a real progress ring), and neither is hardened for a locked card the way the
+               timeline is - its section URLs are blanked server-side and styles.css gives it
+               pointer-events: none. A locked card is forced to the timeline shape with
+               nothing named, so the overlay stays the only thing a locked learner can reach.
+               One resolver still answers the shape for both views once unlocked, so the
+               tracker and the plan can never disagree about the same open course. */
+            $shape = $locked
+                ? ['mode' => constants::CARDMODE_TIMELINE, 'activity' => null, 'section' => null]
+                : self::resolve_card_shape((int) $course->id, $USER->id);
 
             // Keep enrollment check for activity loop (extra security, though locked already covers it).
             $coursecontext = \core\context\course::instance($course->id);
@@ -344,7 +352,11 @@ class calculator {
             return [
                 'mode' => constants::CARDMODE_SECTION,
                 'activity' => null,
-                'section' => self::describe_section($course, $sections[0]),
+                /* $tracked was already walked above (capped at 2) to answer "is there
+                   exactly one" - its non-emptiness also answers "is there at least one",
+                   which is all describe_section() needs, so it is reused rather than
+                   walked a second time. */
+                'section' => self::describe_section($course, $sections[0], count($tracked) > 0),
             ];
         }
 
@@ -517,9 +529,12 @@ class calculator {
      *
      * @param \stdClass $course The course record.
      * @param \section_info $section The section.
-     * @return array Keys name, hasownname and url.
+     * @param bool $tracked Whether the section holds at least one activity with completion
+     *                      tracking on - false draws no percentage, the same honesty the
+     *                      activity shape already carries.
+     * @return array Keys name, hasownname, url and tracked.
      */
-    private static function describe_section(\stdClass $course, \section_info $section): array {
+    private static function describe_section(\stdClass $course, \section_info $section, bool $tracked): array {
         $ownname = trim((string) ($section->name ?? ''));
         $context = \core\context\course::instance($course->id);
 
@@ -527,6 +542,7 @@ class calculator {
             'name' => $ownname !== '' ? format_string($ownname, true, ['context' => $context]) : '',
             'hasownname' => $ownname !== '',
             'url' => (new \moodle_url('/course/section.php', ['id' => $section->id]))->out(false),
+            'tracked' => $tracked,
         ];
     }
 

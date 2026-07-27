@@ -464,5 +464,6 @@ final class get_competency_courses_test extends \advanced_testcase {
         $this->assertSame(\local_dimensions\constants::CARDMODE_SECTION, $rows[$course->id]['cardmode']);
         $this->assertFalse($rows[$course->id]['section']['hasownname']);
         $this->assertStringContainsString('/course/section.php', $rows[$course->id]['section']['url']);
+        $this->assertTrue($rows[$course->id]['section']['tracked']);
     }
 }

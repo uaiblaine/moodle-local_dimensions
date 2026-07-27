@@ -144,7 +144,36 @@ final class get_course_progress_test extends \advanced_testcase {
     }
 
     /**
+     * Writes the singleactivity format's 'activitytype' option directly, exactly like
+     * calculator_card_shape_test::set_singleactivity_type() - see that method's docblock for
+     * why create_course()'s own 'activitytype' key is silently dropped and cannot be used
+     * instead.
+     *
+     * @param int $courseid The course id.
+     * @param string $activitytype The modname to store, e.g. 'page'.
+     * @return void
+     */
+    private function set_singleactivity_type(int $courseid, string $activitytype): void {
+        global $DB;
+
+        $DB->set_field('course_format_options', 'value', $activitytype, [
+            'courseid' => $courseid,
+            'format' => 'singleactivity',
+            'sectionid' => 0,
+            'name' => 'activitytype',
+        ]);
+        rebuild_course_cache($courseid, true);
+    }
+
+    /**
      * A single-activity course reports the activity shape and names its activity.
+     *
+     * Without set_singleactivity_type() the course keeps the site's default activitytype
+     * (forum), so resolve_main_activity() finds no match and returns null - this test would
+     * then pass through the count-based fallback branch instead of the format branch its name
+     * and this comment claim to cover. The second, differently-typed module (url) is also
+     * tracked, so with two trackable candidates that fallback branch cannot land on
+     * CARDMODE_ACTIVITY by itself either - only the format match can.
      *
      * @return void
      */
@@ -154,10 +183,16 @@ final class get_course_progress_test extends \advanced_testcase {
             'format' => 'singleactivity',
             'enablecompletion' => 1,
         ]);
+        $this->set_singleactivity_type((int) $course->id, 'page');
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $this->getDataGenerator()->create_module('page', [
             'course' => $course->id,
             'name' => 'Submit portfolio',
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+        $this->getDataGenerator()->create_module('url', [
+            'course' => $course->id,
+            'name' => 'Leftover link from the old format',
             'completion' => COMPLETION_TRACKING_MANUAL,
         ]);
 
@@ -195,5 +230,6 @@ final class get_course_progress_test extends \advanced_testcase {
         $this->assertSame(\local_dimensions\constants::CARDMODE_SECTION, $row['cardmode']);
         $this->assertFalse($row['section']['hasownname']);
         $this->assertStringContainsString('/course/section.php', $row['section']['url']);
+        $this->assertTrue($row['section']['tracked']);
     }
 }

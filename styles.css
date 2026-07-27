@@ -2719,11 +2719,17 @@
     font-weight: 700;
 }
 
+/* A direct child of .local-dimensions-course-card-lg, like .local-dimensions-course-acts-toggle
+   below - the body's own 1rem padding no longer reaches it, so it carries its own inset to
+   match: 0.8rem keeps its left edge level with the toggle's, and the bottom value stops it
+   sitting flush against the activities drawer's top border. No top value - the card body's own
+   bottom padding already leaves room above this link. */
 .local-dimensions-course-go {
     display: inline-flex;
     align-items: center;
     align-self: flex-start;
     gap: 0.25rem;
+    padding: 0 0.8rem 0.8rem;
     font-size: 0.75rem;
     font-weight: 600;
     color: #0f6cbf;
