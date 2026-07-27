@@ -322,6 +322,7 @@ final class calculator_card_shape_test extends \advanced_testcase {
         $this->assertFalse($shape['section']['hasownname']);
         $this->assertSame('', $shape['section']['name']);
         $this->assertStringContainsString('/course/section.php', $shape['section']['url']);
+        $this->assertTrue($shape['section']['tracked']);
         $this->assertNull($shape['activity']);
     }
 

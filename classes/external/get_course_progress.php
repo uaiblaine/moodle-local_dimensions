@@ -219,6 +219,7 @@ class get_course_progress extends external_api {
                         'name' => new external_value(PARAM_TEXT, 'Section name, empty when Moodle generated it'),
                         'hasownname' => new external_value(PARAM_BOOL, 'Whether a teacher named the section'),
                         'url' => new external_value(PARAM_URL, 'URL of the section'),
+                        'tracked' => new external_value(PARAM_BOOL, 'Whether the section holds a tracked activity'),
                     ],
                     'The course\'s only section, present only when cardmode is section',
                     VALUE_OPTIONAL,

@@ -43,8 +43,8 @@
     * cardmode (string) - Which shape the card takes: "activity", "section" or "timeline"
     * activity (object) - The single trackable activity {cmid, name, url, completed,
       tracked}, present only when cardmode is "activity"
-    * section (object) - The course's one section {name, hasownname, url}, present only
-      when cardmode is "section"
+    * section (object) - The course's one section {name, hasownname, url, tracked},
+      present only when cardmode is "section"
     * istimeline (bool) - Client-derived: cardmode is "timeline", so the section sequence
       renders
     * sectionpercentage (int) - Client-derived: the one section's own percentage, shown by
@@ -143,16 +143,18 @@
         and the activity shape is the one that survives completion tracking being off. }}
     {{#activity}}
     <div class="local-dimensions-single">
+        {{! An untracked activity leaves nothing to mark, so the span itself is dropped
+            rather than left empty - an empty span still reserves its flex gap. }}
+        {{#tracked}}
         <span class="local-dimensions-single-mark">
-            {{#tracked}}
-                {{#completed}}
-                    <img class="local-dimensions-icon local-dimensions-icon-check" src="{{checkiconurl}}" alt="" aria-hidden="true">
-                {{/completed}}
-                {{^completed}}
-                    <img class="local-dimensions-icon local-dimensions-icon-circle" src="{{circleiconurl}}" alt="" aria-hidden="true">
-                {{/completed}}
-            {{/tracked}}
+            {{#completed}}
+                <img class="local-dimensions-icon local-dimensions-icon-check" src="{{checkiconurl}}" alt="" aria-hidden="true">
+            {{/completed}}
+            {{^completed}}
+                <img class="local-dimensions-icon local-dimensions-icon-circle" src="{{circleiconurl}}" alt="" aria-hidden="true">
+            {{/completed}}
         </span>
+        {{/tracked}}
         <span class="local-dimensions-single-name">{{name}}</span>
         {{#tracked}}
         <span class="local-dimensions-single-status {{#completed}}local-dimensions-single-done{{/completed}}">
@@ -189,7 +191,13 @@
         instead. }}
     {{#section}}
     <div class="local-dimensions-single-section">
+        {{! A section with nothing trackable has no percentage to claim - the ring is
+            dropped rather than showing a misleading 0%, the same distinction the
+            timeline it replaces drew with its info icon. The card's job here is still
+            to offer a way in, so the name and call to action survive either way. }}
+        {{#tracked}}
         <span class="local-dimensions-single-section-ring">{{sectionpercentage}}%</span>
+        {{/tracked}}
         {{#hasownname}}
         <span class="local-dimensions-single-section-name">{{name}}</span>
         {{/hasownname}}
