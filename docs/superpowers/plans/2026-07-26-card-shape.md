@@ -292,6 +292,29 @@ final class calculator_card_shape_test extends \advanced_testcase {
 }
 ```
 
+**The fixtures must write `activitytype` directly, not pass it to `create_course()`.**
+That looks like it works and does not: `create_course()` routes format options through
+`base::validate_format_options()`, which calls
+`format_singleactivity::course_format_options(true)`, which filters the legal values
+through `has_capability("mod/{$activity}:addinstance", …)`. The tests create the course
+before `setUser()`, so `$USER->id === 0`, and `has_capability()` returns false
+unconditionally for user 0 on any write or risky capability — `mod/page:addinstance` is
+both. The key is dropped and the course falls back to the site default, `forum`.
+
+`setAdminUser()` before `create_course()` clears that gate but not a second trap:
+`course_format_options()` caches its capability-filtered list in a function-static that
+`resetAfterTest()` never clears, so in a shared CI process the result depends on whichever
+test ran first. Write the row into `course_format_options` (columns `courseid`, `format`,
+`sectionid` — `0` for a course-level option — `name`, `value`) and call
+`rebuild_course_cache($courseid, true)`, which resets the per-course format instance so the
+next read sees it. Put that in one shared private helper with a docblock saying why, or the
+next reader will fold it back into `create_course()` and silently break every case.
+
+The leftover-module test only guards anything if its decoy module is **also**
+completion-tracked. With an untracked decoy the fallback branch filters it out, leaves one
+trackable module and returns the right answer for the wrong reason — green whether or not
+`resolve_main_activity()` works at all.
+
 - [ ] **Step 2: Run the test to verify it fails**
 
 Not runnable in this checkout. In CI, expect all six to **FAIL** with
