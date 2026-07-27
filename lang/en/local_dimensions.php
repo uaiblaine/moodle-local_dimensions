@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['access_content'] = 'Access content';
 $string['activities_count'] = '{$a} activities';
 $string['activities_count_one'] = '1 activity';
 $string['animatelockedborder'] = 'Animate locked card border';

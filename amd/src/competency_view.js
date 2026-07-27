@@ -191,10 +191,15 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 data.iscompleted = container
                     .closest('.local-dimensions-course-card-wrapper')
                     .attr('data-completed') === '1';
-                /* A course with a single section has nothing to sequence, so the timeline
-                   drops its column layout and the one marker is centred instead. The
-                   single-ACTIVITY case is the server's call and arrives as data.activity. */
-                data.issinglesection = !!(data.enabled && data.sections && data.sections.length === 1);
+                /* One section and one activity are both the server's call now, and arrive
+                   as data.cardmode. The template needs a boolean per branch, because
+                   Mustache cannot compare a value. */
+                data.istimeline = data.cardmode === 'timeline';
+                /* A one-section course has exactly one row, and its percentage is the
+                   course's own: every tracked activity lives in that section. */
+                data.sectionpercentage = (data.sections && data.sections.length === 1)
+                    ? (data.sections[0].percentage || 0)
+                    : 0;
                 data.checkiconurl = iconurls.checkcircle || '';
                 data.circleiconurl = iconurls.circle || '';
                 data.islearnmore = (lockedcardmode === 'learnmore');
