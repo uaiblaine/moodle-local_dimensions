@@ -431,27 +431,56 @@ class calculator {
      * directly, but it arrived in Moodle 5.1 and this plugin supports 4.5 upward. An
      * instanceof against a missing interface returns false rather than failing, so that
      * branch would silently never fire on two of the four branches CI runs. The format
-     * string is on the course record everywhere, and the format guarantees a single
-     * activity, so modinfo answers the same question with one code path.
+     * string is on the course record everywhere, so detecting the format that way is
+     * unchanged - but the format does NOT guarantee a single activity: Moodle neither
+     * deletes sections nor modules when a course's format is switched to singleactivity,
+     * nor when the format's activity type is changed later, so a course migrated from
+     * another format keeps its old modules around. This mirrors
+     * format_singleactivity::get_activitytype() + get_main_activity()
+     * (course/format/singleactivity/lib.php): the format option 'activitytype' names the
+     * one module type that counts, and only section 0 is searched for the first module of
+     * that type - exactly what format_singleactivity::page_set_course() redirects the
+     * learner to, so the card must name the same one. Unlike core, this method does not
+     * force-show a hidden match: a deletioninprogress or non-uservisible candidate falls
+     * through to null instead, and the caller's next branch handles it.
      *
      * @param \stdClass $course The course record.
      * @param \course_modinfo $modinfo Its modinfo for the reading user.
-     * @return \cm_info|null The activity, or null when the format is not single-activity
-     *                       or no visible module is configured yet.
+     * @return \cm_info|null The activity, or null when the format is not single-activity,
+     *                       its activity type is unset or unavailable, or the configured
+     *                       module is missing, being deleted, or not visible to the user.
      */
     private static function resolve_main_activity(\stdClass $course, \course_modinfo $modinfo): ?\cm_info {
+        global $CFG;
+
         if (($course->format ?? '') !== 'singleactivity') {
             return null;
         }
 
-        foreach ($modinfo->get_cms() as $cm) {
-            if ($cm->modname === 'subsection' || $cm->deletioninprogress || !$cm->uservisible) {
-                continue;
-            }
-            return $cm;
+        require_once($CFG->dirroot . '/course/format/lib.php');
+        $options = course_get_format($course)->get_format_options();
+        $activitytype = $options['activitytype'] ?? '';
+        if ($activitytype === '' || !array_key_exists($activitytype, \format_singleactivity::get_supported_activities())) {
+            // Unset, or names a type the format itself would not offer (no view page,
+            // a subsection delegate, or hidden from the course by an admin).
+            return null;
         }
 
-        return null;
+        $found = null;
+        foreach ($modinfo->sections[0] ?? [] as $cmid) {
+            if ($modinfo->cms[$cmid]->modname === $activitytype) {
+                // Core takes the first match in section 0 and stops there; mirror that
+                // instead of continuing past it if this candidate fails our guards below.
+                $found = $modinfo->cms[$cmid];
+                break;
+            }
+        }
+
+        if ($found === null || $found->deletioninprogress || !$found->uservisible) {
+            return null;
+        }
+
+        return $found;
     }
 
     /**
@@ -490,6 +519,11 @@ class calculator {
 
     /**
      * The sections the card would draw, mirroring the timeline's own filter.
+     *
+     * A qualifying section counts whether or not it holds any modules: a course with one
+     * empty section still resolves to the section shape rather than the timeline. That is
+     * a deliberate choice - the card's job there is to offer a way in, and a one-row
+     * timeline would say less than the section shape does - not an oversight.
      *
      * @param \course_modinfo $modinfo The course modinfo.
      * @return array List of section_info.

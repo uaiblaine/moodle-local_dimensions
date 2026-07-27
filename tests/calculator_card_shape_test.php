@@ -34,6 +34,7 @@ final class calculator_card_shape_test extends \advanced_testcase {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course([
             'format' => 'singleactivity',
+            'activitytype' => 'page',
             'enablecompletion' => 1,
         ]);
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
@@ -61,6 +62,7 @@ final class calculator_card_shape_test extends \advanced_testcase {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course([
             'format' => 'singleactivity',
+            'activitytype' => 'page',
             'enablecompletion' => 0,
         ]);
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
@@ -91,6 +93,7 @@ final class calculator_card_shape_test extends \advanced_testcase {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course([
             'format' => 'singleactivity',
+            'activitytype' => 'page',
             'enablecompletion' => 1,
         ]);
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
@@ -109,6 +112,40 @@ final class calculator_card_shape_test extends \advanced_testcase {
 
         $this->assertTrue($shape['activity']['completed']);
         $this->assertSame((int) $page->cmid, $shape['activity']['cmid']);
+    }
+
+    /**
+     * A leftover module of a different type must not steal the slot: the resolver names
+     * the module matching the format's own 'activitytype' option, not merely the first
+     * user-visible module it meets. The url module is created before the page module, so
+     * it sits earlier in section 0's sequence - the exact ordering the pre-fix code
+     * (which walked every module and returned the first match) would have picked wrong.
+     *
+     * @return void
+     */
+    public function test_single_activity_format_ignores_a_leftover_of_another_type(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course([
+            'format' => 'singleactivity',
+            'activitytype' => 'page',
+            'enablecompletion' => 1,
+        ]);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $this->getDataGenerator()->create_module('url', [
+            'course' => $course->id,
+            'name' => 'Leftover link from the old format',
+        ]);
+        $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'name' => 'Submit portfolio',
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+
+        $this->setUser($user);
+        $shape = calculator::resolve_card_shape((int) $course->id, (int) $user->id);
+
+        $this->assertSame(constants::CARDMODE_ACTIVITY, $shape['mode']);
+        $this->assertSame('Submit portfolio', $shape['activity']['name']);
     }
 
     /**
