@@ -317,6 +317,16 @@ $functions = [
         'ajax' => true,
     ],
 
+    // Competency hub Plans tab — CSV transfer.
+    'local_dimensions_export_templates' => [
+        'classname' => 'local_dimensions\external\export_templates',
+        'methodname' => 'execute',
+        'description' => 'Export learning plan templates, their competency links and custom fields as CSV.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:templateview',
+        'ajax' => true,
+    ],
+
     // Competency hub Plans tab — cohort role assignments.
     'local_dimensions_list_template_cohort_roles' => [
         'classname' => 'local_dimensions\external\list_template_cohort_roles',
