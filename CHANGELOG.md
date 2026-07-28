@@ -21,6 +21,14 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
     panes.
   - *Frameworks*: native create/edit with scale configuration, duplicate, visibility toggle,
     reason-gated delete and **CSV import/export**.
+  - *Learning plan CSV transfer*: export the templates the Plans tab lists — competency links in
+    order, the plugin's fourteen template custom fields, and a companion download for each
+    referenced structure — and import them back with a **dry-run preview**. The preview projects
+    every row against the target site (create / update / in sync / skip / conflict / blocked /
+    orphan link) with its field diff, its resolved competency links, its effect on existing
+    learner plans, and per-row ways out of a conflict; **nothing is written until you apply**, and
+    then only the rows you ticked, each in its own transaction and re-validated at write time so a
+    site that moved under you is refused rather than half-written.
   - Modals: *Participants* (cohorts with background plan sync, individual users, cohort-role
     assignment), *Courses & activities* (linking with rule outcomes, activity search,
     completion-rule badges), *Related competencies* (shared tree browser).

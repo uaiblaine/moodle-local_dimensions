@@ -37,6 +37,31 @@
   --text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;
   --border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;
 }}
+/* CSV transfer toolbar (PLN-TRANSFER) — reuses the Frameworks toolbar's own classes in the
+   plugin, so it is drawn here with the same shape rather than with new tokens. */
+.xftbar{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:10px 0;}
+.xfcount{font-size:12px;color:var(--text-secondary);}
+.xfcount b{color:var(--text-primary);}
+.xfacts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.xout{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:8px 12px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface-2);color:var(--text-secondary);}
+/* Preview modal (PLN-IMP) */
+.xmodal{border:0.5px solid var(--border);border-radius:10px;background:var(--surface-2);overflow:hidden;margin-top:10px;}
+.xmhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;font-weight:500;}
+.xmbody{padding:11px 12px;}
+.xmfoot{display:flex;justify-content:flex-end;gap:8px;padding:9px 12px;border-top:1px solid var(--border);}
+.xpills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+.xpill{font-size:10px;font-weight:500;border-radius:20px;padding:2px 8px;background:var(--surface-0);color:var(--text-secondary);}
+.xpill.ok{background:var(--bg-accent);color:var(--text-accent);}
+.xpill.warn{background:var(--bg-warning);color:var(--text-warning);}
+.xpill.bad{background:var(--bg-danger);color:var(--text-danger);}
+.xgroup{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;}
+.xghead{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface-1);font-size:11px;}
+.xrow{padding:8px 10px;border-top:1px solid var(--border);}
+.xrow:first-child{border-top:0;}
+.xrhead{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:12px;}
+.xsub{font-size:10px;color:var(--text-muted);margin-top:4px;}
+.xdiff{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);}
+
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
 .panel{max-width:760px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
 .plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
@@ -246,10 +271,73 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     The toggle above <b>works</b>, and so do the <b>five</b> switches of the two gears below —
     each one switches on the same <code>show-*</code> class the plugin switches on. Partial shared with
     <code>EST</code>/<code>FWK</code> (<code>central/showhidden_toggle.mustache</code>, called at
-    <code>plans.mustache:140</code>, <code>frameworks.mustache:73</code> and
+    <code>plans.mustache:143</code>, <code>frameworks.mustache:73</code> and
     <code>structure.mustache:106</code>); the <code>data-action</code> is variable and here it is
-    <code>toggle-disabled</code> (<code>dynamictabs/plans.php:289</code>). It renders only if something is
+    <code>toggle-disabled</code> (<code>dynamictabs/plans.php:292</code>). It renders only if something is
     hidden — with none, the context comes back <code>null</code> (<code>:286-291</code>).
+  </div>
+
+  <div class="xftbar">
+    <span class="xfcount">Templates listed: <b>2</b> <span class="idb">PLN-TRANSFER-COUNT</span></span>
+    <span class="xfacts">
+      <span class="xout"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-plus"/></svg>Import templates <span class="idb">PLN-IMPORT</span></span>
+      <span class="xout"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#p-plus"/></svg>Export templates <span class="idb">PLN-EXPORT</span></span>
+    </span>
+  </div>
+  <div class="note" style="margin-top:-4px;">
+    The strip sits between the toggle above and the master-detail below
+    (<code>plans.mustache:149-165</code>) and reuses the Frameworks toolbar's classes unchanged, so
+    it added no CSS. The labels say <b>"Import templates"</b> and <b>"Export templates"</b>, never
+    "Import"/"Export": the Frameworks pane is the only one server-rendered on load
+    (<code>central.php:116-121</code>) and stays in the DOM, hidden, with buttons named exactly
+    that — <b>earlier in document order</b>, which is what a name-based Behat click would hit.
+    Import is gated on <code>canmanage</code>, Export on <code>canexport</code>
+    (<code>dynamictabs/plans.php:297</code>), the same gate the web service re-checks per template.
+  </div>
+
+  <div class="xmodal">
+    <div class="xmhead"><span>Import preview <span class="idb">PLN-IMP-ROOT</span></span><span class="note">refresh · close</span></div>
+    <div class="xmbody">
+      <div class="xpills">
+        <span class="xpill">Rows: 4</span>
+        <span class="xpill ok">Create: 2</span>
+        <span class="xpill warn">Conflict: 1</span>
+        <span class="xpill bad">Blocked: 1</span>
+        <span class="idb">PLN-IMP-SUMMARY</span>
+      </div>
+      <div class="note" style="margin-bottom:8px;">
+        Nothing has been written yet. This is what applying the selected rows would do.
+        <span class="idb">PLN-IMP-REASSURANCE</span>
+      </div>
+      <div class="xgroup">
+        <div class="xghead"><b>Blocked</b> · 1 · This row cannot be applied as it stands. <span class="idb">PLN-IMP-GROUP</span></div>
+        <div class="xrow">
+          <div class="xrhead"><span class="xpill bad">Blocked</span><b>Nursing induction</b><span class="cid">TPL-NUR</span><span class="note">Row 5</span></div>
+          <div class="xsub">The due date is in the past, which Moodle refuses on a new or changed template.</div>
+          <div class="xsub">How to resolve: <b>Clear the due date</b> · Move the due date forward · <span class="idb">PLN-IMP-REMEDY</span></div>
+        </div>
+      </div>
+      <div class="xgroup">
+        <div class="xghead"><b>Create</b> · 2 · No template on this site matches this row.</div>
+        <div class="xrow">
+          <div class="xrhead"><span class="xpill ok">Create</span><b>Onboarding</b><span class="cid">TPL-ON</span><span class="note">Row 2</span><span class="idb">PLN-IMP-ROW</span></div>
+          <div class="xsub xdiff">shortname · Onboarding → Onboarding 2026 <span class="idb">PLN-IMP-DIFF</span></div>
+          <div class="xsub">Competencies: Communication (COMM-01) · CORE <span class="xpill ok">Matched</span> · Teamwork <span class="xpill warn">Matched by name</span> <span class="idb">PLN-IMP-LINK</span></div>
+          <div class="xsub">Affects 12 open plans and 3 completed plans · 1 cohorts <span class="idb">PLN-IMP-BLAST</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="xmfoot"><span class="tb">Cancel</span><span class="bprim">Apply the selected rows <span class="idb">PLN-IMP-APPLY</span></span></div>
+  </div>
+  <div class="note" style="margin-top:5px;">
+    Two modals, not one: an upload-only <code>dynamic_form</code> (<code>FORM-TPLIMP</code> in
+    <code>mod-forms.md</code>) whose submission writes nothing, then this preview. It opens on the
+    upload modal's <b>hidden</b> event (<code>plans_transfer.js:438-447</code>), never inside the
+    submit handler, so it does not race Bootstrap's body-class cleanup. The header refresh button
+    re-calls the same read service on the same draft file, which is the whole "import the missing
+    structures in another tab, then re-check" flow — the analyser is pure, so there is no second
+    code path. Rows are <b>divs</b>, not table rows: CI's mustache lint renders the row partial
+    standalone and validates the HTML, and a bare <code>&lt;tr&gt;</code> outside a table fails it.
   </div>
 
   <div class="md" style="margin-top:9px;">
@@ -415,7 +503,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     (<code>styles.css:5829</code>). The three stops above are the <b>real</b> ones for the
     <code>#0f6cbf</code> default: <code>#0f6cbf</code> → <code>#0d5ba0</code> → <code>#0a477e</code>,
     computed by <code>darken_hex(base, 0.16)</code> and <code>(base, 0.34)</code>
-    (<code>dynamictabs/plans.php:311-313</code> calling <code>helper.php:3020-3035</code>). It
+    (<code>dynamictabs/plans.php:316-318</code> calling <code>helper.php:3020-3035</code>). It
     <b>does not follow the theme</b> — neither here nor in the plugin.
   </div>
   <div class="warn">
@@ -453,7 +541,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
       <div class="note">
         Drawn <b>open</b> — it is a Bootstrap dropdown, driven by JS. "Move up" is
         <code>disabled</code> because the row is the <b>first</b> (<code>{{#first}}</code>,
-        <code>plans.mustache:412</code>), exactly as the server renders it.
+        <code>plans.mustache:438</code>), exactly as the server renders it.
         <b>"Remove" carries <code>text-danger</code></b> (<code>:430</code>) — unlike the footer's
         buttons, the menu item <b>does</b> carry a colour variant.
       </div>
@@ -465,17 +553,17 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     governs the <b>CRUD of the tab's own entity</b> (framework / structure node / template) — which goes
     to the sticky footer because that is what launches the modals. The actions on <b>competencies inside
     a plan's list</b> are a <b>nested list</b> and legitimately use a kebab
-    (<code>plans.mustache:396-436</code>): this tab's sticky footer is already occupied by the selected
+    (<code>plans.mustache:422-462</code>): this tab's sticky footer is already occupied by the selected
     template's actions. <b>This kebab is correct — do not "fix" it.</b>
   </div>
   <div class="note" style="margin-top:6px;">
     <b>The strongest proof is the shared <code>openForm</code>.</b> The kebab's
-    <code>edit-competency</code> (<code>plans.mustache:405-408</code>) and the footer's
+    <code>edit-competency</code> (<code>plans.mustache:431-434</code>) and the footer's
     <code>edit-template</code> (<code>:465-468</code>) call <b>the same function</b> — <code>openForm</code>
-    (<code>plans.js:200-208</code>, whose <code>new ModalForm</code> sits at <code>:201</code>) — which the
+    (<code>plans.js:201-209</code>, whose <code>new ModalForm</code> sits at <code>:201</code>) — which the
     header's <code>new-template</code> calls too. All <b>three</b> coexist because
     <code>openForm</code> is parameterised by <code>formclass</code>: the kebab passes
-    <code>COMPETENCY_FORM_CLASS</code> (<code>plans.js:728-734</code>), the footer and the header pass
+    <code>COMPETENCY_FORM_CLASS</code> (<code>plans.js:731-737</code>), the footer and the header pass
     <code>FORM_CLASS</code> (<code>:721-727</code>, <code>:714-720</code>). <b>Different entities,
     same mechanism</b> — which is why kebab and footer coexist without ambiguity.
   </div>
@@ -501,18 +589,18 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     <span class="idb">PLN-EDIT</span><span class="idb">PLN-BROWSE → MOD.BROWSER</span><span class="idb">PLN-PARTICIPANTS → MOD.PART</span><span class="idb">PLN-DUPLICATE</span><span class="idb">PLN-DELETE → MOD.DELPLANS</span>
   </div>
   <div class="note" style="margin-top:6px;">
-    <b>Five</b> buttons (<code>plans.mustache:462-488</code>), not three: <b>Duplicate</b> arrived
+    <b>Five</b> buttons (<code>plans.mustache:488-514</code>), not three: <b>Duplicate</b> arrived
     together with the move to the footer and calls the <b>plugin's</b> WS
     (<code>local_dimensions_duplicate_template</code>), which also copies the lp-area custom fields and
-    the embedded files (<code>plans.js:604-615</code>). The holder is born <code>hidden</code> on the
+    the embedded files (<code>plans.js:605-616</code>). The holder is born <code>hidden</code> on the
     server and <code>init</code> copies the <code>innerHTML</code> into the sticky footer through
-    <code>ActionFooter.show</code> and <b>removes the holder</b> (<code>plans.js:788-789</code>) —
+    <code>ActionFooter.show</code> and <b>removes the holder</b> (<code>plans.js:791-792</code>) —
     otherwise a hidden duplicate would shadow Behat's name-based clicks. Core's raw pattern: icon above
     label, <b>no colour variant</b>, not even on Delete.
   </div>
   <div class="warn">
     <b>The grip is <code>CLAUDE.md</code>'s Behat trap, live.</b> It is rendered
-    <b>after</b> the kebab in the DOM (<code>plans.mustache:440-445</code>, with the comment at
+    <b>after</b> the kebab in the DOM (<code>plans.mustache:466-471</code>, with the comment at
     <code>:437-439</code>) because its <code>aria-label</code> embeds the competency's name and the
     <code>"button"</code> selector takes the <b>first hit in document order</b> — coming first, it would
     steal the real control's click. The CSS <code>order:-1</code> (<code>styles.css:6856</code>) paints it
@@ -574,7 +662,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
   <div class="warn">
     <b>The <code>quiet</code> exception — and why it is the right call.</b> <code>reloadKeepingScroll</code>
-    (<code>plans.js:93-109</code>) <b>is</b> a whole-pane reload (it awaits <code>reloadPane</code> at
+    (<code>plans.js:94-110</code>) <b>is</b> a whole-pane reload (it awaits <code>reloadPane</code> at
     <code>:102</code>, capturing <code>scrollTop</code> before and restoring it after), but it passes
     <code>{quiet: true}</code> — so it <b>suppresses</b> the blanket on purpose: a whole-pane blanket
     would destroy the scroll preservation that function exists to give. It is the <b>only</b> caller of
