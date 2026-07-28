@@ -35,9 +35,12 @@ import Ajax from 'core/ajax';
 import Modal from 'core/modal';
 import ModalEvents from 'core/modal_events';
 import ModalForm from 'core_form/modalform';
+import ModalSaveCancel from 'core/modal_save_cancel';
 import Templates from 'core/templates';
 import {getString} from 'core/str';
+import {flashRow} from 'local_dimensions/central/flash';
 import {notifyError} from 'local_dimensions/central/errors';
+import {reloadPane} from 'local_dimensions/central/tabs';
 import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
 import {makeSpinner, triggerDownload} from 'local_dimensions/central/download';
 import * as ModalRefresh from 'local_dimensions/central/modal_refresh';
@@ -51,6 +54,12 @@ const SELECTORS = {
     download: '[data-action="download"]',
     loader: '[data-region="export-loader"]',
     groupToggle: '[data-action="toggle-group"]',
+    preview: '[data-region="import-preview"]',
+    row: '[data-region="import-row"]',
+    itemCheck: '[data-region="item-check"]',
+    linkCheck: '[data-region="link-check"]',
+    link: '[data-region="import-link"]',
+    remedy: '[data-region="remedy"]',
 };
 
 /**
@@ -213,17 +222,117 @@ const toggleGroup = (button) => {
 };
 
 /**
+ * Read the operator's choices off the rendered rows.
+ *
+ * Only choices travel: an item key, the verdict and fingerprint the row was drawn with, the
+ * chosen remedy and the ticked competency keys. No ids, no field values — the server re-derives
+ * everything else from the file and the database.
+ *
+ * @param {HTMLElement} body The modal body.
+ * @return {Array} One selection per ticked row.
+ */
+const collectSelections = (body) => {
+    const selections = [];
+    body.querySelectorAll(SELECTORS.row).forEach((row) => {
+        const check = row.querySelector(SELECTORS.itemCheck);
+        if (!check || !check.checked) {
+            return;
+        }
+        const remedy = row.querySelector(`${SELECTORS.remedy}:checked`);
+        const links = [];
+        row.querySelectorAll(SELECTORS.link).forEach((link) => {
+            const linkcheck = link.querySelector(SELECTORS.linkCheck);
+            if (linkcheck && linkcheck.checked) {
+                links.push(link.dataset.itemkey);
+            }
+        });
+        selections.push({
+            itemkey: row.dataset.itemkey,
+            verdict: row.dataset.verdict,
+            fingerprint: row.dataset.fingerprint,
+            remedy: remedy ? remedy.value : 'none',
+            links: links,
+        });
+    });
+    return selections;
+};
+
+/**
+ * Repaint the rows the apply touched, flashing each so the change is visible where the operator
+ * is looking, and report the run.
+ *
+ * @param {HTMLElement} body The modal body.
+ * @param {Object} response The apply web service response.
+ * @return {Promise<void>}
+ */
+const paintResults = async(body, response) => {
+    await Promise.all(response.results.map(async(result) => {
+        const selector = `${SELECTORS.row}[data-itemkey="${result.itemkey}"]`;
+        const row = body.querySelector(selector);
+        if (!row || !result.html) {
+            return;
+        }
+        // Through core's own DOM replacement rather than innerHTML: the markup is server-rendered
+        // Mustache, and this is the path that also runs any JS a template ships with.
+        await Templates.replaceNode(row, result.html, '');
+        flashRow(body.querySelector(selector));
+    }));
+    const written = response.counts.created + response.counts.updated;
+    addToast(
+        await getString('central_plans_import_applied', 'local_dimensions', {
+            written: written,
+            skipped: response.counts.skipped + response.counts.changed + response.counts.gone,
+            failed: response.counts.failed,
+        }),
+        {type: response.counts.failed > 0 ? 'warning' : 'success'}
+    );
+};
+
+/**
+ * Apply the ticked rows.
+ *
+ * @param {Modal} modal The preview modal.
+ * @param {Object} settings The draft handle and parse settings.
+ * @param {HTMLElement} pane The tab pane, reloaded once something was written.
+ * @return {Promise<void>}
+ */
+const applySelections = async(modal, settings, pane) => {
+    const body = modal.getBody()[0];
+    const selections = collectSelections(body);
+    if (!selections.length) {
+        addToast(await getString('central_plans_import_nothingticked', 'local_dimensions'), {type: 'warning'});
+        return;
+    }
+    modal.setButtonDisabled('save', true);
+    try {
+        const response = await Ajax.call([{
+            methodname: 'local_dimensions_apply_import_templates',
+            args: {...settings, selections: selections},
+        }])[0];
+        await paintResults(body, response);
+        if (response.counts.created + response.counts.updated > 0 && pane) {
+            await reloadPane(pane, undefined, {quiet: true});
+        }
+    } finally {
+        modal.setButtonDisabled('save', false);
+    }
+};
+
+/**
  * Open the preview modal for an uploaded file.
  *
+ * @param {HTMLElement} pane The tab pane, reloaded after a successful apply.
  * @param {Object} settings The draft handle and parse settings the upload form returned.
  * @return {Promise<void>}
  */
-const openPreviewModal = async(settings) => {
-    const [title, loading] = await Promise.all([
+const openPreviewModal = async(pane, settings) => {
+    const [title, savelabel, loading] = await Promise.all([
         getString('central_plans_import_preview_title', 'local_dimensions'),
+        getString('central_plans_import_apply', 'local_dimensions'),
         makeLoadingBody('central_plans_import_loading'),
     ]);
-    const modal = await Modal.create({title: title, body: loading.outerHTML, large: true});
+    const modal = await ModalSaveCancel.create({title: title, body: loading.outerHTML, large: true});
+    modal.setSaveButtonText(savelabel);
     modal.setRemoveOnClose(true);
     modal.getRoot().on(ModalEvents.shown, () => {
         const dialog = modal.getRoot()[0].querySelector('.modal-dialog');
@@ -233,6 +342,11 @@ const openPreviewModal = async(settings) => {
     modal.getRoot().on('click', SELECTORS.groupToggle, (event) => {
         event.preventDefault();
         toggleGroup(event.target.closest(SELECTORS.groupToggle));
+    });
+    modal.getRoot().on(ModalEvents.save, (event) => {
+        // The modal stays open: the outcomes are painted onto the rows the operator was reading.
+        event.preventDefault();
+        applySelections(modal, settings, pane).catch(notifyError);
     });
     modal.show();
 };
@@ -244,10 +358,11 @@ const openPreviewModal = async(settings) => {
  * second modal while Bootstrap is still tearing down the first races its body-class cleanup and
  * can leave the page unscrollable.
  *
+ * @param {HTMLElement} pane The tab pane, reloaded after a successful apply.
  * @param {HTMLElement} region The plans region (carries the hub context id).
  * @return {Promise<void>}
  */
-export const openImportModal = async(region) => {
+export const openImportModal = async(pane, region) => {
     let uploaded = null;
     const form = new ModalForm({
         formClass: IMPORT_FORM_CLASS,
@@ -264,7 +379,7 @@ export const openImportModal = async(region) => {
             }
             const settings = uploaded;
             uploaded = null;
-            openPreviewModal(settings).catch(notifyError);
+            openPreviewModal(pane, settings).catch(notifyError);
         });
     });
     form.show();

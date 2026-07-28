@@ -150,7 +150,7 @@ class template_import_analyser {
         foreach (($this->parsed['templates'] ?? []) as $index => $row) {
             $itemkey = 't' . $index;
             $items[$itemkey] = $this->label_item(
-                $this->analyse_template($itemkey, $row, $grouped['bykey'][$index] ?? [])
+                $this->analyse_template($itemkey, (int) $index, $row, $grouped['bykey'][$index] ?? [])
             );
         }
         foreach ($grouped['orphans'] as $offset => $link) {
@@ -248,11 +248,13 @@ class template_import_analyser {
      * Project one template row and its links.
      *
      * @param string $itemkey The item key (t<n>).
+     * @param int $index The row's index in the parsed template list, which the importer reads
+     *     back to find the source row without having to parse the item key.
      * @param \stdClass $row The parsed template row.
      * @param array $linkrows The parsed link rows claimed by this template.
      * @return array
      */
-    protected function analyse_template(string $itemkey, \stdClass $row, array $linkrows): array {
+    protected function analyse_template(string $itemkey, int $index, \stdClass $row, array $linkrows): array {
         $shortname = (string) $row->shortname;
         $duedate = $row->duedate === null ? null : template_csv_serializer::parse_duedate((string) $row->duedate);
         $cf = (array) $row->cf;
@@ -262,11 +264,13 @@ class template_import_analyser {
 
         $item = [
             'itemkey' => $itemkey,
+            'rowindex' => $index,
             'rownumber' => (int) $row->rownumber,
             'shortname' => $shortname,
             'templateidnumber' => (string) $row->templateidnumber,
             'sourcecontext' => (string) $row->sourcecontext,
             'matchedid' => (int) $match['id'],
+            'hascustomfielddata' => $this->has_customfield_data((int) $match['id']),
             'matchconfidence' => (string) $match['confidence'],
             'verdict' => template_import_verdict::VERDICT_CREATE,
             'reason' => template_import_verdict::REASON_NONE,
@@ -600,6 +604,35 @@ class template_import_analyser {
             $result[(int) $record->id] = (int) $record->contextid;
         }
         return $result;
+    }
+
+    /**
+     * Whether a template already carries any of this plugin's lp-area custom-field values.
+     *
+     * The importer passes this to the handler as its "is new instance" flag, so the audit event
+     * says which it was. Same category join as the identity lookup, for the same reason.
+     *
+     * @param int $templateid The template id, or 0 for a row that matches nothing.
+     * @return bool
+     */
+    protected function has_customfield_data(int $templateid): bool {
+        global $DB;
+
+        if ($templateid <= 0) {
+            return false;
+        }
+        $sql = "SELECT COUNT(d.id)
+                  FROM {customfield_data} d
+                  JOIN {customfield_field} f ON f.id = d.fieldid
+                  JOIN {customfield_category} c ON c.id = f.categoryid
+                 WHERE c.component = :component
+                   AND c.area = :area
+                   AND d.instanceid = :instanceid";
+        return $DB->count_records_sql($sql, [
+            'component' => 'local_dimensions',
+            'area' => helper::AREA_LP,
+            'instanceid' => $templateid,
+        ]) > 0;
     }
 
     /**
@@ -1103,11 +1136,13 @@ class template_import_analyser {
     protected function orphan_item(string $itemkey, \stdClass $row): array {
         $item = [
             'itemkey' => $itemkey,
+            'rowindex' => -1,
             'rownumber' => (int) $row->rownumber,
             'shortname' => (string) $row->parentshortname,
             'templateidnumber' => (string) $row->parentidnumber,
             'sourcecontext' => '',
             'matchedid' => 0,
+            'hascustomfielddata' => false,
             'matchconfidence' => template_import_verdict::CONFIDENCE_NONE,
             'verdict' => template_import_verdict::VERDICT_ORPHANLINK,
             'reason' => template_import_verdict::REASON_NOPARENT,

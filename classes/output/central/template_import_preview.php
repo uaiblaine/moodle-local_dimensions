@@ -94,7 +94,7 @@ class template_import_preview implements renderable, templatable {
                     break;
                 }
                 $shown++;
-                $rows[] = $this->export_row($item);
+                $rows[] = self::export_row($item);
             }
             if (empty($rows)) {
                 continue;
@@ -173,15 +173,20 @@ class template_import_preview implements renderable, templatable {
     /**
      * One item, as the row partial reads it.
      *
+     * Public and static because the apply step repaints single rows with it, from a projection
+     * it built itself: the row is the repaint unit, so its context must be buildable without a
+     * whole preview around it.
+     *
      * @param array $item The projected item.
+     * @param string $outcome An apply outcome to badge onto the row, or '' for the preview.
      * @return array
      */
-    protected function export_row(array $item): array {
+    public static function export_row(array $item, string $outcome = ''): array {
         $links = [];
         foreach ($item['links'] as $link) {
             $links[] = [
                 'itemkey' => $link['itemkey'],
-                'name' => $this->describe_competency($link),
+                'name' => self::describe_competency($link),
                 'status' => $link['status'],
                 'statuslabel' => $link['statuslabel'],
                 'statusbadge' => $link['statusbadge'],
@@ -213,9 +218,13 @@ class template_import_preview implements renderable, templatable {
             'preselected' => (bool) $item['preselected'],
             'checkboxid' => 'ld-tplimp-' . $item['itemkey'],
             'selectlabel' => get_string('central_plans_import_select', 'local_dimensions', $item['shortname']),
+            'hasoutcome' => $outcome !== '',
+            'outcome' => $outcome,
+            'outcomelabel' => $outcome === '' ? '' : template_import_verdict::outcome_label($outcome),
+            'outcomebadge' => $outcome === '' ? '' : template_import_verdict::outcome_badge($outcome),
             'diff' => $item['diff'],
             'hasdiff' => !empty($item['diff']),
-            'remedies' => $this->export_remedies($item),
+            'remedies' => self::export_remedies($item),
             'hasremedies' => !empty($item['remedies']),
             'links' => $links,
             'haslinks' => !empty($links),
@@ -237,7 +246,7 @@ class template_import_preview implements renderable, templatable {
      * @param array $item The projected item.
      * @return array
      */
-    protected function export_remedies(array $item): array {
+    protected static function export_remedies(array $item): array {
         $remedies = [];
         foreach ($item['remedies'] as $index => $remedy) {
             $remedies[] = [
@@ -257,7 +266,7 @@ class template_import_preview implements renderable, templatable {
      * @param array $link The projected link.
      * @return string
      */
-    protected function describe_competency(array $link): string {
+    protected static function describe_competency(array $link): string {
         $name = $link['competencyshortname'] !== '' ? $link['competencyshortname'] : $link['competencyidnumber'];
         if ($name === '') {
             $name = $link['frameworkidnumber'];

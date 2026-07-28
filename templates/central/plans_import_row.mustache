@@ -30,6 +30,7 @@
     * shortname (string) · templateidnumber (string)
     * hasreason (bool) · reasonlabel (string) · hasdetail (bool) · detail (string)
     * selectable (bool) · preselected (bool) · checkboxid (string) · selectlabel (string)
+    * hasoutcome (bool) · outcomelabel (string) · outcomebadge (string) · set only on a repaint
     * hasdiff (bool) · diff (array) {field, from, to}
     * hasremedies (bool) · remedies (array) {remedy, label, selected, name, id}
     * haslinks (bool) · links (array) {itemkey, name, statuslabel, statusbadge, confidencelabel,
@@ -55,6 +56,9 @@
         "preselected": true,
         "checkboxid": "ld-tplimp-t0",
         "selectlabel": "Select Induction plan",
+        "hasoutcome": true,
+        "outcomelabel": "Updated",
+        "outcomebadge": "bg-success",
         "hasdiff": true,
         "diff": [{"field": "shortname", "from": "Induction", "to": "Induction plan"}],
         "hasremedies": false,
@@ -81,7 +85,9 @@
         <span class="local-dimensions-tplimport-name">{{shortname}}</span>
         {{#templateidnumber}}<span class="local-dimensions-tplimport-id">{{templateidnumber}}</span>{{/templateidnumber}}
         <span class="local-dimensions-tplimport-rownum">{{rownumberlabel}}</span>
-        <span class="local-dimensions-tplimport-outcome" data-region="outcome"></span>
+        <span class="local-dimensions-tplimport-outcome" data-region="outcome">
+            {{#hasoutcome}}<span class="badge {{outcomebadge}}">{{outcomelabel}}</span>{{/hasoutcome}}
+        </span>
     </div>
 
     {{#hasreason}}
