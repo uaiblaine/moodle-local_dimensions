@@ -1,38 +1,29 @@
-<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Related content" subtitle="as-is: scroller rendered outside the tabs │ to-be: the leading tab pane + access states (enrol / locked / single activity / single section) + a footer link to the tracker" -->
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Related content" subtitle="The leading tab pane: course cards with a decisive outcome badge, an activities drawer, access states (enrol / locked / single activity / single section) and a footer link to the tracker" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
-   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
-   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
-   by token values alone. See tokens.html / token-migration.md.
+   The token values on .kit are the Moodle DS values the shipped CSS carries;
+   markup uses var(--lk-*) so a value change lands in one place.
+   See tokens.html / token-migration.md.
    ============================================================================ */
 .kit{
   --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
   --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
-  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
-  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
-  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
-  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
-  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
-  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
-  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
   --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
   --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
 }
 .kit *{box-sizing:border-box;}
-.panel.moodle{
-  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
-  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
-  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
-  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
-  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
-  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
-  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
-}
-.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
-.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.screens{max-width:1100px;margin:0 auto;}
+.panel{border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
 .plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
 .pdot{width:8px;height:8px;border-radius:50%;flex:none;}
 .idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
@@ -41,80 +32,47 @@
 .lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
 .divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
 .note{font-size:10px;color:#8a8980;padding:2px 20px;}
+.pend{margin:14px 20px 4px;padding:10px 12px;border:1px dashed #c9a3a3;border-radius:8px;background:var(--lk-surface);font-size:11px;color:var(--lk-text-2);}
+.pend b{color:#a3552d;}
 .ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
 
-/* ---- linked-courses section (accordion.js renderCourseCardsScrollable ~1619; styles.css 1488-1672, 2393-2497) ---- */
-.crs-sec{background:var(--lk-pill-platter);padding:1.25rem;margin:0;} /* .local-dimensions-courses-section — bg #f1f3f4 platter (2492) */
-.crs-title{display:flex;align-items:center;gap:.5rem;font-size:.9375rem;font-weight:600;color:var(--lk-text);margin:0 0 .75rem;line-height:1.2;} /* 1488 */
-.crs-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--lk-surface);color:var(--lk-pill-text);border-radius:999px;font-size:.7rem;font-weight:600;} /* 1500 — text #5f6368 */
-/* scroll wrapper: 3.7rem bottom pad reserves the control-pill lane (2393) */
-.crs-wrap{position:relative;width:100%;padding-bottom:3.7rem;}
-.crs-scroll{display:flex;gap:1rem;overflow-x:hidden;padding:.25rem 0;} /* real: overflow-x:auto + scroll-snap + grab (2404) — clipped here */
-/* card (1570) + horizontal-scroll sizing (2431) */
-.crs-card{display:flex;flex-direction:column;flex-shrink:0;min-width:260px;max-width:280px;background:var(--lk-surface);border-radius:.75rem;overflow:hidden;border:none;box-shadow:0 4px 6px -1px rgb(0 0 0 / 10%),0 2px 4px -2px rgb(0 0 0 / 10%);}
-.crs-img{height:128px;overflow:hidden;background:var(--lk-line);} /* 1590 — bg #e9ecef behind lazy img */
-.crs-img img{width:100%;height:100%;object-fit:cover;display:block;}
-.crs-ph{display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--lk-accent) 0%,var(--lk-accent-grad-end) 100%);} /* 1602 — MIGRATES #667eea→#764ba2 */
-.crs-body{padding:1rem;flex:1;display:flex;flex-direction:column;} /* 1613 */
-.crs-name{font-size:.9375rem;font-weight:600;color:var(--lk-text);margin:0 0 .5rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;} /* 1620 — 3-line clamp */
-.crs-prog{display:flex;align-items:center;gap:.5rem;margin-top:auto;margin-bottom:.75rem;} /* 1634 */
-.crs-track{flex-grow:1;height:8px;background:var(--lk-line);border-radius:4px;overflow:hidden;} /* 1642 — bg #e9ecef */
-.crs-fill{height:100%;background:var(--lk-success);border-radius:4px;} /* 1650 — MIGRATES #28a745→#198754 */
-.crs-pct{font-size:.75rem;color:var(--lk-muted);font-weight:500;min-width:2rem;text-align:right;} /* 1657 */
-/* fa-check-circle carries JS class .local-dimensions-course-check, which has NO CSS rule
-   (the styled .local-dimensions-course-progress-check #198754 at 1250 is a different tracker
-   class) → the icon inherits body colour. Rendered here in --lk-text to match reality. */
-.crs-check{width:.95rem;height:.95rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--lk-text);}
-/* Access button = core Boost .btn.btn-secondary (theme-driven, identical both panels); plugin adds full-width (1666) */
-.crs-btn{display:block;width:100%;text-align:center;font-size:.8125rem;font-weight:500;padding:.375rem .75rem;border-radius:.375rem;text-decoration:none;background:#e9ecef;color:#212529;border:1px solid #dee2e6;}
-/* scroll control pill (2439) + arrow buttons (2457) */
-.crs-ctrls{position:absolute;right:.5rem;bottom:.25rem;display:inline-flex;align-items:center;border-radius:999px;overflow:hidden;background:var(--lk-surface);box-shadow:rgb(50 50 93 / 25%) 0 2px 5px -1px,rgb(0 0 0 / 30%) 0 1px 3px -1px;z-index:3;}
-.crs-nav{display:flex;align-items:center;justify-content:center;width:42px;height:42px;border:none;border-radius:0;background:transparent;color:#1d2125;cursor:pointer;} /* 2457 */
-.crs-nav + .crs-nav{border-left:1px solid rgb(17 24 39 / 8%);} /* 2452 */
-.crs-nav.disabled{opacity:.45;color:#8da1b6;pointer-events:none;} /* 2481 */
-.crs-nav.kbd{outline:2px solid var(--lk-accent);outline-offset:-2px;} /* :focus — var(--primary,#667eea) fallback → --lk-accent (2476) */
-.crs-nav .ic{width:.875rem;height:.875rem;} /* .fa 0.875rem (2487) */
-/* ≤2 courses → .local-dimensions-courses-no-scroll: wrap, no controls (2500) */
-.crs-noscroll{flex-wrap:wrap;overflow-x:visible;}
-.crs-noscroll .crs-card{flex:1 1 0;min-width:200px;max-width:calc(50% - .5rem);}
-
-/* ==== to-be: keep the course-card grid; add a decisive outcome badge + expandable activities ==== */
 /* tab strip (shape only; the strip itself is owned by ovw-detail-tabs.html) */
 .tabnav{display:flex;border-bottom:1px solid var(--lk-line);padding:0 1rem;margin:10px 12px 0;min-width:0;}
 .tab{display:inline-flex;align-items:center;gap:.375rem;padding:.625rem 1rem;border:none;background:transparent;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:.8125rem;font-weight:500;color:var(--lk-muted);cursor:pointer;white-space:nowrap;line-height:1.2;}
 .tab.on{color:var(--lk-text);border-bottom-color:var(--lk-accent);font-weight:600;}
-.tabn{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--lk-counter-bg);color:var(--lk-pill-text);font-size:.66rem;font-weight:700;}
+.tabn{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--lk-counter-bg);color:var(--lk-pill-text);font-size:.6875rem;font-weight:700;}
 .tab.on .tabn{background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);}
-.co-sec{padding:2px 20px 8px;}
-.co-head{display:flex;align-items:center;gap:.5rem;margin:6px 0 .7rem;}
-.co-title{font-size:.9375rem;font-weight:600;color:var(--lk-text);}
-.co-title b{font-weight:700;}
-.co-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--lk-surface-2);color:var(--lk-muted);border-radius:999px;font-size:.72rem;font-weight:700;}
-.co-scroll{display:flex;gap:1rem;overflow-x:auto;padding:.25rem 0 .5rem;align-items:flex-start;scrollbar-width:none;-ms-overflow-style:none;}
+
+/* ---- Related-content pane (accordion.js renderCourseCardsScrollable) ----
+   The pane body is one .local-dimensions-courses-section: a grey platter with
+   1.25rem of padding, holding the header pill and the horizontal card track. */
+.co-sec{background:var(--lk-pill-platter);padding:1.25rem;margin:12px;border-radius:.5rem;}
+.co-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;}
+/* nav pill — in the header, so it never jumps when a card's drawer expands */
+.co-nav{display:inline-flex;align-items:center;border-radius:999px;overflow:hidden;background:var(--lk-surface);border:1px solid var(--lk-line-2);box-shadow:0 1px 2px rgb(0 0 0 / 8%);margin-left:auto;}
+.co-nav button{display:flex;align-items:center;justify-content:center;width:34px;height:30px;border:none;background:transparent;color:#1d2125;cursor:pointer;}
+.co-nav button + button{border-left:1px solid rgb(17 24 39 / 8%);}
+.co-nav button.disabled{opacity:.45;color:#8da1b6;pointer-events:none;}
+.co-nav svg{width:.875rem;height:.875rem;flex:none;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+/* track: natural card heights, hidden scrollbar, grab cursor */
+.co-scroll{display:flex;align-items:flex-start;gap:1rem;overflow-x:auto;padding:.25rem 0;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;}
 .co-scroll::-webkit-scrollbar{display:none;}
-/* horizontal-nav pill (OVW-CRS-NAV kept) — moved into the header so it never jumps when a card expands */
-.co-nav{display:inline-flex;align-items:center;border-radius:999px;overflow:hidden;background:var(--lk-surface);border:1px solid var(--lk-line-2);box-shadow:0 1px 2px rgb(0 0 0 / 8%);}
-.co-nav button{display:flex;align-items:center;justify-content:center;width:30px;height:26px;border:none;background:transparent;color:var(--lk-text-2);cursor:pointer;}
-.co-nav button + button{border-left:1px solid var(--lk-line-2);}
-.co-nav button.disabled{opacity:.4;color:var(--lk-muted);pointer-events:none;}
-.co-nav svg{width:.8rem;height:.8rem;flex:none;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
-.co-card{display:flex;flex-direction:column;flex-shrink:0;width:255px;background:var(--lk-surface);border-radius:.75rem;overflow:hidden;border:1px solid var(--lk-line);box-shadow:0 4px 6px -1px rgb(0 0 0 / 8%);}
-.co-link{text-decoration:none;color:inherit;display:block;}
-.co-img{height:104px;overflow:hidden;background:var(--lk-line);}
+.co-card{display:flex;flex-direction:column;flex-shrink:0;width:260px;background:var(--lk-surface);border-radius:.75rem;overflow:hidden;border:none;box-shadow:0 4px 6px -1px rgb(0 0 0 / 10%),0 2px 4px -2px rgb(0 0 0 / 10%);}
+.co-link{display:block;color:inherit;text-decoration:none;}
+.co-img{height:128px;overflow:hidden;background:var(--lk-line);}
 .co-img img{width:100%;height:100%;object-fit:cover;display:block;}
-.co-ph{display:flex;align-items:center;justify-content:center;height:104px;font-size:1.4rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--lk-accent) 0%,var(--lk-accent-grad-end) 100%);}
-.co-body{padding:.75rem .8rem;display:flex;flex-direction:column;gap:.5rem;}
-.co-name{font-size:.9rem;font-weight:600;color:var(--lk-text);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.co-prog{display:flex;align-items:center;gap:.5rem;}
-.co-track{flex-grow:1;height:7px;background:var(--lk-line);border-radius:4px;overflow:hidden;}
-.co-fill{height:100%;background:#198754;border-radius:4px;}
-.co-pct{font-size:.72rem;color:var(--lk-muted);font-weight:600;min-width:2rem;text-align:right;}
-.co-check{width:1rem;height:1rem;flex:none;stroke:#198754;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
-/* decisive outcome badge (only Complete/Recommend surface strongly; Evidence is subtle; None shows nothing) */
-.co-badge{display:inline-flex;align-items:center;gap:.3rem;align-self:flex-start;padding:.2rem .55rem;border-radius:.4rem;font-size:.71rem;font-weight:700;background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);border:1px solid rgba(15,108,191,.28);}
-.co-badge svg{width:.85rem;height:.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.co-badge.evidence{background:var(--lk-surface-2);color:var(--lk-muted);border-color:var(--lk-line-2);font-weight:600;}
-/* activities disclosure */
+.co-ph{display:flex;align-items:center;justify-content:center;height:128px;font-size:1.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--lk-accent) 0%,var(--lk-accent-grad-end) 100%);}
+.co-body{padding:1rem;flex:1;display:flex;flex-direction:column;}
+.co-name{font-size:.9375rem;font-weight:600;color:var(--lk-text);margin:0 0 .5rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.co-prog{display:flex;align-items:center;gap:.5rem;margin-top:auto;margin-bottom:.75rem;}
+.co-track{flex-grow:1;height:8px;background:var(--lk-line);border-radius:4px;overflow:hidden;}
+.co-fill{height:100%;background:var(--lk-success);border-radius:4px;}
+.co-pct{font-size:.75rem;color:var(--lk-muted);font-weight:500;min-width:2rem;text-align:right;}
+.co-check{width:1rem;height:1rem;flex:none;stroke:var(--lk-success);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+/* decisive outcome badge: only Complete and Recommend render one */
+.co-badge{display:inline-flex;align-items:center;gap:.3rem;align-self:flex-start;margin-bottom:.5rem;padding:.2rem .55rem;border-radius:.4rem;font-size:.71rem;font-weight:700;background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);border:1px solid rgba(15,108,191,.28);}
+.co-badge svg{width:.7rem;height:.7rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* activities disclosure — a sibling of the card link, never nested inside it */
 .co-toggle{display:flex;align-items:center;gap:.4rem;width:100%;padding:.5rem .8rem;border:none;border-top:1px solid var(--lk-line);background:var(--lk-surface-2);color:var(--lk-text-2);font-size:.78rem;font-weight:600;cursor:pointer;text-align:left;}
 .co-toggle .chev{margin-left:auto;transition:transform 150ms ease;}
 .co-toggle svg{width:.85rem;height:.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -122,79 +80,81 @@
 .co-acts{list-style:none;margin:0;padding:.3rem .5rem .5rem;display:flex;flex-direction:column;gap:.15rem;background:var(--lk-surface-2);}
 .co-act{display:flex;align-items:center;gap:.5rem;padding:.4rem .45rem;border-radius:.45rem;text-decoration:none;color:var(--lk-text);background:var(--lk-surface);}
 .co-act:hover{background:var(--lk-counter-active-bg);}
+.co-act.locked{color:var(--lk-muted);}
 .co-act-ico{flex:none;display:inline-flex;color:var(--lk-muted);}
 .co-act-ico svg{width:1rem;height:1rem;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .co-act-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:.12rem;}
 .co-act-name{font-size:.8rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.co-act-badge{align-self:flex-start;display:inline-flex;align-items:center;gap:.22rem;font-size:.66rem;font-weight:700;color:var(--lk-pill-active-fg);}
-.co-act-badge svg{width:.72rem;height:.72rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* inside a row the badge loses its border and fill and keeps only the accent text */
+.co-act .co-badge{margin-bottom:0;padding:0;border:none;background:none;font-size:.66rem;}
 .co-act-state{flex:none;display:inline-flex;}
 .co-act-state svg{width:1rem;height:1rem;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .co-act-state .done{stroke:#198754;stroke-width:2.4;}
-.co-act-state .todo{stroke:var(--lk-muted);stroke-width:2;stroke-dasharray:2.5 2.5;}
-.co-empty{display:flex;align-items:center;gap:.55rem;padding:.7rem .1rem;color:var(--lk-muted);font-size:.83rem;}
-.co-empty svg{width:1.05rem;height:1.05rem;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.co-act-state .todo{stroke:#adb5bd;stroke-width:2;}
 
-/* ==== to-be: access states — the state strip replaces the progress row ====
+/* ---- access states: the state strip replaces the progress row ----
    A progress bar says nothing to a learner who cannot open the course, and a
    percentage is a lie on a course with a single trackable activity. So the one
-   row that is meaningless in each case is the one that gets replaced — the
-   image, the name, the outcome badge and the activities drawer all survive. */
-.co-state{display:flex;align-items:center;gap:.4rem;padding:.35rem .5rem;border-radius:.4rem;font-size:.74rem;font-weight:600;line-height:1.25;}
+   row that is meaningless in each case is the one that is replaced — the image,
+   the name, the outcome badge and the activities drawer all survive. */
+.co-state{display:flex;align-items:center;gap:.4rem;padding:.35rem .5rem;border-radius:.4rem;font-size:.8125rem;font-weight:600;line-height:1.25;}
 .co-state svg{width:.9rem;height:.9rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .co-state.locked{background:var(--lk-surface-2);color:var(--lk-muted);border:1px solid var(--lk-line);}
 .co-state.enrol{background:var(--lk-accent);color:#fff;justify-content:center;}
 .co-when{display:inline-flex;align-items:center;gap:.3rem;align-self:flex-start;padding:.15rem .5rem;border-radius:999px;
-  background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);font-size:.7rem;font-weight:600;}
+  background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);font-size:.75rem;font-weight:600;}
 .co-when svg{width:.75rem;height:.75rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.co-hint{font-size:.68rem;color:var(--lk-muted);text-align:center;}
+.co-hint{font-size:.75rem;color:var(--lk-muted);text-align:center;}
 /* Dimmed artwork: the state reads at a glance without a veil over the whole card. */
-.co-img.dim img{filter:grayscale(.55);opacity:.62;}
+.co-img.dim img{filter:grayscale(55%);opacity:.62;}
 .co-ph.dim{opacity:.5;}
-/* Single trackable activity or single section — the activity or the section's own ring,
-   in place of the bar. A centred column, the same shape the tracker's compact bodies use,
-   so a learner moving between the two views reads one thing. The auto vertical margins
-   centre it in the slack the card's floor leaves below the name (the image cards' progress
-   row uses margin-top:auto for the mirror reason, to sit at the bottom). The call to action
-   sits on its own line: sharing one with the name would truncate the name at the card's
-   255px long before it needed to be. */
+/* Single trackable activity or single section — the activity's own mark or the
+   section's ring, in place of the bar. A centred column, the same shape the
+   tracker's compact bodies use, so a learner moving between the two views reads
+   one thing. The auto vertical margins centre it in the slack the card's floor
+   leaves below the name (the image cards' progress row uses margin-top:auto for
+   the mirror reason, to sit at the bottom). The call to action sits on its own
+   line: sharing one with the name would truncate the name long before it needed
+   to be. */
 .co-single{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;margin:auto 0;text-align:center;}
-/* One 56px box for the completion icon and one for the ring, so the two compact modes put
-   their mark at the same place and the same size — the icon's circle (r=9 + a 2-unit stroke
-   in a 24-unit viewBox) and the ring's (r=12 + 3 in 32) then paint the same ~47px diameter.
-   In the plugin the icon is a Font Awesome glyph rather than an SVG, so styles.css sizes it
-   by font-size (3.5rem) to land on that same diameter. */
-.co-single-mark{flex:none;display:flex;align-items:center;justify-content:center;width:56px;height:56px;}
-.co-single-mark svg{width:56px;height:56px;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+/* One 56px box for the completion icon and one for the ring, so the two compact
+   modes put their mark at the same place and the same size. In the plugin the
+   icon is a Font Awesome glyph, so styles.css sizes it by font-size (3.5rem) to
+   land on the ~47px diameter the ring paints (r=12 + a 3-unit stroke in a
+   32-unit viewBox, scaled 56/32). */
+.co-single-mark{flex:none;display:flex;align-items:center;justify-content:center;width:56px;height:56px;color:var(--lk-muted);}
+.co-single-mark svg{width:47px;height:47px;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .co-single-mark .done{stroke:#198754;stroke-width:2.4;}
-.co-single-mark .todo{stroke:var(--lk-muted);stroke-width:2;stroke-dasharray:2.5 2.5;}
-.co-single-name{max-width:100%;font-size:.78rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.co-single-state{font-size:.7rem;color:var(--lk-muted);flex:none;}
+.co-single-mark .todo{stroke:currentColor;stroke-width:2;}
+.co-single-name{max-width:100%;font-size:.8125rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.co-single-state{font-size:.75rem;color:var(--lk-muted);flex:none;}
 .co-single-state.done{color:#0f5132;font-weight:600;}
-/* Section shape's own marker: the SAME ring the tracker draws, at the same 56px — the
-   timeline's ring component reused (local-dimensions-progress-ring-container + …-lg), so
-   the 32-unit viewBox and r=12 circle are shared and the arc is percentage × 0.754. */
+/* Section shape's own marker: the SAME ring the tracker draws, at the same 56px —
+   the timeline's ring component reused (local-dimensions-progress-ring-container
+   + …-lg), so the 32-unit viewBox and r=12 circle are shared and the arc is
+   percentage × 0.754. */
 .co-single-pct{position:relative;display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:none;}
 .co-single-pct svg{width:56px;height:56px;transform:rotate(-90deg);display:block;}
 .co-single-pct .ring-bg{fill:transparent;stroke:var(--lk-line-2);stroke-width:3;}
 .co-single-pct .ring-fg{fill:transparent;stroke:#198754;stroke-width:3;stroke-linecap:round;}
 .co-single-pct .ring-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1rem;font-weight:700;color:#198754;}
-/* co-go is a REAL link (local-dimensions-course-go), a sibling of co-link rather than
-   nested inside it — the card's second target, see the note below. */
-.co-go{display:inline-flex;align-items:center;gap:.25rem;align-self:flex-start;font-size:.72rem;font-weight:600;color:var(--lk-accent);white-space:nowrap;text-decoration:none;}
+/* co-go is a REAL link (local-dimensions-course-go), a sibling of co-link rather
+   than nested inside it — the card's second target. Its own inset, because the
+   body's padding no longer reaches it. */
+.co-go{display:inline-flex;align-items:center;gap:.25rem;align-self:flex-start;padding:0 .8rem .8rem;font-size:.75rem;font-weight:600;color:var(--lk-accent);white-space:nowrap;text-decoration:none;}
 .co-go:hover{text-decoration:underline;}
 .co-go svg{width:.8rem;height:.8rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-/* Compact modes (activity/section) carry no cover image, so the body starts at the
-   card's top edge instead of under a 104px image slot. Dropping that slot would leave the
-   card visibly shorter than its image-bearing siblings, and the scroller does not stretch
-   them to match — it sets align-items:flex-start so expanding one card's activities drawer
-   cannot stretch the whole row. So the card carries a floor of its own: the artwork height
-   plus the body of an image card whose name fits one line (220px at the real card's 128px
-   artwork; 176px at this kit's 104px). A floor, not a height — a longer name or an open
-   drawer still runs taller. The card link is what grows into it, so the slack lands inside
-   the body, where the centred mark uses it, not as dead space under the call to action. */
+/* Compact modes carry no cover image, so the body starts at the card's top edge.
+   Dropping the 128px artwork would leave the card visibly shorter than its
+   image-bearing siblings, and the track does not stretch them to match — it sets
+   align-items:flex-start so expanding one card's drawer cannot stretch the row.
+   So the card carries a floor of its own: 128px of artwork plus the body of an
+   image card whose name fits one line = 220px (192px below 576px, where the
+   artwork itself drops to 100px). A floor, not a height — a longer name or an
+   open drawer still runs taller. The card link is what grows into it, so the
+   slack lands inside the body, where the centred mark uses it. */
 .co-card.compact .co-body{padding-top:.8rem;}
-.co-card.compact{min-height:176px;}
+.co-card.compact{min-height:220px;}
 .co-card.compact .co-link{display:flex;flex:1;flex-direction:column;}
 /* Blocked mode: the card stops being a link, so it must not look clickable. */
 .co-card.blocked .co-link{cursor:default;}
@@ -202,13 +162,13 @@
    Outlined rather than solid: the cards own the primary actions in this pane. */
 .co-foot{display:flex;justify-content:flex-end;padding:.5rem 0 .1rem;}
 .co-more{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .75rem;border:1px solid var(--lk-line-2);border-radius:.375rem;
-  background:var(--lk-surface);color:var(--lk-text-2);font-size:.78rem;font-weight:600;text-decoration:none;}
+  background:var(--lk-surface);color:var(--lk-text-2);font-size:.8125rem;font-weight:600;text-decoration:none;}
 .co-more:hover{background:var(--lk-surface-2);color:var(--lk-text);}
 .co-more:focus-visible{outline:2px solid var(--lk-focus-ring);outline-offset:2px;}
 .co-more svg{width:.85rem;height:.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
 /* matrix */
-.mx{width:100%;border-collapse:collapse;font-size:11px;background:var(--lk-surface);border-radius:.5rem;overflow:hidden;margin:4px 0 2px;}
+.mx{width:calc(100% - 40px);margin:6px 20px 2px;border-collapse:collapse;font-size:11px;background:var(--lk-surface);border-radius:.5rem;overflow:hidden;}
 .mx th,.mx td{border:1px solid var(--lk-line);padding:5px 7px;text-align:left;vertical-align:top;}
 .mx th{background:var(--lk-surface-2);color:var(--lk-text-2);font-weight:700;font-size:10px;}
 .mx code{font-family:var(--mono);font-size:10px;color:#a3552d;}
@@ -223,119 +183,11 @@
 </style>
 <div class="kit"><div class="screens">
 
-  <!-- ============ AS-IS ============ -->
   <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>Related content — the leading tab pane</div>
 
-    <div class="lk-cap">Competency detail — linked-course scroller (&gt;2 courses) · <span class="idb">OVW-CRS</span></div>
-    <div class="crs-sec">
-      <h2 class="crs-title">Linked courses <span class="crs-badge">3</span></h2>
-      <div class="crs-wrap">
-        <div class="crs-scroll">
-
-          <!-- card 1 — has course image, partial progress -->
-          <div class="crs-card">
-            <div class="crs-img">
-              <img alt="" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='128'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%232f6fb0'/><stop offset='1' stop-color='%235aa0d8'/></linearGradient></defs><rect width='280' height='128' fill='url(%23g)'/><circle cx='210' cy='38' r='22' fill='%23ffffff' opacity='.28'/><rect x='24' y='92' width='150' height='10' rx='5' fill='%23ffffff' opacity='.55'/></svg>">
-            </div>
-            <div class="crs-body">
-              <h3 class="crs-name">Foundations of Academic Writing</h3>
-              <div class="crs-prog">
-                <div class="crs-track"><div class="crs-fill" style="width:65%"></div></div>
-                <span class="crs-pct">65%</span>
-              </div>
-              <a href="#" class="crs-btn">Access</a>
-            </div>
-          </div>
-
-          <!-- card 2 — no image → gradient placeholder + initials; progress 100% → check -->
-          <div class="crs-card">
-            <div class="crs-img crs-ph"><span>DS</span></div>
-            <div class="crs-body">
-              <h3 class="crs-name">Data Structures</h3>
-              <div class="crs-prog">
-                <div class="crs-track"><div class="crs-fill" style="width:100%"></div></div>
-                <span class="crs-pct">100%</span>
-                <svg class="crs-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>
-              </div>
-              <a href="#" class="crs-btn">Access</a>
-            </div>
-          </div>
-
-          <!-- card 3 — clipped by the scroller (demonstrates horizontal overflow) -->
-          <div class="crs-card">
-            <div class="crs-img crs-ph"><span>WA</span></div>
-            <div class="crs-body">
-              <h3 class="crs-name">Web Accessibility Essentials</h3>
-              <div class="crs-prog">
-                <div class="crs-track"><div class="crs-fill" style="width:30%"></div></div>
-                <span class="crs-pct">30%</span>
-              </div>
-              <a href="#" class="crs-btn">Access</a>
-            </div>
-          </div>
-
-        </div>
-        <!-- control pill: prev disabled at scroll start, next enabled -->
-        <div class="crs-ctrls" role="group" aria-label="Linked courses">
-          <button type="button" class="crs-nav disabled" aria-label="Previous"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
-          <button type="button" class="crs-nav" aria-label="Next"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </div>
-    </div>
-    <div class="lk-ids">
-      <span class="idb">OVW-CRS · card = image|initials + progress + Access</span>
-      <span class="idb">OVW-CRS-NAV · prev/next pill + 100% check</span>
-      <span class="idb">DATA · local_dimensions_get_competency_courses (own SQL)</span>
-    </div>
-
-    <div class="divlbl">≤2 courses → no-scroll (wrap, control pill hidden) <span class="idb">OVW-CRS</span></div>
-    <div class="crs-sec">
-      <h2 class="crs-title">Linked courses <span class="crs-badge">2</span></h2>
-      <div class="crs-wrap" style="padding-bottom:0">
-        <div class="crs-scroll crs-noscroll">
-          <div class="crs-card">
-            <div class="crs-img crs-ph"><span>RM</span></div>
-            <div class="crs-body">
-              <h3 class="crs-name">Research Methods</h3>
-              <div class="crs-prog">
-                <div class="crs-track"><div class="crs-fill" style="width:45%"></div></div>
-                <span class="crs-pct">45%</span>
-              </div>
-              <a href="#" class="crs-btn">Access</a>
-            </div>
-          </div>
-          <div class="crs-card">
-            <div class="crs-img crs-ph"><span>ET</span></div>
-            <div class="crs-body">
-              <h3 class="crs-name">Ethics &amp; Practice</h3>
-              <div class="crs-prog">
-                <div class="crs-track"><div class="crs-fill" style="width:80%"></div></div>
-                <span class="crs-pct">80%</span>
-              </div>
-              <a href="#" class="crs-btn">Access</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="divlbl">Nav — keyboard focus on Next (focus ring) <span class="idb">OVW-CRS-NAV</span></div>
-    <div style="padding:6px 20px 2px">
-      <span class="crs-ctrls" style="position:static;display:inline-flex">
-        <button type="button" class="crs-nav" aria-label="Previous"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
-        <button type="button" class="crs-nav kbd" aria-label="Next"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-      </span>
-    </div>
-    <div class="note">Placeholder gradient = <code>#667eea → #764ba2</code>; progress fill green <code>#28a745</code>; focus ring <code>#667eea</code>; section platter <code>#f1f3f4</code>. The check <code>#212529</code> is inherited (no rule on <code>.local-dimensions-course-check</code>).</div>
-  </div>
-
-  <!-- ============ TO-BE ============ -->
-  <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · now a tab · outcome badge · activities expand · access states</div>
-
-    <div class="lk-cap">The scroller is now the leading tab pane · <span class="idb r">OVW-CRS-PANE · to-be</span></div>
-    <div class="tabnav" role="tablist" aria-label="Competency summary">
+    <div class="lk-cap">The scroller is the tab pane · <span class="idb">OVW-CRS-PANE</span> <span class="idb">OVW-CRS</span></div>
+    <div class="tabnav" role="tablist">
       <button type="button" class="tab on" role="tab" aria-selected="true" tabindex="0">Related content <span class="tabn">3</span></button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Description</button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Progress</button>
@@ -343,34 +195,34 @@
     </div>
     <div class="co-sec">
       <div class="co-head">
-        <span class="co-nav" role="group" aria-label="Scroll related content" style="margin-left:auto">
+        <span class="co-nav" role="group" aria-label="Related content">
           <button type="button" class="disabled" aria-label="Previous"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
           <button type="button" aria-label="Next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
         </span>
       </div>
       <div class="co-scroll">
 
-        <!-- Course A: decisive Complete + 2 activities, expanded -->
+        <!-- Course A: decisive Complete + 2 activities, drawer expanded -->
         <div class="co-card">
           <a href="#" class="co-link">
-            <div class="co-img"><img alt="" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='255' height='104'><defs><linearGradient id='g3' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%232f6fb0'/><stop offset='1' stop-color='%235aa0d8'/></linearGradient></defs><rect width='255' height='104' fill='url(%23g3)'/><circle cx='200' cy='32' r='20' fill='%23ffffff' opacity='.28'/><rect x='20' y='78' width='130' height='9' rx='4' fill='%23ffffff' opacity='.55'/></svg>"></div>
+            <div class="co-img"><img alt="" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='128'><defs><linearGradient id='g3' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%232f6fb0'/><stop offset='1' stop-color='%235aa0d8'/></linearGradient></defs><rect width='260' height='128' fill='url(%23g3)'/><circle cx='205' cy='38' r='22' fill='%23ffffff' opacity='.28'/><rect x='22' y='94' width='134' height='9' rx='4' fill='%23ffffff' opacity='.55'/></svg>"></div>
             <div class="co-body">
-              <div class="co-name">Foundations of Academic Writing</div>
+              <h3 class="co-name">Foundations of Academic Writing</h3>
               <span class="co-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.11"/></svg>Completes the competency</span>
               <div class="co-prog"><div class="co-track"><div class="co-fill" style="width:65%"></div></div><span class="co-pct">65%</span></div>
             </div>
           </a>
-          <button type="button" class="co-toggle" aria-expanded="true">
+          <button type="button" class="co-toggle" aria-expanded="true" aria-controls="acts-1">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>2 activities
             <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
           </button>
-          <ul class="co-acts">
-            <li><a href="#" class="co-act">
+          <ul class="co-acts" id="acts-1">
+            <li><a href="#" class="co-act" aria-label="Assignment: Reflective essay">
               <span class="co-act-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg></span>
-              <span class="co-act-main"><span class="co-act-name">Reflective essay</span><span class="co-act-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Send for review</span></span>
+              <span class="co-act-main"><span class="co-act-name">Reflective essay</span><span class="co-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Sends for review</span></span>
               <span class="co-act-state"><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="done" cx="12" cy="12" r="9"/><path class="done" d="m8.5 12 2.5 2.5 4.5-5"/></svg></span>
             </a></li>
-            <li><a href="#" class="co-act">
+            <li><a href="#" class="co-act" aria-label="Forum: Discussion forum">
               <span class="co-act-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
               <span class="co-act-main"><span class="co-act-name">Discussion forum</span></span>
               <span class="co-act-state"><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="todo" cx="12" cy="12" r="9"/></svg></span>
@@ -378,29 +230,28 @@
           </ul>
         </div>
 
-        <!-- Course B: decisive Recommend, 100%, 1 activity, collapsed -->
+        <!-- Course B: decisive Recommend, 100%, 1 activity, drawer collapsed -->
         <div class="co-card">
           <a href="#" class="co-link">
             <div class="co-ph"><span>DS</span></div>
             <div class="co-body">
-              <div class="co-name">Data Structures</div>
+              <h3 class="co-name">Data Structures</h3>
               <span class="co-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Sends for review</span>
               <div class="co-prog"><div class="co-track"><div class="co-fill" style="width:100%"></div></div><span class="co-pct">100%</span><svg class="co-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg></div>
             </div>
           </a>
-          <button type="button" class="co-toggle" aria-expanded="false">
+          <button type="button" class="co-toggle" aria-expanded="false" aria-controls="acts-2">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>1 activity
             <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
           </button>
         </div>
 
-        <!-- Course C: journey Evidence (subtle), no activities; a Do-nothing course would show no badge -->
+        <!-- Course C: no decisive outcome and no linked activities — a plain card -->
         <div class="co-card">
           <a href="#" class="co-link">
             <div class="co-ph"><span>WA</span></div>
             <div class="co-body">
-              <div class="co-name">Web Accessibility Essentials</div>
-              <span class="co-badge evidence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Attach evidence</span>
+              <h3 class="co-name">Web Accessibility Essentials</h3>
               <div class="co-prog"><div class="co-track"><div class="co-fill" style="width:30%"></div></div><span class="co-pct">30%</span></div>
             </div>
           </a>
@@ -412,15 +263,15 @@
       </div>
     </div>
     <div class="lk-ids">
-      <span class="idb r">OVW-CRS-PANE · scroller is the tab pane</span>
-      <span class="idb r">OVW-CRS-MORE · footer link, 3+ courses</span>
+      <span class="idb">OVW-CRS-PANE · the scroller is the tab pane</span>
       <span class="idb">OVW-CRS-OUTCOME · decisive badge from ruleoutcome</span>
       <span class="idb">OVW-CRS-ACT · activities expand from the card</span>
-      <span class="idb">OVW-CRS-NAV · kept — header pill, scrollbar hidden</span>
+      <span class="idb">OVW-CRS-NAV · header pill, native scrollbar hidden</span>
+      <span class="idb">OVW-CRS-MORE · footer link, 3+ courses</span>
     </div>
-    <div class="note">The image-card scroller is <b>kept</b> and now <b>is the tab pane</b>: the section heading is gone (the tab label says it) and the count rides the tab. The outcome badge and the activities drawer are already shipped — a card carries a strong accent badge for <b>Completes the competency</b> / <b>Sends for review</b>, a subtle grey <b>Attach evidence</b> for the journey case, and nothing for "Do nothing" (the default, so most cards stay clean); a course with activities linked to this competency shows an <b>"N activities"</b> disclosure of compact rows, each a link straight to the activity. The <b>prev/next pill is kept</b> in the header so it never jumps when a card expands, still only shown when the cards overflow, Prev disabled at the left edge.</div>
+    <div class="note">The pane has <b>no heading of its own</b> — the tab label names it and the count rides the tab. The whole card is the link to the course; there is no per-card Access button. A card carries a strong accent badge when the link's outcome is <b>Completes the competency</b> or <b>Sends for review</b>, and nothing otherwise. A course whose activities are linked to this competency shows an <b>"N activities"</b> disclosure of compact rows, each a link straight to the activity — the toggle and the list are <b>siblings</b> of the card's anchor, never nested inside it, so no interactive content sits in a link. The prev/next pill lives in the header, so it does not jump when a drawer expands; it is shown only when the cards overflow, with Prev disabled at the left edge.</div>
 
-    <div class="divlbl">The way out to the tracker — from 3 courses up <span class="idb r">OVW-CRS-MORE · to-be</span></div>
+    <div class="divlbl">The way out to the tracker — from 3 courses up <span class="idb">OVW-CRS-MORE</span></div>
     <div class="co-sec">
       <div class="co-scroll" style="pointer-events:none">
         <div class="co-card" style="width:150px"><div class="co-ph" style="height:56px;font-size:.95rem"><span>FA</span></div><div class="co-body" style="padding:.5rem .6rem"><div class="co-name" style="font-size:.8rem">Foundations of Academic Writing</div></div></div>
@@ -438,22 +289,22 @@
         <div class="co-card" style="width:150px"><div class="co-ph" style="height:56px;font-size:.95rem"><span>ET</span></div><div class="co-body" style="padding:.5rem .6rem"><div class="co-name" style="font-size:.8rem">Ethics &amp; Practice</div></div></div>
       </div>
     </div>
-    <div class="note"><b>2 visible courses</b> — no link. With one or two cards the pane already shows everything the tracker would, so the extra hop buys nothing.</div>
+    <div class="note"><b>2 visible courses</b> — no link, and the track also drops into no-scroll mode (the two cards wrap and share the width, controls hidden).</div>
     <div class="lk-ids">
-      <span class="idb r">OVW-CRS-MORE · visibleCourses.length &gt;= 3</span>
+      <span class="idb">OVW-CRS-MORE · courses.length &gt;= 3</span>
       <span class="idb">→ view-competency.php?id={plan}&amp;competencyid={comp}</span>
       <span class="idb">outlined — the cards own the primary actions</span>
     </div>
-    <div class="note">A pane footer, right-aligned under the track: the scroller answers "which courses", this answers "how am I doing in each of them" — per-section progress, locks and dates, which the card can only summarise as one percentage. It is a <b>link</b>, not a button; it navigates. Deliberately outlined rather than solid, so it does not compete with a card's own "Enrol to start". <b>Threshold</b> is a plain count of the courses actually shown, not the condition that reveals the scroll arrows: those also appear with two cards on a narrow screen, and a control that comes and goes on resize is worse than one that is simply predictable. The link needs no <code>noredirect=1</code> — the single-course redirect requires exactly one course to survive the filter, and this link only exists from three up. The destination applies the <b>same</b> enrolment-filter cascade, so it reveals no course this pane was hiding.</div>
+    <div class="note">A pane footer, right-aligned under the track: the scroller answers "which courses", this answers "how am I doing in each of them" — per-section progress, locks and dates, which the card can only summarise as one percentage. It is a <b>link</b>, not a button; it navigates. Deliberately outlined rather than solid, so it does not compete with a card's own "Enrol to start". The <b>threshold</b> is a plain count of the courses actually shown, not the condition that reveals the scroll arrows: those also appear with two cards on a narrow screen, and a control that comes and goes on resize is worse than one that is simply predictable. The link needs no <code>noredirect=1</code> — the single-course redirect requires exactly one course to survive the filter, and this link only exists from three up. The destination applies the <b>same</b> enrolment-filter cascade, so it reveals no course this pane was hiding.</div>
 
-    <div class="divlbl">Self-enrolment open — the lock is an invitation <span class="idb r">OVW-CRS-STATE · to-be</span></div>
+    <div class="divlbl">Self-enrolment open — the lock is an invitation <span class="idb">OVW-CRS-STATE</span></div>
     <div class="co-sec">
       <div class="co-scroll">
         <div class="co-card">
           <a href="#" class="co-link">
-            <div class="co-img dim"><img alt="" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='255' height='104'><defs><linearGradient id='g4' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%232f6fb0'/><stop offset='1' stop-color='%235aa0d8'/></linearGradient></defs><rect width='255' height='104' fill='url(%23g4)'/><circle cx='200' cy='32' r='20' fill='%23ffffff' opacity='.28'/></svg>"></div>
+            <div class="co-img dim"><img alt="" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='128'><defs><linearGradient id='g4' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%232f6fb0'/><stop offset='1' stop-color='%235aa0d8'/></linearGradient></defs><rect width='260' height='128' fill='url(%23g4)'/><circle cx='205' cy='38' r='22' fill='%23ffffff' opacity='.28'/></svg>"></div>
             <div class="co-body">
-              <div class="co-name">Intro to Public Speaking</div>
+              <h3 class="co-name">Intro to Public Speaking</h3>
               <span class="co-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.11"/></svg>Completes the competency</span>
               <span class="co-state enrol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>Enrol to start</span>
               <span class="co-hint">Self-enrolment is open</span>
@@ -464,7 +315,7 @@
           <a href="#" class="co-link">
             <div class="co-ph dim"><span>RM</span></div>
             <div class="co-body">
-              <div class="co-name">Research Methods</div>
+              <h3 class="co-name">Research Methods</h3>
               <span class="co-state enrol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>Enrol to start</span>
               <span class="co-hint">Self-enrolment is open</span>
             </div>
@@ -473,44 +324,44 @@
       </div>
     </div>
     <div class="lk-ids">
-      <span class="idb r">OVW-CRS-STATE · access = enrol</span>
-      <span class="idb">strings enrol_to_start / selfenrolment_open — already present</span>
+      <span class="idb">OVW-CRS-STATE · access = enrol</span>
+      <span class="idb">glyph = <code>fa fa-sign-in</code></span>
+      <span class="idb">strings enrol_to_start / selfenrolment_open</span>
       <span class="idb">no date — it is open now</span>
     </div>
-    <div class="note">Taken from the tracker's locked card, but <b>not</b> its chrome: no frosted veil, no 80px icon ring, no marching-ants border. On a 255px card in a horizontal scroller that overlay would bury the image, the name, the outcome badge and the activities drawer — everything the card exists to show. Instead the <b>one row that says nothing to a learner without access</b> — the progress bar — is replaced by the state, and the artwork is dimmed so the card reads as out of reach at a glance. The enrol state takes precedence over locked: when the learner can simply join, the card is an invitation, and it carries no date because there is nothing to wait for.</div>
+    <div class="note">Taken from the tracker's locked card, but <b>not</b> its chrome: no frosted veil, no 80px icon ring, no marching-ants border. On a 260px card in a horizontal scroller that overlay would bury the image, the name, the outcome badge and the activities drawer — everything the card exists to show. Instead the <b>one row that says nothing to a learner without access</b> — the progress bar — is replaced by the state, and the artwork is dimmed (55% grayscale at 62% opacity; a placeholder just drops to 50% opacity) so the card reads as out of reach at a glance. The enrol state takes precedence over locked: when the learner can simply join, the card is an invitation, and it carries no date because there is nothing to wait for. The glyph is the FontAwesome 4 alias <code>fa fa-sign-in</code>, the same class the tracker's locked card uses in both of its places.</div>
 
-    <div class="divlbl">Locked — no access, no way in yet <span class="idb r">OVW-CRS-STATE · to-be</span></div>
+    <div class="divlbl">Locked — no access, no way in yet <span class="idb">OVW-CRS-STATE</span></div>
     <div class="co-sec">
       <div class="co-scroll">
         <div class="co-card">
           <a href="#" class="co-link">
             <div class="co-ph dim"><span>AO</span></div>
             <div class="co-body">
-              <div class="co-name">Advanced Oratory</div>
+              <h3 class="co-name">Advanced Oratory</h3>
               <span class="co-state locked"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Locked content</span>
               <span class="co-when"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Opens 01/03/26</span>
             </div>
           </a>
         </div>
         <div class="co-card blocked">
-          <a href="#" class="co-link">
+          <span class="co-link">
             <div class="co-ph dim"><span>PS</span></div>
             <div class="co-body">
-              <div class="co-name">Public Speaking II</div>
-              <span class="co-badge evidence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Attach evidence</span>
+              <h3 class="co-name">Public Speaking II</h3>
               <span class="co-state locked"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Locked content</span>
               <span class="co-when"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Enrolment opens 15/02/26</span>
             </div>
-          </a>
+          </span>
         </div>
       </div>
     </div>
     <div class="lk-ids">
-      <span class="idb r">OVW-CRS-STATE · access = locked</span>
+      <span class="idb">OVW-CRS-STATE · access = locked</span>
       <span class="idb">showlockeddate · reused from the tracker</span>
-      <span class="idb r">lockedcardmode · blocked = the card is not a link</span>
+      <span class="idb">lockedcardmode · blocked = the card is a span, not a link</span>
     </div>
-    <div class="note">The date is the same fact the tracker shows, reframed the same way — "Opens {date}" for a course start, "Enrolment opens {date}" when the learner already holds a future-dated enrolment — and it is <b>dropped when it lies in the past</b>, because a past date explains nothing. It obeys the existing <code>showlockeddate</code> setting. <code>lockedcardmode</code> is honoured cheaply: in learn-more mode the card stays a link to the course, where core explains the restriction; in blocked mode the card stops being a link (second card here). The tracker's <code>animatelockedborder</code>, <code>cardicon</code> and <code>learnmorebuttoncolor</code> do <b>not</b> carry over — they style an overlay, a dashed border and an icon ring that this card does not have.</div>
+    <div class="note">The date is the same fact the tracker shows, reframed the same way — "Opens {date}" (<code>available_at</code>) for a course start, "Enrolment opens {date}" (<code>enrolment_starts</code>) when the learner already holds a future-dated enrolment — and it is <b>dropped when it lies in the past</b>, because a past date explains nothing: the client renders it only while <code>lockdate * 1000 &gt; Date.now()</code>. It obeys the existing <code>showlockeddate</code> setting. <code>lockedcardmode</code> is honoured cheaply: in learn-more mode the card stays a link to the course, where core explains the restriction; in blocked mode the outer element becomes a <code>&lt;span&gt;</code> (second card here). The tracker's <code>animatelockedborder</code>, <code>cardicon</code> and <code>learnmorebuttoncolor</code> do <b>not</b> carry over — they style an overlay, a dashed border and an icon ring that this card does not have.</div>
 
     <div class="divlbl">Single trackable activity — the bar would be a lie <span class="idb">OVW-CRS-SINGLE</span></div>
     <div class="co-sec">
@@ -518,7 +369,7 @@
         <div class="co-card compact">
           <a href="#" class="co-link">
             <div class="co-body">
-              <div class="co-name">Reflective Journal</div>
+              <h3 class="co-name">Reflective Journal</h3>
               <div class="co-single">
                 <span class="co-single-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="todo" cx="12" cy="12" r="9"/></svg></span>
                 <span class="co-single-name">Weekly reflection</span>
@@ -531,7 +382,7 @@
         <div class="co-card compact">
           <a href="#" class="co-link">
             <div class="co-body">
-              <div class="co-name">Final Assessment</div>
+              <h3 class="co-name">Final Assessment</h3>
               <span class="co-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.11"/></svg>Completes the competency</span>
               <div class="co-single">
                 <span class="co-single-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="done" cx="12" cy="12" r="9"/><path class="done" d="m8.5 12 2.5 2.5 4.5-5"/></svg></span>
@@ -546,18 +397,18 @@
     </div>
     <div class="lk-ids">
       <span class="idb">OVW-CRS-SINGLE · state strip replaces the progress bar</span>
-      <span class="idb">card name → course, "Go to activity" → the activity (two targets)</span>
+      <span class="idb">card → course, "Go to activity" → the activity (two targets)</span>
       <span class="idb">drawer suppressed when it would repeat this activity</span>
     </div>
-    <div class="note">Same reasoning as the tracker's single-activity card, applied to a different component: there the timeline had no sequence to draw, here the percentage has only two values it can ever hold, so "0%" or "100%" is noise where the activity's own name and state are the answer. Drawn <b>imageless</b> like every compact card, its state marker <b>centred in a 56px box</b> so it lands where the section card's ring lands and matches the tracker's arrangement, and the card carries a <b>minimum height</b> so losing the cover image does not leave it sitting short beside its image-bearing siblings. With <b>two independent link targets</b>: the outer <code>&lt;a&gt;</code> around the name, badge and state strip goes to the course; "Go to activity" is a second, separate <code>&lt;a&gt;</code> below it, to the activity itself — not a <code>&lt;span&gt;</code> nested inside the first link, which is what this card used to be. When the single activity is also the one the <b>"N activities"</b> drawer would list, the drawer is suppressed — otherwise the card shows the same activity twice. A locked or enrol state wins over this one: there is no point naming an activity the learner cannot open.</div>
+    <div class="note">Same reasoning as the tracker's single-activity card, applied to a different component: there the timeline had no sequence to draw, here the percentage has only two values it can ever hold, so "0%" or "100%" is noise where the activity's own name and state are the answer. Drawn <b>imageless</b> like every compact card, its mark <b>centred in a 56px box</b> so it lands where the section card's ring lands, and the card carries a <b>minimum height</b> so losing the cover image does not leave it sitting short beside its image-bearing siblings. The mark and the "Completed / Not completed" line render only when the activity has completion tracking on; the activity's name always does. With <b>two independent link targets</b>: the outer <code>&lt;a&gt;</code> around the name, badge and state strip goes to the course; "Go to activity" is a second, separate <code>&lt;a&gt;</code> below it, to the activity itself — the card is not one anchor with a nested span. When the single activity is also the one the <b>"N activities"</b> drawer would list, the drawer is suppressed (matched by <code>cmid</code>, not by name) — otherwise the card shows the same activity twice. A locked or enrol state wins over this one: <code>cardmode</code> is only resolved server-side when access is <code>open</code>, so a gated card never names an activity the learner cannot reach.</div>
 
-    <div class="divlbl">One qualifying section — a percentage, not a bar <span class="idb">OVW-CRS-SECTION</span></div>
+    <div class="divlbl">One qualifying section — a ring, not a bar <span class="idb">OVW-CRS-SECTION</span></div>
     <div class="co-sec">
       <div class="co-scroll">
         <div class="co-card compact">
           <a href="#" class="co-link">
             <div class="co-body">
-              <div class="co-name">Orientation Pack</div>
+              <h3 class="co-name">Orientation Pack</h3>
               <div class="co-single">
                 <span class="co-single-pct">
                   <svg viewBox="0 0 32 32" aria-hidden="true"><circle class="ring-bg" cx="16" cy="16" r="12"/><circle class="ring-fg" cx="16" cy="16" r="12" style="stroke-dasharray:18.85 75.4;stroke-dashoffset:0;"/></svg>
@@ -571,7 +422,7 @@
         <div class="co-card compact">
           <a href="#" class="co-link">
             <div class="co-body">
-              <div class="co-name">Foundations of Academic Writing</div>
+              <h3 class="co-name">Foundations of Academic Writing</h3>
               <span class="co-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Sends for review</span>
               <div class="co-single">
                 <span class="co-single-pct">
@@ -591,7 +442,7 @@
       <span class="idb">^hasownname → name omitted (left card, "General"/"Topic 1")</span>
       <span class="idb">hasownname → name shown (right card)</span>
     </div>
-    <div class="note">The plan's mirror of the tracker's <code>TRK-CARD-SECTION</code>, from the same server call to <code>calculator::resolve_card_shape()</code> — the two views cannot disagree about a course's shape, but the number in the ring is not the same kind of number. <code>calculator::describe_section()</code> returns only <code>name</code>, <code>hasownname</code> and <code>url</code> — no percentage — so the plan card shows the course-wide <code>course.progress</code> instead, the same field the ordinary bar reads; the tracker, by contrast, genuinely computes a per-section percentage. That reuse is sound rather than sloppy: with exactly one qualifying section, every trackable activity in the course sits inside it, so the course-wide figure and a section-scoped one would be the same number — the card reuses the figure it already has rather than computing a second one. A qualifying section counts whether or not it holds any modules (an empty section still takes this shape), so "one section" is the whole precondition, not "one section with several activities." The section's name renders only when a teacher authored one. Imageless and two-target like <code>OVW-CRS-SINGLE</code> above: the card links to the course, "Access content" links to the section. Both compact shapes now put their mark — the ring here, the completion icon above — <b>centred in a 56px box</b>, the same arrangement the tracker uses, and the card carries a <b>minimum height</b> so an imageless card lines up with its image-bearing siblings instead of sitting short in the scroller. The ring itself is the tracker's component reused, so the <code>percentagedisplaymode</code> setting reaches it: fixed, on hover, or hidden — and hidden still leaves the arc, which a bare number could not. The resolver checks the activity shape first, so a course only ever lands here when it does not already resolve to a single activity — the two states are mutually exclusive, never both on the same card.</div>
+    <div class="note">The plan's mirror of the tracker's <code>TRK-CARD-SECTION</code>, from the same server call to <code>calculator::resolve_card_shape()</code> — the two views cannot disagree about a course's shape, but the number in the ring is not the same kind of number. <code>calculator::describe_section()</code> returns <code>name</code>, <code>hasownname</code>, <code>url</code> and <code>tracked</code> — no percentage — so the plan card shows the course-wide <code>course.progress</code> instead, the same field the ordinary bar reads; the tracker, by contrast, genuinely computes a per-section percentage. That reuse is sound rather than sloppy: with exactly one qualifying section, every trackable activity in the course sits inside it, so the course-wide figure and a section-scoped one would be the same number — the card reuses the figure it already has rather than computing a second one. A qualifying section counts whether or not it holds any modules (an empty section still takes this shape), so "one section" is the whole precondition, not "one section with several activities"; when nothing in it is tracked, <code>section.tracked</code> is false and <b>no ring renders at all</b>. The section's name renders only when a teacher authored one. Imageless and two-target like <code>OVW-CRS-SINGLE</code> above: the card links to the course, "Access content" links to <code>/course/section.php</code>. Both compact shapes put their mark <b>centred in a 56px box</b>, the same arrangement the tracker uses, and the card carries the same <b>220px floor</b>. The ring is the tracker's own component reused — <code>.local-dimensions-progress-ring-container</code> plus <code>-lg</code>, r=12 in a 32-unit viewBox, arc = percentage × 0.754 — so the <code>percentagedisplaymode</code> setting reaches it without a rule of its own: fixed, on hover, or hidden, and hidden still leaves the arc, which a bare number could not. The resolver checks the activity shape first, so a course only ever lands here when it does not already resolve to a single activity — the two states are mutually exclusive, never both on the same card.</div>
 
     <div class="divlbl">How the states interact with the enrolment filter <span class="idb">enrollmentfilter</span></div>
     <table class="mx">
@@ -603,28 +454,30 @@
     </table>
     <div class="note">The filter runs server-side inside the courses web service, so it decides membership <b>before</b> any state is computed. The two settings are complementary, not redundant: the filter answers "should this card exist at all", the state answers "what can the learner do with it".</div>
 
-    <div class="divlbl">Superseded by this slice</div>
-    <div class="note"><span class="idb">OVW-CRS-TITLE</span> — the proposal to retitle the section "Linked {label} &amp; activities" from the competency's label field. The section heading no longer exists: the <b>tab label</b> names the pane, and a per-competency tab label would make the strip's wording change from one accordion item to the next. Dropped.<br><span class="idb">OVW-CRS-EMPTY</span> — the muted "nothing linked yet" line. It existed only because the section rendered unconditionally and left a blank strip; with the pane gated as a tab, no courses means no tab. Dropped.<br><span class="idb">single-target fix</span> — the earlier slice that pointed a compact card's <b>whole</b> anchor at the activity's URL instead of the course's. That was the best answer available at the time: the card had only one target to give, a "Go to activity" <code>&lt;span&gt;</code> nested inside it could not carry its own link, and letting the outer anchor open the activity at least made the affordance work. This slice gives the card a second, independent link, so the outer anchor goes back to the course (consistent with every other card) and "Go to activity" / "Access content" becomes a real link of its own.</div>
+    <div class="divlbl">Data</div>
+    <div class="note">One call to <code>local_dimensions_get_competency_courses</code> carries the whole pane. Per course it returns <code>id</code>, <code>fullname</code>, <code>shortname</code>, <code>courseimage</code>, <code>progress</code>, <code>visible</code>, <code>ruleoutcome</code>, the resolved <code>access</code> (open / enrol / locked), <code>lockdate</code>, <code>isenrolstart</code>, <code>cardmode</code>, the optional <code>activity</code> and <code>section</code> structures, and the <code>activities</code> list of the competency's module links inside that course. Because <code>execute_returns</code> is an allowlist, every one of those keys is declared there — anything not declared is silently stripped by <code>clean_returnvalue</code>, which is why the return structure and the payload are regression-covered together.</div>
 
-    <div class="note"><b>Data:</b> the shipped web service already returns <code>ruleoutcome</code> and the competency's activity links. This slice adds, per course, the resolved <b>access</b> (open / enrol / locked), the <b>lock date</b> and whether it is an enrolment start, and the <b>single trackable activity</b> when the course has exactly one. Access reuses the existing helpers for active enrolment and self-enrolment; the single activity needs a lean new helper that counts trackable modules rather than running the full section-progress calculation. Because <code>execute_returns</code> is an allowlist, every new key must be declared there or it is silently stripped — and the web service change needs a <code>version.php</code> bump.</div>
+    <div class="pend"><b>Pending · a subtle grey "Attach evidence" badge for OUTCOME_EVIDENCE.</b> <code>renderOutcomeBadge</code> handles only OUTCOME_COMPLETE and OUTCOME_RECOMMEND and returns an empty string for everything else (accordion.js:1962-1964), and no <code>outcome_evidence</code> or <code>outcome_none</code> string exists in <code>lang/en/local_dimensions.php</code> — only <code>outcome_complete</code> (:515) and <code>outcome_recommend</code> (:516). The constants block states the reason (accordion.js:46-51): OUTCOME_EVIDENCE is core's DB default, so badging it would mark nearly every card instead of the few that decide anything.</div>
+
+    <div class="pend"><b>Pending · activities whose course is not itself linked.</b> There is no neutral-container card. <code>get_linked_activities()</code> is called with <code>array_keys($courses)</code> (get_competency_courses.php:121), and <code>$courses</code> comes only from <code>competency_coursecomp</code> (:98-103) after the enrolment filter (:115-127) — so a course carrying a linked <b>module</b> but no linked <b>course</b> produces no card, and its activities never reach the pane. Neither <code>execute()</code> nor <code>renderCourseCardsScrollable</code> has a branch for that case.</div>
   </div>
 
 </div>
 
 <div class="legend">
-  <h3>ID legend — Plan detail · Linked courses</h3>
+  <h3>ID legend — Plan detail · Related content</h3>
   <div class="leg">
-    <span class="k">OVW-CRS</span><span class="v"><b>Linked-course cards</b> — a horizontal scroller of <code>.local-dimensions-course-card-lg</code>. Each card: a 128px image (first valid <code>get_course_overviewfiles()</code> file) <b>or</b>, when absent, a gradient placeholder with <code>getInitials(name)</code> (first+last word initials, or first two chars if one word); a 3-line-clamped course name (<code>fullname || shortname</code>); an 8px progress track with a <code>width: {progress}%</code> fill; the <code>{progress}%</code> label; and a full-width Access button (core Boost <code>btn btn-secondary</code>) linking to <code>/course/view.php?id={id}</code>. Section title = <code>linked_courses</code> ("Linked courses") + a count badge (<code>courses.length</code>). <b>Data source:</b> the plugin WS <code>local_dimensions_get_competency_courses</code> runs its <b>own</b> SQL — <code>SELECT DISTINCT c.id,… FROM {competency_coursecomp} cc JOIN {course} c ON c.id=cc.courseid WHERE cc.competencyid=:id AND c.visible=1 ORDER BY c.fullname</code> — <b>not</b> <code>tool_lp_list_courses_using_competency</code> (its docblock still says "wraps" that, but <code>execute()</code> queries directly), then applies the enrolment-filter cascade (competency → plan template → global) via <code>calculator::filter_courses_by_enrollment</code>. <span class="rule">accordion.js renderCourseCardsScrollable; get_competency_courses.php:83-103; styles.css:1488-1672 · MIGRATES: placeholder gradient <code>#667eea→#764ba2</code> (--lk-accent/--lk-accent-grad-end), progress fill <code>#28a745</code> (--lk-success), badge text <code>#5f6368</code> (--lk-pill-text), section platter <code>#f1f3f4</code> (--lk-pill-platter)</span></span>
-    <span class="k">OVW-CRS-NAV</span><span class="v"><b>Scroll control group + 100% check.</b> A bottom-right pill (<code>role="group"</code>) of two arrow buttons — Prev (<code>evidence_slider_prev</code> = "Previous") and Next (<code>evidence_slider_next</code> = "Next"), each an <code>aria-label</code>ed icon button. Both are markup-rendered always but <code>initScrollableTrack</code> shows them only when <code>shouldShowScrollableControls(itemCount)</code> is true — <code>itemCount &gt; 2</code> (or mobile); ≤2 courses render <code>.local-dimensions-courses-no-scroll</code> (wrap, controls hidden). <code>updateScrollableArrows</code> toggles <code>.disabled</code> (opacity .45, <code>#8da1b6</code>, pointer-events none) when a track edge is reached — Prev starts disabled at scroll 0. Prev/Next scroll by one card (<code>scrollToTrackAdjacentCard</code>); the track is also drag-scrollable. The green <code>fa-check-circle</code> appears when <code>progress &gt;= 100</code>; note its emitted class <code>.local-dimensions-course-check</code> has no CSS rule (the styled <code>.local-dimensions-course-progress-check</code> <code>#198754</code> at styles.css:1250 is a different tracker class), so it inherits body colour. Focus ring on a nav button = <code>outline:2px solid var(--dimension-custombgcolor, var(--primary, #667eea))</code> → <b>--lk-accent (migrates)</b>. <b>To-be:</b> the scroller and this pill are <b>kept</b> — the pill is <b>moved into the section header</b> (right-aligned, stable when a card expands) and the native horizontal scrollbar is hidden (<code>scrollbar-width:none</code>), so the pill is the clean nav affordance while trackpad/drag still scroll. The per-card Access button is dropped (the whole card is the link → the course). The existing gates carry over: shown only when the cards overflow (<code>shouldShowScrollableControls</code>, itemCount &gt; 2 / mobile), Prev disabled at the left edge (<code>updateScrollableArrows</code>). <span class="rule">accordion.js renderCourseCardsScrollable:1664-1689, initCourseScroll:1702 → initScrollableTrack:1436 (shouldShowScrollableControls:1208, updateScrollableArrows:1399); styles.css:2439-2489</span></span>
-    <span class="k">OVW-CRS-OUTCOME</span><span class="v"><b>(to-be) Decisive outcome badge</b> — each course card carries a badge from the link's <code>ruleoutcome</code> (<code>course_competency</code> / <code>course_module_competency</code>): a <b>strong accent</b> badge for the two that conclude/advance the competency — <b>Completes the competency</b> (OUTCOME_COMPLETE) and <b>Sends for review</b> (OUTCOME_RECOMMEND); a <b>subtle grey</b> badge for the journey case <b>Attach evidence</b> (OUTCOME_EVIDENCE); and <b>no badge</b> for <b>Do nothing</b> (OUTCOME_NONE, the default — so most cards stay clean). Deliberately accent, not green: the green progress ring means "achieved", the badge means "what finishing this <i>does</i>" — an item can be decisive yet not done. Mirrors the Evidence tab's decisive/journey line. <b>Code:</b> add <code>ruleoutcome</code> to the courses WS. <span class="rule">competency/classes/course_competency.php OUTCOME_*; strings coursecompetencyoutcome_* / coursemodulecompetencyoutcome_*</span></span>
-    <span class="k">OVW-CRS-ACT</span><span class="v"><b>(to-be) Activities expand from the card</b> — a course whose activities are linked to <b>this</b> competency shows a "N activities" disclosure; expanded, it lists compact rows (icon + name + its own decisive badge + done/to-do state), each a link straight to the activity. Courses aren't discarded — activities nest under their course (mirrors <code>course_modules → course</code>). <b>Code:</b> extend <code>local_dimensions_get_competency_courses</code> to also return the competency's <b>module links</b> (<code>competency_modulecomp</code>, grouped by courseid) with <code>ruleoutcome</code> + completion; the admin side already joins this (helper.php:2373). Handle activities whose course isn't itself linked (show the course as a neutral container, no course badge). <code>version.php</code> bump. <span class="rule">competency_modulecomp; completion_info; helper.php:2373</span></span>
-    <span class="k">OVW-CRS-PANE</span><span class="v"><b>(to-be) The scroller becomes a tab pane</b> — today the linked-course section is rendered <b>after</b> the whole tab wrapper, so it is on screen whatever tab is active and competes with the pane above it. It becomes the <b>leading tab</b>, gated on <code>visibleCourses.length &gt; 0</code>. Two things move with it: the section heading disappears (the tab label replaces it) and the count badge moves onto the tab. Mechanically this is a reposition — the card renderer is reused as the pane body. <span class="rule">accordion.js renderCompetencySummary (the out-of-wrapper call) → renderSummaryTabPanes; buildSummaryTabs</span></span>
-    <span class="k">OVW-CRS-STATE</span><span class="v"><b>(to-be) Access state strip</b> — replaces the progress row, which carries no meaning for a learner without access, with one of two states. <b>enrol</b>: an accent CTA "Enrol to start" plus the muted "Self-enrolment is open", no date. <b>locked</b>: a muted "Locked content" plus the availability chip, and the artwork is dimmed. Precedence is enrol → locked → normal. <b>Lock rule:</b> not actively enrolled <i>and</i> unable to self-enrol. This deliberately differs from the tracker's rule, which also demands the student role and therefore reports every card locked to anyone reviewing a plan without one — the courses web service documents avoiding exactly that today. The two views can be aligned in a later slice; until then the plan cards answer "can this viewer open it", which is the question the card's own link is about to answer anyway. Settings: <code>showlockeddate</code> reused; <code>lockedcardmode</code> honoured by dropping the card's link in blocked mode; <code>animatelockedborder</code> / <code>cardicon</code> / <code>learnmorebuttoncolor</code> do not apply. Strings all exist already. <span class="rule">calculator::current_user_can_self_enrol / user_can_access_course / get_availability_date / get_enrolment_start_date; strings enrol_to_start, selfenrolment_open, locked_content, available_at, enrolment_starts</span></span>
-    <span class="k">OVW-CRS-SINGLE</span><span class="v"><b>Single-activity course</b> — the card's <code>cardmode</code> (from the same <code>calculator::resolve_card_shape()</code> the tracker calls) is <code>activity</code>: either the course's format is Moodle's own <code>singleactivity</code>, or it happens to resolve to exactly one trackable, visible module. Either way a progress bar could only ever read 0% or 100%, so it is replaced by the activity itself: a state marker (green check / dashed to-do circle, only when <code>activity.tracked</code>), the activity name, and a direct "Go to activity" link — the card's <b>second</b> link target, a real anchor rather than a span, sitting beside (not inside) the outer anchor that still goes to the course. Drawn <b>imageless</b>, like <code>OVW-CRS-SECTION</code>. When that activity is also the one the activities drawer would list, the drawer is suppressed so the card does not show it twice. Ranks below the access states (enrol/locked): there is no point naming an activity the learner cannot open. <span class="rule">calculator.php resolve_card_shape (shared with the tracker); get_competency_courses.php:194-210; accordion.js renderCourseState / renderCourseGoLink; strings go_to_activity, course_completed, filter_not_completed</span></span>
-    <span class="k">OVW-CRS-SECTION</span><span class="v"><b>One-section course</b> — <code>cardmode</code> is <code>section</code>: the course has exactly one qualifying section (the same visibility filter the timeline itself applies; a section counts whether or not it holds any modules, so an empty section qualifies too). A one-row timeline naming a section usually called "General" or "Topic 1" would say nothing, so the bar is replaced by a plain bordered circle (no SVG arc) — but the number in it is the course-wide <code>course.progress</code>, the same figure the ordinary bar reads, not a percentage computed for the section: <code>calculator::describe_section()</code> returns only <code>name</code>, <code>hasownname</code> and <code>url</code>. That reuse holds up because with exactly one qualifying section every trackable activity in the course sits inside it, so a section-scoped figure would read the same number anyway. The section's name renders only when a teacher authored one — then the second link target, "Access content", to <code>/course/section.php?id=…</code>. Imageless and two-target, exactly like <code>OVW-CRS-SINGLE</code> above; the resolver checks the activity shape first, so the two states never coincide on one card. <span class="rule">calculator.php resolve_card_shape / describe_section (shared with the tracker); get_competency_courses.php:194-210; accordion.js renderCourseState / renderCourseGoLink; string access_content</span></span>
-    <span class="k">OVW-CRS-MORE</span><span class="v"><b>(to-be) "View detailed progress" footer link</b> — right-aligned under the track, rendered only when <code>visibleCourses.length &gt;= 3</code>. Goes to <code>view-competency.php?id={planid}&amp;competencyid={competencyid}</code>, the same URL shape the related-competency pills and the rules children already write, built from the <code>viewcompetencyurl</code> already passed into the accordion's display settings. <b>Why it exists:</b> a card can only summarise a course as one percentage; the tracker shows per-section progress, locked sections and availability dates. With many linked courses the scroller becomes the wrong tool for "how am I actually doing", and today there is no way out of the accordion to the fuller view. <b>Why 3:</b> a plain count of what is shown, not the scroll-arrow condition — that one also fires with two cards on a narrow screen, so the link would appear and disappear on resize. <b>No <code>noredirect=1</code>:</b> the single-course redirect requires exactly one course to survive the filter, so it cannot fire from three up, and adding the flag would diverge from the other two links that write this URL. Outlined, not solid: the cards own the primary actions in this pane. One new lang string. <span class="rule">new; accordion.js renderCourseCardsScrollable + displaySettings.viewcompetencyurl; view-competency.php required_param id/competencyid, $willredirect</span></span>
-    <span class="k">OVW-CRS-TITLE</span><span class="v"><b>(dropped)</b> Label-driven title — "Linked courses" becoming "Linked <b>{label}</b> &amp; activities" from the competency's label field. The section heading no longer exists: the tab label names the pane, and deriving it per competency would make the tab strip change wording between accordion items. <span class="rule">superseded by OVW-CRS-PANE</span></span>
-    <span class="k">OVW-CRS-EMPTY</span><span class="v"><b>(dropped)</b> Empty group — a muted "nothing linked yet" line, proposed because the section used to render unconditionally and left a blank strip when no course survived the filter. With the pane gated as a tab, no courses simply means no tab. <span class="rule">superseded by OVW-CRS-PANE / OVW-TAB-ORDER</span></span>
+    <span class="k">OVW-CRS</span><span class="v"><b>Linked-course cards</b> — a horizontal track of <code>.local-dimensions-course-card-lg</code> (min-width 260px, max-width 280px, natural height) inside a grey <code>.local-dimensions-courses-section</code> platter. Each card: a 128px image (first valid <code>get_course_overviewfiles()</code> file) <b>or</b>, when absent, a gradient placeholder (<code>#0f6cbf → #0a5aa0</code>) with <code>getInitials(name)</code> — first+last word initials, or the first two characters of a one-word name; a 3-line-clamped course name (<code>fullname || shortname</code>); and, unless a state strip replaces it, an 8px track with a <code>#198754</code> fill, the <code>{progress}%</code> label and a green <code>fa-check-circle</code> at 100%. The whole card is one link to <code>/course/view.php?id={id}</code> — there is no per-card Access button and the pane emits no section heading. With ≤2 courses the track switches to <code>.local-dimensions-courses-no-scroll</code>: the cards wrap and share the width. <b>Data source:</b> the plugin WS <code>local_dimensions_get_competency_courses</code> runs its <b>own</b> SQL — <code>SELECT DISTINCT c.id, …, cc.ruleoutcome FROM {competency_coursecomp} cc JOIN {course} c ON c.id = cc.courseid WHERE cc.competencyid = :competencyid AND c.visible = 1 ORDER BY c.fullname</code> — then applies the enrolment-filter cascade (competency → plan template → site) through <code>calculator::filter_courses_by_enrollment</code>. <span class="rule">accordion.js renderCourseCardsScrollable:2231-2342, renderCourseProgress:2207-2219, getInitials:2771; get_competency_courses.php:94-127; styles.css:2533-2606, 2804-2843, 3885-3904</span></span>
+    <span class="k">OVW-CRS-NAV</span><span class="v"><b>Scroll control group.</b> A pill (<code>role="group"</code>, labelled with the <code>related_content</code> string) of two 34×30 arrow buttons — Prev (<code>evidence_slider_prev</code>) and Next (<code>evidence_slider_next</code>), each an <code>aria-label</code>ed icon button — sitting in <code>.local-dimensions-courses-head</code> and pushed right by <code>margin-left: auto</code>, so it stays put when a card's drawer expands. Both buttons are always in the markup; <code>initScrollableTrack</code> hides them and marks the wrapper <code>.local-dimensions-controls-hidden</code> unless <code>shouldShowScrollableControls(itemCount)</code> is true — <code>itemCount &gt; 2</code>, or 2 on a viewport ≤575.98px, never at 1. <code>updateScrollableArrows</code> toggles <code>.disabled</code> (opacity .45, <code>#8da1b6</code>, pointer-events none) at each edge, so Prev starts disabled. Prev/Next scroll by one card; the native scrollbar is suppressed (<code>scrollbar-width: none</code> plus the WebKit rule) while drag and trackpad scrolling survive (<code>cursor: grab</code>, <code>.local-dimensions-dragging</code>). Focus ring <code>outline: 2px solid var(--dimension-custombgcolor, var(--primary, #0f6cbf))</code>. <span class="rule">accordion.js renderCourseCardsScrollable:2237-2252, initCourseScroll:2371, initScrollableTrack:1736-1753, shouldShowScrollableControls:1508-1514, updateScrollableArrows:1699-1729, scrollToTrackAdjacentCard:1655; styles.css:3774-3882</span></span>
+    <span class="k">OVW-CRS-OUTCOME</span><span class="v"><b>Decisive outcome badge</b> — driven by the link's <code>ruleoutcome</code>. <code>renderOutcomeBadge</code> emits a badge for exactly two values: OUTCOME_COMPLETE → <code>fa-trophy</code> + <b>Completes the competency</b>, OUTCOME_RECOMMEND → <code>fa-paper-plane</code> + <b>Sends for review</b>; every other value, including core's OUTCOME_EVIDENCE default and OUTCOME_NONE, returns an empty string, so most cards stay clean. Accent, not green: the green progress means "achieved", the badge means "what finishing this <i>does</i>" — an item can be decisive yet not done. The same helper renders per-activity badges inside the drawer, where a scoped rule strips its border and fill and leaves only the accent text. <code>ruleoutcome</code> is selected, emitted and <b>declared in the return allowlist</b>, so it survives <code>clean_returnvalue</code>. <span class="rule">accordion.js OUTCOME_* :46-51, renderOutcomeBadge:1951-1969, called at :2300 and :2007; get_competency_courses.php:98, :187, :351; styles.css:2846-2864, 2952-2958; lang/en:515-516</span></span>
+    <span class="k">OVW-CRS-ACT</span><span class="v"><b>Activities expand from the card</b> — a course whose activities are linked to <b>this</b> competency gets an <code>"N activities"</code> disclosure (<code>activities_count</code> / <code>activities_count_one</code>) with <code>aria-expanded</code> + <code>aria-controls</code> pointing at a document-unique panel id, and a chevron that rotates 180°. The panel is a plain <code>&lt;ul hidden&gt;</code> toggled through <code>panel.hidden</code>, not a Bootstrap collapse — the data-API attribute differs between Bootstrap 4 (4.5) and 5. Toggle and list are emitted <b>after</b> the card's own anchor closes, so no interactive content nests in a link. Each row carries core's <code>activityiconcontainer smaller {purpose}</code> icon, the name, its own outcome badge, and a marker: <code>fa-lock</code> when restricted, <code>fa-check-circle</code> when completed, <code>fa-circle-o</code> when tracked but not, nothing when the module has no completion. A row is an <code>&lt;a&gt;</code> with <code>aria-label="{modtype}: {name}"</code> when it has a URL and a <code>&lt;span&gt;</code> otherwise. Server-side, <code>get_linked_activities()</code> joins <code>{competency_modulecomp}</code> to <code>{course_modules}</code>, then walks <code>get_fast_modinfo()</code> in course order applying the section/module visibility and <code>uservisible</code> cascade — a restricted row survives but links to the course page, where core explains the restriction — and reads completion per module. The course-level lock is deliberately not applied to these rows. <span class="rule">accordion.js renderCourseActivitiesDrawer:2174-2199, renderActivityRow:1981-2014, initActivityDisclosures:2352-2364, activitiesPanelSeq:55; get_competency_courses.php get_linked_activities:236-335, allowlist :383-399; styles.css:2866-2966; lang/en:28-29</span></span>
+    <span class="k">OVW-CRS-PANE</span><span class="v"><b>The scroller is a tab pane</b> — <code>renderCoursesPane</code> wraps <code>renderCourseCardsScrollable</code> in <code>.local-dimensions-tab-pane-courses</code> and is called from <code>renderSummaryTabPanes</code>, so the cards render inside the tab wrapper rather than after it. The pane exists only while <code>visibleCourses.length &gt; 0</code> and leads whenever it exists. It emits no title: the tab label is the heading and the count badge rides the tab. <span class="rule">accordion.js renderCoursesPane:576-590, renderSummaryTabPanes:550-552, buildSummaryTabs:465-471; see ovw-detail-tabs.html</span></span>
+    <span class="k">OVW-CRS-STATE</span><span class="v"><b>Access state strip</b> — replaces the progress row, which carries no meaning for a learner without access, with one of two states. <b>enrol</b>: an accent CTA <code>fa fa-sign-in</code> + "Enrol to start" plus the muted "Self-enrolment is open", no date. <b>locked</b>: a muted <code>fa-lock</code> + "Locked content" plus an availability chip, and the artwork dimmed via <code>.local-dimensions-course-card-dim</code>. Precedence is enrol → locked → compact shape → normal bar. <b>Lock rule:</b> not actively enrolled <i>and</i> unable to self-enrol. This deliberately differs from the tracker's <code>calculator::is_locked()</code>, which also demands the student role and would therefore report every card locked to a member of staff reviewing someone's plan; the web service documents avoiding exactly that. Settings: <code>showlockeddate</code> reused, and the date is dropped once it lies in the past; <code>lockedcardmode</code> honoured by turning the card's anchor into a span in blocked mode; <code>animatelockedborder</code> / <code>cardicon</code> / <code>learnmorebuttoncolor</code> do not apply. <span class="rule">accordion.js renderCourseState:2064-2130, card classes :2264-2280, :2306; get_competency_courses.php:160-178; calculator::current_user_can_self_enrol / get_availability_date / get_enrolment_start_date; styles.css:2608-2674; lang/en:44, :361, :369, :453, :570</span></span>
+    <span class="k">OVW-CRS-SINGLE</span><span class="v"><b>Single-activity course</b> — the card's <code>cardmode</code> (from the same <code>calculator::resolve_card_shape()</code> the tracker calls) is <code>activity</code>: either the course's format is Moodle's own <code>singleactivity</code>, or it resolves to exactly one trackable, visible module. Either way a progress bar could only ever read 0% or 100%, so it is replaced by the activity itself — a <code>fa-check-circle</code> / <code>fa-circle-o</code> mark and a "Completed" / "Not completed" line, both only when <code>activity.tracked</code>, plus the activity name, which always renders — and a "Go to activity" link, the card's <b>second</b> target, a real anchor sitting beside (not inside) the outer anchor that still goes to the course. Drawn <b>imageless</b>, like <code>OVW-CRS-SECTION</code>, with a 220px floor. When that activity is also the one the drawer would list, the drawer is suppressed, matched by <code>cmid</code>. Ranks below the access states: the server resolves <code>cardmode</code> only when access is <code>open</code>. <span class="rule">calculator.php resolve_card_shape:323-368, describe_activity:502-520; get_competency_courses.php:194-210, allowlist :362-372; accordion.js renderCourseState:2109-2127, renderCourseGoLink:2143-2156, suppression :2175-2179; styles.css:2680-2771; lang/en:329, :429, :433</span></span>
+    <span class="k">OVW-CRS-SECTION</span><span class="v"><b>One-section course</b> — <code>cardmode</code> is <code>section</code>: the course has exactly one qualifying section under the same visibility filter the timeline applies (delegated sections excluded, hidden ones skipped; a section counts whether or not it holds modules, so an empty one qualifies). A one-row timeline naming a section usually called "General" or "Topic 1" would say nothing, so the bar is replaced by <b>the tracker's own progress ring, reused</b> — <code>.local-dimensions-progress-ring-container .local-dimensions-progress-ring-lg</code>, r=12 in a 32-unit viewBox, <code>stroke-dasharray = percentage × 0.754</code>, scaled to 56px by CSS — carrying a bare number and a <code>role="progressbar"</code> label. The figure in it is the course-wide <code>course.progress</code>, not one computed for the section: <code>calculator::describe_section()</code> returns only <code>name</code>, <code>hasownname</code>, <code>url</code> and <code>tracked</code>. That reuse holds up because with exactly one qualifying section every trackable activity sits inside it. No ring renders when <code>section.tracked</code> is false. The section's name renders only when a teacher authored one; the second target, "Access content", goes to <code>/course/section.php?id=…</code>. Because the ring is the shared component, <code>percentagedisplaymode</code> reaches it unchanged. The resolver checks the activity shape first, so the two compact states never coincide. <span class="rule">calculator.php resolve_card_shape:350-361, collect_card_sections:474-492, describe_section:537-547; accordion.js renderSectionRing:2030-2048, renderCourseState:2095-2107; get_competency_courses.php:194-210, allowlist :373-382; styles.css:1365-1380, 2680-2726; lang/en:27</span></span>
+    <span class="k">OVW-CRS-MORE</span><span class="v"><b>"View detailed progress" footer link</b> — right-aligned under the track, rendered only when <code>courses.length &gt;= 3</code> and both ids are present. Goes to <code>view-competency.php?id={planid}&amp;competencyid={competencyid}</code>, the same URL shape the related-competency pills and the rules children write, built from the <code>viewcompetencyurl</code> passed into the accordion's display settings (falling back to the plugin path under <code>wwwroot</code>). <b>Why it exists:</b> a card can only summarise a course as one percentage; the tracker shows per-section progress, locked sections and availability dates. <b>Why 3:</b> a plain count of what is shown, not the scroll-arrow condition — that one also fires with two cards on a narrow screen, so the link would appear and disappear on resize. <b>No <code>noredirect=1</code>:</b> the single-course redirect requires exactly one course to survive the filter, so it cannot fire from three up, and adding the flag would diverge from the other two links that write this URL. Outlined, not solid: the cards own the primary actions in this pane. <span class="rule">accordion.js renderCourseCardsScrollable:2319-2336; styles.css:2773-2802; lang/en:645 view_detailed_progress</span></span>
+    <span class="k">OVW-CRS-TITLE</span><span class="v"><b>(dropped)</b> Label-driven title — "Linked courses" becoming "Linked <b>{label}</b> &amp; activities" from the competency's label field. Retired because the pane has no heading left to retitle and a per-competency label would make the tab strip change wording between accordion items; no <code>linked_courses</code> string exists any more, and <code>related_content</code> took its slot. <span class="rule">superseded by OVW-CRS-PANE</span></span>
+    <span class="k">OVW-CRS-EMPTY</span><span class="v"><b>(dropped)</b> Empty group — a muted "nothing linked yet" line, proposed when the section rendered unconditionally and left a blank strip. Retired because the pane is gated as a tab: no visible course means no tab, so there is nothing to fill. <span class="rule">superseded by OVW-CRS-PANE / OVW-TAB-ORDER</span></span>
   </div>
 </div>
 </div>

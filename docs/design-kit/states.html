@@ -1,21 +1,21 @@
-<!-- @dsCard group="Fundações" name="Estados e foco" subtitle="default/hover/active/disabled/busy + foco visível (WCAG 2.2 AA) — mapeia .btn-* do Boost" -->
+<!-- @dsCard group="Foundations" name="States and focus" subtitle="default/hover/active/disabled/busy + visible focus (WCAG 2.2 AA) — the Boost .btn-* classes the hub actually uses" -->
 <style>
 :root{
   --mds-color-blue-100:#cfe2f2;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;--mds-color-blue-700:#094173;
-  --mds-color-red-500:#ca3120;--mds-color-red-600:#a2271a;--mds-color-red-700:#791d13;
+  --mds-color-red-500:#ca3120;--mds-color-red-600:#a2271a;
   --mds-color-gray-100:#f8f9fa;--mds-color-gray-200:#e9ecef;--mds-color-gray-300:#dee2e6;--mds-color-gray-400:#ced4da;--mds-color-gray-500:#8f959e;--mds-color-gray-600:#6a737b;--mds-color-gray-700:#495057;--mds-color-gray-900:#1d2125;--mds-color-white:#fff;
   --mds-bg-surface-default:var(--mds-color-white);--mds-bg-surface-subtle:var(--mds-color-gray-100);
   --mds-text-default:var(--mds-color-gray-900);--mds-text-muted:var(--mds-color-gray-600);--mds-text-disabled:var(--mds-color-gray-500);
   --mds-border-default:var(--mds-color-gray-300);--mds-border-strong:var(--mds-color-gray-500);
-  --mds-accent-busy:var(--mds-color-blue-500);
+  --mds-focus-default:var(--mds-color-blue-500);
   --mds-radius-md:0.5rem;--mds-stroke-sm:0.0625rem;--mds-loading-min-height:12rem;
-  --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
 }
 @media (prefers-color-scheme:dark){:root{
   --mds-bg-surface-default:#1d2125;--mds-bg-surface-subtle:#16191c;
   --mds-text-default:#f8f9fa;--mds-text-muted:#ced4da;--mds-text-disabled:#6a737b;
   --mds-border-default:#495057;--mds-border-strong:#6a737b;
-  --mds-accent-busy:var(--mds-color-blue-200);
+  --mds-focus-default:var(--mds-color-blue-200);
 }}
 body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
 .h{font-size:12px;font-weight:500;color:var(--mds-text-muted);margin:16px 0 6px;}
@@ -23,115 +23,186 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .cap{font-size:10px;color:var(--mds-text-muted);width:62px;}
 .btn{font-size:12px;padding:6px 14px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid transparent;color:var(--mds-color-white);}
-.sec{background:var(--mds-bg-surface-default);color:var(--mds-text-default);border-color:var(--mds-border-strong);}
+.sec{background:transparent;color:var(--mds-text-default);border-color:var(--mds-border-strong);}
+.dan{background:transparent;color:var(--mds-color-red-500);border-color:var(--mds-color-red-500);}
+.dan-fill{background:var(--mds-color-red-500);color:var(--mds-color-white);border-color:var(--mds-color-red-500);}
 .ghost{background:transparent;color:var(--mds-color-blue-500);border-color:transparent;}
-.dis{opacity:1;color:var(--mds-text-disabled);background:var(--mds-color-gray-200);border-color:var(--mds-color-gray-200);}
+.dis{opacity:0.65;}
+.foc{outline:2px solid var(--mds-focus-default);outline-offset:2px;}
+.foc-in{outline:2px solid var(--mds-focus-default);outline-offset:-2px;}
 .field{font-size:12px;padding:7px 10px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid var(--mds-border-default);background:var(--mds-bg-surface-default);color:var(--mds-text-default);min-width:160px;}
-.field.foc{border-color:var(--mds-color-blue-500);box-shadow:0 0 0 3px var(--mds-color-blue-200);}
-.load{min-height:var(--mds-loading-min-height);display:flex;align-items:center;justify-content:center;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);color:var(--mds-accent-busy);}
-.spin{display:inline-block;width:2rem;height:2rem;border:.25em solid currentColor;border-right-color:transparent;border-radius:50%;animation:.75s linear infinite spinner-border;}
-.spin.sm{width:1rem;height:1rem;border-width:.2em;}
-@keyframes spinner-border{to{transform:rotate(360deg);}}
-@media (prefers-reduced-motion:reduce){.spin{animation-duration:1.5s;}}
 .note{font-size:10px;color:var(--mds-text-muted);margin-top:2px;}
-.tag{font-family:Menlo,monospace;font-size:10px;color:var(--mds-text-muted);}
+.note b{color:var(--mds-text-default);}
+.tag{font-family:var(--font-mono);font-size:10px;color:var(--mds-text-muted);}
+code{font-family:var(--font-mono);font-size:10px;}
+/* The busy cover, reproduced from styles.css:4028-4069 so the card behaves like the pane it draws. */
+.pane{position:relative;min-height:var(--mds-loading-min-height);border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);padding:12px;overflow:hidden;}
+.pane .fake{height:12px;border-radius:3px;background:var(--mds-bg-surface-subtle);margin-bottom:9px;}
+.pane .fake.w70{width:70%;}
+.pane .fake.w45{width:45%;}
+.pane .fake.w85{width:85%;}
+.busy::before{content:'';position:absolute;top:0;right:0;bottom:0;left:0;z-index:2;background-color:rgba(255,255,255,0.55);}
+.busy::after{content:'';position:absolute;top:50%;left:50%;z-index:3;width:2rem;height:2rem;margin:-1rem 0 0 -1rem;border:0.25rem solid var(--mds-color-blue-500);border-right-color:transparent;border-radius:50%;animation:750ms linear infinite dim-spin;}
+@keyframes dim-spin{to{transform:rotate(360deg);}}
+@media (prefers-reduced-motion:reduce){.busy::after{animation-duration:1500ms;}}
+.spin{display:inline-block;width:1rem;height:1rem;border:.2em solid currentColor;border-right-color:transparent;border-radius:50%;animation:750ms linear infinite dim-spin;vertical-align:-2px;}
+.fa-spin-mock{display:inline-block;animation:750ms linear infinite dim-spin;}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border:0;border-radius:8px;background:#e7f0f9;color:#0f4d85;font-size:0.875rem;}
+.banner{display:flex;align-items:center;gap:8px;font-size:12px;padding:8px 10px;border-radius:var(--mds-radius-md);background:#cfe2ff;color:#084298;border:var(--mds-stroke-sm) solid #9ec5fe;}
+.pend{margin-top:14px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-left:3px dashed var(--mds-color-gray-500);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);padding:9px 11px;}
+.pend .t{font-size:11px;font-weight:600;margin-bottom:3px;}
+.pend p{font-size:10px;color:var(--mds-text-muted);margin:0;}
+.pend p b{color:var(--mds-text-default);}
+.grid2{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;}
+.grid2 > div{flex:1;min-width:230px;}
 </style>
 
-<div class="h">Primary · <span class="tag">.btn-primary</span></div>
+<div class="h">Primary · <span class="tag">.btn.btn-primary — 9 uses in the hub</span></div>
 <div class="row">
-  <span class="cap">default</span><span class="btn" style="background:var(--mds-color-blue-500)">Salvar</span>
-  <span class="cap">hover</span><span class="btn" style="background:var(--mds-color-blue-600)">Salvar</span>
-  <span class="cap">active</span><span class="btn" style="background:var(--mds-color-blue-700)">Salvar</span>
-  <span class="cap">focus</span><span class="btn" style="background:var(--mds-color-blue-500);box-shadow:0 0 0 3px var(--mds-color-blue-200)">Salvar</span>
-  <span class="cap">disabled</span><span class="btn dis">Salvar</span>
+  <span class="cap">default</span><span class="btn" style="background:var(--mds-color-blue-500)">Save</span>
+  <span class="cap">hover</span><span class="btn" style="background:var(--mds-color-blue-600)">Save</span>
+  <span class="cap">active</span><span class="btn" style="background:var(--mds-color-blue-700)">Save</span>
+  <span class="cap">focus</span><span class="btn foc" style="background:var(--mds-color-blue-500)">Save</span>
+  <span class="cap">disabled</span><span class="btn dis" style="background:var(--mds-color-blue-500)">Save</span>
 </div>
 
-<div class="h">Secondary · <span class="tag">.btn-secondary / .btn-outline-secondary</span></div>
+<div class="h">Secondary · <span class="tag">.btn.btn-outline-secondary — 10 uses</span></div>
 <div class="row">
-  <span class="cap">default</span><span class="btn sec">Cancelar</span>
-  <span class="cap">hover</span><span class="btn sec" style="background:var(--mds-color-gray-100)">Cancelar</span>
-  <span class="cap">focus</span><span class="btn sec" style="box-shadow:0 0 0 3px var(--mds-color-blue-200)">Cancelar</span>
+  <span class="cap">default</span><span class="btn sec">Cancel</span>
+  <span class="cap">hover</span><span class="btn sec" style="background:var(--mds-color-gray-100);color:var(--mds-color-gray-900)">Cancel</span>
+  <span class="cap">focus</span><span class="btn sec foc">Cancel</span>
 </div>
 
-<div class="h">Danger · <span class="tag">.btn-outline-danger</span></div>
+<div class="h">Danger · <span class="tag">.btn.btn-outline-danger — 1 use (remove enrolment method)</span></div>
 <div class="row">
-  <span class="cap">default</span><span class="btn" style="background:var(--mds-color-red-500)">Excluir</span>
-  <span class="cap">hover</span><span class="btn" style="background:var(--mds-color-red-600)">Excluir</span>
-  <span class="cap">active</span><span class="btn" style="background:var(--mds-color-red-700)">Excluir</span>
+  <span class="cap">default</span><span class="btn dan">Remove method</span>
+  <span class="cap">hover</span><span class="btn dan-fill">Remove method</span>
+  <span class="cap">focus</span><span class="btn dan foc">Remove method</span>
+</div>
+<div class="note">
+  The hub has no <b>filled</b> danger button: <code>btn-danger</code> has zero occurrences in
+  <code>templates/central/</code> and <code>amd/src/central/</code>. Only the <i>outline</i>, and in a
+  single place (<code>enrol_methods.mustache:110</code>). Real destruction goes through core's
+  <code>ModalDeleteCancel</code>, which brings its own red button.
 </div>
 
-<div class="h">Link / ghost · <span class="tag">.btn-link</span></div>
+<div class="h">Link / ghost · <span class="tag">.btn.btn-link — 15 uses, the hub's most common</span></div>
 <div class="row">
-  <span class="cap">default</span><span class="btn ghost">Procurar em frameworks</span>
-  <span class="cap">focus</span><span class="btn ghost" style="box-shadow:0 0 0 3px var(--mds-color-blue-200)">Procurar em frameworks</span>
+  <span class="cap">default</span><span class="btn ghost">Browse structures</span>
+  <span class="cap">focus</span><span class="btn ghost foc">Browse structures</span>
 </div>
 
-<div class="h">Carregando / ocupado · <span class="tag">.spinner-border</span></div>
+<div class="h">Visible focus · <span class="tag">:focus-visible → outline, not halo</span></div>
+<div class="row">
+  <span class="cap">outside</span><span class="btn foc" style="background:var(--mds-color-blue-500)">offset 2px</span>
+  <span class="cap">inside</span><span class="btn foc-in" style="background:var(--mds-color-blue-500)">offset -2px</span>
+  <span class="cap">field</span><span class="field foc">Search by name or ID number</span>
+</div>
+<div class="note">
+  The house pattern is <code>outline: 2px solid #0f6cbf</code> (or <code>var(--bs-primary, #0f6cbf)</code>)
+  with <code>outline-offset</code>: <b>27</b> <code>:focus-visible</code> rules in <code>styles.css</code>
+  write exactly that, plus 3 at <code>3px</code>. The offset is <code>2px</code> outside (19×) and
+  <code>-2px</code> inside (11×) — <i>inside</i> when the target touches the container's edge and the
+  outer ring would be clipped (the active tab, <code>:7255-7259</code>; the modal chip, <code>:4955-4959</code>).
+  There is no <code>box-shadow: 0 0 0 3px</code> halo in the plugin. Where <code>border: 0</code> kills
+  Boost's native ring, the focus rule is <b>restored explicitly</b> — that is why the tab indicator got
+  its own <code>:focus-visible</code>.
+</div>
+
+<div class="h">Loading / busy — the three shipped idioms</div>
 <div class="note" style="margin-bottom:8px;">
-  O hub fala <b>dois idiomas</b> para a mesma ideia: <code>spinner-border</code> (frameworks.js, via um
-  <code>makeSpinner()</code> compartilhado — banner do import + loader do export) e <code>fa fa-spinner fa-spin</code>
-  (enrol_methods, na linha e no contador). A troca de aba <b>do core</b> já mostra o ícone de loading; a lacuna era o
-  <code>reloadPane</code> do plugin (os ~20 refreshes pós-ação), <b>fechada em <code>976006d</code></b>: ele cobre o pane
-  com veil + spinner e marca <code>aria-busy</code>. Padrão do MDS: <b>só
-  <code>spinner-border</code></b>, nos dois formatos abaixo, e o pane marcado com <code>aria-busy</code> +
-  <code>aria-live="polite"</code> + <code>aria-label</code> — os três que o <code>format_mtube</code> já põe no
-  placeholder dele — mais um <code>role="status"</code>, que é <b>adição do hub</b>: o
-  <code>fakeactivities.mustache</code> é um <code>&lt;ul&gt;</code> e não declara <code>role</code> nenhum, fica com o
-  <code>role=list</code> implícito. O spinner em si vai <code>aria-hidden</code>: quem anuncia é o container, então o
-  <code>role="status"</code> fica nele e não no anel, senão vira live region aninhada dentro de live region.
-  O <code>aria-label</code> é <b>obrigatório</b>, não enfeite — mas pelo motivo certo: ele não dá <i>conteúdo</i> à live
-  region (anúncio de live region vem do conteúdo, e enquanto <code>aria-busy="true"</code> o anúncio fica adiado de
-  qualquer jeito); ele dá <b>nome</b>, e um <code>status</code> anônimo não diz nada a quem esbarra nele navegando.
-  Requisito para quem for implementar o pane: o placeholder entra no lugar do conteúdo em que o foco podia estar, então
-  precisa receber o foco — e o nome é o que o usuário ouve ao aterrissar. (O <code>reloadPane</code> shipou a forma de
-  <b>cover</b> — o conteúdo velho fica sob o veil, então o foco não migra para um placeholder; ele recupera o foco
-  <b>depois</b> da troca. A forma de <b>placeholder</b> abaixo é para o <b>primeiro paint</b>, quando não há conteúdo —
-  o mount do modal de participantes, IMP-11.) O
-  <code>aria-live</code> é redundante — <code>role="status"</code> já implica <code>polite</code> — e fica explícito de
-  propósito, porque o suporte a live region implícita varia entre leitores. (O <code>makeSpinner()</code> põe
-  <code>role="status"</code> <i>e</i> <code>aria-hidden</code> no mesmo elemento — o <code>aria-hidden</code> anula o
-  role; aqui os dois papéis ficam separados.)
+  <b>Core's</b> tab switch already shows its own loading icon. What the plugin writes are these three,
+  and each covers something different: the <b>pane cover</b>, the <b>control that fired</b> and the
+  <b>long-operation banner</b>.
 </div>
-<div class="row" style="align-items:flex-start;gap:16px;">
-  <div style="flex:1;min-width:220px;">
-    <div class="note" style="margin-bottom:4px;"><b>Pane</b> · troca de aba · <code>aria-busy="true"</code> · <code>--mds-loading-min-height</code> (12rem, shipado <code>b33c2d2</code>)</div>
-    <div class="load" role="status" aria-busy="true" aria-live="polite" aria-label="Carregando competências…"><span class="spin" aria-hidden="true"></span></div>
+<div class="grid2">
+  <div>
+    <div class="note" style="margin-bottom:4px;"><b>1 · The pane cover</b> · <code>reloadPane</code> · <code>aria-busy="true"</code></div>
+    <div class="pane busy" aria-busy="true">
+      <div class="fake w70"></div><div class="fake w85"></div><div class="fake w45"></div><div class="fake w70"></div>
+    </div>
+    <div class="note">
+      <code>tabs.js:77-79</code> adds the class <code>local-dimensions-central-tab-loading</code> and
+      <code>aria-busy="true"</code>; <code>:103-105</code> removes both in the <code>finally</code>, and only
+      if the reload's generation still owns the pane. The visual is a <b>cover</b>, not a replacement: an
+      <code>rgba(255,255,255,0.55)</code> veil in <code>::before</code> over the old content, a
+      <code>2rem</code> ring in <code>::after</code> with its own keyframe
+      (<code>styles.css:4028-4069</code>) — with no dependence on Boost's <code>spinner-border</code>. The
+      veil is fixed white: the hub is a light surface only.
+    </div>
   </div>
-  <div style="flex:1;min-width:220px;">
-    <div class="note" style="margin-bottom:4px;"><b>Botão</b> · <code>disabled</code> + <code>.spinner-border-sm</code></div>
-    <span class="btn dis" style="display:inline-flex;align-items:center;gap:6px;"><span class="spin sm" aria-hidden="true"></span>Salvando…</span>
+  <div>
+    <div class="note" style="margin-bottom:4px;"><b>2 · The control that fired</b> · <code>disabled</code> + <code>fa-spin</code></div>
+    <div class="row" style="margin-bottom:8px;">
+      <span class="iconbtn dis"><span class="fa-spin-mock">⟳</span></span>
+      <span class="note" style="margin:0;">the modal header's refresh chip</span>
+    </div>
+    <div class="note">
+      <code>context.js:212-214</code> (the contextbar's refresh) and <code>modal_refresh.js:74-75</code>
+      (the modal header's refresh) do the same: <code>button.disabled = true</code> and
+      <code>icon.classList.add('fa-spin')</code>, undone in a <code>finally</code>
+      (<code>:218-229</code> and <code>:80-83</code>). <code>context.js</code> also <b>hands focus back</b>
+      to the button if disabling it dropped focus on the <code>&lt;body&gt;</code> (<code>:226-228</code>).
+      The plugin's own styling here: a single line —
+      <code>.local-dimensions-modal-refresh[disabled] { cursor: default; }</code>
+      (<code>styles.css:4962-4964</code>). The rest of the disabled state is Boost's.
+    </div>
+  </div>
+</div>
+<div class="row" style="margin-top:12px;align-items:flex-start;">
+  <div style="flex:1;min-width:260px;">
+    <div class="note" style="margin-bottom:4px;"><b>3 · Long-operation banner</b> · <code>spinner-border spinner-border-sm</code></div>
+    <div class="banner" role="status"><span class="spin" aria-hidden="true"></span>Importing…</div>
+    <div class="note">
+      The only place Boost's <code>spinner-border</code> enters:
+      <code>frameworks.js:209-214</code> (<code>makeSpinner()</code>), consumed by the import banner
+      (<code>:230</code>, an <code>alert alert-info</code> with <code>role="status"</code> at
+      <code>:231</code>) and by the export loader (<code>:314</code>). Note the correct division of
+      roles: the <code>role="status"</code> sits on the <b>container</b> and the spinner goes
+      <code>aria-hidden="true"</code> — what announces is the text, not the ring. Putting both on the same
+      element would cancel the role.
+    </div>
   </div>
 </div>
 <div class="note" style="margin-top:8px;">
-  Este preview não carrega o Bootstrap, então reproduz aqui a keyframe <code>spinner-border</code> e a regra de
-  reduced-motion — só para o card girar de verdade. <b>No plugin não se escreve nenhuma das duas</b>: o Boost traz
-  <code>.75s linear infinite</code> e, sob <code>prefers-reduced-motion</code>, dobra a duração para <code>1.5s</code>
-  em vez de congelar (<code>$enable-reduced-motion: true</code>). Medidas idênticas às do Boost: 2rem/<code>.25em</code>
-  e 1rem/<code>.2em</code> no <code>-sm</code>; a cor sai de <code>currentColor</code>, então o spinner do botão herda
-  o cinza do <code>disabled</code> sozinho.
+  <b>Mandatory discipline</b>: clear the state in a <code>finally</code>, never only on the success path —
+  otherwise a load that fails leaves the pane spinning forever, with no retry. Today there are <b>9</b>
+  <code>finally</code> blocks in <code>amd/src/central/</code>: <code>tabs.js:100</code>,
+  <code>context.js:218</code>, <code>modal_refresh.js:80</code>, <code>frameworks.js:324</code>,
+  <code>competency_links.js:488</code>, <code>related_competencies.js:199</code>,
+  <code>enrol_methods.js:630</code>, <code>participants_users.js:113</code> and
+  <code>competency_tree_browser.js:274</code>. <code>downloadFramework()</code> is the complete example:
+  it re-enables the button, hides the loader <i>and</i> empties its content (<code>frameworks.js:324-327</code>).
 </div>
 <div class="note" style="margin-top:4px;">
-  <b>Disciplina obrigatória</b>: limpar o estado num <code>finally</code>, nunca só no caminho de sucesso — senão um
-  load que falha deixa o pane girando pra sempre, sem retry. O hub já usa <code>finally</code> em 5 pontos — o
-  <code>downloadFramework()</code> reabilita o botão e esconde o loader lá. O pane novo segue a mesma regra.
+  <b>House rule:</b> pane reloaded → cover; row swapped in place → <i>flash</i> (see
+  <code>toast.html</code>). The explicit escape hatch exists: <code>reloadPane(pane, args, {quiet: true})</code>
+  suppresses the cover, and today has a <b>single</b> caller — <code>plans.js:102</code>, the reload that
+  preserves the scroll position.
 </div>
 <div class="note" style="margin-top:4px;">
-  <b>Veredito dividido sobre o <code>format_mtube</code></b>, de onde vem metade deste card: os <b>templates</b> dele
-  são a referência boa — <code>fakeactivities.mustache</code> traz <code>aria-busy</code> +
-  <code>aria-live="polite"</code> + <code>aria-label</code> + esqueleto, que é justo o que falta no hub. O <b>JS</b> é o
-  contraexemplo, e o recorte que importa não é a camada e sim o próprio código de loading: os <b>4</b> arquivos que
-  tocam o <code>#background-loading</code> têm <b>zero</b> <code>finally</code> — e <b>3 deles são de
-  <code>features/</code></b>, a mesma camada que soma 60 blocos <code>finally</code> em <i>outros</i> arquivos. Os 3
-  pontos que escondem o loading (<code>main.js:946</code>, <code>preview_embed.js:141</code> e <code>:182</code>) estão
-  todos no caminho de sucesso, e os <code>catch</code> de <code>preview_embed.js:116</code> e <code>:129</code> dão
-  <code>return</code> sem restaurar nada — iframe que não carrega, spinner pra sempre, <i>dentro</i> da camada
-  disciplinada. A lição não é "mtube não sabe fazer": a disciplina existe na base e simplesmente não chega no código
-  onde o estado de load mora. Por isso a regra está no card.
+  This preview reproduces the keyframe and the <code>prefers-reduced-motion</code> rule because it does not
+  load Boost. <b>In the plugin this is written twice, on purpose</b>: the cover carries its own
+  (<code>styles.css:4059-4069</code>, 750ms → 1500ms under reduced-motion, mirroring Boost instead of
+  freezing) and <code>spinner-border</code> inherits Boost's.
 </div>
 
-<div class="h">Campo de formulário · <span class="tag">.form-control</span> · foco visível</div>
-<div class="row">
-  <span class="cap">default</span><span class="field">Buscar competência…</span>
-  <span class="cap">foco</span><span class="field foc">Buscar competência…</span>
+<div class="pend">
+  <div class="t">Pending — the first-paint placeholder (IMP-11) and the ARIA quartet</div>
+  <p>
+    The cover above covers <b>content that already exists</b>. The sibling form — a <b>placeholder</b> in
+    place of the missing content, on the first paint of the participants modal's on-demand mounted panes —
+    <b>was not built</b>, and with it falls the ARIA quartet this card already specified:
+    <code>role="status"</code> + <code>aria-live="polite"</code> + <code>aria-label</code> + focus moving
+    to the placeholder (which replaces the content where focus might have been). Of the quartet, only
+    <code>aria-busy</code> shipped, and on the cover.
+    <b>Evidence of absence:</b> a <code>grep</code> for <code>spinner</code>, <code>aria-busy</code>,
+    <code>role="status"</code> or <code>placeholder</code> in
+    <code>amd/src/central/participants_manager.js</code> and <code>cohort_manager.js</code> returns zero;
+    <code>templates/central/participants_manager.mustache:75-76</code> still delivers the cohorts pane
+    as a literally empty <code>&lt;div&gt;</code>, filled only afterwards by
+    <code>startMount</code> (<code>participants_manager.js:198</code>, fired on
+    <code>ModalEvents.shown</code> at <code>:237</code>, and by <code>ensureMounted</code> at
+    <code>:243-246</code> on the tab switch).
+  </p>
 </div>
-<div class="note">Anel de foco = <code>0 0 0 3px blue-200</code> sobre borda blue-500 (token <code>--mds-focus-default</code>). Todo interativo é alcançável por teclado e tem foco visível — pilar de acessibilidade do MDS.</div>

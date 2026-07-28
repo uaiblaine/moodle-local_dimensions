@@ -1,4 +1,4 @@
-<!-- @dsCard group="Shell" name="Sticky footer" subtitle="As 3 variantes reais — é o lançador da maioria dos modais" -->
+<!-- @dsCard group="Shell" name="Sticky footer" subtitle="The 3 real variants — it is the launcher of most of the modals" -->
 <style>
 :root{
   --mds-color-blue-50:#e7f0f9;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-800:#062b4c;
@@ -17,9 +17,9 @@
   --mds-bg-surface-default:#1d2125;--mds-bg-surface-subtle:#16191c;--mds-bg-surface-strong:#343a40;
   --mds-text-default:#f8f9fa;--mds-text-muted:#ced4da;
   --mds-border-default:#495057;
-  /* blue-200 sobre superfície escura, e não blue-500: mesma escolha do states.html e do
-     modal-shell.html. Os tokens --mds-bg-interactive-* não têm variante dark em lugar nenhum
-     do kit, então nenhum fundo aqui é pintado com eles. */
+  /* blue-200 over the dark surface, and not blue-500: the same choice states.html and
+     modal-shell.html make. The --mds-bg-interactive-* tokens have no dark variant anywhere
+     in the kit, so no background here is painted with them. */
   --mds-accent:var(--mds-color-blue-200);--mds-accent-tint:var(--mds-color-blue-800);
 }}
 body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
@@ -30,39 +30,39 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .note b{color:var(--mds-text-default);font-weight:500;}
 code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surface-strong);border-radius:4px;padding:0 4px;}
 
-/* ---- A barra: o #sticky-footer do core com o inner layout que os 3 mustaches trazem ---- */
+/* ---- The bar: core's #sticky-footer with the inner layout the 3 mustaches bring ---- */
 .foot{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);box-shadow:var(--mds-shadow-md);}
-/* As duas regras reais de styles.css:3969-3972, no seletor de id que vence o overflow:hidden do Boost. */
+/* The two real rules from styles.css:5486-5489, in the id selector that beats Boost's overflow:hidden. */
 .foot .fwrap{display:flex;align-items:center;gap:8px;padding:6px 12px;justify-content:safe center;overflow-x:auto;}
-/* Padrão cru do core: btn py-0 d-flex flex-column align-items-center — ícone acima do rótulo
-   centrado, sem variante de cor. flex-shrink:0 é a regra real (styles.css:3974-3976). */
+/* Core's raw pattern: btn py-0 d-flex flex-column align-items-center — icon above a centred
+   label, no colour variant. flex-shrink:0 is the real rule (styles.css:5491-5493). */
 .fbtn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 9px;border:var(--mds-stroke-sm) solid transparent;border-radius:var(--mds-radius-sm);background:none;color:var(--mds-text-default);font-family:inherit;font-size:11px;line-height:1.3;cursor:pointer;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
 .fbtn:hover{background:var(--mds-bg-surface-strong);}
 .fbtn:focus-visible{outline:2px solid var(--mds-accent);outline-offset:1px;}
-/* styles.css:3978-3980 põe font-size:1.1rem no <i> da fonte de ícones; aqui o glifo é um SVG,
-   então o equivalente é a caixa de 1.1rem abaixo. */
+/* styles.css:5495-5497 puts font-size:1.1rem on the icon font's <i>; here the glyph is an SVG,
+   so the equivalent is the 1.1rem box below. */
 .ic{width:1.1rem;height:1.1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .lbl{white-space:nowrap;}
-/* Anotação DO CARD (não existe no mustache): marca o botão que abre um dos 17 modais do hub.
-   No rodapé real todos os botões têm a mesma altura e os ícones alinham; a pílula quebraria isso,
-   então os botões sem pílula levam um placeholder invisível que reserva a mesma altura. */
+/* CARD annotation (it does not exist in the mustache): marks the button that opens one of the hub's
+   17 modals. In the real footer every button has the same height and the icons line up; the pill
+   would break that, so the buttons with no pill carry an invisible placeholder reserving the same height. */
 .mflag-ph{visibility:hidden;}
 .mflag{font-family:var(--font-mono);font-size:8.5px;line-height:1.5;padding:0 5px;border-radius:var(--mds-radius-pill);background:var(--mds-accent-tint);color:var(--mds-accent);border:var(--mds-stroke-sm) solid var(--mds-accent);white-space:nowrap;margin-top:1px;}
 
-/* Colapso sr-only real (styles.css:3985-3997). Estreite a janela abaixo de 768px e os rótulos
-   destes rodapés somem de verdade — os ícones são aria-hidden, então o rótulo é o único nome
-   acessível do botão e por isso ele fica na árvore, não em display:none. */
+/* Real sr-only collapse (styles.css:5502-5514). Narrow the window below 768px and these footers'
+   labels really do disappear — the icons are aria-hidden, so the label is the button's only
+   accessible name and that is why it stays in the tree, not in display:none. */
 @media (max-width:767.98px){
   .fbtn .lbl{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;}
-  /* A pílula é anotação do card e não sobrevive ao colapso — o rodapé real vira só ícone. */
+  /* The pill is a card annotation and does not survive the collapse — the real footer becomes icon-only. */
   .fbtn .mflag{display:none;}
 }
 
 .legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mds-text-muted);margin:10px 0 2px;}
-/* border-left em --mds-accent (e não --mds-bg-interactive-primary-default, como o tokens.html):
-   a família --mds-bg-interactive-* não tem variante dark, e o blue-500 sobre a superfície escura
-   mede 3,02:1 — passa raspando no mínimo de 3:1 de componente. O --mds-accent é o mesmo blue-500
-   no claro (5,36:1) e vira blue-200 no escuro (8,87:1). */
+/* border-left on --mds-accent (and not --mds-bg-interactive-primary-default, as tokens.html does):
+   the --mds-bg-interactive-* family has no dark variant, and blue-500 over the dark surface
+   measures 3.02:1 — scraping past the 3:1 component minimum. --mds-accent is the same blue-500
+   in light (5.36:1) and becomes blue-200 in dark (8.87:1). */
 .callout{margin-top:20px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-left:3px solid var(--mds-accent);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);padding:10px 12px;}
 .callout .t{font-size:12px;font-weight:500;margin-bottom:4px;}
 .callout li{font-size:11px;color:var(--mds-text-muted);margin:4px 0;}
@@ -84,182 +84,203 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
 </defs></svg>
 
 <div class="note" style="margin-top:0;">
-  O rodapé fixo é a superfície de ações da Central e <b>não é decoração</b>: destes 16 botões saem
-  <b>10 dos 17 modais</b> do hub, e para <b>7</b> deles ele é a <b>única</b> porta. Tirar um botão daqui não
-  muda layout — <b>tira uma ação do produto</b> (e, nesses 7, deixa o modal inalcançável).
-  A página tem <b>um</b> <code>\core\output\sticky_footer</code> (<code>central.php:139-140</code>, com
-  <code>set_auto_enable(false)</code>) e as <b>3 abas dirigem essa mesma superfície</b>, trocando o
-  <code>innerHTML</code> dela — coordenado por <code>amd/src/central/action_footer.js</code>.
+  The sticky footer is the hub's action surface and <b>is not decoration</b>: these 16 buttons open
+  <b>10 of the hub's 17 modals</b>, and for <b>7</b> of them it is the <b>only</b> door. Taking a button out of
+  here does not change layout — <b>it takes an action out of the product</b> (and, for those 7, leaves the modal
+  unreachable).
+  The page has <b>one</b> <code>\core\output\sticky_footer</code> (<code>central.php:150-152</code>, with
+  <code>set_auto_enable(false)</code> at <code>:151</code>) and the <b>3 tabs drive that same surface</b>, swapping its
+  <code>innerHTML</code> — coordinated by <code>amd/src/central/action_footer.js</code>.
 </div>
 
-<div class="legend"><span class="mflag">modal</span> abre um dos 17 modais do hub · sem pílula = Ajax direto ou confirm do core</div>
+<div class="legend"><span class="mflag">modal</span> opens one of the hub's 17 modals · no pill = direct Ajax or core confirm</div>
 
-<div class="h">Estruturas · <span class="tag">central/structure_footer_actions.mustache</span> · 7 ações · age na linha ativa da árvore</div>
+<div class="h">Competencies tab · <span class="tag">central/structure_footer_actions.mustache</span> · 7 actions · acts on the tree's active row</div>
 <div class="foot">
   <div class="fwrap">
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pencil"/></svg><span class="lbl">Editar detalhes</span><span class="mflag" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg><span class="lbl">Adicionar filha</span><span class="mflag" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-list"/></svg><span class="lbl">Regra da competência</span><span class="mflag" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-link"/></svg><span class="lbl">Cursos e atividades</span><span class="mflag" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-exchange"/></svg><span class="lbl">Competências referenciadas</span><span class="mflag" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-move"/></svg><span class="lbl">Mover para posição…</span><span class="mflag" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-trash"/></svg><span class="lbl">Excluir</span><span class="mflag mflag-ph" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pencil"/></svg><span class="lbl">Edit details</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg><span class="lbl">Add child</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-list"/></svg><span class="lbl">Competency rule</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-link"/></svg><span class="lbl">Courses &amp; activities</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-exchange"/></svg><span class="lbl">Related competencies</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-move"/></svg><span class="lbl">Move to position…</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-trash"/></svg><span class="lbl">Delete</span><span class="mflag mflag-ph" aria-hidden="true">modal</span></button>
   </div>
 </div>
 <div class="note">
   <code>data-action</code>: <code>edit</code>, <code>addchild</code>, <code>rules</code>, <code>links</code>,
-  <code>related</code>, <code>moveto</code>, <code>delete</code>. Os botões <b>não carregam dataset por item</b> —
-  <code>dispatchStructureAction</code> lê a linha ativa do módulo. <code>edit</code> e <code>addchild</code> abrem o
-  <b>mesmo</b> <code>ModalForm</code> (<code>structure.js:797</code>) com args diferentes; por isso 7 botões, 6 com
-  pílula, e só <b>5 modais distintos</b> nesta aba. <code>delete</code> é o único sem modal próprio: vai no
-  <code>Notification.deleteCancelPromise</code> do core.
+  <code>related</code>, <code>moveto</code>, <code>delete</code>. The buttons <b>carry no per-item dataset</b> —
+  <code>dispatchStructureAction</code> (<code>structure.js:1298-1305</code>) reads the module's active row.
+  <code>edit</code> and <code>addchild</code> open the
+  <b>same</b> <code>ModalForm</code> (<code>structure.js:798</code>) with different args; hence 7 buttons, 6 with a
+  pill, and only <b>5 distinct modals</b> in this tab. <code>delete</code> is the only one with no modal of its own:
+  it goes to core's <code>Notification.deleteCancelPromise</code>.
 </div>
 
-<div class="h">Frameworks · <span class="tag">central/frameworks_footer_actions.mustache</span> · 4 ações · age na linha selecionada</div>
+<div class="h">Structures tab · <span class="tag">central/frameworks_footer_actions.mustache</span> · 4 actions · acts on the selected row</div>
 <div class="foot">
   <div class="fwrap">
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pencil"/></svg><span class="lbl">Editar detalhes</span><span class="mflag" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-eye"/></svg><span class="lbl">Alternar visibilidade</span><span class="mflag mflag-ph" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><span class="lbl">Duplicar</span><span class="mflag mflag-ph" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-trash"/></svg><span class="lbl">Excluir</span><span class="mflag mflag-ph" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pencil"/></svg><span class="lbl">Edit details</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-eye"/></svg><span class="lbl">Toggle visibility</span><span class="mflag mflag-ph" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><span class="lbl">Duplicate</span><span class="mflag mflag-ph" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-trash"/></svg><span class="lbl">Delete</span><span class="mflag mflag-ph" aria-hidden="true">modal</span></button>
   </div>
 </div>
 <div class="note">
   <code>data-action</code>: <code>edit</code>, <code>visibility</code>, <code>duplicate</code>, <code>delete</code>.
-  É a variante <b>mais magra em modais</b>: só <code>edit</code> abre um (<code>frameworks.js:174</code>).
-  <code>visibility</code> e <code>duplicate</code> são <b>Ajax direto + reload do pane</b>, sem diálogo nenhum;
-  <code>delete</code> passa pelo confirm do core (e por um <code>Notification.alert</code> quando a linha não é
-  <code>deletable</code>). O ícone de <code>visibility</code> alterna <code>fa-eye</code>/<code>fa-eye-slash</code>
-  conforme o contexto <code>visible</code>. Os outros 2 modais desta aba (importar CSV, exportar CSV) <b>não saem
-  do rodapé</b> — são botões do cabeçalho.
+  It is the <b>leanest variant in modals</b>: only <code>edit</code> opens one (<code>frameworks.js:172</code>).
+  <code>visibility</code> and <code>duplicate</code> are <b>direct Ajax + pane reload</b>, with no dialog at all
+  (<code>frameworks.js:369-375</code> and <code>:384-386</code>);
+  <code>delete</code> goes through core's confirm (<code>:407</code>) and through a <code>Notification.alert</code>
+  when the row is not <code>deletable</code> (<code>:397-398</code>). The <code>visibility</code> icon toggles
+  <code>fa-eye</code>/<code>fa-eye-slash</code>
+  according to the <code>visible</code> context. The other 2 modals in this tab (import CSV, export CSV) do <b>not
+  come from the footer</b> — they are header buttons.
 </div>
 
-<div class="h">Planos · <span class="tag">central/plans.mustache:462-488</span> · 5 ações · age no modelo selecionado</div>
+<div class="h">Learning plans tab · <span class="tag">central/plans.mustache:462-488</span> · 5 actions · acts on the selected template</div>
 <div class="foot">
   <div class="fwrap">
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pencil"/></svg><span class="lbl">Editar detalhes</span><span class="mflag" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg><span class="lbl">Adicionar competência</span><span class="mflag" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-users"/></svg><span class="lbl">Gerenciar participantes</span><span class="mflag" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><span class="lbl">Duplicar modelo</span><span class="mflag mflag-ph" aria-hidden="true">modal</span></button>
-    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-trash"/></svg><span class="lbl">Excluir modelo</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pencil"/></svg><span class="lbl">Edit details</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg><span class="lbl">Add competency</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-users"/></svg><span class="lbl">Manage participants</span><span class="mflag" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><span class="lbl">Duplicate template</span><span class="mflag mflag-ph" aria-hidden="true">modal</span></button>
+    <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-trash"/></svg><span class="lbl">Delete template</span><span class="mflag" aria-hidden="true">modal</span></button>
   </div>
 </div>
 <div class="note">
   <code>data-action</code>: <code>edit-template</code>, <code>browse-frameworks</code>,
-  <code>manage-participants</code>, <code>duplicate-template</code>, <code>delete-template</code>. É a <b>única
-  variante autorada server-side</b>: o markup nasce num holder <code>[data-region="plans-footer-actions"] hidden</code>
-  (para levar o <code>data-id</code> do modelo) e o <code>plans.js:797-799</code> passa o
-  <code>innerHTML</code> dele para o coordenador. Ao contrário das outras duas, aqui os botões <b>carregam
-  dataset</b>. <code>duplicate-template</code> é Ajax direto. <code>delete-template</code> é o único
-  <b>condicional</b>: abre o <code>ModalDeleteCancel</code> próprio (<code>plans.js:251</code>, com a escolha
-  desvincular/excluir planos) só quando o modelo <b>tem planos</b>; sem planos, cai no confirm do core.
+  <code>manage-participants</code>, <code>duplicate-template</code>, <code>delete-template</code>. It is the <b>only
+  server-side authored variant</b>: the markup is born in a <code>[data-region="plans-footer-actions"] hidden</code>
+  holder (so it can carry the template's <code>data-id</code>) and <code>plans.js:786-789</code> hands its
+  <code>innerHTML</code> to the coordinator — and <b>removes the holder</b> right after, so the buttons are not
+  duplicated in the DOM. Unlike the other two, here the buttons <b>do carry a
+  dataset</b>. <code>duplicate-template</code> is direct Ajax. <code>delete-template</code> is the only
+  <b>conditional</b> one: it opens its own <code>ModalDeleteCancel</code> (<code>plans.js:240</code>, with the
+  unlink/delete-plans choice) only when the template <b>has plans</b>; with no plans, it falls back to core's confirm
+  (<code>:256</code>).
 </div>
 
-<div class="h">A conta — alcança 10, é a única porta de 7</div>
+<div class="h">The count — it reaches 10, it is the only door for 7</div>
 <div class="note" style="margin-top:2px;">
-  O hub constrói <b>17</b> modais (<b>4</b> <code>ModalForm</code> + <b>13</b>
-  <code>Modal*.create</code>, contados em <code>amd/src/central/</code> — a unidade é o <b>ponto de
-  construção</b>, não o botão). O rodapé alcança <b>10</b> deles <b>direto</b>, mas <b>alcançar não é
-  monopolizar</b>: <b>3</b> desses 10 têm <b>porta paralela no cabeçalho</b>, então a exclusividade é de <b>7</b>.
+  The hub builds <b>17</b> modals (<b>4</b> <code>new ModalForm</code> + <b>13</b>
+  <code>Modal*.create</code> — <b>6</b> <code>Modal.create</code>, <b>6</b> <code>ModalSaveCancel.create</code>,
+  <b>1</b> <code>ModalDeleteCancel.create</code>; counted in <code>amd/src/central/</code>, the unit is the
+  <b>construction point</b>, not the button — the point-by-point census is in
+  <code>modal-shell.html</code>). The footer reaches <b>10</b> of them <b>directly</b>, but <b>reaching is not
+  monopolising</b>: <b>3</b> of those 10 have a <b>parallel door in the header</b>, so exclusivity is <b>7</b>.
   <ul style="margin:6px 0 0;padding-left:18px;">
-    <li><b>7 exclusivos</b> (o rodapé é a única porta): mover nó (<code>moveto</code>), regra
-      (<code>rules</code>), vínculos (<code>links</code>), referenciadas (<code>related</code>), navegador de
-      frameworks (<code>browse-frameworks</code>), excluir-modelo (<code>delete-template</code>) e participantes
-      (<code>manage-participants</code>) — cada um só aparece no próprio template de rodapé.</li>
-    <li><b>3 com porta paralela</b> — os <b>formulários</b>: <code>frameworks.js:174</code> (rodapé
-      <code>edit</code> <b>e</b> cabeçalho <code>new</code>, <code>frameworks.mustache:82</code> →
-      <code>frameworks.js:501-502</code> → <code>createFramework</code>); <code>structure.js:797</code> (rodapé
-      <code>edit</code>/<code>addchild</code> <b>e</b> cabeçalho <code>add</code>,
-      <code>structure.mustache:127</code> → <code>structure.js:1424-1426</code>); <code>plans.js:212</code>
-      (rodapé <code>edit-template</code>, cabeçalho <code>new-template</code> em
-      <code>plans.mustache:182</code> <b>e</b> o <code>edit-competency</code> do kebab em
-      <code>plans.mustache:405</code> → <code>plans.js:739</code> — os três caem no mesmo
-      <code>openForm</code>).</li>
+    <li><b>7 exclusive</b> (the footer is the only door): move node (<code>moveto</code> →
+      <code>structure.js:988</code>), rule (<code>rules</code> → <code>rule_config.js:144</code>), links
+      (<code>links</code> → <code>competency_links.js:862</code>), related competencies (<code>related</code> →
+      <code>related_competencies.js:239</code>), browse structures (<code>browse-frameworks</code> →
+      <code>competency_browser.js:106</code>), delete-template (<code>delete-template</code> →
+      <code>plans.js:240</code>) and participants (<code>manage-participants</code> →
+      <code>participants_manager.js:171</code>) — each one appears only in its own footer template.</li>
+    <li><b>3 with a parallel door</b> — the <b>forms</b>: <code>frameworks.js:172</code> (footer
+      <code>edit</code> <b>and</b> header <code>new</code>, <code>frameworks.mustache:82</code> →
+      <code>frameworks.js:500</code> → <code>createFramework</code>, <code>:201-202</code>);
+      <code>structure.js:798</code> (footer
+      <code>edit</code>/<code>addchild</code> <b>and</b> header <code>add</code>,
+      <code>structure.mustache:127</code> → <code>structure.js:1425-1427</code>); <code>plans.js:201</code>
+      (footer <code>edit-template</code> at <code>plans.js:721</code>, header <code>new-template</code> at
+      <code>plans.mustache:182</code> → <code>plans.js:714</code> <b>and</b> the kebab's <code>edit-competency</code> at
+      <code>plans.mustache:405</code> → <code>plans.js:728</code> — all three land in the same
+      <code>openForm</code>, <code>plans.js:200</code>).</li>
   </ul>
-  Somando o aninhado: só <code>enrol_methods</code> depende de fato (a aba de métodos de inscrição só existe
-  dentro de participantes, que só abre pelo rodapé) — <b>8 dos 17 dependem do rodapé</b>. A escala
-  (<code>framework_scaleconfig</code>) <b>não</b> depende: o botão “Configurar escala” entra
-  <b>incondicionalmente</b> em <code>classes/form/framework_dynamic_form.php:195</code> (o
-  <code>$configured</code> da linha 189 só troca o texto do resumo), então ele também aparece no formulário de
-  <b>criação</b>, que sai do cabeçalho.
-  <br>Os <b>5</b> que nunca vêm do rodapé: importar e exportar CSV (cabeçalho de Frameworks), uso da competência
-  (chip do detalhe), detalhe da competência e mover competência (kebab do plano).
-  Os confirms do core (<code>deleteCancelPromise</code>, <code>alert</code>) não entram nessa conta: o hub não
-  os constrói.
-  <br><b>A porta paralela não enfraquece a regra — ela a afia.</b> O botão do cabeçalho <b>cria</b> uma entidade
-  nova; o do rodapé <b>edita a que está selecionada</b>. Tirar o do rodapé não órfã o modal: <b>órfã a ação</b>.
-  Não sobra nenhuma forma de agir sobre a linha selecionada.
+  Adding the nested one: only <code>enrol_methods</code> actually depends (<code>enrol_methods.js:859</code> — the
+  enrolment-methods tab exists only inside participants, which only opens from the footer) — <b>8 of the 17 depend
+  on the footer</b>. The scale
+  (<code>framework_scaleconfig.js:139</code>) does <b>not</b> depend: the "Configure scale" button enters
+  <b>unconditionally</b> at <code>classes/form/framework_dynamic_form.php:195</code> (the
+  <code>$configured</code> on line 189 only swaps the summary text), so it also appears in the
+  <b>create</b> form, which comes from the header.
+  <br>The <b>5</b> that never come from the footer: import (<code>frameworks.js:260</code>) and export CSV
+  (<code>frameworks.js:343</code>), both in the Structures tab's header; competency usage
+  (<code>structure.js:1225</code>, from the detail's <code>show-usage</code> metric), competency detail
+  (<code>competency_detail.js:277</code>) and move competency from the plan's kebab
+  (<code>plans.js:557</code>).
+  Core's confirms (<code>deleteCancelPromise</code>, <code>alert</code>) do not enter this count: the hub does not
+  build them.
+  <br><b>The parallel door does not weaken the rule — it sharpens it.</b> The header button <b>creates</b> a new
+  entity; the footer one <b>edits the selected one</b>. Taking the footer one away does not orphan the modal:
+  <b>it orphans the action</b>. No way is left to act on the selected row.
 </div>
 
-<div class="h">CSS que sustenta a barra · <span class="tag">styles.css:3965-3997</span></div>
+<div class="h">The CSS that holds the bar up · <span class="tag">styles.css:5482-5514</span></div>
 <div class="note" style="margin-top:2px;">
-  <b>Centralizar sem cortar</b>: <code>#sticky-footer .local-dimensions-central-footer-actions</code> aplica
-  <code>justify-content: safe center</code> + <code>overflow-x: auto</code>. O <b>seletor de id é deliberado</b>:
-  o Boost põe <code>overflow: hidden</code> em <code>.sticky-footer-content</code>
-  (<code>theme/boost/scss/moodle/sticky-footer.scss:22-23</code>, aninhado em <code>.stickyfooter</code> →
-  especificidade <code>0,2,0</code>); o seletor de id do plugin é <code>1,1,0</code> e <b>vence sem
-  <code>!important</code></b>. Sem isso a variante de 7 seria cortada em vez de rolar.
-  O <code>safe</code> é o detalhe que importa: um <code>center</code> puro transborda para os <b>dois</b> lados
-  quando não cabe, e o que sai pela <b>esquerda</b> fica inalcançável por scroll. Com <code>safe center</code> a
-  fila fica centrada enquanto couber e cai para alinhada ao início quando não couber, então o primeiro botão
-  continua sempre acessível.
-  <br><b>Onde a barra de Estruturas (a de 7) realmente rola</b> — medido neste card, não no plugin, redimensionando
-  a janela de verdade (clampar só o elemento <b>não</b> serve: a media query lê o <b>viewport</b>):
+  <b>Centre without clipping</b>: <code>#sticky-footer .local-dimensions-central-footer-actions</code>
+  (<code>styles.css:5486-5489</code>) applies
+  <code>justify-content: safe center</code> + <code>overflow-x: auto</code>. The <b>id selector is deliberate</b>:
+  Boost puts <code>overflow: hidden</code> on <code>.sticky-footer-content</code> nested in
+  <code>.stickyfooter</code> (<code>theme/boost/scss/moodle/sticky-footer.scss</code>) → specificity
+  <code>0,2,0</code>; the plugin's id selector is <code>1,1,0</code> and <b>wins without
+  <code>!important</code></b> — which is what the rule's own comment records
+  (<code>styles.css:5482-5485</code>). Without it the 7-button variant would be clipped instead of scrolling.
+  The <code>safe</code> is the detail that matters: a plain <code>center</code> overflows on <b>both</b> sides
+  when it does not fit, and what leaves on the <b>left</b> is unreachable by scrolling. With <code>safe center</code>
+  the row stays centred while it fits and falls back to start-aligned when it does not, so the first button is
+  always still reachable.
+  <br><b>Where the Structure bar (the 7-button one) actually scrolls</b> — measured in this card, not in the plugin,
+  by really resizing the window (clamping the element alone does <b>not</b> do: the media query reads the <b>viewport</b>):
   <ul style="margin:6px 0 0;padding-left:18px;">
-    <li><b>abaixo de ~390px</b> — <b>rola</b>, apesar do colapso: só os ícones, e ainda não cabem
-      (<b>375px</b>: <code>335</code> &gt; <code>333</code>; <b>326px</b>: sobra <code>57</code>). As janelas
-      <b>mais estreitas são as que mais rolam</b>.</li>
-    <li><b>~390px até 768px</b> — <b>cabe</b>, centrada (em <b>390px</b>, <code>348</code> = <code>348</code>).
-      É só aqui que o colapso “faz caber”.</li>
-    <li><b>768px até ~950px</b> — <b>rola</b>: os rótulos voltam e as 7 não cabem (em <b>790px</b>,
-      <code>scrollWidth 885</code> &gt; <code>clientWidth 733</code>), com <code>scrollLeft</code> em
-      <code>0</code> e o primeiro botão sempre alcançável — o <code>safe</code> em ação.</li>
-    <li><b>acima de ~950px</b> — <b>cabe</b>, centrada.</li>
+    <li><b>below ~390px</b> — <b>scrolls</b>, despite the collapse: icons only, and they still do not fit
+      (<b>375px</b>: <code>335</code> &gt; <code>333</code>; <b>326px</b>: <code>57</code> of overflow). The
+      <b>narrowest windows are the ones that scroll most</b>.</li>
+    <li><b>~390px to 768px</b> — <b>fits</b>, centred (at <b>390px</b>, <code>348</code> = <code>348</code>).
+      This is the only band where the collapse "makes it fit".</li>
+    <li><b>768px to ~950px</b> — <b>scrolls</b>: the labels come back and the 7 do not fit (at <b>790px</b>,
+      <code>scrollWidth 885</code> &gt; <code>clientWidth 733</code>), with <code>scrollLeft</code> at
+      <code>0</code> and the first button always reachable — <code>safe</code> in action.</li>
+    <li><b>above ~950px</b> — <b>fits</b>, centred.</li>
   </ul>
-  Ou seja: <b>duas</b> bandas de scroll, uma de cada lado do breakpoint, e não uma só.
-  <br><b>Colapso sr-only</b>: abaixo de <code>767.98px</code> o rótulo vira sr-only e sobra só o ícone
-  (padrão action-bar). É <b>obrigatório</b> que ele continue na árvore de acessibilidade e não em
-  <code>display:none</code>: os <code>&lt;i&gt;</code> são <code>aria-hidden</code>, então o
-  <code>&lt;span&gt;</code> é o <b>único nome acessível</b> do botão. As duas regras estão reproduzidas neste
-  card e valem aqui também.
+  In other words: <b>two</b> scroll bands, one on each side of the breakpoint, and not just one.
+  <br><b>sr-only collapse</b>: below <code>767.98px</code> the label becomes sr-only and only the icon is left
+  (action-bar pattern). It is <b>mandatory</b> that it stays in the accessibility tree and not in
+  <code>display:none</code>: the <code>&lt;i&gt;</code> are <code>aria-hidden</code>, so the
+  <code>&lt;span&gt;</code> is the button's <b>only accessible name</b>. Both rules are reproduced in this
+  card and hold here too.
 </div>
 <div class="note">
-  Este preview não carrega o Boost nem a fonte de ícones: os glifos acima são SVG inline (o plugin usa
+  This preview loads neither Boost nor the icon font: the glyphs above are inline SVG (the plugin uses
   <code>fa-pencil</code>, <code>fa-plus</code>, <code>fa-list</code>, <code>fa-link</code>,
   <code>fa-exchange</code>, <code>fa-arrows-up-down-left-right</code>, <code>fa-trash</code>,
   <code>fa-eye</code>/<code>fa-eye-slash</code>, <code>fa-copy</code>, <code>fa-users</code>,
-  <code>fa-clone</code>), e a pílula <span class="mflag">modal</span> é anotação do card, não markup shipado.
-  Dois rótulos <b>não são do plugin</b> e seguem o langpack do site: “Regra da competência”
-  (<code>competencyrule</code>, do <code>tool_lp</code>) e “Excluir” (<code>delete</code>, do core).
+  <code>fa-clone</code>), and the <span class="mflag">modal</span> pill is a card annotation, not shipped markup.
+  Two labels <b>are not the plugin's</b> and follow the site's langpack: "Competency rule"
+  (<code>competencyrule</code>, from <code>tool_lp</code>) and "Delete" (<code>delete</code>, from core).
 </div>
 
 <div class="callout">
-  <div class="t">Invariante — o rodapé é o lançador, não um enfeite</div>
+  <div class="t">Invariant — the footer is the launcher, not an ornament</div>
   <ul>
-    <li><b>Remover um botão daqui remove uma ação do produto.</b> 11 dos 16 botões são porta de entrada de um
-      modal do hub; o rodapé alcança <b>10 dos 17</b> e é a <b>única</b> porta de <b>7</b> deles (<b>8</b>
-      contando <code>enrol_methods</code>, que só vive dentro de participantes) — esses ficam
-      <b>inalcançáveis</b>. Os outros <b>3</b> são os formulários, que têm porta paralela no cabeçalho: ali o
-      modal sobrevive, mas <b>a ação não</b> — o cabeçalho <b>cria</b> uma entidade nova, o rodapé <b>edita a
-      selecionada</b>, e sem ele não resta forma nenhuma de agir sobre a linha escolhida. Nos dois casos não é
-      mudança de layout.</li>
-    <li><b>Nunca um kebab por linha para a entidade primária da aba</b> — framework, nó da estrutura, modelo.
-      A intenção é o rodapé. Se um <code>.dc.html</code> do Claude Design mostrar um ⋮ nessas linhas, o ⋮ é
-      <b>artefato do mock</b>, não requisito: já houve uma sessão que trocou o rodapé de
-      <code>frameworks.js</code> por um menu por card exatamente assim, e foi revertido.</li>
-    <li><b>A fronteira da regra</b>: ações de <b>competência dentro da lista de um plano</b> são uma
-      <b>lista aninhada</b> e usam kebab com razão — o rodapé daquela aba já está ocupado pelas 5 ações do
-      <b>modelo selecionado</b>, que é a entidade primária dela. O ⋮ de <code>plans.mustache:396-436</code>
-      (<code>fa fa-ellipsis-v</code>, 5 itens: editar, subir, descer, mover para posição, remover)
-      <b>está correto — não “conserte”.</b> Repare que o “editar” <b>desse</b> kebab
-      (<code>edit-competency</code>) cai no <code>plans.js:212</code>, o mesmo <code>ModalForm</code> do
-      <code>edit-template</code> do rodapé: é uma das 3 portas paralelas da conta acima. As duas coisas convivem
-      porque agem em <b>entidades diferentes</b> — o rodapé no <b>modelo</b>, o kebab na <b>competência da
-      lista</b>.</li>
-    <li><b>Uma superfície, três donos.</b> O Moodle permite <b>um</b> sticky footer por página, então
-      <code>action_footer.js</code> guarda um <code>currentDispatch</code> e um único listener delegado;
-      <code>show(html, dispatch)</code> troca o <code>innerHTML</code> e a troca de aba chama
-      <code>hide()</code>, que limpa. Quem entra reasserta o seu — <code>core/dynamic_tabs</code> roda o
-      <code>init</code> a cada entrada. As <b>3</b> abas passam por aqui.</li>
+    <li><b>Removing a button from here removes an action from the product.</b> 11 of the 16 buttons are the entry
+      door of a hub modal; the footer reaches <b>10 of the 17</b> and is the <b>only</b> door for <b>7</b> of them
+      (<b>8</b> counting <code>enrol_methods</code>, which lives only inside participants) — those become
+      <b>unreachable</b>. The other <b>3</b> are the forms, which have a parallel door in the header: there the
+      modal survives, but <b>the action does not</b> — the header <b>creates</b> a new entity, the footer <b>edits
+      the selected one</b>, and without it no way is left to act on the chosen row. In both cases it is not a
+      layout change.</li>
+    <li><b>Never a per-row kebab for the tab's primary entity</b> — framework, structure node, template.
+      The intent is the footer. If a Claude Design <code>.dc.html</code> shows a ⋮ on those rows, the ⋮ is a
+      <b>mock artefact</b>, not a requirement: there was once a session that swapped the footer of
+      <code>frameworks.js</code> for a per-card menu exactly like that, and it was reverted.</li>
+    <li><b>The rule's boundary</b>: actions on a <b>competency inside a plan's list</b> are a
+      <b>nested list</b> and use a kebab with reason — that tab's footer is already occupied by the 5 actions of the
+      <b>selected template</b>, which is its primary entity. The ⋮ at <code>plans.mustache:396-436</code>
+      (<code>fa fa-ellipsis-v</code>, 5 items: edit, move up, move down, move to position, remove)
+      <b>is correct — do not "fix" it.</b> Note that <b>this</b> kebab's "edit"
+      (<code>edit-competency</code>, <code>plans.js:728</code>) lands in the same <code>openForm</code>
+      (<code>plans.js:200-201</code>) — the same <code>ModalForm</code> as the footer's
+      <code>edit-template</code>: it is one of the 3 parallel doors in the count above. The two coexist
+      because they act on <b>different entities</b> — the footer on the <b>template</b>, the kebab on the
+      <b>competency in the list</b>.</li>
+    <li><b>One surface, three owners.</b> Moodle allows <b>one</b> sticky footer per page, so
+      <code>action_footer.js</code> keeps a <code>currentDispatch</code> (<code>:49</code>) and a single delegated
+      listener (<code>:111-116</code>); <code>show(html, dispatch)</code> (<code>:68-81</code>) swaps the
+      <code>innerHTML</code> and switching tab calls <code>hide()</code> (<code>:88-95</code>), which clears it.
+      Whoever enters re-asserts its own — <code>core/dynamic_tabs</code> runs
+      <code>init</code> on every entry, and the guard at <code>:127</code> stops re-clicking the current tab from
+      wiping its own footer. All <b>3</b> tabs pass through here.</li>
   </ul>
 </div>

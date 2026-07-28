@@ -1,114 +1,114 @@
-<!-- @dsCard group="Telas (as-is ↔ to-be)" name="Modal · Cursos e atividades" subtitle="MOD.LINKS — outcome em dois níveis, card de curso com atividades preguiçosas; caso de referência do toast hospedado no modal" -->
+<!-- @dsCard group="Screens (as-is)" name="Modal · Courses & activities" subtitle="MOD.LINKS — two-level outcome, course card with lazy activities; the reference case for the modal-hosted toast and for the three header controls" -->
 <style>
+/* Moodle DS palette (Layer 3) — the only one in the file. */
 :root{
-  --surface-2:#fff;--surface-1:#f7f6f3;--surface-0:#f0eee9;
-  --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-muted:#8a8980;
-  --text-accent:#185fa5;--bg-accent:#e6f1fb;--border-accent:#85b7eb;
-  --text-success:#0f6e56;--bg-success:#e1f5ee;--border-success:#5dcaa5;
-  --text-warning:#854f0b;--bg-warning:#faeeda;--border-warning:#ef9f27;
-  --text-danger:#a32d2d;--bg-danger:#fcebeb;--border-danger:#f09595;
-  --border:#e3e1da;--border-strong:#cfccc4;--border-stronger:#b4b2a9;--radius:8px;
-  --font-sans:'Anthropic Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+  --surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;
+  --text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;
+  --text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;
+  --text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;
+  --text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;
+  --text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;
+  --border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--radius:8px;
+  --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
   --mds-motion-fast:150ms;--mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
-  /* Acento FIXO, fora do alcance dos dois painéis — mesmo precedente do mod-related. Herdar
-     --text-accent mata no painel .moodle escuro, onde ele vira #3f89cc. Aqui ele é só TEXTO
-     (o "Carregar mais" e o nome do curso), e nenhum tint depende dele. Medido no DOM. */
+  /* FIXED accent, not var(--text-accent): in dark the DS token becomes #3f89cc, measured in
+     moodle-ds-alignment.md:184-200 at 4.37:1 — below AA for body text, and kept there on
+     purpose as a faithful portrait of Moodle's dark accent. Here it is TEXT only ("Load
+     more" and the course name): 6.52:1 in light and 7.69:1 in dark. */
   --acc-fg:#185fa5;
-  /* Preenchimento primário (o distintivo de conclusão OK e o botão do to-be). NÃO pode ser
-     var(--text-accent): no escuro do painel DS ele vira o azul CLARO #85b7eb, e branco sobre ele
-     dá 2,11:1. O par fixo #185fa5/#fff também não serve sozinho — passa no RÓTULO e reprova no
-     PREENCHIMENTO contra a superfície escura (a armadilha da Task 12). Daí a inversão blue-200 no
-     escuro. Números na nota de medição. */
-  --prim-bg:#185fa5;--prim-fg:#fff;
-  /* Perigo FIXO: o 🗑 do curso e o ✕ da atividade. Nenhum dos dois pousa em tint. */
-  --err-fg:#a32d2d;
-  /* Chip de fechar: os três literais que o styles.css:3740-3769 publica, sem variante dark. */
+  /* Header-control chip: the three literals that styles.css:4929-4956 and :5074-5103
+     publish, with no dark variant — glyph #0f4d85 on #e7f0f9 at 7.53:1 in both themes. */
   --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
   --prov-fg:#185fa5;--prov-bg:#e6f1fb;
 }
 @media (prefers-color-scheme:dark){:root{
-  --surface-2:#26252a;--surface-1:#1f1e22;--surface-0:#191a1d;
-  --text-primary:#f3f1ec;--text-secondary:#b4b2a9;--text-muted:#8a8980;
-  --text-accent:#85b7eb;--bg-accent:#0c2740;--border-accent:#185fa5;
-  --text-success:#5dcaa5;--bg-success:#0a2a24;--border-success:#085041;
-  --text-warning:#ef9f27;--bg-warning:#2a1f0a;--border-warning:#633806;
-  --text-danger:#f09595;--bg-danger:#2a1313;--border-danger:#791f1f;
-  --border:#3a3940;--border-strong:#4a4951;--border-stronger:#5f5e5a;
-  --acc-fg:#85b7eb;--err-fg:#f09595;
+  --surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;
+  --text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;
+  --text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;
+  --text-success:#86af84;--bg-success:#153114;--border-success:#86af84;
+  --text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;
+  --text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;
+  --border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;
+  --acc-fg:#85b7eb;
   --prov-fg:#85b7eb;--prov-bg:#0c2740;
-  --prim-bg:#85b7eb;--prim-fg:#0c2740;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
-.screens{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;}
-.panel{flex:1 1 470px;min-width:340px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
+.panel{max-width:760px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
 .plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
 .pdot{width:8px;height:8px;border-radius:50%;flex:none;}
-/* .note usa --text-secondary, NÃO --text-muted: a 10px o muted reprova o AA. Medido. */
+/* .note uses --text-secondary, NOT --text-muted: at 10px the muted one fails AA. Measured. */
 .note{font-size:10px;color:var(--text-secondary);}
 .idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
 .prov{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:10px;background:var(--prov-bg);color:var(--prov-fg);border:0.5px solid var(--prov-fg);white-space:nowrap;}
 .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-/* code com cor PRÓPRIA: o --text-secondary do painel .moodle claro sobre o fundo do chip dá
-   4,07:1 e reprova. Com --text-primary passa nos dois painéis e nos dois temas. */
+/* code with its OWN colour: with --text-secondary the chip gives 4.07:1 over its own background and
+   fails; with --text-primary it passes in both themes. */
 code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);color:var(--text-primary);border-radius:4px;padding:0 3px;}
 .ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .ic.sm{width:0.75rem;height:0.75rem;}
 
-/* ---- casca do modal ---- */
+/* ---- modal shell ---- */
 .m{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
-.m-head{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:0.5px solid var(--border);}
+.m-head{display:flex;align-items:center;gap:3px;padding:10px 12px;border-bottom:0.5px solid var(--border);}
 .m-title{font-size:13px;font-weight:500;flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.m-x{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;padding:0;border:0;border-radius:8px;background:var(--close-bg);color:var(--close-fg);font-size:0.8rem;line-height:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
-.m-x:hover,.m-x:focus-visible{background:var(--close-bg-hover);}
+/* The three header controls share the close button's blue chip: same 1.75rem, same colours
+   (styles.css:4929-4956 for refresh/expand, :5074-5103 for close). Only refresh and the toggles
+   carry the 0.25rem margin-right and draw their own focus ring — the .btn-close keeps core's.
+   None of the three carries .btn. */
+.m-btn{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;margin-right:0.25rem;padding:0;border:0;border-radius:8px;background:var(--close-bg);color:var(--close-fg);font-size:0.875rem;line-height:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease),color var(--mds-motion-fast) var(--mds-motion-ease);}
+.m-btn:hover,.m-btn:focus-visible{background:var(--close-bg-hover);color:var(--close-fg);}
+.m-btn:focus-visible{outline:2px solid #0f6cbf;outline-offset:1px;}
+.m-x{margin-right:0;font-size:0.9rem;}
 .m-body{padding:11px 12px;display:flex;flex-direction:column;gap:8px;}
 .m-foot{display:flex;justify-content:flex-end;gap:8px;padding:9px 12px;border-top:0.5px solid var(--border);}
-/* O rodapé fantasma: o .modal-footer EXISTE no DOM (lib/templates/modal.mustache:58-62) com zero
-   filhos, e o core lhe aplica .hidden { display:none } (core.scss:417). Desenhar uma barra vazia
-   mentiria — o usuário não vê barra nenhuma. Este é um RÓTULO sobre a ausência, tracejado. */
+/* The ghost footer: the .modal-footer EXISTS in core's DOM with zero children, and core applies
+   .hidden { display:none } to it. Drawing an empty bar would lie — the user sees no bar at all.
+   This is a dashed LABEL about the absence. The footer escape links in styles.css:5028-5034
+   belong to the participants modal and to the structure form; this modal has none. */
 .m-foot-ghost{justify-content:center;border-top:0.5px dashed var(--border-stronger);background:var(--surface-1);padding:6px 12px;}
 .fk{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);}
 
-/* ---- controles ---- */
+/* ---- controls ---- */
 .lbl{font-size:11px;font-weight:500;}
-/* Contorno de CONTROLE: os 3:1 da 1.4.11 valem, e a régua não é a do texto. Medido nas quatro
-   superfícies (claro/escuro × dois painéis), --border-strong entrega 1,60 / 1,49 / 1,71 / 3,36 —
-   reprova em três, inclusive no CLARO. Só --text-secondary passa nas quatro. Segue a correção do
-   mod-related; o conserto do TOKEN no kit inteiro continua pendente (ver a nota de medição). */
+/* CONTROL outline: the 3:1 of 1.4.11 applies, and the ruler is not the text one. In the DS palette
+   --border-strong and --border-stronger are the SAME literal (#ced4da light / #6a737b dark) and give
+   1.49:1 and 3.36:1 — they fail in both themes. Only --text-secondary passes (4.83:1 and 10.84:1). */
 .ctrl{display:flex;align-items:center;gap:6px;font-size:11px;padding:5px 8px;border:0.5px solid var(--text-secondary);border-radius:var(--radius);background:var(--surface-2);}
 .ph{color:var(--text-secondary);flex:1;}
 .chev{color:var(--text-secondary);flex:none;}
-.bprim{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:4px 9px;border:0;border-radius:var(--radius);background:var(--prim-bg);color:var(--prim-fg);white-space:nowrap;font-family:inherit;cursor:pointer;}
-.bsec{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:4px 9px;border:0.5px solid var(--text-secondary);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);white-space:nowrap;font-family:inherit;cursor:pointer;}
-/* O <select> de outcome: mesmo motivo, mesma régua. */
+/* The outcome <select>: same reason, same ruler. */
 .sel{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:2px 6px;border:0.5px solid var(--text-secondary);border-radius:6px;background:var(--surface-2);color:var(--text-primary);white-space:nowrap;}
 
-/* ---- alertas e caixas de prosa ---- */
+/* ---- alerts and prose boxes ---- */
 .alert{border:0.5px solid var(--text-warning);background:var(--bg-warning);color:var(--text-warning);border-radius:var(--radius);padding:6px 8px;font-size:10px;display:flex;align-items:flex-start;gap:6px;}
 .ok{border:0.5px solid var(--border-success);background:var(--bg-success);color:var(--text-success);border-radius:var(--radius);padding:7px 9px;font-size:10px;}
-.warn{border:0.5px solid var(--border-warning);background:var(--bg-warning);color:var(--text-warning);border-radius:var(--radius);padding:7px 9px;font-size:10px;}
-.ok b,.warn b,.alert b{font-weight:600;}
-/* A borda do toast é --text-success, não --border-success: no escuro do painel DS o tint
-   --bg-success encosta na superfície do modal a 1,01:1 e some — quem segura a caixa é a borda. */
+.ok b,.alert b{font-weight:600;}
+/* The toast's border uses --text-success. In the DS palette it and --border-success are the SAME
+   literal (#153114 in light, #86af84 in dark), so the choice is indifferent here — what matters is
+   that the tint (#d7e4d6 / #153114) sits at 1.32:1 and 1.14:1 from the modal surface and does not
+   hold the box on its own. What holds it is the border: 14.18:1 and 6.54:1. */
 .toast{display:inline-flex;align-items:center;gap:6px;font-size:10px;padding:4px 8px;border-radius:var(--radius);border:0.5px solid var(--text-success);background:var(--bg-success);color:var(--text-success);}
 
-/* ---- card de curso ---- */
+/* ---- course card ---- */
 .card{border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);padding:7px 8px;}
 .card+.card{margin-top:6px;}
 .chead{display:flex;align-items:center;gap:5px;}
 .cname{font-size:11.5px;font-weight:500;color:var(--acc-fg);display:inline-flex;align-items:center;gap:3px;min-width:0;}
 .cshort{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);}
 .ccount{font-size:9.5px;color:var(--text-secondary);margin-left:auto;white-space:nowrap;}
-.icobtn{display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;padding:0 2px;cursor:pointer;flex:none;font-family:inherit;color:var(--err-fg);}
+/* Danger: the course's 🗑 and the activity's ✕. Neither of them lands on a tint, so the DS's
+   --text-danger serves directly — 5.29:1 in light and 5.91:1 in dark. */
+.icobtn{display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;padding:0 2px;cursor:pointer;flex:none;color:var(--text-danger);}
 .tgbtn{display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;padding:0;cursor:pointer;flex:none;color:var(--text-secondary);width:14px;}
 .orow{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px;padding-left:18px;}
 .opfx{font-size:9.5px;color:var(--text-secondary);}
 .wnote{font-size:9.5px;color:var(--text-secondary);padding-left:18px;margin-top:4px;}
-/* O distintivo de conclusão: verde = tem regra, âmbar = criar. Vira <a> só com url. */
+/* The completion badge: green = has a rule, amber = create one. Becomes an <a> only with a url. */
 .badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:1px 6px;border-radius:10px;white-space:nowrap;}
 .badge-ok{background:var(--bg-success);color:var(--text-success);border:0.5px solid var(--text-success);}
 .badge-warn{background:var(--bg-warning);color:var(--text-warning);border:0.5px solid var(--text-warning);}
 
-/* ---- atividades dentro do card ---- */
+/* ---- activities inside the card ---- */
 .acts{margin-top:6px;padding-left:18px;border-top:0.5px dashed var(--border);padding-top:6px;}
 .actshdr{font-size:9.5px;color:var(--text-secondary);margin-bottom:5px;}
 .alist{border:0.5px solid var(--border);border-radius:6px;background:var(--surface-1);margin-top:4px;padding:2px;}
@@ -118,45 +118,37 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .act{padding:5px 0;}
 .act+.act{border-top:0.5px dashed var(--border);}
 .aname{display:flex;align-items:flex-start;gap:5px;}
-/* O nome real quebra em DUAS linhas e então reticencia, com o nome inteiro no title
-   (styles.css:5706-5715). Aqui a mecânica é a mesma; não é clamp(), é line-clamp. */
+/* The real name wraps to TWO lines and then ellipsises, with the whole name in the title
+   (styles.css:7105-7114). The mechanics here are the same; it is not clamp(), it is line-clamp. */
 .antext{flex:1;min-width:0;font-size:11px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;word-break:break-word;}
 .mtype{font-size:9px;padding:0 5px;border:0.5px solid var(--text-secondary);border-radius:6px;color:var(--text-secondary);white-space:nowrap;flex:none;}
 .actrl{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px;}
 .shared{border:0.5px solid var(--text-warning);background:var(--bg-warning);color:var(--text-warning);border-radius:6px;padding:3px 6px;font-size:9px;display:flex;align-items:center;gap:6px;margin-top:4px;}
 .slink{color:var(--text-warning);white-space:nowrap;display:inline-flex;align-items:center;gap:2px;flex:none;}
 
-/* ---- ações do cabeçalho no to-be ---- */
-.m-acts{display:flex;align-items:center;gap:3px;flex:none;}
-.m-acts .act2{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease),color var(--mds-motion-fast) var(--mds-motion-ease);}
-.m-acts .act2:hover,.m-acts .act2:focus-visible{background:var(--surface-0);color:var(--text-primary);}
-
-/* ---- DEMONSTRAÇÃO 1 (as-is): o chevron expande o card ----
-   Combinador de IRMÃO, nunca :has(): medido no mod-participants, um :has() num ancestral só
-   reavalia um passo depois. Os checkboxes são irmãos do .pane e o ~ os alcança.
-   DIVERGÊNCIA HONESTA: aqui quem troca o chevron é o CSS; em PRODUÇÃO é um className em JS
-   (js:563 / :571). O que se demonstra é o estado, não o mecanismo da troca. */
+/* ---- DEMONSTRATION 1: the chevron expands the card ----
+   SIBLING combinator, never :has(): measured in mod-participants, a :has() on an ancestor only
+   re-evaluates one step later. The checkboxes are siblings of .pane and ~ reaches them.
+   HONEST DIVERGENCE: here it is the CSS that swaps the chevron; in PRODUCTION it is a className in
+   JS (competency_links.js:572 / :580). What is demonstrated is the state, not the swap mechanism. */
 .dchk{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
 #a-exp:not(:checked) ~ .pane .acts{display:none;}
 #a-exp:not(:checked) ~ .pane .chev-down{display:none;}
 #a-exp:checked ~ .pane .chev-right{display:none;}
-/* O contador NÃO muda ao expandir: updateCourseMeta só o repinta com o dado fresco do WS
-   (js:546). Nada aqui toca a .ccount — de propósito. */
+/* The counter does NOT change on expansion: updateCourseMeta only repaints it with the WS's fresh
+   data (competency_links.js:555). Nothing here touches .ccount — on purpose. */
 #a-exp:focus-visible ~ .pane .card-1{outline:2px solid var(--acc-fg);outline-offset:2px;}
 
-/* ---- DEMONSTRAÇÃO 2 (to-be): expandir/restaurar ----
-   Dois botões SEMPRE presentes; o CSS escolhe qual aparece — é literalmente o par de regras do
-   mtube (styles.css:4329-4335), zero troca de ícone em JS. A largura muda de verdade: calc(),
-   nunca clamp/min/max. SEM transition em max-width — o Chrome não interpola calc(100% - 40px)
-   para 100% e a largura travaria no valor inicial. */
+/* ---- DEMONSTRATION 2: expand/restore ----
+   Two buttons ALWAYS present; the CSS chooses which one shows, exactly like the shipped pair of
+   rules (styles.css:4966-4976) — zero icon swapping in JS. The width really changes: calc(),
+   never clamp/min/max. NO transition on max-width — Chrome does not interpolate calc(100% - 40px)
+   to 100% and the width would freeze at its initial value. */
 #b-exp:not(:checked) ~ .dlg .exp-in{display:none;}
 #b-exp:checked ~ .dlg .exp-out{display:none;}
 .dlg{width:100%;max-width:calc(100% - 40px);margin:0 auto;}
 #b-exp:checked ~ .dlg{max-width:100%;}
 #b-exp:focus-visible ~ .dlg{outline:2px solid var(--acc-fg);outline-offset:2px;}
-
-.screens>.panel.moodle{--surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;--text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;--text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;--text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;--text-success:#153114;--bg-success:#d7e4d6;--border-success:#153114;--text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;--border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
-@media (prefers-color-scheme:dark){.screens>.panel.moodle{--surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;--text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;--text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;--text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;--text-success:#86af84;--bg-success:#153114;--border-success:#86af84;--text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;--border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;}}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -174,368 +166,298 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
   <symbol id="l-rot" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
 </svg>
 
-<div class="screens">
+<section class="panel">
+  <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Current (as-is) · the shipped modal — three header controls, course card, two-level outcome, lazy activities</div>
 
-  <!-- as-is -->
-  <section class="panel asis">
-    <div class="plabel"><span class="pdot" style="background:var(--border-stronger)"></span>Atual (as-is) · o modal shipado — card de curso, outcome em dois níveis, atividades preguiçosas</div>
+  <span class="note" style="display:block;margin-bottom:10px;">Every <code>file:line</code> ref in this file was re-anchored at <code>d0adc3b</code>. One detail the screen has to pin down, because it has already changed twice: the activity list has <b>no checkbox</b> — a <code>grep -nE 'checkbox|form-check'</code> over <code>competency_links.js</code> returns <b>zero</b>. Adding is the <b>search</b>; removing is the per-row <b>✕</b>.</span>
 
-    <div class="warn" style="margin-bottom:10px;">
-      <b>Esta tela foi redesenhada porque a anterior desenhava linhas que não existem mais.</b> O
-      <code>competency_links.js</code> mudou <b>onze</b> vezes depois que ela foi feita
-      (<code>159a800</code>, 2026-06-29) — as <b>duas últimas</b> são de <b>2026-07-16</b>:
-      <code>7bd9729</code> (o picker escondido, não mais desabilitado) e <code>046644b</code> (o
-      cursor de offset aposentado por exclusão no servidor), depois de <code>59af0f4</code> (foco no
-      teclado, 2026-07-15) — todos anotados abaixo. A maior mudança visual: o
-      <code>93e4f69</code> trouxe atividades com
-      <b>checkbox</b> e o <code>d7578b3</code> as removeu <b>no mesmo dia</b>, trocando por uma
-      <b>busca</b> + <b>✕</b> por linha. Um <code>grep -nE 'checkbox|form-check'</code> no JS de hoje
-      devolve <b>nada</b>. O Mustache mudou <b>uma</b> vez desde <code>bcdbea1</code> — o
-      <code>7bd9729</code> pôs <code>tabindex="-1"</code> no alerta de estrutura oculta (<code>:33</code>),
-      um atributo que <b>não deslocou linha nenhuma</b>, então as 6 refs de template do mapa antigo
-      seguem certas.
+  <input type="checkbox" id="b-exp" class="dchk" aria-label="Expand the modal">
+  <div class="m dlg">
+    <div class="m-head">
+      <span class="m-title">Courses &amp; activities — Problem solving</span>
+      <button type="button" class="m-btn" aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true" focusable="false"><use href="#l-rot"/></svg></button>
+      <label class="m-btn exp-out" for="b-exp" title="Expand"><svg class="ic" aria-hidden="true" focusable="false"><use href="#l-exp"/></svg></label>
+      <label class="m-btn exp-in" for="b-exp" title="Restore size"><svg class="ic" aria-hidden="true" focusable="false"><use href="#l-res"/></svg></label>
+      <button type="button" class="m-btn m-x" aria-label="Close">✕</button>
     </div>
 
-    <div class="m">
-      <div class="m-head">
-        <span class="m-title">Cursos e atividades — Resolução de problemas</span>
-        <button type="button" class="m-x" aria-label="Fechar">✕</button>
+    <input type="checkbox" id="a-exp" class="dchk" checked aria-label="Expand the course card">
+    <div class="pane m-body">
+
+      <div class="alert">
+        <svg class="ic sm" aria-hidden="true" focusable="false" style="margin-top:1px;"><use href="#l-warn"/></svg>
+        <span>This competency belongs to a hidden structure and cannot be linked to courses.</span>
       </div>
+      <div class="row"><span class="idb">MOD.LINKS-HIDDENFW · competency_links.mustache:33-35 · ships hidden</span></div>
+      <span class="note"><b>Not decorative:</b> the same pair of lines that turns the alert on <b>hides the add block</b> — <code>js:468</code> shows the alert, <code>js:473</code> makes the picker's <code>parentElement</code> disappear. The WS's <code>canlink</code> is literally the structure's visibility (<code>get_competency_links.php:106</code>). <b>Existing</b> links stay listed and keep an editable outcome — the block applies only to <b>new</b> ones.<br><b>Why hide the block rather than disable the <code>&lt;select&gt;</code>:</b> core's <code>enhance()</code> swaps the <code>&lt;select&gt;</code> for an input <b>of its own, always typable</b>, plus a downarrow that opens the list on click without looking at <code>disabled</code> — disabling the original is inert. Hiding the <b>whole block</b> takes input, downarrow and label out of view <b>and out of the tab order</b>; the comment in the source says exactly that (<code>js:469-472</code>). It was never a <b>security</b> hole (core blocks it server-side), it was the UI offering an action it does not deliver. The alert carries <code>tabindex="-1"</code> (template <code>:33</code>) and <code>restoreFocus</code> falls into it when the block disappears.</span>
 
-      <input type="checkbox" id="a-exp" class="dchk" checked aria-label="Expandir o card do curso">
-      <div class="pane m-body">
+      <span class="lbl">Add course <span class="idb">MOD.LINKS-ADD-LABEL · competency_links.mustache:37-39</span></span>
+      <div class="ctrl"><span class="ph">Link a course — search by name, short name or ID number…</span><span class="chev">⌄</span></div>
+      <div class="row"><span class="idb">MOD.LINKS-ADD · competency_links.mustache:40-44 · course_datasource.js</span><span class="idb">MOD.LINKS-ADD-CHEVRON · styles.css:7199-7212</span></div>
 
-        <div class="alert">
-          <svg class="ic sm" aria-hidden="true" focusable="false" style="margin-top:1px;"><use href="#l-warn"/></svg>
-          <span>Esta competência pertence a uma estrutura oculta e não pode ser vinculada a cursos.</span>
+      <!-- card 1: expanded -->
+      <div class="card card-1">
+        <div class="chead">
+          <label class="tgbtn" for="a-exp" title="Expand/collapse">
+            <svg class="ic sm chev-right" aria-hidden="true" focusable="false"><use href="#l-chev-r"/></svg>
+            <svg class="ic sm chev-down" aria-hidden="true" focusable="false"><use href="#l-chev-d"/></svg>
+          </label>
+          <svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-cap"/></svg>
+          <span class="cname">Applied Mathematics <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+          <span class="cshort">MAT-101</span>
+          <span class="ccount">2 activities</span>
+          <button type="button" class="icobtn" aria-label="Remove course"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-trash"/></svg></button>
         </div>
-        <div class="row"><span class="idb">MOD.LINKS-HIDDENFW · :33-35 · nasce hidden</span></div>
-        <span class="note"><b>Não é decorativo:</b> o mesmo par de linhas que liga o alerta <b>esconde o bloco de adicionar</b> — <code>js:478</code> mostra o alerta, <code>js:483</code> some com o <code>parentElement</code> do picker. O <code>canlink</code> do WS é literalmente a visibilidade da estrutura (<code>get_competency_links.php:106</code>). Os vínculos <b>existentes</b> continuam listados e com outcome editável — o bloqueio é só para <b>novos</b>.<br><b>CORRIGIDO em 2026-07-16</b> (<code>7bd9729</code>). <b>O que era:</b> a segunda linha fazia <code>state.addsel.disabled = !canlink</code> — e era <b>inerte</b>. O <code>enhance()</code> do core troca o <code>&lt;select&gt;</code> por um input <b>próprio, sempre digitável</b>, mais uma seta que abre a lista no clique sem olhar o <code>disabled</code>; o usuário buscava, escolhia um curso e só então batia na parede, com o <code>add_competency_to_course</code> do core lançando uma exceção crua no <code>notifyError</code>. <b>O que é:</b> a linha esconde o <b>bloco inteiro</b> (<code>state.addsel.parentElement.hidden = !canlink</code>) — tira input, seta e rótulo da vista <b>e da ordem de tabulação</b>. <b>Por quê:</b> não era falha de <b>segurança</b> (o core barra no servidor, nada era vinculado), era a UI oferecendo uma ação que não entrega. O alerta ganhou <code>tabindex="-1"</code> (template <code>:33</code>) e o <code>restoreFocus</code> cai nele quando o bloco some.</span>
-
-        <span class="lbl">Adicionar curso <span class="idb">MOD.LINKS-ADD-LABEL · :37-39</span></span>
-        <div class="ctrl"><span class="ph">Vincular curso — busque por nome, nome breve ou número de ID…</span><span class="chev">⌄</span></div>
-        <div class="row"><span class="idb">MOD.LINKS-ADD · :40-44 · course_datasource.js</span><span class="idb">MOD.LINKS-ADD-CHEVRON · styles.css:5800-5813</span></div>
-
-        <!-- card 1: expandido -->
-        <div class="card card-1">
-          <div class="chead">
-            <label class="tgbtn" for="a-exp" title="Expandir/recolher">
-              <svg class="ic sm chev-right" aria-hidden="true" focusable="false"><use href="#l-chev-r"/></svg>
-              <svg class="ic sm chev-down" aria-hidden="true" focusable="false"><use href="#l-chev-d"/></svg>
-            </label>
-            <svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-cap"/></svg>
-            <span class="cname">Matemática Aplicada <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
-            <span class="cshort">MAT-101</span>
-            <span class="ccount">2 atividades</span>
-            <button type="button" class="icobtn" aria-label="Remover curso"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-trash"/></svg></button>
-          </div>
-          <div class="orow">
-            <span class="opfx">Outcome:</span>
-            <span class="sel">Concluir a competência <span class="chev">⌄</span></span>
-            <span class="badge badge-ok"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Possui regra de conclusão <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
-          </div>
-
-          <div class="acts">
-            <div class="actshdr">Atividades vinculadas · outcome ao concluir a atividade</div>
-            <div class="ctrl" style="padding:3px 6px;"><svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-search"/></svg><span class="ph">Adicionar atividade — buscar por nome…</span></div>
-            <div class="alist">
-              <div class="aitem"><span class="an">Lista de exercícios 3</span><span class="mtype">Tarefa</span></div>
-              <div class="aitem"><span class="an">Fórum de dúvidas</span><span class="mtype">Fórum</span></div>
-            </div>
-            <div class="row" style="margin-top:5px;">
-              <span class="idb">MOD.LINKS-ACTSEARCH · js:283-342</span>
-              <span class="idb">MOD.LINKS-ACTSEARCH-ITEM · js:312-325</span>
-            </div>
-            <span class="note" style="display:block;margin:4px 0 7px;">Busca <b>client-side</b>, sem WS: filtra o <code>available</code> que já veio na mesma leitura. <b>Dobra acento dos dois lados</b> (<code>fold</code>, <code>js:62</code>) — "pratica" acha "Prática". <b>Só o nome</b> casa; o tipo é exibido e não é buscável.</span>
-
-            <div class="act">
-              <div class="aname">
-                <span class="antext">Prova diagnóstica de raciocínio lógico</span>
-                <span class="mtype">Questionário</span>
-                <button type="button" class="icobtn" aria-label="Remover atividade"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-x"/></svg></button>
-              </div>
-              <div class="actrl">
-                <span class="sel">Concluir a competência <span class="chev">⌄</span></span>
-                <span class="badge badge-ok"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Possui regra de conclusão <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
-              </div>
-            </div>
-
-            <div class="act">
-              <div class="aname">
-                <span class="antext">Trabalho final</span>
-                <span class="mtype">Tarefa</span>
-                <button type="button" class="icobtn" aria-label="Remover atividade"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-x"/></svg></button>
-              </div>
-              <div class="actrl">
-                <span class="sel">Sugerir a competência <span class="chev">⌄</span></span>
-                <span class="badge badge-warn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-warn"/></svg>Criar regra de conclusão <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
-              </div>
-              <div class="shared">
-                <span>Outras 3 competências estão vinculadas a esta atividade — a regra de conclusão é compartilhada e afeta todas.</span>
-                <span class="slink">Abrir atividade › Competências <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:6px;">
-              <span class="idb">MOD.LINKS-ACT · js:223-272</span>
-              <span class="idb">MOD.LINKS-ACT-SHARED · js:253-270</span>
-              <span class="idb">MOD.LINKS-ACTS · js:425-429 · data-loaded</span>
-            </div>
-          </div>
+        <div class="orow">
+          <span class="opfx">Outcome:</span>
+          <span class="sel">Complete the competency <span class="chev">⌄</span></span>
+          <span class="badge badge-ok"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Completion rule configured <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
         </div>
 
-        <!-- card 2: recolhido, sem atividade vinculada -->
-        <div class="card">
-          <div class="chead">
-            <span class="tgbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-chev-r"/></svg></span>
-            <svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-cap"/></svg>
-            <span class="cname">Lógica e Algoritmos <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
-            <span class="cshort">LOG-200</span>
-            <span class="ccount">Curso inteiro</span>
-            <button type="button" class="icobtn" aria-label="Remover curso"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-trash"/></svg></button>
+        <div class="acts">
+          <div class="actshdr">Linked activities · outcome on activity completion</div>
+          <div class="ctrl" style="padding:3px 6px;"><svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-search"/></svg><span class="ph">Add an activity — search by name…</span></div>
+          <div class="alist">
+            <div class="aitem"><span class="an">Exercise sheet 3</span><span class="mtype">Assignment</span></div>
+            <div class="aitem"><span class="an">Discussion forum</span><span class="mtype">Forum</span></div>
           </div>
-          <div class="orow">
-            <span class="opfx">Outcome:</span>
-            <span class="sel">Nenhum <span class="chev">⌄</span></span>
-            <span class="badge badge-warn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-warn"/></svg>Criar regra de conclusão <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+          <div class="row" style="margin-top:5px;">
+            <span class="idb">MOD.LINKS-ACTSEARCH · js:271-331</span>
+            <span class="idb">MOD.LINKS-ACTSEARCH-ITEM · js:301-315</span>
           </div>
-          <div class="wnote">Vínculo no nível do curso, sem atividade específica.</div>
-        </div>
+          <span class="note" style="display:block;margin:4px 0 7px;"><b>Client-side</b> search, no WS: it filters the <code>available</code> that already arrived in the same read. <b>Folds accents on both sides</b> (<code>fold</code>, <code>js:65</code>) — "pratica" finds "Prática". <b>Only the name</b> matches; the type is displayed and is not searchable.</span>
 
-        <div class="row">
-          <span class="idb">MOD.LINKS-CARD · js:352-437</span>
-          <span class="idb">MOD.LINKS-CARD-COUNT · js:197-210</span>
-          <span class="idb">MOD.LINKS-WHOLENOTE · js:419-423</span>
-        </div>
-        <span class="note"><b>O contador tem três estados, não dois.</b> Com 0 atividades vinculadas ele <b>deixa de ser contagem</b> e vira o rótulo <b>"Curso inteiro"</b>, e a nota aparece embaixo — é o segundo card. Com 1, "1 atividade" (string própria). Com 2+, "{n} atividades". O total do curso <b>nunca</b> é mostrado: não existe "2 / 5".</span>
+          <div class="act">
+            <div class="aname">
+              <span class="antext">Diagnostic test on logical reasoning</span>
+              <span class="mtype">Quiz</span>
+              <button type="button" class="icobtn" aria-label="Remove activity"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-x"/></svg></button>
+            </div>
+            <div class="actrl">
+              <span class="sel">Complete the competency <span class="chev">⌄</span></span>
+              <span class="badge badge-ok"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Completion rule configured <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+            </div>
+          </div>
 
-        <div class="row" style="margin-top:2px;">
-          <span style="font-size:11px;color:var(--acc-fg)">Carregar mais</span>
-          <span class="idb">MOD.LINKS-LOADMORE · :50-53 · página de 25</span>
-        </div>
-        <span class="note"><b>Estado vazio: "Nenhum curso vinculado."</b> <span class="idb">MOD.LINKS-EMPTY · :47-49</span> — hoje a condição é simples e <b>vem do servidor</b>: a mensagem aparece com <code>state.total === 0</code>, onde <code>total</code> é a <b>contagem cheia</b> de vínculos que o WS devolve. O "Carregar mais" é o par da mesma função: aparece enquanto há <b>menos cards na tela do que o <code>total</code></b>. As duas linhas moram no <code>refreshListState</code> (<code>js:447-450</code>), chamado por <b>toda</b> transição — carga, add e remoção.<br><b>CORRIGIDO em 2026-07-15</b> (<code>5d9da31</code>). O <code>removeCourse</code> tirava o card e <b>não voltava</b> ao estado vazio: remover o último curso deixava o painel <b>em branco</b>, sem mensagem. Faltava reavaliar a bandeira na remoção. <b>Depois, em 2026-07-16</b> (<code>046644b</code>), esse conserto e os outros dois ramos foram <b>unificados</b> no <code>refreshListState</code>: hoje o <code>removeCourse</code> faz <code>courseEl.remove()</code> (<code>js:636</code>) e chama o helper (<code>js:638</code>).<br><b>E o predicado encolheu.</b> Antes ele precisava de um segundo termo (<code>!loadMoreEl.hidden</code>) porque a lista pagina e um contêiner vazio no DOM <b>não</b> é o mesmo que "sem vínculos" — copiar o <code>children.length &gt; 0</code> do gêmeo <code>related_competencies</code> teria sido errado, porque aquela lista é <b>sem paginação</b> e esta pagina de <b>25</b> (<code>PAGE_SIZE</code>, <code>js:42</code>). Com o <code>total</code> virando a contagem <b>do servidor</b>, <code>total === 0</code> passou a ser exato <b>sem olhar o DOM</b>, e o segundo termo saiu.<br><b>O cursor de offset: APOSENTADO em 2026-07-16</b> (<code>046644b</code>). <b>O que era:</b> a paginação usava um <code>state.offset</code> numérico — o WS recebia <code>limitfrom</code> e devolvia a fatia dali. Esse cursor acumulou <b>três</b> defeitos: (1) o <code>removeCourse</code> não o decrementava, então um "Carregar mais" depois de uma remoção <b>pulava o curso que subiu</b> (<code>cf6dad6</code>, 2026-07-15, remendado com uma etiqueta <code>data-paged</code> e um decremento condicionado); (2) sem ordem <b>total</b> o banco devolvia empates em sequência diferente por chamada e o offset pulava ou duplicava <b>sem mutação nenhuma</b>; (3) o <b>espelho no add</b> — o <code>onAddCourse</code> anexava a linha sem mexer no offset, então o próximo "Carregar mais" re-buscava um índice já na tela e <b>duplicava</b> um card, e isso <b>não</b> se consertava com <code>offset += 1</code>, porque a posição do curso novo depende do <code>fullname</code> dele, a própria chave da ordenação. <b>O que é:</b> não há cursor. O WS ganhou <code>excludecourseids</code> (<code>get_competency_links.php:60-65</code>, <code>PARAM_SEQUENCE</code>, <code>VALUE_DEFAULT</code> — parâmetro é lido na chamada, não no install, <b>sem bump de version.php</b>), a query de registros derruba os cursos já mostrados com <code>AND c.id NOT IN (…)</code> (<code>get_in_or_equal(…, 'ex', false)</code>, <code>:138-142</code>) e o <code>total</code> segue a contagem <b>cheia</b> (<code>:126-132</code>). O cliente manda o conjunto na tela (<code>Array.from(state.excluded)</code>, <code>js:473</code>) e pede a próxima página não-mostrada — <b>sem offset a derivar</b>. <b>Por quê assim:</b> os três defeitos eram do próprio cursor, e o terceiro não tinha conserto client-side — nenhuma aritmética sobre um offset numérico se mantém alinhada quando a lista muda pelas <b>duas pontas</b> (picker e 🗑). Retirado, não remendado de novo.<br><b>O add-mirror que o mapa antigo marcava "ainda em aberto" está FECHADO</b> pela mesma mudança. O <code>onAddCourse</code> hoje incrementa o <code>total</code> (<code>js:751</code>) e chama o <code>refreshListState</code> (<code>js:752</code>), guardado por um teste de idempotência (<code>if (!state.excluded.has(id))</code>, <code>js:745</code>) para um duplo-envio não contar duas vezes. A remoção espelha: o <code>removeCourse</code> só decrementa quando é a chamada que tira o id do conjunto (<code>if (!state.excluded.delete(id)) return</code>, <code>js:632</code>) — o segundo desvínculo de um re-clique <b>resolve com <code>success: false</code></b> em vez de lançar (<code>unlink_competency_course.php:85</code>) e cai nesse guarda. Uma bandeira <code>state.loading</code> descarta um "Carregar mais" reentrante (<code>js:461-464</code>), e o <code>loadCourses</code> pula um curso já mostrado ao anexar (<code>js:488-490</code>), fechando a janela de um add que pousa no meio de uma busca.<br><b>A ordenação continua, com o papel trocado.</b> O <code>get_competency_links.php:151</code> ainda ordena por <code>c.fullname ASC, c.id ASC</code>, mas o desempate <b>não</b> guarda mais contra pulos/duplicatas — a exclusão faz isso; ele só <b>estabiliza a ordem de exibição</b> entre cargas, e o comentário no fonte diz exatamente isso (<code>:144-145</code>). O desempate é total porque o índice <b>único</b> <code>courseidcompetencyid</code> do core (<code>competency_coursecomp</code>, <code>lib/db/install.xml</code>) dá no máximo <b>uma</b> linha por curso com o <code>competencyid</code> fixado no WHERE. Dois WSs irmãos ainda ordenam sem desempate — <code>get_competency_courses.php:87</code> e <code>search_linkable_courses.php:119</code>, ambos <code>ORDER BY c.fullname ASC</code> só —, follow-up latente não tocado aqui.</span>
+          <div class="act">
+            <div class="aname">
+              <span class="antext">Final project</span>
+              <span class="mtype">Assignment</span>
+              <button type="button" class="icobtn" aria-label="Remove activity"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-x"/></svg></button>
+            </div>
+            <div class="actrl">
+              <span class="sel">Send for review <span class="chev">⌄</span></span>
+              <span class="badge badge-warn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-warn"/></svg>Create completion rule <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+            </div>
+            <div class="shared">
+              <span>3 other competencies are linked to this activity — the completion rule is shared and affects them all.</span>
+              <span class="slink">Open activity › Competencies <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+            </div>
+          </div>
 
-        <div class="row" style="margin-top:2px;">
-          <span class="toast"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Salvo</span>
-          <span class="idb">MOD.LINKS-TOAST · js:898</span>
+          <div class="row" style="margin-top:6px;">
+            <span class="idb">MOD.LINKS-ACT · js:211-260</span>
+            <span class="idb">MOD.LINKS-ACT-SHARED · js:241-258</span>
+            <span class="idb">MOD.LINKS-ACTS · js:415-419 · data-loaded</span>
+          </div>
         </div>
       </div>
 
-      <div class="m-foot m-foot-ghost"><span class="fk">.modal-footer sem filhos → core aplica .hidden → nenhuma barra é desenhada</span></div>
-    </div>
-
-    <div class="row" style="margin-top:9px;">
-      <span class="idb">MOD.LINKS-ACTION · structure_footer_actions.mustache:53-56</span>
-      <span class="idb">MOD.LINKS-COUNT-REFRESH · js:921-928 → structure.js:908-920</span>
-    </div>
-
-    <span class="note" style="display:block;margin-top:6px;"><b>Clique no chevron do primeiro card</b> — as atividades somem e voltam. É a carga preguiçosa real: <code>toggleCourse</code> (<code>js:557-572</code>) só chama o WS na <b>primeira</b> abertura e marca <code>data-loaded="1"</code>; depois disso é só mostrar/esconder. <b>O que a tela não demonstra:</b> aqui quem troca o chevron é o CSS; em produção é um <code>className</code> em JS (<code>js:563</code> / <code>:571</code>). O estado é real; o mecanismo da troca, não.</span>
-
-    <div class="ok" style="margin-top:8px;">
-      <b>O toast mora dentro do modal, e este arquivo é o caso de referência.</b>
-      <code>js:898</code> chama <code>addToastRegion(modal.getBody()[0])</code> no
-      <code>ModalEvents.shown</code> (<code>:895</code>). O motivo é aritmética de
-      <code>z-index</code>: a <code>.toast-wrapper</code> da página é <b>1051</b>
-      (<code>theme/boost/scss/moodle/core.scss:2432</code>) e o diálogo é <b>1055</b>
-      (<code>$zindex-modal</code>, <code>bootstrap/_variables.scss:1139</code>) — um toast disparado
-      daqui pousaria <b>atrás</b> do modal. O comentário do core na linha de cima ainda diz "above any
-      modals": envelheceu no salto para o BS5, que subiu o modal de 1050 para 1055. <b>Este é o
-      modal que mais depende disso:</b> são <b>5</b> <code>addToast</code> próprios
-      (<code>:643</code>, <code>:666</code>, <code>:701</code>, <code>:753</code>, <code>:911</code>)
-      mais o de rede do <code>notifyError</code>, e <b>nenhuma</b> dessas ações fecha o diálogo.
-      <b>Três</b> delas também <b>piscam</b> o elemento (<code>flash</code>,
-      <code>js:179-187</code>, chamado em <code>:665</code>, <code>:749</code> e <code>:912</code>): o
-      toast diz <i>o quê</i>, o flash diz <i>onde</i>. As duas sem flash são as <b>remoções</b> — não
-      há o que piscar quando o elemento acabou de sair do DOM.
-      <br><b>E o que as remoções ganharam no lugar do flash: o foco — <code>59af0f4</code>,
-      2026-07-15.</b> Sair do DOM levava o foco junto: ele caía no <code>&lt;body&gt;</code> e quem
-      usa teclado tinha que re-atravessar o diálogo inteiro. As <b>duas</b> remoções agora chamam o
-      <code>restoreFocus</code> (<code>js:583-604</code>), e <b>cada uma prefere um alvo diferente</b>.
-      O <code>removeCourse</code> (<code>:642</code>) vai para o <b>chevron</b>
-      (<code>[data-action="toggle-course"]</code>) e <b>não</b> para o próximo 🗑: só o chevron é
-      <b>sempre</b> renderizado — o 🗑 é gated por capacidade curso a curso. O <code>removeModule</code>
-      (<code>:699-700</code>) fica <b>dentro do card</b> em que o usuário estava: prefere o ✕ da
-      próxima atividade e cai no chevron <b>daquele</b> card quando a última atividade sai.
-      O "Carregar mais" tem precedência enquanto estiver visível (com página pendente, é ele o caminho
-      adiante, não o picker). E o último recurso é o <b>input enhanced</b> do autocomplete
-      (<code>SELECTORS.addInput</code>, <code>js:51</code>), <b>nunca</b> o <code>state.addsel</code>:
-      o <code>enhance()</code> do core esconde o <code>&lt;select&gt;</code> original, e escondido ele
-      não recebe foco.
-    </div>
-  </section>
-
-  <!-- to-be -->
-  <section class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:var(--acc-fg)"></span>Expandir/restaurar + atualizar · SHIPADO (expander 8ea9daf; atualizar 7d69197, via central/modal_refresh) — os três controles do cabeçalho a 1.75rem, no chip azul do fechar</div>
-
-    <input type="checkbox" id="b-exp" class="dchk" aria-label="Expandir o modal">
-    <div class="m dlg">
-      <div class="m-head">
-        <span class="m-title">Cursos e atividades — Resolução de problemas</span>
-        <span class="m-acts">
-          <button type="button" class="act2" aria-label="Atualizar" title="Atualizar"><svg class="ic" aria-hidden="true" focusable="false"><use href="#l-rot"/></svg></button>
-          <label class="act2 exp-out" for="b-exp" title="Expandir"><svg class="ic" aria-hidden="true" focusable="false"><use href="#l-exp"/></svg></label>
-          <label class="act2 exp-in" for="b-exp" title="Restaurar"><svg class="ic" aria-hidden="true" focusable="false"><use href="#l-res"/></svg></label>
-          <button type="button" class="m-x" aria-label="Fechar">✕</button>
-        </span>
-      </div>
-      <div class="m-body">
-        <div class="ctrl"><span class="ph">Vincular curso — busque por nome, nome breve ou número de ID…</span><span class="chev">⌄</span></div>
-
-        <div class="card">
-          <div class="chead">
-            <span class="tgbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-chev-d"/></svg></span>
-            <svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-cap"/></svg>
-            <span class="cname">Matemática Aplicada <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
-            <span class="cshort">MAT-101</span>
-            <span class="ccount">2 atividades</span>
-            <button type="button" class="icobtn" aria-label="Remover curso"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-trash"/></svg></button>
-          </div>
-          <div class="orow">
-            <span class="opfx">Outcome:</span>
-            <span class="sel">Concluir a competência <span class="chev">⌄</span></span>
-            <span class="badge badge-ok"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Possui regra de conclusão</span>
-          </div>
-          <div class="acts">
-            <div class="act">
-              <div class="aname">
-                <span class="antext">Prova diagnóstica de raciocínio lógico</span>
-                <span class="mtype">Questionário</span>
-                <button type="button" class="icobtn" aria-label="Remover atividade"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-x"/></svg></button>
-              </div>
-              <div class="actrl">
-                <span class="sel">Concluir a competência <span class="chev">⌄</span></span>
-                <span class="badge badge-ok"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Possui regra de conclusão</span>
-              </div>
-            </div>
-          </div>
+      <!-- card 2: collapsed, with no linked activity -->
+      <div class="card">
+        <div class="chead">
+          <span class="tgbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-chev-r"/></svg></span>
+          <svg class="ic sm" aria-hidden="true" focusable="false" style="color:var(--text-secondary)"><use href="#l-cap"/></svg>
+          <span class="cname">Logic and Algorithms <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+          <span class="cshort">LOG-200</span>
+          <span class="ccount">Whole course</span>
+          <button type="button" class="icobtn" aria-label="Remove course"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-trash"/></svg></button>
         </div>
+        <div class="orow">
+          <span class="opfx">Outcome:</span>
+          <span class="sel">Do nothing <span class="chev">⌄</span></span>
+          <span class="badge badge-warn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-warn"/></svg>Create completion rule <svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-ext"/></svg></span>
+        </div>
+        <div class="wnote">Linked at course level, without a specific activity.</div>
       </div>
-      <div class="m-foot m-foot-ghost"><span class="fk">o rodapé segue oculto — o expandir não mexe nele</span></div>
+
+      <div class="row">
+        <span class="idb">MOD.LINKS-CARD · js:341-427</span>
+        <span class="idb">MOD.LINKS-CARD-COUNT · js:185-198</span>
+        <span class="idb">MOD.LINKS-WHOLENOTE · js:409-413</span>
+      </div>
+      <span class="note"><b>The counter has three states, not two.</b> With 0 linked activities it <b>stops being a count</b> and becomes the label <b>"Whole course"</b>, and the note appears underneath — that is the second card. With 1, "1 activity" (its own string). With 2+, "{n} activities". The course's total is <b>never</b> shown: there is no "2 / 5".</span>
+
+      <div class="row" style="margin-top:2px;">
+        <span style="font-size:11px;color:var(--acc-fg)">Load more</span>
+        <span class="idb">MOD.LINKS-LOADMORE · competency_links.mustache:50-53 · pages of 25</span>
+      </div>
+      <span class="note"><b>Empty state: "No courses linked."</b> <span class="idb">MOD.LINKS-EMPTY · competency_links.mustache:47-49</span> — the condition <b>comes from the server</b>: the message appears with <code>state.total === 0</code>, where <code>total</code> is the <b>full</b> link count the WS returns (<code>get_competency_links.php:126-132</code>, deliberately <b>not</b> narrowed by the exclusion). "Load more" is the same function's counterpart: it shows while there are <b>fewer cards on screen than <code>total</code></b>. Both lines live in <code>refreshListState</code> (<code>js:437-440</code>), called by <b>every</b> transition — load (<code>js:487</code>), add (<code>js:761</code>) and removal (<code>js:647</code>).<br><b>There is no offset cursor.</b> Pagination is by <b>exclusion on the server</b>: the client sends the set already on screen (<code>Array.from(state.excluded)</code>, <code>js:463</code>), the WS receives <code>excludecourseids</code> (<code>get_competency_links.php:60-65</code>, <code>PARAM_SEQUENCE</code>, <code>VALUE_DEFAULT</code>) and the records query drops the courses already shown with <code>AND c.id NOT IN (…)</code> (<code>get_in_or_equal(…, 'ex', false)</code>, <code>:138-142</code>) — the next page is the next <b>unshown</b> one, with no index to derive. <b>Why this way:</b> a numeric offset does not stay aligned when the list changes at <b>both ends</b> (picker and 🗑) — a newly added course's position depends on its <code>fullname</code>, which is the ordering key itself, so no client-side arithmetic fixes that case.<br><b>Both ends are idempotent.</b> <code>onAddCourse</code> only counts when the id enters the set (<code>if (!state.excluded.has(…))</code>, <code>js:754</code>), so a double submit does not add twice; <code>removeCourse</code> mirrors it (<code>if (!state.excluded.delete(…)) return</code>, <code>js:641</code>) — the second unlink of a re-click resolves with <code>success: false</code> (<code>unlink_competency_course.php:85</code>) and lands on that guard. A <code>state.loading</code> flag discards a re-entrant "Load more" (<code>js:451-453</code>) and <code>loadCourses</code> skips a course already on screen when appending (<code>js:478-480</code>), closing the window of an add that lands in the middle of a fetch.<br><b>The ordering only stabilises the display.</b> <code>get_competency_links.php:151</code> orders by <code>c.fullname ASC, c.id ASC</code>; the tiebreak does <b>not</b> guard against skips/duplicates — the exclusion does that —, and the comment in the source says exactly that (<code>:144-145</code>). It is total because core's <b>unique</b> index <code>courseidcompetencyid</code> (<code>competency_coursecomp</code>) yields at most <b>one</b> row per course with the <code>competencyid</code> fixed in the WHERE. Two sibling WSes still order without a tiebreak — <code>get_competency_courses.php:102</code> and <code>search_linkable_courses.php:119</code>, both <code>ORDER BY c.fullname ASC</code> only —, a latent follow-up not touched here.</span>
+
+      <div class="row" style="margin-top:2px;">
+        <span class="toast"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#l-check"/></svg>Saved</span>
+        <span class="idb">MOD.LINKS-TOAST · js:914 · region in the body</span>
+      </div>
     </div>
 
-    <div class="row" style="margin-top:9px;">
-      <span class="idb">MOD.LINKS-EXPAND · to-be</span>
-      <span class="prov">mtube: expandir</span>
-      <span class="prov">modal_refresh: atualizar</span>
-    </div>
+    <div class="m-foot m-foot-ghost"><span class="fk">.modal-footer with no children → core applies .hidden → no bar is drawn</span></div>
+  </div>
 
-    <span class="note" style="display:block;margin-top:6px;"><b>Clique em ⤢ acima</b> — o ícone vira ⤡ e o diálogo <b>alarga de verdade</b>: os 40 px que o <code>calc(100% - 40px)</code> devolve (medido neste preview, 543 → 583 px), e volta no ⤡. São <b>dois botões sempre presentes</b>; o CSS escolhe qual aparece, como no mtube. <b>O que a tela NÃO demonstra:</b> o <i>reflow</i> que a largura compra. Conferido antes de afirmar — nesta amostra o nome da atividade ocupa <b>uma</b> linha nos dois estados, então expandir aqui não desfaz quebra nenhuma. O ganho real aparece com nome longo + tela estreita, e o diálogo deste preview está preso ao painel de comparação.</span>
+  <div class="row" style="margin-top:9px;">
+    <span class="idb">MOD.LINKS-EXPAND · modal_expander.js:83-120</span>
+    <span class="prov">modal_expander: expand/restore</span>
+    <span class="prov">modal_refresh: refresh</span>
+    <span class="idb">MOD.LINKS-ACTION · structure_footer_actions.mustache:53-56</span>
+    <span class="idb">MOD.LINKS-COUNT-REFRESH · js:937-944 → structure.js:909-921</span>
+  </div>
 
-    <span class="note" style="display:block;margin-top:6px;"><b>O ⟳ atualizar TAMBÉM shipou — <code>7d69197</code>.</b> O <code>central/modal_refresh</code> injeta <b>um</b> botão no cabeçalho (<code>&lt;button class="local-dimensions-modal-refresh" data-action="modal-refresh"&gt;</code> com <code>&lt;i class="fa fa-rotate"&gt;</code>), ancorado <b>antes</b> do primeiro <code>.local-dimensions-modal-sizetoggle</code> (ou do <code>.btn-close</code> se não houver) — a ordem final é <b>[atualizar][expandir][restaurar][fechar]</b>. Os dois hosts fazem <code>attachExpander(dialog).then(() =&gt; attachRefresh(dialog, cb))</code> (<code>competency_links.js:909</code>). No clique o botão se desabilita, gira o ícone (<code>fa-spin</code>), roda o callback e limpa os dois num <code>finally</code>. A string é o core <code>refresh</code> — <b>sem string de lang nova, sem bump de version.php</b>. Aqui o refresh <b>recarrega a lista de cursos</b>: o <code>reloadCourses</code> (<code>competency_links.js:501-509</code>) zera <code>rowsEl</code>/<code>excluded</code>/<code>total</code> e chama <code>loadCourses</code> pela página 1 — <b>no-op</b> enquanto <code>state.loading</code>, então um reset nunca esvazia a lista.</span>
+  <span class="note" style="display:block;margin-top:6px;"><b>Click the first card's chevron</b> — the activities disappear and come back. That is the real lazy load: <code>toggleCourse</code> (<code>js:566-581</code>) calls the WS only on the <b>first</b> opening and marks <code>data-loaded="1"</code> (<code>js:554</code>); after that it is only show/hide. <b>What the screen does not demonstrate:</b> here it is the CSS that swaps the chevron; in production it is a <code>className</code> in JS (<code>js:572</code> / <code>:580</code>). The state is real; the swap mechanism is not.</span>
 
-    <span class="note" style="display:block;margin-top:6px;"><b>Os três controles do cabeçalho compartilham o chip AZUL do fechar.</b> Atualizar, expandir/restaurar e fechar agora dão o mesmo 1.75rem <b>e</b> as mesmas cores — fundo <code>#e7f0f9</code>, glifo <code>#0f4d85</code>, hover <code>#d4e6fb</code> (<code>styles.css:3600-3630</code>). Os toggles de tamanho foram <b>restilizados</b> do antigo look neutro (fundo transparente / cinza <code>#6a737b</code>) para este chip azul. Nenhum dos três carrega <code>.btn</code>, então o <code>:focus-visible</code> desenha o próprio anel. <b>O mock acima desenha o <code>.act2</code> neutro</b> só para a demonstração; a régua azul do shipado é a do chip de fechar.</span>
+  <div class="ok" style="margin-top:8px;">
+    <b>The three header controls.</b> The DOM order is <b>[refresh][expand][restore][close]</b>,
+    and only one of the expand/restore pair shows at a time.
+    <br>• <b>Expand/restore</b> — <code>central/modal_expander</code>. <code>attach</code>
+    (<code>modal_expander.js:83-120</code>) seeds the saved state <b>synchronously</b>, before the strings
+    load (<code>:90</code>), and then inserts <b>both</b> buttons before the <code>.btn-close</code>
+    (<code>:98-99</code>) — <code>fa-expand</code> and <code>fa-compress</code>, labels
+    <code>central_modal_expand</code> / <code>central_modal_restore</code> (<code>lang/en:199-200</code>).
+    The CSS is what chooses which one shows (<code>styles.css:4966-4976</code>), so <b>nothing swaps an
+    icon in JS</b>. On click, if the activated button had focus, focus goes to the newly revealed twin
+    (<code>:106-118</code>) — without that it would fall on the <code>&lt;body&gt;</code>, because the
+    clicked button is exactly the one that hides itself.
+    <br>• <b>Refresh</b> — <code>central/modal_refresh</code>. A single button
+    (<code>modal_refresh.js:36-48</code>: <code>.local-dimensions-modal-refresh</code>,
+    <code>data-action="modal-refresh"</code>, <code>&lt;i class="fa fa-rotate"&gt;</code>), anchored
+    <b>before</b> the first <code>.local-dimensions-modal-sizetoggle</code> — or before the
+    <code>.btn-close</code> if there is none (<code>:67</code>). On click it disables itself, spins the
+    icon (<code>fa-spin</code>) and clears both in a <code>finally</code> (<code>:80-83</code>), so a
+    reload that fails never leaves the button stuck. The label is <b>core's</b> string
+    <code>refresh</code> (<code>:63</code>) — no new lang string.
+    <br>• <b>The wiring</b> is one line: <code>attachExpander(dialog).then(() =&gt; attachRefresh(dialog,
+    …))</code> (<code>js:909</code>), and it is the chaining that guarantees the order. Here the refresh
+    <b>reloads the course list</b>: <code>reloadCourses</code> (<code>js:501-509</code>) zeroes
+    <code>rowsEl</code> / <code>excluded</code> / <code>total</code> and calls <code>loadCourses</code> for
+    page 1 — a <b>no-op</b> while <code>state.loading</code>, so a reset never empties the list.
+    Card expansion and loaded activities return to their initial state.
+  </div>
 
-    <div class="ok" style="margin-top:8px;">
-      <b>Por que esta tela é candidata.</b> É o modal do hub com mais coisa por linha: nome do curso
-      + nome breve + contador + 🗑, e dentro dele nome da atividade + tipo + ✕ + outcome +
-      distintivo + aviso de compartilhada. O nome da atividade já quebra em <b>duas linhas</b> e
-      então reticencia (<code>styles.css:5706-5715</code>) — a largura é o recurso escasso. Hoje o
-      único ajuste é <code>large: true</code> (<code>js:852</code>).
-    </div>
+  <span class="note" style="display:block;margin-top:6px;"><b>Click ⤢ above</b> — the icon becomes ⤡ and the dialog widens; ⤡ brings it back. <b>What the screen does NOT demonstrate:</b> the shipped one is <b>genuinely full screen</b> — <code>.modal-dialog.local-dimensions-modal-expanded</code> gives <code>width:100%; max-width:none; height:100%; margin:0</code> and the content loses its radius (<code>styles.css:4986-5006</code>). Here the width is a <code>max-width</code> tied to the preview panel, which does not run <code>core/modal</code>. And the width gain is not free to demonstrate: in this sample the activity name occupies <b>one</b> line in both states, so expanding undoes no wrapping — the real gain shows with a long name on a narrow screen.</span>
 
-    <div class="ok" style="margin-top:8px;">
-      <b>O precedente é shipado, e é zero-JS na parte visual.</b> Do <code>format_mtube</code>,
-      citado <b>por símbolo</b> — o plugin não versiona <code>amd/src</code> (só
-      <code>amd/build</code>), então o fonte só sobrevive no <code>sourcesContent</code> dos
-      <code>.map</code> e uma ref <code>arquivo:linha</code> de JS não resolveria para ninguém:
-      <br>• <code>getFullscreenButtonsHtml(expandLabel, narrowLabel)</code> emite <b>dois botões
-      sempre presentes</b>: <code>.enterfullscreen</code> (<code>fa fa-expand</code>) e
-      <code>.exitfullscreen</code> (<code>fa fa-compress</code>), cada um com <code>aria-label</code>
-      + <code>title</code>.
-      <br>• <code>renderFullscreenButtons()</code> pede as strings <code>expand</code> /
-      <code>narrow</code> e devolve o markup.
-      <br>• <code>setModalFullscreen(root, enabled, storageKey)</code> faz <b>uma</b> coisa visual:
-      <code>root.toggleClass('fullscreen', enabled)</code>. O <code>.each</code> acima dele só
-      descarta o tooltip do botão que vai sumir — <b>não troca ícone</b>.
-      <br>• Quem escolhe é o CSS, e ele existe:
-      <code>.modal.mtube-modal-fullscreen-capable:not(.fullscreen) .exitfullscreen</code> e
-      <code>.modal…fullscreen .enterfullscreen</code>
-      (<code>format_mtube/styles.css:4329-4335</code>). A largura sai de
-      <code>.modal…fullscreen .modal-dialog</code> (<code>:4337</code>).
-    </div>
+  <div class="ok" style="margin-top:8px;">
+    <b>The width has two mechanisms, and they stack.</b> <code>Modal.create</code> opens with
+    <code>large: true</code> (<code>js:862</code>), which is the <b>base</b> size; the class
+    <code>local-dimensions-modal-expanded</code> overrides it with specificity <b>0,2,0</b> —
+    with no <code>!important</code> and without Bootstrap 5's <code>.modal-fullscreen</code>, which 4.5
+    does not have (the reasoning is in the source itself, <code>styles.css:4978-4985</code>). The width is
+    <code>100%</code> and not <code>100vw</code> on purpose: the parent <code>.modal</code> is
+    <code>position:fixed</code> and its width already excludes the scrollbar column, so the dialog sits
+    <b>beside</b> it instead of running underneath. The
+    <code>:has(.local-dimensions-modal-sizetoggle)</code> also kills the container's second scrollbar
+    (<code>styles.css:4916-4918</code>) and lets the title take the remaining width
+    (<code>:5015-5018</code>).
+  </div>
 
-    <div class="warn" style="margin-top:8px;">
-      <b>A divergência é a persistência, e ela não é cosmética.</b> O mtube grava em
-      <code>localStorage</code> (<code>STORAGE_PREFIX = 'format_mtube.modal.fullscreen.'</code>), que
-      <b>não sai do navegador</b>. O hub já resolveu esse problema uma vez, e a solução está no
-      repositório: <code>amd/src/central/preferences.js</code> usa <code>setUserPreference</code> do
-      <code>core_user/repository</code> (<code>:28</code>) com <b>debounce de 400 ms</b>
-      (<code>SAVE_DELAY</code>, <code>:36</code>), e o docblock diz por quê (<code>:20-21</code>):
-      <i>"across sessions and devices — replaces the previous per-session sessionStorage
-      persistence"</i>. As prefs são declaradas em <code>lib.php:140-151</code>, com
-      <code>permissioncallback</code> = <code>\core_user::is_current_user</code>.
-    </div>
+  <div class="ok" style="margin-top:8px;">
+    <b>The chosen size is a user preference, not a per-tab one.</b> The expander reads and writes through
+    <code>HUB_STORE</code> (<code>modal_expander.js:39-42</code>), which is the
+    <code>modalexpanded</code> key of the hub's shared display
+    (<code>preferences.js:50</code> in the default, <code>:113</code> <code>getDisplay</code>,
+    <code>:130</code> <code>saveDisplay</code>). The write goes to
+    <code>core_user/repository</code>'s <code>setUserPreference</code> with a <b>400 ms debounce</b>
+    (<code>preferences.js:77-78</code>, <code>SAVE_DELAY</code> at <code>:36</code>) — so the choice
+    <b>crosses sessions and devices</b>, and it is the same in both modals that use the expander. The
+    preference is declared in <code>lib.php:143-149</code> (<code>permissioncallback</code> =
+    <code>\core_user::is_current_user</code>) under the name in <code>constants.php:90</code>, and a
+    caller from <b>outside</b> the hub must pass its own <code>store</code> (the parameter exists for
+    exactly that, <code>modal_expander.js:80-84</code>) — otherwise a learner expanding a modal would
+    write the administrative hub's preference.
+  </div>
 
-    <div class="ok" style="margin-top:8px;">
-      <b>E não precisa de pref nova.</b> O <code>PREF_CENTRAL_DISPLAY</code> já é um objeto JSON com
-      sub-objetos por área (<code>preferences.js:41-48</code>), e
-      <code>local_dimensions_user_preferences()</code> já aceita o nome
-      (<code>constants.php:84</code>). O expandir cabe como <b>uma chave</b> ali. <b>Sem WS novo, sem
-      string de setting nova, sem bump de <code>version.php</code></b> — prefs não são serviços.
-    </div>
+  <div class="ok" style="margin-top:8px;">
+    <b>The toast lives inside the modal, and this file is the reference case.</b>
+    <code>js:914</code> calls <code>addToastRegion(modal.getBody()[0])</code> on
+    <code>ModalEvents.shown</code> (<code>:911</code>). The reason is <code>z-index</code>
+    arithmetic: the page's <code>.toast-wrapper</code> is <b>1051</b>
+    (<code>theme/boost/scss/moodle/core.scss</code>) and the dialog is <b>1055</b>
+    (<code>$zindex-modal</code>, <code>bootstrap/_variables.scss</code>) — a toast fired
+    from here would land <b>behind</b> the modal. Core's comment still says "above any modals":
+    it aged in the jump to BS5, which raised the modal from 1050 to 1055. <b>This is the
+    modal that depends on it most:</b> there are <b>5</b> <code>addToast</code> of its own
+    (<code>:652</code>, <code>:675</code>, <code>:710</code>, <code>:762</code>, <code>:927</code>)
+    plus the network one from <code>notifyError</code>, and <b>none</b> of those actions closes the dialog.
+    <b>Three</b> of them also <b>flash</b> the element (<code>flashRow</code>, from
+    <code>central/flash.js:34-48</code>, called at <code>:674</code>, <code>:758</code> and
+    <code>:928</code>): the toast says <i>what</i>, the flash says <i>where</i>. The flash reads its
+    duration from the <code>--mds-motion-flash</code> token and is <b>skipped entirely</b> under
+    <code>prefers-reduced-motion</code> (<code>flash.js:38-40</code>) — it is a redundant cue. The two
+    without a flash are the <b>removals</b>: there is nothing to flash when the element has just left
+    the DOM.
+    <br><b>And what the removals get instead of the flash: focus.</b> Leaving the DOM took focus along —
+    it fell on the <code>&lt;body&gt;</code> and a keyboard user had to re-traverse the whole dialog.
+    <b>Both</b> removals call <code>restoreFocus</code> (<code>js:592-613</code>), and <b>each one
+    prefers a different target</b>. <code>removeCourse</code> (<code>:651</code>) goes to the
+    <b>chevron</b> (<code>[data-action="toggle-course"]</code>) and <b>not</b> to the next 🗑: only the
+    chevron is <b>always</b> rendered — the 🗑 is gated by capability, course by course.
+    <code>removeModule</code> (<code>:708-709</code>) stays <b>inside the card</b> the user was in:
+    it prefers the next activity's ✕ and falls back to <b>that</b> card's chevron when the last
+    activity leaves. "Load more" takes precedence while it is visible (with a page pending, it is
+    the way forward, not the picker). And the last resort is the autocomplete's <b>enhanced input</b>
+    (<code>SELECTORS.addInput</code>, <code>js:54</code>), <b>never</b> <code>state.addsel</code>: core's
+    <code>enhance()</code> hides the original <code>&lt;select&gt;</code>, and hidden it cannot take
+    focus.
+  </div>
 
-    <div class="warn" style="margin-top:8px;">
-      <b>O que fica em aberto, e a tela não resolve.</b> O <code>large: true</code> de hoje
-      (<code>js:852</code>) e a classe <code>fullscreen</code> do to-be são <b>dois</b> mecanismos de
-      largura. Quem implementar precisa decidir se o <code>fullscreen</code> empilha sobre o
-      <code>large</code> ou o substitui. <b>Este preview não decide isso</b>: ele não roda o
-      <code>core/modal</code>, e a largura aqui é <code>max-width</code> num
-      <code>&lt;div&gt;</code> — a prova do mecanismo real está no CSS do mtube, citado acima e
-      conferido linha a linha.
-    </div>
+  <div class="ok" style="margin-top:8px;">
+    <b>Why width is the scarce resource here.</b> It is the hub modal with the most things per row: course
+    name + short name + counter + 🗑, and inside it activity name + type + ✕ + outcome +
+    badge + shared warning. The activity name wraps to <b>two lines</b> and then
+    ellipsises (<code>styles.css:7105-7114</code>), with the whole name in the <code>title</code>
+    (<code>js:221</code>).
+  </div>
 
-    <div class="ok" style="margin-top:10px;">
-      <b>Nota de medição — 2.768 pares no DOM renderizado, não no papel.</b> Por tema, no estado
-      padrão: <b>367</b> pares — <b>331</b> de texto (sempre contra o fundo <i>efetivo</i>, subindo a
-      árvore e compondo as camadas translúcidas até achar quem pinta), <b>23</b> de contorno de
-      controle e <b>13</b> de glifo. Repetido nos <b>4 estados</b> da UI (card expandido/recolhido ×
-      diálogo normal/expandido): <b>1.384</b> por tema, <b>2.768</b> no total. Fecha em <b>zero</b>
-      reprovação nos dois temas. Mais estreitos: claro — texto <b>4,58:1</b>, contorno
-      <b>4,83:1</b>, glifo <b>4,83:1</b>; escuro — texto <b>5,21:1</b>, contorno <b>6,54:1</b>, glifo
-      <b>6,84:1</b>.
-      <br>• <b>Contorno de controle — o achado que se confirma medindo, não lendo.</b> Medi
-      <code>--border-strong</code> contra a superfície do modal nas <b>quatro</b> superfícies:
-      <b>1,60</b> (DS claro) / <b>1,49</b> (.moodle claro) / <b>1,71</b> (DS escuro) / <b>3,36</b>
-      (.moodle escuro) — <b>reprova em três das quatro, inclusive no CLARO</b>; só passa no escuro do
-      painel Moodle. O <code>--border-stronger</code> não salva (2,13 / 1,49 / 2,34 / 3,36). O
-      <code>--text-secondary</code> passa nas quatro, com mínimo de <b>4,83:1</b> — e é o que
-      <code>.ctrl</code>, <code>.sel</code>, <code>.bsec</code> e <code>.mtype</code> usam aqui,
-      seguindo a correção do <code>mod-related</code>.
-      <br>• <b>Preenchimento primário no escuro</b> — o par fixo <code>#185fa5</code>/branco passa no
-      <b>rótulo</b> e é por isso que uma conferência de texto o aprova; contra a superfície escura o
-      <b>preenchimento</b> reprova. A régua do preenchimento não é a do texto. Daí a inversão
-      blue-200 no escuro (<code>--prim-bg</code>/<code>--prim-fg</code>).
-      <br><b>Fica registrado o que NÃO foi mexido, com número:</b> os tints continuam baixos <b>de
-      propósito</b> — quem identifica essas caixas é a <b>borda</b> e o <b>glifo</b>, nunca o
-      preenchimento. O distintivo verde e o toast dão fill <b>1,14:1</b> no claro e <b>1,01:1</b> no
-      escuro (o tint <i>some</i> na superfície) enquanto a borda entrega <b>6,20</b> / <b>7,57</b>; o
-      alerta e o aviso de compartilhada, fill 1,15 / 1,06 com borda 6,73 / 7,00; o chip de fechar,
-      fill 1,15 no claro com o glifo em <b>7,53:1</b> nos dois temas, e os literais são os que o
-      <code>styles.css:3740-3769</code> publica. O <code>.ctrl</code> e o <code>.sel</code> dão fill
-      <b>1:1</b> por definição: o fundo deles <i>é</i> a superfície do modal. As <b>caixas</b>
-      (<code>.card</code>, <code>.panel</code>, <code>.alist</code>) seguem no <code>--border</code>
-      do kit: são contêineres, não controles.
-      <br>• <b>Armadilha de medição — custou três diagnósticos errados, fica registrada para a
-      próxima tela.</b> Trocar o tema no preview deixa uma <code>CSSTransition</code> de
-      <code>color</code> <b>congelada</b> no <code>.act2</code> — o único elemento do arquivo com
-      <code>transition</code> em <code>color</code>. Ela fica em <code>playState: "running"</code> com
-      <code>currentTime: 0</code> <b>para sempre</b>, porque a aba do preview não está pintando e
-      ninguém avança o relógio; o <code>getComputedStyle</code> então devolve a cor <b>do tema
-      anterior</b>. O fantasma tem dois valores, e os dois <i>parecem</i> achados de verdade:
-      <b>1,49:1</b> no claro (o <code>#ced4da</code> do escuro sobre o branco) e <b>3,36:1</b> no
-      escuro (o <code>#6a737b</code> do claro sobre a superfície escura). <b>Esperar não resolve</b>
-      (o relógio não anda) e <b>injetar <code>transition:none</code> também não</b> — uma regra nova
-      não cancela transição já em curso. O que resolve é
-      <code>document.getAnimations().forEach(a =&gt; a.cancel())</code> antes de amostrar: aí o
-      <code>.act2</code> volta para <b>4,83:1</b> (claro) e <b>10,84:1</b> (escuro). Confirmado
-      lendo o <code>getAnimations()</code> do elemento, não por dedução.
-      <br><b>Achado que vaza para o kit inteiro (follow-up, não consertado aqui):</b>
-      <code>--border-strong</code> / <code>--border-stronger</code> <b>não servem como contorno de
-      controle em três das quatro superfícies</b>, e seguem em uso no
-      <code>mod-enrolmethods</code> e no <code>mod-participants</code>. É correção de <b>token</b>,
-      não de tela.
-    </div>
-  </section>
-
-</div>
+  <div class="ok" style="margin-top:10px;">
+    <b>Measurement note — in the rendered DOM, not on paper.</b> This file's token decisions, with
+    the number that supports each of them on both surfaces (DS light and DS dark):
+    <br>• <b>Control outline — the finding that is confirmed by measuring, not by reading.</b> In the Moodle
+    DS palette <code>--border-strong</code> and <code>--border-stronger</code> are the <b>same literal</b>
+    (<code>#ced4da</code> in light, <code>#6a737b</code> in dark) and give <b>1.49:1</b> and <b>3.36:1</b>
+    against the modal surface — they <b>fail the 3:1 of 1.4.11 in light</b> and scrape through in
+    dark. <code>--text-secondary</code> passes on both, with <b>4.83:1</b> and <b>10.84:1</b> — and it is
+    what <code>.ctrl</code>, <code>.sel</code> and <code>.mtype</code> use here.
+    <br>• <b>Text accent</b> — the DS's dark <code>--text-accent</code> (<code>#3f89cc</code>) is
+    measured in <code>moodle-ds-alignment.md:184-200</code> at <b>4.37:1</b> and is kept there on purpose
+    as a faithful portrait of Moodle; for the course name and "Load more" this screen uses its own
+    <code>--acc-fg</code> (<b>6.52:1</b> / <b>7.69:1</b>).
+    <br>• <b>Danger</b> — the course's 🗑 and the activity's ✕ land on the modal surface, never on a
+    tint, so the DS's <code>--text-danger</code> serves directly: <b>5.29:1</b> and <b>5.91:1</b>.
+    <br>• <b>What was NOT touched is on the record, with numbers:</b> the tints stay low <b>on
+    purpose</b> — what identifies these boxes is the <b>border</b> and the <b>glyph</b>, never the
+    fill. The green badge and the toast give a fill of <b>1.32:1</b> in light and <b>1.14:1</b> in
+    dark, while the border delivers <b>14.18:1</b> and <b>6.54:1</b>; the alert and the shared
+    warning, a fill of <b>1.13:1</b> and <b>1.83:1</b> with a border of <b>8.87:1</b> and <b>9.51:1</b>; the
+    header-control chip, a fill of 1.15 in light with the glyph at <b>7.53:1</b> in both themes, and the
+    literals are the ones <code>styles.css:4929-4956</code> and <code>:5074-5103</code> publish. One
+    detail of the DS palette that changes the ruler: <code>--text-success</code> and
+    <code>--border-success</code> are the <b>same literal</b> in both themes, and
+    <code>--text-warning</code>/<code>--border-warning</code> too — the distinction between them, which
+    bites in palettes where they differ, does not exist here. <code>.ctrl</code> and <code>.sel</code>
+    give a fill of <b>1:1</b> by definition: their background <i>is</i> the modal surface. The
+    <b>boxes</b> (<code>.card</code>, <code>.panel</code>, <code>.alist</code>) stay on the kit's
+    <code>--border</code>: they are containers, not controls.
+    <br>• <b>Measurement trap — it cost three wrong diagnoses, recorded here for the next
+    screens.</b> Switching the theme in a preview leaves any <code>CSSTransition</code> on
+    <code>color</code> <b>frozen</b>: it stays at <code>playState: "running"</code> with
+    <code>currentTime: 0</code> <b>forever</b>, because the tab is not painting and nobody advances the
+    clock, and <code>getComputedStyle</code> returns the colour <b>of the previous theme</b>. The ghost
+    value <i>looks</i> like a real finding. <b>Waiting does not fix it</b> (the clock does not move) and
+    <b>injecting <code>transition:none</code> does not either</b> — a new rule does not cancel a
+    transition already under way. What does fix it is
+    <code>document.getAnimations().forEach(a =&gt; a.cancel())</code> before sampling.
+    In this file the only elements with a <code>transition</code> on colour are the header controls,
+    and their colours are fixed literals in both themes — the ghost does not appear here, but it appears
+    in any screen whose transitioned value depends on the theme.
+    <br><b>A finding that holds for the whole kit:</b> <code>--border-strong</code> and
+    <code>--border-stronger</code> <b>do not work as a control outline</b> in the Moodle DS palette —
+    it is the same colour, and it fails in light. A control outline is <code>--text-secondary</code>.
+  </div>
+</section>

@@ -1,122 +1,92 @@
-<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Progress tab" subtitle="as-is: two tabs, Assessment (2-col grid) + Evidence (slider) │ to-be: one Progress tab — assessment card, decisive result, journey, submit" -->
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Progress tab" subtitle="One Progress tab: assessment card, decisive result strip, journey list, submit — the composition that ships" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
-   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
-   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
-   by token values alone. See tokens.html / token-migration.md.
+   One panel: the tokens below are the shipped values, so the drawing and the
+   plugin's own CSS read the same. See tokens.html / token-migration.md.
    ============================================================================ */
 .kit{
   --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
   --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
-  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
-  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
-  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
-  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
-  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
-  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
-  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
   --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
   --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
 }
 .kit *{box-sizing:border-box;}
-.panel.moodle{
-  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
-  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
-  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
-  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
-  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
-  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
-  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
-}
-.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
-.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.screens{max-width:680px;margin:0 auto;}
+.panel{border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
 .plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
 .pdot{width:8px;height:8px;border-radius:50%;flex:none;}
 .idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
-.idb.r{border-color:#c9a3a3;color:#a3552d;}
 .lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
 .lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
 .divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
 .note{font-size:10px;color:#8a8980;padding:2px 20px;}
-.scap{font-size:11px;color:#8a8980;padding:10px 20px 0;}
-.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.pend{margin:12px 20px 2px;padding:8px 10px;border-left:3px solid #b4b2a9;background:var(--lk-surface);border-radius:.25rem;font-size:10.5px;color:#6b6a63;}
+.pend b{display:block;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:#8a8980;margin-bottom:2px;}
 
 /* ---- tab strip (shape only; the strip itself is owned by ovw-detail-tabs.html) ---- */
 .tabnav{display:flex;border-bottom:1px solid var(--lk-line);padding:0 1rem;margin:10px 12px 0;min-width:0;}
 .tab{display:inline-flex;align-items:center;gap:.375rem;padding:.625rem 1rem;border:none;background:transparent;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:.8125rem;font-weight:500;color:var(--lk-muted);cursor:pointer;white-space:nowrap;line-height:1.2;}
 .tab.on{color:var(--lk-text);border-bottom-color:var(--lk-accent);font-weight:600;}
 
-/* ---- AS-IS: 2-column status grid (renderStatusSection) ---- */
-.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:6px 20px 4px;}
-.scell{border-radius:.5rem;padding:1rem;text-align:center;border:1px solid #f1f3f5;}
-.scell.ok{background:#d4edda61;border-color:#d4edda;}
-.scell.warn{background:rgb(255 238 186 / 20%);border-color:#ffeeba;}
-.slabel{font-size:.75rem;color:var(--lk-muted);margin:0 0 .5rem;}
-.sbadge{display:inline-flex;align-items:center;gap:.25rem;padding:.25rem .75rem;border-radius:999px;font-size:.8125rem;font-weight:600;background:var(--lk-success);color:#fff;}
-.sbadge.muted{background:var(--lk-pill-platter);color:var(--lk-muted);}
-.sval{display:flex;align-items:center;justify-content:center;gap:.375rem;font-weight:600;font-size:.9375rem;}
-.sval.ok{color:var(--lk-success);}
-.sval.pending{color:var(--lk-amber-rated);}
-/* as-is: the "About this scale" button, floating under the grid with no owner row */
-.s-scale-loose{display:inline-flex;align-items:center;gap:.3rem;margin:2px 20px 0;padding:.2rem .4rem;border:none;background:none;color:var(--lk-accent);font-size:.76rem;font-weight:600;cursor:pointer;}
-.s-scale-loose svg{width:.9rem;height:.9rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-/* as-is: evidence slider, shown compressed — its anatomy lives in ovw-detail-evidence.html */
-.ev-track{display:flex;gap:.75rem;overflow-x:hidden;padding:.25rem 20px 1rem;}
-.ev-card{flex:0 0 200px;display:flex;gap:.6rem;padding:.8rem;background:var(--lk-surface);border-radius:.75rem;
-  box-shadow:rgb(50 50 93 / 25%) 0 2px 5px -1px, rgb(0 0 0 / 30%) 0 1px 3px -1px;}
-.ev-card .i{flex:none;width:30px;height:30px;border-radius:.375rem;display:flex;align-items:center;justify-content:center;background:#d1e7dd;color:#0f5132;}
-.ev-card .i svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.ev-card h3{font-size:.8rem;font-weight:600;margin:0 0 .2rem;}
-.ev-card p{font-size:.7rem;color:var(--lk-muted);margin:0;}
-
-/* ---- TO-BE: the Progress pane ---- */
+/* ---- 1 · assessment card (.local-dimensions-status-card, styles.css:2977-3044) ---- */
 .pg{padding:2px 0 4px;}
-/* 1 · assessment card (OVW-STATUS to-be) */
 .st-block{margin:6px 20px 10px;padding:.9rem 1rem;background:var(--lk-surface);border:1px solid var(--lk-line);border-radius:.75rem;}
 .st-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.4rem;}
-.st-eyebrow{font-size:.72rem;font-weight:700;color:var(--lk-muted);}
-.st-scale-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .4rem;border:none;border-radius:.4rem;background:none;color:var(--lk-accent);font-size:.76rem;font-weight:600;cursor:pointer;}
+.st-eyebrow{font-size:.75rem;font-weight:700;color:var(--lk-muted);}
+.st-scale-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .4rem;border:none;border-radius:.4rem;background:none;color:var(--lk-accent);font-size:.8125rem;font-weight:600;cursor:pointer;}
 .st-scale-btn:hover{text-decoration:underline;}
 .st-scale-btn:focus-visible{outline:2px solid var(--lk-focus-ring);outline-offset:2px;}
 .st-scale-btn svg{width:.9rem;height:.9rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.st-rating{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem .7rem;min-width:0;}
-.st-level{font-size:1.35rem;font-weight:700;line-height:1.2;color:var(--lk-text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.st-level.none{font-size:1.1rem;font-weight:600;color:var(--lk-muted);}
-.st-prof{display:inline-flex;align-items:center;gap:.3rem;font-size:.76rem;font-weight:700;padding:.2rem .55rem;border-radius:999px;flex:none;}
+.st-rating{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem .75rem;min-width:0;}
+.st-level{display:block;font-size:1.375rem;font-weight:600;line-height:1.2;color:var(--lk-text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.st-level.none{font-size:1.125rem;font-weight:500;color:var(--lk-muted);}
+.st-prof{display:inline-flex;align-items:center;gap:.25rem;font-size:.8125rem;font-weight:600;padding:.25rem .75rem;border-radius:999px;flex:none;}
 .st-prof svg{width:.85rem;height:.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;}
 .st-prof.ok{background:#d1e7dd;color:#0f5132;}
-.st-prof.no{background:#fff3cd;color:#856404;}
-/* tooltip primitive from the DS (design-kit/tooltip.html) — truncation on the child, balloon on the wrapper */
+.st-prof.no{background:#fff3cd;color:#664d03;}
+/* Tooltip primitive from the DS (design-kit/tooltip.html). Ships as
+   .local-dimensions-tip + .local-dimensions-tip-bottom (styles.css:7361-7434): the truncation
+   lives on the child, the balloon on the wrapper, and the balloon opens DOWNWARD because the
+   accordion item and its content box both set overflow:hidden for the expand animation and
+   would clip an upward balloon this close to the top of a pane. */
 .dim-tip{position:relative;display:inline-flex;align-items:center;min-width:0;max-width:100%;}
 .dim-tip::after,.dim-tip::before{position:absolute;opacity:0;pointer-events:none;transition:opacity 150ms ease;}
-.dim-tip::after{content:attr(data-dim-tip);bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);max-width:260px;width:max-content;
+.dim-tip::after{content:attr(data-dim-tip);top:calc(100% + 8px);left:50%;transform:translateX(-50%);max-width:260px;width:max-content;
   padding:.35rem .55rem;border-radius:.25rem;background:#1d2125;color:#fff;font-size:.75rem;font-weight:400;line-height:1.35;
   text-align:left;white-space:normal;overflow-wrap:anywhere;box-shadow:0 .5rem 1rem rgba(0,0,0,.15);z-index:20;}
-.dim-tip::before{content:'';bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1d2125;z-index:21;}
+.dim-tip::before{content:'';top:calc(100% + 3px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-bottom-color:#1d2125;z-index:21;}
 .dim-tip:hover::after,.dim-tip:hover::before,.dim-tip:focus-within::after,.dim-tip:focus-within::before{opacity:1;transition-delay:250ms;}
 .dim-tip.is-open::after,.dim-tip.is-open::before{opacity:1;transition-delay:0s;}
-/* 2 · decisive result strip — orange, tying it to the Rules tab */
-.ev-rule{display:flex;align-items:center;gap:.65rem;margin:0 20px .5rem;text-decoration:none;color:inherit;padding:.55rem .65rem;border-radius:.5rem;background:var(--lk-surface-2);border:1px solid rgb(253 126 20 / 25%);}
-.ev-rule-icon{flex:none;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:.4rem;background:rgb(253 126 20 / 10%);color:var(--lk-orange-dark);}
-.ev-rule-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.ev-rule-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:.1rem;}
-.ev-rule-body b{font-size:.82rem;color:var(--lk-text);}
-.ev-rule-body span{font-size:.72rem;color:var(--lk-muted);}
-.ev-rule-link{flex:none;display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;font-weight:600;color:var(--lk-orange-dark);white-space:nowrap;}
-.ev-rule-link svg{width:.8rem;height:.8rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-/* 3 · stale-rating note */
-.ev-stale{margin:0 20px .5rem;padding:.55rem .7rem;border-radius:.5rem;background:var(--lk-modal-note-bg);color:var(--lk-modal-note-fg);border-left:3px solid var(--lk-modal-note-accent);}
-.ev-stale p{margin:0;font-size:.75rem;}
-.ev-stale button{margin-top:.35rem;padding:.2rem .55rem;font-size:.72rem;font-weight:600;border:1px solid currentColor;border-radius:.35rem;background:transparent;color:inherit;cursor:pointer;}
-/* 4 · journey group label + rows (row anatomy owned by ovw-detail-evidence.html) */
-.ev-group-lbl{display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;color:var(--lk-muted);margin:.7rem 20px .1rem;}
-.ev-group-n{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--lk-surface-2);color:var(--lk-muted);font-size:.66rem;font-weight:700;}
+
+/* ---- 2 · decisive result strip (.local-dimensions-ev-result, styles.css:3082-3133) ---- */
+.ev-rule{display:flex;align-items:center;gap:.75rem;margin:0 20px .75rem;padding:1rem;border-radius:.5rem;background:#f6fbf8;border:1px solid #d1e7dd;}
+.ev-rule-icon{flex:none;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#d1e7dd;color:#0f5132;}
+.ev-rule-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ev-rule-body{flex:1;min-width:0;display:flex;flex-direction:column;}
+.ev-rule-body b{font-size:.875rem;font-weight:600;color:var(--lk-text);}
+.ev-rule-body span{font-size:.8125rem;color:var(--lk-muted);overflow-wrap:anywhere;}
+.ev-rule-action{flex:none;padding:.35rem .85rem;border:1px solid var(--lk-line-2);border-radius:999px;background:var(--lk-surface);color:var(--lk-accent);font-size:.8125rem;font-weight:500;cursor:pointer;white-space:nowrap;}
+/* ---- 3 · stale-rating note (.local-dimensions-ev-stale, styles.css:3136-3170) ---- */
+.ev-stale{display:flex;flex-direction:column;align-items:flex-start;gap:.5rem;margin:0 20px .75rem;padding:.75rem 1rem;border-left:3px solid var(--lk-orange);border-radius:.25rem;background:#fff9f3;}
+.ev-stale p{margin:0;font-size:.8125rem;color:var(--lk-text-2);}
+.ev-stale button{padding:.35rem .85rem;font-size:.8125rem;font-weight:500;border:1px solid var(--lk-orange);border-radius:999px;background:var(--lk-surface);color:#ad4e00;cursor:pointer;}
+.ev-stale .sent{font-size:.8125rem;font-weight:600;color:#ad4e00;}
+/* ---- 4 · journey group label + rows (row anatomy owned by ovw-detail-evidence.html) ---- */
+.ev-group-lbl{display:flex;align-items:center;gap:.4rem;font-size:.8125rem;font-weight:700;color:var(--lk-muted);margin:.9rem 20px .1rem;}
+.ev-group-n{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--lk-surface-2);color:var(--lk-muted);font-size:.6875rem;font-weight:700;}
 .ev-journey{list-style:none;margin:0 20px;padding:0;}
 .ev-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto 84px;align-items:center;gap:.6rem;padding:.55rem .5rem;border-top:1px solid var(--lk-line);}
-.ev-row:first-child{border-top:none;}
+.ev-journey>li:first-child>.ev-row{border-top:none;}
 .ev-row.clickable{cursor:pointer;transition:background-color 150ms ease;}
 .ev-row.clickable:hover{background:var(--lk-surface-2);}
 .ev-row-icon{width:28px;height:28px;border-radius:.375rem;display:flex;align-items:center;justify-content:center;}
@@ -128,13 +98,13 @@
 .ev-row-main{min-width:0;display:flex;flex-direction:column;}
 .ev-row-desc{font-size:.8rem;color:var(--lk-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ev-row-type{font-size:.66rem;color:var(--lk-muted);}
-.ev-row-assess{display:block;min-width:0;max-width:104px;font-size:.7rem;font-weight:600;padding:.08rem .4rem;border-radius:.35rem;background:var(--lk-line);color:var(--lk-text-2);
+.ev-row-assess{display:block;min-width:0;max-width:104px;font-size:.75rem;font-weight:600;padding:.08rem .4rem;border-radius:.35rem;background:var(--lk-line);color:var(--lk-text-2);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ev-row-assess.prof{background:#d1e7dd;color:#0f5132;}
-.ev-row-assess.none{background:transparent;color:#adb5bd;padding:0;}
-.ev-row-date{font-size:.72rem;color:var(--lk-muted);white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;padding-right:.15rem;}
-.ev-empty{font-size:.8rem;color:var(--lk-muted);margin:.4rem 20px 0;}
-/* 5 · submit — orange brand accent, kept */
+.ev-row-assess.none{background:transparent;color:#adb5bd;padding:0;max-width:none;}
+.ev-row-date{font-size:.75rem;color:var(--lk-muted);white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;padding-right:.15rem;}
+.ev-empty{font-size:.875rem;color:var(--lk-muted);margin:.4rem 20px 0;}
+/* ---- 5 · submit — orange brand accent (styles.css:4279-4301) ---- */
 .ev-submit-wrap{padding:10px 20px 0;}
 .ev-submit{display:inline-block;padding:10px 28px;font-weight:600;font-size:.9rem;color:#fff;background:var(--lk-orange);border:none;border-radius:8px;text-decoration:none;}
 
@@ -143,83 +113,21 @@
 .flow .n{flex:none;width:18px;height:18px;border-radius:50%;background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
 .flow .g{margin-left:auto;font-family:var(--mono);font-size:10px;color:#a3552d;}
 
-.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend{max-width:680px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
 .legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
 .leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
 .leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
 .leg .v b{color:var(--lk-text);font-weight:600;}
 .leg .v{color:var(--lk-text-2);}
 .leg .rule{color:#8a8980;}
+.leg .pending{display:block;margin-top:3px;color:#6b6a63;font-style:italic;}
 </style>
 <div class="kit"><div class="screens">
 
-  <!-- ============ AS-IS ============ -->
   <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · two separate tabs</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>As-is · one Progress tab — the rating and what produced it, together</div>
 
-    <div class="lk-cap">Tab 1 — Assessment · 2-column grid · <span class="idb">OVW-STATUS</span></div>
-    <div class="tabnav" role="tablist" aria-label="Competency summary">
-      <button type="button" class="tab on" role="tab" aria-selected="true">Assessment</button>
-      <button type="button" class="tab" role="tab" aria-selected="false">Description</button>
-      <button type="button" class="tab" role="tab" aria-selected="false">Evidence</button>
-      <button type="button" class="tab" role="tab" aria-selected="false">Rules</button>
-    </div>
-    <div class="scap">Proficient — the ancestor accordion item carries <code>.completed</code>, tinting both cells</div>
-    <div class="sgrid">
-      <div class="scell ok">
-        <p class="slabel">Rating</p>
-        <span class="sbadge"><svg class="ic" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Competent</span>
-      </div>
-      <div class="scell ok">
-        <p class="slabel">Proficiency</p>
-        <div class="sval ok"><svg class="ic" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Yes</div>
-      </div>
-    </div>
-    <div class="scap">Rated, not proficient — ancestor <code>.rated</code></div>
-    <div class="sgrid">
-      <div class="scell warn">
-        <p class="slabel">Rating</p>
-        <span class="sbadge muted">Not competent</span>
-      </div>
-      <div class="scell warn">
-        <p class="slabel">Proficiency</p>
-        <div class="sval pending">No</div>
-      </div>
-    </div>
-    <button type="button" class="s-scale-loose"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>About this scale</button>
-    <div class="lk-ids">
-      <span class="idb">OVW-STATUS · two boxed cells</span>
-      <span class="idb">OVW-STATUS-SCALE · button below, ungrouped</span>
-      <span class="idb">no setting gates the button</span>
-    </div>
-    <div class="note">Two cells of equal weight, so the derived boolean ("Proficiency: Yes") reads as loudly as the fact the learner actually wants (the scale level). The scale button hangs under the block with nothing tying it to the rating it explains, and it appears whenever the scale happens to have a description — the admin has no say.</div>
-
-    <div class="divlbl">Tab 3 — Evidence · a separate card slider <span class="idb">OVW-EVID-CARD</span></div>
-    <div class="tabnav" role="tablist" aria-label="Competency summary">
-      <button type="button" class="tab" role="tab" aria-selected="false">Assessment</button>
-      <button type="button" class="tab" role="tab" aria-selected="false">Description</button>
-      <button type="button" class="tab on" role="tab" aria-selected="true">Evidence</button>
-      <button type="button" class="tab" role="tab" aria-selected="false">Rules</button>
-    </div>
-    <div class="ev-track">
-      <div class="ev-card">
-        <span class="i"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg></span>
-        <span><h3>Activity completion</h3><p>Completed “Reflective essay”</p></span>
-      </div>
-      <div class="ev-card">
-        <span class="i"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg></span>
-        <span><h3>Course grade</h3><p>Course completed</p></span>
-      </div>
-    </div>
-    <div class="ev-submit-wrap"><a class="ev-submit" href="#">Submit prior learning evidence</a></div>
-    <div class="note">To answer "how am I doing on this competency?" the learner has to visit two tabs and hold the first in their head while reading the second: the rating is in tab 1, what produced it is in tab 3, and nothing links them. Full slider anatomy in <code>ovw-detail-evidence.html</code>.</div>
-  </div>
-
-  <!-- ============ TO-BE ============ -->
-  <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · one Progress tab — the rating and what produced it, together</div>
-
-    <div class="lk-cap">Progress — full composition · <span class="idb r">OVW-PROG-PANE · to-be</span></div>
+    <div class="lk-cap">Progress — full composition · <span class="idb">OVW-PROG-PANE</span></div>
     <div class="tabnav" role="tablist" aria-label="Competency summary">
       <button type="button" class="tab" role="tab" aria-selected="false">Related content</button>
       <button type="button" class="tab" role="tab" aria-selected="false">Description</button>
@@ -234,64 +142,74 @@
           <button type="button" class="st-scale-btn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>About this scale</button>
         </div>
         <div class="st-rating">
-          <span class="st-level">Competent</span>
+          <span class="dim-tip" data-dim-tip="Competent"><span class="st-level">Competent</span></span>
           <span class="st-prof ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Proficient</span>
         </div>
       </div>
 
-      <a class="ev-rule" href="#rules">
-        <span class="ev-rule-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-2h14v2"/></svg></span>
-        <span class="ev-rule-body"><b>Completed by competency rule</b><span>The competency rule was met — it overrode the existing grade.</span></span>
-        <span class="ev-rule-link">View rule <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-      </a>
+      <div class="ev-rule">
+        <span class="ev-rule-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5 21 10l-2.5 2.5L11 5l2.5-2.5Z"/><path d="M9.5 6.5 15 12"/><path d="m12 9-8 8 3 3 8-8"/><path d="M3 22h10"/></svg></span>
+        <span class="ev-rule-body"><b>Completed by competency rule</b><span>The competency rule was met.</span></span>
+        <button type="button" class="ev-rule-action">View rule</button>
+      </div>
 
       <div class="ev-group-lbl">On the journey <span class="ev-group-n">4</span></div>
       <ul class="ev-journey">
-        <li class="ev-row clickable">
-          <span class="ev-row-icon t-manual"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>
-          <span class="ev-row-main"><span class="ev-row-desc">Rated “Excellent” by assessor</span><span class="ev-row-type">Manual rating · overridden by rule</span></span>
-          <span class="dim-tip is-open" data-dim-tip="Excellent with distinction in written communication"><span class="ev-row-assess prof">Excellent with distinction in written communication</span></span>
-          <span class="ev-row-date">14/01/26</span>
+        <li>
+          <div class="ev-row clickable" role="button" tabindex="0" aria-label="View details: Manual rating">
+            <span class="ev-row-icon t-manual"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>
+            <span class="ev-row-main"><span class="ev-row-desc">Rated &ldquo;Excellent&rdquo; by assessor</span><span class="ev-row-type">Manual rating</span></span>
+            <span class="dim-tip is-open" data-dim-tip="Excellent with distinction in written communication"><span class="ev-row-assess prof">Excellent with distinction in written communication</span></span>
+            <span class="ev-row-date">14/01/26</span>
+          </div>
         </li>
-        <li class="ev-row clickable">
-          <span class="ev-row-icon t-activity"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg></span>
-          <span class="ev-row-main"><span class="ev-row-desc">Completed “Reflective essay”</span><span class="ev-row-type">Activity completion</span></span>
-          <span class="dim-tip" data-dim-tip="Competent"><span class="ev-row-assess prof">Competent</span></span>
-          <span class="ev-row-date">12/01/26</span>
+        <li>
+          <div class="ev-row clickable" role="button" tabindex="0" aria-label="View details: Activity completion">
+            <span class="ev-row-icon t-activity"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg></span>
+            <span class="ev-row-main"><span class="ev-row-desc">Completed &ldquo;Reflective essay&rdquo;</span><span class="ev-row-type">Activity completion</span></span>
+            <span class="dim-tip" data-dim-tip="Competent"><span class="ev-row-assess prof">Competent</span></span>
+            <span class="ev-row-date">12/01/26</span>
+          </div>
         </li>
-        <li class="ev-row">
-          <span class="ev-row-icon t-grade"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg></span>
-          <span class="ev-row-main"><span class="ev-row-desc">Course completed</span><span class="ev-row-type">Course grade</span></span>
-          <span class="ev-row-assess none">—</span>
-          <span class="ev-row-date">10/01/26</span>
+        <li>
+          <div class="ev-row">
+            <span class="ev-row-icon t-grade"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg></span>
+            <span class="ev-row-main"><span class="ev-row-desc">Course completed</span><span class="ev-row-type">Course grade</span></span>
+            <span class="ev-row-assess none">&mdash;</span>
+            <span class="ev-row-date">10/01/26</span>
+          </div>
         </li>
-        <li class="ev-row clickable">
-          <span class="ev-row-icon t-file"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span>
-          <span class="ev-row-main"><span class="ev-row-desc">portfolio.pdf</span><span class="ev-row-type">File attachment</span></span>
-          <span class="ev-row-assess none">—</span>
-          <span class="ev-row-date">08/01/26</span>
+        <li>
+          <div class="ev-row clickable" role="button" tabindex="0" aria-label="View details: File attachment">
+            <span class="ev-row-icon t-file"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span>
+            <span class="ev-row-main"><span class="ev-row-desc">portfolio.pdf</span><span class="ev-row-type">File attachment</span></span>
+            <span class="ev-row-assess none">&mdash;</span>
+            <span class="ev-row-date">08/01/26</span>
+          </div>
         </li>
       </ul>
 
       <div class="ev-submit-wrap"><a class="ev-submit" href="#">Submit prior learning evidence</a></div>
     </div>
     <div class="lk-ids">
-      <span class="idb r">OVW-STATUS-CARD · card, eyebrow, scale on the right</span>
-      <span class="idb r">OVW-PROG-ORDER · rating → decisive → journey → submit</span>
-      <span class="idb r">OVW-EVID-COUNTS · on the group label</span>
+      <span class="idb">OVW-STATUS · assessment card</span>
+      <span class="idb">OVW-STATUS-CARD · eyebrow left, scale right</span>
+      <span class="idb">OVW-PROG-ORDER · rating &rarr; decisive &rarr; journey &rarr; submit</span>
+      <span class="idb">OVW-EVID-COUNTS · on the group label</span>
       <span class="idb">OVW-EVID-JOURNEY · row anatomy in ovw-detail-evidence</span>
     </div>
-    <div class="note">One pane answers the whole question, top to bottom: <b>where I stand</b> (the card), <b>what settled it</b> (the orange strip, only when a rule concluded the competency), <b>how I got here</b> (the journey), <b>what I can add</b> (submit). The merge also removes a duplication the kit had proposed: the result strip's own outcome badge and counts are gone — the card above already states "Competent · Proficient", and the counts ride the group label instead. That drops the <code>showevidencecounts</code> setting the evidence slice had proposed.</div>
+    <div class="note">One pane answers the whole question, top to bottom: <b>where I stand</b> (the card), <b>what settled it</b> (the green strip, only when a rule concluded the competency), <b>how I got here</b> (the journey), <b>what I can add</b> (submit). The decisive strip carries no outcome badge and no &ldquo;1 decisive&rdquo; count &mdash; the card immediately above already says &ldquo;Competent &middot; Proficient&rdquo;, and the journey count rides the group label.</div>
 
-    <div class="divlbl">Composition and what gates each block <span class="idb r">OVW-PROG-ORDER · to-be</span></div>
+    <div class="divlbl">Composition and what gates each block <span class="idb">OVW-PROG-ORDER</span></div>
     <div class="flow">
       <div><span class="n">1</span>Assessment card<span class="g">hasStatus</span></div>
       <div><span class="n">2</span>Decisive result strip — rule completion only<span class="g">last rule-completion row</span></div>
       <div><span class="n">3</span>Stale-rating note + review request<span class="g">rule met, proficiency still 0</span></div>
-      <div><span class="n">4</span>“On the journey” label + count<span class="g">hasEvidence &amp;&amp; rows</span></div>
+      <div><span class="n">4</span>“On the journey” label + count<span class="g">journey.length &gt; 0</span></div>
       <div><span class="n">5</span>Journey rows<span class="g">hasEvidence</span></div>
       <div><span class="n">6</span>Submit prior learning evidence<span class="g">enableevidencesubmitbutton</span></div>
     </div>
+    <div class="note">Blocks 2&ndash;6 all sit inside the <code>hasEvidence</code> branch of <code>renderProgressPane</code> (accordion.js:648-651); block 1 has its own <code>hasStatus</code> gate at :645-647. The tab itself is built only when at least one of the two is true.</div>
 
     <div class="divlbl">Evidence switched off — the card stands alone <span class="idb">showevidence</span></div>
     <div class="st-block">
@@ -300,13 +218,13 @@
         <button type="button" class="st-scale-btn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>About this scale</button>
       </div>
       <div class="st-rating">
-        <span class="st-level">Developing</span>
+        <span class="dim-tip" data-dim-tip="Developing"><span class="st-level">Developing</span></span>
         <span class="st-prof no">Not yet proficient</span>
       </div>
     </div>
     <div class="note">The tab survives on the rating alone. Blocks 2–6 all hang off evidence, so switching the setting off leaves a coherent single-card pane rather than an empty tab.</div>
 
-    <div class="divlbl">No grade yet, and a scale with no description → no scale button <span class="idb r">OVW-STATUS-SCALE</span></div>
+    <div class="divlbl">No grade yet, and a scale with no description → no scale button <span class="idb">OVW-STATUS-SCALE</span></div>
     <div class="st-block">
       <div class="st-head"><span class="st-eyebrow">Rating</span></div>
       <div class="st-rating">
@@ -315,26 +233,33 @@
     </div>
     <div class="ev-group-lbl">On the journey <span class="ev-group-n">1</span></div>
     <ul class="ev-journey">
-      <li class="ev-row">
-        <span class="ev-row-icon t-grade"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg></span>
-        <span class="ev-row-main"><span class="ev-row-desc">Course completed</span><span class="ev-row-type">Course grade</span></span>
-        <span class="ev-row-assess none">—</span>
-        <span class="ev-row-date">10/01/26</span>
+      <li>
+        <div class="ev-row">
+          <span class="ev-row-icon t-grade"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg></span>
+          <span class="ev-row-main"><span class="ev-row-desc">Course completed</span><span class="ev-row-type">Course grade</span></span>
+          <span class="ev-row-assess none">&mdash;</span>
+          <span class="ev-row-date">10/01/26</span>
+        </div>
       </li>
     </ul>
-    <div class="note">With no grade the level reads "Not yet rated" in muted weight and the proficiency pill drops entirely — saying "No" about a competency nobody has assessed yet would be a verdict, not a fact. The scale button is omitted on two independent conditions now: the scale has no description, <b>or</b> the new <code>showscaledescription</code> setting is off.</div>
+    <div class="note">With no grade the level reads &ldquo;Not yet rated&rdquo; in muted weight and the proficiency pill drops entirely &mdash; saying &ldquo;No&rdquo; about a competency nobody has assessed yet would be a verdict, not a fact. The scale button is omitted on two independent conditions: the scale has no description, <b>or</b> the <code>showscaledescription</code> setting is off &mdash; both resolve server-side to the same empty <code>scaledescription</code>, so the client has one thing to test.</div>
 
     <div class="divlbl">Rule met but the grade never moved <span class="idb">OVW-EVID-RULE</span></div>
-    <a class="ev-rule" href="#rules">
-      <span class="ev-rule-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-2h14v2"/></svg></span>
+    <div class="ev-rule">
+      <span class="ev-rule-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5 21 10l-2.5 2.5L11 5l2.5-2.5Z"/><path d="M9.5 6.5 15 12"/><path d="m12 9-8 8 3 3 8-8"/><path d="M3 22h10"/></svg></span>
       <span class="ev-rule-body"><b>Completed by competency rule</b><span>The competency rule was met.</span></span>
-      <span class="ev-rule-link">View rule <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-    </a>
-    <div class="ev-stale" role="note">
-      <p>The rule was met, but the recorded rating still stands — a rule does not overwrite a grade that was already set.</p>
-      <button type="button">Request a review</button>
+      <button type="button" class="ev-rule-action">View rule</button>
     </div>
-    <div class="note">Existing behaviour, unchanged by the merge — but it reads better here, because the card immediately above is the very rating being described as stale. Split across two tabs, the note referred to something the learner could not see.</div>
+    <div class="ev-stale" role="note">
+      <p>This rule was met, but an earlier rating is still in force, so your status has not changed. You can ask for it to be reviewed.</p>
+      <button type="button">Send for review</button>
+    </div>
+    <div class="note" style="padding-bottom:6px">&hellip; and once the request is in, or when the learner was already waiting for one:</div>
+    <div class="ev-stale" role="note">
+      <p>This rule was met, but an earlier rating is still in force, so your status has not changed. You can ask for it to be reviewed.</p>
+      <p class="sent">Sent for review</p>
+    </div>
+    <div class="note">Core does not let a rule overwrite a grade that is already set, so a rating made <i>before</i> the rule fired still stands. The note says so and offers the review request; once it is sent the button is replaced in place by a plain &ldquo;Sent for review&rdquo; line in the same amber-brown, and a learner already waiting for review sees that line instead of the button from the start.</div>
 
     <div class="divlbl">Evidence on, nothing recorded <span class="idb">OVW-EVID-EMPTY</span></div>
     <div class="st-block">
@@ -342,7 +267,10 @@
       <div class="st-rating"><span class="st-level none">Not yet rated</span></div>
     </div>
     <p class="ev-empty">No evidence recorded</p>
-    <div class="note">The group label and its count are omitted when there is nothing to count — a heading over an empty list is worse than no heading.</div>
+    <div class="ev-submit-wrap"><a class="ev-submit" href="#">Submit prior learning evidence</a></div>
+    <div class="note">The group label and its count are omitted when there is nothing to count &mdash; a heading over an empty list is worse than no heading. The submit button still renders: it is gated on the <i>setting</i>, not on the row count, so an empty list is exactly the case where it is most useful.</div>
+
+    <div class="pend"><b>Pending — structured scale-level modal</b>The &ldquo;About this scale&rdquo; modal shows the scale&rsquo;s raw description blob. The designed extension &mdash; a level list built from <code>mdl_scale.scale</code> + <code>scaleconfiguration</code>, with the proficient levels marked &mdash; is not built: <code>get_user_competency_summary_in_plan::get_scale_description()</code> (:153-170) reads only <code>$scale-&gt;get_description()</code> and never touches <code>load_items()</code> or the scale configuration, and <code>initScaleAbout</code> (accordion.js:1371-1387) passes that string straight into the modal body. No level-list renderer and no lang strings for one exist.</div>
   </div>
 
 </div>
@@ -350,15 +278,15 @@
 <div class="legend">
   <h3>ID legend — Plan detail · Progress tab</h3>
   <div class="leg">
-    <span class="k">OVW-PROG-PANE</span><span class="v"><b>(to-be) The merged pane</b> — the former Assessment and Evidence panes become one tab labelled <b>Progress</b>, gated by <code>hasStatus || hasEvidence</code>. Replaces <code>renderStatusPane</code> + <code>renderEvidencePane</code> with a single <code>renderProgressPane</code>; the section renderers underneath them are reused, not rewritten. Needs one new lang string for the tab label. <span class="rule">accordion.js buildSummaryTabs / renderSummaryTabPanes / renderStatusPane / renderEvidencePane</span></span>
-    <span class="k">OVW-PROG-ORDER</span><span class="v"><b>(to-be) Vertical order inside the pane</b> — assessment card → decisive result strip → stale note → journey label + count → journey rows → submit button. Each block keeps the gate it already had; the order is what is new, and it runs from conclusion to origin so the answer comes before the audit trail. <span class="rule">new composition in renderProgressPane</span></span>
-    <span class="k">OVW-STATUS</span><span class="v"><b>(as-is) 2-column status grid</b> — left Rating cell, right Proficiency cell, collapsing to one column below 576px. Rating: a green badge with a check when proficient, a muted badge otherwise, "-" with no grade. Proficiency: "Yes" in success green or "No" in amber. The cell tint comes from the ancestor accordion item's <code>.completed</code> / <code>.rated</code> class. <b>Replaced</b> by the card below. <span class="rule">accordion.js renderStatusSection; view_plan_summary.mustache accordion item classes</span></span>
-    <span class="k">OVW-STATUS-CARD</span><span class="v"><b>(to-be) Assessment card</b> — the two cells collapse into one bordered card. The card is what is missing today: the rating headline and the proficiency pill already exist, but they float in the pane with no surface, no label above them, and with the scale button dropped underneath instead of grouped. Structure: a header row (<code>space-between</code>) with the <code>rating_label</code> eyebrow on the left and "About this scale" on the right, then the rating row. The level is the primary fact in neutral strong text — a scale word like "Developing" is not inherently good or bad, so colour would over-assert — and proficiency is a small qualifier pill beside it. The level itself takes the truncation + tooltip pair, because scale names are author-written and unbounded. <span class="rule">accordion.js renderStatusSection; strings rating_label / proficient / status_notyetproficient / status_notyetrated (all present)</span></span>
-    <span class="k">OVW-STATUS-SCALE</span><span class="v"><b>"About this scale" → modal</b> — because the rating scale is per-competency, a level word is not self-explanatory; the button opens the scale's own description in a <code>core/modal</code>. Today it renders whenever that description is non-empty. <b>To-be:</b> it moves into the card header, right-aligned, and gains a second gate — the new <code>showscaledescription</code> checkbox in the Full Plan Overview settings block, default on so current behaviour is preserved. Worth gating server-side too: with the setting off the web service can skip reading the scale and formatting its description entirely. <span class="rule">accordion.js renderStatusSection / initScaleAbout; get_user_competency_summary_in_plan::get_scale_description; new setting + two lang strings</span></span>
-    <span class="k">OVW-EVID-RULE</span><span class="v"><b>Decisive result strip</b> — shown when the evidence list contains a rule-completion row (the plugin identifies it by <code>descidentifier</code> plus the complete action, and treats only the <b>last</b> one as decisive). Orange, tying it to the Rules tab, with a "View rule" jump. The stale note and its review request follow when the rule fired but proficiency never moved. All existing; the merge only changes where it sits. <b>Changed:</b> the outcome badge and counts the evidence slice proposed for this strip's header are dropped — see OVW-EVID-COUNTS. <span class="rule">accordion.js isRuleCompletion / renderEvidenceList</span></span>
-    <span class="k">OVW-EVID-COUNTS</span><span class="v"><b>(to-be, revised) Counts</b> — the evidence slice proposed "1 decisive · 4 on the journey" inside a result header, behind a proposed <code>showevidencecounts</code> setting. In the merged pane the decisive fact is already stated twice above, so the header goes and only the journey count survives, as a badge on the group label. <b>The proposed setting is dropped</b> — a row count needs no administrative control. <span class="rule">supersedes the OVW-EVID-COUNTS proposal in ovw-detail-evidence.html</span></span>
-    <span class="k">OVW-EVID-JOURNEY</span><span class="v"><b>Journey list</b> — the chronological rows below the decisive strip, minus the decisive row itself so the same fact is not stated twice. Row anatomy (the four-column grid, the abbreviated date, the truncated assessment chip and its tooltip) is owned by <code>ovw-detail-evidence.html</code>. <span class="rule">accordion.js renderEvidenceList / renderEvidenceRow</span></span>
-    <span class="k">OVW-EVID-SUBMIT</span><span class="v"><b>"Submit prior learning evidence"</b> — links to the core user-evidence list for the plan's owner. Needs <code>enableevidencesubmitbutton</code> and the core capability to manage one's own evidence, both already resolved server-side. Orange, kept. Now the last block of the merged pane. <span class="rule">accordion.js renderEvidencePane; view-plan.php accordion settings</span></span>
+    <span class="k">OVW-PROG-PANE</span><span class="v"><b>The merged pane</b> — one tab labelled <b>Progress</b>, gated by <code>hasStatus || hasEvidence</code>, holding what used to be two separate Assessment and Evidence panes. <code>renderStatusPane</code> and <code>renderEvidencePane</code> no longer exist; the section renderers underneath them were reused, not rewritten. <span class="rule">accordion.js:635-655 renderProgressPane; buildSummaryTabs :462-483 (the progress gate at :475-476); string progress_tab</span></span>
+    <span class="k">OVW-PROG-ORDER</span><span class="v"><b>Vertical order inside the pane</b> — assessment card → decisive result strip → stale note → journey label + count → journey rows → submit button. Each block keeps the gate it already had; the order runs from conclusion to origin, so the answer comes before the audit trail. <span class="rule">accordion.js:645-651 (status, then list, then submit) and renderEvidenceList :1249-1329 for the internal order</span></span>
+    <span class="k">OVW-STATUS</span><span class="v"><b>Assessment card</b> — one bordered card, not two boxed cells. The scale level is the primary fact in neutral strong text (a scale word like &ldquo;Developing&rdquo; is not inherently good or bad, so colour would over-assert) and proficiency follows as a small qualifier pill: success green when <code>proficiency === 1</code>, warning amber otherwise. With no grade the pill is dropped entirely and the level reads &ldquo;Not yet rated&rdquo;. The level itself takes the truncation + tooltip pair, because scale names are author-written and unbounded. <span class="rule">accordion.js:2660-2713 renderStatusSection; styles.css:2977-3044 + the shared pill at :3047-3067; strings rating_label (:536), proficient, status_notyetproficient (:609), status_notyetrated (:610)</span></span>
+    <span class="k">OVW-STATUS-CARD</span><span class="v"><b>Card header row</b> — <code>.local-dimensions-status-card</code> wraps the block; its header (<code>space-between</code>) puts the <code>rating_label</code> eyebrow on the left and &ldquo;About this scale&rdquo; on the right, so the explainer sits with the rating it explains instead of floating under the whole block. <span class="rule">accordion.js:2670-2683; styles.css:2977-2996</span></span>
+    <span class="k">OVW-STATUS-SCALE</span><span class="v"><b>&ldquo;About this scale&rdquo; → modal</b> — the rating scale is per-competency, so a level word is not self-explanatory; the button (<code>fa fa-info-circle</code>) opens the scale&rsquo;s own description in a <code>core/modal</code>. Two independent gates collapse into one client-side test: the payload carries <code>scaledescription</code> only when the <code>showscaledescription</code> checkbox is on <b>and</b> the scale actually has a description, so with either missing the client sees <code>''</code> and renders nothing. Gating server-side also means the web service skips reading and formatting the scale entirely when the setting is off. <span class="rule">accordion.js:2676-2682 + initScaleAbout :1371-1387 (wired at :372); get_user_competency_summary_in_plan.php:115-118, resolve_show_scale_description :133-137, get_scale_description :153-170; settings.php:248-253; strings scale_about (:566), showscaledescription/_desc (:594-595)</span><span class="pending">Pending: the structured level list inside the modal (scale items + <code>scaleconfiguration</code>, proficient levels marked) is not built — the modal body is the raw description string.</span></span>
+    <span class="k">OVW-EVID-RULE</span><span class="v"><b>Decisive result strip, and the stale-rating note that can follow it</b> — the strip is shown when the evidence list contains a rule-completion row (identified by <code>descidentifier === 'evidence_competencyrule'</code> plus the complete action; only the <b>last</b> one counts, an earlier one was superseded). Green, on a <code>fa-gavel</code> mark, with a &ldquo;View rule&rdquo; pill button that jumps to the Rules tab by clicking its tab button. The decisive row is then omitted from the journey below. When the rule fired but <code>proficiency</code> never moved, an orange-ruled callout follows and offers <code>core_competency_user_competency_request_review</code>: the button renders only when <code>isrequestreviewallowed</code>, a learner already <code>isstatuswaitingforreview</code> gets the &ldquo;Sent for review&rdquo; line instead, and on success the button is replaced in place by that same line. <span class="rule">accordion.js isRuleCompletion :1170 / renderEvidenceList :1271-1284 (strip) and :1290-1301 (note); the tab jump in initEvidenceList :1845-1854 and requestReview :1810-1830; styles.css:3082-3133 + :3136-3170; strings evidence_rule_completed (:400), evidence_rule_viewrule (:404), evidence_rule_stale (:403), evidence_rule_sendreview (:402), evidence_rule_reviewsent (:401)</span></span>
+    <span class="k">OVW-EVID-COUNTS</span><span class="v"><b>Journey count</b> — a single badge on the group label, counting the rows below it, rendered only once at least one row survives the decisive row&rsquo;s removal. There is no per-outcome count line and no administrative control over it: the <code>showevidencecounts</code> setting that was once proposed for this was <b>dropped</b> — a row count needs no admin switch, and the decisive half is already stated twice above. <span class="rule">accordion.js:1312-1316; styles.css:3172-3194; string evidence_journey (:394); no setting exists in settings.php</span></span>
+    <span class="k">OVW-EVID-JOURNEY</span><span class="v"><b>Journey list</b> — the chronological rows below the decisive strip, minus the decisive row itself so the same fact is not stated twice. Row anatomy (the four-column grid, the abbreviated date, the truncated assessment chip and its tooltip) is owned by <code>ovw-detail-evidence.html</code>. <span class="rule">accordion.js renderEvidenceList :1317-1324 / renderEvidenceRow :1183-1235; styles.css:3196-3302</span></span>
+    <span class="k">OVW-EVID-SUBMIT</span><span class="v"><b>&ldquo;Submit prior learning evidence&rdquo;</b> — links to the core user-evidence list for the plan&rsquo;s owner. Needs <code>enableevidencesubmitbutton</code> <i>and</i> <code>moodle/competency:userevidencemanageown</code> on the plan owner&rsquo;s user context, both resolved server-side into one boolean before the accordion ever runs. Orange, and the last block of the pane. <span class="rule">accordion.js renderEvidenceSubmit :664-680; view-plan.php:87-92; styles.css:4279-4301; string evidence_submit (:407)</span></span>
   </div>
 </div>
 </div>

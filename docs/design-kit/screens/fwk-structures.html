@@ -1,0 +1,424 @@
+<!-- @dsCard group="Screens (as-is)" name="Structures" subtitle="FWK — cards + 3 header actions + footer, with IDs" -->
+<style>
+:root{
+  /* Moodle Design System (Boost) palette — the same one the screen uses live. */
+  --surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;
+  --text-primary:#1d2125;--text-secondary:#6a737b;--text-muted:#6a737b;
+  --text-accent:#0f6cbf;--bg-accent:#e7f0f9;--border-accent:#9fc4e5;
+  --text-warning:#60451f;--bg-warning:#fcefdc;--border-warning:#60451f;
+  --text-danger:#ca3120;--bg-danger:#f4d6d2;--border-danger:#51140d;
+  --border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--radius:8px;
+  --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
+  --mds-motion-fast:150ms;--mds-motion-base:250ms;--mds-motion-flash:1500ms;
+  --mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
+  /* Tokens of the provenance chip's own: they must NOT inherit the palette's accent, which in dark
+     is #3f89cc and drops to 3.88:1 over the tint (measured; the same value est-competencies and
+     modal-shell recorded). These give 5.70:1 (light) and 7.23:1 (dark). */
+  --prov-fg:#185fa5;--prov-bg:#e6f1fb;
+  /* Primary button fill: it must NOT be var(--text-accent), which in dark becomes the LIGHT
+     blue #3f89cc — white text over it fails. The same trap the --mds-bg-interactive-* tokens
+     recorded: the accent token is made for TEXT over a dark background, not for becoming a
+     background. This pair is fixed in both modes and gives 6.53:1 (measured). */
+  --prim-bg:#185fa5;--prim-fg:#fff;
+}
+/* The dark --text-accent (#3f89cc) fails AA on purpose: it is Boost's own dark accent,
+   and the kit portrays what is live (measured at 4.37:1, moodle-ds-alignment.md:184-200). */
+@media (prefers-color-scheme:dark){:root{
+  --surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;
+  --text-primary:#f8f9fa;--text-secondary:#ced4da;--text-muted:#ced4da;
+  --text-accent:#3f89cc;--bg-accent:#062b4c;--border-accent:#0f6cbf;
+  --text-warning:#f3bd71;--bg-warning:#60451f;--border-warning:#f3bd71;
+  --text-danger:#df8379;--bg-danger:#51140d;--border-danger:#df8379;
+  --border:#495057;--border-strong:#6a737b;--border-stronger:#6a737b;
+  --prov-fg:#85b7eb;--prov-bg:#0c2740;
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-0);margin:0;padding:20px;line-height:1.5;}
+.panel{max-width:820px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-1);padding:14px;}
+.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
+.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.idb{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);background:var(--surface-2);border:1px dashed var(--border-stronger);border-radius:6px;padding:0 5px;display:inline-block;white-space:nowrap;}
+.prov{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:10px;background:var(--prov-bg);color:var(--prov-fg);border:0.5px solid var(--prov-fg);white-space:nowrap;}
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.col{display:flex;flex-direction:column;gap:4px;}
+.note{font-size:10px;color:var(--text-muted);}
+.divlbl{font-size:11px;color:var(--text-muted);margin:14px 0 5px;border-top:0.5px solid var(--border);padding-top:9px;}
+.ic{width:1.1rem;height:1.1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ic.sm{width:0.85rem;height:0.85rem;}
+
+/* ---- "show hidden" toggle ---- */
+.sw{display:inline-flex;align-items:center;gap:9px;font-size:12px;cursor:pointer;}
+.tgl{position:relative;display:inline-block;width:32px;height:18px;flex:none;}
+.tgl input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;}
+.tgl-track{position:absolute;inset:0;background:var(--border-stronger);border-radius:9px;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);pointer-events:none;}
+.tgl-track::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform var(--mds-motion-fast) var(--mds-motion-ease);}
+.tgl input:checked+.tgl-track{background:var(--text-accent);}
+.tgl input:checked+.tgl-track::after{transform:translateX(14px);}
+
+/* ---- toolbar ---- */
+.tbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0;}
+.cnt{font-size:12px;color:var(--text-secondary);white-space:nowrap;}
+.cnt b{color:var(--text-primary);}
+.excl{color:var(--text-muted);}
+.bprim{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border:0;border-radius:10px;background:var(--prim-bg);color:var(--prim-fg);white-space:nowrap;}
+.bout{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border:0.5px solid var(--border-strong);border-radius:10px;background:var(--surface-2);color:var(--text-secondary);white-space:nowrap;}
+
+/* ---- structure cards ---- */
+.fwlist{display:flex;flex-direction:column;gap:8px;}
+.fwcard{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:10px;padding:10px 12px;}
+/* is-hidden paints nothing: the opacity:0.6 was removed on 2026-07-15 (it blocked AA). */
+.fwcard.active{border-color:var(--text-accent);background:var(--bg-accent);box-shadow:0 0 0 1px var(--text-accent);}
+.fwbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.fwhead{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.fwname{font-size:13px;font-weight:700;letter-spacing:-0.01em;}
+.fwid{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);background:var(--surface-1);border:0.5px solid var(--border);border-radius:5px;padding:0 6px;}
+.fwhid{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;color:var(--text-secondary);background:var(--surface-1);border:0.5px solid var(--border);border-radius:999px;padding:1px 8px;}
+.fwdesc{font-size:10px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fwpill{flex:none;display:inline-flex;align-items:baseline;gap:5px;font-size:10px;color:var(--text-secondary);background:var(--bg-accent);border:0.5px solid var(--border-accent);border-radius:999px;padding:3px 10px;white-space:nowrap;}
+.fwpill b{font-size:12px;color:var(--text-accent);}
+
+/* The toggle genuinely governs the list and the counter, mirroring the server's rule
+   (excludedcount = showhidden ? 0 : hiddencount, classes/output/dynamictabs/frameworks.php:117):
+   with the toggle OFF the hidden card disappears and the "· N hidden" suffix shows; ON, the card
+   shows and the suffix goes — the two states never coexist, because in the plugin they cannot.
+   Without :has() the card degrades to exactly the default state (off), which is honest. */
+.fwcard.hid-only{display:none;}
+.panel:has(#fwk-showhidden:checked) .fwcard.hid-only{display:flex;}
+.n-on{display:none;}
+.panel:has(#fwk-showhidden:checked) .n-on{display:inline;}
+.panel:has(#fwk-showhidden:checked) .n-off{display:none;}
+.panel:has(#fwk-showhidden:checked) .excl{display:none;}
+
+/* ---- sticky footer ---- */
+.foot{display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;padding:7px;border:0.5px solid var(--border-strong);border-top-width:2px;border-radius:var(--radius);background:var(--surface-2);margin-top:8px;}
+.fbtn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;padding:3px 7px;border-radius:6px;color:var(--text-primary);text-align:center;}
+
+/* ---- modals ---- */
+.mshell{border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);overflow:hidden;}
+.m-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:0.5px solid var(--border);}
+.m-title{font-size:12px;font-weight:500;flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.m-body{padding:10px;display:flex;flex-direction:column;gap:8px;}
+.m-x{display:inline-flex;align-items:center;justify-content:center;width:1.4rem;height:1.4rem;padding:0;border:0;border-radius:6px;background:var(--surface-1);color:var(--text-secondary);font-size:10px;flex:none;}
+/* Modal footer: the link group has margin-right:auto (styles.css:5028-5034), so it pushes the
+   form's Save/Cancel to the right. */
+.m-foot{display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:0.5px solid var(--border);background:var(--surface-1);}
+.flink{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text-accent);margin-right:auto;}
+.bghost{font-size:10px;padding:3px 9px;border:0.5px solid var(--border-strong);border-radius:6px;background:var(--surface-2);color:var(--text-secondary);}
+.banner{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:var(--radius);background:var(--bg-accent);border:0.5px solid var(--border-accent);color:var(--text-accent);font-size:11px;}
+.fld{display:flex;flex-direction:column;gap:4px;}
+.csel{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;padding:5px 8px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-secondary);}
+
+/* ---- rings, buttons and curtain ---- */
+@keyframes fwk-spin{to{transform:rotate(360deg);}}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:fwk-spin 750ms linear infinite;flex:none;}
+.spin.sm{width:11px;height:11px;}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:1.5s;}}
+/* The pane's busy curtain is a pseudo-element OVER the content already there: a translucent veil +
+   a centred ring, with no text at all (styles.css:4028-4069). */
+.cover{position:relative;overflow:hidden;min-height:96px;}
+.cover::before{content:"";position:absolute;inset:0;z-index:2;background:rgba(255,255,255,0.55);}
+.cover::after{content:"";position:absolute;top:50%;left:50%;z-index:3;width:2rem;height:2rem;margin:-1rem 0 0 -1rem;border:0.25rem solid #0f6cbf;border-right-color:transparent;border-radius:50%;animation:fwk-spin 750ms linear infinite;}
+@media (prefers-reduced-motion:reduce){.cover::after{animation-duration:1500ms;}}
+.rbtn{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 9px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);}
+.rbtn[disabled]{opacity:0.65;color:var(--text-secondary);}
+.rot{animation:fwk-spin 750ms linear infinite;}
+.warn{margin-top:6px;background:var(--bg-warning);color:var(--text-warning);border:0.5px solid var(--border-warning);border-radius:var(--radius);padding:6px 8px;font-size:10px;}
+
+/* ---- page tabs: icon in the label + flat indicator on the active one ---- */
+.tabs{display:flex;gap:2px;border-bottom:0.5px solid var(--border);}
+.tb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:8px 12px;color:var(--text-secondary);background:none;border:0;box-shadow:inset 0 -2px 0 transparent;transition:box-shadow var(--mds-motion-base) var(--mds-motion-ease),color var(--mds-motion-base) var(--mds-motion-ease);}
+.tb.active{color:var(--text-primary);font-weight:500;box-shadow:inset 0 -2px 0 var(--text-accent);}
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="f-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="f-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="f-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="f-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="f-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="f-eye-slash" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></symbol>
+  <symbol id="f-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></symbol>
+  <symbol id="f-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></symbol>
+  <symbol id="f-rotate" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></symbol>
+  <symbol id="f-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6M10 14L21 3"/></symbol>
+  <symbol id="f-sitemap" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="1" y="17" width="6" height="5" rx="1"/><rect x="9" y="17" width="6" height="5" rx="1"/><rect x="17" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M4 12h16M4 12v5M12 12v5M20 12v5"/></symbol>
+  <symbol id="f-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></symbol>
+  <symbol id="f-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="f-cap" viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+</defs></svg>
+
+<section class="panel">
+  <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>As-is · what is live</div>
+
+  <div class="divlbl" style="border-top:0;padding-top:0;margin-top:0;">Page tabs — icon in the label, flat indicator on the active one <span class="prov">mtube: tab icons</span></div>
+  <div class="tabs">
+    <span class="tb active"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-sitemap"/></svg>Structures</span>
+    <span class="tb"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-target"/></svg>Competencies</span>
+    <span class="tb"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-cap"/></svg>Learning plans</span>
+  </div>
+  <div class="note" style="margin-top:6px;">
+    The active tab's indicator is <code>box-shadow: inset 0 -2px 0</code> — it is what is painted above, not a
+    caption: <code>transparent</code> at the base in <code>styles.css:7239-7245</code>, active in
+    <code>var(--bs-primary,#0f6cbf)</code> at <code>:7261-7265</code>, with the keyboard focus ring at
+    <code>:7255-7259</code>. The active tab's text is Boost's dark grey (<code>#1d2125</code>), <b>not</b> the
+    accent. The icon enters through the <b>label</b>: <code>central.php</code> assembles <code>$tabicons</code>
+    (<code>:108-112</code>) and glues an <code>&lt;i class="fa fa-… me-1" aria-hidden&gt;</code> onto
+    <code>displayname</code> (<code>:122</code> builds it, <code>:125</code> concatenates it);
+    <code>core/dynamic_tabs</code> triple-stashes <code>displayname</code>, so <b>no core template
+    changes</b> (the plugin's comment records this at <code>central.php:104-107</code>). Scoped under
+    <code>.local-dimensions-central-page</code> (already on the <code>&lt;body&gt;</code>, <code>central.php:57</code>).
+  </div>
+  <div class="note" style="margin-top:6px;">
+    <b>Structures is active above because it is the tab that is born active</b> in the plugin
+    (<code>central.php:115</code>, <code>$isactive = ($shortname === 'frameworks')</code>) — it is the one that shows
+    the indicator on the first paint. And the labels are the real ones: the one called <code>frameworks</code> in the
+    code appears as <b>"Structures"</b>, and the one called <code>structure</code> appears as <b>"Competencies"</b>
+    (<code>central.php:100-101</code>).
+  </div>
+
+  <div class="divlbl">Refresh — a contextbar control, outside the pane <span class="prov">mtube: refresh</span></div>
+  <div class="row" style="gap:10px;">
+    <div class="col" style="gap:3px;"><span class="note">at rest</span><span class="rbtn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-rotate"/></svg>Refresh</span></div>
+    <div class="col" style="gap:3px;"><span class="note">in progress · <code>disabled</code> + spinning icon</span>
+      <button type="button" class="rbtn" disabled><svg class="ic sm rot" aria-hidden="true" focusable="false"><use href="#f-rotate"/></svg>Refresh</button>
+    </div>
+    <span class="idb">BAR-REFRESH</span>
+  </div>
+  <div class="note" style="margin-top:6px;">
+    The button on the right is a real <code>&lt;button disabled&gt;</code> and the icon does spin:
+    <code>disabled</code> at <code>context.js:212</code>, <code>fa-spin</code> at <code>:214</code>, both undone in a
+    <code>finally</code> (<code>:218-229</code>). No new string —
+    <code>contextbar.mustache:102-103</code> uses <code>fa fa-rotate</code> +
+    <code>{{#str}}refresh, moodle{{/str}}</code>, core's label. The full drawing of the bar is in
+    <code>bar-contextbar</code>.
+  </div>
+  <div class="note" style="margin-top:6px;">
+    <b>Precision:</b> <code>reloadPane</code> has <b>24 call sites across 5 modules</b>
+    (<code>structure</code> 9, <code>frameworks</code> 6, <code>plans</code> 6,
+    <code>competency_browser</code> 1, <code>context</code> 2) — all of them were automatic post-action refreshes;
+    none started from a UI control. The contextbar's <b>Refresh</b> is the one fired on command
+    (<code>context.js:206-230</code>, <code>reloadPane</code> at <code>:217</code>).
+  </div>
+
+  <div class="divlbl">Pane subheader</div>
+  <label class="sw">
+    <span class="tgl"><input type="checkbox" id="fwk-showhidden"><span class="tgl-track"></span></span>
+    Show hidden structures <span class="idb">FWK-SHOWHIDDEN</span>
+  </label>
+  <div class="note" style="margin-top:5px;">
+    The toggle above <b>works</b>: it governs the hidden card and the counter's suffix, as in the plugin.
+    A partial shared with <code>EST</code>/<code>PLN</code>; it is rendered only when there is at least one
+    hidden structure (<code>showhiddentoggle</code> null → nothing,
+    <code>classes/output/dynamictabs/frameworks.php:149</code>). In the plugin, flipping the toggle <b>reloads the
+    whole pane</b> (<code>frameworks.js:522</code>), with the busy curtain below — unlike
+    <code>EST</code>, which rebuilds the <code>select</code> in place.
+  </div>
+
+  <div class="tbar">
+    <span class="cnt">
+      Structures listed: <b class="n-off">2</b><b class="n-on">3</b><span class="excl"> · 1 hidden</span>
+      <span class="idb">FWK-COUNT</span> <span class="idb">FWK-HIDDENCOUNT</span>
+    </span>
+    <span class="row" style="gap:6px;">
+      <span class="bprim"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-plus"/></svg>New structure</span>
+      <span class="bout"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-upload"/></svg>Import</span>
+      <span class="bout"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-download"/></svg>Export</span>
+    </span>
+  </div>
+  <div class="row" style="margin-bottom:8px;gap:5px;">
+    <span class="idb">FWK-NEW</span><span class="idb">FWK-IMPORT</span><span class="idb">FWK-EXPORT · canexport</span>
+  </div>
+  <div class="note" style="margin-bottom:8px;">
+    There are <b>three</b> header actions, not one (<code>frameworks.mustache:82-92</code>). The whole group is
+    gated by <code>canmanage</code> (<code>:80-94</code>); <b>Export</b> has a double gate —
+    a nested <code>{{#canexport}}</code> (<code>:88-92</code>), and on the server
+    <code>canexport = canmanage &amp;&amp; !empty($rows)</code>
+    (<code>classes/output/dynamictabs/frameworks.php:147</code>), so it disappears when there is nothing to export.
+  </div>
+
+  <div class="fwlist">
+    <div class="fwcard active">
+      <span class="fwbody">
+        <span class="fwhead"><span class="fwname">General Competencies</span><span class="fwid">CG-EP</span></span>
+        <span class="fwdesc">Baseline competencies for the current cohort.</span>
+      </span>
+      <span class="fwpill"><b>12</b>competencies</span>
+    </div>
+    <div class="fwcard">
+      <span class="fwbody">
+        <span class="fwhead"><span class="fwname">Mathematics</span><span class="fwid">MAT</span></span>
+        <span class="fwdesc">Quantitative reasoning track for secondary education.</span>
+      </span>
+      <span class="fwpill"><b>8</b>competencies</span>
+    </div>
+    <div class="fwcard is-hidden hid-only">
+      <span class="fwbody">
+        <span class="fwhead"><span class="fwname">Legacy catalogue</span>
+          <span class="fwhid"><svg class="ic sm" style="width:0.6rem;height:0.6rem;" aria-hidden="true" focusable="false"><use href="#f-eye-slash"/></svg>Hidden</span>
+        </span>
+      </span>
+      <span class="fwpill"><b>0</b>competencies</span>
+    </div>
+  </div>
+  <div class="row" style="margin-top:6px;gap:5px;">
+    <span class="idb">FWK-ROW</span><span class="idb">FWK-ROW-NAME</span><span class="idb">FWK-ROW-ID</span>
+    <span class="idb">FWK-ROW-DESC</span><span class="idb">FWK-ROW-HIDDEN</span><span class="idb">FWK-ROW-COUNT</span>
+  </div>
+  <div class="note" style="margin-top:6px;">
+    The <b>whole</b> card is a selection button (<code>FWK-ROW-SELECT</code>,
+    <code>frameworks_row.mustache:46</code>) — the first card is <code>.active</code> above, and that is why the
+    footer below exists. There is no action at all <b>inside</b> the card.
+  </div>
+
+  <div class="divlbl">Actions for the selected structure · <b>the page's sticky footer</b>, not the card</div>
+  <div class="foot">
+    <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#f-pencil"/></svg>Edit details</span>
+    <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#f-eye"/></svg>Toggle visibility</span>
+    <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#f-copy"/></svg>Duplicate</span>
+    <span class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#f-trash"/></svg>Delete</span>
+  </div>
+  <div class="row" style="margin-top:5px;gap:5px;">
+    <span class="idb">FWK-ROW-EDIT</span><span class="idb">FWK-ROW-VIS</span><span class="idb">FWK-ROW-DUP</span><span class="idb">FWK-ROW-DEL</span>
+  </div>
+  <div class="note" style="margin-top:6px;">
+    Four footer buttons (<code>frameworks_footer_actions.mustache:41-56</code>), <b>not</b> badges on the
+    row. No dataset: they act on the <code>.active</code> card held in the module
+    (<code>dispatchFrameworksAction</code>, <code>frameworks.js:429-447</code>), which is why they work from outside
+    the tab's region — and the dispatch aborts if the tab is no longer active (<code>:432-434</code>). The eye shows
+    <b>fa-eye</b> because the selected card is visible (<code>frameworks_footer_actions.mustache:46</code>,
+    fed by <code>frameworks.js:468</code>). <b>Delete with no colour variant</b> — core's raw
+    sticky-footer pattern does not use <code>btn-outline-danger</code>.
+  </div>
+
+  <div class="divlbl">The pane's busy curtain — <code>reloadPane</code> <span class="prov">mtube: loading</span></div>
+  <div class="fwlist cover" aria-busy="true">
+    <div class="fwcard" aria-hidden="true">
+      <span class="fwbody"><span class="fwhead"><span class="fwname">General Competencies</span><span class="fwid">CG-EP</span></span></span>
+      <span class="fwpill"><b>12</b>competencies</span>
+    </div>
+    <div class="fwcard" aria-hidden="true">
+      <span class="fwbody"><span class="fwhead"><span class="fwname">Mathematics</span><span class="fwid">MAT</span></span></span>
+      <span class="fwpill"><b>8</b>competencies</span>
+    </div>
+  </div>
+  <div class="note" style="margin-top:6px;">
+    The curtain covers the list that is <b>already</b> in the pane — it does not replace it, and it
+    <b>has no text</b>: <code>.local-dimensions-central-tab-loading</code> (<code>styles.css:4028-4031</code>, with
+    <code>min-height: var(--mds-loading-min-height)</code> = <code>12rem</code>, defined at <code>:34</code>)
+    + a <code>::before</code> veil of <code>rgba(255,255,255,0.55)</code> (<code>:4033-4042</code>) +
+    a <code>::after</code> ring of <code>2rem</code> in <code>#0f6cbf</code> (<code>:4044-4057</code>), animated by
+    <code>@keyframes local-dimensions-central-spin</code> (<code>:4059-4063</code>) and slowed to
+    <code>1500ms</code> under <code>prefers-reduced-motion</code> (<code>:4065-4069</code>). The ring above really
+    does spin and the <code>aria-busy="true"</code> is on <b>this</b> element. <b>Measured caveat:</b> the veil is a
+    fixed white — there is no dark-scheme variant (the only occurrence of <code>rgba(255, 255, 255, 0.55)</code> in
+    <code>styles.css</code> is the one at <code>:4041</code>).
+  </div>
+  <div class="warn">
+    <b>Scope:</b> the curtain does not cover the tab switch — that already has loading, coming from core
+    (<code>core/dynamic_tabs</code>: <code>loadTab</code> → <code>addIconToContainer</code>, and the previous pane is
+    emptied first). The gap that was filled is the plugin's <code>reloadPane</code>
+    (<code>tabs.js:69-108</code>), which redid <code>loadTab</code>'s path <b>without</b> the icon. It adds
+    <code>LOADING_CLASS</code> (<code>:44</code>) + <code>aria-busy</code> (<code>:78-79</code>) and clears them in a
+    <code>finally</code> (<code>:100-106</code>), under a monotonic per-pane generation counter
+    (<code>:74-75</code>) so an old reload cannot switch off a newer one's spin.
+  </div>
+  <div class="note" style="margin-top:6px;">
+    <b>This tab is the best case of the change:</b> its <b>6</b> calls are <b>100% of the CRUD</b> — saving
+    (<code>openFrameworkForm</code>, <code>frameworks.js:179</code>), importing (<code>openImportForm</code>,
+    <code>:270</code>), visibility (<code>toggleVisibility</code>, <code>:374</code>), duplicating
+    (<code>duplicateFramework</code>, <code>:386</code>), deleting (<code>deleteFramework</code>,
+    <code>:419</code>) and the hidden toggle (<code>:522</code>) — and <b>none</b> of them is in place. The
+    <code>refreshNode</code> caveat that constrains <code>EST</code> does not exist here: on this tab every action
+    reloads the pane and every reload shows the curtain.
+  </div>
+
+  <div class="divlbl">Import modal · <b>the reference form</b> of loading</div>
+  <div class="mshell">
+    <div class="m-head"><span class="m-title">Import structure from CSV</span><button type="button" class="m-x" aria-label="Close">✕</button></div>
+    <div class="m-body">
+      <div class="banner" role="status">
+        <span class="spin sm" aria-hidden="true"></span><span>Importing…</span>
+      </div>
+      <div class="note"><code>dynamic_form</code> body — CSV file picker…</div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:5px;"><span class="idb">FWK-IMP-BANNER</span></div>
+  <div class="note" style="margin-top:6px;">
+    <b>This is the only in-body loading treatment the plugin ships</b> — <code>alert alert-info</code> +
+    <code>spinner-border spinner-border-sm</code>, assembled by <code>showImportLoading</code>
+    (<code>frameworks.js:222-236</code>): the banner receives <code>data-region="import-loading"</code>
+    (<code>:229</code>), the alert classes (<code>:230</code>) and <code>role="status"</code> (<code>:231</code>),
+    and the label <code>central_frameworks_importing</code> enters as a real text <code>&lt;span&gt;</code>
+    (<code>:232-234</code>). There is a duplicate guard (<code>:224</code>) and removal when the server's validation
+    hands the form back (<code>hideImportLoading</code>, <code>:244-250</code>). Fired on
+    <code>SUBMIT_BUTTON_PRESSED</code> (<code>:265</code>). The ring above really does spin.
+  </div>
+  <div class="note" style="margin-top:6px;">
+    <b>The ARIA here is right — it is the export's that is not.</b> <code>makeSpinner()</code>
+    (<code>frameworks.js:209-214</code>) puts <code>aria-hidden="true"</code> <b>on the ring</b> (<code>:212</code>), and
+    what carries the <code>role="status"</code> and the text is the <b>banner</b> — name on the container, decorative
+    ring, exactly the form <code>states.html</code> asks for. The <b>export loader</b> reuses the same
+    <code>makeSpinner()</code> (<code>:314</code>) but its container is a
+    <code>&lt;span data-region="export-loader" class="d-inline-flex" hidden&gt;</code> with no <code>role</code> and no
+    accessible name (<code>frameworks_export.mustache:41</code>) — so the download state <b>announces
+    nothing</b>. It is the only point on the screen where <code>states.html</code>'s loading pattern is not met.
+  </div>
+
+  <div class="divlbl">Export modal</div>
+  <div class="mshell">
+    <div class="m-head">
+      <span class="m-title">Export structure to CSV</span>
+      <button type="button" class="m-x" aria-label="Close">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="fld">
+        <span class="note">Structure to export</span>
+        <span class="csel">General Competencies<span aria-hidden="true">▾</span></span>
+      </div>
+      <div class="row" style="gap:8px;">
+        <span class="bprim"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-download"/></svg>Export</span>
+        <span class="note">loader <code>hidden</code> until clicked</span>
+      </div>
+      <div class="row" style="gap:8px;">
+        <span class="bout" style="opacity:0.65;"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#f-download"/></svg>Export</span>
+        <span class="spin sm" aria-hidden="true"></span>
+        <span class="note">in progress: button <code>disabled</code>, ring visible — <b>and nothing announced</b></span>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:5px;gap:5px;">
+    <span class="idb">FWK-EXP-LABEL</span><span class="idb">FWK-EXP-SELECT</span><span class="idb">FWK-EXP-DOWNLOAD</span><span class="idb">FWK-EXP-LOADER</span>
+  </div>
+  <div class="note" style="margin-top:6px;">
+    The select is born <b>empty</b> (<code>frameworks_export.mustache:35</code>) and is populated from the tab's
+    cards on <code>ModalEvents.shown</code> (<code>frameworks.js:345-354</code>) — the modal only knows what the tab
+    has already listed. <code>downloadFramework</code> (<code>:303-329</code>) disables the button, reveals the loader
+    and injects the ring (<code>:312-314</code>), and <b>restores all three in a <code>finally</code></b>
+    (<code>:324-328</code>, including <code>loader.replaceChildren()</code>).
+  </div>
+
+  <div class="divlbl">Scales shortcut · injected into the form's <b>footer</b></div>
+  <div class="mshell">
+    <div class="m-head">
+      <span class="m-title">Edit structure</span>
+      <button type="button" class="m-x" aria-label="Close">✕</button>
+    </div>
+    <div class="m-body"><div class="note">form body — name, idnumber, scale (<code>MOD.SCALE</code>)…</div></div>
+    <div class="m-foot">
+      <span class="flink"><svg class="ic sm" style="width:0.6rem;height:0.6rem;" aria-hidden="true" focusable="false"><use href="#f-ext"/></svg>Open scales page</span>
+      <span class="bghost">Cancel</span><span class="bprim">Save changes</span>
+    </div>
+  </div>
+  <div class="row" style="margin-top:5px;"><span class="idb">FWK-SCALES-LINK</span></div>
+  <div class="note" style="margin-top:6px;">
+    Injected by JS into the modal's <b>footer</b>, as the <b>first child</b> — it is the group's
+    <code>margin-right:auto</code> (<code>styles.css:5028-5034</code>) that pushes the form's Save/Cancel to the
+    right, and the position above is the one the code produces
+    (<code>injectScalesLink</code>, <code>frameworks.js:133-161</code>; insertion at <code>:160</code>). The same
+    footer-link pattern as the participants modal: <code>div.local-dimensions-modal-footer-links</code> +
+    <code>a.btn.btn-link.p-0</code> with <code>fa fa-external-link me-1</code> (<code>:146-157</code>),
+    <code>target="_blank"</code> + <code>rel="noopener noreferrer"</code>. It runs on the <code>LOADED</code> event
+    (<code>:181</code>), with a duplicate guard (<code>:143</code>) and a gate on
+    <code>data-canscalespage</code> (<code>:138</code>, the attribute at <code>frameworks.mustache:65</code>). The
+    keyboard focus ring of the <code>btn-link</code> is redrawn by hand because Moodle 4.5's Bootstrap 4 zeroes it
+    (<code>styles.css:5041-5045</code>).
+  </div>
+</section>

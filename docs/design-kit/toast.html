@@ -1,4 +1,4 @@
-<!-- @dsCard group="Fundações" name="Toast (confirmação)" subtitle="core/toast — o padrão de confirmação da casa; success/info/warning/danger + a região hospedada no corpo do modal (z-index)" -->
+<!-- @dsCard group="Foundations" name="Toast (confirmation)" subtitle="local_dimensions/central/toast — the house wrapper over core/toast; the four types, the close button by default and the region hosted in the modal body" -->
 <style>
 :root{
   --mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;
@@ -35,6 +35,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .toast .ic{width:1.05rem;height:1.05rem;flex:none;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
 .toast .msg{flex:1;}
 .toast .x{flex:none;opacity:0.55;font-size:15px;line-height:1;}
+.t-neutral{background:var(--mds-bg-surface-default);color:var(--mds-text-default);border-color:var(--mds-border-default);}
 .t-success{background:var(--mds-bg-feedback-success-subtle);color:var(--mds-text-feedback-success);border-color:var(--mds-text-feedback-success);}
 .t-info{background:var(--mds-bg-feedback-info-subtle);color:var(--mds-text-feedback-info);border-color:var(--mds-text-feedback-info);}
 .t-warning{background:var(--mds-bg-feedback-warning-subtle);color:var(--mds-text-feedback-warning);border-color:var(--mds-text-feedback-warning);}
@@ -43,7 +44,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .note{font-size:11px;color:var(--mds-text-muted);margin-top:10px;}
 .note b{color:var(--mds-text-default);}
 code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface-subtle);color:var(--mds-text-default);border-radius:4px;padding:0 3px;}
-/* A demonstração da região hospedada: um mini-modal com um toast por cima. */
+/* The hosted region demonstrated: a mini-modal with a toast on top of it. */
 .stage{position:relative;margin-top:6px;border-radius:var(--mds-radius-lg);background:var(--mds-bg-surface-subtle);border:var(--mds-stroke-sm) dashed var(--mds-border-default);padding:26px 18px 18px;overflow:hidden;}
 .backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.32);}
 .dlg{position:relative;margin:0 auto;max-width:360px;background:var(--mds-bg-surface-default);border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:12px;box-shadow:var(--mds-shadow-md);}
@@ -51,6 +52,11 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface
 .dlg-body{padding:12px;font-size:12px;color:var(--mds-text-muted);}
 .zwrap{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:center;z-index:5;}
 .zlabel{position:absolute;bottom:6px;right:10px;font-family:var(--font-mono);font-size:9px;color:var(--mds-text-muted);}
+.tbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;}
+.tbl th,.tbl td{text-align:left;padding:4px 8px;border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);vertical-align:top;}
+.tbl th{font-weight:500;color:var(--mds-text-muted);font-size:10px;}
+.tbl td code{background:transparent;padding:0;}
+.wrap{overflow-x:auto;}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -60,47 +66,81 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface
   <symbol id="ic-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></symbol>
 </defs></svg>
 
-<div class="h">Os quatro tipos · <span class="tag">core/toast add(msg, {type})</span></div>
+<div class="h">The types · <span class="tag">add(msg, {type}) — local_dimensions/central/toast</span></div>
 <div class="col">
-  <div class="toast t-success"><svg class="ic"><use href="#ic-check"/></svg><span class="msg">Estrutura salva.</span><svg class="ic x"><use href="#ic-x"/></svg></div>
-  <div class="toast t-info"><svg class="ic"><use href="#ic-info"/></svg><span class="msg">Ação enfileirada.</span><svg class="ic x"><use href="#ic-x"/></svg></div>
-  <div class="toast t-warning"><svg class="ic"><use href="#ic-warn"/></svg><span class="msg">Verifique a configuração antes de salvar.</span><svg class="ic x"><use href="#ic-x"/></svg></div>
-  <div class="toast t-danger"><svg class="ic"><use href="#ic-warn"/></svg><span class="msg">Não foi possível remover o vínculo.</span><svg class="ic x"><use href="#ic-x"/></svg></div>
+  <div class="toast t-neutral"><span class="msg">Course added</span><svg class="ic x"><use href="#ic-x"/></svg></div>
+  <div class="toast t-success"><svg class="ic"><use href="#ic-check"/></svg><span class="msg">Structure saved.</span><svg class="ic x"><use href="#ic-x"/></svg></div>
+  <div class="toast t-warning"><svg class="ic"><use href="#ic-warn"/></svg><span class="msg">Connection lost. Please check your network and try again.</span><svg class="ic x"><use href="#ic-x"/></svg></div>
+  <div class="toast t-info"><svg class="ic"><use href="#ic-info"/></svg><span class="msg">info · available, unused today</span><svg class="ic x"><use href="#ic-x"/></svg></div>
+  <div class="toast t-danger"><svg class="ic"><use href="#ic-warn"/></svg><span class="msg">danger · available, unused today</span><svg class="ic x"><use href="#ic-x"/></svg></div>
 </div>
 <div class="note">
-  Texto no stop 800 sobre o tint 100 do mesmo status (o mesmo par do card de feedback dos <code>tokens.html</code>),
-  com a borda no stop 800 para segurar a caixa quando o tint encosta na superfície no escuro. O tipo default
-  (sem <code>{type}</code>) sai neutro; sucesso é o mais comum no hub (<code>central_frameworks_saved</code>,
-  <code>central_links_courseadded</code>…).
+  Text at stop 800 over the same status's 100 tint (the same pair as the feedback card in
+  <code>tokens.html</code>), with the border at stop 800 to hold the box when the tint meets the
+  surface in dark mode. <b>The most used type is the default</b> — no <code>{type}</code>, a neutral box —
+  in 18 of the hub's 21 fires.
+</div>
+<div class="wrap">
+<table class="tbl">
+  <tr><th>type</th><th>fires</th><th>where</th></tr>
+  <tr><td><i>default</i></td><td>18</td><td>CRUD confirmations: <code>structure</code> (4), <code>competency_links</code> (5), <code>roles_manager</code> (2), <code>cohort_manager</code> (2), <code>related_competencies</code> (2), <code>enrol_methods</code> (2), <code>participants_users</code> (1)</td></tr>
+  <tr><td><code>success</code></td><td>2</td><td><code>frameworks.js:272</code> (import complete) and <code>:321</code> (<code>central_frameworks_export_done</code>)</td></tr>
+  <tr><td><code>warning</code></td><td>1</td><td><code>errors.js:79</code> — the network dropped (<code>errornetwork</code>)</td></tr>
+  <tr><td><code>info</code> · <code>danger</code></td><td>0</td><td>core's API accepts them, the hub does not use them: a real error goes through <code>Notification.exception</code>, not through a toast</td></tr>
+</table>
 </div>
 
-<div class="h">A região hospedada no corpo do modal · <span class="tag">addToastRegion(modal.getBody())</span></div>
+<div class="h">The house wrapper · <span class="tag">amd/src/central/toast.js</span></div>
+<div class="note" style="margin-top:6px;">
+  No hub module imports <code>core/toast</code> directly: they all go through
+  <code>local_dimensions/central/toast</code>, which is thin on purpose —
+  <code>export const add = (message, configuration) =&gt; coreAdd(message, {closeButton: true, ...configuration});</code>
+  (<code>toast.js:39</code>), with <code>addToastRegion</code> merely re-exported (<code>:41</code>).
+  The only decision it imposes is the <b>close button by default</b> — which is why every toast drawn
+  above carries the <code>×</code>. The reason: a repeated action stacks several confirmations that hide
+  themselves, and whoever repeated it wants to dismiss them at once instead of waiting out each one's 4s.
+  It is core's own <code>btn-close</code> (Moodle 4.5+), and any <code>core/toast</code> option still
+  overrides the default.
+</div>
+
+<div class="h">The region hosted in the modal body · <span class="tag">addToastRegion(modal.getBody()[0])</span></div>
 <div class="stage">
   <div class="backdrop"></div>
-  <div class="zwrap"><div class="toast t-success" style="min-width:0"><svg class="ic"><use href="#ic-check"/></svg><span class="msg">Curso adicionado.</span></div></div>
+  <div class="zwrap"><div class="toast t-neutral" style="min-width:0"><span class="msg">Course added</span><svg class="ic x"><use href="#ic-x"/></svg></div></div>
   <div class="dlg">
-    <div class="dlg-head">Cursos e atividades — Lógica matemática</div>
-    <div class="dlg-body">…corpo do modal, onde a ação aconteceu…</div>
+    <div class="dlg-head">Courses &amp; activities — Mathematical logic</div>
+    <div class="dlg-body">…the modal body, where the action happened…</div>
   </div>
   <span class="zlabel">toast z &gt; modal z</span>
 </div>
 <div class="note">
-  <b>O padrão da casa, e por que ele existe.</b> Um toast disparado <b>de dentro</b> de um
-  <code>core/modal</code> cairia <b>atrás</b> dele: a <code>.toast-wrapper</code> da página é
-  <code>z-index:1051</code> e o modal é <code>1055</code>. Então, no <code>ModalEvents.shown</code>, o
-  modal <b>hospeda a sua própria região</b> — <code>addToastRegion(modal.getBody()[0])</code> (de
-  <code>core/toast</code>) — e o toast renderiza <b>acima</b> do diálogo, sem override global de z-index.
-  O core <b>remove a região sozinho</b> ao fechar (<code>removeToastRegion</code>), então não vaza.
+  <b>The house pattern, and why it exists.</b> A toast fired <b>from inside</b> a
+  <code>core/modal</code> would land <b>behind</b> it: the page's <code>.toast-wrapper</code> is
+  <code>z-index:1051</code> and the modal is <code>1055</code>. So, on <code>ModalEvents.shown</code>, the
+  modal <b>hosts its own region</b> — <code>addToastRegion(modal.getBody()[0])</code> — and the toast
+  renders <b>above</b> the dialog, with no global z-index override. Core <b>removes the region itself</b>
+  on close (<code>removeToastRegion</code>), so there is no leak.
 </div>
 <div class="note">
-  <b>Quem hospeda é o modal-host.</b> Ligado em <code>competency_links</code>, <code>participants_manager</code>,
-  <code>related_competencies</code> e <code>frameworks_export</code>; módulos que só <code>mount()</code> dentro
-  deles (<code>cohort_manager</code>, <code>participants_users</code>) <b>não</b> adicionam a sua própria.
+  <b>The host is the modal-host</b>, always on <code>shown</code> and always with
+  <code>.catch(notifyError)</code>: <code>competency_links.js:911-914</code> (courses and activities),
+  <code>participants_manager.js:233-236</code> (participants),
+  <code>related_competencies.js:266-269</code> (related competencies) and
+  <code>frameworks.js:345-346</code> (export). They are <b>4</b> of the hub's 17 modal-construction
+  points — the others fire no toast from inside. Modules that only <code>mount()</code> inside those
+  modals do <b>not</b> add a region of their own: <code>cohort_manager.js:34</code> and
+  <code>participants_users.js:32</code> import only <code>add</code>, and write into the host's region.
 </div>
 <div class="note">
-  <b>Par com o flash.</b> Para uma mudança <b>in-place</b> (linha adicionada/editada sem recarregar a lista),
-  o toast vem junto de um <b>flash</b> da linha afetada — o helper único <code>central/flash.js</code>
-  (<code>1500ms</code> = <code>--mds-motion-flash</code>, respeita <code>prefers-reduced-motion</code>) — para a
-  confirmação aparecer <b>onde o usuário está olhando</b>, não só no canto. <code>&lt;select&gt;</code>/inputs
-  construídos em JS precisam de <code>id</code> ou <code>name</code>, senão o browser loga aviso de autofill.
+  <b>Paired with the flash.</b> For an <b>in-place</b> change (a row added/edited without reloading the
+  list), the toast comes with a <b>flash</b> of the affected row — the single helper
+  <code>central/flash.js</code> (<code>flashRow</code>, <code>:34-48</code>) — so the confirmation
+  appears <b>where the user is looking</b>, not only in the corner. It reads the duration from the
+  <code>--mds-motion-flash</code> token (1500ms) via <code>getComputedStyle</code>, animates with the WAAPI
+  (<code>#fff3cd</code> → <code>transparent</code>, <code>ease-out</code>) and <b>does nothing</b> under
+  <code>prefers-reduced-motion</code> — the flash is redundant confirmation, the toast has already said it.
+  Six modules import the helper: <code>structure</code>, <code>plans</code>, <code>competency_links</code>,
+  <code>enrol_methods</code>, <code>roles_manager</code> and <code>related_competencies</code>.
+  <code>&lt;select&gt;</code>/inputs built in JS need an <code>id</code> or a <code>name</code>,
+  otherwise the browser logs an autofill warning.
 </div>

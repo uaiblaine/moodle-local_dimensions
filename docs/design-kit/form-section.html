@@ -1,4 +1,4 @@
-<!-- @dsCard group="Formulário" name="Seção de formulário" subtitle="Cabeçalho de categoria + explicação e linhas de campo (texto, select, textarea) · Moodle DS" -->
+<!-- @dsCard group="Form" name="Form section" subtitle="Category heading (Feel / Look) + field rows (select, text, textarea) · Moodle DS" -->
 <style>
 :root{
   --mds-color-blue-50:#e7f0f9;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;--mds-color-blue-800:#062b4c;
@@ -8,9 +8,9 @@
   --mds-border-default:var(--mds-color-gray-300);--mds-border-subtle:var(--mds-color-gray-200);
   --mds-radius-xs:0.25rem;--mds-radius-md:0.5rem;--mds-radius-pill:50rem;--mds-stroke-sm:0.0625rem;
   --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
-  /* Accent de TEXTO — precedente do --mds-accent-busy do states.html: blue-500 no claro,
-     blue-200 no escuro. Os --mds-bg-interactive-primary-* são fills para texto branco e não têm
-     variante escura; herdá-los aqui pintaria blue-500 sobre superfície escura. */
+  /* TEXT accent — precedent set by states.html's --mds-accent-busy: blue-500 in light,
+     blue-200 in dark. The --mds-bg-interactive-primary-* are fills for white text and have no
+     dark variant; inheriting them here would paint blue-500 on a dark surface. */
   --mds-accent-text:var(--mds-color-blue-500);
   --mds-accent-bg:var(--mds-color-blue-50);
 }
@@ -24,76 +24,112 @@
 body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
 .wrap{max-width:560px;margin:0 auto;}
 .sec{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);overflow:hidden;background:var(--mds-bg-surface-default);}
+.sec + .sec{margin-top:10px;}
 .sec-head{padding:9px 12px;background:var(--mds-bg-surface-subtle);border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);}
 .sec-head .t{font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;}
-.sec-head .m{font-size:11px;color:var(--mds-text-subtle);}
 .sec-body{padding:12px;display:grid;gap:10px;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .lbl{font-size:11px;color:var(--mds-text-subtle);margin-bottom:3px;display:block;}
 .ctrl{min-height:32px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);display:flex;align-items:center;padding:6px 8px;font-size:12px;gap:6px;}
 .ctrl.select{justify-content:space-between;}
 .chev{color:var(--mds-text-muted);font-size:10px;}
-.hex{font-family:var(--font-mono);}
-.sw{width:14px;height:14px;border-radius:var(--mds-radius-xs);border:var(--mds-stroke-sm) solid var(--mds-border-default);flex:none;}
 .area{min-height:52px;align-items:flex-start;color:var(--mds-text-subtle);font-family:var(--font-mono);font-size:11px;}
 .caret{color:var(--mds-text-muted);font-size:10px;}
 .note{font-size:11px;color:var(--mds-text-subtle);margin-top:10px;}
 .note b{color:var(--mds-text-default);}
 .note + .note{margin-top:6px;}
+.pend{border-left:var(--mds-stroke-sm) solid var(--mds-border-default);padding-left:8px;}
+.pend b{color:var(--mds-text-muted);}
 code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface-strong);color:var(--mds-text-default);border-radius:4px;padding:0 3px;}
-.tobe{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:var(--mds-radius-pill);background:var(--mds-accent-bg);color:var(--mds-accent-text);border:var(--mds-stroke-sm) solid var(--mds-accent-text);white-space:nowrap;}
 </style>
 <div class="wrap">
   <div class="sec">
     <div class="sec-head">
-      <div class="t"><span class="caret">▾</span>Outros campos</div>
-      <div class="m">Aparência e metadados usados nas telas de visualização e nos filtros. <span class="tobe">to-be</span></div>
+      <div class="t"><span class="caret">▾</span>Feel</div>
+    </div>
+    <div class="sec-body">
+      <div><span class="lbl">Enrolments</span><div class="ctrl select"><span>Use global setting (default)</span><span class="chev">▾</span></div></div>
+      <div><span class="lbl">Redirect to course when single active enrolment</span><div class="ctrl select"><span>Use global setting (default)</span><span class="chev">▾</span></div></div>
+      <div class="grid2">
+        <div><span class="lbl">Locked card display mode</span><div class="ctrl select"><span>Use global setting (default)</span><span class="chev">▾</span></div></div>
+        <div><span class="lbl">Show availability date</span><div class="ctrl select"><span>Use global setting (default)</span><span class="chev">▾</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head">
+      <div class="t"><span class="caret">▾</span>Look</div>
     </div>
     <div class="sec-body">
       <div class="grid2">
-        <div><span class="lbl">Cor de fundo</span><div class="ctrl"><span class="sw" style="background:#0f6cbf"></span><span class="hex">#0F6CBF</span></div></div>
-        <div><span class="lbl">Cor do Texto</span><div class="ctrl"><span class="sw" style="background:#1d2125"></span><span class="hex">#1D2125</span></div></div>
+        <div><span class="lbl">Background colour</span><div class="ctrl">#0F6CBF</div></div>
+        <div><span class="lbl">Text colour</span><div class="ctrl">#1D2125</div></div>
       </div>
       <div class="grid2">
-        <div><span class="lbl">Rótulo das competências</span><div class="ctrl select"><span>Unidades</span><span class="chev">▾</span></div></div>
-        <div><span class="lbl">Tag 1</span><div class="ctrl select"><span>Edite-me 1</span><span class="chev">▾</span></div></div>
+        <div><span class="lbl">Tag 1</span><div class="ctrl select"><span>Edit me 1</span><span class="chev">▾</span></div></div>
+        <div><span class="lbl">Competency label</span><div class="ctrl select"><span>Units</span><span class="chev">▾</span></div></div>
       </div>
-      <div><span class="lbl">Inscrições</span><div class="ctrl select"><span>Usar configuração global (padrão)</span><span class="chev">▾</span></div></div>
-      <div><span class="lbl">SCSS Personalizado</span><div class="ctrl area">.local-dimensions-card &#123; … &#125;</div></div>
+      <div><span class="lbl">Custom SCSS</span><div class="ctrl area">.local-dimensions-card &#123; … &#125;</div></div>
     </div>
   </div>
 
   <div class="note">
-    <b>O cabeçalho é o nome da categoria de campos personalizados</b>, não uma string do plugin: o
-    <code>instance_form_definition</code> do core faz
-    <code>addElement('header', 'category_&lt;id&gt;', $categoryname)</code>
-    (<code>customfield/classes/handler.php:775</code>) e o handler do plugin repassa o identificador
-    intocado para o nome sair verbatim (<code>competency_handler.php:166-170</code>). Como o plugin
-    não sobrescreve <code>generate_category_name()</code>, a categoria nasce com o padrão do core —
-    <b>Outros campos</b> — e o admin pode renomeá-la na página de configuração dos campos.
+    <b>The heading is the name of a custom-field category</b>, not a loose form string: core's
+    <code>instance_form_definition</code> emits one header per category, and the plugin's handler
+    passes the identifier through <b>untouched</b> so the name comes out verbatim
+    (<code>competency_handler.php:166-170</code>, comment included).
   </div>
   <div class="note">
-    <b>A explicação da seção é a proposta.</b> O core não tem descrição de categoria: descrição é
-    <b>por campo</b> (um <code>static</code> depois do campo) e o plugin passa <code>''</code> em
-    todos eles — "Description removed to avoid fixed-language issue" —, então hoje
-    <b>nenhuma</b> descrição é renderizada nesta seção.
+    <b>There are two categories and both belong to the plugin.</b>
+    <code>organize_customfield_categories()</code> (<code>helper.php:592-635</code>) creates/reuses
+    <b>Feel</b> (<code>fieldcategory_feel</code>) and <b>Look</b>
+    (<code>fieldcategory_look</code>), moves each provisioned field into its own, <b>deletes</b>
+    core's default category as soon as it is empty and orders Feel before Look — Look is
+    <b>last</b> on purpose, because the built-in filemanagers are appended after the last category.
+    The name is localised <b>at creation time</b> and the id is stored in
+    <code>cfcat_&lt;slug&gt;_&lt;area&gt;</code> (<code>helper.php:560-578</code>), so a second pass
+    in another language reuses the same category and an admin's rename survives.
   </div>
   <div class="note">
-    <b>Não há colorpicker.</b> O core só tem seis tipos de campo (checkbox, date, number, select,
-    text, textarea): <code>custombgcolor</code> e <code>customtextcolor</code> são
-    <code>text</code> (<code>displaysize 50</code>, <code>maxlength 255</code>) e o usuário digita o
-    hex. A <b>amostra</b> ao lado do valor é a proposta — o resto da linha é o que ship a hoje.
+    The order within each section is that of the declared lists:
+    <code>feel_category_fields()</code> (<code>helper.php:509-521</code>) and
+    <code>look_category_fields()</code> (<code>helper.php:532-543</code>). Fields absent in the area
+    are skipped — which is why the Feel section drawn above has four rows: the other five
+    (<code>Display mode</code>, <code>Accordion subline source</code>, the template identifier and
+    the two related-competency ones) belong <b>only</b> to the <code>lp</code> area
+    (<code>helper.php:456-463</code>) and never reach the competency modal.
   </div>
   <div class="note">
-    <b>Nenhum asterisco:</b> todo campo do plugin é provisionado com <code>'required' =&gt; 0</code>
-    (<code>helper.php:127</code>). Os obrigatórios do modal — <code>shortname</code> e
-    <code>idnumber</code>, com <code>addRule(… 'required' …)</code> — são campos <b>do core</b>,
-    ficam <b>acima</b> desta seção e não pertencem a ela.
+    <b>There is no colourpicker.</b> <code>custombgcolor</code> and <code>customtextcolor</code> are
+    <code>text</code> fields (<code>displaysize 50</code>, <code>maxlength 255</code> —
+    <code>helper.php:240-260</code> and <code>:269-289</code>) and the user types the hex. Core has
+    no colourpicker field type.
   </div>
   <div class="note">
-    Os quatro campos desenhados são os da área <b>competency</b>. <code>SCSS Personalizado</code> só
-    aparece com <code>enablecustomscss</code> ligado, e <code>Formato de Exibição</code>,
-    <code>Subtítulo do acordeão</code> e afins são <b>só</b> da área <code>lp</code>
-    (<code>helper.php:455-487</code>) — não caem no modal de competência.
+    <b>No asterisk anywhere:</b> every plugin field is provisioned with <code>'required' =&gt; 0</code>
+    (<code>helper.php:128</code>). The modal's required fields — <code>shortname</code> and
+    <code>idnumber</code>, with <code>addRule(… 'required' …)</code> — are <b>core</b> fields, sit
+    <b>above</b> these sections and do not belong to them.
+  </div>
+  <div class="note">
+    <code>Custom SCSS</code> is only provisioned with <code>enablecustomscss</code> on
+    (<code>helper.php:487-490</code>); the two image rows exist only in external mode
+    (<code>helper.php:473-478</code>) — in built-in mode they are drawn by the
+    <code>picture_manager</code>, see the <b>Image dropzone</b> card.
+  </div>
+  <div class="note pend">
+    <b>Pending — a description line per section.</b> Core has no category description (a description
+    is <b>per field</b>) and the plugin passes <code>''</code> everywhere: the
+    <code>$description</code> parameter of <code>create_custom_field()</code>
+    (<code>helper.php:106-113</code>) defaults to <code>''</code> at <code>:112</code> and no caller
+    fills it; the docblock at <code>:93-95</code> itself recommends leaving it empty so as not to
+    freeze a language. Today <b>no</b> description
+    is rendered in this section.
+  </div>
+  <div class="note pend">
+    <b>Pending — a colour swatch beside the value.</b> It would require a new field type or a custom
+    <code>element</code>: the two colours are plain <code>text</code> (above), and there is nothing
+    in <code>styles.css</code> or in <code>amd/src</code> that paints a swatch in the form.
   </div>
 </div>

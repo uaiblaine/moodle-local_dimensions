@@ -1,210 +1,219 @@
-# Alinhamento ao Moodle Design System (Camada 3)
+# Moodle Design System alignment (Layer 3)
 
-Captura das boas práticas e tokens do Moodle Design System (MDS) e como replicá-las no
-nosso kit, **apontando onde divergem** da nossa interpretação anterior (estética Anthropic/CDS).
-Régua: **Bootstrap/Boost (Mustache) hoje → componentes React do MDS quando o Moodle 5.3 LTS sair**.
+Capture of the Moodle Design System (MDS) good practices and tokens and how to replicate them in
+our kit, **pointing out where they diverge** from our earlier interpretation (Anthropic/CDS aesthetic).
+Yardstick: **Bootstrap/Boost (Mustache) today → MDS React components when Moodle 5.3 LTS ships**.
 
-## Fontes
+## Sources
 
-- `github.com/moodlehq/design-system` — tokens em `tokens/css/*.css` (Style Dictionary, origem ZeroHeight).
-- Component Library `componentlibrary.moodle.com` — referência Bootstrap/Boost para Mustache.
-- `design.moodle.com` (Penpot) — **não extraível como dado** (só-JS); coberto pelos dois acima.
+- `github.com/moodlehq/design-system` — tokens in `tokens/css/*.css` (Style Dictionary, ZeroHeight origin).
+- Component Library `componentlibrary.moodle.com` — the Bootstrap/Boost reference for Mustache.
+- `design.moodle.com` (Penpot) — **not extractable as data** (JS-only); covered by the two above.
 
-## Arquitetura do MDS (a boa prática estrutural #1)
+## The MDS architecture (structural good practice #1)
 
-Modelo em **duas camadas**, que devemos espelhar para o port React ser um *rename*, não um redesenho:
+A **two-layer** model, which we should mirror so the React port is a *rename*, not a redesign:
 
-1. **Primitivos** — `--mds-color-{hue}-{50..900}`, `--mds-scale-{0..1800}`, `--mds-typography-*`. Valores crus.
-2. **Semânticos** — o que os componentes consomem. Nunca consumir primitivo direto.
+1. **Primitives** — `--mds-color-{hue}-{50..900}`, `--mds-scale-{0..1800}`, `--mds-typography-*`. Raw values.
+2. **Semantics** — what the components consume. Never consume a primitive directly.
 
-Eixos semânticos do MDS:
+MDS semantic axes:
 
 - `--mds-bg-surface-{default,subtle,strong}` · `--mds-text-{default,muted,subtle,emphasis,inverse}`
-- `--mds-bg-interactive-{primary,secondary,danger}-{default,hover,active,disabled,default-light}` — **fills sólidos com estados**.
-- `--mds-bg-feedback-{primary,info,success,warning,danger,secondary}-{default,light,subtle}` — **tints de status**.
+- `--mds-bg-interactive-{primary,secondary,danger}-{default,hover,active,disabled,default-light}` — **solid fills with states**.
+- `--mds-bg-feedback-{primary,info,success,warning,danger,secondary}-{default,light,subtle}` — **status tints**.
 - `--mds-border-{default,subtle,feedback-*,interactive-*}` · `--mds-focus-{default,danger}`
 - `--mds-border-radius-{xs..xxl,pill}` · `--mds-spacing-{xxs..xxl}` · `--mds-stroke-weight-{sm..xxl}`
-- Tipografia: `--mds-font-size-{headings-1..6,paragraph-default/lead/small}` · `--mds-font-weight-*` · `--mds-line-height-*`
-- Sombras compostas: `--mds-{color,blur,offset}-{sm,md,lg}` · ícones `--mds-icons-{xxs..xxxl}`
-- Cor por tipo de atividade: `assessment`=pink, `collaboration`=indigo, `communication`=orange, `file/resource`=cyan, `interactive`=red.
+- Typography: `--mds-font-size-{headings-1..6,paragraph-default/lead/small}` · `--mds-font-weight-*` · `--mds-line-height-*`
+- Composite shadows: `--mds-{color,blur,offset}-{sm,md,lg}` · icons `--mds-icons-{xxs..xxxl}`
+- Colour by activity type: `assessment`=pink, `collaboration`=indigo, `communication`=orange, `file/resource`=cyan, `interactive`=red.
 
-## Valores concretos (light)
+## Concrete values (light)
 
-| Eixo | Token semântico | Valor (primitivo) |
+| Axis | Semantic token | Value (primitive) |
 | --- | --- | --- |
-| Superfície base | `bg-surface-default` | `#ffffff` |
-| Superfície sutil | `bg-surface-subtle` | gray-100 `#f8f9fa` |
-| Superfície forte | `bg-surface-strong` | gray-200 `#e9ecef` |
-| Borda padrão | `border-default` | gray-300 `#dee2e6` |
-| Texto padrão | `text-default` | gray-900 `#1d2125` |
-| Texto muted | `text-muted` | gray-600 `#6a737b` |
+| Base surface | `bg-surface-default` | `#ffffff` |
+| Subtle surface | `bg-surface-subtle` | gray-100 `#f8f9fa` |
+| Strong surface | `bg-surface-strong` | gray-200 `#e9ecef` |
+| Default border | `border-default` | gray-300 `#dee2e6` |
+| Default text | `text-default` | gray-900 `#1d2125` |
+| Muted text | `text-muted` | gray-600 `#6a737b` |
 | **Primary** | `bg-interactive-primary-default` | blue-500 `#0f6cbf` (hover blue-600 `#0c5699`, active blue-700 `#094173`) |
-| Info | `bg-feedback-info-subtle` / `text-feedback-info` | Boost `$info` = `$cyan` cyan-600 `#008196`; tint cyan-100 `#cce6ea`, texto cyan-800 `#00343c` |
+| Info | `bg-feedback-info-subtle` / `text-feedback-info` | Boost `$info` = `$cyan` cyan-600 `#008196`; tint cyan-100 `#cce6ea`, text cyan-800 `#00343c` |
 | Success | `bg-feedback-success-default` | green-500 `#357a32` |
 | Warning | `bg-feedback-warning-default` | yellow-500 `#f0ad4e` |
 | Danger | `bg-interactive-danger-default` | red-500 `#ca3120` |
-| Foco | `focus-default` | = primary blue |
+| Focus | `focus-default` | = primary blue |
 
-Escala (`--mds-scale-*`): 100=4px, 200=6px, 300=8px, 400=12px, 500=14px, 600=16px, 700=20px,
+Scale (`--mds-scale-*`): 100=4px, 200=6px, 300=8px, 400=12px, 500=14px, 600=16px, 700=20px,
 800=24px, 1000=32px, 1200=48px, 1800=50rem (pill).
 
 Radius: xs=4px, sm=6px, **md=8px**, lg=12px, xl=16px, xxl=32px, pill=50rem.
 Stroke: sm=**1px**, md=2px, lg=3px.
-Tipografia: **Noto Sans** / Menlo; h1=2.5rem … h6=1rem; parágrafo 1rem (lead 1.25, small 0.875);
-pesos light 300 / regular 400 / medium 500 / semibold 600 / bold 700; margem heading=8px, parágrafo=16px.
-Sombras: cor sm/md/lg = preto 8%/15%/17%; md ≈ `0 8px 16px rgba(0,0,0,.15)`.
+Typography: **Noto Sans** / Menlo; h1=2.5rem … h6=1rem; paragraph 1rem (lead 1.25, small 0.875);
+weights light 300 / regular 400 / medium 500 / semibold 600 / bold 700; heading margin=8px, paragraph=16px.
+Shadows: colour sm/md/lg = black 8%/15%/17%; md ≈ `0 8px 16px rgba(0,0,0,.15)`.
 
-**Proveniência (auditado 2026-07-16 contra `theme/boost/scss/preset/default.scss`):** os **9 grays**
-(`#f8f9fa`→`#1d2125`) e as bases de marca **blue `#0f6cbf`**, **red `#ca3120`**, **yellow `#f0ad4e`**,
-**green `#357a32`** batem com o preset **exatamente**; as conversões rem→px conferem (0.5rem=8px,
-0.0625rem=1px, 2.5rem=40px); os tints de feedback são cores reais do Moodle (`#fcefdc` aparece literal
-em `theme/boost/scss/moodle/modules.scss`). A única divergência achada foi o **cyan** — o kit trazia
-`#006778`, que não existe no Moodle; corrigido para o `$cyan` real `#008196`. Escala de espaço e raio
-são T-shirt próprias (rotuladas como tais), não valores Boost.
+**Provenance (audited 2026-07-16 against `theme/boost/scss/preset/default.scss`):** the **9 grays**
+(`#f8f9fa`→`#1d2125`) and the brand bases **blue `#0f6cbf`**, **red `#ca3120`**, **yellow `#f0ad4e`**,
+**green `#357a32`** match the preset **exactly**; the rem→px conversions check out (0.5rem=8px,
+0.0625rem=1px, 2.5rem=40px); the feedback tints are real Moodle colours (`#fcefdc` appears literally
+in `theme/boost/scss/moodle/modules.scss`). The only divergence found was the **cyan** — the kit had
+`#006778`, which does not exist in Moodle; corrected to the real `$cyan` `#008196`. The spacing and
+radius scales are T-shirt scales of our own (labelled as such), not Boost values.
 
-## Mapeamento: MDS → Boost/Bootstrap (hoje) → React do MDS (Moodle 5.3 LTS)
+## Mapping: MDS → Boost/Bootstrap (today) → MDS React (Moodle 5.3 LTS)
 
-| MDS semântico | Boost/Bootstrap 5 (Mustache hoje) | React do MDS (Moodle 5.3 LTS) |
+| MDS semantic | Boost/Bootstrap 5 (Mustache today) | MDS React (Moodle 5.3 LTS) |
 | --- | --- | --- |
 | `bg-interactive-primary-*` | `$primary` / `.btn-primary` | `--mds-bg-interactive-primary-*` |
-| `bg-interactive-secondary-*` | `$secondary` / `.btn-secondary` | idem |
-| `bg-interactive-danger-*` | `$danger` / `.btn-outline-danger` | idem |
+| `bg-interactive-secondary-*` | `$secondary` / `.btn-secondary` | same |
+| `bg-interactive-danger-*` | `$danger` / `.btn-outline-danger` | same |
 | `bg-feedback-{info,success,warning,danger}` | `.alert-{info,success,warning,danger}`, `.badge` | `--mds-bg-feedback-*` |
 | `bg-surface-{default,subtle,strong}` | `$body-bg` / `$gray-100` / `$gray-200` | `--mds-bg-surface-*` |
 | `text-{default,muted}` | `$body-color` / `.text-muted` | `--mds-text-*` |
 | `border-default` | `$border-color` (gray-300) | `--mds-border-default` |
-| radius `md` | `$border-radius` (.375rem Boost ≈ 6px) | `--mds-border-radius-md` |
+| radius `md` | `$border-radius` (.375rem in Boost ≈ 6px) | `--mds-border-radius-md` |
 | focus | `$focus-ring-*` / `:focus-visible` | `--mds-focus-default` |
 
-> As grays do MDS **são** as grays do Bootstrap — então em Boost dá pra apoiar em `$gray-*`/`$primary`
-> nativos; não inventar CSS vars novas no tema. Os componentes Mustache usam classes Bootstrap (`.btn`,
-> `.alert`, `.badge`, `.card`, `.nav-tabs`, `.form-*`) — ver Component Library.
+> The MDS grays **are** the Bootstrap grays — so in Boost we can lean on the native `$gray-*`/`$primary`;
+> do not invent new CSS vars in the theme. The Mustache components use Bootstrap classes (`.btn`,
+> `.alert`, `.badge`, `.card`, `.nav-tabs`, `.form-*`) — see the Component Library.
 
-## Divergências da nossa interpretação anterior
+## Divergences from our earlier interpretation
 
-| Aspecto | Nossa interpretação (CDS/Anthropic) | Moodle DS | Recomendação |
+| Aspect | Our interpretation (CDS/Anthropic) | Moodle DS | Recommendation |
 | --- | --- | --- | --- |
-| Superfícies | neutros **quentes** (`#f7f6f3`, `#f0eee9`) | grays **frios** Bootstrap | adotar grays Bootstrap |
-| Primary/accent | `#185fa5` (accent único) | blue-500 `#0f6cbf` + estados | adotar azul Moodle + hover/active |
-| Info | **fundido** no accent (azul) | **cyan** separado | separar info (cyan) do primary |
-| Success | `#0f6e56` (teal) | green `#357a32` | adotar verde Moodle |
-| Warning / Danger | `#854f0b` / `#a32d2d` | yellow `#f0ad4e` / red `#ca3120` | adotar os do Moodle |
-| Borda | hairline **0.5px** | **1px** (`stroke-sm`) | usar 1px (0.5px era estética Anthropic) |
-| Radius | **8px único** | escala xs..xxl + pill | adotar a escala (md=8px já bate) |
-| Estados | só tints (`bg-accent`) | **default/hover/active/disabled** sólidos | adicionar fills interativos + estados |
-| feedback vs interactive | **conflados** | **separados** | adotar a separação |
-| Elevação | nenhuma (flat) | sombras compostas sm/md/lg | adicionar tokens de elevação |
-| Foco | **ausente** | `focus-default`/`focus-danger` | adicionar anel de foco (WCAG 2.2 AA) |
-| Fonte | Anthropic Sans | **Noto Sans** | usar Noto Sans / stack do Boost |
-| Nomenclatura | flat (`--surface-2`) | semântica `--mds-*` (primitive→semantic) | espelhar a taxonomia → React = rename |
+| Surfaces | **warm** neutrals (`#f7f6f3`, `#f0eee9`) | **cool** Bootstrap grays | adopt the Bootstrap grays |
+| Primary/accent | `#185fa5` (a single accent) | blue-500 `#0f6cbf` + states | adopt the Moodle blue + hover/active |
+| Info | **merged** into the accent (blue) | separate **cyan** | separate info (cyan) from primary |
+| Success | `#0f6e56` (teal) | green `#357a32` | adopt the Moodle green |
+| Warning / Danger | `#854f0b` / `#a32d2d` | yellow `#f0ad4e` / red `#ca3120` | adopt Moodle's |
+| Border | **0.5px** hairline | **1px** (`stroke-sm`) | use 1px (0.5px was the Anthropic aesthetic) |
+| Radius | **a single 8px** | xs..xxl scale + pill | adopt the scale (md=8px already matches) |
+| States | tints only (`bg-accent`) | solid **default/hover/active/disabled** | add interactive fills + states |
+| feedback vs interactive | **conflated** | **separate** | adopt the separation |
+| Elevation | none (flat) | composite sm/md/lg shadows | add elevation tokens |
+| Focus | **absent** | `focus-default`/`focus-danger` | add a focus ring (WCAG 2.2 AA) |
+| Font | Anthropic Sans | **Noto Sans** | use Noto Sans / the Boost stack |
+| Naming | flat (`--surface-2`) | semantic `--mds-*` (primitive→semantic) | mirror the taxonomy → React = rename |
 
-## Boas práticas capturadas (além do visual)
+## Good practices captured (beyond the visual)
 
-1. **Token em duas camadas**; componentes só consomem semântico. Migração React = trocar implementação.
-2. **interactive (sólido + estados) × feedback (tint)** — não usar um pelo outro.
-3. **Cobertura de estados**: default/hover/active/disabled **+ foco** para todo interativo.
-4. **T-shirt sizing** (xxs..xxxl) sobre escala numérica para espaço/raio/ícone.
-5. **WCAG 2.2 AA** — três pilares do Component Library: *links*, *contraste de cor*, *acesso por teclado*.
-   Texto sobre tint usa o stop **800** da mesma família; texto sobre fill sólido usa branco.
-6. **Bootstrap/Boost é o substrato** hoje; Component Library é a referência canônica do Mustache.
-7. **Cor por tipo de atividade** (assessment/collaboration/communication/file/interactive) — aproveitável
-   nas tags de framework/atividade do `master-detail` e do `MOD.LINKS`.
+1. **Two-layer tokens**; components consume semantics only. React migration = swap the implementation.
+2. **interactive (solid + states) × feedback (tint)** — do not use one for the other.
+3. **State coverage**: default/hover/active/disabled **+ focus** for everything interactive.
+4. **T-shirt sizing** (xxs..xxxl) over a numeric scale for spacing/radius/icons.
+5. **WCAG 2.2 AA** — the Component Library's three pillars: *links*, *colour contrast*, *keyboard access*.
+   Text over a tint uses stop **800** of the same family; text over a solid fill uses white.
+6. **Bootstrap/Boost is the substrate** today; the Component Library is the canonical Mustache reference.
+7. **Colour by activity type** (assessment/collaboration/communication/file/interactive) — reusable
+   in the framework/activity tags of `master-detail` and `MOD.LINKS`.
 
-## Componentes — guidance Boost capturada (Component Library)
+## Components — Boost guidance captured (Component Library)
 
-> O Penpot (design.moodle.com) é só-JS e **não foi navegável**; estas regras vêm da Component Library
-> (`componentlibrary.moodle.com`), que documenta o mesmo em termos Bootstrap/Boost — o substrato do Mustache.
+> Penpot (design.moodle.com) is JS-only and **was not navigable**; these rules come from the Component
+> Library (`componentlibrary.moodle.com`), which documents the same in Bootstrap/Boost terms — the Mustache substrate.
 
-**Botões** (`moodle/components/buttons`)
-- Hierarquia: **um único `.btn-primary` por componente/tela**; `.btn-secondary` p/ cancelar/controles persistentes;
-  `.btn-danger` destrutivo; `.btn-outline-secondary` p/ filtros/toggles; `.btn-subtle-*` (intermediário); `.btn-icon` só-ícone.
-- **Ação perigosa:** estilizar o **Cancelar como primário** p/ encorajar o default seguro → reflete no `MOD.DELPLANS`.
-- Rótulo específico ("Salvar", "Excluir"), nunca "OK/Sim". Tamanhos `.btn-sm`/`.btn-lg`. Renderer PHP `single_button()`.
+**Buttons** (`moodle/components/buttons`)
+- Hierarchy: **a single `.btn-primary` per component/screen**; `.btn-secondary` for cancel/persistent controls;
+  `.btn-danger` destructive; `.btn-outline-secondary` for filters/toggles; `.btn-subtle-*` (intermediate); `.btn-icon` icon-only.
+- **Dangerous action:** style **Cancel as the primary** to encourage the safe default → reflected in `MOD.DELPLANS`.
+- A specific label ("Save changes", "Delete"), never "OK/Yes". Sizes `.btn-sm`/`.btn-lg`. PHP renderer `single_button()`.
 
-**Ícones** (`moodle/components/moodle-icons`)
-- **FontAwesome 6.7.2**; em Mustache use `{{#pix}} i/edit, core {{/pix}}` (mapeado em `icon_system_fontawesome.php`), não `<i class="fa">` cru.
-- Decorativo → `aria-hidden="true"`; significativo → `aria-label`/texto `visually-hidden`. `fa-fw` p/ largura fixa.
+**Icons** (`moodle/components/moodle-icons`)
+- **FontAwesome 6.7.2**; in Mustache use `{{#pix}} i/edit, core {{/pix}}` (mapped in `icon_system_fontawesome.php`), not a raw `<i class="fa">`.
+- Decorative → `aria-hidden="true"`; meaningful → `aria-label`/`visually-hidden` text. `fa-fw` for fixed width.
 
-**Activity icons** (`moodle/components/activityicons`) — cor por **propósito**, útil nas tags de framework/atividade do `master-detail`/`MOD.LINKS`:
+**Activity icons** (`moodle/components/activityicons`) — colour by **purpose**, useful in the framework/activity tags of `master-detail`/`MOD.LINKS`:
 - administration `#da58ef` · assessment `#f90086` · collaboration `#5b40ff` · communication `#eb6200` · interactivecontent `#8d3d1b` · content `#0099ad`.
-- Classe `activity_icon` + classe de propósito; vars `$activity-icon-*-bg`; `set_colourize(false)` desliga; customizável no SCSS do Boost.
+- `activity_icon` class + a purpose class; vars `$activity-icon-*-bg`; `set_colourize(false)` turns it off; customisable in Boost's SCSS.
 
-**Nav pills** = **nosso seletor de contexto** (`BAR-CTX`). Tokens `--mds-bg-nav-pill-{hover,pressed,selected}` = **gray-200/300/200**:
-- o toggle Sistema/Categoria é **nav-pill com selecionado em cinza**, **não** um `.btn-primary` azul. (Corrigido na `hierarchy-nav`.)
-- `role="tablist"`, `.nav-link.active`, `aria-selected`; alcançável por teclado.
+**Nav pills** = **our context selector** (`BAR-CTX`). Tokens `--mds-bg-nav-pill-{hover,pressed,selected}` = **gray-200/300/200**:
+- the System/Category toggle is a **nav-pill with a grey selected state**, **not** a blue `.btn-primary`. (**Not applied:** `hierarchy-nav` depicts the shipped `btn-primary`.)
+- `role="tablist"`, `.nav-link.active`, `aria-selected`; keyboard reachable.
 
-## Restrições de plataforma
+## Platform constraints
 
-Antes de qualquer escolha estética, duas coisas decidem o que **dá pra construir** aqui: o que o
-stylelint do CI aceita e o que o Bootstrap 4 do Moodle 4.5 entende. Registradas uma vez neste
-documento em vez de redescobertas a cada superfície — as duas já custaram retrabalho.
+Before any aesthetic choice, two things decide what **can be built** here: what the CI stylelint
+accepts and what Moodle 4.5's Bootstrap 4 understands. Recorded once in this document instead of
+rediscovered on every surface — both have already cost rework.
 
-**Boundary do stylelint do CI**
+**The CI stylelint boundary**
 
-O CI roda o config do **core** (`.stylelintrc` na raiz do Moodle), não o `.stylelintrc.json` do
-plugin — que não carrega nenhuma das regras abaixo. Daí a impressão de boundary invisível: o
-`npx stylelint` local passa e o CI falha. É reproduzível, apontando o stylelint pro config do core
-(da raiz do Moodle):
+CI runs **core's** config (`.stylelintrc` at the Moodle root), not the plugin's `.stylelintrc.json` —
+which carries none of the rules below. Hence the impression of an invisible boundary: the local
+`npx stylelint` passes and CI fails. It is reproducible, pointing stylelint at core's config
+(from the Moodle root):
 
 ```sh
 npx stylelint --config .stylelintrc public/local/dimensions/styles.css
 ```
 
-| Regra (core `.stylelintrc`) | Rejeita | Saída |
+| Rule (core `.stylelintrc`) | Rejects | Way out |
 | --- | --- | --- |
-| `declaration-no-important` | qualquer `!important` — e `keyframe-declaration-no-important` fecha o mesmo dentro de `@keyframes` | quando um utilitário Bootstrap no markup (`.d-flex`, `.d-block`, ambos `!important`) briga com uma propriedade que precisamos alternar, **tirar o utilitário do template** e assumir a propriedade numa classe do plugin |
-| `csstree/validator` (`stylelint-csstree-validator` 3.x) | `clamp()`/`min()`/`max()` **onde se espera um comprimento** — a gramática é antiga e não os conhece. Verificado falhando em `height`, `min-height`, `max-height`, `width`, `max-width`, `font-size`, `padding`, `margin`, `gap`, `flex-basis` → *"Invalid value"* | `calc()` **passa** (e `minmax()` em grid também); no lugar do `clamp()`, par `height` + `min-height`/`max-height` |
-| `time-min-milliseconds: 100` | qualquer duração `< 100ms` | é o **piso da escala de motion** — `--mds-motion-fast` (150ms) já está acima; não descer abaixo de 100ms atrás de "mais snappy" |
+| `declaration-no-important` | any `!important` — and `keyframe-declaration-no-important` closes the same door inside `@keyframes` | when a Bootstrap utility in the markup (`.d-flex`, `.d-block`, both `!important`) fights a property we need to toggle, **drop the utility from the template** and own the property in a plugin class |
+| `csstree/validator` (`stylelint-csstree-validator` 3.x) | `clamp()`/`min()`/`max()` **wherever a length is expected** — the grammar is old and does not know them. Verified failing in `height`, `min-height`, `max-height`, `width`, `max-width`, `font-size`, `padding`, `margin`, `gap`, `flex-basis` → *"Invalid value"* | `calc()` **passes** (and grid `minmax()` too); in place of `clamp()`, a `height` + `min-height`/`max-height` pair |
+| `time-min-milliseconds: 100` | any duration `< 100ms` | it is the **floor of the motion scale** — `--mds-motion-fast` (150ms) is already above it; do not go below 100ms chasing "snappier" |
 
-> As três são **erro**, não warning. E o `csstree/validator` não é só de `height`: pega qualquer
-> propriedade de comprimento — formular como "só height-like" subestima o alcance.
+> All three are **errors**, not warnings. And `csstree/validator` is not only about `height`: it catches
+> any length-valued property — framing it as "height-like only" underestimates the reach.
 
 **Bootstrap 4 (Moodle 4.5) × Bootstrap 5 (5.x)**
 
-O plugin suporta 4.5 → 5.2, e **4.5 é Bootstrap 4**. As *classes* do BS5 têm ponte no 4.5
-(`form-select` etc.), mas os **data attributes do JS não**: o data-API do BS4 escuta `data-toggle`,
-o do BS5 escuta `data-bs-toggle`. Componente ligado por markup (dropdown etc.) precisa dos **dois**
-lado a lado, e das duas classes de alinhamento (`dropdown-menu-right dropdown-menu-end`) — como em
-`participants_manager.mustache` e `plans.mustache`. Seletor de JS idem: casar os dois.
+The plugin supports 4.5 → 5.2, and **4.5 is Bootstrap 4**. BS5's *classes* are bridged on 4.5
+(`form-select` etc.), but the **JS data attributes are not**: BS4's data-API listens on `data-toggle`,
+BS5's on `data-bs-toggle`. A component wired by markup (dropdown etc.) needs **both** side by side,
+and both alignment classes (`dropdown-menu-right dropdown-menu-end`) — as in
+`participants_manager.mustache` and `plans.mustache`. Same for the JS selector: match both.
 
-| Fato (verificado em `v4.5.12` × checkout 5.1) | Consequência de desenho |
+| Fact (verified on `v4.5.12` × a 5.1 checkout) | Design consequence |
 | --- | --- |
-| 4.5 **não define nenhuma custom property `--bs-*` de modal** (`--bs-modal-width`, `--bs-modal-margin`…) — seu `_modal.scss` é só variável SCSS | nunca dimensionar modal por var do BS5. Usar as classes do próprio Bootstrap — `modal-xl` é **idêntico em 4 e 5** (800px no `lg`, 1140px no `xl`) — ou dar fallback: `var(--bs-modal-margin, 1.75rem)` (= `$modal-dialog-margin-y-sm-up` do 4.5) |
-| BS5 (`EventHandler.trigger`) dispara **os dois** eventos, jQuery e nativo; BS4 dispara **só jQuery** | um listener **jQuery** cobre os dois ramos; `addEventListener` cobre só o 5.x |
-| `lib/amd/src/first.js` faz `window.jQuery = $`, então o BS5 **sempre** pega seu caminho jQuery | o bind por jQuery não é gambiarra de compatibilidade: é o caminho que o core garante nos dois |
+| 4.5 **defines no `--bs-*` modal custom property** (`--bs-modal-width`, `--bs-modal-margin`…) — its `_modal.scss` is SCSS variables only | never size a modal by a BS5 var. Use Bootstrap's own classes — `modal-xl` is **identical in 4 and 5** (800px on `lg`, 1140px on `xl`) — or give a fallback: `var(--bs-modal-margin, 1.75rem)` (= 4.5's `$modal-dialog-margin-y-sm-up`) |
+| BS5 (`EventHandler.trigger`) fires **both** events, jQuery and native; BS4 fires **jQuery only** | a **jQuery** listener covers both branches; `addEventListener` covers only 5.x |
+| `lib/amd/src/first.js` does `window.jQuery = $`, so BS5 **always** takes its jQuery path | binding through jQuery is not a compatibility hack: it is the path core guarantees on both |
 
-O custo de ignorar isso já foi pago: dois defeitos **silenciosos** no 4.5, corrigidos em `f84d30a`.
-O `context.js` casava as abas só por `data-bs-toggle` e escutava evento nativo — no 4.5 o seletor
-não casava nada e o evento não chegava, então o contador da contextbar nunca seguia a aba, o
-`saveNav` nunca rodava e o restore da aba salva nunca disparava. E o modal de participantes
-dimensionava a si mesmo com `--bs-modal-width`: indefinida no 4.5, ele encolhia pro `$modal-md`
-(**500px**) com quatro abas e grids dentro. Nenhum dos dois quebra visivelmente no 5.x — só somem
-no branch mais antigo, que é exatamente onde ninguém olha.
+The cost of ignoring this has already been paid: two **silent** defects on 4.5, fixed in `f84d30a`.
+`context.js` matched the tabs by `data-bs-toggle` only and listened for the native event — on 4.5 the
+selector matched nothing and the event never arrived, so the contextbar counter never followed the
+tab, `saveNav` never ran and the saved tab's restore never fired. And the participants modal sized
+itself with `--bs-modal-width`: undefined on 4.5, it shrank to `$modal-md` (**500px**) with four tabs
+and grids inside. Neither breaks visibly on 5.x — they only disappear on the older branch, which is
+exactly where nobody looks.
 
-**Contraste dos tokens de accent do Moodle no escuro (WCAG AA)**
+**Contrast of Moodle's accent tokens in dark (WCAG AA)**
 
-Um terceiro boundary, de acessibilidade e não de build: o `--text-accent` **do próprio Moodle** no
-escuro é `#3f89cc`, e a texto pequeno sobre superfície escura ele **reprova o AA**. Medido: o
-`.load` a 11px sobre `#1d2125` dá **4,37:1**, e o mesmo accent sobre o tint (`#062b4c`) dos
-cabeçalhos dá **3,88:1** — abaixo dos 4,5:1 que o AA exige para texto normal. Não é defeito de uma
-tela nem escolha do kit: é o token escuro do Moodle sobre a surface do Moodle. As três telas
-`est-structure`, `fwk-frameworks` e `pln-plans` o **depictam fiel** (as-is) e registram a medição no
-comentário do próprio arquivo — não as divergimos da cor real, senão o kit mentiria sobre o que o
-Moodle mostra. A correção de fundo (o accent pequeno do Moodle passar no AA) é **upstream**, não do
-plugin.
+A third boundary, of accessibility rather than build: **Moodle's own** `--text-accent` in dark is
+`#3f89cc`, and on small text over a dark surface it **fails AA**. Measured: `.load` at 11px over
+`#1d2125` gives **4.37:1**, and the same accent over the headers' tint (`#062b4c`) gives
+**3.88:1** — below the 4.5:1 AA requires for normal text. It is not a defect of one screen nor a
+choice of the kit: it is Moodle's dark token over Moodle's surface. The screens `est-competencies`,
+`fwk-structures` and `pln-plans` **depict it faithfully** (as-is) and record the measurement in
+the file's own comment — we do not diverge them from the real colour, or the kit would lie about
+what Moodle shows. The underlying fix (Moodle's small accent passing AA) is **upstream**, not the
+plugin's.
 
-O que o kit **prescreve** para superfícies **novas ou reformuladas** é outro par: no escuro,
-`--mds-accent-text` é `blue-200` (`#9fc4e5`), bem acima do AA sobre `#1d2125` — é o que `tokens.html`,
-`states.html` e `paginated-picker.html` já usam. **Regra:** texto de accent em superfície nova, no
-escuro, usa `blue-200`; só a depição as-is de um elemento que o Moodle já pinta com o accent cru
-mantém `#3f89cc`, sempre com a ressalva medida ao lado.
+What the kit **prescribes** for **new or reworked** surfaces is another pair: in dark,
+`--mds-accent-text` is `blue-200` (`#9fc4e5`), well above AA over `#1d2125` — it is what `tokens.html`,
+`states.html` and `paginated-picker.html` already use. **Rule:** accent text on a new surface, in
+dark, uses `blue-200`; only the as-is depiction of an element Moodle already paints with the raw
+accent keeps `#3f89cc`, always with the measured caveat alongside.
 
-## Reflexo no kit
+## How this shows up in the kit
 
-- `tokens.html` reescrito para o modelo MDS (semântico, valores Moodle, estados, foco, elevação, escalas) — feito.
-- Novo card `states.html` (estados interativos + foco) — feito.
-- Os **8 componentes** migrados para os tokens MDS (grays Bootstrap, **primary azul sólido**, Noto Sans, 1px,
-  **nav-pill cinza** no seletor de contexto, **info=cyan / success=green** na cohort-assign), com os nomes legados
-  mantidos como **aliases deprecados → `--mds-*`** para migração incremental — feito.
-- Os `screens/` re-skinados: painel **as-is intocado**, painel **to-be em tokens MDS** (override escopado em
-  `.screens > .panel:last-child`, claro/escuro) — feito. **Camada 3 completa**; resta a sua revisão e o port quando o Moodle 5.3 LTS sair.
+- `tokens.html` rewritten to the MDS model (semantic, Moodle values, states, focus, elevation, scales) — done.
+- New card `states.html` (interactive states + focus) — done.
+- The **8 components** migrated to the MDS tokens (Bootstrap grays, **solid blue primary**, Noto Sans, 1px,
+  **info=cyan / success=green** in `cohort-assign`), with the legacy names kept as **deprecated aliases →
+  `--mds-*`** for incremental migration — done. The two cards added afterwards (`toast.html`, `tooltip.html`)
+  were born on the MDS tokens, so all **12** previews reference `--mds-*`.
+- The **14** `screens/` draw the **shipped output** in the Moodle (Boost) palette itself: all of them
+  set the same theme literals in `:root` (`#fff` / `#f8f9fa` / `#e9ecef`, `#1d2125` / `#6a737b`,
+  accent `#0f6cbf`), and **13** name the palette in the `:root` comment — `pln-plans.html` carries the
+  literals with no comment. The dark-accent caveat above travels with them. **Layer 3 complete.**
+
+## Pending
+
+- **The review and the MDS React port.** The port is scheduled for when **Moodle 5.3 LTS** ships; until
+  then the substrate is Bootstrap/Boost and the mapping table above is the contract. Nothing in the kit
+  blocks on it — the taxonomy was mirrored precisely so the port is a rename, not a redesign.

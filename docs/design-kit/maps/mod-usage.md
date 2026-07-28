@@ -1,156 +1,172 @@
-# Mapa de Campos — `MOD.USAGE` · Onde a competência é usada (as-is)
+# Field map — `MOD.USAGE` · Where the competency is used (as-is)
 
-Modal aberto por **um dos três contadores** do card de detalhe da aba Estrutura — Cursos vinculados,
-Atividades vinculadas ou Planos de aprendizagem vinculados. Lista, em texto simples, onde aquela
-competência aparece. É o modal mais simples do kit e o mais fácil de descrever errado, porque **duas
-das suas regras não são visíveis no Mustache**: o web service devolve **as três** listas e o template
-renderiza **só a que o usuário clicou**; e as linhas são **deliberadamente não navegáveis** — não
-levam ao curso, à atividade nem ao plano.
+A modal opened by **one of the three counters** on the Competencies tab's detail card — Linked courses,
+Linked activities or Linked learning plans. It shows, in a **striped table with column headers**,
+where that competency appears. It is the simplest modal in the kit and the easiest to describe
+wrongly, because **two of its rules are not visible in the Mustache**: the web service returns **all
+three** lists and the template renders **only the one the user clicked**; and the modal **does not
+navigate in place** — courses and activities open in a **new tab**, so the Central hub behind it is
+never destroyed.
 
 - **Mustache:** [`competency_usage_modal.mustache`](../../../templates/central/competency_usage_modal.mustache)
-  (100) — só o **corpo**; o `Modal.create` é todo em JS. Gatilhos em
+  (145) — the **body** only; the `Modal.create` is all in JS. Triggers in
   [`structure_detail_content.mustache`](../../../templates/central/structure_detail_content.mustache)
   (`:79-82`, `:91-94`, `:103-106`)
-- **AMD:** [`structure.js`](../../../amd/src/central/structure.js) — mapa `USAGE_SECTIONS` em
-  `:1190-1195`, `openUsageModal` em `:1197-1232`, despacho em `:1249-1251`. Usa `core/modal` (import
-  `:29`), `core/templates` (`:35`), `getString` (`:39`) e `errors.js` (`notifyError`, `:34`)
-- **WS:** `local_dimensions_competency_usage` (`db/services.php:90-91` →
-  [`classes/external/competency_usage.php`](../../../classes/external/competency_usage.php)) —
-  **um WS do plugin, uma chamada, três listas**. Sem WS do core
-- **CSS:** **nenhum.** Um `grep -n 'local-dimensions-central-usage' styles.css` não devolve nada — a
-  classe do `:51` existe só como gancho semântico. O corpo é **Bootstrap puro**
-  (`list-unstyled`, `py-1 border-bottom`, `text-muted small`, `font-monospace`)
-- **Behat:** nenhum. Não há `.feature` tocando os contadores
-- **Tela no DS:** **nenhuma, de propósito.** É uma lista `<li>` sem decisão de design; desenhá-la
-  acrescentaria superfície ao kit sem nada para revisar. As regras estão todas aqui
+- **AMD:** [`structure.js`](../../../amd/src/central/structure.js) — the `USAGE_SECTIONS` map at
+  `:1192-1196`, `openUsageModal` at `:1208-1233`, dispatch at `:1250-1252`. It uses `core/modal`
+  (import `:30`), `core/templates` (`:36`), `getString` (`:40`) and `errors.js` (`notifyError`, `:35`)
+- **WS:** `local_dimensions_competency_usage` (`db/services.php:90-97` →
+  [`classes/external/competency_usage.php`](../../../classes/external/competency_usage.php), 161
+  lines) — **one plugin WS, one call, three lists**. No core WS
+- **CSS:** `styles.css:6998-7018` — three rules only: `margin-bottom: 0` on the table (`:7005-7007`),
+  cells roomier than Boost's default (`padding: 0.625rem 0.75rem` + `vertical-align: middle`,
+  `:7009-7013`) and the new-tab glyph small and quiet (`font-size: 0.75em; opacity: 0.75`,
+  `:7015-7018`). Beyond that the body is **pure Bootstrap**
+  (`table table-striped table-hover generaltable mb-0`, `font-monospace small text-muted`,
+  `badge bg-success` / `badge bg-secondary`)
+- **Behat:** none. There is no `.feature` touching the counters
+- **Screen in the DS:** **none, on purpose.** It is a two-column table with no design decision of its
+  own — it mirrors the *Manage participants* grid (the comment at `styles.css:7001` says so). The
+  rules are all here
 
-**Abreviações usadas nas tabelas:** `mustache:` = `templates/central/competency_usage_modal.mustache`
+**Abbreviations used in the tables:** `mustache:` = `templates/central/competency_usage_modal.mustache`
 · `js:` = `amd/src/central/structure.js` · `detail:` =
 `templates/central/structure_detail_content.mustache` · `php:` =
 `classes/external/competency_usage.php`.
 
-> **Mapa novo (2026-07-15) — a superfície não tinha mapa nenhum.** Um
-> `grep -rln 'competency_usage_modal' docs/design-kit/` devolvia **vazio** (controle positivo: o mesmo
-> grep com `mod-delplans` devolve 7 arquivos), contradizendo o "Todas as superfícies da Central estão
-> cobertas" do README. Corrigido aqui e na tabela do README.
->
-> **Procedência, medida — o brief desta task errou o commit.** O brief dizia
-> "`competency_usage_modal.mustache` (commit `ec028d5`)". O arquivo **nasceu em `6f9fc47`**
-> ("Structure tab parity — tree drag-and-drop, equal panes, usage counters", 2026-07-02);
-> `ec028d5` é do **mesmo dia** e o **reformou** (`git show --stat ec028d5 -- <arquivo>`:
-> **20 inserções, 13 deleções**) — foi ali que nasceram os flags `show*` e, com eles, a regra
-> "só a seção clicada". As duas afirmações são verdadeiras em partes diferentes: o arquivo é de
-> `6f9fc47`, o **comportamento por seção** é de `ec028d5`.
+> **Provenance, in three commits.** The template **was born in `6f9fc47`** ("Competencies tab parity —
+> tree drag-and-drop, equal panes, usage counters", 2026-07-02). On the **same day**, `ec028d5`
+> reworked it and that is where the `show*` flags were born and, with them, the "only the clicked
+> section" rule. In `8d5500f` the three `<li>` lists became **striped tables with headers**, and
+> courses and activities gained a new-tab link — the WS started exporting `url` (`php:100`, `:116`)
+> and `execute_returns` started declaring it (`php:145`, `:152`).
 
-## Gatilhos (na aba Estrutura, fora do modal)
+## Triggers (on the Competencies tab, outside the modal)
 
-As três portas **já têm ID** — são do card de detalhe e pertencem ao
-[`est-structure.md`](est-structure.md). Este mapa **as referencia**, não as re-emite.
+The three doors **already have IDs** — they belong to the detail card and to
+[`est-competencies.md`](est-competencies.md). This map **references** them, it does not re-mint them.
 
-| ID (dono) | Rótulo | Origem | `data-usage` | Regra |
+| ID (owner) | Label | Origin | `data-usage` | Rule |
 | --- | --- | --- | --- | --- |
-| `EST-DETAIL-COURSES` | Cursos vinculados | `detail:79-82` (botão) · `:85` (texto) | `courses` | str `managecompetencies_linkedcourses` |
-| `EST-DETAIL-ACTIVITIES` | Atividades vinculadas | `detail:91-94` (botão) · `:97` (texto) | `activities` | str `managecompetencies_linkedactivities` |
-| `EST-DETAIL-PLANS` | Planos de aprendizagem vinculados | `detail:103-106` (botão) · `:109` (texto) | `templates` | str `central_structure_linkedplans`. **O `data-usage` diverge do nome:** a UI diz "planos", o dataset diz `templates` — e o mapa `USAGE_SECTIONS` (`js:1194`) casa `templates` → `central_structure_linkedplans` |
+| `EST-DETAIL-COURSES` | Linked courses | `detail:79-82` (button) · `:85` (text) | `courses` (`detail:82`) | str `managecompetencies_linkedcourses` |
+| `EST-DETAIL-ACTIVITIES` | Linked activities | `detail:91-94` (button) · `:97` (text) | `activities` (`detail:94`) | str `managecompetencies_linkedactivities` |
+| `EST-DETAIL-PLANS` | Linked learning plans | `detail:103-106` (button) · `:109` (text) | `templates` (`detail:106`) | str `central_structure_linkedplans`. **The `data-usage` diverges from the name:** the UI says "plans", the dataset says `templates` — and the `USAGE_SECTIONS` map (`js:1195`) pairs `templates` → `central_structure_linkedplans` |
 
-**A regra que governa os três:** o contador só é `<button>` sob `{{#linksclickable}}`; sem o flag
-ele é uma `<div>` inerte (`detail:84-86`, `:96-98`, `:108-110`). O `MOD.DETAIL` entra com
-`linksclickable: false` (`competency_detail.js:275`), então **este modal nunca empilha sobre
-aquele** — é o mecanismo, não uma convenção.
+**The rule that governs all three:** the counter is only a `<button>` under `{{#linksclickable}}`;
+without the flag it is an inert `<div>` (`detail:84-86`, `:96-98`, `:108-110`). `MOD.DETAIL` comes in
+with `linksclickable: false` (`competency_detail.js:275`), so **this modal never stacks on top of that
+one** — that is the mechanism, not a convention.
 
-## Casca (montada em JS, sem Mustache)
+## Shell (assembled in JS, no Mustache)
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.USAGE-TITLE` | {seção} — {nome} | título | `js:1225-1226` | str de `USAGE_SECTIONS[labelkey]` + `' — '` + `row.dataset.name` | o `title` recebe a **Promise** do `getString` (`Modal.create` aceita); o travessão é **literal no JS**, não vem de string. É o único lugar que diz **qual** seção está aberta — o corpo não tem cabeçalho |
-| `MOD.USAGE-MODAL` | — | `core/modal` | `js:1224-1231` | `large: true`, `show: true`, `removeOnClose: true` | `core/modal` **puro** — sem `footer`, sem save/cancel: é leitura. Fecha só pelo `.btn-close` do cabeçalho do core (que **recebe** o restyle de chip azul do plugin, `styles.css:3740` — este modal **não** está no `:not()` da exclusão; quem está é o `MOD.DETAIL`) |
-| `MOD.USAGE-ROOT` | `[sem rótulo]` | região/raiz | `mustache:51` | `.local-dimensions-central-usage` | **sem CSS**. Único filho do corpo; as três seções são irmãs dentro dele |
+| `MOD.USAGE-TITLE` | {section} — {name} | title | `js:1226-1227` | the str from `USAGE_SECTIONS[labelkey]` + `' — '` + `row.dataset.name` | the `title` receives the `getString` **Promise** (`Modal.create` accepts that); the em dash is a **literal in the JS**, it does not come from a string. It is the only thing that says **which** section is open on screen — the table's `<caption>` says it too, but it is `visually-hidden` |
+| `MOD.USAGE-MODAL` | — | `core/modal` | `js:1225-1232` | `large: true`, `show: true`, `removeOnClose: true` | **plain** `core/modal` — no `footer`, no save/cancel: it is read-only. It closes only through core's header `.btn-close`, which **does get** the plugin's blue chip restyle (`styles.css:5074`) — this modal is **not** in the exclusion's `:not()`; `MOD.DETAIL` is. It does not carry the `sizetoggle` marker, so it also falls **outside** the `overflow` rule for the two dense modals (`0ee36cc`) |
+| `MOD.USAGE-ROOT` | `[no label]` | region/root | `mustache:54` | `.local-dimensions-central-usage` | the modal's **only** CSS hook (`styles.css:7005-7018`). The body's only child; the three sections are siblings inside it |
 
-## Seção "Cursos" (`showcourses`)
+## "Courses" section (`showcourses`)
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+A **two-column** table — *Course* (`central_usage_col_course`) and *Short name*
+(`central_usage_col_shortname`), headers at `mustache:61-62` — with a `visually-hidden` `<caption>`
+repeating the counter's label (`:58`).
+
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.USAGE-COURSES` | `[sem rótulo]` | lista | `mustache:54-61` | `ul.list-unstyled.mb-0` | sai sob `{{#showcourses}}{{#hascourses}}` |
-| `MOD.USAGE-COURSE-ROW` | {fullname} | linha | `mustache:56-59` | `li.py-1.border-bottom` | **não é link nem botão** — ver a regra 2 abaixo. `name` = `format_string($course->fullname)` no contexto do curso (`php:93`) |
-| `MOD.USAGE-COURSE-SHORT` | `[sem rótulo]` | shortname | `mustache:58` | `.font-monospace.small.text-muted.ms-1` | `format_string($course->shortname)` (`php:94`) |
-| `MOD.USAGE-EMPTY-COURSES` | Nenhum curso vinculado. | estado vazio | `mustache:64` | str **`central_links_nocourses`** | **assimetria de string:** este vazio **reusa a string do `MOD.LINKS`**; os outros dois têm string própria (`central_usage_*`). Não é bug — é reuso — mas quem editar a string do `MOD.LINKS` muda **este** texto também |
+| `MOD.USAGE-COURSES` | `[no label]` | table | `mustache:57-78` | `table table-striped table-hover generaltable mb-0` | renders under `{{#showcourses}}{{#hascourses}}` (`:55-56`) |
+| `MOD.USAGE-COURSE-ROW` | {fullname} | row | `mustache:67-75` | `<tr>` · name `<td>` at `:68-73` | **it is a link** — `<a href="{{url}}" target="_blank" rel="noopener noreferrer">` with `fa-external-link` and a `visually-hidden` carrying the core str `opensinnewwindow` (`:70`). Under `{{^url}}` it degrades to raw text (`:72`), which only happens if the WS sends an empty `url`. `name` = `format_string($course->fullname)` in the course context (`php:94`), `url` = `/course/view.php?id=` (`php:100`) |
+| `MOD.USAGE-COURSE-SHORT` | `[no label]` | shortname | `mustache:74` | `<td>` with `.font-monospace.small.text-muted` | it became **its own column** (no longer a suffix in the same cell). `format_string($course->shortname)` (`php:95`) |
+| `MOD.USAGE-EMPTY-COURSES` | No courses linked. | empty state | `mustache:81` | str **`central_links_nocourses`** (`lang/en:183`) | `p.text-muted.small.mb-0`. **String asymmetry:** this empty state **reuses `MOD.LINKS`'s string**; the other two have their own (`central_usage_*`). It is not a bug — it is reuse — but whoever edits the `MOD.LINKS` string changes **this** text too |
 
-## Seção "Atividades" (`showactivities`)
+## "Activities" section (`showactivities`)
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+Two columns — *Activity* (`central_usage_col_activity`) and *Course* (`central_usage_col_course`),
+headers at `mustache:91-92`; `<caption>` at `:88`.
+
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.USAGE-ACTIVITIES` | `[sem rótulo]` | lista | `mustache:70-78` | `ul.list-unstyled.mb-0` | sai sob `{{#showactivities}}{{#hasactivities}}` |
-| `MOD.USAGE-ACT-ROW` | {nome do módulo} | linha | `mustache:72-76` | `li.py-1.border-bottom` · `cmid` | o `cmid` **vai no contexto mas não é usado** pelo template — nenhum atributo o carrega. É a prova mais direta da regra 2: o dado para navegar **está lá** e o template escolhe não usá-lo |
-| `MOD.USAGE-ACT-COURSE` | — {fullname} | curso da atividade | `mustache:74` | `.small.text-muted.ms-1` | o travessão é **literal no Mustache** (`:74`), não vem de string — não localiza |
-| `MOD.USAGE-ACT-SHORT` | `[sem rótulo]` | shortname do curso | `mustache:75` | `.font-monospace.small.text-muted.ms-1` | |
-| `MOD.USAGE-EMPTY-ACTIVITIES` | Nenhuma atividade vinculada. | estado vazio | `mustache:81` | str `central_usage_noactivities` | |
+| `MOD.USAGE-ACTIVITIES` | `[no label]` | table | `mustache:87-111` | `table table-striped table-hover generaltable mb-0` | renders under `{{#showactivities}}{{#hasactivities}}` (`:85-86`) |
+| `MOD.USAGE-ACT-ROW` | {module name} | row | `mustache:97-108` | `<tr>` · name `<td>` at `:98-103` | **it is a link**, the same shape as the courses (`:100`). The `url` comes from `$cm->url` (`php:110`, `:116`) and is an **empty string when the module has no view page** (`execute_returns` documents that at `php:152`) — in which case the `{{^url}}` at `:102` degrades to raw text. It is the only row in the modal that may not be clickable |
+| `MOD.USAGE-ACT-COURSE` | {fullname} | the activity's course | `mustache:105` | `<td>` (the 2nd column) | it became **its own column**: the literal em dash that used to separate name and course in the same cell **no longer exists** — what labels it is the *Course* `<th>` at `:92` |
+| `MOD.USAGE-ACT-SHORT` | `[no label]` | the course's shortname | `mustache:106` | `.font-monospace.small.text-muted.ms-1` | inside the course cell, next to the `coursename` |
+| `MOD.USAGE-EMPTY-ACTIVITIES` | No linked activities. | empty state | `mustache:114` | str `central_usage_noactivities` (`lang/en:297`) | `p.text-muted.small.mb-0` |
 
-## Seção "Planos" (`showtemplates`)
+## "Plans" section (`showtemplates`)
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+Two columns — *Learning plan* (`central_usage_col_plan`) and *Status*
+(`central_usage_col_status`), headers at `mustache:124-125`; `<caption>` at `:121`.
+
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.USAGE-PLANS` | `[sem rótulo]` | lista | `mustache:87-94` | `ul.list-unstyled.mb-0` | sai sob `{{#showtemplates}}{{#hastemplates}}` |
-| `MOD.USAGE-PLAN-ROW` | {shortname do template} | linha | `mustache:89-92` | `li.py-1.border-bottom` | `format_string($template->get('shortname'))` (`php:122`) — **sem `['context' => …]`**, ao contrário dos cursos (`php:93-94`) e das atividades (`php:110`), que passam o contexto do curso. Aqui cai no contexto default do `$PAGE` |
-| `MOD.USAGE-PLAN-HIDDEN` | Oculto | badge | `mustache:91` | `.badge.bg-secondary.ms-1` · str `hidden, tool_lp` | sai sob `{{^visible}}` — **só** o template oculto ganha badge; o visível não ganha nada. String do **`tool_lp`**, não do plugin |
-| `MOD.USAGE-EMPTY-PLANS` | Não está em nenhum plano de aprendizagem. | estado vazio | `mustache:97` | str `central_usage_noplans` | |
+| `MOD.USAGE-PLANS` | `[no label]` | table | `mustache:120-139` | `table table-striped table-hover generaltable mb-0` | renders under `{{#showtemplates}}{{#hastemplates}}` (`:118-119`) |
+| `MOD.USAGE-PLAN-ROW` | {template shortname} | row | `mustache:130-136` | `<tr>` · name at `:131` | **not a link** — it is the only one of the three sections with no `url`: the WS exports none (`php:124-128`, `execute_returns` at `:154-158`). `format_string($template->get('shortname'))` (`php:126`) — **without `['context' => …]`**, unlike the courses (`php:94-95`) and the activities (`php:113`), which pass the course context. Here it falls back to `$PAGE`'s default context |
+| `MOD.USAGE-PLAN-HIDDEN` | Hidden | badge | `mustache:134` | `.badge.bg-secondary` · str `hidden, tool_lp` | the *Status* column is **explicit in both states**: `{{#visible}}` renders a `badge bg-success` with the `visible, tool_lp` str (`:133`) and `{{^visible}}` renders this one. Both strings are **`tool_lp`**'s, not the plugin's |
+| `MOD.USAGE-EMPTY-PLANS` | Not part of any learning plan. | empty state | `mustache:142` | str `central_usage_noplans` (`lang/en:298`) | `p.text-muted.small.mb-0` |
 
-## Regras de negócio (verificadas no código)
+## Business rules (verified in the code)
 
-### 1. O WS devolve as três listas; o modal mostra uma
+### 1. The WS returns all three lists; the modal shows one
 
-`openUsageModal` (`js:1207-1232`) faz **uma** chamada a `local_dimensions_competency_usage`
-(`js:1209-1212`) e passa ao template **os três arrays inteiros** — `courses`, `activities` e
-`templates` (`js:1216`, `:1219`, `:1222`) — junto com três flags `show*` dos quais **exatamente um é
-`true`** (`js:1214`, `:1217`, `:1220`, cada um um `labelkey === '…'`). O `php:127` confirma o outro
-lado: `return ['courses' => …, 'activities' => …, 'templates' => …]`, sempre os três.
+`openUsageModal` (`js:1208-1233`) makes **one** call to `local_dimensions_competency_usage`
+(`js:1210-1213`) and passes the template **all three arrays whole** — `courses`, `activities` and
+`templates` (`js:1217`, `:1220`, `:1223`) — along with three `show*` flags of which **exactly one is
+`true`** (`js:1215`, `:1218`, `:1221`, each one a `labelkey === '…'`). `php:131` confirms the other
+side: `return ['courses' => …, 'activities' => …, 'templates' => …]`, always all three.
 
-Ou seja: **o custo é sempre o de três listas; o proveito é o de uma.** Trocar de contador refaz a
-chamada inteira, porque o modal é `removeOnClose` e não há cache. Não é acidente — o
-`ec028d5` foi exatamente a mudança que introduziu os `show*` num template que antes renderizava
-tudo. O que ficou por fazer é o WS aceitar a seção como argumento, não o template descartá-la.
+In other words: **the cost is always three lists; the benefit is one.** Switching counter redoes the
+whole call, because the modal is `removeOnClose` and there is no cache. It is no accident —
+`ec028d5` was exactly the change that introduced the `show*` flags into a template that used to render
+everything. What is left undone is for the WS to accept the section as an argument, not for the
+template to discard it.
 
-### 2. As linhas não navegam — e não é esquecimento
+### 2. The rows navigate — but always in a new tab
 
-Cada linha é `<li class="py-1 border-bottom">` dentro de um `<ul class="list-unstyled mb-0">`
-(`mustache:54-61`, `:70-78`, `:87-94`). **Nenhuma** carrega `<a href>`, `<button>` ou `data-action`.
-O modal informa *onde* a competência é usada e **não leva até lá**.
+Courses and activities are `<a href="…" target="_blank" rel="noopener noreferrer">` (`mustache:70`,
+`:100`), with a decorative `fa-external-link` and a `visually-hidden` carrying the core str
+`opensinnewwindow` — the pair that makes the target announceable. The `url` is built on the server,
+not in the template: `/course/view.php?id=` (`php:100`) and `modinfo`'s `$cm->url` (`php:110`, `:116`),
+declared as `PARAM_URL` in `execute_returns` (`php:145`, `:152`).
 
-A prova de que é decisão, não descuido: o WS **exporta os ids** — `id` do curso (`php:96`), `cmid`
-da atividade (`php:109`), `id` do template (`php:121`) — e os declara no `execute_returns`
-(`php:137-149`). O template **recebe** os três e **não usa nenhum**. Construir o link seria
-`/course/view.php?id={{id}}` e `/mod/…/view.php?id={{cmid}}` — o dado está no contexto.
+**The `target="_blank"` is the rule, not a detail.** Navigating **in the same tab** would destroy the
+Central hub behind the modal — the tree, the selected row, the expansion, the scroll and the splitter
+width. The new tab is what lets the modal be useful (take you there) at no cost in state.
+`styles.css:7002-7003` records the glyph's visual intent: *"the new-tab glyph sits small and quiet
+beside the course/activity name"*.
 
-O motivo plausível é o de sempre num modal: navegar **destrói** a Central (a árvore, a seleção, a
-expansão, o scroll). É o mesmo raciocínio do `MOD.LINKS`, que também lista e não navega. Registrado
-como **decisão**, não como lacuna — a discussão (abrir em nova aba? `target="_blank"`?) é de to-be.
+**The plans were left out, and it is consistent:** the WS exports no `url` for a template
+(`php:124-128`) because **there is no public template page** — the destination would be the hub's own
+Plans tab, that is, the page the user is already on. Recorded as a **deliberate** asymmetry.
 
-### 3. Seção desconhecida cai em "cursos", calada
+### 3. An unknown section falls back to "courses", silently
 
-`const labelkey = USAGE_SECTIONS[section] ? section : 'courses';` (`js:1208`). Um `data-usage` com
-lixo (ou ausente) **não** dá erro: abre a lista de cursos com o título "Cursos vinculados". Como o
-único emissor é o próprio Mustache (`detail:82`, `:94`, `:106`), o galho é defensivo — mas é o que
-segura um `data-usage` renomeado num lado só.
+`const labelkey = USAGE_SECTIONS[section] ? section : 'courses';` (`js:1209`). A `data-usage` carrying
+junk (or missing) does **not** raise an error: it opens the courses list with the title "Linked
+courses". Since the only emitter is the Mustache itself (`detail:82`, `:94`, `:106`), the branch is
+defensive — but it is what catches a `data-usage` renamed on one side only.
 
-### 4. Atividade invisível é consequência de curso invisível — estruturalmente
+### 4. An invisible activity is a consequence of an invisible course — structurally
 
-`api::list_courses_using_competency` (`php:91`) já vem filtrada pelas capabilities por curso do
-chamador (comentário `php:88`). As atividades são colhidas **dentro** desse laço (`php:103-114`),
-`get_fast_modinfo` por curso (`php:102`). Então **a lista de atividades é função da lista de
-cursos**: um curso que o usuário não pode ver não contribui com nenhuma atividade — não por um
-filtro de atividade, mas porque o laço nunca chega lá. Um `$cm` ausente do `modinfo` é pulado
-calado (`php:104-106`).
+`api::list_courses_using_competency` (`php:92`) already comes filtered by the caller's per-course
+capabilities (comment at `php:89`). The activities are gathered **inside** that loop (`php:105-118`),
+`get_fast_modinfo` per course (`php:104`). So **the activity list is a function of the course list**:
+a course the user cannot see contributes no activities — not because of an activity filter, but
+because the loop never gets there. A `$cm` missing from `modinfo` is skipped silently
+(`php:106-109`).
 
-**Os planos não seguem essa regra.** `api::list_templates_using_competency` (`php:119`) entra sem
-filtro por template — o único portão é o global, lá em cima: `require_capability(
-'moodle/competency:competencyview')` no **contexto do sistema** (`php:70-72`), mais um
-`competency_framework::can_read_context` no contexto do **framework** (`php:79-86`), que lança
-`required_capability_exception` quando falha. Por isso o `visible` é exportado (`php:123`) e vira o
-badge "Oculto": quem chega aqui **vê** o template oculto, e o badge é o que conta a verdade.
+**The plans do not follow that rule.** `api::list_templates_using_competency` (`php:123`) goes in with
+no per-template filter — the only gate is the global one, up top: `require_capability(
+'moodle/competency:competencyview')` in the **system context** (`php:71-73`), plus a
+`competency_framework::can_read_context` in the **framework**'s context (`php:80-87`), which throws
+`required_capability_exception` when it fails. That is why `visible` is exported (`php:127`) and
+becomes the *Status* column: whoever gets here **does see** the hidden template, and the badge is what
+tells the truth.
 
-### 5. O título é a única pista da seção
+### 5. The title names the section; the `<caption>` repeats it for screen readers only
 
-O corpo não tem cabeçalho de seção: aberto em "Atividades", o `<ul>` é indistinguível do de
-"Cursos" (mesmas classes, mesma forma). Quem diz é o `MOD.USAGE-TITLE` (`js:1225-1226`) — e ele
-depende do `USAGE_SECTIONS[labelkey]`. O rótulo do contador e o título do modal saem da **mesma
-string** (o comentário do `js:1190` registra isso: "lang key of its title (also the counter
-label)"), então nunca divergem.
+Opened on "Activities", the table is indistinguishable from the "Courses" one by shape (same classes,
+two columns) — what changes are the `<th>`s. What names the section **on screen** is `MOD.USAGE-TITLE`
+(`js:1226-1227`), which depends on `USAGE_SECTIONS[labelkey]`; and each table repeats the same label in
+a `<caption class="visually-hidden">` (`mustache:58`, `:88`, `:121`), which names the table for
+assistive technology without duplicating visible text. The counter's label and the modal's title come
+from the **same string** (the comment at `js:1191` records this: "lang key of its title (also the
+counter label)"), so they never diverge.
