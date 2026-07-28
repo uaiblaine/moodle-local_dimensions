@@ -16,7 +16,7 @@ The kit maps the **shell** of every modal (`modal-shell.html`); this file maps t
 `template_dynamic_form.php` in `FORM-TPL`, `import_framework_dynamic_form.php` in `FORM-IMP`. The other
 paths are relative to the plugin root.
 
-ID convention here: `FORM-FWK-*`, `FORM-COMP-*`, `FORM-TPL-*`, `FORM-IMP-*` — the `IMP` in
+ID convention here: `FORM-FWK-*`, `FORM-COMP-*`, `FORM-TPL-*`, `FORM-IMP-*`, `FORM-TPLIMP-*` — the `IMP` in
 `FORM-IMP-*` stands for **import**, not for improvement. **Migration:** the IDs
 `MOD.SCALE-ACTION/-SUMMARY/-HIDDEN` were **provisional** in `mod-scale.md` (the scale trigger lives in
 the framework form's body, not in the scale modal); they now live here as `FORM-FWK-SCALE-*`.
@@ -142,7 +142,7 @@ two-column flex (`:475-491`). (3) **Colour swatch** (`colour_swatch`, `:229-232`
 
 Opens from `plans.js`: **new** (`new-template`, `:714-720`, args `{id:0, contextid}`, title
 `managetemplates_addtemplate`) and **edit** (`edit-template`, `:721-727`, args `{id}`, native title
-`edittemplate`). **Save** → `reloadKeepingScroll` (`plans.js:206` → `:93-109`: snapshots the scroll of
+`edittemplate`). **Save** → `reloadKeepingScroll` (`plans.js:207` → `:93-109`: snapshots the scroll of
 both regions, `reloadPane` in `quiet` mode, restores). **No toast.** Server-side save
 (`form.php:295-325`): `create/update_template` + `lp_handler::instance_form_save_with_image` (2-arg,
 `:317`) — and it is **the handler**, not the form, that wraps the save in a `dml_write_exception` retry
@@ -163,7 +163,7 @@ Gate: `moodle/competency:templatemanage` (`form.php:93`).
 | `FORM-TPL-SHOWRELATED` | Show related | select (customfield) | `form.php:192-197` | `hideIf displaymode eq DISPLAYMODE_COMPETENCIES` (1) | only in **Full plan overview** mode; the gate for the link below |
 | `FORM-TPL-SHOWRELATEDLINK` | Link related | select (customfield) | `form.php:198-203` + `:205-210` | **two** `hideIf` rules: displaymode eq 1 **and** showrelated eq index-of-No | only Full plan overview **and** with Show related = Yes. The 2nd value is **not** a literal: it is `array_search(SHOWRELATED_NO, array_keys(showrelated_options())) + 1` (`:209`), computed at definition time — `3` today, and reordering `showrelated_options()` is followed automatically |
 | `FORM-TPL-ENROLFILTER` | Enrollment filter | select (customfield) | `form.php:161-163` | — | the anchor for the cascade explainer (`insertElementBefore` above it) |
-| `FORM-TPL-BGCOLOR` / `-TEXTCOLOR` | custombgcolor / customtextcolor | text (customfield) | from the lp block (`form.php:145`); decorated at `:230-233` (swatch) and `:236-239` (contrast) | hex | **the graded pair** — plain text (not a colorpicker). Header defaults when empty: `#0f6cbf`/`#ffffff` (`dynamictabs/plans.php:271-272`) |
+| `FORM-TPL-BGCOLOR` / `-TEXTCOLOR` | custombgcolor / customtextcolor | text (customfield) | from the lp block (`form.php:145`); decorated at `:230-233` (swatch) and `:236-239` (contrast) | hex | **the graded pair** — plain text (not a colorpicker). Header defaults when empty: `#0f6cbf`/`#ffffff` (`dynamictabs/plans.php:274-275`) |
 | `FORM-TPL-SCSS` | Custom SCSS | textarea (customfield) | `form.php:226` (pin at render), `:272-288` (pin in `get_data`) | — | only with `enablecustomscss`. Pinned to `FORMAT_PLAIN` at render **and** in `get_data` (all 4 possible shapes of the value); **blocks** the save on a compilation error |
 | `FORM-TPL-CASCADE` | `[no label]` | static | `form.php:148-166` | — | explainer, `insertElementBefore` above `enrollmentfilter` (`:163`; fallback `addElement` at `:165`) |
 
@@ -176,6 +176,36 @@ to the competency form, same `contrast.js`/`colour_swatch`, same relayout, same 
 block". (3) **`hideIf` cascade** driven by `displaymode` (progressive disclosure, 5 rules + 1 depending
 on `showrelated`). (4) Blocking **`FORMAT_PLAIN` SCSS**. (5) URL-only description. (6) **No toast** on
 save (diverges from the house pattern; the confirmation is the scroll-preserving reload).
+
+---
+
+## `FORM-TPLIMP` — the learning plan import form body (`import_templates_dynamic_form.php`)
+
+Opens from the `PLN-IMPORT` button (`data-action="import-templates"`, `plans.mustache:155-157`) →
+`openImportModal` (`plans_transfer.js:432`), args `{contextid}`, title `central_plans_import_title`.
+Gate: a **SYSTEM or COURSECAT** context (otherwise `invalidcontext`) + `competency:templatemanage`
+(`form.php:64-71`). **Nothing is imported here.** Unlike `FORM-IMP`, whose submission runs the whole
+import in-request, this form is **step one of two**: `process_dynamic_submission` (`form.php:151-159`)
+returns only the draft handle and the parse settings and **contains no write of any kind**, which is
+what lets the preview that follows promise that nothing has happened yet.
+
+| ID | Label | Type | Origin | Data | Rule / notes |
+| --- | --- | --- | --- | --- | --- |
+| `FORM-TPLIMP-CONTEXTID` | `[hidden]` | hidden | `form.php:92-94` | `PARAM_INT` | the import target; seeded from `region.dataset.contextid` by the opener, and re-resolved server-side |
+| `FORM-TPLIMP-FILE` | CSV file | filepicker | `form.php:96-102` | `accepted_types ['.csv','.txt']` | its own key `central_plans_import_file`, whose English value matches the Frameworks one. `required` is client-only (`:103`) |
+| `FORM-TPLIMP-DELIM` | CSV separator | select | `form.php:105-110` | `PARAM_ALPHA` | same language-sensitive default as `FORM-IMP-DELIM`: `listsep == ';'` → `semicolon` (`:113`) |
+| `FORM-TPLIMP-ENCODING` | Encoding | select | `form.php:115-120` | `PARAM_RAW` | `core_text::get_encodings()`; default UTF-8 (`:122`) |
+| `FORM-TPLIMP-UPDATE` | Update templates that already exist here | advcheckbox | `form.php:127-131` | `PARAM_BOOL` | **default off** (`:133`), and that default is a decision, not an oversight: on would pre-tick every matched template and arm, on the first Apply, the bulk UPDATE that renames every open learner plan built from it. Off makes the first run a pure comparison the operator opts into row by row. `addHelpButton` (`:134`) |
+
+**Validation (`form.php:172-191`) — server-only:** an **empty** file (`:176-179`), one the parser
+refuses, and one **with no template row** (`:187-189`, `central_plans_import_notemplaterow`). The
+parser's **own** error is carried through verbatim (`:185-186`) rather than replaced by a generic
+message, so "this looks like a competency structure file, import it from the Structures tab" survives
+to the user instead of becoming "the file could not be read".
+
+**Design controls:** the upload, the delimiter, the encoding and the update toggle — four, exactly as
+`FORM-IMP`. What differs is everything after Save: see `PLN-IMP` in
+[`pln-plans.md`](pln-plans.md) for the preview this hands off to.
 
 ---
 
@@ -192,7 +222,7 @@ draft, parses it and imports synchronously. **No customfields** — the plugin's
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
 | `FORM-IMP-CONTEXTID` | `[hidden]` | hidden | `form.php:93-95` | `PARAM_INT` | the import target; defaults to the submission context, seeded from `region.dataset.contextid` by the opener |
-| `FORM-IMP-FILE` | CSV file | filepicker | `form.php:97-104` | `accepted_types ['.csv','.txt']` | **the central control.** `required` is client-only (`:104`) — the **only** client-side validation. On save, `$data->importfile` is the **draft id**, read from the draft area by `read_uploaded_csv` (`:190-200`) |
+| `FORM-IMP-FILE` | CSV file | filepicker | `form.php:97-104` | `accepted_types ['.csv','.txt']` | **the central control.** `required` is client-only (`:103`) — the **only** client-side validation. On save, `$data->importfile` is the **draft id**, read from the draft area by `read_uploaded_csv` (`:190-200`) |
 | `FORM-IMP-DELIM` | CSV separator | select | `form.php:106-114` | `PARAM_ALPHA` | options from `csv_import_reader::get_delimiter_list()` (core). **Language-sensitive default:** `listsep==';' ? 'semicolon' : 'comma'` (`:113-114`) — ';' for locales such as pt_br |
 | `FORM-IMP-ENCODING` | Encoding | select | `form.php:116-123` | `PARAM_RAW` | options from `core_text::get_encodings()`; default UTF-8 (`:123`). `RAW` because charset names contain chars that `ALPHA` would strip |
 | `FORM-IMP-UPDATE` | Update existing by ID number | advcheckbox | `form.php:125-131` | `PARAM_BOOL` | default off. `addHelpButton` (`:131`) explains the merge-by-idnumber (existing ones updated, new ones added, **none removed**; off = always create a new one). 3rd arg of the importer (`:155`) |
