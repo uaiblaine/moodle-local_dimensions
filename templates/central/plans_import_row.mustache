@@ -1,0 +1,141 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/plans_import_row
+
+    One projected row of a learning plan CSV import preview: its verdict badge, why, what would
+    change, how it can be resolved, and its competency links.
+
+    Rendered on its own so the apply step can repaint a single row in place without rebuilding
+    the whole preview. The apply selection is read back from the data attributes on the wrapper —
+    item key, fingerprint and verdict — so the browser sends choices, never data.
+
+    Context variables required:
+    * itemkey (string) · fingerprint (string) · verdict (string) · verdictlabel (string)
+    * verdictbadge (string) · rownumber (int) · rownumberlabel (string)
+    * shortname (string) · templateidnumber (string)
+    * hasreason (bool) · reasonlabel (string) · hasdetail (bool) · detail (string)
+    * selectable (bool) · preselected (bool) · checkboxid (string) · selectlabel (string)
+    * hasdiff (bool) · diff (array) {field, from, to}
+    * hasremedies (bool) · remedies (array) {remedy, label, selected, name, id}
+    * haslinks (bool) · links (array) {itemkey, name, statuslabel, statusbadge, confidencelabel,
+      hasdetail, detail, selectable, preselected, checkboxid}
+    * hasblast (bool) · blastlabel (string)
+
+    Example context (json):
+    {
+        "itemkey": "t0",
+        "fingerprint": "6b2f0c1d",
+        "verdict": "update",
+        "verdictlabel": "Update",
+        "verdictbadge": "bg-primary",
+        "rownumber": 2,
+        "rownumberlabel": "Row 2",
+        "shortname": "Induction plan",
+        "templateidnumber": "TPL-IND",
+        "hasreason": false,
+        "reasonlabel": "",
+        "hasdetail": false,
+        "detail": "",
+        "selectable": true,
+        "preselected": true,
+        "checkboxid": "ld-tplimp-t0",
+        "selectlabel": "Select Induction plan",
+        "hasdiff": true,
+        "diff": [{"field": "shortname", "from": "Induction", "to": "Induction plan"}],
+        "hasremedies": false,
+        "remedies": [],
+        "haslinks": true,
+        "links": [
+            {"itemkey": "t0l0", "name": "Communication (COMM-01) · CORE", "statuslabel": "Matched",
+             "statusbadge": "bg-success", "confidencelabel": "Matched by ID number", "hasdetail": false,
+             "detail": "", "selectable": true, "preselected": true, "checkboxid": "ld-tplimp-t0l0"}
+        ],
+        "hasblast": true,
+        "blastlabel": "12 open plans, 3 completed plans, 1 cohorts, 1 competencies added, 0 kept"
+    }
+}}
+<div class="local-dimensions-tplimport-row" data-region="import-row" data-itemkey="{{itemkey}}"
+     data-fingerprint="{{fingerprint}}" data-verdict="{{verdict}}">
+    <div class="local-dimensions-tplimport-rowhead">
+        {{#selectable}}
+        <input type="checkbox" class="form-check-input mt-0" data-region="item-check" id="{{checkboxid}}"
+               {{#preselected}}checked{{/preselected}}>
+        <label class="visually-hidden" for="{{checkboxid}}">{{selectlabel}}</label>
+        {{/selectable}}
+        <span class="badge {{verdictbadge}}">{{verdictlabel}}</span>
+        <span class="local-dimensions-tplimport-name">{{shortname}}</span>
+        {{#templateidnumber}}<span class="local-dimensions-tplimport-id">{{templateidnumber}}</span>{{/templateidnumber}}
+        <span class="local-dimensions-tplimport-rownum">{{rownumberlabel}}</span>
+        <span class="local-dimensions-tplimport-outcome" data-region="outcome"></span>
+    </div>
+
+    {{#hasreason}}
+    <p class="local-dimensions-tplimport-reason">{{reasonlabel}}{{#hasdetail}} {{detail}}{{/hasdetail}}</p>
+    {{/hasreason}}
+
+    {{#hasdiff}}
+    <ul class="local-dimensions-tplimport-diff">
+        {{#diff}}
+        <li><span class="local-dimensions-tplimport-field">{{field}}</span>
+            <span class="local-dimensions-tplimport-from">{{from}}</span>
+            <span aria-hidden="true">&rarr;</span>
+            <span class="local-dimensions-tplimport-to">{{to}}</span></li>
+        {{/diff}}
+    </ul>
+    {{/hasdiff}}
+
+    {{#hasremedies}}
+    <div class="local-dimensions-tplimport-remedies" role="radiogroup"
+         aria-label="{{#str}}central_plans_import_row_remedy, local_dimensions{{/str}}">
+        <span class="local-dimensions-tplimport-sublabel">{{#str}}central_plans_import_row_remedy, local_dimensions{{/str}}</span>
+        {{#remedies}}
+        <span class="local-dimensions-tplimport-remedy">
+            <input type="radio" class="form-check-input mt-0" data-region="remedy" name="{{name}}" id="{{id}}"
+                   value="{{remedy}}" {{#selected}}checked{{/selected}}>
+            <label for="{{id}}">{{label}}</label>
+        </span>
+        {{/remedies}}
+    </div>
+    {{/hasremedies}}
+
+    {{#haslinks}}
+    <div class="local-dimensions-tplimport-links">
+        <span class="local-dimensions-tplimport-sublabel">{{#str}}central_plans_import_row_links, local_dimensions{{/str}}</span>
+        <ul>
+            {{#links}}
+            <li data-region="import-link" data-itemkey="{{itemkey}}">
+                {{#selectable}}
+                <input type="checkbox" class="form-check-input mt-0" data-region="link-check" id="{{checkboxid}}"
+                       {{#preselected}}checked{{/preselected}}>
+                <label for="{{checkboxid}}">{{name}}</label>
+                {{/selectable}}
+                {{^selectable}}
+                <span class="local-dimensions-tplimport-linkname">{{name}}</span>
+                {{/selectable}}
+                <span class="badge {{statusbadge}}">{{statuslabel}}</span>
+                {{#hasdetail}}<span class="local-dimensions-tplimport-linkdetail">{{detail}}</span>{{/hasdetail}}
+            </li>
+            {{/links}}
+        </ul>
+    </div>
+    {{/haslinks}}
+
+    {{#hasblast}}
+    <p class="local-dimensions-tplimport-blast">{{blastlabel}}</p>
+    {{/hasblast}}
+</div>

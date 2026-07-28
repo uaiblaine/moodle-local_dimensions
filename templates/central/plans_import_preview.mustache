@@ -1,0 +1,156 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/plans_import_preview
+
+    Body of the import-preview modal on the Competency hub Learning plans tab: what a learning
+    plan template CSV would do to this site, before anything is written.
+
+    A summary strip of counts, the reassurance that nothing has happened yet, the structures that
+    have to be imported first, the file-level notices, and then one collapsible group per verdict
+    holding the row partial. Blocked and conflicting groups start open, because those are the rows
+    that need a decision.
+
+    The wrapper carries the draft handle and the parse settings as data attributes, which is the
+    only state kept between the preview and the apply: the draft file is immutable and
+    user-scoped, so the item keys stay stable while the database is re-read.
+
+    Context variables required:
+    * draftitemid (int) · contextid (int) · delimiter (string) · encoding (string) · updateexisting (int)
+    * counts (array) {label, count, badge} · total (int) · selectable (int) · canapply (bool)
+    * hasrows (bool) · hasnotices (bool) · notices (array) {key, message}
+    * hasmissingstructures (bool) · missingstructures (string)
+    * truncated (bool) · truncatedlabel (string)
+    * groups (array) {verdict, label, badge, help, count, expanded, rows}
+
+    Example context (json):
+    {
+        "draftitemid": 12345,
+        "contextid": 1,
+        "delimiter": "comma",
+        "encoding": "UTF-8",
+        "updateexisting": 0,
+        "total": 1,
+        "selectable": 1,
+        "canapply": true,
+        "hasrows": true,
+        "counts": [
+            {"label": "Rows", "count": 1, "badge": "bg-secondary"},
+            {"label": "Create", "count": 1, "badge": "bg-success"}
+        ],
+        "hasnotices": true,
+        "notices": [{"key": "imagesnotcarried", "message": "Card and background images are not carried."}],
+        "hasmissingstructures": false,
+        "missingstructures": "",
+        "truncated": false,
+        "truncatedlabel": "",
+        "groups": [
+            {
+                "verdict": "create",
+                "label": "Create",
+                "badge": "bg-success",
+                "help": "No template on this site matches this row, so a new one is created here.",
+                "count": 1,
+                "expanded": true,
+                "rows": [
+                    {
+                        "itemkey": "t0",
+                        "fingerprint": "6b2f0c1d",
+                        "verdict": "create",
+                        "verdictlabel": "Create",
+                        "verdictbadge": "bg-success",
+                        "rownumber": 2,
+                        "rownumberlabel": "Row 2",
+                        "shortname": "Induction plan",
+                        "templateidnumber": "TPL-IND",
+                        "hasreason": false,
+                        "reasonlabel": "",
+                        "hasdetail": false,
+                        "detail": "",
+                        "selectable": true,
+                        "preselected": true,
+                        "checkboxid": "ld-tplimp-t0",
+                        "selectlabel": "Select Induction plan",
+                        "hasdiff": false,
+                        "diff": [],
+                        "hasremedies": false,
+                        "remedies": [],
+                        "haslinks": false,
+                        "links": [],
+                        "hasblast": false,
+                        "blastlabel": ""
+                    }
+                ]
+            }
+        ]
+    }
+}}
+<div class="local-dimensions-tplimport" data-region="import-preview" data-draftitemid="{{draftitemid}}"
+     data-contextid="{{contextid}}" data-delimiter="{{delimiter}}" data-encoding="{{encoding}}"
+     data-updateexisting="{{updateexisting}}" data-canapply="{{#canapply}}1{{/canapply}}{{^canapply}}0{{/canapply}}">
+
+    <div class="local-dimensions-tplimport-summary">
+        {{#counts}}
+        <span class="badge {{badge}}">{{label}}: {{count}}</span>
+        {{/counts}}
+    </div>
+
+    <p class="local-dimensions-tplimport-reassurance" role="status">
+        <i class="fa fa-info-circle me-1" aria-hidden="true"></i>{{#str}}central_plans_import_nothingwritten, local_dimensions{{/str}}
+    </p>
+
+    {{#hasmissingstructures}}
+    <div class="alert alert-warning" role="alert">
+        {{#str}}central_plans_import_missingstructures, local_dimensions, {{missingstructures}}{{/str}}
+    </div>
+    {{/hasmissingstructures}}
+
+    {{#hasnotices}}
+    <ul class="local-dimensions-tplimport-notices">
+        {{#notices}}
+        <li>{{message}}</li>
+        {{/notices}}
+    </ul>
+    {{/hasnotices}}
+
+    {{#truncated}}
+    <div class="alert alert-info" role="status">{{truncatedlabel}}</div>
+    {{/truncated}}
+
+    {{#groups}}
+    <section class="local-dimensions-tplimport-group" data-region="import-group" data-verdict="{{verdict}}">
+        <button type="button" class="local-dimensions-tplimport-grouphead" data-action="toggle-group"
+                aria-expanded="{{#expanded}}true{{/expanded}}{{^expanded}}false{{/expanded}}"
+                aria-controls="ld-tplimp-group-{{verdict}}">
+            <i class="fa fa-chevron-down local-dimensions-tplimport-chevron" aria-hidden="true"></i>
+            <span class="badge {{badge}}">{{label}}</span>
+            <span class="local-dimensions-tplimport-groupcount">{{count}}</span>
+            <span class="local-dimensions-tplimport-grouphelp">{{help}}</span>
+        </button>
+        <div class="local-dimensions-tplimport-rows" id="ld-tplimp-group-{{verdict}}"
+             {{^expanded}}hidden{{/expanded}}>
+            {{#rows}}
+            {{> local_dimensions/central/plans_import_row }}
+            {{/rows}}
+        </div>
+    </section>
+    {{/groups}}
+
+    {{^hasrows}}
+    <div class="alert alert-info" role="status">{{#str}}central_plans_import_norows, local_dimensions{{/str}}</div>
+    {{/hasrows}}
+</div>

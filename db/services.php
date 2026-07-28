@@ -326,6 +326,14 @@ $functions = [
         'capabilities' => 'moodle/competency:templateview',
         'ajax' => true,
     ],
+    'local_dimensions_preview_import_templates' => [
+        'classname' => 'local_dimensions\external\preview_import_templates',
+        'methodname' => 'execute',
+        'description' => 'Project an uploaded learning plan template CSV against this site without writing anything.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:templatemanage',
+        'ajax' => true,
+    ],
 
     // Competency hub Plans tab — cohort role assignments.
     'local_dimensions_list_template_cohort_roles' => [
