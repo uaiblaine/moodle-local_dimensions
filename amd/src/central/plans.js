@@ -712,7 +712,7 @@ const ACTION_HANDLERS = {
     },
     'browse-frameworks': (pane, region) => showCompetencyBrowser(pane, region).catch(notifyError),
     'export-templates': (pane, region) => openExportModal(region).catch(notifyError),
-    'import-templates': (pane, region) => openImportModal(region).catch(notifyError),
+    'import-templates': (pane, region) => openImportModal(pane, region).catch(notifyError),
     'manage-participants': (pane, region) => showParticipants(pane, region).catch(notifyError),
     'new-template': (pane, region) => openForm(
         pane,
