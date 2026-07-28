@@ -46,6 +46,18 @@ class lp_handler extends handler {
     protected static $singleton;
 
     /**
+     * The instance whose values are being saved right now, or 0.
+     *
+     * Core resolves editability with get_editable_fields($isnewinstance ? 0 : $instance->id)
+     * (customfield/classes/handler.php:707), so on the create path can_edit() is asked about
+     * instance 0 and cannot see which template it is about — which is exactly the case a
+     * category-scoped manager hits. The id is remembered here for the duration of the save.
+     *
+     * @var int
+     */
+    protected $savinginstanceid = 0;
+
+    /**
      * Returns the singleton instance.
      *
      * @param int $itemid
@@ -146,6 +158,7 @@ class lp_handler extends handler {
      * @return context
      */
     protected function resolve_edit_context(int $instanceid): context {
+        $instanceid = $instanceid > 0 ? $instanceid : $this->savinginstanceid;
         if ($instanceid > 0) {
             $template = \core_competency\template::get_record(['id' => $instanceid]);
             if ($template) {
@@ -260,7 +273,15 @@ class lp_handler extends handler {
     public function instance_form_save(\stdClass $instance, bool $isnewinstance = false) {
         $instanceid = (int) ($instance->id ?? 0);
         $before = $this->snapshot_instance_values($instanceid);
-        parent::instance_form_save($instance, $isnewinstance);
+        /* Remembered for can_edit(), which core asks about instance 0 whenever $isnewinstance is
+           true. Without it a manager holding templatemanage only in a course category writes ZERO
+           fields on the create path — the very case the per-instance resolution exists for. */
+        $this->savinginstanceid = $instanceid;
+        try {
+            parent::instance_form_save($instance, $isnewinstance);
+        } finally {
+            $this->savinginstanceid = 0;
+        }
         $changed = $this->diff_instance_values($before, $this->snapshot_instance_values($instanceid));
         $this->trigger_customfields_updated(template_customfields_updated::class, $instanceid, $isnewinstance, $changed);
     }

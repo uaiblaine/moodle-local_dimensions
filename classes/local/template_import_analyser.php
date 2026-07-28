@@ -1057,8 +1057,10 @@ class template_import_analyser {
             if ((int) $link['competencyid'] > 0 && template_import_verdict::link_is_resolved((string) $link['status'])) {
                 $fileids[] = (int) $link['competencyid'];
             }
-            if ($link['status'] === template_import_verdict::LINK_MATCHED
-                    || $link['status'] === template_import_verdict::LINK_MATCHEDFALLBACK) {
+            if (
+                $link['status'] === template_import_verdict::LINK_MATCHED
+                || $link['status'] === template_import_verdict::LINK_MATCHEDFALLBACK
+            ) {
                 $blast['linksadded']++;
             }
         }

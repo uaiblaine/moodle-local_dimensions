@@ -52,7 +52,7 @@ final class template_import_analyser_test extends \advanced_testcase {
             'shortname' => 'First',
             'idnumber' => 'C1',
         ]);
-        $existing = $ccg->create_template(['shortname' => 'Existing']);
+        $existing = $ccg->create_template(['shortname' => 'Existing', 'description' => '']);
         $this->set_template_idnumber((int) $existing->get('id'), 'TPL-1');
         $ccg->create_template(['shortname' => 'Taken']);
 
@@ -89,7 +89,11 @@ final class template_import_analyser_test extends \advanced_testcase {
         foreach ($plan->get_items() as $item) {
             $verdicts[$item['verdict']] = true;
         }
-        $this->assertArrayHasKey(template_import_verdict::VERDICT_UPDATE, $verdicts);
+        $this->assertArrayHasKey(
+            template_import_verdict::VERDICT_UPDATE,
+            $verdicts,
+            $this->describe($plan->get_item('t0'))
+        );
         $this->assertArrayHasKey(template_import_verdict::VERDICT_BLOCKED, $verdicts);
         $this->assertArrayHasKey(template_import_verdict::VERDICT_CONFLICT, $verdicts);
         $this->assertArrayHasKey(template_import_verdict::VERDICT_ORPHANLINK, $verdicts);
@@ -324,7 +328,7 @@ final class template_import_analyser_test extends \advanced_testcase {
      */
     public function test_a_matched_row_is_skipped_or_updated_by_the_flag(): void {
         $site = $this->prepare_site();
-        $stored = $site['generator']->create_template(['shortname' => 'Original']);
+        $stored = $site['generator']->create_template(['shortname' => 'Original', 'description' => '']);
         $this->set_template_idnumber((int) $stored->get('id'), 'TPL-M');
 
         $csv = $this->csv([
@@ -332,7 +336,7 @@ final class template_import_analyser_test extends \advanced_testcase {
         ]);
 
         $skipped = $this->first_item($this->analyse($csv, \context_system::instance(), false));
-        $this->assertSame(template_import_verdict::VERDICT_SKIP, $skipped['verdict']);
+        $this->assertSame(template_import_verdict::VERDICT_SKIP, $skipped['verdict'], $this->describe($skipped));
         $this->assertSame(template_import_verdict::REASON_UPDATEEXISTINGOFF, $skipped['reason']);
         $this->assertFalse($skipped['preselected']);
         $this->assertTrue($skipped['selectable']);
@@ -342,7 +346,7 @@ final class template_import_analyser_test extends \advanced_testcase {
         );
 
         $updated = $this->first_item($this->analyse($csv, \context_system::instance(), true));
-        $this->assertSame(template_import_verdict::VERDICT_UPDATE, $updated['verdict']);
+        $this->assertSame(template_import_verdict::VERDICT_UPDATE, $updated['verdict'], $this->describe($updated));
         $this->assertTrue($updated['preselected']);
         $this->assertSame((int) $stored->get('id'), $updated['matchedid']);
     }
@@ -355,7 +359,7 @@ final class template_import_analyser_test extends \advanced_testcase {
      */
     public function test_an_unchanged_row_is_insync_and_unticked(): void {
         $site = $this->prepare_site();
-        $stored = $site['generator']->create_template(['shortname' => 'Unchanged']);
+        $stored = $site['generator']->create_template(['shortname' => 'Unchanged', 'description' => '']);
         $this->set_template_idnumber((int) $stored->get('id'), 'TPL-S');
 
         $csv = $this->csv([
@@ -364,7 +368,7 @@ final class template_import_analyser_test extends \advanced_testcase {
 
         $item = $this->first_item($this->analyse($csv, \context_system::instance(), true));
 
-        $this->assertSame(template_import_verdict::VERDICT_INSYNC, $item['verdict']);
+        $this->assertSame(template_import_verdict::VERDICT_INSYNC, $item['verdict'], $this->describe($item));
         $this->assertSame([], $item['diff']);
         $this->assertTrue($item['selectable']);
         $this->assertFalse($item['preselected']);
@@ -399,7 +403,7 @@ final class template_import_analyser_test extends \advanced_testcase {
      */
     public function test_an_existing_link_is_reported_as_already_linked(): void {
         $site = $this->prepare_site();
-        $stored = $site['generator']->create_template(['shortname' => 'Has one']);
+        $stored = $site['generator']->create_template(['shortname' => 'Has one', 'description' => '']);
         $this->set_template_idnumber((int) $stored->get('id'), 'TPL-L');
         $site['generator']->create_template_competency([
             'templateid' => (int) $stored->get('id'),
@@ -415,7 +419,7 @@ final class template_import_analyser_test extends \advanced_testcase {
         $item = $this->first_item($this->analyse($csv, \context_system::instance(), true));
         $link = reset($item['links']);
 
-        $this->assertSame(template_import_verdict::LINK_ALREADYLINKED, $link['status']);
+        $this->assertSame(template_import_verdict::LINK_ALREADYLINKED, $link['status'], $this->describe($item));
         $this->assertFalse($link['selectable']);
         $this->assertSame(template_import_verdict::VERDICT_INSYNC, $item['verdict']);
     }
@@ -449,7 +453,7 @@ final class template_import_analyser_test extends \advanced_testcase {
      */
     public function test_the_fingerprint_moves_with_the_projection(): void {
         $site = $this->prepare_site();
-        $stored = $site['generator']->create_template(['shortname' => 'Fingerprinted']);
+        $stored = $site['generator']->create_template(['shortname' => 'Fingerprinted', 'description' => '']);
         $this->set_template_idnumber((int) $stored->get('id'), 'TPL-F');
 
         $csv = $this->csv([
@@ -463,7 +467,7 @@ final class template_import_analyser_test extends \advanced_testcase {
         $after = $this->first_item($this->analyse($renamed, \context_system::instance(), true))['fingerprint'];
 
         $this->assertNotEmpty($before);
-        $this->assertNotSame($before, $after);
+        $this->assertNotSame($before, $after, 'the fingerprint did not move when the projection did');
     }
 
     /**
@@ -513,6 +517,29 @@ final class template_import_analyser_test extends \advanced_testcase {
         $parsed = template_csv_serializer::parse($csv);
         $this->assertSame('', $parsed['error']);
         return (new template_import_analyser($parsed, $target, $updateexisting))->analyse();
+    }
+
+    /**
+     * One item as a one-line diagnosis, for assertion messages.
+     *
+     * A bare "expected insync, got blocked" says nothing about WHY the analyser blocked; the
+     * reason and detail it already computed are what makes a failure readable, and CI is the
+     * only place these tests ever run.
+     *
+     * @param array $item The projected item.
+     * @return string
+     */
+    private function describe(array $item): string {
+        return sprintf(
+            'verdict=%s reason=%s detail=%s matched=%d links=%d/%d/%d',
+            $item['verdict'],
+            $item['reason'],
+            $item['detail'],
+            $item['matchedid'],
+            $item['linksmatched'],
+            $item['linksunresolved'],
+            $item['linkstotal']
+        );
     }
 
     /**
@@ -566,11 +593,12 @@ final class template_import_analyser_test extends \advanced_testcase {
     private function snapshot(): array {
         global $DB;
 
-        $counts = [];
-        foreach ([
+        $tables = [
             'competency_template', 'competency_templatecomp', 'competency_templatecohort',
             'competency_plan', 'customfield_data', 'customfield_field', 'customfield_category', 'files',
-        ] as $table) {
+        ];
+        $counts = [];
+        foreach ($tables as $table) {
             $counts[$table] = $DB->count_records($table);
         }
         return ['counts' => $counts, 'templates' => $DB->get_records('competency_template', null, 'id')];

@@ -71,7 +71,11 @@ final class template_csv_importer_test extends \advanced_testcase {
         /* Second run: the row now matches the template it created and changes nothing, so it is
            in sync — selectable, unticked, and an update rather than a second template. */
         $second = $this->apply($csv, false, $this->tick($csv, false, ['t0']));
-        $this->assertSame(template_import_verdict::OUTCOME_UPDATED, $second[0]['outcome']);
+        $this->assertSame(
+            template_import_verdict::OUTCOME_UPDATED,
+            $second[0]['outcome'],
+            'second run: ' . json_encode($second[0])
+        );
         $this->assertSame(1, $DB->count_records('competency_template'));
     }
 
@@ -143,8 +147,16 @@ final class template_csv_importer_test extends \advanced_testcase {
 
         $this->assertSame(template_import_verdict::OUTCOME_CHANGED, $results[0]['outcome']);
         $this->assertSame(template_import_verdict::OUTCOME_CREATED, $results[1]['outcome']);
-        $this->assertFalse($DB->is_transaction_started());
         $this->assertNotFalse(template::get_record(['shortname' => 'Second']));
+
+        /* The property that matters is that no transaction was left open and none was force-rolled
+           back, either of which poisons every later write in the request. is_transaction_started()
+           cannot express it: advanced_testcase::setUp() wraps each test in its own delegated
+           transaction, so it is ALWAYS true here. Writing again after the run is what proves it. */
+        $after = $this->getDataGenerator()->get_plugin_generator('core_competency')
+            ->create_template(['shortname' => 'Written after the run']);
+        $this->assertNotFalse(template::get_record(['id' => (int) $after->get('id')]));
+        $this->assertSame(3, $DB->count_records('competency_template'));
     }
 
     /**
@@ -160,7 +172,7 @@ final class template_csv_importer_test extends \advanced_testcase {
             'shortname' => 'Kept',
             'idnumber' => 'C-KEPT',
         ]);
-        $stored = $site['generator']->create_template(['shortname' => 'Has extras']);
+        $stored = $site['generator']->create_template(['shortname' => 'Has extras', 'description' => '']);
         $this->set_template_idnumber((int) $stored->get('id'), 'TPL-K');
         $site['generator']->create_template_competency([
             'templateid' => (int) $stored->get('id'),
@@ -175,14 +187,14 @@ final class template_csv_importer_test extends \advanced_testcase {
              'competency_idnumber' => 'C1', 'sortorder' => '1'],
         ]);
 
-        $this->apply($csv, true, $this->tick($csv, true, ['t0']));
+        $applied = $this->apply($csv, true, $this->tick($csv, true, ['t0']));
 
         $ordered = [];
         foreach (template_competency::list_competencies((int) $stored->get('id')) as $competency) {
             $ordered[] = (string) $competency->get('idnumber');
         }
         // The file's own order first, then the link that was kept because nothing is ever removed.
-        $this->assertSame(['C2', 'C1', 'C-KEPT'], $ordered);
+        $this->assertSame(['C2', 'C1', 'C-KEPT'], $ordered, 'apply result: ' . json_encode($applied));
     }
 
     /**
