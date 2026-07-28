@@ -30,6 +30,21 @@ Feature: Manage learning plans from the Competency hub
     Then I should see "New name"
     And I should not see "Old name"
 
+  Scenario: The CSV transfer buttons open their modals
+    Given the following "core_competency > templates" exist:
+      | shortname |
+      | Induction |
+    When I visit "/local/dimensions/central.php"
+    And I click on "Learning plans" "link"
+    Then I should see "Import templates"
+    And I should see "Export templates"
+    # Import first: its modal has a Cancel button to close, the export one is header-close only.
+    When I click on "Import templates" "button"
+    Then I should see "CSV file" in the "Import learning plan templates from CSV" "dialogue"
+    And I click on "Cancel" "button" in the "Import learning plan templates from CSV" "dialogue"
+    When I click on "Export templates" "button"
+    Then I should see "Templates to export" in the "Export learning plan templates to CSV" "dialogue"
+
   Scenario: Delete a template that has no plans
     Given the following "core_competency > templates" exist:
       | shortname  |
