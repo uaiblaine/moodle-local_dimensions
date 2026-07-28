@@ -80,4 +80,54 @@ final class helper_structure_nodes_test extends advanced_testcase {
         $this->assertArrayHasKey('rulelabel', $node);
         $this->assertNotSame('', (string) $node['rulelabel']);
     }
+
+    /**
+     * A node carries the custom colours set on its competency.
+     *
+     * This pins an assumption the node query depends on rather than a behaviour of our own.
+     * The colour fields are customfield **text** fields, whose data_controller::datafield() is
+     * `charvalue` — yet {@see helper::structure_nodes()} reads them from the generic `value`
+     * column. That is correct, because core's data_controller::instance_form_save() writes the
+     * submitted value to BOTH the type-specific column and `value`
+     * (`customfield/classes/data_controller.php:206-210`). If core ever stopped mirroring, three
+     * of this plugin's batch queries would silently start returning empty colours, and this test
+     * is what would say so.
+     *
+     * @return void
+     */
+    public function test_nodes_carry_the_competency_custom_colours(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        helper::ensure_custom_fields_exist(helper::AREA_COMPETENCY);
+
+        $cgen = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $cgen->create_framework();
+        $parent = $cgen->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'shortname' => 'Parent',
+        ]);
+        $child = $cgen->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'parentid' => $parent->get('id'),
+            'shortname' => 'Coloured',
+        ]);
+
+        // Through the handler, which is the only way the plugin ever writes these values.
+        $formdata = (object) (['id' => (int) $child->get('id')] + helper::customfields_to_formdata([
+            'cf_bgcolor' => '#ff0000',
+            'cf_textcolor' => '#ffffff',
+        ], helper::AREA_COMPETENCY));
+        customfield\competency_handler::create()->instance_form_save($formdata, true);
+
+        $records = competency::get_records(
+            ['competencyframeworkid' => $framework->get('id'), 'parentid' => $parent->get('id')],
+            'sortorder',
+            'ASC'
+        );
+        $nodes = helper::structure_nodes($records, $framework, $framework->get_context());
+
+        $this->assertCount(1, $nodes);
+        $this->assertSame('#ff0000', (string) $nodes[0]['bgcolor']);
+        $this->assertSame('#ffffff', (string) $nodes[0]['textcolor']);
+    }
 }
