@@ -131,8 +131,10 @@ class template_csv_importer {
         if ($item === null) {
             return $this->result($itemkey, template_import_verdict::OUTCOME_GONE, 0);
         }
-        if ((string) $item['verdict'] !== (string) ($selection['verdict'] ?? '')
-                || (string) ($item['fingerprint'] ?? '') !== (string) ($selection['fingerprint'] ?? '')) {
+        if (
+            (string) $item['verdict'] !== (string) ($selection['verdict'] ?? '')
+            || (string) ($item['fingerprint'] ?? '') !== (string) ($selection['fingerprint'] ?? '')
+        ) {
             // Either the file moved under the operator or the site did. Nothing is written and the
             // fresh item goes back so the row repaints and the decision is made again.
             return $this->result($itemkey, template_import_verdict::OUTCOME_CHANGED, 0);
@@ -142,8 +144,10 @@ class template_csv_importer {
         }
 
         $remedy = (string) ($selection['remedy'] ?? '');
-        if ($remedy !== '' && $remedy !== template_import_verdict::REMEDY_NONE
-                && !in_array($remedy, array_column($item['remedies'], 'remedy'), true)) {
+        if (
+            $remedy !== '' && $remedy !== template_import_verdict::REMEDY_NONE
+            && !in_array($remedy, array_column($item['remedies'], 'remedy'), true)
+        ) {
             return $this->result($itemkey, template_import_verdict::OUTCOME_CHANGED, 0);
         }
         if (!empty($item['remedies']) && ($remedy === '' || $remedy === template_import_verdict::REMEDY_NONE)) {
