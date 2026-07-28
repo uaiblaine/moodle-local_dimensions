@@ -1,201 +1,214 @@
-# Mapa de Campos — `MOD.DETAIL` · O card é o diálogo (as-is)
+# Field map — `MOD.DETAIL` · The card is the dialog (as-is)
 
-A superfície mais incomum do plugin: um modal **sem cabeçalho**, em que **o card de detalhe da
-competência _é_ o diálogo**. Não há casca do core visível — nem título, nem barra, nem `.btn-close`,
-nem rodapé. O `core/modal` vira um contêiner transparente de 620px e tudo o que o usuário vê é o
-mesmo card que a aba Estrutura mostra no painel inline, flutuando sobre o backdrop, com um botão de
-fechar **próprio**, desenhado dentro do corpo e pintado em JS com a cor de texto da competência.
+The plugin's most unusual surface: a modal **with no header**, in which **the competency's detail
+card _is_ the dialog**. No core shell is visible — no title, no bar, no `.btn-close`, no footer. The
+`core/modal` becomes a transparent 620px container and everything the user sees is the same card the
+Competencies tab shows in its inline panel, floating over the backdrop, with a close button **of its
+own**, drawn inside the body and painted in JS with the competency's text colour.
 
-É também o único lugar do kit onde o leitor **não consegue inferir a construção sem abrir três
-arquivos** — o Mustache não diz que o cabeçalho some, o JS não diz por que o `title` é passado, e o
-CSS não diz quem aplica a classe. Por isso **o contrato de CSS mora aqui**: é o único lugar onde ele
-seria escrito.
+It is also the only place in the kit where the reader **cannot infer the construction without
+opening three files** — the Mustache does not say the header disappears, the JS does not say why the
+`title` is passed, and the CSS does not say who applies the class. That is why **the CSS contract
+lives here**: it is the only place where it would be written.
 
-> **Nome do arquivo × nome do ID — leia isto antes de procurar `MOD.STRUCTRELATED`.**
-> O arquivo se chama `mod-detail.md` porque o **ID** é `MOD.DETAIL` — batizado antes, no `pln-plans.md`. O **template** ainda se chama `structure_related_modal.mustache`: é o nome do template que envelheceu, não o ID.
-> O **prefixo é `MOD.DETAIL`**, e não `MOD.STRUCTRELATED`, porque **o modal já tinha nome**: o
-> [`pln-plans.md`](pln-plans.md) o batizou em `:234` (`MOD.DETAIL` ← `competency_detail.js:277`) e o
-> referencia de novo em `:186`. Emitir um segundo nome para o mesmo diálogo é exatamente o defeito
-> que a convenção de IDs proíbe (o caso `MOD.BROWSER-ACTION` × `PLN-BROWSE`), e deixaria a referência
-> do `pln-plans.md` apontando para o nada. **O nome do template é que envelheceu**, não o ID: ele
-> nasceu como alvo dos chips da Estrutura (`47677dd`) e **um dia depois** virou o card compartilhado
-> das duas abas (`a59d5fb`, que extraiu o `competency_detail.js` e tirou 261 linhas do `structure.js`).
-> Hoje "structure related" descreve **uma** das duas portas.
+> **File name × ID name — read this before going looking for `MOD.STRUCTRELATED`.**
+> The file is called `mod-detail.md` because the **ID** is `MOD.DETAIL` — named earlier, in `pln-plans.md`. The **template** is still called `structure_related_modal.mustache`: it is the template's name that aged, not the ID.
+> The **prefix is `MOD.DETAIL`**, not `MOD.STRUCTRELATED`, because **the modal already had a name**:
+> [`pln-plans.md`](pln-plans.md) named it in the *Modals reached* table (`MOD.DETAIL` ←
+> `competency_detail.js:277`) and refers to it again on the `PLN-COMP-NAME` row. Issuing a second
+> name for the same dialog is exactly the defect the ID convention forbids (the
+> `MOD.BROWSER-ACTION` × `PLN-BROWSE` case), and it would leave `pln-plans.md`'s reference pointing
+> at nothing. **It is the template's name that aged**, not the ID: it was born as the target of the
+> Competencies tab's chips (`47677dd`) and **one day later** became the card shared by the two tabs
+> (`a59d5fb`, which extracted `competency_detail.js` and took 261 lines out of `structure.js`).
+> Today "structure related" describes **one** of the two doors.
 
 - **Mustache:** [`structure_related_modal.mustache`](../../../templates/central/structure_related_modal.mustache)
-  (46, a casca headless) + [`structure_detail_content.mustache`](../../../templates/central/structure_detail_content.mustache)
-  (126, **o partial compartilhado com o painel inline** — é o que faz os dois visuais serem idênticos
-  por construção, não por coincidência)
+  (46, the headless shell) + [`structure_detail_content.mustache`](../../../templates/central/structure_detail_content.mustache)
+  (126, **the partial shared with the inline panel** — it is what makes the two visuals identical by
+  construction, not by coincidence)
 - **AMD:** [`competency_detail.js`](../../../amd/src/central/competency_detail.js) (297) —
-  `openCompetencyDetailModal` em `:265-297`; `renderDetailInto` (`:220-226`), `nodeToDetailData`
-  (`:235-253`), `applyHeaderColors` (`:121-137`), `darkenHex` (`:102-112`). Importa `core/modal`
-  (`:29`) e `local_dimensions/collapsible_description` (`:34`)
-- **WS:** `local_dimensions_get_structure_node` (`db/services.php:125-126`) — **sempre busca o nó
-  fresco**, mesmo quando o chamador já tem os dados na linha (ver a regra 4)
-- **CSS:** [`styles.css:5147-5199`](../../../styles.css) — o contrato inteiro (tabela abaixo); mais a
-  **exclusão** em `:3557`, `:3571`, `:3581-3582`, e o card herdado em `:4300-4304` (raio 24px) e
-  `:4310-4316` (o gradiente 140deg)
-- **Behat:** nenhum
-- **Tela no DS:** [`screens/mod-detail.html`](../screens/mod-detail.html) — **um painel
-  as-is só**: nada está proposto para mudar
+  `openCompetencyDetailModal` at `:265-297`; `renderDetailInto` (`:220-226`), `nodeToDetailData`
+  (`:235-253`), `applyHeaderColors` (`:121-137`), `darkenHex` (`:102-112`). It imports `core/modal`
+  (`:29`) and `local_dimensions/collapsible_description` (`:34`)
+- **WS:** `local_dimensions_get_structure_node` (`db/services.php:125-132`) — **it always fetches the
+  node fresh**, even when the caller already holds the data on the row (see rule 4)
+- **CSS:** [`styles.css:6660-6712`](../../../styles.css) — the whole contract (table below); plus the
+  **exclusion** at `:5074`, `:5088`, `:5098-5099`, and the inherited card at `:5813-5817` (24px
+  radius) and `:5823-5830` (the 140deg gradient)
+- **Behat:** none
+- **Screen in the DS:** [`screens/mod-detail.html`](../screens/mod-detail.html) — single panel
 
-**Abreviações usadas nas tabelas:** `js:` = `amd/src/central/competency_detail.js` · `mustache:` =
+**Abbreviations used in the tables:** `js:` = `amd/src/central/competency_detail.js` · `mustache:` =
 `templates/central/structure_related_modal.mustache` · `detail:` =
-`templates/central/structure_detail_content.mustache` · `css:` = `styles.css`. Caminhos que começam
-com `lib/` são do **core**, relativos a `public/`.
+`templates/central/structure_detail_content.mustache` · `css:` = `styles.css`. Paths that begin with
+`lib/` are **core** (relative to `public/`) and are cited **without a line number**: the core
+checkout does not live in this repository, so no line of it is verifiable from here.
 
-## A armadilha de nomes — respondida de forma direta
+## The name trap — answered head-on
 
-Há **dois** modais com "related" no nome, e eles são **coisas diferentes**:
+There are **two** modals with "related" in the name, and they are **different things**:
 
-| | `MOD.RELATED` ([`mod-related.md`](mod-related.md)) | **`MOD.DETAIL`** (este) |
+| | `MOD.RELATED` ([`mod-related.md`](mod-related.md)) | **`MOD.DETAIL`** (this one) |
 | --- | --- | --- |
-| **O que é** | o **gerenciador** de relações: lista, remove, adiciona pela árvore | o **card** da competência referenciada, como diálogo |
-| **Abre por** | `EST-DETAIL-RELATED` — o botão ⇄ do **sticky-footer** (`structure_footer_actions.mustache:57-60`) | os **chips** (`MOD.RELATED-CHIP`) e os **nomes** da aba Planos (`PLN-COMP-NAME`) |
-| **Módulo** | `related_competencies.js:248` | `competency_detail.js:277` |
-| **Cabeçalho do core** | **visível** (título "Competências referenciadas — {nome}") | **oculto** (`css:5158-5160`) |
-| **Carrega `.local-dimensions-related-modal`** | **não** | **sim** — `js:285` |
+| **What it is** | the relations **manager**: it lists, removes, adds from the tree | the **card** of the referenced competency, as a dialog |
+| **Opened by** | `EST-DETAIL-RELATED` — the ⇄ button in the **sticky footer** (`structure_footer_actions.mustache:57-60`) | the **chips** (`MOD.RELATED-CHIP`) and the **names** on the Learning plans tab (`PLN-COMP-NAME`) |
+| **Module** | `related_competencies.js:239` | `competency_detail.js:277` |
+| **Core header** | **visible** (title "Related competencies — {name}") | **hidden** (`css:6671-6673`) |
+| **Carries `.local-dimensions-related-modal`** | **no** | **yes** — `js:285` |
 
-**Então: quem carrega a classe `.local-dimensions-related-modal` é este modal — o card headless.** Ela
-é aplicada em `js:285` (`root.addClass('local-dimensions-related-modal')`), **depois** do
-`Modal.create`, na raiz retornada por `modal.getRoot()`. O `MOD.RELATED`, apesar do nome quase igual
-e de ser *o* modal "de referenciadas", **não** a carrega.
+**So: the one that carries the `.local-dimensions-related-modal` class is this modal — the headless
+card.** It is applied at `js:285` (`root.addClass('local-dimensions-related-modal')`), **after** the
+`Modal.create`, on the root returned by `modal.getRoot()`. `MOD.RELATED`, despite the almost
+identical name and being *the* "referenced competencies" modal, does **not** carry it.
 
-**E o que o `:not()` protege?** O restyle de `.btn-close` do plugin (`css:3550-3586`) pinta um chip
-azul-claro com um "×" azul-escuro em **todo** modal que tenha conteúdo do plugin no corpo. O seletor é
-`.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .btn-close`
-— ou seja, ele **exclui deste modal** o restyle que aplica a todos os outros. O comentário do
-`css:3554-3555` diz o motivo: *"the referenced-competency modal keeps its own close button (its
-header is hidden), so it is excluded"*.
+**And what does the `:not()` protect?** The plugin's `.btn-close` restyle (`css:5063-5103`) paints a
+1.75rem light-blue chip (`#e7f0f9`) with a dark-blue "×" (`#0f4d85`) on **every** modal that has
+plugin content in its body. The selector is
+`.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close`
+(`css:5074`) — that is, it **excludes this modal** from the restyle it applies to all the others. The
+comment at `css:5067-5068` gives the reason: *"the referenced-competency modal keeps its own close
+button (its header is hidden), so it is excluded"*.
 
-**Ressalva medida, porque o comentário quase se contradiz:** hoje a exclusão **não protege nada que
-seja pintado**. O `.btn-close` do core mora dentro do `.modal-header` (`lib/templates/modal.mustache:51`,
-dentro do `:46`), e esse cabeçalho é `display: none` (`css:5158-5160`). Um ancestral `display: none`
-apaga a subárvore inteira — declarar `display: inline-flex` no descendente não a ressuscita. O
-`.btn-close` deste modal **nunca renderiza, com ou sem o `:not()`**; e o botão do corpo tem classe
-própria (`.local-dimensions-related-modal-close`), que o seletor não alcança. A exclusão é, portanto,
-**intenção declarada + seguro** para o dia em que o cabeçalho deixar de ser oculto — não um mecanismo
-ativo. Registrado como **redundância deliberada**, não como erro: o parêntese do próprio comentário
-("its header is hidden") é a razão de ela ser redundante.
+**Measured caveat, because the comment almost contradicts itself:** today the exclusion **protects
+nothing that gets painted** — and the selector itself reinforces that. Core's `.btn-close` lives
+inside `.modal-header` (`lib/templates/modal.mustache`), and that header is `display: none`
+(`css:6671-6673`). An ancestor with `display: none` erases the whole subtree — declaring
+`display: inline-flex` on a descendant does not resurrect it. After `02713fb` the selector began
+traversing `.modal-header` **explicitly** (to leave the `.btn-close` of a toast hosted in the body
+with core's look, `css:5071-5072`), which makes the redundancy even more literal: the target is
+declaredly inside the hidden node. This modal's `.btn-close` **never renders, with or without the
+`:not()`**; and the body's button has a class of its own (`.local-dimensions-related-modal-close`),
+which the selector does not reach. The exclusion is therefore **declared intent + insurance** for the
+day the header stops being hidden — not an active mechanism. Recorded as **deliberate redundancy**,
+not as an error: the parenthetical in the comment itself ("its header is hidden") is the reason it is
+redundant.
 
-## O contrato de CSS — `css:5147-5199`
+## The CSS contract — `css:6660-6712`
 
-Cinco regras transformam um `core/modal` comum no card. **Nenhuma tem `!important`**; todas vencem
-por especificidade de classe.
+Five rules turn an ordinary `core/modal` into the card. **None of them uses `!important`**; they all
+win on class specificity.
 
-| Alvo | Declaração | Origem | Por quê |
+| Target | Declaration | Origin | Why |
 | --- | --- | --- | --- |
-| `.modal-dialog` | `max-width: 620px` | `css:5150-5151` | mais estreito que o `modal-lg` — **e o sobrepõe**: o `js:280` passa `large: true`, que põe `.modal-lg` (800px) no diálogo, e `.local-dimensions-related-modal .modal-dialog` (0,2,0) ganha de `.modal-lg` (0,1,0). O `large: true` é **letra morta** |
-| `.modal-dialog` | `border-radius: 24px` | `css:5155` | **não é decoração** — o diálogo é transparente, então nada dessa borda aparece. Ela existe **só pelo anel de foco**: o `core/modal` foca o `.modal-dialog` ao abrir (`lib/amd/src/modal.js:899` → `getModal().focus()`, e o `tabindex="0"` em `lib/templates/modal.mustache:44`). Sem o raio, o anel sairia **retangular em volta de um card arredondado**. Os 24px casam com o raio do card (`css:4301`), e o comentário `css:5153-5154` diz isso |
-| `.modal-header` | `display: none` | `css:5158-5160` | some com título **e** `.btn-close` do core de uma vez |
-| `.modal-content` | `border: 0` · `background: transparent` · `box-shadow: none` | `css:5162-5166` | apaga a casca: o que dá fundo, borda e sombra é o **card** (`css:4302-4303`) |
-| `.modal-body` | `padding: 0` | `css:5168-5170` | o card encosta na borda do diálogo — é o que faz o anel de foco "abraçar" o card |
+| `.modal-dialog` | `max-width: 620px` | `css:6663-6664` | narrower than `modal-lg` — **and it overrides it**: `js:280` passes `large: true`, which puts `.modal-lg` (800px) on the dialog, and `.local-dimensions-related-modal .modal-dialog` (0,2,0) beats `.modal-lg` (0,1,0). The `large: true` is **dead letter** |
+| `.modal-dialog` | `border-radius: 24px` | `css:6668` | **not decoration** — the dialog is transparent, so none of that border shows. It exists **only for the focus ring**: `core/modal` focuses the `.modal-dialog` on open (`getModal().focus()` in `lib/amd/src/modal.js`, and the `tabindex="0"` in `lib/templates/modal.mustache`). Without the radius the ring would come out **rectangular around a rounded card**. The 24px matches the card's radius (`css:5814`), and the comment at `css:6666-6667` says so |
+| `.modal-header` | `display: none` | `css:6671-6673` | removes the title **and** core's `.btn-close` in one go |
+| `.modal-content` | `border: 0` · `background: transparent` · `box-shadow: none` | `css:6675-6679` | erases the shell: what provides background, border and shadow is the **card** (`css:5815-5816`) |
+| `.modal-body` | `padding: 0` | `css:6681-6683` | the card meets the dialog's edge — that is what makes the focus ring "hug" the card |
 
-## Casca headless
+## Headless shell
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.DETAIL-MODAL` | — | `core/modal` | `js:277-283` | `title`, `body`, `large: true`, `show: true`, `removeOnClose: true` | `core/modal` **puro** — sem `footer`. A classe que dispara todo o contrato entra **depois**, em `js:285` |
-| `MOD.DETAIL-TITLE` | {shortname} | título | `js:278` | `title: data.name` | **nunca pinta** (o cabeçalho é `display: none`) — **mas não é código morto**: continua sendo o **nome acessível** do diálogo. Medido, não deduzido — ver a regra 1 |
-| `MOD.DETAIL-CARD` | `[sem rótulo]` | região/raiz | `mustache:36` | **três** classes: `.local-dimensions-central-plans-detail` + `.local-dimensions-central-structure-detail` + `.local-dimensions-related-modal-card` | as duas primeiras são **emprestadas**: trazem o raio de 24px, o fundo, a sombra (`css:4300-4304`) e o gradiente do cabeçalho (`css:4310-4316`) já prontos do painel inline. A terceira é só dele: `position: relative` (âncora do botão de fechar) + `overflow: hidden` (clipa o gradiente nos cantos arredondados) — `css:5172-5175` |
-| `MOD.DETAIL-CLOSE` | Fechar | botão | `mustache:37-40` | `data-action="close-related-modal"` · `aria-label` = str core `closebuttontitle` · `fa fa-times` | **mora no corpo, não no cabeçalho** — é o substituto do `.btn-close`. `css:5177-5194`: `position: absolute` a 18px do topo/direita, 36×36, `z-index: 3`, fundo `rgba(255,255,255,0.16)` e borda `rgba(255,255,255,0.28)` — um "vidro" sobre o gradiente. A **cor** é escrita em JS (`js:294`): `data.textcolor` da competência, com **fallback `'#fff'`**. O listener é direto no elemento (`js:295`), não delegado |
-| `MOD.DETAIL-CONTENT` | `[sem rótulo]` | contêiner-JS | `mustache:41-45` | `data-region="detail-content"` | onde o partial entra. O `js:286` o localiza na raiz do modal e **desiste calado** se não achar (`:287-289`) |
+| `MOD.DETAIL-MODAL` | — | `core/modal` | `js:277-283` | `title`, `body`, `large: true`, `show: true`, `removeOnClose: true` | **plain** `core/modal` — no `footer`. The class that triggers the whole contract comes in **afterwards**, at `js:285` |
+| `MOD.DETAIL-TITLE` | {shortname} | title | `js:278` | `title: data.name` | **never paints** (the header is `display: none`) — **but it is not dead code**: it remains the dialog's **accessible name**. Measured, not deduced — see rule 1 |
+| `MOD.DETAIL-CARD` | `[no label]` | region/root | `mustache:36` | **three** classes: `.local-dimensions-central-plans-detail` + `.local-dimensions-central-structure-detail` + `.local-dimensions-related-modal-card` | the first two are **borrowed**: they bring the 24px radius, the background, the shadow (`css:5813-5817`) and the header gradient (`css:5823-5830`) ready-made from the inline panel. The third is its own: `position: relative` (the close button's anchor) + `overflow: hidden` (clips the gradient at the rounded corners) — `css:6685-6688` |
+| `MOD.DETAIL-CLOSE` | Close | button | `mustache:37-40` | `data-action="close-related-modal"` · `aria-label` = core str `closebuttontitle` (`mustache:38`) · `fa fa-times` (`:39`) | **it lives in the body, not in the header** — it is the substitute for `.btn-close`. `css:6690-6707`: `position: absolute` 18px from the top/right, 36×36, `z-index: 3`, `rgba(255,255,255,0.16)` background and `rgba(255,255,255,0.28)` border — a "glass" over the gradient; hover/focus rises to `rgba(255,255,255,0.3)` (`css:6709-6712`). The **colour** is written in JS (`js:294`): the competency's `data.textcolor`, with a **`'#fff'` fallback**. The listener is on the element directly (`js:295`), not delegated |
+| `MOD.DETAIL-CONTENT` | `[no label]` | JS container | `mustache:41-45` | `data-region="detail-content"` | where the partial goes. `js:286` locates it in the modal root and **gives up silently** if it finds nothing (`:287-289`) |
 
-## Conteúdo — o partial compartilhado, com dois flags desligados
+## Content — the shared partial, with two flags switched off
 
-O corpo do card **não tem IDs próprios**: é o `structure_detail_content.mustache` inteiro, o **mesmo**
-partial do painel inline da aba Estrutura, cujos elementos já são `EST-DETAIL-*` no
-[`est-structure.md`](est-structure.md). Este mapa **não os re-emite**. O que muda aqui é o contexto:
-`{linksclickable: false, showrelated: false}` (`js:275`), e ele muda **duas** coisas visíveis.
+The card's body **has no IDs of its own**: it is the whole `structure_detail_content.mustache`, the
+**same** partial as the Competencies tab's inline panel, whose elements are already `EST-DETAIL-*` in
+[`est-competencies.md`](est-competencies.md). This map does **not** re-issue them. What changes here is the
+context: `{linksclickable: false, showrelated: false}` (`js:275`), and it changes **two** visible
+things.
 
-| Elemento (dono) | No painel inline | **Neste modal** | Mecanismo |
+| Element (owner) | In the inline panel | **In this modal** | Mechanism |
 | --- | --- | --- | --- |
-| `EST-DETAIL-COURSES` · `-ACTIVITIES` · `-PLANS` | `<button data-action="show-usage">` → abre o `MOD.USAGE` | `<div>` **inerte** — número sem clique | `{{#linksclickable}}` / `{{^linksclickable}}` (`detail:78-86`, `:90-98`, `:102-110`). **É o que impede empilhar um modal sobre este** |
-| `MOD.RELATED-CHIPS` (a seção ⇄ de referenciadas) | renderiza, com contador e chips | **não existe no DOM** | `{{#showrelated}}` (`detail:116-125`). Por isso `populateRelated` (`structure.js:477-503`) sai calado quando a região não está lá |
-| Cabeçalho, chips, descrição | idênticos | idênticos | mesmo `renderDetailInto` (`js:220-226`) |
+| `EST-DETAIL-COURSES` · `-ACTIVITIES` · `-PLANS` | `<button data-action="show-usage">` → opens `MOD.USAGE` | an **inert** `<div>` — a number with no click | `{{#linksclickable}}` / `{{^linksclickable}}` (`detail:78-86`, `:90-98`, `:102-110`). **It is what stops a modal being stacked on top of this one** |
+| `MOD.RELATED-CHIPS` (the ⇄ referenced section) | renders, with counter and chips | **does not exist in the DOM** | `{{#showrelated}}` (`detail:116-125`). Which is why `populateRelated` (`structure.js:478-504`) returns silently when the region is not there (`:482-484`) |
+| Header, chips, description | identical | identical | the same `renderDetailInto` (`js:220-226`) |
 
-**A consequência de design:** não há referenciadas dentro de referenciadas, e não há uso dentro de
-detalhe. O card é uma **folha** — abre, informa, fecha. Nenhum modal empilha sobre ele.
+**The design consequence:** there are no referenced-within-referenced, and no usage within detail.
+The card is a **leaf** — it opens, it informs, it closes. No modal stacks on top of it.
 
-## Portas de entrada — **duas, nenhuma nova aqui**
+## Entry doors — **two, none new here**
 
-| ID (dono) | Aba | Origem | Caminho |
+| ID (owner) | Tab | Origin | Path |
 | --- | --- | --- | --- |
-| `MOD.RELATED-CHIP` | Estrutura ([`mod-related.md`](mod-related.md)) | `structure_related_chips.mustache:36-43` | `data-action="open-related"` + `data-id` → `structure.js:1244-1248` → `openCompetencyDetailModal(id)` |
-| `PLN-COMP-NAME` | Planos ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:381-382` | `data-action="open-competency-detail"` + `data-id` → `plans.js:754-755` → mesmo `openCompetencyDetailModal(id)` |
+| `MOD.RELATED-CHIP` | Structure ([`mod-related.md`](mod-related.md)) | `structure_related_chips.mustache:36-42` | `data-action="open-related"` + `data-id` (`:38`) → `structure.js:1245-1249` → `openCompetencyDetailModal(id)` (`:1247`) |
+| `PLN-COMP-NAME` | Learning plans ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:381-382` | `data-action="open-competency-detail"` + `data-id` → `plans.js:743-744` → the same `openCompetencyDetailModal(id)` |
 
-**Nenhuma das duas é rodapé** — e é o único modal do kit de que isso é verdade. Toda a Central abre
-modal por botão de sticky-footer; este abre por **um chip** e por **um nome clicável no meio de uma
-lista**. O `pln-plans.md:234` já registrava a observação.
+**Neither of the two is a footer** — and it is the only modal in the kit of which that is true. The
+whole hub opens modals from a sticky-footer button; this one opens from **a chip** and from **a
+clickable name in the middle of a list**. The *Modals reached* table in
+[`pln-plans.md`](pln-plans.md) already recorded the observation.
 
-## Regras de negócio (verificadas no código)
+## Business rules (verified in the code)
 
-### 1. O título nunca pinta — e mesmo assim nomeia o diálogo (medido)
+### 1. The title never paints — and still it names the dialog (measured)
 
-O `js:278` passa `title: data.name`. O cabeçalho é `display: none` (`css:5158-5160`), então **nada
-disso aparece na tela**. A conclusão tentadora — "o `title` é código morto, pode sair" — está
-**errada**.
+`js:278` passes `title: data.name`. The header is `display: none` (`css:6671-6673`), so **none of
+this appears on screen**. The tempting conclusion — "the `title` is dead code, it can go" — is
+**wrong**.
 
-O `core/modal` liga `aria-labelledby="{{uniqid}}-modal-title"` na raiz do diálogo
-(`lib/templates/modal.mustache:43`) apontando para o `<h5 id="{{uniqid}}-modal-title">` do `:49` — que
-está **dentro** do cabeçalho oculto. Pela AccName, um nó oculto **diretamente referenciado** por
-`aria-labelledby` **entra** no cálculo do nome acessível.
+`core/modal` sets `aria-labelledby="{{uniqid}}-modal-title"` on the dialog root
+(`lib/templates/modal.mustache`), pointing at the `<h5 id="{{uniqid}}-modal-title">` — which is
+**inside** the hidden header. Under AccName, a hidden node **directly referenced** by
+`aria-labelledby` **does** enter the accessible-name computation.
 
-**Medido em Chromium** (árvore de acessibilidade real, com controles positivo e negativo, sobre uma
-réplica da estrutura do `core/modal` + a regra do plugin):
+**Measured in Chromium** (real accessibility tree, with positive and negative controls, over a
+replica of `core/modal`'s structure + the plugin's rule):
 
-- **caso real** (cabeçalho `display:none`, `aria-labelledby` → `h5` lá dentro): a subárvore do
-  cabeçalho aparece como `ignored` — o `h5` **não chega à árvore** — e mesmo assim o diálogo sai como
-  **`dialog "Comunicação Assertiva" modal`**. **Nomeado.**
-- **controle positivo** (mesmo diálogo, cabeçalho visível): `dialog "Visible Title Control" modal`.
-- **controle negativo** (`aria-labelledby` apontando para um id inexistente): `dialog modal` — **sem
-  nome**, provando que a ferramenta mostra a ausência quando ela existe.
+- **real case** (header `display:none`, `aria-labelledby` → the `h5` inside it): the header's subtree
+  shows up as `ignored` — the `h5` **never reaches the tree** — and even so the dialog comes out as
+  **`dialog "Comunicação Assertiva" modal`**. **Named.**
+- **positive control** (same dialog, header visible): `dialog "Visible Title Control" modal`.
+- **negative control** (`aria-labelledby` pointing at a non-existent id): `dialog modal` — **no
+  name**, proving the tool shows the absence when there is one.
 
-Ou seja: **o `title` é a única coisa que nomeia este diálogo para leitor de tela.** Tirá-lo deixaria o
-card visualmente idêntico e o diálogo anônimo. É a razão de o `MOD.DETAIL-TITLE` ter ID mesmo sem
-pintar um pixel.
+That is: **the `title` is the only thing that names this dialog to a screen reader.** Removing it
+would leave the card visually identical and the dialog anonymous. It is the reason
+`MOD.DETAIL-TITLE` has an ID without painting a single pixel.
 
-### 2. O anel de foco é o motivo do raio de 24px
+### 2. The focus ring is the reason for the 24px radius
 
-Sem o `border-radius: 24px` do `css:5155`, nada mudaria de aparência — o `.modal-dialog` é
-transparente (`css:5162-5166`) e não tem borda visível. A regra existe por causa de **um** momento: o
-`core/modal` chama `getModal().focus()` ao abrir (`lib/amd/src/modal.js:899`) e o `.modal-dialog`
-carrega `tabindex="0"` (`lib/templates/modal.mustache:44`). O anel de foco do navegador segue o
-`border-radius` do elemento focado. Como o `.modal-body` tem `padding: 0` (`css:5168-5170`), o
-diálogo tem **exatamente** o tamanho do card — e o anel precisa ter **exatamente** o raio do card
-(`css:4301`, 24px) para não desenhar um retângulo em volta de um card redondo. O comentário do
-`css:5153-5154` registra o raciocínio; este mapa registra que ele **depende de duas linhas do core**.
+Without `css:6668`'s `border-radius: 24px` nothing would change in appearance — the `.modal-content`
+is transparent (`css:6675-6679`) and has no visible border. The rule exists because of **one**
+moment: `core/modal` calls `getModal().focus()` on open (`lib/amd/src/modal.js`) and the
+`.modal-dialog` carries `tabindex="0"` (`lib/templates/modal.mustache`). The browser's focus ring
+follows the `border-radius` of the focused element. Since the `.modal-body` has `padding: 0`
+(`css:6681-6683`), the dialog is **exactly** the size of the card — and the ring needs **exactly**
+the card's radius (`css:5814`, 24px) so as not to draw a rectangle around a round card. The comment
+at `css:6666-6667` records the reasoning; this map records that it **depends on two lines of core**.
 
-### 3. A cor do fechar vem do dado, não do tema
+### 3. The close button's colour comes from the data, not from the theme
 
-`js:294`: `closebtn.style.color = data.textcolor || '#fff'`. O `textcolor` é o campo personalizado da
-competência (via `nodeToDetailData`, `js:246`), o mesmo que pinta o texto do cabeçalho
-(`applyHeaderColors`, `js:136`). O botão é um "vidro" translúcido (`rgba(255,255,255,0.16)` sobre o
-gradiente, `css:5190`), então o glifo tem de acompanhar o texto do cabeçalho ou destoa.
+`js:294`: `closebtn.style.color = data.textcolor || '#fff'`. The `textcolor` is the competency's
+custom field (through `nodeToDetailData`, `js:246`), the same one that paints the header text
+(`applyHeaderColors`, `js:136`). The button is a translucent "glass" (`rgba(255,255,255,0.16)` over
+the gradient, `css:6703`), so the glyph has to follow the header text or it clashes.
 
-**O risco que isso cria:** o `textcolor` é livre. Uma competência com `textcolor` escuro sobre um
-`bgcolor` escuro produz um "×" ilegível — e **não há guarda**: nem contraste calculado, nem fallback
-condicional (o `|| '#fff'` só cobre o **vazio**, não o ilegível). O mesmo vale para o cabeçalho
-inteiro, então não é regressão deste modal; é a política de cor do plugin, e aqui ela alcança o
-**único** controle do diálogo. Ver a medição na tela.
+**The risk this creates:** `textcolor` is free-form. A competency with a dark `textcolor` over a dark
+`bgcolor` produces an illegible "×" — and **there is no guard**: no computed contrast, no conditional
+fallback (the `|| '#fff'` covers only the **empty** value, not the illegible one). The same holds for
+the whole header, so it is not a regression of this modal; it is the plugin's colour policy (the
+forms' WCAG panel **advises and does not block** — see the a11y rule in
+[`pln-plans.md`](pln-plans.md)), and here it reaches the dialog's **only** control. See the
+measurement on the screen.
 
-### 4. O modal sempre refaz a busca, mesmo com o dado na mão
+### 4. The modal always re-fetches, even with the data in hand
 
-`openCompetencyDetailModal` (`js:265`) recebe **só o id** e chama `local_dimensions_get_structure_node`
-(`js:266-269`) antes de qualquer render. Os dois chamadores **já têm** dados: o chip nasce de uma
-linha da árvore cujo `dataset` tem tudo o que o `renderDetailInto` pede, e a aba Planos idem.
+`openCompetencyDetailModal` (`js:265`) receives **only the id** and calls
+`local_dimensions_get_structure_node` (`js:266-269`) before any render. Both callers **already have**
+data: the chip is born from a tree row whose `dataset` holds everything `renderDetailInto` asks for,
+and the Learning plans tab likewise.
 
-É deliberado, e a razão é o `nodeToDetailData` (`js:235-253`): o card precisa de `coursecount`,
-`activitycount`, `templatecount`, `ruletype`, `rulelabel` e `haschildren` — números que a **linha de
-origem não carrega** (o chip só tem `id` e `name`, `structure_related_chips.mustache:38`). Buscar o nó
-fresco é o que permite as duas portas usarem o **mesmo** código. O custo: um round-trip por abertura,
-sem cache. Se o nó sumiu, sai calado — `if (!response.found || !response.node) return` (`js:270-272`)
-—, sem toast e sem modal: o clique simplesmente não faz nada.
+It is deliberate, and the reason is `nodeToDetailData` (`js:235-253`): the card needs `coursecount`,
+`activitycount`, `templatecount`, `ruletype`, `rulelabel` and `haschildren` (`js:247-252`) — numbers
+the **originating row does not carry** (the chip only has `id` and `name`,
+`structure_related_chips.mustache:38`, `:40`). Fetching the node fresh is what lets the two doors use
+the **same** code. The cost: one round trip per opening, with no cache. If the node is gone it exits
+silently — `if (!response.found || !response.node) return` (`js:270-272`) — with no toast and no
+modal: the click simply does nothing.
 
-### 5. `removeOnClose` é o que sustenta as guardas de render
+### 5. `removeOnClose` is what holds the render guards up
 
-`removeOnClose: true` (`js:282`) destrói a árvore ao fechar. Por isso o guard das renderizações
-assíncronas é `() => modalcontent.isConnected` (`js:291`) — e não uma flag: quando os `getString` dos
-chips e o `renderForPromise` da descrição voltam (`js:156-158`, `:196-205`), o teste é se o nó ainda
-está **no documento**. Fechar rápido não deixa "chip fantasma" nem exceção; o `applyChipText`
-(`js:88-93`) simplesmente não escreve. O comentário do `js:290` diz isso em uma linha.
+`removeOnClose: true` (`js:282`) destroys the tree on close. That is why the guard on the
+asynchronous renders is `() => modalcontent.isConnected` (`js:291`) — and not a flag: when the chips'
+`getString`s and the description's `renderForPromise` come back (`js:156-158`, `:165-167`,
+`:196-205`), the test is whether the node is still **in the document**. Closing quickly leaves no
+"ghost chip" and no exception; `applyChipText` (`js:88-93`) simply does not write. The comment at
+`js:290` says this in one line.

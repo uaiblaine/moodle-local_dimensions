@@ -1,156 +1,192 @@
-# Mapa de Campos — `BAR` · Contextbar (as-is)
+# Field map — `BAR` · Contextbar (as-is)
 
-Seletor de contexto renderizado uma vez acima do `dynamic_tabs` (`central.php:134`), **fora**
-dos panes das abas. A troca de contexto é 100% client-side: `applyContextToPanes`
-(`context.js:139-151`) escreve em **todos** os panes (`.dynamictabs [data-tab-content]`) e só
-recarrega o ativo. O select de categoria é sempre renderizado (oculto em modo sistema).
+Context selector rendered once above the `dynamic_tabs` (`central.php:145`), **outside** the tab
+panes. Switching context does not reload the page: `applyContextToPanes`
+(`context.js:173-185`) writes to **every** pane (`.dynamictabs [data-tab-content]`,
+`context.js:57`) and reloads only the active one (`refreshActive`, `context.js:190-195`). The
+category select is always rendered (hidden in system mode, `contextbar.mustache:82`).
 
-- **Mustache:** [`templates/central/contextbar.mustache`](../../../templates/central/contextbar.mustache)
+- **Mustache:** [`templates/central/contextbar.mustache`](../../../templates/central/contextbar.mustache), [`showhidden_toggle.mustache`](../../../templates/central/showhidden_toggle.mustache)
 - **AMD:** [`amd/src/central/context.js`](../../../amd/src/central/context.js)
 - **Renderable:** [`classes/output/central/contextbar.php`](../../../classes/output/central/contextbar.php)
-- **To-be no DS:** `hierarchy-nav.html` (propõe trilha adaptativa + contexto em card — **diverge** do as-is); `bar-contextbar.html` (as-is ↔ to-be do toggle `BAR-CATHIDDEN`, abaixo).
+- **Component in the DS:** `bar-contextbar.html` (the bar); `hierarchy-nav.html` section 3 (the icons
+  and the indicator of the hub's tabs, shipped — `central.php:108-112`, `:122`, `:125` and
+  `styles.css:7232-7271`).
 
-## Barra
+## The bar
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `BAR-ROOT` | `[sem rótulo]` | região/raiz | `contextbar.mustache:50-56` | `data-region="contextbar"` | carrega `contexttype`, `categoryid`, `activemode` e as duas contagens do sistema; `init` marca `data-initialised="1"` e sai se já marcado (`context.js:289-294`) |
-| `BAR-REFRESH` | Atualizar | botão | `contextbar.mustache:88-92` | `data-action="refresh"` · `fa fa-rotate` | str `refresh` (core). Recarrega o **pane ativo** pelo `reloadPane` via `refresh` (`context.js:172-196`), delegado no clique da barra (`:296-306`), com a disciplina de busy do pane de inscrição: desabilita + `fa-spin` num `finally` e devolve o foco a si (o `disabled` o larga no `<body>`, e o `reloadPane` só re-hospeda foco **dentro** do pane). **Não** re-sincroniza o contador da barra — ver a ressalva ao fim |
+| `BAR-ROOT` | `[no label]` | region/root | `contextbar.mustache:58-64` | `data-region="contextbar"` | carries `contexttype`, `categoryid`, `activemode` and the two system counts; `init` stamps `data-initialised="1"` and bails out if already stamped (`context.js:344-348`) |
+| `BAR-REFRESH` | Refresh | button | `contextbar.mustache:101-105` | `data-action="refresh"` · `fa fa-rotate` | str `refresh` (core). Reloads the **active pane** through `reloadPane` via `refresh` (`context.js:206-230`), delegated on the bar's click (`:356-359`). Busy discipline: disables (`:212`) + `fa-spin` (`:214`) and undoes both in a `finally` (`:218-229`), returning focus to itself when `disabled` dropped it on the `<body>` (`:226-228`) — `reloadPane` only re-homes focus **inside** the pane (`tabs.js:93-99`), and the button lives outside it. `reloadPane` covers the pane with its own busy curtain; this control only signals the button the user pressed (docblock at `context.js:198-201`). It does **not** re-sync the bar's counter — see the caveat at the end |
 
-## Contexto (Sistema / Categoria)
+## Context (System / Category)
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `BAR-CTX-LABEL` | Contexto | label/heading | `contextbar.mustache:58` | str `managecompetencies_context` | rótulo do grupo; a mesma string repete no `aria-label` do `btn-group` (`:59`) |
-| `BAR-CTX-01` | Sistema | botão toggle | `contextbar.mustache:60` | `data-context="system"` | `btn-primary` quando `issystem`, senão `btn-outline-secondary`; ícone `fa-globe`; clique → `setContext` (`context.js:204-234`) |
-| `BAR-CTX-02` | Categoria de curso | botão toggle | `contextbar.mustache:63` | `data-context="coursecat"` | idem com `iscoursecat`; ícone `fa-folder-open-o`; delegado no clique da barra (`context.js:296-306`) |
+| `BAR-CTX-LABEL` | Context | label/heading | `contextbar.mustache:66` | str `managecompetencies_context` | the group label; the same string repeats in the `btn-group`'s `aria-label` (`:67`) |
+| `BAR-CTX-01` | System | toggle button | `contextbar.mustache:68-70` | `data-context="system"` | `btn-primary` when `issystem`, otherwise `btn-outline-secondary`; `fa-globe` icon; click → `setContext` (`context.js:238-272`) |
+| `BAR-CTX-02` | Course category | toggle button | `contextbar.mustache:71-73` | `data-context="coursecat"` | the same with `iscoursecat`; `fa-folder-open-o` icon; delegated on the bar's click (`context.js:350-360`) |
 
-## Categoria
+## Category
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `BAR-CAT-WRAPPER` | `[sem rótulo]` | região | `contextbar.mustache:69` | `data-region="category-wrapper"` | `hidden` se `^iscoursecat`; clonado em `init` como `pristineCategoryNode` (`context.js:312`) e restaurado ao voltar para o modo categoria (`context.js:266-269`) — `core/form-autocomplete` não tem API de reset |
-| `BAR-CAT-LABEL` | Categoria de curso | label | `contextbar.mustache:70` | str `managecompetencies_category` | `for="local-dimensions-central-category"` |
-| `BAR-CAT-01` | Categoria de curso (select) | select → autocomplete | `contextbar.mustache:73` | `data-region="category-select"` | `form-select`; vira autocomplete via `enhance` (`context.js:280`); `change` → `setCategory` (`context.js:242-249`) |
-| `BAR-CAT-PLACEHOLDER` | "Selecione uma categoria de curso" | option | `contextbar.mustache:74` | `value="0"` | placeholder; 0 = sem categoria → `selectedCounts` devolve `null` e o contador some |
-| `BAR-CAT-OPTION` | `nome (contagem)` | option (loop) | `contextbar.mustache:76` | `categoryoptions` | `data-name`/`data-frameworkcount`/`data-templatecount`; renderizado com `frameworkcount`, **reescrito** por `renderOptionLabels` conforme a aba ativa (`context.js:124-130`) |
+| `BAR-CAT-WRAPPER` | `[no label]` | region | `contextbar.mustache:82` | `data-region="category-wrapper"` | `hidden` when `^iscoursecat`; cloned in `init` as `pristineCategoryNode` (`context.js:366`) and restored by `enhanceCategory` on the way back to category mode (`context.js:305-308`) — `core/form-autocomplete` has no reset API |
+| `BAR-CAT-LABEL` | Course category | label | `contextbar.mustache:83-85` | str `managecompetencies_category` | `for="local-dimensions-central-category"` |
+| `BAR-CAT-01` | Course category (select) | select → autocomplete | `contextbar.mustache:86` | `data-region="category-select"` | `form-select`; becomes an autocomplete via `enhance` (`context.js:321`); the `change` is re-bound on the enhanced node (`:322-323`) → `setCategory` (`context.js:280-287`) |
+| `BAR-CAT-PLACEHOLDER` | "Select a course category" | option | `contextbar.mustache:87` | `value="0"` | placeholder; 0 = no category → `selectedCounts` returns `null` and the counter disappears (`context.js:89-91`, `:113-115`) |
+| `BAR-CAT-OPTION` | `name (count)` | option (loop) | `contextbar.mustache:89` | `categoryoptions` | `data-name`/`data-frameworkcount`/`data-templatecount`/`data-hidden`; rendered with `frameworkcount`, **rewritten** by `renderOptionLabels` according to the active tab (`context.js:126-132`) |
 
-## Categorias ocultas — `BAR-CATHIDDEN` (to-be · proposto 2026-07-18)
+## Hidden categories — `BAR-CATHIDDEN`
 
-> **Implementado (local; pendente push + validação runtime — resync deste mapa para as-is com
-> refs após CI verde).** Fecha o item 3 do backlog da Central: o irmão do "Mostrar estruturas
-> ocultas" (FWK/EST), agora para **categorias de curso** no picker da barra. Design em
-> `bar-contextbar.html`; spec em `docs/superpowers/specs/2026-07-18-central-bar-hidden-categories-design.md` (local).
+Sibling of "Show hidden structures" (`EST`/`FWK`), now for **course categories** in the bar's
+picker. Design in `bar-contextbar.html`; spec in
+[`docs/superpowers/specs/2026-07-18-central-bar-hidden-categories-design.md`](../../superpowers/specs/2026-07-18-central-bar-hidden-categories-design.md).
 
-| ID | Rótulo | Tipo | Origem (to-be) | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `BAR-CATHIDDEN` | Mostrar categorias ocultas | toggle (partial `showhidden_toggle`) | `contextbar.mustache` (bloco dentro da coluna de Contexto, abaixo dos botões) | `data-action="toggle-hidden-cats"` | **reusa o partial compartilhado** `local_dimensions/central/showhidden_toggle` (`{id,label,action,checked}`, mesmo de EST/FWK) via seção `{{#hiddencatstoggle}}` (null → não renderiza = gate de `hashiddencategories`); fica **abaixo do grupo de botões Sistema/Categoria** (`.mt-2`), oculto no modo Sistema (`^iscoursecat`); `<label>` envolvente **real** (o named selector "checkbox" do Behat exige for/envolvente, não `aria-label`); str nova `central_bar_showhiddencategories` |
+| `BAR-CATHIDDEN` | Show hidden categories | toggle (partial `showhidden_toggle`) | `contextbar.mustache:75-79`, partial at `showhidden_toggle.mustache:43-48` | `data-action="toggle-hidden-cats"` | **reuses the shared partial** `local_dimensions/central/showhidden_toggle` (`{id,label,action,checked}`, the same one as `EST`/`FWK`) through the `{{#hiddencatstoggle}}` section (`:75`) — the gate is the object itself being `null`. It sits **inside the Context column**, in a `[data-region="hidden-cats"] .mt-2` **below the System/Category group** (`:76`), `hidden` in System mode (`^iscoursecat`); `setContext` follows the switch (`context.js:250-253`). A **real** wrapping `<label>` (`showhidden_toggle.mustache:43`) — Behat's "checkbox" named selector needs for/wrapping, not `aria-label`. Str `central_bar_showhiddencategories` (`lang/{en,pt_br}:64`) |
 
-**Alinhamento (correção pós-runtime, 2026-07-18).** A barra passou de `align-items-end` para
-`align-items-start` (rótulos "Contexto"/"Categoria de curso" alinham pelo topo); o toggle desceu
-para **dentro da coluna de Contexto** (antes ficava solto à direita do select); `BAR-COUNT-01` e
-`BAR-REFRESH` ganharam `align-self-center` (centrados na barra alta); e o **chip da categoria
-selecionada** do autocomplete foi reposicionado **abaixo** do input via CSS escopado (styles.css:
-`.local-dimensions-central-contextbar [data-region='category-wrapper']` vira coluna +
-`.form-autocomplete-selection { order: 1 }`) — depende do DOM do core, revalidar no upgrade.
+**Alignment.** The bar uses `align-items-start` (`contextbar.mustache:58`), so the
+"Context"/"Course category" labels line up at the top; `BAR-COUNT-01` (`:94`) and `BAR-REFRESH`
+(`:101`) carry `align-self-center` so they sit centred in the tall bar. The autocomplete's
+**selected-category chip** sits **below** the input, through CSS scoped to the bar
+(`styles.css:7214-7230`: `[data-region='category-wrapper']:not([hidden])` becomes a column and
+`.form-autocomplete-selection { order: 1 }`) — it depends on core's DOM, so revalidate on upgrade.
+The `:not([hidden])` guard is mandatory: the rule beats the UA's `[hidden]{display:none}` and
+without it the wrapper would show up in System mode (comment at `styles.css:7219-7221`).
 
-**Semântica.** Por padrão o picker mostra só categorias visíveis; o toggle revela as `visible=0`
-**que o usuário já pode ver** (`make_categories_list()` só as traz para quem tem
-`moodle/category:viewhiddencategories`). Sem categoria oculta visível → sem toggle.
+**Semantics.** By default the picker shows only visible categories; the toggle reveals the
+`visible=0` ones **that the user can already see** — `make_categories_list()` (`helper.php:2453`)
+only brings them for whoever holds `moodle/category:viewhiddencategories` (comment at
+`helper.php:2467-2469`). With no reachable hidden category, `contextbar.php:118-126` returns `null`
+and the toggle does not render.
 
-**Comportamento (client-side, sem `reloadPane`).** Espelha `applyShowHidden`: o servidor renderiza
-todas as options marcando as ocultas com `data-hidden="1"`; o `<select>` mostra só visíveis por
-padrão; ligar reconstrói as `<option>` de um snapshot, preservando a seleção. Só a **lista** muda —
-`BAR-COUNT-01` é independente (conta o contexto, não categorias).
+**Behaviour (client-side, no `reloadPane`).** The server marks each hidden option with
+`data-hidden="1"` (`helper.php:2489` → `contextbar.mustache:89`). `applyHiddenCats`
+(`context.js:332-337`) rebuilds the wrapper from the pristine clone and `filterHiddenOptions`
+(`context.js:154-164`) drops the hidden ones while the toggle is off, **always preserving the
+selected one**. Only the **list** changes — `BAR-COUNT-01` is independent (it counts the context,
+not categories).
 
-**Edge.** Categoria selecionada persistida oculta → toggle **inicia ligado** (senão o contexto atual
-sumiria da lista).
+**Edge case.** A persisted selected category that is hidden → the toggle **starts on**
+(`contextbar.php:124`: `$this->showhiddencats || $selectedhidden`), or the current context would
+vanish from the list.
 
-**Persistência.** Pref `central_nav` (já guarda contexto+categoria), chave `showhiddencats`;
-sobrevive sessões/dispositivos. Sanitizar no `helper::get_central_prefs` (toda chave nova entra no
-sanitizador). Privacidade já cobre `central_nav`.
+**Persistence.** Preference `local_dimensions_central_nav` (`preferences.js:32`), key
+`showhiddencats` — default at `preferences.js:40`, written at `context.js:336`, sanitised in
+`helper::get_central_prefs` (`helper.php:2311`) and seeded into the render by `central.php:73`/`:78`.
+It survives sessions and devices. Privacy already covers `central_nav`
+(`classes/privacy/provider.php:62`, `:93`).
 
-**Backend.** `central_category_options()` marca `hidden` por opção; `contextbar.php` expõe
-`hashiddencategories` + semeia o estado inicial (pref + edge). Sem WS nova.
+**Backend.** `helper::central_category_options()` (`helper.php:2449-2493`) marks `hidden` per
+option; `contextbar.php:108-126` decides the toggle and its initial state, exported at `:136`.
+There is **no** `hashiddencategories` key — the gate is the null `hiddencatstoggle`. No new WS.
 
-## Contador
+## Counter
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `BAR-COUNT-01` | `[sem rótulo]` | região contador | `contextbar.mustache:81-82` | `data-region="context-count"` | `hidden` se `needscategory`; `renderCounter` (`context.js:101-117`) oculta/reexibe conforme `selectedCounts` (`context.js:78-94`) |
-| `BAR-COUNT-VALUE` | `[sem rótulo]` | número | `contextbar.mustache:83` | `selectedframeworkcount` | valor inicial vem do servidor; depois `renderCounter` escreve `plans`→templates, senão frameworks (`context.js:116`) |
-| `BAR-COUNT-NOUN` | estruturas neste contexto / planos neste contexto | substantivo | `contextbar.mustache:84-85` | str `central_frameworks` / `central_plans` | dois `span[data-mode]`; `renderCounter` mostra só o do modo ativo (`context.js:107-109`). Substantivo **explícito do contexto** (D5 resolvido) — declara que conta o contexto Sistema/Categoria, não a aba |
+| `BAR-COUNT-01` | `[no label]` | counter region | `contextbar.mustache:94-95` | `data-region="context-count"` | `hidden` when `needscategory`; `renderCounter` (`context.js:103-119`) hides and re-shows it according to `selectedCounts` (`context.js:80-96`) |
+| `BAR-COUNT-VALUE` | `[no label]` | number | `contextbar.mustache:96` | `selectedframeworkcount` | the initial value comes from the server; after that `renderCounter` writes templates for `plans`, otherwise frameworks (`context.js:118`) |
+| `BAR-COUNT-NOUN` | structures in this context / plans in this context | noun | `contextbar.mustache:97-98` | str `central_frameworks` / `central_plans` | two `span[data-mode]`; `renderCounter` shows only the one for the active mode (`context.js:109-111`). The noun is **explicit about the context** (D5 resolved) — it declares that it counts the System/Category context, not the tab |
 
-**Regras de negócio**
+**Business rules**
 
-- A barra carrega ambas as contagens do sistema (`data-systemframeworkcount`, `data-systemtemplatecount`, `:55-56`) e cada opção carrega as duas suas (`:76`), para alternar sem round-trip.
-- **Só conta o visível:** `contextbar.php:78-79` filtra `visible => 1`, e as contagens por categoria idem (`helper.php:1555,1560`). Frameworks/templates ocultos não entram — por isso a aba Estruturas mostra o sufixo "· N ocultas" e a barra não.
-- **`data-activemode` é write-only:** o template semeia `structure` (`:54`) e `context.js:324` reescreve a cada troca de aba, mas **nada lê** o atributo (nenhum hit em `amd/src`, `styles.css`, `templates/`, `classes/`). `activeMode()` deriva do pane ativo (`context.js:66-69`) e o valor inicial do contador vem do servidor (`:83`). *(Corrige a regra anterior deste mapa, que dizia que o atributo definia a contagem inicial.)*
-- `activeMode()` só distingue `plans`: **as abas Estruturas e Competências caem as duas no ramo padrão `'structure'`** (`context.js:66-69`).
-- Troca de aba é ouvida por **jQuery** `shown.bs.tab` sobre `.dynamictabs a[data-toggle="tab"], .dynamictabs a[data-bs-toggle="tab"]` (`context.js:58,323-331`) — o Bootstrap 4 (Moodle 4.5) só emite o evento via jQuery. A restauração da aba salva filtra o mesmo seletor (`context.js:337-344`).
-- A barra vive fora dos panes e **não** é re-renderizada num refresh de aba (`context.js:286-287`), então suas contagens permanecem nos valores do page load.
+- The bar carries both system counts (`data-systemframeworkcount`, `data-systemtemplatecount`, `contextbar.mustache:63-64`) and each option carries its own two (`:89`), so switching needs no round-trip.
+- **It counts only what is visible:** `contextbar.php:83-84` filters `visible => 1`, and the per-category counts do the same (`helper.php:2153`, `:2189`). Hidden frameworks/templates never enter — which is why the Structures tab shows the "· N hidden" suffix and the bar does not.
+- **`data-activemode` is write-only:** the template seeds `structure` (`contextbar.mustache:62`) and `context.js:385` rewrites it on every tab switch, but **nothing reads** the attribute (a search for `activemode` across `amd/src`, `styles.css`, `templates/` and `classes/` returns only those two write points). `activeMode()` derives from the active pane (`context.js:68-71`) and the counter's initial value comes from the server (`contextbar.mustache:96`).
+- `activeMode()` only distinguishes `plans`: **the Structures and Competencies tabs both fall through to the default `'structure'` branch** (`context.js:68-71`).
+- Tab switching is listened for through **jQuery** `shown.bs.tab` over `.dynamictabs a[data-toggle="tab"], .dynamictabs a[data-bs-toggle="tab"]` (`context.js:60`, `:384-392`) — Bootstrap 4 (Moodle 4.5) only emits the event through jQuery. Restoring the saved tab filters on the same selector (`context.js:398-405`).
+- The bar lives outside the panes and is **not** re-rendered on a tab refresh (`init`'s docblock, `context.js:340-341`; `reloadPane` only swaps the pane's content, `tabs.js:92`), so its counts stay at their page-load values.
 
-## Decisão (D5, 2026-07-14) — o contador · resolvido (2026-07-17)
+## Decision (D5, 2026-07-14) — the counter · resolved (2026-07-17)
 
-> A contextbar conta o **contexto** (Sistema/Categoria), não a aba — logo o número sempre esteve
-> certo; o **substantivo** é que lia como se descrevesse a aba. Na aba Competências, `activeMode()`
-> cai para `'structure'` e o contador mostra as **estruturas** do contexto enquanto o subheader da
-> aba mostra a contagem de **competências** — dois números de escopos diferentes lado a lado.
-> **Fix shipado:** o substantivo passou a ser **explícito do contexto** — `central_frameworks` =
-> "estruturas neste contexto", `central_plans` = "planos neste contexto" (ambas usadas **só** aqui) —
-> então o contador declara o próprio escopo em vez de parecer descrever a aba. O número **não** mudou:
-> D5 preserva contar o contexto, e só o rótulo ficou honesto. Foi lang-only (sem bump).
-> **Alternativa registrada e descartada:** fazer o contador seguir a aba ativa. Descartada porque
-> contraria o propósito declarado da contextbar. Não re-litigar sem mudar esta nota.
-> **Contexto:** o hub tem **três** contadores onde o mtube tem um.
+> The contextbar counts the **context** (System/Category), not the tab — so the number was always
+> right; it was the **noun** that read as if it described the tab. On the Competencies tab,
+> `activeMode()` falls through to `'structure'` and the counter shows the context's **structures**
+> while the tab's subheader shows the **competency** count — two numbers of different scopes side
+> by side.
+> **Shipped fix:** the noun became **explicit about the context** — `central_frameworks` =
+> "structures in this context", `central_plans` = "plans in this context" (`lang/{en,pt_br}:126` and
+> `:226`, both used **only** here) — so the counter declares its own scope instead of looking as if
+> it described the tab. The number did **not** change: D5 preserves counting the context, and only
+> the label became honest. It was lang-only (no bump).
+> **Alternative recorded and discarded:** making the counter follow the active tab. Discarded
+> because it contradicts the contextbar's declared purpose. Do not re-litigate without changing
+> this note.
+> **Context:** the hub has **three** counters where mtube has one.
 
-**Mecânica (verificada no código):**
+**Mechanics (verified in the code):**
 
-- A aba de `data-tab-content="structure"` é **rotulada "Competências"** (`managecompetencies_structure`, via `dynamictabs/structure.php:48-49`) — o shortname diz `structure`, o rótulo diz Competências.
-- `activeMode()` (`context.js:66-69`) devolve `'plans'` só quando `tabContent === 'plans'`; a aba Competências cai no ramo padrão `'structure'`.
-- Logo `BAR-COUNT-VALUE` = `selectedframeworkcount` e `BAR-COUNT-NOUN` = `central_frameworks` = "estruturas neste contexto".
-- O substantivo **casa com o número** (ambos falam de estruturas do contexto) e agora **declara o escopo**, então não lê mais como um número da aba — é essa a leitura que D5 fixa, e o "neste contexto" a torna literal.
+- The tab whose `data-tab-content="structure"` is **labelled "Competencies"** (`managecompetencies_structure`, via `central.php:101` and `dynamictabs/structure.php:48-49`) — the shortname says `structure`, the label says Competencies.
+- `activeMode()` (`context.js:68-71`) returns `'plans'` only when `tabContent === 'plans'`; the Competencies tab falls through to the default `'structure'` branch.
+- So `BAR-COUNT-VALUE` = `selectedframeworkcount` and `BAR-COUNT-NOUN` = `central_frameworks` = "structures in this context".
+- The noun **matches the number** (both speak of the context's structures) and **declares the scope**, so it does not read as a figure about the tab — that is the reading D5 fixes, and "in this context" makes it literal.
 
-**Os três contadores:**
+**The three counters:**
 
-| # | Onde | Origem | Conta |
+| # | Where | Origin | Counts |
 | --- | --- | --- | --- |
-| 1 | contextbar (`BAR-COUNT-01`) | `contextbar.mustache:81-86` | estruturas/planos **visíveis do contexto** |
-| 2 | toolbar da aba Estruturas | `frameworks.mustache:77-78` | `central_frameworks_listed` ("Estruturas listadas"): `frameworkcount` + "· N ocultas" |
-| 3 | subheader da aba Competências | `structure.mustache:121-122` | `managecompetencies_items` ("itens"): `competencycount` do framework selecionado |
+| 1 | contextbar (`BAR-COUNT-01`) | `contextbar.mustache:94-99` | the context's **visible** structures/plans |
+| 2 | Structures tab toolbar | `frameworks.mustache:77-78` | `central_frameworks_listed` ("Structures listed"): `frameworkcount` + "· N hidden" |
+| 3 | Competencies tab subheader | `structure.mustache:121-123` | `managecompetencies_items` ("items"): `competencycount` of the selected framework |
 
-## IMP-05 — atualizar na contextbar (shipado, `mtube: atualizar`)
+## IMP-05 — refresh on the contextbar (shipped, `mtube: refresh`)
 
-> Entregue: a contextbar ganhou o botão `BAR-REFRESH` (acima), que recarrega o **pane ativo** pelo
-> `reloadPane` que já existia (`tabs.js:69-108`) e que nenhum controle de UI expunha. Sem string
-> nova — reusa `{{#str}}refresh, moodle{{/str}}` + `fa fa-rotate`, como o pane de inscrição.
-> Copiada a disciplina de busy do mtube (desabilita + `fa-spin` num `finally`); **não** copiado o
-> defeito dele de deixar o subtítulo stale — ver a ressalva do contador abaixo.
+> Delivered: the contextbar gained the `BAR-REFRESH` button (above), which reloads the **active
+> pane** through the `reloadPane` that already existed (`tabs.js:69-108`) and that no UI control
+> exposed. No new string — it reuses `{{#str}}refresh, moodle{{/str}}` + `fa fa-rotate`. The busy discipline
+> was copied from mtube (disable + `fa-spin` in a `finally`); what was **not** copied is mtube's
+> defect of leaving the subtitle stale — see the counter caveat below.
 
-**O que shipou, verificado:**
+**What shipped, verified:**
 
-- `reloadPane` (`tabs.js:69-108`) tem agora **um** controle de UI que o dispara: o `refresh`
-  (`context.js:172-196`), delegado no clique da barra (`:296-306`). Os demais 23 call-sites em 5
-  módulos seguem sendo refresh automático pós-ação — nenhum é afordância de UI.
-- Ícone + string reusados dos botões `data-action="enrol-refresh"` do pane de inscrição
-  (`enrol_methods.mustache:40,48,56,117`), que têm handler próprio e **não** usam `reloadPane` (pane
-  de modal, não pane de aba).
-- Disciplina de busy: `button.disabled = true` + `fa-spin`, e o `finally` re-habilita, tira o spin
-  **e** devolve o foco ao controle quando o `disabled` o largou no `<body>` — o `reloadPane` só
-  re-hospeda foco **dentro** do pane (`tabs.js:93-99`), e o botão vive fora dele. Um reload que
-  falha solta o controle em vez de girar pra sempre.
+- `reloadPane` (`tabs.js:69-108`) has **one** UI control that fires it: the `refresh`
+  (`context.js:206-230`), delegated on the bar's click (`:356-359`). Full census: **24** calls
+  across 5 modules — `structure` 9 (`structure.js:730,739,748,764,808,836,960,1036,1472`),
+  `frameworks` 6 (`frameworks.js:179,270,374,386,419,522`), `plans` 6
+  (`plans.js:102,233,614,668,673,825`), `context` 2 (`context.js:193,217`) and `competency_browser`
+  1 (`competency_browser.js:69`). Of those, **only `context.js:217` is a UI affordance**; the other
+  23 are automatic refreshes (post-action, post-context-switch or post-selection-switch).
+- The icon and the string came from the `data-action="enrol-refresh"` buttons of the enrolment
+  pane. Those buttons **no longer exist** (zero hits for `enrol-refresh` in `templates/` and
+  `amd/src/`): the pane now hands a handle to the modal header (`enrol_methods.js:1111`). The
+  precedent is historical.
+- Busy discipline: `button.disabled = true` (`context.js:212`) + `fa-spin` (`:214`), and the
+  `finally` (`:218-229`) re-enables, removes the spin **and** returns focus to the control when
+  `disabled` dropped it on the `<body>` — `reloadPane` only re-homes focus **inside** the pane
+  (`tabs.js:93-99`), and the button lives outside it. A reload that fails releases the control
+  instead of spinning forever.
+- The pane itself gained its own busy curtain inside `reloadPane` (see `est-competencies.md`, IMP-03):
+  `LOADING_CLASS` + `aria-busy="true"` (`tabs.js:44`, `:77-80`), cleared in the `finally`
+  (`:103-106`). That is why `BAR-REFRESH` only has to signal itself.
 
-**A ressalva do contador — o que NÃO shipou, e por quê.** O `BAR-COUNT-01` **não** é
-re-sincronizado pelo refresh, de propósito: a barra vive fora dos panes e não é re-renderizada por
-`reloadPane` (`context.js:286-287`), e suas contagens são atributos de render-time (`:55-56`, `:76`,
-`:83` no Mustache). Ressincronizá-las exigiria uma contagem fresca do servidor — um WS novo, barrado
-pelo congelamento de versão até a 2.0 — ou um recompute client-side que briga com "menos código". **E
-não é regressão:** o contador já fica stale hoje a cada add/remove (o mesmo `context.js:286-287`); o
-refresh não piora isso, só não o conserta. O análogo ao defeito de subtítulo do mtube fica
-**registrado como dívida**, não fingido resolvido — o `BAR-REFRESH` não afirma que o contador atualiza.
+**The counter caveat — what did NOT ship, and why.** `BAR-COUNT-01` is **not** re-synced by the
+refresh, deliberately: the bar lives outside the panes and is not re-rendered by `reloadPane`
+(`context.js:340-341`; `tabs.js:92` only swaps the pane's content), and its counts are render-time
+attributes (`contextbar.mustache:63-64`, `:89`, `:96`). Re-syncing them would require a fresh count
+from the server — **none of the 43 functions in `db/services.php` returns a context count** — or a
+client-side recompute that would duplicate the server's counting (two aggregate queries,
+`helper.php:2142-2201`). **And it is not a regression:** the counter already goes stale today on
+every add/remove, for the same reason; the refresh does not make that worse, it just does not fix
+it. The analogue of mtube's stale-subtitle defect is **recorded as debt**, not pretended resolved —
+`BAR-REFRESH` makes no claim that the counter updates.
 
-> **Alternativa descartada:** ler a contagem fresca do pane recarregado (o toolbar de Estruturas traz
-> `frameworkcount`). Rejeitada: o contador da barra conta o **contexto** (D5), que não é o que o
-> toolbar do pane conta (frameworks listados, com sufixo de ocultas), então a leitura seria infiel
-> para 2 dos 3 modos e acoplaria a barra ao DOM interno do pane. Fica para quando houver fonte de
-> contagem fresca.
+> **Alternative discarded:** reading the fresh count off the reloaded pane (the Structures toolbar
+> carries `frameworkcount`). Rejected: the bar's counter counts the **context** (D5), which is not
+> what the pane's toolbar counts (frameworks listed, with a hidden suffix), so the reading would be
+> unfaithful for 2 of the 3 modes and would couple the bar to the pane's internal DOM. It waits for
+> a fresh-count source to exist.
+
+## Pending
+
+- **A three-segment adaptive trail** (Context → Structure → Competency, with the active segment
+  accented), designed in `hierarchy-nav.html`. **Not built** and, unlike the rest of the kit, it is
+  a **divergent** redesign of the shipped bar rather than an increment: a search for
+  `adaptive|trail|breadcrumb|trilha` across `templates/central/*.mustache`, `amd/src/central/*.js`
+  and `classes/output/central/*.php` returns only unrelated prose ("adaptive counts" in
+  `contextbar.mustache:23` and `contextbar.php:39`) and an autocomplete label helper
+  (`competency_datasource.js:90-92`) — no trail markup, no third segment. What the bar has is the
+  context + category pair (`contextbar.mustache:65-92`) plus the counter and refresh (`:94-105`).

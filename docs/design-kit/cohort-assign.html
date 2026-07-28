@@ -1,4 +1,4 @@
-<!-- @dsCard group="Dados" name="Atribuição a coortes" subtitle="Plano → coortes/usuários + sincronização (estilo mtube) · Moodle DS" -->
+<!-- @dsCard group="Data" name="Cohort assignment" subtitle="Cohorts tab of the participants modal: add autocomplete + 4-column table with sync and per-row remove · Moodle DS" -->
 <style>
 :root{
   --mds-color-blue-50:#e7f0f9;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;--mds-color-blue-700:#094173;--mds-color-blue-800:#062b4c;
@@ -8,14 +8,12 @@
   --mds-bg-surface-default:var(--mds-color-white);--mds-bg-surface-subtle:var(--mds-color-gray-100);--mds-bg-surface-strong:var(--mds-color-gray-200);
   --mds-text-default:var(--mds-color-gray-900);--mds-text-muted:var(--mds-color-gray-600);--mds-text-subtle:var(--mds-color-gray-700);
   --mds-border-default:var(--mds-color-gray-300);--mds-border-strong:var(--mds-color-gray-500);
-  --mds-bg-interactive-primary-default:var(--mds-color-blue-500);
   --mds-bg-feedback-info-subtle:var(--mds-color-cyan-100);--mds-text-feedback-info:var(--mds-color-cyan-800);
   --mds-bg-feedback-success-subtle:var(--mds-color-green-100);--mds-text-feedback-success:var(--mds-color-green-800);
-  --mds-radius-md:0.5rem;--mds-radius-pill:50rem;--mds-stroke-sm:0.0625rem;--mds-stroke-md:0.125rem;
+  --mds-radius-sm:0.375rem;--mds-radius-md:0.5rem;--mds-radius-pill:50rem;--mds-stroke-sm:0.0625rem;--mds-stroke-md:0.125rem;
   --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
-  /* Accent de TEXTO — precedente do --mds-accent-busy do states.html: blue-500 no claro,
-     blue-200 no escuro. O --mds-bg-interactive-primary-default (fill do botão) fica como está:
-     ele é fundo para texto branco, não cor de texto. */
+  /* TEXT accent — precedent set by states.html's --mds-accent-busy: blue-500 in light,
+     blue-200 in dark (the --mds-bg-interactive-primary-* are fills for white text). */
   --mds-accent-text:var(--mds-color-blue-500);
   --mds-accent-bg:var(--mds-color-blue-50);
   --mds-accent-border:var(--mds-color-blue-200);
@@ -32,101 +30,147 @@
 }}
 body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
 .wrap{max-width:560px;margin:0 auto;}
+.modal-title{font-size:14px;font-weight:500;margin-bottom:8px;}
+/* Plain Boost nav-tabs: the active tab is a bordered "folder", with no accent indicator —
+   the hub's rule requires the .dynamictabs ancestor, which this modal does not have. */
 .tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);margin-bottom:12px;}
-.tab{padding:8px 12px;font-size:12px;color:var(--mds-text-subtle);}
-.tab.on{color:var(--mds-accent-text);font-weight:500;box-shadow:inset 0 -2px 0 var(--mds-accent-text);}
+.tab{padding:7px 12px;font-size:12px;color:var(--mds-accent-text);border:var(--mds-stroke-sm) solid transparent;border-radius:var(--mds-radius-sm) var(--mds-radius-sm) 0 0;margin-bottom:-1px;}
+.tab.on{color:var(--mds-text-default);background:var(--mds-bg-surface-default);border-color:var(--mds-border-default) var(--mds-border-default) var(--mds-bg-surface-default);}
 .tab .gate{font-family:var(--font-mono);font-size:9px;color:var(--mds-text-muted);}
-.note{background:var(--mds-bg-feedback-info-subtle);border:var(--mds-stroke-sm) solid var(--mds-text-feedback-info);border-radius:var(--mds-radius-md);padding:8px 10px;font-size:11px;color:var(--mds-text-feedback-info);margin-bottom:10px;display:flex;gap:7px;align-items:flex-start;}
+.lbl{font-size:11px;color:var(--mds-text-subtle);margin-bottom:4px;display:block;}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;padding:6px 8px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);margin-bottom:14px;}
+.chev{color:var(--mds-text-muted);font-size:10px;}
+.info{background:var(--mds-bg-feedback-info-subtle);border:var(--mds-stroke-sm) solid var(--mds-text-feedback-info);border-radius:var(--mds-radius-md);padding:8px 10px;font-size:11px;color:var(--mds-text-feedback-info);margin-bottom:12px;display:flex;gap:7px;align-items:flex-start;}
 .ic{width:0.85rem;height:0.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.ic.tiny{width:0.75rem;height:0.75rem;}
-.coh{display:flex;align-items:center;gap:10px;padding:8px 10px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);margin-top:6px;background:var(--mds-bg-surface-default);}
-.coh.on{border-color:var(--mds-accent-border);background:var(--mds-accent-bg);}
-.coh.on .cn,.coh.on .cm{color:var(--mds-accent-text);}
-.cn{font-size:13px;font-weight:500;}
-.cm{font-size:11px;color:var(--mds-text-subtle);}
-.sync{font-size:11px;color:var(--mds-text-feedback-success);display:inline-flex;align-items:center;gap:4px;flex:none;}
-.nosync{font-size:11px;color:var(--mds-text-subtle);flex:none;}
-.foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;}
-.total{font-size:11px;color:var(--mds-text-feedback-success);}
-.btn{font-size:12px;padding:6px 12px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid var(--mds-border-strong);background:var(--mds-bg-surface-default);color:var(--mds-text-default);}
-.btn-primary{background:var(--mds-bg-interactive-primary-default);color:var(--mds-color-white);border-color:var(--mds-bg-interactive-primary-default);}
+.ic.tiny{width:0.7rem;height:0.7rem;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+caption{caption-side:top;text-align:left;font-size:10px;color:var(--mds-text-muted);padding-bottom:4px;}
+th,td{text-align:left;padding:7px 8px;border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);vertical-align:middle;}
+thead th{font-size:11px;color:var(--mds-text-subtle);font-weight:500;border-bottom-width:var(--mds-stroke-md);}
+tbody tr:nth-child(odd){background:var(--mds-bg-surface-subtle);}
+tbody th{font-weight:500;}
+.rowbtn{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:var(--mds-radius-sm);border:var(--mds-stroke-sm) solid var(--mds-border-strong);background:none;color:var(--mds-text-subtle);white-space:nowrap;}
+.rowbtn + .rowbtn{margin-left:4px;}
 .exp{font-size:11px;color:var(--mds-text-subtle);margin-top:12px;}
 .exp + .exp{margin-top:6px;}
 .exp b{color:var(--mds-text-default);}
+.pend{border-left:var(--mds-stroke-sm) solid var(--mds-border-default);padding-left:8px;}
+.pend b{color:var(--mds-text-muted);}
 code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface-strong);color:var(--mds-text-default);border-radius:4px;padding:0 3px;}
-.tobe{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:var(--mds-radius-pill);background:var(--mds-accent-bg);color:var(--mds-accent-text);border:var(--mds-stroke-sm) solid var(--mds-accent-text);white-space:nowrap;}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
   <symbol id="e-rotate" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></symbol>
-  <symbol id="e-box" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></symbol>
-  <symbol id="e-boxcheck" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></symbol>
+  <symbol id="e-exchange" viewBox="0 0 24 24"><path d="M3 8h15l-4-4M21 16H6l4 4"/></symbol>
+  <symbol id="e-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></symbol>
 </defs></svg>
 
 <div class="wrap">
+  <div class="modal-title">Onboarding plan</div>
   <div class="tabs" role="tablist">
-    <span class="tab on" role="tab" aria-selected="true">Coortes</span>
-    <span class="tab" role="tab">Usuários</span>
-    <span class="tab" role="tab">Atribuir papéis <span class="gate">·cap</span></span>
-    <span class="tab" role="tab">Métodos de inscrição <span class="gate">·cap</span></span>
+    <span class="tab on" role="tab" aria-selected="true">Cohorts</span>
+    <span class="tab" role="tab">Users</span>
+    <span class="tab" role="tab">Assign roles <span class="gate">·cap</span></span>
+    <span class="tab" role="tab">Enrolment methods <span class="gate">·cap</span></span>
   </div>
 
-  <div class="note">
+  <span class="lbl">Add cohort</span>
+  <div class="sel"><span style="color:var(--mds-text-subtle)">Search cohort…</span><span class="chev">▾</span></div>
+
+  <div class="info">
     <svg class="ic" aria-hidden="true" focusable="false"><use href="#e-rotate"/></svg>
-    <span>Ao vincular, a geração de planos é <b>enfileirada</b>, não feita na hora: o WS agenda a
-    adhoc <code>sync_template_cohort</code> e responde <code>syncqueued: true</code> — quem cria os
-    planos é o cron. Membro que entrar depois só ganha plano na próxima passada da tarefa agendada
-    <b>do core</b> (<code>sync_plans_from_template_cohorts_task</code>, de hora em hora).</span>
+    <span>On attach, plan generation is <b>queued</b>, not done there and then: the WS schedules the
+    <code>sync_template_cohort</code> adhoc task and the client shows the toast "Sync queued — plans
+    will be created on the next cron run." The plans are created by cron. A member who joins later
+    only gets a plan on the next run of <b>core's</b> scheduled task.</span>
   </div>
 
-  <div class="coh on">
-    <svg class="ic" aria-hidden="true" focusable="false" style="color:var(--mds-accent-text)"><use href="#e-boxcheck"/></svg>
-    <div style="flex:1;min-width:0;"><div class="cn">Turma 2026 — Informática</div><div class="cm">32 membros</div></div>
-    <span class="sync"><svg class="ic tiny" aria-hidden="true" focusable="false"><use href="#e-rotate"/></svg>sync ativo</span>
-  </div>
-  <div class="coh on">
-    <svg class="ic" aria-hidden="true" focusable="false" style="color:var(--mds-accent-text)"><use href="#e-boxcheck"/></svg>
-    <div style="flex:1;min-width:0;"><div class="cn">Turma 2026 — Eletrotécnica</div><div class="cm">16 membros</div></div>
-    <span class="sync"><svg class="ic tiny" aria-hidden="true" focusable="false"><use href="#e-rotate"/></svg>sync ativo</span>
-  </div>
-  <div class="coh">
-    <svg class="ic" aria-hidden="true" focusable="false" style="color:var(--mds-text-subtle)"><use href="#e-box"/></svg>
-    <div style="flex:1;min-width:0;"><div class="cn">Egressos 2025</div><div class="cm">120 membros</div></div>
-    <span class="nosync">sem sync</span>
-  </div>
-
-  <div class="foot">
-    <span class="total">48 planos serão criados/mantidos</span>
-    <div style="display:flex;gap:8px;"><span class="btn">Cancelar</span><span class="btn btn-primary">Aplicar e sincronizar</span></div>
-  </div>
+  <table>
+    <caption>Cohorts <span style="opacity:.7">(visually-hidden caption)</span></caption>
+    <thead>
+      <tr><th scope="col">Cohort</th><th scope="col">Members</th><th scope="col">Plans</th><th scope="col">Actions</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">Class of 2026 — Computing</th>
+        <td>32</td><td>32</td>
+        <td>
+          <span class="rowbtn"><svg class="ic tiny" aria-hidden="true" focusable="false"><use href="#e-exchange"/></svg>Sync</span>
+          <span class="rowbtn"><svg class="ic tiny" aria-hidden="true" focusable="false"><use href="#e-trash"/></svg>Remove cohort</span>
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">Class of 2026 — Electrical engineering</th>
+        <td>16</td><td>9</td>
+        <td>
+          <span class="rowbtn"><svg class="ic tiny" aria-hidden="true" focusable="false"><use href="#e-exchange"/></svg>Sync</span>
+          <span class="rowbtn"><svg class="ic tiny" aria-hidden="true" focusable="false"><use href="#e-trash"/></svg>Remove cohort</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
   <div class="exp">
-    <b>As abas são quatro, não duas</b>, e os rótulos são estes:
+    <b>There are four tabs, not two</b>, and these are the labels:
     <code>central_participants_tab_cohorts</code>, <code>central_participants_tab_users</code>,
-    <code>central_roles_tab</code> ("Atribuir papéis", não "Papéis") e
-    <code>central_enrol_tab</code> (<code>participants_manager.mustache:42-70</code>). As duas
-    marcadas com <code>·cap</code> são condicionais: <code>canassignroles</code> e
-    <code>canmanageenrol</code> — quem não tem a capability vê só as duas primeiras, e aí a tira de
-    duas abas <b>é</b> um render legítimo.
+    <code>central_roles_tab</code> ("Assign roles", not "Roles") and
+    <code>central_enrol_tab</code> (<code>participants_manager.mustache:40-73</code>). The two marked
+    with <code>·cap</code> are conditional: <code>canassignroles</code> and
+    <code>canmanageenrol</code> — whoever lacks the capability sees only the first two, and then the
+    two-tab strip <b>is</b> a legitimate render. They are <code>nav nav-tabs</code> <b>without</b>
+    <code>.dynamictabs</code>: no icon and no accent indicator — the active tab is plain Boost's
+    "folder", as drawn.
   </div>
   <div class="exp">
-    <b>A lista com checkbox e o "Aplicar e sincronizar" são a proposta</b>
-    <span class="tobe">to-be</span>. O que ship a hoje é uma <b>tabela</b> — Coorte, Membros, Planos,
-    Ações (<code>cohort_manager.mustache:42-45</code>) — onde cada linha é adicionada/removida na
-    hora, sem lote e sem botão de aplicar. A adhoc chama
-    <code>api::create_plans_from_template_cohort()</code> só depois de reconfirmar o vínculo
-    (<code>sync_template_cohort.php:89-92</code>) e é enfileirada com dedupe
-    (<code>queue_adhoc_task($task, true)</code>), porque anexar e clicar em sincronizar enfileiram o
-    mesmo par e <code>competency_plan</code> não tem índice único em (templateid, userid).
+    <b>The body is the add autocomplete plus a 4-column table</b> — Cohort
+    (<code>cohort</code>, a core string), Members, Plans, Actions
+    (<code>cohort_manager.mustache:42-45</code>; the whole table at <code>:38-49</code>, with a
+    <code>visually-hidden</code> <code>caption</code>). The rows are built on the client by
+    <code>makeRow()</code> (<code>cohort_manager.js:51-74</code>): name in <code>&lt;th
+    scope="row"&gt;</code>, the two numbers, and two <code>btn-outline-secondary btn-sm</code> buttons
+    with <b>visible text</b> — <code>fa-exchange</code> "Sync" and <code>fa-trash</code>
+    "Remove cohort" (<code>action_button.js:38-49</code>). With no cohort attached, a cell with
+    <code>colSpan 4</code> says "No cohorts attached." (<code>cohort_manager.js:91-100</code>).
   </div>
   <div class="exp">
-    O vínculo em si é do core: a tabela é <code>competency_templatecohort</code>, manipulada pela
-    persistente <code>core_competency\template_cohort</code>. Os <b>membros por coorte</b> já vêm do
-    <code>local_dimensions_list_template_cohorts</code> (campos <code>members</code> e
-    <code>plans</code> por linha) — o total "48 planos" é a soma no cliente das coortes marcadas, e
-    <b>essa soma não existe hoje</b>: o que a aba Planos publica são
-    <code>selectedtemplateplancount</code> (planos do template) e
-    <code>selectedtemplatecohortcount</code> (quantidade de <b>coortes</b>, não de membros) —
-    <code>plans.php:319-324</code>.
+    <b>Each row acts on its own, immediately.</b> Adding fires
+    <code>local_dimensions_add_template_cohort</code>, shows the queueing toast and
+    <b>re-renders the body</b> to reset the autocomplete (<code>cohort_manager.js:166-181</code>);
+    the row's ⇄ calls <code>local_dimensions_sync_template_cohort</code> and toasts the same text
+    (<code>:152-157</code>); the 🗑 asks for confirmation through <code>saveCancelPromise</code>,
+    removes and returns focus to the list (<code>:111-134</code>). There is no apply button, and no
+    batch.
+  </div>
+  <div class="exp">
+    <b>All the WS returns is <code>success</code>.</b>
+    <code>add_template_cohort::execute_returns()</code> declares a single boolean field
+    (<code>add_template_cohort.php:99-103</code>); the <code>syncqueued =&gt; true</code> travels in
+    the <code>other</code> of the audit event <code>template_cohort_added</code>
+    (<code>:81-89</code>), not in the response. The queueing itself is
+    <code>sync_task::queue()</code> (<code>:78</code>), with dedupe
+    <code>queue_adhoc_task($task, true)</code> (<code>sync_template_cohort.php:60</code>) because
+    attaching and clicking sync queue the same pair and <code>competency_plan</code> has no unique
+    index on (templateid, userid). The adhoc task calls
+    <code>api::create_plans_from_template_cohort()</code> only after reconfirming the template and
+    the link (<code>:86-92</code>).
+  </div>
+  <div class="exp">
+    The link itself is core's: the table is <code>competency_templatecohort</code>, handled by the
+    persistent <code>core_competency\template_cohort</code>. The two numbers per row come from
+    <code>local_dimensions_list_template_cohorts</code>: <code>members</code> is the count of
+    <code>cohort_members</code> and <code>plans</code> is how many plans <b>of this template</b> exist
+    for members of the cohort (<code>list_template_cohorts.php:79-92</code>, declared at
+    <code>:105-108</code>) — which is why the two diverge until cron has run.
+  </div>
+  <div class="pend exp">
+    <b>Pending — the tab in the "group management" style.</b> A list with a checkbox per cohort, a
+    per-row sync pill, a plans roll-up ("48 plans will be created/kept") and a bulk
+    "Apply and sync" button: none of that exists. A search for
+    <code>checkbox</code>/<code>apply</code>/<code>batch</code> in
+    <code>cohort_manager.mustache</code> and <code>cohort_manager.js</code> returns nothing, and the
+    sum of the checked cohorts' members has nowhere to come from — what the Plans tab publishes is
+    <code>selectedtemplateplancount</code> (the template's plans) and
+    <code>selectedtemplatecohortcount</code> (the number of <b>cohorts</b>, not of members) in
+    <code>classes/output/dynamictabs/plans.php:319-324</code>.
   </div>
 </div>

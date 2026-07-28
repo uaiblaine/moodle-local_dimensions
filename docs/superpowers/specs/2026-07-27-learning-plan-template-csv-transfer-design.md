@@ -422,7 +422,7 @@ and beats `[hidden]` on Bootstrap 4, so the loader could never hide on the 4.05 
   repaints), **`templates/central/plans_export.mustache`** (new).
 - **`amd/src/central/plans_transfer.js`**, **`amd/src/central/download.js`** (new; the shared
   `triggerDownload`/`makeSpinner` lifted out of `frameworks.js` — with no ARIA change, since the
-  defect the design kit records at `fwk-frameworks.md:98-102` does not exist at HEAD; the real
+  defect the design kit records at `fwk-structures.md:98-102` does not exist at HEAD; the real
   gap is the export loader's missing accessible name), **`amd/src/central/plans.js`** and
   **`amd/src/central/frameworks.js`** modified, all four with rebuilt `amd/build` output.
 - **`db/services.php`** — three functions, `ajax => true`, no `classpath`, mirroring the

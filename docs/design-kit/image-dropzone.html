@@ -1,4 +1,4 @@
-<!-- @dsCard group="Formulário" name="Dropzone de imagem" subtitle="Anexo padrão Moodle (arrasta e solta) — vazio e com arquivo, funciona em modal · Moodle DS" -->
+<!-- @dsCard group="Form" name="Image dropzone" subtitle="Core's filemanager applied to the two built-in-mode images — empty and with a file · Moodle DS" -->
 <style>
 :root{
   --mds-color-blue-50:#e7f0f9;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-800:#062b4c;
@@ -9,8 +9,8 @@
   --mds-border-default:var(--mds-color-gray-300);--mds-border-strong:var(--mds-color-gray-500);
   --mds-radius-sm:0.375rem;--mds-radius-md:0.5rem;--mds-radius-pill:50rem;--mds-stroke-sm:0.0625rem;
   --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
-  /* Accent de TEXTO — precedente do --mds-accent-busy do states.html: blue-500 no claro,
-     blue-200 no escuro (os --mds-bg-interactive-primary-* não têm variante escura). */
+  /* TEXT accent — precedent set by states.html's --mds-accent-busy: blue-500 in light,
+     blue-200 in dark (the --mds-bg-interactive-primary-* have no dark variant). */
   --mds-accent-text:var(--mds-color-blue-500);
   --mds-accent-bg:var(--mds-color-blue-50);
 }
@@ -23,59 +23,98 @@
 }}
 body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
 .wrap{max-width:560px;margin:0 auto;}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.lbl{font-size:11px;color:var(--mds-text-subtle);margin-bottom:4px;display:block;}
-.drop{border:var(--mds-stroke-sm) dashed var(--mds-border-strong);border-radius:var(--mds-radius-md);padding:14px;display:flex;align-items:center;gap:10px;background:var(--mds-bg-surface-default);}
-.thumb{width:40px;height:40px;border-radius:var(--mds-radius-sm);border:var(--mds-stroke-sm) solid var(--mds-border-default);flex:none;display:flex;align-items:center;justify-content:center;color:var(--mds-color-white);}
+.field + .field{margin-top:14px;}
+.lbl{font-size:11px;color:var(--mds-text-subtle);margin-bottom:4px;display:flex;align-items:center;gap:5px;}
+.help{width:13px;height:13px;border-radius:var(--mds-radius-pill);border:var(--mds-stroke-sm) solid var(--mds-accent-text);color:var(--mds-accent-text);font-size:9px;line-height:11px;text-align:center;flex:none;}
+.limit{font-size:10px;color:var(--mds-text-muted);margin-bottom:4px;}
+.fm{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);overflow:hidden;}
+.fm-bar{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);background:var(--mds-bg-surface-subtle);}
+.fm-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 8px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-sm);background:var(--mds-bg-surface-default);color:var(--mds-text-default);}
+.fm-body{border:var(--mds-stroke-sm) dashed var(--mds-border-strong);border-radius:var(--mds-radius-sm);margin:8px;min-height:74px;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px;}
+.fm-body.filled{justify-content:flex-start;align-items:flex-start;}
+.hint{font-size:11px;color:var(--mds-text-muted);text-align:center;}
+.tile{width:64px;text-align:center;}
+.thumb{width:64px;height:48px;border-radius:var(--mds-radius-sm);border:var(--mds-stroke-sm) solid var(--mds-border-default);display:flex;align-items:center;justify-content:center;color:var(--mds-color-white);background:var(--mds-color-green-500);}
+.fname{font-size:10px;color:var(--mds-text-subtle);margin-top:3px;overflow:hidden;text-overflow:ellipsis;}
 .ic{width:1.1rem;height:1.1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ic.sm{width:0.8rem;height:0.8rem;}
 .ic.up{width:1.4rem;height:1.4rem;color:var(--mds-accent-text);}
-.t1{font-size:11px;color:var(--mds-text-default);}
-.t2{font-size:11px;color:var(--mds-text-subtle);}
-.t2.acc{color:var(--mds-accent-text);}
 .note{font-size:11px;color:var(--mds-text-subtle);margin-top:12px;}
 .note + .note{margin-top:6px;}
 .note b{color:var(--mds-text-default);}
+.pend{border-left:var(--mds-stroke-sm) solid var(--mds-border-default);padding-left:8px;}
+.pend b{color:var(--mds-text-muted);}
 code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface-strong);color:var(--mds-text-default);border-radius:4px;padding:0 3px;}
-.tobe{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:var(--mds-radius-pill);background:var(--mds-accent-bg);color:var(--mds-accent-text);border:var(--mds-stroke-sm) solid var(--mds-accent-text);white-space:nowrap;}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
   <symbol id="e-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></symbol>
   <symbol id="e-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></symbol>
+  <symbol id="e-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 </defs></svg>
 
 <div class="wrap">
-  <div class="row">
-    <div>
-      <span class="lbl">Imagem de Fundo</span>
-      <div class="drop"><svg class="ic up" aria-hidden="true" focusable="false"><use href="#e-upload"/></svg><div><div class="t1">Arraste e solte aqui</div><div class="t2">ou clique para enviar</div></div></div>
+  <div class="field">
+    <span class="lbl">Background image <span class="help">?</span></span>
+    <div class="limit">max. 10 MB · 1 file · web images · no subfolders</div>
+    <div class="fm">
+      <div class="fm-bar"><span class="fm-btn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-plus"/></svg>Add…</span></div>
+      <div class="fm-body">
+        <svg class="ic up" aria-hidden="true" focusable="false"><use href="#e-upload"/></svg>
+        <div class="hint">core's drag-and-drop area</div>
+      </div>
     </div>
-    <div>
-      <span class="lbl">Imagem do Cartão</span>
-      <div class="drop"><div class="thumb" style="background:var(--mds-color-green-500);"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-image"/></svg></div><div><div class="t1">card.jpg</div><div class="t2 acc">arraste para substituir</div></div></div>
+  </div>
+
+  <div class="field">
+    <span class="lbl">Card image <span class="help">?</span></span>
+    <div class="limit">max. 10 MB · 1 file · web images · no subfolders</div>
+    <div class="fm">
+      <div class="fm-bar"><span class="fm-btn"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#e-plus"/></svg>Add…</span></div>
+      <div class="fm-body filled">
+        <div class="tile">
+          <div class="thumb"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-image"/></svg></div>
+          <div class="fname">card.jpg</div>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="note">
-    <b>Rótulos e ordem são os shipados</b>, casing incluído: <code>Imagem de Fundo</code> primeiro e
-    <code>Imagem do Cartão</code> depois, na ordem em que
-    <code>picture_manager::add_all_filemanagers_to_form()</code> os adiciona
-    (<code>picture_manager.php:163-165</code>). Cada um leva <code>addHelpButton</code>.
+    <b>The control is core's <code>filemanager</code></b>, added with
+    <code>addElement('filemanager', …)</code> plus one <code>addHelpButton</code> per field
+    (<code>picture_manager.php:144-155</code>). The drawing above is the widget's <b>shape</b>: the
+    toolbar, the drag-and-drop area and the file grid are core's, and so are that frame's labels —
+    the kit does not fix their wording.
   </div>
   <div class="note">
-    <b>O controle shipado é o <code>filemanager</code> do core</b>, não este cartão de uma linha:
-    <code>maxbytes</code> 10 MB, <code>maxfiles</code> <b>1</b>, <code>subdirs</code> 0,
-    <code>accepted_types</code> <code>web_image</code> (<code>picture_manager.php:100-107</code>). A
-    forma compacta acima — miniatura + nome do arquivo numa linha só — é a
-    <span class="tobe">to-be</span>: cabe no corpo de um modal, onde o filemanager cheio come altura.
+    <b>The only numbers the plugin chooses</b> come from
+    <code>get_filemanager_options()</code> (<code>picture_manager.php:100-106</code>):
+    <code>maxbytes</code> <b>10485760</b> (10 MB), <code>maxfiles</code> <b>1</b>,
+    <code>subdirs</code> <b>0</b>, <code>accepted_types</code> <code>web_image</code>.
   </div>
   <div class="note">
-    <b>As duas dropzones só existem no modo interno.</b>
-    <code>competency_handler::instance_form_definition()</code> só chama o
-    <code>picture_manager</code> se <code>is_builtin_mode()</code>
-    (<code>competency_handler.php:173-175</code>) — isto é, quando o plugin
-    <code>customfield_picture</code> <b>não</b> está instalado. Com ele instalado, as imagens viram
-    campos personalizados <code>picture</code> e quem desenha a linha é aquele plugin, não este kit
-    (<code>helper.php:470-475</code>).
+    <b>Labels and order</b>, casing included: <code>Background image</code>
+    (<code>custombgimage</code>) first and <code>Card image</code> (<code>customcard</code>)
+    second, in the order <code>add_all_filemanagers_to_form()</code> adds them
+    (<code>picture_manager.php:163-165</code>); the label and the help text come from the <b>same</b>
+    lang key (<code>:146</code> picks the key, <code>:150</code> uses it as the label and
+    <code>:154</code> uses it as the help).
+  </div>
+  <div class="note">
+    <b>The two dropzones exist only in built-in mode.</b>
+    <code>competency_handler::instance_form_definition()</code> only calls the
+    <code>picture_manager</code> when <code>is_builtin_mode()</code>
+    (<code>competency_handler.php:173-175</code>) — that is, when the image mode is not the external
+    one (<code>picture_manager.php:75-82</code>). In external mode the images become
+    <code>picture</code> custom fields (<code>helper.php:473-478</code>) and the row is drawn by that
+    plugin, not by this kit. Because the filemanager pair is appended <b>after</b> the last category,
+    it lands inside the <b>Look</b> section — see the <b>Form section</b> card.
+  </div>
+  <div class="note pend">
+    <b>Pending — the compact one-line card</b> (thumbnail + file name side by side, so it fits in a
+    modal body where the full filemanager eats height). It does not exist: there is no template and
+    no class of its own for it — the only image path in the form is the
+    <code>addElement('filemanager', …)</code> above, with no plugin markup around it.
   </div>
 </div>

@@ -1,161 +1,153 @@
-# Mapa de Campos — `MOD.MOVETO` · Mover para posição (as-is)
+# Field map — `MOD.MOVETO` · Move to position (as-is)
 
-Modal de reordenação: um `<select>` numerado com **uma opção por posição**, cada uma anotada com a
-competência que hoje ocupa aquele lugar. Salvar move. É a **alternativa de teclado ao arrasto** — o
-grip é ponteiro-puro — e o caminho prático quando a lista é longa demais para arrastar.
+A reordering modal: a numbered `<select>` with **one option per position**, each annotated with the
+competency currently occupying that slot. Saving moves. It is the **keyboard alternative to
+dragging** — the grip is pointer-only — and the practical path when the list is too long to drag.
 
-**Um template, dois chamadores, duas estratégias de persistência diferentes.** A aba Planos reordena
-competências dentro de um modelo com **uma** chamada de reorder do core; a aba Estrutura reordena nós
-irmãos da árvore **empilhando |delta| movimentos de um passo**. O corpo é idêntico; o que acontece no
-save não é. Esse contraste é o motivo deste mapa existir.
+**One template, two callers, two different persistence strategies.** The Plans tab reorders
+competencies inside a template with **one** core reorder call; the Competencies tab reorders sibling
+nodes of the tree by **stacking |delta| one-step moves**. The body is identical; what happens on save
+is not. That contrast is why this map exists.
 
 - **Mustache:** [`move_competency_modal.mustache`](../../../templates/central/move_competency_modal.mustache)
-  (45) — só o **corpo**; o `ModalSaveCancel.create` é em JS, dos dois lados
-- **AMD (dois chamadores):**
-  - [`plans.js`](../../../amd/src/central/plans.js) — `moveCompetencyTo` em `:548-606`; despacho em
-    `:753`. Helpers: `refreshMoveState` (`:128-140`), `flashRow` (`:115`), `reloadKeepingScroll` (`:92`)
-  - [`structure.js`](../../../amd/src/central/structure.js) — `openNodeMoveModal` em `:972-1007`;
-    `persistNodeMove` em `:941-961`; `nodeSiblings` em `:928`. Duas portas: rodapé
-    (`:1278-1282`) e grip (`:1373-1381`)
-  - Ambos importam `core/modal_save_cancel` e `core/modal_events`
-- **WS:** **nenhum do plugin** — só core, e **diferente em cada aba**:
-  - Planos: `core_competency_reorder_template_competency` (`plans.js:581-587`) — **uma** chamada
-  - Estrutura: `core_competency_move_up_competency` / `core_competency_move_down_competency`
-    (`structure.js:947-951`) — **|delta| chamadas** em `Promise.all`
-- **CSS:** **nenhum.** Um `grep -n 'plans-move' styles.css` não devolve nada — a classe do `:36` é só
-  gancho semântico. O corpo é Bootstrap puro (`form-select`, `d-block small text-muted mb-1`)
-- **Behat:** nenhum. O `CLAUDE.md` desaconselha Behat de drag-and-drop; o **modal**, que é a porta de
-  teclado, também não tem cobertura — ver a nota de cobertura
-- **Tela no DS:** nenhuma. É um `<label>` + um `<select>`; a decisão de design está nas **regras**,
-  não no desenho
+  (45) — the **body** only; the `ModalSaveCancel.create` is in JS on both sides
+- **AMD (two callers):**
+  - [`plans.js`](../../../amd/src/central/plans.js) — `moveCompetencyTo` at `:537-595`; dispatch at
+    `:742`. Helpers: `refreshMoveState` (`:117-129`), `reloadKeepingScroll` (`:93-109`), and the
+    `flashRow` of the shared module `local_dimensions/central/flash` (imported at `:26`)
+  - [`structure.js`](../../../amd/src/central/structure.js) — `openNodeMoveModal` at `:973-1008`;
+    `persistNodeMove` at `:942-962`; `nodeSiblings` at `:929`. Two doors: footer
+    (`:1279-1283`) and grip (`:1374-1382`)
+  - Both import `core/modal_save_cancel` and `core/modal_events`
+- **WS:** **none from the plugin** — core only, and **different in each tab**:
+  - Plans: `core_competency_reorder_template_competency` (`plans.js:570-576`) — **one** call
+  - Structure: `core_competency_move_up_competency` / `core_competency_move_down_competency`
+    (`structure.js:948-952`) — **|delta| calls** in a `Promise.all`
+- **CSS:** **none.** A `grep -n 'plans-move' styles.css` returns nothing — the class at `:36` is only a
+  semantic hook. The body is pure Bootstrap (`form-select`, `d-block small text-muted mb-1`)
+- **Behat:** none. `CLAUDE.md` advises against Behat for drag-and-drop; the **modal**, which is the
+  keyboard door, has no coverage either — see the coverage note
+- **Screen in the DS:** none. It is a `<label>` + a `<select>`; the design decision lives in the
+  **rules**, not in the drawing
 
-**Abreviações usadas nas tabelas:** `mustache:` = `templates/central/move_competency_modal.mustache`
+**Abbreviations used in the tables:** `mustache:` = `templates/central/move_competency_modal.mustache`
 · `plans.js:` = `amd/src/central/plans.js` · `structure.js:` = `amd/src/central/structure.js`.
-Caminhos que começam com `lib/` são do **core**, relativos a `public/`.
+Paths starting with `lib/` are **core's** (relative to `public/`) and are cited **without a line
+number**: core's checkout does not live in this repository, so none of its lines is verifiable from
+here.
 
-> **Mapa novo (2026-07-15) — a superfície não tinha mapa, e duas referências apontavam para o vazio.**
->
-> - **`MOD.MOVETO` era um destino inexistente.** Um `grep -rn 'MOD\.MOVETO' docs/design-kit/` devolvia
->   **11 ocorrências, em 11 linhas de 4 arquivos** — `est-structure.md` (3: `:140`, `:149`, `:150`),
->   `pln-plans.md` (6: `:186`, `:205`, `:233`, `:255`, `:266`, `:341`), `screens/est-structure.html`
->   (`:249`) e `screens/pln-plans.html` (`:554`) — e **nenhum arquivo `mod-moveto.md`** para onde elas
->   apontassem. As aposentadorias da Task 7 (`EST-DETAIL-MOVEUP` / `EST-DETAIL-MOVEDOWN`,
->   `est-structure.md:149-150`) redirecionavam o leitor para um mapa que não existia. Este arquivo é o
->   destino; o `est-structure.md` ganhou o link.
-> - **O brief errou as linhas do `plans.js` — para menos.** Ele dizia `:558-573`. Esse intervalo é só o
->   miolo (montar as opções + criar o modal); a função `moveCompetencyTo` vai de **`:548` a `:606`**, e
->   tudo o que **importa** — a chamada do WS (`:581-587`), o reposicionamento espelhado (`:588-595`) e o
->   rollback (`:599-604`) — cai **fora** do intervalo do brief. As linhas do `structure.js` (`:972-1007`)
->   estavam **exatas**.
-> - **O grip da Estrutura abre o modal, e não por `data-action`.** O `structure_node.mustache:111-116`
->   carrega **só** `data-region="node-drag-handle"` — nenhum `data-action`. Quem o transforma em porta é
->   um galho dedicado do listener da região (`structure.js:1373-1381`), não o despacho por ação. O
->   `est-structure.md:91` descrevia o `EST-NODE-DRAG` só como arrasto; ganhou a menção.
+## Triggers (outside the modal) — **four doors, none new here**
 
-## Gatilhos (fora do modal) — **quatro portas, nenhuma nova aqui**
+Every door already has an ID in the tabs' maps. This map **references** them.
 
-Todas as portas já têm ID nos mapas das abas. Este mapa **as referencia**.
-
-| ID (dono) | Aba | Origem | Mecanismo | Regra |
+| ID (owner) | Tab | Origin | Mechanism | Rule |
 | --- | --- | --- | --- | --- |
-| `PLN-COMP-MOVETO` | Planos ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:423-426` | `data-action="move-competency-to"` → `ACTION_HANDLERS` (`plans.js:753`) | item do kebab; ícone `fa-arrows-v` |
-| `PLN-COMP-GRIP` | Planos ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:440-445` | `data-action="move-competency-to"` **e** `data-region="drag-handle"` | **acumula as duas funções**: clicar abre o modal, arrastar reordena direto |
-| `EST-DETAIL-MOVETO` | Estrutura ([`est-structure.md`](est-structure.md)) | `structure_footer_actions.mustache:61-64` | `data-action="moveto"` → `handleDetailAction` (`structure.js:1278-1282`) | botão do **sticky-footer**; age na linha ativa do módulo |
-| `EST-NODE-DRAG` | Estrutura ([`est-structure.md`](est-structure.md)) | `structure_node.mustache:111-116` | **`data-region="node-drag-handle"`** → galho próprio (`structure.js:1373-1381`) | **sem `data-action`** — a porta é o `closest()` do listener da região, com `preventDefault()` (`:1375`) para o clique não selecionar a linha |
+| `PLN-COMP-MOVETO` | Plans ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:423-426` | `data-action="move-competency-to"` → `ACTION_HANDLERS` (`plans.js:742`) | a kebab item; `fa-arrows-v` icon |
+| `PLN-COMP-GRIP` | Plans ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:440-445` | `data-action="move-competency-to"` **and** `data-region="drag-handle"` (`:441`) | **it holds both functions**: clicking opens the modal, dragging reorders directly |
+| `EST-DETAIL-MOVETO` | Structure ([`est-competencies.md`](est-competencies.md)) | `structure_footer_actions.mustache:61-64` | `data-action="moveto"` → `handleDetailAction` (`structure.js:1279-1283`) | a **sticky-footer** button; it acts on the module's active row |
+| `EST-NODE-DRAG` | Structure ([`est-competencies.md`](est-competencies.md)) | `structure_node.mustache:111-116` | **`data-region="node-drag-handle"`** (`:112`) → its own branch (`structure.js:1374-1382`) | **no `data-action`** — the door is the region listener's `closest()`, with `preventDefault()` (`:1376`) so the click does not select the row |
 
-**Os dois grips prometem a mesma coisa e cumprem.** Ambos têm `title` **e** `aria-label` =
+**The two grips promise the same thing and deliver.** Both carry `title` **and** `aria-label` =
 `central_plans_moveto` + `': '` + shortname (`plans.mustache:442-443`,
-`structure_node.mustache:113-114`), e ambos abrem o modal no clique — por caminhos diferentes. É o
-que mantém o rótulo honesto para teclado: o arrasto é ponteiro-puro, o clique não.
+`structure_node.mustache:113-114`), and both open the modal on click — by different paths. That is
+what keeps the label honest for the keyboard: dragging is pointer-only, clicking is not.
 
-## Corpo (o mesmo nos dois chamadores)
+## Body (the same in both callers)
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.MOVETO-TITLE` | Mover para posição… | título | `plans.js:569` · `structure.js:988` | str `central_plans_moveto` | string **crua**, sem `$a`: **não nomeia o alvo**. Aberto pelo grip da linha "Comunicação", o título não diz "Comunicação" — quem carrega o nome é a opção marcada do select |
-| `MOD.MOVETO-MODAL` | — | `core/modal_save_cancel` | `plans.js:568-573` · `structure.js:987-992` | `show: true`, `removeOnClose: true` | **sem `large`** (ao contrário do `MOD.USAGE`/`MOD.DETAIL`): é um campo só. O rodapé Salvar/Cancelar vem de graça; nenhum dos dois chama `setSaveButtonText` |
-| `MOD.MOVETO-ROOT` | `[sem rótulo]` | região/raiz | `mustache:36` | `.local-dimensions-central-plans-move` | **sem CSS** |
-| `MOD.MOVETO-LABEL` | Nova posição | rótulo | `mustache:37-39` | str `central_plans_moveto_label` · `for` | `<label>` **de verdade**, com `for` casando o `id` do select — o único modal do kit cujo rótulo é um `label` ligado (o `MOD.RELATED-ADDLABEL` é uma `div`, porque lá o alvo é uma árvore) |
-| `MOD.MOVETO-SELECT` | — | select | `mustache:40-44` | `.form-select` · `id` = `name` = `local-dimensions-plans-move-position` | `form-select`, **nunca `custom-select`** (regra do `CLAUDE.md`). O `id` é **fixo, não `uniqid`** — só existe um destes por vez porque o modal é `removeOnClose`. Lido por `querySelector` no save, dos dois lados (`plans.js:575`, `structure.js:994`) |
-| `MOD.MOVETO-OPTION` | {n}. {nome} | option | `mustache:42` | `value` = índice **base 0** · `selected` | o rótulo é **1-based** (`(index + 1) + '. ' + nome`) e o `value` **0-based** — `plans.js:563`, `structure.js:982`. A opção da posição atual nasce `selected` (`plans.js:564`, `structure.js:983`) |
-| `MOD.MOVETO-SAVE` | Salvar mudanças | botão (rodapé) | `lib/templates/modal_save_cancel.mustache:44` | `data-action="save"` | str core `savechanges`. **Único ponto de escrita** — `ModalEvents.save` (`plans.js:574`, `structure.js:993`) |
-| `MOD.MOVETO-CANCEL` | Cancelar | botão (rodapé) | `lib/templates/modal_save_cancel.mustache:43` | `data-action="cancel"` | str core `cancel`. Cancelar, X ou ESC: **nada é gravado** — não há handler de `hidden` em nenhum dos dois |
+| `MOD.MOVETO-TITLE` | Move to position… | title | `plans.js:558` · `structure.js:989` | str `central_plans_moveto` | a **bare** string, no `$a`: **it does not name the target**. Opened from the grip of the "Communication" row, the title does not say "Communication" — what carries the name is the select's selected option |
+| `MOD.MOVETO-MODAL` | — | `core/modal_save_cancel` | `plans.js:557-562` · `structure.js:988-993` | `show: true`, `removeOnClose: true` | **no `large`** (unlike `MOD.USAGE`/`MOD.DETAIL`): it is a single field. The Save/Cancel footer comes free; neither of the two calls `setSaveButtonText` |
+| `MOD.MOVETO-ROOT` | `[no label]` | region/root | `mustache:36` | `.local-dimensions-central-plans-move` | **no CSS** |
+| `MOD.MOVETO-LABEL` | New position | label | `mustache:37-39` | str `central_plans_moveto_label` · `for` | a **real** `<label>`, with `for` matching the select's `id` — the only modal in the kit whose label is a connected `label` (`MOD.RELATED-ADDLABEL` is a `div`, because there the target is a tree) |
+| `MOD.MOVETO-SELECT` | — | select | `mustache:40-44` | `.form-select` · `id` = `name` = `local-dimensions-plans-move-position` (`:40`) | `form-select`, **never `custom-select`** (a `CLAUDE.md` rule). The `id` is **fixed, not a `uniqid`** — only one of these exists at a time because the modal is `removeOnClose`. Read by `querySelector` on save, on both sides (`plans.js:564`, `structure.js:995`) |
+| `MOD.MOVETO-OPTION` | {n}. {name} | option | `mustache:42` | `value` = **0-based** index · `selected` | the label is **1-based** (`(index + 1) + '. ' + name`) and the `value` is **0-based** — `plans.js:551-552`, `structure.js:982-983`. The current position's option is born `selected` (`plans.js:553`, `structure.js:984`) |
+| `MOD.MOVETO-SAVE` | Save changes | button (footer) | `lib/templates/modal_save_cancel.mustache` | `data-action="save"` | core str `savechanges`. **The only write point** — `ModalEvents.save` (`plans.js:563`, `structure.js:994`) |
+| `MOD.MOVETO-CANCEL` | Cancel | button (footer) | `lib/templates/modal_save_cancel.mustache` | `data-action="cancel"` | core str `cancel`. Cancel, X or ESC: **nothing is written** — there is no `hidden` handler in either of them |
 
-## Os dois chamadores, lado a lado
+## The two callers, side by side
 
-| | **Planos** (`plans.js:548-606`) | **Estrutura** (`structure.js:972-1007`) |
+| | **Plans** (`plans.js:537-595`) | **Structure** (`structure.js:973-1008`) |
 | --- | --- | --- |
-| **Universo** | `[data-competency]` dentro de `[data-region="competency-items"]` (`:549`, `:554`) — a lista **plana** do modelo | `nodeSiblings(node)` (`:973`) — os irmãos **de mesmo pai** na árvore (`:928`: filhos do `parentElement` que casam `.local-dimensions-central-node`) |
-| **Desiste quando** | `rows.length < 2` (`:555-557`) | `siblings.length < 2` (`:974-976`) |
-| **Rótulo da opção** | `textContent` do `PLN-COMP-NAME` (`:560-563`) — lê a **tela** | `row.dataset.name` (`:979-982`) — lê o **dataset** |
-| **Escrita** | **1** × `core_competency_reorder_template_competency` (`:581-587`), com `competencyidfrom`/`competencyidto` e o `templateid` do `pane.dataset` (`:584`) | **|delta|** × `move_up`/`move_down` (`:947-951`), montadas por `Array.from({length: Math.abs(delta)})` e disparadas em `Promise.all` (`:952`) |
-| **Ordem** | **WS primeiro, DOM depois** (`:588-595`): o `.then` reposiciona | **DOM primeiro** (`:1000-1004`), `persistNodeMove` depois (`:1005`) |
-| **Confirmação** | `refreshMoveState(list)` + `flashRow(row)` (`:596-597`) | `row.animate([…#fff3cd…], {duration: 1500})` dentro do `persistNodeMove` (`:953`) |
-| **Rollback** | `reloadKeepingScroll(pane)` (`:603`) | `reloadPane(pane)` (`:959`) |
-| **Sem-op** | `targetindex === current` → `return` (`:577-579`) | idem (`:996-998`), **mais** o `if (!delta) return` do `persistNodeMove` (`:942-945`) |
+| **Universe** | `[data-competency]` inside `[data-region="competency-items"]` (`:538`, `:543`) — the template's **flat** list | `nodeSiblings(node)` (`:974`) — the **same-parent** siblings in the tree (`:929`: children of the `parentElement` matching `.local-dimensions-central-node`) |
+| **Gives up when** | `rows.length < 2` (`:544-546`) | `siblings.length < 2` (`:975-977`) |
+| **Option label** | `textContent` of `PLN-COMP-NAME` (`:549-552`) — it reads the **screen** | `row.dataset.name` (`:980-983`) — it reads the **dataset** |
+| **Write** | **1** × `core_competency_reorder_template_competency` (`:570-576`), with `competencyidfrom`/`competencyidto` and the `templateid` from `pane.dataset` (`:573`) | **\|delta\|** × `move_up`/`move_down` (`:948-952`), assembled by `Array.from({length: Math.abs(delta)})` (`:949`) and fired in a `Promise.all` (`:953`) |
+| **Order** | **WS first, DOM after** (`:577-584`): the `.then` repositions | **DOM first** (`:1001-1005`), `persistNodeMove` after (`:1006`) |
+| **Confirmation** | `refreshMoveState(list)` + `flashRow(row)` (`:585-586`) | `flashRow(row)` inside `persistNodeMove` (`:954`) |
+| **Rollback** | `reloadKeepingScroll(pane)` (`:592`) | `reloadPane(pane)` (`:960`) |
+| **No-op** | `targetindex === current` → `return` (`:566-568`) | the same (`:997-999`), **plus** the `if (!delta) return` in `persistNodeMove` (`:943-946`) |
 
-## Regras de negócio (verificadas no código)
+> **The flash is the same on both sides, and it is shared.** Neither module carries a local copy of
+> `row.animate`: both call the `flashRow` of `local_dimensions/central/flash` (`flash.js:34-48`,
+> consolidated in `3c0bf41`), which bails early on `prefers-reduced-motion` (`:38-40`) and reads the
+> duration from the `--mds-motion-flash` token (`styles.css:32`) with a 1500ms fallback (`:43`).
 
-### 1. O espelhamento da semântica do core — e por que só a aba Planos precisa dele
+## Business rules (verified in the code)
 
-O comentário do `plans.js:589-590` é a chave: *"Core lands the row **after** the occupant when moving
-down, **before** it when moving up"*. Daí o par `reference.after(row)` / `reference.before(row)`
-(`:591-595`): o DOM imita o que o servidor acabou de fazer, e a lista fica certa **sem reload**.
+### 1. Mirroring core's semantics — and why only the Plans tab needs it
 
-O `structure.js:1000-1004` tem o **mesmo** par `after`/`before` — mas por um motivo diferente. Ali o
-DOM se move **antes** de qualquer chamada, e a persistência é uma pilha de passos unitários
-(`move_up`/`move_down`), que **não têm ambiguidade de destino**: cada uma troca com o vizinho. O
-`after`/`before` da Estrutura não espelha semântica do core; ele apenas coloca o nó no índice que o
-usuário escolheu, e o `persistNodeMove` conta quantos passos aquilo custou (`delta = to - from`,
-`:942`).
+The comment at `plans.js:578-579` is the key: *"Core lands the row **after** the occupant when moving
+down, **before** it when moving up"*. Hence the `reference.after(row)` / `reference.before(row)` pair
+(`:580-584`): the DOM imitates what the server has just done, and the list ends up right **without a
+reload**.
 
-**A consequência prática:** um salto de 12 posições na aba Planos é **1** request; na Estrutura são
-**12**, em paralelo. O `Promise.all` (`:952`) não garante ordem de chegada, mas cada `move_up`/
-`move_down` é relativa à posição corrente no servidor — e o core as serializa. É por isso que a
-falha derruba tudo para um `reloadPane` (`:955-960`): a única verdade recuperável é a do servidor.
+`structure.js:1001-1005` has the **same** `after`/`before` pair — but for a different reason. There
+the DOM moves **before** any call, and persistence is a stack of single steps
+(`move_up`/`move_down`), which carry **no destination ambiguity**: each one swaps with its neighbour.
+Structure's `after`/`before` does not mirror core semantics; it merely puts the node at the index the
+user chose, and `persistNodeMove` counts how many steps that cost (`delta = to - from`, `:943`). The
+docblock of `persistNodeMove` (`:932-935`) says why in one line: *"core has no reorder-to-position
+service for framework competencies"*.
 
-### 2. `move_competency_modal` é do Planos só no nome
+**The practical consequence:** a 12-position jump on the Plans tab is **1** request; on Structure it is
+**12**, in parallel. The `Promise.all` (`:953`) does not guarantee arrival order, but each `move_up`/
+`move_down` is relative to the current position on the server — and core serialises them. That is why
+a failure drops everything into a `reloadPane` (`:956-961`): the only recoverable truth is the
+server's.
 
-O template diz, no próprio docblock (`:20`), *"Body of the 'move competency to position' modal **on
-the Plans tab**"*. Não é mais verdade desde que a Estrutura passou a usá-lo (`structure.js:986`). E o
-nome vazou para todo lado:
+### 2. `move_competency_modal` belongs to Plans in name only
 
-- o `id`/`name` do select é **`local-dimensions-plans-move-position`** (`mustache:40`) — na árvore de
-  competências também;
-- as duas strings são **`central_plans_moveto`** e **`central_plans_moveto_label`**;
-- a classe da raiz é **`.local-dimensions-central-plans-move`** (`mustache:36`).
+The template says, in its own docblock (`:20`), *"Body of the 'move competency to position' modal **on
+the Plans tab**"*. That has not been true since Structure started using it (`structure.js:987`). And
+the name leaked everywhere:
 
-Nada disso quebra — o select é lido por `querySelector` dentro da raiz do próprio modal
-(`structure.js:994`), então o `id` só precisa ser único **naquele** modal, e ele é (`removeOnClose`).
-Fica registrado como **verruga de nomenclatura**, não como bug: qualquer renomeação tem de mexer nos
-dois módulos, no template e nas duas línguas de uma vez.
+- the select's `id`/`name` is **`local-dimensions-plans-move-position`** (`mustache:40`) — in the
+  competency tree too;
+- both strings are **`central_plans_moveto`** and **`central_plans_moveto_label`**;
+- the root's class is **`.local-dimensions-central-plans-move`** (`mustache:36`).
 
-### 3. O modal não sabe se a posição ainda existe
+None of this breaks — the select is read by `querySelector` inside the modal's own root
+(`structure.js:995`), so the `id` only needs to be unique **within that** modal, and it is
+(`removeOnClose`). Recorded as a **naming wart**, not a bug: any rename has to touch both modules, the
+template and both languages at once.
 
-As opções são um retrato do DOM no instante da abertura (`plans.js:554`, `structure.js:973`). O save
-revalida **só** o índice contra o array capturado — `!rows[targetindex]` (`:577`),
-`!siblings[targetindex]` (`:996`) —, nunca contra o servidor. Como os dois arrays são capturados na
-mesma função e o modal é modal (bloqueia a aba atrás), a janela é estreita; mas **outra sessão**
-reordenando a mesma lista faz o índice significar outra coisa. O core resolve pelo id
-(`competencyidfrom`/`competencyidto`), então o resultado é um move para o lugar **errado**, não um
-erro. Sem cobertura de teste.
+### 3. The modal does not know whether the position still exists
 
-### 4. `refreshMoveState` só existe do lado dos Planos
+The options are a snapshot of the DOM at the instant of opening (`plans.js:543`, `structure.js:974`).
+The save revalidates **only** the index against the captured array — `!rows[targetindex]` (`:566`),
+`!siblings[targetindex]` (`:997`) —, never against the server. Since both arrays are captured in the
+same function and the modal is modal (it blocks the tab behind it), the window is narrow; but
+**another session** reordering the same list makes the index mean something else. Core resolves by id
+(`competencyidfrom`/`competencyidto`), so the outcome is a move to the **wrong** place, not an error.
+No test coverage.
 
-Depois de um reorder in-place, os itens "Mover para cima"/"Mover para baixo" do kebab de **cada**
-linha precisam recalcular seu `disabled` (o primeiro não sobe, o último não desce) —
-`refreshMoveState(list)` (`plans.js:128-140`) varre as linhas e reajusta os dois botões.
+### 4. `refreshMoveState` exists only on the Plans side
 
-A Estrutura **não tem** esse par de botões: `EST-DETAIL-MOVEUP` e `EST-DETAIL-MOVEDOWN` foram
-**aposentados** (ver `est-structure.md:149-150`) e viraram este modal + o arrasto. Por isso o
-`persistNodeMove` não chama nada equivalente — não há estado de borda para recalcular. As duas
-setas viraram uma porta só, e é esta.
+After an in-place reorder, the "Move up"/"Move down" items in **every** row's kebab need to
+recalculate their `disabled` state (the first cannot go up, the last cannot go down) —
+`refreshMoveState(list)` (`plans.js:117-129`) sweeps the rows and readjusts both buttons.
 
-### 5. Cobertura: a porta de teclado não é testada
+Structure **does not have** that pair of buttons: `EST-DETAIL-MOVEUP` and `EST-DETAIL-MOVEDOWN` were
+**retired** (see the *Retired IDs* table in [`est-competencies.md`](est-competencies.md)) and became this
+modal + the drag. That is why `persistNodeMove` calls nothing equivalent — there is no edge state to
+recalculate. The two arrows became a single door, and this is it.
 
-Não há `.feature` tocando o `MOD.MOVETO` — nem pelo grip, nem pelo rodapé, nem pelo kebab. O
-`CLAUDE.md` desaconselha Behat de arrasto (frágil em headless), e a orientação foi seguida; mas o
-**modal** é justamente a alternativa determinística ao arrasto — um `select` e um botão Salvar, sem
-nada de frágil. É a lacuna mais barata de fechar do kit: abrir pelo kebab (`PLN-COMP-MOVETO`, já
-dentro de um dropdown — abrir o ⋯ primeiro, per o `CLAUDE.md`), `I set the field "Nova posição" to
-"2. …"`, salvar, conferir a ordem.
+### 5. Coverage: the keyboard door is not tested
+
+There is no `.feature` touching `MOD.MOVETO` — not through the grip, not through the footer, not
+through the kebab. `CLAUDE.md` advises against Behat for dragging (fragile headless), and the guidance
+was followed; but the **modal** is precisely the deterministic alternative to dragging — a `select`
+and a Save button, with nothing fragile about it. It is the cheapest gap in the kit to close: open it
+from the kebab (`PLN-COMP-MOVETO`, already inside a dropdown — open the ⋯ first, per `CLAUDE.md`),
+`I set the field "New position" to "2. …"`, save, check the order.

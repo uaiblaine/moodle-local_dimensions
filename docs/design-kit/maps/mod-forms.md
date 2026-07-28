@@ -1,204 +1,225 @@
-# Mapa de Campos — os quatro corpos de `dynamic_form` (as-is)
+# Field map — the four `dynamic_form` bodies (as-is)
 
-O kit mapeia a **casca** de todo modal (`modal-shell.html`) mas nunca mapeou nenhum **corpo** de
-`core_form\dynamic_form` — a lacuna que este arquivo fecha (registrada em `mod-scale.md:169` e no
-README). Um `ls classes/form/` devolve **quatro**, todos abertos como `core_form/modalform` (sem
-reload de página):
+The kit maps the **shell** of every modal (`modal-shell.html`); this file maps the **bodies** of
+`core_form\dynamic_form` (the gap recorded in [`mod-scale.md`](mod-scale.md) and in the README). An
+`ls classes/form/` returns **four**, all opened as `core_form/modalform` (no page reload):
 
-| Form | Abre a partir de | Cria/edita | Casca de shell |
+| Form | Opened from | Creates/edits | Shell |
 | --- | --- | --- | --- |
-| `framework_dynamic_form.php` | `frameworks.js` (aba Estruturas) | `competency_framework` | `modal-shell.html` + o link "Abrir escalas" |
-| `competency_dynamic_form.php` | `structure.js` (aba Estruturas) | `competency` | `modal-shell.html` |
-| `template_dynamic_form.php` | `plans.js` (aba Planos) | `competency_template` | `modal-shell.html` |
-| `import_framework_dynamic_form.php` | `frameworks.js` (aba Estruturas) | importa CSV | `modal-shell.html` |
+| `framework_dynamic_form.php` | `frameworks.js` (Structures tab) | `competency_framework` | `modal-shell.html` + the "Open scales page" link |
+| `competency_dynamic_form.php` | `structure.js` (Competencies tab) | `competency` | `modal-shell.html` |
+| `template_dynamic_form.php` | `plans.js` (Plans tab) | `competency_template` | `modal-shell.html` |
+| `import_framework_dynamic_form.php` | `frameworks.js` (Structures tab) | imports CSV | `modal-shell.html` |
 
-Convenção de ID aqui: `FORM-FWK-*`, `FORM-COMP-*`, `FORM-TPL-*`, `FORM-IMP-*`. **Migração:** as IDs
-`MOD.SCALE-ACTION/-SUMMARY/-HIDDEN` eram **provisórias** no `mod-scale.md` (o gatilho da escala mora
-no corpo do framework form, não no modal de escala); passam a viver aqui como `FORM-FWK-SCALE-*`.
+**Abbreviation in the tables:** inside each section, `form.php:` is **that section's form class** —
+`framework_dynamic_form.php` in `FORM-FWK`, `competency_dynamic_form.php` in `FORM-COMP`,
+`template_dynamic_form.php` in `FORM-TPL`, `import_framework_dynamic_form.php` in `FORM-IMP`. The other
+paths are relative to the plugin root.
 
-## Fundações compartilhadas (as quatro)
+ID convention here: `FORM-FWK-*`, `FORM-COMP-*`, `FORM-TPL-*`, `FORM-IMP-*` — the `IMP` in
+`FORM-IMP-*` stands for **import**, not for improvement. **Migration:** the IDs
+`MOD.SCALE-ACTION/-SUMMARY/-HIDDEN` were **provisional** in `mod-scale.md` (the scale trigger lives in
+the framework form's body, not in the scale modal); they now live here as `FORM-FWK-SCALE-*`.
 
-- **Casca é o `core_form/modalform`.** Cada opener faz `new ModalForm({formClass, args, modalConfig:{title}})`.
-  Título é `getString(<key>, <comp>)` no opener, não no form.
-- **ids são randomizados.** O `dynamic_form` sufixa **todo** id de elemento (`id_scaleid` →
-  `id_scaleid_c5fLCIS8…`), então **todo JS que fala com um campo o seleciona por `name`**, nunca por
-  `#id_<name>` (ver [[moodle-hub-ui-gotchas]]). Onde um id **precisa** ser fixo (o `tool_lp/scaleconfig`
-  do core casa por seletor), o form o **pina** explicitamente — `id_scaleconfiguration`,
+## Shared foundations (all four)
+
+- **The shell is `core_form/modalform`.** Each opener does `new ModalForm({formClass, args, modalConfig:{title}})`.
+  The title is `getString(<key>, <comp>)` in the opener, not in the form.
+- **ids are randomised.** `dynamic_form` suffixes **every** element id (`id_scaleid` →
+  `id_scaleid_c5fLCIS8…`), so **every piece of JS that talks to a field selects it by `name`**, never by
+  `#id_<name>` (see [[moodle-hub-ui-gotchas]]). Where an id **has** to be fixed (core's
+  `tool_lp/scaleconfig` matches by selector), the form **pins** it explicitly — `id_scaleconfiguration`,
   `id_scaleid_central`, `tool_lp_scaleconfiguration_central`, `id_scaleconfigbutton_central`.
-- **`js_call_amd` mora no `definition_after_data()`, nunca no `definition()`.** O `definition()` roda
-  no construtor do moodleform, **antes** do `start_collecting_javascript_requirements()` do modalform;
-  um `js_call_amd` ali nunca chega ao modal. Vale para o painel de contraste, o swatch e o pin de SCSS
-  do competency/template (ver [[moodle-hub-ui-gotchas]], os 2 traps do dynamic_form).
-- **Editor de descrição é mídia-por-URL-só.** Os três forms com `description` usam
-  `{maxfiles:1, return_types:FILE_EXTERNAL, enable_filemanagement:false}` — o `maxfiles:1` é o
-  contorno do crash do `tiny_media` (embed sem fpoptions) no 5.0–5.2, e o `FILE_EXTERNAL` tira o
-  repositório do picker: imagem só por URL, sem área de arquivo (ver [[dimensions-tinymce-media-crash]]).
-- **Duas áreas de customfield, e só duas.** `competency_handler` (área competência) e `lp_handler`
-  (área template) injetam o bloco de customfields via `instance_form_definition()`. **O framework
-  form injeta zero** (frameworks não são área de customfield); **o import** também zero (os customfields
-  viajam como colunas `cf_*` do CSV, aplicadas pelo importer). Só **competency** e **template** têm o bloco.
+- **`js_call_amd` lives in `definition_after_data()`, never in `definition()`.** `definition()` runs in
+  the moodleform constructor, **before** the modalform's `start_collecting_javascript_requirements()`;
+  a `js_call_amd` there never reaches the modal. Holds for the contrast panel, the swatch and the SCSS
+  pin of the competency/template forms (see [[moodle-hub-ui-gotchas]], the 2 dynamic_form traps).
+- **The description editor is URL-only media.** The three forms with a `description` use
+  `{maxfiles:1, return_types:FILE_EXTERNAL, enable_filemanagement:false}` — the `maxfiles:1` is the
+  workaround for the `tiny_media` crash (embed without fpoptions) on 5.0–5.2, and `FILE_EXTERNAL` takes
+  the repository out of the picker: images by URL only, with no file area (see
+  [[dimensions-tinymce-media-crash]]).
+- **Two customfield areas, and only two.** `competency_handler` (competency area) and `lp_handler`
+  (template area) inject the customfield block through `instance_form_definition()`. **The framework
+  form injects zero** — a `grep -c 'competency_handler\|lp_handler' classes/form/framework_dynamic_form.php`
+  returns `0`; **the import** is zero too (the customfields travel as `cf_*` columns of the CSV, applied
+  by the importer). Only **competency** and **template** carry the block.
 
 ---
 
-## `FORM-FWK` — corpo do form de estrutura (`framework_dynamic_form.php`)
+## `FORM-FWK` — the structure form body (`framework_dynamic_form.php`)
 
-Abre em dois caminhos, ambos por `frameworks.js`: **editar** (`editFramework`, `:194`, args `{id}`,
-título `central_frameworks_edit`, do sticky-footer) e **criar** (`createFramework`, `:203-204`, args
-`{id:0, contextid}`, título `central_frameworks_new`, do botão da toolbar). **Salvar** → toast
-`central_frameworks_saved` + `reloadPane` (`frameworks.js:179-182`); a aba não tem caminho in-place.
-Gate: `moodle/competency:competencymanage` no contexto de submissão (`form.php:115-117`). **Sem customfields.**
+Opens on two paths, both from `frameworks.js`: **edit** (`editFramework`, `:192`, args `{id}`, title
+`central_frameworks_edit`, from the sticky footer) and **create** (`createFramework`, `:201-202`, args
+`{id:0, contextid}`, title `central_frameworks_new`, from the toolbar button). **Save** → toast
+`central_frameworks_saved` + `reloadPane` (`frameworks.js:177-180`); the tab has no in-place path.
+Gate: `moodle/competency:competencymanage` on the submission context (`form.php:115-117`).
+**No customfields.**
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `FORM-FWK-ID` | `[hidden]` | hidden | `form.php:137-138` | `PARAM_INT` | id da estrutura; 0 = criar. Dirige o branch criar-vs-atualizar (`:247,263`) |
-| `FORM-FWK-CONTEXTID` | `[hidden]` | hidden | `form.php:139-141` | `PARAM_INT` | semeado no criar do `region.dataset.contextid` (`frameworks.js:204`); escopa a checagem de shortname único. **Não** relido no editar |
-| `FORM-FWK-SHORTNAME` | Short name | text | `form.php:143-146` | `PARAM_TEXT` · maxlength 100 | rótulo **nativo** `tool_lp`. `required` só client; unicidade é server (ver validação) |
-| `FORM-FWK-IDNUMBER` | ID number | text | `form.php:148-151` | `PARAM_RAW` · maxlength 100 | `RAW` de propósito (idnumber aceita chars arbitrários). Sem checagem de unicidade neste form |
-| `FORM-FWK-DESC` | Description | editor | `form.php:157-164` | `PARAM_CLEANHTML` · rows 4 | mídia-por-URL-só (fundação acima). `set_data` `{text,format}` (`:224-227`) |
-| `FORM-FWK-SCALE` | Scale | select | `form.php:166-184` | `PARAM_INT` | **select congelável** (ver Controles). Rótulo `central_frameworks_scale`; options `get_scales_menu()` (core). `required` só quando não-congelado. É onde o erro de escala-incompleta é ancorado (`:295`), embora o portador seja o hidden |
-| `FORM-FWK-SCALE-HIDDEN` | `[hidden]` | hidden | `form.php:186-187` | `name="scaleconfiguration"` · `PARAM_RAW` · id fixo `id_scaleconfiguration` | **o destino real da escala** (migra do `MOD.SCALE-HIDDEN`). Escrito por JS (`frameworks.js:76`), zerado na troca de escala (`:117`). Persistido verbatim (`:261`) |
-| `FORM-FWK-SCALE-ACTION` | Configurar escala | static (botão+resumo) | `form.php:189-195` | `data-action="configure-scale"` · `data-region="scaleconfig-summary"` | **o gatilho do `MOD.SCALE`** (migra do `MOD.SCALE-ACTION`). String hand-built: botão `.btn.btn-secondary.btn-sm` + span de resumo. Fiado por **delegação document-level capture-phase** (`frameworks.js:95-123`, uma vez por página) porque o corpo do form vive num modalform cujo ciclo nunca roda o init da aba. Clique → `openScaleConfigForForm` (`:62-86`) abre o `MOD.SCALE`. O resumo mostra `central_frameworks_scaleconfigured`="Configurada" só quando o config gravado já está completo (`:189-190`) |
-| `FORM-FWK-VISIBLE` | Visible | selectyesno | `form.php:197-198` | default 1 | flag do próprio framework — **distinto** do `FWK-ROW-VIS` (o toggle do sticky-footer que a vira por WS sem abrir o form) |
-| `FORM-FWK-TAXONOMY` | Level {i} | select (loop) | `form.php:200-204` | — | `taxonomies[1..N]`, N=`max(depth,4)`; options `get_taxonomies_list()` (core). Persistido como CSV (`:255-256`). **Gotcha de load:** o getter mágico do persistente explode a coluna CSV num array indexado de 1 — `(string)` nele = warning que o debug developer escala a exceção (`:232-234`) |
+| `FORM-FWK-ID` | `[hidden]` | hidden | `form.php:137-138` | `PARAM_INT` | structure id; 0 = create. Drives the create-vs-update branch (`:247`, `:263`) |
+| `FORM-FWK-CONTEXTID` | `[hidden]` | hidden | `form.php:139-141` | `PARAM_INT` | seeded on create from `region.dataset.contextid` (`frameworks.js:202`); scopes the unique-shortname check. **Not** re-read on edit |
+| `FORM-FWK-SHORTNAME` | Short name | text | `form.php:143-146` | `PARAM_TEXT` · maxlength 100 | **native** `tool_lp` label. `required` is client-only (`:145`); uniqueness is server-side (see validation) |
+| `FORM-FWK-IDNUMBER` | ID number | text | `form.php:148-151` | `PARAM_RAW` · maxlength 100 | `RAW` on purpose (idnumber accepts arbitrary chars). `required` is client-only (`:150`); **no** uniqueness check in this form |
+| `FORM-FWK-DESC` | Description | editor | `form.php:157-164` | `PARAM_CLEANHTML` · rows 4 | URL-only media (foundation above). `set_data` `{text,format}` (`:224-227`) |
+| `FORM-FWK-SCALE` | Scale | select | `form.php:166-184` | `PARAM_INT` | **freezable select** (see Design controls). Label `central_frameworks_scale`; options `get_scales_menu()` (core). `required` only when not frozen (`:183`). It is where the incomplete-scale error is anchored (`:295`), even though the carrier is the hidden field |
+| `FORM-FWK-SCALE-HIDDEN` | `[hidden]` | hidden | `form.php:186-187` | `name="scaleconfiguration"` · `PARAM_RAW` · fixed id `id_scaleconfiguration` | **the scale's real destination** (migrated from `MOD.SCALE-HIDDEN`). Written by JS (`frameworks.js:76`), cleared when the scale changes (`:117`). Persisted verbatim (`:261`) |
+| `FORM-FWK-SCALE-ACTION` | Configure scale | static (button+summary) | `form.php:189-195` | `data-action="configure-scale"` · `data-region="scaleconfig-summary"` | **the `MOD.SCALE` trigger** (migrated from `MOD.SCALE-ACTION`). Hand-built string: a `.btn.btn-secondary.btn-sm` button + a summary span. Wired by **document-level capture-phase delegation** (`frameworks.js:95-123`, once per page) because the form body lives in a modalform whose life cycle never runs the tab's init. Click → `openScaleConfigForForm` (`:62-86`) opens `MOD.SCALE`. The summary shows `central_frameworks_scaleconfigured`="Configured" only when the stored config is already complete (`:189-190`) |
+| `FORM-FWK-VISIBLE` | Visible | selectyesno | `form.php:197-198` | default 1 | the framework's own flag — **distinct** from `FWK-ROW-VIS` (the sticky-footer toggle that flips it over a WS without opening the form) |
+| `FORM-FWK-TAXONOMY` | Level {i} | select (loop) | `form.php:200-204` | — | `taxonomies[1..N]`, N = `taxonomy_levels()` = `max(depth, 4)` (`:85-87`); options `get_taxonomies_list()` (core). Persisted as CSV (`:255-256`). **Load gotcha:** the persistent's magic getter explodes the CSV column into a 1-indexed array — a `(string)` on it = a warning that developer debug escalates into an exception (`:232-235`) |
 
-**Validação (`form.php:281-299`) — as duas bloqueiam:** (1) **shortname único** no mesmo `contextid`
-→ `shortnametaken` (`:287-292`); (2) **escala incompleta** → `central_frameworks_scaleincomplete`
-ancorado no `scaleid` (`:294-296`), via `helper::scaleconfig_is_complete` (exige ≥1 default **e** ≥1
-proficiente), o mesmo que o modal filho exige antes de resolver — **bloqueia dos dois lados**. Não
-re-checa required de shortname/idnumber/scaleid (client-only) nem unicidade de idnumber.
+**Validation (`form.php:281-299`) — both block:** (1) **unique shortname** within the same `contextid`
+→ `shortnametaken` (`:287-292`); (2) **incomplete scale** → `central_frameworks_scaleincomplete`
+anchored on `scaleid` (`:294-296`), via `helper::scaleconfig_is_complete` (`helper.php:2888`, requires
+≥1 default **and** ≥1 proficient), the same thing the child modal requires before resolving — **it
+blocks on both sides**. It does not re-check the required rule on shortname/idnumber/scaleid
+(client-only), nor idnumber uniqueness.
 
-**Controles de design:** (a) **`FORM-FWK-SCALE` congelado** — quando `framework->has_user_competencies()`,
-o select vira `readonly`+`disabled` + `setConstant` + **sem** rule `required` (`:173-184`): o disabled
-sai do POST mas o constant abastece o `get_data()` e o JS ainda lê `.value` (a receita de congelar
-select, [[moodle-hub-ui-gotchas]]); a troca de escala **não** zera o config quando congelado. Duas
-telas visuais (dropdown editável × cadeado), e o valor cinza não pode ler como vazio. (b) **Gatilho
-`MOD.SCALE`** (migrado, acima). (c) **Link "Abrir escalas" no cabeçalho** — injetado por
-`injectScalesLink` (`frameworks.js:133-161`) no `LOADED`, à esquerda do fechar, **só** quando
-`canscalespage==='1'`. O chip de fechar do form vem do `.modal-form-dialogue` (CSS puro,
-`styles.css:3740-3769`), não mais de uma classe injetada em JS — `injectScalesLink` deixou de tocar o
-diálogo (`025c2f6`); antes a classe chegava no `LOADED` e dava flash. (d) Descrição URL-só.
+**Design controls:** (a) **`FORM-FWK-SCALE` frozen** — when `scale_frozen()` (`:75-77`, that is
+`framework->has_user_competencies()`),
+the select turns `readonly`+`disabled` + `setConstant` + **no** `required` rule (`:173-184`): the
+disabled attribute drops it from the POST but the constant feeds `get_data()` and the JS still reads
+`.value` (the freeze-a-select recipe, [[moodle-hub-ui-gotchas]]); changing the scale does **not** clear
+the config when frozen. Two visual states (editable dropdown × padlock), and the greyed value must not
+read as empty. (b) **`MOD.SCALE` trigger** (migrated, above). (c) **The "Open scales page" link in the
+footer** — injected by `injectScalesLink` (`frameworks.js:133-161`) on `LOADED`, as the **first child of
+`.modal-footer`** (`:160`, so that `margin-right:auto` pushes Save/Cancel across), **only** when
+`activeRegion.dataset.canscalespage === '1'` (`:138`). The form's close chip comes from
+`.modal-form-dialogue` (pure CSS, `styles.css:5063-5103`), not from a class injected in JS —
+`injectScalesLink` stopped touching the dialogue (`025c2f6`); before that the class arrived on `LOADED`
+and produced a flash. (d) URL-only description.
 
 ---
 
-## `FORM-COMP` — corpo do form de competência (`competency_dynamic_form.php`)
+## `FORM-COMP` — the competency form body (`competency_dynamic_form.php`)
 
-Abre por `structure.js` em três sítios: **editar** (`:1253-1258`, título `editcompetency`), **adicionar
-filha** (`:1259-1260`) e o botão "Adicionar competência" do cabeçalho (`:1425-1428`), os dois últimos
-título `addcompetency` (**nativos** `tool_lp`). **Salvar** (`structure.js:804-810`): se editou →
-`refreshNode` **in-place** (mantém expansão+seleção); se mudou o pai → `reloadPane`+`revealNode` no
-novo lugar; se criou → `reloadPane`. **Sem toast** — a confirmação é o flash/re-render in-place. Gate:
-`moodle/competency:competencymanage` no contexto da estrutura (`form.php:112-114`).
+Opens from `structure.js` in three places: **edit** (`:1253-1258`, title `editcompetency`), **add
+child** (`:1259-1260`) and the header's "Add competency" button (`:1425-1428`), the latter two with
+title `addcompetency` (**native** `tool_lp` strings). **Save** (`structure.js:804-810`): on an edit →
+`refreshNode` **in place** (keeps expansion + selection); on a create → `reloadPane`. The parent-change
+case lives **inside** `refreshNode` (`:745-754`): a different parent → `reloadPane` + `revealNode` at
+the new spot. **No toast** — the confirmation is the in-place flash/re-render. Gate:
+`moodle/competency:competencymanage` on the structure's context (`form.php:112-114`).
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `FORM-COMP-ID` | `[hidden]` | hidden | `form.php:131-132` | `PARAM_INT` | 0 = criar |
-| `FORM-COMP-FWKID` | `[hidden]` | hidden | `form.php:133-135` | `PARAM_INT` | escolhe o contexto de submissão + escopa o pai e a unicidade de idnumber |
-| `FORM-COMP-PARENT` | Parent competency | select | `form.php:136-142` | `PARAM_INT` | rótulo **nativo**. Options `get_parent_options` (`:79-97`): raiz + toda competência da estrutura **menos** a editada e suas descendentes (não pode virar filha de si). **Desacoplado no editar:** o pai submetido **não** vai ao `update_competency` — só um `set_parent_competency` separado (`:303-305`) reparenta, e client-side isso força `reloadPane`+`revealNode` |
-| `FORM-COMP-SHORTNAME` | Short name | text | `form.php:144-147` | `PARAM_TEXT` · maxlength 100 | rótulo core. `required` só client |
-| `FORM-COMP-IDNUMBER` | ID number | text | `form.php:149-151` | `PARAM_RAW` | **único server** (ver validação → `idnumberexists`); é o único campo com validador bloqueante |
-| `FORM-COMP-DESC` | Description | editor | `form.php:157-164` | `PARAM_CLEANHTML` | mídia-por-URL-só (fundação) |
-| `FORM-COMP-SCALE` | Scale | select | `form.php:169-172` | `PARAM_INT` · id fixo `id_scaleid_central` | half do trio de escala inline. Options `[null=>inheritfromframework] + get_scales_menu()`; null = herda. `addHelpButton` |
-| `FORM-COMP-SCALE-HIDDEN` | `[hidden]` | hidden | `form.php:174-175` | `PARAM_RAW` · id fixo `tool_lp_scaleconfiguration_central` | destino do diálogo de escala **nativo** (`tool_lp/scaleconfig`) — **mecanismo distinto** do `MOD.SCALE` do framework (aquele é bespoke, este é o do core, sem span de resumo) |
-| `FORM-COMP-SCALE-BTN` | Configure scales | button | `form.php:176-181` | id fixo `id_scaleconfigbutton_central` | gatilho **nativo** do `tool_lp/scaleconfig`; incondicional (existe no criar também) |
-| `FORM-COMP-CFIELD` | {headers de categoria do core} | customfield (bloco) | `form.php:184` → `competency_handler:160-176` | `customfield_<shortname>` | o **bloco da área competência** (o handler passa o header vazio, então só as categorias do core rotulam). Membros: `enrollmentfilter`/`singlecourseredirect` (selects de cascata), `custombgcolor`/`customtextcolor` (text hex — o par graduado), `tag1`/`tag2`/`type` (selects), `customscss` (só com `enablecustomscss` + cap `local/dimensions:editcustomscss`), `customcard`/`custombgimage` (picture, só no modo externo). Rows `itemid=0, instanceid=<compid>` |
-| `FORM-COMP-IMG` | custombgimage / customcard | filemanager | `form.php:184` → `picture_manager:144-166` | áreas `competency_bgimage`/`_cardimage` | **plugin-custom**, só no **modo built-in** de imagem — mutuamente exclusivo com os customfields `picture`. Dois filemanagers 10MB/1 arquivo |
-| `FORM-COMP-CASCADE` | `[sem rótulo]` | static | `form.php:187-201` | — | explicador da cascata competência→template→global, `insertElementBefore` acima do `enrollmentfilter` (fallback no fim se ausente); nomeia os dois selects de cascata |
+| `FORM-COMP-ID` | `[hidden]` | hidden | `form.php:131-132` | `PARAM_INT` | 0 = create |
+| `FORM-COMP-FWKID` | `[hidden]` | hidden | `form.php:133-135` | `PARAM_INT` | picks the submission context + scopes the parent options and idnumber uniqueness |
+| `FORM-COMP-PARENT` | Parent competency | select | `form.php:136-142` | `PARAM_INT` | **native** label. Options from `get_parent_options` (`:79-97`): the root + every competency in the structure **minus** the one being edited (`:87-89`) and its descendants (`:90-92`) — it cannot become a child of itself. **Decoupled on edit:** the submitted parent does **not** go to `update_competency` (`:292` resends the original parent) — only a separate `set_parent_competency` (`:300-302`) reparents, and client-side that forces `reloadPane`+`revealNode` |
+| `FORM-COMP-SHORTNAME` | Short name | text | `form.php:144-147` | `PARAM_TEXT` · maxlength 100 | core label. `required` is client-only |
+| `FORM-COMP-IDNUMBER` | ID number | text | `form.php:149-151` | `PARAM_RAW` | **unique, server-side** (see validation → `idnumberexists`); it is the only field with a blocking validator of its own |
+| `FORM-COMP-DESC` | Description | editor | `form.php:157-164` | `PARAM_CLEANHTML` | URL-only media (foundation) |
+| `FORM-COMP-SCALE` | Scale | select | `form.php:169-172` | `PARAM_INT` · fixed id `id_scaleid_central` | one third of the inline scale trio. Options `[null=>inheritfromframework] + get_scales_menu()`; null = inherit. `addHelpButton` (`:172`) |
+| `FORM-COMP-SCALE-HIDDEN` | `[hidden]` | hidden | `form.php:174-175` | `PARAM_RAW` · fixed id `tool_lp_scaleconfiguration_central` | destination of the **native** scale dialogue (`tool_lp/scaleconfig`) — a **distinct mechanism** from the framework's `MOD.SCALE` (that one is bespoke, this one is core's, with no summary span) |
+| `FORM-COMP-SCALE-BTN` | Configure scales | button | `form.php:176-181` | fixed id `id_scaleconfigbutton_central` | **native** `tool_lp/scaleconfig` trigger; unconditional (it exists on create too) |
+| `FORM-COMP-CFIELD` | {core category headers} | customfield (block) | `form.php:184` → `competency_handler:160-176` | `customfield_<shortname>` | the **competency area block**. The handler adds **no** heading at all and passes the identifier through untouched (`:166-170`), so what labels the block is core's categories. Members provisioned in this area (`helper::ensure_custom_fields_exist`, `:468-490`): `enrollmentfilter`/`singlecourseredirect`/`lockedcardmode`/`showlockeddate` (the cascade), `custombgcolor`/`customtextcolor` (hex text — the graded pair), `tag1`/`tag2`/`type`, `customscss` (only with `enablecustomscss`), and `customcard`/`custombgimage` (picture, **only** in external mode, `:475-478`). Rows carry `itemid=0, instanceid=<compid>` |
+| `FORM-COMP-IMG` | custombgimage / customcard | filemanager | `form.php:184` → `picture_manager:144-166` | areas `competency_bgimage`/`_cardimage` | **plugin-custom**, only in the image **built-in mode** — mutually exclusive with the `picture` customfields. Two filemanagers, `maxbytes` 10MB + `maxfiles` 1 + `accepted_types` `web_image` (`picture_manager:100-107`) |
+| `FORM-COMP-CASCADE` | `[no label]` | static | `form.php:187-198` | — | explainer for the competency→template→global cascade, `insertElementBefore` above `enrollmentfilter` (`:195`; fallback `addElement` at the end if the field is absent, `:197`) |
 
-**Validação (`form.php:328-343`) — bloqueia:** idnumber único na estrutura → `idnumberexists`
-(`:331-337`); + `helper::validate_customscss` (compila o SCSS, bloqueia em erro, só com feature on).
-**Não** valida o par de cor — o painel **aconselha, não bloqueia**.
+**Validation (`form.php:325-339`) — blocks:** unique idnumber within the structure → `idnumberexists`
+(`:328-334`); + `helper::validate_customscss` (`:337`, compiles the SCSS and blocks on error, only with
+the feature on). It does **not** validate the colour pair — the panel **advises, it does not block**.
 
-**Controles de design (todos fiados no `definition_after_data`, `:217-242`):** (1) **trio de escala
-inline** via `tool_lp/scaleconfig` (`:225-229`) — nativo, ids fixos. (2) **Painel de contraste WCAG**
-via `local_dimensions/central/contrast` (`:238-241`) sobre o par `custombgcolor`/`customtextcolor`:
-computa o ratio real (linearização sRGB → luminância → `(L1+.05)/(L2+.05)`, `contrast.js:82-106`),
-pill de veredito (excelente≥7/passa≥4.5/atenção≥3/falha) + badges AA/AAA, e até **dois consertos de
-um clique** abaixo do AA — mas **aconselha, nunca toca no salvar** (`contrast.js:22-23`); relayouta os
-dois `.fitem` num flex de duas colunas (`:475-491`). (3) **Swatch de cor** (`colour_swatch`, `:232-235`).
-(4) **SCSS pinado em `FORMAT_PLAIN`** (`helper::force_customscss_plain`, `:224`).
+**Design controls (all wired in `definition_after_data`, `:214-239`):** (1) the **inline scale trio**
+via `tool_lp/scaleconfig` (`:222-226`) — native, fixed ids. (2) **WCAG contrast panel** via
+`local_dimensions/central/contrast` (`:235-238`) over the `custombgcolor`/`customtextcolor` pair: it
+computes the real ratio (sRGB linearisation → luminance → `(L1+.05)/(L2+.05)`, `contrast.js:82-105`), a
+verdict pill in four bands (excellent ≥7 / pass ≥4.5 / caution ≥3 / fail, `contrast.js:234-245`,
+thresholds at `:43`) + AA/AAA badges, and even **two one-click fixes** below AA (`:404`, `:408`) — but
+it **advises, it never touches the save** (`contrast.js:22-23`); it relayouts the two `.fitem` into a
+two-column flex (`:475-491`). (3) **Colour swatch** (`colour_swatch`, `:229-232`). (4) **SCSS pinned to
+`FORMAT_PLAIN`** (`helper::force_customscss_plain`, `:220`).
 
-> **A lacuna real do painel de contraste** (herdada do `pln-plans.md:293-298`, não re-litigada aqui):
-> ele gradua **texto × fundo**, mas o cabeçalho pinta **três stops derivados** + chips translúcidos que
-> ninguém gradua — o par que o painel mostra não é o que o cabeçalho renderiza. Este mapa só registra
-> que o painel **aconselha**; a superfície bloqueante é a `validation()` (idnumber + SCSS), acima.
+> **The contrast panel's real gap** (inherited from [`pln-plans.md`](pln-plans.md), not re-litigated
+> here): it grades **text × background**, but the header paints **three derived stops** + translucent
+> chips that nobody grades — the pair the panel shows is not what the header renders. This map only
+> records that the panel **advises**; the blocking surface is `validation()` (idnumber + SCSS), above.
 
 ---
 
-## `FORM-TPL` — corpo do form de template (`template_dynamic_form.php`)
+## `FORM-TPL` — the template form body (`template_dynamic_form.php`)
 
-Abre por `plans.js`: **novo** (`new-template`, `:714-720`, args `{id:0, contextid}`) e **editar**
-(`edit-template`, `:721-727`, args `{id}`, título nativo `edittemplate`). **Salvar** →
-`reloadKeepingScroll` (`plans.js:206` → `:93-102`: snapshota o scroll das duas regiões, `reloadPane`,
-restaura). **Sem toast.** Save server (`form.php:280-310`): `create/update_template` + o
-`lp_handler::instance_form_save_with_image` (2-arg) que dispara o evento `template_customfields_updated`,
-tudo num retry de `dml_write_exception` (corrida do INSERT id-0 no `customfield_data`). Gate:
-`moodle/competency:templatemanage`.
+Opens from `plans.js`: **new** (`new-template`, `:714-720`, args `{id:0, contextid}`, title
+`managetemplates_addtemplate`) and **edit** (`edit-template`, `:721-727`, args `{id}`, native title
+`edittemplate`). **Save** → `reloadKeepingScroll` (`plans.js:206` → `:93-109`: snapshots the scroll of
+both regions, `reloadPane` in `quiet` mode, restores). **No toast.** Server-side save
+(`form.php:295-325`): `create/update_template` + `lp_handler::instance_form_save_with_image` (2-arg,
+`:317`) — and it is **the handler**, not the form, that wraps the save in a `dml_write_exception` retry
+(`lp_handler:202-209`, the id-0 INSERT race on `customfield_data`'s unique index).
+Gate: `moodle/competency:templatemanage` (`form.php:93`).
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `FORM-TPL-ID` | `[hidden]` | hidden | `form.php:112-113` | `PARAM_INT` | 0 = criar |
-| `FORM-TPL-CONTEXTID` | `[hidden]` | hidden | `form.php:114-116` | `PARAM_INT` | escopo do shortname único; 0 → contexto system (gotcha dataset-as-truth) |
-| `FORM-TPL-SHORTNAME` | Short name | text | `form.php:118-121` | `PARAM_TEXT` · maxlength 100 | único visível sempre-obrigatório; unicidade server (`shortnametaken`) |
-| `FORM-TPL-DESC` | Description | editor | `form.php:127-134` | `PARAM_CLEANHTML` | mídia-por-URL-só (fundação) |
+| `FORM-TPL-ID` | `[hidden]` | hidden | `form.php:112-113` | `PARAM_INT` | 0 = create |
+| `FORM-TPL-CONTEXTID` | `[hidden]` | hidden | `form.php:114-116` | `PARAM_INT` | scope for the unique shortname; 0 → the system context (the dataset-as-truth gotcha) |
+| `FORM-TPL-SHORTNAME` | Short name | text | `form.php:118-121` | `PARAM_TEXT` · maxlength 100 | the only always-required visible field; uniqueness server-side (`shortnametaken`) |
+| `FORM-TPL-DESC` | Description | editor | `form.php:127-134` | `PARAM_CLEANHTML` | URL-only media (foundation) |
 | `FORM-TPL-VISIBLE` | Visible | selectyesno | `form.php:136-138` | default 1 | `addHelpButton` |
-| `FORM-TPL-DUEDATE` | Due date | date_time_selector | `form.php:140-141` | `['optional'=>true]` | checkbox de habilitar; 0 = sem prazo. O hero de prazo só aparece na view de **plano**, não no tracker |
-| `FORM-TPL-CFIELD` | {headers do core} | customfield (bloco) | `form.php:145` → `lp_handler:169-172` | `customfield_<shortname>` | o **bloco da área lp** (header suprimido). Membros itemizados abaixo |
-| `FORM-TPL-DISPLAYMODE` | Modo de exibição | select (customfield) | `form.php:168` | 1=Trilha, 2=Panorama | **o motor da cascata** — 3 `hideIf` dependem dele. O índice 1-based da opção **é** a constante `DISPLAYMODE_*` por construção |
-| `FORM-TPL-REDIRECT` | Redirect single course | select (customfield) | `form.php:170-175` | `hideIf displaymode eq 2` | só no modo **Trilha** |
-| `FORM-TPL-SHOWRELATED` | Show related | select (customfield) | `form.php:177-182` | `hideIf displaymode eq 1` | só no modo **Panorama**; gate do link abaixo |
-| `FORM-TPL-SHOWRELATEDLINK` | Link related | select (customfield) | `form.php:183-195` | **dois** `hideIf`: displaymode eq 1 **e** showrelated eq índice-de-No | só Panorama **e** com Show-related=Sim. O 2º valor é o índice congelado no define — reordenar `showrelated_options()` o segue silenciosamente |
-| `FORM-TPL-ENROLFILTER` | Enrollment filter | select (customfield) | `form.php:159-161` | — | âncora do explicador de cascata (inserido acima dele) |
-| `FORM-TPL-BGCOLOR` / `-TEXTCOLOR` | custombgcolor / customtextcolor | text (customfield) | `form.php:215-216/221-222` | hex | **o par graduado** — text puro (não colorpicker), decorado por swatch + painel de contraste (defaults `#0f6cbf`/`#ffffff`, `plans.php:271`) |
-| `FORM-TPL-SCSS` | Custom SCSS | textarea (customfield) | `form.php:210-211,257-273` | — | só com `enablecustomscss`. Pinado em `FORMAT_PLAIN` no render **e** no `get_data` (4 formas possíveis); **bloqueia** o salvar em erro de compilação |
-| `FORM-TPL-CASCADE` | `[sem rótulo]` | static | `form.php:148-164` | — | explicador, `insertElementBefore` acima do `enrollmentfilter` |
+| `FORM-TPL-DUEDATE` | Due date | date_time_selector | `form.php:140-141` | `['optional'=>true]` | an enable checkbox; 0 = no due date. The due-date hero only shows on the **plan** view, not on the tracker |
+| `FORM-TPL-CFIELD` | {core headers} | customfield (block) | `form.php:145` → `lp_handler:169-172` | `customfield_<shortname>` | the **lp area block**. The handler only emits an `<h2>` when the identifier is **not** `''` (`:169-172`); the modal passes `''` (`form.php:145`), so the heading is suppressed here. Besides the ones itemised below, the lp area also provisions `subline_source`, `template_idnumber`, `lockedcardmode`, `showlockeddate`, `tag1`/`tag2`/`type` and (in external mode) `customcard`/`custombgimage` — `helper::ensure_custom_fields_exist:457-490` |
+| `FORM-TPL-DISPLAYMODE` | Display mode | select (customfield) | `form.php:168-170` | 1=Competency tracker (`DISPLAYMODE_COMPETENCIES`), 2=Full plan overview (`DISPLAYMODE_PLAN`) | **the cascade's engine** — **five** `hideIf` rules depend on it (`:173-203`), and a sixth depends on `showrelated` (`:205-210`). The option's 1-based index **is** the `DISPLAYMODE_*` constant by construction (comment at `:168-169`; `constants.php:177`/`:180`) |
+| `FORM-TPL-REDIRECT` | Redirect single course | select (customfield) | `form.php:173-178` | `hideIf displaymode eq DISPLAYMODE_PLAN` (2) | only in **Competency tracker** mode. The `hideIf` rules on `lockedcardmode` (`:179-184`) and `showlockeddate` (`:185-190`) are the same rule, over the same two values |
+| `FORM-TPL-SHOWRELATED` | Show related | select (customfield) | `form.php:192-197` | `hideIf displaymode eq DISPLAYMODE_COMPETENCIES` (1) | only in **Full plan overview** mode; the gate for the link below |
+| `FORM-TPL-SHOWRELATEDLINK` | Link related | select (customfield) | `form.php:198-203` + `:205-210` | **two** `hideIf` rules: displaymode eq 1 **and** showrelated eq index-of-No | only Full plan overview **and** with Show related = Yes. The 2nd value is **not** a literal: it is `array_search(SHOWRELATED_NO, array_keys(showrelated_options())) + 1` (`:209`), computed at definition time — `3` today, and reordering `showrelated_options()` is followed automatically |
+| `FORM-TPL-ENROLFILTER` | Enrollment filter | select (customfield) | `form.php:161-163` | — | the anchor for the cascade explainer (`insertElementBefore` above it) |
+| `FORM-TPL-BGCOLOR` / `-TEXTCOLOR` | custombgcolor / customtextcolor | text (customfield) | from the lp block (`form.php:145`); decorated at `:230-233` (swatch) and `:236-239` (contrast) | hex | **the graded pair** — plain text (not a colorpicker). Header defaults when empty: `#0f6cbf`/`#ffffff` (`dynamictabs/plans.php:271-272`) |
+| `FORM-TPL-SCSS` | Custom SCSS | textarea (customfield) | `form.php:226` (pin at render), `:272-288` (pin in `get_data`) | — | only with `enablecustomscss`. Pinned to `FORMAT_PLAIN` at render **and** in `get_data` (all 4 possible shapes of the value); **blocks** the save on a compilation error |
+| `FORM-TPL-CASCADE` | `[no label]` | static | `form.php:148-166` | — | explainer, `insertElementBefore` above `enrollmentfilter` (`:163`; fallback `addElement` at `:165`) |
 
-**Validação (`form.php:319-337`) — bloqueia:** shortname único no `contextid` → `shortnametaken`;
-+ `validate_customscss` (SCSS inválido). **Não** valida o par de cor (aconselha), nem duedate/visible.
+**Validation (`form.php:334-352`) — blocks:** unique shortname within the `contextid` →
+`shortnametaken` (`:337-346`); + `validate_customscss` (`:349`, invalid SCSS). It does **not** validate
+the colour pair (it advises), nor duedate/visible.
 
-**Controles de design:** (1) **Painel de contraste WCAG** + (2) **swatch** — idênticos ao competency,
-mesmo `contrast.js`/`colour_swatch`, mesmo relayout, mesmo "aconselha não bloqueia" (`:221-224`/`:215-218`).
-(3) **Cascata `hideIf`** dirigida pelo `displaymode` (progressive-disclosure, 3 regras). (4) **SCSS
-`FORMAT_PLAIN`** bloqueante. (5) Descrição URL-só. (6) **Sem toast** no salvar (diverge do padrão da
-casa; a confirmação é o reload preservando scroll).
+**Design controls:** (1) **WCAG contrast panel** (`:236-239`) + (2) **swatch** (`:230-233`) — identical
+to the competency form, same `contrast.js`/`colour_swatch`, same relayout, same "advises, does not
+block". (3) **`hideIf` cascade** driven by `displaymode` (progressive disclosure, 5 rules + 1 depending
+on `showrelated`). (4) Blocking **`FORMAT_PLAIN` SCSS**. (5) URL-only description. (6) **No toast** on
+save (diverges from the house pattern; the confirmation is the scroll-preserving reload).
 
 ---
 
-## `FORM-IMP` — corpo do form de import (`import_framework_dynamic_form.php`)
+## `FORM-IMP` — the import form body (`import_framework_dynamic_form.php`)
 
-Abre pelo botão `FWK-IMPORT` (`data-action="import"`, `frameworks.mustache:85-86`) →
-`openImportForm` (`frameworks.js:261-278`), args `{contextid}`, título `central_frameworks_import_title`.
-Gate: contexto **SYSTEM ou COURSECAT** (senão `invalidcontext`) + `competency:competencymanage`
-(`form.php:65-71`) — superset do `tool/lpimportcsv` do core (só system). **Import roda in-request** no
-`process_dynamic_submission` (`:148-158`), **sem WS**: lê o CSV do draft, parseia, importa síncrono.
-**Sem customfields** — os customfields do plugin viajam como colunas `cf_*` do CSV, aplicadas pelo importer.
+Opens from the `FWK-IMPORT` button (`data-action="import"`, `frameworks.mustache:85-86`) →
+`openImportForm` (`frameworks.js:259-276`), args `{contextid}`, title `central_frameworks_import_title`.
+Gate: a **SYSTEM or COURSECAT** context (otherwise `invalidcontext`) + `competency:competencymanage`
+(`form.php:65-71`) — a superset of core's `tool/lpimportcsv` (system only). **The import runs
+in-request** in `process_dynamic_submission` (`:148-158`), **with no WS**: it reads the CSV from the
+draft, parses it and imports synchronously. **No customfields** — the plugin's customfields travel as
+`cf_*` columns of the CSV, applied by the importer.
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `FORM-IMP-CONTEXTID` | `[hidden]` | hidden | `form.php:93-95` | `PARAM_INT` | alvo do import; do `region.dataset.contextid`; fallback system em id ruim |
-| `FORM-IMP-FILE` | CSV file | filepicker | `form.php:97-104` | `accepted_types ['.csv','.txt']` | **o controle central.** `required` só client (`:104`) — a **única** validação client. No save, `$data->importfile` é o **draft id**, lido da área draft (`:190-200`) |
-| `FORM-IMP-DELIM` | CSV separator | select | `form.php:106-114` | `PARAM_ALPHA` | options `csv_import_reader::get_delimiter_list()` (core). **Default sensível ao idioma:** `listsep==';' ? 'semicolon' : 'comma'` (`:113-114`) — ';' para locais como pt_br |
-| `FORM-IMP-ENCODING` | Encoding | select | `form.php:116-123` | `PARAM_RAW` | options `core_text::get_encodings()`; default UTF-8. `RAW` porque nomes de charset têm chars que `ALPHA` cortaria |
-| `FORM-IMP-UPDATE` | Update existing by ID number | advcheckbox | `form.php:125-131` | `PARAM_BOOL` | default off. `addHelpButton` explica merge-por-idnumber (existentes atualizadas, novas adicionadas, **nenhuma removida**; off = sempre cria nova). 3º arg do importer (`:155`) |
+| `FORM-IMP-CONTEXTID` | `[hidden]` | hidden | `form.php:93-95` | `PARAM_INT` | the import target; defaults to the submission context, seeded from `region.dataset.contextid` by the opener |
+| `FORM-IMP-FILE` | CSV file | filepicker | `form.php:97-104` | `accepted_types ['.csv','.txt']` | **the central control.** `required` is client-only (`:104`) — the **only** client-side validation. On save, `$data->importfile` is the **draft id**, read from the draft area by `read_uploaded_csv` (`:190-200`) |
+| `FORM-IMP-DELIM` | CSV separator | select | `form.php:106-114` | `PARAM_ALPHA` | options from `csv_import_reader::get_delimiter_list()` (core). **Language-sensitive default:** `listsep==';' ? 'semicolon' : 'comma'` (`:113-114`) — ';' for locales such as pt_br |
+| `FORM-IMP-ENCODING` | Encoding | select | `form.php:116-123` | `PARAM_RAW` | options from `core_text::get_encodings()`; default UTF-8 (`:123`). `RAW` because charset names contain chars that `ALPHA` would strip |
+| `FORM-IMP-UPDATE` | Update existing by ID number | advcheckbox | `form.php:125-131` | `PARAM_BOOL` | default off. `addHelpButton` (`:131`) explains the merge-by-idnumber (existing ones updated, new ones added, **none removed**; off = always create a new one). 3rd arg of the importer (`:155`) |
 
-**Validação (`form.php:167-182`) — server-only, tudo bloqueia:** re-lê o draft e rejeita **vazio** /
-**não-parseável** (`central_frameworks_import_invalidfile`) e **sem linha de framework**
-(`central_frameworks_import_noframeworkrow`), todos ancorados no `importfile`. Não há validação
-"só-aviso" aqui.
+**Validation (`form.php:167-182`) — server-only, everything blocks:** it re-reads the draft and rejects
+an **empty** file (`:171-174`), an **unparseable** one (`:176-177`,
+`central_frameworks_import_invalidfile`) and one **with no framework row** (`:178-179`,
+`central_frameworks_import_noframeworkrow`), all anchored on `importfile`. There is no "warning-only"
+validation here.
 
-**Controles de design:** o upload (`FORM-IMP-FILE`), o **default de delimitador sensível ao idioma**,
-o encoding, e o **toggle de merge** (`FORM-IMP-UPDATE`). Sem escala, sem contraste, sem select congelado.
-**A UX de loading/feedback** (banner `data-region="import-loading"`, toast `central_frameworks_import_done`,
-e o defeito de ARIA do `makeSpinner`) **já está mapeada** em `fwk-frameworks.md:87-102` — cross-ref, não
-re-derivada aqui.
+**Design controls:** the upload (`FORM-IMP-FILE`), the **language-sensitive delimiter default**, the
+encoding, and the **merge toggle** (`FORM-IMP-UPDATE`). No scale, no contrast, no frozen select.
+**The loading/feedback UX** (the `data-region="import-loading"` banner, the
+`central_frameworks_import_done` toast, and `makeSpinner`'s ARIA defect) **is already mapped** in
+[`fwk-structures.md`](fwk-structures.md), section "Import modal" — cross-referenced, not re-derived
+here.
 
 ---
 
-## Cruzamentos (não contradizer)
+## Cross-references (do not contradict)
 
-- `fwk-frameworks.md` cobre a **casca** da aba (`FWK-ROW-EDIT`, `FWK-IMPORT`, o banner/toast do import,
-  o link de escalas). Este mapa cobre os **corpos**; o `FORM-FWK-SCALE-ACTION` aqui é o que o
-  `fwk-frameworks.md:82` chama de "form com MOD.SCALE embutido".
-- `mod-scale.md` cobre o **modal filho** de escala (o que o `FORM-FWK-SCALE-ACTION` abre). As IDs
-  `MOD.SCALE-ACTION/-SUMMARY/-HIDDEN` de lá eram provisórias e **migram** para `FORM-FWK-SCALE-*` aqui.
-- `pln-plans.md:293-298` e `est-structure.md:135` citam o painel de contraste e o opener; este mapa dá
-  o inventário de campos que faltava, sem re-litigar o achado do contraste.
+- [`fwk-structures.md`](fwk-structures.md) covers the tab's **shell** (`FWK-ROW-EDIT`, `FWK-IMPORT`,
+  the import banner/toast, the scales link). This map covers the **bodies**; `FORM-FWK-SCALE-ACTION`
+  here is what the `FWK-ROW-EDIT` row over there calls "the form with `MOD.SCALE` built in".
+- [`mod-scale.md`](mod-scale.md) covers the scale **child modal** (what `FORM-FWK-SCALE-ACTION` opens).
+  Its `MOD.SCALE-ACTION/-SUMMARY/-HIDDEN` IDs were provisional and **migrate** to `FORM-FWK-SCALE-*`
+  here.
+- [`pln-plans.md`](pln-plans.md) cites the contrast panel (and the gap of the header's three stops);
+  [`est-competencies.md`](est-competencies.md) cites the opener (`EST-DETAIL-EDIT`). This map supplies the
+  field inventory that was missing, without re-litigating the contrast finding.

@@ -1,4 +1,4 @@
-<!-- @dsCard group="Shell" name="Modal shell" subtitle="Cabeçalho/corpo/rodapé — as-is vs to-be (atualizar, expandir, links no rodapé)" -->
+<!-- @dsCard group="Shell" name="Modal shell" subtitle="Header/body/footer — refresh + expand/restore + close in the header, admin links in the footer" -->
 <style>
 :root{
   --mds-color-blue-50:#e7f0f9;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;
@@ -11,73 +11,64 @@
   --mds-radius-sm:0.375rem;--mds-radius-md:0.5rem;--mds-radius-lg:0.75rem;
   --mds-stroke-sm:0.0625rem;
   --mds-motion-fast:150ms;--mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
-  /* Valores literais que o styles.css já publica para o chip de fechar (sem variante dark no código). */
-  --ship-close-bg:#e7f0f9;--ship-close-bg-hover:#d4e6fb;--ship-close-fg:#0f4d85;
+  /* Literals that styles.css ships for the three header chips (no dark variant in the code). */
+  --ship-chip-bg:#e7f0f9;--ship-chip-bg-hover:#d4e6fb;--ship-chip-fg:#0f4d85;
   --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
 }
 @media (prefers-color-scheme:dark){:root{
   --mds-bg-surface-default:#1d2125;--mds-bg-surface-subtle:#16191c;--mds-bg-surface-strong:#343a40;
   --mds-text-default:#f8f9fa;--mds-text-muted:#ced4da;
   --mds-border-default:#495057;--mds-border-strong:#6a737b;
-  /* blue-200 e não blue-500/#3f89cc: sobre a superfície escura o azul do tema claro cai para 4,37:1
-     (e 3,88:1 no chip de proveniência), abaixo do AA. blue-200 dá 8,87:1 / 7,89:1 — mesma escolha
-     que o states.html faz para o dark. */
+  /* blue-200 and not blue-500/#3f89cc: over the dark surface the light theme's blue drops to 4.37:1
+     (and 3.88:1 on the provenance chip), below AA. blue-200 gives 8.87:1 / 7.89:1 — the same choice
+     states.html makes for dark. */
   --mds-accent:var(--mds-color-blue-200);--mds-accent-tint:#062b4c;
 }}
 body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
+.wrap{max-width:560px;}
 
-.screens{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;}
-.panel{flex:1 1 400px;min-width:320px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-lg);background:var(--mds-bg-surface-subtle);padding:14px;}
-.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--mds-text-muted);margin-bottom:12px;}
-.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
-
-/* ---- Casca do modal (comum aos dois painéis) ---- */
+/* ---- Modal shell ---- */
 .m{background:var(--mds-bg-surface-default);border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-lg);overflow:hidden;}
-.m-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);}
-.ic{width:18px;height:18px;border-radius:var(--mds-radius-sm);background:var(--mds-accent-tint);flex:none;}
+.m-head{display:flex;align-items:center;gap:0;padding:12px 14px;border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);}
+.ic{width:18px;height:18px;border-radius:var(--mds-radius-sm);background:var(--mds-accent-tint);flex:none;margin-right:8px;}
 .m-title{font-size:14px;font-weight:500;flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .m-body{padding:14px;}
 .slot{border:var(--mds-stroke-sm) dashed var(--mds-border-strong);border-radius:var(--mds-radius-md);padding:20px 12px;text-align:center;color:var(--mds-text-muted);font-size:11px;}
-.m-foot{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;border-top:var(--mds-stroke-sm) solid var(--mds-border-default);}
+.m-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-top:var(--mds-stroke-sm) solid var(--mds-border-default);}
 .btn{font-size:12px;padding:6px 12px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid var(--mds-border-strong);background:var(--mds-bg-surface-default);color:var(--mds-text-default);font-family:inherit;cursor:pointer;}
 .btn-primary{background:var(--mds-bg-interactive-primary-default);color:var(--mds-color-white);border-color:var(--mds-bg-interactive-primary-default);transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
 .btn-primary:hover{background:var(--mds-bg-interactive-primary-hover);border-color:var(--mds-bg-interactive-primary-hover);}
 
-/* ---- O chip de fechar que o plugin REALMENTE publica (styles.css:3740-3769) ---- */
-.m-x-ship{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;padding:0;border:0;border-radius:8px;background-color:var(--ship-close-bg);color:var(--ship-close-fg);font-size:0.9rem;line-height:1;opacity:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
-.m-x-ship:hover,.m-x-ship:focus-visible{background-color:var(--ship-close-bg-hover);}
+/* ---- The THREE header controls, in the 1.75rem blue chip the plugin ships ----
+   sizetoggle + refresh: styles.css:4929-4945 (base), :4947-4953 (hover/focus),
+   :4955-4959 (focus ring). Close: :5074-5086 (chip) + :5088-5096 (glyph) + :5098-5103 (hover).
+   Specificity 0,2,0 (.m-acts .chip) > .btn (0,1,0) — wins without !important. */
+.m-acts{display:flex;align-items:center;flex:none;}
+.m-acts .chip{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;margin-right:0.25rem;padding:0;border:0;border-radius:8px;background-color:var(--ship-chip-bg);color:var(--ship-chip-fg);font-size:0.875rem;line-height:1;opacity:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease),color var(--mds-motion-fast) var(--mds-motion-ease);}
+.m-acts .chip:hover,.m-acts .chip:focus-visible{background-color:var(--ship-chip-bg-hover);color:var(--ship-chip-fg);}
+.m-acts .chip.m-x{margin-right:0;font-size:0.9rem;}
+.m-acts .chip:focus-visible{outline:2px solid var(--mds-accent);outline-offset:1px;}
 
-/* ---- Link de cabeçalho as-is (participants_manager + frameworks) ---- */
-.hlink{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 9px;border-radius:var(--mds-radius-md);border:var(--mds-stroke-sm) solid var(--mds-border-strong);background:var(--mds-bg-surface-default);color:var(--mds-text-default);text-decoration:none;margin-left:0.5rem;margin-right:0.5rem;white-space:nowrap;flex:none;}
-
-/* ---- to-be: os três controles do cabeçalho, 36x36 ---- */
-.m-acts{display:flex;align-items:center;gap:4px;flex:none;}
-/* Especificidade 0,2,0 > .btn (0,1,0) — vence sem !important. */
-.m-acts .act{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--mds-text-muted);font-size:14px;line-height:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease),color var(--mds-motion-fast) var(--mds-motion-ease);}
-.m-acts .act:hover,.m-acts .act:focus-visible{background:var(--mds-bg-surface-strong);color:var(--mds-text-default);}
-.m-acts .act.m-x{background-color:var(--ship-close-bg);color:var(--ship-close-fg);}
-.m-acts .act.m-x:hover,.m-acts .act.m-x:focus-visible{background-color:var(--ship-close-bg-hover);color:var(--ship-close-fg);}
-@media (max-width:768px){.m-acts .act{width:30px;height:30px;}}
-
-/* Expandir/restaurar: dois botões sempre presentes, o CSS escolhe qual aparece. */
+/* Expand/restore: two buttons always present, the CSS chooses which one shows. */
 .expchk{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
 .expchk:not(:checked) ~ .exp-in{display:none;}
 .expchk:checked ~ .exp-out{display:none;}
 
-/* ---- to-be: rodapé com links à esquerda, ação primária à direita ---- */
-.m-foot-next{justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
-.flinks{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+/* ---- Footer: link group on the left (margin-right:auto), primary action on the right ---- */
+.flinks{display:flex;align-items:center;gap:0.375rem 0.875rem;flex-wrap:wrap;margin-right:auto;}
 .flink{display:inline-flex;align-items:center;gap:5px;padding:0;border:0;background:none;font-size:12px;color:var(--mds-accent);text-decoration:none;}
 .flink:hover{text-decoration:underline;}
-.fbtns{display:flex;gap:8px;margin-left:auto;}
+.fbtns{display:flex;gap:8px;}
 
 .prov{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:10px;background:var(--mds-accent-tint);color:var(--mds-accent);border:var(--mds-stroke-sm) solid var(--mds-accent);white-space:nowrap;}
-.divlbl{font-size:11px;color:var(--mds-text-muted);margin:12px 0 5px;}
+.divlbl{font-size:11px;color:var(--mds-text-muted);margin:18px 0 5px;}
+.divlbl:first-of-type{margin-top:2px;}
 .note{font-size:11px;color:var(--mds-text-muted);margin-top:8px;}
-.fork{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);padding:8px 10px;font-size:11px;color:var(--mds-text-muted);}
-.fork b{color:var(--mds-text-default);font-weight:500;}
-.m-foot-ghost{opacity:0.5;}
-.m-foot-ghost .fk{font-family:var(--font-mono);font-size:10px;}
+.note b{color:var(--mds-text-default);font-weight:500;}
+.census{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);padding:8px 10px;font-size:11px;color:var(--mds-text-muted);}
+.census b{color:var(--mds-text-default);font-weight:500;}
+.pend{margin-top:18px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-left:3px solid var(--mds-border-strong);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);padding:10px 12px;font-size:11px;color:var(--mds-text-muted);}
+.pend .t{font-size:12px;font-weight:500;color:var(--mds-text-default);margin-bottom:4px;}
 code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surface-strong);border-radius:4px;padding:0 4px;}
 .rules{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-lg);background:var(--mds-bg-surface-default);padding:12px 14px;margin-top:18px;font-size:12px;}
 .rules h4{font-size:12px;font-weight:500;margin:14px 0 6px;color:var(--mds-text-default);}
@@ -87,170 +78,199 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
 .rules li b{color:var(--mds-text-default);font-weight:500;}
 </style>
 
-<div class="screens">
+<div class="wrap">
 
-  <!-- Painel as-is -->
-  <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--mds-text-muted)"></span>antes do D2 — links no cabeçalho (pré-<code>0598289</code>)</div>
-
-    <div class="divlbl">Cabeçalho — título elástico, link de aba, chip de fechar</div>
-    <div class="m">
-      <div class="m-head">
-        <span class="ic"></span>
-        <span class="m-title">Gerenciar participantes</span>
-        <a class="hlink" href="#" target="_blank" rel="noopener">↗ Abrir página de coortes</a>
-        <button type="button" class="m-x m-x-ship" aria-label="Fechar">✕</button>
-      </div>
-      <div class="m-body"><div class="slot">corpo — abas, grids, formulário…</div></div>
-      <div class="m-foot m-foot-ghost"><span class="fk">.modal-footer vazio → core aplica .hidden</span></div>
+  <div class="divlbl">Header — <code>[icon] Title … [refresh] [expand] [close]</code></div>
+  <div class="m">
+    <div class="m-head">
+      <span class="ic"></span>
+      <span class="m-title">Manage participants</span>
+      <span class="m-acts">
+        <button type="button" class="chip" aria-label="Refresh" title="Refresh">⟳</button>
+        <input type="checkbox" id="mds-exp-demo" class="expchk" aria-label="Expand the modal">
+        <label class="chip exp-out" for="mds-exp-demo" title="Expand">⤢</label>
+        <label class="chip exp-in" for="mds-exp-demo" title="Restore size">⤡</label>
+        <button type="button" class="chip m-x" aria-label="Close">✕</button>
+      </span>
     </div>
-    <div class="note">
-      <b>Chip de fechar</b>: <code>.btn-close</code> do core, reestilizado em <code>styles.css:3740-3769</code> —
-      <code>1.75rem</code>, raio <code>8px</code>, fundo <code>#e7f0f9</code>, glifo FA <code>\f00d</code> em
-      <code>#0f4d85</code> (7,53:1), hover <code>#d4e6fb</code> (6,82:1). Os três valores são <b>literais</b>, sem
-      variante dark — o par se mantém nos dois temas. Passe o mouse: o hover acima é o mesmo do código.
-    </div>
-    <div class="note">
-      <b>Link de cabeçalho</b>: <code>.btn.btn-outline-secondary.btn-sm.local-dimensions-headerlink</code> +
-      <code>fa fa-arrow-up-right-from-square</code>, <code>target="_blank" rel="noopener noreferrer"</code>.
-      <code>participants_manager.js</code> declara <b>4</b> destinos (<code>HEADER_PAGES</code>: coortes, usuários,
-      papéis, métodos de inscrição), cada um atrás de uma capability — <b>só 1 fica visível por vez</b>, o da aba ativa
-      (<code>showHeaderLinkFor</code> alterna <code>d-none</code>). <code>frameworks.js</code> injeta mais 1 (escalas)
-      no seu próprio modal.
-    </div>
-
-    <div class="divlbl">O garfo do rodapé — 17 pontos de construção, 3 famílias</div>
-    <div class="fork">
-      Contados em <code>amd/src/central/</code> (pontos de construção, não telas — um mesmo formulário abre em
-      criar/editar):<br>
-      • <b>7</b> × <code>Modal.create</code> — nenhum passa <code>footer</code>. O core chama
-      <code>hideFooter()</code> em <code>show()</code> quando o rodapé não tem filhos
-      (<code>lib/amd/src/modal.js:875</code>), então o <code>.modal-footer</code> existe no DOM com
-      <code>.hidden</code>. <b>A ação, quando existe, mora no corpo.</b><br>
-      • <b>5</b> × <code>ModalSaveCancel.create</code> + <b>1</b> × <code>ModalDeleteCancel.create</code> — rodapé real,
-      vindo de <code>core/modal_save_cancel</code> / <code>core/modal_delete_cancel</code>.
-      <code>setSaveButtonText</code> aparece em <b>1</b> único ponto (<code>competency_browser.js:107</code>).<br>
-      • <b>4</b> × <code>new ModalForm</code> — rodapé real do core (Salvar/Cancelar), fora do nosso controle.
+    <div class="m-body"><div class="slot">body — tabs, grids, form…</div></div>
+    <div class="m-foot">
+      <span class="flinks">
+        <a class="flink" href="#" target="_blank" rel="noopener noreferrer">↗ Open cohorts page</a>
+      </span>
     </div>
   </div>
+  <div class="note">
+    Design provenance: <span class="prov">mtube: refresh</span> <span class="prov">mtube: expand</span>
+    <span class="prov">mtube: footer links</span> — all three are shipped.
+  </div>
+  <div class="note">
+    <b>The three controls are the same <code>1.75rem</code> blue chip</b>: refresh, expand/restore and close
+    share background <code>#e7f0f9</code>, glyph <code>#0f4d85</code> and hover <code>#d4e6fb</code>. Refresh and
+    the size-toggles come from a combined rule (<code>styles.css:4929-4945</code>, hover <code>:4947-4953</code>);
+    close is core's <code>.btn-close</code> restyled (<code>:5074-5086</code>, FA glyph <code>\f00d</code>
+    at <code>:5088-5096</code>, hover <code>:5098-5103</code>). The values are <b>literal, with no dark variant</b> —
+    the pair holds in both themes, which is why the chip here stays light blue in the dark preview too. Hover
+    them: the hover above is the code's own. Neither of the first two carries <code>.btn</code>, so each
+    draws its own focus ring (<code>:focus-visible</code>, <code>styles.css:4955-4959</code>).
+  </div>
+  <div class="note">
+    <b>Click ⤢ above</b> — the icon becomes ⤡, and back. They are <b>two buttons always present</b>
+    (<code>fa-expand</code> and <code>fa-compress</code>, inserted before the <code>.btn-close</code> at
+    <code>modal_expander.js:98-99</code>); the CSS chooses which one shows
+    (<code>styles.css:4966-4976</code>: <code>.local-dimensions-modal-restore{display:none}</code> +
+    the two rules under <code>.local-dimensions-modal-expanded</code>), <b>zero icon swapping in JS</b>. In this
+    preview the driver is a checkbox (<code>:checked ~ .exp-out{display:none}</code>); in production it is the
+    <code>local-dimensions-modal-expanded</code> class on the <code>.modal-dialog</code> and the same pair of
+    rules. The preview demonstrates the swap, not the width — the real dialog is what expands.
+  </div>
+  <div class="note">
+    <b>Expanded = real fullscreen</b> (<code>styles.css:4986-5006</code>): <code>width:100%</code>,
+    <code>max-width:none</code>, <code>height:100%</code>, <code>margin:0</code>, and square corners on the
+    <code>.modal-content</code>/header/footer — it mirrors BS5's <code>.modal-fullscreen</code> without the class
+    (4.5 has none) and without <code>!important</code>: <code>0,2,0</code> already beats <code>modal-xl</code>/<code>modal-lg</code>.
+    It is <b><code>100%</code> and not <code>100vw</code></b>: the parent <code>.modal</code> is <code>position:fixed</code>
+    and its width already excludes the scrollbar column, so the dialog sits <b>beside</b> it instead of running
+    underneath (<code>100vw</code> includes the bar and would paint over the dialog's edge).
+  </div>
+  <div class="note">
+    <b>While refreshing</b> the button is disabled and the <code>fa fa-rotate</code> icon spins — the
+    <code>fa-spin</code> is <b>added and removed by the JS</b> (<code>modal_refresh.js:75</code> and
+    <code>:82</code>, cleared in a <code>finally</code> so a failure never leaves the button stuck); the CSS
+    contributes only <code>cursor:default</code> in the disabled state (<code>styles.css:4962-4964</code>). The
+    button is created at <code>modal_refresh.js:36-48</code> (<code>.local-dimensions-modal-refresh</code>,
+    <code>data-action="modal-refresh"</code>) and anchored <b>to the left of the size-toggles</b> when they exist,
+    otherwise to the left of the close chip (<code>:67-68</code>) — hence the order refresh, expand, close.
+  </div>
 
-  <!-- Painel to-be (D2) -->
-  <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:var(--mds-accent)"></span>D2 — atualizar + expandir + links no rodapé SHIPADOS (7d69197, 8ea9daf, 0598289)</div>
-
-    <div class="divlbl">Cabeçalho — <code>[ícone] Título … [atualizar] [expandir] [fechar]</code></div>
-    <div class="m">
-      <div class="m-head">
-        <span class="ic"></span>
-        <span class="m-title">Gerenciar participantes</span>
-        <span class="m-acts">
-          <button type="button" class="act" aria-label="Atualizar" title="Atualizar">⟳</button>
-          <input type="checkbox" id="mds-exp-demo" class="expchk" aria-label="Expandir o modal">
-          <label class="act exp-out" for="mds-exp-demo" title="Expandir">⤢</label>
-          <label class="act exp-in" for="mds-exp-demo" title="Restaurar">⤡</label>
-          <button type="button" class="act m-x" aria-label="Fechar">✕</button>
-        </span>
-      </div>
-      <div class="m-body"><div class="slot">corpo — abas, grids, formulário…</div></div>
-      <div class="m-foot m-foot-next">
-        <span class="flinks">
-          <a class="flink" href="#" target="_blank" rel="noopener">↗ Abrir página de coortes</a>
-        </span>
-        <span class="fbtns"><button type="button" class="btn">Cancelar</button><button type="button" class="btn btn-primary">Salvar</button></span>
-      </div>
-    </div>
-    <div class="note">
-      <span class="prov">mtube: atualizar</span> <span class="prov">mtube: expandir</span>
-      <span class="prov">mtube: links no rodapé</span>
-    </div>
-    <div class="note">
-      <b>Clique em ⤢ acima</b> — o ícone vira ⤡, e volta. São <b>dois botões sempre presentes</b>; o CSS escolhe qual
-      aparece (<code>:checked ~ .exp-out{display:none}</code>), <b>zero troca de ícone por JS</b>. O preview demonstra
-      a troca, não a largura: o diálogo real é quem expande, e aqui ele está preso ao painel de comparação. Neste
-      preview quem dirige é um checkbox; em produção é uma classe no <code>.modal-dialog</code> e o mesmo par de regras.
-    </div>
-    <div class="note">
-      <b>Expandir shipou desacoplado</b> (<code>8ea9daf</code>, <span class="prov">mtube: expandir</span>): os dois
-      botões, o swap por CSS e a persistência em preferência de usuário estão nos modais de <b>participantes</b> e
-      <b>links</b> (<code>central/modal_expander.js</code>, chave <code>modalexpanded</code> no
-      <code>PREF_CENTRAL_DISPLAY</code>; expandido = tela cheia real — <code>100vw</code>, altura total e cantos retos
-      (<code>styles.css:3654</code>/<code>3661</code>, <code>3c91646</code>), espelhando o <code>.modal-fullscreen</code>
-      do BS5 sem a classe e sem <code>!important</code>). Mas <b>a 1.75rem</b>, casando o chip de
-      fechar que já existe — <b>não</b> a 36×36 deste painel. O <b>atualizar</b> depois shipou (<code>7d69197</code>) no
-      mesmo <code>1.75rem</code> e mesmo chip azul; os 36×36 deste painel são só o esquema do mock, nunca foram
-      publicados. Ver <code>maps/mod-links.md</code>.
-    </div>
-    <div class="note">
-      <b>Os três controles são o mesmo chip azul de <code>1.75rem</code></b> — atualizar, expandir/restaurar e fechar
-      dividem o fundo <code>#e7f0f9</code>, glifo <code>#0f4d85</code> e hover <code>#d4e6fb</code>
-      (<code>styles.css:3600-3601</code> base, <code>3618-3624</code> hover). Os size-toggles foram
-      <b>reestilizados</b> do antigo visual neutro (fundo transparente, cinza <code>#6a737b</code>) para este chip —
-      não sobra mais nenhum controle neutro no cabeçalho. Nenhum carrega <code>.btn</code>, então cada um desenha seu
-      próprio anel de foco (<code>:focus-visible</code>, <code>styles.css:3626-3630</code>); durante o atualizar o
-      botão fica desabilitado e o ícone <code>fa fa-rotate</code> gira com <code>fa-spin</code>
-      (<code>styles.css:3633</code>). O mock acima desenha as caixas maiores e neutras só como esquema de comparação.
-    </div>
-    <div class="note">
-      <b>Rodapé (shipou, <code>0598289</code>)</b>: os links administrativos ficam à esquerda
-      (<code>btn btn-link p-0</code> + <code>fa fa-external-link</code>, <code>target="_blank" rel="noopener"</code>),
-      num grupo <code>.local-dimensions-modal-footer-links</code> com <code>margin-right:auto</code> — <b>não</b>
-      <code>justify-content-between</code>: o auto-margin empurra qualquer ação primária (o Salvar/Cancelar do form de
-      framework) para a direita e funciona tanto no rodapé vazio quanto no que já tem botões, no BS4 e no BS5. A regra
-      é escopada sob <code>.modal-footer</code> (<code>styles.css:3696</code>) para vencer o <code>&gt; *{margin}</code>
-      do core em qualquer ordem de folha. No modal de participantes (rodapé sem filhos) o grupo vira o primeiro filho e
-      o core <b>revela</b> o rodapé em vez de aplicar <code>.hidden</code>. E o rodapé é <b>por aba</b>: só o link da aba
-      ativa aparece — <code>showFooterLinkFor(root, activepane)</code> alterna o <code>d-none</code> de cada link por
-      <code>data-pane</code>, e quando a aba ativa não tem link permitido o rodapé recolhe com
-      <code>.local-dimensions-modal-footer-empty</code> (<code>styles.css:3719</code>, <code>display:none</code>,
-      <code>3c91646</code>).
+  <div class="divlbl">Footer — admin links on the left, primary action on the right</div>
+  <div class="m">
+    <div class="m-foot">
+      <span class="flinks">
+        <a class="flink" href="#" target="_blank" rel="noopener noreferrer">↗ Open scales page</a>
+      </span>
+      <span class="fbtns"><button type="button" class="btn">Cancel</button><button type="button" class="btn btn-primary">Save</button></span>
     </div>
   </div>
-</div>
+  <div class="note">
+    <b>Two mechanics, one single group.</b> The group is always
+    <code>.local-dimensions-modal-footer-links</code> with <code>margin-right:auto</code>
+    (<code>styles.css:5028-5034</code>) — <b>not</b> <code>justify-content-between</code>: the auto-margin pushes
+    any primary action to the right and works both in the empty footer and in the one that already has buttons, on
+    BS4 and on BS5. The rule is scoped under <code>.modal-footer</code> to beat core's <code>&gt; *{margin}</code> in
+    any stylesheet order, and the <code>btn-link</code> gets a focus ring of its own
+    (<code>:5041-5045</code>) because Moodle 4.5's BS4 forces <code>box-shadow:none</code> on it.
+    <ul style="margin:6px 0 0;padding-left:18px;">
+      <li><b>Participants</b> (<code>participants_manager.js:103-134</code>): up to <b>4</b> destinations, each one
+        behind a capability (<code>ADMIN_PAGES</code>, <code>:57-66</code> —
+        <code>cancohortpage</code>/<code>canuserpage</code>/<code>canassignroles</code>/<code>canenrolpage</code>),
+        and the footer is <b>per tab</b>: only the active tab's link shows
+        (<code>showFooterLinkFor</code>, <code>:76-91</code>, toggles the <code>d-none</code> by
+        <code>data-pane</code>). When the active tab has no permitted link the footer <b>collapses</b> via
+        <code>.local-dimensions-modal-footer-empty</code> (<code>styles.css:5051-5053</code>,
+        <code>display:none</code>). This modal <b>has no primary action</b> — the footer is the link alone.</li>
+      <li><b>Framework form</b> (<code>frameworks.js:133-161</code>, <code>injectScalesLink</code>):
+        <b>1</b> link, with no per-tab logic (a form modal has a single panel), inserted as
+        <code>firstChild</code> so the form's Save/Cancel stays on the right.</li>
+    </ul>
+    The links are <code>a.btn.btn-link.p-0</code> + <code>i.fa.fa-external-link.me-1</code>, with
+    <code>target="_blank" rel="noopener noreferrer"</code>. In the participants modal the footer is born
+    <b>with no children</b>; the group is appended <b>before</b> <code>show()</code>
+    (<code>participants_manager.js:185</code> awaited, <code>:296</code> shows), so the
+    <code>hideFooter()</code> core runs on <code>show()</code> finds a child and <b>reveals</b> the footer instead
+    of applying <code>.hidden</code>.
+  </div>
 
-<div class="rules">
-  <h4>As duas mudanças são uma só</h4>
-  <ul>
-    <li>O cabeçalho ganha <b>atualizar</b> e <b>expandir</b>; é <b>por isso</b> que os links administrativos descem para
-      o rodapé. Com 4 destinos possíveis, um rótulo textual ao lado de três botões de 36px não cabe — e o rodapé é onde
-      um link de escape pertence, longe do foco da tarefa.</li>
-  </ul>
+  <div class="divlbl">Where this shell lands — 17 construction points, 4 families</div>
+  <div class="census">
+    Counted in <code>amd/src/central/</code> (construction points, not screens — one and the same form opens in
+    create/edit):<br>
+    • <b>6</b> × <code>Modal.create</code> — <code>competency_detail.js:277</code>,
+    <code>competency_links.js:862</code>, <code>enrol_methods.js:859</code>, <code>frameworks.js:343</code>,
+    <code>participants_manager.js:171</code>, <code>structure.js:1225</code>. None passes <code>footer</code>:
+    core calls <code>hideFooter()</code> on <code>show()</code> when the footer has no children, so the
+    <code>.modal-footer</code> exists in the DOM with <code>.hidden</code>. <b>The action, when there is one,
+    lives in the body</b> — unless something injects a child before <code>show()</code>, which is exactly what
+    the link group does.<br>
+    • <b>6</b> × <code>ModalSaveCancel.create</code> — <code>competency_browser.js:106</code>,
+    <code>framework_scaleconfig.js:139</code>, <code>plans.js:557</code>,
+    <code>related_competencies.js:239</code>, <code>rule_config.js:144</code>, <code>structure.js:988</code>.
+    A real footer, coming from <code>core/modal_save_cancel</code>. <code>setSaveButtonText</code> appears at
+    <b>1</b> single point (<code>competency_browser.js:107</code>).<br>
+    • <b>1</b> × <code>ModalDeleteCancel.create</code> — <code>plans.js:240</code> (delete a template that has plans).<br>
+    • <b>4</b> × <code>new ModalForm</code> — <code>frameworks.js:172</code> and <code>:260</code>,
+    <code>plans.js:201</code>, <code>structure.js:798</code>. Core's real footer (Save/Cancel), outside our
+    control; the close chip reaches them through the <code>.modal-form-dialogue</code> arm.<br>
+    Of the 17, <b>2</b> carry the header controls: participants
+    (<code>participants_manager.js:232</code>) and courses-and-activities
+    (<code>competency_links.js:909</code>). Outside the hub, <b>expand</b> also decorates the learner view's
+    detail modal (<code>accordion.js:3489</code>), with a store of its own
+    (<code>learner_prefs</code>, key <code>expanded</code>) — that is what
+    <code>attach(dialog, store)</code> takes the second argument for.
+  </div>
 
-  <h4>Três divergências deliberadas — regras do hub</h4>
-  <ul>
-    <li><b>Reestilizar o <code>.btn-close</code> do core, nunca substituí-lo.</b> Trocar o elemento descarta o
-      <code>data-action="hide"</code> do core e o nome acessível que ele já traz. O chip é pseudo-elemento + Font
-      Awesome porque o stylelint do Moodle proíbe SVG inline em <code>data:</code> URI.</li>
-    <li><b>O estado de expandido é preferência de usuário</b>, via
-      <code>local_dimensions/central/preferences</code> (<code>setUserPreference</code>, debounce de 400ms) — nunca
-      <code>sessionStorage</code>. É o caminho para onde o commit <code>40fb4ad</code> levou os toggles do hub, para que
-      a escolha siga o usuário entre sessões e dispositivos. (<code>localStorage</code> continua legítimo só para
-      geometria efêmera de painel, como em <code>pane_resizer.js</code>.)</li>
-    <li><b>Vencer por especificidade, nunca por <code>!important</code></b> (<code>declaration-no-important</code>
-      reprova o CI) — e nada de <code>min()</code>/<code>max()</code>/<code>clamp()</code> em propriedades de altura
-      (<code>csstree/validator</code>): use pares <code>height</code>/<code>max-height</code> e <code>calc()</code>.</li>
-  </ul>
+  <div class="pend">
+    <div class="t">Pending — refresh/expand at the other 15 construction points</div>
+    D2 drew the whole shell, but the header controls reached only the <b>2</b> dense modals.
+    Evidence of absence: <code>grep -rn 'modal_expander\|modal_refresh' amd/src/</code> returns imports
+    only in <code>central/participants_manager.js:34-35</code>, <code>central/competency_links.js:41-42</code> and
+    <code>accordion.js:27</code> (the learner view, the expander alone) — the other 15 points (4
+    <code>Modal.create</code>, 6 <code>ModalSaveCancel</code>, 1 <code>ModalDeleteCancel</code>, 4
+    <code>ModalForm</code>) import neither of the two modules. The four <code>ModalForm</code> in particular could
+    not take refresh without a reload callback, which <code>attach</code> requires.
+  </div>
 
-  <h4>O que o D2 aposentou (<code>0598289</code>) — e o que foi re-alojado, não deletado</h4>
-  <ul>
-    <li><b>Saíram</b>: as margens de <code>.local-dimensions-headerlink</code> e a classe
-      <code>.local-dimensions-headerlink</code> — os links desceram para o rodapé. Mas o toggle <code>d-none</code> por
-      aba <b>não</b> foi aposentado: voltou como <code>showFooterLinkFor</code> (<code>3c91646</code>), agora sobre o
-      link do rodapé — só o da aba ativa aparece.</li>
-    <li><b>Correção medida — o <code>.modal-title{flex-grow:1;min-width:0}</code> NÃO era sem motivo, e por isso NÃO foi
-      deletado.</b> Além de encaixar o link, ele agrupava os botões de expandir/restaurar à direita: o core dá
-      <code>margin-left:auto</code> ao <code>.btn-close</code> (<code>bootstrap/_modal.scss</code>), o que <b>sozinho
-      encalha</b> os size-toggles ao lado de um título curto (verificado adversarialmente antes do commit). A regra foi
-      <b>re-alojada</b> de <code>.local-dimensions-headerlink-modal .modal-title</code> para
-      <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code> (<code>styles.css:3683</code>) —
-      keyed no próprio botão do expander, cobrindo os modais de participantes <b>e</b> de links sem a classe de
-      header-link.</li>
-    <li><b>O gancho do chip, agora sem classe própria (<code>025c2f6</code>).</b> A classe
-      <code>local-dimensions-headerlink-modal</code> <b>saiu de vez</b>. O chip do modal de participantes segue pelo
-      braço <code>:has(.modal-body [class*='local-dimensions-'])</code> (o corpo carrega
-      <code>.local-dimensions-participants</code>); os <b>modais de formulário</b> (framework, competência, plano)
-      pegam o chip por <code>.local-dimensions-central-page .modal-form-dialogue .btn-close</code> — o
-      <code>.modal-form-dialogue</code> que o core põe no diálogo <b>síncrono, antes do <code>show()</code></b>,
-      então o chip pinta desde o primeiro quadro (sem o flash que o <code>:has()</code> dava ao esperar o corpo
-      async do form).</li>
-  </ul>
+  <div class="rules">
+    <h4>The two halves are one single change</h4>
+    <ul>
+      <li>The header carries <b>refresh</b> and <b>expand</b>; that is <b>why</b> the administrative links
+        live in the footer. With up to 4 destinations, a textual label next to three chips does not fit — and the
+        footer is where an escape link belongs, away from the task's focus.</li>
+    </ul>
+
+    <h4>Three deliberate divergences — hub rules</h4>
+    <ul>
+      <li><b>Restyle core's <code>.btn-close</code>, never replace it.</b> Swapping the element discards core's
+        <code>data-action="hide"</code> and the accessible name it already brings. The chip is pseudo-element +
+        Font Awesome because Moodle's stylelint forbids inline SVG in a <code>data:</code> URI.</li>
+      <li><b>The expanded state is a user preference</b>, through
+        <code>local_dimensions/central/preferences</code> (<code>setUserPreference</code>, debounce of
+        <code>400ms</code> — <code>preferences.js:28</code>, <code>:36</code>, <code>:77</code>), in the
+        <code>modalexpanded</code> key inside <code>PREF_DISPLAY</code>
+        (<code>local_dimensions_central_display</code>) — never <code>sessionStorage</code>. That way the choice
+        follows the user across sessions and devices, and is shared by the two dense modals.
+        (<code>localStorage</code> remains legitimate only for ephemeral pane geometry, as in
+        <code>pane_resizer.js:63</code>/<code>:69</code>.)</li>
+      <li><b>Win by specificity, never by <code>!important</code></b> (<code>declaration-no-important</code>
+        fails CI) — and no <code>min()</code>/<code>max()</code>/<code>clamp()</code> in length-valued
+        properties (<code>csstree/validator</code>): use <code>height</code>/<code>max-height</code> pairs and
+        <code>calc()</code>.</li>
+    </ul>
+
+    <h4>The hooks: how each modal picks up the chip</h4>
+    <ul>
+      <li>There is no header-link class any more — <code>grep -rn 'headerlink' amd/ templates/ styles.css
+        classes/ lang/</code> returns <b>zero</b>.</li>
+      <li>The close chip arrives through <b>two arms</b> (<code>styles.css:5074-5075</code>): the participants
+        modal and the links modal come through
+        <code>.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-'])
+        .modal-header .btn-close</code> (the body carries <code>.local-dimensions-participants</code>); the
+        <b>form modals</b> (framework, competency, plan) come through
+        <code>.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close</code> — the
+        <code>.modal-form-dialogue</code> core puts on the dialog <b>synchronously, before <code>show()</code></b>,
+        so the chip paints from the first frame (without the flash <code>:has()</code> gives while it waits for the
+        form's async body). The <code>:not()</code> excludes the Related competencies modal, which has a hidden
+        header and uses core's close; the <code>.modal-header</code> stops a toast hosted in the body (the
+        <code>addToastRegion</code> pattern) from getting the chip, which is wrong at its size.</li>
+      <li><b><code>.modal-title{flex-grow:1;min-width:0}</code> is not decoration.</b> Core gives
+        <code>margin-left:auto</code> to the <code>.btn-close</code>, which <b>on its own strands</b> the
+        size-toggles next to a short title. The rule is keyed on the expander's own button —
+        <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code>
+        (<code>styles.css:5015-5018</code>) — covering the participants <b>and</b> links modals without
+        depending on any class on the dialog.</li>
+      <li>The same <code>.local-dimensions-modal-sizetoggle</code> marker also scopes the
+        <code>overflow:hidden</code> that kills the second scrollbar of those two modals
+        (<code>styles.css:4916-4918</code>) — filepicker, TinyMCE and the hub's confirms stay out.</li>
+    </ul>
+  </div>
 </div>

@@ -1,108 +1,82 @@
-<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Card body states" subtitle="course_card / progress_card_body — card body states · as-is (spinner + red text/alert) │ to-be: skeleton loading + friendly retry error + iconized states (matches accordion)" -->
+<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Card body states" subtitle="course_card / progress_card_body — the four shipped card-body states: spinner, JS error + Retry, completion off, payload error" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
-   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
-   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
-   by token values alone. See tokens.html / token-migration.md.
+   One set of token values, matching what styles.css ships today.
+   See tokens.html / token-migration.md.
    ============================================================================ */
 .kit{
   --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
   --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
-  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
-  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
-  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
-  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
-  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
-  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
-  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
-  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
-  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --mono:ui-monospace,Menlo,Consolas,monospace;
-  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
-}
-.kit *{box-sizing:border-box;}
-.panel.moodle{
   --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
   --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
   --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
   --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
   --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
-  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;--lk-amber-rated:#e5a100;
   --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --lk-chrome:#e9ebee;--lk-chrome-line:#dcdfe3;--lk-chrome-quiet:#8a8980;--lk-chrome-legend:#e3e1da;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:var(--lk-chrome);margin:0;padding:20px;line-height:1.5;
 }
-.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
-.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
-.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
-.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.kit *{box-sizing:border-box;}
+.screen{max-width:1100px;margin:0 auto;}
+.panel{border:1px solid var(--lk-chrome-line);border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
 .idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
 .idb.r{border-color:#c9a3a3;color:#a3552d;}
-.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
-.lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
-.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
-.note{font-size:10px;color:#8a8980;padding:2px 20px;}
-.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
-.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
-.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.lk-cap{font-size:11px;color:var(--lk-chrome-quiet);padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.note{font-size:10px;color:var(--lk-chrome-quiet);padding:2px 20px;}
+.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid var(--lk-chrome-legend);border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--lk-chrome-quiet);margin:0 0 10px;}
 .leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
 .leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
 .leg .v b{color:var(--lk-text);font-weight:600;}
 .leg .v{color:var(--lk-text-2);}
-.leg .rule{color:#8a8980;}
+.leg .rule{color:var(--lk-chrome-quiet);}
+.pending{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px dashed #c9a3a3;border-radius:12px;padding:12px 18px;font-size:12px;color:var(--lk-text-2);}
+.pending h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#a3552d;margin:0 0 6px;}
 
 /* ---- card body states (course_card + progress_card_body) — screen-specific ---- */
 .gal{display:flex;flex-wrap:wrap;gap:14px;padding:12px 20px 4px;}
 .mc-cell{flex:1 1 200px;min-width:196px;}
 .mc-lbl{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;font-weight:600;color:var(--lk-text-2);margin-bottom:6px;}
-/* .card — view-competency card (styles.css:707); header bg + border (692-695); title link (697-700) */
+/* .card — the tracker card (styles.css:839-846); header bg + border (824-827); title link (829-832) */
 .card{background:var(--lk-card-bg);border:1px solid rgba(0,0,0,.08);border-radius:.375rem;box-shadow:0 .125rem .25rem rgba(0,0,0,.06);overflow:hidden;}
 .card-header{background:var(--lk-card-bg);border:0;border-bottom:1px solid var(--lk-line);padding:.55rem .85rem;margin:0;font-weight:700;}
 .card-header a{font-size:15px;color:var(--lk-card-title);text-decoration:none;}
-/* .local-dimensions-progress-container — min-height 100px, padding 30px 30px 30px 10px (styles.css:711-719) */
+/* .local-dimensions-progress-container — min-height 100px, padding 30px 30px 30px 10px (styles.css:848-856) */
 .prog{position:relative;min-height:100px;padding:1rem .75rem;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
 .prog.inline{justify-content:flex-start;padding:0;}
 /* fa-spinner fa-spin fa-2x text-primary — text-primary maps to --lk-accent */
 .spin{width:32px;height:32px;color:var(--lk-accent);animation:lk-spin 1s linear infinite;}
 @keyframes lk-spin{to{transform:rotate(360deg);}}
 .p-load{color:var(--lk-muted);font-size:.8125rem;margin:.5rem 0 0;}
-/* renderErrorState — text-danger + btn-outline-secondary (neutral Bootstrap, same both panels) */
+/* renderErrorState — text-danger + btn-outline-secondary; both are plain Bootstrap, the
+   plugin adds only the .local-dimensions-retry-btn hook (no styles.css rule of its own) */
 .err-msg{color:#842029;font-size:.8125rem;margin:0 0 .5rem;}
 .btn-outline{font:inherit;font-size:.8125rem;line-height:1.4;padding:.2rem .55rem;border:1px solid #6c757d;color:#6c757d;background:transparent;border-radius:.25rem;cursor:pointer;}
 /* completion_disabled — p-3 text-muted text-center small */
 .nocomp{color:var(--lk-muted);font-size:.8125rem;}
-/* {{#error}} alert-danger m-2 (neutral Bootstrap semantic, same both panels) */
+/* {{#error}} alert-danger m-2 (plain Bootstrap semantic) */
 .alert-danger{align-self:stretch;background:#f8d7da;color:#842029;border:1px solid #f5c2c7;border-radius:.375rem;padding:.45rem .7rem;margin:.5rem;font-size:.78rem;text-align:left;}
-.retry-arrow{display:flex;align-items:center;gap:6px;font-size:10px;color:#8a8980;margin:8px 0 4px;}
+.retry-arrow{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--lk-chrome-quiet);margin:8px 0 4px;}
 .srbadge{font-family:var(--mono);font-size:9px;color:#8a5a1f;background:#fcefdc;border:1px solid #e6b877;border-radius:5px;padding:0 4px;}
 .stateflag{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:9px;background:#eef0f2;color:#5f6368;border:1px solid #d7dade;}
 
-/* ==== to-be: skeleton loading + friendly compact retry error + iconized states (card body) ==== */
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
-@keyframes lk-pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
-.tskel{display:flex;flex-direction:column;gap:.5rem;width:100%;padding:.15rem .1rem;}
-.tskel-row{display:flex;align-items:center;gap:.55rem;}
-.tskel-dot{width:14px;height:14px;flex:none;border-radius:50%;background:var(--lk-line);animation:lk-pulse 1.5s ease-in-out infinite;}
-.tskel-bar{height:.6rem;border-radius:.35rem;background:var(--lk-line);animation:lk-pulse 1.5s ease-in-out infinite;}
-.terr{display:flex;flex-direction:column;align-items:center;gap:.4rem;text-align:center;padding:.2rem;}
-.terr-ic{width:32px;height:32px;flex:none;border-radius:50%;background:#f8d7da;color:#842029;display:flex;align-items:center;justify-content:center;}
-.terr-ic svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
-.terr-msg{font-size:.8rem;color:var(--lk-text-2);}
-.terr-retry{display:inline-flex;align-items:center;gap:.35rem;padding:.28rem .7rem;border:1px solid var(--lk-line-2);border-radius:.4rem;background:var(--lk-surface);color:var(--lk-accent);font-size:.78rem;font-weight:600;cursor:pointer;}
-.terr-retry:hover{border-color:var(--lk-accent);background:var(--lk-counter-active-bg);}
-.terr-retry:focus-visible{outline:2px solid var(--lk-focus-ring);outline-offset:2px;}
-.terr-retry svg{width:.8rem;height:.8rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.tnocomp{display:flex;flex-direction:column;align-items:center;gap:.35rem;color:var(--lk-muted);text-align:center;padding:.2rem;}
-.tnocomp svg{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85;}
-.tnocomp span{font-size:.8rem;}
-.tdanger{align-self:stretch;display:flex;align-items:flex-start;gap:.4rem;background:#f8d7da;color:#842029;border-radius:.4rem;padding:.4rem .55rem;margin:.4rem;font-size:.76rem;text-align:left;line-height:1.4;}
-.tdanger svg{width:.85rem;height:.85rem;flex:none;margin-top:.06rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* The learner views ship light-only (styles.css defines no dark variants), so the
+   mock keeps its shipped colours in both themes; only the kit chrome around it adapts. */
+@media (prefers-color-scheme: dark){
+  .kit{--lk-chrome:#1b1c1e;--lk-chrome-line:#3a3d42;--lk-chrome-quiet:#9a9992;--lk-chrome-legend:#3a3d42;
+       --lk-surface:#26282b;--lk-page:#202225;--lk-text:#e6e6e6;--lk-text-2:#c3c5c8;--lk-line:#e9ecef;}
+  .idb{background:#2f3134;}
+  .card{color:#212529;}
+}
 </style>
-<div class="kit"><div class="screens">
+<div class="kit"><div class="screen">
 
-  <!-- ============ AS-IS ============ -->
   <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
-
     <div class="lk-cap">Card body states — all four render inside <span class="idb">TRK-CARD-PROG</span></div>
     <div class="gal">
 
@@ -160,94 +134,24 @@
       </div>
 
     </div>
-    <div class="note">enabled comes from the completion API; on the catch path enabled=false, so "Completion disabled." always precedes the inline alert.</div>
+    <div class="note"><code>enabled</code> comes from the completion API. The web service's catch row sets <code>enabled=false</code>, <code>locked=false</code> and carries no <code>cardmode</code>/<code>activity</code>/<code>section</code> keys, so on the error path "Completion disabled." always precedes the inline alert and neither compact card body (see <code>trk-locked</code>) can appear.</div>
   </div>
 
-  <!-- ============ TO-BE ============ -->
-  <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · skeleton loading + friendly retry error + iconized states</div>
+</div>
 
-    <div class="lk-cap">Card body states — all four render inside <span class="idb">TRK-CARD-PROG</span></div>
-    <div class="gal">
-
-      <!-- 1. LOADING (server-rendered initial state) -->
-      <div class="mc-cell">
-        <div class="mc-lbl"><span class="idb r">skeleton hints the timeline</span></div>
-        <div class="card">
-          <h3 class="card-header"><a href="#">Technical Writing I</a></h3>
-          <div class="prog" role="status">
-            <span class="sr">Loading progress…</span>
-            <div class="tskel" aria-hidden="true">
-              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:70%"></span></div>
-              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:52%"></span></div>
-              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:62%"></span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. ERROR + RETRY (JS renderErrorState) -->
-      <div class="mc-cell">
-        <div class="mc-lbl"><span class="idb r">friendly error · Retry → skeleton</span></div>
-        <div class="card">
-          <h3 class="card-header"><a href="#">Business Communication</a></h3>
-          <div class="prog" role="alert">
-            <div class="terr">
-              <div class="terr-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
-              <span class="terr-msg">Couldn't load progress.</span>
-              <button type="button" class="terr-retry" aria-label="Retry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Retry</button>
-            </div>
-          </div>
-        </div>
-        <div class="retry-arrow">&rarr; on Retry, body swaps to the loading <span class="srbadge">skeleton · role=status</span></div>
-        <div class="card">
-          <h3 class="card-header"><a href="#">Business Communication</a></h3>
-          <div class="prog" role="status" aria-live="polite">
-            <span class="sr">Loading progress…</span>
-            <div class="tskel" aria-hidden="true">
-              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:66%"></span></div>
-              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:48%"></span></div>
-              <div class="tskel-row"><span class="tskel-dot"></span><span class="tskel-bar" style="width:58%"></span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. COMPLETION DISABLED -->
-      <div class="mc-cell">
-        <div class="mc-lbl"><span class="idb r">muted state + clarifying icon</span></div>
-        <div class="card">
-          <h3 class="card-header"><a href="#">Advanced Rhetoric</a></h3>
-          <div class="prog"><div class="tnocomp"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span>Completion disabled</span></div></div>
-        </div>
-      </div>
-
-      <!-- 4. INLINE ERROR (payload {{#error}}) -->
-      <div class="mc-cell">
-        <div class="mc-lbl"><span class="idb r">iconized disabled + compact danger note</span></div>
-        <div class="card">
-          <h3 class="card-header"><a href="#">Public Speaking</a></h3>
-          <div class="prog inline">
-            <div class="tnocomp" style="padding:.85rem 1rem 0"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span>Completion disabled</span></div>
-            <div class="tdanger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>Course context not available.</div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-    <div class="note">Matches the accordion load states for cross-view consistency: the spinner becomes a compact <b>skeleton</b> hinting the progress timeline (dot + bar rows, gentle pulse; <code>role="status"</code> + sr-only "Loading progress…"), and <b>Retry</b> swaps the body to that same skeleton. The error becomes a <b>friendly compact</b> block (danger-tinted icon + message + accent Retry) instead of bare red text; the muted "Completion disabled" and the inline payload error each gain a small clarifying icon (a slashed circle / a danger triangle). Danger semantics stay in the tints. Retry / disabled strings unchanged; the icons are markup-only.</div>
-  </div>
-
+<div class="pending">
+  <h3>Pending</h3>
+  <p style="margin:0">A skeleton loader and friendly iconized error/disabled states were designed for this screen and are <b>not built</b>. <code>competency_view.js:247-270</code> <code>renderErrorState</code> still builds <code>div.text-danger.small.p-3.text-center[role=alert]</code> + a <code>btn-outline-secondary</code> Retry, and the Retry handler (<code>:261-269</code>) swaps in <code>fa fa-spinner fa-spin fa-2x text-primary</code> — the same spinner the card starts with, not a skeleton. Evidence of absence: "skeleton" has <b>zero</b> occurrences in <code>styles.css</code> and none in <code>amd/src</code> or the learner templates (the only hits anywhere are two unrelated docblock words in <code>templates/central/</code>); <code>.local-dimensions-retry-btn</code> is a bare JS hook with no <code>styles.css</code> rule.</p>
 </div>
 
 <div class="legend">
   <h3>ID legend — Card body states (Tracker)</h3>
   <div class="leg">
-    <span class="k">TRK-CARD-PROG</span><span class="v"><b>Progress container</b> (referenced) — <code>.local-dimensions-progress-container</code>, the AJAX-filled body every state occupies <span class="rule">course_card.mustache:53; styles.css:711-719</span></span>
-    <span class="k">TRK-CARD-LOADING</span><span class="v"><b>Initial state</b> — server-rendered <code>fa-spinner fa-spin fa-2x text-primary</code> + "Loading progress..." (<code>loading_progress</code>); shown until the AJAX render/error replaces it. <b>To-be:</b> becomes a compact <b>skeleton</b> (dot + bar rows hinting the timeline, 1.5s pulse) — matches the accordion loading; keeps <code>role="status"</code> + an sr-only "Loading progress…". <span class="rule">course_card.mustache:53-57</span></span>
-    <span class="k">TRK-CARD-ERROR</span><span class="v"><b>Load failure</b> — JS-built <code>div role="alert"</code> "Could not load progress." (<code>course_load_error</code>) + <code>btn-outline-secondary</code> "Retry" (<code>course_load_retry</code>, echoed in <code>aria-label</code>). Retry swaps the body to a <code>role="status" aria-live="polite"</code> spinner with sr-only "Loading…" (<code>course_loading</code>) and re-calls the fetch. <b>To-be:</b> a <b>friendly compact</b> block — a danger-tinted triangle icon, the message, and an accent <b>Retry</b> button — and Retry swaps to the <b>skeleton</b> (not a bare spinner); the danger red stays in the icon tint. Strings unchanged. <span class="rule">competency_view.js:162-185; fired from loadCourseWithSoftTimeout empty/fail 208-224</span></span>
-    <span class="k">TRK-CARD-NOCOMPLETION</span><span class="v"><b>Tracking off</b> — muted centred "Completion disabled." (<code>completion_disabled</code>) when payload <code>enabled=false</code> and no error <span class="rule">progress_card_body.mustache:102-106</span></span>
-    <span class="k">TRK-CARD-ERROR-INLINE</span><span class="v"><b>Payload error</b> — <code>{{#error}}</code> renders <code>alert-danger m-2</code> with the raw <code>$e-&gt;getMessage()</code>; only set on the per-course catch path, where <code>enabled=false</code> too, so "Completion disabled." shows above it <span class="rule">progress_card_body.mustache:173-175; get_course_progress.php:113,125</span></span>
+    <span class="k">TRK-CARD-PROG</span><span class="v"><b>Progress container</b> (referenced) — <code>.local-dimensions-progress-container</code>, the AJAX-filled body every state occupies <span class="rule">course_card.mustache:53; styles.css:848-856</span></span>
+    <span class="k">TRK-CARD-LOADING</span><span class="v"><b>Initial state</b> — server-rendered <code>fa-spinner fa-spin fa-2x text-primary</code> + "Loading progress..." (<code>loading_progress</code>, lang/en:451); shown until the AJAX render or the error state replaces it <span class="rule">course_card.mustache:53-58</span></span>
+    <span class="k">TRK-CARD-ERROR</span><span class="v"><b>Load failure</b> — JS-built <code>div.text-danger.small.p-3.text-center[role=alert]</code> holding "Could not load progress." (<code>course_load_error</code>) and a <code>btn btn-sm btn-outline-secondary local-dimensions-retry-btn</code> "Retry" (<code>course_load_retry</code>, echoed in <code>aria-label</code>). Retry swaps the body to a <code>role="status" aria-live="polite"</code> spinner with an sr-only "Loading…" (<code>course_loading</code>) and re-calls the fetch. Reached from three places: a failed template render, an empty result set, and a failed AJAX call. <span class="rule">competency_view.js:247-270 (button :256-258, retry swap :261-269); callers :293-297, :299-302, :305-307; lang/en:330-332</span></span>
+    <span class="k">TRK-CARD-NOCOMPLETION</span><span class="v"><b>Tracking off</b> — muted centred "Completion disabled." (<code>completion_disabled</code>, lang/en:309) when the payload has <code>enabled=false</code>; suppressed on a locked card, whose overlay already explains the blank, and skipped when the payload names a single activity (that body lives outside the guard) <span class="rule">progress_card_body.mustache:179-185</span></span>
+    <span class="k">TRK-CARD-ERROR-INLINE</span><span class="v"><b>Payload error</b> — <code>{{#error}}</code> renders <code>alert-danger m-2</code> with the raw <code>$e-&gt;getMessage()</code>; only set on the per-course catch path, which also forces <code>enabled=false</code>, so "Completion disabled." shows above it <span class="rule">progress_card_body.mustache:330-332; get_course_progress.php:119 (empty on the happy path), :134-147 (catch row, message at :146)</span></span>
   </div>
 </div>
 </div>

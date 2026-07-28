@@ -1,190 +1,232 @@
-<!-- @dsCard group="Fundações" name="Tooltip" subtitle="CSS-only balloon on hover/focus + the truncation↔tooltip pair; the full text never leaves the DOM, so the balloon is decoration" -->
+<!-- @dsCard group="Foundations" name="Tooltip" subtitle="CSS-only balloon on hover/focus + the truncation↔tooltip pair; the full text never leaves the DOM, so the balloon is decoration" -->
 <style>
 :root{
   --mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;
-  --mds-color-green-100:#d7e4d6;--mds-color-green-800:#153114;
   --mds-color-gray-100:#f8f9fa;--mds-color-gray-200:#e9ecef;--mds-color-gray-300:#dee2e6;--mds-color-gray-500:#8f959e;--mds-color-gray-600:#6a737b;--mds-color-gray-700:#495057;--mds-color-gray-900:#1d2125;--mds-color-white:#fff;
   --mds-bg-surface-default:var(--mds-color-white);--mds-bg-surface-subtle:var(--mds-color-gray-100);
   --mds-text-default:var(--mds-color-gray-900);--mds-text-muted:var(--mds-color-gray-600);
   --mds-border-default:var(--mds-color-gray-300);
-  /* The balloon is the kit's only inverted surface: dark on light, light on dark. */
-  --mds-bg-tooltip:var(--mds-color-gray-900);--mds-text-tooltip:var(--mds-color-white);
+  /* Shipped values: the balloon is #1d2125 on #fff, with no dark variant (see the note under
+     "Anatomy"). The preview inverts it in dark so the card stays readable in a dark gallery. */
+  --tip-bg:#1d2125;--tip-fg:#fff;
   --mds-radius-sm:0.25rem;--mds-radius-md:0.5rem;--mds-stroke-sm:0.0625rem;
-  --mds-shadow-md:0 0.5rem 1rem rgba(0,0,0,.15);
-  --mds-tooltip-max-width:260px;
-  --mds-motion-fast:150ms;--mds-motion-delay:250ms;
+  --mds-shadow-md:0 0.5rem 1rem rgb(0 0 0 / 15%);
   --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
 }
 @media (prefers-color-scheme:dark){:root{
   --mds-bg-surface-default:#1d2125;--mds-bg-surface-subtle:#16191c;
   --mds-text-default:#f8f9fa;--mds-text-muted:#ced4da;
   --mds-border-default:#495057;
-  --mds-bg-tooltip:#f8f9fa;--mds-text-tooltip:#1d2125;
+  --tip-bg:#f8f9fa;--tip-fg:#1d2125;
 }}
 body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
 .h{font-size:12px;font-weight:500;color:var(--mds-text-muted);margin:22px 0 8px;}
 .h:first-of-type{margin-top:2px;}
 .note{font-size:10px;color:var(--mds-text-muted);margin-top:6px;max-width:720px;}
+.note b{color:var(--mds-text-default);}
 .tag{font-family:var(--font-mono);font-size:10px;color:var(--mds-text-muted);}
 .row{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;}
 .cell{display:flex;flex-direction:column;gap:6px;}
 .cap{font-size:10px;color:var(--mds-text-muted);}
-/* Headroom above the demos: the balloon leaves the flow and would cover the caption.
-   .tall is for the multi-line balloon, which needs roughly twice as much. */
+/* Headroom around the demos: the balloon leaves the flow and would cover the caption. */
 .stage{padding-top:56px;}
 .stage.tall{padding-top:96px;}
+.stage.down{padding-top:8px;padding-bottom:56px;}
 .surface{background:var(--mds-bg-surface-default);border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);padding:12px 14px;}
 
 /* ============================================================================
-   THE COMPONENT — no JavaScript.
+   THE COMPONENT — copied from styles.css:7361-7434, no JavaScript.
    A positioned wrapper carries the text in data-dim-tip; the balloon is ::after
    and the arrow is ::before. Nothing is hidden from assistive technology: the
    visible text stays in the DOM (only text-overflow clips it), so the balloon is
    purely decorative and needs no aria-describedby, no role="tooltip" and no
    Escape handler.
    ============================================================================ */
-.dim-tip{position:relative;display:inline-flex;align-items:center;min-width:0;max-width:100%;}
-.dim-tip::after,.dim-tip::before{position:absolute;opacity:0;pointer-events:none;transition:opacity var(--mds-motion-fast) ease;}
-.dim-tip::after{
+.local-dimensions-tip{position:relative;display:inline-flex;align-items:center;min-width:0;max-width:100%;}
+.local-dimensions-tip::after,.local-dimensions-tip::before{position:absolute;opacity:0;pointer-events:none;transition:opacity 150ms ease;}
+.local-dimensions-tip::after{
   content:attr(data-dim-tip);
   bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  max-width:var(--mds-tooltip-max-width);width:max-content;
-  padding:.35rem .55rem;border-radius:var(--mds-radius-sm);
-  background:var(--mds-bg-tooltip);color:var(--mds-text-tooltip);
+  max-width:260px;width:max-content;
+  padding:.35rem .55rem;border-radius:.25rem;
+  background:var(--tip-bg);color:var(--tip-fg);
   font-size:.75rem;font-weight:400;line-height:1.35;text-align:left;
   white-space:normal;overflow-wrap:anywhere;
   box-shadow:var(--mds-shadow-md);z-index:20;
 }
-.dim-tip::before{
+.local-dimensions-tip::before{
   content:'';bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);
-  border:5px solid transparent;border-top-color:var(--mds-bg-tooltip);z-index:21;
+  border:5px solid transparent;border-top-color:var(--tip-bg);z-index:21;
 }
+/* Position is load-bearing: this variant must stay AFTER the base rules above, or the
+   equal-specificity base rules win the cascade and re-apply bottom/border-top-color. */
+.local-dimensions-tip-bottom::after{bottom:auto;top:calc(100% + 8px);}
+.local-dimensions-tip-bottom::before{bottom:auto;top:calc(100% + 3px);border-top-color:transparent;border-bottom-color:var(--tip-bg);}
 /* Delay on entry only: leaving is immediate, so brushing past does not flicker. */
-.dim-tip:hover::after,.dim-tip:hover::before,
-.dim-tip:focus-visible::after,.dim-tip:focus-visible::before,
-.dim-tip:focus-within::after,.dim-tip:focus-within::before,
-.dim-tip.is-open::after,.dim-tip.is-open::before{opacity:1;transition-delay:var(--mds-motion-delay);}
-.dim-tip.is-open::after,.dim-tip.is-open::before{transition-delay:0s;}
-/* Bottom variant — only where the top balloon would be clipped (see rule 5). */
-.dim-tip-bottom::after{bottom:auto;top:calc(100% + 8px);}
-.dim-tip-bottom::before{bottom:auto;top:calc(100% + 3px);border-top-color:transparent;border-bottom-color:var(--mds-bg-tooltip);}
+.local-dimensions-tip:hover::after,.local-dimensions-tip:hover::before,
+.local-dimensions-tip:focus-visible::after,.local-dimensions-tip:focus-visible::before,
+.local-dimensions-tip:focus-within::after,.local-dimensions-tip:focus-within::before{opacity:1;transition-delay:250ms;}
+/* Preview-only: forces a balloon open so the card can show the state in a screenshot. */
+.is-open::after,.is-open::before{opacity:1;transition-delay:0s;}
 
-/* The pair: the CLIP lives on the child, the BALLOON on the wrapper. With
-   overflow:hidden on the same element as the ::after, the balloon is clipped too. */
-.trunc{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-
-/* --- demo pieces (not part of the component) --- */
-.chip{display:inline-flex;align-items:center;max-width:100%;padding:.08rem .4rem;border-radius:var(--mds-radius-sm);background:var(--mds-color-gray-200);color:var(--mds-color-gray-700);font-size:.7rem;font-weight:600;}
-.chip.prof{background:var(--mds-color-green-100);color:var(--mds-color-green-800);}
-.icobtn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-sm);background:var(--mds-bg-surface-default);color:var(--mds-text-muted);}
-.icobtn svg{width:.95rem;height:.95rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.icobtn.foc{outline:2px solid var(--mds-color-blue-500);outline-offset:2px;}
+/* --- demo pieces: the two clipped children, at their shipped values --- */
+/* Evidence grade chip — styles.css:3269-3282 (prof variant :3284-3287). */
+.ev-assess{display:block;min-width:0;max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:.08rem .4rem;border-radius:.35rem;background:#e9ecef;color:#495057;font-size:.75rem;font-weight:600;}
+.ev-assess.prof{background:#d1e7dd;color:#0f5132;}
+/* Status headline rating — styles.css:3029-3038. */
+.status-rating{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.375rem;font-weight:600;color:#212529;}
+/* Proficiency pill — styles.css:3047-3062. */
+.pill{display:inline-flex;align-items:center;gap:.25rem;padding:.25rem .75rem;border-radius:999px;background:#d1e7dd;color:#0f5132;font-size:.8125rem;font-weight:600;white-space:nowrap;}
+.headline{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem .75rem;min-width:0;}
 .evrow{display:grid;grid-template-columns:28px minmax(0,1fr) auto 84px;align-items:center;gap:.6rem;padding:.5rem;border-top:var(--mds-stroke-sm) solid var(--mds-border-default);}
 .evrow:first-child{border-top:none;}
-.evico{width:28px;height:28px;border-radius:var(--mds-radius-sm);background:var(--mds-color-green-100);color:var(--mds-color-green-800);display:flex;align-items:center;justify-content:center;}
+.evico{width:28px;height:28px;border-radius:var(--mds-radius-sm);background:#d1e7dd;color:#0f5132;display:flex;align-items:center;justify-content:center;}
 .evico svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .evmain{min-width:0;display:flex;flex-direction:column;}
 .evdesc{font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .evtype{font-size:.66rem;color:var(--mds-text-muted);}
 .evdate{font-size:.72rem;color:var(--mds-text-muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
-.scroller{display:flex;gap:10px;overflow-x:auto;padding:4px;border:1px dashed var(--mds-color-gray-500);border-radius:var(--mds-radius-md);}
-.scroller .box{flex:0 0 150px;background:var(--mds-bg-surface-default);border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-sm);padding:10px;font-size:.75rem;}
+.clipbox{border:1px dashed var(--mds-color-gray-500);border-radius:var(--mds-radius-md);overflow:hidden;padding:10px;background:var(--mds-bg-surface-default);}
 .rules{background:var(--mds-bg-surface-default);border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);padding:14px 18px;max-width:860px;margin-top:10px;}
 .rules h3{font-size:12px;font-weight:700;color:var(--mds-text-muted);margin:0 0 10px;}
 .rules ol{margin:0;padding-left:18px;font-size:12px;color:var(--mds-text-default);}
 .rules li{margin-bottom:8px;}
 .rules code{font-family:var(--font-mono);font-size:11px;color:var(--mds-text-muted);}
 .bad{color:#a2271a;font-weight:600;}
-.good{color:var(--mds-color-green-800);font-weight:600;}
+.good{color:#0f5132;font-weight:600;}
 @media (prefers-color-scheme:dark){.bad{color:#f4a49a;}.good{color:#a8c9a5;}}
 </style>
 
-<div class="h">Anatomy · <span class="tag">.dim-tip[data-dim-tip] → ::after (balloon) + ::before (arrow)</span></div>
+<div class="h">Anatomy · <span class="tag">.local-dimensions-tip[data-dim-tip] → ::after (balloon) + ::before (arrow)</span></div>
 <div class="stage row">
   <div class="cell">
-    <span class="dim-tip is-open" data-dim-tip="Competent with distinction"><span class="chip prof trunc">Competent with dis…</span></span>
+    <span class="local-dimensions-tip is-open" data-dim-tip="Competent with distinction"><span class="ev-assess prof">Competent with distinction</span></span>
     <span class="cap">open (state forced for the preview)</span>
   </div>
   <div class="cell">
-    <span class="dim-tip" data-dim-tip="Competent with distinction"><span class="chip prof trunc">Competent with dis…</span></span>
+    <span class="local-dimensions-tip" data-dim-tip="Competent with distinction"><span class="ev-assess prof">Competent with distinction</span></span>
     <span class="cap">at rest — hover it</span>
   </div>
 </div>
-<div class="note">Default placement <b>above</b>, centred on the target. Balloon at <code>.75rem</code>, radius <code>--mds-radius-sm</code>, shadow <code>--mds-shadow-md</code>, capped at <code>260px</code> and wrapping (<code>overflow-wrap:anywhere</code>) — never one endless line. Zero JavaScript: no initialisation, and none of the <code>data-toggle</code> / <code>data-bs-toggle</code> split that Bootstrap 4 and 5 do not bridge.</div>
+<div class="note">
+  Two shipped classes and one data attribute: <code>.local-dimensions-tip</code> on the wrapper,
+  <code>.local-dimensions-tip-bottom</code> for the downward variant, and the text in
+  <code>data-dim-tip</code>, which <code>content: attr()</code> reads
+  (<code>styles.css:7361-7434</code>; <code>:7357</code> carries a comment pointing back at this file).
+  Balloon at <code>.75rem</code>, radius <code>0.25rem</code>, shadow
+  <code>0 0.5rem 1rem rgb(0 0 0 / 15%)</code>, capped at <code>260px</code> and wrapping
+  (<code>overflow-wrap: anywhere</code>) — never one endless line. Arrow is a 5px transparent border box
+  with one side coloured; <code>z-index</code> 20 for the balloon, 21 for the arrow.
+  Zero JavaScript: no initialisation, and none of the <code>data-toggle</code> /
+  <code>data-bs-toggle</code> split that Bootstrap 4 and 5 do not bridge.
+  <b>No dark variant ships:</b> the balloon is always <code>#1d2125</code> on <code>#fff</code>, because
+  the learner views render on Boost's light surface only. The inversion you see in a dark gallery is this
+  preview's own accommodation, not the component.
+</div>
 
 <div class="h">Triggers · <span class="tag">:hover · :focus-visible · :focus-within</span></div>
 <div class="stage row">
   <div class="cell">
-    <span class="dim-tip" data-dim-tip="About this scale"><button type="button" class="icobtn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button></span>
+    <span class="local-dimensions-tip" data-dim-tip="Competent with distinction"><span class="ev-assess prof">Competent with dist…</span></span>
     <span class="cap">at rest</span>
   </div>
   <div class="cell">
-    <span class="dim-tip is-open" data-dim-tip="About this scale"><button type="button" class="icobtn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button></span>
-    <span class="cap">hover</span>
-  </div>
-  <div class="cell">
-    <span class="dim-tip is-open" data-dim-tip="About this scale"><button type="button" class="icobtn foc"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button></span>
-    <span class="cap">keyboard (focus on the inner button)</span>
+    <span class="local-dimensions-tip is-open" data-dim-tip="Competent with distinction"><span class="ev-assess prof">Competent with dist…</span></span>
+    <span class="cap">hover — the only trigger fired today</span>
   </div>
 </div>
-<div class="note">Shown by <code>:hover</code> on the wrapper, and by <code>:focus-within</code> when the target inside is focusable — an icon button. A plain text <code>&lt;span&gt;</code> does <b>not</b> get a <code>tabindex</code> just for this; see rule 2. Entry delayed by <code>250ms</code>, exit immediate; the transition is <code>150ms</code>, above the 100ms floor core's stylelint enforces.</div>
+<div class="note">
+  The rule at <code>styles.css:7426-7434</code> lists three triggers on the wrapper —
+  <code>:hover</code>, <code>:focus-visible</code> and <code>:focus-within</code>. Only the first fires
+  today: <b>both shipped instances wrap a plain <code>&lt;span&gt;</code></b>, and a span does not get a
+  <code>tabindex</code> just so a balloon can open (see rule 2). The two focus triggers are declared so
+  that wrapping a real control later needs no CSS change. Entry is delayed by <code>250ms</code>
+  (<code>transition-delay</code>, <code>:7433</code>), exit is immediate; the transition is
+  <code>150ms</code> (<code>:7374</code>), above the 100ms floor core's stylelint enforces.
+</div>
 
-<div class="h">The truncation ↔ tooltip pair · <span class="tag">.dim-tip &gt; .trunc</span></div>
+<div class="h">The truncation ↔ tooltip pair · <span class="tag">both shipped call sites</span></div>
 <div class="stage tall">
   <div class="surface" style="max-width:520px">
     <div class="evrow">
       <span class="evico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg></span>
       <span class="evmain"><span class="evdesc">Completed “Reflective essay”</span><span class="evtype">Activity completion</span></span>
-      <span class="dim-tip is-open" data-dim-tip="Competent with distinction in written communication"><span class="chip prof trunc" style="max-width:96px">Competent with distinction in written communication</span></span>
+      <span class="local-dimensions-tip local-dimensions-tip-bottom is-open" data-dim-tip="Competent with distinction in written communication"><span class="ev-assess prof">Competent with distinction in written communication</span></span>
       <span class="evdate">12/01/26</span>
     </div>
     <div class="evrow">
       <span class="evico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg></span>
       <span class="evmain"><span class="evdesc">Completed “Final portfolio”</span><span class="evtype">Activity completion</span></span>
-      <span class="dim-tip" data-dim-tip="Competent"><span class="chip prof trunc" style="max-width:96px">Competent</span></span>
+      <span class="local-dimensions-tip local-dimensions-tip-bottom" data-dim-tip="Competent"><span class="ev-assess prof">Competent</span></span>
       <span class="evdate">08/01/26</span>
     </div>
   </div>
 </div>
-<div class="note">The case that motivated the component: a long scale name would push the date column out and break alignment across rows. The <b>clip</b> (<code>overflow:hidden;text-overflow:ellipsis</code>) lives on the child <code>.trunc</code>; the <b>balloon</b> lives on the wrapper <code>.dim-tip</code>. Swapping them clips the balloon. A value that already fits (second row) shows no ellipsis — leaving <code>data-dim-tip</code> in place is harmless there, the balloon would only repeat what is visible.</div>
-
-<div class="h">Length and wrapping</div>
-<div class="stage tall row" style="gap:80px">
-  <div class="cell">
-    <span class="dim-tip is-open" data-dim-tip="Proficient"><span class="chip prof">Proficient</span></span>
-    <span class="cap">short — one line</span>
-  </div>
-  <div class="cell">
-    <span class="dim-tip is-open" data-dim-tip="Demonstrates the competency independently and consistently in unfamiliar contexts, including under indirect supervision"><span class="chip trunc" style="max-width:110px">Demonstrates the competency independently…</span></span>
-    <span class="cap">long — wraps at 260px</span>
-  </div>
+<div class="note">
+  <b>Site 1 — the evidence journey's grade chip</b> (<code>accordion.js:1217-1222</code>). The grade sits
+  in an auto column, so an author-written scale name long enough to widen it would push the date column
+  out of line on every row. The <b>clip</b> lives on the child
+  <code>.local-dimensions-ev-row-assess</code> (<code>styles.css:3269-3282</code>: <code>display:block</code>,
+  <code>min-width:0</code>, <code>max-width:104px</code>, <code>overflow:hidden</code>,
+  <code>text-overflow:ellipsis</code>, <code>white-space:nowrap</code>); the <b>balloon</b> lives on the
+  wrapper. Swapping them clips the balloon. A row with no grade holds the column open with an em dash
+  (<code>-assess-none</code>, <code>:3289-3294</code>) and gets no wrapper at all — a value that already
+  fits, like the second row here, keeps its <code>data-dim-tip</code> harmlessly.
 </div>
-
-<div class="h">Bottom variant · <span class="tag">.dim-tip-bottom</span></div>
-<div class="stage row">
-  <div class="cell">
-    <span class="dim-tip dim-tip-bottom is-open" data-dim-tip="Opens 12/03/26"><span class="chip">Locked</span></span>
-    <span class="cap" style="margin-top:40px">only where the top is clipped</span>
-  </div>
-  <div class="cell" style="max-width:340px">
-    <div class="scroller">
-      <div class="box">A balloon above<br>would be clipped in here</div>
-      <div class="box">…</div>
-      <div class="box">…</div>
+<div class="stage tall">
+  <div class="surface" style="max-width:420px">
+    <div class="headline">
+      <span class="local-dimensions-tip local-dimensions-tip-bottom is-open" data-dim-tip="Competent with distinction in written communication"><span class="status-rating">Competent with distinction in written communication</span></span>
+      <span class="pill">✓ Proficient</span>
     </div>
-    <span class="cap">ancestor with <code class="tag">overflow-x:auto</code></span>
   </div>
 </div>
-<div class="note"><b>Known limit:</b> any ancestor whose <code>overflow</code> is not <code>visible</code> clips the balloon — and <code>overflow-x:auto</code> forces the Y axis to <code>auto</code> as well, so horizontal scrolling clips top and bottom alike. That is why the evidence journey (a static list) may use a tooltip while the linked-course scroller may not: there, the state has to be written on the card itself. A balloon that needs to escape a scrolling container is a sign the information should be visible, not on hover.</div>
+<div class="note">
+  <b>Site 2 — the status headline's rating</b> (<code>accordion.js:2692-2695</code>). Same pair, bigger
+  type: the clip is <code>.local-dimensions-status-rating</code> (<code>styles.css:3029-3038</code>,
+  <code>1.375rem/600</code>) and the proficiency pill follows as a separate element, so only the rating
+  is ever clipped. These two are the <b>whole</b> shipped inventory — <code>grep</code> for
+  <code>local-dimensions-tip</code> across <code>amd/</code>, <code>templates/</code> and
+  <code>classes/</code> returns exactly these two <code>accordion.js</code> lines.
+</div>
+
+<div class="h">Placement · <span class="tag">base rule up, both shipped instances .local-dimensions-tip-bottom</span></div>
+<div class="row">
+  <div class="cell stage">
+    <span class="local-dimensions-tip is-open" data-dim-tip="Competent"><span class="ev-assess prof">Competent</span></span>
+    <span class="cap">base rule — above</span>
+  </div>
+  <div class="cell stage down">
+    <span class="local-dimensions-tip local-dimensions-tip-bottom is-open" data-dim-tip="Competent"><span class="ev-assess prof">Competent</span></span>
+    <span class="cap">what actually ships — below</span>
+  </div>
+  <div class="cell" style="max-width:300px">
+    <div class="clipbox">
+      <span class="local-dimensions-tip is-open" data-dim-tip="An upward balloon is cut off in here"><span class="ev-assess prof">Clipped</span></span>
+    </div>
+    <span class="cap">ancestor with <code class="tag">overflow: hidden</code></span>
+  </div>
+</div>
+<div class="note">
+  <b>Known limit, and the reason the variant exists.</b> Any ancestor whose <code>overflow</code> is not
+  <code>visible</code> clips the balloon — and <code>overflow-x:auto</code> forces the Y axis to
+  <code>auto</code> too, so horizontal scrolling clips top and bottom alike. In the plan accordion this is
+  not hypothetical: <code>.local-dimensions-accordion-item</code> (<code>styles.css:1448-1457</code>) and
+  <code>.local-dimensions-accordion-content</code> (<code>:1587-1592</code>) both set
+  <code>overflow: hidden</code> for the expand/collapse, and both tooltips sit near the top of a pane —
+  which is why <b>both</b> shipped instances carry <code>.local-dimensions-tip-bottom</code>. There is no
+  auto-detection: choosing at authoring time is cheaper than shipping a positioner. A balloon that needs
+  to escape its container is a sign the information should be visible, not on hover.
+</div>
 
 <div class="rules">
   <h3>Design System rules — tooltip</h3>
   <ol>
-    <li><b>Never the only carrier of the information.</b> The tooltip accompanies text that is already in the DOM and was clipped <i>visually</i>. If the value exists only in the balloon it is invisible to screen readers, to touch and in print — in that case, show it.</li>
-    <li><b>No ARIA and no <code>tabindex</code> for the balloon's sake.</b> Because nothing is hidden from assistive technology the balloon is decoration: no <code>role="tooltip"</code>, no <code>aria-describedby</code>, no <span class="tag">Esc</span> handler. Adding <code>tabindex="0"</code> to a <code>&lt;span&gt;</code> just to make it focusable creates tab stops through a long list — <span class="bad">do not</span>. When the target is already a control, <code>:focus-within</code> covers it for free.</li>
-    <li><b>Never pair it with <code>title</code>.</b> The native balloon would sit on top of ours, on its own delay and in the operating system's styling. <span class="good">One or the other</span> — <code>title</code> stays valid on a lone informational icon, like the "no completion tracking" marker in the tracker timeline.</li>
-    <li><b>Clip on the child, balloon on the wrapper.</b> <code>.dim-tip</code> carries no <code>overflow</code>; <code>.trunc</code> carries no <code>position:relative</code>.</li>
-    <li><b>Above by default.</b> <code>.dim-tip-bottom</code> only where the top is demonstrably clipped — first row of a list, top of a modal. No auto-detection: choosing at authoring time is cheaper than shipping a positioner.</li>
-    <li><b>Short text.</b> The balloon qualifies a label; it does not host a paragraph, a link or markup — <code>content:attr()</code> renders plain text by definition. An explanation that needs a link or a list is a modal, like "About this scale".</li>
+    <li><b>Never the only carrier of the information.</b> The tooltip accompanies text that is already in the DOM and was clipped <i>visually</i> — both call sites print the same string twice, once in the clipped child and once in <code>data-dim-tip</code>. If the value existed only in the balloon it would be invisible to screen readers, to touch and in print — in that case, show it.</li>
+    <li><b>No ARIA and no <code>tabindex</code> for the balloon's sake.</b> Because nothing is hidden from assistive technology the balloon is decoration: no <code>role="tooltip"</code>, no <code>aria-describedby</code>, no <span class="tag">Esc</span> handler — and the shipped markup has none of them. Adding <code>tabindex="0"</code> to a <code>&lt;span&gt;</code> just to make it focusable creates tab stops through a long list — <span class="bad">do not</span>. When the target is already a control, <code>:focus-within</code> covers it for free.</li>
+    <li><b>Never pair it with <code>title</code>.</b> The native balloon would sit on top of ours, on its own delay and in the operating system's styling. <span class="good">One or the other</span> — <code>title</code> stays valid on a lone informational icon, like the "No completion tracking" marker in the tracker timeline (<code>progress_card_body.mustache:288</code>, an <code>img</code> with <code>alt=""</code> + <code>aria-hidden</code> + <code>title</code>), which carries no <code>.local-dimensions-tip</code>.</li>
+    <li><b>Clip on the child, balloon on the wrapper.</b> <code>.local-dimensions-tip</code> carries no <code>overflow</code>; the clipped children carry no <code>position: relative</code>.</li>
+    <li><b>Order in the stylesheet is load-bearing.</b> <code>.local-dimensions-tip-bottom</code> must stay <i>after</i> the base <code>::after</code>/<code>::before</code> rules: same specificity, so if it moves up the base rules re-apply <code>bottom</code> and <code>border-top-color</code> and over-constrain the box. The shipped CSS says so in a comment at <code>styles.css:7408-7412</code>.</li>
+    <li><b>Short text.</b> The balloon qualifies a label; it does not host a paragraph, a link or markup — <code>content: attr()</code> renders plain text by definition. An explanation that needs a link or a list is a modal, like "About this scale" (<code>accordion.js:1371-1387</code>, string <code>scale_about</code>).</li>
   </ol>
 </div>

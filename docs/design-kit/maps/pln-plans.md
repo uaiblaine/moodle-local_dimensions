@@ -1,373 +1,411 @@
-# Mapa de Campos — `PLN` · Aba Planos de aprendizagem (as-is)
+# Field map — `PLN` · Learning plans tab (as-is)
 
-Master-detail: um card branco à esquerda (engrenagem de opções, busca client-side, "Novo modelo",
-filtro multi-competência e as linhas de modelo) e, à direita, o painel do modelo selecionado —
-**cabeçalho gradiente que veste as cores do próprio modelo**, badge de status, três pílulas de
-contagem, segunda engrenagem, chips de metadado e a lista de competências (grip, nome, taxonomia,
-caminho, badge de estrutura, **kebab**). Um divisor de 22px redimensiona o mestre.
+Master-detail: a white card on the left (options gear, client-side search, "New template",
+multi-competency filter and the template rows) and, on the right, the selected template's panel —
+**a gradient header that wears the template's own colours**, a status badge, three count pills, a
+second gear, metadata chips and the competency list (grip, name, taxonomy, path, structure badge,
+**kebab**). A 22px divider resizes the master.
 
-**O CRUD do modelo não mora no pane** — mora no sticky-footer da página, publicado por `init`
-(`plans.js:796-804`) e roteado de volta por `dispatchPlansAction` (`plans.js:766-776`). **As ações
-de competência dentro da lista, ao contrário, moram num kebab por linha** (`plans.mustache:396-436`)
-— e isso está correto; ver a fronteira registrada abaixo.
+**The template CRUD does not live in the pane** — it lives in the page's sticky footer, published by
+`init` (`plans.js:785-793`) and routed back by `dispatchPlansAction` (`plans.js:755-765`). **The
+competency actions inside the list, by contrast, live in a per-row kebab** (`plans.mustache:396-436`)
+— and that is correct; see the boundary recorded below.
 
-- **Mustache:** [`templates/central/plans.mustache`](../../../templates/central/plans.mustache) (494 linhas), [`showhidden_toggle.mustache`](../../../templates/central/showhidden_toggle.mustache), [`collapsible_description.mustache`](../../../templates/collapsible_description.mustache), [`move_competency_modal.mustache`](../../../templates/central/move_competency_modal.mustache), [`delete_template_modal.mustache`](../../../templates/delete_template_modal.mustache)
-- **PHP:** [`classes/output/dynamictabs/plans.php`](../../../classes/output/dynamictabs/plans.php) (336 linhas)
-- **AMD:** [`amd/src/central/plans.js`](../../../amd/src/central/plans.js) (871 linhas), [`central/tabs.js`](../../../amd/src/central/tabs.js), [`central/action_footer.js`](../../../amd/src/central/action_footer.js), [`central/pane_resizer.js`](../../../amd/src/central/pane_resizer.js), [`central/preferences.js`](../../../amd/src/central/preferences.js)
-- **To-be no DS:** sem componente dedicado — o master-detail **convergiu** (o `4c1f521` shipou o
-  to-be desta própria tela). O que falta é o loading do `reloadPane`.
+- **Mustache:** [`templates/central/plans.mustache`](../../../templates/central/plans.mustache) (494 lines), [`showhidden_toggle.mustache`](../../../templates/central/showhidden_toggle.mustache), [`collapsible_description.mustache`](../../../templates/collapsible_description.mustache), [`move_competency_modal.mustache`](../../../templates/central/move_competency_modal.mustache), [`delete_template_modal.mustache`](../../../templates/delete_template_modal.mustache)
+- **PHP:** [`classes/output/dynamictabs/plans.php`](../../../classes/output/dynamictabs/plans.php) (336 lines)
+- **AMD:** [`amd/src/central/plans.js`](../../../amd/src/central/plans.js) (860 lines), [`central/tabs.js`](../../../amd/src/central/tabs.js), [`central/action_footer.js`](../../../amd/src/central/action_footer.js), [`central/pane_resizer.js`](../../../amd/src/central/pane_resizer.js), [`central/preferences.js`](../../../amd/src/central/preferences.js), [`central/flash.js`](../../../amd/src/central/flash.js)
 
-> **Nota de nome (verificada).** O rótulo desta aba é a string `learningplans` = **"Planos de
-> aprendizagem"** (`central.php:101`; pt-BR `lang/pt_br:399`) — ela **não** segue a
-> convenção `central_<x>_tab` que o `FWK` usa. É a **terceira** aba e **nunca nasce ativa**
-> (`central.php:105` só marca `frameworks`), então o pane do `PLN` **nunca é renderizado no servidor
-> no load da página**: ele sempre chega pelo `loadTab` do core. Isso importa para o IMP-03 — ver
-> abaixo.
+> **Naming note (verified).** This tab's label is the string `learningplans` = **"Learning plans"**
+> (`central.php:102`; `lang/en:447`) — it does **not** follow the `central_<x>_tab` convention that
+> `FWK` uses. It is the **third** tab and it **never starts active** (`central.php:115` only marks
+> `frameworks`), so the `PLN` pane is **never server-rendered on page load**: it always arrives
+> through core's `loadTab`. That matters for the busy blanket — see below.
 
-> **Resync 2026-07-14:** a versão anterior deste mapa congelou em `159a800` (2026-06-29), junto com a
-> do `EST` e a do `FWK`. Desde então `plans.mustache` foi de **207 para 494** linhas e `plans.js` de
-> **251 para 871** — e **as 21 de 21** refs do mapa antigo resolviam para linhas **não relacionadas**.
-> **Nove** delas (`:68`, `:77`, `:85`, `:92`, `:93`, `:105`, `:111`, `:121`, `:122`) caíam dentro do
-> *Example context* do docblock (que hoje vai de `:17` a `:126`), e `PLN-PARTICIPANTS` apontava `:187`,
-> que é uma **linha em branco**. Todas foram re-derivadas, não corrigidas pontualmente.
->
-> O defeito maior, porém, era **ausência**: não estavam mapeados o cabeçalho gradiente, o badge de
-> status, duas das três contagens, **as duas** engrenagens de opções de exibição (e seus cinco
-> switches), a busca client-side de planos, o filtro **multi**-competência, o toggle de ocultos, o
-> resizer, os chips de metadado, a descrição colapsável, o grip de arrasto, o kebab inteiro — e
-> **todo** o comportamento de `plans.js` (o mapa tinha **zero** refs de JS).
->
-> **A ironia registrada:** o painel **to-be** da tela antiga dizia *"mover/remover num menu ⋮"* e
-> *"contagem de alunos visível"*. As duas coisas **shiparam** em `4c1f521` (2026-07-01) — o kebab e a
-> pílula "Planos: N". O to-be virou o as-is e o artefato nunca foi resincronizado. Duas reformas
-> passaram por cima dele: `9e1a2cc` (2026-07-08, ações → sticky-footer) e `64337c8` (2026-07-09,
-> redesenho pixel-perfect: classe do kebab, cabeçalho gradiente, engrenagens, chips).
+> **Provenance.** The tab's current shape came out of three reworks: `4c1f521` (2026-07-01, the
+> per-row kebab and the "Plans {N}" pill), `9e1a2cc` (2026-07-08, the template actions move to the
+> sticky footer) and `64337c8` (2026-07-09, pixel-perfect redesign: the kebab class, the gradient
+> header, the two gears, the chips).
 
-## A fronteira da regra do sticky-footer (decidida 2026-07-14)
+## The boundary of the sticky-footer rule (settled 2026-07-14)
 
-> A regra "nunca kebab por linha" governa o **CRUD da entidade da aba** (framework / nó da estrutura /
-> template) — que vai pro sticky-footer porque é o que lança os modais. As ações de **competências
-> dentro da lista de um plano** são **lista aninhada** e legitimamente usam kebab
-> (`plans.mustache:396-436`): o sticky-footer desta aba já está ocupado pelas ações do template
-> selecionado. **Este kebab está correto — não "conserte".**
+> The "never a per-row kebab" rule governs the **CRUD of the tab's own entity** (framework /
+> structure node / template) — which goes to the sticky footer because that is what launches the
+> modals. The actions on **competencies inside a plan's list** are a **nested list** and legitimately
+> use a kebab (`plans.mustache:396-436`): this tab's sticky footer is already occupied by the
+> selected template's actions. **This kebab is correct — do not "fix" it.**
 
-O que sustenta a fronteira, verificado no código:
+What holds the boundary up, verified in the code:
 
-- **As duas listas são de entidades diferentes.** O sticky-footer age sobre o **template**
-  selecionado (`plans.mustache:462-488`, cinco botões); o kebab age sobre uma **competência dentro**
-  daquele template (`plans.mustache:396-436`, cinco itens). Não há um segundo rodapé disponível — o
-  da página já está ocupado.
-- **A prova mais forte é o `openForm` compartilhado.** O `edit-competency` do kebab
-  (`plans.mustache:405-408`) e o `edit-template` do rodapé (`:465-468`) chamam **a mesma função**,
-  `openForm` (`plans.js:211-219`, cujo `new ModalForm` está em `:212`) — que o `new-template` do
-  cabeçalho (`:182-184`) também chama. Os **três** convivem porque o `openForm` é parametrizado pela
-  `formclass`: `edit-competency` passa `COMPETENCY_FORM_CLASS` (`plans.js:739-745`), enquanto
-  `edit-template` e `new-template` passam `FORM_CLASS` (`:732-738`, `:725-731`). **Entidades
-  diferentes, mesmo mecanismo** — é exatamente por isso que um kebab e um rodapé podem coexistir sem
-  ambiguidade.
-- **O sticky-footer continua sendo o padrão dominante do hub, e os números são estes** (medidos, não
-  estimados). O hub tem **17** sítios de construção de modal — **4** `new ModalForm` + **13**
-  `Modal*.create`, todos sob `amd/src/central/` (o `Modal.create` de `amd/src/accordion.js:1191` é da
-  visão do aluno, **fora** do hub). Destes 17, o rodapé **alcança 10** diretamente; é a **única
-  porta** de **7**; e **8 dependem** dele (os 7 + `enrol_methods.js:799`, que só é montado de dentro
-  do modal de participantes — `participants_manager.js:33`, importador único).
-  - **Os 7 sem outra porta:** `rule_config.js:144` (`rules`), `competency_links.js:852` (`links`),
-    `related_competencies.js:248` (`related`), `structure.js:987` (`moveto`) — os quatro só existem
-    em `structure_footer_actions.mustache` — mais `participants_manager.js:144`
-    (`manage-participants`), `competency_browser.js:106` (`browse-frameworks`) e `plans.js:251`
-    (`delete-template` com planos), os três só em `plans.mustache:462-488`.
-  - **Os outros 3 têm porta paralela no cabeçalho:** o form de framework (`frameworks.js:174` ←
-    `frameworks.mustache:82`), o form de competência (`structure.js:797` ← `structure.mustache:127`)
-    e o form de template (`plans.js:212` ← `plans.mustache:182`). **Mas o botão do rodapé é o único
-    jeito de agir sobre a linha selecionada** — o do cabeçalho só cria.
-  - **Não inflar:** são **7** sem outra porta, não 10. Os 7 que o rodapé **não** alcança direto são
-    `frameworks.js:262` (import), `frameworks.js:345` (export), `plans.js:568` (mover para posição),
-    `competency_detail.js:277` (detalhe), `structure.js:1224` (uso), `framework_scaleconfig.js:139`
-    (delegado de dentro do form) e `enrol_methods.js:799`.
+- **The two lists belong to different entities.** The sticky footer acts on the selected **template**
+  (`plans.mustache:462-488`, five buttons); the kebab acts on a **competency inside** that template
+  (`plans.mustache:396-436`, five items). There is no second footer available — the page's own is
+  already occupied.
+- **The strongest proof is the shared `openForm`.** The kebab's `edit-competency`
+  (`plans.mustache:405-408`) and the footer's `edit-template` (`plans.mustache:465-468`) call **the
+  same function**, `openForm` (`plans.js:200-208`, whose `new ModalForm` sits at `:201`) — which the
+  header's `new-template` (`plans.mustache:182-184`) calls too. All **three** coexist because
+  `openForm` is parameterised by `formclass`: `edit-competency` passes `COMPETENCY_FORM_CLASS`
+  (`plans.js:728-734`), while `edit-template` and `new-template` pass `FORM_CLASS` (`:721-727`,
+  `:714-720`). **Different entities, same mechanism** — which is exactly why a kebab and a footer can
+  coexist without ambiguity.
+- **The sticky footer is still the hub's dominant pattern, and these are the numbers** (measured, not
+  estimated). The hub has **17** modal construction sites — **4** `new ModalForm` + **13**
+  `Modal*.create`, all under `amd/src/central/` (the **four** `Modal.create` calls in
+  `amd/src/accordion.js` — `:1378`, `:1476`, `:2526`, `:3470` — belong to the learner view,
+  **outside** the hub). Of those 17, the footer **reaches 10** directly; it is the **only door** to
+  **7**; and **8 depend** on it (the 7 plus `enrol_methods.js:859`, which is only mounted from inside
+  the participants modal — `participants_manager.js:33`, its sole importer).
+  - **The 7 with no other door:** `rule_config.js:144` (`rules`), `competency_links.js:862` (`links`),
+    `related_competencies.js:239` (`related`), `structure.js:988` (`moveto`) — the four exist only in
+    `structure_footer_actions.mustache:49`, `:53`, `:57`, `:61` — plus
+    `participants_manager.js:171` (`manage-participants`), `competency_browser.js:106`
+    (`browse-frameworks`) and `plans.js:240` (`delete-template` with plans), the three only in
+    `plans.mustache:469`, `:473` and `:481`.
+  - **The other 3 have a parallel door in the header:** the framework form (`frameworks.js:172` ←
+    `frameworks.mustache:82`), the competency form (`structure.js:798` ← `structure.mustache:127`)
+    and the template form (`plans.js:201` ← `plans.mustache:182`). **But the footer button is the
+    only way to act on the selected row** — the header one only creates.
+  - **Do not inflate:** it is **7** with no other door, not 10. The 7 the footer does **not** reach
+    directly are `frameworks.js:260` (import), `frameworks.js:343` (export), `plans.js:557` (move to
+    position), `competency_detail.js:277` (detail), `structure.js:1225` (usage),
+    `framework_scaleconfig.js:139` (delegated from inside the form) and `enrol_methods.js:859`.
 
-## Raiz e dados de página
+## Root and page data
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-ROOT` | `[sem rótulo]` | região/raiz | `plans.mustache:127-133` | `data-region="plans"` | carrega **11** atributos: `contexttype`, `categoryid`, `contextid`, `templateid`, `templatename`, `competencyids`, `excludeids`, `canassignroles`, `cancohortpage`, `canuserpage`, `canmanageenrol`, `canenrolpage`. `init` a resolve por seletor (`plans.js:782`) e guarda em `activeRegion`/`activePane` (`:787-788`) |
-| `PLN-MIRROR-TPL` | `[sem rótulo]` | espelho de dataset | `plans.js:813-815` | `pane.dataset.templateid` | o servidor **auto-seleciona** um modelo (`dynamictabs/plans.php:143-156`); `init` espelha o id no dataset do **pane** senão os WSes recebem 0 → "Invalid context id" (o padrão *dataset-as-truth* do `CLAUDE.md`) |
-| `PLN-MIRROR-FILTER` | `[sem rótulo]` | espelho de dataset | `plans.js:819-821` | `pane.dataset.competencyids` | espelha o filtro **já validado pelo servidor**, para que competências ilegíveis/apagadas que o servidor descartou não fiquem penduradas no dataset |
+| `PLN-ROOT` | `[no label]` | region/root | `plans.mustache:127-133` | `data-region="plans"` | carries **12** attributes: `contexttype`, `categoryid`, `contextid`, `templateid`, `templatename`, `competencyids`, `excludeids`, `canassignroles`, `cancohortpage`, `canuserpage`, `canmanageenrol`, `canenrolpage`. `init` resolves it by selector (`plans.js:771`) and keeps it in `activeRegion`/`activePane` (`:776-777`) |
+| `PLN-MIRROR-TPL` | `[no label]` | dataset mirror | `plans.js:802-804` | `pane.dataset.templateid` | the server **auto-selects** a template (`dynamictabs/plans.php:143-156`); `init` mirrors the id onto the **pane**'s dataset or the web services receive 0 → "Invalid context id" (the *dataset-as-truth* pattern from `CLAUDE.md`) |
+| `PLN-MIRROR-FILTER` | `[no label]` | dataset mirror | `plans.js:808-810` | `pane.dataset.competencyids` | mirrors the filter **already validated by the server**, so unreadable or deleted competencies that the server discarded are not left dangling in the dataset |
 
-## Cabeçalho e toggle
+## Header and toggle
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-EMPTY-CAT` | "Escolha primeiro a categoria de curso…" | empty-state | `plans.mustache:134-136` | `needscategoryselection` | bloqueia a aba inteira (o `{{^needscategoryselection}}` de `:138` embrulha todo o resto) |
-| `PLN-SHOWDISABLED` | Mostrar modelos ocultos | switch | `showhidden_toggle.mustache:44-45`, chamado em `plans.mustache:139-141` | `data-action="{{action}}"` → `toggle-disabled` | **partial compartilhado** com `EST`/`FWK`: o `data-action` é **variável** no template e o valor literal vem de `dynamictabs/plans.php:289` (contexto em `:286-291`; **nulo quando não há nenhum oculto** → não renderiza). Estado na preferência `plansshowdisabled` (`plans.js:192-197`), **não** no servidor — as linhas ocultas ficam no DOM e o toggle só liga a classe `show-disabled` (`:194`, `:197`) |
+| `PLN-EMPTY-CAT` | "Choose the course category first…" | empty-state | `plans.mustache:134-136` | `needscategoryselection` | `alert-info` with `role="status"` (`:135`); blocks the whole tab (the `{{^needscategoryselection}}` at `:138` wraps everything else) |
+| `PLN-SHOWDISABLED` | Show hidden templates | switch | `showhidden_toggle.mustache:44-45`, called at `plans.mustache:139-141` | `data-action="{{action}}"` → `toggle-disabled` | **shared partial** with `EST`/`FWK`: the `data-action` is **variable** in the template and the literal value comes from `dynamictabs/plans.php:289` (context at `:286-291`; **null when nothing is hidden** → does not render). State lives in the `plansshowdisabled` preference (`plans.js:181-186`), **not** on the server — the hidden rows stay in the DOM and the toggle only switches the `show-disabled` class (`:183`, `:186`) |
 
-## Painel mestre — cabeçalho e opções de exibição (engrenagem 1 de 2)
+## Master panel — header and display options (gear 1 of 2)
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-LIST-TITLE` | "Modelos" | heading | `plans.mustache:146` | str `central_plans_templatestitle` | `<h2>` |
-| `PLN-LIST-GEAR` | Opções de exibição | botão ícone | `plans.mustache:147-152` | `data-action="list-display-options"` | `fa-cog`; alterna `PLN-LIST-OPTS` e **persiste** o estado aberto/fechado na preferência `panels.planslist` (`plans.js:714-722`). **Não estava no mapa** |
-| `PLN-LIST-OPTS` | `[sem rótulo]` | painel colapsável | `plans.mustache:155-170` | `data-region="list-display-options-panel"` | `role="group"`; estado restaurado por `applyPanelState` (`plans.js:428`) |
-| `PLN-LIST-OPT-ID` | Mostrar identificadores | switch | `plans.mustache:158-163` | `data-list-toggle="id"` | liga `show-id` no container de linhas (`LISTDISPLAY_CLASSES`, `plans.js:57`) |
-| `PLN-LIST-OPT-DUE` | Mostrar data de entrega | switch | `plans.mustache:164-169` | `data-list-toggle="duedate"` | liga `show-duedate`; preferência `planslist` (`plans.js:381-389`) |
+| `PLN-LIST-TITLE` | "Templates" | heading | `plans.mustache:146` | str `central_plans_templatestitle` | `<h2>` |
+| `PLN-LIST-GEAR` | Display options | icon button | `plans.mustache:147-152` | `data-action="list-display-options"` | `fa-cog` (`:150`); toggles `PLN-LIST-OPTS` and **persists** the open/closed state in the `panels.planslist` preference (`plans.js:703-711`) |
+| `PLN-LIST-OPTS` | `[no label]` | collapsible panel | `plans.mustache:155-170` | `data-region="list-display-options-panel"` | `role="group"`; state restored by `applyPanelState` (`plans.js:417`) |
+| `PLN-LIST-OPT-ID` | Show identifiers | switch | `plans.mustache:158-163` | `data-list-toggle="id"` | switches on `show-id` on the row container (`LISTDISPLAY_CLASSES`, `plans.js:58`) |
+| `PLN-LIST-OPT-DUE` | Show due date | switch | `plans.mustache:164-169` | `data-list-toggle="duedate"` | switches on `show-duedate`; `planslist` preference (`plans.js:370-378`) |
 
-## Painel mestre — busca e criação
+## Master panel — search and creation
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-TOOLBAR` | `[sem rótulo]` | contêiner | `plans.mustache:172` | `data-region="plan-toolbar"` | busca + botão novo |
-| `PLN-PLANSEARCH` | Buscar por nome ou identificador | input search | `plans.mustache:178-179` | `data-region="plan-search-input"` | **busca client-side**, não recarrega nada: `applyPlanSearch` (`plans.js:160-178`) casa contra o haystack `data-search` (nome + idnumber em minúsculas, montado no servidor em `dynamictabs/plans.php:172`) e alterna a classe `local-dimensions-central-plan-filtered`. Rótulo em `visually-hidden` (`:175-177`). **É um elemento novo — não confundir com `PLN-SEARCH`** |
-| `PLN-NEW` | Novo modelo | botão | `plans.mustache:182-184` | `data-action="new-template"` | `fa-plus`; só `{{#canmanage}}` (`:181`); `openForm` com `FORM_CLASS` e `id: 0` (`plans.js:725-731`) |
+| `PLN-TOOLBAR` | `[no label]` | container | `plans.mustache:172` | `data-region="plan-toolbar"` | search + new button |
+| `PLN-PLANSEARCH` | Search by name or ID number | search input | `plans.mustache:178-179` | `data-region="plan-search-input"` | **client-side search**, reloads nothing: `applyPlanSearch` (`plans.js:149-167`) matches against the `data-search` haystack (name + idnumber lowercased, built on the server at `dynamictabs/plans.php:172`) and toggles the `local-dimensions-central-plan-filtered` class. Label is `visually-hidden` (`:175-177`). **It is a new element — do not confuse it with `PLN-SEARCH`** |
+| `PLN-NEW` | New template | button | `plans.mustache:182-184` | `data-action="new-template"` | `fa-plus`; only under `{{#canmanage}}` (`:181`); `openForm` with `FORM_CLASS` and `id: 0` (`plans.js:714-720`) |
 
-## Painel mestre — filtro multi-competência
+## Master panel — multi-competency filter
 
-Substituiu o badge único "Filtrado por: X". O filtro é uma **interseção cross-framework**: só sobram
-modelos que contêm **todas** as competências escolhidas (`dynamictabs/plans.php:119-140`).
+It replaced the single "Filtered by: X" badge. The filter is a **cross-framework intersection**: only
+templates that contain **all** the chosen competencies survive (`dynamictabs/plans.php:119-140`).
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-FILTER` | `[sem rótulo]` | contêiner | `plans.mustache:188` | `data-region="competency-filter"` | — |
-| `PLN-FILTER-LABEL` | "Filtrar por competências" | label | `plans.mustache:190` | str `central_plans_filterbycompetencies` | — |
-| `PLN-FILTER-CLEAR` | Limpar filtro de competência | botão | `plans.mustache:192-194` | `data-action="clear-competency"` | `fa-times`; só com `{{#filteredbycompetency}}` (`:191`); zera o dataset e `reloadPane` (`plans.js:677-680`) |
-| `PLN-FILTER-CHIP` | nome da competência | chip (loop) | `plans.mustache:199-206` | `competencyfilters` | `badge local-dimensions-central-chip-accent`; label = `shortname` (`dynamictabs/plans.php:136-139`) |
-| `PLN-FILTER-CHIP-REMOVE` | "Remover {$a} do filtro" | botão ícone | `plans.mustache:201-205` | `data-action="remove-filter-competency"` | `aria-label` embute o nome; tira o id do CSV e `reloadPane` (`plans.js:681-685`) |
-| `PLN-FILTER-ADD` | Adicionar ao filtro | botão | `plans.mustache:208-211` | `data-action="add-filter-competency"` | `fa-plus`; alterna o `hidden` do picker e move o foco pro input (`plans.js:686-702`). **Divulgação progressiva** — o `CLAUDE.md` avisa: no Behat, abrir antes de interagir |
-| `PLN-FILTER-PICKER` | `[sem rótulo]` | painel | `plans.mustache:213-220` | `data-region="competency-filter-picker"` | nasce `hidden` (`:214`) |
-| `PLN-SEARCH` | Filtrar planos por competência | select/autocomplete | `plans.mustache:218` | `data-region="competency-search"` | `form-select` (nunca `custom-select`); nasce **vazio** e é enriquecido por `enhance()` com o datasource `local_dimensions/central/competency_datasource` (`plans.js:838-840`), guardado por `dataset.enhanced` (`:824-825`) pra não enriquecer duas vezes a cada `reloadPane`. O `change` adiciona o id ao CSV e `reloadPane` (`:826-837`) |
+| `PLN-FILTER` | `[no label]` | container | `plans.mustache:188` | `data-region="competency-filter"` | — |
+| `PLN-FILTER-LABEL` | "Filter by competencies" | label | `plans.mustache:190` | str `central_plans_filterbycompetencies` | — |
+| `PLN-FILTER-CLEAR` | Clear competency filter | button | `plans.mustache:192-194` | `data-action="clear-competency"` | `fa-times`; only with `{{#filteredbycompetency}}` (`:191`); clears the dataset and `reloadPane` (`plans.js:666-669`) |
+| `PLN-FILTER-CHIP` | competency name | chip (loop) | `plans.mustache:199-206` | `competencyfilters` | `badge local-dimensions-central-chip-accent` (`:199`) — the hub's **soft blue** chip (`styles.css:6808-6814`), not the header's `-plans-chip-accent`; label = `shortname` (`dynamictabs/plans.php:136-139`) |
+| `PLN-FILTER-CHIP-REMOVE` | "Remove {$a} from the filter" | icon button | `plans.mustache:201-205` | `data-action="remove-filter-competency"` | the `aria-label` embeds the name (`:203`); drops the id from the CSV and `reloadPane` (`plans.js:670-674`) |
+| `PLN-FILTER-ADD` | Add to filter | button | `plans.mustache:208-211` | `data-action="add-filter-competency"` | `fa-plus`; toggles the picker's `hidden` and moves focus to the input (`plans.js:675-691`). **Progressive disclosure** — `CLAUDE.md` warns: in Behat, open it before interacting |
+| `PLN-FILTER-PICKER` | `[no label]` | panel | `plans.mustache:213-220` | `data-region="competency-filter-picker"` | starts `hidden` (`:214`) |
+| `PLN-SEARCH` | Filter plans by competency | select/autocomplete | `plans.mustache:218` | `data-region="competency-search"` | `form-select` (never `custom-select`); starts **empty** and is enriched by `enhance()` with the `local_dimensions/central/competency_datasource` datasource (`plans.js:827-829`), guarded by `dataset.enhanced` (`:813`) so it is not enriched twice on every `reloadPane`. The `change` adds the id to the CSV and `reloadPane` (`:815-826`) |
 
-## Painel mestre — lista de modelos
+## Master panel — template list
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-TPL-LIST` | `[sem rótulo]` | contêiner | `plans.mustache:224` | `data-region="template-rows"` | recebe as classes `show-id` / `show-duedate` / `show-disabled` |
-| `PLN-TPL-ROW` | nome do modelo | botão | `plans.mustache:226-240` | `data-action="select-template"`, `data-region="template-row"` | o **botão inteiro** é a linha; `active` + `aria-current="true"` no selecionado (`:227`, `:229`); grava o id no dataset, **persiste** em `Preferences.saveNav({templateid})` e recarrega **preservando o scroll da lista** (`plans.js:671-676`) |
-| `PLN-TPL-ICON` | `[sem rótulo]` | ícone | `plans.mustache:230` | `fa-clipboard-list` | decorativo |
-| `PLN-TPL-NAME` | nome | texto | `plans.mustache:233` | `name` | — |
-| `PLN-TPL-ID` | idnumber | chip | `plans.mustache:234` | `idnumber` | só se `idnumber`; visível só com `PLN-LIST-OPT-ID` |
-| `PLN-TPL-DUE` | data de entrega | chip | `plans.mustache:236` | `duedate` | `fa-calendar`; só se `duedate`; visível só com `PLN-LIST-OPT-DUE`. Formatado no servidor com `userdate(..., strftimedate)` (`dynamictabs/plans.php:176-178`) |
-| `PLN-TPL-COUNT` | N | contador | `plans.mustache:238` | `competencycount` | `api::count_competencies_in_template($id)` (`dynamictabs/plans.php:173`) — **uma query por linha**; ganha `is-selected` no modelo ativo |
-| `PLN-TPL-HIDDEN` | "Oculto" | badge | `plans.mustache:239` | `^visible` | `badge bg-secondary`; str `hidden, tool_lp` |
-| `PLN-SEARCH-EMPTY` | "Nenhum modelo corresponde à busca atual." | empty-state | `plans.mustache:242-244` | `data-region="plan-search-empty"` | nasce `hidden`; `applyPlanSearch` o revela quando a contagem de visíveis chega a zero (`plans.js:174-177`) — e **linha oculta só conta como visível se o toggle a revelou** (`:170`) |
+| `PLN-TPL-LIST` | `[no label]` | container | `plans.mustache:224` | `data-region="template-rows"` | takes the `show-id` / `show-duedate` / `show-disabled` classes |
+| `PLN-TPL-ROW` | template name | button | `plans.mustache:226-240` | `data-action="select-template"`, `data-region="template-row"` | the **whole button** is the row; `active` + `aria-current="true"` on the selected one (`:227`, `:229`); it writes the id into the dataset, **persists** it through `Preferences.saveNav({templateid})` and reloads **preserving the list's scroll** (`plans.js:660-665`) — through `reloadKeepingScroll`, therefore **without** the busy blanket |
+| `PLN-TPL-ICON` | `[no label]` | icon | `plans.mustache:230` | `fa-clipboard-list` | decorative |
+| `PLN-TPL-NAME` | name | text | `plans.mustache:233` | `name` | — |
+| `PLN-TPL-ID` | idnumber | chip | `plans.mustache:234` | `idnumber` | only when `idnumber` is set; visible only with `PLN-LIST-OPT-ID` |
+| `PLN-TPL-DUE` | due date | chip | `plans.mustache:236` | `duedate` | `fa-calendar`; only when `duedate` is set; visible only with `PLN-LIST-OPT-DUE`. Formatted on the server with `userdate(..., strftimedate)` (`dynamictabs/plans.php:176-178`) |
+| `PLN-TPL-COUNT` | N | counter | `plans.mustache:238` | `competencycount` | `api::count_competencies_in_template($id)` (`dynamictabs/plans.php:173`) — **one query per row**; gains `is-selected` on the active template |
+| `PLN-TPL-HIDDEN` | "Hidden" | badge | `plans.mustache:239` | `^visible` | `badge bg-secondary`; str `hidden, tool_lp` |
+| `PLN-SEARCH-EMPTY` | "No templates match the current search." | empty-state | `plans.mustache:242-244` | `data-region="plan-search-empty"` | starts `hidden` **with `role="status"`** (`:242`, `f73c260`), so revealing it announces; `applyPlanSearch` reveals it when the visible count reaches zero (`plans.js:163-166`) — and **a hidden row only counts as visible if the toggle revealed it** (`:159`) |
 
-## Divisor
+## Divider
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-RESIZER` | Redimensionar painéis | separator | `plans.mustache:258-262` | `data-region="plans-resizer"` | `role="separator"`, `aria-orientation="vertical"`, `tabindex="0"`; só com `{{#hastemplates}}` (`:257`). `initMasterResizer` (`plans.js:854-863`) com `cssvar` `--local-dimensions-plans-master-width`, mínimo **300**, máximo **1200**, reserva **382**; a largura persiste em **`localStorage`** sob `local_dimensions_plans_master_width` (`pane_resizer.js:63`, `:69`) — não é preferência de usuário |
+| `PLN-RESIZER` | Resize panels | separator | `plans.mustache:258-262` | `data-region="plans-resizer"` | `role="separator"`, `aria-orientation="vertical"`, `tabindex="0"`; only with `{{#hastemplates}}` (`:257`). `initMasterResizer` (`plans.js:843-852`) with `cssvar` `--local-dimensions-plans-master-width`, minimum **300**, maximum **1200**, reserve **382**; the width persists in **`localStorage`** under `local_dimensions_plans_master_width` (`pane_resizer.js:63`, `:69`) — it is not a user preference |
 
-## Detalhe — cabeçalho gradiente (veste as cores do modelo)
+## Detail — gradient header (wears the template's colours)
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-DETAIL-HEADER` | `[sem rótulo]` | cabeçalho | `plans.mustache:266-269` | `data-region="plan-detail-header"` | três stops via custom properties inline (`--ld-plans-hdr-0/-48/-100`) + `color` do texto; a regra é `linear-gradient(140deg, …0%, …48%, …100%)` (`styles.css:4316`). O servidor calcula: base = campo `bgcolor` do modelo **ou `#0f6cbf`**, e os stops 48/100 são `helper::darken_hex(base, 0.16)` e `(base, 0.34)` (`dynamictabs/plans.php:271-272`, `:311-313`). Para o padrão `#0f6cbf` isso dá **`#0d5ba0`** e **`#0a477e`** (medido, reproduzindo `helper.php:2382-2397`). **Pegadinha:** os *fallbacks* do CSS (`#0d5a9f`, `#0a4680`, `styles.css:4316`) **não batem** com o que o PHP calcula — mas são inertes, porque `:267` grava as três custom properties **incondicionalmente**, então o fallback nunca pinta |
-| `PLN-DETAIL-GLOW` | `[sem rótulo]` | brilho | `plans.mustache:268-269` | `aria-hidden="true"` | `radial-gradient` branco a 22% no canto superior esquerdo, inline |
-| `PLN-DETAIL-TITLE` | nome do modelo | heading | `plans.mustache:274` | `selectedtemplatename` | `<h2>` |
-| `PLN-STATUS` | "Habilitado" / "Oculto" | badge | `plans.mustache:275-280` | `selectedtemplatevisible` | `is-enabled` (str `central_plans_enabled`) ou `is-disabled` (str `hidden, tool_lp`) |
-| `PLN-DETAIL-COUNT` | "Competências: N" | pílula | `plans.mustache:283-286` | `competencycount` | `count($competencies)` (`dynamictabs/plans.php:327`) |
-| `PLN-COUNT-PLANS` | "Planos: N" | pílula | `plans.mustache:288-291` | `selectedtemplateplancount` | `helper::count_plans_by_template` (`dynamictabs/plans.php:319-321`); alimenta também o `data-plancount` do `PLN-DELETE`. **Não estava no mapa** |
-| `PLN-COUNT-COHORTS` | "Coortes: N" | pílula | `plans.mustache:293-296` | `selectedtemplatecohortcount` | `helper::count_cohorts_by_template` (`dynamictabs/plans.php:322-324`). **Não estava no mapa** |
-| `PLN-DETAIL-GEAR` | Opções de exibição | botão ícone | `plans.mustache:299-304` | `data-action="display-options"` | `fa-cog`; **a segunda engrenagem da aba**; preferência `panels.plansdetail` (`plans.js:705-713`). **Não estava no mapa** |
-| `PLN-DISP-OPTS` | `[sem rótulo]` | painel colapsável | `plans.mustache:307-328` | `data-region="display-options-panel"` | `role="group"`; switches em variante escura (`-switch-dark`) porque ficam **sobre o gradiente** |
-| `PLN-DISP-TAX` | Exibir taxonomia | switch | `plans.mustache:310-315` | `data-display-toggle="tax"` | liga `show-tax` na lista (`DISPLAY_CLASSES`, `plans.js:54`) |
-| `PLN-DISP-PATH` | Mostrar caminhos | switch | `plans.mustache:316-321` | `data-display-toggle="path"` | liga `show-path` |
-| `PLN-DISP-ID` | Mostrar identificadores | switch | `plans.mustache:322-327` | `data-display-toggle="id"` | liga `show-id`; preferência `plansdetail` (`plans.js:306-314`) |
-| `PLN-CHIP-DISPLAY` | "Formato de exibição: {$a}" | chip | `plans.mustache:331-335` | `selectedtemplatehasdisplaymode` | `fa-eye`; variante accent. Vem de `constants::display_mode_options()` (`dynamictabs/plans.php:256-258`) |
-| `PLN-CHIP-TYPE` | "Rótulo das competências: {$a}" | chip | `plans.mustache:336-340` | `selectedtemplatehastype` | `fa-tag`; variante glass; custom field `type` |
-| `PLN-CHIP-DUE` | "Prazo: …" | chip | `plans.mustache:341-345` | `selectedtemplatehasduedate` | `fa-calendar`; **os dois-pontos e o espaço são literais no template** (`:343`), não fazem parte da string |
+| `PLN-DETAIL-HEADER` | `[no label]` | header | `plans.mustache:266-269` | `data-region="plan-detail-header"` | three stops through inline custom properties (`--ld-plans-hdr-0/-48/-100`) + the text `color`; the rule is `linear-gradient(140deg, …0%, …48%, …100%)` (`styles.css:5829`, block at `:5823-5837`). The server computes them: base = the template's `bgcolor` field **or `#0f6cbf`**, and the 48/100 stops are `helper::darken_hex(base, 0.16)` and `(base, 0.34)` (`dynamictabs/plans.php:271-272`, `:311-313`). For the `#0f6cbf` default that gives **`#0d5ba0`** and **`#0a477e`** (measured, reproducing `helper.php:3020-3035`). **Gotcha:** the CSS *fallbacks* (`#0d5a9f`, `#0a4680`, `styles.css:5829`) **do not match** what the PHP computes — but they are inert, because `:267` writes the three custom properties **unconditionally**, so the fallback never paints |
+| `PLN-DETAIL-GLOW` | `[no label]` | glow | `plans.mustache:268-269` | `aria-hidden="true"` | white `radial-gradient` at 22% in the top-left corner, inline |
+| `PLN-DETAIL-TITLE` | template name | heading | `plans.mustache:274` | `selectedtemplatename` | `<h2>` |
+| `PLN-STATUS` | "Enabled" / "Hidden" | badge | `plans.mustache:275-280` | `selectedtemplatevisible` | `is-enabled` (str `central_plans_enabled`) or `is-disabled` (str `hidden, tool_lp`); colours at `styles.css:5882-5888` |
+| `PLN-DETAIL-COUNT` | "Competencies {N}" | pill | `plans.mustache:283-286` | `competencycount` | `count($competencies)` (`dynamictabs/plans.php:327`) |
+| `PLN-COUNT-PLANS` | "Plans {N}" | pill | `plans.mustache:288-291` | `selectedtemplateplancount` | `helper::count_plans_by_template` (`dynamictabs/plans.php:319-321`); it also feeds `PLN-DELETE`'s `data-plancount` |
+| `PLN-COUNT-COHORTS` | "Cohorts {N}" | pill | `plans.mustache:293-296` | `selectedtemplatecohortcount` | `helper::count_cohorts_by_template` (`dynamictabs/plans.php:322-324`) |
+| `PLN-DETAIL-GEAR` | Display options | icon button | `plans.mustache:299-304` | `data-action="display-options"` | `fa-cog`; **the tab's second gear**; `panels.plansdetail` preference (`plans.js:694-702`) |
+| `PLN-DISP-OPTS` | `[no label]` | collapsible panel | `plans.mustache:307-328` | `data-region="display-options-panel"` | `role="group"`; switches in the dark variant (`-switch-dark`) because they sit **on top of the gradient** |
+| `PLN-DISP-TAX` | Show taxonomy | switch | `plans.mustache:310-315` | `data-display-toggle="tax"` | switches on `show-tax` on the list (`DISPLAY_CLASSES`, `plans.js:55`) |
+| `PLN-DISP-PATH` | Show paths | switch | `plans.mustache:316-321` | `data-display-toggle="path"` | switches on `show-path` |
+| `PLN-DISP-ID` | Show identifiers | switch | `plans.mustache:322-327` | `data-display-toggle="id"` | switches on `show-id`; `plansdetail` preference (`plans.js:295-303`) |
+| `PLN-CHIP-DISPLAY` | "Display format: {$a}" | chip | `plans.mustache:331-335` | `selectedtemplatehasdisplaymode` | `fa-eye`; the `-plans-chip-accent` variant (`styles.css:5976-5981`, `#495057` + `#fff`). Comes from `constants::display_mode_options()` (`dynamictabs/plans.php:256-258`) |
+| `PLN-CHIP-TYPE` | "Competency label: {$a}" | chip | `plans.mustache:336-340` | `selectedtemplatehastype` | `fa-tag`; glass variant; `type` custom field |
+| `PLN-CHIP-DUE` | "Due date: …" | chip | `plans.mustache:341-345` | `selectedtemplatehasduedate` | `fa-calendar`; **the colon and the space are literals in the template** (`:343`), they are not part of the string |
 | `PLN-CHIP-TAG1` | tag 1 | chip | `plans.mustache:346-348` | `selectedtemplatehastag1` | glass; custom field |
 | `PLN-CHIP-TAG2` | tag 2 | chip | `plans.mustache:349-351` | `selectedtemplatehastag2` | glass; custom field |
 
-## Detalhe — corpo e lista de competências
+## Detail — body and competency list
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-DESC` | `[sem rótulo]` | descrição colapsável | `plans.mustache:357-363` | `selectedtemplatehasdescription` | partial `collapsible_description`; o gate usa a versão **sem tags** (`strip_tags` + `trim`, `dynamictabs/plans.php:265`, `:301`), então uma descrição com só `<p></p>` não abre o bloco. Reativada a cada refresh por `CollapsibleDescription.refresh(pane)` (`plans.js:808`) |
-| `PLN-LIST-HEADER` | Competências do plano · Estrutura · Ações | cabeçalho de colunas | `plans.mustache:365-372` | — | o título é **dinâmico**: com custom field `type` usa str `central_plans_competencylistlabelled` ("{$a} do plano"), senão `central_plans_competencylist` (`:368`) |
-| `PLN-COMP-ROW` | `[sem rótulo]` | linha (loop) | `plans.mustache:378` | `data-competency="{id}"` | `<li>`; **o seletor de linha do JS é `[data-competency]`** (`plans.js:129`, `:451`, `:465`) |
-| `PLN-COMP-NAME` | shortname | botão | `plans.mustache:381-382` | `data-action="open-competency-detail"`, `data-region="comp-name"` | abre `MOD.DETAIL` (`plans.js:754-755`); **não** é o rodapé nem o kebab — é o próprio nome. Também é lido como rótulo pelas opções do `MOD.MOVETO` (`plans.js:560-563`) |
-| `PLN-COMP-TAX` | "– taxonomia" | texto | `plans.mustache:383` | `taxonomy` | `helper::get_taxonomy_at_level` pelo nível da competência (`dynamictabs/plans.php:212-215`); visível só com `PLN-DISP-TAX` |
-| `PLN-COMP-ID` | idnumber | chip | `plans.mustache:384` | `idnumber` | visível só com `PLN-DISP-ID` |
-| `PLN-COMP-PATH` | caminho | trilha | `plans.mustache:386-390` | `path` | `fa-folder-o`; `helper::competency_breadcrumbs` (`dynamictabs/plans.php:205`); visível só com `PLN-DISP-PATH` |
-| `PLN-COMP-STRUCT` | tag da estrutura | badge | `plans.mustache:392-394` | `frameworktag` | **cross-framework**: `idnumber` do framework, ou o `shortname` se não houver (`dynamictabs/plans.php:199-201`) |
+| `PLN-DESC` | `[no label]` | collapsible description | `plans.mustache:357-363` | `selectedtemplatehasdescription` | `collapsible_description` partial; the gate uses the **tag-stripped** version (`strip_tags` + `trim`, `dynamictabs/plans.php:265`, `:301`), so a description holding only `<p></p>` does not open the block. Re-armed on every refresh by `CollapsibleDescription.refresh(pane)` (`plans.js:797`) |
+| `PLN-LIST-HEADER` | Plan competencies · Structure · Actions | column header | `plans.mustache:365-372` | — | the title is **dynamic**: with the `type` custom field it uses str `central_plans_competencylistlabelled` ("{$a} of the plan"), otherwise `central_plans_competencylist` (`:368`) |
+| `PLN-COMP-ROW` | `[no label]` | row (loop) | `plans.mustache:378` | `data-competency="{id}"` | `<li>`; **the JS row selector is `[data-competency]`** (`plans.js:118`, `:440`, `:454`) |
+| `PLN-COMP-NAME` | shortname | button | `plans.mustache:381-382` | `data-action="open-competency-detail"`, `data-region="comp-name"` | opens `MOD.DETAIL` (`plans.js:743-744`); it is **not** the footer nor the kebab — it is the name itself. It is also read as the label by `MOD.MOVETO`'s options (`plans.js:549-552`) |
+| `PLN-COMP-TAX` | "– taxonomy" | text | `plans.mustache:383` | `taxonomy` | `helper::get_taxonomy_at_level` by the competency's level (`dynamictabs/plans.php:212-215`); visible only with `PLN-DISP-TAX` |
+| `PLN-COMP-ID` | idnumber | chip | `plans.mustache:384` | `idnumber` | visible only with `PLN-DISP-ID` |
+| `PLN-COMP-PATH` | path | trail | `plans.mustache:386-390` | `path` | `fa-folder-o` (`:388`); `helper::competency_breadcrumbs` (`dynamictabs/plans.php:205`); visible only with `PLN-DISP-PATH` |
+| `PLN-COMP-STRUCT` | structure tag | badge | `plans.mustache:392-394` | `frameworktag` | **cross-framework**: the framework's `idnumber`, or its `shortname` when there is none (`dynamictabs/plans.php:199-201`) |
 
-## Kebab da competência — **lista aninhada, legítimo** (`plans.mustache:396-436`)
+## Competency kebab — **nested list, legitimate** (`plans.mustache:396-436`)
 
-Todo o bloco é gated por `{{#canmanage}}` (`:395`, fecha em `:446`). `:396` abre a `div.dropdown` e
-`:436` a fecha. **Os dois `data-*` lado a lado** (`data-toggle` **e** `data-bs-toggle`, `:399`) e as
-**duas** classes de alinhamento (`dropdown-menu-right dropdown-menu-end`, `:403`) são o requisito
-BS4/BS5 do `CLAUDE.md` — o comentário em `:397` registra o porquê.
+The whole block is gated by `{{#canmanage}}` (`:395`, closing at `:446`). `:396` opens the
+`div.dropdown` and `:436` closes it. **The two `data-*` side by side** (`data-toggle` **and**
+`data-bs-toggle`, `:399`) and the **two** alignment classes (`dropdown-menu-right
+dropdown-menu-end`, `:403`) are the BS4/BS5 requirement from `CLAUDE.md` — the comment at `:397`
+records why.
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-COMP-MENU` | "Ações: {shortname}" | botão kebab | `plans.mustache:398-402` | `data-toggle`/`data-bs-toggle="dropdown"` | `fa-ellipsis-v`; ícone-só, então o `aria-label` embute o nome da linha (`:400`) — o padrão que o `CLAUDE.md` exige para o seletor `"button"` do Behat |
-| `PLN-COMP-EDIT` | Editar competência | dropdown-item | `plans.mustache:405-408` | `data-action="edit-competency"` | `fa-pencil`; str `editcompetency, tool_lp`; carrega `data-frameworkid`; `openForm` com `COMPETENCY_FORM_CLASS` (`plans.js:739-745`) — **mesma função** do `PLN-EDIT`, entidade diferente. **Não estava no mapa** |
-| `PLN-COMP-UP` | Mover para cima | dropdown-item | `plans.mustache:411-414` | `data-action="move-competency-up"` | `fa-arrow-up`; `disabled` se `{{#first}}` (`:412`); **caminho in-place** — sem reload (`plans.js:636-661`) |
-| `PLN-COMP-DOWN` | Mover para baixo | dropdown-item | `plans.mustache:417-420` | `data-action="move-competency-down"` | `fa-arrow-down`; `disabled` se `{{#last}}` (`:418`); idem in-place |
-| `PLN-COMP-MOVETO` | Mover para posição… | dropdown-item | `plans.mustache:423-426` | `data-action="move-competency-to"` | `fa-arrows-v`; abre `MOD.MOVETO` (`plans.js:548-606`). **Não estava no mapa** |
-| `PLN-COMP-REMOVE` | Remover competência | dropdown-item | `plans.mustache:430-433` | `data-action="remove-competency"` | `fa-times`; **`text-danger`** (`:430`) — ao contrário dos rodapés, o item de menu **tem** variante de cor; separado por um `dropdown-divider` (`:428`); confirma com `saveCancelPromise` (`plans.js:290`) |
-| `PLN-COMP-GRIP` | "Mover para posição…: {shortname}" | grip de arrasto | `plans.mustache:440-445` | `data-region="drag-handle"`, `data-action="move-competency-to"` | `fa-arrows-up-down-left-right`. **Renderizado DEPOIS do kebab de propósito** (comentário em `:437-439`): o `aria-label` embute o nome e o seletor `"button"` do Behat pega o **primeiro hit em ordem de documento** — o `order: -1` do CSS (`styles.css:5343`) o pinta na **esquerda** mesmo assim. É a armadilha exata registrada no `CLAUDE.md`. Nasce com `opacity: 0` (`styles.css:5347`) e aparece no hover da linha (`:5356-5359`) — **mas continua interativo pro WebDriver**. **Não estava no mapa** |
+| `PLN-COMP-MENU` | "Actions: {shortname}" | kebab button | `plans.mustache:398-402` | `data-toggle`/`data-bs-toggle="dropdown"` | `fa-ellipsis-v`; icon-only, so the `aria-label` embeds the row name (`:400`) — the pattern `CLAUDE.md` requires for Behat's `"button"` selector |
+| `PLN-COMP-EDIT` | Edit competency | dropdown-item | `plans.mustache:405-408` | `data-action="edit-competency"` | `fa-pencil`; str `editcompetency, tool_lp`; carries `data-frameworkid` (`:406`); `openForm` with `COMPETENCY_FORM_CLASS` (`plans.js:728-734`) — **the same function** as `PLN-EDIT`, different entity |
+| `PLN-COMP-UP` | Move up | dropdown-item | `plans.mustache:411-414` | `data-action="move-competency-up"` | `fa-arrow-up`; `disabled` when `{{#first}}` (`:412`); **in-place path** — no reload (`plans.js:625-650`) |
+| `PLN-COMP-DOWN` | Move down | dropdown-item | `plans.mustache:417-420` | `data-action="move-competency-down"` | `fa-arrow-down`; `disabled` when `{{#last}}` (`:418`); in-place likewise |
+| `PLN-COMP-MOVETO` | Move to position… | dropdown-item | `plans.mustache:423-426` | `data-action="move-competency-to"` | `fa-arrows-v`; opens `MOD.MOVETO` (`plans.js:537-595`) |
+| `PLN-COMP-REMOVE` | Remove competency | dropdown-item | `plans.mustache:430-433` | `data-action="remove-competency"` | `fa-times`; **`text-danger`** (`:430`) — unlike the footers, the menu item **does** carry a colour variant; separated by a `dropdown-divider` (`:428`); confirms with `saveCancelPromise` (`plans.js:279`) |
+| `PLN-COMP-GRIP` | "Move to position…: {shortname}" | drag grip | `plans.mustache:440-445` | `data-region="drag-handle"`, `data-action="move-competency-to"` | `fa-arrows-up-down-left-right` (`:444`). **Rendered AFTER the kebab on purpose** (comment at `:437-439`): the `aria-label` embeds the name (`:443`) and Behat's `"button"` selector takes the **first hit in document order** — the CSS `order: -1` (`styles.css:6856`) paints it on the **left** all the same. It is the exact trap recorded in `CLAUDE.md`. It starts at `opacity: 0` (`styles.css:6860`) and appears on row hover or on `:focus-visible` (`:6869-6873`) — **but stays interactable for WebDriver** |
 
-## Ações do modelo — **sticky-footer da página** (`plans.mustache:462-488`)
+## Template actions — **the page's sticky footer** (`plans.mustache:462-488`)
 
-O holder nasce `hidden` no servidor (`:462`) **com os `data-*` do modelo selecionado já embutidos**,
-e `init` copia o `innerHTML` pro `#sticky-footer` e **remove o holder** (`plans.js:797-800`) — senão
-um duplicado escondido, mais cedo em ordem de documento, sombrearia os cliques por nome do Behat (o
-comentário em `:790-795` registra isso). Só com `{{#canmanage}}` (`:457`, fecha em `:489`). Padrão
-cru do core (`btn py-0 d-flex flex-column`): ícone sobre rótulo centrado, **sem variante de cor**.
+The holder is server-rendered `hidden` (`:462`) **with the selected template's `data-*` already
+embedded**, and `init` copies the `innerHTML` into `#sticky-footer` and **removes the holder**
+(`plans.js:786-789`) — otherwise a hidden duplicate, earlier in document order, would shadow Behat's
+name-based clicks (the comment at `:779-784` records this). Only under `{{#canmanage}}` (`:457`,
+closing at `:489`). Core's raw pattern (`btn py-0 d-flex flex-column`): icon above a centred label,
+**no colour variant**.
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-EDIT` | Editar detalhes | botão rodapé | `plans.mustache:465-468` | `data-action="edit-template"` | `fa-pencil`; str `central_plans_editdetails` (**compartilhada com o `FWK`**); `openForm` com `FORM_CLASS` (`plans.js:732-738`) |
-| `PLN-BROWSE` | Adicionar competência | botão rodapé | `plans.mustache:469-472` | `data-action="browse-frameworks"` | `fa-plus`; str `central_addcompetency`. Abre `MOD.BROWSER` (`plans.js:723`) — **absorveu o trabalho do aposentado `PLN-ADD`**; o `excludeids` (`dynamictabs/plans.php:328`) impede reoferecer o que já está no modelo. **Única porta** deste modal |
-| `PLN-PARTICIPANTS` | Gerenciar participantes | botão rodapé | `plans.mustache:473-476` | `data-action="manage-participants"` | `fa-users`; abre `MOD.PART` (`plans.js:724`). **Única porta** — e é por dentro dele que o `MOD.ENROL` existe |
-| `PLN-DUPLICATE` | Duplicar modelo | botão rodapé | `plans.mustache:477-480` | `data-action="duplicate-template"` | `fa-clone`; WS **do plugin** `local_dimensions_duplicate_template` (não o do core), que também copia os custom fields da área lp, os arquivos embutidos e as imagens de card (`plans.js:615-626`); **seleciona a cópia** gravando o novo id no dataset **antes** do reload (`:622-625`). **Não estava no mapa** |
-| `PLN-DELETE` | Excluir modelo | botão rodapé | `plans.mustache:481-485` | `data-action="delete-template"` | `fa-trash`; carrega `data-name` e `data-plancount`; **dois caminhos** — ver as regras abaixo |
+| `PLN-EDIT` | Edit details | footer button | `plans.mustache:465-468` | `data-action="edit-template"` | `fa-pencil`; str `central_plans_editdetails` (**shared with `FWK`**); `openForm` with `FORM_CLASS` (`plans.js:721-727`) |
+| `PLN-BROWSE` | Add competency | footer button | `plans.mustache:469-472` | `data-action="browse-frameworks"` | `fa-plus`; str `central_addcompetency`. Opens `MOD.BROWSER` (`plans.js:712`) — **it absorbed the retired `PLN-ADD`'s job**; the `excludeids` (`dynamictabs/plans.php:328`) stops what is already in the template being offered again. **Only door** to this modal |
+| `PLN-PARTICIPANTS` | Manage participants | footer button | `plans.mustache:473-476` | `data-action="manage-participants"` | `fa-users`; opens `MOD.PART` (`plans.js:713`). **Only door** — and it is from inside it that `MOD.ENROL` exists |
+| `PLN-DUPLICATE` | Duplicate template | footer button | `plans.mustache:477-480` | `data-action="duplicate-template"` | `fa-clone`; the **plugin's** WS `local_dimensions_duplicate_template` (not core's), which also copies the lp-area custom fields, the embedded files and the card images (`plans.js:604-615`); it **selects the copy** by writing the new id into the dataset **before** the reload (`:611-614`) |
+| `PLN-DELETE` | Delete template | footer button | `plans.mustache:481-485` | `data-action="delete-template"` | `fa-trash`; carries `data-name` and `data-plancount` (`:482`); **two paths** — see the rules below |
 
-## Modais alcançados
+## Modals reached
 
-| ID | Origem | Regra / notas |
+| ID | Origin | Rule / notes |
 | --- | --- | --- |
-| `MOD.BROWSER` | `competency_browser.js:106` | ← `PLN-BROWSE`. Ver [`mod-browser.md`](mod-browser.md) |
-| `MOD.PART` | `participants_manager.js:144` | ← `PLN-PARTICIPANTS`. Ver [`mod-participants.md`](mod-participants.md) |
-| `MOD.ENROL` | `enrol_methods.js:799` | montado **só** de dentro do `MOD.PART` (`participants_manager.js:33`). Ver [`mod-enrolmethods.md`](mod-enrolmethods.md) |
-| `MOD.DELPLANS` | `plans.js:251-256` | ← `PLN-DELETE` **quando há planos**. Ver [`mod-delplans.md`](mod-delplans.md) |
-| `MOD.MOVETO` | `plans.js:568-573` | ← `PLN-COMP-MOVETO` e `PLN-COMP-GRIP`. Template `local_dimensions/central/move_competency_modal` — **o mesmo do `EST`** (`structure.js:987`); select `#local-dimensions-plans-move-position` (`plans.js:575`) |
-| `MOD.DETAIL` | `competency_detail.js:277` | ← `PLN-COMP-NAME`. Também aberto pelo chip de relacionada do `EST` (`structure.js:1246`) — **nenhuma das duas portas é rodapé** |
-| `MOD.TPLFORM` | `plans.js:212` | ← `PLN-EDIT` (rodapé), `PLN-NEW` (cabeçalho) e `PLN-COMP-EDIT` (kebab, com outra `formclass`) |
+| `MOD.BROWSER` | `competency_browser.js:106` | ← `PLN-BROWSE`. See [`mod-browser.md`](mod-browser.md) |
+| `MOD.PART` | `participants_manager.js:171` | ← `PLN-PARTICIPANTS`. See [`mod-participants.md`](mod-participants.md) |
+| `MOD.ENROL` | `enrol_methods.js:859` | mounted **only** from inside `MOD.PART` (`participants_manager.js:33`). See [`mod-enrolmethods.md`](mod-enrolmethods.md) |
+| `MOD.DELPLANS` | `plans.js:240-245` | ← `PLN-DELETE` **when there are plans**. See [`mod-delplans.md`](mod-delplans.md) |
+| `MOD.MOVETO` | `plans.js:557-562` | ← `PLN-COMP-MOVETO` and `PLN-COMP-GRIP`. Template `local_dimensions/central/move_competency_modal` — **the same one as `EST`** (`structure.js:988`); select `#local-dimensions-plans-move-position` (`plans.js:564`) |
+| `MOD.DETAIL` | `competency_detail.js:277` | ← `PLN-COMP-NAME`. Also opened by `EST`'s related chip (`structure.js:1247`) — **neither of the two doors is a footer** |
+| `MOD.TPLFORM` | `plans.js:201` | ← `PLN-EDIT` (footer), `PLN-NEW` (header) and `PLN-COMP-EDIT` (kebab, with a different `formclass`) |
 
-## Estados vazios
+## Empty states
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+All three are born with `role="status"` (`f73c260`), so when the list empties the message announces
+itself.
+
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-EMPTY-FILTERED` | "Nenhum plano de aprendizagem contém esta competência." | empty-state | `plans.mustache:247` | str `central_noplanswithcompetency` | `alert-warning`; com filtro e sem resultado |
-| `PLN-EMPTY` | "Nenhum plano de aprendizagem encontrado." | empty-state | `plans.mustache:250` | str `noplans` | `alert-info`; sem filtro e sem modelos |
-| `PLN-DETAIL-EMPTY` | "Nenhuma competência nesta estrutura" | empty-state | `plans.mustache:452` | str `nocompetencies` | `alert-warning`. **Ver a verruga de i18n abaixo** |
+| `PLN-EMPTY-FILTERED` | "No learning plans contain this competency." | empty-state | `plans.mustache:247` | str `central_noplanswithcompetency` | `alert-warning`; filter on and no result |
+| `PLN-EMPTY` | "No learning plans found." | empty-state | `plans.mustache:250` | str `noplans` | `alert-info`; no filter and no templates |
+| `PLN-DETAIL-EMPTY` | "No competencies in this structure" | empty-state | `plans.mustache:452` | str `nocompetencies` | `alert-warning`. **See the i18n wart below** |
 
-## Regras de negócio (verificadas no código)
+## Business rules (verified in the code)
 
-- **A exclusão tem dois caminhos, e o gate é o servidor, não o dataset.** `deleteTemplate`
-  (`plans.js:234-272`) **não** confia no `data-plancount` para decidir: ele pergunta ao WS
-  `core_competency_template_has_related_data` (`:236-239`). Só se **o servidor** disser que há planos
-  é que o `MOD.DELPLANS` abre (`:246-263`), e aí o `data-plancount` é usado **apenas** para exibir o
-  número (`:249`). Sem planos, cai num `deleteCancelPromise` simples (`:265-271`). O radio escolhe
-  entre desvincular (padrão) e apagar os planos do aluno (`:257-261`).
-- **Reordenar tem três caminhos e todos são in-place — nenhum recarrega o pane.** `moveCompetency`
-  (`plans.js:636-661`, in-place explícito no comentário `:653`), o `dragend` de `initDragReorder`
-  (`:523-527`) e o save do `MOD.MOVETO` (`:588-598`). Os três terminam igual: `refreshMoveState` +
-  `flashRow` (`:525-526`, `:596-597`, `:659-660`). **O `reloadKeepingScroll` só aparece no `.catch`**
-  dos dois últimos (`:532`, `:603`) — restaurar a ordem do servidor a partir de uma falha, com o
-  `eslint-disable-next-line promise/no-nesting` que o `CLAUDE.md` exige.
-- **O `refreshMoveState` existe porque o in-place mente sobre `first`/`last`.** O servidor marca
-  `first`/`last` no render (`dynamictabs/plans.php:229-232`) e o template usa isso pra desabilitar as
-  setas (`plans.mustache:412`, `:418`). Como o reorder não recarrega, `refreshMoveState`
-  (`plans.js:128-140`) recalcula o `disabled` de **todas** as linhas por índice — senão a primeira
-  linha continuaria com "mover para cima" habilitado depois de um arrasto.
-- **O core decide de que lado a linha cai, e os dois caminhos in-place espelham isso.** O
-  `reorder_template_competency` põe a origem **depois** do destino ao descer e **antes** ao subir; o
-  `dragend` deduz a referência do irmão novo (`plans.js:510-512`) e o `MOD.MOVETO` aplica
-  `after`/`before` conforme a direção (`:589-595`). Errar isso desalinha DOM e servidor sem erro
-  nenhum.
-- **O rodapé é defendido contra corrida em dois pontos** (o `FWK` tem três): `init` só publica se a
-  aba for a ativa (`plans.js:796`) e `dispatchPlansAction` ignora cliques se a aba saiu de foco
-  (`:769-771`). Ambos existem porque as abas dinâmicas re-executam `init` de uma carga assíncrona
-  fora de ordem.
-- **O modelo selecionado é auto-escolhido, e prefere um visível.** Sem `templateid` válido, o
-  servidor pega o **primeiro visível** e só cai no primeiro de todos se nenhum for
-  (`dynamictabs/plans.php:143-156`) — assim o detalhe combina com a lista padrão, onde os ocultos
-  começam escondidos.
-- **`hashiddentemplates` é exportado e o template não o usa.** `dynamictabs/plans.php:285` o manda,
-  mas `plans.mustache` decide pelo `{{#showhiddentoggle}}` (`:139`) — mesma chave morta que o
-  `fwk-frameworks.md` registrou para o `hashiddenframeworks`. Os únicos consumidores do nome são o
+- **Deletion has two paths, and the gate is the server, not the dataset.** `deleteTemplate`
+  (`plans.js:223-261`) does **not** trust `data-plancount` to decide: it asks the WS
+  `core_competency_template_has_related_data` (`:225-228`). Only if **the server** says there are
+  plans does `MOD.DELPLANS` open (`:235-252`), and then `data-plancount` is used **only** to display
+  the number (`:238`). With no plans it falls through to a plain `deleteCancelPromise` (`:254-260`).
+  The radio chooses between unlinking (default) and deleting the learner's plans (`:246-250`).
+- **Reordering has three paths and all of them are in-place — none reloads the pane.**
+  `moveCompetency` (`plans.js:625-650`, in-place stated explicitly in the comment at `:642`),
+  `initDragReorder`'s `dragend` (`:484-523`, in-place confirmation at `:512-516`) and `MOD.MOVETO`'s
+  save (`:577-587`). All three end the same way: `refreshMoveState` + `flashRow` (`:514-515`,
+  `:585-586`, `:648-649`). **`reloadKeepingScroll` appears only in the `.catch`** of the last two
+  (`:521`, `:592`) — restoring the server's order out of a failure, with the
+  `eslint-disable-next-line promise/no-nesting` that `CLAUDE.md` requires.
+- **The flash is shared and respects `prefers-reduced-motion`.** `flashRow` no longer lives in this
+  tab: it is the `local_dimensions/central/flash` module (`flash.js:34-48`, `3c0bf41`), which bails
+  out early when the user asked for reduced motion (`:38-40`) and reads the duration from the
+  `--mds-motion-flash` token (`styles.css:32`) with a 1500ms fallback (`flash.js:43`).
+- **`refreshMoveState` exists because in-place lies about `first`/`last`.** The server marks
+  `first`/`last` at render time (`dynamictabs/plans.php:229-232`) and the template uses that to
+  disable the arrows (`plans.mustache:412`, `:418`). Since the reorder does not reload,
+  `refreshMoveState` (`plans.js:117-129`) recomputes `disabled` on **every** row by index — otherwise
+  the first row would keep "move up" enabled after a drag.
+- **Core decides which side the row lands on, and both in-place paths mirror that.**
+  `reorder_template_competency` puts the source **after** the target when moving down and **before**
+  it when moving up; `dragend` derives the reference from the new sibling (`plans.js:499-501`) and
+  `MOD.MOVETO` applies `after`/`before` according to the direction (`:578-584`). Getting this wrong
+  desynchronises DOM and server with no error at all.
+- **The footer is defended against races at two points** (`FWK` has three): `init` only publishes if
+  the tab is the active one (`plans.js:785`) and `dispatchPlansAction` ignores clicks once the tab
+  loses focus (`:758-760`). Both exist because dynamic tabs re-run `init` from an out-of-order
+  asynchronous load.
+- **The selected template is auto-chosen, and it prefers a visible one.** With no valid `templateid`
+  the server takes the **first visible** one and only falls back to the first of all when none is
+  (`dynamictabs/plans.php:143-156`) — so the detail matches the default list, where hidden ones start
+  out of sight.
+- **`hashiddentemplates` is exported and the template does not use it.** `dynamictabs/plans.php:285`
+  sends it, but `plans.mustache` decides on `{{#showhiddentoggle}}` (`:139`) — the same dead key that
+  `fwk-structures.md` recorded for `hashiddenframeworks`. The only occurrences of that name are in
   `structure.mustache`.
-- **`canmanage` no `PLN-ROOT` viaja com outro nome.** `data-canmanageenrol="{{canmanage}}"`
-  (`plans.mustache:133`) — o mesmo valor de `canmanage` (`dynamictabs/plans.php:329`) exposto sob um
-  nome diferente para o modal de participantes. Não existe `data-canmanage`.
-- **i18n · a verruga do estado vazio.** `PLN-DETAIL-EMPTY` usa a str `nocompetencies`, que é
-  **"Nenhuma competência nesta estrutura"** / "No competencies in this structure"
-  (`lang/pt_br:460`, `lang/en:460`) — mas o container aqui é um **modelo de plano**, não uma
-  estrutura. A string é compartilhada com o `EST` (`structure.mustache:225`, onde está correta) e nem
-  a variante de alerta bate: `alert-info` no `EST`, `alert-warning` no `PLN`. Um modelo vazio anuncia
-  ao usuário a entidade errada.
-- **a11y · o cabeçalho é a única superfície do hub cujas cores o admin escolhe — e o que é medido não
-  é o que é pintado.** O par vem de dois custom fields (`constants::CFIELD_CUSTOMBGCOLOR` /
-  `CFIELD_CUSTOMTEXTCOLOR`), com padrão `#0f6cbf` + `#ffffff` (`dynamictabs/plans.php:271-272`). O
-  plugin **não é omisso**: os dois forms que editam esse par (`template_dynamic_form.php:220-223` e
-  `competency_dynamic_form.php:237-240`) montam um painel WCAG **em tempo real** — razão, veredito,
-  badges AA/AAA e **até dois consertos de um clique** quando reprova (`contrast.js:16-28`, limiares
-  em `:43`: AA 4.5, AAA 7). Mas ele **aconselha, não bloqueia**: o próprio módulo diz que "nunca toca
-  em como o form salva" (`contrast.js:22-23`), e a `validation()` do form só checa `shortname` e o
-  SCSS (`template_dynamic_form.php:319-337`) — nunca o par.
-  **A lacuna real, porém, é outra:** o painel gradua **texto vs fundo**, e o cabeçalho **não pinta
-  esse par** — pinta três stops derivados (`darken_hex` 0.16/0.34) e chips **translúcidos** por cima
-  deles. Esses derivados ninguém gradua. Medido para o padrão `#0f6cbf`: o texto branco dá **5,36:1**
-  (passa), mas os `-chip-glass` (branco a 13%, `styles.css`) dão **4,22:1 sobre o stop 0** —
-  **abaixo** do mínimo AA — subindo para 5,22:1 no stop 48 e 6,71:1 no stop 100. Ou seja: o mesmo
-  chip passa ou reprova conforme **onde cai no gradiente**. Os fixos passam com folga: `chip-accent`
-  e a pílula de contagem usam `#495057` + `#fff` (**8,18:1**), `status.is-enabled` `#217a37`
-  (**5,38:1**), `status.is-disabled` `#6a737b` (**4,83:1**).
-- **Uma query de contagem por linha.** `PLN-TPL-COUNT` chama
-  `api::count_competencies_in_template($id)` dentro do laço (`dynamictabs/plans.php:173`), sem
-  batching — ao contrário de `count_plans_by_template`/`count_cohorts_by_template`, que aceitam array
-  (`:319-324`) mas são chamadas só para o selecionado. Com N modelos, N queries.
+- **`canmanage` on `PLN-ROOT` travels under another name.** `data-canmanageenrol="{{canmanage}}"`
+  (`plans.mustache:133`) — the same value as `canmanage` (`dynamictabs/plans.php:329`) exposed under
+  a different name for the participants modal. There is no `data-canmanage`.
+- **i18n · the empty-state wart.** `PLN-DETAIL-EMPTY` uses the str `nocompetencies`, which is
+  **"No competencies in this structure"** (en, `lang/en:511`) / "Nenhuma competência nesta estrutura"
+  (pt_br, `lang/pt_br:511`) — but the container here is a **plan template**, not a structure. The
+  string is shared with `EST` (`structure.mustache:225`, where it is correct) and not even the alert
+  variant matches: `alert-info` in `EST`, `alert-warning` in `PLN`. An empty template announces the
+  wrong entity to the user.
 
-## to-be
+<a id="a11y-cabecalho-gradiente"></a>
 
-### IMP-03 (`mtube: carregando`) — **o alvo é `reloadPane`, não a troca de aba**
+- **a11y · the header is the only surface in the hub whose colours the admin picks — and what is
+  measured is not what is painted.** The pair comes from two custom fields
+  (`constants::CFIELD_CUSTOMBGCOLOR` / `CFIELD_CUSTOMTEXTCOLOR`), defaulting to `#0f6cbf` + `#ffffff`
+  (`dynamictabs/plans.php:271-272`). The plugin is **not negligent**: the two forms that edit that
+  pair (`template_dynamic_form.php:235-239` and `competency_dynamic_form.php:234-238`) build a WCAG
+  panel **in real time** — ratio, verdict, AA/AAA badges and **up to two one-click fixes** when it
+  fails (`contrast.js:16-33`, thresholds at `:43`: AA 4.5, AAA 7). But it **advises, it does not
+  block**: the module itself says it "never touches how the form saves" (`contrast.js:22-23`), and
+  the form's `validation()` only checks `shortname` and the SCSS
+  (`template_dynamic_form.php:334-352`) — never the pair.
+  **The real gap, though, is elsewhere:** the panel grades **text vs background**, and the header
+  **does not paint that pair** — it paints three derived stops (`darken_hex` 0.16/0.34) and
+  **translucent** chips on top of them. Nobody grades those derivatives. Measured for the `#0f6cbf`
+  default: white text gives **5.36:1** (passes), but the `-plans-chip-glass` chips (white at 13%,
+  `styles.css:5983-5987`) give **4.22:1 over stop 0** — **below** the AA minimum — rising to 5.22:1
+  at stop 48 and 6.71:1 at stop 100. That is: the same chip passes or fails depending on **where it
+  falls in the gradient**. The fixed ones pass comfortably: `-plans-chip-accent`
+  (`styles.css:5976-5981`) and the count pill (`:5905-5917`) use `#495057` + `#fff` (**8.18:1**),
+  `status.is-enabled` `#217a37` (**5.38:1**), `status.is-disabled` `#6a737b` (**4.83:1**).
+- **One count query per row.** `PLN-TPL-COUNT` calls
+  `api::count_competencies_in_template($id)` inside the loop (`dynamictabs/plans.php:173`), with no
+  batching — unlike `count_plans_by_template`/`count_cohorts_by_template`, which accept an array
+  (`:319-324`) but are called only for the selected template. With N templates, N queries.
 
-> **Correção medida** (idêntica à do `est-structure.md` e à do `fwk-frameworks.md`, re-verificada
-> aqui de forma independente). O plano descreve o IMP-03 como "loading na troca de aba". **A troca de
-> aba já tem loading, e vem do core**: `dynamic_tabs.js:92-97` ouve `shown.bs.tab` → `loadTab`, e
-> `loadTab` abre com `addIconToContainer(tab)` (`:153`). Antes disso, `show.bs.tab` **esvazia** o
-> pane anterior (`:88`).
->
-> A lacuna é o **`reloadPane` do plugin** (`tabs.js:51-66`), que refaz o caminho do `loadTab`
-> **sem** o `addIconToContainer` — e é ele que roda nas **23** chamadas em 5 módulos (`structure` 9,
-> `frameworks` 6, `plans` 6, `competency_browser` 1, `context` 1). Uma linha no `reloadPane` e os 23
-> sítios ganham juntos.
->
-> **Precisão que só esta aba dá:** como o `PLN` **nunca nasce ativo** (`central.php:105`), o pane
-> dele **nunca** é renderizado no servidor no load — a primeira pintura *sempre* passa pelo `loadTab`,
-> que **já** mostra o ícone. Ou seja, nesta aba a lacuna é **exclusivamente** o `reloadPane`.
+## The `reloadPane` busy blanket (`976006d`)
 
-**As 6 chamadas desta aba** são `plans.js:101` (dentro do `reloadKeepingScroll`), `:244` (excluir),
-`:625` (duplicar), `:679` (limpar filtro), `:684` (remover chip do filtro) e `:836` (adicionar
-competência ao filtro).
+Switching tabs **already had** a loading indication, and it comes from core: `core/local/dynamic_tabs`'s
+`loadTab` opens with `addIconToContainer` and `show.bs.tab` empties the previous pane. The gap was
+the **plugin's own `reloadPane`** (`tabs.js:69-108`), which retraces `loadTab`'s path **without**
+that icon and is the one that runs on every post-action refresh. **A precision only this tab
+affords:** because `PLN` **never starts active** (`central.php:115`), its pane is **never**
+server-rendered on load — the first paint *always* goes through `loadTab`, which **already** shows
+the icon. In this tab the gap was **exclusively** `reloadPane`.
 
-> **Ressalva medida — e ela não é a que o plano supunha.** O `reloadKeepingScroll`
-> (`plans.js:92-108`) **não é um caminho in-place**: ele **aguarda `reloadPane` na `:101`**, ou seja,
-> é um reload de pane inteiro que apenas **captura o `scrollTop` antes (`:95-100`) e o restaura
-> depois (`:102-107`)**. Um spinner no `reloadPane` **cobre o `reloadKeepingScroll` de graça** e isso
-> é **correto** — é reload, merece spinner. O que **seria** regressão é pôr spinner nos **três
-> caminhos in-place de verdade** — `moveCompetency` (`:636-661`), o `dragend` (`:523-527`) e o save
-> do `MOD.MOVETO` (`:588-598`) — que não recarregam nada e já se confirmam com `flashRow`.
->
-> A regra da casa vale sem emenda: **pane recarregado → spinner; linha trocada → flash.** Esta aba é
-> a que mais claramente exibe as duas metades: **6** reloads e **3** flashes, no mesmo arquivo.
+**The shape is not a banner, and that is the expectation to correct.** It is not an `alert alert-info`
++ `spinner-border spinner-border-sm` in the style of `FWK-IMP-BANNER`, nor core's
+`addIconToContainer`: it is a **whole-pane busy blanket**, entirely in CSS.
 
-Forma de referência: o `alert alert-info` + `spinner-border spinner-border-sm` do `FWK-IMP-BANNER`
-(`frameworks.js:231-237`). Copiar a forma **visual**, **não** o ARIA do `makeSpinner()` (que põe
-`role="status"` e `aria-hidden="true"` no mesmo elemento e não anuncia nada — ver
-`fwk-frameworks.md`); marcar o pane com `aria-busy="true"` e o nome no container, como em
-`states.html`.
+- `reloadPane` switches on the `local-dimensions-central-tab-loading` class and writes
+  `aria-busy="true"` (`tabs.js:44`, `:77-80`), and clears both in a `finally` **under the generation
+  guard** (`:103-106`) — never only on success, so a failure does not leave the pane spinning
+  forever, and a superseded reload does not switch off the newest one's blanket.
+- The visual is two pseudo-elements (`styles.css:4028-4069`): an `rgba(255,255,255,0.55)` veil on
+  `::before` (`:4033-4042`) and a 2rem ring on `::after` (`:4044-4057`) with a **keyframe of its own**
+  (`@keyframes local-dimensions-central-spin`, `:4059-4063`) — no dependence on Bootstrap's
+  `spinner-border` being present. `prefers-reduced-motion` stretches the rotation to 1500ms
+  (`:4065-4069`).
+- The minimum height comes from the `--mds-loading-min-height: 12rem` token (`styles.css:34`,
+  consumed at `:4030`), so the pane does not collapse behind the veil.
+- `aria-busy="true"` shipped as asked. The ARIA quartet that `states.html` specifies (`role="status"`
+  + `aria-live="polite"` + `aria-label` + moving focus) does **not** belong to the blanket — it covers
+  content that already exists. That quartet belongs to the **first-paint placeholder** of an empty
+  pane, which is a different surface and does not exist — see [`mod-participants.md`](mod-participants.md).
 
-### IMP-05 (`mtube: atualizar`) — controle de atualizar na contextbar
+**The `reloadPane` census, measured.** There are **24** calls across 5 modules — `structure` 9,
+`frameworks` 6, `plans` 6, `context` 2, `competency_browser` 1. One of the 24 is the contextbar's own
+refresh control (`context.js:217`), not a post-action refresh. **The 6 in this tab** are
+`plans.js:102` (inside `reloadKeepingScroll`), `:233` (delete), `:614` (duplicate), `:668` (clear
+filter), `:673` (remove filter chip) and `:825` (add competency to the filter).
 
-Ver `bar-contextbar.md` (a decisão e as verificações moram lá). Precisão que este mapa confirma de
-forma independente: **não** é verdade que "nada expõe `reloadPane`" — ele tem **23 chamadas em 5
-módulos**. O que é verdade é que **nenhum controle de UI** o dispara; as 23 são refresh automático
-pós-ação. Aqui são as 6 de `plans.js` listadas acima.
+**The `{quiet: true}` option is the counter-intuitive point — read it before "fixing" anything.**
+`reloadPane` accepts `{quiet}` (`tabs.js:66`, `:69`) to suppress the blanket, and the **only** caller
+in the entire plugin is `plans.js:102`, inside `reloadKeepingScroll`. So of this tab's 6 reloads,
+**5 show the blanket and 1 does not** — and the one that does not is precisely `reloadKeepingScroll`
+(`plans.js:93-109`), which is **not** an in-place path: it **awaits `reloadPane` at `:102`** and only
+captures `scrollTop` before (`:96-101`) and restores it after (`:103-108`). It is a whole-pane reload
+kept silent **on purpose**: its goal is to preserve the sense of stillness at the five entries that
+go through it — `:206` (form submitted), `:287` (remove competency), `:664` (`select-template`), and
+the reorder's two failure recoveries (`:521`, `:592`).
 
-### IMP-10 (`mtube: ícones nas abas`) — ícones + indicador nas abas
+The **three genuinely in-place paths** — `moveCompetency` (`:625-650`), the `dragend` (`:512-516`)
+and `MOD.MOVETO`'s save (`:577-587`) — **never call `reloadPane`**, so the blanket never comes near
+them: they confirm themselves with `flashRow`. The house rule holds, with the amendment `quiet`
+introduced: **pane reloaded → blanket, except when the caller opts to preserve the scroll; row
+swapped → flash.**
 
-Ver `hierarchy-nav.html`. O que esta aba confirma: `central.php:114` passa `displayname` e o
-`core/dynamic_tabs.mustache:53` faz **triple-stash**, então o ícone entra pelo rótulo **sem** mudar
-template do core. O rótulo desta aba vem de `central.php:101` (str `learningplans`), e como o `PLN`
-**não** nasce ativo, ele é o caso que exercita o **estado inativo** do indicador no primeiro paint.
+## The contextbar's refresh control (`7ed2a99`)
 
-## IDs aposentados
+Before it, **no UI control** fired `reloadPane` — all 24 calls were automatic post-action refreshes.
+Today the contextbar carries a `data-action="refresh"` button (`contextbar.mustache:101-105`) that
+reuses core's `refresh` string and the `fa fa-rotate` glyph (`:103`), with no new string. The handler
+(`context.js:206-230`, selector at `:47`, delegated at `:356-358`) disables the button (`:212`), puts
+`fa-spin` on the icon (`:214`), awaits `reloadPane` (`:217`) and, in a `finally`, re-enables it,
+removes the spin and **gives focus back** when disabling the button dropped it onto `<body>`
+(`:218-228`).
 
-> Não reutilizar. Um ID pendurado é pior que uma aposentadoria registrada.
+It is **not** the refresh button in the modal headers — that is a different surface,
+`amd/src/central/modal_refresh.js` (`7d69197`). Both exist; do not confuse them. Recorded as debt,
+not as a gap: the refresh does **not** resynchronise `BAR-COUNT-01`, because the bar lives outside
+the panes and `reloadPane` does not re-render it. See [`bar-contextbar.md`](bar-contextbar.md).
 
-| ID | Situação | Substituto | Nota |
+## Icons and the indicator on the page tabs (`514d246`)
+
+The page's three tabs carry a FontAwesome glyph to the left of the label and a flat 2px indicator on
+the active one. The glyphs are assembled in PHP: `$tabicons` at `central.php:108-112`
+(`frameworks` → `fa-sitemap`, `structure` → `fa-crosshairs`, `plans` → `fa-graduation-cap`), the `<i>`
+at `:122` and the concatenation at `:125` (`'displayname' => $icon . $tablabels[$shortname]`). What
+this tab confirms: `core/dynamic_tabs.mustache` **triple-stashes** `displayname`, so the icon rides
+in on the label **without** changing a core template — the comment at `central.php:104-107` records
+this.
+
+The indicator is CSS scoped to the hub's `body` (`central.php:57` adds
+`local-dimensions-central-page`), at `styles.css:7232-7271` — the only rule in the plugin that still
+carries the `IMP-10` tag in its comment (`:7233`). Base: `color: #6a737b`, `border: 0`,
+`box-shadow: inset 0 -2px 0 transparent` and a transition driven by the `--mds-motion-base`/`-ease`
+tokens (`:7239-7245`). Hover `#1d2125` (`:7247-7249`). Active: `#1d2125` + `font-weight: 500` +
+`box-shadow: inset 0 -2px 0 var(--bs-primary, #0f6cbf)` (`:7261-7265`) — the active tab's **text** is
+Boost's dark grey, **not** the accent blue; the accent stays in the underline alone. And because
+`border: 0` plus the base `box-shadow` knocked out Boost's focus ring, a `:focus-visible` restores it
+with `outline: 2px solid var(--bs-primary, #0f6cbf)` (`:7255-7259`). `prefers-reduced-motion` cuts
+the transition (`:7267-7271`). mtube's `ResizeObserver` overflow dropdown was **not** ported (zero
+occurrences of `ResizeObserver` in `amd/src/central/`).
+
+Because `PLN` does **not** start active (`central.php:115`), it is the tab that exercises the
+indicator's **inactive state** on the first paint. See [`hierarchy-nav.html`](../hierarchy-nav.html).
+
+## Retired IDs
+
+> Do not reuse. A dangling ID is worse than a recorded retirement.
+
+| ID | Status | Replacement | Note |
 | --- | --- | --- | --- |
-| `PLN-ADD` | **Aposentado** (2026-07-14) | `PLN-BROWSE` → `MOD.BROWSER` | Era o autocomplete `data-region="competency-add"` no painel de detalhe, para adicionar competência sem sair da aba. **Não existe em nenhum template nem em `plans.js`** (verificado por busca em `templates/` e `amd/src/`). Adicionar competência agora é só pelo `MOD.BROWSER`, lançado do rodapé — o `excludeids` que alimentava o `data-exclude` dele sobreviveu e hoje alimenta o modal (`dynamictabs/plans.php:328`) |
-| `PLN-FILTER-BADGE` | **Aposentado** (2026-07-14) | `PLN-FILTER-CHIP` | Era o badge único "Filtrado por: X". O filtro virou **multi**-competência: um chip removível por competência (`plans.mustache:199-206`) mais um botão de adicionar (`:208-211`). A flag `filteredbycompetency` sobreviveu, mas hoje só gateia o `PLN-FILTER-CLEAR` (`:191`) |
+| `PLN-ADD` | **Retired** (2026-07-14) | `PLN-BROWSE` → `MOD.BROWSER` | It was the `data-region="competency-add"` autocomplete in the detail panel, for adding a competency without leaving the tab. **It exists in no template and not in `plans.js`** (verified by searching `templates/` and `amd/src/`). Adding a competency now happens only through `MOD.BROWSER`, launched from the footer — the `excludeids` that fed its `data-exclude` survived and today feeds the modal (`dynamictabs/plans.php:328`) |
+| `PLN-FILTER-BADGE` | **Retired** (2026-07-14) | `PLN-FILTER-CHIP` | It was the single "Filtered by: X" badge. The filter became **multi**-competency: one removable chip per competency (`plans.mustache:199-206`) plus an add button (`:208-211`). The `filteredbycompetency` flag survived, but today it only gates `PLN-FILTER-CLEAR` (`:191`) |

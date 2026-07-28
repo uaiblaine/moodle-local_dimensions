@@ -1,118 +1,87 @@
-<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Empty states" subtitle="view_competency.mustache — empty states · as-is (alert-info + alert-warning boxes) │ to-be: friendly empty (neutral) + warning not-found state" -->
+<!-- @dsCard group="Learner screens · Tracker (TRK)" name="Empty states" subtitle="view_competency.mustache:103-131 — the two shipped empty states: friendly no-courses (neutral chip) and not-found (warning chip)" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
-   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
-   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
-   by token values alone. See tokens.html / token-migration.md.
+   One set of token values, matching what styles.css ships today.
+   See tokens.html / token-migration.md.
    ============================================================================ */
 .kit{
   --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
   --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
-  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
-  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
-  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
-  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
-  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
-  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
-  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
-  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
-  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --mono:ui-monospace,Menlo,Consolas,monospace;
-  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
-}
-.kit *{box-sizing:border-box;}
-.panel.moodle{
   --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
   --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
   --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
   --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
   --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
-  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;--lk-amber-rated:#e5a100;
   --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
+  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  --lk-chrome:#e9ebee;--lk-chrome-line:#dcdfe3;--lk-chrome-quiet:#8a8980;--lk-chrome-legend:#e3e1da;
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:var(--lk-chrome);margin:0;padding:20px;line-height:1.5;
 }
-.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
-.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
-.plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
-.pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.kit *{box-sizing:border-box;}
+.screen{max-width:640px;margin:0 auto;}
+.panel{border:1px solid var(--lk-chrome-line);border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
 .idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
 .idb.r{border-color:#c9a3a3;color:#a3552d;}
-.lk-cap{font-size:11px;color:#8a8980;padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.lk-cap{font-size:11px;color:var(--lk-chrome-quiet);padding:14px 20px 2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
 .lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
-.divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
-.note{font-size:10px;color:#8a8980;padding:2px 20px;}
-.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
-.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
-.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
+.divlbl{font-size:11px;color:var(--lk-chrome-quiet);margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
+.note{font-size:10px;color:var(--lk-chrome-quiet);padding:2px 20px;}
+.legend{max-width:640px;margin:16px auto 0;background:var(--lk-surface);border:1px solid var(--lk-chrome-legend);border-radius:12px;padding:14px 18px;}
+.legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--lk-chrome-quiet);margin:0 0 10px;}
 .leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
 .leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
 .leg .v b{color:var(--lk-text);font-weight:600;}
 .leg .v{color:var(--lk-text-2);}
-.leg .rule{color:#8a8980;}
-
-/* ---- empty-state alerts (view_competency.mustache:69-81) ----
-   Bootstrap semantic alerts (.alert-info / .alert-warning). These are
-   already Moodle DS — identical in both panels — so NO --lk-* token
-   migrates here; the two colours are held fixed on purpose. */
-.alert{margin:1rem 20px;padding:.75rem 1.25rem;border-radius:.375rem;font-size:.9rem;border:1px solid transparent;}
-.alert.info{background:#cff4fc;color:#055160;border-color:#b6effb;}
-.alert.warn{background:#fff3cd;color:#664d03;border-color:#ffecb5;}
+.leg .rule{color:var(--lk-chrome-quiet);}
 .cond{font-family:var(--mono);}
 
-/* ==== to-be: friendly empty state — neutral for no-courses; amber-warning for not-found ==== */
-.emp{display:flex;flex-direction:column;align-items:center;gap:.55rem;padding:32px 20px 28px;text-align:center;}
-.emp-ic{width:48px;height:48px;flex:none;border-radius:50%;background:var(--lk-surface-2);border:1px solid var(--lk-line);display:flex;align-items:center;justify-content:center;color:var(--lk-muted);}
-.emp-ic.warn{background:#fff3cd;border-color:#ffecb5;color:#664d03;}
+/* ---- .local-dimensions-empty family (styles.css:2424-2461) ----
+   A centred icon chip, a title and a muted note. Both tracker empties use it;
+   the not-found one adds .local-dimensions-empty-icon-warning (styles.css:2445-2448). */
+.emp{display:flex;flex-direction:column;align-items:center;text-align:center;padding:3rem 1.5rem;}
+.emp-ic{display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:none;margin-bottom:1rem;border-radius:50%;background:#e9ecef;color:#6c757d;font-size:1.25rem;}
+.emp-ic.warn{background:#fff3cd;color:#997404;}
 .emp-ic svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
-.emp-title{font-size:.98rem;font-weight:600;color:var(--lk-text);}
-.emp-sub{font-size:.83rem;color:var(--lk-muted);max-width:34ch;line-height:1.5;}
+.emp-title{font-size:1.125rem;font-weight:600;color:#212529;margin-bottom:.35rem;}
+.emp-sub{font-size:.9375rem;color:#6c757d;max-width:32rem;}
+
+/* The learner views ship light-only (styles.css defines no dark variants), so the
+   mock keeps its shipped colours in both themes; only the kit chrome around it adapts. */
+@media (prefers-color-scheme: dark){
+  .kit{--lk-chrome:#1b1c1e;--lk-chrome-line:#3a3d42;--lk-chrome-quiet:#9a9992;--lk-chrome-legend:#3a3d42;
+       --lk-surface:#26282b;--lk-page:#202225;--lk-text:#e6e6e6;--lk-text-2:#c3c5c8;--lk-line:#3a3d42;}
+  .idb{background:#2f3134;}
+  .emp{background:#fff;border-radius:10px;margin:0 20px;}
+}
 </style>
-<div class="kit"><div class="screens">
+<div class="kit"><div class="screen">
 
-  <!-- ============ AS-IS ============ -->
   <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
-
-    <div class="lk-cap">Tracker — empty states (course grid renders nothing)</div>
+    <div class="lk-cap">Tracker — empty states (the course grid renders nothing)</div>
 
     <div class="divlbl">Competency exists, no visible linked courses <span class="idb">TRK-EMPTY-NOCOURSES</span></div>
-    <div class="alert info" role="alert">No courses linked to this competency.</div>
-
-    <div class="divlbl">Competency id invalid — record not found <span class="idb r">TRK-EMPTY-NOCOMP</span></div>
-    <div class="alert warn" role="alert">Competency ID not provided.</div>
-
-    <div class="lk-ids">
-      <span class="idb"><span class="cond">alert-info</span> · hascompetency &amp;&amp; !hascourses</span>
-      <span class="idb"><span class="cond">alert-warning</span> · !hascompetency</span>
-    </div>
-    <div class="note">Both are Bootstrap semantic alerts (already Moodle DS): no <code>--lk-*</code> token migrates, so this panel and the to-be one render identically. Per request the two are mutually exclusive — a missing competency also yields empty courses, but the info alert is gated inside <span class="cond">hascompetency</span>, so only the warning shows.</div>
-  </div>
-
-  <!-- ============ TO-BE ============ -->
-  <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · friendly empty state (neutral) + warning not-found</div>
-
-    <div class="lk-cap">Tracker — empty states (course grid renders nothing)</div>
-
-    <div class="divlbl">Competency exists, no visible linked courses <span class="idb r">TRK-EMPTY-NOCOURSES · to-be</span></div>
     <div class="emp" role="status">
       <div class="emp-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.42 10.42 12 5 2.58 10.42 12 15.84z"/><path d="M6 12.5V17c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-4.5"/></svg></div>
       <div class="emp-title">No courses linked yet</div>
-      <div class="emp-sub">When a course is linked to this competency, it'll appear here to track your progress.</div>
+      <div class="emp-sub">When a course is linked to this competency, it will appear here to track your progress.</div>
     </div>
 
-    <div class="divlbl">Competency id invalid — record not found <span class="idb r">TRK-EMPTY-NOCOMP · to-be</span></div>
-    <div class="emp" role="alert">
+    <div class="divlbl">Competency id invalid — record not found <span class="idb">TRK-EMPTY-NOCOMP</span></div>
+    <div class="emp" role="status">
       <div class="emp-ic warn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
       <div class="emp-title">Competency not found</div>
-      <div class="emp-sub">This competency isn't available — it may have been removed, or the link is out of date.</div>
+      <div class="emp-sub">This competency is not available. It may have been removed, or the link is out of date.</div>
     </div>
 
     <div class="lk-ids">
-      <span class="idb r">NOCOURSES · friendly empty state (neutral) replaces alert-info</span>
-      <span class="idb r">NOCOMP · warning state (amber icon) replaces alert-warning</span>
+      <span class="idb"><span class="cond">.local-dimensions-empty</span> · hascompetency &amp;&amp; !hascourses</span>
+      <span class="idb"><span class="cond">.local-dimensions-empty-icon-warning</span> · !hascompetency</span>
     </div>
-    <div class="note">Both flat semantic alert boxes become centered states matching the redesign — <b>no dead box</b>. No-courses is a <b>neutral friendly empty</b> (muted course icon + "No courses linked yet"); the invalid-id is a <b>warning</b> state (amber-tinted alert icon + "Competency not found"), keeping the "something's off" signal without the full box. Same <code>.emp</code> pattern as <code>ovw-empty</code>. <b>Code:</b> a mustache change keeping <code>role="status"</code> / <code>role="alert"</code>; reword the two lang strings. The two stay mutually exclusive.</div>
+    <div class="note">One shared element for both: a 56&nbsp;px icon chip, a title and a muted note, centred, <code>role="status"</code> on <b>both</b> states — the not-found one is not an <code>alert</code>, it only swaps the chip to the amber warning variant. The chips are FontAwesome (<code>fa-graduation-cap</code> / <code>fa-exclamation-triangle</code>); the SVGs above stand in for them so this preview needs no icon font. The two are mutually exclusive: a missing competency also yields empty courses, but the no-courses state is gated inside <span class="cond">hascompetency</span>, so only the warning shows. The same <code>.local-dimensions-empty</code> pattern serves the plan overview — see <code>ovw-empty</code>.</div>
   </div>
 
 </div>
@@ -120,9 +89,9 @@
 <div class="legend">
   <h3>ID legend — Tracker empty states (view_competency.mustache)</h3>
   <div class="leg">
-    <span class="k">TRK-EMPTY-NOCOURSES</span><span class="v"><b>alert-info</b> — string <code>no_courses_linked</code> = &ldquo;No courses linked to this competency.&rdquo; Rendered when <code>hascompetency</code> is true but <code>hascourses</code> is false — zero visible <code>{competency_coursecomp}</code> joins (<code>c.visible = 1</code>), or every linked course dropped by the enrolment filter. <b>To-be:</b> the flat blue <code>alert-info</code> box becomes a <b>neutral friendly empty state</b> (muted course icon + "No courses linked yet" + subtext), the same <code>.emp</code> pattern as <code>ovw-empty</code> — no "dead box". <span class="rule">view_competency.mustache:69-75; flags view_competency_page.php:83-84; courses view-competency.php:78-96</span></span>
-    <span class="k">TRK-EMPTY-NOCOMP</span><span class="v"><b>alert-warning</b> — string <code>competency_id_missing</code> = &ldquo;Competency ID not provided.&rdquo; Rendered when <code>hascompetency</code> is false — <code>$DB->get_record('competency', ['id' =&gt; $competencyid])</code> returned false (no such/hidden competency). A truly absent param 400s earlier via <code>required_param</code>. <b>To-be:</b> not just absence but a problem — so it becomes a <b>warning</b> empty state (amber-tinted alert-triangle icon + "Competency not found" + subtext), keeping the "something's off" signal without the full box; <code>role="alert"</code> preserved. Reworded lang string. <span class="rule">view_competency.mustache:77-81; view-competency.php:35,70 → view_competency_page.php:83</span></span>
-    <span class="k">gate</span><span class="v">Mutual exclusivity — <code>{{^hascourses}}</code> wraps the info alert but nests it inside <code>{{#hascompetency}}</code>, so a missing competency shows only the warning; the two never co-render <span class="rule">view_competency.mustache:69-81</span></span>
+    <span class="k">TRK-EMPTY-NOCOURSES</span><span class="v"><b>Friendly empty state</b> — a neutral <code>.local-dimensions-empty-icon</code> chip (<code>fa-graduation-cap</code>) over <code>no_courses_linked</code> = &ldquo;No courses linked yet&rdquo; and <code>no_courses_linked_note</code>. Rendered when <code>hascompetency</code> is true but <code>hascourses</code> is false — zero visible <code>{competency_coursecomp}</code> joins (<code>c.visible = 1</code>), or every linked course dropped by the enrolment filter. <span class="rule">view_competency.mustache:103-117; styles.css:2424-2461; lang/en:508-509; flags view_competency_page.php:83-84; courses view-competency.php:76-85</span></span>
+    <span class="k">TRK-EMPTY-NOCOMP</span><span class="v"><b>Warning empty state</b> — the same element with <code>.local-dimensions-empty-icon-warning</code> (amber <code>#fff3cd</code> / <code>#997404</code>, <code>fa-exclamation-triangle</code>) over <code>competency_id_missing</code> = &ldquo;Competency not found&rdquo; and <code>competency_id_missing_note</code>. Rendered when <code>hascompetency</code> is false — <code>$DB-&gt;get_record('competency', ['id' =&gt; $competencyid])</code> returned false (no such/hidden competency). A truly absent param 400s earlier via <code>required_param</code>. <span class="rule">view_competency.mustache:119-131; styles.css:2445-2448; lang/en:304-305; view-competency.php:35,70 → view_competency_page.php:83</span></span>
+    <span class="k">gate</span><span class="v">Mutual exclusivity — <code>{{^hascourses}}</code> wraps the no-courses state but nests it inside <code>{{#hascompetency}}</code>, so a missing competency shows only the warning; the two never co-render <span class="rule">view_competency.mustache:103-104, 116-117, 119</span></span>
   </div>
 </div>
 </div>

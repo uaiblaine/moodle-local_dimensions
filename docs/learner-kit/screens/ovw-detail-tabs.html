@@ -1,38 +1,29 @@
-<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Tab strip" subtitle="accordion.js buildSummaryTabs — as-is: Assessment│Description│Evidence│Rules, courses outside │ to-be: Related content│Description│Progress│Rules, courses becomes the leading tab" -->
+<!-- @dsCard group="Learner screens · Plan (OVW)" name="Detail — Tab strip" subtitle="accordion.js buildSummaryTabs — Related content │ Description │ Progress │ Rules, with the linked-course scroller as the leading tab pane" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
-   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
-   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
-   by token values alone. See tokens.html / token-migration.md.
+   The token values on .kit are the Moodle DS values the shipped CSS carries;
+   markup uses var(--lk-*) so a value change lands in one place.
+   See tokens.html / token-migration.md.
    ============================================================================ */
 .kit{
   --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
   --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
-  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
-  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
-  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
-  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
-  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
-  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
-  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
   --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
   --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
 }
 .kit *{box-sizing:border-box;}
-.panel.moodle{
-  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
-  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
-  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
-  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
-  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
-  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
-  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
-}
-.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
-.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.screens{max-width:1100px;margin:0 auto;}
+.panel{border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
 .plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
 .pdot{width:8px;height:8px;border-radius:50%;flex:none;}
 .idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
@@ -52,24 +43,19 @@
 .tab{display:inline-flex;align-items:center;gap:.375rem;padding:.625rem 1rem;border:none;background:transparent;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:.8125rem;font-weight:500;color:var(--lk-muted);cursor:pointer;white-space:nowrap;line-height:1.2;}
 .tab.on{color:var(--lk-text);border-bottom-color:var(--lk-accent);font-weight:600;}
 .tab.kbd{outline:2px solid var(--lk-focus-ring);outline-offset:-2px;}
-/* to-be: count badge riding the Related-content tab (OVW-TAB-COUNT) */
-.tabn{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--lk-counter-bg);color:var(--lk-pill-text);font-size:.66rem;font-weight:700;}
+/* count badge riding the Related-content tab (.local-dimensions-tab-count) */
+.tabn{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--lk-counter-bg);color:var(--lk-pill-text);font-size:.6875rem;font-weight:700;}
 .tab.on .tabn{background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);}
 
 /* pane stub — stands for whatever the active tab renders */
 .pane{margin:0 12px;padding:14px 1rem;border:1px dashed var(--lk-line-2);border-top:none;border-radius:0 0 .5rem .5rem;background:var(--lk-surface);font-size:.78rem;color:var(--lk-muted);}
 .pane b{color:var(--lk-text);font-weight:600;}
-/* as-is: the courses section sits BELOW the tab wrapper, not inside it */
-.outside{margin:8px 12px 0;padding:12px 1rem;background:var(--lk-pill-platter);border-radius:.5rem;font-size:.78rem;color:var(--lk-text-2);}
-.outside b{color:var(--lk-text);}
 
 /* gating matrix */
 .mx{width:calc(100% - 40px);margin:6px 20px 2px;border-collapse:collapse;font-size:11px;background:var(--lk-surface);border-radius:.5rem;overflow:hidden;}
 .mx th,.mx td{border:1px solid var(--lk-line);padding:5px 7px;text-align:left;vertical-align:top;}
 .mx th{background:var(--lk-surface-2);color:var(--lk-text-2);font-weight:700;font-size:10px;}
 .mx code{font-family:var(--mono);font-size:10px;color:#a3552d;}
-.mx .y{color:#0f5132;font-weight:700;}
-.mx .n{color:var(--lk-muted);}
 
 .legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
 .legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
@@ -81,142 +67,100 @@
 </style>
 <div class="kit"><div class="screens">
 
-  <!-- ============ AS-IS ============ -->
   <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · 4 tabs, courses rendered outside them</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>Competency detail — the summary tab strip</div>
 
-    <div class="lk-cap">Everything present · <span class="idb">OVW-TAB-NAV</span></div>
-    <div class="tabnav" role="tablist" aria-label="Competency summary">
-      <button type="button" class="tab on" role="tab" aria-selected="true" tabindex="0" data-tab="status">Assessment</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="description">Description</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="evidence">Evidence</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="rules">Rules</button>
-    </div>
-    <div class="pane"><b>Assessment</b> pane — the rating grid. Opening a competency always lands here.</div>
-    <div class="outside"><b>Related content</b> — the linked-course scroller, rendered <b>after</b> the whole tab wrapper, always visible whatever tab is active.</div>
-    <div class="lk-ids">
-      <span class="idb">tab order = push order in buildSummaryTabs</span>
-      <span class="idb">tab[0] gets .active</span>
-      <span class="idb">text-only — the icon field is set but never emitted</span>
-    </div>
-    <div class="note">Four tabs plus a fifth region that is not a tab. Assessment always leads when the learner has any user-competency row, so a competency is opened on its grade rather than on what to do about it. The course scroller competes with the pane below it for the same vertical space.</div>
-
-    <div class="divlbl">Evidence hidden by setting — the strip just loses a tab <span class="idb">OVW-TAB-NAV</span></div>
-    <div class="tabnav" role="tablist" aria-label="showevidence off">
-      <button type="button" class="tab on" role="tab" aria-selected="true" tabindex="0">Assessment</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Description</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Rules</button>
-    </div>
-
-    <div class="divlbl">No user-competency row and no rule — only Description survives <span class="idb">OVW-TAB-NAV</span></div>
-    <div class="tabnav" role="tablist" aria-label="Description only">
-      <button type="button" class="tab on" role="tab" aria-selected="true" tabindex="0">Description</button>
-    </div>
-    <div class="outside"><b>Related content</b> — still below, still outside.</div>
-
-    <div class="scap">Keyboard: roving tabindex + Arrow / Home / End — focus &amp; underline move together · <span class="idb">OVW-TAB-KBD</span></div>
-    <div class="tabnav" role="tablist" aria-label="After ArrowRight twice">
-      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Assessment</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Description</button>
-      <button type="button" class="tab on kbd" role="tab" aria-selected="true" tabindex="0">Evidence</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Rules</button>
-    </div>
-  </div>
-
-  <!-- ============ TO-BE ============ -->
-  <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · courses lead as a tab · assessment + evidence merge into Progress</div>
-
-    <div class="lk-cap">Everything present · <span class="idb r">OVW-TAB-ORDER · to-be</span></div>
-    <div class="tabnav" role="tablist" aria-label="Competency summary">
+    <div class="lk-cap">Everything present · <span class="idb">OVW-TAB-NAV</span> <span class="idb">OVW-TAB-ORDER</span></div>
+    <div class="tabnav" role="tablist">
       <button type="button" class="tab on" role="tab" aria-selected="true" tabindex="0" data-tab="courses">Related content <span class="tabn">3</span></button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="description">Description</button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="progress">Progress</button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="rules">Rules</button>
     </div>
-    <div class="pane"><b>Related content</b> pane — the course cards, now inside the tab wrapper. Nothing renders outside it any more.</div>
+    <div class="pane"><b>Related content</b> pane — the course cards, inside the tab wrapper. Nothing renders outside it.</div>
     <div class="lk-ids">
-      <span class="idb r">OVW-TAB-ORDER · courses │ description │ progress │ rules</span>
-      <span class="idb r">OVW-TAB-COUNT · card count on the leading tab</span>
-      <span class="idb">tab[0] .active — unchanged mechanism</span>
+      <span class="idb">OVW-TAB-ORDER · courses │ description │ progress │ rules</span>
+      <span class="idb">OVW-TAB-COUNT · card count on the leading tab</span>
+      <span class="idb">tab order = push order in buildSummaryTabs</span>
+      <span class="idb">tabs[0] gets .active</span>
     </div>
-    <div class="note">The order puts <b>what to do</b> before <b>how it went</b>. Courses stop being a fifth region and become the first tab, so only one pane is on screen at a time and the accordion item is shorter. The count that used to sit beside the "Related content" heading rides the tab instead — the heading itself is now the tab label, so it is not repeated inside the pane.</div>
+    <div class="note">The order puts <b>what to do</b> before <b>how it went</b>. The linked-course scroller is the first tab rather than a fifth region rendered after the wrapper, so only one pane is on screen at a time and the accordion item is shorter. The count rides the tab, because the tab label is the pane's only heading — the scroller emits no title of its own.</div>
 
-    <div class="divlbl">No linked courses — the tab is absent and Description leads <span class="idb r">OVW-TAB-FIRST · to-be</span></div>
-    <div class="tabnav" role="tablist" aria-label="No courses">
+    <div class="divlbl">No linked courses — the tab is absent and Description leads <span class="idb">OVW-TAB-FIRST</span></div>
+    <div class="tabnav" role="tablist">
       <button type="button" class="tab on" role="tab" aria-selected="true" tabindex="0">Description</button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Progress</button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Rules</button>
     </div>
     <div class="pane"><b>Description</b> pane.</div>
-    <div class="note">No empty state is needed: the tab simply is not built. This <b>supersedes</b> the <span class="idb">OVW-CRS-EMPTY</span> proposal in <code>ovw-detail-courses.html</code>, which existed only because the section used to render unconditionally and left a blank strip.</div>
+    <div class="note">There is no empty state for the courses pane and none is needed: with no visible course the tab is simply not built. The same holds in <code>ovw-detail-courses.html</code>, where <span class="idb">OVW-CRS-EMPTY</span> is recorded as dropped for this reason.</div>
 
-    <div class="divlbl">Evidence hidden by setting — Progress stays, carrying the assessment alone <span class="idb r">OVW-TAB-ORDER</span></div>
-    <div class="tabnav" role="tablist" aria-label="showevidence off">
+    <div class="divlbl">Evidence hidden by setting — Progress stays, carrying the assessment alone <span class="idb">OVW-TAB-ORDER</span></div>
+    <div class="tabnav" role="tablist">
       <button type="button" class="tab on" role="tab" aria-selected="true" tabindex="0">Related content <span class="tabn">2</span></button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Description</button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Progress</button>
     </div>
-    <div class="note">Merging the two tabs makes the setting cheaper to reason about: <code>showevidence</code> now removes a <b>section inside</b> Progress instead of a whole tab, and the tab only disappears when there is neither a rating nor evidence to show.</div>
+    <div class="note"><code>showevidence</code> removes a <b>section inside</b> Progress rather than a whole tab: the pane renders the status section when <code>hasStatus</code> and the evidence list plus its submit button when <code>hasEvidence</code>, so the tab only disappears when there is neither a rating nor evidence to show.</div>
 
-    <div class="divlbl">Courses only — a single tab still renders as a strip <span class="idb r">OVW-TAB-ORDER</span></div>
-    <div class="tabnav" role="tablist" aria-label="Courses only">
+    <div class="divlbl">Courses only — a single tab still renders as a strip <span class="idb">OVW-TAB-ORDER</span></div>
+    <div class="tabnav" role="tablist">
       <button type="button" class="tab on" role="tab" aria-selected="true" tabindex="0">Related content <span class="tabn">1</span></button>
     </div>
-    <div class="note">Kept deliberately: a lone tab reads as a titled section, and dropping the strip would make the pane change shape depending on how many tabs exist.</div>
+    <div class="note">A lone tab reads as a titled section, and dropping the strip would make the pane change shape depending on how many tabs exist. Only an empty tab list suppresses the wrapper entirely.</div>
 
-    <div class="scap">Keyboard — unchanged · <span class="idb">OVW-TAB-KBD</span></div>
-    <div class="tabnav" role="tablist" aria-label="After ArrowRight twice">
+    <div class="scap">Keyboard: roving tabindex + Arrow / Home / End · <span class="idb">OVW-TAB-KBD</span></div>
+    <div class="tabnav" role="tablist">
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Related content <span class="tabn">3</span></button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Description</button>
       <button type="button" class="tab on kbd" role="tab" aria-selected="true" tabindex="0">Progress</button>
       <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1">Rules</button>
     </div>
-    <div class="note">Roving tabindex, Arrow/Home/End and the focus ring are untouched — the change is which tabs exist and in what order, not how they behave.</div>
+    <div class="note">Arrow / Home / End activate the target tab <b>and</b> move focus to it; a mouse click activates without moving focus. The focus ring is a 2px outline drawn inside the button.</div>
   </div>
 
 </div>
 
 <div class="lk-cap" style="max-width:1100px;margin:14px auto 0;padding-left:0">Gating matrix — which tab exists, and why</div>
 <table class="mx" style="max-width:1100px;margin:6px auto 0;width:100%">
-  <tr><th style="width:16%">Tab (to-be)</th><th style="width:30%">Condition</th><th style="width:24%">Settings involved</th><th>Note</th></tr>
+  <tr><th style="width:16%">Tab</th><th style="width:30%">Condition</th><th style="width:24%">Settings involved</th><th>Note</th></tr>
   <tr>
     <td><b>Related content</b></td>
     <td><code>visibleCourses.length &gt; 0</code><br>(<code>courses.filter(visible == 1)</code>)</td>
     <td><code>enrollmentfilter</code> cascade — resolved server-side inside the courses web service</td>
-    <td class="y">New tab. The filter can empty the list, and then the tab is absent — the cascade is competency → plan template → site.</td>
+    <td>Leads whenever it exists. The filter can empty the list, and then the tab is absent — the cascade is competency → plan template → site.</td>
   </tr>
   <tr>
     <td><b>Description</b></td>
     <td><code>hasDesc || hasTaxonomyCard || hasPath || hasRelated</code></td>
     <td><code>showdescription</code>, <code>showtaxonomycard</code>, <code>showpath</code>, <code>showrelated</code> (+ <code>showrelatedlink</code> for the links)</td>
-    <td class="n">Unchanged. <b>Known gap:</b> <code>hasPath</code> is only <code>showpath &amp;&amp; comp</code> — it never checks that a path exists, and the footnote renderer returns an empty string when both halves are empty, so a root competency with <code>showpath</code> on can produce an empty tab. Tightening it to require actual path parts is part of this slice.</td>
+    <td><code>hasPath</code> is <code>hasCompetencyPath()</code>: <code>showpath</code> <i>and</i> either a framework shortname or at least one parent. It checks the ancestry, so a root competency with <code>showpath</code> on cannot open an empty tab — the footnote renderer would have returned an empty string there.</td>
   </tr>
   <tr>
     <td><b>Progress</b></td>
     <td><code>hasStatus || hasEvidence</code></td>
-    <td><code>showevidence</code>, <code>enableevidencesubmitbutton</code>, <code>showscaledescription</code> <span class="idb r">new</span></td>
-    <td class="y">Merged from the two former tabs. <code>hasStatus</code> needs a user-competency row; <code>hasEvidence</code> is <code>ucs &amp;&amp; showevidence</code>, so with no summary at all neither fires and the tab is absent.</td>
+    <td><code>showevidence</code>, <code>enableevidencesubmitbutton</code>, <code>showscaledescription</code></td>
+    <td>One pane for both halves. <code>hasStatus</code> needs a user-competency row (<code>usercompetency</code> or <code>usercompetencyplan</code>); <code>hasEvidence</code> is <code>ucs &amp;&amp; showevidence</code>, so with no summary at all neither fires and the tab is absent.</td>
   </tr>
   <tr>
     <td><b>Rules</b></td>
     <td><code>ruleoutcome !== 0 &amp;&amp; ruletype</code></td>
     <td>—</td>
-    <td class="n">Unchanged, still lazy-loaded on first activation. It can now only lead when it is the sole tab, so the "load immediately if the rules pane starts active" branch stays necessary.</td>
+    <td>Lazy-loaded on first activation. When it is the only tab it starts active and never receives a click, so the summary render triggers the load itself.</td>
   </tr>
   <tr>
-    <td colspan="4"><b>No tab at all</b> — when the list comes out empty the tab wrapper returns an empty string, exactly as today. With courses folded in, a competency that has only linked courses now produces one tab instead of a tabless section.</td>
+    <td colspan="4"><b>No tab at all</b> — <code>renderSummaryTabs</code> returns an empty string when the tab list is empty or there is no competency record, so the wrapper is not emitted.</td>
   </tr>
 </table>
 
 <div class="legend">
   <h3>ID legend — Plan detail · Tab strip</h3>
   <div class="leg">
-    <span class="k">OVW-TAB-NAV</span><span class="v"><b>Summary tab strip</b> — a <code>role="tablist"</code> of text-only buttons built by <code>buildSummaryTabs</code> and emitted by <code>renderSummaryTabNavigation</code>; each button carries <code>id</code>, <code>aria-selected</code>, <code>aria-controls</code>, <code>tabindex</code> and <code>data-tab</code>, and <code>tabs[0]</code> is rendered active. The <code>icon</code> field on each tab object is populated but never emitted. Active underline = <code>border-bottom-color</code> from the custom background colour, falling back to the primary → <b>--lk-accent (migrates)</b>. <span class="rule">accordion.js buildSummaryTabs / renderSummaryTabNavigation</span></span>
-    <span class="k">OVW-TAB-KBD</span><span class="v"><b>Roving tabindex</b> — active tab <code>tabindex="0"</code>, the rest <code>-1</code>, mirrored by <code>aria-selected</code>. ArrowRight/ArrowDown → next (wraps), ArrowLeft/ArrowUp → previous (wraps), Home → first, End → last; each activates and moves focus together. Focus ring <code>outline:2px</code> → <b>--lk-focus-ring (migrates to primary)</b>. Untouched by this slice. <span class="rule">accordion.js attachTabListeners</span></span>
-    <span class="k">OVW-TAB-ORDER</span><span class="v"><b>(to-be) Tab order</b> — <b>Related content · Description · Progress · Rules</b>, replacing <b>Assessment · Description · Evidence · Rules</b>. Two structural moves: the linked-course scroller stops being rendered after the tab wrapper and becomes the leading tab, and the Assessment and Evidence panes merge into one <b>Progress</b> pane. Order is still just the push order in <code>buildSummaryTabs</code>, so no new mechanism is involved. Needs one new string for the Progress label. <span class="rule">accordion.js buildSummaryTabs, renderSummaryTabPanes, renderCompetencySummary (the out-of-wrapper courses call)</span></span>
-    <span class="k">OVW-TAB-FIRST</span><span class="v"><b>(to-be) Which tab leads</b> — falls out of the existing <code>tabs[0]</code> rule: with linked courses the learner lands on <b>Related content</b>, without them on <b>Description</b>. Worth stating because it is a real change of focus — today a competency with any user-competency row always opens on its grade. <span class="rule">accordion.js renderSummaryTabNavigation (isActive = idx === 0)</span></span>
-    <span class="k">OVW-TAB-COUNT</span><span class="v"><b>(to-be) Count badge on the Related-content tab</b> — the number of visible linked courses, moved off the section heading (which the tab label now replaces) and onto the tab. Muted platter at rest, accent tint while the tab is active. Purely additive to the nav markup: a span inside the button, after the label. <span class="rule">new; replaces the section-title badge in renderCourseCardsScrollable</span></span>
+    <span class="k">OVW-TAB-NAV</span><span class="v"><b>Summary tab strip</b> — a <code>role="tablist"</code> of text-only buttons built by <code>buildSummaryTabs</code> and emitted by <code>renderSummaryTabNavigation</code>; each button carries <code>id</code>, <code>aria-selected</code>, <code>aria-controls</code>, <code>tabindex</code> and <code>data-tab</code>, and <code>tabs[0]</code> is rendered active. A tab object holds only <code>id</code>, <code>label</code> and — on the courses tab — <code>count</code>; there is no icon field. Active underline = <code>border-bottom-color: var(--dimension-custombgcolor, var(--primary, #0f6cbf))</code>. <span class="rule">accordion.js buildSummaryTabs:462-483, renderSummaryTabs:493-506, renderSummaryTabNavigation:515-536; styles.css:3592-3641</span></span>
+    <span class="k">OVW-TAB-KBD</span><span class="v"><b>Roving tabindex</b> — active tab <code>tabindex="0"</code>, the rest <code>-1</code>, mirrored by <code>aria-selected</code>. ArrowRight/ArrowDown → next (wraps), ArrowLeft/ArrowUp → previous (wraps), Home → first, End → last; each activates the tab and moves focus to it, while a click activates without moving focus. Focus ring <code>outline: 2px solid #0f6cbf; outline-offset: -2px</code>. <span class="rule">accordion.js attachTabListeners:713-794 (activateTab:722, click :764-766, keydown :769-792); styles.css:3631-3635</span></span>
+    <span class="k">OVW-TAB-ORDER</span><span class="v"><b>Tab order</b> — <b>Related content · Description · Progress · Rules</b>. Order is the push order in <code>buildSummaryTabs</code>, and <code>renderSummaryTabPanes</code> repeats the same four conditions in the same sequence so pane order matches. The linked-course scroller is rendered by <code>renderCoursesPane</code> <i>inside</i> the wrapper; the assessment grid and the evidence list share <code>renderProgressPane</code>. Labels come from <code>related_content</code>, <code>description_label</code>, <code>progress_tab</code> and <code>rules_tab</code>. <span class="rule">accordion.js buildSummaryTabs:462-483, renderSummaryTabPanes:547-565, renderCoursesPane:576-590, renderProgressPane:635-655; lang/en:344, :534, :537, :563</span></span>
+    <span class="k">OVW-TAB-FIRST</span><span class="v"><b>Which tab leads</b> — falls out of the <code>tabs[0]</code> rule: with linked courses the learner lands on <b>Related content</b>, without them on <b>Description</b>, and so on down the list. Each pane renderer computes its own <code>isFirst = tabs[0].id === '&lt;id&gt;'</code> to place the <code>active</code> class, so nav and pane cannot disagree. <span class="rule">accordion.js renderSummaryTabNavigation:519 (isActive = idx === 0); renderCoursesPane:577, renderDescriptionPane:602, renderProgressPane:639, renderRulesPane:692</span></span>
+    <span class="k">OVW-TAB-COUNT</span><span class="v"><b>Count badge on the Related-content tab</b> — <code>visibleCourses.length</code>. It is the only tab that sets <code>count</code>, and the badge is emitted only when that value is truthy, as a <code>span.local-dimensions-tab-count</code> after the label. Muted platter at rest (<code>#e9ecef</code> / <code>#6c757d</code>), accent tint while the tab is active (<code>#cfe2ff</code> / <code>#0f6cbf</code>). <span class="rule">accordion.js buildSummaryTabs:465-471, renderSummaryTabNavigation:528-530; styles.css:3643-3661</span></span>
   </div>
 </div>
 </div>

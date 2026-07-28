@@ -1,4 +1,4 @@
-<!-- @dsCard group="Navegação" name="Navegação hierárquica" subtitle="Contexto + contador, trilha adaptativa, abas com ícones e indicador (IMP-10) · Moodle DS" -->
+<!-- @dsCard group="Navigation" name="Hierarchy navigation" subtitle="Context bar (context + hidden + category + counter + refresh) and hub tabs with icon and indicator · Moodle DS" -->
 <style>
 :root{
   --mds-color-blue-50:#e7f0f9;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;--mds-color-blue-800:#062b4c;
@@ -6,13 +6,15 @@
   --mds-bg-surface-default:var(--mds-color-white);--mds-bg-surface-subtle:var(--mds-color-gray-100);--mds-bg-surface-strong:var(--mds-color-gray-200);
   --mds-text-default:var(--mds-color-gray-900);--mds-text-muted:var(--mds-color-gray-600);--mds-text-subtle:var(--mds-color-gray-700);
   --mds-border-default:var(--mds-color-gray-300);--mds-border-subtle:var(--mds-color-gray-200);
-  --mds-bg-interactive-secondary-default:var(--mds-color-gray-200);
+  /* Solid fill for white text (Boost's .btn-primary on the active context button);
+     it has no dark variant — it is a background, not a text colour. */
+  --mds-bg-interactive-primary-default:var(--mds-color-blue-500);
   --mds-radius-md:0.5rem;--mds-radius-pill:50rem;--mds-stroke-sm:0.0625rem;--mds-stroke-md:0.125rem;
   --mds-motion-base:250ms;--mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
   --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  /* Accent de TEXTO. --mds-bg-interactive-primary-* não tem variante escura (é fill sólido para
-     texto branco), então herdá-lo aqui pintaria blue-500 sobre superfície escura. Precedente do
-     --mds-accent-busy do states.html: blue-500 no claro, blue-200 no escuro. Medidos abaixo. */
+  /* TEXT accent. --mds-bg-interactive-primary-* has no dark variant (it is a solid fill for
+     white text), so inheriting it here would paint blue-500 on a dark surface. Precedent set by
+     states.html's --mds-accent-busy: blue-500 in light, blue-200 in dark. */
   --mds-accent-text:var(--mds-color-blue-500);
   --mds-accent-bg:var(--mds-color-blue-50);
   --mds-accent-border:var(--mds-color-blue-200);
@@ -21,46 +23,44 @@
   --mds-bg-surface-default:#1d2125;--mds-bg-surface-subtle:#16191c;--mds-bg-surface-strong:#343a40;
   --mds-text-default:#f8f9fa;--mds-text-muted:#ced4da;--mds-text-subtle:#dee2e6;
   --mds-border-default:#495057;--mds-border-subtle:#343a40;
-  --mds-bg-interactive-secondary-default:#343a40;
   --mds-accent-text:var(--mds-color-blue-200);
   --mds-accent-bg:var(--mds-color-blue-800);
   --mds-accent-border:var(--mds-color-blue-600);
 }}
 body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
 .wrap{max-width:600px;margin:0 auto;display:grid;gap:14px;}
-.h{font-size:12px;font-weight:500;color:var(--mds-text-muted);margin:0;}
+.h{font-size:12px;font-weight:500;color:var(--mds-text-muted);margin:0 0 6px;}
 .lbl{font-size:11px;color:var(--mds-text-subtle);margin-bottom:4px;display:block;}
 .ic{width:0.85rem;height:0.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
-/* ---- Contexto: btn-group de dois botões (as-is) ---- */
-.seg{display:inline-flex;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);overflow:hidden;background:var(--mds-bg-surface-default);}
-.seg span{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;font-size:12px;color:var(--mds-text-subtle);}
-.seg span.on{background:var(--mds-bg-interactive-secondary-default);color:var(--mds-text-default);font-weight:500;}
-.sel{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;padding:6px 8px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);}
+/* ---- Context bar ---- */
+.bar{display:flex;flex-wrap:wrap;align-items:flex-start;gap:16px;}
+.seg{display:inline-flex;border-radius:var(--mds-radius-md);overflow:hidden;}
+.seg span{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;font-size:12px;color:var(--mds-text-subtle);border:var(--mds-stroke-sm) solid var(--mds-border-default);background:var(--mds-bg-surface-default);}
+.seg span + span{border-left:0;}
+.seg span.on{background:var(--mds-bg-interactive-primary-default);border-color:var(--mds-bg-interactive-primary-default);color:var(--mds-color-white);}
+.sw{display:inline-flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:var(--mds-text-subtle);}
+.sw-track{width:26px;height:15px;border-radius:var(--mds-radius-pill);background:var(--mds-bg-surface-strong);border:var(--mds-stroke-sm) solid var(--mds-border-default);display:inline-flex;align-items:center;padding:1px;flex:none;}
+.sw-knob{width:11px;height:11px;border-radius:var(--mds-radius-pill);background:var(--mds-color-white);border:var(--mds-stroke-sm) solid var(--mds-border-default);}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;padding:6px 8px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);min-width:210px;}
 .chev{color:var(--mds-text-muted);font-size:10px;}
-.count{font-size:11px;color:var(--mds-text-subtle);}
+.count{font-size:11px;color:var(--mds-text-subtle);align-self:center;}
 .count b{color:var(--mds-text-default);}
+.refresh{margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);color:var(--mds-text-subtle);}
 
-/* ---- Trilha adaptativa (to-be) ---- */
-.rail{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);}
-.rseg{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);padding:5px 10px;}
-.rseg.on{background:var(--mds-accent-bg);border-color:var(--mds-accent-border);}
-.rl{font-size:10px;color:var(--mds-text-subtle);}
-.rseg.on .rl{color:var(--mds-accent-text);}
-.rv{font-size:12px;font-weight:500;}
-.rseg.on .rv{color:var(--mds-accent-text);}
-.sep{color:var(--mds-text-subtle);display:inline-flex;}
-
-/* ---- IMP-10: abas com ícone + indicador ----
-   O indicador é o mesmo do mtube (styles.css:6300-6307) — box-shadow inset, sem borda. A transição
-   usa o motion-base (250ms) do tokens.html, a duração que o kit reserva para indicador de aba. */
+/* ---- Hub tabs: icon + indicator ----
+   The indicator is an inset box-shadow, with no border (styles.css:7261-7265). The transition uses
+   tokens.html's --mds-motion-base (250ms), the same token the styles.css rule uses. */
 .tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);}
 .tb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:8px 12px;color:var(--mds-text-muted);background:none;border:0;transition:box-shadow var(--mds-motion-base) var(--mds-motion-ease),color var(--mds-motion-base) var(--mds-motion-ease);}
 .tb.on{color:var(--mds-text-default);font-weight:500;box-shadow:inset 0 -2px 0 var(--mds-accent-text);}
 @media (prefers-reduced-motion:reduce){.tb{transition:none;}}
 
 .note{font-size:11px;color:var(--mds-text-subtle);}
+.note + .note{margin-top:6px;}
 .note b{color:var(--mds-text-default);}
+.pend{border-left:var(--mds-stroke-sm) solid var(--mds-border-default);padding-left:8px;}
+.pend b{color:var(--mds-text-muted);}
 code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--mds-bg-surface-strong);color:var(--mds-text-default);border-radius:4px;padding:0 3px;}
 .prov{font-family:Menlo,ui-monospace,monospace;font-size:9px;padding:1px 6px;border-radius:var(--mds-radius-pill);background:var(--mds-accent-bg);color:var(--mds-accent-text);border:var(--mds-stroke-sm) solid var(--mds-accent-text);white-space:nowrap;}
 </style>
@@ -68,9 +68,7 @@ code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--md
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
   <symbol id="e-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></symbol>
   <symbol id="e-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></symbol>
-  <symbol id="e-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
-  <symbol id="e-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
-  <symbol id="e-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="e-rotate" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></symbol>
   <symbol id="e-cap" viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
   <symbol id="e-sitemap" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="1" y="17" width="6" height="5" rx="1"/><rect x="9" y="17" width="6" height="5" rx="1"/><rect x="17" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M4 12h16M4 12v5M12 12v5M20 12v5"/></symbol>
   <symbol id="e-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></symbol>
@@ -78,127 +76,134 @@ code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--md
 
 <div class="wrap">
   <div>
-    <div class="h">Contexto e contador · as-is</div>
-    <span class="lbl">Contexto</span>
-    <div class="seg" role="group" aria-label="Contexto">
-      <span><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-globe"/></svg>Sistema</span>
-      <span class="on"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-folder"/></svg>Categoria de curso</span>
-    </div>
-    <div style="margin-top:8px;">
-      <span class="lbl">Categoria de curso</span>
-      <div class="sel"><span>Educação Profissional (3)</span><span class="chev">▾</span></div>
-    </div>
-    <div class="count" style="margin-top:6px;"><b>3</b> estruturas</div>
-    <div class="note" style="margin-top:6px;">
-      O contador troca de substantivo por aba: <b>estruturas</b> na Estruturas/Competências e
-      <b>planos</b> na Planos (<code>contextbar.mustache:84-85</code>, strings
-      <code>central_frameworks</code> e <code>central_plans</code> — ambas minúsculas). A contagem
-      por categoria já viaja no <code>&lt;option&gt;</code> como <code>{nome} ({frameworkcount})</code>.
-    </div>
-  </div>
-
-  <div>
-    <div class="h">Trilha adaptativa · to-be (não existe hoje)</div>
-    <div class="rail">
-      <div class="rseg"><div class="rl">Contexto</div><div class="rv">Ed. Profissional</div></div>
-      <span class="sep"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-right"/></svg></span>
-      <div class="rseg on"><div class="rl">Estrutura</div><div class="rv">Competências Gerais ⌄</div></div>
-      <span class="sep"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-right"/></svg></span>
-      <div class="rseg"><div class="rl">Competência</div><div class="rv">Resolução de problemas</div></div>
-    </div>
-    <div class="note" style="margin-top:6px;">
-      Nenhum mustache do hub desenha isto — a contextbar shipada para em <b>contexto + categoria</b>.
-      O segundo nível chama-se <b>Estrutura</b>, não "Framework": é o rótulo que o próprio hub usa
-      (<code>central_browseframeworks_framework</code>).
-    </div>
-  </div>
-
-  <div>
-    <div class="h">IMP-10 · abas com ícone + indicador · shipado (514d246) <span class="prov">mtube: ícones nas abas</span></div>
-    <div class="tabs" role="tablist">
-      <span class="tb" role="tab"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-sitemap"/></svg>Estruturas</span>
-      <span class="tb on" role="tab" aria-selected="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-target"/></svg>Competências</span>
-      <span class="tb" role="tab"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-cap"/></svg>Planos de aprendizagem</span>
+    <div class="h">Context bar</div>
+    <div class="bar">
+      <div>
+        <span class="lbl">Context</span>
+        <div class="seg" role="group" aria-label="Context">
+          <span><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-globe"/></svg>System</span>
+          <span class="on"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-folder"/></svg>Course category</span>
+        </div>
+        <span class="sw"><span class="sw-track"><span class="sw-knob"></span></span>Show hidden categories</span>
+      </div>
+      <div>
+        <span class="lbl">Course category</span>
+        <div class="sel"><span>Professional Education (3)</span><span class="chev">▾</span></div>
+      </div>
+      <div class="count"><b>3</b> structures in this context</div>
+      <span class="refresh"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-rotate"/></svg>Refresh</span>
     </div>
     <div class="note" style="margin-top:8px;">
-      O indicador da aba ativa é <code>box-shadow: inset 0 -2px 0</code> — é o que está pintado acima,
-      não uma legenda. Mesma forma do mtube (<code>format_mtube/styles.css:6300-6307</code>: fundo
-      transparente, <code>border:0</code>, <code>inset 0 -2px 0 var(--bs-primary)</code>).
+      <b>The active context button is solid blue, not grey:</b> the pair is a <code>btn-group</code>
+      in which the active one takes <code>btn-primary</code> and the other
+      <code>btn-outline-secondary</code> (<code>contextbar.mustache:68</code> and <code>:71</code>).
+      No rule in <code>styles.css</code> repaints that pair — there are only two rules for the bar,
+      both of them <code>category-wrapper</code> layout (<code>:7222-7230</code>).
     </div>
-    <div class="note" style="margin-top:6px;">
-      <b>Os rótulos são estes, e a nomenclatura é invertida:</b> o pane de shortname
-      <code>structure</code> mostra <b>Competências</b> (<code>managecompetencies_structure</code>) e o
-      <code>frameworks</code> mostra <b>Estruturas</b> (<code>central_frameworks_tab</code>). A ordem
-      é a de <code>central.php:104</code>: frameworks, structure, plans.
+    <div class="note">
+      <b>The hidden-categories switch only appears when a hidden category is reachable:</b>
+      <code>contextbar.php:108-126</code> builds <code>hiddencatstoggle</code> as <code>null</code>
+      when there is none, and it is born <b>on</b> if the selected category is itself hidden
+      (otherwise the context would vanish from the selector). In System mode it is
+      <code>hidden</code> (<code>contextbar.mustache:75-79</code>). It is the shared partial
+      <code>central/showhidden_toggle</code>, the same pill as the three tabs; the label is
+      <code>central_bar_showhiddencategories</code>.
     </div>
-    <div class="note" style="margin-top:6px;">
-      <b>Onde entra o ícone (shipado):</b> <code>central.php</code> monta o <code>$tabicons</code>
-      (<code>:107</code>) e cola uma <code>&lt;i class="fa fa-… me-1" aria-hidden="true"&gt;</code> no
-      <code>displayname</code> dentro do loop (<code>:121</code>, <code>:124</code>);
-      <code>core/dynamic_tabs.mustache:53</code> faz triple-stash, então o ícone entra no <b>rótulo</b>
-      e <b>nada muda</b> no template do core (a página renderiza <code>core/dynamic_tabs</code> direto
-      em <code>central.php:145</code>). Os glifos padronizados: <code>fa-sitemap</code> (Estruturas),
-      <code>fa-crosshairs</code> (Competências), <code>fa-graduation-cap</code> (Planos) — os SVG acima só
-      substituem a FontAwesome, que este preview não carrega.
+    <div class="note">
+      <b>The counter swaps its noun per tab, and the noun includes "in this context":</b>
+      <code>central_frameworks</code> = "structures in this context" and <code>central_plans</code> =
+      "plans in this context" (both lower-case, both travel in the HTML and the client hides the one
+      that does not apply — <code>contextbar.mustache:94-99</code>). The switching is done by
+      <code>renderCounter()</code> (<code>context.js:103-119</code>) from
+      <code>activeMode()</code> (<code>:68-71</code>), which only returns <code>plans</code> in the
+      plans pane. The per-category count travels in the <code>&lt;option&gt;</code> as
+      <code>{name} ({count})</code> (<code>contextbar.mustache:89</code>) and is rewritten on the
+      client with the active mode's count (<code>context.js:126-132</code>).
     </div>
-    <div class="note" style="margin-top:6px;">
-      <b>Escopo (shipado):</b> a regra vive sob <code>.local-dimensions-central-page .dynamictabs
-      .nav-tabs .nav-link</code> (<code>styles.css:5781</code>) — a classe de <code>&lt;body&gt;</code>
-      (<code>central.php:57</code>) contém o restyle no hub. O ancestral <code>.dynamictabs</code> é o
-      que importa: as abas do modal de participantes (<code>nav nav-tabs</code> <b>sem</b>
-      <code>.dynamictabs</code>) não são alcançadas. Antes do IMP-10 <b>nenhuma</b> regra do
-      <code>styles.css</code> tocava <code>.dynamictabs</code>/<code>.nav-tabs</code> — as abas eram
-      Boost puro; hoje só esta regra as toca.
-    </div>
-    <div class="note" style="margin-top:6px;">
-      <b>Duas decisões que uma varredura adversarial forçou (o card acima já as reflete):</b> o texto da
-      aba ativa é <b>escuro</b> (paleta cinza da Boost, como o core), <b>não</b> o azul de acento — o
-      acento fica só no sublinhado de 2px e no anel de foco, porque <code>var(--bs-body-color)</code> é
-      indefinido no Bootstrap 4 (Moodle 4.5) e o azul como texto reprova o AA no escuro. E o
-      <code>border:0</code> + o <code>box-shadow</code> da base derrubavam o anel de foco de teclado do
-      core (WCAG 2.4.7); o shipado restaura um <code>outline</code> no <code>:focus-visible</code>.
-    </div>
-    <div class="note" style="margin-top:6px;">
-      <b>Não</b> portar o dropdown de overflow por <code>ResizeObserver</code> do mtube:
-      <b>146 linhas</b> de medição em quatro helpers exportados (174 com docblocks —
-      <code>dynamic_tab_helpers.js:300-473</code>). Ele existe porque o mtube força
-      <code>flex-wrap: nowrap</code> na tira de abas dentro do modal
-      (<code>format_mtube/styles.css:6265</code>); o <code>.nav</code> do Bootstrap é
-      <code>flex-wrap: wrap</code> por padrão (<code>bootstrap/_nav.scss:18</code>) e a tira do hub é
-      de página inteira — ela <b>quebra linha</b> em vez de transbordar, como a de cima faz se você
-      estreitar a janela. Medido neste preview: uma linha até 420px de container, duas de 360px para
-      baixo, e <b>zero</b> transbordo horizontal em qualquer largura.
+    <div class="note">
+      <b>The Refresh button reloads the active pane, not the bar:</b> it sits in the bar's
+      <code>ms-auto</code> (<code>contextbar.mustache:101-105</code>, core string
+      <code>refresh</code>) and calls <code>reloadPane()</code> spinning its own icon, with a
+      <code>finally</code> that re-enables it and returns focus (<code>context.js:206-230</code>).
+      The counter's number is <b>not</b> resynced by it — the bar lives outside the panes and is not
+      re-rendered; the debt is recorded in <code>maps/bar-contextbar.md</code>.
     </div>
   </div>
 
   <div>
-    <div class="h">Divergência conhecida · a ilha Material do aluno (não mexer aqui)</div>
+    <div class="h">Adaptive trail</div>
+    <div class="note pend">
+      <b>Pending — a three-segment trail</b> (Context → Structure → Competency, with the active
+      segment accented). Not built, and it is a <b>divergent</b> redesign of the bar above rather
+      than an increment: no mustache, AMD or renderable in the hub draws a trail — the bar stops at
+      context + category (<code>contextbar.mustache:65-92</code>) plus counter and refresh
+      (<code>:94-105</code>). Vocabulary, for whoever picks it up: the second level is called
+      <b>Structure</b>, not "Framework".
+    </div>
+  </div>
+
+  <div>
+    <div class="h">Hub tabs — icon + indicator <span class="prov">mtube: tab icons</span></div>
+    <div class="tabs" role="tablist">
+      <span class="tb" role="tab"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-sitemap"/></svg>Structures</span>
+      <span class="tb on" role="tab" aria-selected="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-target"/></svg>Competencies</span>
+      <span class="tb" role="tab"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-cap"/></svg>Learning plans</span>
+    </div>
+    <div class="note" style="margin-top:8px;">
+      The active tab's indicator is <code>box-shadow: inset 0 -2px 0 var(--bs-primary, #0f6cbf)</code>
+      — that is what is painted above, not a caption (<code>styles.css:7261-7265</code>). The base
+      zeroes the border and transitions <code>box-shadow</code> and <code>color</code> with
+      <code>--mds-motion-base</code>/<code>--mds-motion-ease</code>
+      (<code>:7239-7245</code>), with <code>prefers-reduced-motion</code> switching the transition
+      off (<code>:7267-7271</code>). Same shape as <code>format_mtube</code>'s indicator, where the
+      idea came from.
+    </div>
     <div class="note">
-      A inconsistência mais afiada do plugin é esta, e ela <b>não</b> é do hub: o filtro de chips da
-      visão do <b>aluno</b> (<code>.local-dimensions-filter-tabs</code>,
-      <code>styles.css:3250-3288</code>) traz <b>20</b> tokens próprios numa paleta
-      <b>Google Material</b>, não na Boost — platter <code>#f1f3f4</code>, item
-      <code>#5f6368</code>, ativo <code>#1a73e8</code> —, enquanto o azul do kit é o
-      <code>#0f6cbf</code> da Boost. Ou seja: a navegação <b>primária do admin</b> não ganhou
-      <b>nenhuma</b> regra (as abas são Boost puro, ver acima) e o <b>filtro do aluno</b> ganhou
-      platter arredondado, indicador deslizante, paddles e máscara de scroll.
+      <b>These are the labels, and the naming is inverted:</b> the pane whose shortname is
+      <code>structure</code> shows <b>Competencies</b> (<code>managecompetencies_structure</code>) and
+      <code>frameworks</code> shows <b>Structures</b> (<code>central_frameworks_tab</code>); the
+      third uses <code>learningplans</code> (<code>central.php:99-103</code>). The render order is
+      that of the loop at <code>central.php:114</code>: frameworks, structure, plans.
     </div>
-    <div class="note" style="margin-top:6px;">
-      Medidos, para quando alguém for reconciliar: <code>#5f6368</code> sobre o platter dá 5,44:1 e
-      <code>#1a73e8</code> sobre o indicador branco dá <b>4,51:1</b> — passa o AA por 0,01. Sobre o
-      platter (isto é, <b>durante</b> os 320ms em que o indicador ainda está a caminho) o mesmo azul
-      cai para <b>4,05:1</b>, e o indicador branco sobre o platter é <b>1,11:1</b> — quem o desenha
-      é só a sombra <code>0 1px 3px rgba(0,0,0,.12)</code>. Não há variante escura: o
-      <b>único</b> <code>prefers-color-scheme: dark</code> do <code>styles.css</code> é o do widget
-      de contraste (<code>:385-451</code>), então o platter fica claro nos dois temas.
+    <div class="note">
+      <b>Where the icon enters:</b> <code>central.php</code> assembles <code>$tabicons</code>
+      (<code>:108-112</code>) and glues an <code>&lt;i class="fa fa-… me-1" aria-hidden="true"&gt;</code>
+      onto the <code>displayname</code> inside the loop (<code>:122</code>, <code>:125</code>);
+      <code>core/dynamic_tabs.mustache</code> triple-stashes <code>displayname</code>, so the icon
+      enters through the <b>label</b> and <b>nothing changes</b> in the core template (the page
+      renders <code>core/dynamic_tabs</code> directly at <code>central.php:146</code>). The glyphs:
+      <code>fa-sitemap</code> (Structures), <code>fa-crosshairs</code> (Competencies),
+      <code>fa-graduation-cap</code> (Plans) — the SVGs above merely stand in for Font Awesome,
+      which this preview does not load.
     </div>
-    <div class="note" style="margin-top:6px;">
-      Duas correções de vocabulário para o registro: o indicador do aluno transiciona
-      <code>left</code>/<code>width</code> em <code>320ms ease-out</code> (<code>:3420-3423</code>) —
-      <b>não</b> é mola. A mola <code>cubic-bezier(0.34, 1.3, 0.64, 1)</code> existe, mas é do
-      <b>FAB</b>, no encaixe pós-arrasto (<code>:3024</code>). E há <b>duas</b> regras
-      <code>.local-dimensions-filter-tabs</code> no arquivo: a simples em <code>:1254</code> e a
-      tokenizada em <code>:3250</code>.
+    <div class="note">
+      <b>Scope:</b> the rule lives under <code>.local-dimensions-central-page .dynamictabs .nav-tabs
+      .nav-link</code> (<code>styles.css:7239</code>) — the <code>&lt;body&gt;</code> class
+      (<code>central.php:57</code>) confines the restyle to the hub. The <code>.dynamictabs</code>
+      ancestor is what matters: the participants modal's tabs (<code>nav nav-tabs</code> <b>without</b>
+      <code>.dynamictabs</code>) are not reached. This five-rule block
+      (<code>:7239-7271</code>) is the <b>only</b> place in <code>styles.css</code> that touches
+      <code>.nav-tabs</code>/<code>.nav-link</code>.
+    </div>
+    <div class="note">
+      <b>Two decisions an adversarial sweep forced (the card above already reflects them):</b> the
+      active tab's text is <b>dark</b> — <code>#1d2125</code>, Boost's grey palette, like core —
+      <b>not</b> the accent blue: the accent stays in the 2px underline and the focus ring alone,
+      because <code>var(--bs-body-color)</code> is undefined in Bootstrap 4 (Moodle 4.5) and blue as
+      text fails AA in dark. And the base's <code>border:0</code> + <code>box-shadow</code> knocked
+      out core's keyboard focus ring (WCAG 2.4.7); <code>:focus-visible</code> restores an
+      <code>outline: 2px solid var(--bs-primary, #0f6cbf)</code> with
+      <code>outline-offset: -2px</code> (<code>styles.css:7255-7259</code>).
+    </div>
+    <div class="note pend">
+      <b>Not ported (decision closed):</b> <code>format_mtube</code>'s
+      <code>ResizeObserver</code>-driven overflow dropdown — four measurement helpers that exist
+      because mtube forces <code>flex-wrap: nowrap</code> on the tab strip inside the modal.
+      Bootstrap's <code>.nav</code> is <code>flex-wrap: wrap</code> by default and the hub's strip is
+      full-page: it <b>wraps</b> instead of overflowing, as the one above does if you narrow the
+      window. Measured in this preview: one line down to a 420px container, two from 360px down, and
+      <b>zero</b> horizontal overflow at any width. A search for <code>ResizeObserver</code> in
+      <code>amd/src/central/</code>: no occurrences.
     </div>
   </div>
 </div>

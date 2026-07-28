@@ -1,4 +1,4 @@
-<!-- @dsCard group="Dados" name="Picker de busca" subtitle="Busca server-side cross-framework + resultados AJAX + aviso de overflow quando passa de uma página (shipado) · Moodle DS" -->
+<!-- @dsCard group="Data" name="Search picker" subtitle="Core autocomplete in the plans filter: cross-structure server-side search + overflow warning past one page · Moodle DS" -->
 <style>
 :root{
   --mds-color-blue-50:#e7f0f9;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;--mds-color-blue-800:#062b4c;
@@ -14,8 +14,8 @@
   --mds-bg-feedback-warning-subtle:var(--mds-color-yellow-100);--mds-text-feedback-warning:var(--mds-color-yellow-800);
   --mds-radius-sm:0.375rem;--mds-radius-md:0.5rem;--mds-radius-pill:50rem;--mds-stroke-sm:0.0625rem;
   --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:Menlo,ui-monospace,monospace;
-  /* Accent de TEXTO — precedente do --mds-accent-busy do states.html: blue-500 no claro,
-     blue-200 no escuro (os --mds-bg-interactive-primary-* não têm variante escura). */
+  /* TEXT accent — precedent set by states.html's --mds-accent-busy: blue-500 in light,
+     blue-200 in dark (the --mds-bg-interactive-primary-* have no dark variant). */
   --mds-accent-text:var(--mds-color-blue-500);
   --mds-accent-bg:var(--mds-color-blue-50);
   --mds-accent-border:var(--mds-color-blue-200);
@@ -33,104 +33,142 @@
 }}
 body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(--mds-bg-surface-subtle);margin:0;padding:20px;line-height:1.5;}
 .wrap{max-width:560px;margin:0 auto;}
-.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.chiprow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:2px 8px;border-radius:var(--mds-radius-pill);background:var(--mds-accent-bg);color:var(--mds-accent-text);border:var(--mds-stroke-sm) solid var(--mds-accent-border);}
+.chip .x{font-size:10px;}
+.addbtn{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:2px 8px;border-radius:var(--mds-radius-pill);border:var(--mds-stroke-sm) dashed var(--mds-border-default);color:var(--mds-text-subtle);background:none;}
 .ctrl{min-height:32px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);display:flex;align-items:center;padding:6px 8px;font-size:12px;gap:6px;}
 .ph{color:var(--mds-text-subtle);}
 .ic{width:0.85rem;height:0.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.res{display:flex;align-items:center;gap:10px;padding:7px 10px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);margin-top:6px;background:var(--mds-bg-surface-default);}
-.res.on{border-color:var(--mds-accent-border);background:var(--mds-accent-bg);}
-.res.on .nm,.res.on .path{color:var(--mds-accent-text);}
-.nm{font-size:12px;}
-.path{font-size:10px;color:var(--mds-text-subtle);}
-.tag{font-size:10px;padding:1px 6px;border-radius:var(--mds-radius-pill);border:var(--mds-stroke-sm) solid;font-family:var(--font-mono);flex:none;}
-.statelabel{font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--mds-text-subtle);margin:16px 0 6px;display:flex;align-items:center;gap:6px;}
-.ship{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:var(--mds-radius-pill);background:var(--mds-bg-feedback-success-subtle);color:var(--mds-text-feedback-success);border:var(--mds-stroke-sm) solid var(--mds-text-feedback-success);white-space:nowrap;text-transform:none;letter-spacing:0;}
+.sugs{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-top:0;border-radius:0 0 var(--mds-radius-md) var(--mds-radius-md);background:var(--mds-bg-surface-default);overflow:hidden;}
+.sug{padding:6px 10px;}
+.sug + .sug{border-top:var(--mds-stroke-sm) solid var(--mds-border-default);}
+.sug.on{background:var(--mds-accent-bg);}
+.nm{font-size:12px;font-weight:500;}
+.idn{font-family:var(--font-mono);font-size:10px;color:var(--mds-text-muted);}
+.trail{font-size:10px;color:var(--mds-text-muted);}
+.statelabel{font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--mds-text-subtle);margin:16px 0 6px;}
 .notice{padding:12px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);color:var(--mds-text-muted);font-size:12px;text-align:center;}
-.count{font-size:11px;color:var(--mds-text-subtle);}
+.count{font-size:11px;color:var(--mds-text-subtle);margin-top:6px;}
 .note{font-size:11px;color:var(--mds-text-subtle);margin-top:12px;}
 .note + .note{margin-top:6px;}
 .note b{color:var(--mds-text-default);}
+.pend{border-left:var(--mds-stroke-sm) solid var(--mds-border-default);padding-left:8px;}
+.pend b{color:var(--mds-text-muted);}
 code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface-strong);color:var(--mds-text-default);border-radius:4px;padding:0 3px;}
-.tobe{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:var(--mds-radius-pill);background:var(--mds-accent-bg);color:var(--mds-accent-text);border:var(--mds-stroke-sm) solid var(--mds-accent-text);white-space:nowrap;}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
   <symbol id="e-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
-  <symbol id="e-box" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></symbol>
-  <symbol id="e-boxcheck" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></symbol>
+  <symbol id="e-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 </defs></svg>
 
 <div class="wrap">
-  <div class="bar">
-    <div class="ctrl" style="flex:1;min-width:170px;">
-      <svg class="ic" aria-hidden="true" focusable="false"><use href="#e-search"/></svg>
-      <span class="ph">Buscar competência…</span>
-      <span style="margin-left:auto;font-size:11px;color:var(--mds-accent-text)">buscando…</span>
+  <div class="chiprow">
+    <span class="chip">Logical-deductive thinking <span class="x">✕</span></span>
+    <span class="addbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#e-plus"/></svg>Add to filter</span>
+  </div>
+
+  <div class="statelabel">Up to 25 matching the search</div>
+  <div class="ctrl" style="border-radius:0.5rem 0.5rem 0 0;">
+    <svg class="ic" aria-hidden="true" focusable="false"><use href="#e-search"/></svg>
+    <span class="ph">Filter plans by competency</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--mds-accent-text)">searching…</span>
+  </div>
+  <div class="sugs">
+    <div class="sug">
+      <div><span class="nm">Mathematical logic</span> <span class="idn">MAT-014</span></div>
+      <div class="trail">MAT / Mathematics / Reasoning</div>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <div class="ctrl" style="width:170px;justify-content:space-between;"><span>Todas as estruturas</span><span class="ph">▾</span></div>
-      <span class="tobe">to-be</span>
+    <div class="sug on">
+      <div><span class="nm">Logical-deductive thinking</span> <span class="idn">GEN-07</span></div>
+      <div class="trail">GEN / General competencies / Problem solving</div>
+    </div>
+    <div class="sug">
+      <div><span class="nm">Information security</span></div>
+      <div class="trail">IT-SEC / IT and Security / Fundamentals</div>
     </div>
   </div>
-  <div class="count">Busca server-side · uma estrutura pode ter centenas de competências</div>
+  <div class="count">Server-side search, from 2 characters on · a structure can hold hundreds of competencies</div>
 
-  <div class="statelabel">Até 25 casando a busca</div>
-  <div class="res">
-    <svg class="ic" aria-hidden="true" focusable="false" style="color:var(--mds-text-subtle)"><use href="#e-box"/></svg>
-    <div style="flex:1;min-width:0;"><div class="nm">Lógica matemática</div><div class="path">Matemática ▸ Raciocínio</div></div>
-    <span class="tag" style="background:var(--mds-bg-feedback-warning-subtle);color:var(--mds-text-feedback-warning);border-color:var(--mds-text-feedback-warning)">MAT</span>
-  </div>
-  <div class="res on">
-    <svg class="ic" aria-hidden="true" focusable="false" style="color:var(--mds-accent-text)"><use href="#e-boxcheck"/></svg>
-    <div style="flex:1;min-width:0;"><div class="nm">Pensamento lógico-dedutivo</div><div class="path">Competências Gerais ▸ Resolução de problemas</div></div>
-    <span class="tag" style="background:var(--mds-bg-feedback-info-subtle);color:var(--mds-text-feedback-info);border-color:var(--mds-text-feedback-info)">CG-EP</span>
-  </div>
-  <div class="res">
-    <svg class="ic" aria-hidden="true" focusable="false" style="color:var(--mds-text-subtle)"><use href="#e-box"/></svg>
-    <div style="flex:1;min-width:0;"><div class="nm">Segurança da informação</div><div class="path">TI e Segurança ▸ Fundamentos</div></div>
-    <span class="tag" style="background:var(--mds-bg-feedback-success-subtle);color:var(--mds-text-feedback-success);border-color:var(--mds-text-feedback-success)">TI-SEC</span>
-  </div>
-
-  <div class="statelabel">Mais de 25 casando a busca <span class="ship">shipado</span></div>
-  <div class="notice">Muitos resultados. Refine a busca para restringir a lista.</div>
+  <div class="statelabel">More than 25 matching the search</div>
+  <div class="notice">Too many matches. Refine your search to narrow the list.</div>
 
   <div class="note">
-    <b>A busca, o chip de origem e a trilha são reais.</b>
-    <code>local_dimensions_search_competencies</code> varre <b>todas</b> as estruturas legíveis
-    (<code>competencyframeworkid IN (…)</code>), devolve por resultado a <b>tag da estrutura de
-    origem</b> — o <code>idnumber</code>, ou o <code>shortname</code> se ele for vazio
-    (<code>search_competencies.php:93-96</code>) — e a <b>trilha de ancestrais</b> da raiz até o pai.
-    Só dispara a partir de <code>MIN_QUERY_LENGTH = 2</code> caracteres (<code>search_competencies.php:45</code>).
+    <b>Where this control lives:</b> it is the picker of the Plans tab's <b>filter by competency</b> —
+    a bare <code>&lt;select&gt;</code> (<code>plans.mustache:218</code>) inside the panel
+    <code>local-dimensions-central-plans-filter-picker</code> (<code>:213-220</code>), which is born
+    <code>hidden</code> and is opened by the "Add to filter" button (<code>:208-211</code>), with the
+    <code>visually-hidden</code> label "Filter plans by competency"
+    (<code>central_searchcompetency</code>). What turns it into an autocomplete is
+    <code>plans.js:827-829</code>, with core's <code>core/form-autocomplete</code> and the datasource
+    <code>central/competency_datasource</code>. The competencies already filtered sit in chips above,
+    each with its own ✕ (<code>plans.mustache:197-212</code>).
   </div>
   <div class="note">
-    <b>O buraco dos 26+ era real — e o fix shipado é um aviso, não um paginador.</b> O controle é um
-    <code>core/form-autocomplete</code> na aba Planos, alimentado pelo
-    <code>competency_datasource.js:39</code> com <code>limitfrom: 0, limitnum: 25</code> <b>fixos</b>.
-    O widget do core <b>não pagina</b>: reconstrói a lista inteira a cada tecla e não expõe hook de
-    scroll nem "Carregar mais". O sinal idiomático dele para excedente é o <code>data-notice</code> —
-    quando o datasource devolve uma <b>string</b> no lugar do array, o widget a mostra no lugar das
-    sugestões (<code>form-autocomplete.js:748-750</code>, <code>:556-558</code>). Então o
-    <code>transport</code> agora testa <code>response.total &gt; response.items.length</code> e, se
-    passa de uma página, chama <code>success(getString('search_toomany'))</code>
-    (<code>competency_datasource.js:41-44</code>); o <code>processResults</code> deixa a string passar
-    com um guard <code>Array.isArray</code> (<code>:76</code>). Espelha o
-    <code>core_user/form_user_selector</code>. O <code>total</code> que a WS devolve alimenta a
-    <b>detecção de overflow</b>, não uma paginação.
+    <b>The search, the origin tag and the trail are real.</b>
+    <code>local_dimensions_search_competencies</code> sweeps <b>every</b> readable structure
+    (<code>competencyframeworkid IN (…)</code>), returns per result the <b>tag of the origin
+    structure</b> — the <code>idnumber</code>, or the <code>shortname</code> when it is empty
+    (<code>search_competencies.php:93-96</code>) — and the <b>ancestor trail</b> from the root down to
+    the parent (<code>:113-129</code>). It only fires from <code>MIN_QUERY_LENGTH = 2</code>
+    characters on (<code>:45</code>, checked at <code>:87</code>).
   </div>
   <div class="note">
-    <b>Divergências deliberadas, ainda to-be:</b> (1) o filtro de estrutura — a WS <b>não</b> tem
-    parâmetro de framework hoje (só <code>query</code>, <code>limitfrom</code>,
-    <code>limitnum</code>), então essa caixa exige um parâmetro novo; (2) a seleção múltipla por
-    checkbox — o autocomplete shipado é <b>single-select</b>. O que ele já faz e o desenho preserva:
-    excluir o que já está no template via <code>data-exclude</code>, lido fresco a cada busca
-    (<code>competency_datasource.js:80-84</code>).
+    <b>The suggestion's label is a single line of HTML assembled on the client:</b> name in
+    <code>fw-medium</code>, <code>idnumber</code> in <code>font-monospace small text-muted</code>
+    when present, and below it a muted line with <code>frameworktag</code> and <code>path</code>
+    joined by <code>" / "</code> (<code>competency_datasource.js:86-93</code>) — the tag is <b>not</b>
+    a separate pill on the right. Everything goes through <code>escapeHtml()</code>
+    (<code>:58-62</code>).
   </div>
   <div class="note">
-    <b>A paginação de verdade mora em outro controle.</b> Não confundir com o <b>MOD.BROWSER</b>
-    (<code>competency_browser.mustache</code>): lá há um <code>&lt;select&gt;</code> de <b>uma</b>
-    estrutura por vez (rótulo "Estrutura"), filtro de texto "Filtrar competências", um toggle
-    "Mostrar caminhos" e um botão <b>"Carregar mais"</b> — o padrão de paginação que o resto do hub
-    usa (<code>central_structure_loadmoreshown</code> = "Mostrando {$a->shown} de {$a->total}",
-    <code>lang/en:279</code>). Ele pode paginar porque <b>não</b> é o <code>form-autocomplete</code>.
+    <b>The 26+ hole is solved by a warning, not by a paginator.</b> The datasource asks for
+    <code>limitfrom: 0, limitnum: 25</code>, <b>fixed</b> (<code>competency_datasource.js:39</code>).
+    Core's widget <b>does not paginate</b>: it rebuilds the whole list on every keystroke and exposes
+    neither a scroll hook nor a "Load more". Its idiomatic signal for overflow is the
+    <code>data-notice</code> — when the datasource returns a <b>string</b> in place of the array, the
+    widget shows it instead of the suggestions. So the <code>transport</code> tests
+    <code>response.total &gt; response.items.length</code> and, if it goes past one page, calls
+    <code>success(getString('search_toomany'))</code> (<code>:41-45</code>);
+    <code>processResults</code> lets the string through with an <code>Array.isArray</code> guard
+    (<code>:76-79</code>). It mirrors <code>core_user/form_user_selector</code>. The
+    <code>total</code> the WS returns (<code>search_competencies.php:109</code>, declared at
+    <code>:149</code>) feeds the <b>overflow detection</b>, not a pagination.
+  </div>
+  <div class="note">
+    <b><code>data-exclude</code> exists in the datasource but nothing feeds it here.</b>
+    <code>processResults</code> reads the attribute fresh off the source <code>&lt;select&gt;</code>
+    on every search and discards the listed ids (<code>competency_datasource.js:80-84</code>) — only
+    the sole element enhanced with this datasource is the filter picker above, and it carries no
+    <code>data-exclude</code> at all (<code>plans.mustache:218</code>). The one that exercises the
+    mechanism is its sibling <code>course_datasource</code>, in the links modal
+    (<code>competency_links.mustache:44</code>, fed by
+    <code>competency_links.js:484</code>).
+  </div>
+  <div class="note">
+    <b>Real pagination lives in another control.</b> Not to be confused with <b>MOD.BROWSER</b>
+    (<code>competency_browser.mustache:37-56</code>): there is a <code>&lt;select&gt;</code> of
+    <b>one</b> structure at a time (label "Structure",
+    <code>central_browseframeworks_framework</code>), a text filter "Filter competencies" and a
+    "Show paths" toggle (<code>competency_tree_browser.mustache:33-39</code>) — and the list paginates
+    by <b>infinite scroll</b>, with an <code>IntersectionObserver</code> sentinel
+    (<code>competency_tree_browser.js:487-498</code>). It can paginate because it is <b>not</b> the
+    <code>form-autocomplete</code>. <b>Retired:</b> this card once sketched <b>numbered</b> pagination
+    for that list; it fell when the chosen shape was the sentinel — recorded in
+    <code>maps/mod-browser.md</code>.
+  </div>
+  <div class="note pend">
+    <b>Pending — a structure filter beside the search.</b> The WS has no framework parameter:
+    <code>search_competencies::execute_parameters()</code> declares <b>only</b> <code>query</code>,
+    <code>limitfrom</code> and <code>limitnum</code> (<code>search_competencies.php:55-61</code>).
+    The box would require a new parameter and a <code>version.php</code> bump.
+  </div>
+  <div class="note pend">
+    <b>Pending — multiple selection by checkbox.</b> The autocomplete is enhanced with
+    <code>multiple = false</code> (<code>plans.js:828</code>, second argument) and there is not a
+    single occurrence of <code>multiple</code> or <code>checkbox</code> in
+    <code>competency_datasource.js</code>. The multi-selection the tab has today is by
+    <b>accumulating chips</b>, one choice at a time.
   </div>
 </div>

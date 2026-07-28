@@ -1,283 +1,267 @@
-# Mapa de Campos — `MOD.ENROL` · Métodos de inscrição (as-is)
+# Field map — `MOD.ENROL` · Enrolment methods (as-is)
 
-**4ª aba** do modal Participantes (`MOD.PART`), depois de Coortes / Usuários / Atribuir papéis.
-Configura **em massa** os métodos de inscrição dos cursos vinculados às competências do template,
-sempre amarrado a um coorte do plano. O pane nasce **vazio** no host
-(`participants_manager.mustache:150-151`) e é montado por `enrol_methods.js:1082-1112`.
+**4th tab** of the Participants modal (`MOD.PART`), after Cohorts / Users / Assign roles.
+It configures **in bulk** the enrolment methods of the courses linked to the template's competencies,
+always tied to one of the plan's cohorts. The pane is born **empty** in the host
+(`participants_manager.mustache:150-151`) and is mounted by `enrol_methods.js:1082-1112`.
 
-- **Mustache:** [`enrol_methods.mustache`](../../../templates/central/enrol_methods.mustache) (121, esqueleto da aba), [`enrol_group.mustache`](../../../templates/central/enrol_group.mustache) (65, um grupo do accordion), [`enrol_detail.mustache`](../../../templates/central/enrol_detail.mustache) (82, corpo do modal de detalhe)
-- **AMD:** [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1112) — reusa `action_button.js` (`iconButton`, `:38-49`) e `errors.js` (`notifyError`)
-- **WS (5, todos em `db/services.php:346-386`):** `list_enrol_competencies` (raízes paginadas + *bootstrap* de mount), `list_enrol_courses` (linhas com o status dos **dois** métodos), `queue_enrol_action`, `get_enrol_queue_status`, `set_enrol_instance_status`
-- **Task:** [`process_enrol_method`](../../../classes/task/process_enrol_method.php) — adhoc por `(courseid, método, cohortid)`
+- **Mustache:** [`enrol_methods.mustache`](../../../templates/central/enrol_methods.mustache) (121, the tab's skeleton), [`enrol_group.mustache`](../../../templates/central/enrol_group.mustache) (65, one accordion group), [`enrol_detail.mustache`](../../../templates/central/enrol_detail.mustache) (82, body of the detail modal)
+- **AMD:** [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1112) — reuses `action_button.js` (`iconButton`, `:38-49`) and `errors.js` (`notifyError`)
+- **WS (5, all in `db/services.php:357-396`):** `list_enrol_competencies` (paginated roots + mount *bootstrap*), `list_enrol_courses` (rows with the status of **both** methods), `queue_enrol_action`, `get_enrol_queue_status`, `set_enrol_instance_status`
+- **Task:** [`process_enrol_method`](../../../classes/task/process_enrol_method.php) — adhoc, per `(courseid, method, cohortid)`
 - **Helper:** [`classes/local/enrol_methods.php`](../../../classes/local/enrol_methods.php) — `eligible_roles()` (`:58-73`), `default_roleid()` (`:81-89`)
-- **CSS:** [`styles.css:5955-6021`](../../../styles.css)
+- **CSS:** [`styles.css:7289-7354`](../../../styles.css) — the accordion's scroll box, the group's chevron/fade, the search width and the detail modal's table
 
-> **Resync 2026-07-15 — este mapa era uma _spec_, e o código passou por cima dela na mesma noite.**
-> Medido, não estimado:
+> **Resync 2026-07-15 — this map was a _spec_, and the code ran over it the same night.**
+> Measured, not estimated:
 >
-> - **Zero refs quebradas — porque havia zero refs.** A versão anterior (`0b3782c`) **não tinha
->   coluna `Origem`**: o cabeçalho das tabelas era `| ID | Rótulo | Tipo | Dados | Regra / notas |`.
->   Um `grep -oE '[a-z_/.]+\.(php|js|mustache|css):[0-9]+'` no arquivo antigo devolve **0**. Não é o
->   estrago dos outros mapas (Task 7: 23/23; Task 9: 21/21; Task 10: 12/24) — aqui a coluna de
->   proveniência **faltava inteira**. As 22 IDs existiam sem uma única origem.
-> - **A janela real é de 69 minutos.** O mapa entrou em `0b3782c` (**2026-07-11 21:53:13**,
->   autor e committer batem) e o `3d1d5cb` shipou a aba em **23:03:05** — `(1783821785 − 1783817593)
->   / 60 = 69`. **Não existe commit às 21:37** (a janela 21:00–23:30 tem 8 commits; nenhum nesse
->   minuto), e **nenhum par "21:37 / 86 minutos" existe** no `mod-participants.md` — pelo contrário,
->   aquele mapa **corrobora** esta janela, reportando os mesmos ~70 minutos (23:03 − 21:53) em `:29-30`
->   e `:198`. E o **primeiro** código do recurso é anterior à aba: a task em `5df19b7` (22:41, +48 min)
->   e os WSes em `ee7a9e8` (22:51, +58 min) — os três bullets "planejado" do mapa antigo já eram
->   falsos antes da aba existir.
-> - **Oito commits passaram por cima** de `enrol_methods.js`: `3d1d5cb` (aba), `432195c` (polish do
->   1º teste manual), `1d15e9f` (atalho de plugins + portão de ambos-desabilitados), `545ba17`
->   (accordion vira **tabela rotulada** + contraste), `33f7697` (linhas **DOM-built**, remove
->   `enrol_row.mustache`), `a5ef9a8` (toggle por linha), `8eea9ef` (toast + barra distribuída +
->   segmento primário), `ec9d813` (busca de competências).
-> - **O que o mapa antigo não tinha como ter:** a busca (`ENROL-SEARCH`), o portão de
->   ambos-desabilitados (`ENROL-DISABLED`), os **três** botões de atualizar, o toggle
->   habilitar/desabilitar por linha (`ENROL-TOGGLE-STATUS`), os dois "Carregar mais", a coluna de
->   papel por linha, o `<caption>`/`<thead>` da tabela, e todo o `bootstrap` de mount.
-> - **`ENROL-METHOD` não é `sync`.** O mapa antigo dizia `sync | self`; o código diz
->   **`cohort | self`** (`enrol_methods.mustache:59`, `:63`) e o estado nasce `method: 'cohort'`
->   (`enrol_methods.js:1091`). **`sync` não existe em lugar nenhum** — o rótulo *visível* é que é
->   "Sincronização de coortes" (`central_enrol_method_cohort`). Confundir os dois quebra
->   `data-method`, o `state.method`, o argumento `method` dos 3 WSes e a chave da task.
-> - **`enrol_row.mustache` foi deletado** em `33f7697`, com motivo registrado: o lint de Mustache
->   renderiza o template isolado e o validador de HTML **rejeita um fragmento `tr` solto**. As
->   linhas viraram `createElement` em `makeRow` (`:366-463`) — mesmo padrão das abas Usuários/Papéis.
+> - **Zero broken refs — because there were zero refs.** The previous version (`0b3782c`) **had no
+>   `Origin` column**: the table header was `| ID | Label | Type | Data | Rule / notes |`.
+>   A `grep -oE '[a-z_/.]+\.(php|js|mustache|css):[0-9]+'` over the old file returns **0**. This is not
+>   the other maps' damage (Task 7: 23/23; Task 9: 21/21; Task 10: 12/24) — here the provenance column
+>   **was missing entirely**. The 22 IDs existed without a single origin.
+> - **The real window is 69 minutes.** The map landed in `0b3782c` (**2026-07-11 21:53:13**,
+>   author and committer agree) and `3d1d5cb` shipped the tab at **23:03:05** — `(1783821785 − 1783817593)
+>   / 60 = 69`. **There is no commit at 21:37** (the 21:00–23:30 window holds 8 commits; none in that
+>   minute), and **no "21:37 / 86 minutes" pair exists** in `mod-participants.md` — on the contrary,
+>   that map **corroborates** this window, reporting the same ~70 minutes (23:03 − 21:53). And the
+>   feature's **first** code predates the tab: the task in `5df19b7` (22:41, +48 min) and the WSes in
+>   `ee7a9e8` (22:51, +58 min) — the old map's three "planned" bullets were already false before the
+>   tab existed.
+> - **Eight commits ran over** `enrol_methods.js`: `3d1d5cb` (the tab), `432195c` (polish after the
+>   1st manual test), `1d15e9f` (plugins shortcut + both-disabled gate), `545ba17`
+>   (the accordion becomes a **labelled table** + contrast), `33f7697` (**DOM-built** rows, removes
+>   `enrol_row.mustache`), `a5ef9a8` (per-row toggle), `8eea9ef` (toast + distributed bar +
+>   primary segment), `ec9d813` (competency search). After those came `c2d9471` (error region),
+>   `c07d5e5` (per-method icon + named action) and `7d69197` (the refresh leaves the pane and moves to
+>   the modal header).
+> - **What the old map had no way of having:** the search (`ENROL-SEARCH`), the both-disabled gate
+>   (`ENROL-DISABLED`), per-pane refresh buttons (which **existed and later went away** —
+>   see `ENROL-REFRESH`), the per-row enable/disable toggle (`ENROL-TOGGLE-STATUS`), the two "Load
+>   more"s, the per-row role column, the table's `<caption>`/`<thead>`, and the whole mount
+>   `bootstrap`.
+> - **`ENROL-METHOD` is not `sync`.** The old map said `sync | self`; the code says
+>   **`cohort | self`** (`enrol_methods.mustache:59`, `:63`) and the state is born `method: 'cohort'`
+>   (`enrol_methods.js:1091`). **`sync` exists nowhere** — it is the *visible* label that reads
+>   "Cohort sync" (`central_enrol_method_cohort`). Confusing the two breaks
+>   `data-method`, `state.method`, the `method` argument of the 3 WSes and the task's key.
+> - **`enrol_row.mustache` was deleted** in `33f7697`, with the reason recorded: the Mustache lint
+>   renders the template in isolation and the HTML validator **rejects a loose `tr` fragment**. The
+>   rows became `createElement` in `makeRow` (`:366-463`) — the same pattern as the Users/Roles tabs.
 
-> **Resync 2026-07-18 — re-medido contra `c07d5e5` depois da fatia de diferenciação de métodos.**
-> A fatia (`c07d5e5`, ícone por método + ação nomeada) inseriu ~50 linhas no topo do JS e **deslocou
-> todas** as refs `enrol_methods.js:NNN` — re-medidas uma a uma aqui. **Sem bump de `version.php`:** a
-> fatia não a toca e a versão segue **congelada em `2026071306`** até a 2.0 (só strings/JS/templates,
-> nenhum WS novo nem mudança estrutural). As refs de `enrol_methods.mustache`
-> (~18 fora) e as de `styles.css` (~266 fora) já estavam **desatualizadas antes** desta fatia (drift de
-> commits anteriores) e foram corrigidas nesta passada. As refs de PHP/task/helper (`external/*`,
-> `process_enrol_method`, `classes/local/enrol_methods`, `db/services`, `dynamictabs/plans`) e de
-> `enrol_group`/`enrol_detail` foram reconferidas e a maioria seguia certa; `participants_manager.js` e
-> `tabs.js` haviam derivado e foram ajustadas. **Pendência conhecida, fora do escopo desta passada:** os
-> **quatro botões `enrol-refresh` por-pane foram removidos** na fatia do refresh de cabeçalho (D2,
-> `7d69197`) e substituídos por um refresh no cabeçalho do modal (`mount` devolve `{refresh: () => init(state)}`,
-> `enrol_methods.js:1111`; consumido em `participants_manager.js:213-232`, `attachRefresh`); a narrativa de
-> `ENROL-REFRESH` e do "pane em branco" ainda descreve os botões antigos e precisa de um re-sync próprio,
-> como os mapas irmãos ganharam em `77243d1`.
+> **About this file's refs.** The `c07d5e5` slice (per-method icon + named action) inserted ~50
+> lines at the top of the JS and shifted **every** `enrol_methods.js:NNN` ref; the `7d69197` slice
+> (refresh in the header) removed four buttons and shifted the rest. Everything was re-measured
+> against the current `HEAD`, including the refs of `enrol_methods.mustache`, of `styles.css` (which
+> were ~1300 lines out), of `participants_manager.js` and of `tabs.js`. **The plugin version is not
+> frozen:** `version.php:28` is `2026072700` and has been bumped several times since this feature — do
+> not use "frozen at 2026071306" as an argument for anything.
 
-## Portões — quatro regiões, uma revelada por vez
+## Gates — four regions, one revealed at a time
 
-As quatro nascem `hidden` no Mustache; `init()` revela **uma**: em sucesso, um de `enrol-disabled` /
-`enrol-empty` / `enrol-main` (`enrol_methods.js:954-967`); numa falha **precoce** — a carga inicial
-rejeita antes de qualquer `hidden = false` — o `catch` revela `enrol-error` (`:939`) e esconde as
-outras três (`:940-942`). Os alerts são blocos simples de propósito: o comentário de
-`enrol_methods.mustache:33-35` avisa que um `.d-flex` no próprio alert **venceria** o atributo `hidden`
-(`display` é `!important` nas utilities), então o flex mora num wrapper interno.
+All four are born `hidden` in the Mustache; `init()` reveals **one**: on success, one of
+`enrol-disabled` / `enrol-empty` / `enrol-main` (`enrol_methods.js:954-967`); on an **early** failure
+— the initial load rejects before any `hidden = false` — the `catch` reveals `enrol-error` (`:939`)
+and hides the other three (`:940-942`). The three alerts are **message-only blocks**, with no inner
+wrapper and no button: the comment at `enrol_methods.mustache:33-35` gives the two reasons — a
+`.d-flex` on the alert itself would **beat** the `hidden` attribute (`display` is `!important` in the
+utilities), and reloading is now the modal header's refresh, *"so each alert carries just its
+message"*.
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-ROOT` | `[sem rótulo]` | região/raiz | `enrol_methods.mustache:32` | `data-region="enrol"` · `.local-dimensions-enrol` | é o `state.root`; o listener delegado pousa nele (`enrol_methods.js:990`) |
-| `ENROL-DISABLED` | aviso: os dois plugins desabilitados no site | alerta | `enrol_methods.mustache:36-38` | `data-region="enrol-disabled"` · `alert-warning` | `central_enrol_bothdisabled` (`:37`). Revelado por `enrol_methods.js:954-959` quando `!cohortenabled && !selfenabled` — a aba inteira fica inerte. Quem conserta é o `PART-LINK-ENROL`, que **só o admin do site vê** (ver o descasamento de fechaduras abaixo) |
-| `ENROL-EMPTY` | aviso: nenhum coorte vinculado | alerta | `enrol_methods.mustache:39-41` | `data-region="enrol-empty"` · `alert-info` | `central_enrol_empty` (`:40`) manda o usuário para a **aba Coortes**. Revelado por `enrol_methods.js:961-965` quando `!cohortdata.cohorts.length` |
-| `ENROL-ERROR` | aviso: falha ao carregar os métodos | alerta | `enrol_methods.mustache:42-44` | `data-region="enrol-error"` · `alert-warning` | **ENTREGUE em 2026-07-16 (`c2d9471`)** — era a 4ª porta que este mapa pedia como *to-be* (ver a seção da trava de montagem). `central_enrol_loadfailed` (`:43`). Revelado no `catch` da carga inicial de `init` (`enrol_methods.js:939`), que esconde as outras três (`:940-942`), e **relança** para o *swallow* do mount ainda emitir o toast. `alert-warning` (não `danger`): a falha é transitória/retentável. *(O atalho de recuperação por-pane era um `enrol-refresh` local; desde a fatia D2 `7d69197` a recuperação é o refresh do cabeçalho do modal — ver a nota de resync 2026-07-18.)* |
-| `ENROL-MAIN` | `[sem rótulo]` | região principal | `enrol_methods.mustache:45` | `data-region="enrol-main"` | revelada em `enrol_methods.js:967`. **Tudo** o que segue mora aqui dentro |
-| `ENROL-REFRESH` | Atualizar | ~~botão ×4~~ **removido (D2 `7d69197`)** | *[não existe mais no pane]* | ~~`data-action="enrol-refresh"`~~ | **Os quatro botões `enrol-refresh` por-pane foram removidos** na fatia do refresh de cabeçalho (D2, `7d69197`): o refresh passou ao cabeçalho do modal (`mount` devolve `{refresh: () => init(state)}`, `enrol_methods.js:1111`; ligado por `attachRefresh` em `participants_manager.js:213-232`). Linha mantida como marcador — a narrativa antiga (`ENROL-REFRESH`/IMP-05/"pane em branco") ainda a cita e aguarda re-sync próprio (ver nota 2026-07-18) |
+| `ENROL-ROOT` | `[no label]` | region/root | `enrol_methods.mustache:32` | `data-region="enrol"` · `.local-dimensions-enrol` | it is the `state.root`; the delegated listener lands on it (`enrol_methods.js:990`) |
+| `ENROL-DISABLED` | warning: both plugins disabled on the site | alert | `enrol_methods.mustache:36-38` | `data-region="enrol-disabled"` · `alert-warning` | `central_enrol_bothdisabled` (`:37`). Revealed by `enrol_methods.js:954-959` when `!cohortenabled && !selfenabled` — the whole tab goes inert. What fixes it is `PART-LINK-ENROL`, which **only a site admin sees** (see the lock mismatch below) |
+| `ENROL-EMPTY` | warning: no cohort linked | alert | `enrol_methods.mustache:39-41` | `data-region="enrol-empty"` · `alert-info` · `role="status"` | `central_enrol_empty` (`:40`) sends the user to the **Cohorts tab**. Revealed by `enrol_methods.js:961-965` when `!cohortdata.cohorts.length` |
+| `ENROL-ERROR` | warning: failed to load the methods | alert | `enrol_methods.mustache:42-44` | `data-region="enrol-error"` · `alert-warning` | the **4th door**, shipped in `c2d9471`. `central_enrol_loadfailed` (`:43`). Revealed in the `catch` of `init`'s initial load (`enrol_methods.js:939`), which hides the other three (`:940-942`), and **rethrows** (`:943`) so the mount's *swallow* still emits the toast. `alert-warning` (not `danger`): the failure is transient/retryable. Recovery is the modal header's refresh (`PART-REFRESH`) |
+| `ENROL-MAIN` | `[no label]` | main region | `enrol_methods.mustache:45` | `data-region="enrol-main"` | revealed at `enrol_methods.js:967`. **Everything** that follows lives inside it |
+| `ENROL-REFRESH` | **Retired** (`7d69197`, 2026-07-18) | — | absent | — | There were **four** `data-action="enrol-refresh"` buttons — one in each alert and one on the filters bar —, the pane's only refresh affordance. They went out together with the click handler: a `grep -rn 'enrol-refresh' templates/ amd/src/` returns **nothing**. Refreshing is now the **modal header's** button (`PART-REFRESH`), which consumes the `{refresh: () => init(state)}` handle returned by `mount` (`enrol_methods.js:1111`) via `attachRefresh` (`participants_manager.js:232`, callback at `:213-229`). The ID is kept here only for whoever comes looking for it; there is no corresponding control |
 
-## Barra de configuração
+## Configuration bar
 
-Uma linha `d-flex` com os três controles distribuídos (`enrol_methods.mustache:46`), a dica embaixo.
+A `d-flex` row with the three controls distributed (`enrol_methods.mustache:46`), the hint underneath.
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-COHORT` | **Coorte do plano** | select | `enrol_methods.mustache:51` | `data-region="enrol-cohort"` · `form-select` | rótulo em `:48-50`. Opções via `list_template_cohorts` (`enrol_methods.js:969-970`) — **os coortes já vinculados ao template**, não todos os do site. Trocar dispara `reload` (`:1048-1050`) |
-| `ENROL-METHOD` | Método | grupo de botões | `enrol_methods.mustache:57-67` | `data-region="enrol-method"` · `role="group"` | **`cohort`** (`:59-62`, nasce `active`/`btn-primary`/`aria-pressed="true"`, ícone estático `fa-users`) e **`self`** (`:63-66`, ícone estático `fa-user-plus`). Rotulado por `aria-labelledby` → o `<span>` de `:54-56` (não é `<label>`: não há um controle único a apontar). Trocar **não refaz fetch** — `applyMethodChange` (`:756-780`) repinta das `data-*` da linha |
-| `ENROL-METHOD-OFF` | `[sem rótulo]` | regra de disponibilidade | `enrol_methods.js:891-898` | `button.disabled = !enabled` | cada segmento é desabilitado se o plugin correspondente estiver off no site (`enrol_is_enabled`, `list_enrol_competencies.php:202-203`). Se **só** `cohort` estiver off, o pane troca sozinho para `self` (`:896-898`) |
-| `ENROL-ROLE` | **Papel atribuído** | select | `enrol_methods.mustache:73` | `data-region="enrol-role"` · `form-select` | rótulo em `:70-72`. `eligible_roles()` = `$CFG->gradebookroles` **∩** `get_default_enrol_roles($context)` (`classes/local/enrol_methods.php:58-73`) — gradebook **e** atribuível por inscrição. Default = arquétipo *student* quando elegível, senão o primeiro (`:81-89`). Trocar **não** recarrega (`enrol_methods.js:1051-1052`): só vale na próxima ação |
-| `ENROL-HINT` | `[sem rótulo]` | texto | `enrol_methods.mustache:76` | `data-region="enrol-hint"` | `central_enrol_hint_cohort` / `_hint_self`, trocado em `enrol_methods.js:766-767` e `:976-977` |
+| `ENROL-COHORT` | **Plan cohort** | select | `enrol_methods.mustache:51` | `data-region="enrol-cohort"` · `form-select` | label at `:48-50`. Options via `list_template_cohorts` (`enrol_methods.js:969-970`) — **the cohorts already linked to the template**, not every cohort on the site. Changing it fires `reload` (`:1048-1050`) |
+| `ENROL-METHOD` | Method | button group | `enrol_methods.mustache:57-67` | `data-region="enrol-method"` · `role="group"` | **`cohort`** (`:59-62`, born `active`/`btn-primary`/`aria-pressed="true"`, static `fa-users` icon) and **`self`** (`:63-66`, static `fa-user-plus` icon). Labelled by `aria-labelledby` → the `<span>` at `:54-56` (not a `<label>`: there is no single control to point at). Changing it **does not refetch** — `applyMethodChange` (`:756-780`) repaints from the row's `data-*` |
+| `ENROL-METHOD-OFF` | `[no label]` | availability rule | `enrol_methods.js:891-898` | `button.disabled = !enabled` | each segment is disabled if the corresponding plugin is off on the site (`enrol_is_enabled`, `list_enrol_competencies.php:202-203`). If **only** `cohort` is off, the pane switches itself to `self` (`:896-898`) |
+| `ENROL-ROLE` | **Assigned role** | select | `enrol_methods.mustache:73` | `data-region="enrol-role"` · `form-select` | label at `:70-72`. `eligible_roles()` = `$CFG->gradebookroles` **∩** `get_default_enrol_roles($context)` (`classes/local/enrol_methods.php:58-73`) — gradebook **and** assignable by enrolment. Default = the *student* archetype when eligible, otherwise the first one (`:81-89`). Changing it does **not** reload (`enrol_methods.js:1051-1052`): it only counts on the next action |
+| `ENROL-HINT` | `[no label]` | text | `enrol_methods.mustache:76` | `data-region="enrol-hint"` | `central_enrol_hint_cohort` / `_hint_self`, swapped at `enrol_methods.js:766-767` and `:976-977` |
 
-## Barra de filtros
+## Filters bar
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-SEARCH` | Pesquisar competências | input texto | `enrol_methods.mustache:82-84` | `data-region="enrol-search"` · `.local-dimensions-enrol-search` | **faltava inteiro** (`ec9d813`). Rótulo `visually-hidden` (`:79-81`) **e** `placeholder` com a mesma string. Debounce de **300 ms** → `reload` (`enrol_methods.js:1033-1044`); o comentário de `:1037-1038` diz por que é server-side: a lista é paginada, um filtro client-side perderia as páginas não carregadas. Largura fixa `14rem` (`styles.css:5999-6001`) |
-| `ENROL-CAT` | Categoria de curso | select | `enrol_methods.mustache:90-91` | `data-region="enrol-category"` | rótulo `visually-hidden` (`:87-89`). Opções = `central_enrol_categoryall` + as categorias **dos cursos vinculados** (`enrol_methods.js:882-885`; `list_enrol_competencies.php:185-197`). Trocar dispara `reload` (`:1053-1055`) |
-| `ENROL-HIDDEN` | Mostrar cursos ocultos | switch | `enrol_methods.mustache:94-95` | `data-region="enrol-hidden"` · `.form-check.form-switch` | rótulo real em `:96-98` (`for`/`id` — o seletor `"checkbox"` do Behat exige `<label>`, não `aria-label`). Ocultos escondidos por padrão (`enrol_methods.js:1095`); trocar dispara `reload` (`:1056-1058`) |
-| `ENROL-VISCOUNT` | `[sem rótulo]` | contador | `enrol_methods.mustache:100` | `data-region="enrol-viscount"` | `central_enrol_viscount` ("N cursos exibidos") com `data.totalcourses` = **cursos configuráveis distintos após os filtros** (`enrol_methods.js:498-503`; `list_enrol_competencies.php:151`) |
+| `ENROL-SEARCH` | Search competencies | text input | `enrol_methods.mustache:82-84` | `data-region="enrol-search"` · `.local-dimensions-enrol-search` | **was missing entirely** (`ec9d813`). `visually-hidden` label (`:79-81`) **and** a `placeholder` with the same string. **300 ms** debounce → `reload` (`enrol_methods.js:1033-1044`, the `setTimeout` at `:1040-1043`); the comment at `:1037-1038` says why it is server-side: the list is paginated, and a client-side filter would lose the pages not yet loaded. Fixed width `14rem` (`styles.css:7332-7334`) |
+| `ENROL-CAT` | Course category | select | `enrol_methods.mustache:90-91` | `data-region="enrol-category"` | `visually-hidden` label (`:87-89`). Options = `central_enrol_categoryall` + the categories **of the linked courses** (`enrol_methods.js:882-885`; `list_enrol_competencies.php:185-197`). Changing it fires `reload` (`:1053-1055`) |
+| `ENROL-HIDDEN` | Show hidden courses | switch | `enrol_methods.mustache:94-95` | `data-region="enrol-hidden"` · `.form-check.form-switch` | real label at `:96-98` (`for`/`id` — Behat's `"checkbox"` selector requires a `<label>`, not an `aria-label`). Hidden courses hidden by default (`enrol_methods.js:1095`); changing it fires `reload` (`:1056-1058`) |
+| `ENROL-VISCOUNT` | `[no label]` | counter | `enrol_methods.mustache:100` | `data-region="enrol-viscount"` | `central_enrol_viscount` ("N courses shown") with `data.totalcourses` = **distinct configurable courses after the filters** (`enrol_methods.js:498-503`; `list_enrol_competencies.php:151`) |
 
-## Accordion — grupos de competência
+## Accordion — competency groups
 
-`ENROL-TREE` é uma caixa de rolagem própria: `max-height: 50vh; overflow-y: auto`
-(`styles.css:5961-5964`) para a barra de config acima e o rodapé de ações abaixo ficarem sempre
-visíveis. Grupos via `renderGroupHtml` → `appendNodeContents` (`enrol_methods.js:340-354`, `:487`).
+`ENROL-TREE` is a scroll box of its own: `max-height: 50vh; overflow-y: auto`
+(`styles.css:7294-7297`) so the config bar above and the actions footer below stay visible at all
+times. Groups via `renderGroupHtml` → `appendNodeContents` (`enrol_methods.js:340-354`, `:487`).
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-TREE` | `[sem rótulo]` | contêiner-JS | `enrol_methods.mustache:102` | `data-region="enrol-tree"` | vazio quando `!data.total` → parágrafo `nothingtodisplay` (`enrol_methods.js:488-493`) |
-| `ENROL-GROUP` | `[sem rótulo]` | grupo | `enrol_group.mustache:36` | `data-group={id}` · `data-name={name}` | `data-name` é lido de volta em `loadCourses` (`enrol_methods.js:529`) para carimbar o nome da competência na linha |
-| `ENROL-GROUP-CB` | Selecionar todos os cursos de {competência} | checkbox | `enrol_group.mustache:38-39` | `data-groupcheck={id}` | `aria-label` via `central_enrol_selectall`. Só alcança as linhas **já carregadas** do grupo e **pula as em processamento** (`enrol_methods.js:1063-1071`) |
-| `ENROL-TOGGLE` | {nome da competência} | botão | `enrol_group.mustache:40-47` | `data-action="enrol-toggle"` · `aria-expanded` | chevron (`:44`) + nome (`:45`) + badge de contagem (`:46`). **O nome é o `shortname`** (`enrol_methods.js:350`), não o `fullname`. Rotação do chevron e o *fade/slide* são **CSS puro** keyed no `aria-expanded` (`styles.css:5970-5992`) |
-| `ENROL-GROUP-COUNT` | N cursos | badge | `enrol_group.mustache:46` | `badge bg-secondary text-dark` | `central_enrol_courses` / `_coursesone` (singular próprio, `enrol_methods.js:342-344`). O par `bg-secondary` + `text-dark` é deliberado — ver a nota de contraste |
-| `ENROL-CHILDREN` | `[sem rótulo]` | contêiner | `enrol_group.mustache:49` | `data-children={id}` · `data-offset="0"` · `hidden` | **carga preguiçosa na 1ª expansão**, com trava `data-loaded` que é **revertida no erro** (`enrol_methods.js:568-576`), então re-expandir sempre tenta de novo. A trava do host **também** passou a se recuperar (`c96a3e9`), mas só numa rejeição pré-fiação — ver a seção da trava de montagem |
-| `ENROL-CAPTION` | {nome da competência} | caption | `enrol_group.mustache:51` | `visually-hidden` | — |
-| `ENROL-HEAD` | Selecionar · Curso · Categoria · Papel · Status · Ações | cabeçalho | `enrol_group.mustache:53-60` | — | **6 colunas** (`545ba17` trocou o accordion solto por `table generaltable` listrada). A 1ª é `{{#str}}select{{/str}}` **`visually-hidden`** (`:54`); as outras cinco são strings do core (`course`, `category`, `role`, `status`, `actions`) |
-| `ENROL-ROWS` | `[sem rótulo]` | contêiner-JS | `enrol_group.mustache:62` | `data-region="enrol-rows"` | `<tbody>`; linhas via `makeRow` |
-| `ENROL-MORECOMPS` | Carregar mais | botão | `enrol_methods.js:496` | `data-action="enrol-morecomps"` · `data-offset` | página de **20** competências (`:39`); o botão se remove ao clicar (`:1008`) |
-| `ENROL-MORECOURSES` | Carregar mais | botão | `enrol_methods.js:544` | `data-action="enrol-morecourses"` · `data-competencyid` · `data-offset` | página de **25** cursos (`:40`) |
+| `ENROL-TREE` | `[no label]` | JS container | `enrol_methods.mustache:102` | `data-region="enrol-tree"` | empty when `!data.total` → a `nothingtodisplay` paragraph (`enrol_methods.js:488-493`) |
+| `ENROL-GROUP` | `[no label]` | group | `enrol_group.mustache:36` | `data-group={id}` · `data-name={name}` | `data-name` is read back in `loadCourses` (`enrol_methods.js:529`) to stamp the competency name onto the row |
+| `ENROL-GROUP-CB` | Select all courses of {competency} | checkbox | `enrol_group.mustache:38-39` | `data-groupcheck={id}` | `aria-label` via `central_enrol_selectall`. It only reaches the group's **already-loaded** rows and **skips the ones processing** (`enrol_methods.js:1063-1071`) |
+| `ENROL-TOGGLE` | {competency name} | button | `enrol_group.mustache:40-47` | `data-action="enrol-toggle"` · `aria-expanded` | chevron (`:44`) + name (`:45`) + count badge (`:46`). **The name is the `shortname`** (`enrol_methods.js:349`), not the `fullname`. The chevron rotation and the *fade/slide* are **pure CSS** keyed on `aria-expanded` (`styles.css:7303-7325`) |
+| `ENROL-GROUP-COUNT` | N courses | badge | `enrol_group.mustache:46` | `badge bg-secondary text-dark` | `central_enrol_courses` / `_coursesone` (its own singular, `enrol_methods.js:342-344`). The `bg-secondary` + `text-dark` pair is deliberate — see the contrast note |
+| `ENROL-CHILDREN` | `[no label]` | container | `enrol_group.mustache:49` | `data-children={id}` · `data-offset="0"` · `hidden` | **lazy load on 1st expansion**, with a `data-loaded` latch that is **reverted on error** (`enrol_methods.js:568-576`), so re-expanding always tries again. The host's latch **also** recovers, but only on a pre-wiring rejection — see the mount-latch section |
+| `ENROL-CAPTION` | {competency name} | caption | `enrol_group.mustache:51` | `visually-hidden` | — |
+| `ENROL-HEAD` | Select · Course · Category · Role · Status · Actions | header | `enrol_group.mustache:53-60` | — | **6 columns** (`545ba17` swapped the loose accordion for a striped `table generaltable`). The 1st is `{{#str}}select{{/str}}` and **`visually-hidden`** (`:54`); the other five are core strings (`course`, `category`, `role`, `status`, `actions`) |
+| `ENROL-ROWS` | `[no label]` | JS container | `enrol_group.mustache:62` | `data-region="enrol-rows"` | `<tbody>`; rows via `makeRow` |
+| `ENROL-MORECOMPS` | Load more | button | `enrol_methods.js:496` | `data-action="enrol-morecomps"` · `data-offset` | page of **20** competencies (`PAGE_COMPETENCIES`, `:39`); the button removes itself on click (`:1008`) |
+| `ENROL-MORECOURSES` | Load more | button | `enrol_methods.js:544` | `data-action="enrol-morecourses"` · `data-competencyid` · `data-offset` | page of **25** courses (`PAGE_COURSES`, `:40`) |
 
-## Linha de curso — **DOM-built**, não Mustache
+## Course row — **DOM-built**, not Mustache
 
-`makeRow` (`enrol_methods.js:366-463`). Cada linha carrega o status dos **dois** métodos nas suas
-`data-*` (`:370-384`), então trocar o segmento e abrir o detalhe **não refazem fetch**.
+`makeRow` (`enrol_methods.js:366-463`). Each row carries the status of **both** methods in its own
+`data-*` (`:370-384`), so switching the segment and opening the detail **do not refetch**.
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-ROW` | `[sem rótulo]` | linha | `enrol_methods.js:368-369` | `.local-dimensions-enrol-row` · `data-courseid` + 14 `data-*` | o **mesmo curso pode aparecer sob mais de uma competência**: toda escrita varre os *gêmeos* por `data-courseid` (`:261`, `:589`, `:619`, `:705`) |
-| `ENROL-ROW-CB` | Selecionar {shortname} | checkbox | `enrol_methods.js:387-391` | `data-rowcheck="1"` | `aria-label` via `central_enrol_selectcourse`. **Escondido** (não desabilitado) quando processando (`:239`) |
-| `ENROL-ROW-SPIN` | `[sem rótulo]` | spinner | `enrol_methods.js:392-396` | `data-region="row-spinner"` · `fa-spinner fa-spin` | ocupa o lugar do checkbox no estado processando (`:240`) — é a troca 1-para-1 que a spec previa |
-| `ENROL-ROW-NAME` | {shortname} · {fullname} | cabeçalho de linha | `enrol_methods.js:400-418` | `<th scope="row">` | shortname em negrito + `·` + fullname **inteiro** (`:407`) — a spec previa truncar; o código **não trunca**. Curso oculto ganha `fa-eye-slash` + texto `visually-hidden` `hiddenfromstudents` (`:408-418`) |
-| `ENROL-ROW-CAT` | {categoria} | célula | `enrol_methods.js:420-421` | — | texto puro desde `545ba17` (era badge) |
-| `ENROL-ROW-ROLE` | {papel} | célula | `enrol_methods.js:423-424` | `data-region="row-role"` | preenchida **só** quando `configured` (`:226-228`); é o papel **efetivo da instância**, não o do `ENROL-ROLE` |
-| `ENROL-STATUS` | Configurado / Processando / Não configurado | badge | `enrol_methods.js:426-437` | `data-region="row-status"` · `-icon` + `-text` | o pill é um `span.badge` com `<i data-region="row-status-icon">` + `<span data-region="row-status-text">` (`makeRow`, `:426-437`); `paintRow` (`:223-225`) põe a classe de cor (`STATUS_BADGES`, `:89-93`), a classe do ícone **por método** (`'fa ' + methodIcon + ' me-1'`) **e** grava a palavra de status no `-text`. O **texto** visível não mudou (Configurado/Processando/Não configurado) — deliberado: a asserção Behat "Not configured" continua valendo; só entrou um ícone por método (`fa-users`/`fa-user-plus`). Reflete **só** o método+coorte selecionados (`rowStatus`, `:192-194`) |
-| `ENROL-TOGGLE-STATUS` | Inscrição habilitada / desabilitada | botão | `enrol_methods.js:441-453` | `data-action="enrol-toggle-status"` | **faltava inteiro** (`a5ef9a8`). Só aparece se `configured` (`:231`); ícone `fa-eye`/`fa-eye-slash` (`:233`). Chama `set_enrol_instance_status`, repinta os gêmeos, **pisca** (`:626`) e emite toast (`:629`) |
-| `ENROL-INFO` | Detalhes | botão | `enrol_methods.js:454` | `data-action="enrol-info"` | via `iconButton('enrol-info', 'fa-circle-info', …)` — texto visível é o nome acessível |
+| `ENROL-ROW` | `[no label]` | row | `enrol_methods.js:368-369` | `.local-dimensions-enrol-row` · `data-courseid` + 14 `data-*` | the **same course can appear under more than one competency**: every write sweeps the *twins* by `data-courseid` (`:261`, `:589`, `:619`, `:705`) |
+| `ENROL-ROW-CB` | Select {shortname} | checkbox | `enrol_methods.js:387-391` | `data-rowcheck="1"` | `aria-label` via `central_enrol_selectcourse`. **Hidden** (not disabled) while processing (`:239`) |
+| `ENROL-ROW-SPIN` | `[no label]` | spinner | `enrol_methods.js:392-396` | `data-region="row-spinner"` · `fa-spinner fa-spin` | it takes the checkbox's place in the processing state (`:240`) — a 1-for-1 swap |
+| `ENROL-ROW-NAME` | {shortname} · {fullname} | row header | `enrol_methods.js:400-418` | `<th scope="row">` | shortname in bold + `·` + the **whole** fullname (`:407`) — it **does not truncate**. A hidden course gains `fa-eye-slash` + `visually-hidden` `hiddenfromstudents` text (`:408-418`) |
+| `ENROL-ROW-CAT` | {category} | cell | `enrol_methods.js:420-421` | — | plain text since `545ba17` (it used to be a badge) |
+| `ENROL-ROW-ROLE` | {role} | cell | `enrol_methods.js:423-424` | `data-region="row-role"` | filled **only** when `configured` (`:226-228`); it is the **instance's effective** role, not the one in `ENROL-ROLE` |
+| `ENROL-STATUS` | Configured / Processing / Not configured | badge | `enrol_methods.js:426-437` | `data-region="row-status"` · `-icon` + `-text` | the pill is a `span.badge` with `<i data-region="row-status-icon">` + `<span data-region="row-status-text">` (`makeRow`, `:426-437`); `paintRow` (`:223-225`) sets the colour class (`STATUS_BADGES`, `:89-93`), the icon class **per method** (`'fa ' + methodIcon + ' me-1'`) **and** writes the status word into `-text`. The visible **text** is Configured/Processing/Not configured — deliberate: the Behat assertion "Not configured" still holds; the per-method icon (`fa-users`/`fa-user-plus`) went in without touching the text. It reflects **only** the selected method+cohort (`rowStatus`, `:192-194`) |
+| `ENROL-TOGGLE-STATUS` | Enrolment enabled / disabled | button | `enrol_methods.js:441-453` | `data-action="enrol-toggle-status"` | **was missing entirely** (`a5ef9a8`). It only appears if `configured` (`:231`); `fa-eye`/`fa-eye-slash` icon (`:233`). It calls `set_enrol_instance_status` (`:608-617`), repaints the twins (`:619-627`), **flashes** (`:626`) and emits a toast (`:629`); the button is disabled in a `finally` (`:606`, `:630-631`) |
+| `ENROL-INFO` | Details | button | `enrol_methods.js:454` | `data-action="enrol-info"` | via `iconButton('enrol-info', 'fa-circle-info', …)` — the visible text is the accessible name |
 
-## Rodapé de ações
+## Actions footer
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-SELCOUNT` | N selecionado(s) | contador | `enrol_methods.mustache:104` | `data-region="enrol-selcount"` | `central_enrol_selcount`; `state.selected.size` (`enrol_methods.js:274-279`) |
-| `ENROL-PROC` | N em processamento | indicador | `enrol_methods.mustache:105-108` | `data-region="enrol-proccount"` · `hidden` | `fa-spinner fa-spin` (`:106`) + texto em `:107`. Escondido quando `pending.size === 0` (`enrol_methods.js:280-289`) |
-| `ENROL-REMOVE` | Remover · {método} | botão | `enrol_methods.mustache:110-113` | `data-action="enrol-remove"` · `disabled` | `btn-outline-danger`; nasce desabilitado, habilitado só com seleção (`enrol_methods.js:290-292`). Não é mais `{{#str}}` estático: carrega `<i data-region="enrol-remove-icon">` + `<span data-region="enrol-remove-text">`; `setActionLabels` (`:302-311`) põe o ícone do método e o texto `central_enrol_remove_method` = "Remover · <método>". O mustache mantém `central_enrol_remove` genérico como rótulo de fallback pré-JS (`:112`) |
-| `ENROL-APPLY` | Aplicar · {método} | botão | `enrol_methods.mustache:114-117` | `data-action="enrol-apply"` · `disabled` | `btn-primary`; mesma regra (`enrol_methods.js:290-292`). `<i data-region="enrol-apply-icon">` + `<span data-region="enrol-apply-text">`; `setActionLabels` (`:302-311`, **novo**, síncrono) põe o texto `central_enrol_apply_method` = "Aplicar · <método>" (fallback `central_enrol_apply`, `:116`). Chamado de `init` (`:978`) e de `applyMethodChange` (`:768`) a cada troca de método; os 4 rótulos resolvidos (apply/remove × cohort/self) são **pré-carregados** no 2º `getStrings` de `loadLabels` (`:128-137`), então o repaint é síncrono (`método` = `central_enrol_method_cohort`/`_self`) |
+| `ENROL-SELCOUNT` | N selected | counter | `enrol_methods.mustache:104` | `data-region="enrol-selcount"` | `central_enrol_selcount`; `state.selected.size` (`enrol_methods.js:274-279`) |
+| `ENROL-PROC` | N processing | indicator | `enrol_methods.mustache:105-108` | `data-region="enrol-proccount"` · `hidden` | `fa-spinner fa-spin` (`:106`) + text at `:107`. Hidden when `pending.size === 0` (`enrol_methods.js:280-289`) |
+| `ENROL-REMOVE` | Remove · {method} | button | `enrol_methods.mustache:110-113` | `data-action="enrol-remove"` · `disabled` | `btn-outline-danger`; born disabled, enabled only with a selection (`enrol_methods.js:290-292`). Not a static `{{#str}}`: it carries `<i data-region="enrol-remove-icon">` + `<span data-region="enrol-remove-text">`; `setActionLabels` (`:302-311`) sets the method's icon and the `central_enrol_remove_method` text = "Remove · <method>". The mustache keeps the generic `central_enrol_remove` as the pre-JS fallback label (`:112`) |
+| `ENROL-APPLY` | Apply · {method} | button | `enrol_methods.mustache:114-117` | `data-action="enrol-apply"` · `disabled` | `btn-primary`; same rule (`enrol_methods.js:290-292`). `<i data-region="enrol-apply-icon">` + `<span data-region="enrol-apply-text">`; `setActionLabels` (`:302-311`, synchronous) sets the `central_enrol_apply_method` text = "Apply · <method>" (fallback `central_enrol_apply`, `:116`). Called from `init` (`:978`) and from `applyMethodChange` (`:768`) on every method change; the 4 resolved labels (apply/remove × cohort/self) are **preloaded** in the 2nd `getStrings` of `loadLabels` (`:131-136`, with the reason at `:128-130`), so the repaint is synchronous (`method` = `central_enrol_method_cohort`/`_self`) |
 
-## Modais
+## Modals
 
-| ID | Rótulo | Tipo | Origem | Dados | Regra / notas |
+| ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-CONFIRM` | Remover método de inscrição | modal | `enrol_methods.js:647-659` | `Notification.saveCancelPromise` | **título** = `central_enrol_confirm_remove_title` (é por ele que o Behat acha o diálogo, não pela palavra "Confirmação") — **inalterado**; corpo `central_enrol_confirm_remove` virou placeholder-**objeto** (`{$a->method}` + `{$a->count}`, era escalar `{$a}`=contagem), e a chamada JS passa `{method: <nome>, count: courseids.length}` (`:651`); botão = `{{#str}}remove{{/str}}`. Cancelar **retorna** sem enfileirar (`:656-658`) |
-| `ENROL-DETAIL` | {fullname} | modal | `enrol_methods.js:839-862` + `enrol_detail.mustache` | `Modal.create({large: true})` · `setRemoveOnClose(true)` | tabela rótulo/valor: categoria (`:55-58`), visível (`:59-62`), competência (`:63-66`) e **as duas linhas de método** (`:67-74`) — cujos `<th>` (cohortlabel/selflabel) agora levam um ícone de método (`fa-users` `:68` / `fa-user-plus` `:72`) — montadas por `statusLine` (`enrol_methods.js:807-830`), que compõe status + data + `Inativo` + papel. Tudo é **pré-localizado** no JS: o template não tem `{{#str}}` |
-| `ENROL-DETAIL-LINK` | Abrir curso | link | `enrol_detail.mustache:77-81` | `target="_blank" rel="noopener noreferrer"` | `/course/view.php?id=` — nova aba |
+| `ENROL-CONFIRM` | Remove enrolment method | modal | `enrol_methods.js:647-659` | `Notification.saveCancelPromise` | **title** = `central_enrol_confirm_remove_title` (`:650`) — that is what Behat finds the dialogue by, not the word "Confirmation". The `central_enrol_confirm_remove` body is an **object** placeholder (`{$a->method}` + `{$a->count}`), and the JS call passes `{method: <name>, count: courseids.length}` (`:651`); button = core str `remove` (`:652`). Cancelling **returns** without queueing (`:656-658`) |
+| `ENROL-DETAIL` | {fullname} | modal | `enrol_methods.js:839-862` + `enrol_detail.mustache` | `Modal.create({large: true})` (`:859`) · `setRemoveOnClose(true)` (`:860`) | a label/value table: category (`:55-58`), visible (`:59-62`), competency (`:63-66`) and **the two method rows** (`:67-74`) — whose `<th>`s (cohortlabel/selflabel) carry a method icon (`fa-users` `:68` / `fa-user-plus` `:72`) — assembled by `statusLine` (`enrol_methods.js:807-830`), which composes status + date + `Inactive` + role. Everything is **pre-localised** in the JS: the template has no `{{#str}}` |
+| `ENROL-DETAIL-LINK` | Open course | link | `enrol_detail.mustache:77-81` | `target="_blank" rel="noopener noreferrer"` | `/course/view.php?id=` — new tab |
 
-## Regras de negócio
+## Business rules
 
-### As duas fechaduras da aba são diferentes — e uma delas descasa
+### The tab's two locks are different — and one of them is mismatched
 
-A **aba** é gated em `canmanageenrol`, que `plans.mustache:133` alimenta com **`{{canmanage}}`** =
-`moodle/competency:templatemanage` **no contexto** (`dynamictabs/plans.php:98`, `:329`). O **link**
-do cabeçalho (`PART-LINK-ENROL`) quer `canenrolpage` = `moodle/site:config` **no sistema**
-(`:243`). Logo: **um gestor de template vê a aba e não vê o link** — e o link é exatamente o
-conserto que o `ENROL-DISABLED` pede. Os 5 WSes reexigem `templatemanage` no contexto do template
-(p.ex. `list_enrol_competencies.php:104`, `queue_enrol_action.php:108-109`), então a fechadura da
-aba é a real; a do link só decide se o atalho aparece. Não está documentado em nenhum outro lugar.
+The **tab** is gated on `canmanageenrol`, which `plans.mustache:133` feeds with **`{{canmanage}}`** =
+`moodle/competency:templatemanage` **in context** (`dynamictabs/plans.php:98`, `:329`). The footer
+**link** (`PART-LINK-ENROL`) wants `canenrolpage` = `moodle/site:config` **at system level**
+(`:243`). Therefore: **a template manager sees the tab and does not see the link** — and the link is
+exactly the fix `ENROL-DISABLED` asks for. The 5 WSes re-require `templatemanage` in the template's
+context (e.g. `list_enrol_competencies.php:104`, `queue_enrol_action.php:109`), so the tab's lock is
+the real one; the link's only decides whether the shortcut appears. It is documented nowhere else.
 
-### A trava de montagem e o pane em branco na 1ª montagem — os dois já fechados
+### The mount latch and the blank pane on first mount — both closed
 
-**Como era.** Em `participants_manager.js`, `enrolmounted = true` (como `usersmounted`/`rolesmounted`)
-era escrito **antes** do await e `mountEnrol(...)` **não era aguardado** (`.catch(notifyError)`). Se o
-mount rejeitasse, o toast aparecia e a trava ficava `true`: voltar na aba **não** tentava de novo, e com
-`setRemoveOnClose(true)` (`:172`) a única recuperação era **fechar e reabrir o modal**. O pane de Coortes
-era pior — montado uma vez no `shown`, **sem trava nenhuma**, e como a própria aba de Coortes não roda o
-`ensureMounted`, um pane-padrão que falhasse não tinha recuperação alguma dentro do modal.
+**How it used to be.** In `participants_manager.js`, `enrolmounted = true` (like
+`usersmounted`/`rolesmounted`) was written **before** the await and `mountEnrol(...)` **was not
+awaited** (`.catch(notifyError)`). If the mount rejected, the toast appeared and the latch stayed
+`true`: coming back to the tab did **not** try again, and with `setRemoveOnClose(true)` the only
+recovery was **closing and reopening the modal**. The Cohorts pane was worse — mounted once on
+`shown`, **with no latch at all**, and since the Cohorts tab itself does not run `ensureMounted`, a
+default pane that failed had no recovery whatsoever inside the modal.
 
-**A trava — CORRIGIDO em 2026-07-16 (`c96a3e9`).** As quatro montagens passam por um só
-`startMount(key, mountfn, selector)` (`participants_manager.js:198-210`) sobre uma tabela única
-`mounted = {cohorts, users, roles, enrol}` (`:191`). Ele **reivindica a trava de forma síncrona**
-(`mounted[key] = true`, `:202`) — um duplo-clique ainda dispara um único mount — e a **libera no `.catch`**
-(`mounted[key] = false`, `:207`), então a **próxima ativação da aba tenta de novo**. Coortes entrou na
-tabela (`:237`, e via `ensureMounted` em `:243`), logo re-clicar a aba-padrão também a recupera.
-Liberar-no-catch só é seguro porque uma trava liberada sempre significa um pane **não-fiado**: Coortes e
-Papéis dão `replaceNodeContents`-clear e fiam **nós-filhos frescos**, então um remount descarta os
-listeners antigos e começa limpo.
+**The latch — fixed in `c96a3e9` (2026-07-16).** All four mounts go through a single
+`startMount(key, mountfn, selector)` (`participants_manager.js:198-210`) over one `mounted =
+{cohorts, users, roles, enrol}` table (`:191`). It **claims the latch synchronously**
+(`mounted[key] = true`, `:202`) — a double click still fires a single mount — and **releases it in the
+`.catch`** (`mounted[key] = false`, `:207`), so the **next activation of the tab tries again**.
+Cohorts joined the table (`:237`, and via `ensureMounted` at `:243-248`), so re-clicking the default
+tab recovers it too. Release-on-catch is only safe because a released latch always means an
+**unwired** pane: Cohorts and Roles do a `replaceNodeContents` clear and wire **fresh child nodes**, so
+a remount discards the old listeners and starts clean.
 
-**Correção que este mapa faz contra si mesmo: o enrol NÃO é idempotente sob `replaceNodeContents`.** `mount`
-(`enrol_methods.js:1082-1112`) limpa o container com `replaceNodeContents` (`:1085`), mas isso esvazia só
-os **filhos** — o `wireEvents` (`:1103`) **delega** o listener de `click` no **próprio elemento container**
-(`state.root`, `:990`), que **sobrevive** ao clear. Um remount ingênuo empilharia um segundo jogo de
-listeners. Por isso o único await pós-fiação foi **engolido para um toast**: `await init(state)` virou
-`await init(state).catch(notifyError)` (`:1108`). Uma falha **pós-fiação** agora **resolve** o mount — a
-trava fica `true`, nenhum re-clique refaz, e existe **exatamente um** estado fiado. É por isto que o enrol
-não pode simplesmente liberar-e-remontar como Coortes/Papéis, e por que o *swallow* de `:1108` é
-**obrigatório**, não opcional.
+**A correction this map makes against itself: enrol is NOT idempotent under `replaceNodeContents`.**
+`mount` (`enrol_methods.js:1082-1112`) clears the container with `replaceNodeContents` (`:1085`), but
+that only empties the **children** — `wireEvents` (`:1103`) **delegates** the `click` listener on the
+**container element itself** (`state.root`, `:990`), which **survives** the clear. A naive remount
+would stack a second set of listeners. That is why the only post-wiring await is **swallowed into a
+toast**: `await init(state).catch(notifyError)` (`:1108`, with the reason in the comment at
+`:1104-1107`). A **post-wiring** failure **resolves** the mount — the latch stays `true`, no re-click
+redoes it, and there is **exactly one** wired state. This is why enrol cannot simply
+release-and-remount like Cohorts/Roles, and why the *swallow* at `:1108` is **mandatory**, not
+optional.
 
-**O pane em branco na 1ª montagem — ENTREGUE em 2026-07-16 (`c2d9471`).** Este mapa desenhava, como
-*to-be*, uma **4ª porta**: uma região de erro, revelada no `catch` do `init`, com um atualizar **fora** das
-outras três. Foi **exatamente** o que shipou. As três regiões de sucesso nascem `hidden` e quem revela
-**uma** é o `init` (`:954-967`). Se o `Promise.all` da carga inicial (`:918-934`) rejeitar — WS fora, rede
-caindo —, o `init` **antes** saía por exceção antes de qualquer `hidden = false`, o erro era engolido pelo
-`.catch` de `:1108`, e as três regiões — com os **três** `enrol-refresh` presos dentro delas — ficavam
-todas ocultas: pane em branco, nenhum atualizar alcançável, recuperação só reabrindo o modal. *(Os botões
-`enrol-refresh` por-pane foram depois removidos na fatia D2 `7d69197`; esta narrativa aguarda re-sync
-próprio — ver nota 2026-07-18.)*
+**The blank pane on first mount — closed in `c2d9471` (2026-07-16), with the 4th door.** The three
+success regions are born `hidden` and `init` is what reveals **one** (`:954-967`). If the initial
+load's `Promise.all` (`:918-934`) rejected — WS down, network dropping —, `init` **used to** exit by
+exception before any `hidden = false`, the error was swallowed by the `.catch` at `:1108`, and all
+three regions stayed hidden: blank pane, no refresh within reach, recovery only by reopening the
+modal. **Today** the initial load runs inside a `try` (`:917-934`); in the `catch`, `init` **reveals
+`ENROL-ERROR`** (`error.hidden = false`, `:939`), **hides** the other three (`:940-942`) and
+**rethrows** (`:943`) — the `.catch` at `:1108` still emits the toast. The host's latch stays `true`
+(the *swallow* remains deliberate), and the retry is the **modal header's refresh**: `mount` returns
+`{refresh: () => init(state)}` (`:1111`) and the host's `attachRefresh` consumes it
+(`participants_manager.js:232`, `refreshActiveTab` callback at `:213-229`).
 
-**Como ficou.** A carga inicial agora roda dentro de um `try` (`enrol_methods.js:917-934`); no `catch`, o
-`init` **revela a `ENROL-ERROR`** (`error.hidden = false`, `:939`), **esconde** as outras três (`:940-942`)
-e **relança** — o `.catch` de `:1108` ainda emite o toast. Assim a falha **precoce** virou **recuperável**,
-sem reabrir o modal. `alert-warning` (não `danger`): a falha é transitória/retentável. A trava do host segue
-`true` — o *swallow* de `:1108` continua deliberado (a alternativa, liberar e remontar, duplicaria os
-listeners). *(A recuperação **no lugar** era, quando este mapa foi escrito, um `enrol-refresh` dentro da
-`ENROL-ERROR`; desde a fatia D2 `7d69197` o retry é o refresh do cabeçalho do modal — `mount` devolve
-`{refresh: () => init(state)}` (`:1111`), consumido por `attachRefresh` (`participants_manager.js:213-232`)
-— ver nota 2026-07-18.)*
+The **late** failure (`loadCompetencies`, `:980`) was always recoverable and stays **deliberately
+outside** the `try`: `main.hidden = false` has already run at `:967`, so `enrol-main` is visible and
+the header refresh re-runs `init(state)`. With `ENROL-ERROR` closing the **early** failure and
+`enrol-main` covering the **late** one, `mod-participants.md`'s conclusion ("only the refresh lets you
+try again") holds for **every** state: the `ENROL-EMPTY`/`ENROL-DISABLED` alerts (where `init`
+**succeeded** and revealed an alert), the late failure and the early failure.
 
-A falha **tardia** (`loadCompetencies`, `:980`) sempre foi recuperável e continua **deliberadamente fora**
-do `try`: `main.hidden = false` já rodou em `:967`, então o `enrol-main` fica visível e o refresh do
-cabeçalho re-roda `init(state)`. *(No texto original o retry da falha tardia era um `enrol-refresh` dentro
-do `enrol-main`, removido na D2 `7d69197` — ver nota 2026-07-18.)* Com a `ENROL-ERROR` fechando a falha
-**precoce** e o `enrol-main` cobrindo a **tardia**, a conclusão
-do `mod-participants.md` ("só o atualizar deixa tentar de novo") agora vale para **todos** os estados: os
-alertas `ENROL-EMPTY`/`ENROL-DISABLED` (em que o `init` **teve sucesso** e revelou um alerta), a falha
-tardia, e — desde `c2d9471` — a falha precoce.
+### Concurrency — dedup by `(course, method, cohort)`
 
-### Concorrência — dedup por `(curso, método, coorte)`
+Each combination is an **independent adhoc task**; different combinations run in parallel. The key is
+`process_enrol_method::key($courseid, $method, $cohortid)` (`:102`), `pending_map()`
+(`:114`) is consulted under the queue lock before enqueueing (`queue_enrol_action.php:144-148` →
+`status = 'skipped'`) and execution serialises on the Lock API (`process_enrol_method.php:206-209`,
+60 s timeout → `central_enrol_busy`). The JS only marks `processing` on what did **not** come back
+`skipped` (`enrol_methods.js:671-675`). The same course stays free for the **other** combination — which
+is why `pending` is rebuilt from scratch on every method change (`:769-777`).
 
-Cada combinação é uma **task adhoc independente**; combinações diferentes rodam em paralelo. A
-chave é `process_enrol_method::key($courseid, $method, $cohortid)` (`:102`), o `pending_map()`
-(`:114`) é consultado sob o lock da fila antes de enfileirar (`queue_enrol_action.php:144-148` →
-`status = 'skipped'`) e a execução serializa na Lock API (`process_enrol_method.php:206-209`,
-timeout 60 s → `central_enrol_busy`). O JS só marca `processing` no que **não** voltou `skipped`
-(`enrol_methods.js:671-675`). O mesmo curso segue livre para a **outra** combinação — é por isso
-que `pending` é reconstruído do zero a cada troca de método (`:769-777`).
+### The poll
 
-### O poll
+`POLL_MS = 5000` (`:41`), `setInterval` only while there is something `pending` (`ensurePolling`,
+`:723-733`). Each turn queries `get_enrol_queue_status` (`:693-696`) and flips the finished rows to
+`configured`/`notconfigured`, with a yellow **flash** (`:708`). The timer stops by itself when
+`pending` empties (`:712-714`) **or** when the root leaves the DOM (`!state.root.isConnected`, `:688`)
+— which is what stops the poll from outliving the modal's `setRemoveOnClose`. House rule respected:
+**row changed → flash** (`:626`, `:708`), never a whole-pane spinner.
 
-`POLL_MS = 5000` (`:41`), `setInterval` só enquanto há `pending` (`ensurePolling`, `:723-733`).
-Cada volta consulta `get_enrol_queue_status` e vira as linhas prontas para `configured`/
-`notconfigured`, com **flash** amarelo (`:708`). O timer para sozinho quando `pending` esvazia
-(`:712-714`) **ou** quando a raiz sai do DOM (`!state.root.isConnected`, `:688`) — é o que impede
-o poll de sobreviver ao `setRemoveOnClose` do modal. Regra da casa respeitada: **linha trocada →
-flash** (`:626`, `:708`), nunca spinner de pane inteiro.
+### Contrast: why `bg-secondary` comes with `text-dark`
 
-### Contraste: por que `bg-secondary` vem com `text-dark`
+The comment at `enrol_methods.js:87-88` records the decision, and it measures out: Boost's `secondary`
+is a light grey (`#ced4da`) and the badge's default text is white — **1.49:1**, fails. The pair the
+code ships, `bg-secondary` + `text-dark` (`#1d2125`), gives **10.84:1**. It applies to the
+`ENROL-STATUS` "Not configured" (`:92`) and to `ENROL-GROUP-COUNT` (`enrol_group.mustache:46`).
 
-O comentário de `enrol_methods.js:87-88` registra a decisão, e ela se mede: o `secondary` do Boost
-é um cinza claro (`#ced4da`) e o texto padrão do badge é branco — **1,49:1**, reprova. O par que o
-código shipa, `bg-secondary` + `text-dark` (`#1d2125`), dá **10,84:1**. Vale para o
-`ENROL-STATUS` "Não configurado" (`:92`) e para o `ENROL-GROUP-COUNT` (`enrol_group.mustache:46`).
+## Refresh (`mtube: refresh`) — where it lives, and what this map pins down
 
-## IMP-05 (`mtube: atualizar`) — **esta aba é o precedente visual**
+The decision and the checks live in [`bar-contextbar.md`](bar-contextbar.md). What **this** map pins
+down, independently:
 
-A decisão e as verificações moram em [`bar-contextbar.md`](bar-contextbar.md). O que **este** mapa
-fixa, de forma independente:
-
-- **[Histórico — ver nota 2026-07-18]** Os **quatro** `data-action="enrol-refresh"` por-pane eram,
-  quando este mapa foi escrito, a **única afordância de atualizar de todo o hub**. Foram **removidos
-  na fatia D2 (`7d69197`)** e substituídos por um **refresh no cabeçalho do modal** (`mount` devolve
-  `{refresh: () => init(state)}`, `enrol_methods.js:1111`; ligado por `attachRefresh` em
-  `participants_manager.js:213-232`), que passou a ser a afordância de atualizar. O ponto de
-  precedência do IMP-05 fica **histórico** e a narrativa aguarda re-sync próprio.
-- **Precisão medida (o mapa confirma de forma independente):** `reloadPane` existe
-  (`tabs.js:69`) e tem **24 chamadas em 5 módulos** — `structure` 9, `frameworks` 6, `plans` 6,
-  `context` 2, `competency_browser` 1. **Não** é verdade que "nada expõe `reloadPane`"; o que é
-  verdade é que **nenhum controle de UI** o dispara. (Um `grep -rn reloadPane amd/src/` devolve
-  **36** linhas: as 24 chamadas + 1 definição + 5 imports + 6 comentários — p.ex. `frameworks.js:18`
-  e `plans.js:784`. Contar as 36 como chamadas é o erro fácil.)
-- **Este pane não usa `reloadPane`** e não é exceção a nada: seu atualizar é `init(state)` — hoje via
-  o handle `{refresh: () => init(state)}` que `mount` devolve (`enrol_methods.js:1111`) e o cabeçalho
-  consome — porque ele é **pane de modal**, não pane de aba do `core/dynamic_tabs`; `reloadPane` não
-  o alcançaria.
-- **A disciplina a copiar é a do mtube** (`course_report.js:286-299`, via `sourcesContent` do
-  sourcemap): `disabled = true` + `fa-spin` no ícone, revertidos num `finally`. Os (extintos) quatro
-  botões desta aba **não tinham** essa disciplina — clicar duas vezes disparava dois `init`
-  concorrentes; o refresh de cabeçalho que os substituiu (D2 `7d69197`) deveria nascer com ela. O
-  IMP-05 herda a mesma recomendação.
-- **Rastreabilidade das refs do mtube:** o `format_mtube` **não** tem `amd/src` neste checkout, só
-  `amd/build`. Uma ref de JS do mtube por `file:line` **não resolve para ninguém** — por isso este
-  mapa cita o mtube por **nome de símbolo**. Um `grep` no disco por esse `.js` não achar nada é
-  **esperado**, não é ausência.
+- **This pane's refresh affordance is the modal header's refresh**, not an internal button: `mount`
+  returns `{refresh: () => init(state)}` (`enrol_methods.js:1111`) and the host wires it with
+  `attachRefresh` (`participants_manager.js:232`). The *busy* discipline the four extinct buttons
+  lacked — clicking twice fired two concurrent `init`s — **exists** in the replacement:
+  `modal_refresh.js:70-84` disables the button (`:74`), adds `fa-spin` (`:75`) and clears both in a
+  `finally` (`:80-83`). It is the same shape as `format_mtube`'s `course_report.js`
+  (`:286-299`, via the sourcemap's `sourcesContent`).
+- **Measured precision (this map confirms it independently):** `reloadPane` exists
+  (`tabs.js:69`) and has **24 calls across 5 modules** — `structure` 9, `frameworks` 6, `plans` 6,
+  `context` 2, `competency_browser` 1. (A `grep -rn reloadPane amd/src/` returns **36** lines: the 24
+  calls + 1 definition at `tabs.js:69` + 5 imports + 6 comments — e.g. `frameworks.js:18` and
+  `plans.js:784`. Counting the 36 as calls is the easy mistake.) There **is** a UI control firing it
+  today: the contextbar's `data-action="refresh"` button (`context.js`, 2 of the 24).
+- **This pane does not use `reloadPane`** and is not an exception to anything: its refresh is
+  `init(state)` because it is a **modal pane**, not a `core/dynamic_tabs` tab pane; `reloadPane` would
+  not reach it.
+- **Traceability of the mtube refs:** `format_mtube` has **no** `amd/src` in this checkout, only
+  `amd/build`. An mtube JS ref by `file:line` **resolves for nobody** — which is why this map cites
+  mtube by **symbol name**. A `grep` on disk for that `.js` finding nothing is **expected**, not
+  absence.

@@ -1,38 +1,29 @@
-<!-- @dsCard group="Shared" name="Hero" subtitle="hero_header — title, collapsible description, bg variants, plan due-date · as-is │ to-be: masked fade (no box) + open⇄slim collapse handle + 'See more' pill + anticipatory due-date urgency" -->
+<!-- @dsCard group="Shared" name="Hero" subtitle="hero_header — title, collapsible description with a masked fade, glass 'See more' pill, open⇄slim collapse handle, plan due-date card, bg variants" -->
 <style>
 /* ============================================================================
    Canonical learner-kit scaffold (shared by every screen file).
-   AS-IS token values (Material/Google) live on .kit; the .moodle panel overrides
-   only the tokens that migrate. Markup uses var(--lk-*) so the two panels differ
-   by token values alone. See tokens.html / token-migration.md.
+   The --lk-* block below carries the real styles.css values; the markup uses
+   var(--lk-*) so a token change here is a token change everywhere.
+   See tokens.html / token-migration.md.
    ============================================================================ */
 .kit{
   --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
   --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;--lk-line:#e9ecef;--lk-line-2:#dee2e6;
-  --lk-accent:#667eea;--lk-accent-grad-end:#764ba2;
-  --lk-pill-platter:#f1f3f4;--lk-pill-text:#5f6368;--lk-pill-active-fg:#1a73e8;
-  --lk-counter-bg:#e8eaed;--lk-counter-active-bg:#e8f0fe;
-  --lk-search-border:#e1e3e6;--lk-search-icon:#9aa0a6;--lk-search-glow:rgba(26,115,232,.15);
-  --lk-card-bg:#f9fafb;--lk-card-title:#212121;--lk-success:#28a745;
-  --lk-taxonomy-label:#356df3;--lk-focus-ring:#005fcc;--lk-amber-rated:#e5a100;
-  --lk-modal-note-bg:#fef9c3;--lk-modal-note-fg:#713f12;--lk-modal-note-accent:#eab308;
+  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
+  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
+  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
+  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(26,115,232,.15);
+  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
+  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;--lk-amber-rated:#e5a100;
+  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
   --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
   --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;font-family:var(--font);color:var(--lk-text);background:#e9ebee;margin:0;padding:20px;line-height:1.5;
 }
 .kit *{box-sizing:border-box;}
-.panel.moodle{
-  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
-  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
-  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
-  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(15,108,191,.15);
-  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;--lk-success:#198754;
-  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;
-  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
-}
-.screens{display:flex;flex-wrap:wrap;gap:18px;max-width:1100px;margin:0 auto;}
-.panel{flex:1 1 460px;min-width:340px;border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
+.screens{max-width:760px;margin:0 auto;}
+.panel{border:1px solid #dcdfe3;border-radius:14px;background:var(--lk-page);padding:0 0 18px;overflow:hidden;}
 .plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--lk-text-2);padding:12px 20px 0;}
 .pdot{width:8px;height:8px;border-radius:50%;flex:none;}
 .idb{font-family:var(--mono);font-size:10px;color:var(--lk-pill-text);background:var(--lk-surface);border:1px dashed #b4b2a9;border-radius:6px;padding:0 5px;white-space:nowrap;display:inline-block;}
@@ -41,29 +32,49 @@
 .lk-ids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px 2px;}
 .divlbl{font-size:11px;color:#8a8980;margin:14px 20px 4px;border-top:1px solid var(--lk-line);padding-top:10px;}
 .note{font-size:10px;color:#8a8980;padding:2px 20px;}
-.ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+.pend{margin:14px 20px 0;padding:10px 12px;border:1px dashed #c9a3a3;border-radius:8px;background:#fdf7f4;}
+.pend h4{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#a3552d;margin:0 0 4px;}
+.pend p{font-size:11px;color:var(--lk-text-2);margin:0;line-height:1.5;}
+.pend code{font-family:var(--mono);font-size:10px;}
 
 /* ---- HERO (hero_header.mustache) ----
-   Default background is Bootstrap .bg-primary #0f6cbf — ALREADY Moodle DS, so
-   the two panels are visually identical here. The custom bg/text variants below
-   are per-instance custom-field values (author-chosen), not theme tokens, so they
-   are identical in both panels too. No --lk-* token migrates on this screen. */
+   Default background is Bootstrap .bg-primary #0f6cbf — already Moodle DS. The
+   custom bg/text variants below are per-instance custom-field values (author
+   chosen), not theme tokens, so no --lk-* token drives this screen. */
 .hero-wrap{position:relative;width:100%;overflow:hidden;}
-.hero{min-height:150px;display:flex;align-items:center;padding:1.75rem 0;background:#0f6cbf;}
+.hero{position:relative;min-height:150px;display:flex;align-items:center;padding:1.75rem 0 2.9rem;background:#0f6cbf;}
 .hero-content{width:100%;max-width:fit-content;margin:0;padding:2.25rem 2.5rem;color:#fff;}
 .hero-title{font-size:2rem;font-weight:700;margin:0 0 .75rem;line-height:1.2;}
 .hero-desc{position:relative;color:rgba(255,255,255,.85);font-size:1rem;line-height:1.6;max-width:800px;}
-.hero-desc .clip{max-height:4.8em;overflow:hidden;}
+/* The clipped text fades via a mask on the text itself — the shared fade rectangle
+   that collapsible_description ships is suppressed inside the hero. */
+.hero-desc .clip{max-height:4.8em;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);}
 .hero-desc p{margin:0;color:inherit;}
-.hero-fade{position:absolute;left:0;right:0;bottom:2.4rem;height:2.4rem;pointer-events:none;background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,.55) 100%);}
-.hero-toggle{display:inline-flex;align-items:center;gap:.35rem;margin-top:.5rem;padding:.25rem 0;border:none;background:none;font-size:.875rem;font-weight:500;color:inherit;opacity:.85;cursor:pointer;}
+/* "See more" reads as a translucent glass pill, matching the due-date card's material. */
+.hero-toggle{display:inline-flex;align-items:center;gap:.35rem;margin-top:.6rem;padding:.32rem .75rem;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:.45rem;font-size:.875rem;font-weight:600;color:inherit;opacity:1;cursor:pointer;}
+.hero-toggle:hover{background:rgba(255,255,255,.26);}
 .hero-toggle svg{width:.7rem;height:.7rem;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+/* Ghost handle centred on the hero's bottom edge — folds open <-> slim. */
+.hero-collapse{position:absolute;left:50%;bottom:.7rem;z-index:1;transform:translateX(-50%);display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .95rem;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);border-radius:999px;color:#fff;font-size:.76rem;font-weight:600;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap;}
+.hero-collapse:hover{background:rgba(255,255,255,.26);}
+.hero-collapse svg{width:.85rem;height:.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;}
+/* Glass due-date card (plan only). */
 .duedate{display:inline-flex;align-items:center;gap:.75rem;margin-top:1.25rem;padding:.75rem 1.25rem;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);border-radius:.5rem;}
 .dd-ic{display:block;flex-shrink:0;width:20px;height:20px;stroke:#f5f8ff;fill:none;stroke-width:2;stroke-linecap:round;}
 .dd-txt{display:flex;flex-direction:column;gap:.125rem;}
 .dd-lbl{font-size:.75rem;font-weight:500;letter-spacing:.05em;color:rgba(255,255,255,.7);}
 .dd-val{font-size:1rem;font-weight:600;color:#fff;}
-/* background variants (author custom-field values — identical in both panels) */
+/* Slim state: the same elements, folded. The title and the due-date pill share one row,
+   the description is hidden and the standing label goes screen-reader only. */
+.hero.slim{min-height:0;padding:1.1rem 0 2.9rem;}
+.hero.slim .hero-content{max-width:none;width:100%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem 1rem;padding:.5rem 2.5rem;}
+.hero.slim .hero-title{font-size:1.4rem;margin-bottom:0;}
+.hero.slim .hero-desc{display:none;}
+.hero.slim .duedate{flex:none;gap:.4rem;margin-top:0;padding:.28rem .75rem;border-radius:999px;}
+.hero.slim .dd-ic{width:16px;height:16px;}
+.hero.slim .dd-lbl{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;}
+.hero.slim .dd-val{font-size:.82rem;}
+/* background variants (author custom-field values) */
 .hvs-wrap{padding:0 20px;display:grid;gap:8px;}
 .hv{min-height:92px;border-radius:10px;overflow:hidden;display:flex;align-items:center;position:relative;}
 .hv .hvc{padding:1rem 1.25rem;color:#fff;position:relative;z-index:1;}
@@ -75,37 +86,7 @@
 .hv.text{background:#ffe08a;}
 .hv.text .hvc{color:#7a3e00;}
 
-/* ==== to-be: clearer "See more" pill · due-date with anticipatory urgency ==== */
-.hero-toggle.btn2{margin-top:.6rem;padding:.32rem .75rem;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:.45rem;opacity:1;font-weight:600;}
-.hero-toggle.btn2:hover{background:rgba(255,255,255,.26);}
-.dd-primary{font-size:1rem;font-weight:700;color:#fff;line-height:1.2;}
-.dd-date{font-size:.78rem;color:rgba(255,255,255,.72);margin-top:.1rem;}
-/* a solid left-accent carries the urgency on ANY hero bg (the alpha tint alone is bg-fragile) */
-.duedate.soon{background:rgba(255,202,58,.22);border-color:rgba(255,202,58,.5);border-left:3px solid #ffca3a;}
-.duedate.soon .dd-ic{stroke:#ffe08a;}
-.duedate.over{background:rgba(255,107,107,.24);border-color:rgba(255,107,107,.55);border-left:3px solid #ff6b6b;}
-.duedate.over .dd-ic{stroke:#ffd0d0;}
-/* demo backdrop so the glass cards are legible off a hero */
-.dd-states{display:flex;flex-direction:column;gap:8px;margin:0 20px;padding:14px;background:#0f6cbf;border-radius:10px;}
-.dd-states .duedate{margin-top:0;}
-
-/* fade fix — mask the clipped text so it fades out smoothly (no boxy dark rectangle over a rounded design) */
-.hero-desc .clip.masked{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);}
-/* whole-hero open <-> slim — a centered ghost "handle" at the hero's bottom edge; page content sits below */
-.hero.has-handle{padding-bottom:2.9rem;}
-.hero-collapse{position:absolute;left:50%;bottom:.7rem;transform:translateX(-50%);display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .95rem;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);border-radius:999px;color:#fff;font-size:.76rem;font-weight:600;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap;}
-.hero-collapse:hover{background:rgba(255,255,255,.26);}
-.hero-collapse svg{width:.85rem;height:.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;}
-/* slim hero — title + due-date on one line (date right of title); wraps on small screens; no description */
-.hero.slim{min-height:0;padding:1.1rem 0 2.9rem;}
-.hero.slim .hero-content{max-width:none;width:100%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem 1rem;padding-top:.5rem;padding-bottom:.4rem;}
-.slim-title{font-size:1.4rem;font-weight:700;margin:0;line-height:1.25;}
-.slim-due{flex:none;display:inline-flex;align-items:center;gap:.4rem;padding:.28rem .75rem;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);font-size:.82rem;font-weight:600;color:#fff;white-space:nowrap;}
-.slim-due svg{width:.85rem;height:.85rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.slim-due.soon{background:rgba(255,202,58,.24);border-color:rgba(255,202,58,.55);border-left:3px solid #ffca3a;}
-.slim-due.over{background:rgba(255,107,107,.26);border-color:rgba(255,107,107,.6);border-left:3px solid #ff6b6b;}
-
-.legend{max-width:1100px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
+.legend{max-width:760px;margin:16px auto 0;background:var(--lk-surface);border:1px solid #e3e1da;border-radius:12px;padding:14px 18px;}
 .legend h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8980;margin:0 0 10px;}
 .leg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:baseline;}
 .leg .k{font-family:var(--mono);font-size:11px;color:#a3552d;white-space:nowrap;}
@@ -115,32 +96,32 @@
 </style>
 <div class="kit"><div class="screens">
 
-  <!-- ============ AS-IS ============ -->
   <div class="panel">
-    <div class="plabel"><span class="pdot" style="background:#8a8980"></span>As-is · Material</div>
+    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>As-is &middot; what ships today</div>
 
-    <div class="lk-cap">Tracker hero (competency) · <span class="idb">TRK-HERO</span></div>
+    <div class="lk-cap">Tracker hero (competency) &mdash; open &middot; <span class="idb">TRK-HERO</span></div>
     <div class="hero-wrap">
       <div class="hero">
         <div class="hero-content">
           <h1 class="hero-title">Written Communication</h1>
           <div class="hero-desc">
             <div class="clip"><p>Develop the ability to produce clear, cohesive texts appropriate to a range of professional contexts &mdash; from technical reports to executive summaries and client correspondence &mdash; applying register, structure and tone deliberately across every deliverable.</p></div>
-            <div class="hero-fade"></div>
             <button class="hero-toggle">See more <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
           </div>
         </div>
+        <button class="hero-collapse" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>Collapse</button>
       </div>
     </div>
     <div class="lk-ids">
       <span class="idb">TRK-HERO-TITLE · format_string(shortname)</span>
-      <span class="idb">TRK-HERO-DESC · collapsible, 30vh cap</span>
-      <span class="idb">OVW-DESC-TOGGLE · See more/less (shared; only when overflowing)</span>
+      <span class="idb">TRK-HERO-DESC · collapsible, 30vh cap, masked text fade</span>
+      <span class="idb">OVW-DESC-TOGGLE · glass "See more" pill (shared; only when overflowing)</span>
+      <span class="idb">HERO-COLLAPSE · centred ghost handle</span>
       <span class="idb">TRK-HERO-BG · bg-primary default</span>
-      <span class="idb r">no due-date on the tracker</span>
+      <span class="idb r">no due-date on the tracker — hasduedate is set by the plan page only</span>
     </div>
 
-    <div class="divlbl">Plan hero (overview) — adds a glass due-date card · <span class="idb">OVW-HERO</span></div>
+    <div class="divlbl">Plan hero (overview) &mdash; adds a glass due-date card &middot; <span class="idb">OVW-HERO</span></div>
     <div class="hero-wrap">
       <div class="hero">
         <div class="hero-content">
@@ -151,6 +132,7 @@
             <span class="dd-txt"><span class="dd-lbl">Due date</span><span class="dd-val">31 January 2026</span></span>
           </div>
         </div>
+        <button class="hero-collapse" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>Collapse</button>
       </div>
     </div>
     <div class="lk-ids">
@@ -160,98 +142,51 @@
       <span class="idb">OVW-HERO-BG · lp-area custom fields</span>
     </div>
 
-    <div class="divlbl">Background variants — custom fields (author values, same both panels) · <span class="idb">TRK-HERO-BG</span> <span class="idb">OVW-HERO-BG</span></div>
-    <div class="hvs-wrap">
-      <div class="hv flat"><div class="hvc"><p class="hvt">Written Communication</p><p class="hvsub">custombgcolor · flat colour</p></div></div>
-      <div class="hv img"><div class="hvc"><p class="hvt">Written Communication</p><p class="hvsub">custombgimage + radial overlay (custombgcolor tints it)</p></div></div>
-      <div class="hv text"><div class="hvc"><p class="hvt">Written Communication</p><p class="hvsub">customtextcolor · dark text, light bg</p></div></div>
-    </div>
-    <div class="note">Default = Bootstrap <code>.bg-primary</code> (#0f6cbf) — already Moodle DS. Custom bg/text are per-instance author values, not theme tokens.</div>
-    <div class="note" style="padding-top:6px"><span class="idb r">TRK-FAB</span> Return-to-Plan FAB is emitted on these pages by <code>hook_callbacks::before_footer_html_generation</code> — a global footer component, cross-referenced here, not a hero element.</div>
-  </div>
-
-  <!-- ============ TO-BE ============ -->
-  <div class="panel moodle">
-    <div class="plabel"><span class="pdot" style="background:#0f6cbf"></span>To-be · masked fade · open⇄slim collapse · "See more" pill · due-date urgency</div>
-
-    <div class="lk-cap">Tracker hero — open · masked fade (no box) + clear "See more" + collapse handle · <span class="idb r">TRK-HERO · to-be</span></div>
+    <div class="divlbl">Slim state &mdash; the same elements folded onto one row &middot; <span class="idb">OVW-HERO-SLIM</span> <span class="idb">HERO-COLLAPSE</span></div>
     <div class="hero-wrap">
-      <div class="hero has-handle">
-        <div class="hero-content">
-          <h1 class="hero-title">Written Communication</h1>
-          <div class="hero-desc">
-            <div class="clip masked"><p>Develop the ability to produce clear, cohesive texts appropriate to a range of professional contexts &mdash; from technical reports to executive summaries and client correspondence &mdash; applying register, structure and tone deliberately across every deliverable.</p></div>
-            <button class="hero-toggle btn2">See more <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
-          </div>
-        </div>
-      </div>
-      <button class="hero-collapse" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>Collapse</button>
-    </div>
-    <div class="lk-ids">
-      <span class="idb r">HERO-DESC · <b>masked</b> text fade — no boxy dark rectangle</span>
-      <span class="idb r">OVW-DESC-TOGGLE · "See more" now a clear glass pill</span>
-      <span class="idb r">HERO-COLLAPSE · centered ghost handle → slim</span>
-    </div>
-
-    <div class="divlbl">Plan hero — <b>open</b> (full welcome card) · due-date urgency + collapse handle · <span class="idb r">OVW-HERO · to-be</span></div>
-    <div class="hero-wrap">
-      <div class="hero has-handle">
+      <div class="hero slim">
         <div class="hero-content">
           <h1 class="hero-title">Professional Development Plan 2026</h1>
           <div class="hero-desc"><div class="clip"><p>An integrated pathway of general competencies for professional training.</p></div></div>
           <div class="duedate">
             <svg class="dd-ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
-            <span class="dd-txt"><span class="dd-primary">Due in 12 days</span><span class="dd-date">31 January 2026</span></span>
+            <span class="dd-txt"><span class="dd-lbl">Due date</span><span class="dd-val">31 January 2026</span></span>
           </div>
         </div>
+        <button class="hero-collapse" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>Expand</button>
       </div>
-      <button class="hero-collapse" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>Collapse</button>
     </div>
-    <div class="lk-ids">
-      <span class="idb r">OVW-HERO-DUEDATE · "Due in N days" leads; absolute date secondary</span>
-      <span class="idb r">urgency colour: neutral → amber (soon) → red (overdue)</span>
-    </div>
-
-    <div class="divlbl">Plan hero — <b>slim</b> (returning users) · title + due-date right, no description · <span class="idb r">OVW-HERO-SLIM · to-be</span></div>
-    <div class="hero-wrap">
+    <div class="hero-wrap" style="margin-top:8px">
       <div class="hero slim">
         <div class="hero-content">
-          <h1 class="slim-title">Professional Development Plan 2026</h1>
-          <span class="slim-due"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Due in 12 days · 31 Jan 2026</span>
+          <h1 class="hero-title">Written Communication</h1>
+          <div class="hero-desc"><div class="clip"><p>Develop the ability to produce clear, cohesive texts appropriate to a range of professional contexts.</p></div></div>
         </div>
-      </div>
-      <button class="hero-collapse" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>Expand</button>
-    </div>
-    <div class="lk-ids">
-      <span class="idb r">OVW-HERO-SLIM · title + right-aligned due-date pill, no description</span>
-      <span class="idb">responsive — the due-date wraps under the title on narrow screens</span>
-      <span class="idb">open/slim state persists per user (like the FAB position)</span>
-    </div>
-
-    <div class="divlbl">Due-date urgency states — derived from <code>duedate</code> vs today <span class="idb r">OVW-HERO-DUEDATE · to-be</span></div>
-    <div class="dd-states">
-      <div class="duedate soon">
-        <svg class="dd-ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
-        <span class="dd-txt"><span class="dd-primary">Due in 3 days</span><span class="dd-date">31 January 2026</span></span>
-      </div>
-      <div class="duedate over">
-        <svg class="dd-ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
-        <span class="dd-txt"><span class="dd-primary">Overdue by 5 days</span><span class="dd-date">was due 31 January 2026</span></span>
+        <button class="hero-collapse" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>Expand</button>
       </div>
     </div>
     <div class="lk-ids">
-      <span class="idb">soon = within ~7 days (amber) · over = past due (red)</span>
-      <span class="idb">shown only when <code>duedate &gt; 0</code> · plan only</span>
+      <span class="idb">the description is display:none; the due-date card folds to a pill</span>
+      <span class="idb">its "Due date" label stays for screen readers only (clip-path)</span>
+      <span class="idb">the tracker slim is title-only — no due-date to fold</span>
+      <span class="idb">the row wraps on narrow screens (flex-wrap)</span>
+      <span class="idb">folded/open persists per plan and per competency in a user preference</span>
     </div>
 
-    <div class="divlbl">Background variants — custom fields (author values, same both panels) · <span class="idb">TRK-HERO-BG</span> <span class="idb">OVW-HERO-BG</span></div>
+    <div class="divlbl">Background variants &mdash; custom fields (author values) &middot; <span class="idb">TRK-HERO-BG</span> <span class="idb">OVW-HERO-BG</span></div>
     <div class="hvs-wrap">
       <div class="hv flat"><div class="hvc"><p class="hvt">Written Communication</p><p class="hvsub">custombgcolor · flat colour</p></div></div>
       <div class="hv img"><div class="hvc"><p class="hvt">Written Communication</p><p class="hvsub">custombgimage + radial overlay (custombgcolor tints it)</p></div></div>
       <div class="hv text"><div class="hvc"><p class="hvt">Written Communication</p><p class="hvsub">customtextcolor · dark text, light bg</p></div></div>
     </div>
-    <div class="note">To-be changes (no token migration — default is already <code>--primary</code>, bg variants are author values): (1) the boxy dark fade over the clipped description is replaced by a <b>text mask</b> that fades the text out smoothly — no square container on a rounded design; (2) the hero can <b>collapse to a slim state</b> via a centered ghost <b>handle</b> — the full welcome card (rich description, video, "See more") folds to just the title + a right-aligned due-date, for users who return to the plan/competency often; the open/slim choice persists per user. (3) the faint "See more" is a clear <b>glass pill</b>; (4) the plan due-date gains <b>anticipatory urgency</b> — "Due in {N} days" leads (absolute date secondary), neutral → <b>amber</b> (~7 days) → <b>red</b> "Overdue by {N} days · was due {date}", all from <code>duedate</code> vs today (plan only). The slim row wraps on narrow screens. Background variants unchanged.</div>
-    <div class="note" style="padding-top:6px"><span class="idb r">TRK-FAB</span> FAB colour <code>var(--local-dimensions-fab-color, #667eea)</code> migrates with the global component — tracked there, not in the hero.</div>
+    <div class="note">Default = Bootstrap <code>.bg-primary</code> (#0f6cbf) &mdash; already Moodle DS. Custom bg/text are per-instance author values, not theme tokens, so no <code>--lk-*</code> token drives this screen.</div>
+    <div class="note" style="padding-top:6px">The due-date glyph is not inline SVG in the shipped markup: it is an <code>&lt;img&gt;</code> whose <code>src</code> is <code>duedateiconurl</code>, resolved from <code>pix/status/calendar-light.svg</code>. The drawing above reproduces that file's paths so the preview stays self-contained.</div>
+    <div class="note" style="padding-top:6px"><span class="idb r">TRK-FAB</span> Return-to-Plan FAB is emitted on these pages by <code>hook_callbacks::before_footer_html_generation</code> &mdash; a global footer component, cross-referenced here, not a hero element. Its colour falls back to <code>#0f6cbf</code> (<code>styles.css:4342</code>, <code>return_button.mustache:45</code>), so it moved with the palette.</div>
+
+    <div class="pend">
+      <h4>Pending — anticipatory due-date urgency</h4>
+      <p>Designed but not built: a due-date card that leads with the relative <b>"Due in {N} days"</b> (absolute date secondary) and shifts neutral &rarr; amber when due soon &rarr; red "Overdue by {N} days" past due. Evidence of absence: <code>hero_header.mustache:76-84</code> renders a plain <code>.local-dimensions-duedate-card</code> &mdash; icon, the fixed <code>duedate</code> label, the formatted value &mdash; and <code>styles.css:555-591</code> has no urgency state; the only relative-time string that would carry it does not exist (<code>lang/en/local_dimensions.php</code> has <code>duedate</code> at :351, <code>column_duedate</code> at :302 and <code>managetemplates_duedate</code> at :498, and grep for "Due in" / "Overdue" returns nothing anywhere in the plugin).</p>
+    </div>
   </div>
 
 </div>
@@ -259,16 +194,16 @@
 <div class="legend">
   <h3>ID legend — Hero (shared: view-competency + view-plan)</h3>
   <div class="leg">
-    <span class="k">TRK-HERO-TITLE</span><span class="v"><b>Competency title</b> — <code>format_string($competency-&gt;shortname)</code>, triple-stash <code>{{{title}}}</code> <span class="rule">view_competency_page.php:106 · hero_header.mustache:56</span></span>
-    <span class="k">TRK-HERO-DESC</span><span class="v"><b>Collapsible description</b> — <code>format_text(description, descriptionformat)</code>, capped at 30vh (<code>--collapsible-max-vh</code>); can be rich HTML incl. video. <b>To-be:</b> the clipped text uses a <b>mask-image fade</b> so it dissolves at the bottom edge — replacing the <code>.hero-fade</code> dark rectangle whose straight corners looked boxy on a rounded design. <span class="rule">view_competency_page.php:100-103 · collapsible_description.mustache</span></span>
-    <span class="k">HERO-COLLAPSE</span><span class="v"><b>(to-be) Open ⇄ slim toggle</b> — a centered ghost/glass <b>handle</b> at the hero's bottom edge that folds the full welcome card (title + rich description/video + "See more" + due-date) down to a <b>slim</b> state, and back. For learners who return to a plan/competency often and don't need the big header each time. The choice <b>persists per user</b> (a <code>user_preference</code>, like the FAB position), and honours reduced-motion. <span class="rule">new: hero_header.mustache + a small AMD toggle + user_preference</span></span>
-    <span class="k">OVW-HERO-SLIM</span><span class="v"><b>(to-be) Slim hero</b> — just the <b>title</b> with the <b>due-date aligned to its right</b> (the anticipatory urgency pill), <b>no description</b>; compact height. Responsive — the due-date wraps under the title on narrow screens (<code>flex-wrap</code>). The tracker (competency) slim has no due-date, so it's title-only. <span class="rule">new markup branch on <code>hero_header</code></span></span>
-    <span class="k">TRK-HERO-BG</span><span class="v"><b>Hero style</b> — competency-area custom fields <code>custombgcolor</code> / <code>customtextcolor</code> / <code>custombgimage</code>; else class <code>bg-primary</code> <span class="rule">view_competency_page.php:92-118 · hero_header.mustache:51-54</span></span>
-    <span class="k">OVW-HERO-TITLE</span><span class="v"><b>Plan title</b> — template <code>shortname</code>, else the plan's own <code>name</code> (individual plans) <span class="rule">view_plan_summary_page.php:80-81</span></span>
-    <span class="k">OVW-HERO-DESC</span><span class="v"><b>Plan description</b> — template <code>description</code>, else the plan's own; same collapsible partial <span class="rule">view_plan_summary_page.php:82-87</span></span>
-    <span class="k">OVW-HERO-DUEDATE</span><span class="v"><b>Glass due-date card</b> — <b>plan only</b>; <code>userdate(duedate, strftimedaydatetime)</code>, shown only when <code>duedate &gt; 0</code>. <b>To-be:</b> gains <b>anticipatory urgency</b> — the relative "Due in {N} days" leads (absolute date secondary), and the glass shifts neutral → <b>amber</b> when due within ~7 days → <b>red</b> "Overdue by {N} days" past due — all computed from <code>duedate</code> vs now (a JS/PHP day-diff), no new data. Needs the relative-time lang strings. <span class="rule">view_plan_summary_page.php:98-102 · hero_header.mustache:64-72</span></span>
-    <span class="k">OVW-HERO-BG</span><span class="v"><b>Plan hero style</b> — lp-area custom fields (<code>custombgimage</code> + <code>custombgcolor</code>/<code>customtextcolor</code>); image sets <code>--hero-bg-image</code> + radial overlay <span class="rule">view_plan_summary_page.php:93-108 · styles.css:635-686</span></span>
-    <span class="k">OVW-DESC-TOGGLE</span><span class="v"><b>See more / See less</b> — button starts <code>hidden</code>; JS sets <code>toggle.hidden</code> from measured overflow, so it appears only when content exceeds 30vh. <b>To-be:</b> the faint text link becomes a clear <b>glass pill</b> (translucent white on the hero) so it reads as interactive. <span class="rule">collapsible_description.js measure() · collapsible_description.mustache:47-56</span></span>
+    <span class="k">TRK-HERO-TITLE</span><span class="v"><b>Competency title</b> — <code>format_string($competency-&gt;shortname)</code>, triple-stash <code>{{{title}}}</code> <span class="rule">view_competency_page.php:109 · hero_header.mustache:68</span></span>
+    <span class="k">TRK-HERO-DESC</span><span class="v"><b>Collapsible description</b> — <code>format_text(description, descriptionformat)</code>, capped at 30vh (<code>--collapsible-max-vh</code>); can be rich HTML incl. video. Inside the hero the shared fade rectangle is suppressed and the clipped text carries a <b>mask-image fade</b> instead, so it dissolves at the bottom edge rather than sitting under a square dark panel. <span class="rule">view_competency_page.php:100-103 · collapsible_description.mustache:40-57 · styles.css:4540-4547</span></span>
+    <span class="k">HERO-COLLAPSE</span><span class="v"><b>Open ⇄ slim handle</b> — a centred glass handle on the hero's bottom edge folds the header to its slim state and back. The button carries <code>data-hero-collapse</code>, its own <code>data-hero-key</code> ('p'+planid or 'c'+competencyid) and <code>data-hero-state</code>, the whole stored fold list; the chevron and the Collapse/Expand label swap with <code>aria-expanded</code>. State is resolved <b>server-side</b> and rendered already folded, so the module only flips it. It persists as the user preference <code>local_dimensions_learner_hero</code>, a JSON list of folded keys capped at 100, written through <code>core_user/repository</code>. Transitions are dropped under reduced motion. <span class="rule">hero_header.mustache:86-97 · amd/src/hero_collapse.js · helper.php:2364 resolve_hero_state · styles.css:600-635, :708-715</span></span>
+    <span class="k">OVW-HERO-SLIM</span><span class="v"><b>Slim hero</b> — the title and the due-date share one row, the description is <code>display:none</code> and the band loses its tall padding. The glass card folds to a pill and its standing "Due date" label becomes screen-reader only (there is no room for a second line, and the icon alone would leave the date unexplained). The row wraps on narrow screens. The tracker hero has no due date, so its slim state is title-only. Folding also re-measures the collapsible description, which measures as non-overflowing while hidden. <span class="rule">styles.css:640-699 · hero_collapse.js imports remeasure from collapsible_description</span></span>
+    <span class="k">TRK-HERO-BG</span><span class="v"><b>Hero style</b> — competency-area custom fields <code>custombgcolor</code> / <code>customtextcolor</code> / <code>custombgimage</code>; else class <code>bg-primary</code> <span class="rule">view_competency_page.php:92-98 · hero_header.mustache:63-66</span></span>
+    <span class="k">OVW-HERO-TITLE</span><span class="v"><b>Plan title</b> — template <code>shortname</code>, else the plan's own <code>name</code> (individual plans) <span class="rule">view_plan_summary_page.php:161-162</span></span>
+    <span class="k">OVW-HERO-DESC</span><span class="v"><b>Plan description</b> — template <code>description</code>, else the plan's own; same collapsible partial <span class="rule">view_plan_summary_page.php:163-168</span></span>
+    <span class="k">OVW-HERO-DUEDATE</span><span class="v"><b>Glass due-date card</b> — <b>plan only</b>; <code>userdate($duedate, get_string('strftimedaydatetime', 'langconfig'))</code>, rendered only when <code>duedate &gt; 0</code>. Icon + the fixed <code>duedate</code> label + the formatted value; no relative or urgency state (see the Pending note). <span class="rule">view_plan_summary_page.php:178-183, :208-209, :218 · hero_header.mustache:76-84 · styles.css:555-591</span></span>
+    <span class="k">OVW-HERO-BG</span><span class="v"><b>Plan hero style</b> — lp-area custom fields (<code>custombgimage</code> + <code>custombgcolor</code>/<code>customtextcolor</code>); image sets <code>--hero-bg-image</code> on the wrapper plus a radial overlay <span class="rule">view_plan_summary_page.php:170-189 · styles.css:767-799</span></span>
+    <span class="k">OVW-DESC-TOGGLE</span><span class="v"><b>See more / See less</b> — button ships <code>hidden</code>; JS sets <code>toggle.hidden</code> from measured overflow, so it appears only when content exceeds the cap. Inside the hero it is a translucent <b>glass pill</b> matching the due-date card's material, not the faint text link the other consumers get. Strings <code>show_more</code> / <code>show_less</code> = "See more" / "See less". <span class="rule">collapsible_description.js measure() · collapsible_description.mustache:47-56 · styles.css:4551-4573</span></span>
     <span class="k">TRK-FAB</span><span class="v"><i>Reference</i> — draggable "Return to Plan" FAB emitted on both pages before the footer; a global component, not part of the hero <span class="rule">hook_callbacks.php:49 before_footer_html_generation</span></span>
   </div>
 </div>
