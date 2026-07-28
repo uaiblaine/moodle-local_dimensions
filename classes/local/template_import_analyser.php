@@ -282,6 +282,7 @@ class template_import_analyser {
             'linksmatched' => 0,
             'linksunresolved' => 0,
             'blast' => $this->empty_blast(),
+            'remaps' => $this->build_remaps($cf),
             'selectable' => true,
             'preselected' => true,
         ];
@@ -984,6 +985,42 @@ class template_import_analyser {
     }
 
     /**
+     * The per-value remap controls for option labels this site does not have.
+     *
+     * The admin-editable tag and type option lists are seeded once, never re-synced, and are
+     * separate per area, so their labels are genuinely site-local. Reporting the mismatch is not
+     * enough on its own: without a control the label would land on index 0 — cleared — which is
+     * a silent change. Offering the target's own options plus an explicit "clear" makes the
+     * outcome the operator's choice.
+     *
+     * @param array $cf The row's custom-field cells.
+     * @return array Each an array of token, value and options.
+     */
+    protected function build_remaps(array $cf): array {
+        $remaps = [];
+        foreach (['cf_tag1', 'cf_tag2', 'cf_type'] as $token) {
+            $value = (string) ($cf[$token] ?? '');
+            $field = $this->fields[self::CF_FIELDS[$token]] ?? null;
+            if ($value === '' || !$field) {
+                continue;
+            }
+            $options = helper::select_raw_options($field);
+            if (in_array($value, $options, true)) {
+                continue;
+            }
+            $choices = [[
+                'value' => '',
+                'label' => get_string('central_plans_import_remap_clear', 'local_dimensions'),
+            ]];
+            foreach ($options as $option) {
+                $choices[] = ['value' => $option, 'label' => $option];
+            }
+            $remaps[] = ['token' => $token, 'value' => $value, 'options' => $choices];
+        }
+        return $remaps;
+    }
+
+    /**
      * Reduce one custom-field form value to a comparable scalar.
      *
      * @param mixed $value An index, a string, or an editor array.
@@ -1154,6 +1191,7 @@ class template_import_analyser {
             'linksmatched' => 0,
             'linksunresolved' => 0,
             'blast' => $this->empty_blast(),
+            'remaps' => [],
             'selectable' => false,
             'preselected' => false,
         ];
@@ -1219,6 +1257,9 @@ class template_import_analyser {
             $item['diff'],
             $competencyids,
             $existing,
+            // Included so that an option list edited on the target between the preview and the
+            // apply moves the fingerprint rather than silently changing what a remap means.
+            $item['remaps'] ?? [],
         ]));
     }
 

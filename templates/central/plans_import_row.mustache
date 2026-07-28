@@ -33,6 +33,7 @@
     * hasoutcome (bool) · outcomelabel (string) · outcomebadge (string) · set only on a repaint
     * hasdiff (bool) · diff (array) {field, from, to}
     * hasremedies (bool) · remedies (array) {remedy, label, selected, name, id}
+    * hasremaps (bool) · remaps (array) {token, value, id, label, options {value, label}}
     * haslinks (bool) · links (array) {itemkey, name, statuslabel, statusbadge, confidencelabel,
       hasdetail, detail, selectable, preselected, checkboxid}
     * hasblast (bool) · blastlabel (string)
@@ -63,6 +64,12 @@
         "diff": [{"field": "shortname", "from": "Induction", "to": "Induction plan"}],
         "hasremedies": false,
         "remedies": [],
+        "hasremaps": true,
+        "remaps": [
+            {"token": "cf_tag1", "value": "Year 1", "id": "ld-tplimp-remap-t0-cf_tag1",
+             "label": "cf_tag1: \"Year 1\" has no option here",
+             "options": [{"value": "", "label": "Clear this value"}, {"value": "Stage 1", "label": "Stage 1"}]}
+        ],
         "haslinks": true,
         "links": [
             {"itemkey": "t0l0", "name": "Communication (COMM-01) · CORE", "statuslabel": "Matched",
@@ -118,6 +125,21 @@
         {{/remedies}}
     </div>
     {{/hasremedies}}
+
+    {{#hasremaps}}
+    <div class="local-dimensions-tplimport-remaps">
+        {{#remaps}}
+        <span class="local-dimensions-tplimport-remap">
+            <label for="{{id}}">{{label}}</label>
+            <select class="form-select form-select-sm" id="{{id}}" data-region="remap" data-token="{{token}}">
+                {{#options}}
+                <option value="{{value}}">{{label}}</option>
+                {{/options}}
+            </select>
+        </span>
+        {{/remaps}}
+    </div>
+    {{/hasremaps}}
 
     {{#haslinks}}
     <div class="local-dimensions-tplimport-links">

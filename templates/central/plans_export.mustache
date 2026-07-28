@@ -56,4 +56,18 @@
             <span class="visually-hidden">{{#str}}central_plans_exporting, local_dimensions{{/str}}</span>
         </span>
     </div>
+
+    <p class="local-dimensions-tplimport-reassurance mt-3">
+        {{#str}}central_plans_export_lossy, local_dimensions{{/str}}
+    </p>
+
+    {{! Filled in after a successful export: one companion download per referenced structure,
+        through the Structures tab's own export web service. A plan without its structures cannot
+        be imported anywhere, so they are offered where the operator already is. }}
+    <div data-region="export-frameworks" hidden>
+        <span class="local-dimensions-tplimport-sublabel">
+            {{#str}}central_plans_export_structures, local_dimensions{{/str}}
+        </span>
+        <div class="d-flex flex-wrap gap-2 mt-1" data-region="export-frameworklist"></div>
+    </div>
 </div>
