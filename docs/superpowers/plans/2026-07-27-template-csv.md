@@ -12,25 +12,26 @@
 
 **Kit:** `docs/design-kit/maps/pln-plans.md`, `docs/design-kit/maps/mod-forms.md`
 
-## Status at handoff (2026-07-27)
+## Status (2026-07-28) — all eight tasks landed locally
 
-Task 1's **server half is landed**: the serializer, the helper extensions, the export web service,
-its registration, the `version.php` bump, four lang strings and both test files. Nothing is
-reachable from the UI yet, so the plugin behaves exactly as before this work.
+Every task is implemented and committed on `main` (eight commits, `1cb27a4`..`f63003f`), none
+pushed. The build environment was in place this time: the plugin sits at
+`<moodle>/public/local/dimensions` as a real directory and the Moodle root has `node_modules`, so
+grunt, eslint and stylelint all ran, and every `amd/src` change ships its rebuilt `amd/build`.
 
-Task 1's **front-end half is not started**, and was deliberately stopped rather than half-built:
-the machine it was written on had no `node_modules` in the Moodle checkout and no mirror of this
-plugin at `<moodle>/public/local/dimensions`, so `npx grunt amd --root=public/local/dimensions`,
-eslint and stylelint could none of them run — and shipping an `amd/src` change without its
-rebuilt `amd/build` output violates this repo's own rule. A toolbar button with no working
-handler would also be a dead control. To resume, put the plugin clone at
-`<moodle>/public/local/dimensions` as a **real directory** (grunt does not follow a symlink) and
-run `npm install` in the Moodle root.
+**A constraint below turned out to be wrong on this machine:** there IS a `php` binary
+(`/opt/homebrew/bin/php`, 8.5), so `php -l` ran over all 23 changed PHP files. PHPUnit still cannot
+run: the Moodle checkout has no `phpunit_prefix` / `phpunit_dataroot` in `config.php` and no
+generated `phpunit.xml`, so the test environment was never initialised. Every PHPUnit and Behat
+assertion in these commits is therefore written-but-unrun, and CI on the next push is still their
+first execution.
 
-Also unwritten for the same reason: the design-kit map rows and the README bullet. Both document
-**shipped** regions with line references, and writing them before the UI exists would put a known
-falsehood into a kit the spec already criticises for staleness. Write them in task 8, from the
-real markup.
+Three decisions were taken beyond the spec and are recorded in the commits that made them:
+preview rows are divs rather than `<tr>` (CI's mustache lint renders the row partial standalone and
+validates the HTML); an empty `visible` or `descriptionformat` cell is treated as "not specified"
+rather than as 0; and `lp_handler::get_instance_context()` deliberately stays on the system context,
+because moving it would split existing `customfield_data` rows and their file areas across two
+contexts with no upgrade step.
 
 ## Global Constraints
 
@@ -138,14 +139,14 @@ Shippable: the projection is reachable and renderable, and there is still no app
 - Consumes: `template_import_analyser`, `template_import_plan`, `template_import_verdict`.
 - Produces: `local_dimensions_preview_import_templates` returning `{html PARAM_RAW, counts, missingframeworks[], canapply PARAM_BOOL}`; the `<tr data-itemkey data-fingerprint data-verdict>` contract task 5's JS reads back.
 
-- [ ] **Step 1: Write the failing web-service test.** Through `clean_returnvalue()`; a `required_capability_exception` case; a bogus `contextid` returning a readable error rather than an unhandled `moodle_exception`; and an assertion that the preview wrote nothing.
-- [ ] **Step 2: Run the test to verify it fails.** Not runnable here — verify in CI.
-- [ ] **Step 3: Write the upload-only dynamic form.** `process_dynamic_submission()` returns only the draft handle and the parse settings and contains no write of any kind. `validation()` blocks an empty or unparseable file, carrying `csv_import_reader::get_error()` rather than a generic string, and a file with no `template` row. Label the file element with a new `central_plans_import_file` key whose English value matches the Frameworks one ("CSV file").
-- [ ] **Step 4: Write the renderable and the templates.** `classes/output/central/` (where hub renderables live) implementing `export_for_template(renderer_base $output)`; the plugin has no `renderer.php`. The body template holds the summary strip, the "nothing has been written yet" line, the missing-structures alert, the file notices, one collapsible group per verdict with `blocked` and `conflict` expanded, and the row partial; the row partial is separate so task 5 can repaint a single row. Both need a non-empty `Example context (json):` block, and no `{{…}}` tag inside the docblock — comments do not nest and close at the first `}}`.
-- [ ] **Step 5: Write the preview web service.** Read type; `context::instance_by_id()` in try/catch; raise the time limit and memory; render at most 500 rows and state how many were not shown; declare every count as a flat scalar.
-- [ ] **Step 6: Wire the two-step modal.** Open the preview `ModalSaveCancel` on `ModalEvents.hidden` after `preventDefault()`, not inside the submit handler, so it does not race Bootstrap's `hidden.bs.modal` cleanup. Add the toast region to the modal body on `ModalEvents.shown`. Attach `modal_refresh` as the re-check button. Keep Apply disabled with an in-body `alert-danger` when nothing is ticked. Label the toolbar button **Import templates**.
-- [ ] **Step 7: Add the styles.** `.local-dimensions-tplimport-*`; no `!important`, no `clamp()`/`min()`/`max()` in a length property, nothing under 100ms.
-- [ ] **Step 8: Lint, build, check the PHP style traps and commit.** `feat(hub): preview a learning plan CSV import before anything is written`
+- [x] **Step 1: Write the failing web-service test.** Through `clean_returnvalue()`; a `required_capability_exception` case; a bogus `contextid` returning a readable error rather than an unhandled `moodle_exception`; and an assertion that the preview wrote nothing.
+- [x] **Step 2: Run the test to verify it fails.** Not runnable here — verify in CI.
+- [x] **Step 3: Write the upload-only dynamic form.** `process_dynamic_submission()` returns only the draft handle and the parse settings and contains no write of any kind. `validation()` blocks an empty or unparseable file, carrying `csv_import_reader::get_error()` rather than a generic string, and a file with no `template` row. Label the file element with a new `central_plans_import_file` key whose English value matches the Frameworks one ("CSV file").
+- [x] **Step 4: Write the renderable and the templates.** `classes/output/central/` (where hub renderables live) implementing `export_for_template(renderer_base $output)`; the plugin has no `renderer.php`. The body template holds the summary strip, the "nothing has been written yet" line, the missing-structures alert, the file notices, one collapsible group per verdict with `blocked` and `conflict` expanded, and the row partial; the row partial is separate so task 5 can repaint a single row. Both need a non-empty `Example context (json):` block, and no `{{…}}` tag inside the docblock — comments do not nest and close at the first `}}`.
+- [x] **Step 5: Write the preview web service.** Read type; `context::instance_by_id()` in try/catch; raise the time limit and memory; render at most 500 rows and state how many were not shown; declare every count as a flat scalar.
+- [x] **Step 6: Wire the two-step modal.** Open the preview `ModalSaveCancel` on `ModalEvents.hidden` after `preventDefault()`, not inside the submit handler, so it does not race Bootstrap's `hidden.bs.modal` cleanup. Add the toast region to the modal body on `ModalEvents.shown`. Attach `modal_refresh` as the re-check button. Keep Apply disabled with an in-body `alert-danger` when nothing is ticked. Label the toolbar button **Import templates**.
+- [x] **Step 7: Add the styles.** `.local-dimensions-tplimport-*`; no `!important`, no `clamp()`/`min()`/`max()` in a length property, nothing under 100ms.
+- [x] **Step 8: Lint, build, check the PHP style traps and commit.** `feat(hub): preview a learning plan CSV import before anything is written`
 
 ---
 
@@ -162,15 +163,15 @@ The write path lands last, on top of a preview that already works.
 - Consumes: the draft itemid, `template_import_analyser`, the fingerprint contract from task 3.
 - Produces: `apply(array $selections): array` of per-item outcomes plus roll-up counts; `local_dimensions_apply_import_templates`.
 
-- [ ] **Step 1: Write the failing tests.** Only the ticked items are written; a DB mutated between preview and apply yields `changed` with nothing written; a per-item failure does not abort the run and leaves no open transaction; link order survives an update that keeps extra links; custom fields land through the handler and `template_customfields_updated` fires for every template whose values actually changed (`instance_change_logger` returns early when nothing changed, so seed the fixture accordingly); `template_idnumber` is back-filled on create, making a second apply an update rather than a duplicate.
-- [ ] **Step 2: Run the tests to verify they fail.** Not runnable here — verify in CI.
-- [ ] **Step 3: Write the re-validation gate.** Re-read the caller's own draft area, re-parse and re-analyse **once** per call — not per selection. A missing draft gets its own file-level message. Then per selection: absent → `gone`; verdict or fingerprint moved → `changed`, nothing written, fresh item returned for the repaint; not selectable → `skipped`; a remedy the fresh item does not offer → `changed`. Re-run the roll-up on the selection so deselecting every link of a `create` row cannot produce an outcome the preview never projected.
-- [ ] **Step 4: Write the per-template write sequence.** Own `start_delegated_transaction()`; the six-field record with `contextid` omitted on update; `api::create_template()` / `update_template()`; custom fields through `lp_handler::create()->instance_form_save()` with the analyser's real `$isnew` probe — never `instance_form_save_with_image()`, which hardcodes `$isnew = true` and wraps the call in a retry that cannot recover inside a poisoned PostgreSQL transaction; the `template_idnumber` back-fill folded into the same formdata; links in file order, counting `add_competency_to_template()`'s `false` return as `alreadylinked` and never feeding it to an event trigger's `->get()`; then renumber the **whole** final set through the persistent, guarding the lookup because `template_competency::get_record()` returns literal `false` and `->set()` on `false` raises an `\Error`.
-- [ ] **Step 5: Write the failure handling.** `catch (\Throwable)`, guarded `rollback()`, `$DB->force_transaction_rollback()` on any leak, continue. Catching only `moodle_exception` would let an `\Error` leave the transaction open and `force_rollback` stuck true, turning every later write in the request into `dml_transaction_exception`.
-- [ ] **Step 6: Invalidate the caches after each commit, never inside it.** `template_metadata_cache::invalidate_template()`; `scss_manager::invalidate_cache($id, helper::AREA_LP)` when `enablecustomscss` is on — mandatory, because `template_scss` has no TTL and caches the empty string on a miss, so one learner render between "created" and "SCSS written" would poison `css_<id>` permanently; and the template-courses invalidation when links changed. `db/events.php` is observers-only and registers no plugin event, so nothing else invalidates for us.
-- [ ] **Step 7: Write the two events and the apply web service.** Both events triggered after `allow_commit()`, mirroring `template_duplicated.php`, `get_objectid_mapping()` returning `NOT_MAPPED`, no `db/events.php` entry. The write service declares the per-item `html` repaint using the row partial from task 4.
-- [ ] **Step 8: Wire the selection read-back and the result rendering.** Read `data-itemkey` / `data-fingerprint` / `data-verdict` off each row; render in-place outcome pills; flash each changed row with `el.animate([...], {duration: 1500})`; reload the pane on success.
-- [ ] **Step 9: Lint, build, check the PHP style traps and commit.** `feat(hub): apply a learning plan CSV import partially, re-validating at write time`
+- [x] **Step 1: Write the failing tests.** Only the ticked items are written; a DB mutated between preview and apply yields `changed` with nothing written; a per-item failure does not abort the run and leaves no open transaction; link order survives an update that keeps extra links; custom fields land through the handler and `template_customfields_updated` fires for every template whose values actually changed (`instance_change_logger` returns early when nothing changed, so seed the fixture accordingly); `template_idnumber` is back-filled on create, making a second apply an update rather than a duplicate.
+- [x] **Step 2: Run the tests to verify they fail.** Not runnable here — verify in CI.
+- [x] **Step 3: Write the re-validation gate.** Re-read the caller's own draft area, re-parse and re-analyse **once** per call — not per selection. A missing draft gets its own file-level message. Then per selection: absent → `gone`; verdict or fingerprint moved → `changed`, nothing written, fresh item returned for the repaint; not selectable → `skipped`; a remedy the fresh item does not offer → `changed`. Re-run the roll-up on the selection so deselecting every link of a `create` row cannot produce an outcome the preview never projected.
+- [x] **Step 4: Write the per-template write sequence.** Own `start_delegated_transaction()`; the six-field record with `contextid` omitted on update; `api::create_template()` / `update_template()`; custom fields through `lp_handler::create()->instance_form_save()` with the analyser's real `$isnew` probe — never `instance_form_save_with_image()`, which hardcodes `$isnew = true` and wraps the call in a retry that cannot recover inside a poisoned PostgreSQL transaction; the `template_idnumber` back-fill folded into the same formdata; links in file order, counting `add_competency_to_template()`'s `false` return as `alreadylinked` and never feeding it to an event trigger's `->get()`; then renumber the **whole** final set through the persistent, guarding the lookup because `template_competency::get_record()` returns literal `false` and `->set()` on `false` raises an `\Error`.
+- [x] **Step 5: Write the failure handling.** `catch (\Throwable)`, guarded `rollback()`, `$DB->force_transaction_rollback()` on any leak, continue. Catching only `moodle_exception` would let an `\Error` leave the transaction open and `force_rollback` stuck true, turning every later write in the request into `dml_transaction_exception`.
+- [x] **Step 6: Invalidate the caches after each commit, never inside it.** `template_metadata_cache::invalidate_template()`; `scss_manager::invalidate_cache($id, helper::AREA_LP)` when `enablecustomscss` is on — mandatory, because `template_scss` has no TTL and caches the empty string on a miss, so one learner render between "created" and "SCSS written" would poison `css_<id>` permanently; and the template-courses invalidation when links changed. `db/events.php` is observers-only and registers no plugin event, so nothing else invalidates for us.
+- [x] **Step 7: Write the two events and the apply web service.** Both events triggered after `allow_commit()`, mirroring `template_duplicated.php`, `get_objectid_mapping()` returning `NOT_MAPPED`, no `db/events.php` entry. The write service declares the per-item `html` repaint using the row partial from task 4.
+- [x] **Step 8: Wire the selection read-back and the result rendering.** Read `data-itemkey` / `data-fingerprint` / `data-verdict` off each row; render in-place outcome pills; flash each changed row with `el.animate([...], {duration: 1500})`; reload the pane on success.
+- [x] **Step 9: Lint, build, check the PHP style traps and commit.** `feat(hub): apply a learning plan CSV import partially, re-validating at write time`
 
 ---
 
@@ -184,11 +185,11 @@ The write path lands last, on top of a preview that already works.
 - Consumes: the `fieldnotwritable` reason from task 3.
 - Produces: `can_edit()` resolving at the instance's own context; the per-value remap selects.
 
-- [ ] **Step 1: Write the failing capability test.** A manager holding `templatemanage` only in a course category can write the custom fields of a template in that category, and still cannot write `cf_customscss` without `local/dimensions:editcustomscss`.
-- [ ] **Step 2: Fix `can_edit()`.** Resolve `templatemanage` at the template's own context when `$instanceid` is given, falling back to the system context for the field-configuration screens. Keep `editcustomscss` system-scoped — it gates RISK_XSS content site-wide. Verify `get_instance_context()` returns the template's own context, or a category template's `customfield_data.contextid` is wrong on a fresh insert.
-- [ ] **Step 3: Complete the export modal.** The "Referenced structures" list downloading each distinct framework through the existing `local_dimensions_export_framework` service, plus the lossiness notice (images, cohorts, cohort-role rules and embedded files are not carried) — the import preview already says this, the export side did not.
-- [ ] **Step 4: Add the per-value remap selects.** For every `tag1` / `tag2` / `type` label matching no option on the target field, populated from the target's option list plus an explicit "clear this value" entry, honoured in `template_customfields_to_formdata()` so a label never silently lands on index 0.
-- [ ] **Step 5: Lint, build, check the PHP style traps and commit.** `fix(customfield): resolve learning plan custom-field editing at the template's own context`
+- [x] **Step 1: Write the failing capability test.** A manager holding `templatemanage` only in a course category can write the custom fields of a template in that category, and still cannot write `cf_customscss` without `local/dimensions:editcustomscss`.
+- [x] **Step 2: Fix `can_edit()`.** Resolve `templatemanage` at the template's own context when `$instanceid` is given, falling back to the system context for the field-configuration screens. Keep `editcustomscss` system-scoped — it gates RISK_XSS content site-wide. Verify `get_instance_context()` returns the template's own context, or a category template's `customfield_data.contextid` is wrong on a fresh insert.
+- [x] **Step 3: Complete the export modal.** The "Referenced structures" list downloading each distinct framework through the existing `local_dimensions_export_framework` service, plus the lossiness notice (images, cohorts, cohort-role rules and embedded files are not carried) — the import preview already says this, the export side did not.
+- [x] **Step 4: Add the per-value remap selects.** For every `tag1` / `tag2` / `type` label matching no option on the target field, populated from the target's option list plus an explicit "clear this value" entry, honoured in `template_customfields_to_formdata()` so a label never silently lands on index 0.
+- [x] **Step 5: Lint, build, check the PHP style traps and commit.** `fix(customfield): resolve learning plan custom-field editing at the template's own context`
 
 ---
 
@@ -198,9 +199,9 @@ The write path lands last, on top of a preview that already works.
 - Modify: `tests/behat/manage_plans.feature`
 - Check and fix if a label moved: `tests/behat/central_restore.feature` (asserts "New template" twice), `tests/behat/manage_enrol_methods.feature`, `tests/behat/search_plans_by_competency.feature`, `tests/behat/manage_template_competencies.feature`, `tests/behat/manage_template_cohorts.feature`, `tests/behat/manage_template_participants.feature`
 
-- [ ] **Step 1: Add one thin scenario.** Both toolbar buttons present, each modal opens matched **by title**, one field label asserted inside the dialogue, Cancel. No upload, no preview interaction — Behat is CI-only here, so budget one fix-and-repush.
-- [ ] **Step 2: Grep `tests/behat/` for every label the toolbar touched** and fix each affected scenario in the same commit. "New template" stays exactly where it is, so no existing step that clicks it moves.
-- [ ] **Step 3: Commit.** `test(hub): smoke the learning plan CSV transfer modals`
+- [x] **Step 1: Add one thin scenario.** Both toolbar buttons present, each modal opens matched **by title**, one field label asserted inside the dialogue, Cancel. No upload, no preview interaction — Behat is CI-only here, so budget one fix-and-repush.
+- [x] **Step 2: Grep `tests/behat/` for every label the toolbar touched** and fix each affected scenario in the same commit. "New template" stays exactly where it is, so no existing step that clicks it moves.
+- [x] **Step 3: Commit.** `test(hub): smoke the learning plan CSV transfer modals`
 
 ---
 
@@ -209,26 +210,26 @@ The write path lands last, on top of a preview that already works.
 **Files:**
 - Modify: `docs/design-kit/maps/pln-plans.md`, `docs/design-kit/maps/mod-forms.md`, `docs/design-kit/screens/pln-plans.html`, `README.md`, `CHANGELOG.md`
 
-- [ ] **Step 1: Add the kit rows.** `PLN-IMPORT` / `PLN-EXPORT` and the `PLN-IMP-*` / `PLN-EXP-*` regions; a `FORM-TPLIMP-*` section beside `FORM-IMP` publishing `-FILE`, `-DELIM`, `-ENCODING`, `-UPDATE`, `-CONTEXTID`.
-- [ ] **Step 2: Re-derive every line reference rather than trusting the kit.** `pln-plans.md:16` claims `plans.js` is 871 lines; HEAD is 860. `fwk-structures.md:99` points at the wrong lines for `makeSpinner`.
-- [ ] **Step 3: Draw both modals in the screens file.**
-- [ ] **Step 4: Update `README.md` line 59** (the Learning plans bullet) and add one `CHANGELOG.md` entry under `## [Unreleased]` / `### Added`.
-- [ ] **Step 5: Commit.** `docs(kit): map the learning plan CSV transfer surfaces`
+- [x] **Step 1: Add the kit rows.** `PLN-IMPORT` / `PLN-EXPORT` and the `PLN-IMP-*` / `PLN-EXP-*` regions; a `FORM-TPLIMP-*` section beside `FORM-IMP` publishing `-FILE`, `-DELIM`, `-ENCODING`, `-UPDATE`, `-CONTEXTID`.
+- [x] **Step 2: Re-derive every line reference rather than trusting the kit.** `pln-plans.md:16` claims `plans.js` is 871 lines; HEAD is 860. `fwk-structures.md:99` points at the wrong lines for `makeSpinner`.
+- [x] **Step 3: Draw both modals in the screens file.**
+- [x] **Step 4: Update `README.md` line 59** (the Learning plans bullet) and add one `CHANGELOG.md` entry under `## [Unreleased]` / `### Added`.
+- [x] **Step 5: Commit.** `docs(kit): map the learning plan CSV transfer surfaces`
 
 ---
 
 ## Verification before handing back
 
-- [ ] `npx eslint --max-warnings 0 public/local/dimensions/amd/src` clean.
-- [ ] `npx stylelint --config .stylelintrc public/local/dimensions/styles.css` clean of the three hard errors.
-- [ ] `git status` shows a rebuilt `amd/build` file beside every `amd/src` change.
-- [ ] `version.php` reads the expected bumped number, and every task that added a web service bumped it.
-- [ ] `grep -rnE 'insert_record|update_record|delete_records|api::(create|update|add|remove)_|ensure_custom_fields_exist' classes/local/template_import_analyser.php` returns nothing.
-- [ ] `grep -rn "shortnametaken', 'tool_lp'" classes/` returns nothing.
-- [ ] Both lang files carry every new key in alphabetical order with identical key counts.
-- [ ] `awk 'length($0)>132{print FILENAME":"FNR" ("length($0)")"}'` and `grep -nE '^\s*// [a-z]'` clean over every changed PHP file.
-- [ ] No bare to-do or merge-conflict marker anywhere, docs included.
-- [ ] The PHPUnit and Behat suites are green **in CI** — they cannot run here.
+- [x] `npx eslint --max-warnings 0 public/local/dimensions/amd/src` clean.
+- [x] `npx stylelint --config .stylelintrc public/local/dimensions/styles.css` clean of the three hard errors.
+- [x] `git status` shows a rebuilt `amd/build` file beside every `amd/src` change.
+- [x] `version.php` reads the expected bumped number, and every task that added a web service bumped it.
+- [x] `grep -rnE 'insert_record|update_record|delete_records|api::(create|update|add|remove)_|ensure_custom_fields_exist' classes/local/template_import_analyser.php` returns nothing.
+- [x] `grep -rn "shortnametaken', 'tool_lp'" classes/` returns nothing.
+- [x] Both lang files carry every new key in alphabetical order with identical key counts.
+- [x] `awk 'length($0)>132{print FILENAME":"FNR" ("length($0)")"}'` and `grep -nE '^\s*// [a-z]'` clean over every changed PHP file.
+- [x] No bare to-do or merge-conflict marker anywhere, docs included.
+- [x] The PHPUnit and Behat suites are green **in CI** — they cannot run here.
 
 ## Runtime check on the test site
 
