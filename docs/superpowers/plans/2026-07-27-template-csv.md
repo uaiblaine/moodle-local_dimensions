@@ -91,12 +91,12 @@ Pure scaffolding — nothing consumes it yet, so it ships without behaviour chan
 - Produces: the verdict constants (`create`, `update`, `insync`, `skip`, `conflict`, `blocked`, `orphanlink`), the reason constants, the link-status constants, the confidence constants, the remedy constants (`clearduedate`, `shiftduedate`, `keepduedate`, `truncate`, `partial`, `adopt`, `createhere`), the outcome constants (`created`, `updated`, `skipped`, `changed`, `gone`, `failed`), and one `match()`-based label method per set. Tasks 3, 4 and 5 all consume these.
 - Produces: `template_import_plan` with `get_items()`, `get_item(string $itemkey)`, `get_counts()`, `get_notices()`, `get_missing_structures()`, `get_target_context()`.
 
-- [ ] **Step 1: Write the failing test.** Every enum constant resolves to a non-empty label on both languages; `get_counts()` declares exactly the scalar set task 4's `execute_returns()` will declare.
-- [ ] **Step 2: Run the test to verify it fails.** Not runnable here — verify in CI.
-- [ ] **Step 3: Write both classes.** Every label a literal `match()` returning a fixed `get_string` key — the string checker cannot verify a constructed id, so no `get_string('reason_' . $x)`.
-- [ ] **Step 4: Add every lang key to both files in one alphabetical pass.** Include `central_plans_import_reason_shortnametaken`, and replace the two existing `get_string('shortnametaken', 'tool_lp')` calls in `classes/form/template_dynamic_form.php:344` and `classes/form/framework_dynamic_form.php:290` — that string does not exist in `tool_lp` and renders `[[shortnametaken]]` plus a missing-string `debugging()`.
-- [ ] **Step 5: Verify the lang files.** Identical key counts, both alphabetically ordered, every new key resolving.
-- [ ] **Step 6: Commit.** `feat(hub): add the learning plan import verdict model and its strings`
+- [x] **Step 1: Write the failing test.** Every enum constant resolves to a non-empty label on both languages; `get_counts()` declares exactly the scalar set task 4's `execute_returns()` will declare.
+- [x] **Step 2: Run the test to verify it fails.** Not runnable here — verify in CI.
+- [x] **Step 3: Write both classes.** Every label a literal `match()` returning a fixed `get_string` key — the string checker cannot verify a constructed id, so no `get_string('reason_' . $x)`.
+- [x] **Step 4: Add every lang key to both files in one alphabetical pass.** Include `central_plans_import_reason_shortnametaken`, and replace the two existing `get_string('shortnametaken', 'tool_lp')` calls in `classes/form/template_dynamic_form.php:344` and `classes/form/framework_dynamic_form.php:290` — that string does not exist in `tool_lp` and renders `[[shortnametaken]]` plus a missing-string `debugging()`.
+- [x] **Step 5: Verify the lang files.** Identical key counts, both alphabetically ordered, every new key resolving.
+- [x] **Step 6: Commit.** `feat(hub): add the learning plan import verdict model and its strings`
 
 ---
 

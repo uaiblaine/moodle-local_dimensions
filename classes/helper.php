@@ -2234,6 +2234,42 @@ class helper {
     }
 
     /**
+     * Count the learner plans per template that still read the template live.
+     *
+     * Draft, active and in-review plans take their name, description and due date from the
+     * template — api::update_template() rewrites them through a raw bulk UPDATE — while
+     * complete plans are frozen against user_competency_plan and are not touched. The shipped
+     * {@see self::count_plans_by_template()} counts every status, so it cannot answer
+     * "how many learners' plans will this rename".
+     *
+     * @param int[] $templateids Template IDs.
+     * @return array<int, int> templateid => count of plans that are not complete
+     */
+    public static function count_open_plans_by_template(array $templateids): array {
+        global $DB;
+
+        $templateids = array_values(array_unique(array_filter(array_map('intval', $templateids))));
+        if (empty($templateids)) {
+            return [];
+        }
+
+        $counts = [];
+        foreach (array_chunk($templateids, 1000) as $chunk) {
+            [$insql, $params] = $DB->get_in_or_equal($chunk, SQL_PARAMS_NAMED, 'tpl');
+            $params['complete'] = \core_competency\plan::STATUS_COMPLETE;
+            $sql = "SELECT templateid, COUNT(id) AS cnt
+                      FROM {competency_plan}
+                     WHERE templateid $insql
+                       AND status <> :complete
+                  GROUP BY templateid";
+            foreach ($DB->get_records_sql($sql, $params) as $row) {
+                $counts[(int)$row->templateid] = (int)$row->cnt;
+            }
+        }
+        return $counts;
+    }
+
+    /**
      * Count cohorts linked to each template.
      *
      * Single aggregate query (chunked only as a placeholder-limit safeguard).
