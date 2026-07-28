@@ -31,6 +31,7 @@ import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
+import {makeSpinner, triggerDownload} from 'local_dimensions/central/download';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import {open as openScaleConfig} from 'local_dimensions/central/framework_scaleconfig';
 import * as ActionFooter from 'local_dimensions/central/action_footer';
@@ -202,18 +203,6 @@ const createFramework = (pane, region) =>
     openFrameworkForm(pane, {id: 0, contextid: Number(region.dataset.contextid)}, 'central_frameworks_new');
 
 /**
- * A small Bootstrap spinner element.
- *
- * @return {HTMLElement}
- */
-const makeSpinner = () => {
-    const spinner = document.createElement('span');
-    spinner.className = 'spinner-border spinner-border-sm';
-    spinner.setAttribute('aria-hidden', 'true');
-    return spinner;
-};
-
-/**
  * Show a processing banner inside the import modal body while the CSV is imported in-request.
  *
  * @param {ModalForm} form The import modal form.
@@ -273,25 +262,6 @@ const openImportForm = async(pane, region) => {
             .catch(notifyError);
     });
     form.show();
-};
-
-/**
- * Stream a CSV string to the browser as a downloaded file.
- *
- * @param {String} filename The suggested filename.
- * @param {String} content The CSV content.
- * @return {void}
- */
-const triggerDownload = (filename, content) => {
-    const blob = new Blob([content], {type: 'text/csv;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
 };
 
 /**
