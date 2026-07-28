@@ -361,7 +361,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     (<code>:876</code> and <code>:920</code>); <code>applyShowHidden</code> (<code>:272-291</code>) rebuilds the
     <code>select</code>'s options with no reload and <b>with no flash</b> — there is no visual confirmation on that path.
     The explicit opt-out <code>{quiet: true}</code> exists (<code>tabs.js:69</code>, <code>:77</code>, <code>:103</code>) and
-    has <b>exactly one</b> caller: <code>reloadKeepingScroll</code> (<code>plans.js:93-109</code>, called at
+    has <b>exactly one</b> caller: <code>reloadKeepingScroll</code> (<code>plans.js:94-110</code>, called at
     <code>:102</code>), which is a real pane reload that preserves <code>scrollTop</code>.
   </div>
 </section>

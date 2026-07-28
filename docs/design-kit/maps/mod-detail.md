@@ -129,7 +129,7 @@ The card is a **leaf** — it opens, it informs, it closes. No modal stacks on t
 | ID (owner) | Tab | Origin | Path |
 | --- | --- | --- | --- |
 | `MOD.RELATED-CHIP` | Structure ([`mod-related.md`](mod-related.md)) | `structure_related_chips.mustache:36-42` | `data-action="open-related"` + `data-id` (`:38`) → `structure.js:1245-1249` → `openCompetencyDetailModal(id)` (`:1247`) |
-| `PLN-COMP-NAME` | Learning plans ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:381-382` | `data-action="open-competency-detail"` + `data-id` → `plans.js:743-744` → the same `openCompetencyDetailModal(id)` |
+| `PLN-COMP-NAME` | Learning plans ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:407-408` | `data-action="open-competency-detail"` + `data-id` → `plans.js:746-747` → the same `openCompetencyDetailModal(id)` |
 
 **Neither of the two is a footer** — and it is the only modal in the kit of which that is true. The
 whole hub opens modals from a sticky-footer button; this one opens from **a chip** and from **a

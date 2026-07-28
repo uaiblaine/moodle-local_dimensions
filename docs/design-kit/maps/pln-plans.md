@@ -61,12 +61,12 @@ What holds the boundary up, verified in the code:
     `participants_manager.js:171` (`manage-participants`), `competency_browser.js:106`
     (`browse-frameworks`) and `plans.js:241` (`delete-template` with plans), the three only in
     `plans.mustache:495`, `:499` and `:507`.
-  - **The other 3 have a parallel door in the header:** the framework form (`frameworks.js:172` ←
+  - **The other 3 have a parallel door in the header:** the framework form (`frameworks.js:173` ←
     `frameworks.mustache:82`), the competency form (`structure.js:798` ← `structure.mustache:127`)
     and the template form (`plans.js:202` ← `plans.mustache:207`). **But the footer button is the
     only way to act on the selected row** — the header one only creates.
   - **Do not inflate:** it is **7** with no other door, not 10. The 7 the footer does **not** reach
-    directly are `frameworks.js:260` (import), `frameworks.js:343` (export), `plans.js:558` (move to
+    directly are `frameworks.js:249` (import), `frameworks.js:313` (export), `plans.js:558` (move to
     position), `competency_detail.js:277` (detail), `structure.js:1225` (usage),
     `framework_scaleconfig.js:139` (delegated from inside the form) and `enrol_methods.js:859`.
 
@@ -221,7 +221,7 @@ templates that contain **all** the chosen competencies survive (`dynamictabs/pla
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-DETAIL-HEADER` | `[no label]` | header | `plans.mustache:292-295` | `data-region="plan-detail-header"` | three stops through inline custom properties (`--ld-plans-hdr-0/-48/-100`) + the text `color`; the rule is `linear-gradient(140deg, …0%, …48%, …100%)` (`styles.css:5829`, block at `:5823-5837`). The server computes them: base = the template's `bgcolor` field **or `#0f6cbf`**, and the 48/100 stops are `helper::darken_hex(base, 0.16)` and `(base, 0.34)` (`dynamictabs/plans.php:274-275`, `:316-318`). For the `#0f6cbf` default that gives **`#0d5ba0`** and **`#0a477e`** (measured, reproducing `helper.php:3020-3035`). **Gotcha:** the CSS *fallbacks* (`#0d5a9f`, `#0a4680`, `styles.css:5829`) **do not match** what the PHP computes — but they are inert, because `:270` writes the three custom properties **unconditionally**, so the fallback never paints |
+| `PLN-DETAIL-HEADER` | `[no label]` | header | `plans.mustache:292-295` | `data-region="plan-detail-header"` | three stops through inline custom properties (`--ld-plans-hdr-0/-48/-100`) + the text `color`; the rule is `linear-gradient(140deg, …0%, …48%, …100%)` (`styles.css:5829`, block at `:5823-5837`). The server computes them: base = the template's `bgcolor` field **or `#0f6cbf`**, and the 48/100 stops are `helper::darken_hex(base, 0.16)` and `(base, 0.34)` (`dynamictabs/plans.php:274-275`, `:316-318`). For the `#0f6cbf` default that gives **`#0d5ba0`** and **`#0a477e`** (measured, reproducing `helper.php:3056-3071`). **Gotcha:** the CSS *fallbacks* (`#0d5a9f`, `#0a4680`, `styles.css:5829`) **do not match** what the PHP computes — but they are inert, because `:270` writes the three custom properties **unconditionally**, so the fallback never paints |
 | `PLN-DETAIL-GLOW` | `[no label]` | glow | `plans.mustache:294-295` | `aria-hidden="true"` | white `radial-gradient` at 22% in the top-left corner, inline |
 | `PLN-DETAIL-TITLE` | template name | heading | `plans.mustache:300` | `selectedtemplatename` | `<h2>` |
 | `PLN-STATUS` | "Enabled" / "Hidden" | badge | `plans.mustache:301-306` | `selectedtemplatevisible` | `is-enabled` (str `central_plans_enabled`) or `is-disabled` (str `hidden, tool_lp`); colours at `styles.css:5882-5888` |

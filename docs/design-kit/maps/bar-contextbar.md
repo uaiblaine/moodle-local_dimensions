@@ -58,13 +58,13 @@ The `:not([hidden])` guard is mandatory: the rule beats the UA's `[hidden]{displ
 without it the wrapper would show up in System mode (comment at `styles.css:7219-7221`).
 
 **Semantics.** By default the picker shows only visible categories; the toggle reveals the
-`visible=0` ones **that the user can already see** — `make_categories_list()` (`helper.php:2453`)
+`visible=0` ones **that the user can already see** — `make_categories_list()` (`helper.php:2489`)
 only brings them for whoever holds `moodle/category:viewhiddencategories` (comment at
-`helper.php:2467-2469`). With no reachable hidden category, `contextbar.php:118-126` returns `null`
+`helper.php:2503-2505`). With no reachable hidden category, `contextbar.php:118-126` returns `null`
 and the toggle does not render.
 
 **Behaviour (client-side, no `reloadPane`).** The server marks each hidden option with
-`data-hidden="1"` (`helper.php:2489` → `contextbar.mustache:89`). `applyHiddenCats`
+`data-hidden="1"` (`helper.php:2525` → `contextbar.mustache:89`). `applyHiddenCats`
 (`context.js:332-337`) rebuilds the wrapper from the pristine clone and `filterHiddenOptions`
 (`context.js:154-164`) drops the hidden ones while the toggle is off, **always preserving the
 selected one**. Only the **list** changes — `BAR-COUNT-01` is independent (it counts the context,
@@ -76,11 +76,11 @@ vanish from the list.
 
 **Persistence.** Preference `local_dimensions_central_nav` (`preferences.js:32`), key
 `showhiddencats` — default at `preferences.js:40`, written at `context.js:336`, sanitised in
-`helper::get_central_prefs` (`helper.php:2311`) and seeded into the render by `central.php:73`/`:78`.
+`helper::get_central_prefs` (`helper.php:2347`) and seeded into the render by `central.php:73`/`:78`.
 It survives sessions and devices. Privacy already covers `central_nav`
 (`classes/privacy/provider.php:62`, `:93`).
 
-**Backend.** `helper::central_category_options()` (`helper.php:2449-2493`) marks `hidden` per
+**Backend.** `helper::central_category_options()` (`helper.php:2485-2529`) marks `hidden` per
 option; `contextbar.php:108-126` decides the toggle and its initial state, exported at `:136`.
 There is **no** `hashiddencategories` key — the gate is the null `hiddencatstoggle`. No new WS.
 
@@ -146,8 +146,8 @@ There is **no** `hashiddencategories` key — the gate is the null `hiddencatsto
 - `reloadPane` (`tabs.js:69-108`) has **one** UI control that fires it: the `refresh`
   (`context.js:206-230`), delegated on the bar's click (`:356-359`). Full census: **24** calls
   across 5 modules — `structure` 9 (`structure.js:730,739,748,764,808,836,960,1036,1472`),
-  `frameworks` 6 (`frameworks.js:179,270,374,386,419,522`), `plans` 6
-  (`plans.js:102,233,614,668,673,825`), `context` 2 (`context.js:193,217`) and `competency_browser`
+  `frameworks` 6 (`frameworks.js:180,270,374,386,419,522`), `plans` 6
+  (`plans.js:103,233,614,668,673,825`), `context` 2 (`context.js:193,217`) and `competency_browser`
   1 (`competency_browser.js:69`). Of those, **only `context.js:217` is a UI affordance**; the other
   23 are automatic refreshes (post-action, post-context-switch or post-selection-switch).
 - The icon and the string came from the `data-action="enrol-refresh"` buttons of the enrolment

@@ -55,7 +55,7 @@ cites the **symbol**, not the line — core's numbers vary across the 4.5–5.2 
 >   `central/`. **The reason no longer holds**: `f804e14` ("refactor(admin): remove the legacy
 >   manage/edit admin surface", 2026-07-07) deleted `amd/src/manage_templates.js`, and today a
 >   `grep -rn 'delete_template_modal' --include='*.js' --include='*.php' --include='*.mustache' .`
->   (outside `build/`) returns **a single** renderer: `plans.js:236`. **The template sits at the root
+>   (outside `build/`) returns **a single** renderer: `plans.js:237`. **The template sits at the root
 >   because of a sharing arrangement that ended** — moving it to `central/` is a one-line change in the
 >   `renderForPromise`, and it is recorded here as debt, outside the scope of this task.
 > - **The gate was never mapped, and it decides which of the two dialogues opens.** The old map
@@ -82,7 +82,7 @@ cites the **symbol**, not the line — core's numbers vary across the 4.5–5.2 
 >   is exactly what Behat exercises. See the coverage note.
 > - **The trigger gets no new ID here — it already has one.** The old map said "Triggered by
 >   `PLN-DELETE`", and that **checks out**: `pln-plans.md` maps `PLN-DELETE` at
->   `plans.mustache:481-485`, exactly the ref derived here independently, and it already publishes the
+>   `plans.mustache:507-511`, exactly the ref derived here independently, and it already publishes the
 >   cross-reference `MOD.DELPLANS` ← `PLN-DELETE` **when there are plans**. This map **reuses**
 >   `PLN-DELETE` instead of minting a `MOD.DELPLANS-ACTION`, so as not to give one button two IDs. The
 >   divergence this paragraph used to record — `mod-browser.md` having minted a `MOD.BROWSER-ACTION`
@@ -93,9 +93,9 @@ cites the **symbol**, not the line — core's numbers vary across the 4.5–5.2 
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-DELETE` | Delete template | button (trigger) | `plans.mustache:481-485` — ID from [`pln-plans.md`](pln-plans.md) | `data-action="delete-template"` · `data-id` · `data-name` · `data-plancount` · `fa fa-trash` | str `managetemplates_delete` = "Delete template" — **the same str as the modal title** (`js:241`), so the button and the dialogue it opens carry an identical label. It lives in the `data-region="plans-footer-actions"` holder (`plans.mustache:462`), which is born `hidden` and is moved to the page's `#sticky-footer` by `plans.js`; it only renders under `{{#canmanage}}` (`:457`). **The footer is this modal's only door.** Dispatch at `js:735-737`, with `target.dataset.name \|\| ''` and `target.dataset.plancount \|\| 0` |
+| `PLN-DELETE` | Delete template | button (trigger) | `plans.mustache:507-511` — ID from [`pln-plans.md`](pln-plans.md) | `data-action="delete-template"` · `data-id` · `data-name` · `data-plancount` · `fa fa-trash` | str `managetemplates_delete` = "Delete template" — **the same str as the modal title** (`js:241`), so the button and the dialogue it opens carry an identical label. It lives in the `data-region="plans-footer-actions"` holder (`plans.mustache:488`), which is born `hidden` and is moved to the page's `#sticky-footer` by `plans.js`; it only renders under `{{#canmanage}}` (`:483`). **The footer is this modal's only door.** Dispatch at `js:735-737`, with `target.dataset.name \|\| ''` and `target.dataset.plancount \|\| 0` |
 
-**The count is already there at click time.** `data-plancount` (`plans.mustache:482`) is
+**The count is already there at click time.** `data-plancount` (`plans.mustache:508`) is
 `selectedtemplateplancount`, exported server-side by `plans.php:319-321`
 (`helper::count_plans_by_template([$templateid])[$templateid] ?? 0` — the same source as the
 `PLN-COUNT-PLANS` pill in the tab's map). `js:238` does `Number(plancount) || 0` and passes it to the

@@ -20,7 +20,7 @@ is not. That contrast is why this map exists.
     (`:1279-1283`) and grip (`:1374-1382`)
   - Both import `core/modal_save_cancel` and `core/modal_events`
 - **WS:** **none from the plugin** — core only, and **different in each tab**:
-  - Plans: `core_competency_reorder_template_competency` (`plans.js:570-576`) — **one** call
+  - Plans: `core_competency_reorder_template_competency` (`plans.js:571-577`) — **one** call
   - Structure: `core_competency_move_up_competency` / `core_competency_move_down_competency`
     (`structure.js:948-952`) — **|delta| calls** in a `Promise.all`
 - **CSS:** **none.** A `grep -n 'plans-move' styles.css` returns nothing — the class at `:36` is only a
@@ -42,13 +42,13 @@ Every door already has an ID in the tabs' maps. This map **references** them.
 
 | ID (owner) | Tab | Origin | Mechanism | Rule |
 | --- | --- | --- | --- | --- |
-| `PLN-COMP-MOVETO` | Plans ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:423-426` | `data-action="move-competency-to"` → `ACTION_HANDLERS` (`plans.js:742`) | a kebab item; `fa-arrows-v` icon |
-| `PLN-COMP-GRIP` | Plans ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:440-445` | `data-action="move-competency-to"` **and** `data-region="drag-handle"` (`:441`) | **it holds both functions**: clicking opens the modal, dragging reorders directly |
+| `PLN-COMP-MOVETO` | Plans ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:449-452` | `data-action="move-competency-to"` → `ACTION_HANDLERS` (`plans.js:745`) | a kebab item; `fa-arrows-v` icon |
+| `PLN-COMP-GRIP` | Plans ([`pln-plans.md`](pln-plans.md)) | `plans.mustache:466-471` | `data-action="move-competency-to"` **and** `data-region="drag-handle"` (`:467`) | **it holds both functions**: clicking opens the modal, dragging reorders directly |
 | `EST-DETAIL-MOVETO` | Structure ([`est-competencies.md`](est-competencies.md)) | `structure_footer_actions.mustache:61-64` | `data-action="moveto"` → `handleDetailAction` (`structure.js:1279-1283`) | a **sticky-footer** button; it acts on the module's active row |
 | `EST-NODE-DRAG` | Structure ([`est-competencies.md`](est-competencies.md)) | `structure_node.mustache:111-116` | **`data-region="node-drag-handle"`** (`:112`) → its own branch (`structure.js:1374-1382`) | **no `data-action`** — the door is the region listener's `closest()`, with `preventDefault()` (`:1376`) so the click does not select the row |
 
 **The two grips promise the same thing and deliver.** Both carry `title` **and** `aria-label` =
-`central_plans_moveto` + `': '` + shortname (`plans.mustache:442-443`,
+`central_plans_moveto` + `': '` + shortname (`plans.mustache:468-469`,
 `structure_node.mustache:113-114`), and both open the modal on click — by different paths. That is
 what keeps the label honest for the keyboard: dragging is pointer-only, clicking is not.
 
@@ -56,18 +56,18 @@ what keeps the label honest for the keyboard: dragging is pointer-only, clicking
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.MOVETO-TITLE` | Move to position… | title | `plans.js:558` · `structure.js:989` | str `central_plans_moveto` | a **bare** string, no `$a`: **it does not name the target**. Opened from the grip of the "Communication" row, the title does not say "Communication" — what carries the name is the select's selected option |
-| `MOD.MOVETO-MODAL` | — | `core/modal_save_cancel` | `plans.js:557-562` · `structure.js:988-993` | `show: true`, `removeOnClose: true` | **no `large`** (unlike `MOD.USAGE`/`MOD.DETAIL`): it is a single field. The Save/Cancel footer comes free; neither of the two calls `setSaveButtonText` |
+| `MOD.MOVETO-TITLE` | Move to position… | title | `plans.js:559` · `structure.js:989` | str `central_plans_moveto` | a **bare** string, no `$a`: **it does not name the target**. Opened from the grip of the "Communication" row, the title does not say "Communication" — what carries the name is the select's selected option |
+| `MOD.MOVETO-MODAL` | — | `core/modal_save_cancel` | `plans.js:558-563` · `structure.js:988-993` | `show: true`, `removeOnClose: true` | **no `large`** (unlike `MOD.USAGE`/`MOD.DETAIL`): it is a single field. The Save/Cancel footer comes free; neither of the two calls `setSaveButtonText` |
 | `MOD.MOVETO-ROOT` | `[no label]` | region/root | `mustache:36` | `.local-dimensions-central-plans-move` | **no CSS** |
 | `MOD.MOVETO-LABEL` | New position | label | `mustache:37-39` | str `central_plans_moveto_label` · `for` | a **real** `<label>`, with `for` matching the select's `id` — the only modal in the kit whose label is a connected `label` (`MOD.RELATED-ADDLABEL` is a `div`, because there the target is a tree) |
-| `MOD.MOVETO-SELECT` | — | select | `mustache:40-44` | `.form-select` · `id` = `name` = `local-dimensions-plans-move-position` (`:40`) | `form-select`, **never `custom-select`** (a `CLAUDE.md` rule). The `id` is **fixed, not a `uniqid`** — only one of these exists at a time because the modal is `removeOnClose`. Read by `querySelector` on save, on both sides (`plans.js:564`, `structure.js:995`) |
-| `MOD.MOVETO-OPTION` | {n}. {name} | option | `mustache:42` | `value` = **0-based** index · `selected` | the label is **1-based** (`(index + 1) + '. ' + name`) and the `value` is **0-based** — `plans.js:551-552`, `structure.js:982-983`. The current position's option is born `selected` (`plans.js:553`, `structure.js:984`) |
-| `MOD.MOVETO-SAVE` | Save changes | button (footer) | `lib/templates/modal_save_cancel.mustache` | `data-action="save"` | core str `savechanges`. **The only write point** — `ModalEvents.save` (`plans.js:563`, `structure.js:994`) |
+| `MOD.MOVETO-SELECT` | — | select | `mustache:40-44` | `.form-select` · `id` = `name` = `local-dimensions-plans-move-position` (`:41`) | `form-select`, **never `custom-select`** (a `CLAUDE.md` rule). The `id` is **fixed, not a `uniqid`** — only one of these exists at a time because the modal is `removeOnClose`. Read by `querySelector` on save, on both sides (`plans.js:565`, `structure.js:995`) |
+| `MOD.MOVETO-OPTION` | {n}. {name} | option | `mustache:42` | `value` = **0-based** index · `selected` | the label is **1-based** (`(index + 1) + '. ' + name`) and the `value` is **0-based** — `plans.js:552-553`, `structure.js:982-983`. The current position's option is born `selected` (`plans.js:554`, `structure.js:984`) |
+| `MOD.MOVETO-SAVE` | Save changes | button (footer) | `lib/templates/modal_save_cancel.mustache` | `data-action="save"` | core str `savechanges`. **The only write point** — `ModalEvents.save` (`plans.js:564`, `structure.js:994`) |
 | `MOD.MOVETO-CANCEL` | Cancel | button (footer) | `lib/templates/modal_save_cancel.mustache` | `data-action="cancel"` | core str `cancel`. Cancel, X or ESC: **nothing is written** — there is no `hidden` handler in either of them |
 
 ## The two callers, side by side
 
-| | **Plans** (`plans.js:537-595`) | **Structure** (`structure.js:973-1008`) |
+| | **Plans** (`plans.js:538-596`) | **Structure** (`structure.js:973-1008`) |
 | --- | --- | --- |
 | **Universe** | `[data-competency]` inside `[data-region="competency-items"]` (`:538`, `:543`) — the template's **flat** list | `nodeSiblings(node)` (`:974`) — the **same-parent** siblings in the tree (`:929`: children of the `parentElement` matching `.local-dimensions-central-node`) |
 | **Gives up when** | `rows.length < 2` (`:544-546`) | `siblings.length < 2` (`:975-977`) |
@@ -87,7 +87,7 @@ what keeps the label honest for the keyboard: dragging is pointer-only, clicking
 
 ### 1. Mirroring core's semantics — and why only the Plans tab needs it
 
-The comment at `plans.js:578-579` is the key: *"Core lands the row **after** the occupant when moving
+The comment at `plans.js:579-580` is the key: *"Core lands the row **after** the occupant when moving
 down, **before** it when moving up"*. Hence the `reference.after(row)` / `reference.before(row)` pair
 (`:580-584`): the DOM imitates what the server has just done, and the list ends up right **without a
 reload**.
@@ -124,7 +124,7 @@ template and both languages at once.
 
 ### 3. The modal does not know whether the position still exists
 
-The options are a snapshot of the DOM at the instant of opening (`plans.js:543`, `structure.js:974`).
+The options are a snapshot of the DOM at the instant of opening (`plans.js:544`, `structure.js:974`).
 The save revalidates **only** the index against the captured array — `!rows[targetindex]` (`:566`),
 `!siblings[targetindex]` (`:997`) —, never against the server. Since both arrays are captured in the
 same function and the modal is modal (it blocks the tab behind it), the window is narrow; but
@@ -136,7 +136,7 @@ No test coverage.
 
 After an in-place reorder, the "Move up"/"Move down" items in **every** row's kebab need to
 recalculate their `disabled` state (the first cannot go up, the last cannot go down) —
-`refreshMoveState(list)` (`plans.js:117-129`) sweeps the rows and readjusts both buttons.
+`refreshMoveState(list)` (`plans.js:118-130`) sweeps the rows and readjusts both buttons.
 
 Structure **does not have** that pair of buttons: `EST-DETAIL-MOVEUP` and `EST-DETAIL-MOVEDOWN` were
 **retired** (see the *Retired IDs* table in [`est-competencies.md`](est-competencies.md)) and became this

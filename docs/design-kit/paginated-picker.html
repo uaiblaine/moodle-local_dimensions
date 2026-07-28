@@ -96,14 +96,14 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface
 
   <div class="note">
     <b>Where this control lives:</b> it is the picker of the Plans tab's <b>filter by competency</b> —
-    a bare <code>&lt;select&gt;</code> (<code>plans.mustache:218</code>) inside the panel
+    a bare <code>&lt;select&gt;</code> (<code>plans.mustache:243</code>) inside the panel
     <code>local-dimensions-central-plans-filter-picker</code> (<code>:213-220</code>), which is born
     <code>hidden</code> and is opened by the "Add to filter" button (<code>:208-211</code>), with the
     <code>visually-hidden</code> label "Filter plans by competency"
     (<code>central_searchcompetency</code>). What turns it into an autocomplete is
-    <code>plans.js:827-829</code>, with core's <code>core/form-autocomplete</code> and the datasource
+    <code>plans.js:830-832</code>, with core's <code>core/form-autocomplete</code> and the datasource
     <code>central/competency_datasource</code>. The competencies already filtered sit in chips above,
-    each with its own ✕ (<code>plans.mustache:197-212</code>).
+    each with its own ✕ (<code>plans.mustache:222-237</code>).
   </div>
   <div class="note">
     <b>The search, the origin tag and the trail are real.</b>
@@ -141,7 +141,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface
     <code>processResults</code> reads the attribute fresh off the source <code>&lt;select&gt;</code>
     on every search and discards the listed ids (<code>competency_datasource.js:80-84</code>) — only
     the sole element enhanced with this datasource is the filter picker above, and it carries no
-    <code>data-exclude</code> at all (<code>plans.mustache:218</code>). The one that exercises the
+    <code>data-exclude</code> at all (<code>plans.mustache:243</code>). The one that exercises the
     mechanism is its sibling <code>course_datasource</code>, in the links modal
     (<code>competency_links.mustache:44</code>, fed by
     <code>competency_links.js:484</code>).
@@ -166,7 +166,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface
   </div>
   <div class="note pend">
     <b>Pending — multiple selection by checkbox.</b> The autocomplete is enhanced with
-    <code>multiple = false</code> (<code>plans.js:828</code>, second argument) and there is not a
+    <code>multiple = false</code> (<code>plans.js:831</code>, second argument) and there is not a
     single occurrence of <code>multiple</code> or <code>checkbox</code> in
     <code>competency_datasource.js</code>. The multi-selection the tab has today is by
     <b>accumulating chips</b>, one choice at a time.

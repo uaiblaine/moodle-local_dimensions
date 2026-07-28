@@ -102,7 +102,7 @@ visible label **is** the accessible name (`:126-127`: no extra `title`/`aria-lab
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PART-LINK-COHORTS` | Open cohorts page | link | `participants_manager.js:58-59` | `/cohort/index.php` · flag `cancohortpage` | `moodle/cohort:view` **or** `:manage` at system level (`dynamictabs/plans.php:239-240`) |
+| `PART-LINK-COHORTS` | Open cohorts page | link | `participants_manager.js:58-59` | `/cohort/index.php` · flag `cancohortpage` | `moodle/cohort:view` **or** `:manage` at system level (`dynamictabs/plans.php:242-243`) |
 | `PART-LINK-USERS` | Open users page | link | `participants_manager.js:60-61` | `/admin/user.php` · flag `canuserpage` | `moodle/user:update` **or** `:delete` (`:241-242`) |
 | `PART-LINK-ROLES` | Open roles page | link | `participants_manager.js:62-63` | `/admin/roles/manage.php` · flag `canassignroles` | `moodle/role:manage` (`:238`) |
 | `PART-LINK-ENROL` | Manage enrol plugins | link | `participants_manager.js:64-65` | `/admin/settings.php?section=manageenrols` · flag `canenrolpage` | `moodle/site:config` (`:243`) |
@@ -110,7 +110,7 @@ visible label **is** the accessible name (`:126-127`: no extra `title`/`aria-lab
 
 > **Tab and link are doors with different locks — and in two tabs they diverge.** The Roles tab and
 > the roles link share the **same** flag (`canassignroles`), so they travel together. The **Enrolment
-> methods** tab, though, is gated on `canmanageenrol`, which `plans.mustache:133` feeds with
+> methods** tab, though, is gated on `canmanageenrol`, which `plans.mustache:136` feeds with
 > **`{{canmanage}}`** = `moodle/competency:templatemanage` **in context** (`dynamictabs/plans.php:98`,
 > `:329`) — while its **link** wants `moodle/site:config` **at system level**. A template manager sees
 > the tab and does **not** see the link. The Cohorts and Users tabs are unconditional; their links are

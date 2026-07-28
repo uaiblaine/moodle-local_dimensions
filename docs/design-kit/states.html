@@ -155,12 +155,16 @@ code{font-family:var(--font-mono);font-size:10px;}
     <div class="banner" role="status"><span class="spin" aria-hidden="true"></span>Importing…</div>
     <div class="note">
       The only place Boost's <code>spinner-border</code> enters:
-      <code>frameworks.js:209-214</code> (<code>makeSpinner()</code>), consumed by the import banner
-      (<code>:230</code>, an <code>alert alert-info</code> with <code>role="status"</code> at
-      <code>:231</code>) and by the export loader (<code>:314</code>). Note the correct division of
-      roles: the <code>role="status"</code> sits on the <b>container</b> and the spinner goes
+      <code>central/download.js:53-58</code> (<code>makeSpinner()</code>, shared since 2026-07-28 —
+      it used to sit in <code>frameworks.js</code>), consumed by the Structures import banner
+      (<code>frameworks.js:223</code>, an <code>alert alert-info</code> with <code>role="status"</code> at
+      <code>:220</code>), the Structures export loader (<code>:284</code>) and the Learning plans
+      transfer (<code>plans_transfer.js:181</code> export, <code>:247</code> preview). Note the correct
+      division of roles: the <code>role="status"</code> sits on the <b>container</b> and the spinner goes
       <code>aria-hidden="true"</code> — what announces is the text, not the ring. Putting both on the same
-      element would cancel the role.
+      element would cancel the role. The Structures <b>export</b> loader is the one place that does not
+      hold up its end (no <code>role</code>, no text); <code>plans_export.mustache:55-57</code> is the
+      same control done right.
     </div>
   </div>
 </div>
@@ -168,16 +172,16 @@ code{font-family:var(--font-mono);font-size:10px;}
   <b>Mandatory discipline</b>: clear the state in a <code>finally</code>, never only on the success path —
   otherwise a load that fails leaves the pane spinning forever, with no retry. Today there are <b>9</b>
   <code>finally</code> blocks in <code>amd/src/central/</code>: <code>tabs.js:100</code>,
-  <code>context.js:218</code>, <code>modal_refresh.js:80</code>, <code>frameworks.js:324</code>,
+  <code>context.js:218</code>, <code>modal_refresh.js:80</code>, <code>frameworks.js:294</code>,
   <code>competency_links.js:488</code>, <code>related_competencies.js:199</code>,
   <code>enrol_methods.js:630</code>, <code>participants_users.js:113</code> and
   <code>competency_tree_browser.js:274</code>. <code>downloadFramework()</code> is the complete example:
-  it re-enables the button, hides the loader <i>and</i> empties its content (<code>frameworks.js:324-327</code>).
+  it re-enables the button, hides the loader <i>and</i> empties its content (<code>frameworks.js:294-297</code>).
 </div>
 <div class="note" style="margin-top:4px;">
   <b>House rule:</b> pane reloaded → cover; row swapped in place → <i>flash</i> (see
   <code>toast.html</code>). The explicit escape hatch exists: <code>reloadPane(pane, args, {quiet: true})</code>
-  suppresses the cover, and today has a <b>single</b> caller — <code>plans.js:102</code>, the reload that
+  suppresses the cover, and today has a <b>single</b> caller — <code>plans.js:103</code>, the reload that
   preserves the scroll position.
 </div>
 <div class="note" style="margin-top:4px;">

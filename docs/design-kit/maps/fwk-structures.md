@@ -6,8 +6,8 @@ footer**. The toolbar carries the counter ("· N hidden") and **three** header a
 / export). The System/Category selector comes from the contextbar (`BAR`).
 
 **The card's actions do not live in the card** — they live in the page's sticky footer, injected by
-`selectFramework` (`frameworks.js:466-474`) and routed back by `dispatchFrameworksAction`
-(`frameworks.js:429-447`).
+`selectFramework` (`frameworks.js:436-444`) and routed back by `dispatchFrameworksAction`
+(`frameworks.js:399-417`).
 
 - **Mustache:** [`templates/central/frameworks.mustache`](../../../templates/central/frameworks.mustache), [`frameworks_row.mustache`](../../../templates/central/frameworks_row.mustache), [`frameworks_footer_actions.mustache`](../../../templates/central/frameworks_footer_actions.mustache), [`frameworks_export.mustache`](../../../templates/central/frameworks_export.mustache), [`showhidden_toggle.mustache`](../../../templates/central/showhidden_toggle.mustache)
 - **PHP:** [`classes/output/dynamictabs/frameworks.php`](../../../classes/output/dynamictabs/frameworks.php)
@@ -33,21 +33,21 @@ footer**. The toolbar carries the counter ("· N hidden") and **three** header a
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `FWK-ROOT` | `[no label]` | region/root | `frameworks.mustache:63-65` | `data-region="frameworks"` | carries `contexttype`, `categoryid`, `contextid`, `canmanage`, `canscalespage`; `init` resolves it by selector (`frameworks.js:483`) and keeps it in `activeRegion`/`activePane` (`:488-489`) |
-| `FWK-CANSCALES` | `[no label]` | flag | `frameworks.mustache:65` | `data-canscalespage` | `has_capability('moodle/course:managescales', system)` (`dynamictabs/frameworks.php:130`); its **only** consumer is `injectScalesLink` (`frameworks.js:138`) → `FWK-SCALES-LINK` |
+| `FWK-ROOT` | `[no label]` | region/root | `frameworks.mustache:63-65` | `data-region="frameworks"` | carries `contexttype`, `categoryid`, `contextid`, `canmanage`, `canscalespage`; `init` resolves it by selector (`frameworks.js:453`) and keeps it in `activeRegion`/`activePane` (`:458-459`) |
+| `FWK-CANSCALES` | `[no label]` | flag | `frameworks.mustache:65` | `data-canscalespage` | `has_capability('moodle/course:managescales', system)` (`dynamictabs/frameworks.php:130`); its **only** consumer is `injectScalesLink` (`frameworks.js:139`) → `FWK-SCALES-LINK` |
 
 ## Header and toolbar
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
 | `FWK-EMPTY-CAT` | "Choose the course category first…" | empty state | `frameworks.mustache:67-69` | str `managecompetencies_selectcategory_help` | blocks the whole tab (the `{{^needscategoryselection}}` at `:71` wraps everything else) |
-| `FWK-SHOWHIDDEN` | Show hidden structures | switch | `showhidden_toggle.mustache:44-45`, called from `frameworks.mustache:72-74` | `data-action="{{action}}"` → `toggle-hidden` | **shared partial** with `EST`/`PLN`: the `data-action` is a **variable** in the template and the literal value comes from `dynamictabs/frameworks.php:152` (context at `:149-154`; **null when there is not a single hidden one** → does not render). State in the `frameworksshowhidden` preference (`frameworks.js:521`) **and** in `pane.dataset.showhidden` (`:520`), then `reloadPane` (`:522`) |
+| `FWK-SHOWHIDDEN` | Show hidden structures | switch | `showhidden_toggle.mustache:44-45`, called from `frameworks.mustache:72-74` | `data-action="{{action}}"` → `toggle-hidden` | **shared partial** with `EST`/`PLN`: the `data-action` is a **variable** in the template and the literal value comes from `dynamictabs/frameworks.php:152` (context at `:150-155`; **null when there is not a single hidden one** → does not render). State in the `frameworksshowhidden` preference (`frameworks.js:491`) **and** in `pane.dataset.showhidden` (`:490`), then `reloadPane` (`:492`) |
 | `FWK-TOOLBAR` | `[no label]` | container | `frameworks.mustache:76` | `.local-dimensions-central-fwtoolbar` | `space-between`; counter on the left, actions on the right |
 | `FWK-COUNT` | "Structures listed: N" | counter | `frameworks.mustache:77-78` | `frameworkcount` | str `central_frameworks_listed`; it counts the rows **displayed** (`count($rows)`, `dynamictabs/frameworks.php:142`) — the **2nd of the hub's three counters** (see `bar-contextbar.md`). 15px `#495057` (`styles.css:5157-5161`), number in `#1d2125` (`:5163-5166`) |
 | `FWK-HIDDENCOUNT` | "· N hidden" / "· 1 hidden" | suffix | `frameworks.mustache:78` | `hasexcluded` / `hiddenlabel` | strs `central_frameworks_hiddencount` + `central_frameworks_hiddencount_one`, chosen by a literal `if` and **resolved in PHP** (`dynamictabs/frameworks.php:118-127`) — the template receives finished text, it does not call `{{#str}}`, because `get_string` has no plural forms and pt_br inflects the adjective. `excludedcount = showhidden ? 0 : hiddencount` (`:117`) — it disappears while the toggle is on, because then nothing is being hidden. It exists to keep `FWK-COUNT` **honest** (comment at `:115-116`). Colour at `styles.css:5168-5170` |
 | `FWK-ACTIONS` | `[no label]` | group | `frameworks.mustache:81` | `.local-dimensions-central-fwactions` | the whole group is gated by `{{#canmanage}}` (`:80-94`) |
-| `FWK-NEW` | New structure | button | `frameworks.mustache:82-84` | `data-action="new"` | `fa-plus`; primary (`.local-dimensions-central-plans-new`); `createFramework` → a modal with the region's `contextid` (`frameworks.js:201-202`) |
-| `FWK-IMPORT` | Import | button | `frameworks.mustache:85-87` | `data-action="import"` | `fa-upload`; outline; `openImportForm` (`frameworks.js:259-276`) → dynamic form with CSV |
+| `FWK-NEW` | New structure | button | `frameworks.mustache:82-84` | `data-action="new"` | `fa-plus`; primary (`.local-dimensions-central-plans-new`); `createFramework` → a modal with the region's `contextid` (`frameworks.js:202-203`) |
+| `FWK-IMPORT` | Import | button | `frameworks.mustache:85-87` | `data-action="import"` | `fa-upload`; outline; `openImportForm` (`frameworks.js:248-265`) → dynamic form with CSV |
 | `FWK-EXPORT` | Export | button | `frameworks.mustache:88-92` | `data-action="export"` | `fa-download`; outline; **double gate** — `{{#canexport}}` (`:88`) nested inside the `{{#canmanage}}`, and `canexport = canmanage && !empty($rows)` (`dynamictabs/frameworks.php:147`), so it disappears when there is no structure to export |
 | `FWK-LIST` | `[no label]` | container | `frameworks.mustache:98` | `data-region="framework-rows"` | only with `hasframeworks`; receives the `FWK-ROW`s |
 | `FWK-EMPTY` | "No structures in this context." | empty state | `frameworks.mustache:105-107` | str `central_frameworks_none` | `alert alert-info role="status"` |
@@ -56,93 +56,100 @@ footer**. The toolbar carries the counter ("· N hidden") and **three** header a
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `FWK-ROW` | `[no label]` | card (wrapper) | `frameworks_row.mustache:41-45` | `data-framework="{id}"` | carries `frameworkid`, `name`, `count`, `visible`, `deletable`; the `is-hidden` class (`:41`) has been a state hook with no CSS since 2026-07-15 (the `opacity: 0.6` was removed for blocking AA; see the rules below — searching for `is-hidden` in `styles.css` returns nothing). The JS row selector is `[data-framework]` (`frameworks.js:44`) |
-| `FWK-ROW-SELECT` | `[no label]` | button | `frameworks_row.mustache:46` | `data-action="select-framework"` | **the whole card is a button**: `selectFramework` marks it `.active` and publishes the footer (`frameworks.js:458-475`). The `data-action` is **decorative** — the handler matches through `closest('[data-framework]')` (`:511-514`), not through the action |
+| `FWK-ROW` | `[no label]` | card (wrapper) | `frameworks_row.mustache:41-45` | `data-framework="{id}"` | carries `frameworkid`, `name`, `count`, `visible`, `deletable`; the `is-hidden` class (`:41`) has been a state hook with no CSS since 2026-07-15 (the `opacity: 0.6` was removed for blocking AA; see the rules below — searching for `is-hidden` in `styles.css` returns nothing). The JS row selector is `[data-framework]` (`frameworks.js:45`) |
+| `FWK-ROW-SELECT` | `[no label]` | button | `frameworks_row.mustache:46` | `data-action="select-framework"` | **the whole card is a button**: `selectFramework` marks it `.active` and publishes the footer (`frameworks.js:428-445`). The `data-action` is **decorative** — the handler matches through `closest('[data-framework]')` (`:481-484`), not through the action |
 | `FWK-ROW-NAME` | name | text | `frameworks_row.mustache:49` | `shortname` | 17px/700 (`styles.css:5264-5269`) |
 | `FWK-ROW-ID` | idnumber | mono chip | `frameworks_row.mustache:50` | `idnumber` | only when `idnumber` (`styles.css:5271-5279`) |
 | `FWK-ROW-HIDDEN` | "Hidden" | badge | `frameworks_row.mustache:51` | `^visible` | `fa-eye-slash` + str `hidden, tool_lp` (`styles.css:5281-5292`) |
-| `FWK-ROW-DESC` | `[no label]` | description | `frameworks_row.mustache:53` | `description` | only when `description`; a single line with an ellipsis and the full text in the `title` (`styles.css:5294-5302`). The server flattens it to plain text and cuts it at 300 (`helper.php:2861-2872`) |
+| `FWK-ROW-DESC` | `[no label]` | description | `frameworks_row.mustache:53` | `description` | only when `description`; a single line with an ellipsis and the full text in the `title` (`styles.css:5294-5302`). The server flattens it to plain text and cuts it at 300 (`helper.php:2897-2908`) |
 | `FWK-ROW-COUNT` | "N competencies" / "1 competency" | pill | `frameworks_row.mustache:55-57` | `competencycount` / `competencylabel` | **only the noun** arrives finished from PHP (strs `central_frameworks_competencieslabel` + `_one`, chosen by a literal `if` at `dynamictabs/frameworks.php:105-111`); the number stays in its `<strong>`, because the pill is 15px bold blue (`styles.css:5318-5322`) + `gap: 6px` + a 13.5px grey noun (`:5304-5316`) — resolving the whole phrase would kill that contrast. Accent pill on the right |
 
 ## Structure actions — **the page's sticky footer**, not the card
 
 Rendered by `selectFramework` through `Templates.renderForPromise('…/frameworks_footer_actions')` and
-handed to `ActionFooter.show(html, dispatchFrameworksAction)` (`frameworks.js:466-474`). Only with
+handed to `ActionFooter.show(html, dispatchFrameworksAction)` (`frameworks.js:436-444`). Only with
 `canmanage` (otherwise `ActionFooter.hide()`, `:462-465`). The buttons **carry no dataset**: they act
-on the module-level `activeFrameworkRow` (`frameworks.js:429-447`), which is why they work from
+on the module-level `activeFrameworkRow` (`frameworks.js:399-417`), which is why they work from
 outside the tab's region.
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `FWK-ROW-EDIT` | Edit details | footer button | `frameworks_footer_actions.mustache:41-44` | `data-action="edit"` | `fa-pencil`; str `central_plans_editdetails` (**shared with `PLN`**, it has no string of its own); opens the form with `MOD.SCALE` embedded (`framework_dynamic_form.php:192-194`); saving → toast + `reloadPane` (`frameworks.js:177-180`) |
-| `FWK-ROW-VIS` | Toggle visibility | footer button | `frameworks_footer_actions.mustache:45-48` | `data-action="visibility"` | the icon **mirrors the selected card's state** — `fa-eye`/`fa-eye-slash` decided at footer render time from the `visible` that `selectFramework` passes (`:46`, `frameworks.js:468`); WS `set_framework_visibility` → `reloadPane` (`:369-375`) |
-| `FWK-ROW-DUP` | Duplicate | footer button | `frameworks_footer_actions.mustache:49-52` | `data-action="duplicate"` | `fa-copy`; **core's** WS `core_competency_duplicate_competency_framework` → `reloadPane` (`frameworks.js:384-386`) |
+| `FWK-ROW-EDIT` | Edit details | footer button | `frameworks_footer_actions.mustache:41-44` | `data-action="edit"` | `fa-pencil`; str `central_plans_editdetails` (**shared with `PLN`**, it has no string of its own); opens the form with `MOD.SCALE` embedded (`framework_dynamic_form.php:192-194`); saving → toast + `reloadPane` (`frameworks.js:178-181`) |
+| `FWK-ROW-VIS` | Toggle visibility | footer button | `frameworks_footer_actions.mustache:45-48` | `data-action="visibility"` | the icon **mirrors the selected card's state** — `fa-eye`/`fa-eye-slash` decided at footer render time from the `visible` that `selectFramework` passes (`:46`, `frameworks.js:438`); WS `set_framework_visibility` → `reloadPane` (`:339-345`) |
+| `FWK-ROW-DUP` | Duplicate | footer button | `frameworks_footer_actions.mustache:49-52` | `data-action="duplicate"` | `fa-copy`; **core's** WS `core_competency_duplicate_competency_framework` → `reloadPane` (`frameworks.js:354-356`) |
 | `FWK-ROW-DEL` | Delete | footer button | `frameworks_footer_actions.mustache:53-56` | `data-action="delete"` | `fa-trash`; core's `delete` str. **No colour variant** — core's raw sticky-footer pattern does not use `btn-outline-danger`. Gated at **two** points, see the rules below |
 
 ## Import modal
 
 The banner `showImportLoading` injects is the plugin's **loading treatment for a modal body**:
 `alert alert-info` + `spinner-border spinner-border-sm`, prepended to the modal body
-(`frameworks.js:222-236`).
+(`frameworks.js:211-225`).
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `FWK-IMP-BANNER` | "Importing…" | banner (JS) | `frameworks.js:222-236` | `data-region="import-loading"` | str `central_frameworks_importing` (`:227`); born on `SUBMIT_BUTTON_PRESSED` (`:265`) and removed by `hideImportLoading` (`:244-250`) on both validation errors (`:266-267`), because the form comes back and the banner would spin forever. Duplicate guard at `:224` |
-| `FWK-IMP-DONE` | "Import complete: N competencies processed." | toast | `frameworks.js:268-274` | str `central_frameworks_import_done` | the count comes from the form's `event.detail.competencycount` (`:269`); `reloadPane` (`:270`) + success toast (`:271-273`) |
+| `FWK-IMP-BANNER` | "Importing…" | banner (JS) | `frameworks.js:211-225` | `data-region="import-loading"` | str `central_frameworks_importing` (`:216`); born on `SUBMIT_BUTTON_PRESSED` (`:254`) and removed by `hideImportLoading` (`:233-239`) on both validation errors (`:255-256`), because the form comes back and the banner would spin forever. Duplicate guard at `:213` |
+| `FWK-IMP-DONE` | "Import complete: N competencies processed." | toast | `frameworks.js:257-263` | str `central_frameworks_import_done` | the count comes from the form's `event.detail.competencycount` (`:258`); `reloadPane` (`:259`) + success toast (`:260-262`) |
 
-> **ARIA (measured).** The banner and the export loader share the same `makeSpinner()`
-> (`frameworks.js:209-214`), which marks the spinner `aria-hidden="true"` (`:212`) and **nothing
-> else** — the accessible name sits on the container: the import banner puts `role="status"` on
-> itself (`:231`) and holds the text inside, which is the correct pattern from `states.html`. The
-> **export loader** has no such pair: `FWK-EXP-LOADER` only hosts the `aria-hidden` spinner (`:314`),
-> with no `role` and no text, so that wait is not announced.
+> **ARIA (measured).** The banner and the export loader share the same `makeSpinner()`, which marks
+> the spinner `aria-hidden="true"` and **nothing else** — the accessible name sits on the container:
+> the import banner puts `role="status"` on itself (`frameworks.js:220`) and holds the text inside
+> (`:222-223`), which is the correct pattern from `states.html`. The **export loader** has no such
+> pair: `FWK-EXP-LOADER` only hosts the `aria-hidden` spinner (`:284`), with no `role` and no text,
+> so that wait is not announced.
+>
+> **`makeSpinner()` moved out of this file on 2026-07-28.** It lives in
+> [`central/download.js`](../../../amd/src/central/download.js) (`download.js:53-58`) with
+> `triggerDownload()` (`:36-46`), lifted verbatim — no ARIA change — when the Learning plans tab's
+> own CSV export needed both. `frameworks.js` imports them; the defect above is unchanged and still
+> lives here, in the **container**, not in the helper. `PLN-EXP-LOADER`
+> ([`pln-plans.md`](pln-plans.md)) is the corrected shape and can be copied from.
 
 ## Export modal
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
 | `FWK-EXP-LABEL` | "Structure to export" | label | `frameworks_export.mustache:32-34` | str `central_frameworks_export_pick` | `for="local-dimensions-export-select"` |
-| `FWK-EXP-SELECT` | `[no label]` | select | `frameworks_export.mustache:35` | `data-region="export-select"` | `form-select` (never `custom-select`); born **empty** and populated client-side from the tab's `FWK-ROW`s, on `ModalEvents.shown` (`frameworks.js:345-354`) — the modal only knows what the tab has already listed |
-| `FWK-EXP-DOWNLOAD` | Export | button | `frameworks_export.mustache:38-40` | `data-action="download"` | `btn-primary`; WS `local_dimensions_export_framework` (`frameworks.js:316-319`) → `Blob` + `<a download>` (`triggerDownload`, `:285-295`) |
-| `FWK-EXP-LOADER` | `[no label]` | spinner slot | `frameworks_export.mustache:41` | `data-region="export-loader"` | `hidden` by default; `downloadFramework` disables the button and shows the spinner (`frameworks.js:312-314`) and **restores both in a `finally`** (`:324-328`) — the discipline `states.html` demands |
+| `FWK-EXP-SELECT` | `[no label]` | select | `frameworks_export.mustache:35` | `data-region="export-select"` | `form-select` (never `custom-select`); born **empty** and populated client-side from the tab's `FWK-ROW`s, on `ModalEvents.shown` (`frameworks.js:315-324`) — the modal only knows what the tab has already listed |
+| `FWK-EXP-DOWNLOAD` | Export | button | `frameworks_export.mustache:38-40` | `data-action="download"` | `btn-primary`; WS `local_dimensions_export_framework` (`frameworks.js:286-289`) → `Blob` + `<a download>` (`triggerDownload`, `:285-295`) |
+| `FWK-EXP-LOADER` | `[no label]` | spinner slot | `frameworks_export.mustache:41` | `data-region="export-loader"` | `hidden` by default; `downloadFramework` disables the button and shows the spinner (`frameworks.js:282-284`) and **restores both in a `finally`** (`:294-298`) — the discipline `states.html` demands |
 
-The modal hosts a **toast region of its own** (`addToastRegion(modal.getBody()[0])`, `frameworks.js:346`):
+The modal hosts a **toast region of its own** (`addToastRegion(modal.getBody()[0])`, `frameworks.js:316`):
 a toast fired from inside it renders **above** the dialogue (the house pattern; see `CLAUDE.md`).
 
 ## Scales shortcut in the form
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `FWK-SCALES-LINK` | "Open scales page" | link (JS) | `frameworks.js:133-161` | str `central_frameworks_openscales` (`:145`) | injected into the form's **`.modal-footer`** (`:141`), as the **first child** so the group's `margin-right: auto` pushes Save/Cancel to the right (`:159-160`), inside a `.local-dimensions-modal-footer-links` (`:147`). Fired on the `LOADED` event (`:181`); `target="_blank"` + `rel="noopener noreferrer"` (`:150-151`), `fa fa-external-link` icon, `aria-hidden` (`:154-155`). Gated by `FWK-CANSCALES` (`:138`) and idempotent (`:142`). The group's CSS is at `styles.css:5028-5033` (+ a focus ring of its own for the `btn-link` at `:5041-5045`, which Moodle 4.5's Bootstrap 4 does not draw). It is the same escape-link pattern as the participants modal — the links **moved down from the header to the footer** in D2 (comment at `styles.css:5020-5027`) |
+| `FWK-SCALES-LINK` | "Open scales page" | link (JS) | `frameworks.js:134-162` | str `central_frameworks_openscales` (`:146`) | injected into the form's **`.modal-footer`** (`:142`), as the **first child** so the group's `margin-right: auto` pushes Save/Cancel to the right (`:160-161`), inside a `.local-dimensions-modal-footer-links` (`:148`). Fired on the `LOADED` event (`:182`); `target="_blank"` + `rel="noopener noreferrer"` (`:151-152`), `fa fa-external-link` icon, `aria-hidden` (`:155-156`). Gated by `FWK-CANSCALES` (`:139`) and idempotent (`:143`). The group's CSS is at `styles.css:5028-5033` (+ a focus ring of its own for the `btn-link` at `:5041-5045`, which Moodle 4.5's Bootstrap 4 does not draw). It is the same escape-link pattern as the participants modal — the links **moved down from the header to the footer** in D2 (comment at `styles.css:5020-5027`) |
 | `FWK-SCALES-CHIP` | `[no label]` | close chip | `styles.css:5074-5104` | `.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close` | **Pure CSS, no class from JS.** A `1.75rem` chip, `#e7f0f9` background, Font Awesome's `\f00d` glyph in `#0f4d85` (`:5088-5097`), hover/focus `#d4e6fb` (`:5099-5104`). The selector's second arm matches the `.modal-form-dialogue` that core puts on the dialogue **synchronously, before `show()`** — it paints from the first frame; the `:has()` arm on its own flashed (comment at `:5063-5073`). The old `local-dimensions-headerlink-modal` class was **removed** (zero hits for `headerlink` in `amd/`, `templates/`, `classes/` and `styles.css`) |
 
 ## Business rules (verified in the code)
 
 - **Deletion has two gates, and the second does not trust the first.** `deleteFramework` refuses
-  early when `data-deletable !== '1'` (`frameworks.js:397-400`), confirms with `deleteCancelPromise`
+  early when `data-deletable !== '1'` (`frameworks.js:367-370`), confirms with `deleteCancelPromise`
   (`:407`) and **still** treats `success === false` from core's WS as a block (`:415-418`). The
   dataset is a snapshot of the render; between render and click the structure may have come into
-  use. `deletable` comes out of `competency::can_all_be_deleted()` (`helper.php:2875`).
+  use. `deletable` comes out of `competency::can_all_be_deleted()` (`helper.php:2911`).
 - **`hashiddenframeworks` is a dead key on this tab.** `dynamictabs/frameworks.php:140` exports it,
   but `frameworks.mustache` **does not use it** anywhere — the toggle's gate became "is
   `showhiddentoggle` null or not" (`:149`). The name's only other occurrences are the docblock and
   the *Example context* of `structure.mustache` (`:36`, `:55`), which has a context of its own
   (`dynamictabs/structure.php:165`) and likewise does not consume it in the body.
 - **The scale-config delegation is global and set up once per page** (`setupScaleConfigDelegation`,
-  `frameworks.js:95-123`), in the **capture phase** (`:107`): the form is born inside a `modalform`
+  `frameworks.js:96-124`), in the **capture phase** (`:108`): the form is born inside a `modalform`
   whose lifecycle does not run the tab's `init`, so the click is listened for on the document. The
   select is resolved **by `name`, not by `id`** (`:65` and `:109`): `core_form\dynamic_form` suffixes
   the ids with a random string (`id_scaleid_c5fLCIS8ExDrcVf`), so `#id_scaleid` would never match
   (comment at `:63-64`).
 - **Changing the scale clears the proficiency config — except when the select is `readonly`**
-  (`frameworks.js:109-113`): an already-rated framework has its scale frozen, and clearing there
+  (`frameworks.js:110-114`): an already-rated framework has its scale frozen, and clearing there
   would erase a config the server is going to re-pin anyway.
 - **The footer is defended against races at three points** (the same pattern as `EST`):
   `selectFramework` only shows it when the card is still `.active` **and** the tab is still the
   active one (`:470`); `dispatchFrameworksAction` ignores clicks when the tab has lost focus
   (`:432-434`); and `init` only clears the footer when the tab is the active one (`:493-495`),
   because the dynamic tabs re-run `init` from an out-of-order asynchronous load.
-- **Every action reloads the pane.** This tab's **6** `reloadPane` calls (`frameworks.js:179`,
+- **Every action reloads the pane.** This tab's **6** `reloadPane` calls (`frameworks.js:180`,
   `:270`, `:374`, `:386`, `:419`, `:522`) cover saving, importing, toggling visibility, duplicating,
   deleting and flipping the toggle. **There is no in-place path here** — unlike `EST`, which has
   four. That is why IMP-03 paid off more on this tab: every action click rebuilds the list, and now
@@ -206,7 +213,7 @@ the old content plus a `2rem` ring in `::after` (`:4044`) with a keyframe of its
 **not** the form this map prescribed (`FWK-IMP-BANNER`'s `alert alert-info` + `spinner-border-sm`);
 that remains the form for loading **in a modal body**, and the two coexist. The `{quiet: true}`
 opt-out (`tabs.js:66`) exists but **no** call on this tab uses it — the hub's only caller is
-`reloadKeepingScroll` on the Plans tab (`plans.js:102`).
+`reloadKeepingScroll` on the Plans tab (`plans.js:103`).
 
 ## IMP-05 — refresh on the contextbar (shipped, `mtube: refresh`)
 

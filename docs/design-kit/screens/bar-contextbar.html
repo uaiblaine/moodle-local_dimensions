@@ -128,7 +128,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     <code>BAR-CATHIDDEN</code> is <b>client-side</b>: <code>context.js:335</code> re-calls
     <code>enhanceCategory</code> preserving the selected value and writes the preference
     (<code>Preferences.saveNav({showhiddencats: …})</code>, <code>:336</code>), with the <code>change</code>
-    re-bound at <code>:378</code>; the key is sanitised at <code>classes/helper.php:2311</code> and is born
+    re-bound at <code>:378</code>; the key is sanitised at <code>classes/helper.php:2347</code> and is born
     <code>false</code> in the navigation defaults (<code>preferences.js:40</code>). There is no
     <code>reloadPane</code> on that path — only the option list changes.
     <code>BAR-CAT-01</code> is a <code>&lt;select class="form-select"&gt;</code> in the template

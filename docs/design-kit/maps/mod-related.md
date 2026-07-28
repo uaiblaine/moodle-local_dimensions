@@ -109,7 +109,7 @@ anything twice, and why removing the A→B relation makes B disappear from A's l
 
 `related_competencies.js:269` calls `addToastRegion(modal.getBody()[0])` on `ModalEvents.shown`.
 It is one of the plugin's **4** points with this pattern (`participants_manager.js:236`,
-`competency_links.js:914`, `frameworks.js:346`, and this one) — counted with
+`competency_links.js:914`, `frameworks.js:316`, and this one) — counted with
 `grep -rn 'addToastRegion(' amd/src/`, **with the parenthesis**: without it the grep returns **11**,
 because it adds the hosts' 4 `import` lines plus three from the `toast.js` wrapper (the docblock
 `:21`, the core import `:29` and the re-export `:41`).

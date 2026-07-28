@@ -1,4 +1,4 @@
-<!-- @dsCard group="Screens (as-is)" name="Learning plans tab" subtitle="PLN — master-detail, the nested list's kebab, the sticky footer, reloadPane's busy blanket and the icon tabs, with IDs" -->
+<!-- @dsCard group="Screens (as-is)" name="Learning plans tab" subtitle="PLN — master-detail, the nested list's kebab, the sticky footer, reloadPane's busy blanket, the icon tabs and the CSV transfer (toolbar + both modals), with IDs" -->
 <style>
 :root{
   --surface-2:#fff;--surface-1:#f8f9fa;--surface-0:#e9ecef;
@@ -16,7 +16,7 @@
      6.52:1 (measured). */
   --prim-bg:#185fa5;--prim-fg:#fff;
   /* The plan header's three stops: the REAL values PHP computes for the #0f6cbf default —
-     darken_hex(base, 0.16) and darken_hex(base, 0.34) (helper.php:3020-3035,
+     darken_hex(base, 0.16) and darken_hex(base, 0.34) (helper.php:3056-3071,
      dynamictabs/plans.php:311-313). Fixed in both modes, as in the plugin: the header wears
      the TEMPLATE's colours, not the theme's. White text over the lightest stop =
      5.36:1 (measured). */
@@ -296,6 +296,49 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
 
   <div class="xmodal">
+    <div class="xmhead"><span>Export learning plan templates to CSV <span class="idb">PLN-EXP</span></span><span class="note">close</span></div>
+    <div class="xmbody">
+      <label class="note" for="pln-exp-select" style="display:block;margin-bottom:3px;">Templates to export <span class="idb">PLN-EXP-SELECT</span></label>
+      <select id="pln-exp-select" multiple size="3" style="width:100%;font-size:12px;padding:5px;border:1px solid var(--border-strong);border-radius:6px;background:var(--surface-2);color:var(--text-primary);">
+        <option selected>Induction plan (TPL-IND)</option>
+        <option>Management track</option>
+        <option>Clinical placement (TPL-CLIN)</option>
+      </select>
+      <label class="sw" style="margin-top:7px;font-size:12px;">
+        <span class="tgl"><input type="checkbox" id="pln-exp-all"><span class="tgl-track"></span></span>
+        Select every template <span class="idb">PLN-EXP-ALL</span>
+      </label>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:9px;">
+        <span class="bprim">Export templates <span class="idb">PLN-EXP-DOWNLOAD</span></span>
+        <span class="note">Exporting… <span class="idb">PLN-EXP-LOADER</span></span>
+      </div>
+      <div class="xsub" style="margin-top:8px;">
+        Card and background images, cohort links, cohort role rules and files embedded in text are
+        not carried by this file. <span class="idb">PLN-EXP-LOSSY</span>
+      </div>
+      <div style="margin-top:8px;">
+        <span class="xsub">Referenced structures <span class="idb">PLN-EXP-STRUCTURES</span></span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+          <span class="xout">CORE</span><span class="xout">SOFT</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note" style="margin-top:5px;">
+    A plain <code>core/modal</code> — there is nothing to confirm, the Download button is the action,
+    so there is no Save/Cancel pair. The select is built client-side from the tab's own rows
+    (<code>plans_transfer.js:77-92</code>), which is what makes the offering <b>exactly</b> what the tab
+    lists and never more, and it pre-selects the template the detail pane is showing. The loader
+    carries <code>role="status"</code> plus a visually hidden label — the shape
+    <code>FWK-EXP-LOADER</code> is missing (see <code>fwk-structures.md</code>) — and deliberately no
+    <code>d-inline-flex</code>, which is <code>display:inline-flex !important</code> on Bootstrap 4 and
+    beats <code>[hidden]</code>. "Referenced structures" appears only after a successful export, fed by
+    the web service's own <code>frameworks[]</code>, and each button downloads through the
+    <b>existing</b> <code>local_dimensions_export_framework</code> service: a plan without its
+    structures cannot be imported anywhere, so the offer sits where the operator already is.
+  </div>
+
+  <div class="xmodal">
     <div class="xmhead"><span>Import preview <span class="idb">PLN-IMP-ROOT</span></span><span class="note">refresh · close</span></div>
     <div class="xmbody">
       <div class="xpills">
@@ -503,7 +546,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     (<code>styles.css:5829</code>). The three stops above are the <b>real</b> ones for the
     <code>#0f6cbf</code> default: <code>#0f6cbf</code> → <code>#0d5ba0</code> → <code>#0a477e</code>,
     computed by <code>darken_hex(base, 0.16)</code> and <code>(base, 0.34)</code>
-    (<code>dynamictabs/plans.php:316-318</code> calling <code>helper.php:3020-3035</code>). It
+    (<code>dynamictabs/plans.php:316-318</code> calling <code>helper.php:3056-3071</code>). It
     <b>does not follow the theme</b> — neither here nor in the plugin.
   </div>
   <div class="warn">

@@ -128,7 +128,7 @@ code{font-family:var(--font-mono);font-size:10px;}
   (<code>:7069-7089</code> — <code>-badge-ok</code> at <code>#d7e4d6/#153114</code>, <code>-badge-warn</code>
   at <code>#fcefdc/#60451f</code>). The <b>info/cyan</b> pair (<code>#cce6ea</code>/<code>#00343c</code>) has
   <b>zero</b> occurrences: where the hub needs an informational note it uses Boost's
-  <code>alert alert-info</code> (the import banner, <code>frameworks.js:230</code>). The learner views speak a
+  <code>alert alert-info</code> (the import banner, <code>frameworks.js:219</code>). The learner views speak a
   different vocabulary — there the Bootstrap 5 tints apply (<code>#d1e7dd/#0f5132</code>, <code>#fff3cd/#664d03</code>,
   <code>#f8d7da/#842029</code>), which coexist with these without mixing.
 </div>
@@ -206,9 +206,10 @@ code{font-family:var(--font-mono);font-size:10px;}
   <code>spinner-border</code> — it draws its own ring in <code>::after</code>
   (<code>:4044-4057</code>) with its own keyframe (<code>:4059-4063</code>) and its own
   <code>prefers-reduced-motion</code> rule (<code>:4065-4069</code>), precisely so as not to depend on Boost.
-  <code>spinner-border</code> appears elsewhere: <code>frameworks.js:209-214</code>
-  (<code>makeSpinner()</code>, the import banner and the export loader). Full detail in
-  <b>states.html</b>.
+  <code>spinner-border</code> appears elsewhere: <code>central/download.js:53-58</code>
+  (<code>makeSpinner()</code> — the Structures import banner and export loader, and the Learning
+  plans CSV transfer, which is why it is in a shared module and no longer in
+  <code>frameworks.js</code>). Full detail in <b>states.html</b>.
 </div>
 
 <div class="callout">
