@@ -287,7 +287,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         if (!empty($shortname)) {
             $existing = competency_framework::get_record(['shortname' => $shortname, 'contextid' => $contextid]);
             if ($existing && (int) $existing->get('id') !== $id) {
-                $errors['shortname'] = get_string('shortnametaken', 'tool_lp');
+                $errors['shortname'] = get_string('central_plans_import_reason_shortnametaken', 'local_dimensions');
             }
         }
 

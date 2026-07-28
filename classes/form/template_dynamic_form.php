@@ -341,7 +341,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
                 'contextid' => $data['contextid'],
             ]);
             if ($existing && (int) $existing->get('id') !== (int) ($data['id'] ?? 0)) {
-                $errors['shortname'] = get_string('shortnametaken', 'tool_lp');
+                $errors['shortname'] = get_string('central_plans_import_reason_shortnametaken', 'local_dimensions');
             }
         }
 
