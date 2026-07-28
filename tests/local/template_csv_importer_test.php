@@ -156,7 +156,8 @@ final class template_csv_importer_test extends \advanced_testcase {
         $after = $this->getDataGenerator()->get_plugin_generator('core_competency')
             ->create_template(['shortname' => 'Written after the run']);
         $this->assertNotFalse(template::get_record(['id' => (int) $after->get('id')]));
-        $this->assertSame(3, $DB->count_records('competency_template'));
+        // Two, not three: the refused row wrote nothing, which is what this test is about.
+        $this->assertSame(2, $DB->count_records('competency_template'));
     }
 
     /**

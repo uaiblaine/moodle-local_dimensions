@@ -514,7 +514,8 @@ class template_import_analyser {
             $here = $this->templates_by_idnumber($idnumber, true);
             if (count($here) === 1) {
                 return array_merge($none, [
-                    'id' => (int) reset($here),
+                    // Keyed by template id, valued by context id: the KEY is the match.
+                    'id' => (int) array_key_first($here),
                     'confidence' => template_import_verdict::CONFIDENCE_EXACT,
                 ]);
             }
