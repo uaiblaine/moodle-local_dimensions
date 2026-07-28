@@ -7432,3 +7432,162 @@ a.local-dimensions-central-links-badge-warn:focus {
     opacity: 1;
     transition-delay: 250ms;
 }
+
+/* Learning plan CSV import preview (Competency hub Plans tab). A dense, scannable list rather
+   than a table: each row is one projected template with its verdict badge, what would change,
+   how it can be resolved, and its competency links. The row is the repaint unit, so its
+   markup is a self-contained block the apply step can replace in place. */
+.local-dimensions-tplimport-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.local-dimensions-tplimport-reassurance {
+    margin-bottom: 12px;
+    color: #495057;
+    font-size: 14px;
+}
+
+.local-dimensions-tplimport-notices {
+    margin-bottom: 16px;
+    padding-left: 20px;
+    color: #495057;
+    font-size: 13.5px;
+}
+
+.local-dimensions-tplimport-group {
+    margin-bottom: 12px;
+    border: 1px solid #e4e7ea;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.local-dimensions-tplimport-grouphead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border: 0;
+    background: #f5f7f9;
+    text-align: left;
+    cursor: pointer;
+}
+
+.local-dimensions-tplimport-chevron {
+    transition: transform 150ms ease;
+}
+
+.local-dimensions-tplimport-grouphead[aria-expanded='false'] .local-dimensions-tplimport-chevron {
+    transform: rotate(-90deg);
+}
+
+.local-dimensions-tplimport-groupcount {
+    font-weight: 700;
+    color: #1d2125;
+}
+
+.local-dimensions-tplimport-grouphelp {
+    color: #495057;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.local-dimensions-tplimport-rows {
+    padding: 4px 14px 10px;
+}
+
+.local-dimensions-tplimport-row {
+    padding: 10px 0;
+    border-top: 1px solid #eef0f2;
+}
+
+.local-dimensions-tplimport-row:first-child {
+    border-top: 0;
+}
+
+.local-dimensions-tplimport-rowhead {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.local-dimensions-tplimport-name {
+    font-weight: 600;
+    color: #1d2125;
+}
+
+.local-dimensions-tplimport-id,
+.local-dimensions-tplimport-rownum {
+    color: #6c757d;
+    font-size: 12.5px;
+}
+
+.local-dimensions-tplimport-reason,
+.local-dimensions-tplimport-blast {
+    margin: 6px 0 0;
+    color: #495057;
+    font-size: 13px;
+}
+
+.local-dimensions-tplimport-diff {
+    margin: 6px 0 0;
+    padding-left: 20px;
+    font-size: 13px;
+}
+
+.local-dimensions-tplimport-field {
+    font-family: monospace;
+    color: #1d2125;
+}
+
+.local-dimensions-tplimport-from {
+    color: #6c757d;
+    text-decoration: line-through;
+}
+
+.local-dimensions-tplimport-to {
+    color: #1d2125;
+}
+
+.local-dimensions-tplimport-remedies,
+.local-dimensions-tplimport-links {
+    margin-top: 6px;
+    font-size: 13px;
+}
+
+.local-dimensions-tplimport-sublabel {
+    display: block;
+    color: #6c757d;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.local-dimensions-tplimport-remedy {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 14px;
+}
+
+.local-dimensions-tplimport-links ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.local-dimensions-tplimport-links li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 2px 0;
+}
+
+.local-dimensions-tplimport-linkdetail {
+    color: #6c757d;
+    font-size: 12.5px;
+}

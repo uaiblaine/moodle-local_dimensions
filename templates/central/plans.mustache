@@ -150,13 +150,18 @@
         <span class="local-dimensions-central-fwcount">
             {{#str}}central_plans_listed, local_dimensions{{/str}}: <strong>{{templatecount}}</strong>
         </span>
-        {{#canexport}}
         <div class="local-dimensions-central-fwactions">
+            {{#canmanage}}
+            <button type="button" class="local-dimensions-central-btn-outline" data-action="import-templates">
+                <i class="fa fa-upload" aria-hidden="true"></i>{{#str}}central_plans_import, local_dimensions{{/str}}
+            </button>
+            {{/canmanage}}
+            {{#canexport}}
             <button type="button" class="local-dimensions-central-btn-outline" data-action="export-templates">
                 <i class="fa fa-download" aria-hidden="true"></i>{{#str}}central_plans_export, local_dimensions{{/str}}
             </button>
+            {{/canexport}}
         </div>
-        {{/canexport}}
     </div>
 
     <div class="local-dimensions-central-plans-body{{^hastemplates}} local-dimensions-central-plans-body-single{{/hastemplates}}" data-region="plans-body">
