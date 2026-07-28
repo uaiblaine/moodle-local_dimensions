@@ -72,6 +72,15 @@ class apply_import_templates extends external_api {
                         VALUE_DEFAULT,
                         []
                     ),
+                    'remaps' => new external_multiple_structure(
+                        new external_single_structure([
+                            'token' => new external_value(PARAM_ALPHANUMEXT, 'The CSV column token'),
+                            'value' => new external_value(PARAM_TEXT, 'The option label to store, or empty to clear'),
+                        ]),
+                        'Chosen replacements for option labels this site does not have',
+                        VALUE_DEFAULT,
+                        []
+                    ),
                 ]),
                 'The rows the operator ticked'
             ),

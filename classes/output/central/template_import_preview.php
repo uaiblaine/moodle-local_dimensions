@@ -226,6 +226,8 @@ class template_import_preview implements renderable, templatable {
             'hasdiff' => !empty($item['diff']),
             'remedies' => self::export_remedies($item),
             'hasremedies' => !empty($item['remedies']),
+            'remaps' => self::export_remaps($item),
+            'hasremaps' => !empty($item['remaps']),
             'links' => $links,
             'haslinks' => !empty($links),
             'hasblast' => $blast['openplans'] > 0 || $blast['cohorts'] > 0
@@ -258,6 +260,29 @@ class template_import_preview implements renderable, templatable {
             ];
         }
         return $remedies;
+    }
+
+    /**
+     * The per-value remap selects of one item, each carrying the column token it stands for.
+     *
+     * @param array $item The projected item.
+     * @return array
+     */
+    protected static function export_remaps(array $item): array {
+        $remaps = [];
+        foreach (($item['remaps'] ?? []) as $remap) {
+            $remaps[] = [
+                'token' => $remap['token'],
+                'value' => $remap['value'],
+                'options' => $remap['options'],
+                'id' => 'ld-tplimp-remap-' . $item['itemkey'] . '-' . $remap['token'],
+                'label' => get_string('central_plans_import_row_remap', 'local_dimensions', (object) [
+                    'column' => $remap['token'],
+                    'value' => $remap['value'],
+                ]),
+            ];
+        }
+        return $remaps;
     }
 
     /**

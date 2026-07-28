@@ -80,6 +80,13 @@ class lp_handler extends handler {
     /**
      * Returns the context for the data instance.
      *
+     * Deliberately the system context, including for a template that lives in a course category.
+     * This is where every customfield_data row this plugin has ever written already sits, along
+     * with the file areas of the textarea and picture fields; switching new inserts to the
+     * template's own context would split the plugin's data across two contexts with no upgrade
+     * step, and leave the files of existing category templates unreachable. Moving it is a
+     * migration in its own right, not a side effect of the editing fix in can_edit().
+     *
      * @param int $instanceid
      * @return context
      */
@@ -110,6 +117,14 @@ class lp_handler extends handler {
     /**
      * Check if the current user can edit the custom fields.
      *
+     * Resolved at the TEMPLATE's own context when there is one. Resolving templatemanage at the
+     * system context meant handler::instance_form_save() — which saves only get_editable_fields()
+     * — silently wrote ZERO custom fields for a manager who holds the capability in a course
+     * category, the very place category templates live. That included the template ID number, so
+     * the identity key never landed and every re-import created a duplicate.
+     *
+     * editcustomscss stays system-scoped: it gates RISK_XSS content that renders site-wide.
+     *
      * @param \core_customfield\field_controller $field
      * @param int $instanceid
      * @return bool
@@ -118,7 +133,26 @@ class lp_handler extends handler {
         if ($field->get('shortname') === \local_dimensions\constants::CFIELD_CUSTOMSCSS) {
             return has_capability('local/dimensions:editcustomscss', context_system::instance());
         }
-        return has_capability('moodle/competency:templatemanage', context_system::instance());
+        return has_capability('moodle/competency:templatemanage', $this->resolve_edit_context($instanceid));
+    }
+
+    /**
+     * The context a template's custom-field editing rights are resolved against.
+     *
+     * Falls back to the system context with no instance — the field-configuration screens edit
+     * the field definitions themselves, which are site-wide.
+     *
+     * @param int $instanceid The template id, or 0.
+     * @return context
+     */
+    protected function resolve_edit_context(int $instanceid): context {
+        if ($instanceid > 0) {
+            $template = \core_competency\template::get_record(['id' => $instanceid]);
+            if ($template) {
+                return $template->get_context();
+            }
+        }
+        return context_system::instance();
     }
 
     /**

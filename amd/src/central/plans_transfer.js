@@ -53,6 +53,9 @@ const SELECTORS = {
     selectAll: '[data-action="export-selectall"]',
     download: '[data-action="download"]',
     loader: '[data-region="export-loader"]',
+    frameworks: '[data-region="export-frameworks"]',
+    frameworklist: '[data-region="export-frameworklist"]',
+    downloadFramework: '[data-action="download-framework"]',
     groupToggle: '[data-action="toggle-group"]',
     preview: '[data-region="import-preview"]',
     row: '[data-region="import-row"]',
@@ -60,6 +63,7 @@ const SELECTORS = {
     linkCheck: '[data-region="link-check"]',
     link: '[data-region="import-link"]',
     remedy: '[data-region="remedy"]',
+    remap: '[data-region="remap"]',
 };
 
 /**
@@ -105,6 +109,59 @@ const toggleSelectAll = (body, checked) => {
 };
 
 /**
+ * Offer every structure the exported plans reference as a companion download.
+ *
+ * A plan without its structures cannot be imported anywhere, and the import preview says so from
+ * the other side; this is the same fact offered where the operator already is. The download goes
+ * through the Structures tab's own existing web service.
+ *
+ * @param {HTMLElement} body The modal body.
+ * @param {Array} frameworks The structures the export web service reported.
+ * @return {void}
+ */
+const offerFrameworks = (body, frameworks) => {
+    const holder = body.querySelector(SELECTORS.frameworks);
+    const list = body.querySelector(SELECTORS.frameworklist);
+    if (!holder || !list || !frameworks.length) {
+        return;
+    }
+    list.replaceChildren();
+    frameworks.forEach((framework) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'local-dimensions-central-btn-outline';
+        button.dataset.action = 'download-framework';
+        button.dataset.id = framework.id;
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-download';
+        icon.setAttribute('aria-hidden', 'true');
+        button.append(icon, document.createTextNode(framework.shortname || framework.idnumber));
+        list.append(button);
+    });
+    holder.hidden = false;
+};
+
+/**
+ * Download one referenced structure through the Structures tab's export service.
+ *
+ * @param {HTMLElement} button The structure's download button.
+ * @return {Promise<void>}
+ */
+const downloadFramework = async(button) => {
+    button.disabled = true;
+    try {
+        const result = await Ajax.call([{
+            methodname: 'local_dimensions_export_framework',
+            args: {frameworkid: Number(button.dataset.id)},
+        }])[0];
+        triggerDownload(result.filename, result.content);
+        addToast(await getString('central_frameworks_export_done', 'local_dimensions'), {type: 'success'});
+    } finally {
+        button.disabled = false;
+    }
+};
+
+/**
  * Fetch the selected templates as CSV and hand the file to the browser, with a loader.
  *
  * @param {Modal} modal The export modal.
@@ -131,6 +188,7 @@ const downloadTemplates = async(modal, region) => {
             args: {templateids: ids.join(','), contextid: Number(region.dataset.contextid)},
         }])[0];
         triggerDownload(result.filename, result.content);
+        offerFrameworks(body, result.frameworks || []);
         addToast(await getString('central_plans_export_done', 'local_dimensions'), {type: 'success'});
     } catch (error) {
         notifyError(error);
@@ -166,6 +224,10 @@ export const openExportModal = async(region) => {
     modal.getRoot().on('click', SELECTORS.download, (event) => {
         event.preventDefault();
         downloadTemplates(modal, region).catch(notifyError);
+    });
+    modal.getRoot().on('click', SELECTORS.downloadFramework, (event) => {
+        event.preventDefault();
+        downloadFramework(event.target.closest(SELECTORS.downloadFramework)).catch(notifyError);
     });
     modal.show();
 };
@@ -246,12 +308,17 @@ const collectSelections = (body) => {
                 links.push(link.dataset.itemkey);
             }
         });
+        const remaps = [];
+        row.querySelectorAll(SELECTORS.remap).forEach((select) => {
+            remaps.push({token: select.dataset.token, value: select.value});
+        });
         selections.push({
             itemkey: row.dataset.itemkey,
             verdict: row.dataset.verdict,
             fingerprint: row.dataset.fingerprint,
             remedy: remedy ? remedy.value : 'none',
             links: links,
+            remaps: remaps,
         });
     });
     return selections;

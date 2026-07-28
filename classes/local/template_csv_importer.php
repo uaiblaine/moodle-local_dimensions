@@ -46,6 +46,17 @@ use local_dimensions\template_metadata_cache;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class template_csv_importer {
+    /**
+     * The CSV columns whose value the operator may replace from the preview.
+     *
+     * Only the three admin-editable option lists, as an isset() map: a remap is a choice among
+     * options the server computed, so an unlisted token from a crafted payload is ignored rather
+     * than allowed to set an arbitrary custom field.
+     *
+     * @var array
+     */
+    const REMAPPABLE = ['cf_tag1' => true, 'cf_tag2' => true, 'cf_type' => true];
+
     /** @var array The parse() output being applied. */
     protected $parsed;
 
@@ -201,7 +212,7 @@ class template_csv_importer {
         $transaction = $DB->start_delegated_transaction();
         try {
             $templateid = $this->write_core_row($item, $row, $remedy, $isnew);
-            $this->write_customfields($item, $row, $templateid, $isnew);
+            $this->write_customfields($item, $row, $templateid, $isnew, $selection);
             $added = $this->write_links($templateid, $links);
             $transaction->allow_commit();
         } catch (\Throwable $e) {
@@ -319,10 +330,26 @@ class template_csv_importer {
      * @param \stdClass $row The parsed source row.
      * @param int $templateid The template that was created or updated.
      * @param bool $isnew Whether a template was created.
+     * @param array $selection The selection as the browser sent it, carrying any option remaps.
      * @return void
      */
-    protected function write_customfields(array $item, \stdClass $row, int $templateid, bool $isnew): void {
+    protected function write_customfields(
+        array $item,
+        \stdClass $row,
+        int $templateid,
+        bool $isnew,
+        array $selection
+    ): void {
         $cf = (array) $row->cf;
+        /* An option label this site does not have would otherwise resolve to index 0 - cleared -
+           which is a silent change. The preview offered the target's own options, so what lands
+           is the operator's choice. */
+        foreach ((array) ($selection['remaps'] ?? []) as $remap) {
+            $token = (string) ($remap['token'] ?? '');
+            if (isset(self::REMAPPABLE[$token]) && array_key_exists($token, $cf)) {
+                $cf[$token] = (string) ($remap['value'] ?? '');
+            }
+        }
         /* The identity column is back-filled on create so the second import of the same file is
            an update rather than a duplicate: competency_template has no ID number of its own. */
         if ($isnew && (string) $row->templateidnumber !== '') {
