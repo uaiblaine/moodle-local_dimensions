@@ -26,6 +26,14 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
     completion-rule badges), *Related competencies* (shared tree browser).
   - ~30 AJAX web services back the hub; the front-end is ESM, zero-YUI, Bootstrap 4+5
     compatible.
+- **Learning plan template CSV transfer** — *groundwork only, not yet reachable from the UI*:
+  the two-row-type CSV format (`template` / `link` rows, every column read by header name)
+  carrying all fourteen template custom fields, cross-framework competency links and their
+  order, plus the `local_dimensions_export_templates` web service and a one-directional
+  ingest shim for `admin/tool/lptmanager` files. The hub toolbar, the dry-run import preview
+  and the partial-apply importer are specified in
+  `docs/superpowers/specs/2026-07-27-learning-plan-template-csv-transfer-design.md` and
+  planned in `docs/superpowers/plans/2026-07-27-template-csv.md`; tasks 2-8 remain.
 - **Per-user persistent hub state**: last tab/context/framework/template, display toggles and
   gear panels survive sessions and devices (two JSON user preferences + privacy provider).
 - **Bulk enrolment methods** (participants modal, 4th tab): apply/remove cohort sync
