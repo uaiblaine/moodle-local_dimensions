@@ -96,6 +96,9 @@ class plans extends \core\output\dynamic_tabs\base {
         $templateid = (int) ($data['templateid'] ?? 0);
 
         $canmanage = has_capability('moodle/competency:templatemanage', $context);
+        // The export web service re-checks templateview on each template's own context; the
+        // toolbar button mirrors that gate so it never offers a download the server refuses.
+        $cantemplateview = has_capability('moodle/competency:templateview', $context);
 
         // Managers also see disabled (hidden) templates; the tab hides them client-side
         // behind the "show disabled plans" toggle. Non-managers only get visible ones.
@@ -168,7 +171,7 @@ class plans extends \core\output\dynamic_tabs\base {
             $templateoptions[] = [
                 'id' => $id,
                 'name' => $name,
-                'idnumber' => s($idnumber),
+                'idnumber' => $idnumber,
                 'search' => \core_text::strtolower($name . ' ' . $idnumber),
                 'competencycount' => api::count_competencies_in_template($id),
                 'visible' => $visible,
@@ -290,6 +293,8 @@ class plans extends \core\output\dynamic_tabs\base {
                 'checked' => false,
             ] : null,
             'templates' => $templateoptions,
+            'templatecount' => count($templateoptions),
+            'canexport' => (int) (!$needscategory && !empty($templateoptions) && $cantemplateview),
             'selectedtemplateid' => $templateid,
             'selectedtemplatename' => $selected ? format_string($selected->get('shortname')) : '',
             'selectedtemplateidnumber' => s($selectedidnumber),

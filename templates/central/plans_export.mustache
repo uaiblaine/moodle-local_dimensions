@@ -1,0 +1,59 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/plans_export
+
+    Body of the export-templates modal on the Competency hub Learning plans tab. The multiple
+    select is populated client-side from the tab's own template rows, so the modal offers
+    exactly the templates the tab currently lists; the Download button calls the
+    local_dimensions_export_templates web service and streams the CSV as a file.
+
+    The loader span carries role=status and a visually hidden label, so the wait is announced
+    rather than being a nameless spinner, and it deliberately has no d-inline-flex utility:
+    that class is display:inline-flex !important on Bootstrap 4 and would beat the hidden
+    attribute, leaving the loader permanently visible on the 4.5 branch.
+
+    Context variables required: none (static markup; strings resolved with str helpers).
+
+    Example context (json):
+    {
+    }
+}}
+<div data-region="export-body">
+    <div class="mb-2">
+        <label class="form-label" for="local-dimensions-plans-export-select">
+            {{#str}}central_plans_export_pick, local_dimensions{{/str}}
+        </label>
+        <select class="form-select" id="local-dimensions-plans-export-select"
+                data-region="export-select" multiple size="8"></select>
+    </div>
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="local-dimensions-plans-export-all"
+               data-action="export-selectall">
+        <label class="form-check-label" for="local-dimensions-plans-export-all">
+            {{#str}}central_plans_export_selectall, local_dimensions{{/str}}
+        </label>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-primary" data-action="download">
+            <i class="fa fa-download me-1" aria-hidden="true"></i>{{#str}}central_plans_export, local_dimensions{{/str}}
+        </button>
+        <span data-region="export-loader" role="status" hidden>
+            <span class="visually-hidden">{{#str}}central_plans_exporting, local_dimensions{{/str}}</span>
+        </span>
+    </div>
+</div>

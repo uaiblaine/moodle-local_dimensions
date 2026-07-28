@@ -38,6 +38,7 @@
     * contexttype (string) · selectedcategoryid (int) · contextid (int) · needscategoryselection (bool)
     * hastemplates (bool) · hashiddentemplates (bool)
     * showhiddentoggle (object|null) {id, label, action, checked} · standalone "show hidden" pill
+    * templatecount (int) · canexport (int) · the transfer toolbar's count and its Export gate
     * templates (array) {id, name, idnumber, search, competencycount, visible, selected, duedate}
     * selectedtemplateid (int) · selectedtemplatename (string) · selectedtemplatevisible (bool)
     * headertextcolor (string) · headerbgstop0 (string) · headerbgstop48 (string) · headerbgstop100 (string)
@@ -75,6 +76,8 @@
             "action": "toggle-disabled",
             "checked": false
         },
+        "templatecount": 2,
+        "canexport": 1,
         "templates": [
             {"id": 4, "name": "Induction plan", "idnumber": "IND-01", "search": "induction plan ind-01",
              "competencycount": 6, "visible": true, "selected": true, "duedate": "31 December 2025"},
@@ -139,6 +142,23 @@
     {{#showhiddentoggle}}
     {{> local_dimensions/central/showhidden_toggle }}
     {{/showhiddentoggle}}
+
+    {{! Transfer toolbar, same shape as the Frameworks tab's. The button says "Export templates",
+        never "Export": the Frameworks pane is server-rendered and merely hidden once the user
+        switches tabs, so a name-based Behat click on "Export" would resolve to that hidden pane. }}
+    <div class="local-dimensions-central-fwtoolbar">
+        <span class="local-dimensions-central-fwcount">
+            {{#str}}central_plans_listed, local_dimensions{{/str}}: <strong>{{templatecount}}</strong>
+        </span>
+        {{#canexport}}
+        <div class="local-dimensions-central-fwactions">
+            <button type="button" class="local-dimensions-central-btn-outline" data-action="export-templates">
+                <i class="fa fa-download" aria-hidden="true"></i>{{#str}}central_plans_export, local_dimensions{{/str}}
+            </button>
+        </div>
+        {{/canexport}}
+    </div>
+
     <div class="local-dimensions-central-plans-body{{^hastemplates}} local-dimensions-central-plans-body-single{{/hastemplates}}" data-region="plans-body">
         <section class="local-dimensions-central-plans-list-pane" data-region="template-list">
             <div class="local-dimensions-central-plans-panel">
@@ -226,6 +246,7 @@
                     <button type="button"
                             class="local-dimensions-central-plans-tpl-row local-dimensions-central-row {{#selected}}active{{/selected}}{{^visible}} local-dimensions-central-plan-hidden{{/visible}}"
                             data-action="select-template" data-id="{{id}}" data-region="template-row"
+                            data-name="{{name}}" data-idnumber="{{idnumber}}"
                             data-search="{{search}}"{{#selected}} aria-current="true"{{/selected}}>
                         <i class="fa fa-clipboard-list local-dimensions-central-plans-tpl-icon" aria-hidden="true"></i>
                         <span class="local-dimensions-central-plans-tpl-body">

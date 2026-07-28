@@ -33,6 +33,7 @@ import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
 import {getString} from 'core/str';
+import {openExportModal} from 'local_dimensions/central/plans_transfer';
 import {show as showCompetencyBrowser} from 'local_dimensions/central/competency_browser';
 import {show as showParticipants} from 'local_dimensions/central/participants_manager';
 import {initMasterResizer} from 'local_dimensions/central/pane_resizer';
@@ -710,6 +711,7 @@ const ACTION_HANDLERS = {
         Preferences.saveDisplay({panels: {planslist: !panel.hidden}});
     },
     'browse-frameworks': (pane, region) => showCompetencyBrowser(pane, region).catch(notifyError),
+    'export-templates': (pane, region) => openExportModal(region).catch(notifyError),
     'manage-participants': (pane, region) => showParticipants(pane, region).catch(notifyError),
     'new-template': (pane, region) => openForm(
         pane,
