@@ -1,8 +1,8 @@
-# Field map — the four `dynamic_form` bodies (as-is)
+# Field map — the five `dynamic_form` bodies (as-is)
 
 The kit maps the **shell** of every modal (`modal-shell.html`); this file maps the **bodies** of
 `core_form\dynamic_form` (the gap recorded in [`mod-scale.md`](mod-scale.md) and in the README). An
-`ls classes/form/` returns **four**, all opened as `core_form/modalform` (no page reload):
+`ls classes/form/` returns **five**, all opened as `core_form/modalform` (no page reload):
 
 | Form | Opened from | Creates/edits | Shell |
 | --- | --- | --- | --- |
@@ -10,6 +10,7 @@ The kit maps the **shell** of every modal (`modal-shell.html`); this file maps t
 | `competency_dynamic_form.php` | `structure.js` (Competencies tab) | `competency` | `modal-shell.html` |
 | `template_dynamic_form.php` | `plans.js` (Plans tab) | `competency_template` | `modal-shell.html` |
 | `import_framework_dynamic_form.php` | `frameworks.js` (Structures tab) | imports CSV | `modal-shell.html` |
+| `import_templates_dynamic_form.php` | `plans_transfer.js` (Plans tab) | **imports nothing** — uploads a CSV and hands it to the preview | `modal-shell.html` |
 
 **Abbreviation in the tables:** inside each section, `form.php:` is **that section's form class** —
 `framework_dynamic_form.php` in `FORM-FWK`, `competency_dynamic_form.php` in `FORM-COMP`,
@@ -21,7 +22,7 @@ ID convention here: `FORM-FWK-*`, `FORM-COMP-*`, `FORM-TPL-*`, `FORM-IMP-*`, `FO
 `MOD.SCALE-ACTION/-SUMMARY/-HIDDEN` were **provisional** in `mod-scale.md` (the scale trigger lives in
 the framework form's body, not in the scale modal); they now live here as `FORM-FWK-SCALE-*`.
 
-## Shared foundations (all four)
+## Shared foundations (all five)
 
 - **The shell is `core_form/modalform`.** Each opener does `new ModalForm({formClass, args, modalConfig:{title}})`.
   The title is `getString(<key>, <comp>)` in the opener, not in the form.
@@ -52,26 +53,26 @@ the framework form's body, not in the scale modal); they now live here as `FORM-
 Opens on two paths, both from `frameworks.js`: **edit** (`editFramework`, `:192`, args `{id}`, title
 `central_frameworks_edit`, from the sticky footer) and **create** (`createFramework`, `:201-202`, args
 `{id:0, contextid}`, title `central_frameworks_new`, from the toolbar button). **Save** → toast
-`central_frameworks_saved` + `reloadPane` (`frameworks.js:177-180`); the tab has no in-place path.
+`central_frameworks_saved` + `reloadPane` (`frameworks.js:178-181`); the tab has no in-place path.
 Gate: `moodle/competency:competencymanage` on the submission context (`form.php:115-117`).
 **No customfields.**
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
 | `FORM-FWK-ID` | `[hidden]` | hidden | `form.php:137-138` | `PARAM_INT` | structure id; 0 = create. Drives the create-vs-update branch (`:247`, `:263`) |
-| `FORM-FWK-CONTEXTID` | `[hidden]` | hidden | `form.php:139-141` | `PARAM_INT` | seeded on create from `region.dataset.contextid` (`frameworks.js:202`); scopes the unique-shortname check. **Not** re-read on edit |
+| `FORM-FWK-CONTEXTID` | `[hidden]` | hidden | `form.php:139-141` | `PARAM_INT` | seeded on create from `region.dataset.contextid` (`frameworks.js:203`); scopes the unique-shortname check. **Not** re-read on edit |
 | `FORM-FWK-SHORTNAME` | Short name | text | `form.php:143-146` | `PARAM_TEXT` · maxlength 100 | **native** `tool_lp` label. `required` is client-only (`:145`); uniqueness is server-side (see validation) |
 | `FORM-FWK-IDNUMBER` | ID number | text | `form.php:148-151` | `PARAM_RAW` · maxlength 100 | `RAW` on purpose (idnumber accepts arbitrary chars). `required` is client-only (`:150`); **no** uniqueness check in this form |
 | `FORM-FWK-DESC` | Description | editor | `form.php:157-164` | `PARAM_CLEANHTML` · rows 4 | URL-only media (foundation above). `set_data` `{text,format}` (`:224-227`) |
 | `FORM-FWK-SCALE` | Scale | select | `form.php:166-184` | `PARAM_INT` | **freezable select** (see Design controls). Label `central_frameworks_scale`; options `get_scales_menu()` (core). `required` only when not frozen (`:183`). It is where the incomplete-scale error is anchored (`:295`), even though the carrier is the hidden field |
-| `FORM-FWK-SCALE-HIDDEN` | `[hidden]` | hidden | `form.php:186-187` | `name="scaleconfiguration"` · `PARAM_RAW` · fixed id `id_scaleconfiguration` | **the scale's real destination** (migrated from `MOD.SCALE-HIDDEN`). Written by JS (`frameworks.js:76`), cleared when the scale changes (`:117`). Persisted verbatim (`:261`) |
-| `FORM-FWK-SCALE-ACTION` | Configure scale | static (button+summary) | `form.php:189-195` | `data-action="configure-scale"` · `data-region="scaleconfig-summary"` | **the `MOD.SCALE` trigger** (migrated from `MOD.SCALE-ACTION`). Hand-built string: a `.btn.btn-secondary.btn-sm` button + a summary span. Wired by **document-level capture-phase delegation** (`frameworks.js:95-123`, once per page) because the form body lives in a modalform whose life cycle never runs the tab's init. Click → `openScaleConfigForForm` (`:62-86`) opens `MOD.SCALE`. The summary shows `central_frameworks_scaleconfigured`="Configured" only when the stored config is already complete (`:189-190`) |
+| `FORM-FWK-SCALE-HIDDEN` | `[hidden]` | hidden | `form.php:186-187` | `name="scaleconfiguration"` · `PARAM_RAW` · fixed id `id_scaleconfiguration` | **the scale's real destination** (migrated from `MOD.SCALE-HIDDEN`). Written by JS (`frameworks.js:77`), cleared when the scale changes (`:117`). Persisted verbatim (`:261`) |
+| `FORM-FWK-SCALE-ACTION` | Configure scale | static (button+summary) | `form.php:189-195` | `data-action="configure-scale"` · `data-region="scaleconfig-summary"` | **the `MOD.SCALE` trigger** (migrated from `MOD.SCALE-ACTION`). Hand-built string: a `.btn.btn-secondary.btn-sm` button + a summary span. Wired by **document-level capture-phase delegation** (`frameworks.js:96-124`, once per page) because the form body lives in a modalform whose life cycle never runs the tab's init. Click → `openScaleConfigForForm` (`:62-86`) opens `MOD.SCALE`. The summary shows `central_frameworks_scaleconfigured`="Configured" only when the stored config is already complete (`:189-190`) |
 | `FORM-FWK-VISIBLE` | Visible | selectyesno | `form.php:197-198` | default 1 | the framework's own flag — **distinct** from `FWK-ROW-VIS` (the sticky-footer toggle that flips it over a WS without opening the form) |
 | `FORM-FWK-TAXONOMY` | Level {i} | select (loop) | `form.php:200-204` | — | `taxonomies[1..N]`, N = `taxonomy_levels()` = `max(depth, 4)` (`:85-87`); options `get_taxonomies_list()` (core). Persisted as CSV (`:255-256`). **Load gotcha:** the persistent's magic getter explodes the CSV column into a 1-indexed array — a `(string)` on it = a warning that developer debug escalates into an exception (`:232-235`) |
 
 **Validation (`form.php:281-299`) — both block:** (1) **unique shortname** within the same `contextid`
 → `shortnametaken` (`:287-292`); (2) **incomplete scale** → `central_frameworks_scaleincomplete`
-anchored on `scaleid` (`:294-296`), via `helper::scaleconfig_is_complete` (`helper.php:2888`, requires
+anchored on `scaleid` (`:294-296`), via `helper::scaleconfig_is_complete` (`helper.php:2924`, requires
 ≥1 default **and** ≥1 proficient), the same thing the child modal requires before resolving — **it
 blocks on both sides**. It does not re-check the required rule on shortname/idnumber/scaleid
 (client-only), nor idnumber uniqueness.
@@ -83,7 +84,7 @@ disabled attribute drops it from the POST but the constant feeds `get_data()` an
 `.value` (the freeze-a-select recipe, [[moodle-hub-ui-gotchas]]); changing the scale does **not** clear
 the config when frozen. Two visual states (editable dropdown × padlock), and the greyed value must not
 read as empty. (b) **`MOD.SCALE` trigger** (migrated, above). (c) **The "Open scales page" link in the
-footer** — injected by `injectScalesLink` (`frameworks.js:133-161`) on `LOADED`, as the **first child of
+footer** — injected by `injectScalesLink` (`frameworks.js:134-162`) on `LOADED`, as the **first child of
 `.modal-footer`** (`:160`, so that `margin-right:auto` pushes Save/Cancel across), **only** when
 `activeRegion.dataset.canscalespage === '1'` (`:138`). The form's close chip comes from
 `.modal-form-dialogue` (pure CSS, `styles.css:5063-5103`), not from a class injected in JS —
@@ -212,7 +213,7 @@ to the user instead of becoming "the file could not be read".
 ## `FORM-IMP` — the import form body (`import_framework_dynamic_form.php`)
 
 Opens from the `FWK-IMPORT` button (`data-action="import"`, `frameworks.mustache:85-86`) →
-`openImportForm` (`frameworks.js:259-276`), args `{contextid}`, title `central_frameworks_import_title`.
+`openImportForm` (`frameworks.js:248-265`), args `{contextid}`, title `central_frameworks_import_title`.
 Gate: a **SYSTEM or COURSECAT** context (otherwise `invalidcontext`) + `competency:competencymanage`
 (`form.php:65-71`) — a superset of core's `tool/lpimportcsv` (system only). **The import runs
 in-request** in `process_dynamic_submission` (`:148-158`), **with no WS**: it reads the CSV from the

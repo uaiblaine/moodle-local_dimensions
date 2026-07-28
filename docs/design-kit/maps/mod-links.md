@@ -102,7 +102,7 @@ fresh data** (`:555`) — the point where a stale server count corrects itself.
 `competency_links.js:914` calls `addToastRegion(modal.getBody()[0])` on `ModalEvents.shown`
 (`:911`), with the reason written in the comment just above (`:912-913`). It is one of the plugin's
 **4** modules with this pattern — `participants_manager.js:236`, `related_competencies.js:269`,
-`frameworks.js:346` and this one —, counted with `grep -rn 'addToastRegion(' amd/src/`, **with the
+`frameworks.js:316` and this one —, counted with `grep -rn 'addToastRegion(' amd/src/`, **with the
 parenthesis**: without it there are **11** lines in **5** files, because it also picks up the hosts'
 4 `import`s plus three lines of the `toast.js` wrapper (the docblock `:21`, the core import `:29` and
 the re-export `:41`).
@@ -309,7 +309,7 @@ names live in `constants.php:87` / `:90`.
 And expand **needed no new pref**: it fits as the `modalexpanded` key inside the
 `PREF_CENTRAL_DISPLAY` that already existed — it is in `DISPLAY_DEFAULTS` (`preferences.js:50`), in
 `init` (`:97`) and, because the server **validates** the JSON and copies only known keys, also in
-`helper::get_central_prefs()` (`helper.php:2344`), or the key would be discarded on reload. **No new
+`helper::get_central_prefs()` (`helper.php:2380`), or the key would be discarded on reload. **No new
 WS and no new setting string.** The state is seeded **synchronously** (`modal_expander.js:90`, before
 the first `await`), so the modal opens already at the saved size; and the pref is **shared** —
 expanding one modal expands the other on its next opening (a global size preference).

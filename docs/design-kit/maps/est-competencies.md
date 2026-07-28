@@ -228,7 +228,7 @@ outside the tab's region.
   row and preserves expansion + selection; a whole-pane curtain there would visually destroy
   exactly the state the function exists to preserve. In practice the four in-place paths **never
   called** `reloadPane`, so they were never at risk: the only caller of `{quiet: true}` is
-  `reloadKeepingScroll` (`plans.js:93-108`, called at `:102`), which preserves the scroll position.
+  `reloadKeepingScroll` (`plans.js:94-109`, called at `:103`), which preserves the scroll position.
   House rule: **pane reloaded → curtain; row swapped → flash.**
 
 ## IMP-05 — refresh on the contextbar (shipped, `mtube: refresh`)

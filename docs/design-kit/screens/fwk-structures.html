@@ -208,7 +208,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     A partial shared with <code>EST</code>/<code>PLN</code>; it is rendered only when there is at least one
     hidden structure (<code>showhiddentoggle</code> null → nothing,
     <code>classes/output/dynamictabs/frameworks.php:149</code>). In the plugin, flipping the toggle <b>reloads the
-    whole pane</b> (<code>frameworks.js:522</code>), with the busy curtain below — unlike
+    whole pane</b> (<code>frameworks.js:492</code>), with the busy curtain below — unlike
     <code>EST</code>, which rebuilds the <code>select</code> in place.
   </div>
 
@@ -281,10 +281,10 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   <div class="note" style="margin-top:6px;">
     Four footer buttons (<code>frameworks_footer_actions.mustache:41-56</code>), <b>not</b> badges on the
     row. No dataset: they act on the <code>.active</code> card held in the module
-    (<code>dispatchFrameworksAction</code>, <code>frameworks.js:429-447</code>), which is why they work from outside
+    (<code>dispatchFrameworksAction</code>, <code>frameworks.js:399-417</code>), which is why they work from outside
     the tab's region — and the dispatch aborts if the tab is no longer active (<code>:432-434</code>). The eye shows
     <b>fa-eye</b> because the selected card is visible (<code>frameworks_footer_actions.mustache:46</code>,
-    fed by <code>frameworks.js:468</code>). <b>Delete with no colour variant</b> — core's raw
+    fed by <code>frameworks.js:438</code>). <b>Delete with no colour variant</b> — core's raw
     sticky-footer pattern does not use <code>btn-outline-danger</code>.
   </div>
 
@@ -322,7 +322,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
   <div class="note" style="margin-top:6px;">
     <b>This tab is the best case of the change:</b> its <b>6</b> calls are <b>100% of the CRUD</b> — saving
-    (<code>openFrameworkForm</code>, <code>frameworks.js:179</code>), importing (<code>openImportForm</code>,
+    (<code>openFrameworkForm</code>, <code>frameworks.js:180</code>), importing (<code>openImportForm</code>,
     <code>:270</code>), visibility (<code>toggleVisibility</code>, <code>:374</code>), duplicating
     (<code>duplicateFramework</code>, <code>:386</code>), deleting (<code>deleteFramework</code>,
     <code>:419</code>) and the hidden toggle (<code>:522</code>) — and <b>none</b> of them is in place. The
@@ -344,7 +344,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   <div class="note" style="margin-top:6px;">
     <b>This is the only in-body loading treatment the plugin ships</b> — <code>alert alert-info</code> +
     <code>spinner-border spinner-border-sm</code>, assembled by <code>showImportLoading</code>
-    (<code>frameworks.js:222-236</code>): the banner receives <code>data-region="import-loading"</code>
+    (<code>frameworks.js:211-225</code>): the banner receives <code>data-region="import-loading"</code>
     (<code>:229</code>), the alert classes (<code>:230</code>) and <code>role="status"</code> (<code>:231</code>),
     and the label <code>central_frameworks_importing</code> enters as a real text <code>&lt;span&gt;</code>
     (<code>:232-234</code>). There is a duplicate guard (<code>:224</code>) and removal when the server's validation
@@ -353,13 +353,20 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
   <div class="note" style="margin-top:6px;">
     <b>The ARIA here is right — it is the export's that is not.</b> <code>makeSpinner()</code>
-    (<code>frameworks.js:209-214</code>) puts <code>aria-hidden="true"</code> <b>on the ring</b> (<code>:212</code>), and
-    what carries the <code>role="status"</code> and the text is the <b>banner</b> — name on the container, decorative
-    ring, exactly the form <code>states.html</code> asks for. The <b>export loader</b> reuses the same
-    <code>makeSpinner()</code> (<code>:314</code>) but its container is a
+    (<code>central/download.js:53-58</code> since 2026-07-28, when the Plans tab's own export started
+    sharing it; it was <code>frameworks.js</code>) puts <code>aria-hidden="true"</code> <b>on the ring</b>, and
+    what carries the <code>role="status"</code> and the text is the <b>banner</b> (<code>frameworks.js:220</code>,
+    <code>:223</code>) — name on the container, decorative ring, exactly the form <code>states.html</code> asks
+    for. The <b>export loader</b> reuses the same <code>makeSpinner()</code> (<code>:284</code>) but its
+    container is a
     <code>&lt;span data-region="export-loader" class="d-inline-flex" hidden&gt;</code> with no <code>role</code> and no
     accessible name (<code>frameworks_export.mustache:41</code>) — so the download state <b>announces
     nothing</b>. It is the only point on the screen where <code>states.html</code>'s loading pattern is not met.
+    <b>The Plans tab's export loader is the corrected shape</b> and can be copied from:
+    <code>plans_export.mustache:55-57</code> gives the span a <code>role="status"</code> and a
+    <code>visually-hidden</code> label, and drops <code>d-inline-flex</code> — which is
+    <code>display:inline-flex !important</code> on Bootstrap 4 and would beat <code>[hidden]</code>, so the
+    loader here could never hide on 4.5 in the first place.
   </div>
 
   <div class="divlbl">Export modal</div>
@@ -389,7 +396,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
   <div class="note" style="margin-top:6px;">
     The select is born <b>empty</b> (<code>frameworks_export.mustache:35</code>) and is populated from the tab's
-    cards on <code>ModalEvents.shown</code> (<code>frameworks.js:345-354</code>) — the modal only knows what the tab
+    cards on <code>ModalEvents.shown</code> (<code>frameworks.js:315-324</code>) — the modal only knows what the tab
     has already listed. <code>downloadFramework</code> (<code>:303-329</code>) disables the button, reveals the loader
     and injects the ring (<code>:312-314</code>), and <b>restores all three in a <code>finally</code></b>
     (<code>:324-328</code>, including <code>loader.replaceChildren()</code>).
@@ -412,7 +419,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     Injected by JS into the modal's <b>footer</b>, as the <b>first child</b> — it is the group's
     <code>margin-right:auto</code> (<code>styles.css:5028-5034</code>) that pushes the form's Save/Cancel to the
     right, and the position above is the one the code produces
-    (<code>injectScalesLink</code>, <code>frameworks.js:133-161</code>; insertion at <code>:160</code>). The same
+    (<code>injectScalesLink</code>, <code>frameworks.js:134-162</code>; insertion at <code>:161</code>). The same
     footer-link pattern as the participants modal: <code>div.local-dimensions-modal-footer-links</code> +
     <code>a.btn.btn-link.p-0</code> with <code>fa fa-external-link me-1</code> (<code>:146-157</code>),
     <code>target="_blank"</code> + <code>rel="noopener noreferrer"</code>. It runs on the <code>LOADED</code> event

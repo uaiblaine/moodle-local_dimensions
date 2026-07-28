@@ -105,7 +105,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   <div class="plabel"><span class="pdot" style="background:var(--text-accent)"></span>Current (as-is) · the modal shipped in 820a449 — name, real count and the consequence of each option</div>
 
   <div class="row" style="margin-bottom:9px;">
-    <span class="prov">plans.mustache:481-485</span>
+    <span class="prov">plans.mustache:507-511</span>
     <span class="btn btn-page" style="display:inline-flex;align-items:center;gap:5px;"><span aria-hidden="true">🗑</span>Delete template</span>
     <span class="idb">PLN-DELETE · sticky footer of the Learning plans tab</span>
   </div>
@@ -117,7 +117,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     <label class="gstep gs2" for="g2">→ <b>false</b> (no plans)</label>
   </div>
   <div class="row" style="margin-bottom:9px;">
-    <span class="idb">MOD.DELPLANS-GATE · click to switch path</span><span class="prov">plans.js:225-228 · :235</span>
+    <span class="idb">MOD.DELPLANS-GATE · click to switch path</span><span class="prov">plans.js:226-229 · :235</span>
   </div>
 
   <div class="paths">
@@ -127,7 +127,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
         <div class="m-head">
           <span class="m-title">Delete template</span>
           <span class="idb">MOD.DELPLANS-TITLE</span>
-          <span class="prov">plans.js:241 · :240-245</span>
+          <span class="prov">plans.js:242 · :240-245</span>
           <button type="button" class="m-x" aria-label="Close">✕</button>
         </div>
         <div class="m-body">
@@ -183,12 +183,12 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
       <div class="m">
         <div class="m-head">
           <span class="m-title">Delete</span>
-          <span class="prov">plans.js:256 · core str delete</span>
+          <span class="prov">plans.js:257 · core str delete</span>
           <button type="button" class="m-x core" aria-label="Close">✕</button>
         </div>
         <div class="m-body">
           <p class="dt-inplans">Delete learning plan template 'Disposable'?</p>
-          <div class="row"><span class="idb">MOD.DELPLANS-FALLBACK</span><span class="prov">plans.js:254 · tool_lp: deletetemplate</span></div>
+          <div class="row"><span class="idb">MOD.DELPLANS-FALLBACK</span><span class="prov">plans.js:255 · tool_lp: deletetemplate</span></div>
         </div>
         <div class="m-foot">
           <span class="btn">Cancel</span>
@@ -197,7 +197,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
       </div>
       <div class="note" style="margin-top:6px;">
         <b>The path the old map did not have.</b> With no plans there is no plugin modal: the flow
-        falls into a core <code>Notification.deleteCancelPromise</code> (<code>plans.js:254-260</code>),
+        falls into a core <code>Notification.deleteCancelPromise</code> (<code>plans.js:255-261</code>),
         whose title is the core str <code>delete</code> and whose body is <b>tool_lp</b>'s
         <code>deletetemplate</code> — a core string, rendered here by the langpack. Cancelling is the
         promise's <code>reject</code>, caught by a <code>try/catch</code> that only does
@@ -214,10 +214,10 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 
   <div class="note">
     <b>The footer is the only door</b> — the button is born in the <code>data-region="plans-footer-actions"</code>
-    holder (<code>plans.mustache:462</code>, under <code>{{#canmanage}}</code> at <code>:457</code>),
+    holder (<code>plans.mustache:488</code>, under <code>{{#canmanage}}</code> at <code>:483</code>),
     which <code>plans.js</code> moves into the page's <code>#sticky-footer</code>. It carries
     <code>data-plancount="{{selectedtemplateplancount}}"</code> (<code>:482</code>), exported by
-    <code>dynamictabs/plans.php:319-321</code> via <code>helper::count_plans_by_template</code>
+    <code>dynamictabs/plans.php:324-326</code> via <code>helper::count_plans_by_template</code>
     (<code>helper.php:2214</code>) — <b>the count is already there on the click</b>, and the gate's WS
     only decides the path, not the number.
   </div>
@@ -235,7 +235,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
 
   <div class="note">
-    <b>The confirm closes before it writes.</b> The handler (<code>plans.js:246-250</code>) reads the
+    <b>The confirm closes before it writes.</b> The handler (<code>plans.js:247-251</code>) reads the
     checked radio (<code>:247-248</code>) and calls <code>remove()</code> with
     <code>checked.value === 'delete'</code> (<code>:249</code>), but does <b>not</b> call
     <code>preventDefault()</code> — so <code>core/modal_delete_cancel</code>'s

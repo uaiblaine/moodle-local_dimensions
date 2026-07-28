@@ -84,7 +84,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface
 <table class="tbl">
   <tr><th>type</th><th>fires</th><th>where</th></tr>
   <tr><td><i>default</i></td><td>18</td><td>CRUD confirmations: <code>structure</code> (4), <code>competency_links</code> (5), <code>roles_manager</code> (2), <code>cohort_manager</code> (2), <code>related_competencies</code> (2), <code>enrol_methods</code> (2), <code>participants_users</code> (1)</td></tr>
-  <tr><td><code>success</code></td><td>2</td><td><code>frameworks.js:272</code> (import complete) and <code>:321</code> (<code>central_frameworks_export_done</code>)</td></tr>
+  <tr><td><code>success</code></td><td>2</td><td><code>frameworks.js:261</code> (import complete) and <code>:291</code> (<code>central_frameworks_export_done</code>)</td></tr>
   <tr><td><code>warning</code></td><td>1</td><td><code>errors.js:79</code> — the network dropped (<code>errornetwork</code>)</td></tr>
   <tr><td><code>info</code> · <code>danger</code></td><td>0</td><td>core's API accepts them, the hub does not use them: a real error goes through <code>Notification.exception</code>, not through a toast</td></tr>
 </table>
@@ -126,7 +126,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--mds-bg-surface
   <code>.catch(notifyError)</code>: <code>competency_links.js:911-914</code> (courses and activities),
   <code>participants_manager.js:233-236</code> (participants),
   <code>related_competencies.js:266-269</code> (related competencies) and
-  <code>frameworks.js:345-346</code> (export). They are <b>4</b> of the hub's 17 modal-construction
+  <code>frameworks.js:315-316</code> (export). They are <b>4</b> of the hub's 17 modal-construction
   points — the others fire no toast from inside. Modules that only <code>mount()</code> inside those
   modals do <b>not</b> add a region of their own: <code>cohort_manager.js:34</code> and
   <code>participants_users.js:32</code> import only <code>add</code>, and write into the host's region.

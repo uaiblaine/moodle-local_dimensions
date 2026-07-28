@@ -135,11 +135,11 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     <span class="idb">MOD.RELATED-CHIP · data-action="open-related"</span>
   </div>
   <div class="row" style="margin-top:5px;">
-    <span class="prov">plans.mustache:381-382</span>
+    <span class="prov">plans.mustache:407-408</span>
     <button class="pname">Assertive Communication</button>
     <span class="idb">PLN-COMP-NAME · data-action="open-competency-detail"</span>
   </div>
-  <div class="note">Both call the <b>same</b> <code>openCompetencyDetailModal(id)</code> (<code>structure.js:1244-1248</code> · <code>plans.js:743-744</code>), which <b>always</b> fetches the node fresh through the WS before rendering — the chip carries only <code>id</code> and <code>name</code>, and the card needs the counters. The function itself is exported at <code>competency_detail.js:265</code>.</div>
+  <div class="note">Both call the <b>same</b> <code>openCompetencyDetailModal(id)</code> (<code>structure.js:1244-1248</code> · <code>plans.js:746-747</code>), which <b>always</b> fetches the node fresh through the WS before rendering — the chip carries only <code>id</code> and <code>name</code>, and the card needs the counters. The function itself is exported at <code>competency_detail.js:265</code>.</div>
 
   <input type="radio" name="col" id="c1" class="dchk" checked>
   <input type="radio" name="col" id="c2" class="dchk">

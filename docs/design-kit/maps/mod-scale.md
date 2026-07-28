@@ -35,7 +35,7 @@ the form.
   + field rows"*.
 - **It is a modal _on top of another modal_.** `FWK-NEW` and `FWK-ROW-EDIT`
   ([`fwk-structures.md`](fwk-structures.md)) open `framework_dynamic_form` in a `ModalForm`
-  (`frameworks.js:28`, `:172`); the **Configure scale** button lives **inside** that form and opens
+  (`frameworks.js:28`, `:173`); the **Configure scale** button lives **inside** that form and opens
   this `ModalSaveCancel` above it. That is why the wiring is delegated on `document` in the **capture**
   phase — see "The trigger".
 - **This modal's refs do not rot, and that is not the map's doing.** Neither
@@ -49,23 +49,23 @@ the form.
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
 | `MOD.SCALE-ACTION` | Configure scale | button (trigger) | `form.php:191-195` | `data-action="configure-scale"` · `.btn.btn-secondary.btn-sm` | str `central_frameworks_configurescale` — **the same str as the modal title** (`js:135`), as in `MOD.RULE`/`EST-DETAIL-RULES`. **Provisional ID**: by house convention the trigger belongs to the surface it lives on, and it lives in the body of `framework_dynamic_form`. **Migrated** to `FORM-FWK-SCALE-ACTION` in [`mod-forms.md`](mod-forms.md), where the form body is mapped; this modal keeps the **child** the button opens |
-| `MOD.SCALE-SUMMARY` | Configured / `[empty]` | text | `form.php:194` (node), `:189-190` (initial value) | `data-region="scaleconfig-summary"` · `.text-muted.small.ms-2` | str `central_frameworks_scaleconfigured` = "Configured" (`lang/en:159`). **It is the only thing `$configured` changes.** `form.php:195` adds the button **unconditionally** — `$configured` (`:189`, via `helper::scaleconfig_is_complete`) only picks the summary text (`:190`). Consequence: **the button exists on the create path**, not only on the edit one, and this modal **does not depend on the sticky footer** in any way. After the save, what writes the summary is `frameworks.js:77-82` |
-| `MOD.SCALE-HIDDEN` | `[no label]` | hidden field | `form.php:186-187` | `name="scaleconfiguration"` · `PARAM_RAW` | **the modal's real destination.** `open` resolves a string and `frameworks.js:76` writes it here; it is the form that persists, on its own save. If the user closes the `ModalForm` without saving, the chosen configuration **is lost** — the scale modal writes nothing to the server |
+| `MOD.SCALE-SUMMARY` | Configured / `[empty]` | text | `form.php:194` (node), `:190-191` (initial value) | `data-region="scaleconfig-summary"` · `.text-muted.small.ms-2` | str `central_frameworks_scaleconfigured` = "Configured" (`lang/en:159`). **It is the only thing `$configured` changes.** `form.php:195` adds the button **unconditionally** — `$configured` (`:190`, via `helper::scaleconfig_is_complete`) only picks the summary text (`:191`). Consequence: **the button exists on the create path**, not only on the edit one, and this modal **does not depend on the sticky footer** in any way. After the save, what writes the summary is `frameworks.js:78-83` |
+| `MOD.SCALE-HIDDEN` | `[no label]` | hidden field | `form.php:186-187` | `name="scaleconfiguration"` · `PARAM_RAW` | **the modal's real destination.** `open` resolves a string and `frameworks.js:77` writes it here; it is the form that persists, on its own save. If the user closes the `ModalForm` without saving, the chosen configuration **is lost** — the scale modal writes nothing to the server |
 
 **The wiring is global, and the comment in the code says why.** `setupScaleConfigDelegation`
-(`frameworks.js:95-123`) registers **once** (`scaleconfigwired`, `:96-99`) a listener on `document` in
+(`frameworks.js:96-124`) registers **once** (`scaleconfigwired`, `:97-100`) a listener on `document` in
 the **capture** phase (`:107`, the `true`). The docblock (`:90-91`) and the capture comment
 (`:100-101`) explain it: the form renders inside a `ModalForm` whose life cycle **does not run the
 plugin's `init`**, and capture guarantees the click is seen on the way down, before anything inside the
 modalform stops it.
 
-**The selectors go by `name`, never by `id`** (`frameworks.js:65-67`), and the comment at `:63-64`
+**The selectors go by `name`, never by `id`** (`frameworks.js:66-68`), and the comment at `:64-65`
 gives the reason: `core_form\dynamic_form` suffixes ids with a random string
 (`id_scaleid_c5fLCIS8ExDrcVf`), so a fixed `#id_scaleid` would never match. The same finding is in
 `fwk-structures.md`, in the "Business rules" section.
 
 **Changing the scale wipes the configuration — unless the select is frozen.** The `change` handler
-(`frameworks.js:108-122`) clears `MOD.SCALE-HIDDEN` and `MOD.SCALE-SUMMARY`, because the old
+(`frameworks.js:109-123`) clears `MOD.SCALE-HIDDEN` and `MOD.SCALE-SUMMARY`, because the old
 configuration points at value ids from another scale. But it bails out first if the select carries
 `readonly` (`:109`) — and the comment at `:110-111` gives the reason: a framework that has already been
 assessed has its scale frozen, and the server pins `scaleid` through a form constant; wiping the
@@ -77,7 +77,7 @@ configuration there would destroy data over an event the user cannot even fire.
 | --- | --- | --- | --- | --- | --- |
 | `MOD.SCALE-TITLE` | Configure scale | title | `js:135` (str), `:139` (`ModalSaveCancel.create`) | str `central_frameworks_configurescale` | `lang/en:129` = `'Configure scale'`; `lang/pt_br:129` = `'Configurar escala'`. **No scale name and no framework name** — `title` is the raw string. The modal's two strings (title and error) are fetched **in parallel** in a `Promise.all` (`js:134-137`). `setRemoveOnClose(true)` at `:140` |
 | `MOD.SCALE-SAVE` | Save changes | button (footer) | `lib/templates/modal_save_cancel.mustache` | `data-action="save"` | comes with `ModalSaveCancel` (import `js:28`). **It is the only validation point** — see "The validation" |
-| `MOD.SCALE-CANCEL` | Cancel | button (footer) | `lib/templates/modal_save_cancel.mustache` | `data-action="cancel"` | closing via Cancel, via the X or via ESC lands on `ModalEvents.hidden` (`js:152`) → `resolve(null)` → `frameworks.js:73-75` sees `null` and **does not touch** the hidden field or the summary |
+| `MOD.SCALE-CANCEL` | Cancel | button (footer) | `lib/templates/modal_save_cancel.mustache` | `data-action="cancel"` | closing via Cancel, via the X or via ESC lands on `ModalEvents.hidden` (`js:152`) → `resolve(null)` → `frameworks.js:74-76` sees `null` and **does not touch** the hidden field or the summary |
 | `MOD.SCALE-NOSCALE` | `[nothing — the modal does not open]` | guard | `js:126-128` | `if (!scaleid) { return null; }` | no scale chosen → `open` returns `null` **without opening anything and without warning**. The click on "Configure scale" simply does nothing. Recorded, not fixed |
 
 ## Body — one row per scale value
@@ -146,7 +146,7 @@ The `1`/`0` (not `true`/`false`) is what core expects. The `def &&` / `prof &&` 
 without the controls — a situation the Mustache does not produce, but which `serialize` does not assume
 away.
 
-The receiver is `frameworks.js:71-85`: `null` (cancel) → it bails (`:73-75`); a string → written into
+The receiver is `frameworks.js:72-86`: `null` (cancel) → it bails (`:74-76`); a string → written into
 `MOD.SCALE-HIDDEN` (`:76`) and "Configured" written into `MOD.SCALE-SUMMARY` (`:77-82`). A network
 error goes to `notifyError` (`:85`). **Nothing is persisted here** — `scaleconfiguration` only reaches
 the database when `framework_dynamic_form` is saved.

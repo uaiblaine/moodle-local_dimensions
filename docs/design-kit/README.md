@@ -44,7 +44,7 @@ palette itself, so the depiction and the live UI share one set of colours.
 | `screens/bar-contextbar.html` | Contextbar | `BAR` — context selector + hidden-categories toggle + counter + Refresh |
 | `screens/est-competencies.html` | Competencies | `EST` — tree + detail + sticky footer |
 | `screens/fwk-structures.html` | Structures | `FWK` — cards + 3 header actions + footer |
-| `screens/pln-plans.html` | Learning plans tab | `PLN` — master-detail, the nested list's kebab, the sticky footer, `reloadPane`'s busy blanket, the icon tabs |
+| `screens/pln-plans.html` | Learning plans tab | `PLN` — master-detail, the nested list's kebab, the sticky footer, `reloadPane`'s busy blanket, the icon tabs, and the **CSV transfer** toolbar with both its modals (`PLN-EXP`, `PLN-IMP`) |
 | `screens/mod-browser.html` | Modal · Browse structures | `MOD.BROWSER` — structure selector + shared tree; Add is born disabled |
 | `screens/mod-links.html` | Modal · Courses & activities | `MOD.LINKS` — two-level outcome, course card with lazy activities |
 | `screens/mod-related.html` | Modal · Related competencies | `MOD.RELATED` — shared tree + current relations |
@@ -87,7 +87,7 @@ Design required.
 | `maps/mod-usage.md` | `MOD.USAGE` · Where the competency is used (**no screen** — see the map) |
 | `maps/mod-moveto.md` | `MOD.MOVETO` · Move to position — one template, two callers (**no screen**) |
 | `maps/mod-structrelated.md` | `MOD.STRUCTREL` · Related-competency peek modal |
-| `maps/mod-forms.md` | The four `dynamic_form` bodies — `FORM-FWK` / `FORM-COMP` / `FORM-TPL` / `FORM-IMP` (**no screen**; the shell is `modal-shell.html`) |
+| `maps/mod-forms.md` | The five `dynamic_form` bodies — `FORM-FWK` / `FORM-COMP` / `FORM-TPL` / `FORM-IMP` / `FORM-TPLIMP` (**no screen**; the shell is `modal-shell.html`) |
 | `maps/mod-detail.md` | **`MOD.DETAIL`** · The competency card as a dialog (headless). The **template** is called `structure_related_modal.mustache` — whoever greps for that name lands here; the files (`maps/mod-detail.md`, `screens/mod-detail.html`) carry the **ID**, which `pln-plans.md` had already coined. It is the template name that aged, not the ID |
 
 > **How a ref is derived.** Every `file:line` is obtained by **opening the file** and reading the
@@ -186,8 +186,9 @@ file it lives in; this is only the index.
 ## Known blind spots
 The **two** gaps the audit exposed — both **closed** (2026-07-17):
 
-1. ✅ **~~No `dynamic_form` body is mapped~~ — CLOSED.** The four bodies got a map in
+1. ✅ **~~No `dynamic_form` body is mapped~~ — CLOSED.** The bodies got a map in
    [`maps/mod-forms.md`](maps/mod-forms.md) (full fidelity: `FORM-FWK`/`FORM-COMP`/`FORM-TPL`/`FORM-IMP`,
+   and `FORM-TPLIMP` since the CSV transfer,
    field inventory, gating, validation and design controls), and `MOD.SCALE`'s provisional IDs migrated
    there (`FORM-FWK-SCALE-*`). In the same pass, `structure_related_modal` — the only modal without a
    map — got [`maps/mod-structrelated.md`](maps/mod-structrelated.md). The kit's maps now cover **every**

@@ -169,7 +169,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
         <code>data-pane</code>). When the active tab has no permitted link the footer <b>collapses</b> via
         <code>.local-dimensions-modal-footer-empty</code> (<code>styles.css:5051-5053</code>,
         <code>display:none</code>). This modal <b>has no primary action</b> — the footer is the link alone.</li>
-      <li><b>Framework form</b> (<code>frameworks.js:133-161</code>, <code>injectScalesLink</code>):
+      <li><b>Framework form</b> (<code>frameworks.js:134-162</code>, <code>injectScalesLink</code>):
         <b>1</b> link, with no per-tab logic (a form modal has a single panel), inserted as
         <code>firstChild</code> so the form's Save/Cancel stays on the right.</li>
     </ul>
@@ -186,20 +186,20 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
     Counted in <code>amd/src/central/</code> (construction points, not screens — one and the same form opens in
     create/edit):<br>
     • <b>6</b> × <code>Modal.create</code> — <code>competency_detail.js:277</code>,
-    <code>competency_links.js:862</code>, <code>enrol_methods.js:859</code>, <code>frameworks.js:343</code>,
+    <code>competency_links.js:862</code>, <code>enrol_methods.js:859</code>, <code>frameworks.js:313</code>,
     <code>participants_manager.js:171</code>, <code>structure.js:1225</code>. None passes <code>footer</code>:
     core calls <code>hideFooter()</code> on <code>show()</code> when the footer has no children, so the
     <code>.modal-footer</code> exists in the DOM with <code>.hidden</code>. <b>The action, when there is one,
     lives in the body</b> — unless something injects a child before <code>show()</code>, which is exactly what
     the link group does.<br>
     • <b>6</b> × <code>ModalSaveCancel.create</code> — <code>competency_browser.js:106</code>,
-    <code>framework_scaleconfig.js:139</code>, <code>plans.js:557</code>,
+    <code>framework_scaleconfig.js:139</code>, <code>plans.js:558</code>,
     <code>related_competencies.js:239</code>, <code>rule_config.js:144</code>, <code>structure.js:988</code>.
     A real footer, coming from <code>core/modal_save_cancel</code>. <code>setSaveButtonText</code> appears at
     <b>1</b> single point (<code>competency_browser.js:107</code>).<br>
-    • <b>1</b> × <code>ModalDeleteCancel.create</code> — <code>plans.js:240</code> (delete a template that has plans).<br>
-    • <b>4</b> × <code>new ModalForm</code> — <code>frameworks.js:172</code> and <code>:260</code>,
-    <code>plans.js:201</code>, <code>structure.js:798</code>. Core's real footer (Save/Cancel), outside our
+    • <b>1</b> × <code>ModalDeleteCancel.create</code> — <code>plans.js:241</code> (delete a template that has plans).<br>
+    • <b>4</b> × <code>new ModalForm</code> — <code>frameworks.js:173</code> and <code>:249</code>,
+    <code>plans.js:202</code>, <code>structure.js:798</code>. Core's real footer (Save/Cancel), outside our
     control; the close chip reaches them through the <code>.modal-form-dialogue</code> arm.<br>
     Of the 17, <b>2</b> carry the header controls: participants
     (<code>participants_manager.js:232</code>) and courses-and-activities

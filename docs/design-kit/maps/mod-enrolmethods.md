@@ -7,7 +7,7 @@ always tied to one of the plan's cohorts. The pane is born **empty** in the host
 
 - **Mustache:** [`enrol_methods.mustache`](../../../templates/central/enrol_methods.mustache) (121, the tab's skeleton), [`enrol_group.mustache`](../../../templates/central/enrol_group.mustache) (65, one accordion group), [`enrol_detail.mustache`](../../../templates/central/enrol_detail.mustache) (82, body of the detail modal)
 - **AMD:** [`enrol_methods.js`](../../../amd/src/central/enrol_methods.js) (1112) — reuses `action_button.js` (`iconButton`, `:38-49`) and `errors.js` (`notifyError`)
-- **WS (5, all in `db/services.php:357-396`):** `list_enrol_competencies` (paginated roots + mount *bootstrap*), `list_enrol_courses` (rows with the status of **both** methods), `queue_enrol_action`, `get_enrol_queue_status`, `set_enrol_instance_status`
+- **WS (5, all in `db/services.php:373-412`):** `list_enrol_competencies` (paginated roots + mount *bootstrap*), `list_enrol_courses` (rows with the status of **both** methods), `queue_enrol_action`, `get_enrol_queue_status`, `set_enrol_instance_status`
 - **Task:** [`process_enrol_method`](../../../classes/task/process_enrol_method.php) — adhoc, per `(courseid, method, cohortid)`
 - **Helper:** [`classes/local/enrol_methods.php`](../../../classes/local/enrol_methods.php) — `eligible_roles()` (`:58-73`), `default_roleid()` (`:81-89`)
 - **CSS:** [`styles.css:7289-7354`](../../../styles.css) — the accordion's scroll box, the group's chevron/fade, the search width and the detail modal's table
@@ -156,8 +156,8 @@ times. Groups via `renderGroupHtml` → `appendNodeContents` (`enrol_methods.js:
 
 ### The tab's two locks are different — and one of them is mismatched
 
-The **tab** is gated on `canmanageenrol`, which `plans.mustache:133` feeds with **`{{canmanage}}`** =
-`moodle/competency:templatemanage` **in context** (`dynamictabs/plans.php:98`, `:329`). The footer
+The **tab** is gated on `canmanageenrol`, which `plans.mustache:136` feeds with **`{{canmanage}}`** =
+`moodle/competency:templatemanage` **in context** (`dynamictabs/plans.php:98`, `:334`). The footer
 **link** (`PART-LINK-ENROL`) wants `canenrolpage` = `moodle/site:config` **at system level**
 (`:243`). Therefore: **a template manager sees the tab and does not see the link** — and the link is
 exactly the fix `ENROL-DISABLED` asks for. The 5 WSes re-require `templatemanage` in the template's
@@ -256,7 +256,7 @@ down, independently:
   (`tabs.js:69`) and has **24 calls across 5 modules** — `structure` 9, `frameworks` 6, `plans` 6,
   `context` 2, `competency_browser` 1. (A `grep -rn reloadPane amd/src/` returns **36** lines: the 24
   calls + 1 definition at `tabs.js:69` + 5 imports + 6 comments — e.g. `frameworks.js:18` and
-  `plans.js:784`. Counting the 36 as calls is the easy mistake.) There **is** a UI control firing it
+  `plans.js:787`. Counting the 36 as calls is the easy mistake.) There **is** a UI control firing it
   today: the contextbar's `data-action="refresh"` button (`context.js`, 2 of the 24).
 - **This pane does not use `reloadPane`** and is not an exception to anything: its refresh is
   `init(state)` because it is a **modal pane**, not a `core/dynamic_tabs` tab pane; `reloadPane` would

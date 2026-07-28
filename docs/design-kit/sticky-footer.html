@@ -128,9 +128,9 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
 </div>
 <div class="note">
   <code>data-action</code>: <code>edit</code>, <code>visibility</code>, <code>duplicate</code>, <code>delete</code>.
-  It is the <b>leanest variant in modals</b>: only <code>edit</code> opens one (<code>frameworks.js:172</code>).
+  It is the <b>leanest variant in modals</b>: only <code>edit</code> opens one (<code>frameworks.js:173</code>).
   <code>visibility</code> and <code>duplicate</code> are <b>direct Ajax + pane reload</b>, with no dialog at all
-  (<code>frameworks.js:369-375</code> and <code>:384-386</code>);
+  (<code>frameworks.js:339-345</code> and <code>:354-356</code>);
   <code>delete</code> goes through core's confirm (<code>:407</code>) and through a <code>Notification.alert</code>
   when the row is not <code>deletable</code> (<code>:397-398</code>). The <code>visibility</code> icon toggles
   <code>fa-eye</code>/<code>fa-eye-slash</code>
@@ -138,7 +138,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
   come from the footer</b> — they are header buttons.
 </div>
 
-<div class="h">Learning plans tab · <span class="tag">central/plans.mustache:462-488</span> · 5 actions · acts on the selected template</div>
+<div class="h">Learning plans tab · <span class="tag">central/plans.mustache:488-514</span> · 5 actions · acts on the selected template</div>
 <div class="foot">
   <div class="fwrap">
     <button type="button" class="fbtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pencil"/></svg><span class="lbl">Edit details</span><span class="mflag" aria-hidden="true">modal</span></button>
@@ -152,11 +152,11 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
   <code>data-action</code>: <code>edit-template</code>, <code>browse-frameworks</code>,
   <code>manage-participants</code>, <code>duplicate-template</code>, <code>delete-template</code>. It is the <b>only
   server-side authored variant</b>: the markup is born in a <code>[data-region="plans-footer-actions"] hidden</code>
-  holder (so it can carry the template's <code>data-id</code>) and <code>plans.js:786-789</code> hands its
+  holder (so it can carry the template's <code>data-id</code>) and <code>plans.js:789-792</code> hands its
   <code>innerHTML</code> to the coordinator — and <b>removes the holder</b> right after, so the buttons are not
   duplicated in the DOM. Unlike the other two, here the buttons <b>do carry a
   dataset</b>. <code>duplicate-template</code> is direct Ajax. <code>delete-template</code> is the only
-  <b>conditional</b> one: it opens its own <code>ModalDeleteCancel</code> (<code>plans.js:240</code>, with the
+  <b>conditional</b> one: it opens its own <code>ModalDeleteCancel</code> (<code>plans.js:241</code>, with the
   unlink/delete-plans choice) only when the template <b>has plans</b>; with no plans, it falls back to core's confirm
   (<code>:256</code>).
 </div>
@@ -175,18 +175,18 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
       (<code>links</code> → <code>competency_links.js:862</code>), related competencies (<code>related</code> →
       <code>related_competencies.js:239</code>), browse structures (<code>browse-frameworks</code> →
       <code>competency_browser.js:106</code>), delete-template (<code>delete-template</code> →
-      <code>plans.js:240</code>) and participants (<code>manage-participants</code> →
+      <code>plans.js:241</code>) and participants (<code>manage-participants</code> →
       <code>participants_manager.js:171</code>) — each one appears only in its own footer template.</li>
-    <li><b>3 with a parallel door</b> — the <b>forms</b>: <code>frameworks.js:172</code> (footer
+    <li><b>3 with a parallel door</b> — the <b>forms</b>: <code>frameworks.js:173</code> (footer
       <code>edit</code> <b>and</b> header <code>new</code>, <code>frameworks.mustache:82</code> →
-      <code>frameworks.js:500</code> → <code>createFramework</code>, <code>:201-202</code>);
+      <code>frameworks.js:470</code> → <code>createFramework</code>, <code>:202-203</code>);
       <code>structure.js:798</code> (footer
       <code>edit</code>/<code>addchild</code> <b>and</b> header <code>add</code>,
-      <code>structure.mustache:127</code> → <code>structure.js:1425-1427</code>); <code>plans.js:201</code>
-      (footer <code>edit-template</code> at <code>plans.js:721</code>, header <code>new-template</code> at
-      <code>plans.mustache:182</code> → <code>plans.js:714</code> <b>and</b> the kebab's <code>edit-competency</code> at
-      <code>plans.mustache:405</code> → <code>plans.js:728</code> — all three land in the same
-      <code>openForm</code>, <code>plans.js:200</code>).</li>
+      <code>structure.mustache:127</code> → <code>structure.js:1425-1427</code>); <code>plans.js:202</code>
+      (footer <code>edit-template</code> at <code>plans.js:724</code>, header <code>new-template</code> at
+      <code>plans.mustache:207</code> → <code>plans.js:717</code> <b>and</b> the kebab's <code>edit-competency</code> at
+      <code>plans.mustache:431</code> → <code>plans.js:731</code> — all three land in the same
+      <code>openForm</code>, <code>plans.js:201</code>).</li>
   </ul>
   Adding the nested one: only <code>enrol_methods</code> actually depends (<code>enrol_methods.js:859</code> — the
   enrolment-methods tab exists only inside participants, which only opens from the footer) — <b>8 of the 17 depend
@@ -195,11 +195,11 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
   <b>unconditionally</b> at <code>classes/form/framework_dynamic_form.php:195</code> (the
   <code>$configured</code> on line 189 only swaps the summary text), so it also appears in the
   <b>create</b> form, which comes from the header.
-  <br>The <b>5</b> that never come from the footer: import (<code>frameworks.js:260</code>) and export CSV
-  (<code>frameworks.js:343</code>), both in the Structures tab's header; competency usage
+  <br>The <b>5</b> that never come from the footer: import (<code>frameworks.js:249</code>) and export CSV
+  (<code>frameworks.js:313</code>), both in the Structures tab's header; competency usage
   (<code>structure.js:1225</code>, from the detail's <code>show-usage</code> metric), competency detail
   (<code>competency_detail.js:277</code>) and move competency from the plan's kebab
-  (<code>plans.js:557</code>).
+  (<code>plans.js:558</code>).
   Core's confirms (<code>deleteCancelPromise</code>, <code>alert</code>) do not enter this count: the hub does not
   build them.
   <br><b>The parallel door does not weaken the rule — it sharpens it.</b> The header button <b>creates</b> a new
@@ -267,11 +267,11 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
       <code>frameworks.js</code> for a per-card menu exactly like that, and it was reverted.</li>
     <li><b>The rule's boundary</b>: actions on a <b>competency inside a plan's list</b> are a
       <b>nested list</b> and use a kebab with reason — that tab's footer is already occupied by the 5 actions of the
-      <b>selected template</b>, which is its primary entity. The ⋮ at <code>plans.mustache:396-436</code>
+      <b>selected template</b>, which is its primary entity. The ⋮ at <code>plans.mustache:422-462</code>
       (<code>fa fa-ellipsis-v</code>, 5 items: edit, move up, move down, move to position, remove)
       <b>is correct — do not "fix" it.</b> Note that <b>this</b> kebab's "edit"
-      (<code>edit-competency</code>, <code>plans.js:728</code>) lands in the same <code>openForm</code>
-      (<code>plans.js:200-201</code>) — the same <code>ModalForm</code> as the footer's
+      (<code>edit-competency</code>, <code>plans.js:731</code>) lands in the same <code>openForm</code>
+      (<code>plans.js:201-202</code>) — the same <code>ModalForm</code> as the footer's
       <code>edit-template</code>: it is one of the 3 parallel doors in the count above. The two coexist
       because they act on <b>different entities</b> — the footer on the <b>template</b>, the kebab on the
       <b>competency in the list</b>.</li>
