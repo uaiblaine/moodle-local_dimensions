@@ -210,7 +210,10 @@ In `lang/pt_br/local_dimensions.php`, in the same slot between `:652` and `:653`
 $string['returntocompetency'] = 'Voltar à competência';
 ```
 
-Leave the neighbouring `returntoplan` alone — its "Voltar ao Plano" capitalisation is pre-existing and out of scope here.
+Leave the neighbouring `returntoplan` alone for this step — its "Voltar ao Plano" capitalisation
+is pre-existing here and out of scope for Task 1. A later fix (generalising the return-button
+strings once both buttons shared one setting and colour) revisited it, lower-casing it to
+"Voltar ao plano" to match its new sibling "Voltar à competência".
 
 - [ ] **Step 6: Wire the label into the hook**
 
