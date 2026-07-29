@@ -742,3 +742,157 @@ Build the zip with the short SHA, which is what distinguishes builds while the v
 ```bash
 ver=$(grep -oE '\$plugin->version[[:space:]]*=[[:space:]]*[0-9]+' /Volumes/N1TB/dev/github/moodle/public/local/dimensions/version.php | grep -oE '[0-9]+') && sha=$(git -C /Volumes/N1TB/dev/github/moodle/public/local/dimensions rev-parse --short HEAD) && git -C /Volumes/N1TB/dev/github/moodle/public/local/dimensions archive --format=zip --prefix=dimensions/ HEAD -o ~/Downloads/dimensions-$ver-$sha.zip
 ```
+
+---
+
+### Task 5: The tracker's button only offers a plan overview the learner is routed to
+
+Found in manual review after Tasks 1-4 landed, and it is the **default** configuration rather than an edge case.
+
+The sibling plugin `block_dimensions` routes a learner by the plan's display mode: `DISPLAYMODE_PLAN` yields a plan card leading to `view-plan.php`, anything else yields competency cards leading straight to `view-competency.php` (`blocks/dimensions/classes/local/dataset_provider.php:124`). A templated plan whose template never set the field resolves to `DISPLAYMODE_COMPETENCIES` (`dataset_provider.php:232`, and the same default in `classes/template_metadata_cache.php:264`). So in the common case the learner **only ever sees competency cards** — and Task 2's button offers them a plan overview the configuration deliberately never routes to.
+
+A plan with **no** template is the opposite case: the block defaults it to `DISPLAYMODE_PLAN` (`dataset_provider.php:228`), the learner does get a plan card, and the button is correct for them.
+
+The rule this task adds: the tracker offers the plan overview only when the plan overview is a page this learner is actually routed to. In competency-card mode the tracker *is* their root, so `course → FAB → tracker` is arriving home rather than dead-ending.
+
+**Files:**
+- Modify: `classes/helper.php` (the `tracker_return_context` added in Task 2, plus one new method beside it)
+- Modify: `view-competency.php:158`
+- Modify: `tests/helper_return_navigation_test.php`
+- Modify: `docs/superpowers/specs/2026-07-28-learner-return-navigation-design.md`
+- Modify: `CLAUDE.md`
+
+**Interfaces:**
+- Consumes: `helper::tracker_return_context(int $planid, bool $related): ?array` from Task 2 — its signature changes here.
+- Produces: `helper::plan_overview_is_routed(int $templateid): bool`, and `helper::tracker_return_context(int $planid, int $templateid, bool $related): ?array`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Append to `tests/helper_return_navigation_test.php`, inside the class. The existing `tracker_return_context` tests need their calls widened to the new signature — pass `0` as the templateid, which keeps them on the routed path.
+
+The display mode lives in the `local_dimensions_displaymode` custom field on the learning-plan template. Follow the existing precedent in `tests/customfield/lp_handler_test.php`: `helper::find_field_by_shortname(constants::CFIELD_DISPLAYMODE, helper::AREA_LP)` to locate the field, then `lp_handler::create()->instance_form_save($formdata, true)` to write it. Call `helper::ensure_all_fields()` first so the fields exist, and invalidate `template_metadata_cache` for the template after writing so the read does not see a stale entry.
+
+```php
+    /**
+     * A plan with no template is routed to the plan overview, matching the block's default.
+     *
+     * @return void
+     */
+    public function test_plan_overview_is_routed_without_a_template(): void {
+        $this->assertTrue(helper::plan_overview_is_routed(0));
+    }
+
+    /**
+     * A template that routes learners to competency cards suppresses the tracker's button.
+     *
+     * @return void
+     */
+    public function test_tracker_return_context_suppressed_in_competency_card_mode(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enablereturnbutton', 1, 'local_dimensions');
+
+        $templateid = $this->create_template_with_displaymode(constants::DISPLAYMODE_COMPETENCIES);
+
+        $this->assertFalse(helper::plan_overview_is_routed($templateid));
+        $this->assertNull(helper::tracker_return_context(42, $templateid, false));
+    }
+
+    /**
+     * A template that routes learners to the plan overview keeps the tracker's button.
+     *
+     * @return void
+     */
+    public function test_tracker_return_context_shown_in_plan_mode(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enablereturnbutton', 1, 'local_dimensions');
+
+        $templateid = $this->create_template_with_displaymode(constants::DISPLAYMODE_PLAN);
+
+        $this->assertTrue(helper::plan_overview_is_routed($templateid));
+        $this->assertNotNull(helper::tracker_return_context(42, $templateid, false));
+    }
+```
+
+Write the `create_template_with_displaymode(int $displaymode): int` private helper in the same test class, with its own docblock. Keep it small and give it a `@param` and a `@return`.
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+```bash
+cd /Volumes/N1TB/dev/github/moodle && /opt/homebrew/opt/php@8.3/bin/php -d max_input_vars=5000 vendor/bin/phpunit --no-coverage public/local/dimensions/tests/helper_return_navigation_test.php
+```
+
+Expected: FAIL — `Error: Call to undefined method local_dimensions\helper::plan_overview_is_routed()`.
+
+- [ ] **Step 3: Add the routing resolver**
+
+In `classes/helper.php`, immediately before `tracker_return_context()`:
+
+```php
+    /**
+     * Whether the plan overview is a page this plan's learners are routed to.
+     *
+     * The display mode is a template custom field, and block_dimensions routes on
+     * it: DISPLAYMODE_PLAN yields a plan card leading to the overview, anything
+     * else yields competency cards leading straight to the tracker. A plan with no
+     * template has no such field, and the block treats it as plan mode.
+     *
+     * @param int $templateid The plan's template id, or 0 when it has none.
+     * @return bool True when the overview is part of this learner's journey.
+     */
+    public static function plan_overview_is_routed(int $templateid): bool {
+        if (!$templateid) {
+            return true;
+        }
+
+        $metadata = template_metadata_cache::get_template_metadata($templateid);
+        $displaymode = (int) ($metadata['displaymode'] ?? constants::DISPLAYMODE_COMPETENCIES);
+
+        return $displaymode === constants::DISPLAYMODE_PLAN;
+    }
+```
+
+- [ ] **Step 4: Widen `tracker_return_context` and gate on the resolver**
+
+Change its signature to `tracker_return_context(int $planid, int $templateid, bool $related): ?array`, document the new parameter, and add the gate after the existing one:
+
+```php
+        if (!self::plan_overview_is_routed($templateid)) {
+            return null;
+        }
+```
+
+Extend the method's docblock to say the button is suppressed when the plan's display mode routes learners to competency cards, because the tracker is then their root.
+
+- [ ] **Step 5: Pass the plan's template id at the call site**
+
+In `view-competency.php:158`, change the call to pass `$templateid` — the **plan's** template id read at `:66`, **not** `$effectivetemplateid`. The display mode is a property of the plan, and `$effectivetemplateid` is deliberately zeroed when the competency is not in the plan (`:70-71`); using it would make a related competency's tracker look plan-routed when it is not.
+
+- [ ] **Step 6: Run the tests to verify they pass**
+
+```bash
+cd /Volumes/N1TB/dev/github/moodle && /opt/homebrew/opt/php@8.3/bin/php -d max_input_vars=5000 vendor/bin/phpunit --no-coverage public/local/dimensions/tests/helper_return_navigation_test.php
+```
+
+Then the full suite:
+
+```bash
+cd /Volumes/N1TB/dev/github/moodle && /opt/homebrew/opt/php@8.3/bin/php -d max_input_vars=5000 vendor/bin/phpunit --no-coverage --testsuite local_dimensions_testsuite
+```
+
+- [ ] **Step 7: Update the spec**
+
+In `docs/superpowers/specs/2026-07-28-learner-return-navigation-design.md`:
+
+- Add a Decisions row: **when the tracker's button appears at all** — only when the plan overview is routed to, with the reasoning above.
+- Update the navigation matrix rows that enter the tracker from the block, and any row implying the tracker always offers the button.
+- Record the cross-plugin risk plainly: `local_dimensions` now encodes a routing rule that `block_dimensions` also implements. The plugin owns the *value* (it is a template custom field of this plugin) but the block owns the *routing*, so if the two defaults drift the button lies again. Name `dataset_provider.php:124` and `:228` as the code that must agree.
+
+- [ ] **Step 8: Record the cross-plugin contract in CLAUDE.md**
+
+Add to the "Return-to-Plan FAB" section: the tracker's button is gated on `helper::plan_overview_is_routed()`, which must keep agreeing with `block_dimensions`' `dataset_provider::resolve_plan_display_context()` — no template means plan mode, a template without the field means competency mode.
+
+- [ ] **Step 9: Commit**
+
+Two commits: the resolver, the gate, the call site and the tests; then the documentation.
