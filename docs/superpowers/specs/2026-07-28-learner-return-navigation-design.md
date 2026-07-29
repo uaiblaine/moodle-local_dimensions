@@ -116,7 +116,7 @@ never existed — is precisely where the learner is most stuck, and today it ren
 page with no exit at all.
 
 ```php
-$returnbutton = \local_dimensions\helper::tracker_return_context($planid, $related);
+$returnbutton = \local_dimensions\helper::tracker_return_context($planid, $templateid, $related);
 if ($returnbutton !== null) {
     echo $OUTPUT->render_from_template('local_dimensions/return_button', $returnbutton);
     $PAGE->requires->js_call_amd('local_dimensions/return_button', 'init');
@@ -142,7 +142,7 @@ gate.
 | Plan overview → tracker **via the pill** (`:2473`, new tab) | tracker, without `related` | "Return to competency" | **suppressed** (new tab) |
 | …then → course → FAB → tracker | tracker | "Return to competency" | → plan |
 | **Block competency card** → tracker → course | tracker | "Return to competency" | **suppressed** *(Task 5)* — `DISPLAYMODE_COMPETENCIES` is the block's default and never puts a plan card in front of this learner |
-| Tracker with one course + `singlecourseredirect` | **plan** | "Return to plan" | *(the page redirects past itself)* |
+| Tracker with one course + `singlecourseredirect` | plan, or tracker *(Task 6)* | "Return to plan", or "Return to competency" in competency-card mode | *(the page redirects past itself)* |
 | Direct link / bookmark on the tracker | tracker | — | → plan, or suppressed in competency-card mode |
 | Staff viewing someone else's plan | nothing written | none | → plan, or suppressed in competency-card mode |
 
@@ -150,6 +150,13 @@ gate.
 `DISPLAYMODE_PLAN`, or no template at all; in `DISPLAYMODE_COMPETENCIES` the button is
 suppressed regardless of the path that reached the tracker, per
 `helper::plan_overview_is_routed()`.
+
+*(Task 6)* The single-course redirect's cached URL follows the same rule, via
+`helper::redirect_return_url()`: the plan overview when `plan_overview_is_routed()` is
+true, otherwise the tracker's own URL, still carrying `noredirect=1`. Before this task
+the redirect branch stored the plan overview unconditionally, which — in
+competency-card mode — left the destination course with a button offering a page this
+learner is never routed to, the same defect Task 5 fixed for the tracker's own button.
 
 The block's **competency card** is the product's default entry into the tracker
 (`template_metadata_cache::get_displaymode_value()` defaults to competency cards), and
@@ -188,7 +195,9 @@ Both belong in the CLAUDE.md "Return-to-Plan FAB" section.
 
 | File | Change |
 |---|---|
-| `classes/helper.php` | Add `return_destination_kind(string $url): string` returning `'plan'` or `'competency'`, defaulting to `'plan'`. Add `tracker_return_context(int $planid, bool $related): ?array` returning the template context (`returnurl`, `label`, `buttoncolor`) or `null` when `related` is true or `enablereturnbutton` is off. |
+| `classes/helper.php` | Add `return_destination_kind(string $url): string` returning `'plan'` or `'competency'`, defaulting to `'plan'`. Add `tracker_return_context(int $planid, int $templateid, bool $related): ?array` returning the template context (`returnurl`, `label`, `buttoncolor`) or `null` when `related` is true, `enablereturnbutton` is off, or `plan_overview_is_routed($templateid)` is false. |
+| `classes/helper.php` *(Task 5)* | Add `plan_overview_is_routed(int $templateid): bool` — true when the plan has no template, or its template's display mode is `DISPLAYMODE_PLAN`; false in `DISPLAYMODE_COMPETENCIES`. Gates `tracker_return_context()`. |
+| `classes/helper.php` *(Task 6)* | Add `redirect_return_url(int $planid, int $competencyid, int $templateid): moodle_url` — the URL the `singlecourseredirect` branch of `view-competency.php` stores for the destination course: the plan overview when `plan_overview_is_routed($templateid)` is true, otherwise the tracker's own URL with `noredirect=1`. |
 | `classes/hook_callbacks.php` | Replace the fixed `get_string('returntoplan', …)` at `:103` with the literal `match` above. |
 | `view-competency.php` | Read `related`; render System B after the main template, outside the `if ($competency)` block. |
 | `amd/src/accordion.js` | Append `&related=1` to the pill URL at `:2473`. |
@@ -220,6 +229,12 @@ either plugin.
 | `test_set_return_context_writes_one_entry_per_course` | one cache entry per id, each holding the same URL |
 | `test_set_return_context_with_no_courses_writes_nothing` | pins the silent no-op — the empty `foreach` at `helper.php:2098` |
 | `test_get_return_context_for_course_returns_null_when_absent` | the reader's miss path |
+| `test_set_return_context_last_writer_wins_for_a_shared_course` | a tracker write for a course already holding a plan write overrides it |
+| `test_plan_overview_is_routed_without_a_template` *(Task 5)* | a plan with no template routes to the plan overview, matching the block's default |
+| `test_tracker_return_context_suppressed_in_competency_card_mode` *(Task 5)* | `null` when the plan's template has `DISPLAYMODE_COMPETENCIES` |
+| `test_tracker_return_context_shown_in_plan_mode` *(Task 5)* | the button survives when the plan's template has `DISPLAYMODE_PLAN` |
+| `test_redirect_return_url_points_at_the_plan_when_routed` *(Task 6)* | the redirect stores the plan overview URL when `plan_overview_is_routed()` is true |
+| `test_redirect_return_url_points_at_the_tracker_in_competency_card_mode` *(Task 6)* | in competency-card mode the redirect stores the tracker's own URL, carrying `noredirect=1` |
 
 PHPUnit runs locally in this checkout since 2026-07-28 (Postgres in Docker, the root
 `config.php`, PHP 8.3 at `/opt/homebrew/opt/php@8.3/bin/php`), so this suite is green
