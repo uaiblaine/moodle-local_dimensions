@@ -64,7 +64,7 @@ depending on a path the learner cannot see.
 | How the label is chosen | **Classify the cached URL by script name** | The alternative — adding a `kind` key to the payload — changes no cache *definition* either, but it does need every writer updated and a fallback for sessions holding the old payload. Classifying the URL needs one reader-side function, no writer changes, and no migration. The four writers already store the right URL; only the reader was blind to it. |
 | How the tracker knows to stay quiet | **An explicit `related=1` on the pill's URL** | The real reason is that the pill opens a **new tab** (`accordion.js:2372`), and that is not observable server-side. `helper::competency_in_plan()` is already computed at `view-competency.php:65` and looks free, but it encodes "new tab" as "outside the plan", which leaks both ways: a related competency that *is* in the plan would get a button in a new tab, and a bookmark to a competency outside the plan would lose its button in the same tab. |
 | Whether the marker reaches the cache | **It does not, and costs nothing** | `$PAGE->set_url` declares only `id` and `competencyid` (`view-competency.php:43-46`), so `$PAGE->url` never carries `related` and the write at `:129` already excludes it. A learner who descends from a pill-opened tracker into a course and presses the FAB lands back on the tracker **with** its return button — by then they are navigating inside that tab, and a way out to the plan has become useful. |
-| Whether staff see the tracker's button | **Yes** | The ownership gate (`view-plan.php:63-66`, `view-competency.php:114-117`) exists to stop a manager reviewing someone else's plan from polluting their own session cache. An in-page link writes nothing, and `api::read_plan()` has already authorised the destination. |
+| Whether staff see the tracker's button | **Yes, subject to the same display-mode gate as everyone else** *(Task 5)* | The ownership gate (`view-plan.php:63-66`, `view-competency.php:114-117`) exists to stop a manager reviewing someone else's plan from polluting their own session cache. An in-page link writes nothing, and `api::read_plan()` has already authorised the destination. `plan_overview_is_routed()` takes only the template id, so in competency-card mode it suppresses the button for staff exactly as it does for the plan's own learner — see the navigation matrix's staff row. |
 | Whether the tracker's button appears at all *(Task 5)* | **Only when the plan overview is a page this learner is actually routed to** | `block_dimensions` routes a learner by the plan's display mode (`dataset_provider.php:124`): `DISPLAYMODE_PLAN` yields a plan card leading to the overview, anything else — including the unset default — yields competency cards leading straight to the tracker. The design above always offered the plan overview from the tracker, which in that default configuration is a page the learner has never seen and is never routed to. In competency-card mode the tracker *is* the learner's root, so `course → FAB → tracker` is arriving home rather than dead-ending, and there is nothing to offer above it. `helper::plan_overview_is_routed(int $templateid): bool` makes the call; `tracker_return_context()` gates on it. |
 | `version.php` | **No bump** | The version is frozen: no schema change, no new web service. A cache revision is not a reason to bump — test installs purge caches as routine. `amd/build` ships rebuilt in the same commit. |
 | Behat | **Out** | The learner views have no scenarios today and there is no local Behat runner, so a first scenario would cost a CI round. PHPUnit now runs locally, and both decisions are pure functions — the logic belongs there. |
@@ -91,7 +91,7 @@ guard behave identically — one button identity across course and tracker.
 | Cached destination | String | Status |
 |---|---|---|
 | `view-plan.php` | `returntoplan` — "Return to plan" | exists (`lang/en/local_dimensions.php:653`) |
-| `view-competency.php` | `returntocompetency` — "Return to competency" | **one** new string, `en` + `pt_br`, in the alphabetical slot |
+| `view-competency.php` | `returntocompetency` — "Return to competency" | **one** new string, `en` + `pt_br`, in the alphabetical slot *(a later fix reworded three more existing strings to cover both destinations — see Code changes)* |
 
 The template already binds the label to `title` **and** `aria-label`
 (`templates/return_button.mustache:43-44`). The mobile rule hides only the visible
@@ -202,8 +202,8 @@ Both belong in the CLAUDE.md "Return-to-Plan FAB" section.
 | `view-competency.php` | Read `related`; render System B after the main template, outside the `if ($competency)` block. |
 | `amd/src/accordion.js` | Append `&related=1` to the pill URL at `:2473`. |
 | `amd/build/accordion.min.js` + `.map` | Rebuilt with `npx grunt amd --root=public/local/dimensions`, committed together. |
-| `lang/en/local_dimensions.php` | `returntocompetency` — "Return to competency", between `returnbuttoncolor_desc` (`:652`) and `returntoplan` (`:653`). |
-| `lang/pt_br/local_dimensions.php` | The same key in the same slot, after `returnbuttoncolor_desc` at `:652` — "Voltar à competência". The neighbouring `returntoplan` capitalises "Plano"; that inconsistency is pre-existing and left alone. |
+| `lang/en/local_dimensions.php` | `returntocompetency` — "Return to competency", between `returnbuttoncolor_desc` (`:652`) and `returntoplan` (`:653`). A later fix reworded the existing `enablereturnbutton`, `enablereturnbutton_desc` and `returnbuttoncolor_desc` values (keys unchanged) once both buttons started sharing the one setting and colour. |
+| `lang/pt_br/local_dimensions.php` | The same key in the same slot, after `returnbuttoncolor_desc` at `:652` — "Voltar à competência". The same later fix reworded the same three keys, and lower-cased the neighbouring `returntoplan` from "Voltar ao Plano" to "Voltar ao plano" to match its new sibling "Voltar à competência". |
 | `db/caches.php` | Fix `:91` (`Key: 'returncontext'` → `course_{courseid}`) and `:92` (the value is `['url' => string]`, never a course-id list). |
 | `CLAUDE.md` | Record N1 and N2. |
 
@@ -285,3 +285,16 @@ the related competency but not the plan's template with no button at all. The br
 still improves this case over the prior behaviour, where the same button always said
 "Return to plan" and landed on a tracker with no way out. Drag and
 double-click-to-reset remain pointer-only.
+
+`plan_overview_is_routed(int $templateid)` knows only the template — not the viewer,
+not the entry path. So in competency-card mode the tracker offers no way back to the
+plan overview even when the viewer did arrive from it: the accordion's own tracker
+links, the related pill's return path, and a manager reviewing a learner's plan are
+all suppressed alike. This is a property of the template, not of the journey that
+reached the tracker. The related-competency sub-case is sharper still: a pill-opened
+tracker for a competency outside the plan, in competency-card mode, has no way onward
+at all — the `related` marker is gone from the URL by the time the learner returns
+from a course, and that competency has no card in the block either. Its reachability
+is low today, because the pill lives only on the plan overview, which those learners
+are not routed to, but it becomes reachable the moment anything else renders a
+related pill.
