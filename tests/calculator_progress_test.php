@@ -86,4 +86,103 @@ final class calculator_progress_test extends \advanced_testcase {
         $this->assertFalse($data['locked']);
         $this->assertIsArray($data['sections']);
     }
+
+    /**
+     * The section percentage reports the share of its activities the user has completed.
+     *
+     * @return void
+     */
+    public function test_section_percentage_counts_completed_activities(): void {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1, 'numsections' => 1]);
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
+
+        $cms = $this->create_tracked_activities($course, 4);
+        $this->setUser($user);
+        $this->complete_activities($course, $user->id, array_slice($cms, 0, 1));
+
+        $section = $this->find_section($course->id, 1);
+
+        $this->assertTrue($section['has_activities']);
+        $this->assertSame(25, (int) $section['percentage']);
+    }
+
+    /**
+     * A section one activity short of finished never reports a round hundred.
+     *
+     * 199 of 200 rounds to 100, and get_course_progress reads any 100 as "completed" and
+     * swaps the ring for the done icon - so the card claimed a finished section while an
+     * activity was still open.
+     *
+     * @return void
+     */
+    public function test_section_one_activity_short_never_reports_a_hundred(): void {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1, 'numsections' => 1]);
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
+
+        $cms = $this->create_tracked_activities($course, 200);
+        $this->setUser($user);
+        $this->complete_activities($course, $user->id, array_slice($cms, 0, 199));
+
+        $section = $this->find_section($course->id, 1);
+
+        $this->assertSame(99, (int) $section['percentage']);
+    }
+
+    /**
+     * Creates activities with manual completion tracking in section 1.
+     *
+     * @param \stdClass $course The course to add them to.
+     * @param int $count How many to create.
+     * @return array The created course module ids.
+     */
+    private function create_tracked_activities(\stdClass $course, int $count): array {
+        $cmids = [];
+        for ($i = 0; $i < $count; $i++) {
+            $module = $this->getDataGenerator()->create_module(
+                'page',
+                [
+                    'course' => $course->id,
+                    'section' => 1,
+                    'completion' => COMPLETION_TRACKING_MANUAL,
+                ]
+            );
+            $cmids[] = (int) $module->cmid;
+        }
+
+        return $cmids;
+    }
+
+    /**
+     * Marks the given course modules complete for a user.
+     *
+     * @param \stdClass $course The course they belong to.
+     * @param int $userid The user completing them.
+     * @param array $cmids The course module ids to complete.
+     * @return void
+     */
+    private function complete_activities(\stdClass $course, int $userid, array $cmids): void {
+        $completion = new \completion_info($course);
+        $modinfo = get_fast_modinfo($course, $userid);
+        foreach ($cmids as $cmid) {
+            $completion->update_state($modinfo->get_cm($cmid), COMPLETION_COMPLETE, $userid);
+        }
+    }
+
+    /**
+     * Returns one section's row from the calculator payload.
+     *
+     * @param int $courseid The course to calculate.
+     * @param int $index The zero-based position of the section in the returned list.
+     * @return array The section row.
+     */
+    private function find_section(int $courseid, int $index): array {
+        $data = calculator::get_course_section_progress($courseid);
+        $this->assertArrayHasKey($index, $data['sections']);
+
+        return $data['sections'][$index];
+    }
 }
