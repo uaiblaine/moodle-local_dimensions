@@ -650,6 +650,7 @@ $string['related_content'] = 'Related content';
 $string['related_dimensions'] = 'Related dimensions';
 $string['returnbuttoncolor'] = 'Button color';
 $string['returnbuttoncolor_desc'] = 'Choose the color for the "Return to Plan" floating button.';
+$string['returntocompetency'] = 'Return to competency';
 $string['returntoplan'] = 'Return to plan';
 $string['rules_all_outcome_attach'] = 'Upon successful completion, evidence of mastery will be automatically generated and attached.';
 $string['rules_all_outcome_complete'] = 'Will only be marked as complete when all items are finished, without exceptions.';

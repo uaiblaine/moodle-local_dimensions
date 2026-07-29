@@ -650,6 +650,7 @@ $string['related_content'] = 'Conteúdo relacionado';
 $string['related_dimensions'] = 'Dimensões relacionadas';
 $string['returnbuttoncolor'] = 'Cor do botão';
 $string['returnbuttoncolor_desc'] = 'Escolha a cor do botão flutuante "Voltar ao Plano".';
+$string['returntocompetency'] = 'Voltar à competência';
 $string['returntoplan'] = 'Voltar ao Plano';
 $string['rules_all_outcome_attach'] = 'Ao finalizar com sucesso, uma evidência será gerada e vinculada automaticamente.';
 $string['rules_all_outcome_complete'] = 'A conclusão só ocorrerá quando todos os itens forem finalizados, sem exceções.';

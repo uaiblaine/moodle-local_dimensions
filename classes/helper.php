@@ -2130,6 +2130,24 @@ class helper {
     }
 
     /**
+     * Classify a stored return URL by the page it points at.
+     *
+     * The return context holds a bare URL string and no origin, so the button's
+     * label is derived from its destination. Anything unrecognised is treated as
+     * the plan: the plan is the root of the journey and every writer except the
+     * tracker stores it.
+     *
+     * @param string $url The stored return URL.
+     * @return string Either 'competency' or 'plan'.
+     */
+    public static function return_destination_kind(string $url): string {
+        if (str_contains($url, '/local/dimensions/view-competency.php')) {
+            return 'competency';
+        }
+        return 'plan';
+    }
+
+    /**
      * Count visible competency frameworks per course category context.
      *
      * Single aggregate query (chunked only as a placeholder-limit safeguard).
