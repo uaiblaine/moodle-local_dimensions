@@ -896,3 +896,150 @@ Add to the "Return-to-Plan FAB" section: the tracker's button is gated on `helpe
 - [ ] **Step 9: Commit**
 
 Two commits: the resolver, the gate, the call site and the tests; then the documentation.
+
+---
+
+### Task 6: The single-course redirect obeys the same routing rule
+
+Found by Task 5's reviewer, out of that task's scope. `view-competency.php:123-131` writes the **plan overview** URL for the destination course whenever `singlecourseredirect` fires, unconditionally — reproducing in that branch exactly the defect Task 5 fixed in the tracker's own button. A learner in competency-card mode is redirected into a course and finds a button offering a view they have never seen.
+
+The comment's stated reason — "this page would just redirect again" — is already answered by `noredirect=1`, which `$willredirect` honours at `view-competency.php:113`. Storing the tracker's own URL with that flag does not loop.
+
+This task also repairs the spec content Task 5's change made stale.
+
+**Files:**
+- Modify: `classes/helper.php` (one new method beside `plan_overview_is_routed`)
+- Modify: `view-competency.php:123-131`
+- Modify: `tests/helper_return_navigation_test.php`
+- Modify: `docs/superpowers/specs/2026-07-28-learner-return-navigation-design.md`
+- Modify: `CLAUDE.md`
+
+**Interfaces:**
+- Consumes: `helper::plan_overview_is_routed(int $templateid): bool` from Task 5.
+- Produces: `helper::redirect_return_url(int $planid, int $competencyid, int $templateid): moodle_url`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Append to `tests/helper_return_navigation_test.php`, inside the class, reusing the `create_template_with_displaymode()` helper Task 5 added:
+
+```php
+    /**
+     * A plan whose learners are routed to the overview keeps the redirect pointing there.
+     *
+     * @return void
+     */
+    public function test_redirect_return_url_points_at_the_plan_when_routed(): void {
+        $url = helper::redirect_return_url(42, 7, 0);
+
+        $this->assertStringContainsString('/local/dimensions/view-plan.php', $url->out(false));
+        $this->assertSame('plan', helper::return_destination_kind($url->out(false)));
+    }
+
+    /**
+     * In competency-card mode the redirect points back at the tracker, carrying noredirect.
+     *
+     * @return void
+     */
+    public function test_redirect_return_url_points_at_the_tracker_in_competency_card_mode(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $templateid = $this->create_template_with_displaymode(constants::DISPLAYMODE_COMPETENCIES);
+        $url = helper::redirect_return_url(42, 7, $templateid)->out(false);
+
+        $this->assertStringContainsString('/local/dimensions/view-competency.php', $url);
+        $this->assertStringContainsString('noredirect=1', $url);
+        $this->assertSame('competency', helper::return_destination_kind($url));
+    }
+```
+
+The second test pins the anti-loop invariant directly: the URL this branch stores must always carry `noredirect=1`, or a learner pressing the button would be bounced straight back into the course they just left.
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+```bash
+cd /Volumes/N1TB/dev/github/moodle && /opt/homebrew/opt/php@8.3/bin/php -d max_input_vars=5000 vendor/bin/phpunit --no-coverage public/local/dimensions/tests/helper_return_navigation_test.php
+```
+
+Expected: FAIL — `Error: Call to undefined method local_dimensions\helper::redirect_return_url()`.
+
+- [ ] **Step 3: Add the method**
+
+In `classes/helper.php`, immediately after `plan_overview_is_routed()`:
+
+```php
+    /**
+     * The URL a single-course redirect leaves behind for the destination course.
+     *
+     * When the plan overview is routed to, the course points back at it, because
+     * this page would only redirect again. When it is not - competency-card mode -
+     * the overview is a page the learner never sees, so the course points at the
+     * tracker instead, carrying noredirect=1 so that the tracker renders rather
+     * than bouncing the learner straight back into the course they just left.
+     *
+     * @param int $planid The plan being viewed.
+     * @param int $competencyid The competency being viewed.
+     * @param int $templateid The plan's template id, or 0 when it has none.
+     * @return moodle_url The URL to store for the destination course.
+     */
+    public static function redirect_return_url(int $planid, int $competencyid, int $templateid): moodle_url {
+        if (self::plan_overview_is_routed($templateid)) {
+            return new moodle_url('/local/dimensions/view-plan.php', ['id' => $planid]);
+        }
+
+        return new moodle_url('/local/dimensions/view-competency.php', [
+            'id' => $planid,
+            'competencyid' => $competencyid,
+            'noredirect' => 1,
+        ]);
+    }
+```
+
+- [ ] **Step 4: Use it at the call site**
+
+In `view-competency.php`, replace the `$willredirect` branch's body — currently the comment at `:124-127` plus the `set_return_context_for_course()` call at `:128-131` — with:
+
+```php
+            /* Leave the destination course a button that points where this learner
+               is actually routed: the plan overview when the block sends them there,
+               and this tracker otherwise. The tracker URL carries noredirect=1, so
+               pressing the button renders it instead of redirecting again. */
+            \local_dimensions\helper::set_return_context_for_course(
+                (int) reset($courses)->id,
+                \local_dimensions\helper::redirect_return_url($planid, $competencyid, $templateid)
+            );
+```
+
+Pass `$templateid` — the plan's own, read at `:66` — never `$effectivetemplateid`.
+
+- [ ] **Step 5: Run the tests to verify they pass**
+
+```bash
+cd /Volumes/N1TB/dev/github/moodle && /opt/homebrew/opt/php@8.3/bin/php -d max_input_vars=5000 vendor/bin/phpunit --no-coverage public/local/dimensions/tests/helper_return_navigation_test.php
+```
+
+Then the full suite:
+
+```bash
+cd /Volumes/N1TB/dev/github/moodle && /opt/homebrew/opt/php@8.3/bin/php -d max_input_vars=5000 vendor/bin/phpunit --no-coverage --testsuite local_dimensions_testsuite
+```
+
+- [ ] **Step 6: Repair the stale spec content**
+
+Task 5 changed `tracker_return_context`'s signature and Task 6 changes the redirect branch, leaving earlier sections of `docs/superpowers/specs/2026-07-28-learner-return-navigation-design.md` describing code that no longer exists. Fix all of it:
+
+- The code sample showing the two-argument `tracker_return_context($planid, $related)` call.
+- The "Code changes" table row for `tracker_return_context`, whose signature and null-conditions are both now incomplete: it must name the display-mode gate.
+- The "Code changes" table, which needs rows for `plan_overview_is_routed` and `redirect_return_url`.
+- The "Tests" table, which lists neither Task 5's three tests nor Task 6's two.
+- The navigation matrix row for the single-course redirect, which states the cached URL is the plan overview. It now depends on the display mode.
+
+Read each section before editing it, and make every claim true of the code as it now stands.
+
+- [ ] **Step 7: Correct the invariant in CLAUDE.md**
+
+The "Return-to-Plan FAB" section states the anti-loop invariant as: when the page redirects it writes the plan URL for the destination course. That is now conditional. Reword it so the invariant that survives is the one that actually holds — every `view-competency.php` URL the button stores carries `noredirect=1` — and the destination is described as following the display-mode routing.
+
+- [ ] **Step 8: Commit**
+
+Two commits: the method, the call site and the tests; then the documentation repairs.
