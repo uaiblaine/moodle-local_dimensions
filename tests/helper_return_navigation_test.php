@@ -74,4 +74,47 @@ final class helper_return_navigation_test extends advanced_testcase {
         $this->assertSame('plan', helper::return_destination_kind('https://example.invalid/course/view.php?id=2'));
         $this->assertSame('plan', helper::return_destination_kind(''));
     }
+
+    /**
+     * The tracker's button points at the plan it was opened from.
+     *
+     * @return void
+     */
+    public function test_tracker_return_context_points_at_the_plan(): void {
+        $this->resetAfterTest();
+        set_config('enablereturnbutton', 1, 'local_dimensions');
+        set_config('returnbuttoncolor', '#ff0000', 'local_dimensions');
+
+        $context = helper::tracker_return_context(42, false);
+
+        $this->assertNotNull($context);
+        $expected = (new moodle_url('/local/dimensions/view-plan.php', ['id' => 42]))->out(false);
+        $this->assertSame($expected, $context['returnurl']);
+        $this->assertSame(get_string('returntoplan', 'local_dimensions'), $context['label']);
+        $this->assertSame('#ff0000', $context['buttoncolor']);
+    }
+
+    /**
+     * A tracker opened by a related-competency pill gets no button: it is a new tab.
+     *
+     * @return void
+     */
+    public function test_tracker_return_context_suppressed_when_related(): void {
+        $this->resetAfterTest();
+        set_config('enablereturnbutton', 1, 'local_dimensions');
+
+        $this->assertNull(helper::tracker_return_context(42, true));
+    }
+
+    /**
+     * The tracker's button honours the same feature switch as the course FAB.
+     *
+     * @return void
+     */
+    public function test_tracker_return_context_suppressed_when_feature_disabled(): void {
+        $this->resetAfterTest();
+        set_config('enablereturnbutton', 0, 'local_dimensions');
+
+        $this->assertNull(helper::tracker_return_context(42, false));
+    }
 }

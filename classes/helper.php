@@ -2148,6 +2148,30 @@ class helper {
     }
 
     /**
+     * Build the competency tracker's own return-button context.
+     *
+     * The tracker cannot receive the footer FAB: it leaves the page layout at
+     * core's default 'base', which the hook's allowlist excludes. It needs no
+     * return-context cache either, because the plan id is a required parameter
+     * of the page, so this button is built from the request alone.
+     *
+     * @param int $planid The plan the tracker was opened from.
+     * @param bool $related Whether a related-competency pill opened this page in a new tab.
+     * @return array|null Keys returnurl, label and buttoncolor, or null when no button belongs here.
+     */
+    public static function tracker_return_context(int $planid, bool $related): ?array {
+        if ($related || !get_config('local_dimensions', 'enablereturnbutton')) {
+            return null;
+        }
+
+        return [
+            'returnurl' => (new moodle_url('/local/dimensions/view-plan.php', ['id' => $planid]))->out(false),
+            'label' => get_string('returntoplan', 'local_dimensions'),
+            'buttoncolor' => get_config('local_dimensions', 'returnbuttoncolor') ?: '#0f6cbf',
+        ];
+    }
+
+    /**
      * Count visible competency frameworks per course category context.
      *
      * Single aggregate query (chunked only as a placeholder-limit safeguard).
