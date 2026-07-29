@@ -35,9 +35,11 @@ use core\hook\output\before_footer_html_generation;
  */
 class hook_callbacks {
     /**
-     * Add the "Return to Plan" floating button before the footer.
+     * Add the course floating return button before the footer, labelled for its destination.
      *
-     * This displays a FAB button when:
+     * The button returns the learner to the plan overview or to the competency tracker,
+     * whichever the stored context for this course actually holds (`helper::return_destination_kind()`
+     * picks the label). This displays the button when:
      * 1. The feature is enabled in settings
      * 2. User is currently on a course or activity page
      * 3. The page is course content (not an administrative/report page)
