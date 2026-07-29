@@ -233,8 +233,11 @@ The tracker renders a **second, separate** return button of its own
 (`helper::tracker_return_context`, echoed by `view-competency.php`), because the
 hook cannot reach it: both learner views leave `$PAGE->pagelayout` at core's
 default `base`, which the allowlist excludes. Two consequences are invariants.
-**Never call `set_pagelayout('course'|'incourse')` in a learner view** — the hook
-would then render a second FAB sharing the fixed DOM id
+**Never combine a course-content pagelayout with a course in `$PAGE->context` in a
+learner view** — `get_current_course_id()` runs, and returns, before the pagelayout
+check, so on the tracker (no course in context) the hook exits there regardless of
+layout; it is that check, not the layout alone, that keeps it off the tracker today.
+Both conditions together would render a second FAB sharing the fixed DOM id
 `local-dimensions-return-fab`, and the tracker would become a destination for
 itself. And **never add `related` to the tracker's `$PAGE->set_url`** — the
 related-competency pill sets it to suppress the tracker's button in the new tab it
