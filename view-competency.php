@@ -34,6 +34,11 @@ use local_dimensions\constants;
 $planid = required_param('id', PARAM_INT);
 $competencyid = required_param('competencyid', PARAM_INT);
 
+/* Set by the related-competency pill, which opens a new tab. Deliberately kept
+   out of $PAGE->set_url below: it must not leak into the URL this page caches
+   for the course FAB, or the way back from a course would find no button. */
+$related = optional_param('related', 0, PARAM_BOOL);
+
 // Security and Login Checks.
 require_login();
 $context = context_system::instance();
@@ -145,6 +150,16 @@ echo $OUTPUT->header();
 $page = new view_competency_page($competency, $courses, $USER->id);
 $templatedata = $page->export_for_template($OUTPUT);
 echo $OUTPUT->render_from_template('local_dimensions/view_competency', $templatedata);
+
+/* The tracker renders its own return button: the footer hook fires only on
+   course-content layouts and this page keeps core's default 'base'. Outside the
+   competency guard on purpose, because the empty state is where a learner has
+   the fewest ways out. */
+$returnbutton = \local_dimensions\helper::tracker_return_context($planid, $related);
+if ($returnbutton !== null) {
+    echo $OUTPUT->render_from_template('local_dimensions/return_button', $returnbutton);
+    $PAGE->requires->js_call_amd('local_dimensions/return_button', 'init');
+}
 
 // Initialise the collapsible description for the hero.
 $PAGE->requires->js_call_amd('local_dimensions/collapsible_description', 'init');
