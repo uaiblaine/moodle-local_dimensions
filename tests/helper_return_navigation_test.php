@@ -26,12 +26,14 @@ namespace local_dimensions;
 
 use advanced_testcase;
 use moodle_url;
+use local_dimensions\customfield\lp_handler;
 
 /**
  * Tests for the return-context classification and the tracker's return button.
  *
  * @covers \local_dimensions\helper::return_destination_kind
  * @covers \local_dimensions\helper::tracker_return_context
+ * @covers \local_dimensions\helper::plan_overview_is_routed
  * @covers \local_dimensions\helper::set_return_context
  * @covers \local_dimensions\helper::get_return_context_for_course
  */
@@ -87,7 +89,7 @@ final class helper_return_navigation_test extends advanced_testcase {
         set_config('enablereturnbutton', 1, 'local_dimensions');
         set_config('returnbuttoncolor', '#ff0000', 'local_dimensions');
 
-        $context = helper::tracker_return_context(42, false);
+        $context = helper::tracker_return_context(42, 0, false);
 
         $this->assertNotNull($context);
         $expected = (new moodle_url('/local/dimensions/view-plan.php', ['id' => 42]))->out(false);
@@ -105,7 +107,7 @@ final class helper_return_navigation_test extends advanced_testcase {
         $this->resetAfterTest();
         set_config('enablereturnbutton', 1, 'local_dimensions');
 
-        $this->assertNull(helper::tracker_return_context(42, true));
+        $this->assertNull(helper::tracker_return_context(42, 0, true));
     }
 
     /**
@@ -117,7 +119,7 @@ final class helper_return_navigation_test extends advanced_testcase {
         $this->resetAfterTest();
         set_config('enablereturnbutton', 0, 'local_dimensions');
 
-        $this->assertNull(helper::tracker_return_context(42, false));
+        $this->assertNull(helper::tracker_return_context(42, 0, false));
     }
 
     /**
@@ -184,5 +186,79 @@ final class helper_return_navigation_test extends advanced_testcase {
         $context = helper::get_return_context_for_course($courseid);
 
         $this->assertSame('competency', helper::return_destination_kind($context['url']));
+    }
+
+    /**
+     * A plan with no template is routed to the plan overview, matching the block's default.
+     *
+     * @return void
+     */
+    public function test_plan_overview_is_routed_without_a_template(): void {
+        $this->assertTrue(helper::plan_overview_is_routed(0));
+    }
+
+    /**
+     * A template that routes learners to competency cards suppresses the tracker's button.
+     *
+     * @return void
+     */
+    public function test_tracker_return_context_suppressed_in_competency_card_mode(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enablereturnbutton', 1, 'local_dimensions');
+
+        $templateid = $this->create_template_with_displaymode(constants::DISPLAYMODE_COMPETENCIES);
+
+        $this->assertFalse(helper::plan_overview_is_routed($templateid));
+        $this->assertNull(helper::tracker_return_context(42, $templateid, false));
+    }
+
+    /**
+     * A template that routes learners to the plan overview keeps the tracker's button.
+     *
+     * @return void
+     */
+    public function test_tracker_return_context_shown_in_plan_mode(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enablereturnbutton', 1, 'local_dimensions');
+
+        $templateid = $this->create_template_with_displaymode(constants::DISPLAYMODE_PLAN);
+
+        $this->assertTrue(helper::plan_overview_is_routed($templateid));
+        $this->assertNotNull(helper::tracker_return_context(42, $templateid, false));
+    }
+
+    /**
+     * Create a learning plan template with its display mode custom field set to $displaymode.
+     *
+     * Provisions the plugin's custom fields, creates a bare template via the core_competency
+     * generator, then writes the display mode through the lp custom-field handler — the same
+     * save path the template edit form uses (see tests/customfield/lp_handler_test.php) — so the
+     * value is stored the way `template_metadata_cache` actually reads it back. The cache is
+     * invalidated afterwards so the write is visible immediately instead of leaving a stale
+     * (or missing) cached entry from before the field existed.
+     *
+     * @param int $displaymode One of constants::DISPLAYMODE_COMPETENCIES or DISPLAYMODE_PLAN.
+     * @return int The new template's id.
+     */
+    private function create_template_with_displaymode(int $displaymode): int {
+        helper::ensure_all_fields();
+
+        $field = helper::find_field_by_shortname(constants::CFIELD_DISPLAYMODE, helper::AREA_LP);
+        $this->assertNotNull($field);
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $template = $generator->create_template();
+        $templateid = (int) $template->get('id');
+
+        $formdata = (object) (['id' => $templateid] + helper::template_customfields_to_formdata([
+            'cf_displaymode' => (string) $displaymode,
+        ]));
+        lp_handler::create()->instance_form_save($formdata, true);
+
+        template_metadata_cache::invalidate_template($templateid);
+
+        return $templateid;
     }
 }

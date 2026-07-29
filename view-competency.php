@@ -155,7 +155,7 @@ echo $OUTPUT->render_from_template('local_dimensions/view_competency', $template
    course-content layouts and this page keeps core's default 'base'. Outside the
    competency guard on purpose, because the empty state is where a learner has
    the fewest ways out. */
-$returnbutton = \local_dimensions\helper::tracker_return_context($planid, $related);
+$returnbutton = \local_dimensions\helper::tracker_return_context($planid, $templateid, $related);
 if ($returnbutton !== null) {
     echo $OUTPUT->render_from_template('local_dimensions/return_button', $returnbutton);
     $PAGE->requires->js_call_amd('local_dimensions/return_button', 'init');
