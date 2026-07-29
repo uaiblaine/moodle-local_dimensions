@@ -2,6 +2,7 @@
 
 **Date:** 2026-07-28
 **Surfaces:** `view-competency.php` (Competency tracker), `classes/hook_callbacks.php` (the course FAB), `amd/src/accordion.js` (the related-competency pill)
+**Line references pinned to:** `dce41b3` — the branch moved while this was being written, so every reference below was re-verified against that tree.
 
 ## Why
 
@@ -39,10 +40,12 @@ its own, no navbar node is set, and the renderable is never even given the plan 
 learner "to where they came from" returns them to a page with no way onward.
 
 **The same course already behaves two different ways, invisibly.** The plan overview
-links straight into courses (`accordion.js:2134`) and into single activities
-(`accordion.js:2146`), bypassing the tracker. On those edges the FAB is correct,
-because nothing overwrote the plan URL. So one course returns to the plan or to the
-tracker depending on a path the learner cannot see.
+links straight into content, bypassing the tracker entirely — the course card's own
+URL (`accordion.js:2258`), the "go" link a compact card renders for its single
+activity or single section (`accordion.js:2143-2152`), and every activity row of an
+expanded card (`accordion.js:1998`). On those edges the FAB is correct, because
+nothing overwrote the plan URL. So one course returns to the plan or to the tracker
+depending on a path the learner cannot see.
 
 ## Scope
 
@@ -86,7 +89,7 @@ guard behave identically — one button identity across course and tracker.
 
 | Cached destination | String | Status |
 |---|---|---|
-| `view-plan.php` | `returntoplan` — "Return to plan" | exists (`lang/en/local_dimensions.php:537`) |
+| `view-plan.php` | `returntoplan` — "Return to plan" | exists (`lang/en/local_dimensions.php:653`) |
 | `view-competency.php` | `returntocompetency` — "Return to competency" | **one** new string, `en` + `pt_br`, in the alphabetical slot |
 
 The template already binds the label to `title` **and** `aria-label`
@@ -124,7 +127,7 @@ if ($returnbutton !== null) {
 
 ### The related-competency pill
 
-`accordion.js:2372` appends `&related=1` to the URL it builds. Nothing else about the
+`accordion.js:2473` appends `&related=1` to the URL it builds. Nothing else about the
 pill changes — it keeps `target="_blank" rel="noopener"` and its `showrelatedlink`
 gate.
 
@@ -132,10 +135,10 @@ gate.
 
 | Journey | Cached for the course | Course FAB | Tracker button |
 |---|---|---|---|
-| Block → plan overview → **course** (`accordion.js:2134`) | plan | "Return to plan" | — |
-| Plan overview → **activity** (`accordion.js:2146`) | plan | "Return to plan" *(when the layout passes the allowlist)* | — |
-| Plan overview → tracker (rule child `:997` / footer `:2228`) → course | tracker | "Return to competency" | → plan |
-| Plan overview → tracker **via the pill** (`:2372`, new tab) | tracker, without `related` | "Return to competency" | **suppressed** |
+| Block → plan overview → **course** (`accordion.js:2258`) | plan | "Return to plan" | — |
+| Plan overview → **activity or section** (`accordion.js:2143-2152`, `:1998`) | plan | "Return to plan" *(when the layout passes the allowlist)* | — |
+| Plan overview → tracker (rule child `:1001` / footer `:2329`) → course | tracker | "Return to competency" | → plan |
+| Plan overview → tracker **via the pill** (`:2473`, new tab) | tracker, without `related` | "Return to competency" | **suppressed** |
 | …then → course → FAB → tracker | tracker | "Return to competency" | → plan |
 | **Block competency card** → tracker → course | tracker | "Return to competency" | → plan |
 | Tracker with one course + `singlecourseredirect` | **plan** | "Return to plan" | *(the page redirects past itself)* |
@@ -174,9 +177,9 @@ Both belong in the CLAUDE.md "Return-to-Plan FAB" section.
 | `classes/helper.php` | Add `return_destination_kind(string $url): string` returning `'plan'` or `'competency'`, defaulting to `'plan'`. Add `tracker_return_context(int $planid, bool $related): ?array` returning the template context (`returnurl`, `label`, `buttoncolor`) or `null` when `related` is true or `enablereturnbutton` is off. |
 | `classes/hook_callbacks.php` | Replace the fixed `get_string('returntoplan', …)` at `:103` with the literal `match` above. |
 | `view-competency.php` | Read `related`; render System B after the main template, outside the `if ($competency)` block. |
-| `amd/src/accordion.js` | Append `&related=1` to the pill URL at `:2372`. |
+| `amd/src/accordion.js` | Append `&related=1` to the pill URL at `:2473`. |
 | `amd/build/accordion.min.js` + `.map` | Rebuilt with `npx grunt amd --root=public/local/dimensions`, committed together. |
-| `lang/en/local_dimensions.php` | `returntocompetency` — "Return to competency", between `returnbuttoncolor_desc` and `returntoplan`. |
+| `lang/en/local_dimensions.php` | `returntocompetency` — "Return to competency", between `returnbuttoncolor_desc` (`:652`) and `returntoplan` (`:653`). |
 | `lang/pt_br/local_dimensions.php` | The same key in the same slot, after `returnbuttoncolor_desc` at `:652` — "Voltar à competência". The neighbouring `returntoplan` capitalises "Plano"; that inconsistency is pre-existing and left alone. |
 | `db/caches.php` | Fix `:91` (`Key: 'returncontext'` → `course_{courseid}`) and `:92` (the value is `['url' => string]`, never a course-id list). |
 | `CLAUDE.md` | Record N1 and N2. |
