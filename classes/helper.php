@@ -2178,6 +2178,13 @@ class helper {
      * tracker instead, carrying noredirect=1 so that the tracker renders rather
      * than bouncing the learner straight back into the course they just left.
      *
+     * Rebuilds the tracker URL from raw ids rather than taking a moodle_url
+     * parameter, so it stays testable without a $PAGE. view-competency.php's own
+     * non-redirect branch builds the same URL from $PAGE->url instead; the two
+     * agree today only because both list exactly id, competencyid and
+     * noredirect. Keep them in step: a third parameter added to the tracker's
+     * $PAGE->set_url() would silently leave this copy behind.
+     *
      * @param int $planid The plan being viewed.
      * @param int $competencyid The competency being viewed.
      * @param int $templateid The plan's template id, or 0 when it has none.

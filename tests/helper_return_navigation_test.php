@@ -285,7 +285,10 @@ final class helper_return_navigation_test extends advanced_testcase {
      * save path the template edit form uses (see tests/customfield/lp_handler_test.php) — so the
      * value is stored the way `template_metadata_cache` actually reads it back. The cache is
      * invalidated afterwards so the write is visible immediately instead of leaving a stale
-     * (or missing) cached entry from before the field existed.
+     * (or missing) cached entry from before the field existed. DISPLAYMODE_COMPETENCIES is
+     * also the fall-through default when the field is unset, so a silently no-op write would
+     * still read back as competency mode; asserting the write landed keeps a broken write
+     * path from passing every competency-mode test that uses this helper.
      *
      * @param int $displaymode One of constants::DISPLAYMODE_COMPETENCIES or DISPLAYMODE_PLAN.
      * @return int The new template's id.
@@ -306,6 +309,9 @@ final class helper_return_navigation_test extends advanced_testcase {
         lp_handler::create()->instance_form_save($formdata, true);
 
         template_metadata_cache::invalidate_template($templateid);
+
+        $metadata = template_metadata_cache::get_template_metadata($templateid);
+        $this->assertSame($displaymode, $metadata['displaymode']);
 
         return $templateid;
     }
