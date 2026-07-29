@@ -2170,6 +2170,32 @@ class helper {
     }
 
     /**
+     * The URL a single-course redirect leaves behind for the destination course.
+     *
+     * When the plan overview is routed to, the course points back at it, because
+     * this page would only redirect again. When it is not - competency-card mode -
+     * the overview is a page the learner never sees, so the course points at the
+     * tracker instead, carrying noredirect=1 so that the tracker renders rather
+     * than bouncing the learner straight back into the course they just left.
+     *
+     * @param int $planid The plan being viewed.
+     * @param int $competencyid The competency being viewed.
+     * @param int $templateid The plan's template id, or 0 when it has none.
+     * @return moodle_url The URL to store for the destination course.
+     */
+    public static function redirect_return_url(int $planid, int $competencyid, int $templateid): moodle_url {
+        if (self::plan_overview_is_routed($templateid)) {
+            return new moodle_url('/local/dimensions/view-plan.php', ['id' => $planid]);
+        }
+
+        return new moodle_url('/local/dimensions/view-competency.php', [
+            'id' => $planid,
+            'competencyid' => $competencyid,
+            'noredirect' => 1,
+        ]);
+    }
+
+    /**
      * Build the competency tracker's own return-button context.
      *
      * The tracker cannot receive the footer FAB: it leaves the page layout at

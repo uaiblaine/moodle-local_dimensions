@@ -121,13 +121,13 @@ if ($competency) {
         && (int) $plan->get('userid') === (int) $USER->id
     ) {
         if ($willredirect) {
-            // Point the destination course's FAB at the plan overview: this page
-            // would just redirect again, and entry paths that never pass through
-            // view-plan.php (block card, direct link) would otherwise leave the
-            // course with no FAB at all.
+            /* Leave the destination course a button that points where this learner
+               is actually routed: the plan overview when the block sends them there,
+               and this tracker otherwise. The tracker URL carries noredirect=1, so
+               pressing the button renders it instead of redirecting again. */
             \local_dimensions\helper::set_return_context_for_course(
                 (int) reset($courses)->id,
-                new moodle_url('/local/dimensions/view-plan.php', ['id' => $planid])
+                \local_dimensions\helper::redirect_return_url($planid, $competencyid, $templateid)
             );
         } else {
             \local_dimensions\helper::set_return_context(
