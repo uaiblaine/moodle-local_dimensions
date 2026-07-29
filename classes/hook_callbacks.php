@@ -96,11 +96,18 @@ class hook_callbacks {
         // Get configured button color.
         $buttoncolor = get_config('local_dimensions', 'returnbuttoncolor') ?: '#0f6cbf';
 
+        /* Name the destination the context actually holds. Literal string keys
+           only: the string checker cannot verify a constructed identifier. */
+        $label = match (helper::return_destination_kind($context['url'])) {
+            'competency' => get_string('returntocompetency', 'local_dimensions'),
+            default => get_string('returntoplan', 'local_dimensions'),
+        };
+
         // Render the return button with iframe detection script.
         $renderer = $hook->renderer;
         $html = $renderer->render_from_template('local_dimensions/return_button', [
             'returnurl' => $context['url'],
-            'label' => get_string('returntoplan', 'local_dimensions'),
+            'label' => $label,
             'buttoncolor' => $buttoncolor,
         ]);
         $hook->add_html($html);
