@@ -1468,44 +1468,21 @@ AI opt-out and the acceptable use policy before reaching the provider."
 ```
 
 ---
+## Task 6: `lib.php`, the gates, and the drawer that opens
 
-## Task 6: `lib.php`, the gates, and the apply path
+**Deliverable:** clicking "Suggest competencies with AI" opens the plugin's own drawer showing a framework select and its branch checkboxes. Nothing is sent to a model yet — that is Task 7.
 
 **Files:**
 - Create: `lib.php`
 - Create: `amd/src/suggest.js` and the built `amd/build/suggest.min.js` plus `.map`
-- Create: `templates/button.mustache`, `templates/drawer.mustache`, `templates/suggestions.mustache`
+- Create: `templates/button.mustache`, `templates/drawer.mustache`, `templates/pickers.mustache`
 - Modify: `lang/en/aiplacement_dimensions.php`
 
 **Interfaces:**
-- Consumes: `aiplacement_dimensions_suggest_competencies` (Task 5); `local_dimensions_link_competency_course(competencyid, courseid)`; `local_dimensions_browse_structure` for the framework and branch pickers.
-- Produces: no PHP interface for later tasks. Behat in Task 7 targets the button `[data-action="aiplacement-dimensions-suggest"]`.
+- Consumes: `local_dimensions_browse_structure` for the framework and branch tree.
+- Produces: the AMD module `aiplacement_dimensions/suggest` exporting `init(contextId, courseId)`; the selector constants `SELECTORS`; the launch button `[data-action="aiplacement-dimensions-suggest"]`; the drawer `#aiplacement-dimensions-drawer` with body `.aiplacement-dimensions-body`; the picker regions `[data-region="framework"]` and `[data-region="branch"]`; the run button `[data-action="aiplacement-dimensions-run"]` (wired in Task 7).
 
-- [ ] **Step 1: Spike the chip re-render, before writing any apply code**
-
-This is the one open question in the spec. Budget 30 minutes.
-
-`lib/amd/src/form-autocomplete.js` exports only `enhance` and `enhanceField` (`:1326-1336`), and `updateSelectionList` (`:152`) rebuilds the visible chips from `originalSelect.children('option:selected')` (`:157`) on init and on user interaction — there is **no `change` listener on the original select**. So appending an option externally updates the data but not the chips.
-
-In a browser on an activity edit page, with the competencies field present, run in the console:
-
-```js
-require(['jquery', 'core/form-autocomplete'], function($, AC) {
-    var sel = document.querySelector('select[name="competencies[]"]');
-    var opt = new Option('Test competency', '999', true, true);
-    sel.appendChild(opt);
-    AC.enhanceField(sel);
-});
-```
-
-Observe whether the chip list updates and whether the DOM gains a duplicate autocomplete widget.
-
-- If it updates cleanly: use `enhanceField` in Step 5.
-- If it duplicates: **use the fallback** — leave the chips alone and render a notice under the field listing what was added. Record which branch you took in the commit message.
-
-Either way the save is correct, because the form submits the hidden select and not the chips.
-
-- [ ] **Step 2: Write `lib.php` with the six gates**
+- [ ] **Step 1: Write `lib.php` with the six gates**
 
 ```php
 defined('MOODLE_INTERNAL') || die();
@@ -1553,10 +1530,10 @@ function aiplacement_dimensions_coursemodule_standard_elements($formwrapper, $mf
         return;
     }
 
-    $mform->addElement('static', 'aiplacementdimensions', '', $OUTPUT->render_from_template(
-        'aiplacement_dimensions/button',
-        []
-    ));
+    $mform->addElement('static', 'aiplacementdimensions', '',
+        $OUTPUT->render_from_template('aiplacement_dimensions/button', []) .
+        $OUTPUT->render_from_template('aiplacement_dimensions/drawer', [])
+    );
 
     $PAGE->requires->js_call_amd('aiplacement_dimensions/suggest', 'init', [
         (int) $context->id,
@@ -1567,7 +1544,9 @@ function aiplacement_dimensions_coursemodule_standard_elements($formwrapper, $mf
 
 The gate order matters: the cheap `get_config` and capability checks come before anything that instantiates the AI manager.
 
-- [ ] **Step 3: Write `templates/button.mustache`**
+On the add path there is no cmid yet and `$formwrapper->get_context()` returns the **course** context. Both capability checks and `is_action_enabled_in_context()` accept a course context (`ai/classes/manager.php:351` admits `CONTEXT_COURSE`), so the gates hold and the feature works on an unsaved activity. Do not add a cmid requirement.
+
+- [ ] **Step 2: Write `templates/button.mustache`**
 
 ```
 {{!
@@ -1589,227 +1568,7 @@ The gate order matters: the cheap `get_config` and capability checks come before
 
 Every class here is namespaced `aiplacement-dimensions-*`. Do not reuse `.ai-drawer` or `.course-assist-*`: another placement resolves those document-wide and the two would cross-bind handlers.
 
-- [ ] **Step 4: Write `amd/src/suggest.js`**
-
-The module extends nothing. It owns its drawer and reads the unsaved editor content.
-
-```js
-// Licence header as in every other file.
-
-/**
- * Competency suggestions on the activity form.
- *
- * @module     aiplacement_dimensions/suggest
- * @copyright  2026 Anderson Blaine
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-define(['core/ajax', 'core/templates', 'core/notification', 'core/str'],
-function(Ajax, Templates, Notification, Str) {
-
-    var SELECTORS = {
-        LAUNCH: '[data-action="aiplacement-dimensions-suggest"]',
-        DRAWER: '#aiplacement-dimensions-drawer',
-        BODY: '#aiplacement-dimensions-drawer .aiplacement-dimensions-body',
-        APPLY: '[data-action="aiplacement-dimensions-apply"]',
-        PICK: 'input[data-region="aiplacement-dimensions-pick"]',
-        COMPETENCIES: 'select[name="competencies[]"]'
-    };
-
-    /**
-     * Read the unsaved activity description from the form.
-     *
-     * @return {String} The content to classify.
-     */
-    var readContent = function() {
-        var textarea = document.querySelector('#id_introeditor, [name="intro[text]"]');
-        if (textarea && typeof textarea.value === 'string' && textarea.value.trim()) {
-            return textarea.value.trim();
-        }
-        var editable = document.querySelector('[id^="id_introeditor"][contenteditable="true"]');
-        return editable ? editable.textContent.trim() : '';
-    };
-
-    /**
-     * Append a competency to the form's own competencies select.
-     *
-     * The form submits this select, not the visible chips, so appending here is
-     * what makes tool_lp create the module link on save. We never write the
-     * module link ourselves: tool_lp_coursemodule_edit_post_actions diffs this
-     * element and would remove anything absent from it.
-     *
-     * @param {Object} suggestion The resolved suggestion.
-     * @return {void}
-     */
-    var appendToForm = function(suggestion) {
-        var select = document.querySelector(SELECTORS.COMPETENCIES);
-        if (!select) {
-            return;
-        }
-        var existing = select.querySelector('option[value="' + suggestion.id + '"]');
-        if (existing) {
-            existing.selected = true;
-            return;
-        }
-        select.appendChild(new Option(suggestion.shortname, suggestion.id, true, true));
-    };
-
-    return {
-        /**
-         * Initialise the placement.
-         *
-         * @param {Number} contextId The activity or course context id.
-         * @param {Number} courseId The course id.
-         * @return {void}
-         */
-        init: function(contextId, courseId) {
-            document.addEventListener('click', function(e) {
-                var launch = e.target.closest(SELECTORS.LAUNCH);
-                if (launch) {
-                    e.preventDefault();
-                    // Open the drawer and run the framework and branch pickers.
-                    return;
-                }
-
-                var apply = e.target.closest(SELECTORS.APPLY);
-                if (!apply) {
-                    return;
-                }
-                e.preventDefault();
-
-                var picks = Array.prototype.slice.call(
-                    document.querySelectorAll(SELECTORS.PICK + ':checked')
-                ).map(function(input) {
-                    return JSON.parse(input.dataset.suggestion);
-                });
-
-                // One call per competency. A single Ajax.call batch aborts the
-                // remainder on the first exception, losing the rest silently.
-                var jobs = picks.map(function(pick) {
-                    return Ajax.call([{
-                        methodname: 'local_dimensions_link_competency_course',
-                        args: {competencyid: pick.id, courseid: courseId}
-                    }])[0].then(function() {
-                        appendToForm(pick);
-                        return {pick: pick, ok: true};
-                    }).catch(function() {
-                        return {pick: pick, ok: false};
-                    });
-                });
-
-                Promise.all(jobs).then(function(results) {
-                    // Render the outcome. No page reload: it would discard the
-                    // unsaved content that produced the classification.
-                    return results;
-                }).catch(Notification.exception);
-            }, false);
-
-            this.contextId = contextId;
-        }
-    };
-});
-```
-
-This step delivers the launch handler, `readContent`, `appendToForm` and the apply handler. The drawer shell, the framework and branch pickers, and the suggestion rendering are **Task 7** — do not start them here; this task ends with a button that opens an empty drawer and an apply path that is unit-reachable.
-
-- [ ] **Step 5: Apply the spike outcome from Step 1**
-
-If `enhanceField` was clean, call it once after the `Promise.all` resolves, passing the select element:
-
-```js
-require(['core/form-autocomplete'], function(AC) {
-    AC.enhanceField(document.querySelector(SELECTORS.COMPETENCIES));
-});
-```
-
-If it duplicated the widget, delete that call and render the fallback notice instead, leaving the chips untouched:
-
-```js
-Templates.renderForPromise('aiplacement_dimensions/applied', {
-    added: results.filter(function(r) { return r.ok; }).map(function(r) { return r.pick; }),
-    failed: results.filter(function(r) { return !r.ok; }).map(function(r) { return r.pick; })
-}).then(function(rendered) {
-    var host = document.querySelector('.aiplacement-dimensions-launch');
-    host.insertAdjacentHTML('afterend', rendered.html);
-    Templates.runTemplateJS(rendered.js);
-    return rendered;
-}).catch(Notification.exception);
-```
-
-with `templates/applied.mustache`:
-
-```
-{{!
-    @template aiplacement_dimensions/applied
-
-    Outcome notice rendered under the competencies field after applying.
-
-    Example context (json):
-    {
-        "added": [{"id": 1, "shortname": "Alpha"}],
-        "failed": []
-    }
-}}
-<div class="aiplacement-dimensions-applied alert alert-info" role="status">
-    {{#added.length}}
-        <p class="mb-1">{{#str}} appliedheading, aiplacement_dimensions {{/str}}</p>
-        <ul class="mb-0">
-            {{#added}}<li>{{shortname}}</li>{{/added}}
-        </ul>
-    {{/added.length}}
-    {{#failed.length}}
-        <p class="mb-1 mt-2">{{#str}} failedheading, aiplacement_dimensions {{/str}}</p>
-        <ul class="mb-0">
-            {{#failed}}<li>{{shortname}}</li>{{/failed}}
-        </ul>
-    {{/failed.length}}
-</div>
-```
-
-Record which branch you took in the commit message.
-
-- [ ] **Step 6: Build the AMD bundle**
-
-```bash
-cd /Volumes/N1TB/dev/github/moodle
-npx grunt amd --root=public/ai/placement/dimensions
-```
-
-Confirm `amd/build/suggest.min.js` and `amd/build/suggest.min.js.map` were written. Grunt compiles the main checkout rather than a worktree and can report success without rebuilding — check the file mtimes before committing.
-
-- [ ] **Step 7: Add the remaining lang strings, alphabetically sorted**
-
-```php
-$string['appliedheading'] = 'Added to the course and selected below. Save the form to link them to this activity.';
-$string['applybutton'] = 'Add selected';
-$string['failedheading'] = 'Could not be added:';
-$string['suggestbutton'] = 'Suggest competencies with AI';
-```
-
-- [ ] **Step 8: Commit**
-
-```bash
-cd /Volumes/N1TB/dev/github/moodle/public/ai/placement/dimensions
-git add lib.php amd/src/suggest.js amd/build/suggest.min.js amd/build/suggest.min.js.map templates lang/en/aiplacement_dimensions.php
-git commit -m "feat: add the suggestion button and apply flow
-
-Applies by linking to the course and appending to the form's own
-competencies select, so the native save creates the module link."
-```
-
----
-
-## Task 7: The drawer, the pickers, and the suggestion list
-
-**Files:**
-- Create: `templates/drawer.mustache`, `templates/pickers.mustache`, `templates/suggestions.mustache`
-- Modify: `amd/src/suggest.js` and its rebuilt bundle
-- Modify: `lang/en/aiplacement_dimensions.php`
-
-**Interfaces:**
-- Consumes: `aiplacement_dimensions_suggest_competencies` (Task 5); `local_dimensions_browse_structure` for the framework and branch tree; `SELECTORS` and `readContent()` from Task 6.
-- Produces: the checkbox rows Task 6's apply handler reads — each is `input[data-region="aiplacement-dimensions-pick"]` carrying the whole suggestion as JSON in `data-suggestion`.
-
-- [ ] **Step 1: Write `templates/drawer.mustache`**
+- [ ] **Step 3: Write `templates/drawer.mustache`**
 
 ```
 {{!
@@ -1837,7 +1596,7 @@ competencies select, so the native save creates the module link."
 </div>
 ```
 
-- [ ] **Step 2: Write `templates/pickers.mustache`**
+- [ ] **Step 4: Write `templates/pickers.mustache`**
 
 ```
 {{!
@@ -1880,9 +1639,164 @@ competencies select, so the native save creates the module link."
 </form>
 ```
 
-- [ ] **Step 3: Write `templates/suggestions.mustache`**
+- [ ] **Step 5: Write `amd/src/suggest.js`**
 
-`data-suggestion` carries the whole resolved record, which is what Task 6's apply handler parses. The empty state and both notices are here, so no state is silent.
+The module extends nothing and owns its drawer.
+
+```js
+// Licence header as in every other file.
+
+/**
+ * Competency suggestions on the activity form.
+ *
+ * @module     aiplacement_dimensions/suggest
+ * @copyright  2026 Anderson Blaine
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+define(['core/ajax', 'core/templates', 'core/notification', 'core/str'],
+function(Ajax, Templates, Notification, Str) {
+
+    var SELECTORS = {
+        LAUNCH: '[data-action="aiplacement-dimensions-suggest"]',
+        CLOSE: '[data-action="aiplacement-dimensions-close"]',
+        RUN: '[data-action="aiplacement-dimensions-run"]',
+        DRAWER: '#aiplacement-dimensions-drawer',
+        BODY: '#aiplacement-dimensions-drawer .aiplacement-dimensions-body',
+        FRAMEWORK: '[data-region="framework"]',
+        BRANCH: '[data-region="branch"]',
+        COMPETENCIES: 'select[name="competencies[]"]'
+    };
+
+    /**
+     * Open the drawer and render the framework and branch pickers.
+     *
+     * @param {Number} contextId The activity or course context id.
+     * @return {Promise} Resolves once the pickers are in the drawer.
+     */
+    var openPickers = function(contextId) {
+        return Ajax.call([{
+            methodname: 'local_dimensions_browse_structure',
+            args: {contextid: contextId}
+        }])[0].then(function(structure) {
+            return Templates.renderForPromise('aiplacement_dimensions/pickers', {
+                frameworks: structure.frameworks || [],
+                branches: []
+            });
+        }).then(function(rendered) {
+            document.querySelector(SELECTORS.DRAWER).hidden = false;
+            document.querySelector(SELECTORS.BODY).innerHTML = rendered.html;
+            Templates.runTemplateJS(rendered.js);
+            return rendered;
+        });
+    };
+
+    return {
+        /**
+         * Initialise the placement.
+         *
+         * @param {Number} contextId The activity or course context id.
+         * @param {Number} courseId The course id.
+         * @return {void}
+         */
+        init: function(contextId, courseId) {
+            /*
+             * contextId and courseId are captured in this closure on purpose.
+             * The click handler below is a plain function, so `this` inside it
+             * is the document, not the module — reading this.contextId there
+             * would silently yield undefined.
+             */
+            document.addEventListener('click', function(e) {
+                if (e.target.closest(SELECTORS.LAUNCH)) {
+                    e.preventDefault();
+                    openPickers(contextId).catch(Notification.exception);
+                    return;
+                }
+
+                if (e.target.closest(SELECTORS.CLOSE)) {
+                    e.preventDefault();
+                    document.querySelector(SELECTORS.DRAWER).hidden = true;
+                }
+            }, false);
+        }
+    };
+});
+```
+
+`courseId` is unused in this task and is consumed by Task 7's apply path. Keep the parameter — `lib.php` already passes it and Task 7 needs it in the same closure.
+
+Confirm the return shape of `local_dimensions_browse_structure` before relying on `structure.frameworks`; read `public/local/dimensions/classes/external/browse_structure.php` and use its real key names.
+
+- [ ] **Step 6: Build the AMD bundle**
+
+```bash
+cd /Volumes/N1TB/dev/github/moodle
+npx grunt amd --root=public/ai/placement/dimensions
+```
+
+Confirm `amd/build/suggest.min.js` and `amd/build/suggest.min.js.map` were written. Grunt compiles the main checkout rather than a worktree and can report success without rebuilding — check the file mtimes before committing.
+
+- [ ] **Step 7: Add the lang strings, alphabetically sorted**
+
+```php
+$string['brancheslabel'] = 'Limit to these branches';
+$string['frameworklabel'] = 'Competency framework';
+$string['runbutton'] = 'Suggest';
+$string['suggestbutton'] = 'Suggest competencies with AI';
+```
+
+- [ ] **Step 8: Commit**
+
+```bash
+cd /Volumes/N1TB/dev/github/moodle/public/ai/placement/dimensions
+git add lib.php amd templates lang/en/aiplacement_dimensions.php
+git commit -m "feat: add the suggestion button and the drawer it opens
+
+Six availability gates in lib.php, and a drawer that inherits nothing from
+any other placement and namespaces every selector."
+```
+
+---
+
+## Task 7: Suggest, render, and apply
+
+**Deliverable:** pressing "Suggest" in the drawer calls the model, renders the resolved suggestions with their rationale, and applying them links the competencies to the course and selects them in the form's own field.
+
+**Files:**
+- Modify: `amd/src/suggest.js` and its rebuilt bundle
+- Create: `templates/suggestions.mustache`, `templates/applied.mustache`
+- Modify: `lang/en/aiplacement_dimensions.php`
+
+**Interfaces:**
+- Consumes: `aiplacement_dimensions_suggest_competencies` (Task 5); `local_dimensions_link_competency_course(competencyid, courseid)`; `SELECTORS`, `openPickers` and the click handler from Task 6.
+- Produces: nothing for later PHP tasks. Behat in Task 8 drives the run button, the checkboxes and `[data-action="aiplacement-dimensions-apply"]`.
+
+- [ ] **Step 1: Spike the chip re-render, before writing the apply code**
+
+This is the one open question in the spec. Budget 30 minutes.
+
+`lib/amd/src/form-autocomplete.js` exports only `enhance` and `enhanceField` (`:1326-1336`), and `updateSelectionList` (`:152`) rebuilds the visible chips from `originalSelect.children('option:selected')` (`:157`) on init and on user interaction — there is **no `change` listener on the original select**. So appending an option externally updates the data but not the chips.
+
+In a browser on an activity edit page, with the competencies field present, run in the console:
+
+```js
+require(['jquery', 'core/form-autocomplete'], function($, AC) {
+    var sel = document.querySelector('select[name="competencies[]"]');
+    var opt = new Option('Test competency', '999', true, true);
+    sel.appendChild(opt);
+    AC.enhanceField(sel);
+});
+```
+
+Observe whether the chip list updates and whether the DOM gains a duplicate autocomplete widget.
+
+- If it updates cleanly: use `enhanceField` in Step 5.
+- If it duplicates: use the fallback in Step 5 and leave the chips alone.
+
+Either way the save is correct, because the form submits the hidden select and not the chips. Record which branch you took in the commit message.
+
+- [ ] **Step 2: Write `templates/suggestions.mustache`**
+
+`data-suggestion` carries the whole resolved record, which is what the apply handler parses. The empty state and both notices live here, so no state is silent.
 
 ```
 {{!
@@ -1937,33 +1851,53 @@ competencies select, so the native save creates the module link."
 {{/suggestions.length}}
 ```
 
-- [ ] **Step 4: Wire the flow in `amd/src/suggest.js`**
+- [ ] **Step 3: Write `templates/applied.mustache`**
 
-Add these to the module. `renderSuggestions` stringifies each suggestion into `json` so the apply handler can parse it straight back — the structured record never becomes prose and is never re-parsed out of the DOM text.
+```
+{{!
+    @template aiplacement_dimensions/applied
+
+    Outcome notice rendered under the competencies field after applying.
+
+    Example context (json):
+    {
+        "added": [{"id": 1, "shortname": "Alpha"}],
+        "failed": []
+    }
+}}
+<div class="aiplacement-dimensions-applied alert alert-info" role="status">
+    {{#added.length}}
+        <p class="mb-1">{{#str}} appliedheading, aiplacement_dimensions {{/str}}</p>
+        <ul class="mb-0">
+            {{#added}}<li>{{shortname}}</li>{{/added}}
+        </ul>
+    {{/added.length}}
+    {{#failed.length}}
+        <p class="mb-1 mt-2">{{#str}} failedheading, aiplacement_dimensions {{/str}}</p>
+        <ul class="mb-0">
+            {{#failed}}<li>{{shortname}}</li>{{/failed}}
+        </ul>
+    {{/failed.length}}
+</div>
+```
+
+- [ ] **Step 4: Extend `amd/src/suggest.js`**
+
+Add these to the module alongside Task 6's `openPickers`. Add `PICK: 'input[data-region="aiplacement-dimensions-pick"]'` and `APPLY: '[data-action="aiplacement-dimensions-apply"]'` to `SELECTORS`.
 
 ```js
     /**
-     * Open the drawer and show the pickers.
+     * Read the unsaved activity description from the form.
      *
-     * @param {Number} contextId The context id.
-     * @return {Promise} Resolves when the pickers are rendered.
+     * @return {String} The content to classify.
      */
-    var openPickers = function(contextId) {
-        return Ajax.call([{
-            methodname: 'local_dimensions_browse_structure',
-            args: {contextid: contextId}
-        }])[0].then(function(structure) {
-            return Templates.renderForPromise('aiplacement_dimensions/pickers', {
-                frameworks: structure.frameworks || [],
-                branches: []
-            });
-        }).then(function(rendered) {
-            var drawer = document.querySelector(SELECTORS.DRAWER);
-            drawer.hidden = false;
-            document.querySelector(SELECTORS.BODY).innerHTML = rendered.html;
-            Templates.runTemplateJS(rendered.js);
-            return rendered;
-        });
+    var readContent = function() {
+        var textarea = document.querySelector('#id_introeditor, [name="intro[text]"]');
+        if (textarea && typeof textarea.value === 'string' && textarea.value.trim()) {
+            return textarea.value.trim();
+        }
+        var editable = document.querySelector('[id^="id_introeditor"][contenteditable="true"]');
+        return editable ? editable.textContent.trim() : '';
     };
 
     /**
@@ -1973,9 +1907,9 @@ Add these to the module. `renderSuggestions` stringifies each suggestion into `j
      * @return {Promise} Resolves when the suggestions are rendered.
      */
     var runSuggestion = function(contextId) {
-        var frameworkSelect = document.querySelector('[data-region="framework"]');
+        var frameworkSelect = document.querySelector(SELECTORS.FRAMEWORK);
         var branches = Array.prototype.slice.call(
-            document.querySelectorAll('[data-region="branch"]:checked')
+            document.querySelectorAll(SELECTORS.BRANCH + ':checked')
         ).map(function(input) {
             return parseInt(input.value, 10);
         });
@@ -1992,9 +1926,9 @@ Add these to the module. `renderSuggestions` stringifies each suggestion into `j
             if (!response.success) {
                 return Str.get_string('error_provider', 'aiplacement_dimensions', response.errorcode)
                     .then(function(message) {
-                        document.querySelector(SELECTORS.BODY).innerHTML =
-                            '<div class="alert alert-danger" role="alert"></div>';
-                        document.querySelector(SELECTORS.BODY + ' .alert').textContent = message;
+                        var body = document.querySelector(SELECTORS.BODY);
+                        body.innerHTML = '<div class="alert alert-danger" role="alert"></div>';
+                        body.querySelector('.alert').textContent = message;
                         return response;
                     });
             }
@@ -2014,47 +1948,162 @@ Add these to the module. `renderSuggestions` stringifies each suggestion into `j
             });
         });
     };
+
+    /**
+     * Append a competency to the form's own competencies select.
+     *
+     * The form submits this select, not the visible chips, so appending here is
+     * what makes tool_lp create the module link on save. We never write the
+     * module link ourselves: tool_lp_coursemodule_edit_post_actions diffs this
+     * element and would remove anything absent from it.
+     *
+     * @param {Object} suggestion The resolved suggestion.
+     * @return {void}
+     */
+    var appendToForm = function(suggestion) {
+        var select = document.querySelector(SELECTORS.COMPETENCIES);
+        if (!select) {
+            return;
+        }
+        var existing = select.querySelector('option[value="' + suggestion.id + '"]');
+        if (existing) {
+            existing.selected = true;
+            return;
+        }
+        select.appendChild(new Option(suggestion.shortname, suggestion.id, true, true));
+    };
+
+    /**
+     * Link the checked suggestions to the course and select them in the form.
+     *
+     * @param {Number} courseId The course id.
+     * @return {Promise} Resolves with one outcome record per suggestion.
+     */
+    var applyPicks = function(courseId) {
+        var picks = Array.prototype.slice.call(
+            document.querySelectorAll(SELECTORS.PICK + ':checked')
+        ).map(function(input) {
+            return JSON.parse(input.dataset.suggestion);
+        });
+
+        /*
+         * One call per competency. A single Ajax.call batch aborts the
+         * remainder on the first exception, losing the rest silently.
+         */
+        return Promise.all(picks.map(function(pick) {
+            return Ajax.call([{
+                methodname: 'local_dimensions_link_competency_course',
+                args: {competencyid: pick.id, courseid: courseId}
+            }])[0].then(function() {
+                appendToForm(pick);
+                return {pick: pick, ok: true};
+            }).catch(function() {
+                return {pick: pick, ok: false};
+            });
+        }));
+    };
 ```
 
-Then extend the click handler from Task 6 so the launch branch calls `openPickers(this.contextId)`, add a branch for `[data-action="aiplacement-dimensions-run"]` calling `runSuggestion(this.contextId)`, and a branch for `[data-action="aiplacement-dimensions-close"]` setting `drawer.hidden = true`. Bind the handler **once** in `init`, not once per suggestion.
+Then extend the click handler with two branches, using the closure variables `contextId` and `courseId` and never `this`:
 
-Confirm the return shape of `local_dimensions_browse_structure` before relying on `structure.frameworks`; read `public/local/dimensions/classes/external/browse_structure.php` and use its real key names.
+```js
+                if (e.target.closest(SELECTORS.RUN)) {
+                    e.preventDefault();
+                    runSuggestion(contextId).catch(Notification.exception);
+                    return;
+                }
 
-- [ ] **Step 5: Render the drawer once, from `lib.php`**
-
-Append the drawer to the button markup so it exists before any click. In `lib.php`, change the `static` element to render both templates:
-
-```php
-    $mform->addElement('static', 'aiplacementdimensions', '',
-        $OUTPUT->render_from_template('aiplacement_dimensions/button', []) .
-        $OUTPUT->render_from_template('aiplacement_dimensions/drawer', [])
-    );
+                if (e.target.closest(SELECTORS.APPLY)) {
+                    e.preventDefault();
+                    applyPicks(courseId).then(function(results) {
+                        return showOutcome(results);
+                    }).catch(Notification.exception);
+                    return;
+                }
 ```
 
-- [ ] **Step 6: Add the remaining lang strings, alphabetically sorted**
+There is no `window.location.reload()` anywhere in this module. Reloading would discard the unsaved content that produced the classification.
 
-```php
-$string['brancheslabel'] = 'Limit to these branches';
-$string['discardednotice'] = 'The model returned {$a} answer(s) that could not be matched to a competency.';
-$string['error_provider'] = 'The AI provider could not complete the request (code {$a}).';
-$string['frameworklabel'] = 'Competency framework';
-$string['nocandidates'] = 'The competencies you chose have no sub-competencies to classify against.';
-$string['nosuggestions'] = 'The model did not find a clear match in this framework.';
-$string['runbutton'] = 'Suggest';
-$string['truncatednotice'] = 'Only the first {$a->sent} of {$a->total} competencies were sent to the model.';
+- [ ] **Step 5: Write `showOutcome` according to the Step 1 spike**
+
+If `enhanceField` was clean:
+
+```js
+    /**
+     * Report the outcome and refresh the autocomplete chips.
+     *
+     * @param {Array} results The outcome records from applyPicks.
+     * @return {Promise} Resolves once the chips are refreshed.
+     */
+    var showOutcome = function(results) {
+        return new Promise(function(resolve) {
+            require(['core/form-autocomplete'], function(AC) {
+                AC.enhanceField(document.querySelector(SELECTORS.COMPETENCIES));
+                resolve(results);
+            });
+        });
+    };
 ```
 
-- [ ] **Step 7: Rebuild and commit**
+If it duplicated the widget, use the fallback instead, which leaves the chips untouched:
+
+```js
+    /**
+     * Report the outcome under the competencies field.
+     *
+     * @param {Array} results The outcome records from applyPicks.
+     * @return {Promise} Resolves once the notice is rendered.
+     */
+    var showOutcome = function(results) {
+        return Templates.renderForPromise('aiplacement_dimensions/applied', {
+            added: results.filter(function(r) { return r.ok; }).map(function(r) { return r.pick; }),
+            failed: results.filter(function(r) { return !r.ok; }).map(function(r) { return r.pick; })
+        }).then(function(rendered) {
+            var host = document.querySelector('.aiplacement-dimensions-launch');
+            host.insertAdjacentHTML('afterend', rendered.html);
+            Templates.runTemplateJS(rendered.js);
+            return rendered;
+        });
+    };
+```
+
+Ship exactly one of these two, not both. If you ship the `enhanceField` variant, `templates/applied.mustache` and its two lang strings are unused — delete them rather than leaving dead files.
+
+- [ ] **Step 6: Rebuild the AMD bundle**
 
 ```bash
 cd /Volumes/N1TB/dev/github/moodle
 npx grunt amd --root=public/ai/placement/dimensions
-cd public/ai/placement/dimensions
-git add amd templates lang/en/aiplacement_dimensions.php lib.php
-git commit -m "feat: add the drawer, pickers and suggestion list
+```
 
-Suggestions carry their resolved record as JSON on the checkbox, so the
-apply step never re-parses competency names out of the DOM."
+Check the mtimes of `amd/build/suggest.min.js` and its map before committing.
+
+- [ ] **Step 7: Add the lang strings, alphabetically sorted**
+
+Ship the `applied*` pair only if Step 5 kept the fallback variant.
+
+```php
+$string['appliedheading'] = 'Added to the course and selected below. Save the form to link them to this activity.';
+$string['applybutton'] = 'Add selected';
+$string['discardednotice'] = 'The model returned {$a} answer(s) that could not be matched to a competency.';
+$string['error_provider'] = 'The AI provider could not complete the request (code {$a}).';
+$string['failedheading'] = 'Could not be added:';
+$string['nocandidates'] = 'The competencies you chose have no sub-competencies to classify against.';
+$string['nosuggestions'] = 'The model did not find a clear match in this framework.';
+$string['truncatednotice'] = 'Only the first {$a->sent} of {$a->total} competencies were sent to the model.';
+```
+
+- [ ] **Step 8: Commit**
+
+```bash
+cd /Volumes/N1TB/dev/github/moodle/public/ai/placement/dimensions
+git add amd templates lang/en/aiplacement_dimensions.php
+git commit -m "feat: suggest, render and apply the resolved competencies
+
+Applies by linking to the course and appending to the form's own
+competencies select, so the native save creates the module link.
+Suggestions carry their resolved record as JSON on the checkbox, so
+nothing is ever re-parsed out of the DOM text."
 ```
 
 ---
