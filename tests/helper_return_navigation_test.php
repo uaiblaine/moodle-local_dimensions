@@ -163,4 +163,26 @@ final class helper_return_navigation_test extends advanced_testcase {
 
         $this->assertNull(helper::get_return_context_for_course(987654));
     }
+
+    /**
+     * The cache is last-writer-wins: a tracker write for a course already holding
+     * a plan write overrides it, and the classifier reads the newer destination.
+     *
+     * @return void
+     */
+    public function test_set_return_context_last_writer_wins_for_a_shared_course(): void {
+        $this->resetAfterTest();
+        $courseid = 21;
+
+        helper::set_return_context(new moodle_url('/local/dimensions/view-plan.php', ['id' => 17]), [$courseid]);
+        helper::set_return_context(new moodle_url('/local/dimensions/view-competency.php', [
+            'id' => 17,
+            'competencyid' => 8,
+            'noredirect' => 1,
+        ]), [$courseid]);
+
+        $context = helper::get_return_context_for_course($courseid);
+
+        $this->assertSame('competency', helper::return_destination_kind($context['url']));
+    }
 }
