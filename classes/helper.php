@@ -2148,6 +2148,28 @@ class helper {
     }
 
     /**
+     * Whether the plan overview is a page this plan's learners are routed to.
+     *
+     * The display mode is a template custom field, and block_dimensions routes on
+     * it: DISPLAYMODE_PLAN yields a plan card leading to the overview, anything
+     * else yields competency cards leading straight to the tracker. A plan with no
+     * template has no such field, and the block treats it as plan mode.
+     *
+     * @param int $templateid The plan's template id, or 0 when it has none.
+     * @return bool True when the overview is part of this learner's journey.
+     */
+    public static function plan_overview_is_routed(int $templateid): bool {
+        if (!$templateid) {
+            return true;
+        }
+
+        $metadata = template_metadata_cache::get_template_metadata($templateid);
+        $displaymode = (int) ($metadata['displaymode'] ?? constants::DISPLAYMODE_COMPETENCIES);
+
+        return $displaymode === constants::DISPLAYMODE_PLAN;
+    }
+
+    /**
      * Build the competency tracker's own return-button context.
      *
      * The tracker cannot receive the footer FAB: it leaves the page layout at
@@ -2155,12 +2177,22 @@ class helper {
      * return-context cache either, because the plan id is a required parameter
      * of the page, so this button is built from the request alone.
      *
+     * The button is suppressed when the plan's display mode routes learners to
+     * competency cards rather than the plan overview: block_dimensions never
+     * shows them a plan card, so the tracker is their root, and the button would
+     * be offering a page they have never seen and are never routed to.
+     *
      * @param int $planid The plan the tracker was opened from.
+     * @param int $templateid The plan's template id, or 0 when it has none.
      * @param bool $related Whether a related-competency pill opened this page in a new tab.
      * @return array|null Keys returnurl, label and buttoncolor, or null when no button belongs here.
      */
-    public static function tracker_return_context(int $planid, bool $related): ?array {
+    public static function tracker_return_context(int $planid, int $templateid, bool $related): ?array {
         if ($related || !get_config('local_dimensions', 'enablereturnbutton')) {
+            return null;
+        }
+
+        if (!self::plan_overview_is_routed($templateid)) {
             return null;
         }
 
