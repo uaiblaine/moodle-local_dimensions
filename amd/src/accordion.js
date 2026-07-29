@@ -2470,7 +2470,9 @@ define(
 
             data.relatedcompetencies.forEach(function(related) {
                 if (useLink && related.id) {
-                    const href = displaySettings.viewcompetencyurl + '?id=' + planId + '&competencyid=' + related.id;
+                    // Opens a new tab, so related=1 tells the tracker to skip its own return button.
+                    const href = displaySettings.viewcompetencyurl + '?id=' + planId
+                        + '&competencyid=' + related.id + '&related=1';
                     html += '<a href="' + escapeHtml(href) +
                         '" target="_blank" rel="noopener"' +
                         ' class="local-dimensions-related-pill-v2 local-dimensions-related-pill-link">'
