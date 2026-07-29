@@ -233,9 +233,10 @@ have caught three shipped defects in the CMU plugin.
 
 ### CI — from the first commit, not later
 
-`moodle-plugin-ci` v4. Matrix PHP 8.2/8.3/8.4 × `MOODLE_500_STABLE` / `MOODLE_501_STABLE`.
-Gating jobs: `phplint`, `phpmd`, `phpcs --max-warnings 0`, `validate`, `savepoints`, `mustache`,
-`grunt`, `phpunit`, `behat`. Release job carries `needs: [test]`.
+`moodle-plugin-ci` v4. Matrix PHP 8.2/8.3/8.4 × `MOODLE_501_STABLE` / `MOODLE_502_STABLE` — the floor
+is 5.1, so 5.0 is not in the matrix, and `MOODLE_503_STABLE` does not exist yet (see "Version
+support"). Gating jobs: `phplint`, `phpmd`, `phpcs --max-warnings 0`, `validate`, `savepoints`,
+`mustache`, `grunt`, `phpunit`, `behat`. Release job carries `needs: [test]`.
 
 `grunt` is non-negotiable and counts twice: it runs core's ESLint over `amd/src` **and** fails when
 `amd/build` differs from a fresh build.
@@ -294,20 +295,34 @@ Gating jobs: `phplint`, `phpmd`, `phpcs --max-warnings 0`, `validate`, `savepoin
 | **4** | Competency hub tab (bulk), same engine | — |
 | **5** | Approach C (two-pass triage) once a framework does not fit | — |
 
-## Version floor
+## Version support
 
-`$plugin->requires = 2025100600` — **Moodle 5.1**.
+```php
+$plugin->requires     = 2025100600;                         // Moodle 5.1
+$plugin->supported    = [501, 503];                         // 5.1 → 5.3
+$plugin->dependencies = ['local_dimensions' => 2026072801]; // v2.0
+```
 
-`is_action_enabled_in_context()` landed in MDL-85738 ("Add base support for AI access controls",
-2025-09-03), first released in `v5.1.0-beta`. It is gate 6 and is not optional: without it the
-per-course and per-activity AI opt-outs are silently ignored, which is one of the audited
-anti-patterns. Probing for it with `method_exists()` to widen the floor would be the same cargo-cult
-defensive coding the audit flagged in the CMU plugin — so we require 5.1 honestly instead.
+`$plugin->supported` is read at `lib/classes/plugininfo/base.php:311-317` and must be an array of
+exactly two **ints**, ascending — verified, not assumed.
+
+**Why the 5.1 floor.** `is_action_enabled_in_context()` landed in MDL-85738 ("Add base support for AI
+access controls", 2025-09-03), first released in `v5.1.0-beta`. It is gate 6 and is not optional:
+without it the per-course and per-activity AI opt-outs are silently ignored, which is one of the
+audited anti-patterns. Probing for it with `method_exists()` to widen the floor would be the same
+cargo-cult defensive coding the audit flagged in the CMU plugin — so we require 5.1 honestly instead.
 
 This is narrower than `local_dimensions` itself (`$plugin->requires = 2024100700`, Moodle 4.5). It is a
 deliberate trade: correct AI governance over reach.
 
-## Open item to pin during slice 0
+**Why the dependency pin.** `2026072801` is the anchor `local_dimensions` re-based on at a phase
+boundary for its 2.0. Pinning at that boundary rather than `ANY_VERSION` is what makes the dependency
+*honest* — the whole design consumes web services (`link_competency_course`, `search_competencies`,
+`browse_structure`) that only exist from that version on, and the CMU plugin's headline defect was
+exactly an undeclared dependency on another plugin's internals.
 
-- `$plugin->dependencies`: decide between `ANY_VERSION` and a pinned `local_dimensions` version.
-  `local_dimensions` is under a version freeze until 2.0, which argues for pinning at the 2.0 boundary.
+**Declared support outruns tested support.** As of 2026-07-29 only `MOODLE_500_STABLE`,
+`MOODLE_501_STABLE` and `MOODLE_502_STABLE` exist upstream — there is no `MOODLE_503_STABLE` branch
+yet. So CI can test 5.1 and 5.2 but not 5.3. `supported = [501, 503]` is a forward-looking claim;
+the matrix must gain `MOODLE_503_STABLE` the moment that branch appears, and until then the top of the
+declared range is asserted, not verified.
