@@ -229,6 +229,20 @@ plan's own user** (staff reviewing someone else's plan must not pollute their
 session), and the `returncontext` session cache has a 4h defensive TTL. The FAB
 is draggable; its position persists in `sessionStorage` (per-tab, current
 session) — see `amd/src/return_button.js`.
+The tracker renders a **second, separate** return button of its own
+(`helper::tracker_return_context`, echoed by `view-competency.php`), because the
+hook cannot reach it: both learner views leave `$PAGE->pagelayout` at core's
+default `base`, which the allowlist excludes. Two consequences are invariants.
+**Never call `set_pagelayout('course'|'incourse')` in a learner view** — the hook
+would then render a second FAB sharing the fixed DOM id
+`local-dimensions-return-fab`, and the tracker would become a destination for
+itself. And **never add `related` to the tracker's `$PAGE->set_url`** — the
+related-competency pill sets it to suppress the tracker's button in the new tab it
+opens, and leaking it into the cached URL would suppress the button on the way back
+from a course too. The course FAB's label is derived from the cached URL
+(`helper::return_destination_kind`), so a context pointing at the tracker reads
+"Return to competency"; keep the mapping a literal `match`, since the string
+checker cannot verify a constructed identifier.
 
 ### Caches and invalidation
 `observer.php` invalidates the metadata/trail caches on the relevant
