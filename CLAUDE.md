@@ -221,14 +221,17 @@ fails closed so `secure` quiz windows, popups, `mypublic` profiles and
 layout-less scripts never get the button) plus a pagetype blocklist for the
 administrative core pages that ship layout `incourse` (participants, tool_lp,
 `grade-*`, quiz editing…) — and a stored return context exists for that course.
-Anti-loop invariant: every FAB URL `view-competency.php` writes carries
-`noredirect=1` (honoured in its `$willredirect` check), and when it does
-redirect it writes the **plan** URL for the destination course instead — keep
-both when touching the redirect path. Both views write contexts **only for the
-plan's own user** (staff reviewing someone else's plan must not pollute their
-session), and the `returncontext` session cache has a 4h defensive TTL. The FAB
-is draggable; its position persists in `sessionStorage` (per-tab, current
-session) — see `amd/src/return_button.js`.
+Anti-loop invariant: every `view-competency.php` URL the button stores carries
+`noredirect=1` (honoured in its `$willredirect` check) — keep this when touching
+the redirect path. When it redirects, the destination course's stored URL
+follows the same display-mode routing as the tracker's own button
+(`helper::redirect_return_url()`, gated on `helper::plan_overview_is_routed()`):
+the plan overview when the plan's learners are routed there, the tracker's own
+URL — carrying `noredirect=1` — otherwise. Both views write contexts **only for
+the plan's own user** (staff reviewing someone else's plan must not pollute
+their session), and the `returncontext` session cache has a 4h defensive TTL.
+The FAB is draggable; its position persists in `sessionStorage` (per-tab,
+current session) — see `amd/src/return_button.js`.
 The tracker renders a **second, separate** return button of its own
 (`helper::tracker_return_context`, echoed by `view-competency.php`), because the
 hook cannot reach it: both learner views leave `$PAGE->pagelayout` at core's
