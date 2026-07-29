@@ -32,6 +32,8 @@ use moodle_url;
  *
  * @covers \local_dimensions\helper::return_destination_kind
  * @covers \local_dimensions\helper::tracker_return_context
+ * @covers \local_dimensions\helper::set_return_context
+ * @covers \local_dimensions\helper::get_return_context_for_course
  */
 final class helper_return_navigation_test extends advanced_testcase {
     /**
@@ -116,5 +118,49 @@ final class helper_return_navigation_test extends advanced_testcase {
         set_config('enablereturnbutton', 0, 'local_dimensions');
 
         $this->assertNull(helper::tracker_return_context(42, false));
+    }
+
+    /**
+     * A write fans the same URL out to one cache entry per course.
+     *
+     * @return void
+     */
+    public function test_set_return_context_writes_one_entry_per_course(): void {
+        $this->resetAfterTest();
+        $url = new moodle_url('/local/dimensions/view-plan.php', ['id' => 9]);
+
+        helper::set_return_context($url, [11, 12]);
+
+        $expected = $url->out(false);
+        $this->assertSame($expected, helper::get_return_context_for_course(11)['url']);
+        $this->assertSame($expected, helper::get_return_context_for_course(12)['url']);
+    }
+
+    /**
+     * A write with no courses is a silent no-op: it never clears what is stored.
+     *
+     * @return void
+     */
+    public function test_set_return_context_with_no_courses_writes_nothing(): void {
+        $this->resetAfterTest();
+        helper::set_return_context(new moodle_url('/local/dimensions/view-plan.php', ['id' => 9]), [13]);
+
+        helper::set_return_context(new moodle_url('/local/dimensions/view-competency.php', [
+            'id' => 9,
+            'competencyid' => 4,
+        ]), []);
+
+        $this->assertStringContainsString('view-plan.php', helper::get_return_context_for_course(13)['url']);
+    }
+
+    /**
+     * A course with no stored context reads back as null.
+     *
+     * @return void
+     */
+    public function test_get_return_context_for_course_returns_null_when_absent(): void {
+        $this->resetAfterTest();
+
+        $this->assertNull(helper::get_return_context_for_course(987654));
     }
 }

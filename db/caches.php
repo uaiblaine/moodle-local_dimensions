@@ -88,8 +88,9 @@ $definitions = [
     ],
 
     // Session cache for the "Return to Plan" button context.
-    // Key: 'returncontext'
-    // Value: serialised array with return URL and valid course IDs.
+    // Key: course_{courseid} - one entry per course, and the last writer wins.
+    // Value: ['url' => string]. Which courses the button covers is expressed by
+    // which keys exist, not by a list stored inside the value.
     // The TTL bounds staleness (deleted plans, unlinked courses): entries are
     // rewritten on every plan/tracker visit, so active navigation never expires.
     'returncontext' => [
