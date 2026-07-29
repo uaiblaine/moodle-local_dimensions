@@ -385,4 +385,52 @@ final class calculator_card_shape_test extends \advanced_testcase {
         $this->assertNull($shape['activity']);
         $this->assertNull($shape['section']);
     }
+
+    /**
+     * The shape resolver and the progress walk agree about a hidden section's activities.
+     *
+     * collect_trackable_cms() walks the whole course without filtering by section, while
+     * get_course_section_progress() skips hidden sections outright. The two only stay in
+     * agreement because a module in a hidden section is never uservisible to a student -
+     * the topics format allows the third visibility state ("available but not shown") in
+     * section 0 and visible sections only, so a module cannot be stealth its way out of a
+     * hidden section. This test pins that down: were it to change, the card could name an
+     * activity the progress walk never counts.
+     *
+     * @return void
+     */
+    public function test_hidden_section_activity_is_invisible_to_both_paths(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $CFG->allowstealth = 1;
+
+        $course = $this->getDataGenerator()->create_course([
+            'numsections' => 2,
+            'enablecompletion' => 1,
+        ]);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+
+        // The course's only tracked activity, in a section the teacher then hides.
+        $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'section' => 1,
+            'name' => 'Hidden away',
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+        set_section_visible($course->id, 1, 0);
+
+        $this->setUser($user);
+        $shape = calculator::resolve_card_shape((int) $course->id, (int) $user->id);
+        $data = calculator::get_course_section_progress((int) $course->id);
+
+        // The resolver must not name it.
+        $this->assertNull($shape['activity']);
+
+        // And no section the progress walk returns may count it.
+        foreach ($data['sections'] as $section) {
+            $this->assertNotSame('Hidden away', $section['name']);
+            $this->assertFalse($section['has_activities']);
+        }
+    }
 }

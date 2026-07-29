@@ -214,10 +214,8 @@ class calculator {
                         }
                     }
 
-                    if ($total > 0) {
-                        $percentage = round(($completed / $total) * 100);
-                        $hasactivities = true;
-                    }
+                    $percentage = self::progress_percentage($completed, $total);
+                    $hasactivities = $percentage !== null;
                 }
 
                 // Define URL: if locked, go to Course Page. Else, Section anchor.
@@ -259,6 +257,58 @@ class calculator {
         } finally {
             $COURSE = $savedcourse;
         }
+    }
+
+    /**
+     * The percentage a progress ring may honestly show for a completed-out-of-total count.
+     *
+     * round() alone lies at both ends. A section of 200 activities with 199 done rounds to
+     * 100, and the external function reads any 100 as "completed" and swaps the ring for the
+     * done icon - so the card claims a finished section while one activity is still open. The
+     * mirror is just as wrong: 1 of 201 rounds to 0, and 0 reads as "not started", erasing
+     * work the learner has already done. Both ends are therefore reserved: only a genuinely
+     * full count reaches 100, and only a genuinely empty one reaches 0.
+     *
+     * @param int $completed How many of the section's activities the user has completed.
+     * @param int $total How many activities the section counts.
+     * @return int|null The percentage 0-100, or null when there is nothing to measure.
+     */
+    public static function progress_percentage(int $completed, int $total): ?int {
+        if ($total <= 0) {
+            return null;
+        }
+
+        $percentage = (int) round(($completed / $total) * 100);
+
+        if ($percentage >= 100 && $completed < $total) {
+            return 99;
+        }
+        if ($percentage <= 0 && $completed > 0) {
+            return 1;
+        }
+
+        return $percentage;
+    }
+
+    /**
+     * A raw course percentage from core, normalised to what a progress bar may display.
+     *
+     * core_completion\progress::get_course_progress_percentage() returns null when the course
+     * has nothing to measure. It can also return more than 100: before MDL-60912 (fixed in
+     * 5.0.7 and 5.1.4, and never backported to 4.5) its numerator was not a subset of its
+     * denominator - count_modules_completed() took no module list there - so a completion row
+     * left behind by a module the denominator no longer counts inflates the result. The
+     * plugin supports 4.5 upward, so the clamp is load-bearing on the older branches.
+     *
+     * @param float|null $raw The value core returned.
+     * @return int The percentage clamped to 0-100; null becomes 0.
+     */
+    public static function clamp_percentage(?float $raw): int {
+        if ($raw === null) {
+            return 0;
+        }
+
+        return (int) max(0, min(100, round($raw)));
     }
 
     /**

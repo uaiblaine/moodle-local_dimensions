@@ -38,6 +38,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core\context\system as context_system;
 use core\context\course as context_course;
+use local_dimensions\calculator;
 use local_dimensions\constants;
 
 /**
@@ -144,17 +145,16 @@ class get_competency_courses extends external_api {
                 }
             }
 
-            // Get course progress for the current user.
+            /* Get course progress for the current user. Core's value is clamped rather than
+               cast straight to int: on the branches without the MDL-60912 fix (4.5 throughout,
+               below 5.0.7 and below 5.1.4) its numerator is not a subset of its denominator, so
+               the raw value can exceed 100 and the bar would render past full. */
             $progress = 0;
             $completion = new \completion_info($fullcourse);
             if ($completion->is_enabled()) {
-                $progressvalue = \core_completion\progress::get_course_progress_percentage(
-                    $fullcourse,
-                    $USER->id
+                $progress = calculator::clamp_percentage(
+                    \core_completion\progress::get_course_progress_percentage($fullcourse, $USER->id)
                 );
-                if ($progressvalue !== null) {
-                    $progress = (int) round($progressvalue);
-                }
             }
 
             /* What the viewer can do with this course. calculator::is_locked() is deliberately
