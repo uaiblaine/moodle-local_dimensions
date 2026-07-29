@@ -155,7 +155,14 @@ echo $OUTPUT->render_from_template('local_dimensions/view_competency', $template
    course-content layouts and this page keeps core's default 'base'. Outside the
    competency guard on purpose, because the empty state is where a learner has
    the fewest ways out. */
-$returnbutton = \local_dimensions\helper::tracker_return_context($planid, $templateid, $related);
+
+/* The display-mode gate is about the tracker being a destination the plan
+   routes learners to. With no competency there is no tracker to be a
+   destination, so the gate does not apply here: pass 0, which
+   plan_overview_is_routed() already treats as no template-based reason to
+   suppress the button. */
+$gatetemplateid = $competency ? $templateid : 0;
+$returnbutton = \local_dimensions\helper::tracker_return_context($planid, $gatetemplateid, $related);
 if ($returnbutton !== null) {
     echo $OUTPUT->render_from_template('local_dimensions/return_button', $returnbutton);
     $PAGE->requires->js_call_amd('local_dimensions/return_button', 'init');

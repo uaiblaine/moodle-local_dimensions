@@ -215,6 +215,24 @@ final class helper_return_navigation_test extends advanced_testcase {
     }
 
     /**
+     * The empty state's call site passes 0, not the plan's own template id, so the
+     * display-mode gate never suppresses the button there: with no competency there
+     * is no tracker to be a routed destination, so the gate does not apply.
+     *
+     * @return void
+     */
+    public function test_tracker_return_context_shown_for_empty_state_in_competency_card_mode(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enablereturnbutton', 1, 'local_dimensions');
+
+        $templateid = $this->create_template_with_displaymode(constants::DISPLAYMODE_COMPETENCIES);
+
+        $this->assertNull(helper::tracker_return_context(42, $templateid, false));
+        $this->assertNotNull(helper::tracker_return_context(42, 0, false));
+    }
+
+    /**
      * A template that routes learners to the plan overview keeps the tracker's button.
      *
      * @return void
