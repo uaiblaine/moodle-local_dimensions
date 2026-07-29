@@ -34,6 +34,7 @@ use local_dimensions\customfield\lp_handler;
  * @covers \local_dimensions\helper::return_destination_kind
  * @covers \local_dimensions\helper::tracker_return_context
  * @covers \local_dimensions\helper::plan_overview_is_routed
+ * @covers \local_dimensions\helper::redirect_return_url
  * @covers \local_dimensions\helper::set_return_context
  * @covers \local_dimensions\helper::get_return_context_for_course
  */
@@ -227,6 +228,35 @@ final class helper_return_navigation_test extends advanced_testcase {
 
         $this->assertTrue(helper::plan_overview_is_routed($templateid));
         $this->assertNotNull(helper::tracker_return_context(42, $templateid, false));
+    }
+
+    /**
+     * A plan whose learners are routed to the overview keeps the redirect pointing there.
+     *
+     * @return void
+     */
+    public function test_redirect_return_url_points_at_the_plan_when_routed(): void {
+        $url = helper::redirect_return_url(42, 7, 0);
+
+        $this->assertStringContainsString('/local/dimensions/view-plan.php', $url->out(false));
+        $this->assertSame('plan', helper::return_destination_kind($url->out(false)));
+    }
+
+    /**
+     * In competency-card mode the redirect points back at the tracker, carrying noredirect.
+     *
+     * @return void
+     */
+    public function test_redirect_return_url_points_at_the_tracker_in_competency_card_mode(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $templateid = $this->create_template_with_displaymode(constants::DISPLAYMODE_COMPETENCIES);
+        $url = helper::redirect_return_url(42, 7, $templateid)->out(false);
+
+        $this->assertStringContainsString('/local/dimensions/view-competency.php', $url);
+        $this->assertStringContainsString('noredirect=1', $url);
+        $this->assertSame('competency', helper::return_destination_kind($url));
     }
 
     /**
