@@ -246,6 +246,19 @@ from a course too. The course FAB's label is derived from the cached URL
 (`helper::return_destination_kind`), so a context pointing at the tracker reads
 "Return to competency"; keep the mapping a literal `match`, since the string
 checker cannot verify a constructed identifier.
+The tracker's button is further gated on `helper::plan_overview_is_routed()`: it
+only appears when the plan overview is a page this learner is actually routed to.
+`block_dimensions` routes learners by the plan's display mode — `DISPLAYMODE_PLAN`
+yields a plan card leading to the overview, anything else (including a template
+that never set the field) yields competency cards leading straight to the
+tracker — and in competency-card mode the tracker *is* the learner's root, so
+offering the overview from there would be offering a page they are never routed
+to. This plugin owns the *value* (the `local_dimensions_displaymode` template
+custom field) but `block_dimensions` owns the *routing*, so
+`plan_overview_is_routed()` must keep agreeing with that plugin's
+`dataset_provider::resolve_plan_display_context()`: no template means plan mode, a
+template without the field means competency mode. If the two plugins' defaults
+ever drift apart, the button lies again.
 
 ### Caches and invalidation
 `observer.php` invalidates the metadata/trail caches on the relevant

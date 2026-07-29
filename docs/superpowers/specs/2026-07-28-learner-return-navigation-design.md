@@ -65,6 +65,7 @@ depending on a path the learner cannot see.
 | How the tracker knows to stay quiet | **An explicit `related=1` on the pill's URL** | The real reason is that the pill opens a **new tab** (`accordion.js:2372`), and that is not observable server-side. `helper::competency_in_plan()` is already computed at `view-competency.php:65` and looks free, but it encodes "new tab" as "outside the plan", which leaks both ways: a related competency that *is* in the plan would get a button in a new tab, and a bookmark to a competency outside the plan would lose its button in the same tab. |
 | Whether the marker reaches the cache | **It does not, and costs nothing** | `$PAGE->set_url` declares only `id` and `competencyid` (`view-competency.php:43-46`), so `$PAGE->url` never carries `related` and the write at `:129` already excludes it. A learner who descends from a pill-opened tracker into a course and presses the FAB lands back on the tracker **with** its return button — by then they are navigating inside that tab, and a way out to the plan has become useful. |
 | Whether staff see the tracker's button | **Yes** | The ownership gate (`view-plan.php:63-66`, `view-competency.php:114-117`) exists to stop a manager reviewing someone else's plan from polluting their own session cache. An in-page link writes nothing, and `api::read_plan()` has already authorised the destination. |
+| Whether the tracker's button appears at all *(Task 5)* | **Only when the plan overview is a page this learner is actually routed to** | `block_dimensions` routes a learner by the plan's display mode (`dataset_provider.php:124`): `DISPLAYMODE_PLAN` yields a plan card leading to the overview, anything else — including the unset default — yields competency cards leading straight to the tracker. The design above always offered the plan overview from the tracker, which in that default configuration is a page the learner has never seen and is never routed to. In competency-card mode the tracker *is* the learner's root, so `course → FAB → tracker` is arriving home rather than dead-ending, and there is nothing to offer above it. `helper::plan_overview_is_routed(int $templateid): bool` makes the call; `tracker_return_context()` gates on it. |
 | `version.php` | **No bump** | The version is frozen: no schema change, no new web service. A cache revision is not a reason to bump — test installs purge caches as routine. `amd/build` ships rebuilt in the same commit. |
 | Behat | **Out** | The learner views have no scenarios today and there is no local Behat runner, so a first scenario would cost a CI round. PHPUnit now runs locally, and both decisions are pure functions — the logic belongs there. |
 
@@ -138,16 +139,26 @@ gate.
 | Block → plan overview → **course** (`accordion.js:2258`) | plan | "Return to plan" | — |
 | Plan overview → **activity or section** (`accordion.js:2143-2152`, `:1998`) | plan | "Return to plan" *(when the layout passes the allowlist)* | — |
 | Plan overview → tracker (rule child `:1001` / footer `:2329`) → course | tracker | "Return to competency" | → plan |
-| Plan overview → tracker **via the pill** (`:2473`, new tab) | tracker, without `related` | "Return to competency" | **suppressed** |
+| Plan overview → tracker **via the pill** (`:2473`, new tab) | tracker, without `related` | "Return to competency" | **suppressed** (new tab) |
 | …then → course → FAB → tracker | tracker | "Return to competency" | → plan |
-| **Block competency card** → tracker → course | tracker | "Return to competency" | → plan |
+| **Block competency card** → tracker → course | tracker | "Return to competency" | **suppressed** *(Task 5)* — `DISPLAYMODE_COMPETENCIES` is the block's default and never puts a plan card in front of this learner |
 | Tracker with one course + `singlecourseredirect` | **plan** | "Return to plan" | *(the page redirects past itself)* |
-| Direct link / bookmark on the tracker | tracker | — | → plan |
-| Staff viewing someone else's plan | nothing written | none | → plan |
+| Direct link / bookmark on the tracker | tracker | — | → plan, or suppressed in competency-card mode |
+| Staff viewing someone else's plan | nothing written | none | → plan, or suppressed in competency-card mode |
+
+*(Task 5)* Every "→ plan" cell above holds only while the plan's template has
+`DISPLAYMODE_PLAN`, or no template at all; in `DISPLAYMODE_COMPETENCIES` the button is
+suppressed regardless of the path that reached the tracker, per
+`helper::plan_overview_is_routed()`.
 
 The block's **competency card** is the product's default entry into the tracker
 (`template_metadata_cache::get_displaymode_value()` defaults to competency cards), and
-it seeds no plan URL at all. System B fixes that path without touching the block.
+it seeds no plan URL at all. System B originally offered the plan overview here
+regardless, which was wrong: in that default configuration the block never gives this
+learner a plan card, so the plan overview is not part of their journey. Task 5 gates the
+button on the plan's display mode instead (`helper::plan_overview_is_routed()`), and it
+is correctly suppressed on this path — the tracker is the learner's root here, not a
+dead end.
 
 ### Invariants preserved
 
@@ -236,6 +247,7 @@ PHPUnit cannot include — it stays guarded by N1/N2 in CLAUDE.md and by review.
 | R3 | `related` reaching `$PAGE->set_url` breaks the return path | N2, plus the current `set_url` listing its parameters explicitly |
 | R4 | Someone sets a course pagelayout on a learner view and gets two buttons | N1 |
 | R5 | The cache still has no delete path, so a stale entry survives plan deletion for up to 4h | Pre-existing and untouched; the TTL added by the earlier audit bounds it |
+| R6 *(Task 5)* | `local_dimensions` now encodes a routing rule that `block_dimensions` also implements: this plugin owns the *value* (the `local_dimensions_displaymode` template custom field) but the block owns the *routing* — which display mode sends the learner to a plan card versus a competency card. If the two defaults ever drift, the tracker's button lies again, the same way it did before this task. | No enforced coupling exists between the two plugins. `helper::plan_overview_is_routed()` documents the block's two defaults inline (no template → plan mode, a template with no stored value → competency mode) and names the code that must keep agreeing: `dataset_provider.php:124` (the `DISPLAYMODE_PLAN` branch) and `:228` (the no-template default). Re-verify both before trusting the gate on an upgrade that touches either plugin's display-mode logic. |
 
 ### Known limits this design does not remove
 
