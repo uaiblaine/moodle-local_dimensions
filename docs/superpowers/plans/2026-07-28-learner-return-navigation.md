@@ -166,7 +166,7 @@ Expected: FAIL — `Error: Call to undefined method local_dimensions\helper::ret
 
 - [ ] **Step 3: Implement the classifier**
 
-In `classes/helper.php`, insert immediately after `get_return_context_for_course()` closes at line 2130 (before the `count_frameworks_per_category` docblock that starts at 2132):
+In `classes/helper.php`, insert immediately after `get_return_context_for_course()` closes at line 2130 (before the `count_frameworks_by_category` docblock that starts at 2132):
 
 ```php
     /**
