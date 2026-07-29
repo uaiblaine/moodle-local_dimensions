@@ -142,7 +142,7 @@ gate.
 | …then → course → FAB → tracker | tracker | "Return to competency" | → plan |
 | **Block competency card** → tracker → course | tracker | "Return to competency" | → plan |
 | Tracker with one course + `singlecourseredirect` | **plan** | "Return to plan" | *(the page redirects past itself)* |
-| Direct link / bookmark on the tracker | — | — | → plan |
+| Direct link / bookmark on the tracker | tracker | — | → plan |
 | Staff viewing someone else's plan | nothing written | none | → plan |
 
 The block's **competency card** is the product's default entry into the tracker
@@ -163,9 +163,12 @@ it seeds no plan URL at all. System B fixes that path without touching the block
 
 Both belong in the CLAUDE.md "Return-to-Plan FAB" section.
 
-- **N1 — no learner view may call `set_pagelayout('course'|'incourse')`.** The footer
-  hook would then render a second button with the same DOM id, and the tracker would
-  become a destination for itself.
+- **N1 — no learner view may combine `set_pagelayout('course'|'incourse')` with a
+  course in `$PAGE->context`.** The footer hook's `get_current_course_id()` runs, and
+  returns, before the pagelayout check, so today it is the tracker having no course in
+  context — not the layout — that keeps the hook off it. Layout is one of two
+  conditions: both together would render a second button with the same DOM id, and the
+  tracker would become a destination for itself.
 - **N2 — `related` must never enter the tracker's `$PAGE->set_url`.** It would leak
   into the URL cached at `:129` and suppress the tracker's own button on the way back
   from a course.
@@ -243,4 +246,15 @@ the redirect is evaluated against the viewer while the write is gated on the own
 `view-plan.php`'s course set ignores `c.visible` and enrolment while the tracker's
 applies both, so a hidden course in the template gets a plan button and never a
 competency one. `template_course_cache` still carries a one-hour TTL with
-delete-only invalidation. Drag and double-click-to-reset remain pointer-only.
+delete-only invalidation. The pill's cache write is not suppressed by `related`,
+only its own button is: opening the new tab still stamps the tracker's URL onto
+every course of the related competency, gated only on the feature switch and plan
+ownership. `returncontext` is a session cache, not a tab-scoped one, so a tracker
+visit in any tab retargets the FAB in every tab for the courses the two share — a
+course belonging to both the plan's template and the related competency has its FAB
+flip to "Return to competency" back in the original tab, for a competency that tab
+never opened. Skipping the write was rejected: it would leave courses that belong to
+the related competency but not the plan's template with no button at all. The branch
+still improves this case over the prior behaviour, where the same button always said
+"Return to plan" and landed on a tracker with no way out. Drag and
+double-click-to-reset remain pointer-only.
