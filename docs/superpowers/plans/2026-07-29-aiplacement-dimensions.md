@@ -1487,6 +1487,62 @@ final class suggest_competencies_test extends \advanced_testcase {
     }
 
     /**
+     * The new-activity path works when no course module exists yet.
+     *
+     * Without this test the whole cmid-zero branch, including its capability
+     * requirement, could be deleted and the suite would stay green.
+     *
+     * @return void
+     */
+    public function test_execute_works_for_a_new_activity(): void {
+        $this->resetAfterTest();
+        $scenario = $this->scenario();
+        $this->mock_manager('{"picks":[{"n":1}]}');
+
+        $teacher = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($teacher->id, $scenario['course']->id, 'editingteacher');
+        $this->setUser($teacher);
+        $this->accept_policy(\context_course::instance($scenario['course']->id));
+
+        $result = $this->call($scenario, ['cmid' => 0]);
+
+        $this->assertFalse($result['error']);
+        $this->assertTrue($result['data']['success']);
+        $this->assertSame(1, $result['data']['candidatecount']);
+    }
+
+    /**
+     * The new-activity path requires the capability to add activities.
+     *
+     * This is the only test that gives the manageactivities gate meaning: it builds
+     * the role for which that gate is not inert — someone who curates competency
+     * links without being able to edit activities.
+     *
+     * @return void
+     */
+    public function test_execute_new_activity_requires_manageactivities(): void {
+        $this->resetAfterTest();
+        $scenario = $this->scenario();
+        $this->mock_manager('{"picks":[]}');
+
+        $coursecontext = \context_course::instance($scenario['course']->id);
+        $roleid = $this->getDataGenerator()->create_role(['shortname' => 'curriculumlead']);
+        assign_capability('moodle/competency:coursecompetencymanage', CAP_ALLOW, $roleid, $coursecontext->id, true);
+        assign_capability('aiplacement/dimensions:suggest', CAP_ALLOW, $roleid, $coursecontext->id, true);
+        assign_capability('moodle/course:manageactivities', CAP_PROHIBIT, $roleid, $coursecontext->id, true);
+
+        $lead = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($lead->id, $scenario['course']->id, $roleid);
+        $this->setUser($lead);
+        $this->accept_policy($coursecontext);
+
+        $result = $this->call($scenario, ['cmid' => 0]);
+
+        $this->assertTrue($result['error']);
+        $this->assertSame('nopermissions', $result['exception']->errorcode);
+    }
+
+    /**
      * A cmid that does not belong to the given course is refused.
      *
      * @return void
@@ -1682,7 +1738,15 @@ class suggest_competencies extends external_api {
              * learn which frameworks exist in categories they cannot see. The sibling
              * local_dimensions picker collapses the same two cases for the same reason.
              */
-            throw new \moodle_exception('error_nosuchframework', 'aiplacement_dimensions');
+            throw new \moodle_exception(
+                'error_nosuchframework',
+                'aiplacement_dimensions',
+                '',
+                null,
+                $framework
+                    ? 'framework not readable in context ' . $framework->get('contextid')
+                    : 'no such framework id'
+            );
         }
 
         $trimmed = \core_text::substr($params['content'], 0, self::MAX_CONTENT);
@@ -1810,7 +1874,7 @@ cd /Volumes/N1TB/dev/github/moodle
 PHP_INI_SCAN_DIR="/opt/homebrew/etc/php/8.5/conf.d:/tmp/phpini" php vendor/bin/phpunit --filter suggest_competencies_test --testsuite aiplacement_dimensions_testsuite
 ```
 
-Expected: 12 tests, all passing.
+Expected: 14 tests, all passing.
 
 - [ ] **Step 8: Commit**
 
