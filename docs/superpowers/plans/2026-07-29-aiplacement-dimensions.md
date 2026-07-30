@@ -1144,9 +1144,15 @@ final class suggest_competencies_test extends \advanced_testcase {
      * @return void
      */
     private function mock_manager(string $generated, bool $success = true): void {
+        /*
+         * `error` is not optional on a failure response: response_base::__construct()
+         * (ai/classes/aiactions/responses/response_base.php:57-59) throws a
+         * coding_exception when !$success and either errorcode is 0 or error is empty.
+         */
         $response = new \core_ai\aiactions\responses\response_generate_text(
             success: $success,
             errorcode: $success ? 0 : 429,
+            error: $success ? '' : 'error_ratelimited',
             errormessage: $success ? '' : 'Rate limited'
         );
         if ($success) {
