@@ -2276,11 +2276,13 @@ Either way the save is correct, because the form submits the hidden select and n
     </div>
 {{/discarded}}
 
-{{#contenttruncated}}
-    <div class="alert alert-warning" role="status">
-        {{#str}} contenttruncatednotice, aiplacement_dimensions {{/str}}
-    </div>
-{{/contenttruncated}}
+{{^nocandidates}}
+    {{#contenttruncated}}
+        <div class="alert alert-warning" role="status">
+            {{#str}} contenttruncatednotice, aiplacement_dimensions {{/str}}
+        </div>
+    {{/contenttruncated}}
+{{/nocandidates}}
 
 {{#undecodable}}
     <div class="alert alert-danger" role="alert">
