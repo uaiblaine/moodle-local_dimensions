@@ -146,9 +146,25 @@ got wrong, and are unit-testable without a site.
 
 ### The call
 
-Client sends `{contextid, frameworkid, rootids[], content}`, where `rootids[]` are the IDs of the
-competency subtree roots the user selected in step 2 (empty = the whole framework). `content` is the
-**unsaved** editor text, capped by character budget.
+Client sends `{cmid, courseid, frameworkid, rootids[], content}`, where `cmid` is `0` for an activity
+that does not exist yet, and `rootids[]` are the IDs of the competency subtree roots the user selected
+in step 2 (empty = the whole framework). `content` is the **unsaved** editor text, capped by character
+budget.
+
+**The context is derived server-side from `cmid`, never accepted from the caller.** A caller-supplied
+`contextid` would make gate 6 a no-op the caller chooses: `validate_context()` constrains nothing about
+the context *level*, and core's `is_action_enabled_in_context()` returns `true` outright for any level
+outside course, category and module, and only consults a module's `enabledaiactions` at
+`CONTEXT_MODULE`. So passing the parent course's contextid would dodge the per-activity opt-out, and
+passing any block's contextid would short-circuit the check entirely. Found by the Task 5 review.
+
+**The web service enforces the same six gates as the page-load path, plus two of its own** — the
+acceptable-use policy backstop, and `moodle/competency:competencyview` on the **framework's own
+context**. That second one matters because frameworks are context-scoped and every core read path
+checks them: without it an editing teacher could name any framework id, have its competencies read and
+shipped to the provider, and use `candidatecount` as an enumeration oracle. `local_dimensions`'
+own picker already refuses a framework the user cannot read, so omitting the check would gate this
+service more weakly than the UI that calls it — which was one of the audited defects.
 
 Server (`suggest_competencies::execute`):
 
