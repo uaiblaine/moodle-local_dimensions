@@ -913,7 +913,7 @@ final class candidates_test extends \advanced_testcase {
 
         $this->assertContains($child->get('id'), $ids);
         $this->assertContains($grandchild->get('id'), $ids, 'depth 3 must be reachable');
-        $this->assertNotContains($root->get('id'), $ids, 'the chosen root is scope, not a candidate');
+        $this->assertContains($root->get('id'), $ids, 'the chosen root is in scope as a candidate too');
     }
 
     /**
@@ -1019,6 +1019,14 @@ class candidates {
             if (!$root) {
                 continue;
             }
+            /*
+             * The chosen root is a candidate too. get_descendants_ids matches
+             * path LIKE '.../id/%', which excludes the root itself — so without this
+             * merge, checking every branch would send strictly fewer competencies than
+             * checking none, and a flat framework (everything at parentid 0) would
+             * yield zero candidates through the picker and be unusable.
+             */
+            $ids[] = (int) $root->get('id');
             $ids = array_merge($ids, competency::get_descendants_ids($root));
         }
 
@@ -1833,6 +1841,7 @@ class suggest_competencies extends external_api {
             'undecodable' => $undecodable,
             'contenttruncated' => $contenttruncated,
             'candidatecount' => $built['candidatecount'],
+            'sentcount' => count($built['candidates']),
             'truncated' => $built['truncated'],
         ];
     }
@@ -1861,6 +1870,7 @@ class suggest_competencies extends external_api {
             'undecodable' => new external_value(PARAM_BOOL, 'True when the model answer could not be parsed at all'),
             'contenttruncated' => new external_value(PARAM_BOOL, 'True when the submitted content was cut to the cap'),
             'candidatecount' => new external_value(PARAM_INT, 'Competencies in scope before truncation'),
+            'sentcount' => new external_value(PARAM_INT, 'Competencies actually sent to the model'),
             'truncated' => new external_value(PARAM_BOOL, 'Whether the candidate list was truncated'),
         ]);
     }
@@ -2437,7 +2447,7 @@ Add these to the module alongside Task 6's `openPickers`. Add `PICK: 'input[data
                 nocandidates: response.candidatecount === 0,
                 truncated: response.truncated,
                 candidatecount: response.candidatecount,
-                sentcount: response.suggestions.length
+                sentcount: response.sentcount
             }).then(function(rendered) {
                 document.querySelector(SELECTORS.BODY).innerHTML = rendered.html;
                 Templates.runTemplateJS(rendered.js);
