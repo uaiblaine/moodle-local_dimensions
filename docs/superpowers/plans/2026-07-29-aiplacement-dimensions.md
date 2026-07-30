@@ -178,7 +178,7 @@ $capabilities = [
 ];
 ```
 
-`read` is correct: this capability gates asking the model, not writing. The writes are gated by `moodle/competency:coursecompetencymanage`, which core enforces in `api::add_competency_to_course` (`competency/classes/api.php:1466`).
+`read` is correct: this capability gates asking the model, not writing. The writes are gated by `moodle/competency:coursecompetencymanage`, which core enforces in `api::add_competency_to_course` (`competency/classes/api.php:1625`).
 
 - [ ] **Step 5: Write `lang/en/aiplacement_dimensions.php` (alphabetically sorted)**
 
@@ -263,7 +263,8 @@ jobs:
     uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
     with:
       moodle-core-branch: MOODLE_502_STABLE
-      extra-plugin-runners: 'moodle-plugin-ci add-plugin uaiblaine/moodle-local_dimensions'
+      plugin-dependencies: |
+        uaiblaine/moodle-local_dimensions,main
 
   ci-501:
     name: Moodle 5.01
@@ -271,10 +272,11 @@ jobs:
     with:
       moodle-core-branch: MOODLE_501_STABLE
       one-db-only: true
-      extra-plugin-runners: 'moodle-plugin-ci add-plugin uaiblaine/moodle-local_dimensions'
+      plugin-dependencies: |
+        uaiblaine/moodle-local_dimensions,main
 ```
 
-The `extra-plugin-runners` line is mandatory: this plugin declares a hard dependency, so CI cannot install it without `local_dimensions` present. Confirm the input name against the reusable workflow before relying on it — if it differs, the correct name is whatever that workflow documents for installing extra plugins.
+The `plugin-dependencies` line is mandatory: this plugin declares a hard dependency, so CI cannot install it without `local_dimensions` present. The input name and its `owner/repo,branch` value shape were verified against the reusable workflow's source during Task 1 — an earlier draft of this plan named a non-existent `extra-plugin-runners` input taking a CLI command string.
 
 - [ ] **Step 9: Write the smoke test `tests/plugin_test.php`**
 
@@ -497,7 +499,7 @@ class prompt {
 
 - [ ] **Step 4: Add the prompt lang string**
 
-Insert into `lang/en/aiplacement_dimensions.php`, keeping alphabetical order (it sorts between `pluginname` and `privacy:metadata`):
+Insert into `lang/en/aiplacement_dimensions.php`, keeping alphabetical order. It sorts **after** `privacy:metadata`, not before: the two diverge at the third character, and `i` precedes `o`. Do not take this plan's word for it — run `sort()` over the resulting key list and compare.
 
 ```php
 $string['promptinstruction'] = 'You are mapping educational content to competencies.
@@ -549,7 +551,7 @@ answers with positions, never names."
 
 **Interfaces:**
 - Consumes: the `candidates` array produced by `prompt::build()` — a 0-indexed list of rows with keys `id`, `idnumber`, `shortname`.
-- Produces: `\aiplacement_dimensions\local\resolver::resolve(string $raw, array $candidates): array`, returning `suggestions` (list of arrays with keys `id`, `idnumber`, `shortname`, `confidence` (float), `why` (string)) and `discarded` (int).
+- Produces: `\aiplacement_dimensions\local\resolver::resolve(string $raw, array $candidates): array`, returning `suggestions` (list of arrays with keys `id`, `idnumber`, `shortname`, `confidence` (float), `why` (string)), `discarded` (int), and `undecodable` (bool — true when no `picks` payload could be found in the model's answer at all).
 
 This is the unit where the plugin being replaced went wrong. Every branch below is a defect that shipped there.
 
@@ -743,36 +745,89 @@ class resolver {
                 'id' => (int) $candidate['id'],
                 'idnumber' => (string) $candidate['idnumber'],
                 'shortname' => (string) $candidate['shortname'],
-                'confidence' => isset($pick['confidence']) ? (float) $pick['confidence'] : 0.0,
-                'why' => isset($pick['why']) ? clean_param((string) $pick['why'], PARAM_TEXT) : '',
+                'confidence' => isset($pick['confidence']) && is_numeric($pick['confidence'])
+                    ? (float) $pick['confidence']
+                    : 0.0,
+                'why' => isset($pick['why']) && is_scalar($pick['why'])
+                    ? clean_param((string) $pick['why'], PARAM_TEXT)
+                    : '',
             ];
         }
 
-        return ['suggestions' => $suggestions, 'discarded' => $discarded];
+        return [
+            'suggestions' => $suggestions,
+            'discarded' => $discarded,
+            'undecodable' => $decoded === null,
+        ];
+    }
+
+    /** @var int Ceiling on brace-span attempts, so a brace-heavy answer cannot spin. */
+    private const MAX_SPANS = 20;
+
+    /**
+     * Decode the model output, tolerating fences and surrounding prose.
+     *
+     * Tries a list of candidate substrings in priority order and accepts the first
+     * that decodes to an array carrying a "picks" key. Requiring that key matters:
+     * a fenced code example can itself be valid JSON, and without the shape check a
+     * worked example would win over the real answer.
+     *
+     * @param string $raw The model's generated content.
+     * @return array|null Decoded payload, or null when no payload could be found.
+     */
+    private static function decode(string $raw): ?array {
+        foreach (self::candidate_payloads($raw) as $candidate) {
+            $decoded = json_decode($candidate, true);
+            if (is_array($decoded) && array_key_exists('picks', $decoded)) {
+                return $decoded;
+            }
+        }
+
+        return null;
     }
 
     /**
-     * Decode the model output, tolerating a surrounding code fence or prose.
+     * Build the candidate substrings that might hold the payload, best first.
      *
      * @param string $raw The model's generated content.
-     * @return array Decoded payload, or an empty array when unreadable.
+     * @return array Candidate strings, in the order they should be tried.
      */
-    private static function decode(string $raw): array {
+    private static function candidate_payloads(string $raw): array {
         $text = trim($raw);
+        $candidates = [$text];
 
-        $decoded = json_decode($text, true);
-        if (is_array($decoded)) {
-            return $decoded;
+        /*
+         * Every fenced block, not just the first: models put a worked example in one
+         * fence and the answer in another. The closing fence is anchored to its own
+         * line so a triple-backtick inside a string value cannot truncate the capture.
+         */
+        if (preg_match_all('/^```[a-z]*[ \t]*\R(.*?)\R```[ \t]*$/ims', $text, $matches)) {
+            foreach ($matches[1] as $block) {
+                $candidates[] = trim($block);
+            }
         }
 
-        $open = strpos($text, '{');
+        /*
+         * Last resort for unfenced JSON: every span from a brace to the final brace.
+         * Trying successive opening braces means a brace in the preamble no longer
+         * swallows the payload, because a later start eventually lands on it.
+         */
         $close = strrpos($text, '}');
-        if ($open === false || $close === false || $close <= $open) {
-            return [];
+        if ($close !== false) {
+            $offset = 0;
+            $tries = 0;
+            while ($tries < self::MAX_SPANS) {
+                $open = strpos($text, '{', $offset);
+                if ($open === false || $open >= $close) {
+                    break;
+                }
+                $candidates[] = substr($text, $open, $close - $open + 1);
+                $offset = $open + 1;
+                $tries++;
+            }
         }
 
-        $decoded = json_decode(substr($text, $open, $close - $open + 1), true);
-        return is_array($decoded) ? $decoded : [];
+        return $candidates;
     }
 }
 ```
@@ -1373,6 +1428,7 @@ class suggest_competencies extends external_api {
                 'errormessage' => $response->get_errormessage(),
                 'suggestions' => [],
                 'discarded' => 0,
+                'undecodable' => false,
                 'candidatecount' => $built['candidatecount'],
                 'truncated' => $built['truncated'],
             ];
@@ -1387,6 +1443,7 @@ class suggest_competencies extends external_api {
             'errormessage' => '',
             'suggestions' => $resolved['suggestions'],
             'discarded' => $resolved['discarded'],
+            'undecodable' => $resolved['undecodable'],
             'candidatecount' => $built['candidatecount'],
             'truncated' => $built['truncated'],
         ];
@@ -1405,6 +1462,7 @@ class suggest_competencies extends external_api {
             'errormessage' => '',
             'suggestions' => [],
             'discarded' => 0,
+            'undecodable' => false,
             'candidatecount' => $built['candidatecount'],
             'truncated' => $built['truncated'],
         ];
@@ -1431,6 +1489,7 @@ class suggest_competencies extends external_api {
                 'Resolved suggestions'
             ),
             'discarded' => new external_value(PARAM_INT, 'Model answers that could not be resolved'),
+            'undecodable' => new external_value(PARAM_BOOL, 'True when the model answer could not be parsed at all'),
             'candidatecount' => new external_value(PARAM_INT, 'Competencies in scope before truncation'),
             'truncated' => new external_value(PARAM_BOOL, 'Whether the candidate list was truncated'),
         ]);
@@ -1826,6 +1885,12 @@ Either way the save is correct, because the form submits the hidden select and n
     </div>
 {{/discarded}}
 
+{{#undecodable}}
+    <div class="alert alert-danger" role="alert">
+        {{#str}} undecodablenotice, aiplacement_dimensions {{/str}}
+    </div>
+{{/undecodable}}
+
 {{#suggestions.length}}
     <ul class="list-unstyled aiplacement-dimensions-suggestions">
         {{#suggestions}}
@@ -1847,7 +1912,9 @@ Either way the save is correct, because the form submits the hidden select and n
 {{/suggestions.length}}
 
 {{^suggestions.length}}
-    <p class="text-muted">{{#str}} nosuggestions, aiplacement_dimensions {{/str}}</p>
+    {{^undecodable}}
+        <p class="text-muted">{{#str}} nosuggestions, aiplacement_dimensions {{/str}}</p>
+    {{/undecodable}}
 {{/suggestions.length}}
 ```
 
@@ -1938,6 +2005,7 @@ Add these to the module alongside Task 6's `openPickers`. Add `PICK: 'input[data
                     return Object.assign({}, suggestion, {json: JSON.stringify(suggestion)});
                 }),
                 discarded: response.discarded,
+                undecodable: response.undecodable,
                 truncated: response.truncated,
                 candidatecount: response.candidatecount,
                 sentcount: response.suggestions.length
@@ -2091,6 +2159,7 @@ $string['failedheading'] = 'Could not be added:';
 $string['nocandidates'] = 'The competencies you chose have no sub-competencies to classify against.';
 $string['nosuggestions'] = 'The model did not find a clear match in this framework.';
 $string['truncatednotice'] = 'Only the first {$a->sent} of {$a->total} competencies were sent to the model.';
+$string['undecodablenotice'] = 'The AI provider replied, but its answer could not be read. Nothing was suggested. Try again.';
 ```
 
 - [ ] **Step 8: Commit**
