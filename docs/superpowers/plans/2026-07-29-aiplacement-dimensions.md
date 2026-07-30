@@ -1483,6 +1483,7 @@ final class suggest_competencies_test extends \advanced_testcase {
         $result = $this->call($scenario);
 
         $this->assertTrue($result['error']);
+        $this->assertSame('error_nosuchframework', $result['exception']->errorcode);
     }
 
     /**
@@ -1612,16 +1613,34 @@ class suggest_competencies extends external_api {
          * contextid would make the AI opt-out gate a no-op the caller chooses: core's
          * is_action_enabled_in_context() only consults a module's enabledaiactions at
          * CONTEXT_MODULE, and returns true outright for levels outside course, category
-         * and module. Passing cmid means the per-activity check cannot be dodged.
+         * and module, so any block's contextid would have short-circuited the check.
+         *
+         * The course context is resolved and authorized FIRST so that resolving the
+         * course module cannot be used as a pre-authentication membership probe.
          */
+        $coursecontext = \context_course::instance($params['courseid'], MUST_EXIST);
+        self::validate_context($coursecontext);
+
         if ($params['cmid'] > 0) {
             $cm = get_coursemodule_from_id('', $params['cmid'], $params['courseid'], false, MUST_EXIST);
             $context = \context_module::instance($cm->id);
+            self::validate_context($context);
         } else {
-            $context = \context_course::instance($params['courseid'], MUST_EXIST);
+            /*
+             * cmid 0 means the activity does not exist yet, so there is no per-activity
+             * enabledaiactions to consult and this call is evaluated at course level.
+             * That is a real residual hole: a caller editing an EXISTING activity whose
+             * action is switched off can send cmid 0 and be evaluated at course level
+             * instead. It is not a privilege escalation, because the same editing
+             * teacher may flip that switch on the module form anyway, but it does mean
+             * the ai_action_register row records the course context rather than the
+             * module's. Requiring manageactivities is what being on the add-activity
+             * form actually implies, and narrows who can take that path.
+             */
+            $context = $coursecontext;
+            require_capability('moodle/course:manageactivities', $coursecontext);
         }
 
-        self::validate_context($context);
         require_capability('moodle/competency:coursecompetencymanage', $context);
         require_capability('aiplacement/dimensions:suggest', $context);
 
@@ -1656,10 +1675,15 @@ class suggest_competencies extends external_api {
          * check would gate this service more weakly than the UI that calls it.
          */
         $framework = competency_framework::get_record(['id' => $params['frameworkid']]);
-        if (!$framework) {
+        if (!$framework || !has_capability('moodle/competency:competencyview', $framework->get_context())) {
+            /*
+             * One error for both cases on purpose. Distinguishing "does not exist" from
+             * "you may not read it" would let any editing teacher walk the id space and
+             * learn which frameworks exist in categories they cannot see. The sibling
+             * local_dimensions picker collapses the same two cases for the same reason.
+             */
             throw new \moodle_exception('error_nosuchframework', 'aiplacement_dimensions');
         }
-        require_capability('moodle/competency:competencyview', $framework->get_context());
 
         $trimmed = \core_text::substr($params['content'], 0, self::MAX_CONTENT);
         $contenttruncated = \core_text::strlen($params['content']) > self::MAX_CONTENT;
@@ -1774,7 +1798,7 @@ Work out their correct alphabetical positions and **prove the ordering with a sc
 
 ```php
 $string['error_actiondisabled'] = 'AI competency suggestions are turned off for this activity or course.';
-$string['error_nosuchframework'] = 'That competency framework does not exist.';
+$string['error_nosuchframework'] = 'That competency framework is not available.';
 $string['error_policynotaccepted'] = 'You need to accept the AI acceptable use policy before asking for suggestions.';
 $string['error_toomanyroots'] = 'Too many competency branches were selected at once.';
 ```
