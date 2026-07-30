@@ -107,9 +107,10 @@ disable outright.
 
 ```
 version.php                                dependencies on local_dimensions; no invented properties
-lib.php                                    aiplacement_dimensions_coursemodule_standard_elements()
+lib.php                                    aiplacement_dimensions_coursemodule_definition_after_data()
 classes/placement.php                      get_action_list() → [generate_text]   (~15 lines)
 classes/external/suggest_competencies.php  the ONLY external function
+classes/local/candidates.php               fetches the competency subtree in scope (DB-facing)
 classes/local/prompt.php                   builds the numbered candidate list   (pure, DB-free logic)
 classes/local/resolver.php                 index → id + discard accounting      (pure, DB-free)
 amd/src/suggest.js                         own drawer, ~40 lines, extends nothing
@@ -119,13 +120,17 @@ db/services.php  db/access.php  lang/en  lang/pt_br  classes/privacy/provider.ph
 No `db/install.xml`, no `db/upgrade.php`, no `settings.php` — core_ai builds the action-settings page
 itself (`\core\plugininfo\aiplacement::load_settings()`), exactly as `aiplacement_courseassist` does.
 
-Entry point is `lib.php`, not a footer hook: `get_plugins_with_function('coursemodule_standard_elements', 'lib.php')`
-(`lib/moodlelib.php:7210`, called from `course/moodleform_mod.php:847-848`) scans every plugin type
-with a `lib.php`, so an `aiplacement` subplugin receives the callback. The button is rendered **inside**
-the competencies section `tool_lp` already created, next to the field it will fill.
+Entry point is `lib.php`, not a footer hook. It hooks **`coursemodule_definition_after_data`**
+(`course/moodleform_mod.php:861-862`, called at `:336`), not `coursemodule_standard_elements`: both
+iterate in `components.json` order, where `aiplacement` is index 0 and `tool` is index 35, so on the
+earlier hook the callback fires before `tool_lp` has created the competencies section at all.
+`definition_after_data` runs as a separate later form phase, after every `standard_elements` callback,
+so `insertElementBefore` has an anchor and the button lands **inside** that section, next to the field
+it fills.
 
-`prompt.php` and `resolver.php` touch neither the DB nor `core_ai`. They hold the logic the CMU plugin
-got wrong, and are unit-testable without a site.
+`prompt.php` and `resolver.php` touch neither the DB nor `core_ai` — `candidates.php` holds the DB
+access they would otherwise have needed. They hold the logic the CMU plugin got wrong, and are
+unit-testable without a site.
 
 ---
 
