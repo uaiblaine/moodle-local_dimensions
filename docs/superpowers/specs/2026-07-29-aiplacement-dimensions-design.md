@@ -159,7 +159,14 @@ Server (`suggest_competencies::execute`):
 4. `prompt::build($frameworkid, $rootids)` returns a `$candidates` array indexed `1..N` **and** the
    prompt text derived from it. The array is the source of truth.
 5. `generate_text` → `resolver::resolve($json, $candidates)`
-6. return `{success, errorcode?, errormessage?, suggestions:[{id, idnumber, shortname, confidence, why}], discarded, candidatecount, truncated}`
+6. return `{success, errorcode?, errormessage?, suggestions:[{id, idnumber, shortname, confidence, why}], discarded, undecodable, candidatecount, truncated}`
+
+`undecodable` distinguishes **"the model answered, and chose nothing"** from **"the model's answer could
+not be read at all."** Both produce an empty `suggestions` list, and conflating them makes the UI tell
+the user "no clear match in this framework" when the truth is that the parser failed — a lie about the
+model's actual output. Added after a Task 3 review reproduced two realistic shapes (a triple-backtick
+inside a `why` value; two fenced blocks with the answer in the second) that lost a genuine answer with
+no signal at all.
 
 `discarded` and `truncated` are surfaced in the UI. "The model returned 2 invalid indices" and
 "40 competencies did not fit the budget" become on-screen text, never silence.
@@ -188,7 +195,7 @@ The external function **does not throw on AI failure — it returns state**, fol
 | No provider / action disabled | The button never renders — the gate is at page load, not at click |
 | Policy not accepted | Policy block, not an error |
 | Provider failed | Distinct message per `errorcode`; **"Try again" suppressed** when not retryable |
-| Model returned invalid JSON | Not an exception: `suggestions: []` + `discarded`, with an explicit message |
+| Model's answer could not be parsed | Not an exception: `undecodable: true`, and its **own** message — never the "no clear match" empty state, which would misreport what the model did |
 | Index out of range | Counted in `discarded` and shown — never a silent drop |
 | Chosen branches hold no competencies | Its own empty state, with a **defined** lang string |
 | One `link_competency_course` failed | Only that row turns red; the others proceed (individual calls) |
