@@ -1896,7 +1896,7 @@ per-context opt-out and the acceptable use policy."
 **Deliverable:** clicking "Suggest competencies with AI" opens the plugin's own drawer showing a framework select and its branch checkboxes. Nothing is sent to a model yet — that is Task 7.
 
 **Files:**
-- Create: `lib.php`
+- Create: `lib.php` (hooking `coursemodule_definition_after_data`, not `coursemodule_standard_elements`)
 - Create: `amd/src/suggest.js` and the built `amd/build/suggest.min.js` plus `.map`
 - Create: `templates/button.mustache`, `templates/drawer.mustache`, `templates/pickers.mustache`
 - Modify: `lang/en/aiplacement_dimensions.php`
@@ -1907,20 +1907,29 @@ per-context opt-out and the acceptable use policy."
 
 - [ ] **Step 1: Write `lib.php` with the six gates**
 
+The hook choice is load-bearing. `get_plugins_with_function()` iterates in `components.json` order — `aiplacement` is index 0, `tool` is index 35 — so a `coursemodule_standard_elements` callback in this plugin runs **before** `tool_lp` creates the competencies section, and the button cannot be placed relative to a field that does not exist yet.
+
 ```php
 defined('MOODLE_INTERNAL') || die();
 
 /**
  * Add the AI suggestion button to the activity settings form.
  *
- * Rendered inside the competencies section tool_lp already created, next to the
- * field it will fill. Returns silently when any availability gate fails.
+ * This runs on coursemodule_definition_after_data, NOT coursemodule_standard_elements.
+ * Both hooks iterate plugins in components.json order, where aiplacement is index 0 and
+ * tool is index 35 — so on standard_elements our callback fires before tool_lp has
+ * created the competencies section at all, and the button lands under whatever header
+ * happens to precede it. definition_after_data runs after every standard_elements
+ * callback, so the anchor element exists and insertElementBefore can place the button
+ * next to the field it fills.
+ *
+ * Returns silently when any availability gate fails.
  *
  * @param moodleform_mod $formwrapper The form wrapper.
  * @param MoodleQuickForm $mform The form.
  * @return void
  */
-function aiplacement_dimensions_coursemodule_standard_elements($formwrapper, $mform): void {
+function aiplacement_dimensions_coursemodule_definition_after_data($formwrapper, $mform): void {
     global $PAGE, $OUTPUT, $COURSE;
 
     if (!get_config('core_competency', 'enabled')) {
@@ -1953,10 +1962,23 @@ function aiplacement_dimensions_coursemodule_standard_elements($formwrapper, $mf
         return;
     }
 
-    $mform->addElement('static', 'aiplacementdimensions', '',
+    /*
+     * The competencies element is our anchor. Gate 2 already required the capability
+     * tool_lp itself requires to create it, so it should exist — but guard rather than
+     * let insertElementBefore throw if core ever changes that condition.
+     */
+    if (!$mform->elementExists('competencies')) {
+        return;
+    }
+
+    $element = $mform->createElement(
+        'static',
+        'aiplacementdimensions',
+        '',
         $OUTPUT->render_from_template('aiplacement_dimensions/button', []) .
         $OUTPUT->render_from_template('aiplacement_dimensions/drawer', [])
     );
+    $mform->insertElementBefore($element, 'competencies');
 
     $cm = $formwrapper->get_coursemodule();
 
