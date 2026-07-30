@@ -2778,7 +2778,13 @@ final class lang_test extends \advanced_testcase {
 
         $root = $CFG->dirroot . '/ai/placement/dimensions';
         $patterns = [
-            '/\{\{#str\}\}\s*([a-z0-9_]+)\s*,\s*aiplacement_dimensions\s*\{\{\/str\}\}/i',
+            /*
+             * The optional (?:,.*?) tail matters: a {{#str}} call may carry an argument
+             * after the component, and this plugin uses that form three times. Without
+             * it the scanner silently skips those keys, and a test that cannot see a
+             * reference cannot prove the reference is defined.
+             */
+            '/\{\{#str\}\}\s*([a-z0-9_]+)\s*,\s*aiplacement_dimensions\s*(?:,.*?)?\{\{\/str\}\}/is',
             '/get_string\(\s*[\'"]([a-z0-9_:]+)[\'"]\s*,\s*[\'"]aiplacement_dimensions[\'"]/i',
             '/moodle_exception\(\s*[\'"]([a-z0-9_:]+)[\'"]\s*,\s*[\'"]aiplacement_dimensions[\'"]/i',
         ];
@@ -2814,6 +2820,10 @@ final class lang_test extends \advanced_testcase {
     }
 }
 ```
+
+- [ ] **Step 1b: Prove the scanner can actually fail**
+
+A string-existence test that passes on its first run is as likely to mean the scanner sees nothing as it is to mean the code is clean. Before trusting it, delete one key that is referenced **with an argument** — `branchestruncated`, `discardednotice` or `truncatednotice` — re-run the test, confirm it goes red naming that key, then restore the key. Report what you saw. A scanner blind to the parameterized form was the original defect here.
 
 - [ ] **Step 2: Run it and fix whatever it reports**
 
