@@ -1704,6 +1704,17 @@ class suggest_competencies extends external_api {
 
         $manager = \core\di::get(\core_ai\manager::class);
 
+        /*
+         * Two distinct switches. is_action_enabled() reads only the per-action toggle
+         * (manager.php:327-340); whether the PLACEMENT is enabled at all lives in a
+         * separate setting read by \core\plugininfo\aiplacement::is_plugin_enabled().
+         * Checking only the first means turning the plugin off in Site administration
+         * does not turn it off.
+         */
+        if (!\core\plugininfo\aiplacement::is_plugin_enabled('dimensions')) {
+            throw new \moodle_exception('error_actiondisabled', 'aiplacement_dimensions');
+        }
+
         if (!$manager->is_action_enabled('aiplacement_dimensions', generate_text::class)) {
             throw new \moodle_exception('error_actiondisabled', 'aiplacement_dimensions');
         }
@@ -1943,6 +1954,10 @@ function aiplacement_dimensions_coursemodule_definition_after_data($formwrapper,
     }
 
     if (!has_capability('aiplacement/dimensions:suggest', $context)) {
+        return;
+    }
+
+    if (!\core\plugininfo\aiplacement::is_plugin_enabled('dimensions')) {
         return;
     }
 
