@@ -53,7 +53,7 @@ Everything committed (docs, code, commit messages) is **English**. Only the chat
 
 | Concern | Owner |
 |---|---|
-| Suggest (prompt + model + resolution) | **this plugin** — one read-only external function |
+| Suggest (prompt + model + resolution) | **this plugin** — one external function, declared `write` because `process_action()` records the request |
 | Link competency → **course** | `local_dimensions_link_competency_course` (exists) |
 | Link competency → **module** | **nobody writes it** — see "The load-bearing mechanism" |
 | Search / browse competencies | `local_dimensions_search_competencies`, `_browse_structure`, `_get_structure_node` (exist) |
@@ -175,7 +175,7 @@ Server (`suggest_competencies::execute`):
 4. `prompt::build($frameworkid, $rootids)` returns a `$candidates` array indexed `1..N` **and** the
    prompt text derived from it. The array is the source of truth.
 5. `generate_text` → `resolver::resolve($json, $candidates)`
-6. return `{success, errorcode?, errormessage?, suggestions:[{id, idnumber, shortname, confidence, why}], discarded, undecodable, candidatecount, truncated}`
+6. return `{success, errorcode?, errormessage?, suggestions:[{id, idnumber, shortname, confidence, why}], discarded, undecodable, contenttruncated, candidatecount, sentcount, truncated}`
 
 `undecodable` distinguishes **"the model answered, and chose nothing"** from **"the model's answer could
 not be read at all."** Both produce an empty `suggestions` list, and conflating them makes the UI tell
