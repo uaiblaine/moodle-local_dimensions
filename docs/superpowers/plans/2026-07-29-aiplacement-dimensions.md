@@ -768,9 +768,9 @@ class resolver {
      * Decode the model output, tolerating fences and surrounding prose.
      *
      * Tries a list of candidate substrings in priority order and accepts the first
-     * that decodes to an array carrying a "picks" key. Requiring that key matters:
-     * a fenced code example can itself be valid JSON, and without the shape check a
-     * worked example would win over the real answer.
+     * that decodes to an array whose "picks" value is itself an array. Checking the
+     * value and not merely the key matters: a decoy fence carrying {"picks":null}
+     * satisfies key-presence, is accepted, and masks a real answer in a later fence.
      *
      * @param string $raw The model's generated content.
      * @return array|null Decoded payload, or null when no payload could be found.
@@ -778,7 +778,7 @@ class resolver {
     private static function decode(string $raw): ?array {
         foreach (self::candidate_payloads($raw) as $candidate) {
             $decoded = json_decode($candidate, true);
-            if (is_array($decoded) && array_key_exists('picks', $decoded)) {
+            if (is_array($decoded) && is_array($decoded['picks'] ?? null)) {
                 return $decoded;
             }
         }
@@ -1076,17 +1076,22 @@ Uses core get_descendants_ids so depth beyond direct children is reachable."
 ```
 
 ---
-
 ## Task 5: `suggest_competencies` external function
+
+This is the plugin's **only** external function and its **entire authorization boundary**. The third-party plugin this one replaces failed here specifically: a write endpoint with no `require_capability()` of its own, `is_action_enabled_in_context()` never called, the AI policy bypassed, and the service gated more weakly than the UI that called it. Every gate below exists because one of those shipped.
 
 **Files:**
 - Create: `classes/external/suggest_competencies.php`
 - Create: `db/services.php`
+- Modify: `version.php` (bump — a new `db/services.php` only syncs on a version change)
+- Modify: `lang/en/aiplacement_dimensions.php`
 - Test: `tests/external/suggest_competencies_test.php`
 
 **Interfaces:**
-- Consumes: `candidates::fetch()`, `prompt::build()`, `resolver::resolve()`.
-- Produces: the web service `aiplacement_dimensions_suggest_competencies`, taking `contextid` (int), `frameworkid` (int), `rootids` (list of int), `content` (raw text), and returning `success` (bool), `errorcode` (**int**, `0` when successful), `errormessage` (string), `suggestions` (list of `{id, idnumber, shortname, confidence, why}`), `discarded` (int), `candidatecount` (int), `truncated` (bool).
+- Consumes: `candidates::fetch()`, `prompt::build()`, `resolver::resolve()` (which returns `suggestions`, `discarded`, **`undecodable`**).
+- Produces: the web service `aiplacement_dimensions_suggest_competencies`, taking `cmid` (int, `0` for an activity that does not exist yet), `courseid` (int), `frameworkid` (int), `rootids` (list of int), `content` (raw text); returning `success` (bool), `errorcode` (**int**, `0` when successful), `errormessage` (string), `suggestions` (list of `{id, idnumber, shortname, confidence, why}`), `discarded` (int), `undecodable` (bool), `contenttruncated` (bool), `candidatecount` (int), `truncated` (bool).
+
+**Why `cmid` + `courseid` rather than `contextid`.** A caller-supplied `contextid` makes the AI opt-out gate a no-op the caller chooses: `validate_context()` constrains nothing about the context *level*, and core's `is_action_enabled_in_context()` (`ai/classes/manager.php:349-370`) returns `true` unconditionally for any level outside course/category/module, and only consults the per-activity `enabledaiactions` when the level is `CONTEXT_MODULE`. So passing the parent course's contextid dodges the per-activity opt-out, and passing any block's contextid short-circuits the whole check. Deriving the context server-side from `cmid` removes the class of bypass entirely.
 
 - [ ] **Step 1: Write `db/services.php`**
 
@@ -1097,16 +1102,22 @@ $functions = [
     'aiplacement_dimensions_suggest_competencies' => [
         'classname' => 'aiplacement_dimensions\external\suggest_competencies',
         'description' => 'Suggest competencies for the given activity content.',
-        'type' => 'read',
+        'type' => 'write',
         'ajax' => true,
         'capabilities' => 'aiplacement/dimensions:suggest',
     ],
 ];
 ```
 
-The `capabilities` key is advisory metadata for the admin UI — it enforces nothing. The enforcement is the `require_capability()` calls inside `execute()`. Declaring a capability here and checking a different one (or none) was an audited defect.
+`'type' => 'write'`, not `'read'`: `manager::process_action()` writes to `ai_action_register` and `ai_action_generate_text` (`ai/classes/manager.php:171-210`). Core's sibling declares `write` for the identical operation (`ai/placement/courseassist/db/services.php:31`). Declaring `read` would expose it to read-only tokens.
 
-- [ ] **Step 2: Write the failing test**
+The `capabilities` key is advisory metadata for the admin UI — it enforces nothing. The enforcement is the `require_capability()` calls inside `execute()`. Declaring a capability here and checking a different one, or none, was an audited defect.
+
+- [ ] **Step 2: Bump `version.php`**
+
+Change `$plugin->version` to `2026072901`. A new `db/services.php` is only synced when the version number changes, so without this the web service never registers on a real site.
+
+- [ ] **Step 3: Write the failing test**
 
 `tests/external/suggest_competencies_test.php`:
 
@@ -1129,14 +1140,21 @@ final class suggest_competencies_test extends \advanced_testcase {
      * Install a mocked AI manager returning the given generated content.
      *
      * @param string $generated The content the model is pretending to return.
+     * @param bool $success Whether the provider call succeeded.
      * @return void
      */
-    private function mock_manager(string $generated): void {
-        $response = new \core_ai\aiactions\responses\response_generate_text(success: true);
-        $response->set_response_data([
-            'generatedcontent' => $generated,
-            'finishreason' => 'stop',
-        ]);
+    private function mock_manager(string $generated, bool $success = true): void {
+        $response = new \core_ai\aiactions\responses\response_generate_text(
+            success: $success,
+            errorcode: $success ? 0 : 429,
+            errormessage: $success ? '' : 'Rate limited'
+        );
+        if ($success) {
+            $response->set_response_data([
+                'generatedcontent' => $generated,
+                'finishreason' => 'stop',
+            ]);
+        }
 
         $mock = $this->createMock(\core_ai\manager::class);
         $mock->method('process_action')->willReturn($response);
@@ -1152,12 +1170,11 @@ final class suggest_competencies_test extends \advanced_testcase {
     /**
      * Accept the AI policy for the current user.
      *
-     * get_user_policy_status() and user_policy_accepted() are public STATIC
-     * methods on the manager (ai/classes/manager.php:219 and :242), so they are
-     * not reachable through the DI container and cannot be mocked. The status
-     * lives in the core/ai_policy cache, and the only way to satisfy it in a
-     * test is to accept the policy for real, which is what core does in
-     * ai/tests/provider/provider_test.php:79.
+     * get_user_policy_status() and user_policy_accepted() are public STATIC methods
+     * on the manager (ai/classes/manager.php:242 and :219), so they are not reachable
+     * through the DI container and cannot be mocked. The status lives in the
+     * core/ai_policy cache, and the only way to satisfy it in a test is to accept the
+     * policy for real, which is what core does in ai/tests/provider/provider_test.php:79.
      *
      * @param \context $context The context the policy is accepted in.
      * @return void
@@ -1169,9 +1186,9 @@ final class suggest_competencies_test extends \advanced_testcase {
     }
 
     /**
-     * Build a course, module and framework with one competency.
+     * Build a course, module, framework and one competency.
      *
-     * @return array Keys: context, frameworkid, competencyid.
+     * @return array Keys: course, cmid, frameworkid, competencyid, context.
      */
     private function scenario(): array {
         $course = $this->getDataGenerator()->create_course();
@@ -1184,10 +1201,34 @@ final class suggest_competencies_test extends \advanced_testcase {
         ]);
 
         return [
-            'context' => \context_module::instance($module->cmid),
+            'course' => $course,
+            'cmid' => $module->cmid,
             'frameworkid' => $framework->get('id'),
             'competencyid' => $competency->get('id'),
+            'context' => \context_module::instance($module->cmid),
         ];
+    }
+
+    /**
+     * Call the web service with the given overrides.
+     *
+     * @param array $scenario The scenario array.
+     * @param array $overrides Parameter overrides.
+     * @return array The call_external_function result.
+     */
+    private function call(array $scenario, array $overrides = []): array {
+        $_POST['sesskey'] = sesskey();
+
+        return \core_external\external_api::call_external_function(
+            'aiplacement_dimensions_suggest_competencies',
+            $overrides + [
+                'cmid' => $scenario['cmid'],
+                'courseid' => $scenario['course']->id,
+                'frameworkid' => $scenario['frameworkid'],
+                'rootids' => [],
+                'content' => 'Some activity description.',
+            ]
+        );
     }
 
     /**
@@ -1202,22 +1243,15 @@ final class suggest_competencies_test extends \advanced_testcase {
         $this->accept_policy($scenario['context']);
         $this->mock_manager('{"picks":[{"n":1,"confidence":0.7,"why":"covers it"}]}');
 
-        $_POST['sesskey'] = sesskey();
-        $result = \core_external\external_api::call_external_function(
-            'aiplacement_dimensions_suggest_competencies',
-            [
-                'contextid' => $scenario['context']->id,
-                'frameworkid' => $scenario['frameworkid'],
-                'rootids' => [],
-                'content' => 'Some activity description.',
-            ]
-        );
+        $result = $this->call($scenario);
 
         $this->assertFalse($result['error']);
         $this->assertTrue($result['data']['success']);
         $this->assertCount(1, $result['data']['suggestions']);
         $this->assertSame($scenario['competencyid'], $result['data']['suggestions'][0]['id']);
         $this->assertSame(0, $result['data']['discarded']);
+        $this->assertFalse($result['data']['undecodable']);
+        $this->assertFalse($result['data']['contenttruncated']);
         $this->assertSame(1, $result['data']['candidatecount']);
     }
 
@@ -1233,23 +1267,96 @@ final class suggest_competencies_test extends \advanced_testcase {
         $this->accept_policy($scenario['context']);
         $this->mock_manager('{"picks":[{"n":99}]}');
 
-        $_POST['sesskey'] = sesskey();
-        $result = \core_external\external_api::call_external_function(
-            'aiplacement_dimensions_suggest_competencies',
-            [
-                'contextid' => $scenario['context']->id,
-                'frameworkid' => $scenario['frameworkid'],
-                'rootids' => [],
-                'content' => 'Some activity description.',
-            ]
-        );
+        $result = $this->call($scenario);
 
         $this->assertSame([], $result['data']['suggestions']);
         $this->assertSame(1, $result['data']['discarded']);
     }
 
     /**
-     * A student cannot ask for suggestions.
+     * An unreadable answer is distinguished from an empty one.
+     *
+     * @return void
+     */
+    public function test_execute_reports_undecodable(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $scenario = $this->scenario();
+        $this->accept_policy($scenario['context']);
+        $this->mock_manager('I am afraid I cannot help with that.');
+
+        $result = $this->call($scenario);
+
+        $this->assertTrue($result['data']['undecodable']);
+        $this->assertSame([], $result['data']['suggestions']);
+    }
+
+    /**
+     * A provider failure returns state, not an exception.
+     *
+     * @return void
+     */
+    public function test_execute_returns_provider_failure_as_state(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $scenario = $this->scenario();
+        $this->accept_policy($scenario['context']);
+        $this->mock_manager('', false);
+
+        $result = $this->call($scenario);
+
+        $this->assertFalse($result['error']);
+        $this->assertFalse($result['data']['success']);
+        $this->assertSame(429, $result['data']['errorcode']);
+    }
+
+    /**
+     * A framework with no competencies in scope returns the empty result cleanly.
+     *
+     * @return void
+     */
+    public function test_execute_with_no_candidates(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $scenario = $this->scenario();
+        $this->accept_policy($scenario['context']);
+        $this->mock_manager('{"picks":[]}');
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $empty = $generator->create_framework();
+
+        $result = $this->call($scenario, ['frameworkid' => $empty->get('id')]);
+
+        $this->assertTrue($result['data']['success']);
+        $this->assertSame(0, $result['data']['candidatecount']);
+        $this->assertSame([], $result['data']['suggestions']);
+    }
+
+    /**
+     * Content beyond the cap is truncated and the response says so.
+     *
+     * @return void
+     */
+    public function test_execute_flags_truncated_content(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $scenario = $this->scenario();
+        $this->accept_policy($scenario['context']);
+        $this->mock_manager('{"picks":[]}');
+
+        $result = $this->call($scenario, [
+            'content' => str_repeat('a', suggest_competencies::MAX_CONTENT + 1),
+        ]);
+
+        $this->assertTrue($result['data']['contenttruncated']);
+    }
+
+    /**
+     * An enrolled user without the capability is refused by the capability gate.
+     *
+     * The user is enrolled deliberately: an unenrolled user is stopped earlier by
+     * validate_context()'s require_login(), which would make this test pass even if
+     * both require_capability() calls were deleted.
      *
      * @return void
      */
@@ -1259,20 +1366,33 @@ final class suggest_competencies_test extends \advanced_testcase {
         $this->mock_manager('{"picks":[]}');
 
         $student = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($student->id, $scenario['course']->id, 'student');
         $this->setUser($student);
+        $this->accept_policy($scenario['context']);
 
-        $_POST['sesskey'] = sesskey();
-        $result = \core_external\external_api::call_external_function(
-            'aiplacement_dimensions_suggest_competencies',
-            [
-                'contextid' => $scenario['context']->id,
-                'frameworkid' => $scenario['frameworkid'],
-                'rootids' => [],
-                'content' => 'Some activity description.',
-            ]
-        );
+        $result = $this->call($scenario);
 
         $this->assertTrue($result['error']);
+        $this->assertSame('nopermissions', $result['exception']->errorcode);
+    }
+
+    /**
+     * The acceptable use policy blocks the call when it has not been accepted.
+     *
+     * @return void
+     */
+    public function test_execute_requires_policy_acceptance(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $scenario = $this->scenario();
+        $this->mock_manager('{"picks":[]}');
+
+        \cache::make('core', 'ai_policy')->purge();
+
+        $result = $this->call($scenario);
+
+        $this->assertTrue($result['error']);
+        $this->assertSame('error_policynotaccepted', $result['exception']->errorcode);
     }
 
     /**
@@ -1284,47 +1404,121 @@ final class suggest_competencies_test extends \advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
         $scenario = $this->scenario();
+        $this->accept_policy($scenario['context']);
 
         $response = new \core_ai\aiactions\responses\response_generate_text(success: true);
         $response->set_response_data(['generatedcontent' => '{"picks":[]}', 'finishreason' => 'stop']);
-        $this->accept_policy($scenario['context']);
-
         $mock = $this->createMock(\core_ai\manager::class);
         $mock->method('process_action')->willReturn($response);
         $mock->method('is_action_enabled')->willReturn(true);
         $mock->method('is_action_enabled_in_context')->willReturn(false);
+        $mock->method('get_providers_for_actions')->willReturn([
+            generate_text::class => ['aiprovider_openai'],
+        ]);
         \core\di::set(\core_ai\manager::class, fn() => $mock);
 
-        $_POST['sesskey'] = sesskey();
-        $result = \core_external\external_api::call_external_function(
-            'aiplacement_dimensions_suggest_competencies',
-            [
-                'contextid' => $scenario['context']->id,
-                'frameworkid' => $scenario['frameworkid'],
-                'rootids' => [],
-                'content' => 'Some activity description.',
-            ]
+        $result = $this->call($scenario);
+
+        $this->assertTrue($result['error']);
+        $this->assertSame('error_actiondisabled', $result['exception']->errorcode);
+    }
+
+    /**
+     * The placement's own admin toggle is honoured.
+     *
+     * @return void
+     */
+    public function test_execute_honours_action_toggle(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $scenario = $this->scenario();
+        $this->accept_policy($scenario['context']);
+
+        $mock = $this->createMock(\core_ai\manager::class);
+        $mock->method('is_action_enabled')->willReturn(false);
+        $mock->method('is_action_enabled_in_context')->willReturn(true);
+        \core\di::set(\core_ai\manager::class, fn() => $mock);
+
+        $result = $this->call($scenario);
+
+        $this->assertTrue($result['error']);
+        $this->assertSame('error_actiondisabled', $result['exception']->errorcode);
+    }
+
+    /**
+     * A framework the user may not read is refused.
+     *
+     * @return void
+     */
+    public function test_execute_requires_framework_read_capability(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $scenario = $this->scenario();
+        $this->mock_manager('{"picks":[]}');
+
+        $teacher = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($teacher->id, $scenario['course']->id, 'editingteacher');
+        $this->setUser($teacher);
+        $this->accept_policy($scenario['context']);
+
+        $frameworkcontext = \core_competency\competency_framework::get_record(
+            ['id' => $scenario['frameworkid']]
+        )->get_context();
+        $roleid = $DB->get_field('role', 'id', ['shortname' => 'user'], MUST_EXIST);
+        assign_capability(
+            'moodle/competency:competencyview',
+            CAP_PROHIBIT,
+            $roleid,
+            $frameworkcontext->id,
+            true
         );
+
+        $result = $this->call($scenario);
+
+        $this->assertTrue($result['error']);
+    }
+
+    /**
+     * A cmid that does not belong to the given course is refused.
+     *
+     * @return void
+     */
+    public function test_execute_rejects_mismatched_course(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $scenario = $this->scenario();
+        $this->accept_policy($scenario['context']);
+        $this->mock_manager('{"picks":[]}');
+
+        $other = $this->getDataGenerator()->create_course();
+
+        $result = $this->call($scenario, ['courseid' => $other->id]);
 
         $this->assertTrue($result['error']);
     }
 }
 ```
 
-Note the tests go through `call_external_function()`, not `execute()` directly. That is what exercises `execute_returns()` and the `db/services.php` wiring; calling `execute()` directly leaves both untested, which is how a broken return definition ships.
+The tests go through `\core_external\external_api::call_external_function()`, not `execute()` directly. That is what exercises `execute_returns()` and the `db/services.php` wiring; calling `execute()` directly leaves both untested, which is how a broken return definition ships.
 
-`\core_ai\aiactions\responses\response_generate_text` is verified to exist (`ai/classes/aiactions/responses/response_generate_text.php`). Do not add a `class_exists()` probe around it — defensive probing of core APIs that do exist was an audited anti-pattern.
+Signatures verified against `ai/classes/aiactions/responses/response_base.php`: `get_success(): bool` (`:82`), `get_errorcode(): int` (`:109`), `get_errormessage(): string` (`:126`). `\core_ai\aiactions\responses\response_generate_text` exists. Do not add a `class_exists()` probe.
 
-- [ ] **Step 3: Run the test to verify it fails**
+- [ ] **Step 4: Run the tests to verify they fail**
 
 ```bash
 cd /Volumes/N1TB/dev/github/moodle
 PHP_INI_SCAN_DIR="/opt/homebrew/etc/php/8.5/conf.d:/tmp/phpini" php vendor/bin/phpunit --filter suggest_competencies_test --testsuite aiplacement_dimensions_testsuite
 ```
 
-Expected: FAIL — the web service is not found.
+Expected: FAIL — the web service is not found. **A plain `init.php` re-run will not register it**: Moodle only syncs `db/services.php` when the plugin version changes. Bump the version (Step 2), then rebuild the test database:
 
-- [ ] **Step 4: Write the implementation**
+```bash
+PHP_INI_SCAN_DIR="/opt/homebrew/etc/php/8.5/conf.d:/tmp/phpini" php public/admin/tool/phpunit/cli/util.php --drop
+PHP_INI_SCAN_DIR="/opt/homebrew/etc/php/8.5/conf.d:/tmp/phpini" php public/admin/tool/phpunit/cli/init.php --disable-composer
+```
+
+- [ ] **Step 5: Write the implementation**
 
 `classes/external/suggest_competencies.php`:
 
@@ -1335,6 +1529,7 @@ use aiplacement_dimensions\local\candidates;
 use aiplacement_dimensions\local\prompt;
 use aiplacement_dimensions\local\resolver;
 use core_ai\aiactions\generate_text;
+use core_competency\competency_framework;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
@@ -1352,6 +1547,9 @@ class suggest_competencies extends external_api {
     /** @var int Maximum characters of activity content sent to the model. */
     public const MAX_CONTENT = 20000;
 
+    /** @var int Maximum subtree roots a caller may scope a request to. */
+    public const MAX_ROOTS = 50;
+
     /**
      * Describe the parameters.
      *
@@ -1359,7 +1557,8 @@ class suggest_competencies extends external_api {
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'contextid' => new external_value(PARAM_INT, 'Context id of the activity or course'),
+            'cmid' => new external_value(PARAM_INT, 'Course module id, or 0 for an activity not yet created'),
+            'courseid' => new external_value(PARAM_INT, 'Course id'),
             'frameworkid' => new external_value(PARAM_INT, 'Competency framework id'),
             'rootids' => new external_multiple_structure(
                 new external_value(PARAM_INT, 'Competency id whose subtree is in scope'),
@@ -1374,95 +1573,160 @@ class suggest_competencies extends external_api {
     /**
      * Suggest competencies.
      *
-     * @param int $contextid Context id.
+     * @param int $cmid Course module id, or 0 when the activity does not exist yet.
+     * @param int $courseid Course id.
      * @param int $frameworkid Competency framework id.
      * @param array $rootids Chosen subtree roots.
      * @param string $content Activity content.
      * @return array The structure described by execute_returns().
      */
-    public static function execute(int $contextid, int $frameworkid, array $rootids, string $content): array {
+    public static function execute(
+        int $cmid,
+        int $courseid,
+        int $frameworkid,
+        array $rootids,
+        string $content
+    ): array {
         global $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
-            'contextid' => $contextid,
+            'cmid' => $cmid,
+            'courseid' => $courseid,
             'frameworkid' => $frameworkid,
             'rootids' => $rootids,
             'content' => $content,
         ]);
 
-        $context = \context::instance_by_id($params['contextid']);
+        if (count($params['rootids']) > self::MAX_ROOTS) {
+            throw new \moodle_exception('error_toomanyroots', 'aiplacement_dimensions');
+        }
+
+        /*
+         * The context is derived, never accepted from the caller. A caller-supplied
+         * contextid would make the AI opt-out gate a no-op the caller chooses: core's
+         * is_action_enabled_in_context() only consults a module's enabledaiactions at
+         * CONTEXT_MODULE, and returns true outright for levels outside course, category
+         * and module. Passing cmid means the per-activity check cannot be dodged.
+         */
+        if ($params['cmid'] > 0) {
+            $cm = get_coursemodule_from_id('', $params['cmid'], $params['courseid'], false, MUST_EXIST);
+            $context = \context_module::instance($cm->id);
+        } else {
+            $context = \context_course::instance($params['courseid'], MUST_EXIST);
+        }
+
         self::validate_context($context);
-        require_capability('aiplacement/dimensions:suggest', $context);
         require_capability('moodle/competency:coursecompetencymanage', $context);
+        require_capability('aiplacement/dimensions:suggest', $context);
+
+        \core_competency\api::require_enabled();
 
         $manager = \core\di::get(\core_ai\manager::class);
+
+        if (!$manager->is_action_enabled('aiplacement_dimensions', generate_text::class)) {
+            throw new \moodle_exception('error_actiondisabled', 'aiplacement_dimensions');
+        }
 
         if (!$manager->is_action_enabled_in_context($context, generate_text::class)) {
             throw new \moodle_exception('error_actiondisabled', 'aiplacement_dimensions');
         }
 
         /*
-         * Static, not an instance call: get_user_policy_status() is a public
-         * static method (ai/classes/manager.php:242) reading the core/ai_policy
-         * cache. It is therefore not reachable through the DI container, which
-         * is also why the test accepts the policy for real instead of mocking it.
+         * Static, not an instance call: get_user_policy_status() is a public static
+         * method (ai/classes/manager.php:242) reading the core/ai_policy cache. It is
+         * therefore not reachable through the DI container, which is also why the test
+         * accepts the policy for real instead of mocking it.
          */
         if (!\core_ai\manager::get_user_policy_status((int) $USER->id)) {
             throw new \moodle_exception('error_policynotaccepted', 'aiplacement_dimensions');
         }
 
+        /*
+         * The framework is authorized in its OWN context, not the activity's. Frameworks
+         * are context-scoped and every core read path checks that context; without this
+         * an editing teacher could name any framework id and have its competencies read
+         * and shipped to the provider, with candidatecount acting as an enumeration
+         * oracle. local_dimensions' own picker refuses such a framework, so omitting the
+         * check would gate this service more weakly than the UI that calls it.
+         */
+        $framework = competency_framework::get_record(['id' => $params['frameworkid']]);
+        if (!$framework) {
+            throw new \moodle_exception('error_nosuchframework', 'aiplacement_dimensions');
+        }
+        require_capability('moodle/competency:competencyview', $framework->get_context());
+
+        $trimmed = \core_text::substr($params['content'], 0, self::MAX_CONTENT);
+        $contenttruncated = \core_text::strlen($params['content']) > self::MAX_CONTENT;
+
         $rows = candidates::fetch($params['frameworkid'], $params['rootids']);
-        $built = prompt::build($rows, \core_text::substr($params['content'], 0, self::MAX_CONTENT));
+        $built = prompt::build($rows, $trimmed);
 
         if (empty($built['candidates'])) {
-            return self::empty_result($built);
+            return self::result(true, 0, '', [], 0, false, $contenttruncated, $built);
         }
 
         $action = new generate_text($context->id, (int) $USER->id, $built['text']);
         $response = $manager->process_action($action);
 
         if (!$response->get_success()) {
-            return [
-                'success' => false,
-                'errorcode' => $response->get_errorcode(),
-                'errormessage' => $response->get_errormessage(),
-                'suggestions' => [],
-                'discarded' => 0,
-                'undecodable' => false,
-                'candidatecount' => $built['candidatecount'],
-                'truncated' => $built['truncated'],
-            ];
+            return self::result(
+                false,
+                $response->get_errorcode(),
+                $response->get_errormessage(),
+                [],
+                0,
+                false,
+                $contenttruncated,
+                $built
+            );
         }
 
         $data = $response->get_response_data();
         $resolved = resolver::resolve((string) ($data['generatedcontent'] ?? ''), $built['candidates']);
 
-        return [
-            'success' => true,
-            'errorcode' => 0,
-            'errormessage' => '',
-            'suggestions' => $resolved['suggestions'],
-            'discarded' => $resolved['discarded'],
-            'undecodable' => $resolved['undecodable'],
-            'candidatecount' => $built['candidatecount'],
-            'truncated' => $built['truncated'],
-        ];
+        return self::result(
+            true,
+            0,
+            '',
+            $resolved['suggestions'],
+            $resolved['discarded'],
+            $resolved['undecodable'],
+            $contenttruncated,
+            $built
+        );
     }
 
     /**
-     * Build the result for a request with no candidates in scope.
+     * Assemble the return structure.
      *
+     * @param bool $success Whether the provider call succeeded.
+     * @param int $errorcode Provider error code, zero when successful.
+     * @param string $errormessage Provider error message.
+     * @param array $suggestions Resolved suggestions.
+     * @param int $discarded Model answers that could not be resolved.
+     * @param bool $undecodable Whether the model answer could not be parsed at all.
+     * @param bool $contenttruncated Whether the submitted content was cut to the cap.
      * @param array $built The output of prompt::build().
      * @return array The structure described by execute_returns().
      */
-    private static function empty_result(array $built): array {
+    private static function result(
+        bool $success,
+        int $errorcode,
+        string $errormessage,
+        array $suggestions,
+        int $discarded,
+        bool $undecodable,
+        bool $contenttruncated,
+        array $built
+    ): array {
         return [
-            'success' => true,
-            'errorcode' => 0,
-            'errormessage' => '',
-            'suggestions' => [],
-            'discarded' => 0,
-            'undecodable' => false,
+            'success' => $success,
+            'errorcode' => $errorcode,
+            'errormessage' => $errormessage,
+            'suggestions' => $suggestions,
+            'discarded' => $discarded,
+            'undecodable' => $undecodable,
+            'contenttruncated' => $contenttruncated,
             'candidatecount' => $built['candidatecount'],
             'truncated' => $built['truncated'],
         ];
@@ -1490,6 +1754,7 @@ class suggest_competencies extends external_api {
             ),
             'discarded' => new external_value(PARAM_INT, 'Model answers that could not be resolved'),
             'undecodable' => new external_value(PARAM_BOOL, 'True when the model answer could not be parsed at all'),
+            'contenttruncated' => new external_value(PARAM_BOOL, 'True when the submitted content was cut to the cap'),
             'candidatecount' => new external_value(PARAM_INT, 'Competencies in scope before truncation'),
             'truncated' => new external_value(PARAM_BOOL, 'Whether the candidate list was truncated'),
         ]);
@@ -1497,36 +1762,41 @@ class suggest_competencies extends external_api {
 }
 ```
 
-Signatures verified against `ai/classes/aiactions/responses/response_base.php`: `get_success(): bool` (`:82`), `get_errorcode(): int` (`:109`), `get_errormessage(): string` (`:126`). The error code is an **int**, which is why `execute_returns()` declares `PARAM_INT` and the success path returns `0` rather than an empty string.
+- [ ] **Step 6: Add the lang strings**
 
-- [ ] **Step 5: Add the two error lang strings, keeping alphabetical order**
+Work out their correct alphabetical positions and **prove the ordering with a script** — extract the file's `$string[...]` keys in file order and compare against the same list through PHP's `sort()`. Do not place them by eye: a previous task shipped this file out of order by trusting a plan instruction.
 
 ```php
 $string['error_actiondisabled'] = 'AI competency suggestions are turned off for this activity or course.';
+$string['error_nosuchframework'] = 'That competency framework does not exist.';
 $string['error_policynotaccepted'] = 'You need to accept the AI acceptable use policy before asking for suggestions.';
+$string['error_toomanyroots'] = 'Too many competency branches were selected at once.';
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [ ] **Step 7: Run the tests to verify they pass**
 
 ```bash
 cd /Volumes/N1TB/dev/github/moodle
 PHP_INI_SCAN_DIR="/opt/homebrew/etc/php/8.5/conf.d:/tmp/phpini" php vendor/bin/phpunit --filter suggest_competencies_test --testsuite aiplacement_dimensions_testsuite
 ```
 
-Expected: 4 tests, 4 passing.
+Expected: 12 tests, all passing.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 cd /Volumes/N1TB/dev/github/moodle/public/ai/placement/dimensions
-git add classes/external/suggest_competencies.php db/services.php tests/external/suggest_competencies_test.php lang/en/aiplacement_dimensions.php
+git add classes/external/suggest_competencies.php db/services.php version.php tests/external/suggest_competencies_test.php lang/en/aiplacement_dimensions.php
 git commit -m "feat: add the suggest_competencies web service
 
-Enforces the suggest and competency-manage capabilities, the per-context
-AI opt-out and the acceptable use policy before reaching the provider."
+Derives the context from cmid rather than trusting a caller-supplied
+contextid, so the per-activity AI opt-out cannot be dodged. Authorizes the
+framework in its own context, enforces the placement's action toggle, the
+per-context opt-out and the acceptable use policy."
 ```
 
 ---
+
 ## Task 6: `lib.php`, the gates, and the drawer that opens
 
 **Deliverable:** clicking "Suggest competencies with AI" opens the plugin's own drawer showing a framework select and its branch checkboxes. Nothing is sent to a model yet — that is Task 7.
@@ -1594,9 +1864,12 @@ function aiplacement_dimensions_coursemodule_standard_elements($formwrapper, $mf
         $OUTPUT->render_from_template('aiplacement_dimensions/drawer', [])
     );
 
+    $cm = $formwrapper->get_coursemodule();
+
     $PAGE->requires->js_call_amd('aiplacement_dimensions/suggest', 'init', [
-        (int) $context->id,
+        $cm ? (int) $cm->id : 0,
         (int) $COURSE->id,
+        (int) $context->id,
     ]);
 }
 ```
@@ -1753,13 +2026,14 @@ function(Ajax, Templates, Notification, Str) {
         /**
          * Initialise the placement.
          *
-         * @param {Number} contextId The activity or course context id.
+         * @param {Number} cmId The course module id, or 0 for an activity not yet created.
          * @param {Number} courseId The course id.
+         * @param {Number} contextId The activity or course context id.
          * @return {void}
          */
-        init: function(contextId, courseId) {
+        init: function(cmId, courseId, contextId) {
             /*
-             * contextId and courseId are captured in this closure on purpose.
+             * cmId, courseId and contextId are captured in this closure on purpose.
              * The click handler below is a plain function, so `this` inside it
              * is the document, not the module — reading this.contextId there
              * would silently yield undefined.
@@ -1781,7 +2055,8 @@ function(Ajax, Templates, Notification, Str) {
 });
 ```
 
-`courseId` is unused in this task and is consumed by Task 7's apply path. Keep the parameter — `lib.php` already passes it and Task 7 needs it in the same closure.
+`cmId` and `courseId` are unused in this task and are consumed by Task 7. The web service takes
+`cmid` and `courseid` rather than a context id on purpose — see Task 5's rationale. Keep the parameter — `lib.php` already passes it and Task 7 needs it in the same closure.
 
 Confirm the return shape of `local_dimensions_browse_structure` before relying on `structure.frameworks`; read `public/local/dimensions/classes/external/browse_structure.php` and use its real key names.
 
@@ -1970,10 +2245,11 @@ Add these to the module alongside Task 6's `openPickers`. Add `PICK: 'input[data
     /**
      * Ask the model and render the resolved suggestions.
      *
-     * @param {Number} contextId The context id.
+     * @param {Number} cmId The course module id, or 0 for an activity not yet created.
+     * @param {Number} courseId The course id.
      * @return {Promise} Resolves when the suggestions are rendered.
      */
-    var runSuggestion = function(contextId) {
+    var runSuggestion = function(cmId, courseId) {
         var frameworkSelect = document.querySelector(SELECTORS.FRAMEWORK);
         var branches = Array.prototype.slice.call(
             document.querySelectorAll(SELECTORS.BRANCH + ':checked')
@@ -1984,7 +2260,8 @@ Add these to the module alongside Task 6's `openPickers`. Add `PICK: 'input[data
         return Ajax.call([{
             methodname: 'aiplacement_dimensions_suggest_competencies',
             args: {
-                contextid: contextId,
+                cmid: cmId,
+                courseid: courseId,
                 frameworkid: parseInt(frameworkSelect.value, 10),
                 rootids: branches,
                 content: readContent()
@@ -2006,6 +2283,7 @@ Add these to the module alongside Task 6's `openPickers`. Add `PICK: 'input[data
                 }),
                 discarded: response.discarded,
                 undecodable: response.undecodable,
+                contenttruncated: response.contenttruncated,
                 truncated: response.truncated,
                 candidatecount: response.candidatecount,
                 sentcount: response.suggestions.length
@@ -2077,7 +2355,7 @@ Then extend the click handler with two branches, using the closure variables `co
 ```js
                 if (e.target.closest(SELECTORS.RUN)) {
                     e.preventDefault();
-                    runSuggestion(contextId).catch(Notification.exception);
+                    runSuggestion(cmId, courseId).catch(Notification.exception);
                     return;
                 }
 
