@@ -2276,6 +2276,12 @@ Either way the save is correct, because the form submits the hidden select and n
     </div>
 {{/discarded}}
 
+{{#contenttruncated}}
+    <div class="alert alert-warning" role="status">
+        {{#str}} contenttruncatednotice, aiplacement_dimensions {{/str}}
+    </div>
+{{/contenttruncated}}
+
 {{#undecodable}}
     <div class="alert alert-danger" role="alert">
         {{#str}} undecodablenotice, aiplacement_dimensions {{/str}}
@@ -2304,7 +2310,12 @@ Either way the save is correct, because the form submits the hidden select and n
 
 {{^suggestions.length}}
     {{^undecodable}}
-        <p class="text-muted">{{#str}} nosuggestions, aiplacement_dimensions {{/str}}</p>
+        {{#nocandidates}}
+            <p class="text-muted">{{#str}} nocandidates, aiplacement_dimensions {{/str}}</p>
+        {{/nocandidates}}
+        {{^nocandidates}}
+            <p class="text-muted">{{#str}} nosuggestions, aiplacement_dimensions {{/str}}</p>
+        {{/nocandidates}}
     {{/undecodable}}
 {{/suggestions.length}}
 ```
@@ -2400,6 +2411,13 @@ Add these to the module alongside Task 6's `openPickers`. Add `PICK: 'input[data
                 discarded: response.discarded,
                 undecodable: response.undecodable,
                 contenttruncated: response.contenttruncated,
+                /*
+                 * candidatecount 0 is exactly and only the "nothing was ever in scope"
+                 * case: the service returns before calling the provider. Without this
+                 * flag the template would tell the user the model found no clear match,
+                 * when no model was consulted at all.
+                 */
+                nocandidates: response.candidatecount === 0,
                 truncated: response.truncated,
                 candidatecount: response.candidatecount,
                 sentcount: response.suggestions.length
@@ -2521,8 +2539,14 @@ If it duplicated the widget, use the fallback instead, which leaves the chips un
             added: results.filter(function(r) { return r.ok; }).map(function(r) { return r.pick; }),
             failed: results.filter(function(r) { return !r.ok; }).map(function(r) { return r.pick; })
         }).then(function(rendered) {
-            var host = document.querySelector('.aiplacement-dimensions-launch');
-            host.insertAdjacentHTML('afterend', rendered.html);
+            /*
+             * The outcome replaces the drawer body rather than being inserted above the
+             * drawer. Inserting above meant a user scrolled down a long suggestion list
+             * might never see the confirmation, and a second Apply stacked a duplicate
+             * notice. Replacing keeps the result where the user is already looking and
+             * makes repeat clicks impossible, since the Apply button goes with it.
+             */
+            document.querySelector(SELECTORS.BODY).innerHTML = rendered.html;
             Templates.runTemplateJS(rendered.js);
             return rendered;
         });
@@ -2547,6 +2571,7 @@ Ship the `applied*` pair only if Step 5 kept the fallback variant.
 ```php
 $string['appliedheading'] = 'Added to the course and selected below. Save the form to link them to this activity.';
 $string['applybutton'] = 'Add selected';
+$string['contenttruncatednotice'] = 'The activity content was long, so only the first part of it was sent to the model.';
 $string['discardednotice'] = 'The model returned {$a} answer(s) that could not be matched to a competency.';
 $string['error_provider'] = 'The AI provider could not complete the request (code {$a}).';
 $string['failedheading'] = 'Could not be added:';
