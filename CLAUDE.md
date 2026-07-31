@@ -104,17 +104,32 @@ from the plugin clone. `git archive` packages a **commit** (a tree), never the
 working tree — so commit first; uncommitted edits never enter the zip.
 
 To test local work **before it is pushed**, archive `HEAD` (the current branch
-tip, pushed or not); name the zip `dimensions-<version>-<shortSHA>.zip` so each
-test install is traceable. The short SHA is **required**, not optional: the
-`version.php` version is frozen (many slices share one version number), so the
-version alone can't tell two builds apart — the commit SHA is what does:
+tip, pushed or not); name the zip `moodle-<component>-<version>-<shortSHA>.zip`
+— here `moodle-local_dimensions-<version>-<shortSHA>.zip`.
+
+Two parts of that command name different things and must not be conflated:
+
+- The **filename** carries the frankenstyle component with a `moodle-` prefix,
+  matching the GitHub repo name. This matters because `local_dimensions`,
+  `block_dimensions` and `aiplacement_dimensions` all install into a folder
+  called `dimensions` — under the older `dimensions-<version>-<sha>.zip` naming
+  their zips collided in `~/Downloads` and none of them said which plugin it was.
+- The **`--prefix`** is the *install directory*, which is the component with its
+  type stripped (`${comp#*_}`). All three dimensions plugins share `dimensions/`.
+  Moodle validates this one; getting it wrong makes it refuse the zip.
+
+The short SHA is **required**, not optional: the `version.php` version is frozen
+(many slices share one version number), so the version alone can't tell two
+builds apart — the commit SHA is what does.
+
+The snippet is plugin-agnostic; run it from any plugin clone:
 
 ```sh
-ver=$(grep -oE '\$plugin->version[[:space:]]*=[[:space:]]*[0-9]+' \
-  /Volumes/N1TB/dev/github/moodle/public/local/dimensions/version.php | grep -oE '[0-9]+')
-sha=$(git -C /Volumes/N1TB/dev/github/moodle/public/local/dimensions rev-parse --short HEAD)
-git -C /Volumes/N1TB/dev/github/moodle/public/local/dimensions archive \
-  --format=zip --prefix=dimensions/ HEAD -o ~/Downloads/dimensions-$ver-$sha.zip
+comp=$(grep -oE "\$plugin->component[[:space:]]*=[[:space:]]*'[^']+'" version.php \
+  | grep -oE "'[^']+'" | tr -d "'")
+ver=$(grep -oE '\$plugin->version[[:space:]]*=[[:space:]]*[0-9]+' version.php | grep -oE '[0-9]+')
+sha=$(git rev-parse --short HEAD)
+git archive --format=zip --prefix="${comp#*_}/" HEAD -o ~/Downloads/moodle-$comp-$ver-$sha.zip
 ```
 
 To package the **published** state instead, `git fetch origin` first and archive
