@@ -33,6 +33,7 @@ use core_external\external_value;
 use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use local_dimensions\calculator;
+use local_dimensions\helper;
 use core\context\system as context_system;
 
 /**
@@ -60,7 +61,7 @@ class get_courses_completion_status extends external_api {
      * @return array<int, array{courseid:int,iscompleted:bool,islocked:bool}>
      */
     public static function execute($courseids) {
-        global $DB, $USER;
+        global $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), ['courseids' => $courseids]);
         $courseids = $params['courseids'];
@@ -69,11 +70,27 @@ class get_courses_completion_status extends external_api {
         self::validate_context($context);
         require_capability('local/dimensions:view', $context);
 
+        /* Same gate as get_course_progress, and for the same reason: the capability above is
+           site-wide and held by every authenticated user, while the ids arrive raw from the
+           client. What leaks here is only the caller's own booleans, but the two services feed
+           one card list and must answer for exactly the same set of courses. */
+        $readable = helper::readable_competency_courses($courseids);
+
         $results = [];
         foreach ($courseids as $cid) {
             $cid = (int) $cid;
             try {
-                $course = $DB->get_record('course', ['id' => $cid], '*', \MUST_EXIST);
+                if (!isset($readable[$cid])) {
+                    // Locked, and nothing else said - see get_course_progress::unavailable_row().
+                    $results[] = [
+                        'courseid' => $cid,
+                        'iscompleted' => false,
+                        'islocked' => true,
+                    ];
+                    continue;
+                }
+
+                $course = $readable[$cid];
                 $completion = new \completion_info($course);
                 $enabled = $completion->is_enabled();
                 $iscompleted = false;

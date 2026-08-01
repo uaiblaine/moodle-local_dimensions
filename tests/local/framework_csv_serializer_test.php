@@ -103,6 +103,38 @@ final class framework_csv_serializer_test extends \advanced_testcase {
     }
 
     /**
+     * A competency named as a spreadsheet formula is exported inert and read back intact.
+     *
+     * A manager can author any shortname, and another manager opens the export in Excel or
+     * Sheets - so a leading "=" has to reach the file guarded. Because the same file is an
+     * import format, the guard has to come back off on the way in, or the round trip would
+     * rename the competency.
+     *
+     * @return void
+     */
+    public function test_export_neutralises_a_formula_shortname(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework(['shortname' => 'FW', 'idnumber' => 'FW-1']);
+        $ccg->create_competency([
+            'competencyframeworkid' => (int) $framework->get('id'),
+            'shortname' => '=HYPERLINK("http://x.example")',
+            'idnumber' => 'C1',
+        ]);
+
+        $result = framework_csv_serializer::export_framework((int) $framework->get('id'), false);
+
+        // In the file the cell is text: the apostrophe stops any spreadsheet evaluating it.
+        $this->assertStringContainsString('"\'=HYPERLINK', $result['content']);
+
+        // Reading it back drops the guard again, so a re-import stores the original name.
+        $parsed = framework_csv_serializer::parse($result['content']);
+        $this->assertSame('=HYPERLINK("http://x.example")', $parsed['competencies']['C1']->shortname);
+    }
+
+    /**
      * The cf_customscss column is emitted only when the custom SCSS feature is enabled.
      *
      * @return void

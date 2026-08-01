@@ -106,6 +106,30 @@ final class template_csv_serializer_test extends \advanced_testcase {
     }
 
     /**
+     * A template named as a spreadsheet formula is exported inert and read back intact.
+     *
+     * See framework_csv_serializer_test::test_export_neutralises_a_formula_shortname() - the
+     * two formats share the escaper and the same round-trip obligation.
+     *
+     * @return void
+     */
+    public function test_export_neutralises_a_formula_shortname(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $template = $ccg->create_template(['shortname' => '=cmd|calc']);
+
+        $result = template_csv_serializer::export_templates([(int) $template->get('id')], false);
+
+        $this->assertStringContainsString('"\'=cmd|calc"', $result['content']);
+
+        $parsed = template_csv_serializer::parse($result['content']);
+        $this->assertSame('=cmd|calc', $parsed['templates'][0]->shortname);
+    }
+
+    /**
      * A template whose competencies come from two frameworks exports both, one per link row.
      *
      * @return void
