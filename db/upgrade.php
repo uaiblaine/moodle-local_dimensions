@@ -488,6 +488,19 @@ function xmldb_local_dimensions_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026072306, 'local', 'dimensions');
     }
 
+    if ($oldversion < 2026073100) {
+        /* The PostgreSQL unaccent extension is now provisioned at install and upgrade time
+           only: helper::sql_like_ai() reads the catalogue and no longer attempts the CREATE
+           EXTENSION itself, so search web services never issue DDL. Sites installed fresh
+           before db/install.php provisioned it got their extension from that request-time
+           attempt, so re-run the provisioner here or they would silently drop back to
+           accent-sensitive search. */
+        \local_dimensions\helper::ensure_unaccent();
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2026073100, 'local', 'dimensions');
+    }
+
     // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
     // new customfield in the future only needs a version bump plus a new getter
     // wired into helper::ensure_custom_fields_exist(); no per-version savepoint

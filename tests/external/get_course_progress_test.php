@@ -46,6 +46,30 @@ final class get_course_progress_test extends \advanced_testcase {
     }
 
     /**
+     * Link a fresh competency to the given courses, so the service will answer about them.
+     *
+     * The service gates on helper::readable_competency_courses(), which recognises only a
+     * course carrying at least one competency link - the tracker itself lists no other kind.
+     * Creating the framework needs manage rights, so this runs as admin and logs out again;
+     * every caller sets its own user immediately afterwards.
+     *
+     * @param int ...$courseids The courses to link.
+     * @return void
+     */
+    private function link_competency(int ...$courseids): void {
+        $this->setAdminUser();
+
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework();
+        $competency = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        foreach ($courseids as $courseid) {
+            \core_competency\api::add_competency_to_course($courseid, (int) $competency->get('id'));
+        }
+
+        $this->setUser(null);
+    }
+
+    /**
      * A course with completion tracking off returns cleanly, with no notices.
      *
      * Regression test for the payload guard: the calculator returns only the enabled flag in
@@ -58,6 +82,7 @@ final class get_course_progress_test extends \advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $course = $this->getDataGenerator()->create_course(['enablecompletion' => 0]);
         $this->getDataGenerator()->enrol_user((int) $user->id, (int) $course->id, 'student');
+        $this->link_competency((int) $course->id);
         $this->setUser($user);
 
         $row = $this->cleaned_row_for((int) $course->id);
@@ -98,6 +123,7 @@ final class get_course_progress_test extends \advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user((int) $user->id, (int) $single->id, 'student');
         $this->getDataGenerator()->enrol_user((int) $user->id, (int) $busy->id, 'student');
+        $this->link_competency((int) $single->id, (int) $busy->id);
         $this->setUser($user);
 
         $row = $this->cleaned_row_for((int) $single->id);
@@ -134,6 +160,7 @@ final class get_course_progress_test extends \advanced_testcase {
         $self->update_status($instance, ENROL_INSTANCE_ENABLED);
 
         $user = $this->getDataGenerator()->create_user();
+        $this->link_competency((int) $course->id);
         $this->setUser($user);
 
         $row = $this->cleaned_row_for((int) $course->id);
@@ -196,6 +223,7 @@ final class get_course_progress_test extends \advanced_testcase {
             'completion' => COMPLETION_TRACKING_MANUAL,
         ]);
 
+        $this->link_competency((int) $course->id);
         $this->setUser($user);
         $row = $this->cleaned_row_for((int) $course->id);
 
@@ -224,6 +252,7 @@ final class get_course_progress_test extends \advanced_testcase {
             ]);
         }
 
+        $this->link_competency((int) $course->id);
         $this->setUser($user);
         $row = $this->cleaned_row_for((int) $course->id);
 
@@ -231,5 +260,70 @@ final class get_course_progress_test extends \advanced_testcase {
         $this->assertFalse($row['section']['hasownname']);
         $this->assertStringContainsString('/course/section.php', $row['section']['url']);
         $this->assertTrue($row['section']['tracked']);
+    }
+
+    /**
+     * A hidden course tells an ordinary caller nothing, not even its section names.
+     *
+     * The service takes a raw id list from the client and the capability gating it is held by
+     * every authenticated user, so the only thing standing between a caller and the structure
+     * of a course they cannot see is the per-course gate. The course here is linked and
+     * completion-tracked, so without that gate the row would carry its section names and its
+     * start date.
+     *
+     * @return void
+     */
+    public function test_execute_withholds_the_structure_of_a_hidden_course(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course([
+            'visible' => 0,
+            'enablecompletion' => 1,
+            'startdate' => time() - WEEKSECS,
+        ]);
+        $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'name' => 'Confidential briefing',
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+        $this->link_competency((int) $course->id);
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        $row = $this->cleaned_row_for((int) $course->id);
+
+        $this->assertTrue($row['locked']);
+        $this->assertFalse($row['enabled']);
+        $this->assertSame([], $row['sections']);
+        $this->assertSame('', $row['formatted_start_date']);
+        $this->assertSame('', $row['course_url']);
+    }
+
+    /**
+     * A course carrying no competency link is none of this service's business.
+     *
+     * The tracker builds its card list from competency_coursecomp, so an id that is not in
+     * there did not come from the page - and gets the same silent, locked row a hidden course
+     * gets, which is what keeps the two cases indistinguishable to a caller probing ids.
+     *
+     * @return void
+     */
+    public function test_execute_withholds_the_structure_of_an_unlinked_course(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'name' => 'Unrelated activity',
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $this->setUser($user);
+
+        $row = $this->cleaned_row_for((int) $course->id);
+
+        $this->assertTrue($row['locked']);
+        $this->assertSame([], $row['sections']);
+        $this->assertSame('', $row['formatted_start_date']);
     }
 }

@@ -281,14 +281,15 @@ class template_csv_serializer {
      *
      * Built in memory rather than via csv_export_writer, whose fixed per-user temp path is
      * double-unlinked when two exports share a request - a PHP warning that fails
-     * phpunit --fail-on-warning. See framework_csv_serializer::encode_row().
+     * phpunit --fail-on-warning. See framework_csv_serializer::encode_row(), including why the
+     * formula neutralisation core does inside that writer is applied here by hand.
      *
      * @param array $row Cell values.
      * @return string
      */
     private static function encode_row(array $row): string {
         return implode(',', array_map(static function ($cell): string {
-            return '"' . str_replace('"', '""', (string) $cell) . '"';
+            return '"' . str_replace('"', '""', csv_formula::escape((string) $cell)) . '"';
         }, $row));
     }
 
@@ -374,12 +375,15 @@ class template_csv_serializer {
 
         while ($row = $reader->next()) {
             $rownumber++;
+            /* Formula neutralisation is undone here rather than at each field: every writer of
+               this format applies it, core's csv_export_writer included, so a guarding
+               apostrophe is part of the encoding and never part of the value. */
             $get = static function (string $token) use ($row, $index): string {
                 if (!isset($index[$token])) {
                     return '';
                 }
                 $position = $index[$token];
-                return isset($row[$position]) ? trim((string) $row[$position]) : '';
+                return isset($row[$position]) ? trim(csv_formula::unescape((string) $row[$position])) : '';
             };
             $has = static function (string $token) use ($index): bool {
                 return isset($index[$token]);
@@ -454,8 +458,10 @@ class template_csv_serializer {
 
         while ($row = $reader->next()) {
             $rownumber++;
+            // See parse_native(): tool_lp writes this format through core's csv_export_writer,
+            // which neutralises formulas, so the guarding apostrophe comes off here as well.
             $cell = static function (int $position) use ($row): string {
-                return isset($row[$position]) ? trim((string) $row[$position]) : '';
+                return isset($row[$position]) ? trim(csv_formula::unescape((string) $row[$position])) : '';
             };
             $shortname = \clean_param($cell(0), PARAM_TEXT);
             if ($shortname === '') {

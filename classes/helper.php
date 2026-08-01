@@ -1994,26 +1994,90 @@ class helper {
     }
 
     /**
-     * Ensure the PostgreSQL `unaccent` extension is available, creating it when missing.
+     * The courses from a raw id list that the current viewer may be told about at all.
      *
-     * On non-PostgreSQL databases this is a no-op returning false (accent-insensitivity there
-     * comes from the collation, not unaccent()). On PostgreSQL it checks the pg_extension
-     * catalogue and, if unaccent is absent, attempts CREATE EXTENSION IF NOT EXISTS unaccent;
-     * if creation fails (insufficient privilege / contrib missing) it returns false so callers
-     * can degrade to an accent-sensitive search rather than erroring.
+     * The two card web services (get_course_progress, get_courses_completion_status) take their
+     * ids straight from the client, and the site-wide local/dimensions:view capability that
+     * gates them is held by every authenticated user - so passing that gate says nothing about
+     * the courses being asked for. A course survives here only when all three hold:
+     *
+     * - it exists;
+     * - core would let this viewer see it listed, which is what can_view_course_info() answers -
+     *   a hidden course, or one in a category the viewer cannot browse, drops out;
+     * - it carries at least one competency link, the only reason these services would ever be
+     *   asked about it (both views build their card lists from competency_coursecomp).
+     *
+     * Asked once for the whole list rather than per course, so the gate costs a single query.
+     *
+     * @param array $courseids Raw course ids as received from the client.
+     * @return array Course id => full course record, for the courses that survived.
+     */
+    public static function readable_competency_courses(array $courseids): array {
+        global $DB;
+
+        $courseids = array_values(array_unique(array_map('intval', $courseids)));
+        if (empty($courseids)) {
+            return [];
+        }
+
+        [$insql, $inparams] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED, 'cid');
+        $courses = $DB->get_records_sql(
+            "SELECT c.*
+               FROM {course} c
+              WHERE c.id $insql
+                AND EXISTS (SELECT 1 FROM {competency_coursecomp} cc WHERE cc.courseid = c.id)",
+            $inparams
+        );
+
+        $readable = [];
+        foreach ($courses as $course) {
+            if (\core_course_category::can_view_course_info($course)) {
+                $readable[(int) $course->id] = $course;
+            }
+        }
+
+        return $readable;
+    }
+
+    /**
+     * Whether the PostgreSQL `unaccent` extension is installed and usable right now.
+     *
+     * Read-only - it asks the pg_extension catalogue and nothing else, so it is safe on a
+     * request path. On non-PostgreSQL databases it returns false (accent-insensitivity there
+     * comes from the collation, not unaccent()). Creating the extension is ensure_unaccent()'s
+     * job and happens at install/upgrade time only.
      *
      * @return bool True when unaccent() can be used in SQL (PostgreSQL only).
      */
-    public static function ensure_unaccent(): bool {
+    public static function has_unaccent(): bool {
         global $DB;
         if ($DB->get_dbfamily() !== 'postgres') {
             return false;
         }
-        // Check the catalogue on each call rather than caching: PostgreSQL PHPUnit wraps each test
+        // Ask the catalogue on each call rather than caching: PostgreSQL PHPUnit wraps each test
         // in a rolled-back transaction, so a cached "created" flag would go stale once the CREATE
         // EXTENSION is undone, and a later query would reference a now-missing unaccent().
-        if ($DB->record_exists_sql("SELECT 1 FROM pg_extension WHERE extname = 'unaccent'")) {
+        return $DB->record_exists_sql("SELECT 1 FROM pg_extension WHERE extname = 'unaccent'");
+    }
+
+    /**
+     * Provision the PostgreSQL `unaccent` extension, creating it when it is missing.
+     *
+     * This is DDL, so it belongs to install and upgrade - never to a request path. A
+     * least-privilege database account cannot create extensions at all, which is why failure
+     * is swallowed rather than raised: the site simply keeps accent-sensitive search, and
+     * sql_like_ai() learns that from has_unaccent() instead of from a statement that fails on
+     * every keystroke of every search box.
+     *
+     * @return bool True when unaccent() can be used in SQL afterwards (PostgreSQL only).
+     */
+    public static function ensure_unaccent(): bool {
+        global $DB;
+        if (self::has_unaccent()) {
             return true;
+        }
+        if ($DB->get_dbfamily() !== 'postgres') {
+            return false;
         }
         try {
             $DB->execute('CREATE EXTENSION IF NOT EXISTS unaccent');
@@ -2025,8 +2089,9 @@ class helper {
 
     /**
      * Return a case- and accent-insensitive LIKE fragment that works on MySQL/MariaDB and
-     * PostgreSQL. On PostgreSQL it wraps both operands in unaccent() (when the extension is
-     * available; otherwise it falls back to an accent-sensitive comparison); on other databases
+     * PostgreSQL. On PostgreSQL it wraps both operands in unaccent() when the extension is
+     * already installed - it never tries to install it, since this runs inside search web
+     * services - and otherwise falls back to an accent-sensitive comparison; on other databases
      * it relies on the collation via core sql_like(). The bound parameter value must still be
      * built with sql_like_escape() and the surrounding wildcards by the caller.
      *
@@ -2041,7 +2106,7 @@ class helper {
      */
     public static function sql_like_ai(string $fieldname, string $param): string {
         global $DB;
-        if (self::ensure_unaccent()) {
+        if (self::has_unaccent()) {
             return "unaccent($fieldname) ILIKE unaccent($param) ESCAPE '\\'";
         }
         return $DB->sql_like($fieldname, $param, false, false);
