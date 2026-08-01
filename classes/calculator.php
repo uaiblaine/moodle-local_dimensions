@@ -36,6 +36,13 @@ class calculator {
     /**
      * Calculates the progress of course sections (including subsections)
      *
+     * Access contract: this reads and names every visible section of the course, so the
+     * CALLER must first establish that the viewer may be told about that course at all -
+     * helper::readable_competency_courses() is that gate, and get_course_progress applies it
+     * before every call. Progress itself is already suppressed for a viewer who is not
+     * enrolled (the locked branch below), but the section names are not, by design: the card
+     * shows them blurred behind its lock overlay.
+     *
      * @param int $courseid
      * @return array
      */

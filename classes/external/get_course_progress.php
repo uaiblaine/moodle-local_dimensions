@@ -30,6 +30,8 @@ use core_external\external_value;
 use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use local_dimensions\calculator;
+use local_dimensions\constants;
+use local_dimensions\helper;
 use core\context\system as context_system;
 
 /**
@@ -63,20 +65,28 @@ class get_course_progress extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), ['courseids' => $courseids]);
         $courseids = $params['courseids'];
 
-        // Capability check (system context is enough to start,
-        // but we will check enrollment/access inside the loop or calculator if necessary,
-        // but for consistency, we verify general capability here).
+        /* The capability is site-wide and its archetypes hand it to every authenticated user,
+           so it only says that the caller may use the tracker at all - never which courses it
+           may be asked about. The id list arrives raw from the client, so each course is gated
+           on its own below, before any of its structure is read. */
         $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
         require_capability('local/dimensions:view', $systemcontext);
+
+        $readable = helper::readable_competency_courses($courseids);
 
         $results = [];
 
         foreach ($courseids as $courseid) {
             try {
-                // Calculator already performs context/enrollment checks internally
-                // or assumes caller has permission.
-                // The original calculator checked is_enrolled.
+                /* Three answers collapse into one: the course does not exist, the viewer may
+                   not be told it exists, or it carries no competency link and so is none of
+                   this service's business. All three return the same locked, empty card, so
+                   the response never reveals which of the three it was. */
+                if (!isset($readable[(int) $courseid])) {
+                    $results[] = self::unavailable_row((int) $courseid);
+                    continue;
+                }
 
                 $data = calculator::get_course_section_progress($courseid);
 
@@ -149,6 +159,33 @@ class get_course_progress extends external_api {
         }
 
         return $results;
+    }
+
+    /**
+     * The row returned for a course this viewer may not be told anything about.
+     *
+     * Shaped like a locked card with nothing named: no date, no course URL, no sections. The
+     * client already draws the lock overlay for a course the learner cannot open, so an id
+     * that should never have been asked for degrades into that instead of an error - and the
+     * row carries none of the structure the gate exists to withhold.
+     *
+     * @param int $courseid The requested course id.
+     * @return array The response row.
+     */
+    private static function unavailable_row(int $courseid): array {
+        return [
+            'courseid' => $courseid,
+            'enabled' => false,
+            'locked' => true,
+            'formatted_start_date' => '',
+            'is_enrolment_start' => false,
+            'can_self_enrol' => false,
+            'is_future_date' => false,
+            'course_url' => '',
+            'sections' => [],
+            'cardmode' => constants::CARDMODE_TIMELINE,
+            'error' => '',
+        ];
     }
 
     /**

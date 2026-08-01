@@ -158,14 +158,16 @@ class framework_csv_serializer {
      *
      * Built in memory rather than via csv_export_writer, whose fixed per-user temp path
      * ("csvimport/<userid>/Moodle-data-export.csv") is double-unlinked — a PHP warning that
-     * fails phpunit --fail-on-warning — when two exports run in the same request.
+     * fails phpunit --fail-on-warning — when two exports run in the same request. Writing the
+     * line by hand means the formula neutralisation core applies inside that writer has to be
+     * applied here too, which is what csv_formula::escape() is; parse() undoes it.
      *
      * @param array $row Cell values.
      * @return string
      */
     private static function encode_row(array $row): string {
         return implode(',', array_map(static function ($cell): string {
-            return '"' . str_replace('"', '""', (string) $cell) . '"';
+            return '"' . str_replace('"', '""', csv_formula::escape((string) $cell)) . '"';
         }, $row));
     }
 
@@ -238,12 +240,15 @@ class framework_csv_serializer {
         $framework = null;
         $competencies = [];
         while ($row = $reader->next()) {
+            /* Formula neutralisation is undone on the way in: every writer of this format
+               applies it - encode_row() here, core's csv_export_writer for a tool_lp file - so
+               a guarding apostrophe is part of the encoding and never part of the value. */
             $get = static function (int $index) use ($row): string {
-                return isset($row[$index]) ? (string) $row[$index] : '';
+                return isset($row[$index]) ? csv_formula::unescape((string) $row[$index]) : '';
             };
             $cf = [];
             foreach ($cfindex as $token => $index) {
-                $cf[$token] = isset($row[$index]) ? (string) $row[$index] : '';
+                $cf[$token] = $get($index);
             }
 
             $isframework = trim($get(12));

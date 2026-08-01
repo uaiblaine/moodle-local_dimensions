@@ -96,6 +96,28 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
 - Editing UX unified around core `dynamic_form` modals with in-modal toasts and row flashes;
   pagination standardised at 25 across grids and pickers.
 
+### Security
+- **Per-course authorisation on the two tracker card services.** `get_course_progress` and
+  `get_courses_completion_status` took a raw course-id list and were gated only by the
+  site-wide `local/dimensions:view`, which every authenticated user holds — so a direct AJAX
+  call could read the visible section names and start date of any course, including deliberately
+  hidden ones. Both now resolve their ids through `helper::readable_competency_courses()`, which
+  keeps only courses that exist, that core would let the viewer see listed
+  (`core_course_category::can_view_course_info()`) and that carry a competency link — the only
+  courses either view ever lists. Everything else gets the same locked, empty row, so a probing
+  caller cannot tell a hidden course from a missing one.
+- **CSV exports no longer carry live spreadsheet formulas.** A competency or template whose name
+  began with `=`, `+`, `-` or `@` was written verbatim into the framework and template exports
+  and evaluated when the file was opened. Both serializers now neutralise those cells
+  (`local\csv_formula`, matching core's `\core\dataformat::escape_spreadsheet_formula()`), and
+  both importers strip the guard again — including from files written by core's own
+  `csv_export_writer`, which has no counterpart on the way in.
+- **No more DDL from a request path.** `helper::sql_like_ai()` attempted
+  `CREATE EXTENSION unaccent` on every search that reached it when the extension was missing,
+  which a least-privilege database account can only ever fail. The catalogue check is now
+  `helper::has_unaccent()`; provisioning stays in `helper::ensure_unaccent()` and runs from
+  `db/install.php` and `db/upgrade.php` only.
+
 ### Removed
 - The entire **legacy admin surface**: `manage_competencies.php`, `manage_templates.php`, the
   `edit_*` pages, their forms, templates and AMD modules, ~2.3k lines of CSS and 125 orphaned
