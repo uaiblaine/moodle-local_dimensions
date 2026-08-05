@@ -13,7 +13,15 @@ Requirements
 - Core competencies enabled (`core_competency`)
 
 
+Documentation / Documentação
+-----------------------------
+
+Full user and administrator documentation is available online in English and Portuguese:
+👉 **[Competency Dimensions Documentation (GitHub Pages)](https://uaiblaine.github.io/moodle-local_dimensions-docs/)**
+
+
 Motivation for this plugin
+
 --------------------------
 
 Moodle's competency system is one of the most sophisticated learning-outcome management mechanisms available on a learning platform. But for all that potential to actually come through, it takes presentation layers and complementary resources that make its rules, relationships, and graphical progress representations clear.
