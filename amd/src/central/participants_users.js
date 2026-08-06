@@ -67,7 +67,7 @@ const makeRow = (state, item) => {
     const ind = document.createElement('td');
     if (item.isindividual) {
         const badge = document.createElement('span');
-        badge.className = 'badge bg-secondary';
+        badge.className = 'badge bg-secondary text-dark';
         badge.textContent = state.individuallabel;
         ind.appendChild(badge);
     } else {
@@ -211,9 +211,23 @@ const fillCohortFilter = async(state) => {
  * @return {void}
  */
 const wire = (state, pane) => {
-    // The filter controls live in a <form> inside the filters dropdown (Bootstrap 4 keeps a
-    // dropdown open for clicks inside a form); stop Enter in the search box from submitting it.
-    pane.querySelector(SELECTORS.filtersform).addEventListener('submit', (event) => event.preventDefault());
+    /*
+     * The filter controls live in a <form> inside the filters dropdown. Stop Enter in the search
+     * box from submitting it.
+     *
+     * Keeping the panel open while the user works in it is NOT free on Bootstrap 4, contrary to
+     * what this comment used to claim: BS4 has no data-bs-auto-close, and its Dropdown._clearMenus
+     * (theme/boost/amd/src/bootstrap/dropdown.js) exempts only input and textarea targets. The
+     * cohort <select> and the switch <label> are neither, so on Moodle 4.5 either one closed the
+     * panel mid-interaction. Swallow the click before it reaches the document listener that
+     * clears menus. Guarded on the Bootstrap 4 marker so 5.x keeps using data-bs-auto-close
+     * natively, and scoped to the form so the toggle button and any dropdown item still behave.
+     */
+    const filtersform = pane.querySelector(SELECTORS.filtersform);
+    filtersform.addEventListener('submit', (event) => event.preventDefault());
+    if (document.body.classList.contains('local-dimensions-bs4')) {
+        filtersform.addEventListener('click', (event) => event.stopPropagation());
+    }
     state.cohortsel.addEventListener('change', () => {
         state.cohortid = Number(state.cohortsel.value);
         applyFilters(state).catch(notifyError);

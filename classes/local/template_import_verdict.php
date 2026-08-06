@@ -346,14 +346,14 @@ class template_import_verdict {
      */
     public static function verdict_badge(string $verdict): string {
         return match ($verdict) {
-            self::VERDICT_CREATE => 'bg-success',
-            self::VERDICT_UPDATE => 'bg-primary',
-            self::VERDICT_INSYNC => 'bg-secondary',
-            self::VERDICT_SKIP => 'bg-secondary',
+            self::VERDICT_CREATE => 'bg-success text-white',
+            self::VERDICT_UPDATE => 'bg-primary text-white',
+            self::VERDICT_INSYNC => 'bg-secondary text-dark',
+            self::VERDICT_SKIP => 'bg-secondary text-dark',
             self::VERDICT_CONFLICT => 'bg-warning text-dark',
-            self::VERDICT_BLOCKED => 'bg-danger',
-            self::VERDICT_ORPHANLINK => 'bg-danger',
-            default => 'bg-secondary',
+            self::VERDICT_BLOCKED => 'bg-danger text-white',
+            self::VERDICT_ORPHANLINK => 'bg-danger text-white',
+            default => 'bg-secondary text-dark',
         };
     }
 
@@ -418,12 +418,12 @@ class template_import_verdict {
      */
     public static function link_status_badge(string $status): string {
         return match ($status) {
-            self::LINK_MATCHED => 'bg-success',
+            self::LINK_MATCHED => 'bg-success text-white',
             self::LINK_MATCHEDFALLBACK => 'bg-warning text-dark',
-            self::LINK_ALREADYLINKED => 'bg-secondary',
+            self::LINK_ALREADYLINKED => 'bg-secondary text-dark',
             self::LINK_AMBIGUOUS => 'bg-warning text-dark',
-            self::LINK_EMPTYREFERENCE => 'bg-secondary',
-            default => 'bg-danger',
+            self::LINK_EMPTYREFERENCE => 'bg-secondary text-dark',
+            default => 'bg-danger text-white',
         };
     }
 
@@ -493,10 +493,10 @@ class template_import_verdict {
      */
     public static function outcome_badge(string $outcome): string {
         return match ($outcome) {
-            self::OUTCOME_CREATED, self::OUTCOME_UPDATED => 'bg-success',
-            self::OUTCOME_SKIPPED, self::OUTCOME_GONE => 'bg-secondary',
+            self::OUTCOME_CREATED, self::OUTCOME_UPDATED => 'bg-success text-white',
+            self::OUTCOME_SKIPPED, self::OUTCOME_GONE => 'bg-secondary text-dark',
             self::OUTCOME_CHANGED => 'bg-warning text-dark',
-            default => 'bg-danger',
+            default => 'bg-danger text-white',
         };
     }
 }

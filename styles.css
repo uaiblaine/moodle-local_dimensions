@@ -20,18 +20,27 @@
   */
 
 /* ============================================
-      MOTION & LOADING TOKENS (--mds-motion-* / --mds-loading-min-height)
-      Named durations + Material easing, mirroring the design kit's tokens.html. --mds-motion-flash
+      MOTION & LOADING TOKENS (--local-dimensions-motion-* / --local-dimensions-loading-min-height)
+      Named durations + Material easing, mirroring the design kit's tokens.html. --local-dimensions-motion-flash
       is consumed by JS (central/flash.js via WAAPI); the rest by CSS transitions.
-      --mds-loading-min-height reserves height so a pane does not collapse behind the busy cover.
+      --local-dimensions-loading-min-height reserves height so a pane does not collapse behind the busy cover.
       Adopted on new or reformed surfaces only — shipped CSS is not retro-tokenized.
+
+      These carried an --mds- prefix until 2026-08-06. That is core's namespace, not ours:
+      Moodle 5.2 ships theme/boost/scss/design-system/ defining $mds-* tokens, 5.1 has no such
+      directory, and 5.3 LTS brings MDS React. Declaring --mds-* names in :root — global scope,
+      inside a namespace core is actively expanding — is a collision waiting for the release that
+      turns those SCSS variables into custom properties. The plugin's own frankenstyle prefix
+      removes the hazard, and :root stays correct because the FAB renders on course pages outside
+      every plugin wrapper and still needs to inherit them. The design kit's own --mds-* colour
+      tokens are NOT ours and keep core's names: they document core's palette on purpose.
       ============================================ */
 :root {
-    --mds-motion-fast: 150ms;
-    --mds-motion-base: 250ms;
-    --mds-motion-flash: 1500ms;
-    --mds-motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
-    --mds-loading-min-height: 12rem;
+    --local-dimensions-motion-fast: 150ms;
+    --local-dimensions-motion-base: 250ms;
+    --local-dimensions-motion-flash: 1500ms;
+    --local-dimensions-motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --local-dimensions-loading-min-height: 12rem;
 }
 
 /* ============================================
@@ -4027,7 +4036,7 @@ a.local-dimensions-course-act-row:focus {
  */
 .local-dimensions-central-tab-loading {
     position: relative;
-    min-height: var(--mds-loading-min-height);
+    min-height: var(--local-dimensions-loading-min-height);
 }
 
 .local-dimensions-central-tab-loading::before {
@@ -4941,7 +4950,9 @@ a.local-dimensions-course-act-row:focus {
     color: #0f4d85;
     font-size: 0.875rem;
     cursor: pointer;
-    transition: background-color var(--mds-motion-fast) var(--mds-motion-ease), color var(--mds-motion-fast) var(--mds-motion-ease);
+    transition:
+        background-color var(--local-dimensions-motion-fast) var(--local-dimensions-motion-ease),
+        color var(--local-dimensions-motion-fast) var(--local-dimensions-motion-ease);
 }
 
 .local-dimensions-modal-sizetoggle:hover,
@@ -7234,14 +7245,16 @@ a.local-dimensions-central-links-badge-warn:focus {
  * indicator on the active tab, scoped to the hub page so the restyle never leaks to the many other
  * core dynamic_tabs consumers site-wide. The accent (Boost primary) sits only on the 2px underline
  * and the keyboard focus ring; the text uses Boost's own gray palette, exactly as core renders its
- * muted and body text. The transition uses --mds-motion-base / --mds-motion-ease.
+ * muted and body text. The transition uses --local-dimensions-motion-base / --local-dimensions-motion-ease.
  */
 .local-dimensions-central-page .dynamictabs .nav-tabs .nav-link {
     color: #6a737b;
     background-color: transparent;
     border: 0;
     box-shadow: inset 0 -2px 0 transparent;
-    transition: box-shadow var(--mds-motion-base) var(--mds-motion-ease), color var(--mds-motion-base) var(--mds-motion-ease);
+    transition:
+        box-shadow var(--local-dimensions-motion-base) var(--local-dimensions-motion-ease),
+        color var(--local-dimensions-motion-base) var(--local-dimensions-motion-ease);
 }
 
 .local-dimensions-central-page .dynamictabs .nav-tabs .nav-link:hover {
@@ -7590,4 +7603,206 @@ a.local-dimensions-central-links-badge-warn:focus {
 .local-dimensions-tplimport-linkdetail {
     color: #6c757d;
     font-size: 12.5px;
+}
+
+/* ============================================
+      BOOTSTRAP 4 UTILITY POLYFILL (Moodle 4.5 only)
+      ============================================
+
+      Moodle 4.5 ships Bootstrap 4, 5.0+ ship Bootstrap 5, and the bridging between
+      them is ASYMMETRIC. 4.5's forward bridge (theme/boost/scss/moodle/bs5-bridge.scss)
+      is 116 lines and covers ONLY g-0, btn-close, the ms/me/ps/pe spacers and
+      float/text/border/rounded-start/end. 5.x's backward bridge (bs4-compat.scss) runs
+      past a thousand lines. So BS4 names resolve on both branches and BS5 names do not.
+
+      This block defines the BS5 utility families the plugin uses that resolve to
+      NOTHING on 4.5 - measured on the running m405 stack by computed-style diff against
+      a bare element, not inferred from source. Metrics mirror Boost 4.5's own
+      equivalents so a polyfilled control matches the core controls beside it.
+
+      Writing BS4 names in the markup instead (sr-only, custom-select) was rejected:
+      5.x wraps every back-ported BS4 name in @include deprecated-styles(), which paints
+      a red outline under behat-site and themedesignermode, and Moodle 6.0 removes
+      bs4-compat.scss entirely (MDL-84465).
+
+      GATED on body.local-dimensions-bs4, added by local_dimensions\local\bootstrap when
+      $CFG->branch < 500. The gate is not optional: plugin CSS loads after core's, so an
+      ungated rule scoped to a plugin surface would outrank core's own definition on 5.x
+      and freeze 4.5's metrics onto the newer branch.
+
+      Two house rules constrain how this is written. Moodle's stylelint forbids
+      !important (declaration-no-important) and inline SVG image data
+      (function-url-scheme-disallowed-list), so the hiding rules lean on the specificity
+      the body gate already provides, and the select chevron is drawn with gradients
+      rather than the escape-svg data URI Boost itself uses.
+
+      DELETABLE IN ONE EDIT when 405 leaves $plugin->supported: remove this block,
+      classes/local/bootstrap.php, its three mark_page() callers, and the polyfill arm of
+      tests/local/bootstrap_compat_test.php. */
+
+/* Screen-reader-only text. BS5's .visually-hidden, absent from 4.5 entirely, so all 24
+   sites rendered as ordinary visible text - stray captions above every table and a
+   literal "opens in new window" after every external link. BS5 marks these !important;
+   the body gate supplies the specificity instead. */
+body.local-dimensions-bs4 .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Native select chrome. Box metrics measured from Boost 4.5's own .custom-select. The
+   chevron is two half-triangle gradients because the data: URI Boost uses is banned in
+   plugin CSS, and a select cannot carry a pseudo-element to hold a Font Awesome glyph
+   the way the plugin's other icon surfaces do. */
+body.local-dimensions-bs4 .form-select {
+    display: inline-block;
+    width: 100%;
+    max-width: 100%;
+    height: 36.5px;
+    padding: 6px 28px 6px 12px;
+    font-size: 15px;
+    line-height: 22.5px;
+    color: #495057;
+    vertical-align: middle;
+    background-color: #fff;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #343a40 50%),
+        linear-gradient(135deg, #343a40 50%, transparent 50%);
+    background-position:
+        calc(100% - 16px) calc(50% - 1px),
+        calc(100% - 11px) calc(50% - 1px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    border: 1px solid #8f959e;
+    border-radius: 8px;
+    appearance: none;
+}
+
+body.local-dimensions-bs4 .form-select:focus {
+    border-color: #0f6cbf;
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(15, 108, 191, 0.25);
+}
+
+body.local-dimensions-bs4 .form-select-sm {
+    height: 29.7px;
+    padding: 4px 28px 4px 8px;
+    font-size: 13.125px;
+    line-height: 19.7px;
+}
+
+/* Flex and grid gap. Bootstrap 4 has no gap utilities at all, so every toolbar and
+   footer action bar rendered as run-together controls. Raw gap is safe here: styles.css
+   already declares it 156 times and every browser Moodle 4.5 targets supports it. */
+body.local-dimensions-bs4 .gap-2 {
+    gap: 8px;
+}
+
+body.local-dimensions-bs4 .gap-3 {
+    gap: 16px;
+}
+
+/* Font weight and family utilities renamed in BS5. Only the weights the markup actually
+   asks for: the compat test fails on a polyfill rule nothing calls. */
+body.local-dimensions-bs4 .fw-medium {
+    font-weight: 500;
+}
+
+body.local-dimensions-bs4 .fw-normal {
+    font-weight: 400;
+}
+
+body.local-dimensions-bs4 .font-monospace {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* BS5 form label spacing; 4.5 styles a bare label and has no .form-label. */
+body.local-dimensions-bs4 .form-label {
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+/* Bootstrap 4 makes .form-check-input position:absolute with margin-left:-20px and
+   expects a .form-check parent to supply the compensating padding; BS5 leaves it in
+   flow. The hub deliberately puts these controls in plain d-flex rows - wrapping them in
+   .form-check would reintroduce the -1.5em chevron overlap documented in CLAUDE.md - so
+   restore in-flow layout wherever the parent is not a .form-check. */
+body.local-dimensions-bs4 :not(.form-check) > .form-check-input {
+    position: static;
+    margin-left: 0;
+}
+
+/* Toggle switches. Bootstrap 4 has no .form-switch: its switch is a structurally different
+   component (.custom-control.custom-switch + .custom-control-input + .custom-control-label),
+   so the three toggles rendered as plain checkboxes. Rather than emit BS4's markup, draw the
+   switch on the label's pseudo-elements - which is BS4's own technique - and keep the input
+   in place but transparent so it stays focusable and reachable by a screen reader. The knob
+   is drawn with plain boxes: Moodle stylelint forbids the data: URI Bootstrap uses. */
+body.local-dimensions-bs4 .form-switch {
+    position: relative;
+    padding-left: 2.75em;
+}
+
+body.local-dimensions-bs4 .form-switch .form-check-input {
+    position: absolute;
+    left: 0;
+    z-index: 1;
+    width: 2.25em;
+    height: 1.25em;
+    margin: 0;
+    opacity: 0;
+}
+
+body.local-dimensions-bs4 .form-switch .form-check-label::before {
+    position: absolute;
+    top: 0.15em;
+    left: 0;
+    display: block;
+    width: 2.25em;
+    height: 1.25em;
+    content: "";
+    background-color: #adb5bd;
+    border-radius: 1em;
+    transition: background-color 150ms ease-in-out;
+}
+
+body.local-dimensions-bs4 .form-switch .form-check-label::after {
+    position: absolute;
+    top: 0.3em;
+    left: 0.15em;
+    display: block;
+    width: 0.95em;
+    height: 0.95em;
+    content: "";
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 150ms ease-in-out;
+}
+
+body.local-dimensions-bs4 .form-switch .form-check-input:checked ~ .form-check-label::before {
+    background-color: #0f6cbf;
+}
+
+body.local-dimensions-bs4 .form-switch .form-check-input:checked ~ .form-check-label::after {
+    transform: translateX(1em);
+}
+
+body.local-dimensions-bs4 .form-switch .form-check-input:focus ~ .form-check-label::before {
+    box-shadow: 0 0 0 3px rgba(15, 108, 191, 0.25);
+}
+
+/* Modal close button. Core 4.5's lib/templates/modal.mustache emits the close button WITH a
+   times-glyph span child; core 5.2's button is empty. The plugin draws its own Font Awesome
+   glyph via ::before on the same button, so 4.5 shows two. This is core's markup, not the
+   plugin's - no branch could have avoided the rule. Scoped to exactly the modals that get the
+   ::before chip, so core modals elsewhere keep their only glyph. */
+body.local-dimensions-bs4 .modal:has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close > span,
+body.local-dimensions-bs4.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close > span {
+    display: none;
 }

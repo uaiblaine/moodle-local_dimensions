@@ -55,6 +55,8 @@ $PAGE->set_url(new moodle_url('/local/dimensions/central.php'));
 $PAGE->set_title(get_string('central', 'local_dimensions'));
 $PAGE->set_heading(get_string('central', 'local_dimensions'));
 $PAGE->add_body_class('local-dimensions-central-page');
+\local_dimensions\local\bootstrap::mark_page();
+
 
 // Resolve the shared context once so the page-level selector and both tabs agree.
 $resolved = helper::resolve_central_context($contexttype, $categoryid);
