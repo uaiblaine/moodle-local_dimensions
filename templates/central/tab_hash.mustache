@@ -1,0 +1,55 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/central/tab_hash
+
+    Names the tab core/dynamic_tabs should open, before it initialises.
+
+    core/dynamic_tabs opens the FIRST tab in the DOM and ignores the server's active flag -
+    its allActiveTabs selector matches every enabled tab link and takes the first. The one
+    lever that overrides that is the URL fragment, which its openTabFromHash reads from
+    document.location at init time. So the saved tab has to be in the fragment before that
+    runs, and it has to get there synchronously: an AMD module cannot, because the plugin's
+    own context module demonstrably initialises after core has already opened and fetched a
+    tab. Core's own dynamic_tabs template uses a bare script tag for the same reason and
+    says so - "We must not use the JS helper otherwise this gets executed too late".
+
+    Render this immediately BEFORE the core/dynamic_tabs template.
+
+    history.replaceState rather than assigning location.hash: assigning would scroll the
+    page to the tab pane, whose id is the same shortname, and would push a history entry.
+    An fragment the visitor typed themselves is left alone.
+
+    The value is one of frankenstyle-free shortnames frameworks, structure or plans,
+    allowlisted server-side in central.php before it reaches this template.
+
+    Context variables required for this template:
+    * activetab string Shortname of the tab to open.
+
+    Example context (json):
+    {
+        "activetab": "plans"
+    }
+}}
+<script>
+    (function() {
+        if (!document.location.hash) {
+            window.history.replaceState(null, '', document.location.pathname
+                + document.location.search + '#{{activetab}}');
+        }
+    })();
+</script>
