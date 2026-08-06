@@ -82,9 +82,18 @@ $PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
 // The page-level sticky footer is shared by both tabs; init its coordinator once.
 $PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
 
-// Build the three tabs. core/dynamic_tabs always opens the FIRST tab (Frameworks) on load — it
-// ignores a server "active" flag unless the URL hash names a tab — so pre-render Frameworks and
-// let context.js restore the saved tab on the client after load.
+/*
+ * Build the three tabs. core/dynamic_tabs opens the FIRST tab in the DOM and ignores the server's
+ * active flag — unless the URL fragment names a tab, which the tab_hash template below supplies
+ * synchronously before core initialises. With the fragment in place, core opens the same tab the
+ * server marked active, so pre-render THAT one: it paints immediately while core's unconditional
+ * getContent re-fetches it.
+ *
+ * Until 2026-08-06 this pre-rendered Frameworks unconditionally and let context.js click the saved
+ * tab after load. That cost two concurrent getContent calls on every visit whose saved tab was not
+ * Frameworks — measured 845 ms and 1023 ms starting in the same millisecond — with the Frameworks
+ * pane left fully rendered and invisible, on top of a PHP render core discarded.
+ */
 $tabinstances = [
     'frameworks' => new frameworks(['contexttype' => $contexttype, 'categoryid' => $categoryid]),
     'structure' => new structure([
@@ -114,7 +123,7 @@ $tabicons = [
 ];
 $tabs = [];
 foreach (['frameworks', 'structure', 'plans'] as $shortname) {
-    $isactive = ($shortname === 'frameworks');
+    $isactive = ($shortname === $activetab);
     $tab = $tabinstances[$shortname];
     $content = '';
     if ($isactive) {
@@ -145,6 +154,8 @@ $tabsdata = [
 
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_dimensions/central/contextbar', $contextbar->export_for_template($OUTPUT));
+// Must precede the tabs: it names the tab core opens, and core reads the fragment as it initialises.
+echo $OUTPUT->render_from_template('local_dimensions/central/tab_hash', ['activetab' => $activetab]);
 echo $OUTPUT->render_from_template('core/dynamic_tabs', $tabsdata);
 
 // One page-level sticky footer shared by all three tabs; rendered disabled so it

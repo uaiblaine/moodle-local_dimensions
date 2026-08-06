@@ -163,6 +163,17 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
   select and the switch label both dismissed the panel.
 - Core 4.5's modal close button showing two glyphs, its own `&times;` span plus the plugin's
   Font Awesome `::before`.
+- **The hub loading two tabs at once on every visit.** `core/dynamic_tabs` opens the first tab in
+  the DOM and ignores the server's active flag, and its `loadTab` re-fetches over the web service
+  unconditionally — even the tab the server had just rendered. Since `context.js` then clicked the
+  saved tab to restore it, any visit whose saved tab was not Structures produced three renders and
+  discarded two: a PHP render core replaced, and a full `getContent` for a pane left invisible.
+  Measured on 4.5: two calls of 845 ms and 1023 ms starting in the same millisecond, leaving 3250
+  bytes of content in a hidden pane. The saved tab now reaches core through the URL fragment, which
+  the new `central/tab_hash` template writes synchronously before core initialises — the same
+  technique, and the same reason, as core's own template ("We must not use the JS helper otherwise
+  this gets executed too late"). The server pre-renders that tab instead of Structures, so it
+  paints immediately. Now one `getContent`, one populated pane, whichever tab was saved.
 
 ### Changed
 - The plugin's motion and loading custom properties moved from `--mds-*` to
