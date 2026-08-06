@@ -87,8 +87,8 @@ const methodIcon = (method) => {
 /* Boost's secondary is a light grey while the default badge text is white, so the neutral
    pill pairs bg-secondary with text-dark (core's own combination) to keep AA contrast. */
 const STATUS_BADGES = {
-    configured: 'badge bg-success',
-    processing: 'badge bg-info',
+    configured: 'badge bg-success text-white',
+    processing: 'badge bg-info text-white',
     notconfigured: 'badge bg-secondary text-dark',
 };
 
