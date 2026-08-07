@@ -42,6 +42,7 @@ require_capability('local/dimensions:view', $context);
 $PAGE->set_url(new moodle_url('/local/dimensions/view-plan.php', ['id' => $planid]));
 $PAGE->set_context($context);
 $PAGE->add_body_class('local-dimensions-viewplan');
+\local_dimensions\local\bootstrap::mark_page();
 
 // Get the plan using competency API.
 try {

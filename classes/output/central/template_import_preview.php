@@ -155,7 +155,7 @@ class template_import_preview implements renderable, templatable {
         $pills = [[
             'label' => get_string('central_plans_import_summary_total', 'local_dimensions'),
             'count' => $counts['total'],
-            'badge' => 'bg-secondary',
+            'badge' => 'bg-secondary text-dark',
         ]];
         foreach (template_import_verdict::verdicts() as $verdict) {
             if (empty($counts[$verdict])) {

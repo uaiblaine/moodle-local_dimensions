@@ -140,6 +140,53 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
   not seeded — choosing a sort discarded the grid layout, and the favourites filter and the
   modal size were lost the same way, unseen. The whole resolved state is now handed to the
   client as a single object.
+- **Bootstrap 5 class names that resolve to nothing on Moodle 4.5.** The bridging between the
+  branches is asymmetric — 4.5's forward bridge is 116 lines (`g-0`, `btn-close`, the
+  `ms/me/ps/pe` spacers, `float/text/border/rounded-start/end`) while 5.x's backward bridge runs
+  past a thousand — so BS4 names resolve on both branches and BS5 names do not. Measured on a
+  running 4.5 site: `visually-hidden` did not hide (24 sites, so every table caption printed as a
+  heading and "opens in new window" showed after each external link), `form-select` left 21
+  selects with no border, radius, chevron or padding, `gap-*` collapsed 15 toolbars into
+  run-together controls, and `fw-*`, `font-monospace`, `form-switch` and `form-label` were inert.
+  Fixed with a gated Bootstrap 4 utility polyfill at the tail of `styles.css` rather than by
+  writing BS4 names, which Moodle 6.0 removes (MDL-84465). The gate is a body class added only
+  when `$CFG->branch < 500`, so the block cannot reach 5.x.
+- **Badge contrast on both branches.** Bootstrap 4's `.badge` sets no text colour and Bootstrap
+  5's defaults it to white, so a badge that did not state its own colour failed AA on one branch
+  or the other: measured 3.07:1 for `bg-success` on 4.5, and 1.49:1 for `bg-secondary` on 5.2 —
+  a live defect on the current stable target, not only on the old one. Every badge now declares
+  its text colour.
+- Unwrapped `.form-check-input` controls escaping their row on 4.5, where Bootstrap 4 makes them
+  `position: absolute; margin-left: -20px` and expects a `.form-check` parent to compensate.
+- The participants filter panel closing mid-interaction on 4.5: `data-bs-auto-close` has no
+  Bootstrap 4 equivalent, and BS4 exempts only `input` and `textarea` targets, so the cohort
+  select and the switch label both dismissed the panel.
+- Core 4.5's modal close button showing two glyphs, its own `&times;` span plus the plugin's
+  Font Awesome `::before`.
+- **The hub loading two tabs at once on every visit.** `core/dynamic_tabs` opens the first tab in
+  the DOM and ignores the server's active flag, and its `loadTab` re-fetches over the web service
+  unconditionally — even the tab the server had just rendered. Since `context.js` then clicked the
+  saved tab to restore it, any visit whose saved tab was not Structures produced three renders and
+  discarded two: a PHP render core replaced, and a full `getContent` for a pane left invisible.
+  Measured on 4.5: two calls of 845 ms and 1023 ms starting in the same millisecond, leaving 3250
+  bytes of content in a hidden pane. The saved tab now reaches core through the URL fragment, which
+  the new `central/tab_hash` template writes synchronously before core initialises — the same
+  technique, and the same reason, as core's own template ("We must not use the JS helper otherwise
+  this gets executed too late"). The server pre-renders that tab instead of Structures, so it
+  paints immediately. Now one `getContent`, one populated pane, whichever tab was saved.
+
+### Changed
+- The plugin's motion and loading custom properties moved from `--mds-*` to
+  `--local-dimensions-*`. `--mds-` is core's namespace: Moodle 5.2 ships
+  `theme/boost/scss/design-system/` with `$mds-*` tokens and 5.3 LTS brings MDS React, so
+  declaring those names in `:root` was squatting a namespace core is actively expanding.
+- CI no longer runs a Moodle 5.0 job. 5.0 leaves security support on 2026-10-05; the remaining
+  jobs are 5.02 (full PHP × DB matrix), 5.01 and 4.05.
+- `tests/local/bootstrap_compat_test.php` now enforces the Bootstrap contract that prose had
+  failed to hold three times: every BS5 utility used must be polyfilled, the polyfill must carry
+  nothing unused, every badge must state its text colour, data-API attributes must be paired,
+  the stylesheet must not declare `--mds-*`, and every entry point setting a plugin body class
+  must mark the Bootstrap version.
 
 ## [1.0] - 2026-03-16
 

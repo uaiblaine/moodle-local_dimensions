@@ -87,7 +87,7 @@ const makeRow = (state, assignment) => {
 
     const status = document.createElement('td');
     const badge = document.createElement('span');
-    badge.className = 'badge ' + (assignment.status === 'synced' ? 'bg-success' : 'bg-secondary');
+    badge.className = 'badge ' + (assignment.status === 'synced' ? 'bg-success text-white' : 'bg-secondary text-dark');
     badge.textContent = assignment.status === 'synced'
         ? `${state.syncedlabel} (${assignment.syncedcount}/${assignment.membercount})`
         : state.pendinglabel;
