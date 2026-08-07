@@ -38,9 +38,9 @@ export const flashRow = (el) => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         return;
     }
-    // Read the duration from the --mds-motion-flash token (styles.css :root, inherited here) so the
+    // Read the duration from the --local-dimensions-motion-flash token (styles.css :root, inherited here) so the
     // stylesheet stays the single source; fall back to 1500ms if the token is not set.
-    const duration = parseInt(getComputedStyle(el).getPropertyValue('--mds-motion-flash'), 10) || 1500;
+    const duration = parseInt(getComputedStyle(el).getPropertyValue('--local-dimensions-motion-flash'), 10) || 1500;
     el.animate(
         [{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}],
         {duration, easing: 'ease-out'}

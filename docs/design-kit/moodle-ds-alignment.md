@@ -161,19 +161,45 @@ npx stylelint --config .stylelintrc public/local/dimensions/styles.css
 
 **Bootstrap 4 (Moodle 4.5) × Bootstrap 5 (5.x)**
 
-The plugin supports 4.5 → 5.2, and **4.5 is Bootstrap 4**. BS5's *classes* are bridged on 4.5
-(`form-select` etc.), but the **JS data attributes are not**: BS4's data-API listens on `data-toggle`,
-BS5's on `data-bs-toggle`. A component wired by markup (dropdown etc.) needs **both** side by side,
-and both alignment classes (`dropdown-menu-right dropdown-menu-end`) — as in
-`participants_manager.mustache` and `plans.mustache`. Same for the JS selector: match both.
+The plugin supports 4.5 → 5.2, and **4.5 is Bootstrap 4**. Neither the classes nor the JS data
+attributes are reliably bridged, and the bridging is **asymmetric**: BS4 names resolve on both
+branches, BS5 names resolve only on 5.x.
+
+*Classes.* 4.5's forward bridge `theme/boost/scss/moodle/bs5-bridge.scss` is **116 lines** and covers
+only `g-0`, `btn-close`, the `ms/me/ps/pe` spacers and `float/text/border/rounded-start/end`. 5.x's
+backward bridge `theme/boost/scss/moodle/bs4-compat.scss` is **1009 lines** and covers ~38 BS4 names.
+So a BS5 utility outside that 116-line list is simply dead on 4.5 — measured on the running m405
+stack by computed-style diff, `visually-hidden`, `form-select`, `form-select-sm`, `gap-*`, `fw-*`,
+`font-monospace`, `form-switch` and `form-label` all resolve to nothing. The remedy is the **Bootstrap
+4 utility polyfill** block at the tail of `styles.css`, not writing BS4 names: 5.x wraps every
+back-ported BS4 name in `@include deprecated-styles(...)` and Moodle 6.0 removes the compat sheet
+entirely (MDL-84465).
+
+*JS data attributes.* BS4's data-API listens on `data-toggle`, BS5's on `data-bs-toggle`. A component
+wired by markup (dropdown etc.) needs **both** side by side, and both alignment classes
+(`dropdown-menu-right dropdown-menu-end`) — as in `participants_manager.mustache` and
+`plans.mustache`. Same for the JS selector: match both. Note that `data-bs-auto-close` has **no BS4
+equivalent at all**: BS4's `Dropdown._clearMenus` exempts only `input` and `textarea`, so a `select`
+or `label` inside an open menu closes it. Guard with `stopPropagation` on the menu container.
 
 | Fact (verified on `v4.5.12` × a 5.1 checkout) | Design consequence |
 | --- | --- |
 | 4.5 **defines no `--bs-*` modal custom property** (`--bs-modal-width`, `--bs-modal-margin`…) — its `_modal.scss` is SCSS variables only | never size a modal by a BS5 var. Use Bootstrap's own classes — `modal-xl` is **identical in 4 and 5** (800px on `lg`, 1140px on `xl`) — or give a fallback: `var(--bs-modal-margin, 1.75rem)` (= 4.5's `$modal-dialog-margin-y-sm-up`) |
+| 4.5's `lib/templates/modal.mustache` emits `btn-close` **with a `<span>&times;</span>` child**; 5.2's button is empty | a `::before` glyph on `.btn-close` renders **twice** on 4.5 — hide the span |
+| BS4's `.badge` sets **no text colour**; measured `.badge.bg-success` gives `#1d2125` on `#357a32` (~2.2:1) | always pair a saturated `bg-*` badge with an explicit text colour |
+| BS4 makes an unwrapped `.form-check-input` `position:absolute; margin-left:-20px`; BS5 leaves it in flow | the polyfill restores in-flow layout when the parent is not a `.form-check` — do not wrap, that reintroduces the `-1.5em` chevron overlap |
 | BS5 (`EventHandler.trigger`) fires **both** events, jQuery and native; BS4 fires **jQuery only** | a **jQuery** listener covers both branches; `addEventListener` covers only 5.x |
 | `lib/amd/src/first.js` does `window.jQuery = $`, so BS5 **always** takes its jQuery path | binding through jQuery is not a compatibility hack: it is the path core guarantees on both |
 
-The cost of ignoring this has already been paid: two **silent** defects on 4.5, fixed in `f84d30a`.
+The cost of ignoring this has been paid **three times**, which is why the rule is now enforced by a
+test rather than by prose. `CHANGELOG.md` records BS4 dropdowns dead on 4.5 for want of `data-toggle`;
+`f84d30a` fixed the two defects below; and a 2026-08-06 sweep found **90** sites using BS5 utilities
+that resolve to nothing on 4.5. The JS-attribute rule held at 100% compliance the whole time — because
+the 4.05 Behat leg *throws* when a dropdown fails to open — while the class rule failed 90 times with
+CI fully green. The difference is enforcement, not diligence: see
+`tests/local/bootstrap_compat_test.php`.
+
+The two defects fixed in `f84d30a`.
 `context.js` matched the tabs by `data-bs-toggle` only and listened for the native event — on 4.5 the
 selector matched nothing and the event never arrived, so the contextbar counter never followed the
 tab, `saveNav` never ran and the saved tab's restore never fired. And the participants modal sized

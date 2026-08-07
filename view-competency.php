@@ -51,6 +51,7 @@ $PAGE->set_url(new moodle_url('/local/dimensions/view-competency.php', [
 ]));
 $PAGE->set_context($context);
 $PAGE->add_body_class('local-dimensions-viewcompetency');
+\local_dimensions\local\bootstrap::mark_page();
 
 // Authorization gate: read_plan() is the access check. We intentionally do NOT
 // require the competency to be in this plan — related-competency links rendered

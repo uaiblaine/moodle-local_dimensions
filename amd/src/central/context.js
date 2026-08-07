@@ -391,16 +391,11 @@ export const init = () => {
         }
     });
 
-    // Core's dynamic_tabs module force-opens the first tab (Frameworks) on load regardless of the
-    // saved view, so once that has settled switch to the tab the user last used. A native click
-    // drives the same path a real tab click uses (loads the tab's content via getContent).
-    // Deferred so it runs after core's synchronous init has opened Frameworks.
-    const savedtab = Preferences.getNav().tab;
-    if (savedtab && savedtab !== 'frameworks') {
-        const savedlink = Array.from(document.querySelectorAll(SELECTORS.tabToggle))
-            .find((toggle) => toggle.getAttribute('href') === `#${savedtab}`);
-        if (savedlink) {
-            window.setTimeout(() => savedlink.click(), 0);
-        }
-    }
+    /*
+     * Restoring the saved tab is NOT done here any more. This module initialises after core's
+     * dynamic_tabs has already opened and fetched a tab, so clicking the saved one from here
+     * fetched a second tab concurrently and threw the first away. The saved tab now reaches core
+     * through the URL fragment, written synchronously by the local_dimensions/central/tab_hash
+     * template before core initialises, and the server pre-renders that same tab.
+     */
 };

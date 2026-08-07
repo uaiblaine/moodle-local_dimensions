@@ -475,8 +475,23 @@ web services in a native `core/modal*` instead.
   has no clear API → re-render the body to reset it.
 - **Exclude list:** read `data-exclude` via `element.dataset` (fresh per search) in your own
   datasource; `core/form-cohort-selector` caches it via jQuery `.data()`.
-- **Raw `<select>` chevron:** `form-select` (the BS5 *classes* are bridged on 4.5);
-  never `custom-select`.
+- **Raw `<select>` chevron:** `form-select`, which the plugin polyfills for 4.5 (see
+  the Bootstrap vocabulary rule below); never `custom-select`.
+- **Bootstrap 4 vs 5 — BS5 *class names* are NOT bridged either.** The bridging is
+  asymmetric, and this is the single fact to remember: **BS4 names resolve on both
+  branches, BS5 names resolve only on 5.x.** Moodle 4.5's forward bridge
+  (`theme/boost/scss/moodle/bs5-bridge.scss`) is **116 lines** and covers only
+  `g-0`, `btn-close`, the `ms/me/ps/pe` spacers and `float/text/border/rounded-start/end`.
+  Moodle 5.x's backward bridge (`theme/boost/scss/moodle/bs4-compat.scss`) is **1009
+  lines** and covers ~38 BS4 names. Measured on the running 4.5 stack, these resolve to
+  **nothing**: `visually-hidden`, `form-select`, `form-select-sm`, `gap-*`, `fw-*`,
+  `font-monospace`, `form-switch`, `form-label`.
+  The fix is **not** to write BS4 names — 5.x already wraps every one of them in
+  `@include deprecated-styles(...)` and Moodle 6.0 deletes `bs4-compat.scss`
+  (MDL-84465). The fix is the **Bootstrap 4 utility polyfill** block at the tail of
+  `styles.css`, which defines those families for 4.5, scoped to the plugin's own
+  surfaces. Add a family there before using it; `tests/local/bootstrap_compat_test.php`
+  fails the build on a BS5 utility the polyfill does not cover.
 - **Bootstrap 4 vs 5 — JS data attributes are NOT bridged:** Moodle 4.5 runs
   Bootstrap 4, whose data-API listens on `data-toggle`; 5.x listens on
   `data-bs-toggle`. Components wired via markup (dropdowns etc.) need **both**
@@ -487,6 +502,11 @@ web services in a native `core/modal*` instead.
 - **`[hidden]` vs `.d-block`:** `.d-block { display:block !important }` overrides `[hidden]`;
   to toggle via `el.hidden` use a plain block (`<div>`). `.form-check` adds `margin-left:-1.5em`
   to its input (overlaps a preceding chevron) — use a plain `d-flex` row for custom rows.
+  That rule stands, but it has a 4.5 consequence: an unwrapped `.form-check-input` is
+  `position:absolute; margin-left:-20px` under Bootstrap 4 (BS5 leaves it in flow), so it
+  escapes the row and overlaps its neighbour. Do **not** fix that by wrapping — the
+  polyfill block restores in-flow layout for any `.form-check-input` whose parent is not
+  a `.form-check`, which serves both branches with one rule and no markup change.
 - **Feedback in modals (house pattern):** for success/error/info messages fired from inside a
   `core/modal`, **host a toast region in the modal body** so `core/toast` renders *above* the
   dialog. The page-level `.toast-wrapper` is `z-index:1051` (below the modal's `1055`), so a toast

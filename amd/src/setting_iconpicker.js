@@ -219,7 +219,7 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
                         fabrand: strings.sourceFabrand
                     };
                     var sourceLabel = sourceLabels[icon.source] || strings.sourceFablank;
-                    var sourceColor = icon.source === 'core' ? 'bg-warning text-dark' : 'bg-success';
+                    var sourceColor = icon.source === 'core' ? 'bg-warning text-dark' : 'bg-success text-white';
 
                     item.innerHTML = '<i class="' + iconClass + ' fa-fw" aria-hidden="true"></i>' +
                         '<small style="flex:1; word-break:break-all;">' + escapeHtml(icon.name) + '</small>' +
