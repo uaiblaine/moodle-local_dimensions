@@ -133,6 +133,50 @@ final class calculator_progress_test extends \advanced_testcase {
     }
 
     /**
+     * A subsection scheduled for deletion stops contributing its activities to its parent.
+     *
+     * Deleting a subsection flags only the subsection module itself: every activity inside its
+     * delegated section keeps deletioninprogress = 0 and uservisible = true until
+     * mod_subsection's delete_instance() runs in the adhoc task, while the course page
+     * withdraws the whole subsection the moment it is flagged. The parent's ring therefore went
+     * on counting activities the learner could no longer reach - until the next cron run, or for
+     * good on a site whose delete task keeps failing.
+     *
+     * The first assertion is the control. It proves the cascade is switched on for this course,
+     * so the second cannot pass by the subsection's activities never having been counted at all.
+     *
+     * @return void
+     */
+    public function test_subsection_scheduled_for_deletion_stops_counting(): void {
+        $this->resetAfterTest();
+
+        /* Subsections ship on every supported branch but are disabled by default on 4.5, where
+           get_course_mods() then filters the module type out of modinfo entirely. Core's own
+           tests enable it the same way (lib/tests/modinfolib_test.php). */
+        $manager = \core_plugin_manager::resolve_plugininfo_class('mod');
+        $manager::enable_plugin('subsection', 1);
+
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1, 'numsections' => 1]);
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
+
+        // Two activities directly in section 1, and two more inside a subsection of it.
+        $top = $this->create_tracked_activities($course, 2);
+        $subcmid = $this->create_subsection_with_activities($course, 2);
+
+        $this->setUser($user);
+        $this->complete_activities($course, $user->id, array_slice($top, 0, 1));
+
+        // Control: the subsection's two activities do reach the parent's count, so one of four.
+        $this->assertSame(25, (int) $this->find_section($course->id, 1)['percentage']);
+
+        $this->schedule_deletion($course, $subcmid);
+
+        // Only the two activities outside the subsection count now, one of them complete.
+        $this->assertSame(50, (int) $this->find_section($course->id, 1)['percentage']);
+    }
+
+    /**
      * Creates activities with manual completion tracking in section 1.
      *
      * @param \stdClass $course The course to add them to.
@@ -184,5 +228,61 @@ final class calculator_progress_test extends \advanced_testcase {
         $this->assertArrayHasKey($index, $data['sections']);
 
         return $data['sections'][$index];
+    }
+
+    /**
+     * Creates a subsection in section 1 holding tracked activities.
+     *
+     * @param \stdClass $course The course to add it to.
+     * @param int $count How many activities to place inside it.
+     * @return int The subsection's own course module id.
+     */
+    private function create_subsection_with_activities(\stdClass $course, int $count): int {
+        $subsection = $this->getDataGenerator()->create_module(
+            'subsection',
+            [
+                'course' => $course->id,
+                'section' => 1,
+            ]
+        );
+        $cmid = (int) $subsection->cmid;
+
+        \course_modinfo::clear_instance_cache();
+        $delegated = get_fast_modinfo($course->id)->get_cm($cmid)->get_delegated_section_info();
+
+        for ($i = 0; $i < $count; $i++) {
+            $this->getDataGenerator()->create_module(
+                'page',
+                [
+                    'course' => $course->id,
+                    'section' => $delegated->sectionnum,
+                    'completion' => COMPLETION_TRACKING_MANUAL,
+                ]
+            );
+        }
+        \course_modinfo::clear_instance_cache();
+
+        return $cmid;
+    }
+
+    /**
+     * Puts a module into the state core's asynchronous deletion leaves it in.
+     *
+     * The state is built directly rather than through the delete API because that API is a
+     * different function on each supported branch - course_delete_module() is current on 5.0
+     * and 5.1 and deprecated on 5.2 in favour of formatactions::cm()->delete() (MDL-86856).
+     * Both end in the same two writes core's delete_async() performs, and those two writes are
+     * the whole of the state under test: the flag, and a cleared course cache.
+     *
+     * @param \stdClass $course The course the module belongs to.
+     * @param int $cmid The course module scheduled for deletion.
+     * @return void
+     */
+    private function schedule_deletion(\stdClass $course, int $cmid): void {
+        global $DB;
+
+        $DB->set_field('course_modules', 'deletioninprogress', '1', ['id' => $cmid]);
+        rebuild_course_cache($course->id, true);
+        \course_modinfo::clear_instance_cache();
     }
 }
