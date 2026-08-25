@@ -125,7 +125,6 @@ class get_competency_courses extends external_api {
         $result = [];
         foreach ($courses as $course) {
             $coursecontext = context_course::instance($course->id);
-            $fullcourse = get_course($course->id);
 
             // Get course image URL.
             $courseimage = '';
@@ -145,17 +144,14 @@ class get_competency_courses extends external_api {
                 }
             }
 
-            /* Get course progress for the current user. Core's value is clamped rather than
-               cast straight to int: on the branches without the MDL-60912 fix (4.5 throughout,
-               below 5.0.7 and below 5.1.4) its numerator is not a subset of its denominator, so
-               the raw value can exceed 100 and the bar would render past full. */
-            $progress = 0;
-            $completion = new \completion_info($fullcourse);
-            if ($completion->is_enabled()) {
-                $progress = calculator::clamp_percentage(
-                    \core_completion\progress::get_course_progress_percentage($fullcourse, $USER->id)
-                );
-            }
+            /* Get course progress for the current user. Deliberately not
+               core_completion\progress::get_course_progress_percentage(): on 4.5 its numerator
+               is not a subset of its denominator (MDL-60912, never backported there), so a
+               completion row belonging to a module already dropped from the denominator still
+               counts - and its denominator carries no visibility filter at all, so a hidden
+               activity keeps the bar off 100 for good. calculator reproduces what 5.1 and 5.2
+               core compute, on every branch alike. */
+            $progress = calculator::course_completion_percentage((int) $course->id, (int) $USER->id);
 
             /* What the viewer can do with this course. calculator::is_locked() is deliberately
                not used: it also reports true for anyone enrolled without the student role, which
@@ -170,6 +166,10 @@ class get_competency_courses extends external_api {
                     : self::ACCESS_LOCKED;
             }
             if ($access === self::ACCESS_LOCKED) {
+                /* Fetched here rather than per card: the progress bar used to need the full
+                   record too, and now reads the course by id itself, so only the locked path
+                   is left asking for it. */
+                $fullcourse = get_course($course->id);
                 $lockdate = (int) \local_dimensions\calculator::get_availability_date($fullcourse, $USER->id);
                 $isenrolstart = \local_dimensions\calculator::get_enrolment_start_date(
                     $fullcourse,

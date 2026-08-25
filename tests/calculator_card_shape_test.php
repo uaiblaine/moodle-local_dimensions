@@ -234,6 +234,130 @@ final class calculator_card_shape_test extends \advanced_testcase {
     }
 
     /**
+     * An activity released later is workload, so the course no longer looks like one activity.
+     *
+     * The shape resolver and the percentages have to be asked about the same set of activities.
+     * They were not: the resolver gated on uservisible, so a course of one open activity beside
+     * one released-later activity counted as a course of ONE, took the activity shape, and drew a
+     * completed tick over a course that was half undone - directly beside a bar reading 50%.
+     *
+     * The first assertion is the control. It is the same course without the second activity, and
+     * it must still be an activity card, so what follows measures the second activity's arrival
+     * rather than the activity shape having simply stopped working.
+     *
+     * @return void
+     */
+    public function test_an_activity_released_later_stops_the_course_looking_like_one_activity(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $CFG->enableavailability = 1;
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1, 'numsections' => 1]);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'name' => 'Open now',
+            'section' => 1,
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+
+        $this->setUser($user);
+
+        // Control: one piece of work, and it is an activity card.
+        $shape = calculator::resolve_card_shape((int) $course->id, (int) $user->id);
+        $this->assertSame(constants::CARDMODE_ACTIVITY, $shape['mode']);
+        $this->assertSame('Open now', $shape['activity']['name']);
+
+        $this->setAdminUser();
+        $later = $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'name' => 'Opens next week',
+            'section' => 1,
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+        $this->restrict_until_tomorrow((int) $later->cmid);
+        rebuild_course_cache($course->id, true);
+        \course_modinfo::clear_instance_cache();
+        $this->setUser($user);
+
+        // Two pieces of work now, so the card must stop reporting a single activity.
+        $shape = calculator::resolve_card_shape((int) $course->id, (int) $user->id);
+        $this->assertNotSame(constants::CARDMODE_ACTIVITY, $shape['mode']);
+        $this->assertNull($shape['activity']);
+    }
+
+    /**
+     * A course whose only work has not opened yet is not offered as an activity card.
+     *
+     * The activity shape hands the template a URL and it renders a button, so it may only ever
+     * name an activity the learner can open. Counting work that is released later - which the
+     * percentages must do - would otherwise put a dead button on the card as soon as a course
+     * held exactly one such activity.
+     *
+     * The control is the same course before the restriction is applied.
+     *
+     * @return void
+     */
+    public function test_a_course_of_one_unopened_activity_is_not_an_activity_card(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $CFG->enableavailability = 1;
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1, 'numsections' => 1]);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $only = $this->getDataGenerator()->create_module('page', [
+            'course' => $course->id,
+            'name' => 'Opens next week',
+            'section' => 1,
+            'completion' => COMPLETION_TRACKING_MANUAL,
+        ]);
+
+        $this->setUser($user);
+
+        // Control: while it is open, this really is a one-activity course.
+        $shape = calculator::resolve_card_shape((int) $course->id, (int) $user->id);
+        $this->assertSame(constants::CARDMODE_ACTIVITY, $shape['mode']);
+
+        $this->setAdminUser();
+        $this->restrict_until_tomorrow((int) $only->cmid);
+        rebuild_course_cache($course->id, true);
+        \course_modinfo::clear_instance_cache();
+        $this->setUser($user);
+
+        // Still one piece of work, but nothing the card may link to.
+        $shape = calculator::resolve_card_shape((int) $course->id, (int) $user->id);
+        $this->assertNotSame(constants::CARDMODE_ACTIVITY, $shape['mode']);
+        $this->assertNull($shape['activity']);
+    }
+
+    /**
+     * Puts a future date restriction on an activity, leaving it shown greyed.
+     *
+     * Shown rather than hidden is the whole point: a hidden restriction takes the activity out of
+     * the learner's workload, while a shown one keeps it in - which is what makes it a second
+     * piece of work the card has to account for.
+     *
+     * @param int $cmid The activity to restrict.
+     * @return void
+     */
+    private function restrict_until_tomorrow(int $cmid): void {
+        global $DB;
+
+        $availability = json_encode([
+            'op' => '&',
+            'c' => [
+                [
+                    'type' => 'date',
+                    'd' => '>=',
+                    't' => time() + DAYSECS,
+                ],
+            ],
+            'showc' => [true],
+        ]);
+        $DB->set_field('course_modules', 'availability', $availability, ['id' => $cmid]);
+    }
+
+    /**
      * A single untracked module leaves zero trackable candidates, the same as two - neither
      * count resolves to the activity shape. Ported from
      * `tests/calculator_single_activity_test.php::test_untracked_activity_returns_null`
