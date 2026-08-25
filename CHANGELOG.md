@@ -127,6 +127,50 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
   customfield-aware CRUD web services.
 
 ### Fixed
+- The **card's shape** is now decided over the same set of activities as its percentages. It was
+  not: the shape resolver asked "is there exactly one activity here" using *openable now*, so a
+  course holding one open activity beside one released-later activity looked like a one-activity
+  course, took the single-activity card and drew a completed tick over a course that was half
+  undone — beside a bar reading 50%. Whether an activity may be **offered as a link** stays a
+  separate question, and the single-activity card still asks it: a course whose only work has not
+  opened yet is real work, and is counted, but it falls through to the section or timeline card
+  rather than rendering a button that goes nowhere.
+- **One rule now decides what a learner's progress is measured against**, for the course bar and
+  the section rings alike: an activity counts when completion is tracked on it, when the learner
+  can see it, and when it is theirs to do — now or later. The third condition is the one that had
+  never been stated. Core already draws that line for us: `is_applied_to_user_lists()` marks the
+  restrictions that are **permanent** for a person (group, grouping, profile) and leaves the ones
+  that have merely not come round yet (date, grade, completion of something else). So an activity
+  released next week stays in the denominator, because the learner will have to do it; an activity
+  restricted to a group they are not in leaves it, because no amount of studying will ever unlock
+  it — and counting it would put 100% permanently out of their reach. Previously the rings counted
+  only what was **openable right now**, so a course whose remaining work was date-released read a
+  finished-looking 100% and then walked backwards on the release date.
+- The course card's **progress bar** reading wrong on Moodle 4.5. It no longer calls
+  `core_completion\progress::get_course_progress_percentage()`, whose numerator is not a subset
+  of its denominator on that branch (MDL-60912, fixed in 5.0.7 / 5.1.4, never backported): the
+  denominator drops a module flagged for deletion while the numerator keeps its completion row,
+  so deleting an activity the learner had already completed made the bar jump — measured 67%
+  where 33% was the truth, and `clamp_percentage()` cannot catch it because the value never
+  passes 100. 4.5's denominator also applied no visibility filter at all, so a hidden activity
+  still counted and a learner could never reach 100% in a course holding one, which showed as a
+  50% bar above a 100% section ring on the same card. Neither 5.1+ helper that fixes these
+  upstream exists on 4.5 to call, so `calculator::course_completion_percentage()` reproduces
+  what 5.1 and 5.2 core compute — activities visible **on the course page**, minus those a group
+  or grouping restriction excludes the learner from. All three branches now answer alike, and
+  the bar keeps counting work that is merely date-released rather than reporting a finished
+  100% and then walking backwards. One further change worth knowing: the bar is now rounded by
+  the same rule as the section rings, so 199 of 200 activities reads 99 rather than rounding up
+  to a 100 that claimed the course was finished.
+- Course cards counting activities the learner could no longer reach, after a **subsection** was
+  deleted. Deleting a subsection flags only the subsection module itself — every activity inside
+  its delegated section keeps `deletioninprogress = 0` and stays user-visible until the adhoc
+  task runs — so `calculator::get_course_section_progress()` went on cascading those activities
+  into the parent section's ring while the course page had already withdrawn the whole
+  subsection. Reproduced on 5.1 and 5.2 as 25% where 50% was the honest answer; the window
+  closed at the next cron run, or never, on a site whose delete task keeps failing. Plain
+  activity deletion was never affected (core forces `uservisible` to false for a flagged
+  module, which the counter already tested).
 - Custom-field data leaked on competency/template deletion (Moodle 5.1+ context teardown).
 - Bootstrap 4 dropdowns dead on Moodle 4.5 (missing `data-toggle` bridges).
 - Web-service return structures silently stripping undeclared fields from lazily-fetched rows.
