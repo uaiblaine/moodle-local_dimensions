@@ -136,9 +136,28 @@ class calculator {
                 $sectionbyid[$s->id] = $s;
             }
 
-            // Build children_map by finding subsection activities and their delegated sections.
+            /* Build children_map by finding subsection activities and their delegated sections.
+
+               A subsection the learner cannot reach must not cascade its contents into the
+               parent's count, and a subsection being deleted is the case that bites. Core flags
+               only the subsection module itself, so every activity inside its delegated section
+               keeps deletioninprogress = 0 and uservisible = true until mod_subsection's
+               delete_instance() runs in the adhoc task - while the course page withdraws the
+               whole subsection the moment it is flagged, because section_info ties a delegated
+               section's uservisible to its parent module. Without this guard the ring goes on
+               counting activities the learner can no longer see, until the next cron run - or
+               for good, since a delete task that keeps failing never clears the flag.
+
+               Spelled with uservisible rather than through counts_towards_progress(): the
+               question here is whether the learner can reach the subsection at all, not whether
+               its contents are work. A subsection released later renders as a greyed card whose
+               contents the course page does not list, so cascading them in would add activities
+               nobody can see - which is the opposite of the rule the counter follows. */
             foreach ($modinfo->cms as $cm) {
                 if ($cm->modname === 'subsection') {
+                    if ($cm->deletioninprogress || !$cm->uservisible) {
+                        continue;
+                    }
                     $delegated = $cm->get_delegated_section_info();
                     if ($delegated) {
                         // The subsection CM is in section $cm->section.
@@ -210,7 +229,7 @@ class calculator {
                             continue;
                         }
 
-                        if ($cm->completion != \COMPLETION_TRACKING_NONE && $cm->uservisible) {
+                        if (self::counts_towards_progress($cm, (int) $USER->id)) {
                             $total++;
                             $cmdata = $completion->get_data($cm, true, $USER->id);
                             $iscomplete = $cmdata->completionstate == \COMPLETION_COMPLETE
@@ -298,16 +317,157 @@ class calculator {
     }
 
     /**
-     * A raw course percentage from core, normalised to what a progress bar may display.
+     * The course's overall completion percentage.
      *
-     * core_completion\progress::get_course_progress_percentage() returns null when the course
-     * has nothing to measure. It can also return more than 100: before MDL-60912 (fixed in
-     * 5.0.7 and 5.1.4, and never backported to 4.5) its numerator was not a subset of its
-     * denominator - count_modules_completed() took no module list there - so a completion row
-     * left behind by a module the denominator no longer counts inflates the result. The
-     * plugin supports 4.5 upward, so the clamp is load-bearing on the older branches.
+     * core_completion\progress::get_course_progress_percentage() is deliberately not called.
+     * On Moodle 4.5 its numerator is not a subset of its denominator (MDL-60912, fixed in 5.0.7
+     * and 5.1.4, never backported): the denominator, completion_info::get_activities(), drops a
+     * module flagged deletioninprogress, while the numerator, count_modules_completed(), takes
+     * no module list on that branch and still counts that module's completion row. A learner who
+     * completed two of four activities and then had one of those two deleted read 67% where 33%
+     * was the truth - and clamp_percentage() cannot catch it, because the value never passes 100.
+     * 4.5's denominator is also wider than the later branches: it applies no visibility filter at
+     * all, so a hidden activity counted and a learner could never reach 100% in a course holding
+     * one. Neither of the 5.1+ helpers that fix these exists on 4.5 to call.
      *
-     * @param float|null $raw The value core returned.
+     * What counts is counts_towards_progress(), the one predicate the section rings use as well -
+     * the two numbers share a card, so they must answer the same question. Read that method for
+     * where the line falls and why.
+     *
+     * The numerator is read through completion_info::get_data() rather than core's own COUNT
+     * query, which is the way the rest of this plugin reads completion and which cannot fall out
+     * of step with the denominator the way a separate statement can.
+     *
+     * The course is read by id rather than accepted as an object, the same contract
+     * get_course_section_progress() keeps: modinfo validates its cache against $course->cacherev,
+     * so a caller holding a record fetched before an activity changed would otherwise be served a
+     * stale module list, silently.
+     *
+     * @param int $courseid The course to measure.
+     * @param int $userid The user whose visibility and completion are read.
+     * @return int The percentage 0-100; 0 when there is nothing to measure.
+     * @throws \dml_missing_record_exception If the course id does not resolve.
+     */
+    public static function course_completion_percentage(int $courseid, int $userid): int {
+        global $CFG, $COURSE, $DB;
+        require_once($CFG->libdir . '/completionlib.php');
+
+        $course = $DB->get_record('course', ['id' => $courseid], '*', \MUST_EXIST);
+
+        $completion = new \completion_info($course);
+        if (!$completion->is_enabled() || !$completion->is_tracked_user($userid)) {
+            return 0;
+        }
+
+        // Core asks this first too: a course its own criteria call finished is finished.
+        if ($completion->is_course_complete($userid)) {
+            return 100;
+        }
+
+        /* Same temporary global context, and the same unconditional restore, as
+           get_course_section_progress(): reading a module's dynamic data runs callbacks that may
+           consult $COURSE, and the external service calls this in a per-course loop, so one
+           failure must not poison its siblings. */
+        $savedcourse = $COURSE ?? null;
+        $COURSE = $course;
+        try {
+            $modinfo = get_fast_modinfo($course, $userid);
+
+            $completed = 0;
+            $total = 0;
+
+            foreach ($modinfo->get_cms() as $cm) {
+                if (!self::counts_towards_progress($cm, $userid)) {
+                    continue;
+                }
+
+                $total++;
+                $cmdata = $completion->get_data($cm, true, $userid);
+                $iscomplete = $cmdata->completionstate == \COMPLETION_COMPLETE
+                    || $cmdata->completionstate == \COMPLETION_COMPLETE_PASS;
+                if ($iscomplete) {
+                    $completed++;
+                }
+            }
+
+            return self::clamp_percentage(self::progress_percentage($completed, $total));
+        } finally {
+            $COURSE = $savedcourse;
+        }
+    }
+
+    /**
+     * Whether an activity belongs in this learner's required workload.
+     *
+     * One predicate for the course bar and for the section rings, because the two numbers sit on
+     * the same card and any difference between them reads as a bug. Three cumulative conditions,
+     * and each rules out a different thing:
+     *
+     * 1. Completion is tracked on it. Untracked work has no state to report.
+     * 2. The learner can SEE it. Hidden by the eye icon, sitting in a hidden section, or
+     *    restricted with "hide entirely" - none of those exist as far as the learner knows, so
+     *    none can be work they owe.
+     * 3. It is theirs to do, now or later. This is the subtle one, and core already draws the
+     *    line: core_availability\condition::is_applied_to_user_lists() marks the conditions that
+     *    are PERMANENT for a given person - group, grouping and profile - and leaves the ones
+     *    that merely have not come round yet - date, grade, completion-of-something-else. So a
+     *    date-locked activity stays in the denominator, because it will open for this learner
+     *    and they will have to do it; an activity restricted to a group they are not in leaves
+     *    it, because no amount of studying will ever unlock it. Counting the latter would make
+     *    100% unreachable for that learner, for good.
+     *
+     * Condition 2 is deliberately the UNION of "listed on the course page" and "openable right
+     * now" rather than core's is_visible_on_course_page() alone, because neither half is
+     * sufficient by itself. A date-restricted activity shown greyed is listed but not openable
+     * (uservisible false, is_visible_on_course_page true). A STEALTH activity - "available but
+     * don't show on the course page" - is the mirror: openable right now and reachable from
+     * whatever links to it, but not listed (uservisible true, is_visible_on_course_page false).
+     * Both are work the learner owes. Core drops the stealth one; this does not.
+     *
+     * The explicit $cm->visible test is not redundant with either half. It also settles a branch
+     * difference: MDL-66780 changed the final clause of cm_info::update_user_visible() in 5.x, so
+     * an activity a teacher hid that ALSO carries a shown restriction reports
+     * is_visible_on_course_page() as true on 4.5 and false on 5.1/5.2. Testing $cm->visible up
+     * front gives the same answer on all four supported branches, and it is the answer condition
+     * 2 implies anyway.
+     *
+     * The deletioninprogress test cannot be dropped either, and not only because core forces
+     * uservisible false for such a module: is_visible_on_course_page() returns NULL for it, since
+     * update_user_visible() returns before ever assigning the property it reads. That is falsy
+     * today by accident of an uninitialised property, which is not something to rely on.
+     *
+     * @param \cm_info $cm The activity to judge.
+     * @param int $userid The learner whose visibility and restrictions are read.
+     * @return bool
+     */
+    private static function counts_towards_progress(\cm_info $cm, int $userid): bool {
+        if ($cm->modname === 'subsection' || $cm->deletioninprogress) {
+            return false;
+        }
+
+        if ($cm->completion == \COMPLETION_TRACKING_NONE) {
+            return false;
+        }
+
+        if (!$cm->visible || !($cm->is_visible_on_course_page() || $cm->uservisible)) {
+            return false;
+        }
+
+        $users = [$userid => (object) ['id' => $userid]];
+
+        return !empty((new \core_availability\info_module($cm))->filter_user_list($users));
+    }
+
+    /**
+     * A raw percentage, normalised to what a progress bar may display.
+     *
+     * null means there was nothing to measure and reads as 0. The 0-100 clamp is the outer
+     * safety net rather than the fix it once was: course_completion_percentage() no longer
+     * channels core's own value, which could exceed 100 on the branches without the MDL-60912
+     * fix (4.5 throughout, below 5.0.7 and below 5.1.4). It stays so that no future numerator
+     * can render a bar past full.
+     *
+     * @param float|null $raw The value to normalise.
      * @return int The percentage clamped to 0-100; null becomes 0.
      */
     public static function clamp_percentage(?float $raw): int {
@@ -395,8 +555,17 @@ class calculator {
         }
 
         // Two is enough to answer "is there exactly one", and stops the walk early.
-        $tracked = self::collect_trackable_cms($modinfo, $completion, 2);
-        if (count($tracked) === 1) {
+        $tracked = self::collect_trackable_cms($modinfo, $completion, $userid, 2);
+
+        /* Two questions, deliberately kept apart. counts_towards_progress() says how much work
+           this course is, and it includes an activity that is released later - which is what
+           stops the card claiming a finished course. uservisible says whether that activity can
+           be OFFERED, and the activity shape does exactly that: describe_activity() hands the
+           template a URL and it renders a "go to activity" button. So a course whose one piece of
+           work has not opened yet is real, but it is not an activity card - naming it would be a
+           button that goes nowhere. It falls through to the section or timeline shape, which
+           reports the same 0% without promising a way in. */
+        if (count($tracked) === 1 && $tracked[0]->uservisible) {
             return [
                 'mode' => constants::CARDMODE_ACTIVITY,
                 'activity' => self::describe_activity($tracked[0], $completion, $userid),
@@ -446,6 +615,12 @@ class calculator {
      *
      * @param \stdClass $course The course record.
      * @param \course_modinfo $modinfo Its modinfo for the reading user.
+     * The uservisible guard below is the same question resolve_card_shape() asks before taking
+     * the activity shape, and deliberately NOT counts_towards_progress(): this method's job is to
+     * name an activity the card will link to, so it must be one the learner can actually open. An
+     * activity that is real work but not yet released is counted by the percentages and left
+     * unnamed here.
+     *
      * @return \cm_info|null The activity, or null when the format is not single-activity,
      *                       its activity type is unset or unavailable, or the configured
      *                       module is missing, being deleted, or not visible to the user.
@@ -484,16 +659,27 @@ class calculator {
     }
 
     /**
-     * The course's trackable, user-visible modules, up to a limit.
+     * The modules that make up this learner's workload in the course, up to a limit.
+     *
+     * Counts with counts_towards_progress(), the same predicate the bar and the rings use, so
+     * "does this course boil down to one activity" is asked of the same set of activities the
+     * percentages are measured over. It did not used to be: this walk gated on uservisible, so a
+     * course of one open activity beside one released-later activity looked like a course of ONE,
+     * took the activity shape, and drew a completed tick over a course that was half undone.
+     *
+     * Whether the single activity found may be OFFERED as a link is a different question, and
+     * the caller asks it separately - see resolve_card_shape().
      *
      * @param \course_modinfo $modinfo The course modinfo.
      * @param \completion_info $completion The course completion info.
+     * @param int $userid The learner whose workload this is.
      * @param int $limit Stop once this many are found.
      * @return array List of cm_info.
      */
     private static function collect_trackable_cms(
         \course_modinfo $modinfo,
         \completion_info $completion,
+        int $userid,
         int $limit
     ): array {
         if (!$completion->is_enabled()) {
@@ -502,10 +688,7 @@ class calculator {
 
         $found = [];
         foreach ($modinfo->get_cms() as $cm) {
-            if ($cm->modname === 'subsection' || $cm->deletioninprogress || !$cm->uservisible) {
-                continue;
-            }
-            if ($completion->is_enabled($cm) == \COMPLETION_TRACKING_NONE) {
+            if (!self::counts_towards_progress($cm, $userid)) {
                 continue;
             }
             $found[] = $cm;
