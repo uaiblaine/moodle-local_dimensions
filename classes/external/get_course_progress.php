@@ -122,6 +122,7 @@ class get_course_progress extends external_api {
                     'formatted_start_date' => $data['formatted_start_date'] ?? '',
                     'is_enrolment_start' => !empty($data['is_enrolment_start']),
                     'can_self_enrol' => !empty($data['can_self_enrol']),
+                    'is_pending' => !empty($data['is_pending']),
                     'is_future_date' => !empty($data['is_future_date']),
                     'course_url' => $data['course_url'] ?? '',
                     'sections' => $sections,
@@ -150,6 +151,7 @@ class get_course_progress extends external_api {
                     'formatted_start_date' => '',
                     'is_enrolment_start' => false,
                     'can_self_enrol' => false,
+                    'is_pending' => false,
                     'is_future_date' => false,
                     'course_url' => '',
                     'sections' => [],
@@ -180,6 +182,7 @@ class get_course_progress extends external_api {
             'formatted_start_date' => '',
             'is_enrolment_start' => false,
             'can_self_enrol' => false,
+            'is_pending' => false,
             'is_future_date' => false,
             'course_url' => '',
             'sections' => [],
@@ -222,7 +225,12 @@ class get_course_progress extends external_api {
                 ),
                 'can_self_enrol' => new external_value(
                     PARAM_BOOL,
-                    'Whether the viewer can self-enrol into this locked course',
+                    'Whether the viewer can enrol themselves into this locked course',
+                    VALUE_OPTIONAL,
+                ),
+                'is_pending' => new external_value(
+                    PARAM_BOOL,
+                    'Whether the viewer has an enrolment application awaiting a decision',
                     VALUE_OPTIONAL,
                 ),
                 'is_future_date' => new external_value(
