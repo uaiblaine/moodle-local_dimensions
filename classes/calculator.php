@@ -104,9 +104,15 @@ class calculator {
 
             /* A locked card reframes the date as an invitation rather than a restriction, so
                the client needs to know whether it still lies ahead - and whether the learner
-               can simply join instead of waiting. Both are asked only when the card is locked:
-               the self-enrol answer costs a walk through the course's enrolment instances. */
-            $canselfenrol = $locked && self::current_user_can_self_enrol((int) $course->id);
+               can simply join instead of waiting. All three are asked only when the card is
+               locked: each enrolment answer costs a walk through the course's instances.
+
+               Pending is asked last and only when joining is not on offer. A course can carry
+               a pending application on one instance and an open way in on another, and being
+               able to walk in now outranks waiting for somebody to decide. */
+            $canenrol = $locked && self::current_user_can_enrol((int) $course->id);
+            $ispending = $locked && !$canenrol
+                && self::current_user_has_pending_application((int) $course->id);
             $isfuturedate = $locked && $availabilitydate > time();
 
             $courseurl = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
@@ -117,7 +123,8 @@ class calculator {
                     'locked' => $locked,
                     'formatted_start_date' => $formattedstartdate,
                     'is_enrolment_start' => $isenrolmentstart,
-                    'can_self_enrol' => $canselfenrol,
+                    'can_self_enrol' => $canenrol,
+                    'is_pending' => $ispending,
                     'is_future_date' => $isfuturedate,
                     'course_url' => $courseurl,
                     'sections' => [],
@@ -272,7 +279,8 @@ class calculator {
                 'locked' => $locked,
                 'formatted_start_date' => $formattedstartdate,
                 'is_enrolment_start' => $isenrolmentstart,
-                'can_self_enrol' => $canselfenrol,
+                'can_self_enrol' => $canenrol,
+                'is_pending' => $ispending,
                 'is_future_date' => $isfuturedate,
                 'course_url' => $courseurl,
                 'sections' => $results,
@@ -902,9 +910,15 @@ class calculator {
     }
 
     /**
-     * Whether the user can actually open a course: actively enrolled, or able to self-enrol.
+     * Whether the user can actually open a course: actively enrolled, or able to enrol themselves.
      *
-     * The self branch only answers for the current $USER (core's can_self_enrol is $USER-scoped).
+     * The enrolment branch only answers for the current $USER (the per-plugin predicates it
+     * dispatches to are all $USER-scoped).
+     *
+     * A pending enrol_apply application is neither leg: it writes a suspended enrolment row, so
+     * is_enrolled() with onlyactive says no, and the apply adapter refuses to offer a second
+     * application. Such a learner genuinely cannot open the course, which is what this returns -
+     * see current_user_has_pending_application() for the state a card should show them instead.
      *
      * @param \stdClass $course A course record with at least an id.
      * @param int $userid The user id.
@@ -922,42 +936,171 @@ class calculator {
             return false;
         }
 
-        return self::current_user_can_self_enrol((int) $course->id);
+        return self::current_user_can_enrol((int) $course->id);
+    }
+
+    /**
+     * Whether the current $USER may enrol themselves into the course right now.
+     *
+     * Scoped to $USER by the per-plugin predicates below; callers must gate on
+     * $userid === $USER->id.
+     *
+     * This dispatches per enrolment plugin rather than asking one question of all of them,
+     * because there is no generic question to ask. enrol_plugin::can_self_enrol() is an
+     * unconditional `return false;` in the base class and enrol_self is the only plugin in the
+     * whole of 5.2 that overrides it, so a loop written against it reports every other method
+     * as "cannot" - which is how a course whose only way in is enrol_apply came to be drawn
+     * with a padlock and no path through it, for applicants who were perfectly eligible.
+     *
+     * enrol_self: can_self_enrol() already enforces instance status, the enrolment window, the
+     * max-enrolled cap, an enrolment the user already holds and the customint5 cohort
+     * restriction, so a plan's synced restriction cohort is honoured for free. It returns true,
+     * a string, or null - when customint5 names a cohort that has since been deleted
+     * (enrol/self/lib.php) - but never false, so only `=== true` fails closed.
+     *
+     * enrol_apply (this fleet's fork, and optional - the is_callable() guard is what makes it
+     * so): its predicate is allow_apply(), covering instance status, the new-applications flag,
+     * the enrolment window and the cohort restriction with its -1 unresolved sentinel. Two
+     * checks live outside it, and are mirrored here precisely because enrol_self keeps its
+     * equivalents inside can_self_enrol(): an application already lodged, and the customint3
+     * places cap. Keep them in step with enrol_apply::submit_application(), which is the
+     * authority - it re-checks both under a lock before writing.
+     *
+     * @param int $courseid The course id.
+     * @return bool
+     */
+    public static function current_user_can_enrol(int $courseid): bool {
+        global $DB, $USER;
+
+        $plugins = [];
+        foreach (enrol_get_instances($courseid, true) as $instance) {
+            if ($instance->enrol !== 'self' && $instance->enrol !== 'apply') {
+                continue;
+            }
+            if (!array_key_exists($instance->enrol, $plugins)) {
+                // Null for a plugin that is not installed, which is the normal case for apply.
+                $plugins[$instance->enrol] = enrol_get_plugin($instance->enrol);
+            }
+            $plugin = $plugins[$instance->enrol];
+            if (!$plugin) {
+                continue;
+            }
+
+            if ($instance->enrol === 'self') {
+                if ($plugin->can_self_enrol($instance, false) === true) {
+                    return true;
+                }
+                continue;
+            }
+
+            if (!is_callable([$plugin, 'allow_apply'])) {
+                // Some other build of enrol_apply; this adapter knows nothing about it.
+                continue;
+            }
+            if ($DB->record_exists('user_enrolments', ['userid' => $USER->id, 'enrolid' => $instance->id])) {
+                // An application is already lodged, or an enrolment already held.
+                continue;
+            }
+            if ($plugin->allow_apply($instance) !== true) {
+                continue;
+            }
+            $cap = (int) $instance->customint3;
+            if ($cap > 0 && $DB->count_records('user_enrolments', ['enrolid' => $instance->id]) >= $cap) {
+                continue;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Whether the current $USER has an enrol_apply application still awaiting a decision.
+     *
+     * A pending application is a user_enrolments row on an apply instance written with
+     * ENROL_USER_SUSPENDED and no enrolment period (enrol_apply::apply()), so it answers no to
+     * both of the questions a card asks: is_enrolled() with onlyactive is false, and
+     * current_user_can_enrol() declines to offer a second application. Without a state of its
+     * own such a learner gets the padlock - the same card shown to somebody who was never
+     * eligible - and the one thing it cannot say is the one thing they need to know.
+     *
+     * Scoped to apply instances on purpose. A suspended row on a manual or self instance is an
+     * administrative suspension, not an application, and reading it as one would tell a
+     * suspended learner to wait for a decision nobody is going to take.
+     *
+     * Matched by enrolment state rather than through enrol_apply_applicationinfo, because that
+     * row is deleted the moment a decision is taken while the enrolment row outlives it. An
+     * approval turns the row active, which the enrolled branch catches first, and a
+     * cancellation unenrols the user outright.
+     *
+     * Expiry is the third outcome, and it is why the timeend clause below is not optional. When
+     * a site sets enrol_apply's expiredaction to one of the two suspend values, core's
+     * process_expirations() flips a lapsed ACTIVE row back to ENROL_USER_SUSPENDED and leaves
+     * timeend in the past - so a status-only test reads an approval that simply ran out as a
+     * fresh application, and tells that learner to wait for a decision nobody will ever take.
+     * Pending and waiting-list rows always carry timeend = 0: apply() stamps no period and the
+     * waiting state does not touch the dates, so only a once-approved row can have one.
+     *
+     * The authority is enrol_apply\local\queue::awaiting_decision_where(), whose docblock names
+     * this exact clause as the one that gets left out. That class cannot be called from here -
+     * naming it would make an optional integration a hard dependency - so this is a deliberate
+     * third copy of a two-copy rule. Keep it in step by hand.
+     *
+     * @param int $courseid The course id.
+     * @return bool
+     */
+    public static function current_user_has_pending_application(int $courseid): bool {
+        global $DB, $USER;
+
+        foreach (enrol_get_instances($courseid, true) as $instance) {
+            if ($instance->enrol !== 'apply') {
+                continue;
+            }
+            $pending = $DB->record_exists_select(
+                'user_enrolments',
+                'userid = :userid AND enrolid = :enrolid AND status <> :active
+                     AND (timeend = 0 OR timeend > :now)',
+                [
+                    'userid' => $USER->id,
+                    'enrolid' => $instance->id,
+                    'active' => ENROL_USER_ACTIVE,
+                    'now' => time(),
+                ]
+            );
+            if ($pending) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
      * Whether the current $USER can self-enrol into the course via an enabled self instance.
      *
-     * Scoped to $USER by core's can_self_enrol(); callers must gate on $userid === $USER->id.
-     * The self plugin already enforces the instance status, dates, max-enrolled and cohort
-     * restriction (customint5), so a plan's synced restriction cohort is honoured for free.
-     *
+     * @deprecated Since v1.1 - the predicate is no longer self-only. Use current_user_can_enrol().
      * @param int $courseid The course id.
      * @return bool
      */
     public static function current_user_can_self_enrol(int $courseid): bool {
-        global $CFG;
+        debugging(
+            'calculator::current_user_can_self_enrol() is deprecated, use current_user_can_enrol() instead.',
+            DEBUG_DEVELOPER
+        );
 
-        require_once($CFG->dirroot . '/enrol/self/lib.php');
-        $selfplugin = enrol_get_plugin('self');
-        if (!$selfplugin) {
-            return false;
-        }
-        foreach (enrol_get_instances($courseid, true) as $instance) {
-            if ($instance->enrol === 'self' && $selfplugin->can_self_enrol($instance, false) === true) {
-                return true;
-            }
-        }
-        return false;
+        return self::current_user_can_enrol($courseid);
     }
 
     /**
-     * Whether the user is enrolled (incl. future/suspended) or — for the current $USER — can self-enrol.
+     * Whether the user is enrolled (incl. future/suspended) or — for the current $USER — may join.
      *
      * Membership test for the 'enrolledorself' display filter: the existing 'enrolled' semantics
      * (is_enrolled onlyactive=false, so future-dated and suspended enrolments count) plus the linked
-     * courses the current viewer could self-enrol into. The self leg is evaluable only for $USER, so
-     * when staff view another learner's plan it degrades to enrolled-only.
+     * courses the current viewer could enrol themselves into. That leg is evaluable only for
+     * $USER, so when staff view another learner's plan it degrades to enrolled-only.
+     *
+     * A pending enrol_apply application needs no branch here: it writes a real user_enrolments
+     * row, so the onlyactive=false test above already counts it as enrolled.
      *
      * @param \stdClass $course A course record with at least an id.
      * @param int $userid The user id.
@@ -975,6 +1118,6 @@ class calculator {
             return false;
         }
 
-        return self::current_user_can_self_enrol((int) $course->id);
+        return self::current_user_can_enrol((int) $course->id);
     }
 }

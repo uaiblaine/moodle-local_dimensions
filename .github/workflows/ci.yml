@@ -18,11 +18,27 @@ jobs:
   # $plugin->supported) — update these when the supported range changes.
   # The highest branch runs the full PHP x DB matrix; older branches run
   # PostgreSQL only. PHPUnit and Behat run on every runtime leg.
+  #
+  # enrol_apply is checked out beside the plugin so the enrolability tests in
+  # calculator_enrol_predicate_test can run against the real plugin instead of
+  # skipping. It is emphatically NOT a runtime dependency: local_dimensions
+  # declares no $plugin->dependencies, reaches enrol_apply only through an
+  # is_callable() guard, and installs and runs unchanged on a site that has
+  # never heard of it — optional_enrol_apply_test pins every half of that
+  # promise, source scan included.
+  # This input only populates the CI test site.
+  #
+  # 4.05 gets no such line, and must not: enrol_apply declares
+  # $plugin->supported = [501, 502], so checking it out there would offer
+  # Moodle 4.5 a plugin it cannot install. The apply tests skip on that leg,
+  # which is the truth — the integration cannot exist on 4.5.
   ci-502:
     name: Moodle 5.02
     uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
     with:
       moodle-core-branch: MOODLE_502_STABLE
+      plugin-dependencies: |
+        uaiblaine/moodle-enrol_apply,master
 
   ci-501:
     name: Moodle 5.01
@@ -30,6 +46,8 @@ jobs:
     with:
       moodle-core-branch: MOODLE_501_STABLE
       one-db-only: true
+      plugin-dependencies: |
+        uaiblaine/moodle-enrol_apply,master
 
   ci-405:
     name: Moodle 4.05
