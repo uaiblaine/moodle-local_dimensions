@@ -987,11 +987,18 @@
     font-size: 0.8rem;
 }
 
-/* Self-enrolment open: the lock becomes a way in. */
+/* Enrolment open: the lock becomes a way in. */
 .local-dimensions-locked-icon-enrol {
     border-color: rgb(15 108 191 / 35%);
     background-color: rgb(15 108 191 / 6%);
     color: #0f6cbf;
+}
+
+/* Applied and waiting: neither the brand of an invitation nor the grey of a refusal. */
+.local-dimensions-locked-icon-pending {
+    border-color: rgb(102 77 3 / 35%);
+    background-color: rgb(102 77 3 / 6%);
+    color: #664d03;
 }
 
 .local-dimensions-enrol-btn {
@@ -2658,6 +2665,13 @@
     justify-content: center;
     background: #0f6cbf;
     color: #fff;
+}
+
+.local-dimensions-course-state-pending {
+    justify-content: center;
+    border: 1px solid #ffe69c;
+    background: #fff3cd;
+    color: #664d03;
 }
 
 .local-dimensions-course-hint {

@@ -119,7 +119,7 @@ class constants {
     /** @var string Enrollment filter: show only courses with active enrollments */
     const ENROLLMENTFILTER_ACTIVE = 'active';
 
-    /** @var string Enrollment filter: show enrolled courses plus courses the user can self-enrol into */
+    /** @var string Enrollment filter: show enrolled courses plus courses the user may join themselves */
     const ENROLLMENTFILTER_ENROLLEDORSELF = 'enrolledorself';
 
     /** @var string Single-course redirect: inherit the global setting */

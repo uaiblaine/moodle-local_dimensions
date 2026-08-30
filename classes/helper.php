@@ -789,7 +789,7 @@ class helper {
     }
 
     /**
-     * Append the "enrolled and self-enrolable" option to an already-provisioned
+     * Append the "enrolled and joinable" option to an already-provisioned
      * enrollmentfilter select field, if missing.
      *
      * The provisioning path short-circuits on an existing field and never re-syncs its

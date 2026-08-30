@@ -377,6 +377,92 @@ final class get_competency_courses_test extends \advanced_testcase {
     }
 
     /**
+     * A course reachable only through enrol_apply reports 'enrol', not 'locked'.
+     *
+     * Skipped where enrol_apply is not installed. ci.yml checks it out on the 5.01 and 5.02
+     * jobs, so those legs run this for real; 4.05 does not, because enrol_apply declares
+     * supported = [501, 502] and the integration cannot exist there.
+     *
+     * @return void
+     */
+    public function test_execute_reports_enrol_access_for_an_apply_only_course(): void {
+        $this->resetAfterTest();
+        $plugin = $this->require_apply_plugin();
+        $competencyid = $this->set_up_competency();
+        $course = $this->getDataGenerator()->create_course();
+        \core_competency\api::add_competency_to_course($course->id, $competencyid);
+        $this->add_apply_instance($plugin, $course);
+
+        $rows = $this->cleaned_result_for($competencyid, $this->getDataGenerator()->create_user());
+
+        $this->assertSame('enrol', $rows[$course->id]['access']);
+    }
+
+    /**
+     * An application awaiting a decision gets its own state, between open and locked.
+     *
+     * @return void
+     */
+    public function test_execute_reports_pending_access_for_a_lodged_application(): void {
+        $this->resetAfterTest();
+        $plugin = $this->require_apply_plugin();
+        $competencyid = $this->set_up_competency();
+        $course = $this->getDataGenerator()->create_course();
+        \core_competency\api::add_competency_to_course($course->id, $competencyid);
+        $instance = $this->add_apply_instance($plugin, $course);
+
+        $applicant = $this->getDataGenerator()->create_user();
+        $plugin->enrol_user($instance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
+
+        $rows = $this->cleaned_result_for($competencyid, $applicant);
+
+        $this->assertSame('pending', $rows[$course->id]['access']);
+
+        /* Control: an untouched user on the same course is offered the way in, so 'pending'
+           above is about this applicant's own row and not about the instance being shut. */
+        $rows = $this->cleaned_result_for($competencyid, $this->getDataGenerator()->create_user());
+        $this->assertSame('enrol', $rows[$course->id]['access']);
+    }
+
+    /**
+     * Switch enrol_apply on for this test, or skip when the optional plugin is absent.
+     *
+     * @return \enrol_plugin The apply plugin.
+     */
+    private function require_apply_plugin(): \enrol_plugin {
+        $plugin = enrol_get_plugin('apply');
+        if (!$plugin || !is_callable([$plugin, 'allow_apply'])) {
+            $this->markTestSkipped('enrol_apply is not installed on this site.');
+        }
+
+        $enabled = enrol_get_plugins(true);
+        $enabled['apply'] = true;
+        set_config('enrol_plugins_enabled', implode(',', array_keys($enabled)));
+
+        return $plugin;
+    }
+
+    /**
+     * Add an enabled apply instance accepting applications from anybody.
+     *
+     * @param \enrol_plugin $plugin The apply plugin.
+     * @param \stdClass $course The course to add the instance to.
+     * @return \stdClass The stored enrol record.
+     */
+    private function add_apply_instance(\enrol_plugin $plugin, \stdClass $course): \stdClass {
+        global $DB;
+
+        $id = $plugin->add_instance($course, [
+            'status' => ENROL_INSTANCE_ENABLED,
+            'customint3' => 0,
+            'customint5' => 0,
+            'customint6' => 1,
+        ]);
+
+        return $DB->get_record('enrol', ['id' => $id], '*', MUST_EXIST);
+    }
+
+    /**
      * Neither enrolled nor able to join: locked, and the card gets a date to show.
      *
      * @return void

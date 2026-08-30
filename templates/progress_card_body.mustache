@@ -28,6 +28,7 @@
     * formatted_start_date (string) - When the course becomes available
     * is_enrolment_start (bool) - Whether the date is an enrolment start date
     * can_self_enrol (bool) - Whether the learner may join the locked course right now
+    * is_pending (bool) - Whether the learner has applied to join and is awaiting a decision
     * islearnmore (bool) - Whether to show "Learn More" button instead of "Locked Content"
     * showlockeddate (bool) - Whether to show the availability date
     * customicon (string) - CSS class for custom locked icon (empty = default lock icon from pix)
@@ -65,6 +66,7 @@
         "formatted_start_date": "01/02/2026",
         "is_enrolment_start": false,
         "can_self_enrol": false,
+        "is_pending": false,
         "hascontinue": true,
         "continueurl": "/course/section.php?id=1",
         "continuename": "Section 1",
@@ -98,26 +100,41 @@
 <div style="position: relative; height: 100%;">
     {{#locked}}
     <div class="local-dimensions-locked-overlay">
-        {{! Icon: the enter icon when the learner may simply join, else the custom FA icon or the default lock }}
-        <div class="local-dimensions-locked-icon {{#can_self_enrol}}local-dimensions-locked-icon-enrol{{/can_self_enrol}}">
+        {{! Icon: the enter icon when the learner may simply join, the hourglass while an
+            application is being decided, else the custom FA icon or the default lock }}
+        <div class="local-dimensions-locked-icon {{#can_self_enrol}}local-dimensions-locked-icon-enrol{{/can_self_enrol}}{{^can_self_enrol}}{{#is_pending}}local-dimensions-locked-icon-pending{{/is_pending}}{{/can_self_enrol}}">
             {{#can_self_enrol}}
                 <i class="fa fa-sign-in" aria-hidden="true"></i>
             {{/can_self_enrol}}
             {{^can_self_enrol}}
-                {{#customicon}}
-                    <i class="{{customicon}}" aria-hidden="true"></i>
-                {{/customicon}}
-                {{^customicon}}
-                    <img class="local-dimensions-icon local-dimensions-icon-lock local-dimensions-locked-icon-image" src="{{lockiconurl}}" alt="" aria-hidden="true">
-                {{/customicon}}
+                {{#is_pending}}
+                    <i class="fa fa-hourglass-half" aria-hidden="true"></i>
+                {{/is_pending}}
+                {{^is_pending}}
+                    {{#customicon}}
+                        <i class="{{customicon}}" aria-hidden="true"></i>
+                    {{/customicon}}
+                    {{^customicon}}
+                        <img class="local-dimensions-icon local-dimensions-icon-lock local-dimensions-locked-icon-image" src="{{lockiconurl}}" alt="" aria-hidden="true">
+                    {{/customicon}}
+                {{/is_pending}}
             {{/can_self_enrol}}
         </div>
-        {{! An open self-enrolment makes the card an invitation, so it takes precedence and carries no date }}
+        {{! An open enrolment makes the card an invitation, so it takes precedence over both the
+            pending and the locked wording, and carries no date }}
         {{#can_self_enrol}}
             <a href="{{courseurl}}" class="local-dimensions-enrol-btn"><i class="fa fa-sign-in" aria-hidden="true"></i>{{#str}}enrol_to_start, local_dimensions{{/str}}</a>
-            <div class="local-dimensions-enrol-note">{{#str}}selfenrolment_open, local_dimensions{{/str}}</div>
+            <div class="local-dimensions-enrol-note">{{#str}}enrolment_open, local_dimensions{{/str}}</div>
         {{/can_self_enrol}}
         {{^can_self_enrol}}
+        {{! Applied and waiting: no button, because there is nothing left to do, and no lock
+            message, because the learner is not the one being told no. The date block is
+            skipped for the same reason - the answer is a decision, not a date }}
+        {{#is_pending}}
+            <div class="local-dimensions-locked-message">{{#str}}application_pending, local_dimensions{{/str}}</div>
+            <div class="local-dimensions-enrol-note">{{#str}}application_pending_note, local_dimensions{{/str}}</div>
+        {{/is_pending}}
+        {{^is_pending}}
             {{! Message: "Learn More" button or "Locked Content" text }}
             {{#islearnmore}}
                 <a href="{{courseurl}}" class="local-dimensions-learnmore-btn" style="background: {{learnmorebuttoncolor}};">{{#str}}learn_more, local_dimensions{{/str}}</a>
@@ -137,6 +154,7 @@
                     {{/is_enrolment_start}}
                 </div>
             {{/showlockeddate}}
+        {{/is_pending}}
         {{/can_self_enrol}}
     </div>
     {{/locked}}
