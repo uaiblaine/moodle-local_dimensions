@@ -240,7 +240,7 @@ define(
                 {key: 'evidence_journey', component: 'local_dimensions'},
                 {key: 'view_detailed_progress', component: 'local_dimensions'},
                 {key: 'enrol_to_start', component: 'local_dimensions'},
-                {key: 'selfenrolment_open', component: 'local_dimensions'},
+                {key: 'enrolment_open', component: 'local_dimensions'},
                 {key: 'locked_content', component: 'local_dimensions'},
                 {key: 'available_at', component: 'local_dimensions'},
                 {key: 'enrolment_starts', component: 'local_dimensions'},
@@ -248,7 +248,9 @@ define(
                 {key: 'filter_not_completed', component: 'local_dimensions'},
                 {key: 'go_to_activity', component: 'local_dimensions'},
                 {key: 'access_content', component: 'local_dimensions'},
-                {key: 'aria_completion_percentage', component: 'local_dimensions'}
+                {key: 'aria_completion_percentage', component: 'local_dimensions'},
+                {key: 'application_pending', component: 'local_dimensions'},
+                {key: 'application_pending_note', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -333,7 +335,7 @@ define(
                     evidenceJourney: strings[76],
                     viewDetailedProgress: strings[77],
                     enrolToStart: strings[78],
-                    selfEnrolmentOpen: strings[79],
+                    enrolmentOpen: strings[79],
                     lockedContent: strings[80],
                     availableAt: strings[81],
                     enrolmentStarts: strings[82],
@@ -341,7 +343,9 @@ define(
                     notCompleted: strings[84],
                     goToActivity: strings[85],
                     accessContent: strings[86],
-                    ariaSectionProgress: strings[87]
+                    ariaSectionProgress: strings[87],
+                    applicationPending: strings[88],
+                    applicationPendingNote: strings[89]
                 };
 
                 const summaryState = getSummaryState(data, courses);
@@ -2068,7 +2072,20 @@ define(
                 html += escapeHtml(strMap.enrolToStart);
                 html += '</span>';
                 html += '<span class="local-dimensions-course-hint">' +
-                    escapeHtml(strMap.selfEnrolmentOpen) + '</span>';
+                    escapeHtml(strMap.enrolmentOpen) + '</span>';
+                return html;
+            }
+
+            /* Applied and waiting. Neither of the other two strips fits: the card offers no
+               way in, so it is not an invitation, and the padlock would say the learner is
+               not eligible when the truth is that somebody has yet to decide. */
+            if (course.access === 'pending') {
+                let html = '<span class="local-dimensions-course-state local-dimensions-course-state-pending">';
+                html += '<i class="fa fa-hourglass-half" aria-hidden="true"></i>';
+                html += escapeHtml(strMap.applicationPending);
+                html += '</span>';
+                html += '<span class="local-dimensions-course-hint">' +
+                    escapeHtml(strMap.applicationPendingNote) + '</span>';
                 return html;
             }
 
@@ -2261,7 +2278,8 @@ define(
                 const activities = course.activities || [];
                 const iscompact = course.cardmode === 'activity' || course.cardmode === 'section';
 
-                const isReachable = course.access !== 'locked' && course.access !== 'enrol';
+                const isReachable = course.access !== 'locked' && course.access !== 'enrol'
+                    && course.access !== 'pending';
                 const isBlocked = course.access === 'locked'
                     && displaySettings.lockedcardmode === 'blocked';
 

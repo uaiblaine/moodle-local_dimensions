@@ -127,6 +127,35 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
   customfield-aware CRUD web services.
 
 ### Fixed
+- **A course you can only get into by applying is no longer drawn as a padlock.** The predicate
+  behind every locked card walked the course's enrolment instances looking for `enrol_self` and
+  nothing else, so a course whose only way in is `enrol_apply` was classified as locked — cover
+  image dimmed, lock overlay on top, no path forward — for learners who were perfectly eligible
+  to apply. Widening it is not a matter of asking a more general question, because there is no
+  general question to ask: `enrol_plugin::can_self_enrol()` is an unconditional `return false;`
+  in the base class and `enrol_self` is the only plugin in the whole of 5.2 that overrides it,
+  so a loop written against it reports every other enrolment method as "cannot". The predicate
+  now dispatches per plugin — `can_self_enrol()` for self, `allow_apply()` for apply, with the
+  already-applied check and the `customint3` places cap mirrored beside it because they live
+  outside `allow_apply()` where self keeps its equivalents inside. `enrol_apply` stays optional:
+  an `is_callable()` guard means a site without it, or with a different build of it, simply
+  never matches. The method is now `calculator::current_user_can_enrol()`;
+  `current_user_can_self_enrol()` remains as a deprecated alias.
+- **An application awaiting a decision is now its own card state.** A pending `enrol_apply`
+  application writes a *suspended* enrolment row, which answers no to both questions a card
+  asks: the learner is not actively enrolled, and the plugin will not accept a second
+  application. They were therefore handed the padlock — the same card as somebody who was never
+  eligible — and the one thing it could not say was the one thing they needed to know. Both
+  learner views now report a third state between open and locked: an hourglass with "Application
+  pending" instead of a lock with a date, and no button, because there is nothing left to do.
+  The state is scoped to `apply` instances on purpose — a suspended row on a manual or self
+  instance is an administrative suspension, not an application — and it excludes a row whose
+  enrolment period has run out, which is the clause that separates a real application from an
+  approval that `process_expirations()` re-suspended under a "suspend" expiry action. Without
+  it a learner whose enrolment merely lapsed would be told, permanently, to wait for a decision
+  nobody was going to take. The `enrolledorself` display filter needs no new branch: an
+  application is a real enrolment row, so its existing `onlyactive=false` test already counts
+  it.
 - The **card's shape** is now decided over the same set of activities as its percentages. It was
   not: the shape resolver asked "is there exactly one activity here" using *openable now*, so a
   course holding one open activity beside one released-later activity looked like a one-activity

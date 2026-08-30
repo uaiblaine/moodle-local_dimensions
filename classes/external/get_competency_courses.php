@@ -52,8 +52,11 @@ class get_competency_courses extends external_api {
     /** @var string The viewer is actively enrolled and can open the course. */
     private const ACCESS_OPEN = 'open';
 
-    /** @var string The viewer is not enrolled but self-enrolment is open to them. */
+    /** @var string The viewer is not enrolled but a way in is open to them right now. */
     private const ACCESS_ENROL = 'enrol';
+
+    /** @var string The viewer has applied to join and is waiting for a decision. */
+    private const ACCESS_PENDING = 'pending';
 
     /** @var string The viewer can neither open the course nor join it. */
     private const ACCESS_LOCKED = 'locked';
@@ -161,9 +164,22 @@ class get_competency_courses extends external_api {
             $lockdate = 0;
             $isenrolstart = false;
             if (!is_enrolled($coursecontext, $USER->id, '', true)) {
-                $access = \local_dimensions\calculator::current_user_can_self_enrol((int) $course->id)
-                    ? self::ACCESS_ENROL
-                    : self::ACCESS_LOCKED;
+                /* Three outcomes, not two. A pending enrol_apply application is a suspended
+                   enrolment row: it fails the active test above and the predicate below
+                   declines to offer a second application, so without its own state the
+                   applicant is handed the padlock - the same card as somebody who was never
+                   eligible, saying nothing about the decision they are waiting on.
+
+                   Joining outranks waiting when both are true, which a course with an apply
+                   instance beside an open self one can be: a way in now is worth more than
+                   news about a way in later. */
+                if (\local_dimensions\calculator::current_user_can_enrol((int) $course->id)) {
+                    $access = self::ACCESS_ENROL;
+                } else if (\local_dimensions\calculator::current_user_has_pending_application((int) $course->id)) {
+                    $access = self::ACCESS_PENDING;
+                } else {
+                    $access = self::ACCESS_LOCKED;
+                }
             }
             if ($access === self::ACCESS_LOCKED) {
                 /* Fetched here rather than per card: the progress bar used to need the full
@@ -351,7 +367,7 @@ class get_competency_courses extends external_api {
                 'ruleoutcome' => new external_value(PARAM_INT, 'What completing the course does to the competency'),
                 'access' => new external_value(
                     PARAM_ALPHA,
-                    'What the viewer can do with the course: open, enrol or locked'
+                    'What the viewer can do with the course: open, enrol, pending or locked'
                 ),
                 'lockdate' => new external_value(PARAM_INT, 'Availability timestamp when locked, 0 otherwise'),
                 'isenrolstart' => new external_value(PARAM_BOOL, 'Whether the lock date is an enrolment start date'),

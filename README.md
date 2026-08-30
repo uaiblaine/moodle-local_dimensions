@@ -12,6 +12,11 @@ Requirements
 - Moodle 4.5 or later (tested up to Moodle 5.2)
 - Core competencies enabled (`core_competency`)
 
+**Optional integration.** Where `enrol_apply` is installed, a locked course card recognises it
+as a way in and shows an application awaiting a decision as its own state. The plugin declares
+no dependency on it and reaches it only through a runtime guard, so it installs and behaves
+exactly as before on a site that does not have it.
+
 
 Documentation / Documentação
 -----------------------------
@@ -45,7 +50,9 @@ Two ways to visualize a learning plan, selectable per template via a custom fiel
 
 ### Competency tracker
 
-The linked courses of one competency as a responsive grid of course cards: real-time section progress (circular indicators, recursive subsection support), lock status with configurable icons and messages, availability dates for future enrolments, and tag-driven chip filters. Completion tabs narrow the grid to what is still open, a **Continue** shortcut jumps to the first started-but-unfinished section, and a finished course carries a completion seal. A locked card offers **self-enrolment** where the course allows it, or the date it opens. Courses that amount to a single activity or a single section link straight to it. An optional redirect skips the grid entirely when the learner has a single active enrolment.
+The linked courses of one competency as a responsive grid of course cards: real-time section progress (circular indicators, recursive subsection support), lock status with configurable icons and messages, availability dates for future enrolments, and tag-driven chip filters. Completion tabs narrow the grid to what is still open, a **Continue** shortcut jumps to the first started-but-unfinished section, and a finished course carries a completion seal. A locked card offers a **way in** where the course has one — self-enrolment, or an application
+where `enrol_apply` is installed — shows an **application already lodged** as its own state while
+it waits for a decision, and otherwise gives the date the course opens. Courses that amount to a single activity or a single section link straight to it. An optional redirect skips the grid entirely when the learner has a single active enrolment.
 
 ### Full plan overview
 

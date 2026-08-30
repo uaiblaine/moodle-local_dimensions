@@ -171,6 +171,103 @@ final class get_course_progress_test extends \advanced_testcase {
     }
 
     /**
+     * A lodged application reaches the tracker card as its own state, not as self-enrolment.
+     *
+     * The card body renders three mutually exclusive shapes off can_self_enrol and is_pending,
+     * so both flags have to arrive, and the precedence between them has to hold.
+     *
+     * Skipped where enrol_apply is not installed. ci.yml checks it out on the 5.01 and 5.02
+     * jobs, so those legs run this for real; 4.05 does not, because enrol_apply declares
+     * supported = [501, 502].
+     *
+     * @return void
+     */
+    public function test_execute_reports_a_pending_application_on_a_locked_course(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $plugin = enrol_get_plugin('apply');
+        if (!$plugin || !is_callable([$plugin, 'allow_apply'])) {
+            $this->markTestSkipped('enrol_apply is not installed on this site.');
+        }
+        $enabled = enrol_get_plugins(true);
+        $enabled['apply'] = true;
+        set_config('enrol_plugins_enabled', implode(',', array_keys($enabled)));
+
+        $course = $this->getDataGenerator()->create_course();
+        $instanceid = $plugin->add_instance($course, [
+            'status' => ENROL_INSTANCE_ENABLED,
+            'customint3' => 0,
+            'customint5' => 0,
+            'customint6' => 1,
+        ]);
+        $instance = $DB->get_record('enrol', ['id' => $instanceid], '*', MUST_EXIST);
+        $this->link_competency((int) $course->id);
+
+        // Nobody has applied yet: the card is an invitation.
+        $newcomer = $this->getDataGenerator()->create_user();
+        $this->setUser($newcomer);
+        $row = $this->cleaned_row_for((int) $course->id);
+        $this->assertTrue($row['locked']);
+        $this->assertTrue($row['can_self_enrol']);
+        $this->assertFalse($row['is_pending']);
+
+        // Having applied, the same card becomes a wait rather than an invitation.
+        $applicant = $this->getDataGenerator()->create_user();
+        $plugin->enrol_user($instance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
+        $this->setUser($applicant);
+        $row = $this->cleaned_row_for((int) $course->id);
+        $this->assertTrue($row['locked']);
+        $this->assertFalse($row['can_self_enrol']);
+        $this->assertTrue($row['is_pending']);
+    }
+
+    /**
+     * An open way in outranks an application already lodged elsewhere on the same course.
+     *
+     * @return void
+     */
+    public function test_execute_prefers_an_open_enrolment_over_a_pending_application(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $plugin = enrol_get_plugin('apply');
+        if (!$plugin || !is_callable([$plugin, 'allow_apply'])) {
+            $this->markTestSkipped('enrol_apply is not installed on this site.');
+        }
+        $enabled = enrol_get_plugins(true);
+        $enabled['apply'] = true;
+        set_config('enrol_plugins_enabled', implode(',', array_keys($enabled)));
+
+        $course = $this->getDataGenerator()->create_course();
+        $instanceid = $plugin->add_instance($course, [
+            'status' => ENROL_INSTANCE_ENABLED,
+            'customint3' => 0,
+            'customint5' => 0,
+            'customint6' => 1,
+        ]);
+        $instance = $DB->get_record('enrol', ['id' => $instanceid], '*', MUST_EXIST);
+        $self = $DB->get_record('enrol', ['courseid' => $course->id, 'enrol' => 'self'], '*', MUST_EXIST);
+        enrol_get_plugin('self')->update_status($self, ENROL_INSTANCE_ENABLED);
+        $this->link_competency((int) $course->id);
+
+        $applicant = $this->getDataGenerator()->create_user();
+        $plugin->enrol_user($instance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
+        $this->setUser($applicant);
+
+        $row = $this->cleaned_row_for((int) $course->id);
+
+        /* Both are true of this learner, and the one that can be acted on now wins: news
+           about a decision is worth less than a door that is already open. */
+        $this->assertTrue($row['can_self_enrol']);
+        $this->assertFalse($row['is_pending']);
+    }
+
+    /**
      * Writes the singleactivity format's 'activitytype' option directly, exactly like
      * calculator_card_shape_test::set_singleactivity_type() - see that method's docblock for
      * why create_course()'s own 'activitytype' key is silently dropped and cannot be used
