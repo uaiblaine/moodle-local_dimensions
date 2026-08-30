@@ -1004,8 +1004,7 @@ class calculator {
             if ($plugin->allow_apply($instance) !== true) {
                 continue;
             }
-            $cap = (int) $instance->customint3;
-            if ($cap > 0 && $DB->count_records('user_enrolments', ['enrolid' => $instance->id]) >= $cap) {
+            if (self::apply_is_full($instance, $plugin)) {
                 continue;
             }
             return true;
@@ -1119,5 +1118,41 @@ class calculator {
         }
 
         return self::current_user_can_enrol((int) $course->id);
+    }
+
+    /**
+     * Whether an enrol_apply instance has no place left.
+     *
+     * Asks the plugin, rather than re-deriving the answer, because that definition
+     * changed and this adapter used to re-implement it. enrol_apply stopped counting EXPIRED
+     * enrolments against the cap: it ships expiredaction = ENROL_EXT_REMOVED_KEEP, under which
+     * core changes nothing when a period runs out, so a counted expired row made the cap a
+     * ratchet that only ever tightened. While the count was duplicated here, a course whose
+     * places had been freed by expiry still read as closed on this surface while enrol_apply's
+     * own pages offered the button and accepted the application.
+     *
+     * It goes through the PLUGIN OBJECT and not \enrol_apply\local\capacity, and that is not
+     * a style choice: enrol_apply is an optional dependency here, so naming a class in its
+     * namespace is a reference the autoloader would have to resolve on a site without the
+     * plugin. is_callable() on the object is the same guard every allow_apply() call in this
+     * file already uses.
+     *
+     * The inline fallback is not dead code: it is what an enrol_apply build predating the
+     * method means by "full", and on such a build the unfiltered count IS the plugin's rule.
+     *
+     * @param \stdClass $instance Enrol instance belonging to the apply plugin.
+     * @param \enrol_plugin $plugin The apply plugin instance.
+     * @return bool True when the instance has no place left.
+     */
+    private static function apply_is_full(\stdClass $instance, \enrol_plugin $plugin): bool {
+        global $DB;
+
+        if (is_callable([$plugin, 'is_full'])) {
+            return (bool) $plugin->is_full($instance);
+        }
+
+        $cap = (int) $instance->customint3;
+
+        return $cap > 0 && $DB->count_records('user_enrolments', ['enrolid' => $instance->id]) >= $cap;
     }
 }

@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **A course whose enrolment places had been freed by expiry still showed as closed.** The check
+  for "this course is full" was re-implemented here rather than asked of `enrol_apply`, and that
+  copy counted enrolments whose period had already run out. Since the plugin changed its own
+  answer, the two disagreed: `enrol_apply` offered the button and accepted the application while
+  this surface went on treating the course as full. The question is now put to the plugin, so the
+  two cannot drift again.
+
 Macro view of everything since v1.0 — per-change detail lives in the commit history.
 
 ### Added
