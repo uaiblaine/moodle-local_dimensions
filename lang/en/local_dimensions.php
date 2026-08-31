@@ -46,6 +46,7 @@ $string['assessment_status'] = 'Assessment';
 $string['available_at'] = 'Opens {$a}';
 $string['cachedef_competency_metadata'] = 'Cached competency metadata for card rendering';
 $string['cachedef_competency_scss'] = 'Compiled CSS from competency SCSS custom fields';
+$string['cachedef_course_customfields'] = 'Course custom field values used by the chip filters';
 $string['cachedef_plan_trail'] = 'Session cache for plan competency trail data';
 $string['cachedef_returncontext'] = 'Session context for the course return button (returns to the plan or the competency)';
 $string['cachedef_template_courses'] = 'Valid course IDs per learning plan template';
