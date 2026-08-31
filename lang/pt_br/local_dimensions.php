@@ -46,6 +46,7 @@ $string['assessment_status'] = 'Avaliação';
 $string['available_at'] = 'Abre em {$a}';
 $string['cachedef_competency_metadata'] = 'Metadados de competências em cache para renderização de cartões';
 $string['cachedef_competency_scss'] = 'CSS compilado dos campos SCSS personalizados de competência';
+$string['cachedef_course_customfields'] = 'Valores dos campos personalizados do curso usados pelos filtros de chips';
 $string['cachedef_plan_trail'] = 'Cache de sessão para dados da trilha de competências do plano';
 $string['cachedef_returncontext'] = 'Contexto de sessão do botão de retorno do curso (volta ao plano ou à competência)';
 $string['cachedef_template_courses'] = 'IDs de cursos válidos por modelo de plano de aprendizagem';
