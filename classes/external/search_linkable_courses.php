@@ -25,7 +25,7 @@
 namespace local_dimensions\external;
 
 use core\context\course as context_course;
-use core\context\system as context_system;
+use core_competency\competency;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
@@ -83,9 +83,12 @@ class search_linkable_courses extends external_api {
         $limitfrom = max(0, $params['limitfrom']);
         $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : 25;
 
-        $systemcontext = context_system::instance();
-        self::validate_context($systemcontext);
-        require_capability('moodle/competency:competencyview', $systemcontext);
+        // Validated in the competency's framework context, never at the site: a manager holding
+        // competencyview in one course category only must not depend on the authenticated-user
+        // default there.
+        $frameworkcontext = (new competency($competencyid))->get_context();
+        self::validate_context($frameworkcontext);
+        require_capability('moodle/competency:competencyview', $frameworkcontext);
 
         $manageable = helper::manageable_course_ids();
         if ($manageable === []) {

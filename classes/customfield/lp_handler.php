@@ -57,6 +57,9 @@ class lp_handler extends handler {
      */
     protected $savinginstanceid = 0;
 
+    /** @var context|null Context a form is creating a template in, set before the fields are rendered. */
+    protected $editcontexthint = null;
+
     /**
      * Returns the singleton instance.
      *
@@ -165,7 +168,24 @@ class lp_handler extends handler {
                 return $template->get_context();
             }
         }
+        if ($this->editcontexthint !== null) {
+            return $this->editcontexthint;
+        }
         return context_system::instance();
+    }
+
+    /**
+     * Tell the handler which context a form is creating a template in.
+     *
+     * The saving latch above covers the save half of the create path; this covers the render
+     * half, where core asks can_edit() about instance 0 before any template exists and a manager
+     * holding templatemanage in one course category only would otherwise see no custom fields.
+     *
+     * @param \context|null $context The context the template is being created in, or null to clear.
+     * @return void
+     */
+    public function set_edit_context_hint(?\context $context): void {
+        $this->editcontexthint = $context;
     }
 
     /**

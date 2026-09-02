@@ -252,8 +252,11 @@ class plans extends \core\output\dynamic_tabs\base {
         // header: each button only shows if the user can actually reach the page it opens.
         $syscontext = context_system::instance();
         $canassignroles = has_capability('moodle/role:manage', $syscontext);
-        $cancohortpage = has_capability('moodle/cohort:view', $syscontext)
-            || has_capability('moodle/cohort:manage', $syscontext);
+        // Core's cohort page is context-aware (cohort/index.php?contextid=), and cohort:manage is a
+        // course-category capability, so this one is judged in the resolved context; the client
+        // appends that context to the link.
+        $cancohortpage = has_capability('moodle/cohort:view', $context)
+            || has_capability('moodle/cohort:manage', $context);
         $canuserpage = has_capability('moodle/user:update', $syscontext)
             || has_capability('moodle/user:delete', $syscontext);
         $canenrolpage = has_capability('moodle/site:config', $syscontext);

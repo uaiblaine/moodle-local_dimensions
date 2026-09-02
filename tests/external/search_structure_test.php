@@ -184,12 +184,21 @@ final class search_structure_test extends \externallib_advanced_testcase {
     }
 
     /**
-     * A user without competencyview cannot use this function.
+     * A user who may not read the framework gets nothing: the gate is the framework's context.
+     *
+     * There is no site-level competencyview requirement any more (a manager holding it in one
+     * course category only must be able to search that category's frameworks), so an unreadable
+     * framework reads as empty, exactly as an unknown one does.
      *
      * @return void
      */
-    public function test_requires_competencyview_capability(): void {
+    public function test_an_unreadable_framework_reads_as_empty(): void {
         $this->resetAfterTest();
+        $this->setAdminUser();
+        $gen = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $fw = $gen->create_framework(['shortname' => 'FWcap', 'idnumber' => 'FWcap']);
+        $gen->create_competency(['competencyframeworkid' => $fw->get('id'), 'shortname' => 'anything here']);
+
         $context = \context_system::instance();
         $user = $this->getDataGenerator()->create_user();
         $roleid = $this->getDataGenerator()->create_role();
@@ -198,10 +207,8 @@ final class search_structure_test extends \externallib_advanced_testcase {
         accesslib_clear_all_caches_for_unit_testing();
         $this->setUser($user);
 
-        $gen = $this->getDataGenerator()->get_plugin_generator('core_competency');
-        $fw = $gen->create_framework(['shortname' => 'FWcap', 'idnumber' => 'FWcap']);
-
-        $this->expectException(\required_capability_exception::class);
-        search_structure::execute((int) $fw->get('id'), 'anything', 0, 25);
+        $result = search_structure::execute((int) $fw->get('id'), 'anything', 0, 25);
+        $this->assertSame(0, $result['total']);
+        $this->assertSame([], $result['items']);
     }
 }

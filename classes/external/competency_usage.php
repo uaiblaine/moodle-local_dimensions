@@ -24,10 +24,10 @@
 
 namespace local_dimensions\external;
 
-use core\context\system as context_system;
 use core_competency\api;
 use core_competency\competency;
 use core_competency\competency_framework;
+use core_competency\template_competency;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
@@ -68,22 +68,17 @@ class competency_usage extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), ['competencyid' => $competencyid]);
         $competencyid = $params['competencyid'];
 
-        $context = context_system::instance();
-        self::validate_context($context);
-        require_capability('moodle/competency:competencyview', $context);
-
+        // Validated in the framework's own context: a manager holding competencyview in one course
+        // category only must not depend on the authenticated-user default at the site.
         $competency = competency::get_record(['id' => $competencyid], MUST_EXIST);
         $framework = competency_framework::get_record(
             ['id' => $competency->get('competencyframeworkid')],
             MUST_EXIST
         );
-        if (!competency_framework::can_read_context($framework->get_context())) {
-            throw new \required_capability_exception(
-                $framework->get_context(),
-                'moodle/competency:competencyview',
-                'nopermissions',
-                ''
-            );
+        $context = $framework->get_context();
+        self::validate_context($context);
+        if (!competency_framework::can_read_context($context)) {
+            throw new \required_capability_exception($context, 'moodle/competency:competencyview', 'nopermissions', '');
         }
 
         // Courses (core filters each by the caller's per-course capabilities).
@@ -118,9 +113,15 @@ class competency_usage extends external_api {
             }
         }
 
-        // Learning plan templates bundling the competency (hub "Plans" naming).
+        // Learning plan templates bundling the competency (hub "Plans" naming). Read through the
+        // persistent rather than api::list_templates_using_competency(), which requires template
+        // read access at the SYSTEM context and throws otherwise - a category-scoped manager lost
+        // the whole popover to it. Each template is filtered on its own context instead.
         $templates = [];
-        foreach (api::list_templates_using_competency($competencyid) as $template) {
+        foreach (template_competency::list_templates($competencyid, false) as $template) {
+            if (!$template->can_read()) {
+                continue;
+            }
             $templates[] = [
                 'id' => (int) $template->get('id'),
                 'name' => format_string($template->get('shortname')),

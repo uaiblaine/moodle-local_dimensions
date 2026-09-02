@@ -24,7 +24,6 @@
 
 namespace local_dimensions\external;
 
-use core\context\system as context_system;
 use core_competency\competency;
 use core_competency\competency_framework;
 use core_external\external_api;
@@ -90,12 +89,15 @@ class browse_structure extends external_api {
         $limitfrom = max(0, $params['limitfrom']);
         $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : helper::STRUCTURE_PAGE_SIZE;
 
-        $context = context_system::instance();
-        self::validate_context($context);
-        require_capability('moodle/competency:competencyview', $context);
-
+        // Validated in the framework's own context, never at the site: a manager holding
+        // competencyview in one course category only must not depend on the authenticated-user
+        // default there. An unknown or unreadable framework reads as empty, as before.
         $framework = competency_framework::get_record(['id' => $frameworkid]);
-        if (!$framework || !competency_framework::can_read_context($framework->get_context())) {
+        if (!$framework) {
+            return ['items' => [], 'total' => 0];
+        }
+        self::validate_context($framework->get_context());
+        if (!competency_framework::can_read_context($framework->get_context())) {
             return ['items' => [], 'total' => 0];
         }
 

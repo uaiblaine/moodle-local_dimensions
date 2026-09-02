@@ -24,6 +24,7 @@
 
 namespace local_dimensions\external;
 
+use core_competency\plan;
 use core_competency\template;
 use core_competency\template_cohort;
 use core_external\external_api;
@@ -171,6 +172,9 @@ class list_template_participants extends external_api {
                     'isindividual' => $isindividual,
                     'modelo' => $isindividual ? '' : $modelname,
                     'cohorts' => implode(', ', $cohorts),
+                    // Unlink and delete need planmanage in the user's own context (core parity);
+                    // the grid renders the two actions only where this is true.
+                    'canmanage' => (int) plan::can_manage_user((int) $record->userid),
                 ];
             }
         }
@@ -223,6 +227,7 @@ class list_template_participants extends external_api {
                 'isindividual' => new external_value(PARAM_BOOL, 'Whether the plan is unlinked (individual)'),
                 'modelo' => new external_value(PARAM_TEXT, 'Linked template name, empty when individual'),
                 'cohorts' => new external_value(PARAM_TEXT, 'Attached cohorts the user belongs to, comma-joined'),
+                'canmanage' => new external_value(PARAM_INT, '1 when the caller may unlink or delete this plan'),
             ])),
             'total' => new external_value(PARAM_INT, 'Total matching participants'),
         ]);

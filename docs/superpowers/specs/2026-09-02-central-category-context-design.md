@@ -38,9 +38,11 @@ the dynamic forms, and 31 of the 45 web services derive their context from the o
    context). Rule to implement: a visible framework/template picture is served to any logged-in
    user, as core serves course images; a hidden one only to managers of its context and to
    users with a plan on it, so learner views keep working.
-6. **Listing scope:** match tool_lp — `children` (the context plus its descendants) instead of
-   `self`. Note this also changes the System view to list every category's objects, as tool_lp's
-   system page does.
+6. **Listing scope:** `children` (the category plus its descendants, as tool_lp's category
+   pages list) strictly on the locked category entry (`pagecontextid`). The site entry keeps
+   `self` everywhere — in System mode and for a category picked in the bar — so the scope is a
+   property of the entry, not of the resolved context, and the System view never lists other
+   contexts' objects. The locked bar's headline count follows the same rule.
 7. **Custom fields:** defining fields stays site-wide (the two definition pages keep
    `$hassiteconfig`); FILLING them on competencies and templates must work in category context,
    which means `competency_handler::can_edit()` resolves at the framework's context (the
