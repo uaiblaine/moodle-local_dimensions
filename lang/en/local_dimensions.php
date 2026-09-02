@@ -111,6 +111,7 @@ $string['central_enrol_method'] = 'Method';
 $string['central_enrol_method_cohort'] = 'Cohort sync';
 $string['central_enrol_method_self'] = 'Self enrolment';
 $string['central_enrol_methoddisabled'] = 'This enrolment method is disabled on this site.';
+$string['central_enrol_nocourses'] = 'Enrolment methods act on the courses linked to this plan\'s competencies, and none is linked yet. Add competencies to the plan, then link them to courses on the Structures tab (a course must also be one you may configure enrolment methods in).';
 $string['central_enrol_proccount'] = '{$a} processing';
 $string['central_enrol_remove'] = 'Remove method';
 $string['central_enrol_remove_method'] = 'Remove · {$a}';
