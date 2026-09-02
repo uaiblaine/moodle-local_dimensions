@@ -5457,7 +5457,8 @@ a.local-dimensions-course-act-row:focus {
     overflow-y: auto;
 }
 
-.local-dimensions-central-structure-detail-pane [data-region='detail-description'] .local-dimensions-collapsible.is-expanded .local-dimensions-collapsible-content {
+.local-dimensions-central-structure-detail-pane [data-region='detail-description']
+.local-dimensions-collapsible.is-expanded .local-dimensions-collapsible-content {
     max-height: calc(60vh * 0.4);
     overflow-y: auto;
 }
@@ -5851,7 +5852,13 @@ a.local-dimensions-course-act-row:focus {
     overflow: hidden;
     padding: 26px 30px 36px;
     border-radius: 24px 24px 0 0;
-    background: linear-gradient(140deg, var(--ld-plans-hdr-0, #0f6cbf) 0%, var(--ld-plans-hdr-48, #0d5a9f) 48%, var(--ld-plans-hdr-100, #0a4680) 100%);
+    background:
+        linear-gradient(
+            140deg,
+            var(--ld-plans-hdr-0, #0f6cbf) 0%,
+            var(--ld-plans-hdr-48, #0d5a9f) 48%,
+            var(--ld-plans-hdr-100, #0a4680) 100%
+        );
 }
 
 .local-dimensions-central-plans-detail-glow {
