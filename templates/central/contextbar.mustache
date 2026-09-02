@@ -20,8 +20,11 @@
     Shared context selector governing both the Structure and Plans tabs.
 
     The category select is always rendered (hidden in system mode) so toggling context
-    is purely client-side. Each option and the bar itself carry both adaptive counts so
-    the displayed count switches between frameworks and plans without a round-trip.
+    is purely client-side. It holds the placeholder and, at most, the selected category:
+    every other category arrives through the search web service as the viewer types (the
+    autocomplete's ajax datasource), so a site with thousands of categories never renders
+    them. Each option and the bar itself carry both adaptive counts so the displayed count
+    switches between frameworks and plans without a round-trip.
 
     When the page was entered from a course category's menu it is locked to that category: the
     switch and the picker are replaced by a static label, and the hidden-categories toggle is
@@ -30,7 +33,8 @@
     * contexttype (string) · issystem (bool) · iscoursecat (bool) · needscategory (bool)
     * locked (bool) · lockedcategoryname (string) · cansystem (bool)
     * selectedcategoryid (int) · hascategories (bool)
-    * categoryoptions (array) {id, name, selected, frameworkcount, templatecount, hidden}
+    * categoryoptions (array) {id, name, selected, frameworkcount, templatecount, hidden} - the
+      selected category only, or empty
     * hiddencatstoggle (object|null) {id, label, action, checked} · shared showhidden_toggle partial,
       rendered only when a hidden category is reachable
     * systemframeworkcount (int) · systemtemplatecount (int)

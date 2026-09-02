@@ -95,25 +95,27 @@ class contextbar implements renderable, templatable {
             $systemtemplatecount = template::count_records(['contextid' => $systemcontext->id, 'visible' => 1]);
         }
 
-        $categoryoptions = helper::central_category_options($this->categoryid);
+        // Only the selected category is rendered; the rest of the picker is a search the client
+        // runs as the viewer types (local_dimensions_search_categories), so a site with thousands
+        // of categories costs this page nothing per category.
+        $categoryoptions = [];
+        $selected = $this->contexttype === 'coursecat' && $this->categoryid > 0
+            ? helper::central_category_option($this->categoryid)
+            : null;
+        if ($selected !== null) {
+            $selected['selected'] = true;
+            $categoryoptions = [$selected];
+        }
         $lockedcategoryname = '';
-        if ($this->locked) {
-            // Locked to the entry category: keep that one option (its counts feed the headline
-            // counter) and drop the rest, which the picker would never show anyway.
-            $categoryoptions = array_values(array_filter(
-                $categoryoptions,
-                fn(array $option): bool => $option['id'] === $this->categoryid
-            ));
-            $lockedcategoryname = $categoryoptions[0]['name'] ?? '';
+        if ($this->locked && $selected !== null) {
+            $lockedcategoryname = $selected['name'];
             // The locked entry lists the category's descendants too, so its counts cover the
             // same subtree; the picker's per-category counts are 'self' counts.
-            if (isset($categoryoptions[0])) {
-                $lockedcontext = \context_coursecat::instance($this->categoryid);
-                $categoryoptions[0]['frameworkcount'] = helper::count_frameworks_in_subtree($lockedcontext);
-                $categoryoptions[0]['templatecount'] = helper::count_templates_in_subtree($lockedcontext);
-                $categoryoptions[0]['hasframeworks'] = $categoryoptions[0]['frameworkcount'] > 0;
-                $categoryoptions[0]['hastemplates'] = $categoryoptions[0]['templatecount'] > 0;
-            }
+            $lockedcontext = \context_coursecat::instance($this->categoryid);
+            $categoryoptions[0]['frameworkcount'] = helper::count_frameworks_in_subtree($lockedcontext);
+            $categoryoptions[0]['templatecount'] = helper::count_templates_in_subtree($lockedcontext);
+            $categoryoptions[0]['hasframeworks'] = $categoryoptions[0]['frameworkcount'] > 0;
+            $categoryoptions[0]['hastemplates'] = $categoryoptions[0]['templatecount'] > 0;
         }
 
         // Counts of the currently selected context, in both modes. The Structure tab is
@@ -133,21 +135,17 @@ class contextbar implements renderable, templatable {
         }
 
         // The "show hidden categories" toggle renders only when a hidden category is actually
-        // reachable (null otherwise, so the template skips it). It starts on when the user last
-        // left it on, or when the selected category is itself hidden (else that context would
-        // vanish from the picker). It reuses the shared showhidden_toggle partial.
-        $hashidden = false;
-        $selectedhidden = false;
-        foreach ($categoryoptions as $option) {
-            if (!empty($option['hidden'])) {
-                $hashidden = true;
-                if ($option['id'] === $this->categoryid) {
-                    $selectedhidden = true;
-                }
-            }
-        }
+        // reachable: one exists and the viewer may see hidden categories at the site (null
+        // otherwise, so the template skips it). It starts on when the user last left it on, or
+        // when the selected category is itself hidden (else that context would vanish from the
+        // picker). It reuses the shared showhidden_toggle partial.
+        global $DB;
+        $hashidden = !$this->locked
+            && has_capability('moodle/category:viewhiddencategories', $systemcontext)
+            && $DB->record_exists('course_categories', ['visible' => 0]);
+        $selectedhidden = $selected !== null && !empty($selected['hidden']);
         $hiddencatstoggle = null;
-        if ($hashidden && !$this->locked) {
+        if ($hashidden) {
             $hiddencatstoggle = [
                 'id' => 'local-dimensions-central-showhiddencats',
                 'label' => get_string('central_bar_showhiddencategories', 'local_dimensions'),
@@ -165,7 +163,7 @@ class contextbar implements renderable, templatable {
             'cansystem' => $cansystem,
             'needscategory' => $this->needscategory,
             'selectedcategoryid' => $this->categoryid,
-            'hascategories' => !empty($categoryoptions),
+            'hascategories' => $DB->count_records('course_categories') > 0,
             'categoryoptions' => $categoryoptions,
             'hiddencatstoggle' => $hiddencatstoggle,
             'systemframeworkcount' => (int) $systemframeworkcount,

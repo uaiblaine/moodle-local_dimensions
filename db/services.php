@@ -410,4 +410,14 @@ $functions = [
         'capabilities' => 'moodle/competency:templatemanage',
         'ajax' => true,
     ],
+
+    // Context bar: course category picker.
+    'local_dimensions_search_categories' => [
+        'classname' => 'local_dimensions\external\search_categories',
+        'methodname' => 'execute',
+        'description' => 'Search the course categories the viewer may pick in the Competency hub, with per-category counts.',
+        'type' => 'read',
+        'capabilities' => '',
+        'ajax' => true,
+    ],
 ];

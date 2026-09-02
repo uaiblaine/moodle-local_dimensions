@@ -2732,62 +2732,120 @@ class helper {
     }
 
     /**
-     * Course category options for the Competency hub context selector.
+     * Search the course categories the viewer may pick in the Competency hub, in tree order.
      *
-     * Each readable category carries both adaptive counts so the client can switch the
-     * displayed count between frameworks (Structure) and learning plans (Plans) without a
-     * round-trip. Counts come from two aggregate queries (no N+1). Each entry holds:
-     * id, name, selected, frameworkcount, templatecount, hasframeworks, hastemplates.
+     * Built for sites with thousands of categories: the query is one SQL search on the name
+     * (accent-insensitive where the site supports it), capped at $limit hits, and only the hits
+     * are inspected further. Visibility is core's: a hidden category is offered only when asked
+     * for and only to a viewer who may see it. Competency readability is checked per hit unless
+     * the viewer already reads at the site, where no category can widen what the site grants
+     * (a narrower override on a category still cannot leak: the page re-checks the chosen
+     * category before showing anything).
      *
-     * @param int $selectedid Currently selected category id.
-     * @return array The list of category options.
+     * @param string $query Search text matched against the category name; empty for the first page.
+     * @param bool $includehidden Whether hidden categories the viewer may see are included.
+     * @param int $limit Maximum number of hits (1 to 50).
+     * @return array List of options, each: id, name (plain nested name), frameworkcount,
+     *               templatecount, hasframeworks, hastemplates, hidden.
      */
-    public static function central_category_options(int $selectedid): array {
+    public static function central_category_search(string $query, bool $includehidden, int $limit): array {
         global $DB;
-        $catids = [];
-        $catnames = [];
-        foreach (array_keys(\core_course_category::make_categories_list()) as $catid) {
-            try {
-                if (self::can_read_competency_context(\context_coursecat::instance((int) $catid))) {
-                    $catids[] = (int) $catid;
-                    /* Core's make_categories_list() hands back names already run through
-                       format_string(), the ESCAPED spelling; the picker and the locked label are
-                       Mustache double stashes and escape for themselves, so they need the plain
-                       spelling or an ampersand renders as "&amp;". Rebuild the name unescaped. */
-                    $catnames[(int) $catid] = \core_course_category::get((int) $catid, MUST_EXIST, true)
-                        ->get_nested_name(false, ' / ', ['escape' => false]);
-                }
-            } catch (\moodle_exception $e) {
+        $limit = max(1, min($limit, 50));
+
+        $where = [];
+        $params = [];
+        if ($query !== '') {
+            $where[] = self::sql_like_ai('name', ':q');
+            $params['q'] = '%' . $DB->sql_like_escape($query) . '%';
+        }
+        $canviewhidden = has_capability('moodle/category:viewhiddencategories', \context_system::instance());
+        if (!$includehidden || !$canviewhidden) {
+            $where[] = 'visible = 1';
+        }
+        $select = $where ? implode(' AND ', $where) : '';
+
+        // Over-fetch a little so the per-hit visibility and readability filters rarely leave a
+        // short page; anything past $limit is dropped.
+        $records = $DB->get_records_select('course_categories', $select, $params, 'sortorder ASC', 'id, visible', 0, $limit * 2);
+
+        $readsatsite = self::can_read_competency_context(\context_system::instance());
+        $ids = [];
+        foreach ($records as $record) {
+            $category = \core_course_category::get((int) $record->id, IGNORE_MISSING, true);
+            if (!$category || !\core_course_category::can_view_category($category)) {
                 continue;
             }
-        }
-
-        $frameworkcounts = self::count_frameworks_by_category($catids);
-        $templatecounts = self::count_templates_by_category($catids);
-
-        // Which of the readable categories are hidden (visible = 0). make_categories_list()
-        // already includes a hidden category when the viewer holds viewhiddencategories, so
-        // the flag lets the context bar hide it behind the "show hidden" toggle by default.
-        $visiblemap = [];
-        if (!empty($catids)) {
-            foreach ($DB->get_records_list('course_categories', 'id', $catids, '', 'id, visible') as $rec) {
-                $visiblemap[(int) $rec->id] = (int) $rec->visible;
+            if (!$readsatsite && !self::can_read_competency_context(\context_coursecat::instance((int) $record->id))) {
+                continue;
+            }
+            $ids[] = (int) $record->id;
+            if (count($ids) >= $limit) {
+                break;
             }
         }
+        return self::central_category_options_for($ids);
+    }
+
+    /**
+     * The picker option for one course category, or null when the viewer may not read it.
+     *
+     * The context bar renders only the selected category server-side; every other option
+     * arrives through central_category_search() as the viewer types.
+     *
+     * @param int $categoryid The course category id.
+     * @return array|null The option (see central_category_options_for()), or null.
+     */
+    public static function central_category_option(int $categoryid): ?array {
+        if ($categoryid <= 0) {
+            return null;
+        }
+        try {
+            if (!self::can_read_competency_context(\context_coursecat::instance($categoryid))) {
+                return null;
+            }
+        } catch (\moodle_exception $e) {
+            return null;
+        }
+        $options = self::central_category_options_for([$categoryid]);
+        return $options[0] ?? null;
+    }
+
+    /**
+     * Shape picker options for a list of course category ids, in the given order.
+     *
+     * Names are the plain nested spelling: core's make_categories_list() hands back names
+     * already run through format_string(), the escaped spelling, and the picker and the
+     * locked label are Mustache double stashes that escape for themselves - an ampersand
+     * would render as "&amp;". Counts come from two aggregate queries over the ids.
+     *
+     * @param array $categoryids Course category ids.
+     * @return array List of options, each: id, name, frameworkcount, templatecount,
+     *               hasframeworks, hastemplates, hidden.
+     */
+    private static function central_category_options_for(array $categoryids): array {
+        $categoryids = array_values(array_unique(array_filter(array_map('intval', $categoryids))));
+        if (empty($categoryids)) {
+            return [];
+        }
+        $frameworkcounts = self::count_frameworks_by_category($categoryids);
+        $templatecounts = self::count_templates_by_category($categoryids);
 
         $options = [];
-        foreach ($catids as $catid) {
+        foreach ($categoryids as $catid) {
+            $category = \core_course_category::get($catid, IGNORE_MISSING, true);
+            if (!$category) {
+                continue;
+            }
             $frameworkcount = (int) ($frameworkcounts[$catid] ?? 0);
             $templatecount = (int) ($templatecounts[$catid] ?? 0);
             $options[] = [
                 'id' => $catid,
-                'name' => $catnames[$catid],
-                'selected' => $catid === $selectedid,
+                'name' => $category->get_nested_name(false, ' / ', ['escape' => false]),
                 'frameworkcount' => $frameworkcount,
                 'templatecount' => $templatecount,
                 'hasframeworks' => $frameworkcount > 0,
                 'hastemplates' => $templatecount > 0,
-                'hidden' => empty($visiblemap[$catid]),
+                'hidden' => !$category->visible,
             ];
         }
         return $options;
