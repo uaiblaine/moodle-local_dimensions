@@ -85,7 +85,19 @@ const selectedCounts = (bar) => {
         };
     }
     const select = bar.querySelector(SELECTORS.categorySelect);
-    const option = select && select.selectedOptions[0];
+    if (!select) {
+        // Locked to the category the page was entered from: there is no picker, and the counts
+        // of that one category ride on the counter region itself.
+        const region = bar.querySelector(SELECTORS.count);
+        if (!region) {
+            return null;
+        }
+        return {
+            frameworks: Number(region.dataset.frameworkcount || 0),
+            plans: Number(region.dataset.templatecount || 0),
+        };
+    }
+    const option = select.selectedOptions[0];
     if (!option || !Number(option.value)) {
         return null;
     }

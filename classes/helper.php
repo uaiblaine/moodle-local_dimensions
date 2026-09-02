@@ -2581,6 +2581,24 @@ class helper {
     }
 
     /**
+     * The hub's URL for a context: bare for the site, carrying pagecontextid for a course category.
+     *
+     * The category entry is a different page setup (locked to the category, no admin tree), so any
+     * link that must land a category manager back on the hub has to carry the category; the bare
+     * URL is the Site administration entry and refuses them.
+     *
+     * @param \context $context The context the link is for (system or course category).
+     * @param array $params Further URL parameters (frameworkid, templateid, tab...).
+     * @return \moodle_url
+     */
+    public static function hub_page_url(\context $context, array $params = []): \moodle_url {
+        if ($context->contextlevel === CONTEXT_COURSECAT) {
+            $params = ['pagecontextid' => $context->id] + $params;
+        }
+        return new \moodle_url('/local/dimensions/central.php', $params);
+    }
+
+    /**
      * The learner's stored hero fold, for the one plan or competency being viewed.
      *
      * The fold is per plan and per competency: a learner who knows one plan by heart still
