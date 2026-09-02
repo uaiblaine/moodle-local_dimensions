@@ -127,4 +127,42 @@ final class contextbar_test extends advanced_testcase {
         $this->assertSame(0, $data['systemframeworkcount']);
         $this->assertSame(0, $data['systemtemplatecount']);
     }
+
+    /**
+     * A locked bar counts the whole subtree, and names the category in the plain spelling.
+     *
+     * The picker's per-category counts are 'self' counts; the locked entry lists descendants too,
+     * so its headline count must agree with the list. Category names come back from core already
+     * escaped, and the double stash escapes again, so the export must carry the plain ampersand.
+     *
+     * @return void
+     */
+    public function test_a_locked_bar_counts_the_subtree_and_keeps_the_plain_name(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enabled', 1, 'core_competency');
+        $generator = $this->getDataGenerator();
+        $ccg = $generator->get_plugin_generator('core_competency');
+        $parent = $generator->create_category(['name' => 'Arts & Crafts']);
+        $child = $generator->create_category(['name' => 'Pottery', 'parent' => $parent->id]);
+        $parentcontext = context_coursecat::instance((int) $parent->id);
+        $childcontext = context_coursecat::instance((int) $child->id);
+        $ccg->create_framework(['contextid' => $parentcontext->id]);
+        $ccg->create_framework(['contextid' => $childcontext->id]);
+        $ccg->create_framework(['contextid' => $childcontext->id, 'visible' => 0]);
+        $ccg->create_template(['contextid' => $childcontext->id]);
+
+        $locked = $this->export(new contextbar('coursecat', (int) $parent->id, false, true));
+        $this->assertSame('Arts & Crafts', $locked['lockedcategoryname']);
+        $this->assertSame(2, $locked['categoryoptions'][0]['frameworkcount']);
+        $this->assertSame(1, $locked['categoryoptions'][0]['templatecount']);
+        $this->assertSame(2, $locked['selectedframeworkcount']);
+        $this->assertSame(1, $locked['selectedtemplatecount']);
+
+        $unlocked = $this->export(new contextbar('coursecat', (int) $parent->id, false, false));
+        $selected = array_values(array_filter($unlocked['categoryoptions'], fn(array $o): bool => $o['selected']));
+        $this->assertSame('Arts & Crafts', $selected[0]['name']);
+        $this->assertSame(1, $selected[0]['frameworkcount']);
+        $this->assertSame(0, $selected[0]['templatecount']);
+    }
 }

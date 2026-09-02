@@ -102,7 +102,10 @@ class frameworks extends \core\output\dynamic_tabs\base {
         // Fetch the full set (incl. hidden) once so the "show hidden" toggle can be gated on
         // whether any hidden structure actually exists, mirroring the Plans tab; then filter the
         // display rows by the current toggle state.
-        $allrows = $needscategory ? [] : helper::framework_rows($pagecontext, true);
+        // The locked category entry lists the category and its descendants, as tool_lp's category
+        // page does; the site entry lists the resolved context alone.
+        $includes = empty($data['locked']) ? 'self' : 'children';
+        $allrows = $needscategory ? [] : helper::framework_rows($pagecontext, true, $includes);
         $hiddencount = 0;
         $rows = [];
         foreach ($allrows as $row) {

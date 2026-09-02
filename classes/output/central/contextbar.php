@@ -105,6 +105,15 @@ class contextbar implements renderable, templatable {
                 fn(array $option): bool => $option['id'] === $this->categoryid
             ));
             $lockedcategoryname = $categoryoptions[0]['name'] ?? '';
+            // The locked entry lists the category's descendants too, so its counts cover the
+            // same subtree; the picker's per-category counts are 'self' counts.
+            if (isset($categoryoptions[0])) {
+                $lockedcontext = \context_coursecat::instance($this->categoryid);
+                $categoryoptions[0]['frameworkcount'] = helper::count_frameworks_in_subtree($lockedcontext);
+                $categoryoptions[0]['templatecount'] = helper::count_templates_in_subtree($lockedcontext);
+                $categoryoptions[0]['hasframeworks'] = $categoryoptions[0]['frameworkcount'] > 0;
+                $categoryoptions[0]['hastemplates'] = $categoryoptions[0]['templatecount'] > 0;
+            }
         }
 
         // Counts of the currently selected context, in both modes. The Structure tab is
