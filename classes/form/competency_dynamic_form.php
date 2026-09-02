@@ -184,6 +184,8 @@ class competency_dynamic_form extends \core_form\dynamic_form {
         );
 
         // Plugin custom fields (the core category headers label them; no extra plugin heading).
+        // The hint names the framework's context for the create path, where no instance exists yet.
+        competency_handler::create()->set_edit_context_hint($this->get_context_for_dynamic_submission());
         competency_handler::create()->instance_form_definition($mform, $this->get_competencyid());
 
         // Cascade explainer, naming the two cascading selects and placed right above them.

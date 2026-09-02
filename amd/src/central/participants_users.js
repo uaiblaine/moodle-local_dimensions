@@ -75,11 +75,15 @@ const makeRow = (state, item) => {
     }
     tr.appendChild(ind);
 
+    // Both actions need planmanage in the user's own context, which the server answers per row;
+    // a manager scoped to a course category holds it for nobody, so the cell stays empty.
     const actions = document.createElement('td');
-    if (item.status !== STATUS_COMPLETE) {
-        actions.appendChild(iconButton('unlink-plan', 'fa-times', state.unlinklabel, 'me-1'));
+    if (item.canmanage) {
+        if (item.status !== STATUS_COMPLETE) {
+            actions.appendChild(iconButton('unlink-plan', 'fa-times', state.unlinklabel, 'me-1'));
+        }
+        actions.appendChild(iconButton('delete-plan', 'fa-trash', state.deletelabel));
     }
-    actions.appendChild(iconButton('delete-plan', 'fa-trash', state.deletelabel));
     tr.appendChild(actions);
     return tr;
 };

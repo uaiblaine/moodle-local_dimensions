@@ -38,6 +38,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **A manager scoped to one course category saw no custom fields on a competency and saved
+  none.** `competency_handler::can_edit()` resolved `competencymanage` at the system context
+  whatever the competency, and core filters both the rendered and the saved fields through it,
+  so the modal opened (the form checks the framework's context) with every plugin field missing
+  and each save wrote nothing, without an error. The handler now resolves the competency's own
+  framework context, latches the instance while a new one is saved, and takes a context hint
+  from the form for the create path — the same shape `lp_handler` already had, which also gains
+  the hint so a category manager sees the fields when creating a template.
+- **The competency usage popover failed for a category manager.** Its templates section went
+  through `api::list_templates_using_competency()`, which requires template read access at the
+  system context and throws otherwise. Templates are now read through the persistent and
+  filtered on their own context.
+- **The participants picker offered the whole site directory.** `search_assignable_users`
+  required only `templatemanage` on the template and then listed every active user, with email
+  and ID number, while the follow-up `add_template_user_plan` then failed on `planmanage`. The
+  search is now filtered to users the caller may create a plan for, the way core's tool_lp user
+  search is; the grid also learns per row whether unlink and delete are allowed and renders
+  the two actions only there.
+- **Eight read services no longer depend on the authenticated-user default for `competencyview`
+  at the site.** Structure browsing and search, competency search, course links, linkable
+  courses and usage validated the system context and required `competencyview` there before
+  their real per-framework gate, so a hardened site (or a category manager without that
+  default) lost the Structure tab. Each now validates the framework's own context; the
+  cross-framework search keeps only the login gate and its per-framework filter.
+- **The "open cohorts page" shortcut is judged in the hub's context and opens the category's
+  cohort page.** It was evaluated at the system context and hardcoded the site cohort list,
+  although `cohort:manage` is a course-category capability and core's page is context-aware.
 - **A course whose enrolment places had been freed by expiry still showed as closed.** The check
   for "this course is full" was re-implemented here rather than asked of `enrol_apply`, and that
   copy counted enrolments whose period had already run out. Since the plugin changed its own
