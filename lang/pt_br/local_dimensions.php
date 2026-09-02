@@ -111,6 +111,7 @@ $string['central_enrol_method'] = 'Método';
 $string['central_enrol_method_cohort'] = 'Sincronização de coortes';
 $string['central_enrol_method_self'] = 'Autoinscrição';
 $string['central_enrol_methoddisabled'] = 'Este método de inscrição está desabilitado neste site.';
+$string['central_enrol_nocourses'] = 'Os métodos de inscrição agem sobre os cursos vinculados às competências deste plano, e ainda não há nenhum vinculado. Adicione competências ao plano e vincule-as a cursos na aba Estruturas (o curso também precisa ser um em que você pode configurar métodos de inscrição).';
 $string['central_enrol_proccount'] = '{$a} em processamento';
 $string['central_enrol_remove'] = 'Remover método';
 $string['central_enrol_remove_method'] = 'Remover · {$a}';
