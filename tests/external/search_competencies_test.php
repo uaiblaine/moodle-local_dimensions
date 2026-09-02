@@ -110,12 +110,21 @@ final class search_competencies_test extends \externallib_advanced_testcase {
     }
 
     /**
-     * A user without competencyview cannot search.
+     * A user who may read no framework gets nothing: the gate is per framework, not site-wide.
+     *
+     * There is no site-level competencyview requirement any more (a manager holding it in one
+     * course category only must be able to search that category), so the answer is an empty
+     * result rather than an exception.
      *
      * @return void
      */
-    public function test_requires_competencyview_capability(): void {
+    public function test_a_user_who_may_read_no_framework_gets_nothing(): void {
         $this->resetAfterTest();
+        $this->setAdminUser();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $generator->create_framework(['shortname' => 'Alpha framework']);
+        $generator->create_competency(['competencyframeworkid' => $framework->get('id'), 'shortname' => 'Alpha']);
+
         // The competencyview capability is granted to authenticated users by default; prohibit it.
         $context = \context_system::instance();
         $user = $this->getDataGenerator()->create_user();
@@ -125,7 +134,8 @@ final class search_competencies_test extends \externallib_advanced_testcase {
         accesslib_clear_all_caches_for_unit_testing();
         $this->setUser($user);
 
-        $this->expectException(\required_capability_exception::class);
-        search_competencies::execute('Alpha', 0, 25);
+        $result = search_competencies::execute('Alpha', 0, 25);
+        $this->assertSame(0, $result['total']);
+        $this->assertSame([], $result['items']);
     }
 }

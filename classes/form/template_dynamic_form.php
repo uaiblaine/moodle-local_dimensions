@@ -99,7 +99,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
      * @return \moodle_url
      */
     protected function get_page_url_for_dynamic_submission(): \moodle_url {
-        return new \moodle_url('/local/dimensions/central.php');
+        return \local_dimensions\helper::hub_page_url($this->get_context_for_dynamic_submission());
     }
 
     /**
@@ -142,6 +142,8 @@ class template_dynamic_form extends \core_form\dynamic_form {
 
         // Plugin custom fields. Pass '' to suppress the handler's page-level heading: inside the
         // modal the core category headers already label the fields (parity with the competency modal).
+        // The hint names the context for the create path, where no template exists yet.
+        lp_handler::create()->set_edit_context_hint($this->get_context_for_dynamic_submission());
         lp_handler::create()->instance_form_definition($mform, $this->get_templateid(), '');
 
         // Cascade explainer, naming the two cascading selects and placed right above them.
@@ -220,6 +222,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
         global $PAGE;
 
         parent::definition_after_data();
+        lp_handler::create()->set_edit_context_hint($this->get_context_for_dynamic_submission());
         lp_handler::create()->instance_form_definition_after_data($this->_form, $this->get_templateid());
 
         // SCSS is plain text: pin its editor to FORMAT_PLAIN so it never opens as a rich editor.

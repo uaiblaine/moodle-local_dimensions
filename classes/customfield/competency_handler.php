@@ -45,6 +45,12 @@ class competency_handler extends handler {
      */
     protected static $singleton;
 
+    /** @var int Competency being saved, so can_edit() resolves the right context while core asks about instance 0. */
+    protected $savinginstanceid = 0;
+
+    /** @var context|null Context a form is creating a competency in, set before the fields are rendered. */
+    protected $editcontexthint = null;
+
     /**
      * Returns the singleton instance.
      *
@@ -118,7 +124,48 @@ class competency_handler extends handler {
         if ($field->get('shortname') === \local_dimensions\constants::CFIELD_CUSTOMSCSS) {
             return has_capability('local/dimensions:editcustomscss', context_system::instance());
         }
-        return has_capability('moodle/competency:competencymanage', context_system::instance());
+        return has_capability('moodle/competency:competencymanage', $this->resolve_edit_context($instanceid));
+    }
+
+    /**
+     * Tell the handler which context a form is creating a competency in.
+     *
+     * Core renders and saves the fields through can_edit(), which only knows an instance id; on
+     * the create path that id is 0, so without this hint a manager holding competencymanage in
+     * one course category only would see no custom fields on the create form. The form sets it
+     * from its own framework context before rendering.
+     *
+     * @param \context|null $context The framework's context, or null to clear the hint.
+     * @return void
+     */
+    public function set_edit_context_hint(?\context $context): void {
+        $this->editcontexthint = $context;
+    }
+
+    /**
+     * The context a competency's custom-field editing rights are resolved against.
+     *
+     * The competency's framework context when an instance is known (given, or latched while
+     * saving a new one), the form's hint on the create path, and the system context otherwise -
+     * the field-configuration screens edit the definitions themselves, which are site-wide.
+     * Resolving at the system context regardless, as this handler did, made a category-scoped
+     * manager's competency modal render and save zero custom fields, silently.
+     *
+     * @param int $instanceid The competency id, or 0.
+     * @return context
+     */
+    protected function resolve_edit_context(int $instanceid): context {
+        $instanceid = $instanceid > 0 ? $instanceid : $this->savinginstanceid;
+        if ($instanceid > 0) {
+            $competency = \core_competency\competency::get_record(['id' => $instanceid]);
+            if ($competency) {
+                return $competency->get_context();
+            }
+        }
+        if ($this->editcontexthint !== null) {
+            return $this->editcontexthint;
+        }
+        return context_system::instance();
     }
 
     /**
@@ -224,7 +271,14 @@ class competency_handler extends handler {
     public function instance_form_save(\stdClass $instance, bool $isnewinstance = false) {
         $instanceid = (int) ($instance->id ?? 0);
         $before = $this->snapshot_instance_values($instanceid);
-        parent::instance_form_save($instance, $isnewinstance);
+        /* Remembered for can_edit(), which core asks about instance 0 whenever $isnewinstance is
+           true; without it a category-scoped manager writes ZERO fields on the create path. */
+        $this->savinginstanceid = $instanceid;
+        try {
+            parent::instance_form_save($instance, $isnewinstance);
+        } finally {
+            $this->savinginstanceid = 0;
+        }
         $changed = $this->diff_instance_values($before, $this->snapshot_instance_values($instanceid));
         $this->trigger_customfields_updated(competency_customfields_updated::class, $instanceid, $isnewinstance, $changed);
     }

@@ -2339,6 +2339,51 @@ class helper {
     }
 
     /**
+     * Count visible frameworks in a course category and every category below it.
+     *
+     * The locked category entry lists the category's descendants too (core's 'children' scope),
+     * so its headline count must cover the same subtree; the per-category counts above are
+     * 'self' counts for the picker of the site entry.
+     *
+     * @param \context $context The course category context.
+     * @return int
+     */
+    public static function count_frameworks_in_subtree(\context $context): int {
+        return self::count_in_subtree('competency_framework', $context);
+    }
+
+    /**
+     * Count visible learning plan templates in a course category and every category below it.
+     *
+     * @param \context $context The course category context.
+     * @return int
+     */
+    public static function count_templates_in_subtree(\context $context): int {
+        return self::count_in_subtree('competency_template', $context);
+    }
+
+    /**
+     * Count visible rows of a competency table whose context is the given one or a descendant.
+     *
+     * @param string $table 'competency_framework' or 'competency_template'.
+     * @param \context $context The root context of the subtree.
+     * @return int
+     */
+    private static function count_in_subtree(string $table, \context $context): int {
+        global $DB;
+        $sql = "SELECT COUNT(t.id)
+                  FROM {" . $table . "} t
+                  JOIN {context} ctx ON ctx.id = t.contextid
+                 WHERE t.visible = :visible
+                   AND (ctx.id = :ctxid OR " . $DB->sql_like('ctx.path', ':path') . ")";
+        return (int) $DB->count_records_sql($sql, [
+            'visible' => 1,
+            'ctxid' => $context->id,
+            'path' => $DB->sql_like_escape($context->path) . '/%',
+        ]);
+    }
+
+    /**
      * Count visible learning plan templates per course category context.
      *
      * Single aggregate query (chunked only as a placeholder-limit safeguard).
@@ -2556,6 +2601,49 @@ class helper {
     }
 
     /**
+     * Choose the hub tab to open: the requested one when the viewer may see it, else the first available.
+     *
+     * Core's dynamic tabs open whatever the URL fragment names, so a saved or deep-linked tab the
+     * viewer cannot read would throw from require_access() and take the whole page down. Falling
+     * back keeps the page up for a viewer who holds only some of the competency capabilities in the
+     * context - a template manager without framework access, or the other way round. The fallback
+     * order is the strip's own order. Returns the empty string when no tab is available.
+     *
+     * @param array $available Availability keyed by tab shortname, in strip order (bool values).
+     * @param string $requested The tab the URL or the saved preference asked for.
+     * @return string The shortname to open, or '' when nothing is available.
+     */
+    public static function pick_available_tab(array $available, string $requested): string {
+        if (!empty($available[$requested])) {
+            return $requested;
+        }
+        foreach ($available as $shortname => $isavailable) {
+            if ($isavailable) {
+                return (string) $shortname;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * The hub's URL for a context: bare for the site, carrying pagecontextid for a course category.
+     *
+     * The category entry is a different page setup (locked to the category, no admin tree), so any
+     * link that must land a category manager back on the hub has to carry the category; the bare
+     * URL is the Site administration entry and refuses them.
+     *
+     * @param \context $context The context the link is for (system or course category).
+     * @param array $params Further URL parameters (frameworkid, templateid, tab...).
+     * @return \moodle_url
+     */
+    public static function hub_page_url(\context $context, array $params = []): \moodle_url {
+        if ($context->contextlevel === CONTEXT_COURSECAT) {
+            $params = ['pagecontextid' => $context->id] + $params;
+        }
+        return new \moodle_url('/local/dimensions/central.php', $params);
+    }
+
+    /**
      * The learner's stored hero fold, for the one plan or competency being viewed.
      *
      * The fold is per plan and per competency: a learner who knows one plan by heart still
@@ -2658,11 +2746,16 @@ class helper {
         global $DB;
         $catids = [];
         $catnames = [];
-        foreach (\core_course_category::make_categories_list() as $catid => $catname) {
+        foreach (array_keys(\core_course_category::make_categories_list()) as $catid) {
             try {
                 if (self::can_read_competency_context(\context_coursecat::instance((int) $catid))) {
                     $catids[] = (int) $catid;
-                    $catnames[(int) $catid] = $catname;
+                    /* Core's make_categories_list() hands back names already run through
+                       format_string(), the ESCAPED spelling; the picker and the locked label are
+                       Mustache double stashes and escape for themselves, so they need the plain
+                       spelling or an ampersand renders as "&amp;". Rebuild the name unescaped. */
+                    $catnames[(int) $catid] = \core_course_category::get((int) $catid, MUST_EXIST, true)
+                        ->get_nested_name(false, ' / ', ['escape' => false]);
                 }
             } catch (\moodle_exception $e) {
                 continue;
@@ -3054,13 +3147,14 @@ class helper {
      *
      * @param \context $context The resolved page context (system or course category).
      * @param bool $includehidden Whether to include hidden frameworks (default visible-only).
+     * @param string $includes Core's scope word: 'self' for the context alone, 'children' for its descendants too.
      * @return array List of ['id' => int, 'shortname' => string, 'idnumber' => string,
      *               'description' => string, 'competencycount' => int, 'visible' => bool,
      *               'deletable' => bool, 'canmanage' => bool].
      */
-    public static function framework_rows(\context $context, bool $includehidden = false): array {
+    public static function framework_rows(\context $context, bool $includehidden = false, string $includes = 'self'): array {
         $rows = [];
-        foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $context, 'self', !$includehidden) as $framework) {
+        foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $context, $includes, !$includehidden) as $framework) {
             if (!competency_framework::can_read_context($framework->get_context())) {
                 continue;
             }

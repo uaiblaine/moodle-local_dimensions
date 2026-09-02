@@ -122,7 +122,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
      * @return \moodle_url
      */
     protected function get_page_url_for_dynamic_submission(): \moodle_url {
-        return new \moodle_url('/local/dimensions/central.php');
+        return \local_dimensions\helper::hub_page_url($this->get_context_for_dynamic_submission());
     }
 
     /**

@@ -69,6 +69,12 @@ function local_dimensions_pluginfile($course, $cm, $context, $filearea, $args, $
         return false;
     }
 
+    // The item id is the competency or template the picture belongs to; serve it only to
+    // those who may see that object (a visible template to any logged-in user, as course images).
+    if (!picture_manager::can_view($filearea, (int) $itemid)) {
+        return false;
+    }
+
     send_stored_file($file, DAYSECS, 0, $forcedownload, $options);
 }
 
@@ -154,4 +160,39 @@ function local_dimensions_user_preferences(): array {
         \local_dimensions\constants::PREF_LEARNER_FAV => $definition,
         \local_dimensions\constants::PREF_LEARNER_HERO => $definition,
     ];
+}
+
+/**
+ * Add the Competency hub to a course category's settings navigation (its "More" menu).
+ *
+ * Discovered by get_plugins_with_function('extend_navigation_category_settings', 'lib.php') on
+ * every branch the plugin supports, exactly as tool_lp adds its two category pages. The node is
+ * gated on MANAGING frameworks or templates in the category, not on reading them: reading is an
+ * authenticated-user default at every category, so a read gate would put a management surface
+ * in every student's menu. The page itself admits readers (like tool_lp), so a deep link still
+ * works for a viewer who can only read.
+ *
+ * @param navigation_node $navigation The category settings node to extend.
+ * @param context $coursecategorycontext The course category's context.
+ * @return void
+ */
+function local_dimensions_extend_navigation_category_settings($navigation, $coursecategorycontext): void {
+    if (!get_config('core_competency', 'enabled')) {
+        return;
+    }
+    $canmanage = \core_competency\competency_framework::can_manage_context($coursecategorycontext)
+        || \core_competency\template::can_manage_context($coursecategorycontext);
+    if (!$canmanage) {
+        return;
+    }
+    $node = navigation_node::create(
+        get_string('central', 'local_dimensions'),
+        new moodle_url('/local/dimensions/central.php', ['pagecontextid' => $coursecategorycontext->id]),
+        navigation_node::TYPE_SETTING,
+        null,
+        'local_dimensions_central',
+        new pix_icon('i/competencies', '')
+    );
+    $node->set_force_into_more_menu(true);
+    $navigation->add_node($node);
 }

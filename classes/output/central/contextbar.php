@@ -57,19 +57,24 @@ class contextbar implements renderable, templatable {
     /** @var bool Whether the "show hidden categories" toggle starts on (persisted preference). */
     private $showhiddencats;
 
+    /** @var bool Whether the page is locked to the category it was entered from (no switching). */
+    private $locked;
+
     /**
      * Constructor.
      *
      * @param string $contexttype Either 'system' or 'coursecat'.
      * @param int $categoryid Selected course category id (course-category mode only).
      * @param bool $showhiddencats Whether the "show hidden categories" toggle starts on.
+     * @param bool $locked Whether the page was entered from a category's menu and stays there.
      */
-    public function __construct(string $contexttype, int $categoryid, bool $showhiddencats = false) {
+    public function __construct(string $contexttype, int $categoryid, bool $showhiddencats = false, bool $locked = false) {
         $resolved = helper::resolve_central_context($contexttype, $categoryid);
         $this->contexttype = $resolved['contexttype'];
         $this->categoryid = (int) $resolved['categoryid'];
         $this->needscategory = (bool) $resolved['needscategory'];
         $this->showhiddencats = $showhiddencats;
+        $this->locked = $locked && $this->contexttype === 'coursecat' && $this->categoryid > 0;
     }
 
     /**
@@ -79,11 +84,37 @@ class contextbar implements renderable, templatable {
      * @return array
      */
     public function export_for_template(renderer_base $output): array {
+        // The System button and its counts exist only for a viewer who may read something there;
+        // a manager scoped to one category gets neither the button nor the site-wide totals.
         $systemcontext = context_system::instance();
-        $systemframeworkcount = competency_framework::count_records(['contextid' => $systemcontext->id, 'visible' => 1]);
-        $systemtemplatecount = template::count_records(['contextid' => $systemcontext->id, 'visible' => 1]);
+        $cansystem = helper::can_read_competency_context($systemcontext);
+        $systemframeworkcount = 0;
+        $systemtemplatecount = 0;
+        if ($cansystem) {
+            $systemframeworkcount = competency_framework::count_records(['contextid' => $systemcontext->id, 'visible' => 1]);
+            $systemtemplatecount = template::count_records(['contextid' => $systemcontext->id, 'visible' => 1]);
+        }
 
         $categoryoptions = helper::central_category_options($this->categoryid);
+        $lockedcategoryname = '';
+        if ($this->locked) {
+            // Locked to the entry category: keep that one option (its counts feed the headline
+            // counter) and drop the rest, which the picker would never show anyway.
+            $categoryoptions = array_values(array_filter(
+                $categoryoptions,
+                fn(array $option): bool => $option['id'] === $this->categoryid
+            ));
+            $lockedcategoryname = $categoryoptions[0]['name'] ?? '';
+            // The locked entry lists the category's descendants too, so its counts cover the
+            // same subtree; the picker's per-category counts are 'self' counts.
+            if (isset($categoryoptions[0])) {
+                $lockedcontext = \context_coursecat::instance($this->categoryid);
+                $categoryoptions[0]['frameworkcount'] = helper::count_frameworks_in_subtree($lockedcontext);
+                $categoryoptions[0]['templatecount'] = helper::count_templates_in_subtree($lockedcontext);
+                $categoryoptions[0]['hasframeworks'] = $categoryoptions[0]['frameworkcount'] > 0;
+                $categoryoptions[0]['hastemplates'] = $categoryoptions[0]['templatecount'] > 0;
+            }
+        }
 
         // Counts of the currently selected context, in both modes. The Structure tab is
         // active first, so the headline counter starts in framework mode.
@@ -116,7 +147,7 @@ class contextbar implements renderable, templatable {
             }
         }
         $hiddencatstoggle = null;
-        if ($hashidden) {
+        if ($hashidden && !$this->locked) {
             $hiddencatstoggle = [
                 'id' => 'local-dimensions-central-showhiddencats',
                 'label' => get_string('central_bar_showhiddencategories', 'local_dimensions'),
@@ -129,6 +160,9 @@ class contextbar implements renderable, templatable {
             'contexttype' => $this->contexttype,
             'issystem' => $this->contexttype === 'system',
             'iscoursecat' => $this->contexttype === 'coursecat',
+            'locked' => $this->locked,
+            'lockedcategoryname' => $lockedcategoryname,
+            'cansystem' => $cansystem,
             'needscategory' => $this->needscategory,
             'selectedcategoryid' => $this->categoryid,
             'hascategories' => !empty($categoryoptions),

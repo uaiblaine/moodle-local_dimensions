@@ -248,6 +248,52 @@ class picture_manager {
     }
 
     /**
+     * Whether the current user may see the pictures of a competency or a template.
+     *
+     * Mirrors what the objects themselves allow. A competency's pictures follow its framework:
+     * readable with competencyview or competencymanage in the framework's context, which is an
+     * authenticated-user default at every category. A template's pictures are shown to learners
+     * on their plans, who hold no template capability at all, so a VISIBLE template's pictures
+     * go to any logged-in user, as core serves course images; a hidden template's only to those
+     * who may read it in its context or who hold a plan based on it.
+     *
+     * Before this check every picture was served to any logged-in user by id: harmless while
+     * only site administrators created these objects, a cross-category leak once categories are
+     * delegated to different managers.
+     *
+     * @param string $filearea One of the FILEAREA_* constants.
+     * @param int $itemid The competency or template id the file area is keyed by.
+     * @return bool
+     */
+    public static function can_view(string $filearea, int $itemid): bool {
+        global $USER;
+        if ($itemid <= 0) {
+            return false;
+        }
+        if (in_array($filearea, [self::FILEAREA_COMPETENCY, self::FILEAREA_COMPETENCY_CARD], true)) {
+            $competency = \core_competency\competency::get_record(['id' => $itemid]);
+            return $competency && \core_competency\competency_framework::can_read_context($competency->get_context());
+        }
+        if (in_array($filearea, [self::FILEAREA_TEMPLATE, self::FILEAREA_TEMPLATE_CARD], true)) {
+            $template = \core_competency\template::get_record(['id' => $itemid]);
+            if (!$template) {
+                return false;
+            }
+            if ($template->get('visible')) {
+                return true;
+            }
+            if (\core_competency\template::can_read_context($template->get_context())) {
+                return true;
+            }
+            return \core_competency\plan::record_exists_select(
+                'templateid = :templateid AND userid = :userid',
+                ['templateid' => $itemid, 'userid' => (int) $USER->id]
+            );
+        }
+        return false;
+    }
+
+    /**
      * Get the URL of a stored image.
      *
      * @param string $area 'competency' or 'lp'.
