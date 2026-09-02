@@ -17,8 +17,9 @@
  * Shared context selector for the Competency hub. Lives above the dynamic tabs and
  * governs both of them: switching System / Course category (or picking a category)
  * pushes the context onto every tab pane and refreshes the active one — no page reload.
- * The headline counter and the per-category counts adapt to the active tab (frameworks
- * in Structure, learning plans in Plans) from data embedded at render time.
+ * The category picker searches on demand (category_datasource) rather than listing every
+ * category of the site; the headline counter adapts to the active tab (frameworks in
+ * Structure, learning plans in Plans) from the counts each hit and the selected option carry.
  *
  * @module     local_dimensions/central/context
  * @copyright  2026 Anderson Blaine
@@ -31,6 +32,7 @@ import {getString} from 'core/str';
 import {enhance} from 'core/form-autocomplete';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import * as Preferences from 'local_dimensions/central/preferences';
+import * as Categories from 'local_dimensions/central/category_datasource';
 
 /**
  * Pristine clone of the category wrapper (label + raw select), taken before the autocomplete
@@ -101,6 +103,12 @@ const selectedCounts = (bar) => {
     if (!option || !Number(option.value)) {
         return null;
     }
+    if (option.dataset.frameworkcount === undefined) {
+        // An option the autocomplete created from a search hit carries no counts of its own;
+        // the datasource remembers what the search returned for it.
+        const hit = Categories.known(option.value);
+        return hit ? {frameworks: hit.frameworks, plans: hit.plans} : null;
+    }
     return {
         frameworks: Number(option.dataset.frameworkcount || 0),
         plans: Number(option.dataset.templatecount || 0),
@@ -153,26 +161,6 @@ const renderOptionLabels = (bar) => {
 const showHiddenCats = (bar) => {
     const toggle = bar.querySelector(SELECTORS.hiddenCatsToggle);
     return !!(toggle && toggle.checked);
-};
-
-/**
- * Drop hidden category options from the select unless the "show hidden" toggle is on. The
- * currently selected option is always kept, so turning the toggle off never yanks away the
- * context the user is on. Rebuilt from the pristine clone each time, so this is non-destructive.
- *
- * @param {HTMLElement} bar
- * @param {HTMLSelectElement} select
- */
-const filterHiddenOptions = (bar, select) => {
-    if (showHiddenCats(bar)) {
-        return;
-    }
-    const keep = select.value;
-    select.querySelectorAll('option[data-hidden="1"]').forEach((option) => {
-        if (option.value !== keep) {
-            option.remove();
-        }
-    });
 };
 
 /**
@@ -292,6 +280,13 @@ const setContext = (bar, contexttype) => {
 const setCategory = (bar, select) => {
     const categoryid = Number(select.value) || 0;
     bar.dataset.categoryid = categoryid;
+    const option = select.selectedOptions[0];
+    const hit = option ? Categories.known(option.value) : null;
+    if (option && hit && option.dataset.name === undefined) {
+        option.dataset.name = hit.name;
+        option.dataset.frameworkcount = hit.frameworks;
+        option.dataset.templatecount = hit.plans;
+    }
     applyContextToPanes('coursecat', categoryid);
     renderCounter(bar);
     refreshActive();
@@ -325,26 +320,32 @@ const enhanceCategory = async(bar, reset, keepvalue = null) => {
     if (reset) {
         select.value = keepvalue !== null ? keepvalue : '0';
     }
-    // Drop hidden categories unless the toggle is on (keeping the selected one), then match the
-    // option labels to the active tab's count, both before the autocomplete reads the options.
-    filterHiddenOptions(bar, select);
+    // Match the option labels to the active tab's count before the autocomplete reads them, then
+    // enhance with the search datasource: the select holds at most the selected category, and
+    // every other one is fetched as the viewer types (the datasource reads the hidden toggle).
     renderOptionLabels(bar);
     const placeholder = await getString('managecompetencies_category_placeholder', 'local_dimensions');
-    await enhance(SELECTORS.categorySelect, false, '', placeholder, false, true, placeholder, true);
+    await enhance(
+        SELECTORS.categorySelect,
+        false,
+        'local_dimensions/central/category_datasource',
+        placeholder,
+        false,
+        true,
+        placeholder,
+        true
+    );
     wrapper.querySelector(SELECTORS.categorySelect)
         .addEventListener('change', (event) => setCategory(bar, event.target));
 };
 
 /**
- * Apply the "show hidden categories" toggle: rebuild the picker from the pristine options,
- * filtered by the new toggle state, keeping the current selection, then persist the choice.
+ * Persist the "show hidden categories" toggle. Nothing is rebuilt: the search datasource reads
+ * the toggle on every request, so the next suggestions already honour it.
  *
  * @param {HTMLElement} bar
  */
 const applyHiddenCats = (bar) => {
-    const select = bar.querySelector(SELECTORS.categorySelect);
-    const keepvalue = select ? select.value : '0';
-    enhanceCategory(bar, true, keepvalue).catch(notifyError);
     Preferences.saveNav({showhiddencats: showHiddenCats(bar)});
 };
 

@@ -99,4 +99,27 @@ answers and opens the requested tab only when it is available, else the first av
    `mdl ci moodle-local_dimensions --matrix --behat` (the 4.05 leg is where the Bootstrap 4
    More menu is exercised).
 
-Future: block category deletion per decision 4.
+Decision 4, done the same day: `classes/local/category_lifecycle.php` behind four lib.php
+callbacks. `get_course_category_contents` lists the category's frameworks and templates and
+how many are in use on core's deletion form; `pre_course_category_delete` refuses "delete all"
+while a competency is linked to a course, activity, template or plan or a template has plans
+(mirroring core's refusal to delete a competency in use) and otherwise deletes them through the
+competency API; `can_course_category_delete_move` offers "move contents" only to someone who
+may manage the objects at the destination; `pre_course_category_delete_move` re-homes them
+there with one UPDATE per table, as core's `cohort_delete_category()` moves cohorts (the
+persistents refuse a context change by validation; this is the one moment it is the point). Only the category's own context is handled per call: core recurses
+into children for "delete all" and moves them whole for "move contents".
+
+## The category picker at scale
+
+The bar used to enumerate every category the viewer could see on every render: a context
+instantiation and up to four capability checks per category, a nested name built per
+category, and one `<option>` per category for the autocomplete to enhance. The owner runs
+sites with thousands of categories, so the picker became a search: `helper::central_category_search()`
+behind `local_dimensions_search_categories` (one SQL name match, 25 hits, accent-insensitive
+where the site has it, visibility per hit through core, competency readability per hit only
+for a viewer who cannot already read at the site), and the server renders only the selected
+category (`helper::central_category_option()`). Measured on m501 with 2,003 categories
+(2026-09-02): first page 77 ms cold and 2 ms warm, a name search 3 to 10 ms, the selected
+option 0 ms, the whole bar export 96 ms cold — against 51 ms for core's own
+`make_categories_list()` alone, which the old path called and then walked.

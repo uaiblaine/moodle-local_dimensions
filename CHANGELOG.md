@@ -18,6 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   written into the remembered context — the next visit through Site administration reopens
   where it was. The menu entry is gated on managing, not reading, because reading is an
   authenticated-user default at every category.
+- **Deleting a course category now accounts for its frameworks and learning plan templates.**
+  Core's deletion moves cohorts and deletes grade categories, content bank items and calendar
+  events, then drops the context and leaves competency data pointing at it — invisible,
+  unreachable and undeletable; neither core nor tool_lp registers a callback. The deletion
+  form now lists the category's frameworks and templates and how many are in use; "delete
+  all" is refused while a competency is linked to a course, activity, template or plan or a
+  template still has plans (mirroring core's refusal to delete a competency in use) and
+  otherwise deletes them through the competency API; "move contents" re-homes them to the
+  destination category, and is offered only to someone who may manage them there.
 - **A Behat generator for competency objects in a course category.** Core's generator hardcodes
   the system context and its Behat generator cannot name one, so a scenario about category
   scoping could only create site-wide objects. `the following "local_dimensions > frameworks"
@@ -36,6 +45,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **The hub's course category picker searches on demand instead of listing every category.**
+  The context bar used to enumerate every category the viewer could see on every render —
+  a context instantiation and up to four capability checks per category, a nested name built
+  per category, and thousands of `<option>` elements for the autocomplete to chew through —
+  which does not survive a site with thousands of categories. The picker is now a search
+  (`local_dimensions_search_categories`, 25 hits per query, name match accent-insensitive)
+  that returns the plain nested name and both counts per hit; the server renders only the
+  selected category. A viewer who may read competencies at the site skips the per-category
+  capability checks altogether (a category can only narrow what the site grants, and the
+  page re-checks the chosen category anyway); a category-scoped viewer is checked per hit.
 - **The Competency hub decides tab availability in the context the pane names, not at the site.**
   All three tabs asked `can_read_context()` about the system context whatever category the page
   was showing, so a manager holding the competency capabilities in one course category only was

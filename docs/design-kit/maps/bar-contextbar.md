@@ -80,9 +80,13 @@ vanish from the list.
 It survives sessions and devices. Privacy already covers `central_nav`
 (`classes/privacy/provider.php:62`, `:93`).
 
-**Backend.** `helper::central_category_options()` (`helper.php:2485-2529`) marks `hidden` per
-option; `contextbar.php:108-126` decides the toggle and its initial state, exported at `:136`.
-There is **no** `hashiddencategories` key — the gate is the null `hiddencatstoggle`. No new WS.
+**Backend.** Since 2026-09-02 the picker searches on demand: `helper::central_category_search()`
+answers the `local_dimensions_search_categories` web service (25 hits, name match, `hidden`
+per hit, the toggle passed as `includehidden`), and `helper::central_category_option()` renders
+only the selected category server-side; `contextbar.php` decides the toggle from "a hidden
+category exists and the viewer may see hidden categories" and its initial state from the
+selected option. There is **no** `hashiddencategories` key — the gate is the null
+`hiddencatstoggle`.
 
 ## Counter
 
