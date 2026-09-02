@@ -27,7 +27,15 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-if ($hassiteconfig && get_config('core_competency', 'enabled')) {
+/*
+ * Registered whenever competencies are enabled, not only for site administrators: core includes a
+ * local plugin's settings.php for every user, and the Competency hub is gated by its own capability
+ * (moodle/competency:competencymanage at the system context, exactly like tool_lp's admin pages), so
+ * a system-level competency manager without moodle/site:config reaches it from Site administration.
+ * The settings page and the two custom-field definition pages stay behind $hassiteconfig below:
+ * field definitions are site-wide.
+ */
+if (get_config('core_competency', 'enabled')) {
     // Parent category for our pages (under competencies).
     $parentname = 'competencies';
 
@@ -296,9 +304,12 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         PARAM_TEXT
     ));
 
-    $ADMIN->add('local_dimensions', $settings);
+    if ($hassiteconfig) {
+        $ADMIN->add('local_dimensions', $settings);
+    }
 
-    // Competency hub — single-surface admin (modal/dynamic_tabs). Work in progress.
+    // Competency hub — single-surface admin (modal/dynamic_tabs). The site-administration entry:
+    // no context on the URL, so the hub reopens in the viewer's remembered context.
     $ADMIN->add('local_dimensions', new admin_externalpage(
         'local_dimensions_central',
         get_string('central', 'local_dimensions'),
@@ -306,19 +317,21 @@ if ($hassiteconfig && get_config('core_competency', 'enabled')) {
         'moodle/competency:competencymanage'
     ));
 
-    // Competency custom fields configuration.
-    $ADMIN->add('local_dimensions', new admin_externalpage(
-        'local_dimensions_customfield',
-        get_string('customfields', 'local_dimensions'),
-        new moodle_url('/local/dimensions/customfield.php'),
-        'moodle/competency:competencymanage'
-    ));
+    if ($hassiteconfig) {
+        // Competency custom fields configuration.
+        $ADMIN->add('local_dimensions', new admin_externalpage(
+            'local_dimensions_customfield',
+            get_string('customfields', 'local_dimensions'),
+            new moodle_url('/local/dimensions/customfield.php'),
+            'moodle/competency:competencymanage'
+        ));
 
-    // Learning plan template custom fields configuration.
-    $ADMIN->add('local_dimensions', new admin_externalpage(
-        'local_dimensions_customfield_template',
-        get_string('templatecustomfields', 'local_dimensions'),
-        new moodle_url('/local/dimensions/customfield_template.php'),
-        'moodle/competency:templatemanage'
-    ));
+        // Learning plan template custom fields configuration.
+        $ADMIN->add('local_dimensions', new admin_externalpage(
+            'local_dimensions_customfield_template',
+            get_string('templatecustomfields', 'local_dimensions'),
+            new moodle_url('/local/dimensions/customfield_template.php'),
+            'moodle/competency:templatemanage'
+        ));
+    }
 }

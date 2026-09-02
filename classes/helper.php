@@ -2556,6 +2556,31 @@ class helper {
     }
 
     /**
+     * Choose the hub tab to open: the requested one when the viewer may see it, else the first available.
+     *
+     * Core's dynamic tabs open whatever the URL fragment names, so a saved or deep-linked tab the
+     * viewer cannot read would throw from require_access() and take the whole page down. Falling
+     * back keeps the page up for a viewer who holds only some of the competency capabilities in the
+     * context - a template manager without framework access, or the other way round. The fallback
+     * order is the strip's own order. Returns the empty string when no tab is available.
+     *
+     * @param array $available Availability keyed by tab shortname, in strip order (bool values).
+     * @param string $requested The tab the URL or the saved preference asked for.
+     * @return string The shortname to open, or '' when nothing is available.
+     */
+    public static function pick_available_tab(array $available, string $requested): string {
+        if (!empty($available[$requested])) {
+            return $requested;
+        }
+        foreach ($available as $shortname => $isavailable) {
+            if ($isavailable) {
+                return (string) $shortname;
+            }
+        }
+        return '';
+    }
+
+    /**
      * The learner's stored hero fold, for the one plan or competency being viewed.
      *
      * The fold is per plan and per competency: a learner who knows one plan by heart still
