@@ -72,6 +72,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **The enrolment methods pane explains itself when the plan has no linked courses.** The
+  methods act on the courses linked to the plan's competencies; a plan with no competencies,
+  or none linked to a course the viewer may configure, showed an empty grid that read as a
+  permission problem — a category manager holding every required capability hit exactly that.
+  The pane now says so and points at the two steps that fill it.
 - **A manager scoped to one course category saw no custom fields on a competency and saved
   none.** `competency_handler::can_edit()` resolved `competencymanage` at the system context
   whatever the competency, and core filters both the rendered and the saved fields through it,
