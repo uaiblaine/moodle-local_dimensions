@@ -80,14 +80,17 @@ answers and opens the requested tab only when it is available, else the first av
 1. Done: settings.php registration, tab availability, tab strip + fallback, tests.
 2. Done: category navigation node, dual entry, locked context bar, pinned preference,
    `hub_page_url()` for the forms, AMD rebuild.
-3. Correctness for category managers: `competency_handler::can_edit()` at the framework
-   context; `competency_usage` without core's system-context template check; participants
-   search filtered by `planmanage` on the user context and per-row gating of plan actions;
-   the cohorts escape link at the resolved context; the eight read web services validating the
-   framework's or competency's context rather than system + `competencyview`.
-4. Scope and hygiene: `children` listing scope (decision 6) with matching counts; category-name
-   escaping across the picker and the new sinks; `pluginfile` read check (decision 5); README,
-   CHANGELOG and CLAUDE.md.
+3. Done: `competency_handler::can_edit()` at the framework context (with the saving latch and
+   the form's context hint, added to `lp_handler` too); `competency_usage` without core's
+   system-context template check; participants search filtered by `planmanage` on the user
+   context and per-row gating of plan actions; the cohorts escape link at the resolved context;
+   the eight read web services validating the framework's or competency's context rather than
+   system + `competencyview`.
+4. Done: `children` listing scope on the locked entry only, carried as a `locked` pane
+   argument, with the bar's headline count covering the subtree
+   (`helper::count_frameworks_in_subtree()`); category names rebuilt unescaped for the picker
+   and the locked label; `picture_manager::can_view()` applied by `local_dimensions_pluginfile`
+   (decision 5 as stated above); README, CHANGELOG and CLAUDE.md.
 5. Tests and CI: a Behat generator able to create frameworks and templates in a category (core's
    generator hardcodes the system context), a category-entry feature run on 4.5 as well, and the
    full local CI matrix with Behat.

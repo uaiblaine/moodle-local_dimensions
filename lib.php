@@ -69,6 +69,12 @@ function local_dimensions_pluginfile($course, $cm, $context, $filearea, $args, $
         return false;
     }
 
+    // The item id is the competency or template the picture belongs to; serve it only to
+    // those who may see that object (a visible template to any logged-in user, as course images).
+    if (!picture_manager::can_view($filearea, (int) $itemid)) {
+        return false;
+    }
+
     send_stored_file($file, DAYSECS, 0, $forcedownload, $options);
 }
 

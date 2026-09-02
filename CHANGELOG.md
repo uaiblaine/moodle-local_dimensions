@@ -18,6 +18,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   written into the remembered context — the next visit through Site administration reopens
   where it was. The menu entry is gated on managing, not reading, because reading is an
   authenticated-user default at every category.
+- **The category entry lists the category's descendants too.** Frameworks, structure and
+  learning plans on the locked entry use core's `children` scope, as tool_lp's category pages
+  do, and the bar's headline count covers the same subtree. The site entry keeps listing one
+  context at a time, so the System view never shows other contexts' objects.
+- **Competency and template pictures check who may see the object.** `local_dimensions_pluginfile`
+  served every picture to any logged-in user by id, which was harmless while only site
+  administrators created these objects and becomes a cross-category leak once categories are
+  delegated. A picture of a visible object is still served to any logged-in user, as course
+  images are; a hidden template's picture only to those who may read it in its context or hold
+  a plan based on it, and a competency's only to those who may read its framework.
 
 ### Changed
 
@@ -62,6 +72,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   their real per-framework gate, so a hardened site (or a category manager without that
   default) lost the Structure tab. Each now validates the framework's own context; the
   cross-framework search keeps only the login gate and its per-framework filter.
+- **Course category names with an ampersand rendered as `&amp;` in the hub's context bar.**
+  `make_categories_list()` hands back names already run through `format_string()`, and the
+  picker's double stashes escape once more. The bar now rebuilds the nested name unescaped.
 - **The "open cohorts page" shortcut is judged in the hub's context and opens the category's
   cohort page.** It was evaluated at the system context and hardcoded the site cohort list,
   although `cohort:manage` is a course-category capability and core's page is context-aware.

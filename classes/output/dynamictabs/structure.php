@@ -105,8 +105,11 @@ class structure extends \core\output\dynamic_tabs\base {
         // "show hidden" toggle can reveal them client-side without reloading the tab; the default
         // selection still prefers a visible framework.
         $frameworks = [];
+        // The locked category entry lists the category and its descendants, as tool_lp's category
+        // page does; the site entry lists the resolved context alone.
+        $includes = empty($data['locked']) ? 'self' : 'children';
         if (!$needscategory) {
-            foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $pagecontext, 'self', false) as $framework) {
+            foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $pagecontext, $includes, false) as $framework) {
                 if (competency_framework::can_read_context($framework->get_context())) {
                     $frameworks[(int) $framework->get('id')] = $framework;
                 }

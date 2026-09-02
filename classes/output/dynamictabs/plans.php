@@ -116,8 +116,11 @@ class plans extends \core\output\dynamic_tabs\base {
         // Managers also see disabled (hidden) templates; the tab hides them client-side
         // behind the "show disabled plans" toggle. Non-managers only get visible ones.
         $templates = [];
+        // The locked category entry lists the category and its descendants, as tool_lp's category
+        // page does; the site entry lists the resolved context alone.
+        $includes = empty($data['locked']) ? 'self' : 'children';
         if (!$needscategory) {
-            foreach (api::list_templates('shortname', 'ASC', 0, 0, $context, 'self', !$canmanage) as $template) {
+            foreach (api::list_templates('shortname', 'ASC', 0, 0, $context, $includes, !$canmanage) as $template) {
                 if (template::can_read_context($template->get_context())) {
                     $templates[(int) $template->get('id')] = $template;
                 }

@@ -116,16 +116,20 @@ $categoryid = (int) $resolved['categoryid'];
  * Frameworks — measured 845 ms and 1023 ms starting in the same millisecond — with the Frameworks
  * pane left fully rendered and invisible, on top of a PHP render core discarded.
  */
+// The locked flag rides with the pane data: it widens the listing to the category's descendants
+// (as tool_lp's category pages list) on the category entry only; the site entry stays 'self'.
 $tabinstances = [
-    'frameworks' => new frameworks(['contexttype' => $contexttype, 'categoryid' => $categoryid]),
+    'frameworks' => new frameworks(['contexttype' => $contexttype, 'categoryid' => $categoryid, 'locked' => (int) $locked]),
     'structure' => new structure([
         'contexttype' => $contexttype,
         'categoryid' => $categoryid,
+        'locked' => (int) $locked,
         'frameworkid' => $frameworkid,
     ]),
     'plans' => new plans([
         'contexttype' => $contexttype,
         'categoryid' => $categoryid,
+        'locked' => (int) $locked,
         'templateid' => $templateid,
     ]),
 ];
@@ -213,6 +217,7 @@ $tabsdata = [
     'dataattributes' => [
         ['name' => 'contexttype', 'value' => $contexttype],
         ['name' => 'categoryid', 'value' => $categoryid],
+        ['name' => 'locked', 'value' => (int) $locked],
         ['name' => 'frameworkid', 'value' => $frameworkid],
         ['name' => 'templateid', 'value' => $templateid],
     ],
