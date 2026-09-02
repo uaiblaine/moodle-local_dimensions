@@ -42,6 +42,7 @@ const POLL_MS = 5000;
 
 const SELECTORS = {
     empty: '[data-region="enrol-empty"]',
+    nocourses: '[data-region="enrol-nocourses"]',
     disabled: '[data-region="enrol-disabled"]',
     error: '[data-region="enrol-error"]',
     main: '[data-region="enrol-main"]',
@@ -938,12 +939,14 @@ const init = async(state) => {
         // region, whose own refresh sits outside them, then rethrow so mount's swallow still toasts.
         error.hidden = false;
         state.root.querySelector(SELECTORS.empty).hidden = true;
+        state.root.querySelector(SELECTORS.nocourses).hidden = true;
         state.root.querySelector(SELECTORS.disabled).hidden = true;
         state.root.querySelector(SELECTORS.main).hidden = true;
         throw e;
     }
     error.hidden = true;
     const empty = state.root.querySelector(SELECTORS.empty);
+    const nocourses = state.root.querySelector(SELECTORS.nocourses);
     const disabled = state.root.querySelector(SELECTORS.disabled);
     const main = state.root.querySelector(SELECTORS.main);
     const bootstrap = compdata.bootstrap || {
@@ -954,16 +957,28 @@ const init = async(state) => {
     if (!bootstrap.cohortenabled && !bootstrap.selfenabled) {
         disabled.hidden = false;
         empty.hidden = true;
+        nocourses.hidden = true;
         main.hidden = true;
         return;
     }
     disabled.hidden = true;
     if (!cohortdata.cohorts.length) {
         empty.hidden = false;
+        nocourses.hidden = true;
         main.hidden = true;
         return;
     }
     empty.hidden = true;
+    // The methods act on the courses linked to the plan's competencies. A plan with no
+    // competencies, or none linked to a course the viewer may configure, has nothing to act on:
+    // say so and point at the two steps that fill the pane, instead of an empty grid that reads
+    // as a permission problem (a category manager with every capability in place hit exactly that).
+    if (!compdata.total) {
+        nocourses.hidden = false;
+        main.hidden = true;
+        return;
+    }
+    nocourses.hidden = true;
     main.hidden = false;
 
     const cohortselect = state.root.querySelector(SELECTORS.cohort);
