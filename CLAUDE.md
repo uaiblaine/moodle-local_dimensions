@@ -447,9 +447,14 @@ Each `db/upgrade.php` step ends with
   under both drivers — cast to `(int)` for typed-int signatures and normalise
   haystacks before strict `assertContains`.
 
-## Behat (JS) — CI-only, locator gotchas
-No local Behat here — a new `.feature` is first exercised in CI, so budget one
-fix-and-repush; keep scenarios as thin smoke tests and put the logic in PHPUnit.
+## Behat (JS) — locator gotchas
+Run locally with `mdl behat m501 /var/www/html/public/local/dimensions/tests/behat/<x>.feature`
+(the ABSOLUTE container path — the relative forms match nothing) after `mdl behat-init m501`;
+keep scenarios as thin smoke tests and put the logic in PHPUnit. A scenario that lands on a
+Moodle exception page fails at that step whatever it asserts (Behat's after-step hook throws
+on exception pages), so refusals belong in PHPUnit. `tests/generator/` provides
+`"local_dimensions > frameworks"` / `"templates"` rows with a `category` idnumber column, the
+only way to create competency objects in a course category from a feature.
 Hard-won:
 - **Autocomplete:** pick a value with **only** `I set the field "<label>" to
   "<text>"` — it types, clicks the auto-activated suggestion and presses ESC

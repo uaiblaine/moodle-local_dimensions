@@ -18,6 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   written into the remembered context — the next visit through Site administration reopens
   where it was. The menu entry is gated on managing, not reading, because reading is an
   authenticated-user default at every category.
+- **A Behat generator for competency objects in a course category.** Core's generator hardcodes
+  the system context and its Behat generator cannot name one, so a scenario about category
+  scoping could only create site-wide objects. `the following "local_dimensions > frameworks"
+  exist` and `"local_dimensions > templates"` take the category's idnumber; the new
+  `central_category.feature` walks a category manager from the category page into the locked hub.
 - **The category entry lists the category's descendants too.** Frameworks, structure and
   learning plans on the locked entry use core's `children` scope, as tool_lp's category pages
   do, and the bar's headline count covers the same subtree. The site entry keeps listing one

@@ -91,8 +91,12 @@ answers and opens the requested tab only when it is available, else the first av
    (`helper::count_frameworks_in_subtree()`); category names rebuilt unescaped for the picker
    and the locked label; `picture_manager::can_view()` applied by `local_dimensions_pluginfile`
    (decision 5 as stated above); README, CHANGELOG and CLAUDE.md.
-5. Tests and CI: a Behat generator able to create frameworks and templates in a category (core's
-   generator hardcodes the system context), a category-entry feature run on 4.5 as well, and the
-   full local CI matrix with Behat.
+5. Done: `tests/generator/lib.php` + `behat_local_dimensions_generator` create frameworks and
+   templates in a course category by idnumber (core's generator hardcodes the system context);
+   `tests/behat/central_category.feature` opens the hub from the category's "More" menu as a
+   category manager and checks the lock, the listing and the Learning plans tab. The refusal of
+   the bare URL stays in PHPUnit: Behat fails any step that lands on an exception page. Gate:
+   `mdl ci moodle-local_dimensions --matrix --behat` (the 4.05 leg is where the Bootstrap 4
+   More menu is exercised).
 
 Future: block category deletion per decision 4.
