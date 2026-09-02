@@ -64,6 +64,14 @@ let nav = clone(NAV_DEFAULTS);
 let display = clone(DISPLAY_DEFAULTS);
 /** @type {Object} Pending debounce timer ids, keyed by preference name. */
 const timers = {};
+/**
+ * On a page locked to the category it was entered from, the context the viewer had SAVED before
+ * this visit, written back in place of the locked one on every navigation write. Null when the
+ * page is not locked. The entry context wins for the visit and is never remembered.
+ *
+ * @type {Object|null}
+ */
+let pinnedcontext = null;
 
 /**
  * Schedule a debounced write of a preference to the server.
@@ -86,6 +94,13 @@ const scheduleSave = (name, value) => {
 export const init = (state) => {
     const seed = state || {};
     nav = {...clone(NAV_DEFAULTS), ...(seed.nav || {})};
+    pinnedcontext = null;
+    if (seed.lockedcontext && seed.storedcontext) {
+        pinnedcontext = {
+            contexttype: seed.storedcontext.contexttype === 'coursecat' ? 'coursecat' : 'system',
+            categoryid: Number(seed.storedcontext.categoryid) || 0,
+        };
+    }
     const incoming = seed.display || {};
     display = {
         structure: {...DISPLAY_DEFAULTS.structure, ...(incoming.structure || {})},
@@ -119,7 +134,7 @@ export const getDisplay = () => display;
  */
 export const saveNav = (partial) => {
     nav = {...nav, ...partial};
-    scheduleSave(PREF_NAV, nav);
+    scheduleSave(PREF_NAV, pinnedcontext ? {...nav, ...pinnedcontext} : nav);
 };
 
 /**

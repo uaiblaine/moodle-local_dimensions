@@ -35,27 +35,68 @@ use local_dimensions\output\dynamictabs\frameworks;
 use local_dimensions\output\dynamictabs\plans;
 use local_dimensions\output\dynamictabs\structure;
 
-admin_externalpage_setup('local_dimensions_central');
-api::require_enabled();
+/*
+ * Two entries, one page. Site administration links here with no context: the hub reopens in the
+ * viewer's remembered context behind admin_externalpage_setup(), whose check_access() wants
+ * competencymanage at the system context. A course category's "More" menu links here with
+ * pagecontextid, the way tool_lp's category pages are linked, and that entry must never reach
+ * admin_externalpage_setup(): it pins the page to the system context and refuses anyone without
+ * moodle/site:config before a line of this file runs (measured on 5.2: HTTP 500 "Access denied"
+ * for a manager holding the capabilities in one category only). The category entry follows
+ * tool_lp's own sequence instead, is locked to that category, and is never written into the
+ * saved preference.
+ */
+$pagecontextid = optional_param('pagecontextid', 0, PARAM_INT);
+$entrycontext = $pagecontextid > 0 ? context::instance_by_id($pagecontextid) : null;
+if ($entrycontext !== null && !in_array($entrycontext->contextlevel, [CONTEXT_SYSTEM, CONTEXT_COURSECAT], true)) {
+    throw new moodle_exception('invalidcontext');
+}
+$locked = $entrycontext !== null && $entrycontext->contextlevel === CONTEXT_COURSECAT;
+
+if ($locked) {
+    require_login(null, false);
+    api::require_enabled();
+    if (!helper::can_read_competency_context($entrycontext)) {
+        throw new required_capability_exception($entrycontext, 'moodle/competency:competencyview', 'nopermissions', '');
+    }
+    $PAGE->set_context($entrycontext);
+    $PAGE->set_pagelayout('admin');
+    $PAGE->set_url(new moodle_url('/local/dimensions/central.php', ['pagecontextid' => $pagecontextid]));
+    // The category name as heading, the category active in the navigation block, and the hub's
+    // own node active in the category's secondary navigation - what tool_lp's category pages do.
+    core_course_category::page_setup();
+    $hubnode = $PAGE->settingsnav->find('local_dimensions_central', navigation_node::TYPE_SETTING);
+    if ($hubnode) {
+        $hubnode->make_active();
+    }
+} else {
+    admin_externalpage_setup('local_dimensions_central');
+    api::require_enabled();
+    $PAGE->set_url(new moodle_url('/local/dimensions/central.php'));
+    $PAGE->set_heading(get_string('central', 'local_dimensions'));
+}
+$PAGE->set_title(get_string('central', 'local_dimensions'));
+$PAGE->add_body_class('local-dimensions-central-page');
+\local_dimensions\local\bootstrap::mark_page();
 
 // Restore the last-visited view (tab / context / selection) from the user's saved preference;
-// an explicit URL param always wins so deep-links keep working.
+// an explicit URL param always wins so deep-links keep working. A locked entry neither reads nor
+// writes the saved context: the category on the URL is the context, full stop.
 $prefs = helper::get_central_prefs();
 $nav = $prefs['nav'];
-$contexttype = optional_param('contexttype', $nav['contexttype'], PARAM_ALPHA);
-$categoryid = optional_param('categoryid', $nav['categoryid'], PARAM_INT);
+if ($locked) {
+    $contexttype = 'coursecat';
+    $categoryid = (int) $entrycontext->instanceid;
+} else {
+    $contexttype = optional_param('contexttype', $nav['contexttype'], PARAM_ALPHA);
+    $categoryid = optional_param('categoryid', $nav['categoryid'], PARAM_INT);
+}
 $frameworkid = optional_param('frameworkid', $nav['frameworkid'], PARAM_INT);
 $templateid = optional_param('templateid', $nav['templateid'], PARAM_INT);
 $activetab = optional_param('tab', $nav['tab'], PARAM_ALPHA);
 if (!in_array($activetab, ['frameworks', 'structure', 'plans'], true)) {
     $activetab = 'frameworks';
 }
-
-$PAGE->set_url(new moodle_url('/local/dimensions/central.php'));
-$PAGE->set_title(get_string('central', 'local_dimensions'));
-$PAGE->set_heading(get_string('central', 'local_dimensions'));
-$PAGE->add_body_class('local-dimensions-central-page');
-\local_dimensions\local\bootstrap::mark_page();
 
 
 // Resolve the shared context once so the page-level selector and both tabs agree.
@@ -117,10 +158,14 @@ $prefs['nav'] = [
     'templateid' => $templateid,
     'showhiddencats' => (bool) $nav['showhiddencats'],
 ];
+// On a locked entry every preference write keeps the context the viewer had saved before, so a
+// visit from a category's menu never becomes the default for the next Site administration visit.
+$prefs['lockedcontext'] = $locked;
+$prefs['storedcontext'] = ['contexttype' => $nav['contexttype'], 'categoryid' => $nav['categoryid']];
 $PAGE->requires->js_call_amd('local_dimensions/central/preferences', 'init', [$prefs]);
 
 // The context selector is page-level (governs both tabs); init it once on load.
-$contextbar = new contextbar($contexttype, $categoryid, (bool) $nav['showhiddencats']);
+$contextbar = new contextbar($contexttype, $categoryid, (bool) $nav['showhiddencats'], $locked);
 $PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
 // The page-level sticky footer is shared by both tabs; init its coordinator once.
 $PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
@@ -139,6 +184,10 @@ $tabicons = [
     'structure' => 'fa-crosshairs',
     'plans' => 'fa-graduation-cap',
 ];
+// Ask for the renderer explicitly: before the header $OUTPUT is still core's bootstrap stand-in,
+// which the tabs' typed export_for_template(renderer_base) refuses. The admin entry happened to
+// initialise it inside admin_externalpage_setup(); the category entry does not.
+$output = $PAGE->get_renderer('core');
 $tabs = [];
 foreach (['frameworks', 'structure', 'plans'] as $shortname) {
     $isactive = ($shortname === $activetab);
@@ -146,7 +195,7 @@ foreach (['frameworks', 'structure', 'plans'] as $shortname) {
     $content = '';
     if ($isactive) {
         $tab->require_access();
-        $content = $OUTPUT->render_from_template($tab->get_template(), $tab->export_for_template($OUTPUT));
+        $content = $output->render_from_template($tab->get_template(), $tab->export_for_template($output));
     }
     $icon = '<i class="fa ' . $tabicons[$shortname] . ' me-1" aria-hidden="true"></i>';
     $tabs[] = [
@@ -171,6 +220,10 @@ $tabsdata = [
 ];
 
 echo $OUTPUT->header();
+if ($locked) {
+    // The page heading is the category's name here; the hub names itself below it, as tool_lp does.
+    echo $OUTPUT->heading(get_string('central', 'local_dimensions'), 2);
+}
 echo $OUTPUT->render_from_template('local_dimensions/central/contextbar', $contextbar->export_for_template($OUTPUT));
 // Must precede the tabs: it names the tab core opens, and core reads the fragment as it initialises.
 echo $OUTPUT->render_from_template('local_dimensions/central/tab_hash', ['activetab' => $activetab]);

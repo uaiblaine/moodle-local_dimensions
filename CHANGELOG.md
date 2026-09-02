@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **The Competency hub from a course category's "More" menu.** A manager who holds
+  `moodle/competency:competencymanage` or `templatemanage` in a course category (and nowhere
+  else) now finds the hub beside core's *Competency frameworks* and *Learning plan templates*
+  entries, opened with `pagecontextid` the way tool_lp's pages are, following the same page setup
+  (category heading, category navigation, no admin tree). The page is locked to that category:
+  the context switch and the picker give way to the category's name, the System switch is
+  offered only to viewers who may read something at the site, and nothing from a locked visit is
+  written into the remembered context — the next visit through Site administration reopens
+  where it was. The menu entry is gated on managing, not reading, because reading is an
+  authenticated-user default at every category.
+
 ### Changed
 
 - **The Competency hub decides tab availability in the context the pane names, not at the site.**
