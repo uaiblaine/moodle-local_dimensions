@@ -116,4 +116,35 @@ final class lp_handler_test extends \advanced_testcase {
 
         $this->assertSame('CAT-1', helper::export_template_customfields($templateid)['template_idnumber']);
     }
+
+    /**
+     * On the create path there is no template yet, so the form names the context: with the hint
+     * set a category manager may edit the fields of the template they are about to create.
+     *
+     * @return void
+     */
+    public function test_the_create_path_resolves_the_hinted_context(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enabled', 1, 'core_competency');
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+        $category = $this->getDataGenerator()->create_category();
+        $categorycontext = \context_coursecat::instance((int) $category->id);
+
+        $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templatemanage', CAP_ALLOW, $roleid, $categorycontext->id);
+        role_assign($roleid, (int) $user->id, $categorycontext->id);
+        $this->setUser($user);
+
+        $handler = lp_handler::create();
+        $field = helper::find_field_by_shortname(constants::CFIELD_TEMPLATE_IDNUMBER, helper::AREA_LP);
+        $this->assertNotNull($field);
+
+        $handler->set_edit_context_hint(null);
+        $this->assertFalse($handler->can_edit($field, 0), 'Without a hint the create path is site-scoped');
+        $handler->set_edit_context_hint($categorycontext);
+        $this->assertTrue($handler->can_edit($field, 0), 'The hinted category admits the manager');
+        $handler->set_edit_context_hint(null);
+    }
 }

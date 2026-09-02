@@ -145,4 +145,36 @@ final class template_participants_test extends \advanced_testcase {
         $this->assertSame(1, list_template_participants::execute($templateid, 0, 'Charlie', false, 0, 50)['total']);
         $this->assertSame(0, list_template_participants::execute($templateid, 0, 'Zzz', false, 0, 50)['total']);
     }
+
+    /**
+     * Each row says whether the caller may unlink or delete that plan: yes for the administrator,
+     * no for a manager who only reads templates in the category the template lives in.
+     *
+     * @return void
+     */
+    public function test_each_row_reports_whether_the_caller_may_manage_the_plan(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $category = $this->getDataGenerator()->create_category();
+        $categorycontext = \context_coursecat::instance((int) $category->id);
+        $template = $ccg->create_template(['visible' => 1, 'contextid' => $categorycontext->id]);
+        $templateid = (int) $template->get('id');
+        $learner = $this->getDataGenerator()->create_user();
+        add_template_user_plan::execute($templateid, (int) $learner->id);
+
+        $rows = list_template_participants::execute($templateid, 0, '', false, 0, 50)['items'];
+        $this->assertCount(1, $rows);
+        $this->assertSame(1, $rows[0]['canmanage']);
+
+        $viewer = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templateview', CAP_ALLOW, $roleid, $categorycontext->id);
+        role_assign($roleid, (int) $viewer->id, $categorycontext->id);
+        $this->setUser($viewer);
+
+        $rows = list_template_participants::execute($templateid, 0, '', false, 0, 50)['items'];
+        $this->assertCount(1, $rows);
+        $this->assertSame(0, $rows[0]['canmanage']);
+    }
 }

@@ -24,6 +24,7 @@
 
 namespace local_dimensions\external;
 
+use core_competency\api;
 use core_competency\template;
 use core_external\external_api;
 use core_external\external_function_parameters;
@@ -75,7 +76,7 @@ class search_assignable_users extends external_api {
      * @return array Keys: items (list of {id, fullname, identity}), total (int).
      */
     public static function execute(int $templateid, string $query = '', int $limitfrom = 0, int $limitnum = 25): array {
-        global $CFG, $DB;
+        global $CFG, $DB, $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'templateid' => $templateid,
@@ -100,6 +101,18 @@ class search_assignable_users extends external_api {
         $where = 'u.deleted = 0 AND u.suspended = 0 AND u.confirmed = 1 AND u.id <> :guestid';
         $sqlparams = ['guestid' => (int) $CFG->siteguest, 'templateid' => (int) $template->get('id')];
         $where .= ' AND u.id NOT IN (SELECT p.userid FROM {competency_plan} p WHERE p.templateid = :templateid)';
+
+        // Only users the caller may create a plan for (planmanage in the user's own context), the
+        // way core's tool_lp user search filters; templatemanage alone used to expose the whole
+        // site directory, with identity fields, to a manager scoped to one course category.
+        [$capsql, $capparams] = api::filter_users_with_capability_on_user_context_sql(
+            'moodle/competency:planmanage',
+            $USER->id,
+            SQL_PARAMS_NAMED,
+            'pm'
+        );
+        $where .= " AND u.id $capsql";
+        $sqlparams += $capparams;
 
         if ($query !== '') {
             $fullname = $DB->sql_fullname('u.firstname', 'u.lastname');

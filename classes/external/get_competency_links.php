@@ -25,7 +25,6 @@
 namespace local_dimensions\external;
 
 use core\context\course as context_course;
-use core\context\system as context_system;
 use core_competency\competency;
 use core_external\external_api;
 use core_external\external_function_parameters;
@@ -98,11 +97,13 @@ class get_competency_links extends external_api {
         $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : 25;
         $excludeids = array_filter(array_map('intval', explode(',', $params['excludecourseids'])));
 
-        $systemcontext = context_system::instance();
-        self::validate_context($systemcontext);
-        require_capability('moodle/competency:competencyview', $systemcontext);
-
+        // Validated in the competency's framework context, never at the site: a manager holding
+        // competencyview in one course category only must not depend on the authenticated-user
+        // default there.
         $competency = new competency($competencyid);
+        $frameworkcontext = $competency->get_context();
+        self::validate_context($frameworkcontext);
+        require_capability('moodle/competency:competencyview', $frameworkcontext);
         $canlink = (bool) $competency->get_framework()->get('visible');
 
         $where = 'cc.competencyid = :competencyid';

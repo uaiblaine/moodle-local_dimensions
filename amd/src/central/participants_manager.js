@@ -55,7 +55,8 @@ const MOUNTS = {
 // flag names the data attribute the server sets on the plans region (a "1" when the user can reach
 // that page); only allowed links are rendered.
 const ADMIN_PAGES = [
-    {pane: 'pane-cohorts', path: '/cohort/index.php', flag: 'cancohortpage',
+    // The cohort page is context-aware: it opens on the hub's resolved context (data-contextid).
+    {pane: 'pane-cohorts', path: '/cohort/index.php', flag: 'cancohortpage', contextparam: true,
         strkey: 'central_participants_openpage_cohorts'},
     {pane: 'pane-users', path: '/admin/user.php', flag: 'canuserpage',
         strkey: 'central_participants_openpage_users'},
@@ -114,7 +115,8 @@ const injectFooterLinks = async(root, region) => {
     group.className = 'local-dimensions-modal-footer-links';
     allowed.forEach((page, index) => {
         const link = document.createElement('a');
-        link.href = M.cfg.wwwroot + page.path;
+        link.href = M.cfg.wwwroot + page.path
+            + (page.contextparam && region.dataset.contextid ? '?contextid=' + Number(region.dataset.contextid) : '');
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         link.className = 'btn btn-link p-0 d-none';

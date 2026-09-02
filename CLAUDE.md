@@ -149,21 +149,32 @@ write those tokens literally), `validate`, `savepoints`, `mustache`, and
 (`--fail-on-warning`) and Behat on every PHP × DB combination.
 `.moodle-plugin-ci.yml` filters `node_modules`/`vendor` from the scan.
 
-phpcs/phpdoc/PHPUnit/Behat have **no local runner** here — eyeball them at write
-time against the rules below; only eslint/stylelint are verifiable locally.
+Every gate runs locally through the fleet's `mdl ci moodle-local_dimensions`
+(`--only phpcs,phpdoc,mustache,grunt` for the static pass, `--matrix --behat`
+before a push) and `mdl phpunit <stack> local_dimensions`; the rules below are
+what to pre-empt at write time so the first run is green.
 
 ## Code layout
 
 ```
 settings.php                 Admin tree — added under the 'competencies' admin
                              category (not 'localplugins'), gated on
-                             get_config('core_competency', 'enabled')
+                             get_config('core_competency', 'enabled'); only the
+                             settings page and the two custom-field definition
+                             pages sit behind $hassiteconfig — the hub page is
+                             gated by its own capability at the system context
 lib.php                      Procedural hooks + SCSS injection
 version.php                  component / version / requires / supported
 view-plan.php                Learner views (plan overview / competency tracker)
 view-competency.php          Single-competency detail view
-central.php                  Admin: the Competency hub (Structure / Learning
-                             plans / Frameworks tabs — the whole admin surface)
+central.php                  The Competency hub (Structure / Learning plans /
+                             Frameworks tabs — the whole admin surface). Two
+                             entries: the admin tree (admin_externalpage_setup,
+                             remembered context, 'self' listing) and a course
+                             category's More menu via pagecontextid (tool_lp's
+                             page setup, locked to the category, 'children'
+                             listing, never written to the preference) — see
+                             docs/superpowers/specs/2026-09-02-central-category-context-design.md
 customfield*.php             Custom field config landing pages (core field defs)
 classes/
   hook_callbacks.php         before_footer_html_generation → Return FAB
@@ -222,6 +233,14 @@ instance. Provisioning is serialised under a core Lock API lock and calls
 `create()` as **singletons**, unlike core's per-call `create()`) — keep both
 when touching `ensure_custom_fields_exist()`; neither `customfield_field` nor
 `customfield_category` has a DB unique index to catch duplicates.
+Both handlers resolve `can_edit()` in the **instance's own context** (the
+template's, or the competency's framework's), never at the site: core filters
+the rendered AND the saved fields through it, so a site-context check makes a
+manager scoped to one course category see no fields and save nothing, silently.
+Two mechanisms keep the create path honest, where core asks about instance 0:
+`instance_form_save()` latches the id being saved, and the form calls
+`set_edit_context_hint()` before rendering. Any new caller of a handler on a
+create path must set the hint or the fields vanish for category managers.
 
 ### Custom-field data cleanup on delete (Moodle 5.1+)
 Core destroys the instance context **before** firing `competency_deleted` /
@@ -428,9 +447,14 @@ Each `db/upgrade.php` step ends with
   under both drivers — cast to `(int)` for typed-int signatures and normalise
   haystacks before strict `assertContains`.
 
-## Behat (JS) — CI-only, locator gotchas
-No local Behat here — a new `.feature` is first exercised in CI, so budget one
-fix-and-repush; keep scenarios as thin smoke tests and put the logic in PHPUnit.
+## Behat (JS) — locator gotchas
+Run locally with `mdl behat m501 /var/www/html/public/local/dimensions/tests/behat/<x>.feature`
+(the ABSOLUTE container path — the relative forms match nothing) after `mdl behat-init m501`;
+keep scenarios as thin smoke tests and put the logic in PHPUnit. A scenario that lands on a
+Moodle exception page fails at that step whatever it asserts (Behat's after-step hook throws
+on exception pages), so refusals belong in PHPUnit. `tests/generator/` provides
+`"local_dimensions > frameworks"` / `"templates"` rows with a `category` idnumber column, the
+only way to create competency objects in a course category from a feature.
 Hard-won:
 - **Autocomplete:** pick a value with **only** `I set the field "<label>" to
   "<text>"` — it types, clicks the auto-activated suggestion and presses ESC

@@ -85,4 +85,36 @@ final class assignable_users_test extends \advanced_testcase {
         $this->assertNotNull($match);
         $this->assertStringContainsString('EMP-9', $match['identity']);
     }
+
+    /**
+     * A manager scoped to one course category is offered nobody: the picker lists only users the
+     * caller may create a plan for (planmanage in the user's own context), never the whole site.
+     *
+     * @return void
+     */
+    public function test_a_category_manager_is_offered_nobody_they_cannot_plan_for(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $category = $this->getDataGenerator()->create_category();
+        $categorycontext = \context_coursecat::instance((int) $category->id);
+        $template = $ccg->create_template(['visible' => 1, 'contextid' => $categorycontext->id]);
+        $templateid = (int) $template->get('id');
+        $someone = $this->getDataGenerator()->create_user(['firstname' => 'Delta', 'lastname' => 'Someone']);
+
+        // Control: the administrator (planmanage everywhere) is offered the user.
+        $offered = search_assignable_users::execute($templateid, 'Delta')['items'];
+        $ids = array_map(static fn($item): int => (int) $item['id'], $offered);
+        $this->assertContains((int) $someone->id, $ids);
+
+        $manager = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templatemanage', CAP_ALLOW, $roleid, $categorycontext->id);
+        role_assign($roleid, (int) $manager->id, $categorycontext->id);
+        $this->setUser($manager);
+
+        $result = search_assignable_users::execute($templateid, 'Delta');
+        $this->assertSame(0, $result['total']);
+        $this->assertSame([], $result['items']);
+    }
 }

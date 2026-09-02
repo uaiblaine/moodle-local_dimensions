@@ -24,7 +24,6 @@
 
 namespace local_dimensions\output\dynamictabs;
 
-use core\context\system as context_system;
 use core_competency\competency_framework;
 use local_dimensions\helper;
 
@@ -48,12 +47,23 @@ class frameworks extends \core\output\dynamic_tabs\base {
     }
 
     /**
-     * Whether the current user may see this tab.
+     * Whether the current user may see this tab in the context the pane names.
+     *
+     * Resolved from the pane's own contexttype/categoryid, never from the system context: a manager
+     * holding the competency capabilities in one course category only must get this tab there, and
+     * core's dynamic-tabs web service re-instantiates the tab from the same pane data before calling
+     * require_access(). The resolver downgrades an unreadable category to the system context, so the
+     * check then correctly refuses a category-scoped viewer instead of leaking a system listing.
      *
      * @return bool
      */
     public function is_available(): bool {
-        return competency_framework::can_read_context(context_system::instance());
+        $data = $this->get_data();
+        $resolved = helper::resolve_central_context(
+            (string) ($data['contexttype'] ?? 'system'),
+            (int) ($data['categoryid'] ?? 0)
+        );
+        return competency_framework::can_read_context($resolved['context']);
     }
 
     /**
@@ -92,7 +102,10 @@ class frameworks extends \core\output\dynamic_tabs\base {
         // Fetch the full set (incl. hidden) once so the "show hidden" toggle can be gated on
         // whether any hidden structure actually exists, mirroring the Plans tab; then filter the
         // display rows by the current toggle state.
-        $allrows = $needscategory ? [] : helper::framework_rows($pagecontext, true);
+        // The locked category entry lists the category and its descendants, as tool_lp's category
+        // page does; the site entry lists the resolved context alone.
+        $includes = empty($data['locked']) ? 'self' : 'children';
+        $allrows = $needscategory ? [] : helper::framework_rows($pagecontext, true, $includes);
         $hiddencount = 0;
         $rows = [];
         foreach ($allrows as $row) {

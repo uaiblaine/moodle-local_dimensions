@@ -6,8 +6,83 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **The Competency hub from a course category's "More" menu.** A manager who holds
+  `moodle/competency:competencymanage` or `templatemanage` in a course category (and nowhere
+  else) now finds the hub beside core's *Competency frameworks* and *Learning plan templates*
+  entries, opened with `pagecontextid` the way tool_lp's pages are, following the same page setup
+  (category heading, category navigation, no admin tree). The page is locked to that category:
+  the context switch and the picker give way to the category's name, the System switch is
+  offered only to viewers who may read something at the site, and nothing from a locked visit is
+  written into the remembered context — the next visit through Site administration reopens
+  where it was. The menu entry is gated on managing, not reading, because reading is an
+  authenticated-user default at every category.
+- **A Behat generator for competency objects in a course category.** Core's generator hardcodes
+  the system context and its Behat generator cannot name one, so a scenario about category
+  scoping could only create site-wide objects. `the following "local_dimensions > frameworks"
+  exist` and `"local_dimensions > templates"` take the category's idnumber; the new
+  `central_category.feature` walks a category manager from the category page into the locked hub.
+- **The category entry lists the category's descendants too.** Frameworks, structure and
+  learning plans on the locked entry use core's `children` scope, as tool_lp's category pages
+  do, and the bar's headline count covers the same subtree. The site entry keeps listing one
+  context at a time, so the System view never shows other contexts' objects.
+- **Competency and template pictures check who may see the object.** `local_dimensions_pluginfile`
+  served every picture to any logged-in user by id, which was harmless while only site
+  administrators created these objects and becomes a cross-category leak once categories are
+  delegated. A picture of a visible object is still served to any logged-in user, as course
+  images are; a hidden template's picture only to those who may read it in its context or hold
+  a plan based on it, and a competency's only to those who may read its framework.
+
+### Changed
+
+- **The Competency hub decides tab availability in the context the pane names, not at the site.**
+  All three tabs asked `can_read_context()` about the system context whatever category the page
+  was showing, so a manager holding the competency capabilities in one course category only was
+  refused the Learning plans pane (measured on 5.2: `nopermissiontoaccesspage` over AJAX) and, for
+  the other two, admitted only through the authenticated-user default for `competencyview`. The
+  tab strip now honours that answer the way core's own dynamic-tabs export does — an unavailable
+  tab renders disabled — and the active tab falls back to the first available one instead of a
+  saved preference throwing on the whole page.
+- **The hub's Site administration entry no longer requires `moodle/site:config`.** The plugin
+  wrapped its whole admin subtree in `$hassiteconfig`, which core does not impose on local plugins
+  and tool_lp does not apply to its own pages, so a system-level competency manager was locked out
+  of the hub while core's pages admitted them. The hub is gated by
+  `moodle/competency:competencymanage` alone; the settings page and the two custom-field
+  definition pages keep the site-configuration guard, because field definitions are site-wide.
+
 ### Fixed
 
+- **A manager scoped to one course category saw no custom fields on a competency and saved
+  none.** `competency_handler::can_edit()` resolved `competencymanage` at the system context
+  whatever the competency, and core filters both the rendered and the saved fields through it,
+  so the modal opened (the form checks the framework's context) with every plugin field missing
+  and each save wrote nothing, without an error. The handler now resolves the competency's own
+  framework context, latches the instance while a new one is saved, and takes a context hint
+  from the form for the create path — the same shape `lp_handler` already had, which also gains
+  the hint so a category manager sees the fields when creating a template.
+- **The competency usage popover failed for a category manager.** Its templates section went
+  through `api::list_templates_using_competency()`, which requires template read access at the
+  system context and throws otherwise. Templates are now read through the persistent and
+  filtered on their own context.
+- **The participants picker offered the whole site directory.** `search_assignable_users`
+  required only `templatemanage` on the template and then listed every active user, with email
+  and ID number, while the follow-up `add_template_user_plan` then failed on `planmanage`. The
+  search is now filtered to users the caller may create a plan for, the way core's tool_lp user
+  search is; the grid also learns per row whether unlink and delete are allowed and renders
+  the two actions only there.
+- **Eight read services no longer depend on the authenticated-user default for `competencyview`
+  at the site.** Structure browsing and search, competency search, course links, linkable
+  courses and usage validated the system context and required `competencyview` there before
+  their real per-framework gate, so a hardened site (or a category manager without that
+  default) lost the Structure tab. Each now validates the framework's own context; the
+  cross-framework search keeps only the login gate and its per-framework filter.
+- **Course category names with an ampersand rendered as `&amp;` in the hub's context bar.**
+  `make_categories_list()` hands back names already run through `format_string()`, and the
+  picker's double stashes escape once more. The bar now rebuilds the nested name unescaped.
+- **The "open cohorts page" shortcut is judged in the hub's context and opens the category's
+  cohort page.** It was evaluated at the system context and hardcoded the site cohort list,
+  although `cohort:manage` is a course-category capability and core's page is context-aware.
 - **A course whose enrolment places had been freed by expiry still showed as closed.** The check
   for "this course is full" was re-implemented here rather than asked of `enrol_apply`, and that
   copy counted enrolments whose period had already run out. Since the plugin changed its own

@@ -80,9 +80,12 @@ class search_competencies extends external_api {
         $limitfrom = max(0, $params['limitfrom']);
         $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : 25;
 
+        // A cross-framework search has no single context to validate; the system context here is
+        // only the login gate. The real gate is the per-framework can_read_context() filter below,
+        // so no site-level competencyview is required: a manager holding it in one course category
+        // only searches that category's frameworks and nothing else.
         $context = context_system::instance();
         self::validate_context($context);
-        require_capability('moodle/competency:competencyview', $context);
 
         if (\core_text::strlen($query) < self::MIN_QUERY_LENGTH) {
             return ['items' => [], 'total' => 0];
