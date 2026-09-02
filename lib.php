@@ -196,3 +196,54 @@ function local_dimensions_extend_navigation_category_settings($navigation, $cour
     $node->set_force_into_more_menu(true);
     $navigation->add_node($node);
 }
+
+/**
+ * Describe the competency data a course category holds, for core's category deletion form.
+ *
+ * @param core_course_category $category The category about to be deleted.
+ * @return string A line for the "current contents" list, or '' when there is nothing of ours.
+ */
+function local_dimensions_get_course_category_contents(core_course_category $category): string {
+    return \local_dimensions\local\category_lifecycle::describe((int) $category->id);
+}
+
+/**
+ * Refuse to delete a course category whose frameworks or templates are still in use; delete the rest.
+ *
+ * Core runs this before deleting anything in the category, so a refusal leaves it whole.
+ *
+ * @param stdClass $category The course category record.
+ * @return void
+ * @throws moodle_exception When a framework or template in the category is in use.
+ */
+function local_dimensions_pre_course_category_delete(stdClass $category): void {
+    \local_dimensions\local\category_lifecycle::delete_contents($category);
+}
+
+/**
+ * Whether the "move contents" option may be offered for a category deletion.
+ *
+ * @param core_course_category $category The category being deleted.
+ * @param core_course_category $newparentcat The category its contents would move to.
+ * @return bool
+ */
+function local_dimensions_can_course_category_delete_move(
+    core_course_category $category,
+    core_course_category $newparentcat
+): bool {
+    return \local_dimensions\local\category_lifecycle::can_move_contents((int) $category->id, (int) $newparentcat->id);
+}
+
+/**
+ * Move a deleted category's frameworks and templates to the destination category.
+ *
+ * @param core_course_category $category The category being deleted.
+ * @param core_course_category $newparentcat The category its contents move to.
+ * @return void
+ */
+function local_dimensions_pre_course_category_delete_move(
+    core_course_category $category,
+    core_course_category $newparentcat
+): void {
+    \local_dimensions\local\category_lifecycle::move_contents((int) $category->id, (int) $newparentcat->id);
+}

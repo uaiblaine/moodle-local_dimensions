@@ -20,82 +20,42 @@ changes**. Development happens on Moodle 5.1.
 
 ## Commands
 
-This plugin lives as a **real git clone at `public/local/dimensions` inside the
-dev Moodle checkout** (`/Volumes/N1TB/dev/github/moodle`, 5.x split layout with
-the webroot under `public/`). That clone is the **single working tree**: edit,
-build and `git archive` all happen there directly — no separate standalone clone
-and no rsync are involved. It has its own history (branch `main`, remote
-`uaiblaine/moodle-local_dimensions`), so run git from the plugin dir (or
-`git -C`). `git fetch && git pull` before starting so you don't build on a stale
-base.
+The plugin repo is `~/dev/moodle-local_dimensions` and is **bind-mounted** into every
+stack its `$plugin->supported` range admits (m405, m501, m502) per the fleet manifest
+`~/dev/moodle-dev/plugins.conf`: one edit is live in every Moodle version at once, no
+clone inside a checkout, no rsync. Everything runs through the fleet's `mdl` CLI
+(`~/dev/moodle-dev/bin`, on PATH in interactive shells; use the absolute path from an
+agent's Bash), and git runs from this directory (or `git -C`). `git fetch && git pull`
+before starting so you don't build on a stale base.
 
 ### Building JavaScript assets (required before committing JS)
 
-The AMD modules in `amd/src/*.js` compile to `amd/build/*.min.js` via Moodle's
-grunt. Since the plugin already sits at its real mirror path inside the checkout
-(`public/local/dimensions` is a real directory, not a symlink), grunt builds it
-**in place** — run it from the Moodle root, where `node_modules` and
-`Gruntfile.js` live (the plugin has none of its own):
+`mdl grunt m501 local/dimensions` rebuilds `amd/build/*.min.js` + `.map` in a node
+container pinned to the version Moodle expects; never hand-edit minified output.
+`amd/build/**` is **tracked in git**: every `amd/src` edit ships its rebuilt output in the
+same commit, plus a `version.php` bump so the cache revision changes. The stacks run with
+`cachejs = false`, so during development just edit `amd/src` and reload.
+
+### Gates (run locally before pushing)
 
 ```sh
-cd /Volumes/N1TB/dev/github/moodle
-npx grunt amd --root=public/local/dimensions
+mdl ci moodle-local_dimensions --only phpcs,phpdoc,mustache,grunt   # static pass, one leg
+mdl ci moodle-local_dimensions --matrix --behat                     # every leg GitHub runs
+mdl phpunit m501 local_dimensions                                   # or a path: local/dimensions/tests/...
+mdl behat m501 /var/www/html/public/local/dimensions/tests/behat/<x>.feature   # absolute container path
 ```
 
-The build writes the rebuilt `.min.js` + `.map` straight into the clone's
-`amd/build/`. (On a 4.5 checkout the mirror path is `local/dimensions`, so
-`--root=local/dimensions` instead.)
-
-`amd/build/**` is **tracked in git** — Moodle serves the compiled output, not
-`amd/src`. Every `amd/src` edit must ship its rebuilt `.min.js` + `.map` in the
-same commit, and a `version.php` bump so the cache revision changes. Hand-edited
-minified files are a stopgap only; regenerate with grunt before pushing so the
-module-name annotation, source map, and minification match what Moodle expects.
-
-### Linting (run from the Moodle root, pre-push)
-
-```sh
-npx eslint --max-warnings 0 public/local/dimensions/amd/src
-npx stylelint public/local/dimensions/styles.css
-```
-
-CI runs `grunt --max-lint-warnings 0`, so **every ESLint/Stylelint warning fails
-the build** — there is no warning tier. A plain local `npx grunt amd` build does
-**not** fail on ESLint warnings (it prints them and exits 0, easy to miss in
-filtered output) — always run the `npx eslint --max-warnings 0` command above
-before pushing. `promise/no-nesting` is the usual offender: an intentional
-nested chain (e.g. a recovery reload inside a `.catch` handler) needs
-`// eslint-disable-next-line promise/no-nesting` on the line directly above the
-nested call, with a comment saying why. The local stylelint config
-(`.stylelintrc.json`) extends `stylelint-config-standard` with 4-space indent,
-single quotes, short hex, and `selector-class-pattern ^[a-z0-9\-]+$`. The repo's
-own `package.json` has only stylelint devDeps — **don't** run `npm run build`
-here; the canonical artefacts come from Moodle's Gruntfile.
-
-CI's stylelint is **Moodle's own config** (`/Volumes/N1TB/dev/github/moodle/.stylelintrc`) —
-stricter than the plugin's `.stylelintrc.json`, which carries none of the rules below.
-**It IS reproducible locally** — point stylelint at core's config, from the Moodle root:
-
-```sh
-npx stylelint --config .stylelintrc public/local/dimensions/styles.css
-```
-
-Not byte-identical to grunt's invocation (grunt adds an `at-rule-no-unknown` override for
-raw CSS), so treat its `max-line-length` warnings as advisory — but all three rules below
-are **errors**, and this reproduces them exactly. Run it before pushing CSS:
-
-- `declaration-no-important` — never write `!important`. When a Bootstrap
-  utility in the markup (`.d-flex`, `.d-block` — both `!important`) would fight
-  a `display` you need to toggle, drop the utility from the template and own
-  the property in a plugin class instead (see the plan-row visibility rules).
-  `keyframe-declaration-no-important` closes the same door inside `@keyframes`.
-- `csstree/validator` — rejects property values its (older) grammar doesn't
-  know: `clamp()`/`min()`/`max()` fail with "Invalid value" in **every
-  length-valued property** — not just `height`-like ones: `width`, `max-width`,
-  `font-size`, `padding`, `margin`, `gap`, `flex-basis` all reject them. Use plain
-  `height` + `min-height`/`max-height` pairs; `calc()` is accepted, as is grid `minmax()`.
-- `time-min-milliseconds: 100` — a transition/animation under 100ms is a hard error.
-  The kit's motion scale (150/250/1500ms) clears it, but "80ms, snappier" fails CI.
+CI runs `phpcs --max-warnings 0`, `phpdoc --max-warnings 0` and `grunt --max-lint-warnings 0`
+(eslint plus stylelint on Moodle's own config), so **every warning fails the build**. The
+stylelint rules that bite: `declaration-no-important` (never `!important`; own the property
+in a plugin class instead of fighting a Bootstrap utility), `csstree/validator` (rejects
+`clamp()`/`min()`/`max()` in every length-valued property; use plain `height` +
+`min-height`/`max-height` pairs, `calc()` and grid `minmax()` are fine) and
+`time-min-milliseconds: 100` (a transition under 100ms is an error). A `version.php` bump
+stales the stacks' test sites: `mdl phpunit-init <stack>` / `mdl behat-init <stack>` first.
+Behind the corporate proxy, containers created off-network need
+`mdl down <stack> && mdl up <stack>` before Behat works (see `moodle-dev/CLAUDE.md`). The
+5.02 CI legs cannot install locally there (esm.sh through undici); GitHub runs them.
 
 ### Test deploy / dev loop
 
@@ -296,6 +256,18 @@ custom field) but `block_dimensions` owns the *routing*, so
 `dataset_provider::resolve_plan_display_context()`: no template means plan mode, a
 template without the field means competency mode. If the two plugins' defaults
 ever drift apart, the button lies again.
+
+### Course category deletion (`classes/local/category_lifecycle.php`)
+Core's `delete_full()` / `delete_move()` know nothing about competency data and would leave
+frameworks and templates pointing at a deleted context. `lib.php` answers all four callbacks
+core offers (`get_course_category_contents`, `pre_course_category_delete`,
+`can_course_category_delete_move`, `pre_course_category_delete_move`) through that class:
+refuse "delete all" while anything is in use (`competency::can_all_be_deleted()`, linked
+plans), delete the rest through the competency API, re-home on "move contents" with one
+UPDATE per table the way core moves cohorts (the persistents refuse a context change by
+validation, so neither the API nor `update()` can do it). The callbacks
+are discovered by `get_plugins_with_function()`, cached per `allversionshash`: adding one
+needs a `version.php` bump or it never runs. Only the category's own context per call.
 
 ### Caches and invalidation
 `observer.php` invalidates the metadata/trail caches on the relevant
