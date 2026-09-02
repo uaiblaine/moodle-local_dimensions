@@ -55,12 +55,25 @@ class plans extends \core\output\dynamic_tabs\base {
     }
 
     /**
-     * Whether the current user may see this tab.
+     * Whether the current user may see this tab in the context the pane names.
+     *
+     * Resolved from the pane's own contexttype/categoryid, never from the system context: a manager
+     * holding templatemanage in one course category only must get this tab there, and core's
+     * dynamic-tabs web service re-instantiates the tab from the same pane data before calling
+     * require_access(). Measured on 5.2 before this change: the Plans pane answered
+     * nopermissiontoaccesspage to exactly such a manager, because templateview carries no
+     * authenticated-user default at the system context. The resolver downgrades an unreadable
+     * category to the system context, so the check then correctly refuses a category-scoped viewer.
      *
      * @return bool
      */
     public function is_available(): bool {
-        return template::can_read_context(context_system::instance());
+        $data = $this->get_data();
+        $resolved = helper::resolve_central_context(
+            (string) ($data['contexttype'] ?? 'system'),
+            (int) ($data['categoryid'] ?? 0)
+        );
+        return template::can_read_context($resolved['context']);
     }
 
     /**

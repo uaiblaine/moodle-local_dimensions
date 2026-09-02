@@ -63,25 +63,6 @@ $resolved = helper::resolve_central_context($contexttype, $categoryid);
 $contexttype = $resolved['contexttype'];
 $categoryid = (int) $resolved['categoryid'];
 
-// Init the shared view-state store first (before the context selector) with the resolved nav +
-// display, so the client saves changes against the state the page actually rendered (e.g. a
-// downgraded coursecat context) and context.js can read the saved tab to restore it on load.
-$prefs['nav'] = [
-    'tab' => $activetab,
-    'contexttype' => $contexttype,
-    'categoryid' => $categoryid,
-    'frameworkid' => $frameworkid,
-    'templateid' => $templateid,
-    'showhiddencats' => (bool) $nav['showhiddencats'],
-];
-$PAGE->requires->js_call_amd('local_dimensions/central/preferences', 'init', [$prefs]);
-
-// The context selector is page-level (governs both tabs); init it once on load.
-$contextbar = new contextbar($contexttype, $categoryid, (bool) $nav['showhiddencats']);
-$PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
-// The page-level sticky footer is shared by both tabs; init its coordinator once.
-$PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
-
 /*
  * Build the three tabs. core/dynamic_tabs opens the FIRST tab in the DOM and ignores the server's
  * active flag — unless the URL fragment names a tab, which the tab_hash template below supplies
@@ -107,6 +88,43 @@ $tabinstances = [
         'templateid' => $templateid,
     ]),
 ];
+
+/*
+ * Availability is decided per tab in the resolved context: a viewer may read learning plan
+ * templates but not frameworks, or hold the capabilities in one course category only. The strip
+ * renders an unavailable tab disabled, as core's own dynamic_tabs export does, and the active tab
+ * falls back to the first available one instead of letting a saved or deep-linked tab throw from
+ * require_access() and take the whole page down. Decide this before anything reads $activetab:
+ * the preference seed, the fragment template and the pre-rendered pane all follow it.
+ */
+$available = [];
+foreach ($tabinstances as $shortname => $tab) {
+    $available[$shortname] = $tab->is_available();
+}
+$activetab = helper::pick_available_tab($available, $activetab);
+if ($activetab === '') {
+    throw new required_capability_exception($resolved['context'], 'moodle/competency:competencyview', 'nopermissions', '');
+}
+
+// Init the shared view-state store first (before the context selector) with the resolved nav +
+// display, so the client saves changes against the state the page actually rendered (e.g. a
+// downgraded coursecat context) and context.js can read the saved tab to restore it on load.
+$prefs['nav'] = [
+    'tab' => $activetab,
+    'contexttype' => $contexttype,
+    'categoryid' => $categoryid,
+    'frameworkid' => $frameworkid,
+    'templateid' => $templateid,
+    'showhiddencats' => (bool) $nav['showhiddencats'],
+];
+$PAGE->requires->js_call_amd('local_dimensions/central/preferences', 'init', [$prefs]);
+
+// The context selector is page-level (governs both tabs); init it once on load.
+$contextbar = new contextbar($contexttype, $categoryid, (bool) $nav['showhiddencats']);
+$PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
+// The page-level sticky footer is shared by both tabs; init its coordinator once.
+$PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
+
 $tablabels = [
     'frameworks' => get_string('central_frameworks_tab', 'local_dimensions'),
     'structure' => get_string('managecompetencies_structure', 'local_dimensions'),
@@ -135,7 +153,7 @@ foreach (['frameworks', 'structure', 'plans'] as $shortname) {
         'shortname' => $shortname,
         'displayname' => $icon . $tablabels[$shortname],
         'tabclass' => get_class($tab),
-        'enabled' => true,
+        'enabled' => $available[$shortname],
         'active' => $isactive,
         'content' => $content,
     ];

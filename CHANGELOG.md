@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **The Competency hub decides tab availability in the context the pane names, not at the site.**
+  All three tabs asked `can_read_context()` about the system context whatever category the page
+  was showing, so a manager holding the competency capabilities in one course category only was
+  refused the Learning plans pane (measured on 5.2: `nopermissiontoaccesspage` over AJAX) and, for
+  the other two, admitted only through the authenticated-user default for `competencyview`. The
+  tab strip now honours that answer the way core's own dynamic-tabs export does — an unavailable
+  tab renders disabled — and the active tab falls back to the first available one instead of a
+  saved preference throwing on the whole page.
+- **The hub's Site administration entry no longer requires `moodle/site:config`.** The plugin
+  wrapped its whole admin subtree in `$hassiteconfig`, which core does not impose on local plugins
+  and tool_lp does not apply to its own pages, so a system-level competency manager was locked out
+  of the hub while core's pages admitted them. The hub is gated by
+  `moodle/competency:competencymanage` alone; the settings page and the two custom-field
+  definition pages keep the site-configuration guard, because field definitions are site-wide.
+
 ### Fixed
 
 - **A course whose enrolment places had been freed by expiry still showed as closed.** The check
