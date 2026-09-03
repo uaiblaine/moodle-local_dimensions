@@ -10,8 +10,22 @@ name: ci
 # static gates can see a Bootstrap class that resolves to nothing.
 on:
   push:
+    # Filtered to the merge targets. Without this, a push to a feature branch
+    # ran the whole pipeline AND the pull_request event ran it again on the same
+    # commit - double, for no extra information.
+    branches:
+      - main
+      - 'MOODLE_*_STABLE'
   pull_request:
   workflow_dispatch:
+
+# Supersede a run when new commits arrive on the same pull request: pushing
+# three fixes in a row otherwise leaves three full pipelines running to the end.
+# Never on main - each merge there is the only run its commit will ever get, and
+# a second merge landing quickly must not cancel the first one's verdict.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   # One reusable-workflow call per supported Moodle branch (version.php
