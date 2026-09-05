@@ -18,7 +18,7 @@ never destroyed.
 - **WS:** `local_dimensions_competency_usage` (`db/services.php:90-97` →
   [`classes/external/competency_usage.php`](../../../classes/external/competency_usage.php), 161
   lines) — **one plugin WS, one call, three lists**. No core WS
-- **CSS:** `styles.css:6998-7018` — three rules only: `margin-bottom: 0` on the table (`:7005-7007`),
+- **CSS:** `styles.css:7384-7397` — three rules only: `margin-bottom: 0` on the table (`:7005-7007`),
   cells roomier than Boost's default (`padding: 0.625rem 0.75rem` + `vertical-align: middle`,
   `:7009-7013`) and the new-tab glyph small and quiet (`font-size: 0.75em; opacity: 0.75`,
   `:7015-7018`). Beyond that the body is **pure Bootstrap**
@@ -26,7 +26,7 @@ never destroyed.
   `badge bg-success` / `badge bg-secondary`)
 - **Behat:** none. There is no `.feature` touching the counters
 - **Screen in the DS:** **none, on purpose.** It is a two-column table with no design decision of its
-  own — it mirrors the *Manage participants* grid (the comment at `styles.css:7001` says so). The
+  own — it mirrors the *Manage participants* grid (the comment at `styles.css:7377` says so). The
   rules are all here
 
 **Abbreviations used in the tables:** `mustache:` = `templates/central/competency_usage_modal.mustache`
@@ -62,8 +62,8 @@ one** — that is the mechanism, not a convention.
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
 | `MOD.USAGE-TITLE` | {section} — {name} | title | `js:1226-1227` | the str from `USAGE_SECTIONS[labelkey]` + `' — '` + `row.dataset.name` | the `title` receives the `getString` **Promise** (`Modal.create` accepts that); the em dash is a **literal in the JS**, it does not come from a string. It is the only thing that says **which** section is open on screen — the table's `<caption>` says it too, but it is `visually-hidden` |
-| `MOD.USAGE-MODAL` | — | `core/modal` | `js:1225-1232` | `large: true`, `show: true`, `removeOnClose: true` | **plain** `core/modal` — no `footer`, no save/cancel: it is read-only. It closes only through core's header `.btn-close`, which **does get** the plugin's blue chip restyle (`styles.css:5074`) — this modal is **not** in the exclusion's `:not()`; `MOD.DETAIL` is. It does not carry the `sizetoggle` marker, so it also falls **outside** the `overflow` rule for the two dense modals (`0ee36cc`) |
-| `MOD.USAGE-ROOT` | `[no label]` | region/root | `mustache:54` | `.local-dimensions-central-usage` | the modal's **only** CSS hook (`styles.css:7005-7018`). The body's only child; the three sections are siblings inside it |
+| `MOD.USAGE-MODAL` | — | `core/modal` | `js:1225-1232` | `large: true`, `show: true`, `removeOnClose: true` | **plain** `core/modal` — no `footer`, no save/cancel: it is read-only. It closes only through core's header `.btn-close`, which **does get** the plugin's blue chip restyle (`styles.css:5374`) — this modal is **not** in the exclusion's `:not()`; `MOD.DETAIL` is. It does not carry the `sizetoggle` marker, so it also falls **outside** the `overflow` rule for the two dense modals (`0ee36cc`) |
+| `MOD.USAGE-ROOT` | `[no label]` | region/root | `mustache:54` | `.local-dimensions-central-usage` | the modal's **only** CSS hook (`styles.css:7384-7397`). The body's only child; the three sections are siblings inside it |
 
 ## "Courses" section (`showcourses`)
 
@@ -130,7 +130,7 @@ declared as `PARAM_URL` in `execute_returns` (`php:145`, `:152`).
 **The `target="_blank"` is the rule, not a detail.** Navigating **in the same tab** would destroy the
 Central hub behind the modal — the tree, the selected row, the expansion, the scroll and the splitter
 width. The new tab is what lets the modal be useful (take you there) at no cost in state.
-`styles.css:7002-7003` records the glyph's visual intent: *"the new-tab glyph sits small and quiet
+`styles.css:7377-7383` records the glyph's visual intent: *"the new-tab glyph sits small and quiet
 beside the course/activity name"*.
 
 **The plans were left out, and it is consistent:** the WS exports no `url` for a template

@@ -32,18 +32,18 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .plabel{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;}
 .pdot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--acc-fg);}
 .stage{position:relative;border-radius:16px;background:var(--surface-1);border:0.5px solid var(--border);padding:24px;overflow:hidden;}
-/* The dialog: max-width 620px and radius 24px from styles.css:6663-6668, and with NO modal frame —
+/* The dialog: max-width 620px and radius 24px from styles.css:6989-7008, and with NO modal frame —
    the .modal-content is transparent and shadowless (:6675-6679), so only the card is seen. */
 .dlg{max-width:620px;margin:0 auto;border-radius:24px;}
 
 /* ---- the card (shipped literals) ----
    Envelope = .local-dimensions-central-plans-detail (radius 24, white, deep shadow,
-   styles.css:5813-5817) + .local-dimensions-related-modal-card, which adds overflow:hidden
+   styles.css:6139-6157) + .local-dimensions-related-modal-card, which adds overflow:hidden
    (:6685-6688). That clip is the modal's difference: the inline panel does NOT clip, on purpose, so
    a row's actions menu can escape (the comment at :5811-5812 says so) — in the modal there is no
    actions menu, so clipping is safe and it is what rounds the card over the gradient. */
 .card{position:relative;overflow:hidden;border-radius:24px;background:#fff;box-shadow:0 3px 8px rgba(13,60,110,0.1),0 22px 46px rgba(13,60,110,0.17);}
-/* 140deg gradient in three stops (styles.css:5829). The stops come from JS: --ld-plans-hdr-0 is the
+/* 140deg gradient in three stops (styles.css:6144). The stops come from JS: --ld-plans-hdr-0 is the
    competency's bgcolor and the other two are it darkened by 0.16 and 0.34 by darkenHex
    (competency_detail.js:128-130, darkenHex at :102-112). This screen's sample: #0f4d85 → #0d4170 →
    #0a3358, the last two computed by the function itself. */
@@ -53,15 +53,15 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
    structure_detail_content.mustache:44-45), clipped by the header's overflow. */
 .card-glow{position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(120% 95% at 8% -12%,rgba(255,255,255,0.22),rgba(255,255,255,0) 55%);}
 .card-head-inner{position:relative;z-index:1;}
-/* No reserved gutter on the right: the shipped one has none (styles.css:6505-6510 carries only
+/* No reserved gutter on the right: the shipped one has none (styles.css:6832-6838 carries only
    display/align/gap/wrap), and the close button is absolutely positioned on top. Do not invent one here. */
 .titlerow{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;}
-/* Shipped at 30px/700 (styles.css:5862-5868); compressed here — what is the same is the hierarchy. */
+/* Shipped at 30px/700 (styles.css:6176-6196); compressed here — what is the same is the hierarchy. */
 .card-name{margin:0;font-size:19px;font-weight:700;line-height:1.1;letter-spacing:-0.015em;}
-/* Taxonomy badge: FIXED slate #495057/white (styles.css:6513-6524) — it does not follow the
+/* Taxonomy badge: FIXED slate #495057/white (styles.css:6840-6859) — it does not follow the
    competency's colour, and that is exactly why it reads over any header. */
 .tax{margin-top:2px;display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;background:#495057;color:#fff;font-size:10px;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,0.14);}
-/* Metadata chips in the HEADER, not in the body (styles.css:5955-5969). The rule one is "accent"
+/* Metadata chips in the HEADER, not in the body (styles.css:6283-6283). The rule one is "accent"
    (solid slate, :5976-5981); the others are "glass": translucent white with color:inherit
    (:5983-5987), so they inherit the text colour JS paints on the header. */
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;}
@@ -70,20 +70,20 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .chip-glass{border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.13);color:inherit;}
 .idpfx{opacity:0.8;}
 .mono{font-family:var(--font-mono);}
-/* Its own close button: absolute, 36×36, radius 10, translucent white (styles.css:6690-6707). The
+/* Its own close button: absolute, 36×36, radius 10, translucent white (styles.css:7022-7046). The
    glyph's COLOUR comes from the competency's textcolor in JS (competency_detail.js:294), with #fff
    as the fallback. */
 .close{position:absolute;top:18px;right:18px;z-index:3;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.28);border-radius:10px;background:rgba(255,255,255,0.16);color:#fff;cursor:pointer;transition:background 0.15s ease;}
 .close:hover,.close:focus-visible{background:rgba(255,255,255,0.3);}
 .ic{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .ic.sm{width:0.7rem;height:0.7rem;}
-/* The white body RISES 16px over the header and rounds 22/22/24/24 (styles.css:5991-5998). */
+/* The white body RISES 16px over the header and rounds 22/22/24/24 (styles.css:6315-6329). */
 .card-body{position:relative;z-index:2;margin-top:-16px;padding:16px 22px 20px;border-radius:22px 22px 24px 24px;background:#fff;}
 .metrics{display:flex;gap:10px;flex-wrap:wrap;}
-/* Metric card: border #e7e9ec, radius 14, background #fbfcfd (styles.css:6537-6543). */
+/* Metric card: border #e7e9ec, radius 14, background #fbfcfd (styles.css:6866-6871). */
 .metric{flex:1 1 150px;min-width:120px;padding:10px 12px;border:1px solid #e7e9ec;border-radius:14px;background:#fbfcfd;}
 /* LABEL ON TOP, number below — that is the template's order (structure_detail_content.mustache:76-87).
-   The number is the accent at 30px/700 in the shipped one (styles.css:6550-6559); compressed here. */
+   The number is the accent at 30px/700 in the shipped one (styles.css:6874-6889); compressed here. */
 .metric .l{font-size:10px;color:#6a737b;}
 .metric .n{margin-top:2px;font-size:22px;font-weight:700;line-height:1.1;color:#0f6cbf;}
 .desc{margin-top:14px;font-size:12px;color:#495057;}
@@ -155,7 +155,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     <b>The card is the dialog.</b> The JS puts the class <code>local-dimensions-related-modal</code> on
     the modal's <code>root</code> (<code>detail.js:285</code>) and it rewrites the
     <code>core/modal</code> shell: the <code>.modal-header</code> becomes <code>display:none</code>
-    (<code>styles.css:6671-6673</code>), the <code>.modal-content</code> gets <code>border:0;
+    (<code>styles.css:6995-7008</code>), the <code>.modal-content</code> gets <code>border:0;
     background:transparent; box-shadow:none</code> (<code>:6675-6679</code>), the
     <code>.modal-body</code> zeroes its padding (<code>:6681-6683</code>) and the <code>.modal-dialog</code>
     fits in <b>620px</b> with a <b>24px radius</b> (<code>:6663-6668</code>). The radius on the dialog is
@@ -181,7 +181,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     (<code>content.mustache:78-86</code>, <code>:90-98</code>, <code>:102-110</code>) — otherwise a
     click would open <code>MOD.USAGE</code> <b>on top of</b> this modal. The CSS confirms the split: only
     <code>button.local-dimensions-central-structure-metric-value</code> gets a cursor, an underline on
-    hover and a focus ring (<code>styles.css:6561-6574</code>), and the comment there says the
+    hover and a focus ring (<code>styles.css:6922-6935</code>), and the comment there says the
     related-competency modal draws the same counters as a static number.
     <code>showrelated:false</code> <b>omits</b> the whole related-competencies section
     (<code>content.mustache:116-125</code>) — otherwise a chip would open another
@@ -205,7 +205,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     <b>The close button is its own, not core's.</b> Core's <code>.btn-close</code> is hidden along
     with the header, and the global restyle of the blue close chip <b>excludes</b> this modal through
     <code>:not(.local-dimensions-related-modal)</code> in all three selectors
-    (<code>styles.css:5074</code>, <code>:5088</code>, <code>:5098-5099</code>). Its own button is
+    (<code>styles.css:5374</code>, <code>:5088</code>, <code>:5098-5099</code>). Its own button is
     36×36, radius 10, translucent white (<code>:6690-6707</code>), and its <b>glyph colour</b> comes from
     the competency's <code>textcolor</code> in JS, with <code>#fff</code> as the fallback
     (<code>detail.js:294</code>) — so it contrasts with the coloured header, whatever that header is. It
@@ -216,14 +216,14 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
   <div class="note">
     <b>The header's colour is the competency's; what sits on top of it is not.</b> The gradient is
     <code>140deg</code> in three stops fed by <code>--ld-plans-hdr-0/48/100</code>
-    (<code>styles.css:5829</code>), which the JS writes from the <code>bgcolor</code> and from
+    (<code>styles.css:6144</code>), which the JS writes from the <code>bgcolor</code> and from
     <code>darkenHex</code> at <b>0.16</b> and <b>0.34</b> (<code>detail.js:128-130</code>, the function at
     <code>:102-112</code>); the header's text colour is the <code>textcolor</code>
     (<code>detail.js:136</code>) over the <code>#fff</code> the CSS assumes
-    (<code>styles.css:6501-6503</code>). With no <code>bgcolor</code> the JS <b>removes</b> the three
+    (<code>styles.css:6826-6831</code>). With no <code>bgcolor</code> the JS <b>removes</b> the three
     properties and the gradient falls back to the brand default (<code>detail.js:131-135</code>). What
     does <b>not</b> follow the competency: the taxonomy badge and the rule chip stay on the fixed slate
-    <code>#495057</code> with white text (<code>styles.css:6513-6524</code>,
+    <code>#495057</code> with white text (<code>styles.css:6840-6859</code>,
     <code>:5976-5981</code>), and the "glass" chips are translucent white with
     <code>color:inherit</code> (<code>:5983-5987</code>) — they inherit the colour painted on the header
     instead of fixing their own. The prefix of the identification chip is <b>core's</b> string
@@ -272,7 +272,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
   <div class="warn">
     <b>Fixed light surface — a faithful portrait, not preview sloppiness.</b> The literals of the card's
     body are light and <b>have no dark variant</b> in the plugin: <code>#fff</code> in the body
-    (<code>styles.css:5997</code>), <code>#fbfcfd</code> with a <code>#e7e9ec</code> border on the metric
+    (<code>styles.css:6322</code>), <code>#fbfcfd</code> with a <code>#e7e9ec</code> border on the metric
     cards (<code>:6540-6542</code>) and <code>#6a737b</code>/<code>#0f6cbf</code> on the
     label/value pair (<code>:6547</code>, <code>:6555</code>). The <b>only</b>
     <code>prefers-color-scheme</code> in <code>styles.css</code> is scoped to the contrast panel of the

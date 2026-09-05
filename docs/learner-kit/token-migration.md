@@ -26,7 +26,7 @@ Landed in two commits:
   `^buttoncolor` fallback at `:45`), plus the green inside `pix/status/check-circle-fill.svg` and
   `pix/status/rules-proficient.svg` — both are loaded through `<img>`, so CSS `fill` cannot reach
   them and the colour had to come from the file. (`.local-dimensions-icon-check`'s `fill` rule at
-  `styles.css:1270` is inert for that reason; it was left in place rather than retired, since
+  `styles.css:1456` is inert for that reason; it was left in place rather than retired, since
   removing a selector can break a site's custom SCSS.)
 
 `version.php` **was** bumped — the repo is not under a version freeze. It reads `2026072700` at the
@@ -70,7 +70,7 @@ surfaces, so it remains the one accessibility claim in this record that is unver
 
 The sixth open decision was **`--lk-amber-rated` `#e5a100`**: **kept**, not mapped to a warning
 token. It survives as a single rule — the `rated:not(.completed)` accordion left border,
-`styles.css:1465`.
+`styles.css:1688`.
 
 ## Kept deliberately — the rules orange
 
@@ -91,7 +91,7 @@ is likewise gone; only the 22% and 30% alphas above survive.
 ## Kept deliberately — not learner UI
 
 The custom-SCSS editor textarea on the admin template form uses a Catppuccin theme
-(`#1e1e2e` / `#cdd6f4` / `#45475a` / `#89b4fa`, `styles.css:3985-3999`). Intentional, outside the
+(`#1e1e2e` / `#cdd6f4` / `#45475a` / `#89b4fa`, `styles.css:4286-4313`). Intentional, outside the
 learner palette, untouched by the migration.
 
 ## Resolved — the residual glow

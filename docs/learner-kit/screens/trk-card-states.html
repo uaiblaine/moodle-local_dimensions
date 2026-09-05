@@ -42,11 +42,11 @@
 .gal{display:flex;flex-wrap:wrap;gap:14px;padding:12px 20px 4px;}
 .mc-cell{flex:1 1 200px;min-width:196px;}
 .mc-lbl{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;font-weight:600;color:var(--lk-text-2);margin-bottom:6px;}
-/* .card — the tracker card (styles.css:839-846); header bg + border (824-827); title link (829-832) */
+/* .card — the tracker card (styles.css:968-985); header bg + border (824-827); title link (829-832) */
 .card{background:var(--lk-card-bg);border:1px solid rgba(0,0,0,.08);border-radius:.375rem;box-shadow:0 .125rem .25rem rgba(0,0,0,.06);overflow:hidden;}
 .card-header{background:var(--lk-card-bg);border:0;border-bottom:1px solid var(--lk-line);padding:.55rem .85rem;margin:0;font-weight:700;}
 .card-header a{font-size:15px;color:var(--lk-card-title);text-decoration:none;}
-/* .local-dimensions-progress-container — min-height 100px, padding 30px 30px 30px 10px (styles.css:848-856) */
+/* .local-dimensions-progress-container — min-height 100px, padding 30px 30px 30px 10px (styles.css:987-1008) */
 .prog{position:relative;min-height:100px;padding:1rem .75rem;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
 .prog.inline{justify-content:flex-start;padding:0;}
 /* fa-spinner fa-spin fa-2x text-primary — text-primary maps to --lk-accent */
@@ -147,7 +147,7 @@
 <div class="legend">
   <h3>ID legend — Card body states (Tracker)</h3>
   <div class="leg">
-    <span class="k">TRK-CARD-PROG</span><span class="v"><b>Progress container</b> (referenced) — <code>.local-dimensions-progress-container</code>, the AJAX-filled body every state occupies <span class="rule">course_card.mustache:53; styles.css:848-856</span></span>
+    <span class="k">TRK-CARD-PROG</span><span class="v"><b>Progress container</b> (referenced) — <code>.local-dimensions-progress-container</code>, the AJAX-filled body every state occupies <span class="rule">course_card.mustache:53; styles.css:987-1008</span></span>
     <span class="k">TRK-CARD-LOADING</span><span class="v"><b>Initial state</b> — server-rendered <code>fa-spinner fa-spin fa-2x text-primary</code> + "Loading progress..." (<code>loading_progress</code>, lang/en:451); shown until the AJAX render or the error state replaces it <span class="rule">course_card.mustache:53-58</span></span>
     <span class="k">TRK-CARD-ERROR</span><span class="v"><b>Load failure</b> — JS-built <code>div.text-danger.small.p-3.text-center[role=alert]</code> holding "Could not load progress." (<code>course_load_error</code>) and a <code>btn btn-sm btn-outline-secondary local-dimensions-retry-btn</code> "Retry" (<code>course_load_retry</code>, echoed in <code>aria-label</code>). Retry swaps the body to a <code>role="status" aria-live="polite"</code> spinner with an sr-only "Loading…" (<code>course_loading</code>) and re-calls the fetch. Reached from three places: a failed template render, an empty result set, and a failed AJAX call. <span class="rule">competency_view.js:247-270 (button :256-258, retry swap :261-269); callers :293-297, :299-302, :305-307; lang/en:330-332</span></span>
     <span class="k">TRK-CARD-NOCOMPLETION</span><span class="v"><b>Tracking off</b> — muted centred "Completion disabled." (<code>completion_disabled</code>, lang/en:309) when the payload has <code>enabled=false</code>; suppressed on a locked card, whose overlay already explains the blank, and skipped when the payload names a single activity (that body lives outside the guard) <span class="rule">progress_card_body.mustache:179-185</span></span>

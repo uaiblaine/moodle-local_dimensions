@@ -27,7 +27,7 @@ footer**. The toolbar carries the counter ("· N hidden") and **three** header a
 > **Anchor note.** Every `file:line` ref in this map was re-derived against `d0adc3b`.
 > Reference sizes at the moment of derivation: `frameworks.mustache` 109 lines,
 > `frameworks_row.mustache` 59, `frameworks_footer_actions.mustache` 59,
-> `frameworks_export.mustache` 43, `frameworks.js` 525, `styles.css` 7434.
+> `frameworks_export.mustache` 43, `frameworks.js` 525, `styles.css` 7784.
 
 ## Root and page data
 
@@ -43,8 +43,8 @@ footer**. The toolbar carries the counter ("· N hidden") and **three** header a
 | `FWK-EMPTY-CAT` | "Choose the course category first…" | empty state | `frameworks.mustache:67-69` | str `managecompetencies_selectcategory_help` | blocks the whole tab (the `{{^needscategoryselection}}` at `:71` wraps everything else) |
 | `FWK-SHOWHIDDEN` | Show hidden structures | switch | `showhidden_toggle.mustache:44-45`, called from `frameworks.mustache:72-74` | `data-action="{{action}}"` → `toggle-hidden` | **shared partial** with `EST`/`PLN`: the `data-action` is a **variable** in the template and the literal value comes from `dynamictabs/frameworks.php:152` (context at `:150-155`; **null when there is not a single hidden one** → does not render). State in the `frameworksshowhidden` preference (`frameworks.js:491`) **and** in `pane.dataset.showhidden` (`:490`), then `reloadPane` (`:492`) |
 | `FWK-TOOLBAR` | `[no label]` | container | `frameworks.mustache:76` | `.local-dimensions-central-fwtoolbar` | `space-between`; counter on the left, actions on the right |
-| `FWK-COUNT` | "Structures listed: N" | counter | `frameworks.mustache:77-78` | `frameworkcount` | str `central_frameworks_listed`; it counts the rows **displayed** (`count($rows)`, `dynamictabs/frameworks.php:142`) — the **2nd of the hub's three counters** (see `bar-contextbar.md`). 15px `#495057` (`styles.css:5157-5161`), number in `#1d2125` (`:5163-5166`) |
-| `FWK-HIDDENCOUNT` | "· N hidden" / "· 1 hidden" | suffix | `frameworks.mustache:78` | `hasexcluded` / `hiddenlabel` | strs `central_frameworks_hiddencount` + `central_frameworks_hiddencount_one`, chosen by a literal `if` and **resolved in PHP** (`dynamictabs/frameworks.php:118-127`) — the template receives finished text, it does not call `{{#str}}`, because `get_string` has no plural forms and pt_br inflects the adjective. `excludedcount = showhidden ? 0 : hiddencount` (`:117`) — it disappears while the toggle is on, because then nothing is being hidden. It exists to keep `FWK-COUNT` **honest** (comment at `:115-116`). Colour at `styles.css:5168-5170` |
+| `FWK-COUNT` | "Structures listed: N" | counter | `frameworks.mustache:77-78` | `frameworkcount` | str `central_frameworks_listed`; it counts the rows **displayed** (`count($rows)`, `dynamictabs/frameworks.php:142`) — the **2nd of the hub's three counters** (see `bar-contextbar.md`). 15px `#495057` (`styles.css:5497-5501`), number in `#1d2125` (`:5163-5166`) |
+| `FWK-HIDDENCOUNT` | "· N hidden" / "· 1 hidden" | suffix | `frameworks.mustache:78` | `hasexcluded` / `hiddenlabel` | strs `central_frameworks_hiddencount` + `central_frameworks_hiddencount_one`, chosen by a literal `if` and **resolved in PHP** (`dynamictabs/frameworks.php:118-127`) — the template receives finished text, it does not call `{{#str}}`, because `get_string` has no plural forms and pt_br inflects the adjective. `excludedcount = showhidden ? 0 : hiddencount` (`:117`) — it disappears while the toggle is on, because then nothing is being hidden. It exists to keep `FWK-COUNT` **honest** (comment at `:115-116`). Colour at `styles.css:5508-5510` |
 | `FWK-ACTIONS` | `[no label]` | group | `frameworks.mustache:81` | `.local-dimensions-central-fwactions` | the whole group is gated by `{{#canmanage}}` (`:80-94`) |
 | `FWK-NEW` | New structure | button | `frameworks.mustache:82-84` | `data-action="new"` | `fa-plus`; primary (`.local-dimensions-central-plans-new`); `createFramework` → a modal with the region's `contextid` (`frameworks.js:202-203`) |
 | `FWK-IMPORT` | Import | button | `frameworks.mustache:85-87` | `data-action="import"` | `fa-upload`; outline; `openImportForm` (`frameworks.js:248-265`) → dynamic form with CSV |
@@ -58,11 +58,11 @@ footer**. The toolbar carries the counter ("· N hidden") and **three** header a
 | --- | --- | --- | --- | --- | --- |
 | `FWK-ROW` | `[no label]` | card (wrapper) | `frameworks_row.mustache:41-45` | `data-framework="{id}"` | carries `frameworkid`, `name`, `count`, `visible`, `deletable`; the `is-hidden` class (`:41`) has been a state hook with no CSS since 2026-07-15 (the `opacity: 0.6` was removed for blocking AA; see the rules below — searching for `is-hidden` in `styles.css` returns nothing). The JS row selector is `[data-framework]` (`frameworks.js:45`) |
 | `FWK-ROW-SELECT` | `[no label]` | button | `frameworks_row.mustache:46` | `data-action="select-framework"` | **the whole card is a button**: `selectFramework` marks it `.active` and publishes the footer (`frameworks.js:428-445`). The `data-action` is **decorative** — the handler matches through `closest('[data-framework]')` (`:481-484`), not through the action |
-| `FWK-ROW-NAME` | name | text | `frameworks_row.mustache:49` | `shortname` | 17px/700 (`styles.css:5264-5269`) |
-| `FWK-ROW-ID` | idnumber | mono chip | `frameworks_row.mustache:50` | `idnumber` | only when `idnumber` (`styles.css:5271-5279`) |
-| `FWK-ROW-HIDDEN` | "Hidden" | badge | `frameworks_row.mustache:51` | `^visible` | `fa-eye-slash` + str `hidden, tool_lp` (`styles.css:5281-5292`) |
-| `FWK-ROW-DESC` | `[no label]` | description | `frameworks_row.mustache:53` | `description` | only when `description`; a single line with an ellipsis and the full text in the `title` (`styles.css:5294-5302`). The server flattens it to plain text and cuts it at 300 (`helper.php:2897-2908`) |
-| `FWK-ROW-COUNT` | "N competencies" / "1 competency" | pill | `frameworks_row.mustache:55-57` | `competencycount` / `competencylabel` | **only the noun** arrives finished from PHP (strs `central_frameworks_competencieslabel` + `_one`, chosen by a literal `if` at `dynamictabs/frameworks.php:105-111`); the number stays in its `<strong>`, because the pill is 15px bold blue (`styles.css:5318-5322`) + `gap: 6px` + a 13.5px grey noun (`:5304-5316`) — resolving the whole phrase would kill that contrast. Accent pill on the right |
+| `FWK-ROW-NAME` | name | text | `frameworks_row.mustache:49` | `shortname` | 17px/700 (`styles.css:5609-5614`) |
+| `FWK-ROW-ID` | idnumber | mono chip | `frameworks_row.mustache:50` | `idnumber` | only when `idnumber` (`styles.css:5589-5600`) |
+| `FWK-ROW-HIDDEN` | "Hidden" | badge | `frameworks_row.mustache:51` | `^visible` | `fa-eye-slash` + str `hidden, tool_lp` (`styles.css:5626-5637`) |
+| `FWK-ROW-DESC` | `[no label]` | description | `frameworks_row.mustache:53` | `description` | only when `description`; a single line with an ellipsis and the full text in the `title` (`styles.css:5609-5624`). The server flattens it to plain text and cuts it at 300 (`helper.php:2897-2908`) |
+| `FWK-ROW-COUNT` | "N competencies" / "1 competency" | pill | `frameworks_row.mustache:55-57` | `competencycount` / `competencylabel` | **only the noun** arrives finished from PHP (strs `central_frameworks_competencieslabel` + `_one`, chosen by a literal `if` at `dynamictabs/frameworks.php:105-111`); the number stays in its `<strong>`, because the pill is 15px bold blue (`styles.css:5663-5667`) + `gap: 6px` + a 13.5px grey noun (`:5304-5316`) — resolving the whole phrase would kill that contrast. Accent pill on the right |
 
 ## Structure actions — **the page's sticky footer**, not the card
 
@@ -120,8 +120,8 @@ a toast fired from inside it renders **above** the dialogue (the house pattern; 
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `FWK-SCALES-LINK` | "Open scales page" | link (JS) | `frameworks.js:134-162` | str `central_frameworks_openscales` (`:146`) | injected into the form's **`.modal-footer`** (`:142`), as the **first child** so the group's `margin-right: auto` pushes Save/Cancel to the right (`:160-161`), inside a `.local-dimensions-modal-footer-links` (`:148`). Fired on the `LOADED` event (`:182`); `target="_blank"` + `rel="noopener noreferrer"` (`:151-152`), `fa fa-external-link` icon, `aria-hidden` (`:155-156`). Gated by `FWK-CANSCALES` (`:139`) and idempotent (`:143`). The group's CSS is at `styles.css:5028-5033` (+ a focus ring of its own for the `btn-link` at `:5041-5045`, which Moodle 4.5's Bootstrap 4 does not draw). It is the same escape-link pattern as the participants modal — the links **moved down from the header to the footer** in D2 (comment at `styles.css:5020-5027`) |
-| `FWK-SCALES-CHIP` | `[no label]` | close chip | `styles.css:5074-5104` | `.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close` | **Pure CSS, no class from JS.** A `1.75rem` chip, `#e7f0f9` background, Font Awesome's `\f00d` glyph in `#0f4d85` (`:5088-5097`), hover/focus `#d4e6fb` (`:5099-5104`). The selector's second arm matches the `.modal-form-dialogue` that core puts on the dialogue **synchronously, before `show()`** — it paints from the first frame; the `:has()` arm on its own flashed (comment at `:5063-5073`). The old `local-dimensions-headerlink-modal` class was **removed** (zero hits for `headerlink` in `amd/`, `templates/`, `classes/` and `styles.css`) |
+| `FWK-SCALES-LINK` | "Open scales page" | link (JS) | `frameworks.js:134-162` | str `central_frameworks_openscales` (`:146`) | injected into the form's **`.modal-footer`** (`:142`), as the **first child** so the group's `margin-right: auto` pushes Save/Cancel to the right (`:160-161`), inside a `.local-dimensions-modal-footer-links` (`:148`). Fired on the `LOADED` event (`:182`); `target="_blank"` + `rel="noopener noreferrer"` (`:151-152`), `fa fa-external-link` icon, `aria-hidden` (`:155-156`). Gated by `FWK-CANSCALES` (`:139`) and idempotent (`:143`). The group's CSS is at `styles.css:5355-5361` (+ a focus ring of its own for the `btn-link` at `:5041-5045`, which Moodle 4.5's Bootstrap 4 does not draw). It is the same escape-link pattern as the participants modal — the links **moved down from the header to the footer** in D2 (comment at `styles.css:5320-5329`) |
+| `FWK-SCALES-CHIP` | `[no label]` | close chip | `styles.css:5374-5413` | `.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close` | **Pure CSS, no class from JS.** A `1.75rem` chip, `#e7f0f9` background, Font Awesome's `\f00d` glyph in `#0f4d85` (`:5088-5097`), hover/focus `#d4e6fb` (`:5099-5104`). The selector's second arm matches the `.modal-form-dialogue` that core puts on the dialogue **synchronously, before `show()`** — it paints from the first frame; the `:has()` arm on its own flashed (comment at `:5063-5073`). The old `local-dimensions-headerlink-modal` class was **removed** (zero hits for `headerlink` in `amd/`, `templates/`, `classes/` and `styles.css`) |
 
 ## Business rules (verified in the code)
 
@@ -177,9 +177,9 @@ a toast fired from inside it renders **above** the dialogue (the house pattern; 
 - **a11y · FIXED on 2026-07-15.** `FWK-ROW-DESC` and `FWK-HIDDENCOUNT` used `#8b939b` — **3.11:1**
   over the card's `#fff`, below the required 4.5:1, and carrying **real content** (the structure's
   description and the hidden count), not decoration. It was a one-off deviation: `#8b939b` existed
-  only at those two points in the file. Both now use **`#495057`** (`styles.css:5298` and `:5169`) —
+  only at those two points in the file. Both now use **`#495057`** (`styles.css:5616` and `:5169`) —
   the same grey as `FWK-COUNT` (`:5159`) — and pass on **every** real background of the card: 8.18:1
-  normal, 7.69:1 on `:hover` (`#f7f8fa`, `styles.css:5217-5219`), 7.59:1 on `.active` (`#f2f7fc`,
+  normal, 7.69:1 on `:hover` (`#f7f8fa`, `styles.css:5520-5533`), 7.59:1 on `.active` (`#f2f7fc`,
   `:5223-5227`). `#6a737b` (the kit's `--mds-text-muted`) was discarded for failing on the
   **selected** card by 0.02 (4.48:1).
 - **a11y · the hidden card's `opacity: 0.6` was REMOVED (2026-07-15).** `opacity` on a whole block
@@ -188,7 +188,7 @@ a toast fired from inside it renders **above** the dialogue (the house pattern; 
   hidden card already signalled itself explicitly — `fa-eye-slash` + the word "Hidden"
   (`frameworks_row.mustache:51`) — so the `opacity` was a **second**, redundant signal that only
   destroyed contrast. Removed; the badge went from `#6a737b` to `#495057` (4.15 → **7.03:1**; today
-  at `styles.css:5287`) and now carries the state on its own. The `is-hidden` class stays in the
+  at `styles.css:5602`) and now carries the state on its own. The `is-hidden` class stays in the
   template as a state hook, with no CSS rule to read it.
 
 ## IMP-03 — busy curtain in `reloadPane` (shipped, `mtube: loading`)
@@ -208,7 +208,7 @@ still holds: **pane reloaded → curtain; row swapped → flash.**
 
 **What shipped** (full detail in `est-competencies.md`): `tabs.js:77-80` puts `LOADING_CLASS` (`:44`) +
 `aria-busy="true"` on the pane and the `finally` (`:103-106`) takes them off; the design is a
-**whole-pane curtain** at `styles.css:4028-4068` — a `rgba(255, 255, 255, 0.55)` veil (`:4033`) over
+**whole-pane curtain** at `styles.css:4334-4381` — a `rgba(255, 255, 255, 0.55)` veil (`:4033`) over
 the old content plus a `2rem` ring in `::after` (`:4044`) with a keyframe of its own (`:4059`). It is
 **not** the form this map prescribed (`FWK-IMP-BANNER`'s `alert alert-info` + `spinner-border-sm`);
 that remains the form for loading **in a modal body**, and the two coexist. The `{quiet: true}`
@@ -229,7 +229,7 @@ See `hierarchy-nav.html` section 3. What this tab confirms: `central.php:108-112
 per tab (`FWK` gets `fa-sitemap`), `:122` assembles the decorative `<i>` and `:125` concatenates it
 onto the label in `displayname` — `core/dynamic_tabs.mustache` triple-stashes `displayname`, so the
 icon enters through the label **without** changing a core template (comment at `central.php:104-107`).
-The indicator lives at `styles.css:7232-7271`, scoped by the `local-dimensions-central-page` that
+The indicator lives at `styles.css:7583-7631`, scoped by the `local-dimensions-central-page` that
 `central.php:57` puts on the `<body>` so it does not leak to other `dynamic_tabs` consumers on the
 site. Since `FWK` is the tab that is **born active** (`central.php:115`), it is the one that shows
 the indicator on the first paint.

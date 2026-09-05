@@ -22,7 +22,7 @@
      5.36:1 (measured). */
   --pln-hdr-0:#0f6cbf;--pln-hdr-48:#0d5ba0;--pln-hdr-100:#0a477e;--pln-hdr-fg:#fff;
   /* Plugin literals drawn without a token, because in the plugin they are literals too
-     (styles.css:5905-5917 the pill, :5976-5987 the chips, :5870-5888 the status). */
+     (styles.css:6229-6238 the pill, :5976-5987 the chips, :5870-5888 the status). */
   --pln-fixed-bg:#495057;--pln-fixed-fg:#fff;
   --pln-glass-bg:rgba(255,255,255,0.13);--pln-glass-bd:rgba(255,255,255,0.2);
 }
@@ -211,7 +211,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .rule b{color:var(--text-accent);}
 
 /* ---- reloadPane's busy blanket, drawn with the plugin's literals ----
-   The veil and the ring are pseudo-elements, exactly as in styles.css:4033-4056: an
+   The veil and the ring are pseudo-elements, exactly as in styles.css:4322-4354: an
    rgba(255,255,255,0.55) veil over the old content (which STAYS), a 2rem ring with
    border-right-color:transparent spinning at 750ms — 1500ms under prefers-reduced-motion. */
 @keyframes pln-spin{to{transform:rotate(360deg);}}
@@ -543,7 +543,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 
   <div class="note" style="margin-top:7px;">
     The detail header is a <b>140deg gradient that wears the template's colours</b>
-    (<code>styles.css:5829</code>). The three stops above are the <b>real</b> ones for the
+    (<code>styles.css:6144</code>). The three stops above are the <b>real</b> ones for the
     <code>#0f6cbf</code> default: <code>#0f6cbf</code> → <code>#0d5ba0</code> → <code>#0a477e</code>,
     computed by <code>darken_hex(base, 0.16)</code> and <code>(base, 0.34)</code>
     (<code>dynamictabs/plans.php:316-318</code> calling <code>helper.php:3056-3071</code>). It
@@ -558,7 +558,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     and, worse, <b>it grades the pair the header does not paint</b>: what is painted are three derived
     stops and translucent chips on top of them, which nobody grades. At the default, white text gives
     <b>5.36:1</b> (passes), but the <i>glass</i> chips (white at 13%,
-    <code>styles.css:5983-5987</code>, the <code>rgba</code> at <code>:5985</code>) give <b>4.22:1 over stop 0</b> — below AA — rising to
+    <code>styles.css:6303-6320</code>, the <code>rgba</code> at <code>:5985</code>) give <b>4.22:1 over stop 0</b> — below AA — rising to
     6.71:1 at stop 100. <b>The same chip passes or fails depending on where it falls in the
     gradient.</b> The fixed ones pass comfortably: <code>#495057</code>+<code>#fff</code> = 8.18:1 (the
     count pill <code>:5905-5917</code> and the accent chip <code>:5976-5981</code>).
@@ -646,7 +646,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     <b>after</b> the kebab in the DOM (<code>plans.mustache:466-471</code>, with the comment at
     <code>:437-439</code>) because its <code>aria-label</code> embeds the competency's name and the
     <code>"button"</code> selector takes the <b>first hit in document order</b> — coming first, it would
-    steal the real control's click. The CSS <code>order:-1</code> (<code>styles.css:6856</code>) paints it
+    steal the real control's click. The CSS <code>order:-1</code> (<code>styles.css:7195</code>) paints it
     on the <b>left</b> all the same — and that is what is painted above. In the plugin it is born
     <code>opacity:0</code> (<code>:6860</code>) and appears only on hover, <b>but stays interactable for
     WebDriver</b>.
@@ -666,8 +666,8 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     <code>rgba(255,255,255,0.55)</code> over the content that is <b>not</b> emptied, and a 2rem
     <code>::after</code> with <code>border-right-color:transparent</code> at
     <code>750ms linear infinite</code> (<code>1500ms</code> under
-    <code>prefers-reduced-motion</code>) — <code>styles.css:4028-4069</code>, with
-    <code>min-height: var(--mds-loading-min-height)</code> (<code>styles.css:34</code>) reserving height
+    <code>prefers-reduced-motion</code>) — <code>styles.css:4334-4381</code>, with
+    <code>min-height: var(--mds-loading-min-height)</code> (<code>styles.css:22</code>) reserving height
     so the pane does not collapse behind the blanket. <b>There is no banner and no text</b>: the only
     ARIA signal is the <code>aria-busy="true"</code> that <code>reloadPane</code> puts on the pane
     (<code>tabs.js:77-80</code>, removed in the <code>finally</code> at <code>:103-105</code>, together
@@ -701,7 +701,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   <div class="note" style="margin-top:6px;">
     The flash is <code>#fff3cd</code> → <code>transparent</code> through WAAPI, with the duration read
     from the <code>--mds-motion-flash</code> token (<code>central/flash.js:34-48</code>; the token at
-    <code>styles.css:32</code>).
+    <code>styles.css:22</code>).
   </div>
   <div class="warn">
     <b>The <code>quiet</code> exception — and why it is the right call.</b> <code>reloadKeepingScroll</code>
@@ -753,7 +753,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
   <div class="note" style="margin-top:6px;">
     The active tab's indicator is <code>box-shadow: inset 0 -2px 0</code> — it is what is painted, not a
-    caption (<code>styles.css:7261-7265</code>; the base, with the transparent <code>box-shadow</code> and
+    caption (<code>styles.css:7611-7614</code>; the base, with the transparent <code>box-shadow</code> and
     the transition on <code>--mds-motion-base</code>, at <code>:7239-7245</code>). The icon rides in on the
     <b>label</b>: <code>core/dynamic_tabs</code> triple-stashes <code>displayname</code>, so
     <b>no core template changes</b> — the three glyphs come from <code>central.php:108-112</code> and are
@@ -765,8 +765,8 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     <b>Decisions the CSS records:</b> the active tab's text is Boost's dark grey
     (<code>#1d2125</code>), <b>not</b> the accent blue — the accent stays in the 2px underline and the
     focus ring alone, restored with <code>:focus-visible</code> because <code>border: 0</code> plus the
-    base <code>box-shadow</code> had knocked out core's (<code>styles.css:7255-7259</code>). A
-    <code>prefers-reduced-motion</code> cuts the transition (<code>:7267-7271</code>).
+    base <code>box-shadow</code> had knocked out core's (<code>styles.css:7606-7614</code>). A
+    <code>prefers-reduced-motion</code> cuts the transition (<code>:7653-7657</code>).
   </div>
   <div class="note" style="margin-top:6px;">
     <b>"Learning plans" appears inactive above because that is what it is on the first paint</b> —

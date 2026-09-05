@@ -15,22 +15,22 @@
   --prov-fg:#0f6cbf;--prov-bg:#e7f0f9;
 
   /* ---- THE MODAL BODY USES FIXED LITERALS IN BOTH MODES, because the plugin does too ----
-     The CSS's own comment (styles.css:6923-6927) gives the reason: the body is rendered at <body>
+     The CSS's own comment (styles.css:7269-7296) gives the reason: the body is rendered at <body>
      level, OUTSIDE .local-dimensions-manage, so the custom properties from there are not in scope
      and the block writes literal hexes. A real consequence, not a licence to redesign: the shipped
      modal has NO dark variant — it paints this same light blue under any theme. Drawing it with
      theme tokens would hide exactly that. */
   --m-surface:#fff;--m-border:#dee2e6;--m-title:#1d2125;
-  --m-name:#6c7787;      /* styles.css:6930 */
-  --m-short:#1c2433;     /* styles.css:6936 */
-  --m-inplans:#3a4658;   /* styles.css:6942 */
-  --m-note:#6c7787;      /* styles.css:6990 */
-  --opt-bd:#cdc3b0;      /* styles.css:6960 — UNCHECKED option */
-  --sel-bd:#cee0f3;--sel-bg:#e6f0fb;  /* styles.css:6966-6967 — the ONLY checked rule */
-  --focus-ring:#0f6cbf;  /* styles.css:6971 */
+  --m-name:#6c7787;      /* styles.css:7274 */
+  --m-short:#1c2433;     /* styles.css:7274 */
+  --m-inplans:#3a4658;   /* styles.css:7274 */
+  --m-note:#6c7787;      /* styles.css:7333 */
+  --opt-bd:#cdc3b0;      /* styles.css:7307 — UNCHECKED option */
+  --sel-bd:#cee0f3;--sel-bg:#e6f0fb;  /* styles.css:7312-7316 — the ONLY checked rule */
+  --focus-ring:#0f6cbf;  /* styles.css:7318 */
   --dgr-text:#ca3120;    /* Boost's .text-danger, on the destructive option's title */
   --dgr-bg:#ca3120;--dgr-fg:#fff;      /* core's btn-danger, in the footer */
-  --chip-bg:#e7f0f9;--chip-fg:#0f4d85; /* the .btn-close blue chip — styles.css:5074-5096 */
+  --chip-bg:#e7f0f9;--chip-fg:#0f4d85; /* the .btn-close blue chip — styles.css:5374-5377 */
 }
 @media (prefers-color-scheme:dark){:root{
   --surface-2:#1d2125;--surface-1:#16191c;--surface-0:#0e1012;
@@ -54,7 +54,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .m-title{font-size:13px;font-weight:500;}
 /* This modal's .btn-close gets the plugin's blue chip: the selector
    .modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-'])
-   (styles.css:5074) matches, because the body is the local-dimensions-delete-template-modal. */
+   (styles.css:5374) matches, because the body is the local-dimensions-delete-template-modal. */
 .m-x{margin-left:auto;flex:none;display:inline-flex;align-items:center;justify-content:center;
      width:1.75rem;height:1.75rem;padding:0;border:0;border-radius:8px;
      background:var(--chip-bg);color:var(--chip-fg);font-size:0.9rem;line-height:1;cursor:pointer;}
@@ -169,7 +169,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
       </div>
       <div class="note">
         <b>The close button on this path is the plugin's blue chip.</b> The <code>.btn-close</code>
-        restyle (<code>styles.css:5074</code>, glyph at <code>:5088-5096</code>) matches any modal that
+        restyle (<code>styles.css:5374</code>, glyph at <code>:5088-5096</code>) matches any modal that
         is <b>not</b> the <code>.local-dimensions-related-modal</code> and whose
         <code>.modal-body</code> carries plugin markup — and the body here is the
         <code>.local-dimensions-delete-template-modal</code> (<code>mustache:40</code>). A
@@ -224,7 +224,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 
   <div class="note">
     <b>The checked state's contrast, measured on the shipped literals.</b> The option note
-    (<code>#6c7787</code>, <code>styles.css:6990</code>) gives <b>4.54:1</b> against white — it passes
+    (<code>#6c7787</code>, <code>styles.css:7333</code>) gives <b>4.54:1</b> against white — it passes
     by 0.04 — but <b>3.94:1</b> against the <code>#e6f0fb</code> that being checked paints in
     (<code>:6967</code>): <b>it fails 4.5:1</b>. And since “Unlink” is born <code>checked</code>
     (<code>mustache:51</code>), that is the <b>default</b> state, not an edge case. The border inverts
@@ -250,7 +250,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   <div class="note pend">
     <span class="pend-h">Pending</span><br>
     <b>The danger pair for the irreversible option does not exist in the code.</b> Checking “Delete the
-    plans” paints the box in the <b>same blue</b> as “Unlink”: <code>styles.css:6965-6968</code> is the
+    plans” paints the box in the <b>same blue</b> as “Unlink”: <code>styles.css:7312-7316</code> is the
     <b>only</b> checked-state rule
     (<code>.local-dimensions-delete-template-option:has(input:checked)</code>) and there is no variant
     scoped to <code>value="delete"</code> — <code>grep 'value="delete"' styles.css</code> returns

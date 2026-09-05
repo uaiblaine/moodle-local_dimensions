@@ -36,7 +36,7 @@ chat is bilingual.
 
 | ID | Map says | Fix |
 |---|---|---|
-| `TRK-LOCK-BORDER` | dashed SVG border "only if `animatelockedborder`" | border is **always** on a locked card (`competency_view.js:149` + `styles.css:749`); the setting only enables the marching-ants **animation** (`js:331-333` + `@keyframes` `styles.css:765`) |
+| `TRK-LOCK-BORDER` | dashed SVG border "only if `animatelockedborder`" | border is **always** on a locked card (`competency_view.js:149` + `styles.css:870`); the setting only enables the marching-ants **animation** (`js:331-333` + `@keyframes` `styles.css:895`) |
 | `OVW-CRS` (data) | `list_courses_using_competency` (core tool_lp) | actually calls the plugin WS `local_dimensions_get_competency_courses` (SQL on `competency_coursecomp`, `visible==1`); the WS docblock is also stale |
 | TRK settings note | `percentagedisplaymode (hover/inline)` | real options are **fixed / hover(default) / hidden** — "inline" does not exist |
 | `OVW-TAX` (nuance) | "12 color accents" | 12 keys, 11 icons (behavior≈behaviour); the `taxonomy-card-<type>` classes **do not exist** in the CSS — the accent comes from the icon only |

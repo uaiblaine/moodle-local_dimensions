@@ -120,7 +120,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 /* ---- the pane's busy curtain + Refresh button ---- */
 @keyframes est-spin{to{transform:rotate(360deg);}}
 /* The shipped form is a pseudo-element OVER the content already in the pane: a translucent veil +
-   a centred ring, with no text at all (styles.css:4028-4069). The drawing below reproduces that. */
+   a centred ring, with no text at all (styles.css:4334-4381). The drawing below reproduces that. */
 .cover{position:relative;overflow:hidden;min-height:96px;}
 .cover::before{content:"";position:absolute;inset:0;z-index:2;background:rgba(255,255,255,0.55);}
 .cover::after{content:"";position:absolute;top:50%;left:50%;z-index:3;width:2rem;height:2rem;margin:-1rem 0 0 -1rem;border:0.25rem solid #0f6cbf;border-right-color:transparent;border-radius:50%;animation:est-spin 750ms linear infinite;}
@@ -196,7 +196,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   <div class="note" style="margin-top:6px;">
     The active tab's indicator is <code>box-shadow: inset 0 -2px 0</code> — it is what is painted above, not a
     caption — and it lives in a flat rule: <code>transparent</code> at the base in
-    <code>styles.css:7239-7245</code>, active in <code>var(--bs-primary,#0f6cbf)</code> at
+    <code>styles.css:7587-7592</code>, active in <code>var(--bs-primary,#0f6cbf)</code> at
     <code>:7261-7265</code>. The active tab's text is Boost's dark grey
     (<code>#1d2125</code>), <b>not</b> the accent blue: the accent stays only in the 2px underline and in the
     focus ring (<code>:focus-visible</code>, <code>:7255-7259</code>), which restores the keyboard indicator
@@ -319,7 +319,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
   <div class="note" style="margin-top:6px;">
     The curtain covers the content that is <b>already</b> in the pane — it does not replace it, and it
-    <b>has no text</b>: <code>.local-dimensions-central-tab-loading</code> (<code>styles.css:4028-4031</code>, with
+    <b>has no text</b>: <code>.local-dimensions-central-tab-loading</code> (<code>styles.css:4340-4343</code>, with
     <code>min-height: var(--mds-loading-min-height)</code> = <code>12rem</code>, defined at <code>:34</code>, so the
     pane does not collapse behind it) + a <code>::before</code> veil of <code>rgba(255,255,255,0.55)</code>
     (<code>:4033-4042</code>) + a <code>::after</code> ring of <code>2rem</code> in <code>#0f6cbf</code>
@@ -351,7 +351,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   <div class="note" style="margin-top:6px;">
     <b>The house rule, and how it is actually met.</b> Pane reloaded → curtain; row swapped → flash
     (<code>flash.js:41-43</code> reads the duration from the <code>--mds-motion-flash</code> token = <code>1500ms</code>,
-    <code>styles.css:32</code>). <code>refreshNode</code> (<code>structure.js:726-786</code>) is the deliberate
+    <code>styles.css:22</code>). <code>refreshNode</code> (<code>structure.js:726-786</code>) is the deliberate
     in-place path: in the stretch that swaps the row (<code>:756-786</code>) it does <b>not call</b>
     <code>reloadPane</code> — so there is no curtain there because there is no reload, not because of an opt-out. It
     falls back to <code>reloadPane</code> (with a curtain) only at the four detours: node missing (<code>:730</code>),

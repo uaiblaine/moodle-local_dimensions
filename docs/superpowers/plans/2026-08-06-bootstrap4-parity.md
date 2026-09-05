@@ -84,7 +84,7 @@ These are genuine behaviour differences between BS4 and BS5, all confirmed in th
 
 Core 4.5's `lib/templates/modal.mustache` emits `<button class="btn-close"><span aria-hidden="true">&times;</span></button>`; core 5.2's emits an empty button. The plugin's 11 `.btn-close` rules in `styles.css` draw the glyph with `::before`, so 4.5 shows **two** close glyphs.
 
-- [ ] Add `.modal-header .btn-close > span { display: none; }`, scoped to the plugin's modal selectors already present around `styles.css:5074`.
+- [ ] Add `.modal-header .btn-close > span { display: none; }`, scoped to the plugin's modal selectors already present around `styles.css:5374`.
 - [ ] Note in the comment that this is core's markup, not the plugin's — no branch can change it, which is precisely why a fork would not have avoided this rule.
 
 ## Task 5 — Fix the dropdown auto-close behaviour and its wrong comment
@@ -97,7 +97,7 @@ Core 4.5's `lib/templates/modal.mustache` emits `<button class="btn-close"><span
 
 ## Task 6 — Give up the `--mds-` namespace
 
-`styles.css:30-34` defines `--mds-motion-fast`, `--mds-motion-base`, `--mds-motion-flash`, `--mds-motion-ease` and `--mds-loading-min-height` in **`:root`** — global scope, inside the namespace core is actively expanding. Moodle 5.2 ships `theme/boost/scss/design-system/` with `$mds-*` tokens (SCSS today, so no collision yet); 5.1 has no such directory; 5.3 LTS brings MDS React. The plugin has squatted core's namespace at the one scope where a future collision is unavoidable.
+`styles.css:22-37` defines `--mds-motion-fast`, `--mds-motion-base`, `--mds-motion-flash`, `--mds-motion-ease` and `--mds-loading-min-height` in **`:root`** — global scope, inside the namespace core is actively expanding. Moodle 5.2 ships `theme/boost/scss/design-system/` with `$mds-*` tokens (SCSS today, so no collision yet); 5.1 has no such directory; 5.3 LTS brings MDS React. The plugin has squatted core's namespace at the one scope where a future collision is unavoidable.
 
 - [ ] Rename to `--local-dimensions-motion-*` / `--local-dimensions-loading-min-height` and move them off `:root` onto the plugin's own wrapper selectors.
 - [ ] Update the 91 `--mds-` references in `docs/design-kit/tokens.html` in the same commit.
