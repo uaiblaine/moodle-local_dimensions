@@ -102,5 +102,5 @@ has not changed. You can ask for it to be reviewed."* — and, when
 already in flight, `isstatuswaitingforreview` swaps in "Sent for review" instead.
 
 Strings: `evidence_rule_stale`, `evidence_rule_sendreview`, `evidence_rule_reviewsent`
-(`lang/en/local_dimensions.php:401-403`, mirrored in `pt_br`). Styles: `styles.css:3136-3170`
+(`lang/en/local_dimensions.php:401-403`, mirrored in `pt_br`). Styles: `styles.css:3431-3434`
 (`.local-dimensions-ev-stale`, `-text`, `-action`, `-sent`).

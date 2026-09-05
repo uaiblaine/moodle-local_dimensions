@@ -169,13 +169,17 @@ init():                                        // called once, page-level
 
 ## 7. CSS cleanup (Plans)
 
-Removing the in-card footer changes the plans detail-card flex math:
-- `styles.css:3361-3369` — the competency-list scroll region assumed a fixed footer *after* it in
-  flow. With the footer gone, the list becomes the card's bottom band; re-verify it still scrolls
-  and the card fills its height.
-- `styles.css:~3312` — the expanded-description `max-height: calc(var(--local-dimensions-plans-body-height,60vh)*0.4)`
-  still holds (keys off the body height, not the footer), but re-check now that the footer no longer
-  consumes card height.
+Removing the in-card footer changes the plans detail-card flex math. The two rules below carried
+`styles.css` line numbers when this was written; the stylesheet has been rewritten twice since
+(the 2026-07-20 palette migration and the 2026-09-05 token migration), so the numbers are gone and
+the rules are named instead — this section is a record of the design, not a map of the file.
+
+- The **competency-list scroll region** assumed a fixed footer *after* it in flow. With the footer
+  gone, the list becomes the card's bottom band; re-verify it still scrolls and the card fills its
+  height.
+- The **expanded-description `max-height`**, `calc(var(--local-dimensions-plans-body-height,60vh)*0.4)`,
+  still holds (it keys off the body height, not the footer), but re-check now that the footer no
+  longer consumes card height.
 - The structure detail pane loses its CRUD button row; verify spacing of what remains.
 
 ## 8. Compatibility

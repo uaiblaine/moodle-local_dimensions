@@ -20,7 +20,7 @@ The weakness the user reported: the **status pills say a generic "Configured" /
 acting (the button) restates *which* method you are looking at or about to change.
 
 Layout fact that shapes the fix: `.local-dimensions-enrol-tree` scrolls **internally**
-(`max-height: 50vh; overflow-y: auto`, `styles.css:5961`). The config bar (segment
+(`max-height: 50vh; overflow-y: auto`, `styles.css:6284`). The config bar (segment
 + role select + the prose hint that already describes the active method) and the
 action footer **never scroll away** — only the course list does. So the active
 method is always on screen via the segment; a separate sticky "context anchor"

@@ -360,13 +360,13 @@ code{font-family:var(--font-mono);font-size:10px;}
   fires it. A single easing <code>--local-dimensions-motion-ease</code> = <code>cubic-bezier(0.4,0,0.2,1)</code>
   (Material standard). <code>fast</code> matches Bootstrap's <code>.15s</code>. Under
   <code>prefers-reduced-motion</code> both transitions disappear — here in the card and in the shipped code
-  too, where every rule that uses the tokens carries its own clause (e.g. <code>styles.css:7267-7271</code>).
+  too, where every rule that uses the tokens carries its own clause (e.g. <code>styles.css:7653-7657</code>).
 </div>
 
 <div class="h">Loading</div>
 <div class="load"><span class="note"><code>reloadPane</code>'s busy cover occupies this · 12rem reserved</span></div>
 <div class="note" style="margin-top:6px;">
-  <code>--local-dimensions-loading-min-height: 12rem</code> is consumed at <code>styles.css:4030</code>, by
+  <code>--local-dimensions-loading-min-height: 12rem</code> is consumed at <code>styles.css:4342</code>, by
   <code>.local-dimensions-central-tab-loading</code>: the pane keeps that minimum height while the busy
   cover is up, so it does not collapse during the refresh. The cover does <b>not</b> use Bootstrap's
   <code>spinner-border</code> — it draws its own ring in <code>::after</code>

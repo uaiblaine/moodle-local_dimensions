@@ -81,7 +81,7 @@ what keeps the label honest for the keyboard: dragging is pointer-only, clicking
 > **The flash is the same on both sides, and it is shared.** Neither module carries a local copy of
 > `row.animate`: both call the `flashRow` of `local_dimensions/central/flash` (`flash.js:34-48`,
 > consolidated in `3c0bf41`), which bails early on `prefers-reduced-motion` (`:38-40`) and reads the
-> duration from the `--mds-motion-flash` token (`styles.css:32`) with a 1500ms fallback (`:43`).
+> duration from the `--mds-motion-flash` token (`styles.css:22`) with a 1500ms fallback (`:43`).
 
 ## Business rules (verified in the code)
 

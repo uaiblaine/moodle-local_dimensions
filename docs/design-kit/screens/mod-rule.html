@@ -12,7 +12,7 @@
   --border:#dee2e6;--border-strong:#ced4da;--border-stronger:#ced4da;--radius:8px;
   --font-sans:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--font-mono:ui-monospace,Menlo,monospace;
   --mds-motion-fast:150ms;--mds-motion-ease:cubic-bezier(0.4,0,0.2,1);
-  /* Close chip: the three literals styles.css:5074-5103 publishes, with no dark variant. */
+  /* Close chip: the three literals styles.css:5374-5413 publishes, with no dark variant. */
   --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
 }
 /* The dark theme's --text-accent:#3f89cc measures 4.37:1 and is DELIBERATE: it is Moodle's own dark
@@ -38,7 +38,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .m{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
 .m-head{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:0.5px solid var(--border);}
 .m-title{font-size:13px;font-weight:500;flex-grow:1;min-width:0;}
-/* This modal's close button gets the plugin's chip: the styles.css:5074-5103 rule matches through
+/* This modal's close button gets the plugin's chip: the styles.css:5374-5413 rule matches through
    .modal-body [class*='local-dimensions-'], and the body opens with .local-dimensions-rule-config
    (mustache:51). 1.75rem, #e7f0f9 tint, #0f4d85 glyph — the sibling MOD.SCALE falls outside that
    rule and keeps Bootstrap's raw .btn-close; see the note on that screen. */

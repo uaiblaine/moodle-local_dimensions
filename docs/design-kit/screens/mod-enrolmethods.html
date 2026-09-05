@@ -68,7 +68,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .m-body{padding:11px 12px;display:flex;flex-direction:column;gap:9px;}
 .m-foot{display:flex;align-items:center;gap:8px;padding:9px 12px;border-top:0.5px solid var(--border);}
 /* The header controls are the same 1.75rem chip — refresh and expand/restore through the combined
-   base rule (styles.css:4929-4945), close through core's restyled .btn-close (:5074-5102). This is
+   base rule (styles.css:5229-5253), close through core's restyled .btn-close (:5074-5102). This is
    the geometry that is on air, not a neutral placeholder. */
 .m-acts{display:flex;align-items:center;gap:0.25rem;flex:none;}
 .chip{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;padding:0;border:0;border-radius:8px;background:var(--close-bg);color:var(--close-fg);font-size:0.8rem;line-height:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
@@ -232,7 +232,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
           </div>
 
           <div class="sec" style="margin-top:9px;">
-            <div class="seclbl">Accordion · a scroll box of its own (max-height 50vh, <code>styles.css:7294-7297</code>) <span class="idb">ENROL-TREE · :102</span></div>
+            <div class="seclbl">Accordion · a scroll box of its own (max-height 50vh, <code>styles.css:7680-7683</code>) <span class="idb">ENROL-TREE · :102</span></div>
 
             <div class="grp">
               <div class="grp-head">
@@ -288,7 +288,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
             <div class="row">
               <span class="idb">ENROL-GROUP · enrol_group:36</span><span class="idb">ENROL-GROUP-CB · :38-39</span><span class="idb">ENROL-TOGGLE · :40-47</span><span class="idb">ENROL-HEAD · 6 col · :53-60</span><span class="idb">ENROL-ROW · DOM-built · js:366-463</span>
             </div>
-            <span class="note" style="display:block;margin-top:5px;">A closed group <strong>loads no</strong> courses: the load is lazy on the 1st expansion (<code>data-loaded</code>, <code>js:568-575</code>) and the latch is <strong>reverted on error</strong> (<code>:573</code>), so re-expanding always tries again. The group's name is the competency's <strong>shortname</strong> (<code>js:349</code>). The chevron rotation and the <i>fade/slide</i> are <strong>pure CSS</strong> keyed on <code>aria-expanded</code> (<code>styles.css:7303-7325</code>).</span>
+            <span class="note" style="display:block;margin-top:5px;">A closed group <strong>loads no</strong> courses: the load is lazy on the 1st expansion (<code>data-loaded</code>, <code>js:568-575</code>) and the latch is <strong>reverted on error</strong> (<code>:573</code>), so re-expanding always tries again. The group's name is the competency's <strong>shortname</strong> (<code>js:349</code>). The chevron rotation and the <i>fade/slide</i> are <strong>pure CSS</strong> keyed on <code>aria-expanded</code> (<code>styles.css:7689-7711</code>).</span>
           </div>
 
           <div class="row" style="justify-content:space-between;border-top:0.5px solid var(--border);padding-top:8px;margin-top:9px;">
@@ -349,7 +349,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <code>modal_refresh.js:70-84</code> disables the button (<code>:74</code>), puts
       <code>fa-spin</code> on the icon (<code>:75</code>) and clears both in a <code>finally</code>
       (<code>:80-83</code>). The chip is the same one as the other header controls
-      (<code>styles.css:4929-4945</code>, disabled at <code>:4962-4964</code>) and the label is core's
+      (<code>styles.css:5229-5253</code>, disabled at <code>:4962-4964</code>) and the label is core's
       string <code>getString('refresh')</code> (<code>modal_refresh.js:63</code>) — no new string.
     </div>
 

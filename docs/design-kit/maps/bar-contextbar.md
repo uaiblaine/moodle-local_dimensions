@@ -11,7 +11,7 @@ category select is always rendered (hidden in system mode, `contextbar.mustache:
 - **Renderable:** [`classes/output/central/contextbar.php`](../../../classes/output/central/contextbar.php)
 - **Component in the DS:** `bar-contextbar.html` (the bar); `hierarchy-nav.html` section 3 (the icons
   and the indicator of the hub's tabs, shipped — `central.php:108-112`, `:122`, `:125` and
-  `styles.css:7232-7271`).
+  `styles.css:7583-7631`).
 
 ## The bar
 
@@ -52,10 +52,10 @@ picker. Design in `bar-contextbar.html`; spec in
 "Context"/"Course category" labels line up at the top; `BAR-COUNT-01` (`:94`) and `BAR-REFRESH`
 (`:101`) carry `align-self-center` so they sit centred in the tall bar. The autocomplete's
 **selected-category chip** sits **below** the input, through CSS scoped to the bar
-(`styles.css:7214-7230`: `[data-region='category-wrapper']:not([hidden])` becomes a column and
+(`styles.css:7559-7582`: `[data-region='category-wrapper']:not([hidden])` becomes a column and
 `.form-autocomplete-selection { order: 1 }`) — it depends on core's DOM, so revalidate on upgrade.
 The `:not([hidden])` guard is mandatory: the rule beats the UA's `[hidden]{display:none}` and
-without it the wrapper would show up in System mode (comment at `styles.css:7219-7221`).
+without it the wrapper would show up in System mode (comment at `styles.css:7570-7572`).
 
 **Semantics.** By default the picker shows only visible categories; the toggle reveals the
 `visible=0` ones **that the user can already see** — `make_categories_list()` (`helper.php:2489`)

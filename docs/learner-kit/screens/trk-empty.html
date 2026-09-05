@@ -39,9 +39,9 @@
 .leg .rule{color:var(--lk-chrome-quiet);}
 .cond{font-family:var(--mono);}
 
-/* ---- .local-dimensions-empty family (styles.css:2424-2461) ----
+/* ---- .local-dimensions-empty family (styles.css:2678-2731) ----
    A centred icon chip, a title and a muted note. Both tracker empties use it;
-   the not-found one adds .local-dimensions-empty-icon-warning (styles.css:2445-2448). */
+   the not-found one adds .local-dimensions-empty-icon-warning (styles.css:2707-2726). */
 .emp{display:flex;flex-direction:column;align-items:center;text-align:center;padding:3rem 1.5rem;}
 .emp-ic{display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:none;margin-bottom:1rem;border-radius:50%;background:#e9ecef;color:#6c757d;font-size:1.25rem;}
 .emp-ic.warn{background:#fff3cd;color:#997404;}
@@ -89,8 +89,8 @@
 <div class="legend">
   <h3>ID legend — Tracker empty states (view_competency.mustache)</h3>
   <div class="leg">
-    <span class="k">TRK-EMPTY-NOCOURSES</span><span class="v"><b>Friendly empty state</b> — a neutral <code>.local-dimensions-empty-icon</code> chip (<code>fa-graduation-cap</code>) over <code>no_courses_linked</code> = &ldquo;No courses linked yet&rdquo; and <code>no_courses_linked_note</code>. Rendered when <code>hascompetency</code> is true but <code>hascourses</code> is false — zero visible <code>{competency_coursecomp}</code> joins (<code>c.visible = 1</code>), or every linked course dropped by the enrolment filter. <span class="rule">view_competency.mustache:103-117; styles.css:2424-2461; lang/en:508-509; flags view_competency_page.php:83-84; courses view-competency.php:76-85</span></span>
-    <span class="k">TRK-EMPTY-NOCOMP</span><span class="v"><b>Warning empty state</b> — the same element with <code>.local-dimensions-empty-icon-warning</code> (amber <code>#fff3cd</code> / <code>#997404</code>, <code>fa-exclamation-triangle</code>) over <code>competency_id_missing</code> = &ldquo;Competency not found&rdquo; and <code>competency_id_missing_note</code>. Rendered when <code>hascompetency</code> is false — <code>$DB-&gt;get_record('competency', ['id' =&gt; $competencyid])</code> returned false (no such/hidden competency). A truly absent param 400s earlier via <code>required_param</code>. <span class="rule">view_competency.mustache:119-131; styles.css:2445-2448; lang/en:304-305; view-competency.php:35,70 → view_competency_page.php:83</span></span>
+    <span class="k">TRK-EMPTY-NOCOURSES</span><span class="v"><b>Friendly empty state</b> — a neutral <code>.local-dimensions-empty-icon</code> chip (<code>fa-graduation-cap</code>) over <code>no_courses_linked</code> = &ldquo;No courses linked yet&rdquo; and <code>no_courses_linked_note</code>. Rendered when <code>hascompetency</code> is true but <code>hascourses</code> is false — zero visible <code>{competency_coursecomp}</code> joins (<code>c.visible = 1</code>), or every linked course dropped by the enrolment filter. <span class="rule">view_competency.mustache:103-117; styles.css:2678-2731; lang/en:508-509; flags view_competency_page.php:83-84; courses view-competency.php:76-85</span></span>
+    <span class="k">TRK-EMPTY-NOCOMP</span><span class="v"><b>Warning empty state</b> — the same element with <code>.local-dimensions-empty-icon-warning</code> (amber <code>#fff3cd</code> / <code>#997404</code>, <code>fa-exclamation-triangle</code>) over <code>competency_id_missing</code> = &ldquo;Competency not found&rdquo; and <code>competency_id_missing_note</code>. Rendered when <code>hascompetency</code> is false — <code>$DB-&gt;get_record('competency', ['id' =&gt; $competencyid])</code> returned false (no such/hidden competency). A truly absent param 400s earlier via <code>required_param</code>. <span class="rule">view_competency.mustache:119-131; styles.css:2707-2726; lang/en:304-305; view-competency.php:35,70 → view_competency_page.php:83</span></span>
     <span class="k">gate</span><span class="v">Mutual exclusivity — <code>{{^hascourses}}</code> wraps the no-courses state but nests it inside <code>{{#hascompetency}}</code>, so a missing competency shows only the warning; the two never co-render <span class="rule">view_competency.mustache:103-104, 116-117, 119</span></span>
   </div>
 </div>

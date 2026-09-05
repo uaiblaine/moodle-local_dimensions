@@ -35,7 +35,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .surface{background:var(--mds-bg-surface-default);border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);padding:12px 14px;}
 
 /* ============================================================================
-   THE COMPONENT — copied from styles.css:7361-7434, no JavaScript.
+   THE COMPONENT — copied from styles.css:7747-7792, no JavaScript.
    A positioned wrapper carries the text in data-dim-tip; the balloon is ::after
    and the arrow is ::before. Nothing is hidden from assistive technology: the
    visible text stays in the DOM (only text-overflow clips it), so the balloon is
@@ -70,12 +70,12 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .is-open::after,.is-open::before{opacity:1;transition-delay:0s;}
 
 /* --- demo pieces: the two clipped children, at their shipped values --- */
-/* Evidence grade chip — styles.css:3269-3282 (prof variant :3284-3287). */
+/* Evidence grade chip — styles.css:3565-3569 (prof variant :3284-3287). */
 .ev-assess{display:block;min-width:0;max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:.08rem .4rem;border-radius:.35rem;background:#e9ecef;color:#495057;font-size:.75rem;font-weight:600;}
 .ev-assess.prof{background:#d1e7dd;color:#0f5132;}
-/* Status headline rating — styles.css:3029-3038. */
+/* Status headline rating — styles.css:3315-3327. */
 .status-rating{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.375rem;font-weight:600;color:#212529;}
-/* Proficiency pill — styles.css:3047-3062. */
+/* Proficiency pill — styles.css:3338-3344. */
 .pill{display:inline-flex;align-items:center;gap:.25rem;padding:.25rem .75rem;border-radius:999px;background:#d1e7dd;color:#0f5132;font-size:.8125rem;font-weight:600;white-space:nowrap;}
 .headline{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem .75rem;min-width:0;}
 .evrow{display:grid;grid-template-columns:28px minmax(0,1fr) auto 84px;align-items:center;gap:.6rem;padding:.5rem;border-top:var(--mds-stroke-sm) solid var(--mds-border-default);}
@@ -112,7 +112,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
   Two shipped classes and one data attribute: <code>.local-dimensions-tip</code> on the wrapper,
   <code>.local-dimensions-tip-bottom</code> for the downward variant, and the text in
   <code>data-dim-tip</code>, which <code>content: attr()</code> reads
-  (<code>styles.css:7361-7434</code>; <code>:7357</code> carries a comment pointing back at this file).
+  (<code>styles.css:7747-7809</code>; <code>:7743</code> carries a comment pointing back at this file).
   Balloon at <code>.75rem</code>, radius <code>0.25rem</code>, shadow
   <code>0 0.5rem 1rem rgb(0 0 0 / 15%)</code>, capped at <code>260px</code> and wrapping
   (<code>overflow-wrap: anywhere</code>) — never one endless line. Arrow is a 5px transparent border box
@@ -136,7 +136,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
   </div>
 </div>
 <div class="note">
-  The rule at <code>styles.css:7426-7434</code> lists three triggers on the wrapper —
+  The rule at <code>styles.css:7763-7792</code> lists three triggers on the wrapper —
   <code>:hover</code>, <code>:focus-visible</code> and <code>:focus-within</code>. Only the first fires
   today: <b>both shipped instances wrap a plain <code>&lt;span&gt;</code></b>, and a span does not get a
   <code>tabindex</code> just so a balloon can open (see rule 2). The two focus triggers are declared so
@@ -166,7 +166,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
   <b>Site 1 — the evidence journey's grade chip</b> (<code>accordion.js:1217-1222</code>). The grade sits
   in an auto column, so an author-written scale name long enough to widen it would push the date column
   out of line on every row. The <b>clip</b> lives on the child
-  <code>.local-dimensions-ev-row-assess</code> (<code>styles.css:3269-3282</code>: <code>display:block</code>,
+  <code>.local-dimensions-ev-row-assess</code> (<code>styles.css:3565-3569</code>: <code>display:block</code>,
   <code>min-width:0</code>, <code>max-width:104px</code>, <code>overflow:hidden</code>,
   <code>text-overflow:ellipsis</code>, <code>white-space:nowrap</code>); the <b>balloon</b> lives on the
   wrapper. Swapping them clips the balloon. A row with no grade holds the column open with an em dash
@@ -183,7 +183,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 </div>
 <div class="note">
   <b>Site 2 — the status headline's rating</b> (<code>accordion.js:2692-2695</code>). Same pair, bigger
-  type: the clip is <code>.local-dimensions-status-rating</code> (<code>styles.css:3029-3038</code>,
+  type: the clip is <code>.local-dimensions-status-rating</code> (<code>styles.css:3315-3327</code>,
   <code>1.375rem/600</code>) and the proficiency pill follows as a separate element, so only the rating
   is ever clipped. These two are the <b>whole</b> shipped inventory — <code>grep</code> for
   <code>local-dimensions-tip</code> across <code>amd/</code>, <code>templates/</code> and
@@ -211,7 +211,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
   <b>Known limit, and the reason the variant exists.</b> Any ancestor whose <code>overflow</code> is not
   <code>visible</code> clips the balloon — and <code>overflow-x:auto</code> forces the Y axis to
   <code>auto</code> too, so horizontal scrolling clips top and bottom alike. In the plan accordion this is
-  not hypothetical: <code>.local-dimensions-accordion-item</code> (<code>styles.css:1448-1457</code>) and
+  not hypothetical: <code>.local-dimensions-accordion-item</code> (<code>styles.css:1688-1697</code>) and
   <code>.local-dimensions-accordion-content</code> (<code>:1587-1592</code>) both set
   <code>overflow: hidden</code> for the expand/collapse, and both tooltips sit near the top of a pane —
   which is why <b>both</b> shipped instances carry <code>.local-dimensions-tip-bottom</code>. There is no
@@ -226,7 +226,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
     <li><b>No ARIA and no <code>tabindex</code> for the balloon's sake.</b> Because nothing is hidden from assistive technology the balloon is decoration: no <code>role="tooltip"</code>, no <code>aria-describedby</code>, no <span class="tag">Esc</span> handler — and the shipped markup has none of them. Adding <code>tabindex="0"</code> to a <code>&lt;span&gt;</code> just to make it focusable creates tab stops through a long list — <span class="bad">do not</span>. When the target is already a control, <code>:focus-within</code> covers it for free.</li>
     <li><b>Never pair it with <code>title</code>.</b> The native balloon would sit on top of ours, on its own delay and in the operating system's styling. <span class="good">One or the other</span> — <code>title</code> stays valid on a lone informational icon, like the "No completion tracking" marker in the tracker timeline (<code>progress_card_body.mustache:288</code>, an <code>img</code> with <code>alt=""</code> + <code>aria-hidden</code> + <code>title</code>), which carries no <code>.local-dimensions-tip</code>.</li>
     <li><b>Clip on the child, balloon on the wrapper.</b> <code>.local-dimensions-tip</code> carries no <code>overflow</code>; the clipped children carry no <code>position: relative</code>.</li>
-    <li><b>Order in the stylesheet is load-bearing.</b> <code>.local-dimensions-tip-bottom</code> must stay <i>after</i> the base <code>::after</code>/<code>::before</code> rules: same specificity, so if it moves up the base rules re-apply <code>bottom</code> and <code>border-top-color</code> and over-constrain the box. The shipped CSS says so in a comment at <code>styles.css:7408-7412</code>.</li>
+    <li><b>Order in the stylesheet is load-bearing.</b> <code>.local-dimensions-tip-bottom</code> must stay <i>after</i> the base <code>::after</code>/<code>::before</code> rules: same specificity, so if it moves up the base rules re-apply <code>bottom</code> and <code>border-top-color</code> and over-constrain the box. The shipped CSS says so in a comment at <code>styles.css:7756-7782</code>.</li>
     <li><b>Short text.</b> The balloon qualifies a label; it does not host a paragraph, a link or markup — <code>content: attr()</code> renders plain text by definition. An explanation that needs a link or a list is a modal, like "About this scale" (<code>accordion.js:1371-1387</code>, string <code>scale_about</code>).</li>
   </ol>
 </div>
