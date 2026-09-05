@@ -1344,8 +1344,8 @@ on this wrapper, because a wrapper carrying `overflow: hidden` would clip its ow
 the balloon open.
 
 `.dim-tip-bottom` **does** ship, and Task 6 adds it (see there). The reason is a clipping
-ancestor that is easy to miss: `.local-dimensions-accordion-item` (styles.css:1414) and
-`.local-dimensions-accordion-content` (styles.css:1553) both set `overflow: hidden`
+ancestor that is easy to miss: `.local-dimensions-accordion-item` (styles.css:1688) and
+`.local-dimensions-accordion-content` (styles.css:1830) both set `overflow: hidden`
 unconditionally, and both wrap the element the panes are injected into. The `overflow` is
 there for the expand/collapse animation, so it cannot simply be relaxed. An upward balloon
 near the top of a pane is therefore clipped regardless of where the page is scrolled — and
@@ -1693,8 +1693,8 @@ rather than a circle, matching the kit.
 
 - [ ] **Step 7: Flip both tooltips downward**
 
-Carried from Task 5's review. `.local-dimensions-accordion-item` (styles.css:1414) and
-`.local-dimensions-accordion-content` (styles.css:1553) both set `overflow: hidden`
+Carried from Task 5's review. `.local-dimensions-accordion-item` (styles.css:1688) and
+`.local-dimensions-accordion-content` (styles.css:1830) both set `overflow: hidden`
 unconditionally, and both wrap the element the panes are injected into — the `overflow` drives
 the expand/collapse animation, so it cannot be relaxed. An upward balloon near the top of a
 pane is clipped no matter where the page is scrolled, and **both** of this slice's tooltips sit

@@ -35,7 +35,7 @@
 .acc{padding:2px 20px 0;}
 .acc-item{background:var(--lk-surface);border:1px solid var(--lk-line-2);border-left:4px solid var(--lk-line-2);border-radius:.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);overflow:hidden;}
 .acc-toggle{width:100%;display:flex;align-items:center;gap:.75rem;padding:1rem 1.125rem;background:var(--lk-surface);border:none;text-align:left;cursor:default;}
-/* Boost focus ring: outline 3px, offset -3px (styles.css:1496-1499). */
+/* Boost focus ring: outline 3px, offset -3px (styles.css:1718-1730). */
 .acc-toggle.focus{outline:3px solid var(--lk-focus-ring);outline-offset:-3px;}
 .acc-hc{flex-grow:1;display:flex;flex-direction:column;gap:.25rem;min-width:0;}
 .acc-title{font-weight:600;font-size:1rem;color:var(--lk-text);line-height:1.3;}
@@ -134,7 +134,7 @@
     <span class="k">OVW-ACC-LOADING</span><span class="v"><b>Loading placeholder</b> — <code>.local-dimensions-competency-summary-loading.text-center.py-3</code> wrapping a <code>div.spinner-border.spinner-border-sm.text-primary[role=status]</code> with an <code>sr-only</code> label, plus a visible <code>span.ml-2</code>; both texts = <code>loading_competency_summary</code> ("Loading..."). Server-rendered into every expandable body; <code>display:block</code> as the two web services are called in parallel, <code>display:none</code> once both resolve. <span class="rule">view_plan_summary.mustache:333-338 · lang/en:450 · accordion.js loadCompetencySummary:78, show 89-91, hide 129-131</span></span>
     <span class="k">OVW-ACC-ERROR</span><span class="v"><b>Load-error alert</b> — <code>.local-dimensions-competency-summary-error.alert.alert-danger</code>, text = <code>error_loading_summary</code> ("Error loading competency summary."). Rendered with <code>style="display: none"</code> and unhidden in the <code>.catch</code> when either <code>get_user_competency_summary_in_plan</code> or <code>get_competency_courses</code> rejects — loading is hidden, the box shown, and <code>Notification.exception</code> fired. No button, no re-entry point. <span class="rule">view_plan_summary.mustache:342-344 · lang/en:373 · accordion.js catch 136-145</span></span>
     <span class="k">OVW-ACC · content</span><span class="v"><b>Hidden content sink</b> — <code>.local-dimensions-competency-summary-content</code> (<code>display:none</code>), filled by <code>renderCompetencySummary</code> with the tab strip and its panes, then shown (<span class="rule">OVW-TAB-NAV / OVW-STATUS / OVW-CRS — view_plan_summary.mustache:340 · accordion.js:157, 354-355</span>)</span>
-    <span class="k">focus ring</span><span class="v">Header <code>.local-dimensions-accordion-toggle:focus</code> — <code>outline: 3px solid #0f6cbf; outline-offset: -3px</code>; keyboard-activating a collapsed header expands it while focus stays put <span class="rule">styles.css:1496-1499</span></span>
+    <span class="k">focus ring</span><span class="v">Header <code>.local-dimensions-accordion-toggle:focus</code> — <code>outline: 3px solid #0f6cbf; outline-offset: -3px</code>; keyboard-activating a collapsed header expands it while focus stays put <span class="rule">styles.css:1718-1730</span></span>
   </div>
 </div>
 </div>

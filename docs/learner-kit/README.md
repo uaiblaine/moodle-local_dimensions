@@ -20,7 +20,7 @@ Mirrored in two places, kept in sync:
 ## Foundations
 | File | What it is |
 |---|---|
-| `tokens.html` | The real `styles.css` palette tokenized as `--lk-*`: Moodle DS core, the kept rules orange, the decisions taken during the migration, the evidence/status pills, plus radii and type. Also records the one survivor of the old palette — the Google-blue search-focus glow at `styles.css:2366`. |
+| `tokens.html` | The real `styles.css` palette tokenized as `--lk-*`: Moodle DS core, the kept rules orange, the decisions taken during the migration, the evidence/status pills, plus radii and type. Also records the one survivor of the old palette — the Google-blue search-focus glow at `styles.css:2629`. |
 | `token-migration.md` | Repo-only companion to `tokens.html`: the record of the **completed** Material/Google → Moodle DS migration — the two commits that landed it, the value-for-value mapping with the sites where each new value can be read today, what was kept on purpose, and the two residues (the search glow, the loose neutrals). Changes no runtime code. |
 | `core-issue-notes.md` | Repo-only. The **core** finding behind the stale-evidence callout: a competency rule has no override control of its own, so a rule completion cannot lift an earlier manual rating. Traced and re-verified in core, not changed there — the plugin ships the "Send for review" mitigation instead. |
 
@@ -72,7 +72,7 @@ tab strip it also carried (`OVW-TAB-NAV`, `OVW-TAB-KBD`) moved to
 ## Borrowed from the admin kit
 | File | Why it is used here |
 |---|---|
-| `../design-kit/tooltip.html` | The truncation↔tooltip pair — used by the evidence journey's grade chip and the assessment card's rating level. It lives in the admin kit because that folder is the single source of the Design System's foundations; this kit references it rather than copying it, and `styles.css:7357` points back at it from the code. |
+| `../design-kit/tooltip.html` | The truncation↔tooltip pair — used by the evidence journey's grade chip and the assessment card's rating level. It lives in the admin kit because that folder is the single source of the Design System's foundations; this kit references it rather than copying it, and `styles.css:7701` points back at it from the code. |
 
 ## ID convention
 Format `PREFIX-SECTION[-NN]`, **stable** across re-syncs. Prefixes: **`TRK`**

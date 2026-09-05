@@ -208,8 +208,8 @@ outside the tab's region.
   `aria-busy="true"` on the pane; the `finally` (`:103-106`) removes both — and only the generation
   that still owns the pane removes them, so that a superseded reload cannot switch off the newer
   one's curtain.
-- CSS at `styles.css:4028-4068`: `min-height: var(--mds-loading-min-height)` (token at
-  `styles.css:34`) so the pane does not collapse, a `::before` veil `rgba(255, 255, 255, 0.55)`
+- CSS at `styles.css:4334-4381`: `min-height: var(--mds-loading-min-height)` (token at
+  `styles.css:22`) so the pane does not collapse, a `::before` veil `rgba(255, 255, 255, 0.55)`
   (`:4033`) and a `2rem` `::after` ring (`:4044`) with a keyframe of its own,
   `local-dimensions-central-spin` (`:4059`, 750ms), and `prefers-reduced-motion` taking it to
   1500ms (`:4065-4068`).
@@ -217,7 +217,7 @@ outside the tab's region.
   `spinner-border spinner-border-sm` of `FWK-IMP-BANNER` nor core's `addIconToContainer`: it is a
   **whole-pane curtain** (a translucent veil + a ring drawn in a pseudo-element) that keeps the old
   content visible beneath it. The keyframe is its own so as not to depend on Bootstrap's
-  `spinner-border` being present (comment at `styles.css:4022-4027`).
+  `spinner-border` being present (comment at `styles.css:4302-4316`).
 - **Of the ARIA quartet `states.html` asks for, only `aria-busy` shipped.** `role="status"` +
   `aria-live="polite"` + an accessible name + focus movement did **not** enter this curtain — by
   design, they belong to the first-paint placeholder (IMP-11), which covers the absence of content,
@@ -248,12 +248,12 @@ See `hierarchy-nav.html` section 3. What the Competencies tab confirms in the co
 `fa-graduation-cap`), `:122` assembles the `<i class="fa … me-1" aria-hidden="true">` and `:125`
 concatenates it onto the label in `displayname` — `core/dynamic_tabs.mustache` triple-stashes
 `displayname`, so the icon enters through the label **without** changing a core template (comment at
-`central.php:104-107`). The indicator lives at `styles.css:7232-7271`, scoped by the
+`central.php:104-107`). The indicator lives at `styles.css:7583-7631`, scoped by the
 `local-dimensions-central-page` that `central.php:57` puts on the `<body>` so it does not leak to
 other `dynamic_tabs` consumers on the site: `box-shadow: inset 0 -2px 0 transparent` at the base
 (`:7239-7245`), accent on `.active` (`:7261-7265`), the active tab's text in Boost's dark grey
 (`#1d2125`) and **not** in blue, `:focus-visible` with `outline: 2px solid` (`:7255-7259`) to
 restore the focus ring that `border: 0` knocked out, and `prefers-reduced-motion` zeroing the
-transition (`:7267-7271`). Mtube's `ResizeObserver`-driven overflow dropdown was **not** ported
+transition (`:7653-7657`). Mtube's `ResizeObserver`-driven overflow dropdown was **not** ported
 (zero hits for `ResizeObserver` in `amd/src/central/`) — it was 146 lines of measurement for three
 short labels (`central.php:99-103`) that never overflow.

@@ -112,7 +112,7 @@ template. Two consequences worth recording:
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.DELPLANS-GATE` | `[no label]` | rule (fork) | `js:225-228` (WS), `js:235` (`if`) | `core_competency_template_has_related_data` | it runs **before** any render and is `await`ed — the click opens nothing until the WS returns, **with no spinner and no waiting state**. The hub's waiting coverage is `reloadPane`'s **busy cover** (`tabs.js:69-108`, CSS `styles.css:4028-4069`), which covers a **reloaded pane**; this wait is **prior to the modal** and falls outside it. `true` → the plugin's modal (`:236-251`, with a `return` at `:251`); `false` → core's `deleteCancelPromise` (`:254-260`). **Note the asymmetry**: the gate asks about *related data*, not about *plans* — the WS name is core's and covers more than plans, but the modal it opens talks **only** about plans |
+| `MOD.DELPLANS-GATE` | `[no label]` | rule (fork) | `js:225-228` (WS), `js:235` (`if`) | `core_competency_template_has_related_data` | it runs **before** any render and is `await`ed — the click opens nothing until the WS returns, **with no spinner and no waiting state**. The hub's waiting coverage is `reloadPane`'s **busy cover** (`tabs.js:69-108`, CSS `styles.css:4334-4381`), which covers a **reloaded pane**; this wait is **prior to the modal** and falls outside it. `true` → the plugin's modal (`:236-251`, with a `return` at `:251`); `false` → core's `deleteCancelPromise` (`:254-260`). **Note the asymmetry**: the gate asks about *related data*, not about *plans* — the WS name is core's and covers more than plans, but the modal it opens talks **only** about plans |
 
 ## Modal shell (the **with plans** path)
 
@@ -122,13 +122,13 @@ template. Two consequences worth recording:
 | `MOD.DELPLANS-ROOT` | `[no label]` | region/root | `mustache:40` | `.local-dimensions-delete-template-modal` | the body's wrapper, **with no rule of its own**: `styles.css` styles its children (`:6928` onwards), never the root's class. But it is not a dead hook like `MOD.BROWSER-ROOT`'s — see `MOD.DELPLANS-X` |
 | `MOD.DELPLANS-CONFIRM` | Delete | destructive button (footer) | core (`lib/templates/modal_delete_cancel.mustache`) | `data-action="delete"` · `.btn-danger` · core str `delete` | it comes free with `ModalDeleteCancel`; the plugin does not touch it. **It is red for both choices** — including when the checked one is "Unlink", which destroys nothing. Handler at `js:246-250`; see "Confirming" |
 | `MOD.DELPLANS-CANCEL` | Cancel | button (footer) | core (`lib/templates/modal_delete_cancel.mustache`) | `data-action="cancel"` · core str `cancel` | `core/modal_delete_cancel`'s `registerCloseOnCancel()` closes without calling anything |
-| `MOD.DELPLANS-X` | Close | close chip | core (`lib/templates/modal.mustache`) | — | it gets the hub's `1.75rem` blue restyle (`styles.css:5074-5086`, glyph at `:5088-5096`) through the same selector as its neighbours, which requires a `[class*='local-dimensions-']` in the body. Here **what matches is `MOD.DELPLANS-ROOT`** — and, unlike `MOD.BROWSER`, there is no second candidate: every class in the body is a child of it and starts with the same prefix, but the selector looks at the **root**. Deleting the root's class (because it looks unused, since no rule cites it) **would take the restyle off the X** |
+| `MOD.DELPLANS-X` | Close | close chip | core (`lib/templates/modal.mustache`) | — | it gets the hub's `1.75rem` blue restyle (`styles.css:5374-5388`, glyph at `:5088-5096`) through the same selector as its neighbours, which requires a `[class*='local-dimensions-']` in the body. Here **what matches is `MOD.DELPLANS-ROOT`** — and, unlike `MOD.BROWSER`, there is no second candidate: every class in the body is a child of it and starts with the same prefix, but the selector looks at the **root**. Deleting the root's class (because it looks unused, since no rule cites it) **would take the restyle off the X** |
 
 ## Body — name, count and the two options
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `MOD.DELPLANS-NAME` | Template: {name} | text | `mustache:41-44` — str at `:42`, value at `:43` | str `managetemplates_delete_template` = "Template:" · `{{name}}` | the name comes from the trigger's `data-name` (`js:237`), **escaped** by Mustache (`{{name}}`, not `{{{name}}}`). The `<strong>` is `.local-dimensions-delete-template-shortname` (`styles.css:6933-6937`: `#1c2433`, 1.05rem/600). It is the `shortname`, not the `name` — the template's context documents "Template short name" (`mustache:28`) |
+| `MOD.DELPLANS-NAME` | Template: {name} | text | `mustache:41-44` — str at `:42`, value at `:43` | str `managetemplates_delete_template` = "Template:" · `{{name}}` | the name comes from the trigger's `data-name` (`js:237`), **escaped** by Mustache (`{{name}}`, not `{{{name}}}`). The `<strong>` is `.local-dimensions-delete-template-shortname` (`styles.css:7274-7296`: `#1c2433`, 1.05rem/600). It is the `shortname`, not the `name` — the template's context documents "Template short name" (`mustache:28`) |
 | `MOD.DELPLANS-INPLANS` | This template is used in **N learner plans**. | text | `mustache:45-47` | str `managetemplates_delete_inplans` with `{{plancount}}` | **the `<strong>` is inside the string itself** (`lang/en:493` = `'This template is used in <strong>{$a} learner plans</strong>.'`), not in the template — the `{{#str}}` hands it over as HTML. **The plural is not handled**: with one plan it reads "1 learner plans" (true for both notes as well, `:492` and `:497`) |
 | `MOD.DELPLANS-LEGEND` | What should be done with the learning plans? | legend (sr-only) | `mustache:49` | str `managetemplates_delete_options` · `.sr-only.visually-hidden` | **invisible**; it exists only so a screen reader can name the `<fieldset>` (`:48`). It carries **both** classes — `sr-only` (BS4, Moodle 4.5) and `visually-hidden` (BS5) — because the *classes* are bridged on 4.5 (unlike the `data-` attributes, which are not). It is the only text in the modal a sighted user does not read, and the only place where the old map's question ("What should be done with them?") survived |
 | `MOD.DELPLANS-UNLINK` | Unlink | radio (**default**) | `mustache:50-60` — radio `:51`, title `:54`, note `:57` | `value="unlink"` · `checked` | strs `managetemplates_delete_unlink` + `managetemplates_delete_unlink_note` ("The {$a} plans will continue to exist, without a template."). Born checked: **the default state is the non-destructive one**, and the `!!checked &&` at `js:249` guarantees that even with nothing checked the result would be `false` (unlink). The `<label>` wraps the input — **no `for`**, so the whole row is a click target |
@@ -187,7 +187,7 @@ and the conversion to boolean are, today, verified by reading alone.
 
 ## Contrast — measured on the shipped literals
 
-The `styles.css:6919-6991` block uses **literals**, with no dark variant, by a decision recorded in
+The `styles.css:7262-7342` block uses **literals**, with no dark variant, by a decision recorded in
 its own comment (`:6923-6927`): the body is rendered at `<body>` level, outside
 `.local-dimensions-manage`, so the hub's custom properties are not in scope. Measured in the DOM
 (WCAG 2.x formula; animations cancelled before reading, otherwise the reading returns the previous
@@ -216,7 +216,7 @@ Two findings that only show up when you measure the **checked state**, not the r
 The weak borders are the kit's same known case (`--border-strong`/`--border-stronger` fail 3:1 on
 every recent surface) and are **not** fixed here.
 
-**One rule serves both options.** `styles.css:6965-6968` is a **single** one —
+**One rule serves both options.** `styles.css:7312-7316` is a **single** one —
 `.local-dimensions-delete-template-option:has(input:checked)` — and it applies to `unlink` **and** to
 `delete`: `background: #e6f0fb` and `border-color: #cee0f3` in both. The **irreversible** choice is
 confirmed in the **same blue** as the safe one, in a modal whose `MOD.DELPLANS-CONFIRM` is already red

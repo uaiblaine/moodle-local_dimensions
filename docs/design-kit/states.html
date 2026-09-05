@@ -35,7 +35,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .note b{color:var(--mds-text-default);}
 .tag{font-family:var(--font-mono);font-size:10px;color:var(--mds-text-muted);}
 code{font-family:var(--font-mono);font-size:10px;}
-/* The busy cover, reproduced from styles.css:4028-4069 so the card behaves like the pane it draws. */
+/* The busy cover, reproduced from styles.css:4334-4381 so the card behaves like the pane it draws. */
 .pane{position:relative;min-height:var(--mds-loading-min-height);border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);padding:12px;overflow:hidden;}
 .pane .fake{height:12px;border-radius:3px;background:var(--mds-bg-surface-subtle);margin-bottom:9px;}
 .pane .fake.w70{width:70%;}
@@ -127,7 +127,7 @@ code{font-family:var(--font-mono);font-size:10px;}
       if the reload's generation still owns the pane. The visual is a <b>cover</b>, not a replacement: an
       <code>rgba(255,255,255,0.55)</code> veil in <code>::before</code> over the old content, a
       <code>2rem</code> ring in <code>::after</code> with its own keyframe
-      (<code>styles.css:4028-4069</code>) — with no dependence on Boost's <code>spinner-border</code>. The
+      (<code>styles.css:4334-4381</code>) — with no dependence on Boost's <code>spinner-border</code>. The
       veil is fixed white: the hub is a light surface only.
     </div>
   </div>
@@ -145,7 +145,7 @@ code{font-family:var(--font-mono);font-size:10px;}
       to the button if disabling it dropped focus on the <code>&lt;body&gt;</code> (<code>:226-228</code>).
       The plugin's own styling here: a single line —
       <code>.local-dimensions-modal-refresh[disabled] { cursor: default; }</code>
-      (<code>styles.css:4962-4964</code>). The rest of the disabled state is Boost's.
+      (<code>styles.css:5255-5272</code>). The rest of the disabled state is Boost's.
     </div>
   </div>
 </div>
@@ -187,7 +187,7 @@ code{font-family:var(--font-mono);font-size:10px;}
 <div class="note" style="margin-top:4px;">
   This preview reproduces the keyframe and the <code>prefers-reduced-motion</code> rule because it does not
   load Boost. <b>In the plugin this is written twice, on purpose</b>: the cover carries its own
-  (<code>styles.css:4059-4069</code>, 750ms → 1500ms under reduced-motion, mirroring Boost instead of
+  (<code>styles.css:4345-4369</code>, 750ms → 1500ms under reduced-motion, mirroring Boost instead of
   freezing) and <code>spinner-border</code> inherits Boost's.
 </div>
 

@@ -45,7 +45,7 @@
    Screen-specific — Tracker toolbar, grid and progress timeline
    (view-competency.php). Faithful to styles.css: card + 320px floor (839-846),
    card header (824-832), progress container (848-856), timeline (1202-1240),
-   marker + icons (1243-1294), progress ring (1305-1357), content (1399-1418),
+   marker + icons (1243-1294), progress ring (1517-1582), content (1399-1418),
    toolbar (1633-1664), filter tabs (2212-2268), Filter button + panel
    (2270-2320), seal + collapse (1133-1176), Continue (1180-1199).
    Prefix tg- to avoid clashing with the scaffold.
@@ -59,17 +59,17 @@
 .tg-ref-pill.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 3px rgba(0,0,0,.12);}
 .tg-ref-see{margin-left:auto;font-size:.68rem;color:var(--lk-muted);}
 
-/* Toolbar — .local-dimensions-filter-bar.local-dimensions-toolbar (styles.css:1633-1664):
+/* Toolbar — .local-dimensions-filter-bar.local-dimensions-toolbar (styles.css:1847-1891):
    sticky, capped at 880px, translucent white + blur, radius 1.25rem */
 .tg-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;max-width:880px;margin:.6rem auto 1rem;padding:.6rem .65rem;border-radius:1.25rem;background:rgb(255 255 255 / 85%);}
-/* Completion tabs — .local-dimensions-filter-tabs / -tab / -count (styles.css:2212-2268) */
+/* Completion tabs — .local-dimensions-filter-tabs / -tab / -count (styles.css:2471-2473) */
 .tg-tabs{display:inline-flex;gap:0;background:var(--lk-pill-platter);border-radius:999px;padding:4px;flex-shrink:0;}
 .tg-tab{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:none;background:transparent;border-radius:999px;font-size:.875rem;font-weight:500;color:var(--lk-pill-text);cursor:pointer;white-space:nowrap;}
 .tg-tab.on{background:var(--lk-surface);color:var(--lk-pill-active-fg);box-shadow:0 1px 3px rgba(0,0,0,.12);}
 /* White chip on the grey platter — the count shared the platter's grey and vanished into it */
 .tg-tab .fcount{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:#fff;color:var(--lk-pill-text);border-radius:999px;font-size:.75rem;font-weight:600;}
 .tg-tab.on .fcount{background:var(--lk-counter-active-bg);color:var(--lk-pill-active-fg);}
-/* Filter button — .local-dimensions-filter-toggle (styles.css:2270-2307) */
+/* Filter button — .local-dimensions-filter-toggle (styles.css:2537-2576) */
 .tg-filterbtn{display:inline-flex;align-items:center;gap:.5rem;flex-shrink:0;padding:.5rem 1rem;border:1px solid var(--lk-line-2);border-radius:999px;background:var(--lk-surface);color:var(--lk-text-2);font-size:.875rem;font-weight:500;cursor:pointer;}
 .tg-filterbtn svg{width:.9rem;height:.9rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
@@ -79,14 +79,14 @@
 @media(max-width:560px){.tg-col{width:100%;}}
 
 /* Card — .card h-100 shadow-sm (course_card.mustache:44); the 320px floor is
-   styles.css:845, so a course with few sections still contains the lock overlay */
+   styles.css:983, so a course with few sections still contains the lock overlay */
 .tg-card{background:var(--lk-card-bg);border:1px solid rgba(0,0,0,.06);border-radius:.375rem;min-height:320px;box-shadow:0 .125rem .25rem rgba(0,0,0,.075);overflow:hidden;position:relative;}
 .tg-head{background:var(--lk-card-bg);border:0;padding:.75rem 1.25rem;margin:0;}
 .tg-head a{font-size:20px;color:var(--lk-card-title);text-decoration:none;font-weight:700;}
 .tg-head .muted{font-size:20px;color:var(--lk-muted);font-weight:700;}
 .tg-prog{position:relative;min-height:100px;padding:30px 30px 30px 10px;}
 
-/* Timeline (styles.css:1202-1240) */
+/* Timeline (styles.css:1393-1443) */
 .tg-tl{position:relative;padding-left:10px;}
 .tg-item{position:relative;padding-left:40px;padding-bottom:20px;display:flex;align-items:center;}
 .tg-item::before{content:'';position:absolute;left:11px;top:24px;bottom:-4px;width:2px;background:var(--lk-line);}
@@ -95,7 +95,7 @@
 .tg-mark{position:absolute;left:0;top:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;z-index:1;background:var(--lk-card-bg);}
 .tg-mark svg.tg-icon{display:block;width:24px;height:24px;}
 
-/* Progress ring (styles.css:1305-1357) — bg #e9ecef, fill #198754, % on hover/focus.
+/* Progress ring (styles.css:1517-1583) — bg #e9ecef, fill #198754, % on hover/focus.
    percentagedisplaymode can pin it visible or hide it; hover is the default. */
 .tg-ring{position:relative;width:32px;height:32px;margin:-4px;display:flex;align-items:center;justify-content:center;}
 .tg-ring svg{transform:rotate(-90deg);display:block;}
@@ -104,7 +104,7 @@
 .tg-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;font-weight:700;color:#198754;opacity:0;transition:opacity .25s ease;pointer-events:none;}
 .tg-ring:hover .tg-pct,.tg-ring:focus-within .tg-pct{opacity:1;}
 
-/* Content (styles.css:1399-1418) */
+/* Content (styles.css:1622-1642) */
 .tg-content{font-size:1rem;line-height:1.5;}
 .tg-content a{color:#333;text-decoration:none;font-weight:500;}
 .tg-content a:hover{color:#0056b3;text-decoration:underline;}
@@ -121,20 +121,20 @@
 .tg-lock-body{min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;background:rgb(255 255 255 / 42%);}
 .tg-lock-ic{width:56px;height:56px;border:1px solid #dee2e6;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;color:#495057;}
 .tg-lock-msg{font-weight:700;font-size:.95rem;color:#212529;}
-/* .local-dimensions-locked-date — a soft accent chip, not a raised pill (styles.css:965-979) */
+/* .local-dimensions-locked-date — a soft accent chip, not a raised pill (styles.css:1149-1173) */
 .tg-lock-date{display:inline-flex;align-items:center;gap:.4rem;padding:.32rem .8rem;border-radius:999px;background:#cfe2ff;color:#0f6cbf;font-size:.8rem;font-weight:600;}
 .tg-lock-date svg{width:.8rem;height:.8rem;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .tg-badge-note{font-size:10px;color:var(--lk-chrome-quiet);padding:2px 20px 0;}
 
 /* Completed course: seal + single-line collapse toggle, both in the card BODY
-   (styles.css:1133-1176) — the header carries only the course name */
+   (styles.css:1321-1375) — the header carries only the course name */
 .tg-seal{display:inline-flex;align-items:center;gap:.4rem;margin:0 0 .75rem 10px;padding:.3rem .8rem;border-radius:999px;background:#d1e7dd;color:#0f5132;font-size:.85rem;font-weight:700;}
 .tg-seal svg{width:.85rem;height:.85rem;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
 .tg-tltoggle{display:flex;align-items:center;gap:.4rem;width:100%;padding:.35rem 10px;border:none;background:none;color:var(--lk-muted);font-size:.85rem;text-align:left;cursor:pointer;}
 .tg-tltoggle svg{width:1rem;height:1rem;margin-left:auto;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 150ms ease;}
 .tg-tltoggle[aria-expanded='true'] svg{transform:rotate(180deg);}
 
-/* Continue shortcut — quiet on purpose (styles.css:1178-1199): a bare inline link,
+/* Continue shortcut — quiet on purpose (styles.css:1373-1402): a bare inline link,
    no box, no sub-label; the section name travels in the aria-label only */
 .tg-continue{display:inline-flex;align-items:center;gap:.4rem;margin:0 0 .75rem 10px;color:var(--lk-accent);font-size:.85rem;font-weight:600;text-decoration:none;}
 .tg-continue:hover{text-decoration:underline;}
@@ -301,31 +301,31 @@
 
 <div class="pending">
   <h3>Pending</h3>
-  <p style="margin:0">A sort control over the tracker grid — "Completed first / Name / Recent", client-side over the loaded cards — was designed and is <b>not built</b>. Evidence of absence: the toolbar (<code>view_competency.mustache:60-87</code>) holds exactly two controls, the completion tabs and the Filter button; <code>amd/src/competency_view.js</code> has <b>zero</b> hits for <code>sort</code> and never loads <code>learner_prefs</code>; <code>.local-dimensions-sort-menu</code> (<code>styles.css:2158</code>) is reached only from <code>view_plan_summary.mustache:199-226</code>; and there is no <code>sort_recent</code> lang key at all (<code>sort_completedfirst</code> and <code>sort_name</code> exist but are referenced only from the plan overview). Course order on the tracker is fixed server-side, <code>ORDER BY c.startdate ASC</code> (<code>view-competency.php:83</code>). Sorting exists on the Full plan overview only.</p>
+  <p style="margin:0">A sort control over the tracker grid — "Completed first / Name / Recent", client-side over the loaded cards — was designed and is <b>not built</b>. Evidence of absence: the toolbar (<code>view_competency.mustache:60-87</code>) holds exactly two controls, the completion tabs and the Filter button; <code>amd/src/competency_view.js</code> has <b>zero</b> hits for <code>sort</code> and never loads <code>learner_prefs</code>; <code>.local-dimensions-sort-menu</code> (<code>styles.css:2411</code>) is reached only from <code>view_plan_summary.mustache:199-226</code>; and there is no <code>sort_recent</code> lang key at all (<code>sort_completedfirst</code> and <code>sort_name</code> exist but are referenced only from the plan overview). Course order on the tracker is fixed server-side, <code>ORDER BY c.startdate ASC</code> (<code>view-competency.php:83</code>). Sorting exists on the Full plan overview only.</p>
 </div>
 
 <div class="legend">
   <h3>ID legend — Tracker toolbar, grid &amp; timeline (view-competency.php)</h3>
   <div class="leg">
-    <span class="k">TRK-FILTER</span><span class="v"><b>Not completed / All</b> — a pill tab strip filtering the grid by <b>course completion</b> (the course's own rule, not competency proficiency), client-side over the already-loaded cards. Ships <code>hidden</code> and is revealed only when the batch status call answers, which is also when the two <code>data-count</code> badges are filled. Default tab is <b>All</b>; the predicate is <code>data-completed !== '1'</code>, ANDed with the chip selection. <span class="rule">view_competency.mustache:63-73 · competency_view.js:30,47-48,77-96 (revealed at :85, called from :379) · styles.css:2212-2268</span></span>
-    <span class="k" style="color:#8a8980">filter panel</span><span class="v"><b>Filter button + chip panel</b> — <code>[data-filter-toggle]</code> with <code>fa fa-filter</code>, the <code>filter_toggle</code> string and a <code>[data-chip-count]</code> badge, opening a plain <code>[data-filter-panel]</code> block that hosts the shared <code>chip_filters</code> partial. Kept a plain block on purpose: Bootstrap's display utilities are <code>!important</code> and would defeat the <code>hidden</code> attribute. Both learner views open their chips this way — there is no inline chip bar left. <b>Drawn in full on <code>chips.html</code>.</b> <span class="rule">view_competency.mustache:76-84, 90-97 · chip_filters.js:187-215 · competency_view.js:103-104 · styles.css:2270-2320</span></span>
+    <span class="k">TRK-FILTER</span><span class="v"><b>Not completed / All</b> — a pill tab strip filtering the grid by <b>course completion</b> (the course's own rule, not competency proficiency), client-side over the already-loaded cards. Ships <code>hidden</code> and is revealed only when the batch status call answers, which is also when the two <code>data-count</code> badges are filled. Default tab is <b>All</b>; the predicate is <code>data-completed !== '1'</code>, ANDed with the chip selection. <span class="rule">view_competency.mustache:63-73 · competency_view.js:30,47-48,77-96 (revealed at :85, called from :379) · styles.css:2471-2473</span></span>
+    <span class="k" style="color:#8a8980">filter panel</span><span class="v"><b>Filter button + chip panel</b> — <code>[data-filter-toggle]</code> with <code>fa fa-filter</code>, the <code>filter_toggle</code> string and a <code>[data-chip-count]</code> badge, opening a plain <code>[data-filter-panel]</code> block that hosts the shared <code>chip_filters</code> partial. Kept a plain block on purpose: Bootstrap's display utilities are <code>!important</code> and would defeat the <code>hidden</code> attribute. Both learner views open their chips this way — there is no inline chip bar left. <b>Drawn in full on <code>chips.html</code>.</b> <span class="rule">view_competency.mustache:76-84, 90-97 · chip_filters.js:187-215 · competency_view.js:103-104 · styles.css:2537-2590</span></span>
     <span class="k">TRK-GRID</span><span class="v"><b>Course grid</b> — <code>.row mt-4</code>, <code>role=region</code> + <code>aria-live=polite</code> + <code>aria-relevant="additions text"</code> so AJAX-injected cards are announced <span class="rule">course_grid.mustache:41-46</span></span>
-    <span class="k">TRK-CARD</span><span class="v"><b>Card wrapper</b> — <code>col-md-6 col-lg-4 ... local-dimensions-course-card-wrapper</code>; carries <code>data-courseid</code> and <code>data-filtervalues</code> (json); the JS stamps <code>data-completed</code> 1/0 after the batch status call. Every card is floored at <code>min-height: 320px</code> so a short course still contains the lock overlay. <span class="rule">course_card.mustache:41-43 · competency_view.js:367 · styles.css:839-846</span></span>
-    <span class="k">TRK-CARD-HEAD</span><span class="v"><b>Card header</b> — <code>&lt;h3 class="card-header"&gt;</code>: an <code>&lt;a href=courseurl&gt;</code> when open, a <code>&lt;span class="text-muted"&gt;</code> when locked. It carries the course name only — the completed seal lives in the body. <span class="rule">course_card.mustache:45-52 · styles.css:824-832</span></span>
+    <span class="k">TRK-CARD</span><span class="v"><b>Card wrapper</b> — <code>col-md-6 col-lg-4 ... local-dimensions-course-card-wrapper</code>; carries <code>data-courseid</code> and <code>data-filtervalues</code> (json); the JS stamps <code>data-completed</code> 1/0 after the batch status call. Every card is floored at <code>min-height: 320px</code> so a short course still contains the lock overlay. <span class="rule">course_card.mustache:41-43 · competency_view.js:367 · styles.css:968-985</span></span>
+    <span class="k">TRK-CARD-HEAD</span><span class="v"><b>Card header</b> — <code>&lt;h3 class="card-header"&gt;</code>: an <code>&lt;a href=courseurl&gt;</code> when open, a <code>&lt;span class="text-muted"&gt;</code> when locked. It carries the course name only — the completed seal lives in the body. <span class="rule">course_card.mustache:45-52 · styles.css:941-962</span></span>
     <span class="k">TRK-CARD-A11Y</span><span class="v">Header link <code>aria-label</code> — <code>view_course</code> = "View course: {fullname}" <span class="rule">course_card.mustache:50 · view_competency_page.php:152 · lang/en:643</span></span>
-    <span class="k">TRK-CARD-PROG</span><span class="v"><b>Progress container</b> — <code>.local-dimensions-progress-container[data-courseid]</code>; ships a spinner (<code>loading_progress</code>), replaced by <code>local_dimensions_get_course_progress</code> → <code>progress_card_body</code>. The batch status call runs first and orders the loader so not-completed/not-locked courses render earliest. <span class="rule">course_card.mustache:53-58 · competency_view.js:129-138, 357-390 · styles.css:848-856</span></span>
-    <span class="k">TRK-TL-DONE</span><span class="v"><b>Completed section</b> — <code>is_completed</code> adds <code>.completed</code>: filled check icon + a <b>green connector</b> below it <span class="rule">progress_card_body.mustache:257,265-267 · styles.css:1238-1240 (connector #198754), 1270-1272 (icon)</span></span>
-    <span class="k">TRK-TL-RING</span><span class="v"><b>In-progress ring</b> — <code>is_started</code> and not completed; SVG ring on a 32-unit viewBox with <code>stroke-dasharray = percentage &times; 0.754</code> of 75.4 (the r=12 circumference), the % text fading in on hover/focus unless <code>percentagedisplaymode</code> pins or hides it <span class="rule">progress_card_body.mustache:270-281 · competency_view.js:171 · styles.css:1305-1357</span></span>
+    <span class="k">TRK-CARD-PROG</span><span class="v"><b>Progress container</b> — <code>.local-dimensions-progress-container[data-courseid]</code>; ships a spinner (<code>loading_progress</code>), replaced by <code>local_dimensions_get_course_progress</code> → <code>progress_card_body</code>. The batch status call runs first and orders the loader so not-completed/not-locked courses render earliest. <span class="rule">course_card.mustache:53-58 · competency_view.js:129-138, 357-390 · styles.css:987-1008</span></span>
+    <span class="k">TRK-TL-DONE</span><span class="v"><b>Completed section</b> — <code>is_completed</code> adds <code>.completed</code>: filled check icon + a <b>green connector</b> below it <span class="rule">progress_card_body.mustache:257,265-267 · styles.css:1429-1443 (connector #198754), 1270-1272 (icon)</span></span>
+    <span class="k">TRK-TL-RING</span><span class="v"><b>In-progress ring</b> — <code>is_started</code> and not completed; SVG ring on a 32-unit viewBox with <code>stroke-dasharray = percentage &times; 0.754</code> of 75.4 (the r=12 circumference), the % text fading in on hover/focus unless <code>percentagedisplaymode</code> pins or hides it <span class="rule">progress_card_body.mustache:270-281 · competency_view.js:171 · styles.css:1517-1583</span></span>
     <span class="k">TRK-TL-RING-ARIA</span><span class="v">Ring container is <code>role=progressbar</code> with <code>aria-valuenow=percentage</code> (0–100) + <code>aria-label</code> "Section progress: {n}%" <span class="rule">progress_card_body.mustache:271 · lang/en:42</span></span>
-    <span class="k">TRK-TL-CIRCLE</span><span class="v"><b>Has activities, not started</b> — grey outline circle (<code>circle-outline</code>) <span class="rule">progress_card_body.mustache:284-286 · styles.css:1286-1288</span></span>
-    <span class="k">TRK-TL-INFO</span><span class="v"><b>No completion tracking</b> — info-circle icon when a section has no trackable activities <span class="rule">progress_card_body.mustache:287-289 · styles.css:1290-1294</span></span>
+    <span class="k">TRK-TL-CIRCLE</span><span class="v"><b>Has activities, not started</b> — grey outline circle (<code>circle-outline</code>) <span class="rule">progress_card_body.mustache:284-286 · styles.css:1483-1485</span></span>
+    <span class="k">TRK-TL-INFO</span><span class="v"><b>No completion tracking</b> — info-circle icon when a section has no trackable activities <span class="rule">progress_card_body.mustache:287-289 · styles.css:1487-1491</span></span>
     <span class="k">TRK-TL-INFO-TIP</span><span class="v">Info icon carries <code>title</code> = <code>no_completion_tracking</code> "No completion tracking" (hover tooltip) <span class="rule">progress_card_body.mustache:288 · lang/en:507</span></span>
     <span class="k">TRK-TL-SEC</span><span class="v"><b>Section link</b> — <code>&lt;a href=url&gt;</code> with <code>aria-label</code> <code>view_section</code> "View section: {name}" when the section has a URL; a locked section keeps the link but adds <code>text-muted</code> <span class="rule">progress_card_body.mustache:306-308 (locked variant :297-299) · lang/en:649</span></span>
     <span class="k">TRK-TL-SEC-SPAN</span><span class="v">Plain <code>&lt;span&gt;</code> (no link) when the section has no URL — which is every section of a locked course, since the calculator blanks their URLs server-side <span class="rule">progress_card_body.mustache:309-311 (locked variant :300-302)</span></span>
-    <span class="k">TRK-CARD-DONE</span><span class="v"><b>Completed course</b> — a green <code>course_completed</code> "Completed" pill plus a single-line <code>sections_all_complete</code> "All sections complete" button that folds the section list away (the timeline div itself ships <code>hidden</code> for exactly this case); the chevron rotates via <code>[aria-expanded='true']</code>. Both sit in the card <b>body</b>, inside <code>{{#istimeline}}{{#iscompleted}}{{^locked}}</code> — so neither compact shape nor a locked card ever shows them. <code>iscompleted</code> is the course's own completion rule, read off the wrapper the batch call stamped, which is a different fact from every section happening to be done. <span class="rule">progress_card_body.mustache:238-255 · competency_view.js:191-193, 223-228 · styles.css:1133-1176 · lang/en:329,569</span></span>
-    <span class="k">TRK-CONTINUE</span><span class="v"><b>Continue</b> — a quiet inline link to the <b>first</b> section that is <code>is_started &amp;&amp; !is_completed</code>; the <code>!data.hascontinue</code> guard is what makes it the first. Two further guards: a locked section is skipped (its URL points at the course page, so "continue" leads nowhere) and a URL-less section is skipped. Gated <code>{{^locked}}</code> at card level and inside <code>{{#istimeline}}</code>. The visible text is just "Continue"; the section name travels in the <code>aria-label</code> (<code>continue_to</code>). <span class="rule">progress_card_body.mustache:319-325 · competency_view.js:180-185 · styles.css:1178-1199 · lang/en:310-311</span></span>
+    <span class="k">TRK-CARD-DONE</span><span class="v"><b>Completed course</b> — a green <code>course_completed</code> "Completed" pill plus a single-line <code>sections_all_complete</code> "All sections complete" button that folds the section list away (the timeline div itself ships <code>hidden</code> for exactly this case); the chevron rotates via <code>[aria-expanded='true']</code>. Both sit in the card <b>body</b>, inside <code>{{#istimeline}}{{#iscompleted}}{{^locked}}</code> — so neither compact shape nor a locked card ever shows them. <code>iscompleted</code> is the course's own completion rule, read off the wrapper the batch call stamped, which is a different fact from every section happening to be done. <span class="rule">progress_card_body.mustache:238-255 · competency_view.js:191-193, 223-228 · styles.css:1321-1375 · lang/en:329,569</span></span>
+    <span class="k">TRK-CONTINUE</span><span class="v"><b>Continue</b> — a quiet inline link to the <b>first</b> section that is <code>is_started &amp;&amp; !is_completed</code>; the <code>!data.hascontinue</code> guard is what makes it the first. Two further guards: a locked section is skipped (its URL points at the course page, so "continue" leads nowhere) and a URL-less section is skipped. Gated <code>{{^locked}}</code> at card level and inside <code>{{#istimeline}}</code>. The visible text is just "Continue"; the section name travels in the <code>aria-label</code> (<code>continue_to</code>). <span class="rule">progress_card_body.mustache:319-325 · competency_view.js:180-185 · styles.css:1373-1402 · lang/en:310-311</span></span>
     <span class="k" style="color:#8a8980">disabled</span><span class="v">A completion-tracking-off card renders "<code>completion_disabled</code>" text instead of the timeline — suppressed on a locked card, whose overlay already explains the blank <span class="rule">progress_card_body.mustache:179-185 · lang/en:309</span></span>
-    <span class="k" style="color:#8a8980">TRK-LOCK</span><span class="v">Locked overlay (icon or self-enrol invitation, learn-more / message, the "Opens {date}" chip, blurred sections behind a 42% veil, animated dashed border) — <b>detailed on the locked-card screen</b>; here only the muted head and a stub body are shown <span class="rule">progress_card_body.mustache:99-142 · competency_view.js:229-236, 406-458 · styles.css:859-1051</span></span>
+    <span class="k" style="color:#8a8980">TRK-LOCK</span><span class="v">Locked overlay (icon or self-enrol invitation, learn-more / message, the "Opens {date}" chip, blurred sections behind a 42% veil, animated dashed border) — <b>detailed on the locked-card screen</b>; here only the muted head and a stub body are shown <span class="rule">progress_card_body.mustache:99-142 · competency_view.js:229-236, 406-458 · styles.css:1032-1242</span></span>
   </div>
 </div>
 </div>

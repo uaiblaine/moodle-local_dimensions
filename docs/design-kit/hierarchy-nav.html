@@ -49,7 +49,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .refresh{margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border:var(--mds-stroke-sm) solid var(--mds-border-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);color:var(--mds-text-subtle);}
 
 /* ---- Hub tabs: icon + indicator ----
-   The indicator is an inset box-shadow, with no border (styles.css:7261-7265). The transition uses
+   The indicator is an inset box-shadow, with no border (styles.css:7611-7614). The transition uses
    tokens.html's --mds-motion-base (250ms), the same token the styles.css rule uses. */
 .tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:var(--mds-stroke-sm) solid var(--mds-border-default);}
 .tb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:8px 12px;color:var(--mds-text-muted);background:none;border:0;transition:box-shadow var(--mds-motion-base) var(--mds-motion-ease),color var(--mds-motion-base) var(--mds-motion-ease);}
@@ -151,11 +151,11 @@ code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--md
     </div>
     <div class="note" style="margin-top:8px;">
       The active tab's indicator is <code>box-shadow: inset 0 -2px 0 var(--bs-primary, #0f6cbf)</code>
-      — that is what is painted above, not a caption (<code>styles.css:7261-7265</code>). The base
+      — that is what is painted above, not a caption (<code>styles.css:7611-7614</code>). The base
       zeroes the border and transitions <code>box-shadow</code> and <code>color</code> with
       <code>--mds-motion-base</code>/<code>--mds-motion-ease</code>
       (<code>:7239-7245</code>), with <code>prefers-reduced-motion</code> switching the transition
-      off (<code>:7267-7271</code>). Same shape as <code>format_mtube</code>'s indicator, where the
+      off (<code>:7653-7657</code>). Same shape as <code>format_mtube</code>'s indicator, where the
       idea came from.
     </div>
     <div class="note">
@@ -178,7 +178,7 @@ code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--md
     </div>
     <div class="note">
       <b>Scope:</b> the rule lives under <code>.local-dimensions-central-page .dynamictabs .nav-tabs
-      .nav-link</code> (<code>styles.css:7239</code>) — the <code>&lt;body&gt;</code> class
+      .nav-link</code> (<code>styles.css:7587</code>) — the <code>&lt;body&gt;</code> class
       (<code>central.php:57</code>) confines the restyle to the hub. The <code>.dynamictabs</code>
       ancestor is what matters: the participants modal's tabs (<code>nav nav-tabs</code> <b>without</b>
       <code>.dynamictabs</code>) are not reached. This five-rule block
@@ -193,7 +193,7 @@ code{font-family:Menlo,ui-monospace,monospace;font-size:10px;background:var(--md
       text fails AA in dark. And the base's <code>border:0</code> + <code>box-shadow</code> knocked
       out core's keyboard focus ring (WCAG 2.4.7); <code>:focus-visible</code> restores an
       <code>outline: 2px solid var(--bs-primary, #0f6cbf)</code> with
-      <code>outline-offset: -2px</code> (<code>styles.css:7255-7259</code>).
+      <code>outline-offset: -2px</code> (<code>styles.css:7606-7614</code>).
     </div>
     <div class="note pend">
       <b>Not ported (decision closed):</b> <code>format_mtube</code>'s

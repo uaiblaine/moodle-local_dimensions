@@ -16,7 +16,7 @@
      purpose as a faithful portrait of Moodle's dark accent. Here it is TEXT only ("Load
      more" and the course name): 6.52:1 in light and 7.69:1 in dark. */
   --acc-fg:#185fa5;
-  /* Header-control chip: the three literals that styles.css:4929-4956 and :5074-5103
+  /* Header-control chip: the three literals that styles.css:5229-5272 and :5074-5103
      publish, with no dark variant — glyph #0f4d85 on #e7f0f9 at 7.53:1 in both themes. */
   --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
   --prov-fg:#185fa5;--prov-bg:#e6f1fb;
@@ -52,7 +52,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .m-head{display:flex;align-items:center;gap:3px;padding:10px 12px;border-bottom:0.5px solid var(--border);}
 .m-title{font-size:13px;font-weight:500;flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* The three header controls share the close button's blue chip: same 1.75rem, same colours
-   (styles.css:4929-4956 for refresh/expand, :5074-5103 for close). Only refresh and the toggles
+   (styles.css:5229-5272 for refresh/expand, :5074-5103 for close). Only refresh and the toggles
    carry the 0.25rem margin-right and draw their own focus ring — the .btn-close keeps core's.
    None of the three carries .btn. */
 .m-btn{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;margin-right:0.25rem;padding:0;border:0;border-radius:8px;background:var(--close-bg);color:var(--close-fg);font-size:0.875rem;line-height:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease),color var(--mds-motion-fast) var(--mds-motion-ease);}
@@ -63,7 +63,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .m-foot{display:flex;justify-content:flex-end;gap:8px;padding:9px 12px;border-top:0.5px solid var(--border);}
 /* The ghost footer: the .modal-footer EXISTS in core's DOM with zero children, and core applies
    .hidden { display:none } to it. Drawing an empty bar would lie — the user sees no bar at all.
-   This is a dashed LABEL about the absence. The footer escape links in styles.css:5028-5034
+   This is a dashed LABEL about the absence. The footer escape links in styles.css:5355-5361
    belong to the participants modal and to the structure form; this modal has none. */
 .m-foot-ghost{justify-content:center;border-top:0.5px dashed var(--border-stronger);background:var(--surface-1);padding:6px 12px;}
 .fk{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);}
@@ -119,7 +119,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .act+.act{border-top:0.5px dashed var(--border);}
 .aname{display:flex;align-items:flex-start;gap:5px;}
 /* The real name wraps to TWO lines and then ellipsises, with the whole name in the title
-   (styles.css:7105-7114). The mechanics here are the same; it is not clamp(), it is line-clamp. */
+   (styles.css:7448-7463). The mechanics here are the same; it is not clamp(), it is line-clamp. */
 .antext{flex:1;min-width:0;font-size:11px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;word-break:break-word;}
 .mtype{font-size:9px;padding:0 5px;border:0.5px solid var(--text-secondary);border-radius:6px;color:var(--text-secondary);white-space:nowrap;flex:none;}
 .actrl{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px;}
@@ -141,7 +141,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
 /* ---- DEMONSTRATION 2: expand/restore ----
    Two buttons ALWAYS present; the CSS chooses which one shows, exactly like the shipped pair of
-   rules (styles.css:4966-4976) — zero icon swapping in JS. The width really changes: calc(),
+   rules (styles.css:5255-5280) — zero icon swapping in JS. The width really changes: calc(),
    never clamp/min/max. NO transition on max-width — Chrome does not interpolate calc(100% - 40px)
    to 100% and the width would freeze at its initial value. */
 #b-exp:not(:checked) ~ .dlg .exp-in{display:none;}
@@ -193,7 +193,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 
       <span class="lbl">Add course <span class="idb">MOD.LINKS-ADD-LABEL · competency_links.mustache:37-39</span></span>
       <div class="ctrl"><span class="ph">Link a course — search by name, short name or ID number…</span><span class="chev">⌄</span></div>
-      <div class="row"><span class="idb">MOD.LINKS-ADD · competency_links.mustache:40-44 · course_datasource.js</span><span class="idb">MOD.LINKS-ADD-CHEVRON · styles.css:7199-7212</span></div>
+      <div class="row"><span class="idb">MOD.LINKS-ADD · competency_links.mustache:40-44 · course_datasource.js</span><span class="idb">MOD.LINKS-ADD-CHEVRON · styles.css:7583-7596</span></div>
 
       <!-- card 1: expanded -->
       <div class="card card-1">
@@ -321,7 +321,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     load (<code>:90</code>), and then inserts <b>both</b> buttons before the <code>.btn-close</code>
     (<code>:98-99</code>) — <code>fa-expand</code> and <code>fa-compress</code>, labels
     <code>central_modal_expand</code> / <code>central_modal_restore</code> (<code>lang/en:199-200</code>).
-    The CSS is what chooses which one shows (<code>styles.css:4966-4976</code>), so <b>nothing swaps an
+    The CSS is what chooses which one shows (<code>styles.css:5255-5280</code>), so <b>nothing swaps an
     icon in JS</b>. On click, if the activated button had focus, focus goes to the newly revealed twin
     (<code>:106-118</code>) — without that it would fall on the <code>&lt;body&gt;</code>, because the
     clicked button is exactly the one that hides itself.
@@ -341,19 +341,19 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     Card expansion and loaded activities return to their initial state.
   </div>
 
-  <span class="note" style="display:block;margin-top:6px;"><b>Click ⤢ above</b> — the icon becomes ⤡ and the dialog widens; ⤡ brings it back. <b>What the screen does NOT demonstrate:</b> the shipped one is <b>genuinely full screen</b> — <code>.modal-dialog.local-dimensions-modal-expanded</code> gives <code>width:100%; max-width:none; height:100%; margin:0</code> and the content loses its radius (<code>styles.css:4986-5006</code>). Here the width is a <code>max-width</code> tied to the preview panel, which does not run <code>core/modal</code>. And the width gain is not free to demonstrate: in this sample the activity name occupies <b>one</b> line in both states, so expanding undoes no wrapping — the real gain shows with a long name on a narrow screen.</span>
+  <span class="note" style="display:block;margin-top:6px;"><b>Click ⤢ above</b> — the icon becomes ⤡ and the dialog widens; ⤡ brings it back. <b>What the screen does NOT demonstrate:</b> the shipped one is <b>genuinely full screen</b> — <code>.modal-dialog.local-dimensions-modal-expanded</code> gives <code>width:100%; max-width:none; height:100%; margin:0</code> and the content loses its radius (<code>styles.css:5288-5312</code>). Here the width is a <code>max-width</code> tied to the preview panel, which does not run <code>core/modal</code>. And the width gain is not free to demonstrate: in this sample the activity name occupies <b>one</b> line in both states, so expanding undoes no wrapping — the real gain shows with a long name on a narrow screen.</span>
 
   <div class="ok" style="margin-top:8px;">
     <b>The width has two mechanisms, and they stack.</b> <code>Modal.create</code> opens with
     <code>large: true</code> (<code>js:862</code>), which is the <b>base</b> size; the class
     <code>local-dimensions-modal-expanded</code> overrides it with specificity <b>0,2,0</b> —
     with no <code>!important</code> and without Bootstrap 5's <code>.modal-fullscreen</code>, which 4.5
-    does not have (the reasoning is in the source itself, <code>styles.css:4978-4985</code>). The width is
+    does not have (the reasoning is in the source itself, <code>styles.css:5277-5280</code>). The width is
     <code>100%</code> and not <code>100vw</code> on purpose: the parent <code>.modal</code> is
     <code>position:fixed</code> and its width already excludes the scrollbar column, so the dialog sits
     <b>beside</b> it instead of running underneath. The
     <code>:has(.local-dimensions-modal-sizetoggle)</code> also kills the container's second scrollbar
-    (<code>styles.css:4916-4918</code>) and lets the title take the remaining width
+    (<code>styles.css:5218-5224</code>) and lets the title take the remaining width
     (<code>:5015-5018</code>).
   </div>
 
@@ -411,7 +411,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     <b>Why width is the scarce resource here.</b> It is the hub modal with the most things per row: course
     name + short name + counter + 🗑, and inside it activity name + type + ✕ + outcome +
     badge + shared warning. The activity name wraps to <b>two lines</b> and then
-    ellipsises (<code>styles.css:7105-7114</code>), with the whole name in the <code>title</code>
+    ellipsises (<code>styles.css:7448-7463</code>), with the whole name in the <code>title</code>
     (<code>js:221</code>).
   </div>
 
@@ -436,7 +436,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     dark, while the border delivers <b>14.18:1</b> and <b>6.54:1</b>; the alert and the shared
     warning, a fill of <b>1.13:1</b> and <b>1.83:1</b> with a border of <b>8.87:1</b> and <b>9.51:1</b>; the
     header-control chip, a fill of 1.15 in light with the glyph at <b>7.53:1</b> in both themes, and the
-    literals are the ones <code>styles.css:4929-4956</code> and <code>:5074-5103</code> publish. One
+    literals are the ones <code>styles.css:5229-5272</code> and <code>:5074-5103</code> publish. One
     detail of the DS palette that changes the ruler: <code>--text-success</code> and
     <code>--border-success</code> are the <b>same literal</b> in both themes, and
     <code>--text-warning</code>/<code>--border-warning</code> too — the distinction between them, which

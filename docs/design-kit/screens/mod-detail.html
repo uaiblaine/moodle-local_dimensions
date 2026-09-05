@@ -47,8 +47,8 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 /* ---- the stage: core's backdrop + the dialog ---- */
 .stage{position:relative;border-radius:10px;background:var(--backdrop);padding:22px 14px;display:flex;justify-content:center;}
 
-/* MOD.DETAIL-MODAL -> .modal-dialog. styles.css:6663-6669 = max-width 620 (:6664) + radius 24 (:6668).
-   styles.css:6675-6679 erases the .modal-content's border/background/shadow; :6681-6683 zeroes the
+/* MOD.DETAIL-MODAL -> .modal-dialog. styles.css:6989-7008 = max-width 620 (:6664) + radius 24 (:6668).
+   styles.css:6995-7008 erases the .modal-content's border/background/shadow; :6681-6683 zeroes the
    .modal-body's padding. Result: the dialog is EXACTLY the size of the card. */
 .dlg{width:100%;max-width:620px;border-radius:24px;background:transparent;border:0;box-shadow:none;padding:0;}
 /* The radius above exists only because of THIS ring: without it, focus draws a rectangle
@@ -56,13 +56,13 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .dlg:focus-visible{outline:3px solid var(--focus);outline-offset:3px;}
 
 /* MOD.DETAIL-CARD. Of the three classes at mustache:36, only TWO paint: the one borrowed from the
-   inline panel (.local-dimensions-central-plans-detail, styles.css:5813-5817 — radius 24 +
-   background + shadow) and the modal's own (styles.css:6685-6688 — position + overflow). The
+   inline panel (.local-dimensions-central-plans-detail, styles.css:6139-6157 — radius 24 +
+   background + shadow) and the modal's own (styles.css:7011-7025 — position + overflow). The
    middle one, .local-dimensions-central-structure-detail, has NO rule at all: it is only a hook. */
 .card{border-radius:24px;background:#fff;overflow:hidden;position:relative;
       box-shadow:0 3px 8px rgba(13,60,110,0.1),0 22px 46px rgba(13,60,110,0.17);}
 
-/* 140deg gradient (styles.css:5823-5830, the declaration at :5829) — the SAME header as the PLN
+/* 140deg gradient (styles.css:6144-6157, the declaration at :5829) — the SAME header as the PLN
    tab's, because the partial is shared. The stops are driven by the radios below. */
 .chead{background:linear-gradient(140deg,var(--h0) 0%,var(--h48) 48%,var(--h100) 100%);
        color:var(--tc);padding:18px 18px 15px;}
@@ -71,7 +71,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .cchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
 .gchip{font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.28);background:rgba(255,255,255,0.16);}
 
-/* MOD.DETAIL-CLOSE — styles.css:6690-6707 (hover/focus at :6709-6712). It lives in the BODY, not in
+/* MOD.DETAIL-CLOSE — styles.css:7022-7046 (hover/focus at :6709-6712). It lives in the BODY, not in
    the header. The colour comes from the data (competency_detail.js:294: data.textcolor || '#fff'),
    not from the theme. */
 .cx{position:absolute;top:18px;right:18px;z-index:3;display:inline-flex;align-items:center;justify-content:center;
@@ -105,7 +105,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .dstep+.dstep{border-left:0.5px solid var(--border-strong);}
 #c1:checked~.drv .ds1,#c2:checked~.drv .ds2,#c3:checked~.drv .ds3{background:var(--acc-fg);color:var(--surface-2);font-weight:500;}
 /* The three presets. Stops computed like darkenHex (competency_detail.js:102-112): 16% and 34%
-   towards black. Preset 1 uses the fallback LITERALS from styles.css:5829 (what paints when the
+   towards black. Preset 1 uses the fallback LITERALS from styles.css:6144 (what paints when the
    JS does not set --ld-plans-hdr-*, that is, when there is no bgcolor). */
 #c1:checked~.stage{--h0:#0f6cbf;--h48:#0d5a9f;--h100:#0a4680;--tc:#fff;}
 #c2:checked~.stage{--h0:#7b2d8e;--h48:#672677;--h100:#511e5e;--tc:#ffe9b0;}
@@ -186,18 +186,18 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     <span class="idb">EST-DETAIL-COURSES/-ACTIVITIES/-PLANS — inert here (linksclickable:false)</span>
   </div>
 
-  <div class="note"><b>The focus ring is the reason for the 24px radius.</b> Tab to the card: the ring above is real — it is drawn on the <b>dialog</b>, not on the card, and it only coincides with the rounded border because <code>styles.css:6668</code> gives the <code>.modal-dialog</code> the card's own radius (<code>:5814</code>) and <code>:6681-6683</code> zeroes the body's padding. The comment in the CSS itself (<code>:6666-6667</code>) says exactly that. Core focuses that element on open — <code>core/modal</code> targets the <code>.modal-dialog</code>, which <code>lib/templates/modal.mustache</code> emits with <code>tabindex="0"</code>. Without the radius, a rectangle around a round card.</div>
+  <div class="note"><b>The focus ring is the reason for the 24px radius.</b> Tab to the card: the ring above is real — it is drawn on the <b>dialog</b>, not on the card, and it only coincides with the rounded border because <code>styles.css:6995</code> gives the <code>.modal-dialog</code> the card's own radius (<code>:5814</code>) and <code>:6681-6683</code> zeroes the body's padding. The comment in the CSS itself (<code>:6666-6667</code>) says exactly that. Core focuses that element on open — <code>core/modal</code> targets the <code>.modal-dialog</code>, which <code>lib/templates/modal.mustache</code> emits with <code>tabindex="0"</code>. Without the radius, a rectangle around a round card.</div>
 
   <div class="sec">What does <b style="font-weight:600">not</b> paint — and is still needed</div>
   <div class="ghost">
-    <div class="ghost-h">Core's <code style="font-family:var(--font-mono)">.modal-header</code>, with the <code style="font-family:var(--font-mono)">title</code> that <code style="font-family:var(--font-mono)">competency_detail.js:278</code> passes and the <code style="font-family:var(--font-mono)">.btn-close</code> that the plugin's restyle would paint. <b>None of this renders</b> — <code style="font-family:var(--font-mono)">styles.css:6671-6673</code> hides it entirely. Drawn here only to show what was taken away:</div>
+    <div class="ghost-h">Core's <code style="font-family:var(--font-mono)">.modal-header</code>, with the <code style="font-family:var(--font-mono)">title</code> that <code style="font-family:var(--font-mono)">competency_detail.js:278</code> passes and the <code style="font-family:var(--font-mono)">.btn-close</code> that the plugin's restyle would paint. <b>None of this renders</b> — <code style="font-family:var(--font-mono)">styles.css:6995-7008</code> hides it entirely. Drawn here only to show what was taken away:</div>
     <div class="ghost-b">
       <span class="ghost-t">Assertive Communication</span>
       <span class="ghost-x" aria-hidden="true">✕</span>
     </div>
   </div>
   <div class="note"><b>But the title is not dead code.</b> Core wires <code>aria-labelledby</code> (in <code>lib/templates/modal.mustache</code>) to the title's <code>&lt;h5&gt;</code> — inside the hidden header. <b>Measured in Chromium</b>, on the real accessibility tree: the header's subtree comes out as <code>ignored</code> (the <code>h5</code> never reaches the tree) and the dialog still comes out <b>named</b> — <code>dialog "Comunicação Assertiva" modal</code>. Negative control (<code>aria-labelledby</code> pointing at a non-existent id): <code>dialog modal</code>, with <b>no</b> name. Removing the <code>title</code> would leave the card identical and the dialog anonymous.</div>
-  <div class="note"><b>And the <code>:not()</code>?</b> The class <code>.local-dimensions-related-modal</code> is applied at <code>competency_detail.js:285</code> to <b>this</b> modal (not to <code>MOD.RELATED</code>, which is the manager). <code>styles.css:5074</code> excludes exactly it from the <code>.btn-close</code> blue-chip restyle (the same exclusion at <code>:5088</code> and <code>:5098-5099</code>), and the block's comment (<code>:5063-5073</code>) states the reason: "the referenced-competency modal keeps its own close button (its header is hidden), so it is excluded". <b>Caveat:</b> today the exclusion protects nothing that gets painted — the <code>.btn-close</code> lives in the <code>display:none</code> header, and a hidden ancestor erases the subtree. It is declared intent + insurance for the day the header comes back.</div>
+  <div class="note"><b>And the <code>:not()</code>?</b> The class <code>.local-dimensions-related-modal</code> is applied at <code>competency_detail.js:285</code> to <b>this</b> modal (not to <code>MOD.RELATED</code>, which is the manager). <code>styles.css:5374</code> excludes exactly it from the <code>.btn-close</code> blue-chip restyle (the same exclusion at <code>:5088</code> and <code>:5098-5099</code>), and the block's comment (<code>:5063-5073</code>) states the reason: "the referenced-competency modal keeps its own close button (its header is hidden), so it is excluded". <b>Caveat:</b> today the exclusion protects nothing that gets painted — the <code>.btn-close</code> lives in the <code>display:none</code> header, and a hidden ancestor erases the subtree. It is declared intent + insurance for the day the header comes back.</div>
 
   <div class="sec">Close-glyph contrast — measured on the <b style="font-weight:600">composited fill</b>, not on the transparent parent</div>
   <table class="tbl">

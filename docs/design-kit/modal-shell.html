@@ -40,7 +40,7 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .btn-primary:hover{background:var(--mds-bg-interactive-primary-hover);border-color:var(--mds-bg-interactive-primary-hover);}
 
 /* ---- The THREE header controls, in the 1.75rem blue chip the plugin ships ----
-   sizetoggle + refresh: styles.css:4929-4945 (base), :4947-4953 (hover/focus),
+   sizetoggle + refresh: styles.css:5229-5253 (base), :4947-4953 (hover/focus),
    :4955-4959 (focus ring). Close: :5074-5086 (chip) + :5088-5096 (glyph) + :5098-5103 (hover).
    Specificity 0,2,0 (.m-acts .chip) > .btn (0,1,0) — wins without !important. */
 .m-acts{display:flex;align-items:center;flex:none;}
@@ -107,25 +107,25 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
   <div class="note">
     <b>The three controls are the same <code>1.75rem</code> blue chip</b>: refresh, expand/restore and close
     share background <code>#e7f0f9</code>, glyph <code>#0f4d85</code> and hover <code>#d4e6fb</code>. Refresh and
-    the size-toggles come from a combined rule (<code>styles.css:4929-4945</code>, hover <code>:4947-4953</code>);
+    the size-toggles come from a combined rule (<code>styles.css:5229-5253</code>, hover <code>:4947-4953</code>);
     close is core's <code>.btn-close</code> restyled (<code>:5074-5086</code>, FA glyph <code>\f00d</code>
     at <code>:5088-5096</code>, hover <code>:5098-5103</code>). The values are <b>literal, with no dark variant</b> —
     the pair holds in both themes, which is why the chip here stays light blue in the dark preview too. Hover
     them: the hover above is the code's own. Neither of the first two carries <code>.btn</code>, so each
-    draws its own focus ring (<code>:focus-visible</code>, <code>styles.css:4955-4959</code>).
+    draws its own focus ring (<code>:focus-visible</code>, <code>styles.css:5255-5272</code>).
   </div>
   <div class="note">
     <b>Click ⤢ above</b> — the icon becomes ⤡, and back. They are <b>two buttons always present</b>
     (<code>fa-expand</code> and <code>fa-compress</code>, inserted before the <code>.btn-close</code> at
     <code>modal_expander.js:98-99</code>); the CSS chooses which one shows
-    (<code>styles.css:4966-4976</code>: <code>.local-dimensions-modal-restore{display:none}</code> +
+    (<code>styles.css:5255-5280</code>: <code>.local-dimensions-modal-restore{display:none}</code> +
     the two rules under <code>.local-dimensions-modal-expanded</code>), <b>zero icon swapping in JS</b>. In this
     preview the driver is a checkbox (<code>:checked ~ .exp-out{display:none}</code>); in production it is the
     <code>local-dimensions-modal-expanded</code> class on the <code>.modal-dialog</code> and the same pair of
     rules. The preview demonstrates the swap, not the width — the real dialog is what expands.
   </div>
   <div class="note">
-    <b>Expanded = real fullscreen</b> (<code>styles.css:4986-5006</code>): <code>width:100%</code>,
+    <b>Expanded = real fullscreen</b> (<code>styles.css:5288-5312</code>): <code>width:100%</code>,
     <code>max-width:none</code>, <code>height:100%</code>, <code>margin:0</code>, and square corners on the
     <code>.modal-content</code>/header/footer — it mirrors BS5's <code>.modal-fullscreen</code> without the class
     (4.5 has none) and without <code>!important</code>: <code>0,2,0</code> already beats <code>modal-xl</code>/<code>modal-lg</code>.
@@ -137,7 +137,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
     <b>While refreshing</b> the button is disabled and the <code>fa fa-rotate</code> icon spins — the
     <code>fa-spin</code> is <b>added and removed by the JS</b> (<code>modal_refresh.js:75</code> and
     <code>:82</code>, cleared in a <code>finally</code> so a failure never leaves the button stuck); the CSS
-    contributes only <code>cursor:default</code> in the disabled state (<code>styles.css:4962-4964</code>). The
+    contributes only <code>cursor:default</code> in the disabled state (<code>styles.css:5255-5272</code>). The
     button is created at <code>modal_refresh.js:36-48</code> (<code>.local-dimensions-modal-refresh</code>,
     <code>data-action="modal-refresh"</code>) and anchored <b>to the left of the size-toggles</b> when they exist,
     otherwise to the left of the close chip (<code>:67-68</code>) — hence the order refresh, expand, close.
@@ -155,7 +155,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
   <div class="note">
     <b>Two mechanics, one single group.</b> The group is always
     <code>.local-dimensions-modal-footer-links</code> with <code>margin-right:auto</code>
-    (<code>styles.css:5028-5034</code>) — <b>not</b> <code>justify-content-between</code>: the auto-margin pushes
+    (<code>styles.css:5355-5361</code>) — <b>not</b> <code>justify-content-between</code>: the auto-margin pushes
     any primary action to the right and works both in the empty footer and in the one that already has buttons, on
     BS4 and on BS5. The rule is scoped under <code>.modal-footer</code> to beat core's <code>&gt; *{margin}</code> in
     any stylesheet order, and the <code>btn-link</code> gets a focus ring of its own
@@ -167,7 +167,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
         and the footer is <b>per tab</b>: only the active tab's link shows
         (<code>showFooterLinkFor</code>, <code>:76-91</code>, toggles the <code>d-none</code> by
         <code>data-pane</code>). When the active tab has no permitted link the footer <b>collapses</b> via
-        <code>.local-dimensions-modal-footer-empty</code> (<code>styles.css:5051-5053</code>,
+        <code>.local-dimensions-modal-footer-empty</code> (<code>styles.css:5347-5361</code>,
         <code>display:none</code>). This modal <b>has no primary action</b> — the footer is the link alone.</li>
       <li><b>Framework form</b> (<code>frameworks.js:134-162</code>, <code>injectScalesLink</code>):
         <b>1</b> link, with no per-tab logic (a form modal has a single panel), inserted as
@@ -251,7 +251,7 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
     <ul>
       <li>There is no header-link class any more — <code>grep -rn 'headerlink' amd/ templates/ styles.css
         classes/ lang/</code> returns <b>zero</b>.</li>
-      <li>The close chip arrives through <b>two arms</b> (<code>styles.css:5074-5075</code>): the participants
+      <li>The close chip arrives through <b>two arms</b> (<code>styles.css:5374-5377</code>): the participants
         modal and the links modal come through
         <code>.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-'])
         .modal-header .btn-close</code> (the body carries <code>.local-dimensions-participants</code>); the
@@ -266,11 +266,11 @@ code{font-family:var(--font-mono);font-size:10.5px;background:var(--mds-bg-surfa
         <code>margin-left:auto</code> to the <code>.btn-close</code>, which <b>on its own strands</b> the
         size-toggles next to a short title. The rule is keyed on the expander's own button —
         <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code>
-        (<code>styles.css:5015-5018</code>) — covering the participants <b>and</b> links modals without
+        (<code>styles.css:5313-5324</code>) — covering the participants <b>and</b> links modals without
         depending on any class on the dialog.</li>
       <li>The same <code>.local-dimensions-modal-sizetoggle</code> marker also scopes the
         <code>overflow:hidden</code> that kills the second scrollbar of those two modals
-        (<code>styles.css:4916-4918</code>) — filepicker, TinyMCE and the hub's confirms stay out.</li>
+        (<code>styles.css:5218-5224</code>) — filepicker, TinyMCE and the hub's confirms stay out.</li>
     </ul>
   </div>
 </div>

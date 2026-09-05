@@ -10,7 +10,7 @@ always tied to one of the plan's cohorts. The pane is born **empty** in the host
 - **WS (5, all in `db/services.php:373-412`):** `list_enrol_competencies` (paginated roots + mount *bootstrap*), `list_enrol_courses` (rows with the status of **both** methods), `queue_enrol_action`, `get_enrol_queue_status`, `set_enrol_instance_status`
 - **Task:** [`process_enrol_method`](../../../classes/task/process_enrol_method.php) — adhoc, per `(courseid, method, cohortid)`
 - **Helper:** [`classes/local/enrol_methods.php`](../../../classes/local/enrol_methods.php) — `eligible_roles()` (`:58-73`), `default_roleid()` (`:81-89`)
-- **CSS:** [`styles.css:7289-7354`](../../../styles.css) — the accordion's scroll box, the group's chevron/fade, the search width and the detail modal's table
+- **CSS:** [`styles.css:7641-7711`](../../../styles.css) — the accordion's scroll box, the group's chevron/fade, the search width and the detail modal's table
 
 > **Resync 2026-07-15 — this map was a _spec_, and the code ran over it the same night.**
 > Measured, not estimated:
@@ -93,7 +93,7 @@ A `d-flex` row with the three controls distributed (`enrol_methods.mustache:46`)
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `ENROL-SEARCH` | Search competencies | text input | `enrol_methods.mustache:82-84` | `data-region="enrol-search"` · `.local-dimensions-enrol-search` | **was missing entirely** (`ec9d813`). `visually-hidden` label (`:79-81`) **and** a `placeholder` with the same string. **300 ms** debounce → `reload` (`enrol_methods.js:1033-1044`, the `setTimeout` at `:1040-1043`); the comment at `:1037-1038` says why it is server-side: the list is paginated, and a client-side filter would lose the pages not yet loaded. Fixed width `14rem` (`styles.css:7332-7334`) |
+| `ENROL-SEARCH` | Search competencies | text input | `enrol_methods.mustache:82-84` | `data-region="enrol-search"` · `.local-dimensions-enrol-search` | **was missing entirely** (`ec9d813`). `visually-hidden` label (`:79-81`) **and** a `placeholder` with the same string. **300 ms** debounce → `reload` (`enrol_methods.js:1033-1044`, the `setTimeout` at `:1040-1043`); the comment at `:1037-1038` says why it is server-side: the list is paginated, and a client-side filter would lose the pages not yet loaded. Fixed width `14rem` (`styles.css:7718-7720`) |
 | `ENROL-CAT` | Course category | select | `enrol_methods.mustache:90-91` | `data-region="enrol-category"` | `visually-hidden` label (`:87-89`). Options = `central_enrol_categoryall` + the categories **of the linked courses** (`enrol_methods.js:882-885`; `list_enrol_competencies.php:185-197`). Changing it fires `reload` (`:1053-1055`) |
 | `ENROL-HIDDEN` | Show hidden courses | switch | `enrol_methods.mustache:94-95` | `data-region="enrol-hidden"` · `.form-check.form-switch` | real label at `:96-98` (`for`/`id` — Behat's `"checkbox"` selector requires a `<label>`, not an `aria-label`). Hidden courses hidden by default (`enrol_methods.js:1095`); changing it fires `reload` (`:1056-1058`) |
 | `ENROL-VISCOUNT` | `[no label]` | counter | `enrol_methods.mustache:100` | `data-region="enrol-viscount"` | `central_enrol_viscount` ("N courses shown") with `data.totalcourses` = **distinct configurable courses after the filters** (`enrol_methods.js:498-503`; `list_enrol_competencies.php:151`) |
@@ -101,7 +101,7 @@ A `d-flex` row with the three controls distributed (`enrol_methods.mustache:46`)
 ## Accordion — competency groups
 
 `ENROL-TREE` is a scroll box of its own: `max-height: 50vh; overflow-y: auto`
-(`styles.css:7294-7297`) so the config bar above and the actions footer below stay visible at all
+(`styles.css:7680-7683`) so the config bar above and the actions footer below stay visible at all
 times. Groups via `renderGroupHtml` → `appendNodeContents` (`enrol_methods.js:340-354`, `:487`).
 
 | ID | Label | Type | Origin | Data | Rule / notes |
@@ -109,7 +109,7 @@ times. Groups via `renderGroupHtml` → `appendNodeContents` (`enrol_methods.js:
 | `ENROL-TREE` | `[no label]` | JS container | `enrol_methods.mustache:102` | `data-region="enrol-tree"` | empty when `!data.total` → a `nothingtodisplay` paragraph (`enrol_methods.js:488-493`) |
 | `ENROL-GROUP` | `[no label]` | group | `enrol_group.mustache:36` | `data-group={id}` · `data-name={name}` | `data-name` is read back in `loadCourses` (`enrol_methods.js:529`) to stamp the competency name onto the row |
 | `ENROL-GROUP-CB` | Select all courses of {competency} | checkbox | `enrol_group.mustache:38-39` | `data-groupcheck={id}` | `aria-label` via `central_enrol_selectall`. It only reaches the group's **already-loaded** rows and **skips the ones processing** (`enrol_methods.js:1063-1071`) |
-| `ENROL-TOGGLE` | {competency name} | button | `enrol_group.mustache:40-47` | `data-action="enrol-toggle"` · `aria-expanded` | chevron (`:44`) + name (`:45`) + count badge (`:46`). **The name is the `shortname`** (`enrol_methods.js:349`), not the `fullname`. The chevron rotation and the *fade/slide* are **pure CSS** keyed on `aria-expanded` (`styles.css:7303-7325`) |
+| `ENROL-TOGGLE` | {competency name} | button | `enrol_group.mustache:40-47` | `data-action="enrol-toggle"` · `aria-expanded` | chevron (`:44`) + name (`:45`) + count badge (`:46`). **The name is the `shortname`** (`enrol_methods.js:349`), not the `fullname`. The chevron rotation and the *fade/slide* are **pure CSS** keyed on `aria-expanded` (`styles.css:7689-7711`) |
 | `ENROL-GROUP-COUNT` | N courses | badge | `enrol_group.mustache:46` | `badge bg-secondary text-dark` | `central_enrol_courses` / `_coursesone` (its own singular, `enrol_methods.js:342-344`). The `bg-secondary` + `text-dark` pair is deliberate — see the contrast note |
 | `ENROL-CHILDREN` | `[no label]` | container | `enrol_group.mustache:49` | `data-children={id}` · `data-offset="0"` · `hidden` | **lazy load on 1st expansion**, with a `data-loaded` latch that is **reverted on error** (`enrol_methods.js:568-576`), so re-expanding always tries again. The host's latch **also** recovers, but only on a pre-wiring rejection — see the mount-latch section |
 | `ENROL-CAPTION` | {competency name} | caption | `enrol_group.mustache:51` | `visually-hidden` | — |
