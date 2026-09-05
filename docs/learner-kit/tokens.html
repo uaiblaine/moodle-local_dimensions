@@ -1,110 +1,169 @@
-<!-- @dsCard group="Foundations" name="Tokens (learner views)" subtitle="The learner views' real styles.css palette tokenized as --lk-*: Moodle DS core, the kept rules orange, evidence/status pills, radii and type" -->
+<!-- @dsCard group="Foundations" name="Tokens (learner views)" subtitle="The learner views after tokenization: every --lk-* value is now a shipped --local-dimensions-* token, shown light and dark; the Material skin and the rules orange are both gone" -->
 <style>
 .lk-tok{
-  /* ---- Canonical --lk-* token block. These ARE the literals in styles.css today
-       (Boost, light mode); every screen file inlines the same block. ---- */
-  /* Neutrals — shared with Boost */
-  --lk-page:#f4f5f7;--lk-surface:#fff;--lk-surface-2:#f8f9fa;
-  --lk-text:#212529;--lk-text-2:#495057;--lk-muted:#6c757d;
-  --lk-line:#e9ecef;--lk-line-2:#dee2e6;
-  /* Moodle DS core palette */
-  --lk-accent:#0f6cbf;--lk-accent-grad-end:#0a5aa0;
-  --lk-pill-platter:#e9ecef;--lk-pill-text:#6c757d;--lk-pill-active-fg:#0f6cbf;
-  --lk-counter-bg:#e9ecef;--lk-counter-active-bg:#cfe2ff;
-  /* The one Google-blue value the migration left behind — see the note below. */
-  --lk-search-border:#dee2e6;--lk-search-icon:#6c757d;--lk-search-glow:rgba(26,115,232,.15);
-  --lk-card-bg:#f8f9fa;--lk-card-title:#212529;
-  --lk-success:#198754;
-  /* Decided during the migration — see token-migration.md */
-  --lk-taxonomy-label:#0f6cbf;--lk-focus-ring:#0f6cbf;--lk-amber-rated:#e5a100;
-  --lk-modal-note-bg:#fff3cd;--lk-modal-note-fg:#664d03;--lk-modal-note-accent:#ffc107;
-  /* Rules orange — the deliberate brand accent, kept.
-     --lk-orange-2 was the progress-fill gradient's light stop; the fill is a flat
-     --lk-orange since 675f143, so #ff922b has no occurrence left in styles.css. It
-     stays declared only because the screen files still reference it. */
-  --lk-orange:#fd7e14;--lk-orange-2:#ff922b;--lk-orange-dark:#e8590c;
+  /* ---- The kit's --lk-* vocabulary, re-pointed at what styles.css ACTUALLY ships.
+       Each value below is the LIGHT resolution of a --local-dimensions-* token; the
+       .lk-tok.dark block underneath is the same token set on a dark host page. Neither
+       is typed at the point of use any more: the stylesheet reads the token, and a
+       colour literal outside its declaration block fails the build. ---- */
+  --lk-page:#fff;--lk-surface:#fff;--lk-surface-2:#f8f9fa;--lk-surface-3:#e9ecef;
+  --lk-text:#1d2125;--lk-text-2:rgba(29,33,37,.75);--lk-muted:rgba(29,33,37,.75);
+  --lk-faint:rgba(29,33,37,.5);--lk-strong:#000;
+  --lk-line:#dee2e6;
+  --lk-accent:#0f6cbf;--lk-accent-hover:#0c5699;
+  --lk-brand-ink:#062b4c;--lk-brand-tint:#cfe2f2;--lk-brand-edge:#9fc4e5;
+  --lk-success-ink:#153114;--lk-success-tint:#d7e4d6;--lk-success-edge:#aecaad;
+  --lk-warning-ink:#60451f;--lk-warning-tint:#fcefdc;--lk-warning-edge:#f9deb8;
+  --lk-danger-ink:#51140d;--lk-danger-tint:#f4d6d2;--lk-danger-edge:#eaada6;
+  --lk-info-ink:#00343c;--lk-info-tint:#cce6ea;--lk-info-edge:#99cdd5;
+  --lk-neutral-ink:#525557;--lk-neutral-tint:#f5f6f8;--lk-neutral-edge:#ebeef0;
+  --lk-brand-fill:#0f6cbf;--lk-on-brand-fill:#fff;
+  --lk-focus-ring:#000;--lk-shadow:rgba(0,0,0,.1);--lk-scrim:rgba(255,255,255,.72);
+  --lk-favourite:#e8590c;
 
   --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,Menlo,Consolas,monospace;
-  color-scheme:light;font-family:var(--font);color:var(--lk-text);background:var(--lk-page);margin:0;padding:22px;line-height:1.5;
+  font-family:var(--font);color:var(--lk-text);background:var(--lk-surface-2);margin:0;padding:22px;line-height:1.5;
+}
+/* ---- The same token set on a dark host page. 30 of the 34 are core's own --bs-* values
+     flipping under [data-bs-theme="dark"]; only shadow, scrim and favourite are written
+     by the plugin. ---- */
+.lk-dark{
+  --lk-page:#1d2125;--lk-surface:#1d2125;--lk-surface-2:#292e33;--lk-surface-3:#343a40;
+  --lk-text:#dee2e6;--lk-text-2:rgba(222,226,230,.75);--lk-muted:rgba(222,226,230,.75);
+  --lk-faint:rgba(222,226,230,.5);--lk-strong:#fff;
+  --lk-line:#495057;
+  --lk-accent:#6fa7d9;--lk-accent-hover:#8cb9e1;
+  --lk-brand-ink:#6fa7d9;--lk-brand-tint:#031626;--lk-brand-edge:#094173;
+  --lk-success-ink:#86af84;--lk-success-tint:#0b180a;--lk-success-edge:#20491e;
+  --lk-warning-ink:#f6ce95;--lk-warning-tint:#302310;--lk-warning-edge:#90682f;
+  --lk-danger-ink:#df8379;--lk-danger-tint:#280a06;--lk-danger-edge:#791d13;
+  --lk-info-ink:#66b3c0;--lk-info-tint:#001a1e;--lk-info-edge:#004d5a;
+  --lk-neutral-ink:#e2e5e9;--lk-neutral-tint:#292a2c;--lk-neutral-edge:#7c7f83;
+  --lk-focus-ring:#fff;--lk-shadow:rgba(0,0,0,.55);--lk-scrim:rgba(29,33,37,.72);
+  --lk-favourite:#fd7e14;
+  background:var(--lk-page);color:var(--lk-text);border-radius:10px;padding:12px 14px;
 }
 .lk-tok h1{font-size:17px;font-weight:700;margin:0 0 2px;}
 .lk-tok .sub{font-size:12px;color:var(--lk-muted);margin:0 0 18px;}
 .lk-tok h2{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--lk-muted);margin:22px 0 8px;}
 .lk-col{max-width:560px;}
+.cols{display:flex;flex-wrap:wrap;gap:22px;}
+.col{flex:1 1 45%;min-width:19rem;}
+.col h3{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;margin:0 0 10px;}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;}
 .tk{display:grid;grid-template-columns:34px 1fr auto;gap:8px 10px;align-items:center;margin:5px 0;}
-.tk .sw{width:34px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.12);}
+.tk .sw{width:34px;height:22px;border-radius:6px;border:1px solid rgba(128,128,128,.35);}
 .tk .nm{font-size:11px;font-weight:600;}
 .tk .nm small{display:block;font-weight:400;color:var(--lk-muted);}
 .tk .hex{font-family:var(--mono);font-size:10px;color:var(--lk-muted);text-align:right;}
+.lk-dark .tk .hex,.lk-dark .tk .nm small{color:rgba(222,226,230,.75);}
 .flag{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:10px;white-space:nowrap;}
-.flag.keep{background:rgba(253,126,20,.1);color:#e8590c;border:1px solid rgba(253,126,20,.3);}
+.flag.keep{background:rgba(232,89,12,.12);color:#8a4a10;border:1px solid rgba(232,89,12,.35);}
+.flag.gone{background:var(--lk-neutral-tint);color:var(--lk-neutral-ink);border:1px solid var(--lk-neutral-edge);}
 .note{font-size:11px;color:var(--lk-muted);margin-top:8px;}
 .note code{font-family:var(--mono);}
 .line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0;}
-.pair{display:flex;align-items:center;gap:8px;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:600;width:fit-content;}
+.pair{display:flex;align-items:center;gap:8px;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:600;width:fit-content;border:1px solid transparent;}
 .dec{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:11px;align-items:baseline;margin-top:4px;}
 .dec .k{font-family:var(--mono);color:var(--lk-text-2);white-space:nowrap;}
 .dec .v{color:var(--lk-muted);}
 .radii{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
 .rad{width:96px;text-align:center;font-size:11px;color:var(--lk-muted);}
-.rad .box{height:48px;background:#e7ecff;border:1px solid #c9d6ff;}
+.rad .box{height:48px;background:var(--lk-brand-tint);border:1px solid var(--lk-brand-edge);}
+.callout{margin-top:18px;border:1px solid var(--lk-line);border-left:3px solid var(--lk-accent);border-radius:8px;background:var(--lk-surface);padding:10px 12px;}
+.callout .t{font-size:12px;font-weight:600;margin-bottom:4px;}
 </style>
 <div class="lk-tok">
   <h1>Tokens — Learner views</h1>
-  <p class="sub">The real values in <code>local/dimensions/styles.css</code> (Boost, light mode), tokenized as <code>--lk-*</code>. The Material/Google skin these views started from was migrated to Moodle DS as a value-only slice; the rules <b>orange</b> and the "rated" <b>amber</b> were kept on purpose. The record of what changed is in <code>token-migration.md</code>.</p>
+  <p class="sub">The learner views used to inline a Material/Google skin, then a value-for-value Moodle DS palette written as literals. Both are gone. Every colour on these screens now reads a <code>--local-dimensions-*</code> token declared once on bare <code>:root</code>, so the same markup renders light or dark according to the <b>host page</b> and never according to the plugin. The <code>--lk-*</code> names below are this kit's shorthand for those tokens; the shipped stylesheet declares only the frankenstyle ones. The historical record of the first migration is in <code>token-migration.md</code>.</p>
 
-  <h2>Core palette — Moodle DS</h2>
-  <div class="lk-col">
-    <div class="tk"><span class="sw" style="background:#0f6cbf"></span><span class="nm">accent <small>tab active, focus ring, FAB, course placeholder, learn-more</small></span><span class="hex">#0f6cbf</span></div>
-    <div class="tk"><span class="sw" style="background:linear-gradient(135deg,#0f6cbf,#0a5aa0)"></span><span class="nm">accent gradient end <small>course image placeholder (styles.css:2569)</small></span><span class="hex">#0a5aa0</span></div>
-    <div class="tk"><span class="sw" style="background:#0f6cbf"></span><span class="nm">pill active text <small>active chip / tab / counter</small></span><span class="hex">#0f6cbf</span></div>
-    <div class="tk"><span class="sw" style="background:#e9ecef"></span><span class="nm">pill platter <small>styles.css:2215 (completion tabs) · :4625 (chip groups)</small></span><span class="hex">#e9ecef</span></div>
-    <div class="tk"><span class="sw" style="background:#6c757d"></span><span class="nm">pill text/icon <small>inactive chip and tab label</small></span><span class="hex">#6c757d</span></div>
-    <div class="tk"><span class="sw" style="background:#e9ecef"></span><span class="nm">counter bg <small>detail-tab count (styles.css:3651); the completion-tab count is white on the grey platter (:2254-2264)</small></span><span class="hex">#e9ecef</span></div>
-    <div class="tk"><span class="sw" style="background:#cfe2ff"></span><span class="nm">counter active bg <small>styles.css:3658 · :2322 · the chip Filter badge :2295-2303</small></span><span class="hex">#cfe2ff</span></div>
-    <div class="tk"><span class="sw" style="background:#dee2e6"></span><span class="nm">search border <small>styles.css:2349</small></span><span class="hex">#dee2e6</span></div>
-    <div class="tk"><span class="sw" style="background:#6c757d"></span><span class="nm">search icon + placeholder <small>styles.css:2340 · :2360</small></span><span class="hex">#6c757d</span></div>
-    <div class="tk"><span class="sw" style="background:rgba(26,115,232,.15)"></span><span class="nm">search focus glow <small>still the old Google blue at 15% — the one literal the migration missed</small></span><span class="hex">rgb(26 115 232 / 15%)</span></div>
-    <div class="tk"><span class="sw" style="background:#f8f9fa"></span><span class="nm">card bg <small>competency card + header</small></span><span class="hex">#f8f9fa</span></div>
-    <div class="tk"><span class="sw" style="background:#212529"></span><span class="nm">card / accordion title text</span><span class="hex">#212529</span></div>
-    <div class="tk"><span class="sw" style="background:#198754"></span><span class="nm">success green <small>BS5; the BS4 #28a745 is gone (0 occurrences)</small></span><span class="hex">#198754</span></div>
+  <div class="callout">
+    <div class="t">What changed, and why the columns below are two views of one thing</div>
+    <p class="note" style="margin-top:0;">30 of the 34 tokens are written <code>var(--bs-NEW, var(--BS4-OLD, #literal))</code>. Moodle 4.5 declares none of those <code>--bs-*</code> names and Moodle 5.1/5.2 declare none of the Bootstrap 4 legacy names, so exactly one rung resolves per branch. Moodle 5.1/5.2 already compile a full <code>[data-bs-theme="dark"]</code> token block, so <b>those 30 are dark-correct with no dark rule at all</b> — the dark column is core's own measured output, not a second palette this plugin maintains. Only <code>shadow</code>, <code>scrim</code> and <code>favourite</code> carry a plugin-authored dark value, and they are the entire contents of the plugin's one activation rule.</p>
   </div>
-  <p class="note">One survivor of the pre-migration palette: <code>.local-dimensions-search-input:focus</code> still carries <code>box-shadow: 0 0 0 3px rgb(26 115 232 / 15%)</code> at <code>styles.css:2366</code> &mdash; <code>#1a73e8</code> written in functional notation, which a hex-literal search does not find. Every other Material/Google value (<code>#667eea</code>, <code>#764ba2</code>, <code>#f1f3f4</code>, <code>#5f6368</code>, <code>#e8eaed</code>, <code>#e8f0fe</code>, <code>#e1e3e6</code>, <code>#9aa0a6</code>, <code>#f9fafb</code>, <code>#212121</code>, <code>#28a745</code>) has zero occurrences, in hex or in <code>rgb()</code>.</p>
 
-  <h2>Rules orange — kept <span class="flag keep">keep</span></h2>
+  <h2>Core palette — surfaces, line, ink, accent</h2>
+  <div class="cols">
+    <div class="col">
+      <h3><span class="dot" style="background:#8a8980"></span>Light</h3>
+      <div class="tk"><span class="sw" style="background:#fff"></span><span class="nm">surface <small>competency card face, accordion panel, modal body</small></span><span class="hex">#fff</span></div>
+      <div class="tk"><span class="sw" style="background:#f8f9fa"></span><span class="nm">surface-alt <small>card body, hover tint, search field at rest</small></span><span class="hex">#f8f9fa</span></div>
+      <div class="tk"><span class="sw" style="background:#e9ecef"></span><span class="nm">surface-inset <small>completion-tab platter, chip group, rules progress track</small></span><span class="hex">#e9ecef</span></div>
+      <div class="tk"><span class="sw" style="background:#dee2e6"></span><span class="nm">line <small>card border, divider, search border, untouched accordion rail</small></span><span class="hex">#dee2e6</span></div>
+      <div class="tk"><span class="sw" style="background:#1d2125"></span><span class="nm">ink <small>card and accordion titles</small></span><span class="hex">#1d2125</span></div>
+      <div class="tk"><span class="sw" style="background:rgba(29,33,37,.75)"></span><span class="nm">ink-muted <small>captions, inactive chip and tab labels, search icon</small></span><span class="hex">rgb(29 33 37 / 75%)</span></div>
+      <div class="tk"><span class="sw" style="background:rgba(29,33,37,.5)"></span><span class="nm">ink-faint <small>inactive-control text and placeholders only</small></span><span class="hex">rgb(29 33 37 / 50%)</span></div>
+      <div class="tk"><span class="sw" style="background:#0f6cbf"></span><span class="nm">accent <small>active tab and chip label, taxonomy link, learn-more</small></span><span class="hex">#0f6cbf</span></div>
+      <div class="tk"><span class="sw" style="background:#0c5699"></span><span class="nm">accent-hover</span><span class="hex">#0c5699</span></div>
+      <div class="tk"><span class="sw" style="background:#000"></span><span class="nm">focus-ring <small>one ring everywhere, 2px, offset 2px</small></span><span class="hex">#000</span></div>
+      <div class="tk"><span class="sw" style="background:#e8590c"></span><span class="nm">favourite <span class="flag keep">plugin-owned</span><small>the star, and the only orange left in the plugin</small></span><span class="hex">#e8590c</span></div>
+    </div>
+    <div class="col">
+      <h3><span class="dot" style="background:#6fa7d9"></span>Dark</h3>
+      <div class="lk-dark">
+        <div class="tk"><span class="sw" style="background:#1d2125"></span><span class="nm">surface</span><span class="hex">#1d2125</span></div>
+        <div class="tk"><span class="sw" style="background:#292e33"></span><span class="nm">surface-alt</span><span class="hex">#292e33</span></div>
+        <div class="tk"><span class="sw" style="background:#343a40"></span><span class="nm">surface-inset</span><span class="hex">#343a40</span></div>
+        <div class="tk"><span class="sw" style="background:#495057"></span><span class="nm">line</span><span class="hex">#495057</span></div>
+        <div class="tk"><span class="sw" style="background:#dee2e6"></span><span class="nm">ink</span><span class="hex">#dee2e6</span></div>
+        <div class="tk"><span class="sw" style="background:rgba(222,226,230,.75)"></span><span class="nm">ink-muted</span><span class="hex">rgb(222 226 230 / 75%)</span></div>
+        <div class="tk"><span class="sw" style="background:rgba(222,226,230,.5)"></span><span class="nm">ink-faint</span><span class="hex">rgb(222 226 230 / 50%)</span></div>
+        <div class="tk"><span class="sw" style="background:#6fa7d9"></span><span class="nm">accent</span><span class="hex">#6fa7d9</span></div>
+        <div class="tk"><span class="sw" style="background:#8cb9e1"></span><span class="nm">accent-hover</span><span class="hex">#8cb9e1</span></div>
+        <div class="tk"><span class="sw" style="background:#fff"></span><span class="nm">focus-ring</span><span class="hex">#fff</span></div>
+        <div class="tk"><span class="sw" style="background:#fd7e14"></span><span class="nm">favourite <span class="flag keep">plugin-owned</span></span><span class="hex">#fd7e14</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>Every value the old version of this page listed is now unreachable as a literal.</b> <code>#f4f5f7</code>, <code>#212529</code>, <code>#6c757d</code>, <code>#0a5aa0</code>, <code>#cfe2ff</code>, <code>#198754</code>, <code>#e5a100</code>, <code>#fff3cd</code>, <code>#664d03</code>, <code>#ffc107</code> and <code>#ff922b</code> are <b>no longer written as a value anywhere</b> in <code>styles.css</code> — one of them, <code>#198754</code>, survives once inside a comment recording why a candidate replacement measured worse on a dark page. The same is true of every one of the loose greys that page listed as deliberately un-normalised — <code>#333</code>, <code>#e5e0e0</code>, <code>#f0f0f0</code>, <code>#f1f3f5</code>, <code>#8da1b6</code>, <code>#ccc</code> — and the Stripe-style shadow tints. The <b>search focus glow</b> that page recorded as the one survivor of the Material skin, <code>rgb(26 115 232 / 15%)</code>, is gone too: <code>.local-dimensions-search-input:focus</code> now draws <code>outline: 2px solid var(--local-dimensions-focus-ring)</code> at <code>outline-offset: 2px</code> over an <code>accent</code> border, with no glow at all. A box-shadow was never a legitimate focus indicator — Windows High Contrast Mode does not render one.</p>
+
+  <h2>The rules orange — <span class="flag gone">retired</span>, not kept</h2>
+  <p class="note" style="margin-top:0;">This page used to flag <code>#fd7e14</code> as a deliberate brand accent for "how a competency is earned", kept across nine rules. <b>That decision was reversed.</b> Every rules surface now speaks the <b>warning</b> tone family, so the learner views and the hub say the same thing the same way, and each surface carries its tone's own border exactly as core's <code>.alert-warning</code> does: the progress fill and the rules note are <code>warning-ink</code>, the required tag and the stale-evidence callout are <code>warning-ink</code> on <code>warning-tint</code> inside a <code>warning-edge</code>, and the "rated, not yet complete" accordion rail is <code>warning-ink</code>. The amber <code>#e5a100</code> that rail used to carry is gone with it.</p>
   <div class="line">
-    <span class="pair" style="background:#fd7e14;color:#fff">Progress fill</span>
-    <span class="pair" style="background:#fd7e14;color:#fff">Required tag / submit button</span>
-    <span class="pair" style="background:#fff9f3;color:#ad4e00;border:1px solid #fd7e14">Info / stale-evidence box</span>
+    <span class="pair" style="background:var(--lk-warning-tint);color:var(--lk-warning-ink);border-color:var(--lk-warning-edge)">Required tag</span>
+    <span class="pair" style="background:var(--lk-warning-tint);color:var(--lk-warning-ink);border-color:var(--lk-warning-edge)">Stale evidence</span>
+    <span class="pair" style="background:var(--lk-warning-tint);color:var(--lk-warning-ink);border-color:var(--lk-warning-edge)">Rated, not complete</span>
   </div>
-  <p class="note">Orange <code>#fd7e14</code> is the deliberate brand accent for "how a competency is earned". Hover / alert text <code>#e8590c</code>; the stale-evidence callout pairs a <code>#fd7e14</code> left border with a <code>#fff9f3</code> tint and <code>#ad4e00</code> text (<code>styles.css:3136-3163</code>). The Rules progress fill is a <b>flat</b> <code>#fd7e14</code> (<code>styles.css:4127-4131</code>): commit <code>675f143</code> removed both the <code>#fd7e14 &rarr; #ff922b</code> gradient and the striped variant, so <code>#ff922b</code> no longer appears anywhere in <code>styles.css</code>.</p>
+  <div class="lk-dark" style="margin-top:8px;">
+    <div class="line" style="margin:0;">
+      <span class="pair" style="background:var(--lk-warning-tint);color:var(--lk-warning-ink);border-color:var(--lk-warning-edge)">Required tag</span>
+      <span class="pair" style="background:var(--lk-warning-tint);color:var(--lk-warning-ink);border-color:var(--lk-warning-edge)">Stale evidence</span>
+      <span class="pair" style="background:var(--lk-warning-tint);color:var(--lk-warning-ink);border-color:var(--lk-warning-edge)">Rated, not complete</span>
+    </div>
+  </div>
+  <p class="note"><b>Orange survives in exactly one role</b>, the favourites star, and it is one of the three tokens the plugin still owns outright: <code>#e8590c</code> light, <code>#fd7e14</code> dark. It needs a plugin-authored dark value because no single star hue clears 3:1 against both <code>#fff</code> and <code>#343a40</code> — core's own <code>--bs-warning</code> measures 1.95:1 on white. The star also no longer carries its state in colour alone: it swaps glyph between <code>fa-star</code> and <code>fa-star-o</code>, which is WCAG 1.4.1 and is pinned by a test.</p>
 
-  <h2>Decisions taken during the migration</h2>
+  <h2>Evidence and status pills — the six tone families</h2>
+  <p class="note" style="margin-top:0;">One definition per category, each core's own <code>-text-emphasis</code> / <code>-bg-subtle</code> / <code>-border-subtle</code> triple, so a plugin chip is byte-for-byte a core alert on the same page. <b>file</b> and <b>other</b> merged into one neutral: their two old greys measured 1.03:1 against each other, a distinction no eye can make. <b>rule</b> took over the previously unused info/cyan family, replacing an orphan purple that belonged to no family at all.</p>
+  <div class="line">
+    <span class="pair" style="background:var(--lk-success-tint);color:var(--lk-success-ink);border-color:var(--lk-success-edge)">Activity</span>
+    <span class="pair" style="background:var(--lk-brand-tint);color:var(--lk-brand-ink);border-color:var(--lk-brand-edge)">Course grade</span>
+    <span class="pair" style="background:var(--lk-warning-tint);color:var(--lk-warning-ink);border-color:var(--lk-warning-edge)">Manual</span>
+    <span class="pair" style="background:var(--lk-info-tint);color:var(--lk-info-ink);border-color:var(--lk-info-edge)">Rule</span>
+    <span class="pair" style="background:var(--lk-danger-tint);color:var(--lk-danger-ink);border-color:var(--lk-danger-edge)">Prior learning</span>
+    <span class="pair" style="background:var(--lk-neutral-tint);color:var(--lk-neutral-ink);border-color:var(--lk-neutral-edge)">File / other</span>
+  </div>
+  <div class="lk-dark" style="margin-top:8px;">
+    <div class="line" style="margin:0;">
+      <span class="pair" style="background:var(--lk-success-tint);color:var(--lk-success-ink);border-color:var(--lk-success-edge)">Activity</span>
+      <span class="pair" style="background:var(--lk-brand-tint);color:var(--lk-brand-ink);border-color:var(--lk-brand-edge)">Course grade</span>
+      <span class="pair" style="background:var(--lk-warning-tint);color:var(--lk-warning-ink);border-color:var(--lk-warning-edge)">Manual</span>
+      <span class="pair" style="background:var(--lk-info-tint);color:var(--lk-info-ink);border-color:var(--lk-info-edge)">Rule</span>
+      <span class="pair" style="background:var(--lk-danger-tint);color:var(--lk-danger-ink);border-color:var(--lk-danger-edge)">Prior learning</span>
+      <span class="pair" style="background:var(--lk-neutral-tint);color:var(--lk-neutral-ink);border-color:var(--lk-neutral-edge)">File / other</span>
+    </div>
+  </div>
+  <p class="note">Ink on its own tint, measured: brand 10.85 light / 7.16 dark, success 10.77 / 7.38, warning 7.82 / 10.32, danger 10.58 / 6.74, info 10.33 / 7.52, neutral 6.95 / 11.37 — every one clears the 4.5:1 floor in both modes, and a test re-derives each from the stylesheet rather than from a second copy of these numbers.</p>
+
+  <h2>Two rules the tokens cannot enforce by themselves</h2>
   <div class="dec">
-    <span class="k">--lk-taxonomy-label</span><span class="v">&rarr; <b>#0f6cbf</b> (primary). The taxonomy eyebrow is now the <code>.local-dimensions-tax-link</code> button in the description footnote, <code>styles.css:3751-3759</code>.</span>
-    <span class="k">--lk-focus-ring</span><span class="v">&rarr; <b>#0f6cbf</b>, unified with the accent. Written as <code>outline: 2px solid #0f6cbf</code> at ~18 sites.</span>
-    <span class="k">--lk-amber-rated</span><span class="v"><b>#e5a100 kept</b> &mdash; the "rated, not yet complete" left border on an accordion item, <code>styles.css:1465</code>. Its only occurrence.</span>
-    <span class="k">--lk-modal-note-*</span><span class="v">&rarr; Bootstrap warning-light: <b>#fff3cd</b> bg / <b>#664d03</b> text / <b>#ffc107</b> left border on <code>.local-dimensions-ev-modal-note</code>, <code>styles.css:3441-3448</code>.</span>
-    <span class="k">loose greys</span><span class="v">Left as they are. Roughly ten one-off spellings of neutrals we already have; normalising them was judged optional.</span>
+    <span class="k">surface-inset</span><span class="v">A platter a control sits <b>in</b>, not a ground for coloured ink. In dark, <code>accent</code> and <code>brand-ink</code> measure <b>4.50:1</b> on it and <code>danger-ink</code> <b>4.20:1</b> — core's own values against core's own surface. Coloured ink belongs on <code>surface</code> or <code>surface-alt</code>; <code>ink</code>, <code>ink-muted</code>, <code>ink-strong</code>, <code>success-ink</code>, <code>warning-ink</code>, <code>info-ink</code> and <code>neutral-ink</code> are all fine there. The active chip label solves this by sitting on the indicator pill, which paints <code>surface</code>.</span>
+    <span class="k">ink-faint</span><span class="v">Inactive-control text and placeholders only. It is <b>2.70:1</b> on <code>surface-inset</code> in <i>light</i> mode and rides WCAG 1.4.3's incidental exception, which covers text in an inactive component and nothing else — never a border, never a fill, never an icon.</span>
   </div>
+  <p class="note">Both are enforced, not merely written down: <code>test_no_low_contrast_ink_on_the_inset_surface</code> resolves the <i>effective</i> background through a selector-ancestry map, so the ancestor-background / descendant-colour split cannot slip past it, and <code>test_ink_faint_is_only_inactive_text</code> reddens on a border or a caption drawn in it.</p>
 
-  <h2>Evidence &amp; status pills — Bootstrap, unchanged</h2>
-  <div class="line">
-    <span class="pair" style="background:#d1e7dd;color:#0f5132">● Activity</span>
-    <span class="pair" style="background:#cfe2ff;color:#084298">● Course grade</span>
-    <span class="pair" style="background:#fff3cd;color:#664d03">● Manual</span>
-    <span class="pair" style="background:#e2e3e5;color:#41464b">● File</span>
-    <span class="pair" style="background:#f8d7da;color:#842029">● Prior learning</span>
-    <span class="pair" style="background:#e9ecef;color:#6c757d">● Other</span>
-  </div>
-  <div class="line" style="margin-top:8px">
-    <span class="pair" style="background:#d4edda;color:#155724">✓ Proficient</span>
-    <span class="pair" style="background:#fff3cd;color:#856404">⚠ Not proficient</span>
-    <span class="pair" style="background:#e9ecef;color:#6c757d">To do</span>
-  </div>
-
-  <h2>Radii &amp; type</h2>
+  <h2>Radii and type</h2>
   <div class="radii">
     <div class="rad"><div class="box" style="border-radius:.25rem"></div>0.25rem<br>callout/row</div>
     <div class="rad"><div class="box" style="border-radius:.375rem"></div>0.375rem<br>small badge</div>
@@ -112,6 +171,5 @@
     <div class="rad"><div class="box" style="border-radius:.75rem"></div>0.75rem<br>card/accordion</div>
     <div class="rad"><div class="box" style="border-radius:999px"></div>999px<br>pill</div>
   </div>
-  <p class="note">Counts in <code>styles.css</code>: 999px &times;40, 0.5rem &times;11, 0.375rem &times;6, 0.75rem &times;5, 0.25rem &times;5. A px-valued set also survives (10px &times;12, 8px, 6px). There is <b>no</b> <code>border-radius: 1rem</code> left &mdash; the taxonomy card that used it was replaced by the footnote link.</p>
-  <p class="note">Font = Boost stack (Noto Sans / system-ui). Hero title 2rem/700 (<code>styles.css:533-539</code>) &middot; accordion title 1rem/600 (<code>:1519-1524</code>) &middot; chip 0.8125rem (<code>:4746</code>) &middot; badge 0.75rem. Descriptions collapse at 30vh (<code>--collapsible-max-vh</code>, <code>:4474</code>); the plan's compact variant lowers it to 7rem (<code>:5424</code>).</p>
+  <p class="note">Counts in <code>styles.css</code> today: 999px &times;40, 0.5rem &times;13, 10px &times;13, 0.375rem &times;5, 0.75rem &times;5, 0.25rem &times;5. <b>Radius was never tokenized and does not need to be</b> — a corner does not change with the colour mode, and only colour literals are banned. Font = Boost stack (Noto Sans / system-ui); <code>styles.css</code> declares no text <code>font-family</code> of its own, only the mono for idnumbers and code and Font Awesome's two families.</p>
 </div>

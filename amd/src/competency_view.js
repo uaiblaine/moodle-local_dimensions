@@ -262,7 +262,7 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                     container.html(
                         '<div class="text-center p-3" role="status" aria-live="polite">' +
                             '<i class="fa fa-spinner fa-spin fa-2x text-primary" aria-hidden="true"></i>' +
-                            '<span class="sr-only">' + loaderStrings.loading + '</span>' +
+                            '<span class="visually-hidden">' + loaderStrings.loading + '</span>' +
                         '</div>'
                     );
                     retryFn();
@@ -407,7 +407,7 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
         var SVG_NS = 'http://www.w3.org/2000/svg';
         var STROKE_WIDTH = 2;
         var DASH_ARRAY = '8 8';
-        var BORDER_RADIUS = 6; // Matches 0.375rem at 16px base
+        var BORDER_RADIUS = 8; // Matches the card's 0.5rem radius at 16px base.
 
         var svg = document.createElementNS(SVG_NS, 'svg');
         svg.setAttribute('class', 'local-dimensions-locked-border-svg');
@@ -415,7 +415,9 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
 
         var rect = document.createElementNS(SVG_NS, 'rect');
         rect.setAttribute('fill', 'none');
-        rect.setAttribute('stroke', '#ddd');
+        /* The stroke is a class, not an attribute: an attribute is invisible to the stylesheet,
+           so this one colour could never follow the page's colour mode. */
+        rect.setAttribute('class', 'local-dimensions-locked-border-rect');
         rect.setAttribute('stroke-width', STROKE_WIDTH);
         rect.setAttribute('stroke-dasharray', DASH_ARRAY);
         rect.setAttribute('rx', BORDER_RADIUS);

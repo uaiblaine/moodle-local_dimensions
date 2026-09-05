@@ -114,6 +114,17 @@ Every gate runs locally through the fleet's `mdl ci moodle-local_dimensions`
 before a push) and `mdl phpunit <stack> local_dimensions`; the rules below are
 what to pre-empt at write time so the first run is green.
 
+**Every job checks out `block_dimensions` under `plugin-dependencies`, and a test enforces that
+it keeps doing so.** The two plugins share one colour-token contract under two frankenstyle
+prefixes, and `colour_tokens_test::test_token_block_is_identical_to_the_sibling` compares the
+blocks declaration by declaration — without the checkout it **skips**, and a skip nobody notices
+is how a cross-repo lock quietly stops running, so `test_ci_checks_out_the_family_sibling` reads
+`ci.yml` and fails the build for any job that drops the line. It is not a runtime dependency:
+neither plugin declares the other in `$plugin->dependencies` and each installs standalone. Note
+the asymmetry with the other entry there — `enrol_apply` declares `$plugin->supported = [501, 502]`
+so it must **not** appear on the 4.05 job, while `block_dimensions` declares `[405, 502]` and
+appears on all three.
+
 ## Code layout
 
 ```
@@ -124,6 +135,11 @@ settings.php                 Admin tree — added under the 'competencies' admin
                              pages sit behind $hassiteconfig — the hub page is
                              gated by its own capability at the system context
 lib.php                      Procedural hooks + SCSS injection
+styles.css                   Two :root blocks (5 motion/loading + 34 colour
+                             tokens), ONE activation rule
+                             :root[data-bs-theme="dark"], one inert
+                             prefers-color-scheme block, then the components,
+                             then the Bootstrap 4 polyfill at the tail
 version.php                  component / version / requires / supported
 view-plan.php                Learner views (plan overview / competency tracker)
 view-competency.php          Single-competency detail view
@@ -153,7 +169,9 @@ classes/
                              course/module links, duplication)
   external/                  Web-service functions (one class each)
   form/                      dynamic_form subclasses (competency/template/framework)
-  local/                     plan_status and other value helpers
+  local/                     plan_status, bootstrap, colour_mode (dark-mode
+                             attribute names — constants only) and other value
+                             helpers
   output/                    Renderables: learner (view_*_page) + hub
                              (central/, dynamictabs/ tab classes)
   task/                      Adhoc tasks (cohort role + template cohort sync)
@@ -168,8 +186,15 @@ templates/                   Mustache (server-rendered UI)
 amd/src/                     Plain AMD modules (define([], …)) — NOT Preact/React
 amd/build/                   Committed minified output (grunt) — keep in sync
 lang/{en,pt_br}/             English + Brazilian Portuguese, both kept in sync
-tests/                       PHPUnit (observer, helper_* et al) + behat/
-                             (hub smoke-test .features + step definitions)
+docs/design-kit/             Hub design kit. tokens.html documents core's
+                             palette under core's --mds-* NAMES — legitimate in
+                             documentation, NEVER shipped in CSS (see below)
+docs/learner-kit/            Learner-view design kit + token-migration.md, the
+                             historical record of two colour migrations
+tests/                       PHPUnit (observer, helper_*, local/colour_tokens_test
+                             and local/bootstrap_compat_test et al) + behat/
+                             (hub smoke-test .features incl. colour_mode.feature,
+                             plus step definitions)
 ```
 
 ## Architecture gotchas
@@ -289,6 +314,156 @@ handler writes are auto-logged) and diff **effective** values via
 `get_value()`, redacting textarea bodies to `'(updated)'`. In PHPUnit, core
 refuses a module link unless the competency is on the course first.
 
+## Colour tokens and dark mode
+
+**The plugin does not own a palette.** `styles.css` declares **34 colour tokens** on bare
+`:root` — `--local-dimensions-*`, byte-identical suffixes to `block_dimensions`'
+`--block-dimensions-*` — and every component rule reads one. **A colour literal outside that
+block fails the build.** Do not reintroduce one; do not add a per-site literal fallback at a
+consumption site.
+
+**How the chains work.** 30 of the 34 are `var(--bs-NEW, var(--BS4-OLD, #literal))`. Measured on
+the running stacks: Moodle 4.5 declares **none** of these `--bs-*` names and Moodle 5.1/5.2
+declare **none** of the Bootstrap 4 legacy names, so exactly one rung resolves per branch and the
+literal is a safety net rather than a value the plugin expects to use. The literals are core's own
+compiled 5.2 light values, so every rung of a chain means the same thing.
+
+**Why there is almost no dark rule — read this before adding one.** Moodle 5.1/5.2 already compile
+a complete `[data-bs-theme="dark"]` token block; nothing writes the attribute yet, so those values
+are dormant, not absent. A colour written as `var(--bs-secondary-bg, #e9ecef)` is therefore
+**already dark-correct with no rule of its own**: the plugin's card face *is* `--bs-body-bg`, the
+same value `body`'s background uses, and the two cannot disagree because they are one value.
+**Never add a dark rule for any of those 30 tokens.** Only `shadow`, `scrim` and `favourite` carry
+a plugin-authored dark value — core has no equivalent for any of them — and they are the entire
+contents of the one activation rule. That bound is the second, independent guarantee that this
+plugin can never paint a dark surface on a light page: even if the rule fired on a branch with no
+dark palette at all, the worst outcome is a deeper shadow, a darker veil and a brighter star.
+
+**The activation rule is `:root[data-bs-theme="dark"]`, and the `:root` anchor is load-bearing.**
+A bare `[data-bs-theme="dark"]` matches through **any** ancestor at any depth, and CSS descendant
+combinators have no nearest-ancestor-wins rule. That is not hypothetical: `theme_boost_union_fundaseg`
+sets `data-bs-theme="dark"` on the **navbar element itself**, and `theme_boost_union` then re-pins
+`data-bs-theme="light"` by hand on five nested templates (`core/moremenu`, `core/user_menu`,
+`theme_boost/language_menu` and the two smartmenu children) to stop the dark scope leaking into its
+own submenus. A bare selector would ignore those re-pins. `:root` restricts the match to the `html`
+element and forecloses the whole class at zero cost. **`.theme-dark` and `body.dark` are not
+accepted** — nothing in Moodle 4.5/5.0/5.1/5.2/5.3-dev, `theme_boost_union` or
+`theme_boost_union_fundaseg` has ever emitted either. If a theme ever scopes the attribute to
+`<body>`, add a **separate** rule `:root:has(> body[data-bs-theme="dark"])` with the same three
+declarations; never append it to the existing selector, because an unsupported `:has()` inside a
+comma-separated list invalidates the whole list and takes the working selector down with it.
+
+`data-bs-theme` is written by the **host**, never by this plugin: core writes it from
+`theme_boost`'s `before_html_attributes` listener plus a head script resolving `auto` with
+`matchMedia`, gated behind `theme_boost/enablecolourmodes` (**default off**, and absent entirely
+before 5.3). Whether a page is dark is not server-knowable, so `classes/local/colour_mode.php` is
+**constants only** — `HOST_ATTRIBUTE`, `DARK`, `LIGHT`, `MEDIA_OPTIN_ATTRIBUTE` — and deliberately
+exposes no `is_dark()`-style helper. Only Behat may name the attribute, because a scenario exercises
+the host's side of the contract; a test fails the build if any shipped file writes it.
+
+**The `@media (prefers-color-scheme: dark)` block is written and deliberately inert.** Every selector
+in it is gated on `[data-dimensions-media-optin]`, which nothing in either plugin ever writes.
+Switch-on is **one edit**: delete `[data-dimensions-media-optin]` from that selector, nothing else.
+It is inert because the OS preference is the wrong signal on its own — core treats it as an *input*
+to `data-bs-theme`, never as an independent trigger, so firing on it directly would override an
+explicit user choice and would let the plugin be dark inside a light page. **That exact defect used
+to ship here**: the WCAG contrast panel carried its own live `prefers-color-scheme` rules and flipped
+from the OS preference while the rest of the Moodle page stayed light. Preferred retirement, once
+`$plugin->supported`'s **minimum** reaches 503: delete the block outright, since core resolves `auto`
+itself from 5.3 on.
+
+**Two names are transport, not tokens.** `--dimension-custombgcolor` and
+`--dimension-customtextcolor` carry *admin instance data* — a colour a site chose. They are
+**written by a template** (`block_dimensions`' competency card, and this plugin's own
+`hero_header.mustache`) onto the element being painted, and read from there by `styles.css`. They
+are never declared in the token block and never re-pointed in the dark rule, so a site's chosen
+colour stays its colour in both modes and only the neutrals around the island adapt. Inside a
+**branded island** nothing may read a mode token: "adapt" there means relative to the admin's
+colour, not to the page — which is also why the hero's photo overlays and the glass chips
+composited over an admin colour stay literals, under a named exemption.
+
+**Usage rules the tokens cannot enforce by themselves** (all measured, all with a test):
+`surface-inset` is a platter a control sits **in**, not a ground for coloured ink — in dark,
+`accent` and `brand-ink` are 4.50:1 on it and `danger-ink` 4.20:1. `ink-faint` is for
+inactive-control text and placeholders only (2.70:1 on `surface-inset` in **light**, riding WCAG
+1.4.3's incidental exception); never a border, fill or icon. `brand-fill` is a solid fill under
+`on-brand-fill` and nothing else — `--bs-primary` does not flip. Meaning rides `-ink` / `-tint` /
+`-edge`, which is what core's own `.alert-*` is built from.
+
+**Focus is one converged indicator: `outline: 2px solid var(--local-dimensions-focus-ring)` with
+`outline-offset: 2px`.** The ring chains `--bs-emphasis-color`, **not** `--bs-focus-ring-color`:
+core's own focus colour does not flip (measured, the same rgba in both modes, 1.02:1 on the dark
+page), and a 3:1 obligation cannot be delegated to a colour the site owner picks either
+(`--bs-link-color` is 2.33:1 on the fleet theme's dark card). Never draw a focus ring in the brand
+colour or in a literal, and never let a `box-shadow` be a focus indicator's only signal — Windows
+High Contrast Mode renders no `box-shadow` and does not restore an author's `outline: none`.
+
+### The enforcement suite (`tests/local/colour_tokens_test.php`)
+
+Twenty arms, every one mutation-checked. Prose has failed at this repeatedly in this fleet; these
+are what actually hold the design. What each pins:
+
+- `test_no_colour_literal_outside_the_token_block` — the literal ban, **checked both ways**: an
+  unexempted literal fails, and so does an exemption matching nothing, so the allow-list cannot rot
+  into a blanket as rules are deleted around it.
+- `test_token_block_declares_exactly_the_contract` — equality on the declaration *string*, not a
+  shape regex; the terminating literal is the whole of the plugin's Moodle 4.5 behaviour.
+- `test_token_suffixes_match_the_family_contract` — the parity floor, needing no sibling checkout.
+- `test_token_block_is_identical_to_the_sibling` — declarations compared under a prefix sentinel,
+  with a residue check so an unprefixed name cannot pass by looking the same on both sides.
+- `test_ci_checks_out_the_family_sibling` — the anti-vacuity control for the one above.
+- `test_dark_activation_block_assigns_only_plugin_owned_tokens` — the three-token bound.
+- `test_activation_selectors_are_root_anchored` — the `:root` anchor and the absence of
+  `.theme-dark`.
+- `test_media_fallback_is_written_and_unreachable` — three independent assertions: the block
+  **exists**, every selector carries the gate, and no runtime file writes the gate attribute.
+- `test_no_low_contrast_ink_on_the_inset_surface` — resolves the **effective** background through a
+  selector-ancestry map, so the ancestor-background / descendant-colour split cannot slip past; a
+  rule with no resolvable font-size counts as normal text, never large.
+- `test_declared_values_clear_their_floor` — values read **out of the stylesheet** and followed one
+  hop against core's measured `--bs-*` map, in all three resolutions (5.x light, 5.x dark, 4.5).
+- `test_focus_indicators_survive_forced_colors` and `test_focus_ring_is_never_brand_coloured`.
+- `test_admin_colours_are_never_declared_by_the_mode_layer`, `test_admin_colour_transport_is_intact`
+  and `test_branded_islands_use_no_mode_token` — the branded-island contract.
+- `test_plugin_never_writes_the_host_signal`.
+- `test_ink_faint_is_only_inactive_text`.
+- `test_every_token_read_is_declared` — the typo net. **An unresolved `var()` does not fall back to
+  anything**: the whole declaration is invalid at computed-value time, so a mistyped token name is
+  not a wrong colour, it is *no* colour, and every gate in the pipeline is blind to it.
+- `test_favourite_state_is_not_carried_by_colour_alone` — the star swaps `fa-star` / `fa-star-o`.
+- `test_icon_only_controls_are_named`.
+
+### Two traps no gate can see
+
+**1. The hero's admin text colour had never worked.** `styles.css` read
+`--dimension-customtextcolor` five times and **nothing wrote it**, so an admin's chosen hero text
+colour was inert for the life of the feature. `templates/hero_header.mustache` now emits both
+custom properties on the element it paints, and `test_admin_colour_transport_is_intact` pins both
+halves of the transport. Nothing else in the pipeline can see that chain: phpcs does not read
+Mustache, the mustache lint validates markup rather than cross-file cascade, and stylelint never
+opens a template. **Any new template-to-stylesheet custom-property transport needs a test of its own
+for the same reason.**
+
+**2. `hero_header.mustache`'s inline `background-color` must stay inside its `{{^hasbgimage}}`
+guard.** Both flags are a real, designed-for simultaneous state, and the wrapper already handles it
+with an overlay. Drop the guard and an opaque inline `background-color` paints over the admin's
+photograph — **and it cannot be mitigated from CSS**: a class selector never outranks an inline
+`style` attribute and `!important` is banned fleet-wide. A comment claiming otherwise
+(`background-color: transparent; /* Override inline style background */`) was in the file and was
+simply wrong. The guard's presence is asserted by the same test.
+
+### The design kits document core's `--mds-*` names — never ship them
+
+`docs/design-kit/tokens.html` names core's palette under `--mds-*`. That is **core's** design-system
+namespace: Moodle 5.2 ships `theme/boost/scss/design-system/` defining `$mds-*`, 5.1 has no such
+directory, and 5.3 LTS brings MDS React. Naming them **in documentation** is legitimate and
+deliberate — it keeps the kit legible against core's own vocabulary. **Declaring them in shipped CSS
+is not**, and on `:root` it squats a namespace core is actively expanding, globally. The plugin's own
+motion tokens were renamed away from `--mds-*` for exactly this reason on 2026-08-06. Do not
+"finish the job" by moving that block into `styles.css`. `docs/learner-kit/token-migration.md` is a
+**historical** record of two migrations, not a description of the current stylesheet: its line
+numbers and its "where the value lives today" column are superseded, and its header says so.
+
 ## Coding style
 
 ### File header
@@ -398,6 +573,14 @@ tags in prose without the braces. Use triple-stash
 Server-side rendering uses `renderable` + `templatable` + `render_from_template`
 — **zero `html_writer`** in plugin code (moodleform's own markup excepted).
 
+**An inline `style` attribute is the one thing CSS cannot take back.** A class selector never
+outranks it and `!important` is banned fleet-wide, so a conditional inline declaration is a
+cross-file contract with the stylesheet that no gate reads. `hero_header.mustache` holds two of
+them and both are pinned by `colour_tokens_test::test_admin_colour_transport_is_intact`: the
+`{{^hasbgimage}}` guard on `background-color` (without it an opaque colour paints over the admin's
+hero photograph), and the two `--dimension-custom*color` custom properties the stylesheet reads —
+one of which nothing wrote for the life of the feature. See "Colour tokens and dark mode" above.
+
 ## Forms (moodleform)
 Form classes under `classes/form/` start with
 `require_once($CFG->libdir . '/formslib.php')` (moodleform isn't autoloaded). The
@@ -418,6 +601,14 @@ Each `db/upgrade.php` step ends with
 - `$DB->get_records()` / `getDataGenerator()->create_*()` return **string** ids
   under both drivers — cast to `(int)` for typed-int signatures and normalise
   haystacks before strict `assertContains`.
+- Two suites are **file scanners** on `\basic_testcase`, not DB tests, and they exist because the
+  pipeline is structurally blind to what they check: `local/colour_tokens_test.php` (the colour
+  token contract, 20 arms) and `local/bootstrap_compat_test.php` (Bootstrap 4/5 class vocabulary
+  and badge text colours). Nothing in phpcs, the mustache lint or stylelint reads a class name out
+  of a Mustache or JS file, or a custom property across a template/stylesheet boundary. **Every
+  assertion in them was mutation-checked**, and that is not ceremony: earlier drafts of
+  `bootstrap_compat_test` passed while blind to the very defect they were written for. When you
+  add an arm, delete the production line it guards and confirm it actually reddens.
 
 ## Behat (JS) — locator gotchas
 Run locally with `mdl behat m501 /var/www/html/public/local/dimensions/tests/behat/<x>.feature`
@@ -427,6 +618,37 @@ Moodle exception page fails at that step whatever it asserts (Behat's after-step
 on exception pages), so refusals belong in PHPUnit. `tests/generator/` provides
 `"local_dimensions > frameworks"` / `"templates"` rows with a `category` idnumber column, the
 only way to create competency objects in a course category from a feature.
+
+**Step definitions are SITE-GLOBAL, and two plugins declaring an identically-worded step is a hard
+failure that takes out BOTH plugins' entire suites.** Behat loads every installed plugin's context
+file into one suite, so a duplicated `@Given` regex is an ambiguity error, not a shadowing — and it
+kills the run, not the scenario. **Measured on m502, not theorised.** `local_dimensions` and
+`block_dimensions` both needed colour-mode steps, so their wordings diverge on purpose and must
+stay diverged:
+
+| here (`local_dimensions`) | sibling (`block_dimensions`) |
+|---|---|
+| `the page colour mode is "<mode>"` | `the host colour mode is "<mode>"` |
+| `I remember the page background colour` | `I remember the host page background colour` |
+| `the "<sel>" element background should still match the page` | `… should still match the host page` |
+| `the "<token>" colour token should resolve to "<value>"` | `… should resolve to "<value>" on the host` |
+| `the site has a host colour mode` | `the host ships a colour mode` |
+
+Before adding **any** step here, grep the sibling's `tests/behat/behat_block_dimensions.php` for the
+wording. The same applies in reverse, and the cost of getting it wrong is paid by whichever plugin
+did not change.
+
+`tests/behat/colour_mode.feature` is the plugin's dark-mode coverage. Two things about it are
+deliberate and must survive edits. It sets **`themedesignermode`**, because Behat saves the compiled
+theme CSS at init and restores it around every run
+(`lib/behat/classes/util.php::restore_saved_themes`) — measured: with the theme cache in play,
+deleting the **whole** dark activation block left all four scenarios green, a suite certifying
+nothing. And its first three scenarios assert a **relative** invariant (the plugin surface equals
+the page surface), so they are correct on every supported branch with no skip and no branch tag,
+including 4.5 which ships no dark palette at all; only the fourth needs a real dark palette and it
+**detects one at runtime** rather than guessing from `$CFG->branch`. Do not "simplify" either into
+an absolute colour assertion or a version gate.
+
 Hard-won:
 - **Autocomplete:** pick a value with **only** `I set the field "<label>" to
   "<text>"` — it types, clicks the auto-activated suggestion and presses ESC
