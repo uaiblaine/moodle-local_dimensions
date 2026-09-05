@@ -27,7 +27,8 @@
     * hasvalue (bool) - Whether a value is currently set
     * currenthtml (string) - HTML preview of the current icon
     * placeholder (string) - Placeholder text for the search input
-    * browseall_title (string) - Title for the browse-all button
+    * browseall_title (string) - Title and accessible name for the browse-all button
+    * clear_title (string) - Title and accessible name for the clear button
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -41,17 +42,18 @@
         "hasvalue": true,
         "currenthtml": "<i class=\"fa fa-lock\"></i>",
         "placeholder": "Search for an icon...",
-        "browseall_title": "Browse all icons"
+        "browseall_title": "Browse all icons",
+        "clear_title": "Clear"
     }
 }}
 <div class="form-autocomplete-container" id="{{elementid}}-container">
     <input type="hidden" name="{{fullname}}" id="{{elementid}}-value" value="{{value}}">
     <div class="d-flex align-items-center">
         {{#hasvalue}}
-        <span class="mr-2 me-2" id="{{elementid}}-preview">{{{currenthtml}}}</span>
+        <span class="me-2" id="{{elementid}}-preview">{{{currenthtml}}}</span>
         {{/hasvalue}}
         {{^hasvalue}}
-        <span class="mr-2 me-2" id="{{elementid}}-preview"></span>
+        <span class="me-2" id="{{elementid}}-preview"></span>
         {{/hasvalue}}
         <div class="d-inline-flex align-items-center position-relative" style="max-width: 400px; flex: 1;">
             <input type="text" class="form-control" id="{{id}}"
@@ -61,12 +63,14 @@
                    style="padding-right: 32px;">
             <button type="button" class="btn p-0 border-0 position-absolute" id="{{elementid}}-downarrow"
                     style="right: 8px; top: 50%; transform: translateY(-50%); background: none; line-height: 1;"
-                    title="{{browseall_title}}">
+                    title="{{browseall_title}}"
+                    aria-label="{{browseall_title}}">
                 <i class="fa fa-chevron-down text-muted" aria-hidden="true"></i>
             </button>
         </div>
-        <button type="button" class="btn btn-sm btn-outline-secondary ml-2 ms-2" id="{{elementid}}-clear"
-                title="{{clear_title}}">&times;</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="{{elementid}}-clear"
+                title="{{clear_title}}"
+                aria-label="{{clear_title}}">&times;</button>
     </div>
     <div class="local-dimensions-icon-dropdown" id="{{elementid}}-dropdown"></div>
 </div>

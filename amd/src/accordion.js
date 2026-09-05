@@ -701,7 +701,7 @@ define(
             html += ' data-plan-id="' + planId + '">';
             html += '<div class="local-dimensions-rules-loading" role="status" aria-live="polite">';
             html += '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
-            html += '<span class="sr-only">' + escapeHtml(strMap.rulesTab) + '</span>';
+            html += '<span class="visually-hidden">' + escapeHtml(strMap.rulesTab) + '</span>';
             html += '</div>';
             html += '<div class="local-dimensions-rules-content" style="display:none;"></div>';
             html += '</div>';
@@ -971,7 +971,7 @@ define(
             }
             let html = '<li class="' + cardClasses + '" data-required="' + (child.required ? 'true' : 'false') + '">';
 
-            // Status icon with sr-only label.
+            // Status icon with a visually hidden label.
             html += '<div class="local-dimensions-rules-child-icon-wrapper">';
             const rulesIconUrls = {
                 proficient: M.util.image_url('status/rules-proficient', 'local_dimensions'),
@@ -982,19 +982,19 @@ define(
                 html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-proficient">';
                 html += '<img class="local-dimensions-rules-child-icon-image" src="' +
                     escapeHtml(rulesIconUrls.proficient || '') + '" alt="" aria-hidden="true">';
-                html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrProficient) + '</span>';
+                html += '<span class="visually-hidden">' + escapeHtml(strMap.rulesSrProficient) + '</span>';
                 html += '</div>';
             } else if (child.hasgrade) {
                 html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-inprogress">';
                 html += '<img class="local-dimensions-rules-child-icon-image" src="' +
                     escapeHtml(rulesIconUrls.inprogress || '') + '" alt="" aria-hidden="true">';
-                html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrInprogress) + '</span>';
+                html += '<span class="visually-hidden">' + escapeHtml(strMap.rulesSrInprogress) + '</span>';
                 html += '</div>';
             } else {
                 html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-todo">';
                 html += '<img class="local-dimensions-rules-child-icon-image" src="' +
                     escapeHtml(rulesIconUrls.todo || '') + '" alt="" aria-hidden="true">';
-                html += '<span class="sr-only">' + escapeHtml(strMap.rulesSrTodo) + '</span>';
+                html += '<span class="visually-hidden">' + escapeHtml(strMap.rulesSrTodo) + '</span>';
                 html += '</div>';
             }
             html += '</div>';
@@ -3238,6 +3238,12 @@ define(
                 star.addEventListener('click', function() {
                     const on = LearnerPrefs.toggleFavourite(star.dataset.competencyId);
                     star.setAttribute('aria-pressed', on ? 'true' : 'false');
+                    /* The glyph, not only the colour, carries the state (WCAG 1.4.1), so the
+                       icon has to follow the toggle exactly as the template renders it. */
+                    const staricon = star.querySelector('i');
+                    if (staricon) {
+                        staricon.className = on ? 'fa fa-star' : 'fa fa-star-o';
+                    }
                     const item = star.closest('.local-dimensions-accordion-item');
                     if (item) {
                         item.classList.toggle('local-dimensions-favourite', on);

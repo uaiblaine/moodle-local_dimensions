@@ -42,10 +42,21 @@ jobs:
   # promise, source scan included.
   # This input only populates the CI test site.
   #
-  # 4.05 gets no such line, and must not: enrol_apply declares
+  # block_dimensions is checked out beside the plugin for the OTHER cross-repo
+  # reason: the two share one colour-token contract under two frankenstyle
+  # prefixes, and colour_tokens_test::test_token_block_is_identical_to_the_sibling
+  # compares the two blocks declaration by declaration. Without the checkout that
+  # test SKIPS, and a skip nobody notices is how a cross-repo lock quietly stops
+  # running - which is why test_ci_checks_out_the_family_sibling reads this file
+  # and fails the build for any job that drops the line. It is not a runtime
+  # dependency either: neither plugin declares the other in $plugin->dependencies
+  # and each installs and runs standalone.
+  #
+  # 4.05 lists ONLY block_dimensions, and must: enrol_apply declares
   # $plugin->supported = [501, 502], so checking it out there would offer
   # Moodle 4.5 a plugin it cannot install. The apply tests skip on that leg,
-  # which is the truth — the integration cannot exist on 4.5.
+  # which is the truth — the integration cannot exist on 4.5. block_dimensions
+  # declares [405, 502], so it installs on every leg this plugin runs.
   ci-502:
     name: Moodle 5.02
     uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
@@ -53,6 +64,7 @@ jobs:
       moodle-core-branch: MOODLE_502_STABLE
       plugin-dependencies: |
         uaiblaine/moodle-enrol_apply,master
+        uaiblaine/moodle-block_dimensions,main
 
   ci-501:
     name: Moodle 5.01
@@ -62,6 +74,7 @@ jobs:
       one-db-only: true
       plugin-dependencies: |
         uaiblaine/moodle-enrol_apply,master
+        uaiblaine/moodle-block_dimensions,main
 
   ci-405:
     name: Moodle 4.05
@@ -69,3 +82,5 @@ jobs:
     with:
       moodle-core-branch: MOODLE_405_STABLE
       one-db-only: true
+      plugin-dependencies: |
+        uaiblaine/moodle-block_dimensions,main

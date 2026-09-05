@@ -367,6 +367,73 @@ final class bootstrap_compat_test extends \basic_testcase {
     }
 
     /**
+     * Bootstrap 4 class names that 5.x resolves only through its deprecation layer.
+     *
+     * The asymmetry runs both ways, and this is the direction that is easy to miss. These names DO
+     * resolve on 5.x - but only through theme/boost/scss/moodle/bs4-compat.scss, which wraps each
+     * in an @include deprecated-styles() (a red outline under behat-site and themedesignermode) and
+     * which Moodle 6.0 removes entirely, MDL-84465. Their Bootstrap 5 spellings are all inside
+     * 4.5's own 116-line forward bridge, so the BS5 name ALONE is correct on both branches: writing
+     * "ml-2 ms-2" side by side buys nothing and costs a deprecation.
+     *
+     * @return array Regex matching the deprecated class => the Bootstrap 5 spelling to use instead.
+     */
+    private function deprecated_bs4_utilities(): array {
+        return [
+            '/\bsr-only\b/' => 'visually-hidden',
+            '/\bml-[0-9]\b/' => 'ms-*',
+            '/\bmr-[0-9]\b/' => 'me-*',
+            '/\bpl-[0-9]\b/' => 'ps-*',
+            '/\bpr-[0-9]\b/' => 'pe-*',
+            '/\btext-left\b/' => 'text-start',
+            '/\btext-right\b/' => 'text-end',
+            '/\bfloat-left\b/' => 'float-start',
+            '/\bfloat-right\b/' => 'float-end',
+            '/\bborder-left\b/' => 'border-start',
+            '/\bborder-right\b/' => 'border-end',
+            '/\brounded-left\b/' => 'rounded-start',
+            '/\brounded-right\b/' => 'rounded-end',
+            '/\bno-gutters\b/' => 'g-0',
+        ];
+    }
+
+    /**
+     * The plugin emits no Bootstrap 4 class name that 5.x has already deprecated.
+     *
+     * The companion rule to test_every_bs5_utility_used_is_polyfilled, and the reason the fix for a
+     * missing BS5 utility is the polyfill rather than the BS4 name: writing the old name moves the
+     * breakage from 4.5 to Moodle 6.0 instead of removing it.
+     *
+     * Mutations that must redden it: revert one visually-hidden to sr-only; write ml-2 beside ms-2.
+     *
+     * @return void
+     */
+    public function test_no_deprecated_bootstrap4_class_names(): void {
+        $offenders = [];
+        foreach ($this->markup_files() as $path) {
+            foreach (file($path) as $number => $line) {
+                if ($this->is_comment_line($line)) {
+                    continue;
+                }
+                foreach ($this->deprecated_bs4_utilities() as $pattern => $replacement) {
+                    if (!preg_match($pattern, $line)) {
+                        continue;
+                    }
+                    $offenders[] = basename($path) . ':' . ($number + 1) . ' should use ' . $replacement;
+                }
+            }
+        }
+        sort($offenders);
+        $this->assertSame(
+            [],
+            $offenders,
+            'Moodle 5.x resolves these Bootstrap 4 names only through bs4-compat.scss, which marks each '
+                . 'one deprecated and which Moodle 6.0 deletes; the Bootstrap 5 spelling alone is correct '
+                . 'on both branches: ' . implode('; ', $offenders)
+        );
+    }
+
+    /**
      * The Bootstrap 4 marker must be added wherever the plugin sets one of its page body classes.
      *
      * The polyfill is gated on that marker, so an entry point that forgets it renders unstyled on

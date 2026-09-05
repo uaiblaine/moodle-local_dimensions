@@ -277,7 +277,16 @@
                             data-competency-id="{{id}}"
                             aria-pressed="{{#isfavourite}}true{{/isfavourite}}{{^isfavourite}}false{{/isfavourite}}"
                             aria-label="{{#str}}fav_star, local_dimensions{{/str}}">
+                        {{! The glyph carries the state as well as the colour (WCAG 1.4.1):
+                            filled star when favourited, outline star when not. The companion
+                            block swaps the same two classes, and accordion.js keeps this in
+                            step when the star is toggled without a reload. }}
+                        {{#isfavourite}}
                         <i class="fa fa-star" aria-hidden="true"></i>
+                        {{/isfavourite}}
+                        {{^isfavourite}}
+                        <i class="fa fa-star-o" aria-hidden="true"></i>
+                        {{/isfavourite}}
                     </button>
                     {{/showstar}}
                     <button class="local-dimensions-accordion-toggle"
@@ -332,9 +341,9 @@
                             {{! Loading placeholder - content loaded via AJAX }}
                             <div class="local-dimensions-competency-summary-loading text-center py-3">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="sr-only">{{#str}}loading_competency_summary, local_dimensions{{/str}}</span>
+                                    <span class="visually-hidden">{{#str}}loading_competency_summary, local_dimensions{{/str}}</span>
                                 </div>
-                                <span class="ml-2">{{#str}}loading_competency_summary, local_dimensions{{/str}}</span>
+                                <span class="ms-2">{{#str}}loading_competency_summary, local_dimensions{{/str}}</span>
                             </div>
                             {{! AJAX loaded content will be inserted here }}
                             <div class="local-dimensions-competency-summary-content" style="display: none;"></div>

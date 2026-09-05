@@ -108,7 +108,7 @@ const iconButton = (action, icon, label) => {
     glyph.className = `fa fa-${icon}`;
     glyph.setAttribute('aria-hidden', 'true');
     const sr = document.createElement('span');
-    sr.className = 'sr-only';
+    sr.className = 'visually-hidden';
     sr.textContent = label;
     button.appendChild(glyph);
     button.appendChild(sr);
@@ -139,7 +139,7 @@ const decorateExternalLink = (link, newwindowlabel) => {
     ext.className = 'fa fa-external-link ms-1';
     ext.setAttribute('aria-hidden', 'true');
     const sr = document.createElement('span');
-    sr.className = 'sr-only';
+    sr.className = 'visually-hidden';
     sr.textContent = newwindowlabel;
     link.appendChild(ext);
     link.appendChild(sr);
