@@ -1,5 +1,16 @@
 # Token migration — learner views (Material/Google → Moodle DS)
 
+> **Superseded as a description of the code, kept as a record of how it got here.**
+> Everything below describes the **first** migration (July 2026), which swapped one set of
+> *literals* for another. A **second** change has since landed: the learner views no longer write
+> colour literals at all. `styles.css` declares 34 colour tokens on bare `:root`, delegating to
+> core's own `--bs-*` values, and a colour literal outside that block now fails the build. So the
+> "where the new value lives today" column, the line numbers and both "Pending" sections at the
+> foot of this file are **historical**: the values they point at have no occurrences left. The
+> section "What the second migration did to each of these" at the end of this file reconciles the
+> two, and `tokens.html` is the current picture. Read this file for the *reasoning* — which value
+> replaced which, and why — not for the current state of the stylesheet.
+
 **A record of a completed change, not a plan.** The learner views once carried a Material/Google
 skin over Boost (`#667eea` purple, `#1a73e8` Google blue, `#f1f3f4`/`#5f6368` Google greys). That
 palette is gone: the learner surfaces now use Moodle DS values — `#0f6cbf` for the accent and
@@ -83,23 +94,26 @@ The custom-SCSS editor textarea on the admin template form uses a Catppuccin the
 (`#1e1e2e` / `#cdd6f4` / `#45475a` / `#89b4fa`, `styles.css:3985-3999`). Intentional, outside the
 learner palette, untouched by the migration.
 
-## Pending — one residual glow
+## Resolved — the residual glow
 
-`styles.css:2366` still reads `box-shadow: 0 0 0 3px rgb(26 115 232 / 15%)` on
-`.local-dimensions-search-input:focus` — the old Google-blue glow, sitting directly under the
-`border-color: #0f6cbf` that *did* migrate on `:2364`. The space-separated `rgb()` spelling is why
-the sweep missed it; it dates to `c5fe747` (2026-05-17) and no commit has touched it since. The
-Moodle DS equivalent would be `rgb(15 108 191 / 15%)`, which is already the spelling used at `983`,
-`984` and `2853`.
+This file recorded one survivor of the Material skin: `box-shadow: 0 0 0 3px rgb(26 115 232 / 15%)`
+on `.local-dimensions-search-input:focus`, the old Google blue written in space-separated `rgb()`
+notation, which is why a hex sweep never found it. It is **gone**, and not by recolouring. The rule
+now reads `outline: 2px solid var(--local-dimensions-focus-ring)` with `outline-offset: 2px` over an
+`accent` border, and carries no glow at all — because a `box-shadow` was never a legitimate focus
+indicator in the first place. Windows High Contrast Mode renders no `box-shadow` and does not
+restore an author's `outline: none`, so a ring drawn only as a shadow leaves a keyboard user with no
+indicator whatsoever on the one branch nobody checks by hand. `rgb(26 115 232 / 15%)` returns zero
+hits, in either notation.
 
-## Pending — the loose neutrals
+## Resolved — the loose neutrals
 
-The migration was value-for-value and deliberately did not normalise the one-off greys. Seven
-survive: `#333` (`1405`), `#e5e0e0` (`1453-1455`), `#f0f0f0` (`3397`, `4463`), `#f1f3f5` (8 hits),
-`#8da1b6` (`3876`), `#ccc` (`4446`), `#1d2125` (22 hits). Five of the twelve the original checklist
-listed are already gone (`#fafafa`, `#555`, `#b0b2b5`, `#dfe3e8`, `#273240`), as is the Stripe-style
-shadow tint `rgb(50 50 93 / 25%)`; `rgb(17 24 39 / 8%)` remains at `3846`. Normalising these to
-Bootstrap greys and neutral black-alpha shadows is optional and unscheduled.
+The first migration was value-for-value and deliberately left the one-off greys alone; this section
+listed seven as optional and unscheduled. All seven are **gone**, along with the shadow tints:
+`#333`, `#e5e0e0`, `#f0f0f0`, `#f1f3f5`, `#8da1b6`, `#ccc`, `rgb(50 50 93 / 25%)` and
+`rgb(17 24 39 / 8%)` all return zero hits. `#1d2125` survives once — as the terminating literal of
+the `ink` token's own chain, which is where it belongs. Normalising them stopped being optional when
+the literal ban landed: an unexempted colour literal outside the token block fails the build.
 
 ## How the accent reaches the markup
 
@@ -110,7 +124,45 @@ Most accent uses read through a variable with the literal only as a fallback —
 accent work should keep going through those variables rather than adding literals, so a future theme
 swap stays one block.
 
+## What the second migration did to each of these
+
+Every row of the mapping table above still records a real decision — which value replaced which, and
+why — but the "where the new value lives today" column is now wrong in one uniform way: the new
+value does not live at a line number any more, it lives in a token. The translation:
+
+| First migration's result | Where it is now |
+|---|---|
+| `#0f6cbf` accent, focus ring, taxonomy label | `--local-dimensions-accent` for the foreground roles; the ring moved **off** the brand to `--local-dimensions-focus-ring`, which chains `--bs-emphasis-color` |
+| `#198754` success green | the `success` tone family (`-ink` / `-tint` / `-edge`) |
+| `#6c757d`, `#495057` muted text | `--local-dimensions-ink-muted`; the inactive-control shade is `-ink-faint` |
+| `#e9ecef` platters, `#dee2e6` borders | `--local-dimensions-surface-inset` and `--local-dimensions-line` |
+| `#cfe2ff` active counter fill | the `brand` tone family — note the tint is core's `#cfe2f2`, not stock Bootstrap's `#cfe2ff` |
+| `#fff3cd` / `#664d03` / `#ffc107` evidence-modal note | the `warning` tone family |
+| `#e5a100` amber "rated" rail | retired; the rail is `warning-ink` |
+| `#fd7e14` rules orange, nine rules | retired as a brand accent; every rules surface is the `warning` family. Orange survives only as `--local-dimensions-favourite` (`#e8590c` light, `#fd7e14` dark) |
+| `#f9fafb` / `#212121` card surfaces and titles | `--local-dimensions-surface-alt` and `--local-dimensions-ink` |
+
+Two decisions this file recorded were **reversed**, and both are worth knowing before reinstating
+either from these pages:
+
+- **The rules orange is no longer "kept".** It was a deliberate brand accent for "how a competency
+  is earned"; it is now the warning tone, so the learner views and the hub say the same thing the
+  same way and each surface carries its tone's own border the way core's own alerts do.
+- **The focus ring is no longer unified with the accent.** This file's "focus-ring unification lands
+  at ≈5.4:1 on white; that was never re-measured on coloured surfaces" was the right doubt about the
+  wrong risk. The real defect is that a brand-coloured ring cannot honour a 3:1 obligation, because
+  the brand is a colour the *site owner* picks: on the fleet's live theme `--bs-link-color` measures
+  2.33:1 on the dark card. The ring is now anchored to the emphasis extreme, which flips and is
+  theme-independent — 21.0 / 19.9 / 17.7 light, 16.2 / 13.7 / 11.5 dark, 11.5 / 10.9 / 9.7 on 4.5.
+  Core's own `--bs-focus-ring-color` was not an option either: measured live it is the same
+  `rgba(15, 108, 191, .25)` in both modes, 1.02:1 against the dark page.
+
+The custom-SCSS editor's Catppuccin theme, recorded above as intentional and outside the learner
+palette, is **still there and still exempt** — it is a code editor whose ground is its own, not the
+page's.
+
 ---
 
-*Line numbers verified against `styles.css` at 7434 lines (HEAD `d0adc3b`). They move whenever the
-file grows; the class names and hex values are the durable part.*
+*The hex values and class names in this file are the durable part. The line numbers were verified
+against `styles.css` at 7434 lines (HEAD `d0adc3b`) and are now historical: the file is longer, and
+more to the point the values they pointed at are no longer written at those sites, or anywhere.*

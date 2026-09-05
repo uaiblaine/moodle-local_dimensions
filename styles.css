@@ -44,6 +44,192 @@
 }
 
 /* ============================================
+   COLOUR TOKENS (--local-dimensions-*) - 34 roles, declared once, on bare :root
+   The plugin does not own a palette. It delegates to core's and only names the roles it needs, so
+   a site that rebrands Boost rebrands this plugin, and a page that goes dark takes the plugin with
+   it. Every value below was measured on the running stacks; none is estimated.
+
+   HOW THE CHAINS WORK. 30 of the 34 tokens are var(--bs-NEW, var(--BS4-OLD, #literal)). Measured on
+   the compiled sheets of the running stacks: Moodle 4.5 declares NONE of the --bs-* names used
+   below (its only three --bs-* declarations anywhere are dropdown-link colours) and Moodle 5.1/5.2
+   declare NONE of the Bootstrap 4 legacy names, so exactly one rung resolves on each branch and the
+   literal is a safety net rather than a value the plugin expects to use. The literals are core's own
+   compiled 5.2 light values, so every rung of a chain means the same thing.
+
+   WHY THERE IS ALMOST NO DARK RULE. Moodle 5.1/5.2 already compile a complete
+   [data-bs-theme="dark"] token block; nothing writes the attribute yet, so those values are
+   dormant, not absent. A colour written as var(--bs-secondary-bg, #e9ecef) is therefore already
+   dark-correct with no rule of its own: the plugin's card face IS --bs-body-bg, the same value
+   body's background uses, and the two cannot disagree because they are one value. Do not add a
+   dark rule for any of those 30 tokens.
+
+   THE THREE EXCEPTIONS. shadow, scrim and favourite are the only values in this system carrying a
+   plugin-authored dark declaration, because core has no equivalent: --bs-box-shadow is a whole
+   shadow rather than a colour and is absent from the dark block, no core token is a translucent
+   surface, and no single star hue clears 3:1 on both #fff and #343a40 (--bs-warning is 1.95:1 on
+   white). That bound is the second, independent guarantee that this plugin can never paint a dark
+   surface on a light page: even if the activation block below fired on a branch with no dark
+   palette at all, the worst outcome is a deeper shadow, a darker veil and a brighter star.
+
+   focus-ring chains --bs-emphasis-color, NOT --bs-focus-ring-color. Core's own focus colour does
+   not flip - measured live on m502 it is rgba(7, 0, 147, .75) in both modes, which is 1.02:1 on
+   the dark page - and a 3:1 obligation cannot be delegated to a colour the site owner picks either
+   (--bs-link-color is 2.33:1 on the dark card of that theme). The emphasis extreme flips and is
+   theme-independent: 21.0/19.9/17.7 light, 16.2/13.7/11.5 dark, 11.5/10.9/9.7 on 4.5, against
+   surface/surface-alt/surface-inset.
+
+   THE USAGE RULES THE TOKENS CANNOT ENFORCE BY THEMSELVES, all measured:
+   - surface-inset is a platter a control sits IN, not a text ground for coloured ink. On it in
+     dark, accent and brand-ink (the same value) are 4.495:1 and danger-ink is 4.20:1. Coloured ink
+     belongs on surface or surface-alt; ink, ink-muted, ink-strong, success-ink, warning-ink,
+     info-ink and neutral-ink are all fine here.
+   - ink-faint is for inactive-control text and placeholders only. It is 2.70:1 on surface-inset in
+     LIGHT mode and rides WCAG 1.4.3's "Incidental" exception; it is never a border, a fill, a
+     stroke or an outline.
+   - brand-fill is a solid fill under on-brand-fill and nothing else. --bs-primary does not flip
+     (1.10:1 as text on the dark page), so it is never an ink, never a border that carries state,
+     never a focus ring. That is exactly .btn-primary's own contract.
+   - the tone solids (--bs-success and friends) are never indicators: none of them flip, and their
+     failures fall on disjoint sets per branch. Meaning rides -ink / -tint / -edge, which is what
+     core's own .alert-* is built from, so a plugin chip and a core alert match on the same page.
+
+   BRANDED ISLANDS. --dimension-custombgcolor and --dimension-customtextcolor are the cross-plugin
+   transport for admin instance data, not design tokens. They are referenced by the surfaces an
+   admin has painted, and they are deliberately NOT declared here and NOT overridden in the
+   activation block: a site's chosen colour stays its colour in both modes, and only the neutrals
+   around the island adapt. For the same reason the hero photo overlays and the glass chips
+   composited over an admin colour stay literals - they are relative to the admin's colour or
+   image, not to the page, so they did not go dark when the page did.
+   ============================================ */
+:root {
+    /* Tier 1 - surfaces, line, ink, accent. */
+    --local-dimensions-surface: var(--bs-body-bg, var(--white, #fff));
+    --local-dimensions-surface-alt: var(--bs-tertiary-bg, var(--light, #f8f9fa));
+    --local-dimensions-surface-inset: var(--bs-secondary-bg, #e9ecef);
+    --local-dimensions-line: var(--bs-border-color, #dee2e6);
+    --local-dimensions-ink: var(--bs-body-color, #1d2125);
+    --local-dimensions-ink-muted: var(--bs-secondary-color, #495057);
+    --local-dimensions-ink-faint: var(--bs-tertiary-color, #6a737b);
+    --local-dimensions-ink-strong: var(--bs-emphasis-color, var(--gray-dark, #343a40));
+    --local-dimensions-accent: var(--bs-link-color, var(--primary, #0f6cbf));
+    --local-dimensions-accent-hover: var(--bs-link-hover-color, #0c5699);
+
+    /* Tier 1b - the six tone families, each core's own emphasis/subtle triple. */
+    --local-dimensions-brand-ink: var(--bs-primary-text-emphasis, #062b4c);
+    --local-dimensions-brand-tint: var(--bs-primary-bg-subtle, #cfe2f2);
+    --local-dimensions-brand-edge: var(--bs-primary-border-subtle, #9fc4e5);
+    --local-dimensions-success-ink: var(--bs-success-text-emphasis, #153114);
+    --local-dimensions-success-tint: var(--bs-success-bg-subtle, #d7e4d6);
+    --local-dimensions-success-edge: var(--bs-success-border-subtle, #aecaad);
+    --local-dimensions-warning-ink: var(--bs-warning-text-emphasis, #60451f);
+    --local-dimensions-warning-tint: var(--bs-warning-bg-subtle, #fcefdc);
+    --local-dimensions-warning-edge: var(--bs-warning-border-subtle, #f9deb8);
+    --local-dimensions-danger-ink: var(--bs-danger-text-emphasis, #51140d);
+    --local-dimensions-danger-tint: var(--bs-danger-bg-subtle, #f4d6d2);
+    --local-dimensions-danger-edge: var(--bs-danger-border-subtle, #eaada6);
+    --local-dimensions-info-ink: var(--bs-info-text-emphasis, #00343c);
+    --local-dimensions-info-tint: var(--bs-info-bg-subtle, #cce6ea);
+    --local-dimensions-info-edge: var(--bs-info-border-subtle, #99cdd5);
+    --local-dimensions-neutral-ink: var(--bs-secondary-text-emphasis, #525557);
+    --local-dimensions-neutral-tint: var(--bs-secondary-bg-subtle, #f5f6f8);
+    --local-dimensions-neutral-edge: var(--bs-secondary-border-subtle, #ebeef0);
+
+    /* Tier 1c - the solid brand fill and the only text that may sit on it. */
+    --local-dimensions-brand-fill: var(--bs-primary, var(--primary, #0f6cbf));
+    --local-dimensions-on-brand-fill: #fff;
+
+    /* Tier 2 - the four core cannot supply. Only the last three get a dark value. */
+    --local-dimensions-focus-ring: var(--bs-emphasis-color, var(--gray-dark, #343a40));
+    --local-dimensions-shadow: rgb(0 0 0 / 10%);
+    --local-dimensions-scrim: rgb(255 255 255 / 72%);
+    --local-dimensions-favourite: #e8590c;
+}
+
+/* ============================================
+   DARK MODE - ACTIVATION
+   ============================================
+
+   ONE selector, and it is the host's own signal. data-bs-theme is Bootstrap 5.3's native
+   colour-mode attribute and it is what Moodle itself writes: theme_boost's
+   before_html_attributes listener adds it to the html tag, and the head script it injects
+   resolves "auto" with window.matchMedia and writes the result back to
+   document.documentElement. Gated behind theme_boost/enablecolourmodes, off by default.
+
+   ANCHORED AT :root ON PURPOSE. A bare [data-bs-theme="dark"] matches through ANY ancestor at
+   any depth, and CSS descendant combinators have no nearest-ancestor-wins rule. That is not
+   hypothetical: theme_boost_union_fundaseg sets data-bs-theme="dark" on the navbar element
+   itself, and theme_boost_union then re-pins data-bs-theme="light" by hand on five nested
+   templates (core/moremenu, core/user_menu, theme_boost/language_menu and the two smartmenu
+   children templates) to stop the dark scope leaking into its own submenus. A bare selector
+   would ignore those re-pins. :root restricts the match to the html element and forecloses the
+   whole class at zero cost.
+
+   .theme-dark and body.dark are NOT accepted. Nothing in Moodle 4.5, 5.1, 5.2 or 5.3-dev, and
+   nothing in theme_boost_union or theme_boost_union_fundaseg, has ever emitted either.
+
+   ONLY the three plugin-owned decorative tokens are assigned here. The other 31 follow core's
+   own --bs-* values and need no rule, which is why this block cannot make the plugin dark on a
+   light page even if it fires on a branch that has no dark palette. Enforced by
+   colour_tokens_test::test_dark_activation_block_assigns_only_plugin_owned_tokens.
+
+   If a theme ever scopes the attribute to <body> instead, add a SEPARATE rule
+   :root:has(> body[data-bs-theme="dark"]) carrying the same three declarations. Never append
+   that selector to this one: an unsupported :has() inside a comma-separated list invalidates the
+   whole list and would take the working selector down with it.
+   ============================================ */
+:root[data-bs-theme="dark"] {
+    --local-dimensions-shadow: rgb(0 0 0 / 55%);
+    --local-dimensions-scrim: rgb(29 33 37 / 72%);
+    --local-dimensions-favourite: #fd7e14;
+}
+
+/* ============================================
+   OS-PREFERENCE FALLBACK - WRITTEN, READY, AND DELIBERATELY INERT
+   ============================================
+
+   This block must not fire today, and today it cannot: its selector requires
+   [data-dimensions-media-optin] on the html element, and nothing in either plugin - no PHP, no
+   AMD module, no Mustache template, no Behat step, no test - ever writes that attribute.
+   That is not a claim in prose: colour_tokens_test::test_media_fallback_is_written_and_unreachable
+   fails the build if the attribute appears anywhere outside this stylesheet in this plugin or in
+   any installed family sibling, if any selector here loses the gate, or if the block is deleted.
+
+   INERT BECAUSE THE OS PREFERENCE IS THE WRONG SIGNAL ON ITS OWN. Moodle 5.3's theme_boost reads
+   prefers-color-scheme in a head script and writes the RESULT into data-bs-theme on the html
+   element, and only when the user's stored mode is auto. Core treats the OS preference as an
+   INPUT to the attribute, never as an independent trigger. Firing on the media query directly
+   would override an explicit user choice with an OS setting, and would let this plugin be dark
+   inside a light page - which is exactly the defect this block replaces (the contrast panel that
+   used to carry its own prefers-color-scheme rules further down this file).
+
+   :not([data-bs-theme="light"]) is belt and braces: a host that has explicitly chosen light must
+   win over the OS even after the gate is removed.
+
+   IT CONTAINS ONLY THE THREE PLUGIN-OWNED DECORATIVE TOKENS, AND THAT IS DELIBERATE. The other
+   31 tokens follow core's own --bs-* values. On any host that is genuinely dark, those are
+   already dark and already correct; on any host that is light, re-pointing them here is precisely
+   the defect above. A host that paints dark WITHOUT its --bs-* tokens being dark is a host whose
+   own CSS this plugin cannot see, and the supported fix for that host is to set data-bs-theme,
+   not to widen this block. So even fully switched on, this block cannot produce a dark plugin on
+   a light page. That bound is a second, independent guarantee, and it is why this fallback is not
+   a second palette to keep in step.
+
+   TO SWITCH ON - one line, one edit: delete "[data-dimensions-media-optin]" from the selector
+   below. Nothing else changes anywhere.
+
+   TO RETIRE - preferred, once $plugin->supported's MINIMUM reaches 503: delete this block
+   outright. Core resolves auto itself from 5.3 on, so the fallback has nothing left to cover.
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    /* Switch-on line: remove [data-dimensions-media-optin] and nothing else. */
+    :root[data-dimensions-media-optin]:not([data-bs-theme="light"]) {
+        --local-dimensions-shadow: rgb(0 0 0 / 55%);
+        --local-dimensions-scrim: rgb(29 33 37 / 72%);
+        --local-dimensions-favourite: #fd7e14;
+    }
+}
+
+/* ============================================
       PAGE-SPECIFIC OVERRIDES
       Hide empty default header on view-plan / view-competency pages
       ============================================ */
@@ -102,7 +288,7 @@
     width: 2rem;
     height: 2rem;
     overflow: hidden;
-    border: 1px solid var(--bs-border-color, #ced4da);
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.4rem;
     cursor: pointer;
 }
@@ -127,11 +313,12 @@
 }
 
 .local-dimensions-central-colour-swatch-empty {
+    background-color: var(--local-dimensions-surface);
     background-image:
-        linear-gradient(45deg, #eef1f5 25%, transparent 25%),
-        linear-gradient(-45deg, #eef1f5 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #eef1f5 75%),
-        linear-gradient(-45deg, transparent 75%, #eef1f5 75%);
+        linear-gradient(45deg, var(--local-dimensions-surface-inset) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--local-dimensions-surface-inset) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--local-dimensions-surface-inset) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--local-dimensions-surface-inset) 75%);
     background-position:
         0 0,
         0 0.5rem,
@@ -141,9 +328,11 @@
 }
 
 /* Real-time WCAG contrast panel beside the bg/text colour inputs
-   (amd/src/central/contrast). Mirrors the Claude Design prototype: a self-
-   contained card using fixed Moodle DS token values that flip under
-   prefers-color-scheme (light/dark), independent of the host theme. */
+   (amd/src/central/contrast). The card reads the plugin colour tokens declared at the top of
+   this file, so it follows the host page: light on a light page, dark on a dark one, branded
+   where the site is branded. It used to carry its own prefers-color-scheme block, which turned
+   this one card dark from the OS setting while the rest of the page stayed light. The OS
+   preference is an input to the host theme colour-mode attribute, never a trigger of our own. */
 .local-dimensions-contrast-layout {
     display: flex;
     flex-wrap: wrap;
@@ -166,10 +355,10 @@
     flex-direction: column;
     gap: 0.75rem;
     padding: 0.9375rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.75rem;
-    background: #f8f9fa;
-    color: #1d2125;
+    background: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink);
     font-size: 0.8125rem;
     line-height: 1.5;
 }
@@ -189,12 +378,12 @@
 .local-dimensions-contrast-standard {
     flex: 0 0 auto;
     padding: 0.125rem 0.5625rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 50rem;
-    background: #fff;
+    background: var(--local-dimensions-surface);
     font-size: 0.625rem;
     font-weight: 600;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-contrast-result {
@@ -221,7 +410,7 @@
     font-size: 0.625rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-contrast-verdict {
@@ -251,9 +440,9 @@
     align-items: center;
     gap: 0.5625rem;
     padding: 0.5rem 0.6875rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.5rem;
-    background: #fff;
+    background: var(--local-dimensions-surface);
 }
 
 .local-dimensions-contrast-badge-glyph {
@@ -274,20 +463,20 @@
 
 .local-dimensions-contrast-badge-min {
     font-size: 0.625rem;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-contrast-sizenote {
     margin: 0;
     font-size: 0.625rem;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-contrast-suggestions {
     flex-direction: column;
     gap: 0.5rem;
     padding-top: 0.75rem;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid var(--local-dimensions-line);
 }
 
 .local-dimensions-contrast-suggestions:not([hidden]) {
@@ -310,16 +499,16 @@
     align-items: center;
     gap: 0.625rem;
     padding: 0.5rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.5rem;
-    background: #fff;
+    background: var(--local-dimensions-surface);
 }
 
 .local-dimensions-contrast-suggestion-swatch {
     flex: 0 0 auto;
     width: 1.75rem;
     height: 1.75rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.375rem;
 }
 
@@ -332,7 +521,7 @@
 
 .local-dimensions-contrast-suggestion-which {
     font-size: 0.625rem;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-contrast-suggestion-meta {
@@ -346,7 +535,7 @@
 }
 
 .local-dimensions-contrast-suggestion-apply:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -368,27 +557,27 @@
 
 /* Feedback tones shared by the verdict pill and the WCAG badges. */
 .local-dimensions-contrast .is-success {
-    border-color: #153114;
-    background: #d7e4d6;
-    color: #153114;
+    border-color: var(--local-dimensions-success-edge);
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-contrast .is-warning {
-    border-color: #60451f;
-    background: #fcefdc;
-    color: #60451f;
+    border-color: var(--local-dimensions-warning-edge);
+    background: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
 }
 
 .local-dimensions-contrast .is-danger {
-    border-color: #51140d;
-    background: #f4d6d2;
-    color: #51140d;
+    border-color: var(--local-dimensions-danger-edge);
+    background: var(--local-dimensions-danger-tint);
+    color: var(--local-dimensions-danger-ink);
 }
 
 .local-dimensions-contrast .is-muted {
-    border-color: #dee2e6;
-    background: #fff;
-    color: #6a737b;
+    border-color: var(--local-dimensions-neutral-edge);
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
 }
 
 /* The note is text-only: its tone sets the text colour, not a filled pill. */
@@ -399,79 +588,11 @@
 }
 
 .local-dimensions-contrast-note.is-muted {
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-contrast-note.is-danger {
-    color: #51140d;
-}
-
-@media (prefers-color-scheme: dark) {
-    .local-dimensions-contrast {
-        border-color: #495057;
-        background: #16191c;
-        color: #f8f9fa;
-    }
-
-    .local-dimensions-contrast-standard {
-        border-color: #495057;
-        background: #1d2125;
-        color: #ced4da;
-    }
-
-    .local-dimensions-contrast-ratio-label,
-    .local-dimensions-contrast-badge-min,
-    .local-dimensions-contrast-sizenote,
-    .local-dimensions-contrast-suggestion-which {
-        color: #ced4da;
-    }
-
-    .local-dimensions-contrast-badge,
-    .local-dimensions-contrast-suggestion {
-        border-color: #495057;
-        background: #1d2125;
-    }
-
-    .local-dimensions-contrast-suggestion-swatch {
-        border-color: #495057;
-    }
-
-    .local-dimensions-contrast .is-success {
-        border-color: #d7e4d6;
-        background: #153114;
-        color: #d7e4d6;
-    }
-
-    .local-dimensions-contrast .is-warning {
-        border-color: #fcefdc;
-        background: #60451f;
-        color: #fcefdc;
-    }
-
-    .local-dimensions-contrast .is-danger {
-        border-color: #f4d6d2;
-        background: #51140d;
-        color: #f4d6d2;
-    }
-
-    .local-dimensions-contrast .is-muted {
-        border-color: #495057;
-        background: #1d2125;
-        color: #ced4da;
-    }
-
-    .local-dimensions-contrast-note.is-muted,
-    .local-dimensions-contrast-note.is-danger {
-        background: transparent;
-    }
-
-    .local-dimensions-contrast-note.is-muted {
-        color: #ced4da;
-    }
-
-    .local-dimensions-contrast-note.is-danger {
-        color: #f4d6d2;
-    }
+    color: var(--local-dimensions-danger-ink);
 }
 
 /* Percentage display mode styles */
@@ -761,12 +882,21 @@
     }
 }
 
-/* High contrast mode */
+/*
+ * High contrast mode (the soft user preference, NOT Windows High Contrast - that is
+ * forced-colors, an unrelated media feature).
+ *
+ * MODE-AWARE BY CONSTRUCTION, WITH NOTHING TO RESTATE. The hero is a branded island: its
+ * ground is the admin's own colour or photograph, which is the same in light and dark, so
+ * the ink that sits on it is the same in light and dark too. on-brand-fill is that ink -
+ * the one token in this system that deliberately does not flip. A rule written against
+ * ink or surface here would be wrong in BOTH modes, not just one.
+ */
 @media (prefers-contrast: high) {
     .local-dimensions-hero-title,
     .local-dimensions-hero-description,
     .local-dimensions-hero-description p {
-        color: #fff;
+        color: var(--local-dimensions-on-brand-fill);
     }
 }
 
@@ -831,13 +961,22 @@
       Cards now live exclusively on the view-competency page.
       ============================================ */
 .local-dimensions-viewcompetency .card-header {
-    background-color: #f8f9fa;
+    background-color: var(--local-dimensions-surface-alt);
     border: 0;
 }
 
 .local-dimensions-viewcompetency .card-header a {
     font-size: 20px;
-    color: #212529;
+    color: var(--local-dimensions-ink);
+}
+
+/* The card's only focusable element is its title link, so the ring goes on the link and the
+   lift below tells the learner which card it belongs to. The card had NO hover or focus
+   feedback at all before this - silence rather than a decision - while the companion block's
+   equivalent card has carried both for as long as it has existed. */
+.local-dimensions-viewcompetency .card-header a:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 /* Text muted inside card headers - larger font size */
@@ -846,12 +985,48 @@
 }
 
 .local-dimensions-viewcompetency .card {
-    background-color: #f8f9fa;
+    /* The card face, its border and its corner are the companion block's, so a learner
+       moving between the two never sees two card shapes: the face is the surface token
+       (the block's #fff, not this plugin's older #f8f9fa - the header band keeps the tint),
+       the border is the line token, and the radius is the block's 0.5rem, which the locked
+       variant below repeats. */
+    background-color: var(--local-dimensions-surface);
+    border-color: var(--local-dimensions-line);
+    border-radius: 0.5rem;
+
+    /* The rest shadow is declared here rather than left to Bootstrap's .shadow-sm utility:
+       the geometry is the same 0 .125rem .25rem the block uses, but the colour is the
+       plugin's shadow token, which is the only one of the two that deepens on a dark page.
+       (A utility class could not be overridden anyway - Bootstrap ships them !important.) */
+    box-shadow: 0 0.125rem 0.25rem var(--local-dimensions-shadow);
 
     /* Floor the height so a course with few sections is still tall enough to
        contain the locked overlay's icon and message, which otherwise overflow
        past the dashed border (nothing here sets overflow: hidden). */
     min-height: 320px;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+/* Hover and keyboard focus both lift the card, matching the companion block. The locked
+   card is excluded: it is not a link, and lifting it would promise an action it refuses.
+   The lift is the card's share of the focus feedback and a transform is one of the few
+   things forced-colors mode leaves alone; the ring itself is on the title link above, which
+   is the element that actually holds focus. */
+.local-dimensions-viewcompetency .card:not(.local-dimensions-card-locked):hover,
+.local-dimensions-viewcompetency .card:not(.local-dimensions-card-locked):focus-within {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem var(--local-dimensions-shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-viewcompetency .card {
+        transition: none;
+    }
+
+    .local-dimensions-viewcompetency .card:not(.local-dimensions-card-locked):hover,
+    .local-dimensions-viewcompetency .card:not(.local-dimensions-card-locked):focus-within {
+        transform: none;
+    }
 }
 
 .local-dimensions-progress-container {
@@ -869,7 +1044,9 @@
     border: none;
     box-shadow: none;
     position: relative;
-    border-radius: 0.375rem;
+
+    /* Same radius as the unlocked card above: one grid must never show two corners. */
+    border-radius: 0.5rem;
 }
 
 .local-dimensions-card-locked .card-header {
@@ -892,7 +1069,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: rgb(255 255 255 / 42%);
+    background: var(--local-dimensions-scrim);
     backdrop-filter: blur(2px);
     border-radius: inherit;
 }
@@ -904,6 +1081,17 @@
     opacity: 0.55;
     pointer-events: none;
     user-select: none;
+}
+
+/*
+ * The dashed rectangle competency_view.js draws for a locked card. It used to carry a #ddd
+ * stroke ATTRIBUTE, which no stylesheet can reach, so it was the one colour in this plugin that
+ * could not follow the page. It reads the border token now, like every other card boundary here
+ * and like core's own .card: a container edge, redundant with the lock icon and the message the
+ * overlay states in words, so it is not a 1.4.11 subject in its own right.
+ */
+.local-dimensions-locked-border-rect {
+    stroke: var(--local-dimensions-line);
 }
 
 /* SVG animated dashed border - sits behind overlay content */
@@ -950,35 +1138,36 @@
     justify-content: center;
     width: 80px;
     height: 80px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 50%;
     margin-bottom: 1rem;
-    background-color: #fff;
-    color: #495057;
-    box-shadow: 0 3px 10px rgb(0 0 0 / 10%);
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
+    box-shadow: 0 3px 10px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-locked-message {
     font-weight: bold;
     font-size: 1.1rem;
-    color: #212529;
+    color: var(--local-dimensions-ink);
     margin-bottom: 0.5rem;
     padding: 5px 20px;
-    box-shadow: 0 3px 10px rgb(0 0 0 / 12%);
-    background-color: white;
+    box-shadow: 0 3px 10px var(--local-dimensions-shadow);
+    background-color: var(--local-dimensions-surface);
     border-radius: 10px;
 }
 
 /* The availability date reads as an invitation, not a restriction: a soft accent
-   chip with a calendar icon rather than a raised white pill. */
+   chip with a calendar icon rather than a raised, opaque pill. */
 .local-dimensions-locked-date {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
     padding: 0.32rem 0.8rem;
     border-radius: 999px;
-    background: #cfe2ff;
-    color: #0f6cbf;
+    border: 1px solid var(--local-dimensions-brand-edge);
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
     font-size: 0.8rem;
     font-weight: 600;
 }
@@ -989,16 +1178,16 @@
 
 /* Enrolment open: the lock becomes a way in. */
 .local-dimensions-locked-icon-enrol {
-    border-color: rgb(15 108 191 / 35%);
-    background-color: rgb(15 108 191 / 6%);
-    color: #0f6cbf;
+    border-color: var(--local-dimensions-brand-edge);
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
 }
 
 /* Applied and waiting: neither the brand of an invitation nor the grey of a refusal. */
 .local-dimensions-locked-icon-pending {
-    border-color: rgb(102 77 3 / 35%);
-    background-color: rgb(102 77 3 / 6%);
-    color: #664d03;
+    border-color: var(--local-dimensions-warning-edge);
+    background-color: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
 }
 
 .local-dimensions-enrol-btn {
@@ -1008,9 +1197,9 @@
     margin-bottom: 0.5rem;
     padding: 8px 22px;
     border-radius: 10px;
-    background: var(--primary, #0f6cbf);
-    box-shadow: 0 3px 10px rgb(0 0 0 / 16%);
-    color: #fff;
+    background: var(--local-dimensions-brand-fill);
+    box-shadow: 0 3px 10px var(--local-dimensions-shadow);
+    color: var(--local-dimensions-on-brand-fill);
     font-size: 1rem;
     font-weight: 700;
     text-decoration: none;
@@ -1018,7 +1207,7 @@
 }
 
 .local-dimensions-enrol-btn:hover {
-    color: #fff;
+    color: var(--local-dimensions-on-brand-fill);
     text-decoration: none;
     filter: brightness(0.88);
     transform: translateY(-1px);
@@ -1029,12 +1218,12 @@
 }
 
 .local-dimensions-enrol-btn:focus-visible {
-    outline: 2px solid #0f6cbf;
-    outline-offset: 3px;
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 .local-dimensions-enrol-note {
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.78rem;
 }
 
@@ -1043,18 +1232,18 @@
     display: inline-block;
     font-weight: bold;
     font-size: 1rem;
-    color: #fff;
+    color: var(--local-dimensions-on-brand-fill);
     padding: 8px 24px;
     border-radius: 10px;
     text-decoration: none;
-    box-shadow: 0 3px 10px rgb(0 0 0 / 16%);
+    box-shadow: 0 3px 10px var(--local-dimensions-shadow);
     transition: filter 0.2s ease, transform 0.15s ease;
     margin-bottom: 0.5rem;
 }
 
 .local-dimensions-learnmore-btn:hover {
     filter: brightness(0.88);
-    color: #fff;
+    color: var(--local-dimensions-on-brand-fill);
     text-decoration: none;
     transform: translateY(-1px);
 }
@@ -1087,19 +1276,19 @@
 }
 
 .local-dimensions-single-name {
-    color: #212529;
+    color: var(--local-dimensions-ink);
     font-size: 1.05rem;
     font-weight: 600;
     line-height: 1.3;
 }
 
 .local-dimensions-single-status {
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.85rem;
 }
 
 .local-dimensions-single-done {
-    color: #0f5132;
+    color: var(--local-dimensions-success-ink);
     font-weight: 600;
 }
 
@@ -1108,15 +1297,22 @@
     align-items: center;
     gap: 0.35rem;
     margin-top: 0.2rem;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     font-size: 0.85rem;
     font-weight: 600;
     text-decoration: none;
 }
 
 .local-dimensions-single-go:hover {
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     text-decoration: underline;
+}
+
+/* Its twin, .local-dimensions-continue, has carried a ring since it was written; this one
+   never did, and the two are the same control on two card shapes. */
+.local-dimensions-single-go:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 /* The one-section body: the same centred column the activity body uses, with the
@@ -1138,7 +1334,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #212529;
+    color: var(--local-dimensions-ink);
     font-size: 1.05rem;
     font-weight: 600;
     line-height: 1.3;
@@ -1153,8 +1349,9 @@
     margin: 0 0 0.75rem 10px;
     padding: 0.3rem 0.8rem;
     border-radius: 999px;
-    background: #d1e7dd;
-    color: #0f5132;
+    border: 1px solid var(--local-dimensions-success-edge);
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
     font-size: 0.85rem;
     font-weight: 700;
 }
@@ -1167,18 +1364,18 @@
     padding: 0.35rem 10px;
     border: none;
     background: none;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.85rem;
     text-align: left;
     cursor: pointer;
 }
 
 .local-dimensions-timeline-toggle:hover {
-    color: #212529;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-timeline-toggle:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: -2px;
 }
 
@@ -1198,19 +1395,19 @@
     align-items: center;
     gap: 0.4rem;
     margin: 0 0 0.75rem 10px;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     font-size: 0.85rem;
     font-weight: 600;
     text-decoration: none;
 }
 
 .local-dimensions-continue:hover {
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     text-decoration: underline;
 }
 
 .local-dimensions-continue:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -1242,7 +1439,7 @@
 
     /* Extend to the next marker */
     width: 2px;
-    background-color: #e9ecef;
+    background-color: var(--local-dimensions-surface-inset);
 }
 
 /* Last item has no connector */
@@ -1252,7 +1449,7 @@
 
 /* Completed items have green connectors */
 .local-dimensions-timeline-item.completed::before {
-    background-color: #198754;
+    background-color: var(--local-dimensions-success-ink);
 }
 
 /* Marker container */
@@ -1266,12 +1463,12 @@
     align-items: center;
     justify-content: center;
     z-index: 1;
-    background-color: #f8f9fa;
+    background-color: var(--local-dimensions-surface-alt);
 }
 
 .local-dimensions-timeline-marker .fa-check-circle {
     font-size: 24px;
-    background: #f8f9fa;
+    background: var(--local-dimensions-surface-alt);
 }
 
 /* Feather SVG Icons - Consistent sizing and colors */
@@ -1284,27 +1481,27 @@
 }
 
 .local-dimensions-icon-check {
-    fill: #198754;
+    fill: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-icon-lock {
-    stroke: #6c757d;
+    stroke: var(--local-dimensions-ink-muted);
     width: 40px;
     height: 40px;
 }
 
 .local-dimensions-icon-lock-sm {
-    stroke: #6c757d;
+    stroke: var(--local-dimensions-ink-muted);
     width: 20px;
     height: 20px;
 }
 
 .local-dimensions-icon-circle {
-    stroke: #dee2e6;
+    stroke: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-icon-info {
-    stroke: #adb5bd;
+    stroke: var(--local-dimensions-ink-muted);
     opacity: 0.8;
 }
 
@@ -1312,9 +1509,9 @@
 .local-dimensions-timeline-marker .fa-lock {
     font-size: 10px;
     padding: 5px;
-    border: 2px solid #6c757d;
+    border: 2px solid var(--local-dimensions-ink-muted);
     border-radius: 50%;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 /* Progress Ring SVG - Modern Design (larger to emphasize progress) */
@@ -1336,17 +1533,30 @@
 }
 
 /* stylelint-disable selector-class-pattern */
-/* Background circle - light gray track */
+/*
+ * Background circle - the unfilled groove.
+ *
+ * RECORDED 1.4.11 DECISION, because the number invites the wrong fix. The platter token is
+ * 1.19:1 against the card in light and 1.31:1 in dark, which is far under the 3:1 floor for
+ * a graphical object - but the value this control carries is the ARC, not the groove: the
+ * arc reads at 10.89:1 or better against both the card and the groove, its extent is
+ * legible against an implicit full circle, and the same percentage is also rendered as text
+ * in .local-dimensions-progress-text and announced by the section's own label. The groove is
+ * therefore decoration under 1.4.11, not a part required to understand the content. Darkening
+ * it to a token that would clear 3:1 against the card puts it within 1.73:1 (light) or 1.22:1
+ * (dark) of the arc, destroying the one boundary that does carry meaning. The prefers-contrast
+ * block further down strengthens it as far as that trade allows.
+ */
 .local-dimensions-progress-ring__bg {
     fill: transparent;
-    stroke: #e9ecef;
+    stroke: var(--local-dimensions-surface-inset);
     stroke-width: 3;
 }
 
 /* Progress circle - green fill */
 .local-dimensions-progress-ring__progress {
     fill: transparent;
-    stroke: #198754;
+    stroke: var(--local-dimensions-success-ink);
     stroke-width: 3;
     stroke-linecap: round;
     transition: stroke-dasharray 0.5s ease-in-out;
@@ -1360,7 +1570,7 @@
     transform: translate(-50%, -50%);
     font-size: 9px;
     font-weight: 700;
-    color: #198754;
+    color: var(--local-dimensions-success-ink);
     opacity: 0;
     transition: opacity 0.25s ease;
     pointer-events: none;
@@ -1394,18 +1604,32 @@
     font-size: 1rem;
 }
 
-/* High contrast mode support */
+/*
+ * High contrast mode support, written in tokens so it follows the page.
+ *
+ * THIS BLOCK USED TO ASSUME A LIGHT PAGE AND THAT IS THE DEFECT BEING FIXED HERE. It
+ * hardcoded #157347 for the arc and #000 for the readout: both were chosen against white,
+ * and #157347 measures 2.63:1 on a dark page - WORSE than the value it replaces (#198754 is
+ * 3.40:1 there) and below the 3:1 floor of WCAG 1.4.11. A remedy tuned on one axis silently
+ * regressed the other. The tokens below flip with the host, so the darkened arc stays
+ * darker than its ground in light mode and lighter than it in dark mode.
+ *
+ * The track strengthens only as far as the border token, and deliberately not to ink-muted:
+ * measured, ink-muted against the arc is 1.73:1 in light and 1.22:1 in dark, so a heavier
+ * groove would erase the very boundary that carries the value. Against the border token the
+ * arc reads at 10.89:1 in light and 3.50:1 in dark, both clear of the 3:1 floor.
+ */
 @media (prefers-contrast: high) {
     .local-dimensions-progress-ring__bg {
-        stroke: #6c757d;
+        stroke: var(--local-dimensions-line);
     }
 
     .local-dimensions-progress-ring__progress {
-        stroke: #157347;
+        stroke: var(--local-dimensions-success-ink);
     }
 
     .local-dimensions-progress-ring-container .local-dimensions-progress-text {
-        color: #000;
+        color: var(--local-dimensions-ink-strong);
         font-weight: 800;
     }
 }
@@ -1418,18 +1642,18 @@
 }
 
 .local-dimensions-timeline-content a {
-    color: #333;
+    color: var(--local-dimensions-ink);
     text-decoration: none;
     font-weight: 500;
 }
 
 .local-dimensions-timeline-content a:hover {
-    color: #0056b3;
+    color: var(--local-dimensions-accent-hover);
     text-decoration: underline;
 }
 
 .local-dimensions-timeline-content span.text-muted {
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 20px;
 }
 
@@ -1465,24 +1689,24 @@
     display: block;
     margin-bottom: 25px;
     border-radius: 0.75rem;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 6%), 0 1px 2px rgb(0 0 0 / 4%);
-    border-top: 1px solid #e5e0e0;
-    border-right: 1px solid #e5e0e0;
-    border-bottom: 1px solid #e5e0e0;
+    box-shadow: 0 1px 3px var(--local-dimensions-shadow), 0 1px 2px var(--local-dimensions-shadow);
+    border-top: 1px solid var(--local-dimensions-line);
+    border-right: 1px solid var(--local-dimensions-line);
+    border-bottom: 1px solid var(--local-dimensions-line);
     overflow: hidden;
 }
 
 /* Left border colors by competency state */
 .local-dimensions-accordion-item.completed {
-    border-left: 4px solid #198754;
+    border-left: 4px solid var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-accordion-item.rated:not(.completed) {
-    border-left: 4px solid #e5a100;
+    border-left: 4px solid var(--local-dimensions-warning-ink);
 }
 
 .local-dimensions-accordion-item:not(.completed, .rated) {
-    border-left: 4px solid #dee2e6;
+    border-left: 4px solid var(--local-dimensions-line);
 }
 
 /* Accordion Wrapper */
@@ -1497,7 +1721,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 1rem 1.125rem;
-    background: #fff;
+    background: var(--local-dimensions-surface);
     border: none;
     border-radius: 0;
     cursor: pointer;
@@ -1506,21 +1730,21 @@
 }
 
 .local-dimensions-accordion-toggle:hover {
-    background: #f8f9fa;
+    background: var(--local-dimensions-surface-alt);
 }
 
 .local-dimensions-accordion-toggle:focus {
-    outline: 3px solid #0f6cbf;
-    outline-offset: -3px;
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
 }
 
 /* No colored background on expand */
 .local-dimensions-accordion-toggle[aria-expanded='true'] {
-    background: #fff;
+    background: var(--local-dimensions-surface);
 }
 
 .local-dimensions-accordion-toggle[aria-expanded='true']:hover {
-    background: #f8f9fa;
+    background: var(--local-dimensions-surface-alt);
 }
 
 /* Header content — title + grade badge stacked */
@@ -1535,13 +1759,13 @@
 .local-dimensions-accordion-title {
     font-weight: 600;
     font-size: 1rem;
-    color: #212529;
+    color: var(--local-dimensions-ink);
     line-height: 1.3;
 }
 
 /* No color override on expand */
 .local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-title {
-    color: #212529;
+    color: var(--local-dimensions-ink);
 }
 
 /* Grade Badge — below the title */
@@ -1558,18 +1782,21 @@
 }
 
 .local-dimensions-grade-badge.badge-proficient {
-    background: #d4edda;
-    color: #155724;
+    border: 1px solid var(--local-dimensions-success-edge);
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-grade-badge.badge-not-proficient {
-    background: #fff3cd;
-    color: #856404;
+    border: 1px solid var(--local-dimensions-warning-edge);
+    background: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
 }
 
 .local-dimensions-grade-badge.badge-todo {
-    background: #e9ecef;
-    color: #6c757d;
+    border: 1px solid var(--local-dimensions-neutral-edge);
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
 }
 
 .local-dimensions-grade-badge-icon {
@@ -1580,29 +1807,29 @@
 }
 
 .local-dimensions-grade-badge.badge-proficient .local-dimensions-grade-badge-icon {
-    fill: #155724;
+    fill: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-grade-badge.badge-not-proficient .local-dimensions-grade-badge-icon {
-    fill: #856404;
+    fill: var(--local-dimensions-warning-ink);
 }
 
 /* Accordion Icon (chevron) */
 .local-dimensions-accordion-icon {
     flex-shrink: 0;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     transition: transform 0.2s ease;
 }
 
 .local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-icon {
     transform: rotate(180deg);
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 /* Accordion Content */
 .local-dimensions-accordion-content {
-    background: #fff;
-    border-top: 1px solid #f1f3f5;
+    background: var(--local-dimensions-surface);
+    border-top: 1px solid var(--local-dimensions-line);
     overflow: hidden;
     position: relative;
 }
@@ -1638,7 +1865,7 @@
 
 .local-dimensions-course-progress-check {
     font-size: 0.875rem;
-    color: #198754;
+    color: var(--local-dimensions-success-ink);
 }
 
 /* ============================================
@@ -1675,7 +1902,7 @@
     gap: 0.6rem;
     padding: 0.6rem 0.65rem;
     border-radius: 1.25rem;
-    background: rgb(255 255 255 / 85%);
+    background: var(--local-dimensions-scrim);
     backdrop-filter: blur(8px);
 }
 
@@ -1760,22 +1987,22 @@
         flex-shrink: 0;
         width: 36px;
         height: 36px;
-        border: 1px solid #dee2e6;
+        border: 1px solid var(--local-dimensions-line);
         border-radius: 50%;
-        background: #fff;
-        color: #495057;
+        background: var(--local-dimensions-surface);
+        color: var(--local-dimensions-ink-muted);
         cursor: pointer;
         transition: background-color 150ms ease, color 150ms ease;
     }
 
     .local-dimensions-toolbar-adjust[aria-expanded='true'] {
-        border-color: #0f6cbf;
-        background: #cfe2ff;
-        color: #0f6cbf;
+        border-color: var(--local-dimensions-accent);
+        background: var(--local-dimensions-brand-tint);
+        color: var(--local-dimensions-brand-ink);
     }
 
     .local-dimensions-toolbar-adjust:focus-visible {
-        outline: 2px solid #0f6cbf;
+        outline: 2px solid var(--local-dimensions-focus-ring);
         outline-offset: 2px;
     }
 
@@ -1894,9 +2121,9 @@
     align-items: center;
     flex-shrink: 0;
     overflow: hidden;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 999px;
-    background: #fff;
+    background: var(--local-dimensions-surface);
 }
 
 .local-dimensions-view-toggle button {
@@ -1907,22 +2134,56 @@
     height: 34px;
     border: none;
     background: none;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     cursor: pointer;
 }
 
 .local-dimensions-view-toggle button + button {
-    border-left: 1px solid #dee2e6;
+    border-left: 1px solid var(--local-dimensions-line);
 }
 
 .local-dimensions-view-toggle button[aria-pressed='true'] {
-    background: #cfe2ff;
-    color: #0f6cbf;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
 }
 
 .local-dimensions-view-toggle button:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: -2px;
+}
+
+/*
+ * WINDOWS HIGH CONTRAST (forced-colors) - a different media feature from prefers-contrast,
+ * and the one no rule in this plugin used to address.
+ *
+ * Under forced colours the browser substitutes its own palette: every background collapses
+ * to the system canvas and box-shadow is not painted at all, so any state carried by a fill
+ * alone stops existing on screen. Three selected states in this plugin are fills: the two
+ * toolbar pill groups, the chip filters, and this list/grid toggle. Outlines ARE painted -
+ * the browser remaps outline-color the same way it remaps borders - so the selected state
+ * draws one here. It is dashed so that a selected control and a FOCUSED control, which both
+ * end up the same system colour, still read as two different things.
+ *
+ * Nothing else is needed for the rest of the plugin: every focus indicator is already a real
+ * outline (never box-shadow alone), the tone chips carry a border and a text label, the
+ * favourite star swaps its glyph, and the locked card states its status in words.
+ */
+@media (forced-colors: active) {
+    .local-dimensions-view-toggle button[aria-pressed='true'],
+    .local-dimensions-filter-tab[aria-pressed='true'],
+    .local-dimensions-filter-tab[aria-checked='true'],
+    .local-dimensions-filter-tab.active {
+        outline: 2px dashed var(--local-dimensions-focus-ring);
+        outline-offset: -2px;
+    }
+
+    /* Restated so keyboard focus still reads as focus on a control that is ALSO selected:
+       without this, the selected rule above would leave a focused, selected pill drawing the
+       same dashed ring it already had, and tabbing onto it would change nothing on screen. */
+    .local-dimensions-view-toggle button:focus-visible,
+    .local-dimensions-filter-tab:focus-visible {
+        outline-style: solid;
+    }
 }
 
 /* Grid mode: the same rows, laid out as compact cards. The detail lives in a modal here,
@@ -1986,10 +2247,10 @@
     justify-content: center;
     width: 32px;
     height: 28px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.35rem;
-    background: #fff;
-    color: #495057;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
     cursor: pointer;
 }
 
@@ -1999,12 +2260,12 @@
 }
 
 .local-dimensions-modal-step:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
 .local-dimensions-modal-position {
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.8rem;
     font-weight: 600;
 }
@@ -2020,18 +2281,18 @@
 /* The selected favourites pill is filled, like the block's. The completion pills keep
    their own sliding-indicator treatment, so only this group is restyled. */
 .local-dimensions-fav-group .local-dimensions-filter-tab.active {
-    background: #0f6cbf;
-    color: #fff;
+    background: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
     opacity: 1;
 }
 
 .local-dimensions-fav-group .local-dimensions-filter-tab.active .local-dimensions-filter-count {
-    background: rgb(255 255 255 / 25%);
-    color: #fff;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
 }
 
 .local-dimensions-star:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -2040,7 +2301,7 @@
 .local-dimensions-accordion-head {
     display: flex;
     align-items: stretch;
-    background: #fff;
+    background: var(--local-dimensions-surface);
 }
 
 .local-dimensions-accordion-head .local-dimensions-accordion-toggle {
@@ -2056,17 +2317,17 @@
     width: 2.75rem;
     border: none;
     background: none;
-    color: #ced4da;
+    color: var(--local-dimensions-ink-muted);
     cursor: pointer;
     transition: color 150ms ease;
 }
 
 .local-dimensions-star:hover {
-    color: #fd7e14;
+    color: var(--local-dimensions-favourite);
 }
 
 .local-dimensions-star[aria-pressed='true'] {
-    color: #fd7e14;
+    color: var(--local-dimensions-favourite);
 }
 
 /* Ghost card: an invitation, not a result - dashed and quiet, never a solid row. It sits
@@ -2094,20 +2355,20 @@
     width: 100%;
     margin-bottom: 25px;
     padding: 1rem 1.125rem;
-    border: 1px dashed #ced4da;
+    border: 1px dashed var(--local-dimensions-line);
     border-radius: 0.75rem;
-    background: #f8f9fa;
+    background: var(--local-dimensions-surface-alt);
     text-align: left;
     cursor: pointer;
     transition: background-color 150ms ease;
 }
 
 .local-dimensions-ghost:hover {
-    background: #e9ecef;
+    background: var(--local-dimensions-surface-inset);
 }
 
 .local-dimensions-ghost:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -2119,8 +2380,8 @@
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 50%;
-    background: #e9ecef;
-    color: #6c757d;
+    background: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-ghost-body {
@@ -2131,13 +2392,13 @@
 }
 
 .local-dimensions-ghost-title {
-    color: #212529;
+    color: var(--local-dimensions-ink);
     font-size: 0.95rem;
     font-weight: 600;
 }
 
 .local-dimensions-ghost-text {
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.8rem;
 }
 
@@ -2153,21 +2414,21 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 999px;
-    background: #fff;
-    color: #495057;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
     cursor: pointer;
     transition: background-color 150ms ease;
 }
 
 .local-dimensions-sort-toggle:hover,
 .local-dimensions-sort-toggle[aria-expanded='true'] {
-    background: #e9ecef;
+    background: var(--local-dimensions-surface-inset);
 }
 
 .local-dimensions-sort-toggle:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -2180,15 +2441,15 @@
     flex-direction: column;
     min-width: 200px;
     padding: 0.35rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.5rem;
-    background: #fff;
-    box-shadow: 0 4px 14px rgb(0 0 0 / 12%);
+    background: var(--local-dimensions-surface);
+    box-shadow: 0 4px 14px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-sort-heading {
     padding: 0.3rem 0.6rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.72rem;
     font-weight: 700;
 }
@@ -2201,19 +2462,19 @@
     border: none;
     border-radius: 0.35rem;
     background: none;
-    color: #212529;
+    color: var(--local-dimensions-ink);
     font-size: 0.85rem;
     text-align: left;
     cursor: pointer;
 }
 
 .local-dimensions-sort-menu [data-sort]:hover {
-    background: #e9ecef;
+    background: var(--local-dimensions-surface-inset);
 }
 
 /* The check marks the current choice; every row keeps its slot so the labels stay aligned. */
 .local-dimensions-sort-menu [data-sort] .fa {
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     visibility: hidden;
 }
 
@@ -2228,7 +2489,7 @@
 .local-dimensions-filter-tabs {
     display: inline-flex;
     gap: 0;
-    background: #e9ecef;
+    background: var(--local-dimensions-surface-inset);
     border-radius: 999px;
     padding: 4px;
     flex-shrink: 0;
@@ -2244,29 +2505,35 @@
     border-radius: 999px;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .local-dimensions-filter-tab:hover {
-    background: rgb(0 0 0 / 4%);
+    background: var(--local-dimensions-surface-alt);
 }
 
-.local-dimensions-filter-tab:focus {
-    outline: 2px solid #0f6cbf;
-    outline-offset: 2px;
+/* Both the toolbar's pill groups and the ported chip-filter component emit the bare
+   .local-dimensions-filter-tab class, so this rule and the one in the chip-filter block
+   below apply to the same elements and the later one wins per property. They are kept
+   byte-identical on purpose: until the two blocks are merged, source order must not be
+   what decides how a filter pill draws keyboard focus. The ring is inset because the pill
+   sits inside a masked, scrollable platter that would clip an outward one. */
+.local-dimensions-filter-tab:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
 }
 
 .local-dimensions-filter-tab.active {
-    background: #fff;
-    color: #0f6cbf;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-accent);
+    box-shadow: 0 1px 3px var(--local-dimensions-shadow);
 }
 
-/* White chip on the grey platter: the count shared the platter's own grey and vanished into
-   it. White reads cleanly against it and keeps the greys standard rather than adopting the
-   block's Google tones (a colour-sync of the block is separate work). */
+/* The count chip takes the card surface rather than the platter's own inset grey, which it
+   used to share and vanish into. Both are tokens, so the pair keeps its separation in either
+   colour mode. */
 .local-dimensions-filter-count {
     display: inline-flex;
     align-items: center;
@@ -2274,8 +2541,8 @@
     min-width: 20px;
     height: 20px;
     padding: 0 6px;
-    background: #fff;
-    color: #6c757d;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
@@ -2289,10 +2556,10 @@
     gap: 0.5rem;
     flex-shrink: 0;
     padding: 0.5rem 1rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 999px;
-    background: #fff;
-    color: #495057;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -2300,12 +2567,12 @@
 }
 
 .local-dimensions-filter-toggle:hover {
-    background: #f8f9fa;
+    background: var(--local-dimensions-surface-alt);
 }
 
 .local-dimensions-filter-toggle[aria-expanded='true'] {
-    border-color: #0f6cbf;
-    color: #0f6cbf;
+    border-color: var(--local-dimensions-accent);
+    color: var(--local-dimensions-accent);
 }
 
 .local-dimensions-filter-toggle-count {
@@ -2315,8 +2582,8 @@
     min-width: 20px;
     height: 20px;
     padding: 0 6px;
-    background: #cfe2ff;
-    color: #0f6cbf;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
@@ -2325,9 +2592,9 @@
 .local-dimensions-filter-panel {
     padding: 1rem 1.25rem;
     margin-bottom: 1.5rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.5rem;
-    background: #fff;
+    background: var(--local-dimensions-surface);
 }
 
 .local-dimensions-filter-panel .local-dimensions-chip-filters {
@@ -2336,8 +2603,8 @@
 }
 
 .local-dimensions-filter-tab.active .local-dimensions-filter-count {
-    background: #cfe2ff;
-    color: #0f6cbf;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
 }
 
 /* Search input */
@@ -2353,7 +2620,7 @@
 .local-dimensions-search-icon {
     position: absolute;
     left: 0.75rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.8125rem;
     pointer-events: none;
     z-index: 1;
@@ -2362,24 +2629,24 @@
 .local-dimensions-search-input {
     width: 100%;
     padding: 0.5rem 2rem 0.5rem 2.125rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 999px;
-    background: #f8f9fa;
+    background: var(--local-dimensions-surface-alt);
     font-size: 0.8125rem;
-    color: #212529;
-    outline: none;
-    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    color: var(--local-dimensions-ink);
+    transition: border-color 0.2s ease, background 0.2s ease;
     line-height: 1.3;
 }
 
 .local-dimensions-search-input::placeholder {
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-search-input:focus {
-    border-color: #0f6cbf;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgb(26 115 232 / 15%);
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+    border-color: var(--local-dimensions-accent);
+    background: var(--local-dimensions-surface);
 }
 
 .local-dimensions-search-clear {
@@ -2393,14 +2660,14 @@
     border: none;
     border-radius: 50%;
     background: transparent;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     cursor: pointer;
     padding: 0;
     transition: background 0.15s ease;
 }
 
 .local-dimensions-search-clear:hover {
-    background: rgb(0 0 0 / 6%);
+    background: var(--local-dimensions-surface-inset);
 }
 
 .local-dimensions-search-clear .fa {
@@ -2453,36 +2720,36 @@
     height: 56px;
     margin-bottom: 1rem;
     border-radius: 50%;
-    background-color: #e9ecef;
-    color: #6c757d;
+    background-color: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
     font-size: 1.25rem;
 }
 
 .local-dimensions-empty-icon-warning {
-    background-color: #fff3cd;
-    color: #997404;
+    background-color: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
 }
 
 .local-dimensions-empty-title {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #212529;
+    color: var(--local-dimensions-ink);
     margin-bottom: 0.35rem;
 }
 
 .local-dimensions-empty-text {
     font-size: 0.9375rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     max-width: 32rem;
 }
 
 .local-dimensions-empty-action {
     margin-top: 1rem;
     padding: 0.5rem 1rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 999px;
-    background: #fff;
-    color: #0f6cbf;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-accent);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -2490,7 +2757,7 @@
 }
 
 .local-dimensions-empty-action:hover {
-    background: #f8f9fa;
+    background: var(--local-dimensions-surface-alt);
 }
 
 .local-dimensions-related-pills {
@@ -2499,35 +2766,44 @@
     gap: 0.375rem;
 }
 
-/* Evidence type colors */
+/* Evidence type colours. One definition per category: activity is success, grade is
+   brand, manual is warning, prior is danger, rule is info, and file and other share the
+   neutral tone (their two old greys measured 1.03:1 against each other, a distinction no
+   eye can make). Each carries its tone's own border, the way core's alerts do. */
 .local-dimensions-evidence-activity {
-    background: #d1e7dd;
-    color: #0f5132;
+    border: 1px solid var(--local-dimensions-success-edge);
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-evidence-grade {
-    background: #cfe2ff;
-    color: #084298;
+    border: 1px solid var(--local-dimensions-brand-edge);
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
 }
 
 .local-dimensions-evidence-manual {
-    background: #fff3cd;
-    color: #664d03;
+    border: 1px solid var(--local-dimensions-warning-edge);
+    background: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
 }
 
 .local-dimensions-evidence-file {
-    background: #e2e3e5;
-    color: #41464b;
+    border: 1px solid var(--local-dimensions-neutral-edge);
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
 }
 
 .local-dimensions-evidence-prior {
-    background: #f8d7da;
-    color: #842029;
+    border: 1px solid var(--local-dimensions-danger-edge);
+    background: var(--local-dimensions-danger-tint);
+    color: var(--local-dimensions-danger-ink);
 }
 
 .local-dimensions-evidence-other {
-    background: #e9ecef;
-    color: #6c757d;
+    border: 1px solid var(--local-dimensions-neutral-edge);
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
 }
 
 /* ============================================
@@ -2549,27 +2825,27 @@
 .local-dimensions-course-card-lg {
     display: flex;
     flex-direction: column;
-    background: #fff;
+    background: var(--local-dimensions-surface);
     border-radius: 0.75rem;
     overflow: hidden;
     border: none;
     box-shadow:
-        0 4px 6px -1px rgb(0 0 0 / 10%),
-        0 2px 4px -2px rgb(0 0 0 / 10%);
+        0 4px 6px -1px var(--local-dimensions-shadow),
+        0 2px 4px -2px var(--local-dimensions-shadow);
     transition: box-shadow 0.2s ease;
 }
 
 .local-dimensions-course-card-lg:hover {
     box-shadow:
-        0 10px 15px -3px rgb(0 0 0 / 10%),
-        0 4px 6px -4px rgb(0 0 0 / 10%);
+        0 10px 15px -3px var(--local-dimensions-shadow),
+        0 4px 6px -4px var(--local-dimensions-shadow);
 }
 
 /* Course image area */
 .local-dimensions-course-img {
     height: 128px;
     overflow: hidden;
-    background: #e9ecef;
+    background: var(--local-dimensions-surface-inset);
 }
 
 .local-dimensions-course-img img {
@@ -2582,8 +2858,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #0f6cbf 0%, #0a5aa0 100%);
-    color: #fff;
+    /* One flat brand fill rather than a two-stop gradient: the second stop used to be a
+       darker blue, and the only token that would carry that role inverts to a pale tint in
+       dark mode, which drops the initial to 2.07:1 against the label sitting on it. */
+    background: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
     font-size: 1.5rem;
     font-weight: 700;
 }
@@ -2599,7 +2878,7 @@
 .local-dimensions-course-name-lg {
     font-size: 0.9375rem;
     font-weight: 600;
-    color: #212529;
+    color: var(--local-dimensions-ink);
     margin: 0 0 0.5rem;
     line-height: 1.3;
     display: -webkit-box;
@@ -2640,8 +2919,8 @@
    on hover, feeling clickable when it is not. */
 .local-dimensions-course-card-blocked:hover {
     box-shadow:
-        0 4px 6px -1px rgb(0 0 0 / 10%),
-        0 2px 4px -2px rgb(0 0 0 / 10%);
+        0 4px 6px -1px var(--local-dimensions-shadow),
+        0 2px 4px -2px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-course-state {
@@ -2656,27 +2935,27 @@
 }
 
 .local-dimensions-course-state-locked {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    color: #6c757d;
+    background: var(--local-dimensions-surface-alt);
+    border: 1px solid var(--local-dimensions-line);
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-course-state-enrol {
     justify-content: center;
-    background: #0f6cbf;
-    color: #fff;
+    background: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
 }
 
 .local-dimensions-course-state-pending {
     justify-content: center;
-    border: 1px solid #ffe69c;
-    background: #fff3cd;
-    color: #664d03;
+    border: 1px solid var(--local-dimensions-warning-edge);
+    background: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
 }
 
 .local-dimensions-course-hint {
     font-size: 0.75rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     text-align: center;
 }
 
@@ -2687,8 +2966,9 @@
     gap: 0.3rem;
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
-    background: #cfe2ff;
-    color: #0f6cbf;
+    border: 1px solid var(--local-dimensions-brand-edge);
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
     font-size: 0.75rem;
     font-weight: 600;
 }
@@ -2722,7 +3002,7 @@
     width: 56px;
     height: 56px;
     flex: none;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 3.5rem;
     line-height: 1;
 }
@@ -2739,11 +3019,11 @@
 .local-dimensions-course-single-state {
     flex: none;
     font-size: 0.75rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-course-single-done {
-    color: #0f5132;
+    color: var(--local-dimensions-success-ink);
     font-weight: 600;
 }
 
@@ -2783,13 +3063,13 @@
     padding: 0 0.8rem 0.8rem;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     text-decoration: none;
     white-space: nowrap;
 }
 
 .local-dimensions-course-go:hover {
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     text-decoration: underline;
 }
 
@@ -2804,44 +3084,44 @@
     align-items: center;
     gap: 0.35rem;
     padding: 0.35rem 0.75rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.375rem;
-    background: #fff;
-    color: #495057;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.8125rem;
     font-weight: 600;
     text-decoration: none;
 }
 
 .local-dimensions-courses-more:hover {
-    background: #f8f9fa;
-    color: #212529;
+    background: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink);
     text-decoration: none;
 }
 
 .local-dimensions-courses-more:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
 .local-dimensions-course-progress-track {
     flex-grow: 1;
     height: 8px;
-    background-color: #e9ecef;
+    background-color: var(--local-dimensions-surface-inset);
     border-radius: 4px;
     overflow: hidden;
 }
 
 .local-dimensions-course-progress-fill-lg {
     height: 100%;
-    background-color: #198754;
+    background-color: var(--local-dimensions-success-ink);
     border-radius: 4px;
     transition: width 0.3s ease;
 }
 
 .local-dimensions-course-progress-pct-lg {
     font-size: 0.75rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-weight: 500;
     min-width: 2rem;
     text-align: right;
@@ -2860,9 +3140,16 @@
     text-decoration: none;
 }
 
+/* The rule above drops the underline on focus as well as on hover, so keyboard focus needs
+   a ring of its own or it has no signal left at all. */
+.local-dimensions-course-link:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
 /* The 100% marker had no rule at all, so it inherited the body colour. */
 .local-dimensions-course-check {
-    color: #198754;
+    color: var(--local-dimensions-success-ink);
 }
 
 /* What completing this course or activity does to the competency. */
@@ -2873,10 +3160,10 @@
     align-self: flex-start;
     margin-bottom: 0.5rem;
     padding: 0.2rem 0.55rem;
-    border: 1px solid rgb(15 108 191 / 28%);
+    border: 1px solid var(--local-dimensions-brand-edge);
     border-radius: 0.4rem;
-    background: #cfe2ff;
-    color: #0f6cbf;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
     font-size: 0.71rem;
     font-weight: 700;
 }
@@ -2893,9 +3180,9 @@
     width: 100%;
     padding: 0.5rem 0.8rem;
     border: none;
-    border-top: 1px solid #e9ecef;
-    background: #f8f9fa;
-    color: #495057;
+    border-top: 1px solid var(--local-dimensions-line);
+    background: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.78rem;
     font-weight: 600;
     text-align: left;
@@ -2903,11 +3190,11 @@
 }
 
 .local-dimensions-course-acts-toggle:hover {
-    background: #e9ecef;
+    background: var(--local-dimensions-surface-inset);
 }
 
 .local-dimensions-course-acts-toggle:focus-visible {
-    outline: 2px solid var(--dimension-custombgcolor, var(--primary, #0f6cbf));
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: -2px;
 }
 
@@ -2926,7 +3213,7 @@
     gap: 0.15rem;
     margin: 0;
     padding: 0.3rem 0.5rem 0.5rem;
-    background: #f8f9fa;
+    background: var(--local-dimensions-surface-alt);
     list-style: none;
 }
 
@@ -2936,20 +3223,27 @@
     gap: 0.5rem;
     padding: 0.4rem 0.45rem;
     border-radius: 0.45rem;
-    background: #fff;
-    color: #212529;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
     text-decoration: none;
 }
 
 a.local-dimensions-course-act-row:hover,
 a.local-dimensions-course-act-row:focus {
-    background: #cfe2ff;
-    color: #212529;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
     text-decoration: none;
 }
 
+/* A tint swap is the pointer affordance; under forced-colors every background collapses to
+   the same system colour, so keyboard focus draws a real ring instead. */
+a.local-dimensions-course-act-row:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
 .local-dimensions-course-act-locked .local-dimensions-course-act-row {
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-course-act-icon {
@@ -2985,11 +3279,11 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-act-done {
-    color: #198754;
+    color: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-act-todo {
-    color: #adb5bd;
+    color: var(--local-dimensions-ink-muted);
 }
 
 /* ============================================
@@ -2999,8 +3293,8 @@ a.local-dimensions-course-act-row:focus {
 /* "About this scale" affordance, right-aligned in the card's header row. */
 .local-dimensions-status-card {
     padding: 0.9rem 1rem;
-    background: #fff;
-    border: 1px solid #e9ecef;
+    background: var(--local-dimensions-surface);
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.75rem;
 }
 
@@ -3015,7 +3309,7 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-status-eyebrow {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-status-scale {
@@ -3026,7 +3320,7 @@ a.local-dimensions-course-act-row:focus {
     border: none;
     border-radius: 0.4rem;
     background: none;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
@@ -3037,7 +3331,7 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-status-scale:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -3057,13 +3351,13 @@ a.local-dimensions-course-act-row:focus {
     white-space: nowrap;
     font-size: 1.375rem;
     font-weight: 600;
-    color: #212529;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-status-rating-empty {
     font-size: 1.125rem;
     font-weight: 500;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 /* Shared qualifier pill. Also used by the Evidence rows - keep it generic. */
@@ -3075,22 +3369,24 @@ a.local-dimensions-course-act-row:focus {
     border-radius: 999px;
     font-size: 0.8125rem;
     font-weight: 600;
-    background-color: #e9ecef;
-    color: #495057;
+    background-color: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
 }
 
 .local-dimensions-pill-success {
-    background-color: #d1e7dd;
-    color: #0f5132;
+    border: 1px solid var(--local-dimensions-success-edge);
+    background-color: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-pill-warning {
-    background-color: #fff3cd;
-    color: #664d03;
+    border: 1px solid var(--local-dimensions-warning-edge);
+    background-color: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
 }
 
-/* Evidence type colors (reuse existing color scheme) */
-/* Evidence: the decisive result, then the journey. */
+/* Evidence: the decisive result, then the journey. The chips reuse the tone families
+   defined above, one definition per category. */
 .local-dimensions-ev-list {
     display: flex;
     flex-direction: column;
@@ -3099,7 +3395,7 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-ev-empty {
     font-size: 0.875rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-ev-result {
@@ -3108,9 +3404,9 @@ a.local-dimensions-course-act-row:focus {
     gap: 0.75rem;
     padding: 1rem;
     margin-bottom: 0.75rem;
-    border: 1px solid #d1e7dd;
+    border: 1px solid var(--local-dimensions-success-edge);
     border-radius: 0.5rem;
-    background: #f6fbf8;
+    background: var(--local-dimensions-surface-alt);
 }
 
 .local-dimensions-ev-result-icon {
@@ -3121,8 +3417,8 @@ a.local-dimensions-course-act-row:focus {
     height: 40px;
     flex-shrink: 0;
     border-radius: 50%;
-    background: #d1e7dd;
-    color: #0f5132;
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-ev-result-body {
@@ -3134,22 +3430,22 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-ev-result-title {
     font-weight: 600;
-    color: #212529;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-ev-result-desc {
     font-size: 0.875rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     overflow-wrap: anywhere;
 }
 
 .local-dimensions-ev-result-action {
     flex-shrink: 0;
     padding: 0.35rem 0.85rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 999px;
-    background: #fff;
-    color: #0f6cbf;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-accent);
     font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
@@ -3163,23 +3459,23 @@ a.local-dimensions-course-act-row:focus {
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     margin-bottom: 0.75rem;
-    border-left: 3px solid #fd7e14;
+    border-left: 3px solid var(--local-dimensions-warning-ink);
     border-radius: 0.25rem;
-    background: #fff9f3;
+    background: var(--local-dimensions-warning-tint);
 }
 
 .local-dimensions-ev-stale-text {
     font-size: 0.875rem;
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     margin-bottom: 0;
 }
 
 .local-dimensions-ev-stale-action {
     padding: 0.35rem 0.85rem;
-    border: 1px solid #fd7e14;
+    border: 1px solid var(--local-dimensions-warning-edge);
     border-radius: 999px;
-    background: #fff;
-    color: #ad4e00;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-warning-ink);
     font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
@@ -3188,7 +3484,7 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-ev-stale-sent {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #ad4e00;
+    color: var(--local-dimensions-warning-ink);
     margin-bottom: 0;
 }
 
@@ -3199,7 +3495,7 @@ a.local-dimensions-course-act-row:focus {
     margin: 0.9rem 0 0.1rem;
     font-size: 0.8125rem;
     font-weight: 700;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-ev-group-count {
@@ -3210,8 +3506,8 @@ a.local-dimensions-course-act-row:focus {
     height: 18px;
     padding: 0 5px;
     border-radius: 999px;
-    background: #f8f9fa;
-    color: #6c757d;
+    background: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.6875rem;
     font-weight: 700;
 }
@@ -3231,7 +3527,7 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     gap: 0.6rem;
     padding: 0.55rem 0.5rem;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid var(--local-dimensions-line);
 }
 
 /* The grid lives on a child of the <li> (see renderEvidenceRow), so :first-child on the row
@@ -3247,11 +3543,11 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-ev-row-clickable:hover {
-    background: #f8f9fa;
+    background: var(--local-dimensions-surface-alt);
 }
 
 .local-dimensions-ev-row-clickable:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: -2px;
 }
 
@@ -3277,7 +3573,7 @@ a.local-dimensions-course-act-row:focus {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.875rem;
-    color: #212529;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-ev-row-desc p {
@@ -3286,7 +3582,7 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-ev-row-type {
     font-size: 0.6875rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-ev-row-assess {
@@ -3298,65 +3594,39 @@ a.local-dimensions-course-act-row:focus {
     white-space: nowrap;
     padding: 0.08rem 0.4rem;
     border-radius: 0.35rem;
-    background: #e9ecef;
-    color: #495057;
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
     font-size: 0.75rem;
     font-weight: 600;
 }
 
 .local-dimensions-ev-row-assess-prof {
-    background: #d1e7dd;
-    color: #0f5132;
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-ev-row-assess-none {
     max-width: none;
     padding: 0;
+    border: 0;
     background: transparent;
-    color: #adb5bd;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-ev-row-date {
     text-align: right;
     white-space: nowrap;
     font-size: 0.75rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-variant-numeric: tabular-nums;
 }
 
-.local-dimensions-ev-row-icon.local-dimensions-evidence-activity {
-    background: #d1e7dd;
-    color: #0f5132;
-}
-
-.local-dimensions-ev-row-icon.local-dimensions-evidence-grade {
-    background: #cfe2ff;
-    color: #084298;
-}
-
-.local-dimensions-ev-row-icon.local-dimensions-evidence-manual {
-    background: #fff3cd;
-    color: #664d03;
-}
-
-.local-dimensions-ev-row-icon.local-dimensions-evidence-file {
-    background: #e2e3e5;
-    color: #41464b;
-}
-
-.local-dimensions-ev-row-icon.local-dimensions-evidence-prior {
-    background: #fff3cd;
-    color: #664d03;
-}
-
-.local-dimensions-ev-row-icon.local-dimensions-evidence-other {
-    background: #e9ecef;
-    color: #6c757d;
-}
-
+/* Every other evidence category is painted once, by the .local-dimensions-evidence-*
+   rules above; only the rule-triggered chip is defined here. */
 .local-dimensions-ev-row-icon.local-dimensions-evidence-rule {
-    background: #e0cffc;
-    color: #3d0a91;
+    border: 1px solid var(--local-dimensions-info-edge);
+    background: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
 }
 
 /* ============================================
@@ -3374,12 +3644,12 @@ a.local-dimensions-course-act-row:focus {
     gap: 0.5rem;
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--local-dimensions-line);
 }
 
 .local-dimensions-ev-modal-pager-pos {
     font-size: 0.8125rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-ev-modal-pager-btn {
@@ -3388,15 +3658,15 @@ a.local-dimensions-course-act-row:focus {
     justify-content: center;
     width: 32px;
     height: 32px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 50%;
-    background: #fff;
-    color: #495057;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
     cursor: pointer;
 }
 
 .local-dimensions-ev-modal-pager-btn:disabled {
-    color: #ced4da;
+    color: var(--local-dimensions-ink-faint);
     cursor: default;
 }
 
@@ -3417,7 +3687,7 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-ev-modal-section {
     margin-bottom: 1rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--local-dimensions-line);
 }
 
 .local-dimensions-ev-modal-section:last-child {
@@ -3429,7 +3699,7 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-ev-modal-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     letter-spacing: 0.02em;
     margin-bottom: 0.375rem;
     display: flex;
@@ -3443,13 +3713,13 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-ev-modal-value {
     font-size: 0.875rem;
-    color: #212529;
+    color: var(--local-dimensions-ink);
     line-height: 1.5;
 }
 
 .local-dimensions-ev-modal-description {
     font-size: 0.875rem;
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     line-height: 1.6;
 }
 
@@ -3462,11 +3732,11 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-ev-modal-note {
-    background: #fff3cd;
-    color: #664d03;
+    background: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
-    border-left: 3px solid #ffc107;
+    border-left: 3px solid var(--local-dimensions-warning-ink);
     font-size: 0.85rem;
     line-height: 1.5;
 }
@@ -3475,7 +3745,7 @@ a.local-dimensions-course-act-row:focus {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    color: #0d6efd;
+    color: var(--local-dimensions-accent);
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 500;
@@ -3483,11 +3753,11 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-ev-modal-link a:hover {
     text-decoration: underline;
-    color: #0a58ca;
+    color: var(--local-dimensions-accent-hover);
 }
 
 .local-dimensions-ev-modal-link a:focus-visible {
-    outline: 3px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -3496,16 +3766,18 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     gap: 0.375rem;
     padding: 0.25rem 0.625rem;
-    background: #e9ecef;
-    color: #495057;
+    border: 1px solid var(--local-dimensions-neutral-edge);
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
     border-radius: 0.375rem;
     font-size: 0.8rem;
     font-weight: 600;
 }
 
 .local-dimensions-ev-modal-grade-badge.local-dimensions-ev-modal-grade-proficient {
-    background: #d1e7dd;
-    color: #0f5132;
+    border-color: var(--local-dimensions-success-edge);
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-ev-modal-author {
@@ -3522,7 +3794,7 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-ev-modal-author a {
-    color: #212529;
+    color: var(--local-dimensions-ink);
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 500;
@@ -3530,11 +3802,11 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-ev-modal-author a:hover {
     text-decoration: underline;
-    color: #0d6efd;
+    color: var(--local-dimensions-accent);
 }
 
 .local-dimensions-ev-modal-author a:focus-visible {
-    outline: 3px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -3551,7 +3823,7 @@ a.local-dimensions-course-act-row:focus {
     gap: 0.375rem;
     font-size: 0.9375rem;
     font-weight: 600;
-    color: #212529;
+    color: var(--local-dimensions-ink);
     margin-bottom: 0.625rem;
     line-height: 1.3;
 }
@@ -3566,11 +3838,11 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     padding: 0.25rem 0.75rem;
     background: transparent;
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.8125rem;
     font-weight: 500;
     border-radius: 999px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     cursor: default;
     transition: background-color 0.15s ease;
     margin-right: 0.375rem;
@@ -3578,18 +3850,18 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-related-pill-v2:hover {
-    background: #e9ecef;
+    background: var(--local-dimensions-surface-inset);
 }
 
 /* The link variant had no rule of its own, so it inherited cursor: default and
    read as un-clickable. Make it visibly a link. */
 .local-dimensions-related-pill-link {
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     cursor: pointer;
 }
 
 .local-dimensions-related-pill-link:hover {
-    background: #cfe2ff;
+    background: var(--local-dimensions-brand-tint);
 }
 
 /* ============================================
@@ -3623,7 +3895,7 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-tabs-nav {
     display: flex;
     gap: 0;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--local-dimensions-line);
     padding: 0 1rem;
 }
 
@@ -3639,7 +3911,7 @@ a.local-dimensions-course-act-row:focus {
     margin-bottom: -1px;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     cursor: pointer;
     transition: color 0.2s ease, border-color 0.2s ease;
     white-space: nowrap;
@@ -3647,19 +3919,19 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-tab-btn:hover {
-    color: #212529;
-    border-bottom-color: #dee2e6;
+    color: var(--local-dimensions-ink);
+    border-bottom-color: var(--local-dimensions-line);
 }
 
 .local-dimensions-tab-btn:focus {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: -2px;
 }
 
 /* Active tab — underline accent */
 .local-dimensions-tab-btn.active {
-    color: #212529;
-    border-bottom-color: var(--dimension-custombgcolor, var(--primary, #0f6cbf));
+    color: var(--local-dimensions-ink);
+    border-bottom-color: var(--dimension-custombgcolor, var(--local-dimensions-accent));
     font-weight: 600;
 }
 
@@ -3671,15 +3943,15 @@ a.local-dimensions-course-act-row:focus {
     height: 18px;
     padding: 0 5px;
     border-radius: 999px;
-    background: #e9ecef;
-    color: #6c757d;
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
     font-size: 0.6875rem;
     font-weight: 700;
 }
 
 .local-dimensions-tab-btn.active .local-dimensions-tab-count {
-    background: #cfe2ff;
-    color: #0f6cbf;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
 }
 
 /* Tab pane — hidden by default, visible when active */
@@ -3724,7 +3996,7 @@ a.local-dimensions-course-act-row:focus {
 
 /* Tab pane content wrapper */
 .local-dimensions-tabs-content {
-    background: #fff;
+    background: var(--local-dimensions-surface);
     position: relative;
     z-index: 1;
     min-width: 0;
@@ -3753,9 +4025,9 @@ a.local-dimensions-course-act-row:focus {
     gap: 0.5rem;
     margin-top: 1rem;
     padding-top: 0.75rem;
-    border-top: 1px solid #f1f3f5;
+    border-top: 1px solid var(--local-dimensions-line);
     font-size: 0.8125rem;
-    color: #868e96;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-desc-footnote-spacer {
@@ -3768,14 +4040,14 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-path-sep {
-    color: #ced4da;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-tax-link {
     padding: 0;
     border: none;
     background: none;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
@@ -3859,14 +4131,14 @@ a.local-dimensions-course-act-row:focus {
     display: inline-flex;
     align-items: center;
     overflow: hidden;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 999px;
-    background: #fff;
-    box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+    background: var(--local-dimensions-surface);
+    box-shadow: 0 1px 2px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-courses-scroll-controls .local-dimensions-scroll-btn + .local-dimensions-scroll-btn {
-    border-left: 1px solid rgb(17 24 39 / 8%);
+    border-left: 1px solid var(--local-dimensions-line);
 }
 
 /* Scroll arrow buttons (reuse slider button style) */
@@ -3879,24 +4151,24 @@ a.local-dimensions-course-act-row:focus {
     border: none;
     border-radius: 0;
     background: transparent;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
 }
 
 .local-dimensions-scroll-btn:hover {
-    background: rgb(255 255 255 / 38%);
-    color: #1d2125;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-scroll-btn:focus {
-    outline: 2px solid var(--dimension-custombgcolor, var(--primary, #0f6cbf));
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: -2px;
 }
 
 .local-dimensions-scroll-btn.disabled {
     opacity: 0.45;
-    color: #8da1b6;
+    color: var(--local-dimensions-ink-faint);
     pointer-events: none;
 }
 
@@ -3907,7 +4179,7 @@ a.local-dimensions-course-act-row:focus {
 /* Courses section inside accordion */
 .local-dimensions-courses-section {
     padding: 1.25rem;
-    background: #e9ecef;
+    background: var(--local-dimensions-surface-inset);
     border-radius: 0;
     margin: 0;
 }
@@ -3985,6 +4257,9 @@ a.local-dimensions-course-act-row:focus {
 
 /* ============================================
       HIGH CONTRAST - Evidence detail
+
+      Mode-agnostic already: it thickens two borders and declares no colour at all, so
+      there is nothing here that could assume a light page.
       ============================================ */
 @media (prefers-contrast: high) {
     .local-dimensions-ev-modal-note {
@@ -3998,6 +4273,14 @@ a.local-dimensions-course-act-row:focus {
 
 /* ============================================
       CUSTOM SCSS TEXTAREA - Template edit form
+
+      INTENTIONAL ALWAYS-DARK ISLAND. This is a code-editor skin
+      (Catppuccin Mocha) for a SCSS editing surface, theme-invariant by
+      design in the way a diff view is: it is meant to be dark while the
+      page around it is light, and to stay exactly as it is in dark mode.
+      Its literals are deliberately exempt from the colour-token
+      migration and from any dark-mode sweep. Do not migrate them to
+      tokens and do not lighten them.
       ============================================ */
 .fitem [data-fieldtype='textarea'] textarea[name*='customscss'],
 #id_customfield_customscss {
@@ -4020,7 +4303,13 @@ a.local-dimensions-course-act-row:focus {
     background-color: #1e1e2e;
     color: #cdd6f4;
     border-color: #89b4fa;
-    box-shadow: 0 0 0 0.2rem rgb(137 180 250 / 25%);
+
+    /* The glow this rule used to draw was a box-shadow, and box-shadow is not painted in
+       forced-colors mode, so it has become a real outline. currentcolor rather than the
+       focus-ring token: this island is dark in BOTH modes, and the token is near-black on a
+       light page. */
+    outline: 2px solid currentcolor;
+    outline-offset: 2px;
 }
 
 /* Hide the editor format selector for the custom SCSS field.
@@ -4038,7 +4327,7 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-rules-loading {
     text-align: center;
     padding: 32px 0;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 1.5rem;
 }
 
@@ -4061,7 +4350,7 @@ a.local-dimensions-course-act-row:focus {
     bottom: 0;
     left: 0;
     z-index: 2;
-    background-color: rgba(255, 255, 255, 0.55);
+    background-color: var(--local-dimensions-scrim);
 }
 
 .local-dimensions-central-tab-loading::after {
@@ -4073,7 +4362,7 @@ a.local-dimensions-course-act-row:focus {
     width: 2rem;
     height: 2rem;
     margin: -1rem 0 0 -1rem;
-    border: 0.25rem solid #0f6cbf;
+    border: 0.25rem solid var(--local-dimensions-accent);
     border-right-color: transparent;
     border-radius: 50%;
     animation: 750ms linear infinite local-dimensions-central-spin;
@@ -4107,32 +4396,32 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-rules-eyebrow {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     margin-bottom: 0.25rem;
 }
 
 .local-dimensions-rules-sentence {
     font-size: 1.0625rem;
-    color: #212529;
+    color: var(--local-dimensions-ink);
     margin-bottom: 0;
 }
 
 .local-dimensions-rules-note {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #fd7e14;
+    color: var(--local-dimensions-warning-ink);
     margin-top: 0.35rem;
     margin-bottom: 0;
 }
 
 .local-dimensions-rules-progress-label {
     font-size: 0.875rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-rules-progress-score {
     font-size: 0.875rem;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
 }
 
 /* Progress bar */
@@ -4142,14 +4431,14 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-rules-progress-track {
     height: 6px;
-    background: #e9ecef;
+    background: var(--local-dimensions-surface-inset);
     border-radius: 3px;
     overflow: hidden;
 }
 
 .local-dimensions-rules-progress-fill {
     height: 100%;
-    background: #fd7e14;
+    background: var(--local-dimensions-warning-ink);
     border-radius: 3px;
     transition: width 0.6s ease;
 }
@@ -4163,7 +4452,7 @@ a.local-dimensions-course-act-row:focus {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #e8590c;
+    color: var(--local-dimensions-warning-ink);
     font-weight: 600;
 }
 
@@ -4196,18 +4485,18 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     gap: 14px;
     padding: 16px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 10px;
-    background: #fff;
+    background: var(--local-dimensions-surface);
     transition: box-shadow 0.15s ease;
 }
 
 .local-dimensions-rules-child-card:hover {
-    box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
+    box-shadow: 0 2px 8px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-rules-child-card-required {
-    border-color: rgb(253 126 20 / 22%);
+    border-color: var(--local-dimensions-warning-edge);
 }
 
 .local-dimensions-rules-child-card[hidden] {
@@ -4245,14 +4534,14 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-rules-child-name {
     font-weight: 600;
     font-size: 0.95rem;
-    color: #212529;
+    color: var(--local-dimensions-ink);
     text-decoration: none;
     display: inline;
 }
 
 .local-dimensions-rules-child-name:hover {
     text-decoration: underline;
-    color: #fd7e14;
+    color: var(--local-dimensions-accent);
 }
 
 .local-dimensions-rules-child-assessment {
@@ -4264,11 +4553,12 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-rules-required-tag {
     display: inline-block;
     padding: 2px 10px;
+    border: 1px solid var(--local-dimensions-warning-edge);
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.03em;
-    color: #fff;
-    background: #fd7e14;
+    color: var(--local-dimensions-warning-ink);
+    background: var(--local-dimensions-warning-tint);
     border-radius: 12px;
     vertical-align: middle;
     margin-left: 6px;
@@ -4284,17 +4574,17 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-rules-points-value {
     font-weight: 700;
     font-size: 1.25rem;
-    color: #212529;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-rules-points-pending {
-    color: #adb5bd;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-rules-points-unit {
     font-size: 0.7rem;
     font-weight: 600;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     letter-spacing: 0.04em;
 }
 
@@ -4308,19 +4598,18 @@ a.local-dimensions-course-act-row:focus {
     padding: 10px 28px;
     font-weight: 600;
     font-size: 0.9rem;
-    color: #fff;
-    background: #fd7e14;
+    color: var(--local-dimensions-on-brand-fill);
+    background: var(--local-dimensions-brand-fill);
     border: none;
     border-radius: 8px;
     text-decoration: none;
-    transition: background 0.15s ease, box-shadow 0.15s ease;
+    transition: filter 0.15s ease, box-shadow 0.15s ease;
 }
 
 .local-dimensions-evidence-submit-btn:hover {
-    background: #e8590c;
-    color: #fff;
+    filter: brightness(0.9);
     text-decoration: none;
-    box-shadow: 0 2px 8px rgb(253 126 20 / 30%);
+    box-shadow: 0 2px 8px var(--local-dimensions-shadow);
 }
 
 /* Responsive: stack points below on small screens */
@@ -4362,11 +4651,11 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     gap: 10px;
     padding: 14px 24px;
-    background: var(--local-dimensions-fab-color, #0f6cbf);
-    color: #fff;
+    background: var(--local-dimensions-fab-color, var(--local-dimensions-brand-fill));
+    color: var(--local-dimensions-on-brand-fill);
     text-decoration: none;
     border-radius: 50px;
-    box-shadow: 0 4px 20px rgb(0 0 0 / 25%);
+    box-shadow: 0 4px 20px var(--local-dimensions-shadow);
     font-size: 0.95rem;
     font-weight: 600;
     z-index: 9999;
@@ -4380,9 +4669,16 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-return-fab:hover,
 .local-dimensions-return-fab:focus {
     transform: translateY(-3px);
-    box-shadow: 0 8px 30px rgb(0 0 0 / 35%);
-    color: #fff;
+    box-shadow: 0 8px 30px var(--local-dimensions-shadow);
+    color: var(--local-dimensions-on-brand-fill);
     text-decoration: none;
+}
+
+/* The lift and the deeper shadow are the pointer affordance; a box-shadow is not
+   painted in forced-colors mode, so keyboard focus gets a real outline of its own. */
+.local-dimensions-return-fab:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 .local-dimensions-return-fab:active {
@@ -4446,9 +4742,14 @@ a.local-dimensions-course-act-row:focus {
     animation: dimensions-fab-appear 0.4s ease-out;
 }
 
+/*
+ * Mode-aware by construction: the FAB is a branded island filled with the admin's colour
+ * (or brand-fill when none is set), which does not flip, so the ring drawn around it is
+ * the same on-fill ink in both modes.
+ */
 @media (prefers-contrast: high) {
     .local-dimensions-return-fab {
-        border: 2px solid #fff;
+        border: 2px solid var(--local-dimensions-on-brand-fill);
     }
 }
 
@@ -4465,13 +4766,13 @@ a.local-dimensions-course-act-row:focus {
     display: none;
     position: absolute;
     z-index: 1000;
-    background: #fff;
-    border: 1px solid #ccc;
+    background: var(--local-dimensions-surface);
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 4px;
     max-height: 300px;
     overflow-y: auto;
     width: 400px;
-    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+    box-shadow: 0 4px 12px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-icon-dropdown-item {
@@ -4483,7 +4784,7 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-icon-dropdown-item:hover {
-    background: #f0f0f0;
+    background: var(--local-dimensions-surface-alt);
 }
 
 /* ============================================
@@ -4495,7 +4796,7 @@ a.local-dimensions-course-act-row:focus {
    ============================================ */
 .local-dimensions-collapsible {
     --collapsible-max-vh: 30vh;
-    --collapsible-fade-color: rgba(255, 255, 255, 0.95);
+    --collapsible-fade-color: var(--local-dimensions-surface);
     position: relative;
 }
 
@@ -4519,7 +4820,7 @@ a.local-dimensions-course-act-row:focus {
     background:
         linear-gradient(
             to bottom,
-            rgba(255, 255, 255, 0) 0%,
+            transparent 0%,
             var(--collapsible-fade-color) 100%
         );
     opacity: 0;
@@ -4549,7 +4850,11 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-collapsible-toggle:focus {
     opacity: 1;
     text-decoration: underline;
-    outline: none;
+}
+
+.local-dimensions-collapsible-toggle:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 .local-dimensions-collapsible-toggle .fa {
@@ -4606,8 +4911,9 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-grade-badge.badge-cfield {
-    background: rgba(13, 110, 253, 0.1);
-    color: #0d6efd;
+    border: 1px solid var(--local-dimensions-brand-edge);
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
 }
 
 /* ============================================
@@ -4636,7 +4942,7 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-chip-group-label {
     font-weight: 600;
     font-size: 0.85rem;
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     white-space: nowrap;
 }
 
@@ -4645,13 +4951,13 @@ a.local-dimensions-course-act-row:focus {
     --local-dimensions-tabs-height: 36px;
     --local-dimensions-tabs-inner-height: 28px;
     --local-dimensions-tabs-platter-padding: 4px;
-    --local-dimensions-tabs-platter-bg: #e9ecef;
-    --local-dimensions-tabs-indicator-bg: #fff;
-    --local-dimensions-tabs-indicator-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-    --local-dimensions-tabs-item-color: #6c757d;
-    --local-dimensions-tabs-item-color-active: #0f6cbf;
-    --local-dimensions-tabs-paddle-color: rgba(0, 0, 0, 0.56);
-    --local-dimensions-tabs-paddle-color-hover: rgba(0, 0, 0, 0.72);
+    --local-dimensions-tabs-platter-bg: var(--local-dimensions-surface-inset);
+    --local-dimensions-tabs-indicator-bg: var(--local-dimensions-surface);
+    --local-dimensions-tabs-indicator-shadow: 0 1px 3px var(--local-dimensions-shadow);
+    --local-dimensions-tabs-item-color: var(--local-dimensions-ink-muted);
+    --local-dimensions-tabs-item-color-active: var(--local-dimensions-accent);
+    --local-dimensions-tabs-paddle-color: var(--local-dimensions-ink-muted);
+    --local-dimensions-tabs-paddle-color-hover: var(--local-dimensions-ink);
     --local-dimensions-tabs-paddle-icon-opacity-disabled: 0.42;
     --local-dimensions-tabs-scroll-duration: 320ms;
     --local-dimensions-tabs-indicator-duration: 320ms;
@@ -4768,7 +5074,7 @@ a.local-dimensions-course-act-row:focus {
     border-radius: 999px;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--local-dimensions-tabs-item-color, #6c757d);
+    color: var(--local-dimensions-tabs-item-color, var(--local-dimensions-ink-muted));
     cursor: pointer;
     white-space: nowrap;
     position: relative;
@@ -4783,18 +5089,14 @@ a.local-dimensions-course-act-row:focus {
     opacity: 1;
 }
 
-.local-dimensions-filter-tab:focus {
-    outline: none;
-}
-
 .local-dimensions-filter-tab:focus-visible {
-    box-shadow: inset 0 0 0 2px #0f6cbf;
-    outline: none;
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
 }
 
 .local-dimensions-filter-tab[aria-pressed='true'] {
     background: transparent;
-    color: var(--local-dimensions-tabs-item-color-active, #0f6cbf);
+    color: var(--local-dimensions-tabs-item-color-active, var(--local-dimensions-accent));
     opacity: 1;
 }
 
@@ -4807,7 +5109,7 @@ a.local-dimensions-course-act-row:focus {
     width: var(--local-dimensions-tabs-indicator-width);
     height: calc(100% - var(--local-dimensions-tabs-platter-padding) * 2);
     border-radius: 999px;
-    background-color: var(--local-dimensions-tabs-indicator-bg, #fff);
+    background-color: var(--local-dimensions-tabs-indicator-bg, var(--local-dimensions-surface));
     box-shadow: var(--local-dimensions-tabs-indicator-shadow);
     pointer-events: none;
     z-index: 0;
@@ -4852,7 +5154,7 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-filter-tabs-paddle:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: -2px;
 }
 
@@ -4891,10 +5193,10 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     gap: 0.375rem;
     padding: 0.5rem 1rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 999px;
     background: transparent;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.85rem;
     font-weight: 500;
     white-space: nowrap;
@@ -4903,13 +5205,13 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-chip-clear:hover {
-    border-color: #ced4da;
-    background: #f8f9fa;
-    color: #495057;
+    border-color: var(--local-dimensions-line);
+    background: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-chip-clear:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -4960,8 +5262,8 @@ a.local-dimensions-course-act-row:focus {
     padding: 0;
     border: 0;
     border-radius: 8px;
-    background-color: #e7f0f9;
-    color: #0f4d85;
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
     font-size: 0.875rem;
     cursor: pointer;
     transition:
@@ -4973,14 +5275,14 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-modal-sizetoggle:focus-visible,
 .local-dimensions-modal-refresh:hover,
 .local-dimensions-modal-refresh:focus-visible {
-    background-color: #d4e6fb;
-    color: #0f4d85;
+    background-color: var(--local-dimensions-brand-edge);
+    color: var(--local-dimensions-ink-strong);
 }
 
 .local-dimensions-modal-sizetoggle:focus-visible,
 .local-dimensions-modal-refresh:focus-visible {
-    outline: 2px solid var(--bs-primary, #0f6cbf);
-    outline-offset: 1px;
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 /* While a refresh runs the button is disabled and its icon spins (Font Awesome fa-spin). */
@@ -5064,8 +5366,8 @@ a.local-dimensions-course-act-row:focus {
  * so 4.5 keyboard focus stays visible and 5.x does not stack two rings.
  */
 .modal-footer .local-dimensions-modal-footer-links .btn-link:focus-visible {
-    outline: 2px solid var(--bs-primary, #0f6cbf);
-    outline-offset: 1px;
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
     box-shadow: none;
 }
 
@@ -5087,9 +5389,9 @@ a.local-dimensions-course-act-row:focus {
 
 /*
  * Standardise the close button across the plugin's hub modals — Bootstrap's default .btn-close is
- * a faint, low-contrast glyph. Give it a light-blue chip with a dark-blue "times" icon drawn with
- * the theme's Font Awesome (Moodle stylelint forbids inline SVG image data, and the glyph lets us
- * colour it precisely). Scoped to modals holding this plugin's content; the referenced-competency
+ * a faint, low-contrast glyph. Give it a brand-tinted chip with a brand-ink "times" icon drawn
+ * with the theme's Font Awesome (Moodle stylelint forbids inline SVG image data, and the glyph
+ * lets us colour it precisely). Scoped to modals holding this plugin's content; the referenced-competency
  * modal keeps its own close button (its header is hidden), so it is excluded. The second selector
  * keys off .modal-form-dialogue, which core adds to every ModalForm dialog synchronously before
  * show(): the plugin's form modals get the chip from the first frame (the :has() arm alone flashes).
@@ -5105,7 +5407,7 @@ a.local-dimensions-course-act-row:focus {
     height: 1.75rem;
     padding: 0;
     border-radius: 8px;
-    background-color: #e7f0f9;
+    background-color: var(--local-dimensions-brand-tint);
     background-image: none;
     opacity: 1;
 }
@@ -5117,14 +5419,27 @@ a.local-dimensions-course-act-row:focus {
     font-weight: 900;
     font-size: 0.9rem;
     line-height: 1;
-    color: #0f4d85;
+    color: var(--local-dimensions-brand-ink);
 }
 
 .modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:hover,
 .modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:focus,
 .local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:hover,
 .local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:focus {
-    background-color: #d4e6fb;
+    background-color: var(--local-dimensions-brand-edge);
+}
+
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:focus-visible,
+.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:hover::before,
+.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:focus::before,
+.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:hover::before,
+.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:focus::before {
+    color: var(--local-dimensions-ink-strong);
 }
 
 /* Competency hub — Structure tree (v3 display options). Each node can show a
@@ -5152,17 +5467,17 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-central-row:hover {
-    background-color: var(--bs-secondary-bg, rgba(0, 0, 0, 0.05));
+    background-color: var(--local-dimensions-surface-inset);
 }
 
 .local-dimensions-central-row.active {
-    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
-    border-left-color: var(--bs-primary, #0f6cbf);
+    background-color: var(--local-dimensions-brand-tint);
+    border-left-color: var(--local-dimensions-accent);
     font-weight: 500;
 }
 
 .local-dimensions-central-row:focus-visible {
-    outline: 2px solid var(--bs-primary, #0f6cbf);
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: -2px;
 }
 
@@ -5181,17 +5496,17 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-central-fwcount {
     font-size: 15px;
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     white-space: nowrap;
 }
 
 .local-dimensions-central-fwcount strong {
     font-weight: 700;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-central-fwexcluded {
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-central-fwactions {
@@ -5207,10 +5522,10 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     gap: 8px;
     padding: 11px 16px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 10px;
-    background: #fff;
-    color: #495057;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
     font-size: 14.5px;
     font-weight: 600;
     white-space: nowrap;
@@ -5219,10 +5534,15 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-central-btn-outline:hover,
 .local-dimensions-central-btn-outline:focus {
-    background: #f5f7f9;
-    border-color: #b9c0c7;
-    color: #495057;
+    background: var(--local-dimensions-surface-alt);
+    border-color: var(--local-dimensions-ink-muted);
+    color: var(--local-dimensions-ink-muted);
     text-decoration: none;
+}
+
+.local-dimensions-central-btn-outline:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 .local-dimensions-central-fwlist {
@@ -5232,23 +5552,23 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-central-fwcard {
-    background: #fff;
-    border: 1px solid #e7e9ec;
+    background: var(--local-dimensions-surface);
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 3px var(--local-dimensions-shadow);
     transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .local-dimensions-central-fwcard:hover {
-    background: #f7f8fa;
+    background: var(--local-dimensions-surface-alt);
 }
 
 /* Selected card (JS toggles .active on click): drives the shared page sticky-footer actions.
    Kept after :hover so the selection wins when a selected card is also hovered. */
 .local-dimensions-central-fwcard.active {
-    border-color: #0f6cbf;
-    background: #f2f7fc;
-    box-shadow: 0 0 0 1px #0f6cbf;
+    border-color: var(--local-dimensions-accent);
+    background: var(--local-dimensions-brand-tint);
+    box-shadow: 0 0 0 1px var(--local-dimensions-accent);
 }
 
 /* The whole card is one select button: content column on the left, count pill on the right. */
@@ -5267,7 +5587,7 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-central-fwcard-select:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: -2px;
 }
 
@@ -5289,16 +5609,16 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-central-fwcard-name {
     font-size: 17px;
     font-weight: 700;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
     letter-spacing: -0.01em;
 }
 
 .local-dimensions-central-fwcard-idnumber {
     font-family: Menlo, ui-monospace, monospace;
     font-size: 11.5px;
-    color: #495057;
-    background: #f1f3f5;
-    border: 1px solid #e3e6ea;
+    color: var(--local-dimensions-ink-muted);
+    background: var(--local-dimensions-surface-inset);
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 6px;
     padding: 1px 8px;
 }
@@ -5309,9 +5629,9 @@ a.local-dimensions-course-act-row:focus {
     gap: 5px;
     font-size: 11.5px;
     font-weight: 600;
-    color: #495057;
-    background: #eceef1;
-    border: 1px solid #dfe3e7;
+    color: var(--local-dimensions-ink-muted);
+    background: var(--local-dimensions-surface-inset);
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 999px;
     padding: 2px 10px;
 }
@@ -5320,7 +5640,7 @@ a.local-dimensions-course-act-row:focus {
     display: block;
     max-width: 100%;
     font-size: 13.5px;
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -5332,9 +5652,9 @@ a.local-dimensions-course-act-row:focus {
     align-items: baseline;
     gap: 6px;
     font-size: 13.5px;
-    color: #495057;
-    background: #eef4fb;
-    border: 1px solid #d6e6f7;
+    color: var(--local-dimensions-ink-muted);
+    background: var(--local-dimensions-brand-tint);
+    border: 1px solid var(--local-dimensions-brand-edge);
     border-radius: 999px;
     padding: 6px 14px;
     white-space: nowrap;
@@ -5342,7 +5662,7 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-central-fwcard-count strong {
     font-weight: 700;
-    color: #0f6cbf;
+    color: var(--local-dimensions-brand-ink);
     font-size: 15px;
 }
 
@@ -5359,7 +5679,7 @@ a.local-dimensions-course-act-row:focus {
     z-index: 5;
     max-height: 40vh;
     overflow-y: auto;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.5rem 1rem var(--local-dimensions-shadow);
 }
 
 /* Structure tab — redesigned two-panel master/detail (mirrors the Plans tab). The tree
@@ -5490,7 +5810,14 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-central-plans-resizer:hover::before,
 .local-dimensions-central-plans-resizer:focus-visible::before {
-    background: rgba(159, 196, 229, 0.45);
+    background: var(--local-dimensions-brand-edge);
+}
+
+/* The tinted hairline above is the pointer affordance and disappears under forced-colors;
+   the separator is 12px wide, so the ring is drawn inside it. */
+.local-dimensions-central-plans-resizer:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
 }
 
 .local-dimensions-central-plans-resizer-grip {
@@ -5500,9 +5827,9 @@ a.local-dimensions-course-act-row:focus {
     height: 2.5rem;
     margin: 0 auto;
     border-radius: 999px;
-    background: #aeb4ba;
+    background: var(--local-dimensions-ink-muted);
     pointer-events: none;
-    box-shadow: 0 0 0 4px var(--bs-body-bg, #edeef1);
+    box-shadow: 0 0 0 4px var(--local-dimensions-surface);
 }
 
 /* Sticky-footer action buttons follow core's raw pattern (btn py-0 d-flex flex-column):
@@ -5549,10 +5876,10 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-central-plans-panel {
     display: flex;
     flex-direction: column;
-    background: #fff;
-    border: 1px solid #e7e9ec;
+    background: var(--local-dimensions-surface);
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 10px 26px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px var(--local-dimensions-shadow), 0 10px 26px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-central-plans-panel-head {
@@ -5561,7 +5888,7 @@ a.local-dimensions-course-act-row:focus {
     justify-content: space-between;
     gap: 12px;
     padding: 18px 22px;
-    border-bottom: 1px solid #eef0f2;
+    border-bottom: 1px solid var(--local-dimensions-line);
 }
 
 .local-dimensions-central-plans-panel-title {
@@ -5583,12 +5910,12 @@ a.local-dimensions-course-act-row:focus {
     border: 0;
     border-radius: 8px;
     background: transparent;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     cursor: pointer;
 }
 
 .local-dimensions-central-plans-gear:hover {
-    background: #eef4fb;
+    background: var(--local-dimensions-brand-tint);
 }
 
 .local-dimensions-central-plans-panel-body {
@@ -5622,10 +5949,10 @@ a.local-dimensions-course-act-row:focus {
     gap: 9px;
     min-width: 220px;
     padding: 0 13px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 10px;
-    background: #fff;
-    color: #6a737b;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-central-plans-search i {
@@ -5640,16 +5967,17 @@ a.local-dimensions-course-act-row:focus {
     padding: 10px 0;
     border: 0;
     background: transparent;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
     font-size: 14px;
 }
 
-.local-dimensions-central-plans-search input:focus {
-    outline: none;
+.local-dimensions-central-plans-search:focus-within {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 .local-dimensions-central-plans-search input::placeholder {
-    color: #6a737b;
+    color: var(--local-dimensions-ink-faint);
     opacity: 1;
 }
 
@@ -5661,8 +5989,8 @@ a.local-dimensions-course-act-row:focus {
     padding: 10px 15px;
     border: 0;
     border-radius: 10px;
-    background: #0f6cbf;
-    color: #fff;
+    background: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
     font-size: 14px;
     font-weight: 600;
     white-space: nowrap;
@@ -5670,8 +5998,7 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-central-plans-new:hover {
-    background: #0c5699;
-    color: #fff;
+    filter: brightness(0.9);
 }
 
 /* Competency filter. */
@@ -5690,7 +6017,7 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-central-plans-filter-label {
     font-size: 13px;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-central-plans-filter-clear {
@@ -5700,7 +6027,7 @@ a.local-dimensions-course-act-row:focus {
     padding: 0;
     border: 0;
     background: transparent;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     font-size: 13px;
     cursor: pointer;
 }
@@ -5717,21 +6044,21 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     gap: 7px;
     padding: 9px 14px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 10px;
-    background: #fff;
-    color: #495057;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
     font-size: 13.5px;
     cursor: pointer;
 }
 
 .local-dimensions-central-plans-filter-add:hover {
-    background: #f5f7f9;
+    background: var(--local-dimensions-surface-alt);
 }
 
 /* Template rows: the container clips to the panel's bottom corners. */
 .local-dimensions-central-plans-tpl-list {
-    border-top: 1px solid #eef0f2;
+    border-top: 1px solid var(--local-dimensions-line);
     border-radius: 0 0 16px 16px;
     overflow: hidden;
 }
@@ -5741,25 +6068,25 @@ a.local-dimensions-course-act-row:focus {
     width: 100%;
     padding: 13px 22px;
     border: 0;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--local-dimensions-line);
     border-radius: 0;
-    background: #fff;
+    background: var(--local-dimensions-surface);
     text-align: left;
     cursor: pointer;
 }
 
 .local-dimensions-central-plans-tpl-row:hover {
-    background: #f5f7f9;
+    background: var(--local-dimensions-surface-alt);
 }
 
 .local-dimensions-central-plans-tpl-row.active {
-    background: #eaf2fb;
+    background: var(--local-dimensions-brand-tint);
     font-weight: 400;
 }
 
 .local-dimensions-central-plans-tpl-icon {
     flex: none;
-    color: #7d868f;
+    color: var(--local-dimensions-ink-muted);
     font-size: 16px;
 }
 
@@ -5782,22 +6109,22 @@ a.local-dimensions-course-act-row:focus {
     overflow: hidden;
     font-size: 15px;
     font-weight: 600;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .local-dimensions-central-plans-tpl-row.active .local-dimensions-central-plans-tpl-name {
-    color: #0f6cbf;
+    color: var(--local-dimensions-brand-ink);
 }
 
 .local-dimensions-central-plans-tpl-id {
     flex: none;
     padding: 1px 7px;
-    border: 1px solid #e3e6ea;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 6px;
-    background: #f1f3f5;
-    color: #495057;
+    background: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-muted);
     font-family: Menlo, ui-monospace, monospace;
     font-size: 11px;
 }
@@ -5806,7 +6133,7 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     gap: 5px;
     font-size: 12px;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-central-plans-tpl-due i {
@@ -5823,23 +6150,23 @@ a.local-dimensions-course-act-row:focus {
     height: 23px;
     padding: 0 9px;
     border-radius: 999px;
-    background: #eef0f2;
-    color: #495057;
+    background: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-muted);
     font-size: 12.5px;
     font-weight: 700;
 }
 
 .local-dimensions-central-plans-tpl-count.is-selected {
-    background: #d6e6f7;
-    color: #0d5a9f;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
 }
 
 /* Right "Plan" panel: rounded 24px with a deep shadow. No overflow: hidden on the panel or
    body so a competency row's actions menu is never clipped; the header clips its own glow. */
 .local-dimensions-central-plans-detail {
     border-radius: 24px;
-    background: #fff;
-    box-shadow: 0 3px 8px rgba(13, 60, 110, 0.1), 0 22px 46px rgba(13, 60, 110, 0.17);
+    background: var(--local-dimensions-surface);
+    box-shadow: 0 3px 8px var(--local-dimensions-shadow), 0 22px 46px var(--local-dimensions-shadow);
 }
 
 /* Coloured header: a 140deg gradient from the template's background colour to progressively
@@ -5905,18 +6232,19 @@ a.local-dimensions-course-act-row:focus {
     gap: 6px;
     padding: 5px 13px;
     border-radius: 999px;
-    color: #fff;
     font-size: 12.5px;
     font-weight: 600;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 6px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-central-plans-status.is-enabled {
-    background: #217a37;
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-central-plans-status.is-disabled {
-    background: #6a737b;
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
 }
 
 .local-dimensions-central-plans-detail-counts {
@@ -5942,8 +6270,8 @@ a.local-dimensions-course-act-row:focus {
     height: 23px;
     padding: 0 8px;
     border-radius: 999px;
-    background: #495057;
-    color: #fff;
+    background: var(--local-dimensions-neutral-ink);
+    color: var(--local-dimensions-neutral-tint);
     font-size: 13px;
     font-weight: 700;
 }
@@ -6006,10 +6334,10 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-central-plans-chip-accent {
-    background: #495057;
-    color: #fff;
+    background: var(--local-dimensions-neutral-ink);
+    color: var(--local-dimensions-neutral-tint);
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+    box-shadow: 0 2px 8px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-central-plans-chip-glass {
@@ -6026,13 +6354,13 @@ a.local-dimensions-course-act-row:focus {
     margin-top: -16px;
     padding: 24px 30px 28px;
     border-radius: 22px 22px 24px 24px;
-    background: #fff;
+    background: var(--local-dimensions-surface);
 }
 
 .local-dimensions-central-plans-detail-body .local-dimensions-central-plans-description {
     margin-bottom: 4px;
     font-size: 15px;
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
 }
 
 /* Competency list header (grip spacer · title · Structure · Actions). */
@@ -6042,7 +6370,7 @@ a.local-dimensions-course-act-row:focus {
     gap: 12px;
     margin-top: 18px;
     padding: 11px 8px;
-    border-bottom: 1px solid #e6e9ec;
+    border-bottom: 1px solid var(--local-dimensions-line);
 }
 
 .local-dimensions-central-plans-list-gripspace {
@@ -6054,13 +6382,13 @@ a.local-dimensions-course-act-row:focus {
     flex: 1 1 auto;
     font-size: 16px;
     font-weight: 700;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-central-plans-list-col {
     font-size: 12.5px;
     font-weight: 600;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-central-plans-list-col-actions {
@@ -6082,7 +6410,7 @@ a.local-dimensions-course-act-row:focus {
     align-items: flex-start;
     gap: 12px;
     padding: 15px 8px;
-    border-bottom: 1px solid #eef0f2;
+    border-bottom: 1px solid var(--local-dimensions-line);
     cursor: default;
     transition: background 0.12s ease;
 }
@@ -6107,7 +6435,7 @@ a.local-dimensions-course-act-row:focus {
     font-size: 16px;
     font-weight: 700;
     line-height: inherit;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
     text-align: left;
 
     /* A button that opens the competency detail modal, but kept looking like plain text:
@@ -6117,15 +6445,15 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-central-plans-module-tax {
     font-size: 15px;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-central-plans-module-id {
     padding: 1px 7px;
-    border: 1px solid #e3e6ea;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 6px;
-    background: #f1f3f5;
-    color: #495057;
+    background: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-muted);
     font-family: Menlo, ui-monospace, monospace;
     font-size: 11px;
 }
@@ -6135,7 +6463,7 @@ a.local-dimensions-course-act-row:focus {
     gap: 6px;
     margin-top: 4px;
     font-size: 12.5px;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-central-plans-module-path i {
@@ -6149,10 +6477,10 @@ a.local-dimensions-course-act-row:focus {
     display: inline-flex;
     align-items: center;
     padding: 5px 13px;
-    border: 1px solid #e6e9ec;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 999px;
-    background: #f1f3f5;
-    color: #495057;
+    background: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-muted);
     font-size: 12.5px;
     font-weight: 600;
     white-space: nowrap;
@@ -6174,12 +6502,12 @@ a.local-dimensions-course-act-row:focus {
     border: 0;
     border-radius: 8px;
     background: transparent;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
     cursor: pointer;
 }
 
 .local-dimensions-central-plans-module-menu:hover {
-    background: #eef0f2;
+    background: var(--local-dimensions-surface-inset);
 }
 
 /* Custom pill toggles. The real checkbox is visually hidden (absolute) but still drives
@@ -6190,7 +6518,7 @@ a.local-dimensions-course-act-row:focus {
     justify-content: space-between;
     gap: 16px;
     margin: 0;
-    color: #343a40;
+    color: var(--local-dimensions-ink);
     font-size: 14.5px;
     font-weight: 400;
     cursor: pointer;
@@ -6210,7 +6538,7 @@ a.local-dimensions-course-act-row:focus {
     width: 42px;
     height: 23px;
     border-radius: 999px;
-    background: #ced4da;
+    background: var(--local-dimensions-line);
     transition: background 0.15s ease;
 }
 
@@ -6221,13 +6549,13 @@ a.local-dimensions-course-act-row:focus {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    background: var(--local-dimensions-surface);
+    box-shadow: 0 1px 2px var(--local-dimensions-shadow);
     transition: transform 0.18s ease;
 }
 
 .local-dimensions-plans-switch-input:checked ~ .local-dimensions-plans-switch-track {
-    background: #0f6cbf;
+    background: var(--local-dimensions-brand-fill);
 }
 
 .local-dimensions-plans-switch-input:checked ~ .local-dimensions-plans-switch-track .local-dimensions-plans-switch-knob {
@@ -6235,7 +6563,7 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-plans-switch-input:focus-visible ~ .local-dimensions-plans-switch-track {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -6251,7 +6579,7 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-plans-switch-dark .local-dimensions-plans-switch-knob {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-plans-switch-dark .local-dimensions-plans-switch-input:checked ~ .local-dimensions-plans-switch-track {
@@ -6259,7 +6587,7 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-plans-switch-dark .local-dimensions-plans-switch-input:focus-visible ~ .local-dimensions-plans-switch-track {
-    outline-color: #fff;
+    outline-color: var(--local-dimensions-on-brand-fill);
 }
 
 /* Standalone "show hidden rows" pill toggle, shared by all three hub tabs (partial
@@ -6271,7 +6599,7 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     gap: 14px;
     margin: 0 0 24px;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
     font-size: 16.5px;
     cursor: pointer;
 }
@@ -6306,32 +6634,32 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-central-structure-sublabel {
     margin: 0;
     font-size: 13px;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 /* Framework picker: a form-select (keeps its chevron) sized to the design. */
 .local-dimensions-central-structure-fwselect {
     min-width: 250px;
     padding: 10px 14px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 10px;
     font-size: 14.5px;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-central-structure-fwselect:hover {
-    border-color: #9fc4e5;
+    border-color: var(--local-dimensions-accent);
 }
 
 .local-dimensions-central-structure-fwcount {
     padding-bottom: 11px;
     font-size: 14px;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-central-structure-fwcount strong {
     font-weight: 700;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-central-structure-subheader-actions {
@@ -6343,7 +6671,7 @@ a.local-dimensions-course-act-row:focus {
 
 .local-dimensions-central-structure-addhint {
     font-size: 13px;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
     text-align: right;
 }
 
@@ -6353,7 +6681,7 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     gap: 22px;
     padding: 15px 20px;
-    border-bottom: 1px solid #eef0f2;
+    border-bottom: 1px solid var(--local-dimensions-line);
 }
 
 .local-dimensions-central-structure-toolaction {
@@ -6363,14 +6691,14 @@ a.local-dimensions-course-act-row:focus {
     padding: 0;
     border: 0;
     background: transparent;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
 }
 
 .local-dimensions-central-structure-toolaction:hover {
-    color: #0c5699;
+    color: var(--local-dimensions-accent-hover);
 }
 
 .local-dimensions-central-structure-toolgear {
@@ -6383,7 +6711,7 @@ a.local-dimensions-course-act-row:focus {
     flex-direction: column;
     gap: 13px;
     padding: 16px 20px;
-    border-bottom: 1px solid #eef0f2;
+    border-bottom: 1px solid var(--local-dimensions-line);
 }
 
 /* Search box (relative, so the results dropdown overlays the tree); the reused search field
@@ -6415,12 +6743,12 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-central-structure-node-row:hover {
-    background: #f5f7f9;
+    background: var(--local-dimensions-surface-alt);
 }
 
 .local-dimensions-central-node-active > .local-dimensions-central-structure-node-row {
-    border-left-color: #0f6cbf;
-    background: #e7f0f9;
+    border-left-color: var(--local-dimensions-accent);
+    background: var(--local-dimensions-brand-tint);
 }
 
 /* Grip, chevron/bullet and the name are each a flex box with their glyph/text centred, and the
@@ -6449,7 +6777,7 @@ a.local-dimensions-course-act-row:focus {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
     line-height: 1;
 }
 
@@ -6460,7 +6788,7 @@ a.local-dimensions-course-act-row:focus {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #c2c8ce;
+    color: var(--local-dimensions-ink-muted);
     font-size: 16px;
     line-height: 1;
 }
@@ -6484,7 +6812,7 @@ a.local-dimensions-course-act-row:focus {
 }
 
 .local-dimensions-central-structure-node-select:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -6492,38 +6820,39 @@ a.local-dimensions-course-act-row:focus {
     font-size: 14.5px;
     font-weight: 500;
     line-height: 22px;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
 }
 
 .local-dimensions-central-structure-node-select.active .local-dimensions-central-row-name {
     font-weight: 700;
-    color: #0c5699;
+    color: var(--local-dimensions-accent-hover);
 }
 
 /* Node metadata chips (taxonomy / idnumber / rule) — toggled by the show-* classes. */
 .local-dimensions-central-structure-node-tax {
     padding: 1px 8px;
     border-radius: 6px;
-    background: #f1f3f5;
-    color: #495057;
+    background: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-muted);
     font-size: 12px;
 }
 
 .local-dimensions-central-structure-node-id {
     padding: 1px 7px;
-    border: 1px solid #e3e6ea;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 6px;
-    background: #f1f3f5;
-    color: #495057;
+    background: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-muted);
     font-family: Menlo, ui-monospace, monospace;
     font-size: 11px;
 }
 
 .local-dimensions-central-structure-node-rule {
     padding: 2px 10px;
+    border: 1px solid var(--local-dimensions-info-edge);
     border-radius: 999px;
-    background: #0f766e;
-    color: #fff;
+    background: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
     font-size: 11.5px;
     font-weight: 600;
     white-space: nowrap;
@@ -6531,7 +6860,7 @@ a.local-dimensions-course-act-row:focus {
 
 /* Detail header: white text on the reused brand gradient (Plans header fallback). */
 .local-dimensions-central-structure-detail-header {
-    color: #fff;
+    color: var(--local-dimensions-on-brand-fill);
 }
 
 .local-dimensions-central-structure-detail-titlerow {
@@ -6548,11 +6877,11 @@ a.local-dimensions-course-act-row:focus {
     align-items: center;
     padding: 5px 13px;
     border-radius: 999px;
-    background: #495057;
-    color: #fff;
+    background: var(--local-dimensions-neutral-ink);
+    color: var(--local-dimensions-neutral-tint);
     font-size: 12.5px;
     font-weight: 600;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+    box-shadow: 0 2px 6px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-central-structure-detail-idprefix {
@@ -6569,14 +6898,14 @@ a.local-dimensions-course-act-row:focus {
 .local-dimensions-central-structure-metric {
     flex: 1 1 150px;
     padding: 15px 17px;
-    border: 1px solid #e7e9ec;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 14px;
-    background: #fbfcfd;
+    background: var(--local-dimensions-surface);
 }
 
 .local-dimensions-central-structure-metric-label {
     font-size: 12.5px;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-central-structure-metric-value {
@@ -6584,7 +6913,7 @@ a.local-dimensions-course-act-row:focus {
     padding: 0;
     border: 0;
     background: transparent;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
     font-size: 30px;
     font-weight: 700;
     line-height: 1.1;
@@ -6601,7 +6930,7 @@ button.local-dimensions-central-structure-metric-value:hover {
 }
 
 button.local-dimensions-central-structure-metric-value:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -6612,7 +6941,7 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 /* Empty state (before a node is selected). */
 .local-dimensions-central-structure-detail-empty {
     padding: 40px 30px;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 /* Referenced competencies: a bordered-top section under the description listing the
@@ -6621,7 +6950,7 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 .local-dimensions-central-structure-related {
     margin-top: 24px;
     padding-top: 22px;
-    border-top: 1px solid #eef0f2;
+    border-top: 1px solid var(--local-dimensions-line);
 }
 
 .local-dimensions-central-structure-related-head {
@@ -6633,14 +6962,14 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 
 .local-dimensions-central-structure-related-icon {
     display: inline-flex;
-    color: #0f6cbf;
+    color: var(--local-dimensions-accent);
 }
 
 .local-dimensions-central-structure-related-title {
     margin: 0;
     font-size: 16px;
     font-weight: 700;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-central-structure-related-count {
@@ -6651,8 +6980,8 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
     height: 22px;
     padding: 0 8px;
     border-radius: 999px;
-    background: #eef0f2;
-    color: #6a737b;
+    background: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-muted);
     font-size: 12.5px;
     font-weight: 700;
 }
@@ -6668,10 +6997,10 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
     align-items: center;
     gap: 8px;
     padding: 8px 14px;
-    border: 1px solid #d6e6f7;
+    border: 1px solid var(--local-dimensions-brand-edge);
     border-radius: 999px;
-    background: #eef4fb;
-    color: #0f6cbf;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
     font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
@@ -6680,8 +7009,14 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 
 .local-dimensions-central-structure-related-chip:hover,
 .local-dimensions-central-structure-related-chip:focus {
-    background: #dce9f8;
-    border-color: #9fc4e5;
+    background: var(--local-dimensions-brand-edge);
+    border-color: var(--local-dimensions-ink-muted);
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-central-structure-related-chip:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 .local-dimensions-central-structure-related-chip i {
@@ -6733,7 +7068,7 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
     border: 1px solid rgba(255, 255, 255, 0.28);
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.16);
-    color: #fff;
+    color: var(--local-dimensions-on-brand-fill);
     cursor: pointer;
     transition: background 0.15s ease;
 }
@@ -6741,6 +7076,13 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 .local-dimensions-related-modal-close:hover,
 .local-dimensions-related-modal-close:focus {
     background: rgba(255, 255, 255, 0.3);
+}
+
+/* currentcolor, not the focus-ring token: this button sits on the card's own gradient
+   header, which is the same colour in both modes. */
+.local-dimensions-related-modal-close:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 2px;
 }
 
 /* Per-level "load more": a solid accent button with a "+N" count of the next page, and a
@@ -6758,24 +7100,22 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
     align-items: center;
     gap: 9px;
     padding: 9px 16px;
-    border: 1px solid #0f6cbf;
+    border: 1px solid var(--local-dimensions-brand-fill);
     border-radius: 10px;
-    background: #0f6cbf;
-    color: #fff;
+    background: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
     font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 1px 2px rgba(15, 108, 191, 0.25);
+    box-shadow: 0 1px 2px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-central-structure-loadmore:hover {
-    background: #0c5699;
-    border-color: #0c5699;
-    color: #fff;
+    filter: brightness(0.9);
 }
 
 .local-dimensions-central-structure-loadmore:focus-visible {
-    outline: 2px solid #0f6cbf;
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
@@ -6787,15 +7127,15 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
     height: 20px;
     padding: 0 7px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.24);
-    color: #fff;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
     font-size: 12px;
     font-weight: 700;
 }
 
 .local-dimensions-central-structure-loadmore-hint {
     font-size: 12.5px;
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 /* Plan rows own their display here (no .d-flex utility in the markup — its !important
@@ -6840,8 +7180,8 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 .local-dimensions-central-chip-accent {
     display: inline-flex;
     align-items: center;
-    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
-    color: var(--bs-primary-text-emphasis, #0f6cbf);
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
     font-weight: 500;
 }
 
@@ -6855,8 +7195,8 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 .local-dimensions-central-chip-type {
     display: inline-flex;
     align-items: center;
-    background-color: var(--bs-info-bg-subtle, #cff4fc);
-    color: var(--bs-info-text-emphasis, #055160);
+    background-color: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
     font-weight: 500;
 }
 
@@ -6888,14 +7228,14 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
     order: -1;
     width: 1.25rem;
     text-align: center;
-    color: var(--bs-secondary-color, #6a737b);
+    color: var(--local-dimensions-ink-muted);
     opacity: 0;
     cursor: move;
     transition: opacity 0.15s ease-in-out;
 }
 
 .local-dimensions-central-plans [data-region='competency-items'] > li:hover {
-    background-color: #f7f8fa;
+    background-color: var(--local-dimensions-surface-alt);
 }
 
 .local-dimensions-central-plans [data-region='competency-items'] > li:hover .local-dimensions-central-plan-drag,
@@ -6904,23 +7244,30 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
     opacity: 1;
 }
 
+/* Revealing the grip is not a focus indicator - it is what makes the control visible at
+   all - so focus also draws the ring every other control in the hub draws. */
+.local-dimensions-central-plan-drag:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
 .local-dimensions-central-plan-dragging {
     opacity: 0.45;
-    background-color: var(--bs-secondary-bg, rgba(0, 0, 0, 0.04));
+    background-color: var(--local-dimensions-surface-inset);
     border-radius: 0.25rem;
 }
 
 /* Level-aware drop hints on the Structure tree: hovering a row's middle makes the
    dragged competency its child; hovering the tree whitespace returns it to root. */
 .local-dimensions-central-drop-target {
-    outline: 2px dashed var(--bs-primary, #0f6cbf);
+    outline: 2px dashed var(--local-dimensions-focus-ring);
     outline-offset: -2px;
     border-radius: 0.25rem;
-    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+    background-color: var(--local-dimensions-brand-tint);
 }
 
 .local-dimensions-central-tree.local-dimensions-central-drop-root {
-    outline: 2px dashed var(--bs-primary, #0f6cbf);
+    outline: 2px dashed var(--local-dimensions-focus-ring);
     outline-offset: -4px;
 }
 
@@ -6954,24 +7301,24 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 
 /*
  * Body of the delete-template confirmation modal (core/modal_delete_cancel).
- * Rendered at body level, outside .local-dimensions-manage, so the manage
- * custom properties are not in scope — literal hexes from the same palette.
+ * Rendered at body level, outside .local-dimensions-manage. The colour tokens are
+ * declared on :root, so they resolve here as they do inside the hub.
  */
 .local-dimensions-delete-template-name {
     margin-bottom: 0.25rem;
-    color: #6c7787;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-delete-template-shortname {
     font-size: 1.05rem;
     font-weight: 600;
-    color: #1c2433;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-delete-template-inplans {
     margin-bottom: 0.75rem;
     font-size: 0.9rem;
-    color: #3a4658;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .local-dimensions-delete-template-options {
@@ -6989,19 +7336,19 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
     gap: 0.5rem;
     margin: 0;
     padding: 0.5rem 0.625rem;
-    border: 1px solid #cdc3b0;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.5rem;
     cursor: pointer;
 }
 
 .local-dimensions-delete-template-option:has(input:checked) {
-    border-color: #cee0f3;
-    background: #e6f0fb;
+    border-color: var(--local-dimensions-ink-muted);
+    background: var(--local-dimensions-brand-tint);
 }
 
 .local-dimensions-delete-template-option:has(input:focus-visible) {
-    outline: 2px solid #0f6cbf;
-    outline-offset: 1px;
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 .local-dimensions-delete-template-option input {
@@ -7019,7 +7366,7 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 
 .local-dimensions-delete-template-option-note {
     font-size: 0.8rem;
-    color: #6c7787;
+    color: var(--local-dimensions-ink-muted);
 }
 
 
@@ -7056,14 +7403,14 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 
 /*
  * Course cards inside the "Courses & activities" modal. Rendered at body
- * level (core/modal), outside .local-dimensions-manage, so the manage custom
- * properties are not in scope — literal hexes from the same palette.
+ * level (core/modal), outside .local-dimensions-manage; the colour tokens are
+ * declared on :root, so they resolve here as they do inside the hub.
  * Each linked course is one bordered card; its expanded activities stay
  * inside the border, separated by a dashed rule.
  */
 .local-dimensions-central-links-card {
     padding: 0.5rem 0.75rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.5rem;
 }
 
@@ -7079,7 +7426,7 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
 .local-dimensions-central-links-acts {
     margin-top: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 1px dashed #dee2e6;
+    border-top: 1px dashed var(--local-dimensions-line);
 }
 
 .local-dimensions-central-links-badge {
@@ -7099,25 +7446,25 @@ a.local-dimensions-central-links-badge:focus {
 }
 
 .local-dimensions-central-links-badge-ok {
-    border: 1px solid #86af84;
-    background: #d7e4d6;
-    color: #153114;
+    border: 1px solid var(--local-dimensions-success-edge);
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
 }
 
 a.local-dimensions-central-links-badge-ok:hover,
 a.local-dimensions-central-links-badge-ok:focus {
-    color: #153114;
+    color: var(--local-dimensions-success-ink);
 }
 
 .local-dimensions-central-links-badge-warn {
-    border: 1px solid #f3bd71;
-    background: #fcefdc;
-    color: #60451f;
+    border: 1px solid var(--local-dimensions-warning-edge);
+    background: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
 }
 
 a.local-dimensions-central-links-badge-warn:hover,
 a.local-dimensions-central-links-badge-warn:focus {
-    color: #60451f;
+    color: var(--local-dimensions-warning-ink);
 }
 
 /*
@@ -7131,7 +7478,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 }
 
 .local-dimensions-central-links-act + .local-dimensions-central-links-act {
-    border-top: 1px dashed #dee2e6;
+    border-top: 1px dashed var(--local-dimensions-line);
 }
 
 .local-dimensions-central-links-actname {
@@ -7150,10 +7497,10 @@ a.local-dimensions-central-links-badge-warn:focus {
     align-items: center;
     flex: none;
     padding: 0 0.4rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.375rem;
-    background: #f8f9fa;
-    color: #6a737b;
+    background: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink-muted);
     font-size: 0.7rem;
     white-space: nowrap;
 }
@@ -7161,9 +7508,9 @@ a.local-dimensions-central-links-badge-warn:focus {
 /* Add-activity search: in-flow result list under the input, matching the card border. */
 .local-dimensions-central-links-actsearch-list {
     margin-top: 0.25rem;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 0.5rem;
-    background: #fff;
+    background: var(--local-dimensions-surface);
     max-height: 12rem;
     overflow: auto;
 }
@@ -7174,18 +7521,23 @@ a.local-dimensions-central-links-badge-warn:focus {
     width: 100%;
     padding: 0.25rem 0.5rem;
     border: 0;
-    background: #fff;
+    background: var(--local-dimensions-surface);
     text-align: left;
     font-size: 0.875rem;
 }
 
 .local-dimensions-central-links-actsearch-item + .local-dimensions-central-links-actsearch-item {
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid var(--local-dimensions-line);
 }
 
 .local-dimensions-central-links-actsearch-item:hover,
 .local-dimensions-central-links-actsearch-item:focus {
-    background: #e7f0f9;
+    background: var(--local-dimensions-brand-tint);
+}
+
+.local-dimensions-central-links-actsearch-item:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
 }
 
 /*
@@ -7194,7 +7546,7 @@ a.local-dimensions-central-links-badge-warn:focus {
  * grey that loses contrast on the active-row background.
  */
 .local-dimensions-central-links-code {
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
 }
 
 .form-autocomplete-suggestions li:hover .local-dimensions-central-links-code,
@@ -7264,12 +7616,12 @@ a.local-dimensions-central-links-badge-warn:focus {
 /*
  * IMP-10: the hub's three tabs get an icon (in the label, built in central.php) and a flat accent
  * indicator on the active tab, scoped to the hub page so the restyle never leaks to the many other
- * core dynamic_tabs consumers site-wide. The accent (Boost primary) sits only on the 2px underline
- * and the keyboard focus ring; the text uses Boost's own gray palette, exactly as core renders its
- * muted and body text. The transition uses --local-dimensions-motion-base / --local-dimensions-motion-ease.
+ * core dynamic_tabs consumers site-wide. The accent sits only on the 2px underline, the focus ring
+ * takes the plugin's focus-ring token, and the text takes the ink tokens, which resolve to core's
+ * own muted and body values. The transition uses --local-dimensions-motion-base / -motion-ease.
  */
 .local-dimensions-central-page .dynamictabs .nav-tabs .nav-link {
-    color: #6a737b;
+    color: var(--local-dimensions-ink-muted);
     background-color: transparent;
     border: 0;
     box-shadow: inset 0 -2px 0 transparent;
@@ -7279,7 +7631,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 }
 
 .local-dimensions-central-page .dynamictabs .nav-tabs .nav-link:hover {
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
 }
 
 /*
@@ -7287,15 +7639,15 @@ a.local-dimensions-central-links-badge-warn:focus {
  * a visible keyboard focus indicator with the plugin's own outline pattern (mouse focus is untouched).
  */
 .local-dimensions-central-page .dynamictabs .nav-tabs .nav-link:focus-visible {
-    color: #1d2125;
-    outline: 2px solid var(--bs-primary, #0f6cbf);
+    color: var(--local-dimensions-ink);
+    outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: -2px;
 }
 
 .local-dimensions-central-page .dynamictabs .nav-tabs .nav-link.active {
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
     font-weight: 500;
-    box-shadow: inset 0 -2px 0 var(--bs-primary, #0f6cbf);
+    box-shadow: inset 0 -2px 0 var(--local-dimensions-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -7417,15 +7769,15 @@ a.local-dimensions-central-links-badge-warn:focus {
     width: max-content;
     padding: 0.35rem 0.55rem;
     border-radius: 0.25rem;
-    background: #1d2125;
-    color: #fff;
+    background: var(--local-dimensions-ink);
+    color: var(--local-dimensions-surface);
     font-size: 0.75rem;
     font-weight: 400;
     line-height: 1.35;
     text-align: left;
     white-space: normal;
     overflow-wrap: anywhere;
-    box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 15%);
+    box-shadow: 0 0.5rem 1rem var(--local-dimensions-shadow);
     z-index: 20;
 }
 
@@ -7435,7 +7787,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     left: 50%;
     transform: translateX(-50%);
     border: 5px solid transparent;
-    border-top-color: #1d2125;
+    border-top-color: var(--local-dimensions-ink);
     z-index: 21;
 }
 
@@ -7453,7 +7805,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     bottom: auto;
     top: calc(100% + 3px);
     border-top-color: transparent;
-    border-bottom-color: #1d2125;
+    border-bottom-color: var(--local-dimensions-ink);
 }
 
 /* Delay on entry only, so brushing past does not flicker. */
@@ -7480,20 +7832,20 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-tplimport-reassurance {
     margin-bottom: 12px;
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     font-size: 14px;
 }
 
 .local-dimensions-tplimport-notices {
     margin-bottom: 16px;
     padding-left: 20px;
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     font-size: 13.5px;
 }
 
 .local-dimensions-tplimport-group {
     margin-bottom: 12px;
-    border: 1px solid #e4e7ea;
+    border: 1px solid var(--local-dimensions-line);
     border-radius: 10px;
     overflow: hidden;
 }
@@ -7505,7 +7857,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     width: 100%;
     padding: 10px 14px;
     border: 0;
-    background: #f5f7f9;
+    background: var(--local-dimensions-surface-alt);
     text-align: left;
     cursor: pointer;
 }
@@ -7520,11 +7872,11 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-tplimport-groupcount {
     font-weight: 700;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-tplimport-grouphelp {
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     font-size: 13px;
     font-weight: 400;
 }
@@ -7535,7 +7887,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-tplimport-row {
     padding: 10px 0;
-    border-top: 1px solid #eef0f2;
+    border-top: 1px solid var(--local-dimensions-line);
 }
 
 .local-dimensions-tplimport-row:first-child {
@@ -7551,19 +7903,19 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-tplimport-name {
     font-weight: 600;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-tplimport-id,
 .local-dimensions-tplimport-rownum {
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 12.5px;
 }
 
 .local-dimensions-tplimport-reason,
 .local-dimensions-tplimport-blast {
     margin: 6px 0 0;
-    color: #495057;
+    color: var(--local-dimensions-ink-muted);
     font-size: 13px;
 }
 
@@ -7575,16 +7927,16 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-tplimport-field {
     font-family: monospace;
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-tplimport-from {
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     text-decoration: line-through;
 }
 
 .local-dimensions-tplimport-to {
-    color: #1d2125;
+    color: var(--local-dimensions-ink);
 }
 
 .local-dimensions-tplimport-remedies,
@@ -7595,7 +7947,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-tplimport-sublabel {
     display: block;
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 12px;
     font-weight: 600;
 }
@@ -7622,7 +7974,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 }
 
 .local-dimensions-tplimport-linkdetail {
-    color: #6c757d;
+    color: var(--local-dimensions-ink-muted);
     font-size: 12.5px;
 }
 
@@ -7661,9 +8013,9 @@ a.local-dimensions-central-links-badge-warn:focus {
       classes/local/bootstrap.php, its three mark_page() callers, and the polyfill arm of
       tests/local/bootstrap_compat_test.php. */
 
-/* Screen-reader-only text. BS5's .visually-hidden, absent from 4.5 entirely, so all 24
-   sites rendered as ordinary visible text - stray captions above every table and a
-   literal "opens in new window" after every external link. BS5 marks these !important;
+/* Screen-reader-only text. BS5's .visually-hidden, absent from 4.5 entirely, so every one
+   of its 25 sites rendered as ordinary visible text - stray captions above every table and
+   a literal "opens in new window" after every external link. BS5 marks these !important;
    the body gate supplies the specificity instead. */
 body.local-dimensions-bs4 .visually-hidden {
     position: absolute;
@@ -7706,9 +8058,9 @@ body.local-dimensions-bs4 .form-select {
 }
 
 body.local-dimensions-bs4 .form-select:focus {
-    border-color: #0f6cbf;
-    outline: 0;
-    box-shadow: 0 0 0 3px rgba(15, 108, 191, 0.25);
+    border-color: var(--local-dimensions-accent);
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 body.local-dimensions-bs4 .form-select-sm {
@@ -7788,7 +8140,7 @@ body.local-dimensions-bs4 .form-switch .form-check-label::before {
     width: 2.25em;
     height: 1.25em;
     content: "";
-    background-color: #adb5bd;
+    background-color: var(--local-dimensions-line);
     border-radius: 1em;
     transition: background-color 150ms ease-in-out;
 }
@@ -7801,13 +8153,13 @@ body.local-dimensions-bs4 .form-switch .form-check-label::after {
     width: 0.95em;
     height: 0.95em;
     content: "";
-    background-color: #fff;
+    background-color: var(--local-dimensions-surface);
     border-radius: 50%;
     transition: transform 150ms ease-in-out;
 }
 
 body.local-dimensions-bs4 .form-switch .form-check-input:checked ~ .form-check-label::before {
-    background-color: #0f6cbf;
+    background-color: var(--local-dimensions-brand-fill);
 }
 
 body.local-dimensions-bs4 .form-switch .form-check-input:checked ~ .form-check-label::after {
@@ -7815,7 +8167,8 @@ body.local-dimensions-bs4 .form-switch .form-check-input:checked ~ .form-check-l
 }
 
 body.local-dimensions-bs4 .form-switch .form-check-input:focus ~ .form-check-label::before {
-    box-shadow: 0 0 0 3px rgba(15, 108, 191, 0.25);
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 /* Modal close button. Core 4.5's lib/templates/modal.mustache emits the close button WITH a

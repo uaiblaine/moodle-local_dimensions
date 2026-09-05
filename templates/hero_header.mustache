@@ -63,7 +63,7 @@
 <div class="local-dimensions-hero-wrapper {{#hasbgimage}}local-dimensions-hero-has-image{{/hasbgimage}} {{#slim}}local-dimensions-hero-slim{{/slim}}" id="local-dimensions-hero"
      {{#hasbgimage}}style="--hero-bg-image: url('{{bgimage}}'); {{#hasbgcolor}}--hero-overlay-color: {{bgcolor}};{{/hasbgcolor}}"{{/hasbgimage}}>
     <div class="local-dimensions-hero {{^hasbgcolor}}{{^hasbgimage}}bg-primary{{/hasbgimage}}{{/hasbgcolor}}"
-         style="{{#hasbgcolor}}{{^hasbgimage}}background-color: {{bgcolor}};{{/hasbgimage}}{{/hasbgcolor}}{{#hastextcolor}} color: {{textcolor}};{{/hastextcolor}}">
+         style="{{#hasbgcolor}}--dimension-custombgcolor: {{bgcolor}};{{^hasbgimage}} background-color: {{bgcolor}};{{/hasbgimage}}{{/hasbgcolor}}{{#hastextcolor}} --dimension-customtextcolor: {{textcolor}}; color: {{textcolor}};{{/hastextcolor}}">
         <div class="local-dimensions-hero-content" id="local-dimensions-hero-content">
             <h1 class="local-dimensions-hero-title">{{{title}}}</h1>
             {{#hasdescription}}

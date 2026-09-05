@@ -8,6 +8,57 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **The whole colour contract is a build gate now, not a paragraph.**
+  `tests/local/colour_tokens_test.php` grew from four accessibility arms to seventeen, covering
+  every rule the design states: no colour literal outside the token block or a named exemption
+  (checked in both directions, so an exemption that stops matching anything fails too), the
+  `:root` block declaring exactly the 34 contract tokens with their exact chains, the 34 suffixes
+  matching the array `block_dimensions` carries byte-identically, the two plugins' blocks being
+  the same block under two prefixes, the dark block assigning only the three plugin-owned
+  decorative tokens, every colour-mode selector anchored at `:root`, the OS-preference fallback
+  written and unreachable, three coloured inks never normal-size text on the inset surface
+  (resolved through selector ancestry, with a ratchet on what the scanner cannot resolve), every
+  declared pair clearing its WCAG floor in all three resolutions with the arithmetic done in the
+  test and the values read out of the stylesheet, the admin's colours never owned by the mode
+  layer, the hero transport intact and its `{{^hasbgimage}}` guard present, branded islands free
+  of mode tokens, the plugin never writing the host's colour-mode attribute, `ink-faint` only ever
+  inactive text, and every `var()` naming a token something declares. Every arm was
+  mutation-checked before it landed: the mutation applied, the suite run, the redness confirmed
+  and the mutation reverted.
+- **`classes/local/colour_mode.php`** - the four attribute names in the family's activation
+  contract, and deliberately no `is_dark()`: whether the page is dark is not server-knowable, and
+  a wrong guess is the exact defect the design exists to prevent.
+- **Behat cover for the colour contract** (`tests/behat/colour_mode.feature`, five new steps).
+  Three scenarios assert a relative invariant - the plugin surface equals the page surface - so
+  they hold on every supported branch with no skip: one with the host saying nothing, one with the
+  host in dark mode, and one inside a dialogue, which is the `local_awareness` defect class where
+  an unresolved `var()` leaves an element with no background at all. The fourth asserts the three
+  plugin-owned tokens flip, and gates itself by measuring at runtime whether this Moodle ships a
+  dark palette rather than guessing from a version number. The feature switches `themedesignermode`
+  on, and that is load-bearing rather than incidental: Behat saves the compiled theme CSS when the
+  site is initialised and restores it around every run, so with the cache in play all four
+  scenarios stayed green with the whole dark activation block deleted. Designer mode compiles the
+  same CSS per request, which is what makes the assertions about the stylesheet in the tree.
+- **A sixth arm on `bootstrap_compat_test`: zero deprecated Bootstrap 4 class names.** The
+  asymmetry runs both ways, and this is the direction that is easy to miss - `sr-only`, `ml-*` and
+  their siblings do resolve on 5.x, but only through `bs4-compat.scss`, which marks each one
+  deprecated and which Moodle 6.0 deletes.
+
+- **Enforcement for the four accessibility rules no other gate can see.**
+  `tests/local/colour_tokens_test.php` fails the build when a focus indicator is drawn with a
+  `box-shadow` instead of a real outline (nothing paints a shadow in Windows High Contrast mode),
+  when a focus ring is anchored to the brand colour or a literal instead of the focus-ring token,
+  when the favourite star stops swapping its glyph, and when a control that renders only an
+  aria-hidden icon carries no `aria-label`. Each of the five arms was mutation-checked before it
+  landed: the mutation was applied, the suite run, the redness confirmed and the mutation
+  reverted. phpcs reads PHP, the mustache lint reads markup structure and stylelint reads CSS
+  syntax; none of them can tell any of these four things apart from their correct form.
+- **Windows High Contrast support, which the plugin had none of.** `prefers-contrast: high` and
+  `forced-colors: active` are unrelated media features, and the four blocks this plugin had were
+  addressing only the first. Under forced colours every background collapses to the system canvas,
+  so the three selected states carried by a fill alone — the toolbar pill groups, the chip filters
+  and the list/grid toggle — now also draw a dashed outline, which is a property the browser does
+  paint (and remaps) in that mode.
 - **The Competency hub from a course category's "More" menu.** A manager who holds
   `moodle/competency:competencymanage` or `templatemanage` in a course category (and nowhere
   else) now finds the hub beside core's *Competency frameworks* and *Learning plan templates*
@@ -45,6 +96,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Eleven Bootstrap 4 class names migrated to their Bootstrap 5 spellings** - seven `sr-only`
+  spans in `accordion.js`, `competency_view.js` and `central/competency_links.js` become
+  `visually-hidden`, and the four `ml-2`/`mr-2` utilities become `ms-2`/`me-2`. The BS5 spelling
+  alone is correct on both branches: 4.5's forward bridge covers the spacers, and the plugin's own
+  polyfill covers `visually-hidden`.
+- **CI checks out `block_dimensions` beside the plugin on every job.** The two share one
+  colour-token contract under two frankenstyle prefixes, and the test that compares the two blocks
+  can only run where both are installed; a skip nobody notices is how a cross-repo lock quietly
+  stops running, so a further test reads the workflow file and fails the build for any job that
+  drops the line. It is not a runtime dependency: neither plugin declares the other.
+
+- **Focus indicators converge on one ring across both dimensions plugins.**
+  `outline: 2px solid var(--local-dimensions-focus-ring)` with a 2px offset, everywhere: the two
+  3px rings and the stray 1px and 3px offsets are gone, and the two duplicate
+  `.local-dimensions-filter-tab` rule blocks now declare a byte-identical focus rule so source
+  order no longer decides how a filter pill draws focus. Ten controls that had no ring at all
+  gained one — the course-card title link and its `-single-go` twin, the activity row, the hub's
+  outline button, the structure related chip, the activity-search rows, the plans resizer, the
+  drag grip, the plugin-skinned modal close chip and the referenced-competency modal's close.
+  On the two branded islands the ring is `currentcolor`, because their ground is the admin's own
+  colour in both modes and the emphasis extreme would be wrong there.
+- **`prefers-contrast: high` no longer assumes a light page.** The progress-ring block hardcoded
+  `#157347` for the arc and `#000` for the readout, both chosen against white; `#157347` measures
+  2.63:1 on a dark page, which is *worse* than the value it was replacing (3.40:1) and below the
+  3:1 floor. All three declarations now read tokens that flip with the host. The hero and the FAB
+  blocks keep a fixed ink and say why: their ground is a branded island, which does not flip.
+- **The competency tracker's course card gains the hover and focus feedback it never had**, and
+  its face, border, radius and shadow are the companion block's, so a learner moving between the
+  two never meets two card shapes. The locked card takes the same 0.5rem radius.
+- **The favourite star swaps its glyph as well as its colour** (`fa-star` / `fa-star-o`), in the
+  template and when the star is toggled without a reload, matching what `block_dimensions` has
+  always done. State carried by colour alone is a WCAG 1.4.1 failure.
+- **Two screen-reader-only spans move from `sr-only` to `visually-hidden`**, the spelling the
+  other 25 sites in this plugin already use and the one its Bootstrap 4 polyfill defines. `sr-only`
+  resolves on 5.x only through the compatibility layer Moodle 6.0 deletes.
 - **The hub's course category picker searches on demand instead of listing every category.**
   The context bar used to enumerate every category the viewer could see on every render —
   a context instantiation and up to four capability checks per category, a nested name built
@@ -72,6 +158,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **The admin's chosen hero text colour was inert, and had been for as long as the rule existed.**
+  `styles.css` reads `--dimension-customtextcolor` five times - the hero title, description,
+  due-date label and value, and the collapse button - and nothing had ever written it: the colour
+  reached the DOM as a bare inline `color:` on the ancestor, which all five descendants then
+  overrode with their own white fallback. The hero now emits both
+  `--dimension-custombgcolor` and `--dimension-customtextcolor` beside the plain properties, which
+  is the transport `block_dimensions` has always used, so the two plugins now carry an admin colour
+  the same way. The inline background keeps its `{{^hasbgimage}}` guard, which is load-bearing: a
+  class selector never outranks an inline style and `!important` is banned fleet-wide, so without
+  the guard an opaque colour paints over the hero photograph and no stylesheet can undo it.
+
+- **The icon picker's two icon-only buttons reach a screen reader with a name.** The chevron and
+  the clear button had a `title` and nothing else; `title` alone is exposed inconsistently across
+  browser and screen-reader pairings and never appears on touch. Both now carry an `aria-label`
+  built from the string they already had, so no new lang key was needed.
+- **The custom-SCSS editor's focus indicator survives forced colours.** Its only ring was a
+  `box-shadow` glow, which that mode does not paint at all; it is a real outline now.
 - **The enrolment methods pane explains itself when the plan has no linked courses.** The
   methods act on the courses linked to the plan's competencies; a plan with no competencies,
   or none linked to a course the viewer may configure, showed an empty grid that read as a

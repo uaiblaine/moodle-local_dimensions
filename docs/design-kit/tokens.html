@@ -1,4 +1,4 @@
-<!-- @dsCard group="Foundations" name="Tokens" subtitle="Boost values under --mds-* names; styles.css declares motion + loading height and writes the rest as literals" -->
+<!-- @dsCard group="Foundations" name="Tokens" subtitle="styles.css declares 34 colour tokens on bare :root, light and dark; the --mds-* names below document core's palette and are never shipped" -->
 <style>
 :root{
   --mds-color-blue-50:#e7f0f9;--mds-color-blue-100:#cfe2f2;--mds-color-blue-200:#9fc4e5;--mds-color-blue-500:#0f6cbf;--mds-color-blue-600:#0c5699;--mds-color-blue-700:#094173;--mds-color-blue-800:#062b4c;
@@ -63,7 +63,156 @@ body{font-family:var(--font-sans);color:var(--mds-text-default);background:var(-
 .scalebar{height:14px;background:var(--mds-bg-interactive-primary-default);border-radius:2px;}
 .type span{display:block;}
 code{font-family:var(--font-mono);font-size:10px;}
+.cols{display:flex;flex-wrap:wrap;gap:22px;}
+.col{flex:1 1 45%;min-width:19rem;}
+.col h3{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--mds-text-default);margin:0 0 10px;}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;}
+.tk{display:grid;grid-template-columns:34px 1fr auto;gap:8px 10px;align-items:center;margin:5px 0;}
+.tk .chip{width:34px;height:22px;border-radius:6px;border:var(--mds-stroke-sm) solid rgba(128,128,128,.35);}
+.tk .nm{font-size:11px;font-weight:600;}
+.tk .nm small{display:block;font-weight:400;color:var(--mds-text-muted);}
+.tk .hex{font-family:var(--font-mono);font-size:10px;color:var(--mds-text-muted);text-align:right;}
+.darkbox{background:#1d2125;border-radius:10px;padding:12px 14px;}
+.darkbox .tk .nm{color:#dee2e6;}
+.darkbox .tk .nm small{color:#adb5bd;}
+.darkbox .tk .hex{color:#adb5bd;}
+.warn{border:var(--mds-stroke-sm) solid var(--mds-border-default);border-left:3px solid var(--mds-bg-interactive-danger-default);border-radius:var(--mds-radius-md);background:var(--mds-bg-surface-default);padding:10px 12px;margin-bottom:18px;}
+.warn .t{font-size:12px;font-weight:600;margin-bottom:4px;}
+.warn p{font-size:11px;color:var(--mds-text-subtle);margin:4px 0 0;}
+.flag{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:10px;white-space:nowrap;margin-left:4px;}
+.flag.keep{background:rgba(253,126,20,.12);color:#8a4a10;border:var(--mds-stroke-sm) solid rgba(253,126,20,.35);}
+.darkbox .flag.keep{color:#f6ce95;}
 </style>
+
+<div class="warn">
+  <div class="t">The <code>--mds-*</code> names on this page are documentation. They are never shipped.</div>
+  <p><code>--mds-*</code> is <b>core's</b> design-system namespace: Moodle 5.2 ships
+     <code>theme/boost/scss/design-system/</code> defining <code>$mds-*</code>, 5.1 has no such directory, and
+     5.3 LTS brings MDS React. Naming core's palette here is how this kit stays legible against core's own
+     vocabulary, and it is legitimate <b>in documentation</b>. Declaring those names in shipped CSS is not:
+     it squats a namespace core is actively expanding, and on <code>:root</code> it does so globally. The
+     plugin's stylesheet therefore declares only <code>--local-dimensions-*</code>. If a future reader is
+     tempted to "finish the job" by moving this block into <code>styles.css</code>, that is the mistake this
+     paragraph exists to prevent. (The plugin's own <code>--mds-*</code> motion tokens were renamed away for
+     exactly this reason on 2026-08-06; see the comment at the head of <code>styles.css</code>.)</p>
+</div>
+
+<div class="h">What <code>styles.css</code> ships — 34 colour tokens on bare <code>:root</code></div>
+<div class="note" style="margin-bottom:8px;">
+  The plugin does not own a palette; it <b>delegates</b> to core's and names only the roles it needs. 30 of the
+  34 are written <code>var(--bs-NEW, var(--BS4-OLD, #literal))</code>. Measured on the running stacks: Moodle 4.5
+  declares <b>none</b> of these <code>--bs-*</code> names and Moodle 5.1/5.2 declare <b>none</b> of the Bootstrap 4
+  legacy names, so exactly one rung resolves per branch and the literal is a safety net. Because Moodle 5.1/5.2
+  already compile a complete <code>[data-bs-theme="dark"]</code> token block, <b>those 30 are dark-correct with no
+  dark rule at all</b> — the plugin's card face <i>is</i> <code>--bs-body-bg</code>, the same value the page
+  background uses, so the two cannot disagree. Only <b>three</b> tokens carry a plugin-authored dark value.
+  The dark column below is core's own measured output, read from the compiled Boost sheet on m502.
+</div>
+
+<div class="cols">
+  <div class="col">
+    <h3><span class="dot" style="background:#8a8980"></span>Light — Moodle 5.x, and the 4.5 literal</h3>
+    <div class="tk"><span class="chip" style="background:#fff"></span><span class="nm">surface <small>card face, panel, modal body, popover</small></span><span class="hex">#fff</span></div>
+    <div class="tk"><span class="chip" style="background:#f8f9fa"></span><span class="nm">surface-alt <small>quiet wash: card body, hover tint, input rest</small></span><span class="hex">#f8f9fa</span></div>
+    <div class="tk"><span class="chip" style="background:#e9ecef"></span><span class="nm">surface-inset <small>a platter a control sits <i>in</i>: tab platter, progress track</small></span><span class="hex">#e9ecef</span></div>
+    <div class="tk"><span class="chip" style="background:#dee2e6"></span><span class="nm">line <small>every hairline: card border, divider, dashed ghost</small></span><span class="hex">#dee2e6</span></div>
+    <div class="tk"><span class="chip" style="background:#1d2125"></span><span class="nm">ink <small>heading and value text</small></span><span class="hex">#1d2125</span></div>
+    <div class="tk"><span class="chip" style="background:rgba(29,33,37,.75)"></span><span class="nm">ink-muted <small>caption, eyebrow, rest-state control label</small></span><span class="hex">rgb(29 33 37 / 75%)</span></div>
+    <div class="tk"><span class="chip" style="background:rgba(29,33,37,.5)"></span><span class="nm">ink-faint <small>inactive-control text and placeholders <b>only</b></small></span><span class="hex">rgb(29 33 37 / 50%)</span></div>
+    <div class="tk"><span class="chip" style="background:#000"></span><span class="nm">ink-strong <small>maximum-contrast ink</small></span><span class="hex">#000</span></div>
+    <div class="tk"><span class="chip" style="background:#0f6cbf"></span><span class="nm">accent <small>brand as foreground: link, active label, brand icon</small></span><span class="hex">#0f6cbf</span></div>
+    <div class="tk"><span class="chip" style="background:#0c5699"></span><span class="nm">accent-hover</span><span class="hex">#0c5699</span></div>
+    <div class="tk"><span class="chip" style="background:#062b4c"></span><span class="nm">brand-ink <small>on brand-tint</small></span><span class="hex">#062b4c</span></div>
+    <div class="tk"><span class="chip" style="background:#cfe2f2"></span><span class="nm">brand-tint</span><span class="hex">#cfe2f2</span></div>
+    <div class="tk"><span class="chip" style="background:#9fc4e5"></span><span class="nm">brand-edge</span><span class="hex">#9fc4e5</span></div>
+    <div class="tk"><span class="chip" style="background:#153114"></span><span class="nm">success-ink</span><span class="hex">#153114</span></div>
+    <div class="tk"><span class="chip" style="background:#d7e4d6"></span><span class="nm">success-tint</span><span class="hex">#d7e4d6</span></div>
+    <div class="tk"><span class="chip" style="background:#aecaad"></span><span class="nm">success-edge</span><span class="hex">#aecaad</span></div>
+    <div class="tk"><span class="chip" style="background:#60451f"></span><span class="nm">warning-ink</span><span class="hex">#60451f</span></div>
+    <div class="tk"><span class="chip" style="background:#fcefdc"></span><span class="nm">warning-tint</span><span class="hex">#fcefdc</span></div>
+    <div class="tk"><span class="chip" style="background:#f9deb8"></span><span class="nm">warning-edge</span><span class="hex">#f9deb8</span></div>
+    <div class="tk"><span class="chip" style="background:#51140d"></span><span class="nm">danger-ink</span><span class="hex">#51140d</span></div>
+    <div class="tk"><span class="chip" style="background:#f4d6d2"></span><span class="nm">danger-tint</span><span class="hex">#f4d6d2</span></div>
+    <div class="tk"><span class="chip" style="background:#eaada6"></span><span class="nm">danger-edge</span><span class="hex">#eaada6</span></div>
+    <div class="tk"><span class="chip" style="background:#00343c"></span><span class="nm">info-ink</span><span class="hex">#00343c</span></div>
+    <div class="tk"><span class="chip" style="background:#cce6ea"></span><span class="nm">info-tint</span><span class="hex">#cce6ea</span></div>
+    <div class="tk"><span class="chip" style="background:#99cdd5"></span><span class="nm">info-edge</span><span class="hex">#99cdd5</span></div>
+    <div class="tk"><span class="chip" style="background:#525557"></span><span class="nm">neutral-ink</span><span class="hex">#525557</span></div>
+    <div class="tk"><span class="chip" style="background:#f5f6f8"></span><span class="nm">neutral-tint</span><span class="hex">#f5f6f8</span></div>
+    <div class="tk"><span class="chip" style="background:#ebeef0"></span><span class="nm">neutral-edge</span><span class="hex">#ebeef0</span></div>
+    <div class="tk"><span class="chip" style="background:#0f6cbf"></span><span class="nm">brand-fill <small>solid fill under on-brand-fill, and nothing else</small></span><span class="hex">#0f6cbf</span></div>
+    <div class="tk"><span class="chip" style="background:#fff"></span><span class="nm">on-brand-fill <small>the only text allowed on brand-fill</small></span><span class="hex">#fff</span></div>
+    <div class="tk"><span class="chip" style="background:#000"></span><span class="nm">focus-ring <small>chains <code>--bs-emphasis-color</code>, not the focus colour</small></span><span class="hex">#000</span></div>
+    <div class="tk"><span class="chip" style="background:rgba(0,0,0,.1)"></span><span class="nm">shadow <span class="flag keep">plugin-owned</span></span><span class="hex">rgb(0 0 0 / 10%)</span></div>
+    <div class="tk"><span class="chip" style="background:rgba(255,255,255,.72)"></span><span class="nm">scrim <span class="flag keep">plugin-owned</span></span><span class="hex">rgb(255 255 255 / 72%)</span></div>
+    <div class="tk"><span class="chip" style="background:#e8590c"></span><span class="nm">favourite <span class="flag keep">plugin-owned</span></span><span class="hex">#e8590c</span></div>
+  </div>
+  <div class="col">
+    <h3><span class="dot" style="background:#6fa7d9"></span>Dark — core's own values, inherited</h3>
+    <div class="darkbox">
+      <div class="tk"><span class="chip" style="background:#1d2125"></span><span class="nm">surface</span><span class="hex">#1d2125</span></div>
+      <div class="tk"><span class="chip" style="background:#292e33"></span><span class="nm">surface-alt</span><span class="hex">#292e33</span></div>
+      <div class="tk"><span class="chip" style="background:#343a40"></span><span class="nm">surface-inset</span><span class="hex">#343a40</span></div>
+      <div class="tk"><span class="chip" style="background:#495057"></span><span class="nm">line</span><span class="hex">#495057</span></div>
+      <div class="tk"><span class="chip" style="background:#dee2e6"></span><span class="nm">ink</span><span class="hex">#dee2e6</span></div>
+      <div class="tk"><span class="chip" style="background:rgba(222,226,230,.75)"></span><span class="nm">ink-muted</span><span class="hex">rgb(222 226 230 / 75%)</span></div>
+      <div class="tk"><span class="chip" style="background:rgba(222,226,230,.5)"></span><span class="nm">ink-faint</span><span class="hex">rgb(222 226 230 / 50%)</span></div>
+      <div class="tk"><span class="chip" style="background:#fff"></span><span class="nm">ink-strong</span><span class="hex">#fff</span></div>
+      <div class="tk"><span class="chip" style="background:#6fa7d9"></span><span class="nm">accent</span><span class="hex">#6fa7d9</span></div>
+      <div class="tk"><span class="chip" style="background:#8cb9e1"></span><span class="nm">accent-hover</span><span class="hex">#8cb9e1</span></div>
+      <div class="tk"><span class="chip" style="background:#6fa7d9"></span><span class="nm">brand-ink</span><span class="hex">#6fa7d9</span></div>
+      <div class="tk"><span class="chip" style="background:#031626"></span><span class="nm">brand-tint</span><span class="hex">#031626</span></div>
+      <div class="tk"><span class="chip" style="background:#094173"></span><span class="nm">brand-edge</span><span class="hex">#094173</span></div>
+      <div class="tk"><span class="chip" style="background:#86af84"></span><span class="nm">success-ink</span><span class="hex">#86af84</span></div>
+      <div class="tk"><span class="chip" style="background:#0b180a"></span><span class="nm">success-tint</span><span class="hex">#0b180a</span></div>
+      <div class="tk"><span class="chip" style="background:#20491e"></span><span class="nm">success-edge</span><span class="hex">#20491e</span></div>
+      <div class="tk"><span class="chip" style="background:#f6ce95"></span><span class="nm">warning-ink</span><span class="hex">#f6ce95</span></div>
+      <div class="tk"><span class="chip" style="background:#302310"></span><span class="nm">warning-tint</span><span class="hex">#302310</span></div>
+      <div class="tk"><span class="chip" style="background:#90682f"></span><span class="nm">warning-edge</span><span class="hex">#90682f</span></div>
+      <div class="tk"><span class="chip" style="background:#df8379"></span><span class="nm">danger-ink</span><span class="hex">#df8379</span></div>
+      <div class="tk"><span class="chip" style="background:#280a06"></span><span class="nm">danger-tint</span><span class="hex">#280a06</span></div>
+      <div class="tk"><span class="chip" style="background:#791d13"></span><span class="nm">danger-edge</span><span class="hex">#791d13</span></div>
+      <div class="tk"><span class="chip" style="background:#66b3c0"></span><span class="nm">info-ink</span><span class="hex">#66b3c0</span></div>
+      <div class="tk"><span class="chip" style="background:#001a1e"></span><span class="nm">info-tint</span><span class="hex">#001a1e</span></div>
+      <div class="tk"><span class="chip" style="background:#004d5a"></span><span class="nm">info-edge</span><span class="hex">#004d5a</span></div>
+      <div class="tk"><span class="chip" style="background:#e2e5e9"></span><span class="nm">neutral-ink</span><span class="hex">#e2e5e9</span></div>
+      <div class="tk"><span class="chip" style="background:#292a2c"></span><span class="nm">neutral-tint</span><span class="hex">#292a2c</span></div>
+      <div class="tk"><span class="chip" style="background:#7c7f83"></span><span class="nm">neutral-edge</span><span class="hex">#7c7f83</span></div>
+      <div class="tk"><span class="chip" style="background:#0f6cbf"></span><span class="nm">brand-fill <small>does <b>not</b> flip — 1.10:1 as text on the dark page</small></span><span class="hex">#0f6cbf</span></div>
+      <div class="tk"><span class="chip" style="background:#fff"></span><span class="nm">on-brand-fill</span><span class="hex">#fff</span></div>
+      <div class="tk"><span class="chip" style="background:#fff"></span><span class="nm">focus-ring</span><span class="hex">#fff</span></div>
+      <div class="tk"><span class="chip" style="background:rgba(0,0,0,.55)"></span><span class="nm">shadow <span class="flag keep">plugin-owned</span></span><span class="hex">rgb(0 0 0 / 55%)</span></div>
+      <div class="tk"><span class="chip" style="background:rgba(29,33,37,.72)"></span><span class="nm">scrim <span class="flag keep">plugin-owned</span></span><span class="hex">rgb(29 33 37 / 72%)</span></div>
+      <div class="tk"><span class="chip" style="background:#fd7e14"></span><span class="nm">favourite <span class="flag keep">plugin-owned</span></span><span class="hex">#fd7e14</span></div>
+    </div>
+  </div>
+</div>
+<div class="note" style="margin-top:8px;">
+  <b>The three marked <code>plugin-owned</code> are the entire dark rule.</b> They are the whole contents of
+  <code>:root[data-bs-theme="dark"]</code>, and core has no equivalent for any of them:
+  <code>--bs-box-shadow</code> is a whole shadow rather than a colour and is absent from the dark block, no core
+  token is a translucent surface, and no single star hue clears 3:1 on both <code>#fff</code> and
+  <code>#343a40</code> (<code>--bs-warning</code> is 1.95:1 on white). That bound is what makes it impossible for
+  this plugin to paint a dark surface on a light page: even if the rule fired on a branch with no dark palette,
+  the worst outcome is a deeper shadow, a darker veil and a brighter star.
+  <code>colour_tokens_test::test_dark_activation_block_assigns_only_plugin_owned_tokens</code> fails the build if a
+  fourth name joins them.
+</div>
+<div class="note" style="margin-top:6px;">
+  <b>Moodle 4.5 differs from the light column in three places only</b>, because its literal is the last rung
+  rather than core's compiled light value: <code>ink-muted</code> is a flat <code>#495057</code>,
+  <code>ink-faint</code> a flat <code>#6a737b</code>, and <code>ink-strong</code> / <code>focus-ring</code> are
+  <code>#343a40</code> rather than <code>#000</code> (still 11.5:1 on <code>surface</code>). Every other token's
+  4.5 literal equals the 5.x light value shown, by construction.
+</div>
+<div class="note" style="margin-top:6px;">
+  <b>Two names on this page are deliberately not tokens.</b> <code>--dimension-custombgcolor</code> and
+  <code>--dimension-customtextcolor</code> are the cross-plugin transport for <i>admin instance data</i> — a
+  colour a site chose. They are read by the surfaces an admin has painted and are never declared in the token
+  block and never re-pointed in the dark rule, so a site's colour stays its colour in both modes and only the
+  neutrals around the island adapt. The hero photo overlays and the glass chips composited over an admin colour
+  stay literals for the same reason: they are relative to the admin's colour, not to the page.
+</div>
 
 <div class="h">Surfaces and borders</div>
 <div class="grid">
@@ -74,10 +223,14 @@ code{font-family:var(--font-mono);font-size:10px;}
   <div class="sw"><div class="bar" style="background:var(--mds-color-gray-900)"></div><div class="lab">text-default · gray-900</div></div>
 </div>
 <div class="note" style="margin-top:6px;">
-  The five stops above are the ones most written in <code>styles.css</code>: <code>#495057</code> 41×,
-  <code>#dee2e6</code> 31×, <code>#e9ecef</code> 30×, <code>#6a737b</code> 28×, <code>#1d2125</code> 22×,
-  <code>#f8f9fa</code> 20×. <code>gray-500</code> (<code>#8f959e</code>) and <code>gray-800</code>
-  (<code>#343a40</code>, 1×) barely appear — the neutral scale actually in use is 100→300 + 600/700/900.
+  <b>These stops are no longer written as literals.</b> They used to be the six most frequent hexes in
+  <code>styles.css</code> (<code>#495057</code> 41×, <code>#dee2e6</code> 31×, <code>#e9ecef</code> 30×,
+  <code>#6a737b</code> 28×, <code>#1d2125</code> 22×, <code>#f8f9fa</code> 20×); every one of those counts
+  is now <b>zero outside the token block</b>. The stops still describe the ramp core hands the plugin — they are
+  just reached through <code>surface</code> / <code>surface-alt</code> / <code>surface-inset</code> /
+  <code>line</code> / <code>ink</code> rather than typed at the point of use, which is what lets them flip in dark
+  mode. <code>colour_tokens_test::test_no_colour_literal_outside_the_token_block</code> fails the build on a new
+  one, and fails equally on an <i>exemption that matches nothing</i>, so the allow-list cannot rot into a blanket.
 </div>
 
 <div class="h">Interactive — solid fills + states (not a tint)</div>
@@ -95,23 +248,33 @@ code{font-family:var(--font-mono);font-size:10px;}
   <span class="btn" style="background:var(--mds-bg-interactive-danger-hover)">Danger hover</span>
 </div>
 <div class="note" style="margin-top:6px;">
-  <b>Focus is an outline, not a halo.</b> The shipped pattern is
-  <code>outline: 2px solid #0f6cbf</code> (or <code>var(--bs-primary, #0f6cbf)</code>) with
-  <code>outline-offset</code>: <b>27</b> <code>:focus-visible</code> rules in <code>styles.css</code>
-  write exactly that, plus 3 at <code>3px</code> for large targets; the offset is
-  <code>2px</code> outside (19×) and <code>-2px</code> inside (11×) when the target touches the
-  container's edge. No rule uses <code>box-shadow: 0 0 0 3px</code> as a ring — <code>blue-200</code>
-  (<code>#9fc4e5</code>) appears only as a hover border (<code>:6291</code>, <code>:6652</code>).
+  <b>Focus is an outline, not a halo — and it is no longer the brand colour.</b> The converged pattern is
+  <code>outline: 2px solid var(--local-dimensions-focus-ring)</code> with <code>outline-offset</code>, written by
+  <b>49</b> rules; the offset is <code>2px</code> outside (36×) and <code>-2px</code> inside (19×) when the
+  target touches its container's edge. The ring chains <code>--bs-emphasis-color</code>, <b>not</b>
+  <code>--bs-focus-ring-color</code>: core's own focus colour does not flip — measured live it is the same
+  <code>rgba(15, 108, 191, .25)</code> in both modes, 1.02:1 against the dark page — and a 3:1 obligation cannot
+  be delegated to a colour the site owner picks either (<code>--bs-link-color</code> is 2.33:1 on that theme's dark
+  card). The emphasis extreme flips and is theme-independent: 21.0 / 19.9 / 17.7 light, 16.2 / 13.7 / 11.5 dark,
+  11.5 / 10.9 / 9.7 on 4.5, against <code>surface</code> / <code>surface-alt</code> / <code>surface-inset</code>.
+  Two offences are now build failures rather than conventions: a focus rule that switches the outline off without
+  drawing another, and one whose only visible signal is a <code>box-shadow</code> — Windows High Contrast Mode
+  renders no <code>box-shadow</code> at all and does not restore an author's <code>outline: none</code>. The one
+  <code>currentcolor</code> ring is on a branded island, where the ground is the admin's colour in both modes.
 </div>
 <div class="note" style="margin-top:6px;">
-  <code>secondary</code> is the only <b>unsaturated</b> fill — grey with adaptive text
-  (<code>--mds-text-default</code>), so it <b>needs</b> a dark variant: default/hover become dark
-  greys under <code>prefers-color-scheme:dark</code>, otherwise it renders white on light grey.
-  <code>primary</code> and <code>danger</code> are saturated fills with fixed white text — the same
-  reading in both schemes, no variant. The swatch above consumes the real token (not the surface),
-  so the card demonstrates what it claims. <b>Real coverage:</b> <code>blue-500</code> has 90 occurrences and
-  <code>blue-600</code> 5; <code>blue-700</code>, <code>red-500</code> and <code>red-600</code> have
-  <b>zero</b> — the hub draws no danger button of its own, it uses Boost's <code>.btn-outline-danger</code>.
+  <code>secondary</code> is the only <b>unsaturated</b> fill — grey with adaptive text — so it needs a dark
+  variant, and in the shipped stylesheet it gets one for free by being <code>surface-inset</code> +
+  <code>ink</code> rather than a fill of its own. <code>primary</code> and <code>danger</code> are saturated fills
+  with fixed white text, the same reading in both schemes. <b>What the plugin actually ships</b> is narrower than
+  this row suggests: exactly one solid brand fill, <code>brand-fill</code>, and the only text permitted on it,
+  <code>on-brand-fill</code>. That pairing is <code>.btn-primary</code>'s own contract and nothing more —
+  <code>--bs-primary</code> does <b>not</b> flip (1.10:1 as text on the dark page), so the brand solid is never an
+  ink, never a border that carries state and never a focus ring. The tone solids (<code>--bs-success</code> and
+  friends) are barred as indicators for the same reason: none of them flip, and their failures fall on disjoint
+  sets per branch. Meaning rides <code>-ink</code> / <code>-tint</code> / <code>-edge</code>, which is what core's
+  own <code>.alert-*</code> is built from, so a plugin chip and a core alert match on the same page. The hub still
+  draws no danger button of its own; it uses Boost's <code>.btn-outline-danger</code>.
 </div>
 
 <div class="h">Feedback — status tints (text at stop 800)</div>
@@ -122,15 +285,17 @@ code{font-family:var(--font-mono);font-size:10px;}
   <span class="fb" style="background:var(--mds-bg-feedback-danger-subtle);color:var(--mds-text-feedback-danger);border-color:var(--mds-text-feedback-danger)">danger · red</span>
 </div>
 <div class="note" style="margin-top:6px;">
-  <b>Where these pairs ship.</b> Two surfaces: the contrast checker
-  (<code>styles.css:361-377</code> — <code>.local-dimensions-contrast .is-success/.is-warning/.is-danger</code>,
-  with the light↔dark inversion at <code>:430-446</code>) and the hub's link badges
-  (<code>:7069-7089</code> — <code>-badge-ok</code> at <code>#d7e4d6/#153114</code>, <code>-badge-warn</code>
-  at <code>#fcefdc/#60451f</code>). The <b>info/cyan</b> pair (<code>#cce6ea</code>/<code>#00343c</code>) has
-  <b>zero</b> occurrences: where the hub needs an informational note it uses Boost's
-  <code>alert alert-info</code> (the import banner, <code>frameworks.js:219</code>). The learner views speak a
-  different vocabulary — there the Bootstrap 5 tints apply (<code>#d1e7dd/#0f5132</code>, <code>#fff3cd/#664d03</code>,
-  <code>#f8d7da/#842029</code>), which coexist with these without mixing.
+  <b>These pairs are now the plugin's only status vocabulary, hub and learner views alike.</b> The two
+  dialects this note used to describe have merged: the hub's link badges and the learner views' evidence and
+  status pills all read the same six <code>-ink</code> / <code>-tint</code> / <code>-edge</code> triples, and the
+  learner-side Bootstrap tints they used to write by hand (<code>#d1e7dd/#0f5132</code>,
+  <code>#fff3cd/#664d03</code>, <code>#f8d7da/#842029</code>) return zero hits. The <b>info/cyan</b> family, which
+  had no occurrence at all, now carries the evidence <code>rule</code> chip — it replaced an orphan purple that
+  belonged to no family. <b>The contrast checker no longer inverts itself.</b> It used to carry its own
+  <code>@media (prefers-color-scheme: dark)</code> rules, which flipped that one panel from the OS preference
+  while the rest of the Moodle page stayed light: a plugin surface dark inside a light page, which is the exact
+  defect the whole token design exists to prevent. Those rules are gone, and the panel now follows the host like
+  everything else.
 </div>
 
 <div class="h">Radius</div>
@@ -142,11 +307,12 @@ code{font-family:var(--font-mono);font-size:10px;}
   <span class="fb" style="border-radius:var(--mds-radius-pill);border-color:var(--mds-border-default)">pill</span>
 </div>
 <div class="note" style="margin-top:6px;">
-  Authoring scale: <code>styles.css</code> writes literals, not these names. The most frequent values
-  match the scale (<code>0.5rem</code> 11×, <code>0.375rem</code>/<code>6px</code> 6+6×,
-  <code>0.75rem</code> 5×, <code>0.25rem</code>/<code>4px</code> 5+3×), with two honest deviations:
-  <code>10px</code> (12×, the hub's chips and badges) and <b>the pill is <code>999px</code></b> (40×), not
-  <code>50rem</code> — which is why the token above is <code>999px</code>.
+  Authoring scale: <code>styles.css</code> still writes radius literals, not these names — <b>radius was never
+  tokenised and does not need to be</b>, since a corner does not change with the colour mode. The most frequent
+  values match the scale (<code>0.5rem</code> 13×, <code>0.375rem</code> 5×, <code>0.75rem</code> 5×,
+  <code>0.25rem</code> 5×), with two honest deviations: <code>10px</code> (13×, the hub's chips and badges) and
+  <b>the pill is <code>999px</code></b> (40×), not <code>50rem</code> — which is why the token above is
+  <code>999px</code>. Only <i>colour</i> literals are banned, and only they are enforced.
 </div>
 
 <div class="h">Spacing (T-shirt scale over rem)</div>
@@ -215,11 +381,16 @@ code{font-family:var(--font-mono);font-size:10px;}
 <div class="callout">
   <div class="t">What the code actually declares and consumes</div>
   <ul style="margin:4px 0 0;padding-left:16px;">
-    <li><code>styles.css :root</code> (<code>:29-34</code>) declares <b>exactly five</b> custom
-        properties: <code>--local-dimensions-motion-fast</code>, <code>--local-dimensions-motion-base</code>,
-        <code>--local-dimensions-motion-flash</code>, <code>--local-dimensions-motion-ease</code> and
-        <code>--local-dimensions-loading-min-height</code>. Everything else on this page is the <b>kit's vocabulary</b>: the
-        values match Boost, but the shipped CSS writes literals.</li>
+    <li><code>styles.css</code> declares <b>two</b> <code>:root</code> blocks: the five motion and loading
+        properties (<code>--local-dimensions-motion-fast</code>, <code>-motion-base</code>,
+        <code>-motion-flash</code>, <code>-motion-ease</code>, <code>-loading-min-height</code>) and the
+        <b>34 colour tokens</b> shown at the top of this page, plus one activation rule,
+        <code>:root[data-bs-theme="dark"]</code>, carrying three declarations. The old claim on this line —
+        "exactly five custom properties, and the shipped CSS writes literals" — has been false since the colour
+        tokens landed.</li>
+    <li>The <code>--mds-*</code> names elsewhere on this page remain the <b>kit's</b> vocabulary for core's
+        palette, and are <b>documentation only</b>: see the warning at the top. The shipped stylesheet declares
+        <code>--local-dimensions-*</code> and nothing else.</li>
     <li>Verified consumers: <code>--local-dimensions-motion-fast</code> on the modal header's chip
         (<code>:4944</code>), <code>--local-dimensions-motion-base</code> on the tab indicator (<code>:7244</code>),
         <code>--local-dimensions-loading-min-height</code> on the busy cover (<code>:4030</code>).</li>
@@ -229,9 +400,10 @@ code{font-family:var(--font-mono);font-size:10px;}
         copies</b> across six hub modules; today it is imported by <code>structure</code>, <code>plans</code>,
         <code>competency_links</code>, <code>enrol_methods</code>, <code>roles_manager</code> and
         <code>related_competencies</code>.</li>
-    <li>Adoption scope: <b>new or reworked</b> surfaces. Retro-tokenising the whole shipped CSS fights the
-        less-code rule, so the divergence between "the kit speaks in tokens" and "the CSS writes
-        literals" is deliberate, not debt.</li>
+    <li>Adoption scope for <b>motion</b> is still new or reworked surfaces only. <b>Colour is no longer
+        opt-in</b>: the retro-tokenisation happened, the divergence this line used to defend is closed, and a
+        colour literal outside the token block now fails the build rather than being tolerated as an
+        un-migrated surface.</li>
     <li>Semantic <code>--mds-*</code> naming (primitive→semantic): when the React MDS lands
         (Moodle 5.3 LTS), the migration becomes a rename, not a redesign.</li>
   </ul>
