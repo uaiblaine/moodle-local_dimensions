@@ -98,7 +98,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .m-title{font-size:12px;font-weight:500;flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .m-body{padding:10px;display:flex;flex-direction:column;gap:8px;}
 .m-x{display:inline-flex;align-items:center;justify-content:center;width:1.4rem;height:1.4rem;padding:0;border:0;border-radius:6px;background:var(--surface-1);color:var(--text-secondary);font-size:10px;flex:none;}
-/* Modal footer: the link group has margin-right:auto (styles.css:5028-5034), so it pushes the
+/* Modal footer: the link group has margin-right:auto (styles.css:5355-5361), so it pushes the
    form's Save/Cancel to the right. */
 .m-foot{display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:0.5px solid var(--border);background:var(--surface-1);}
 .flink{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text-accent);margin-right:auto;}
@@ -113,7 +113,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
 .spin.sm{width:11px;height:11px;}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:1.5s;}}
 /* The pane's busy curtain is a pseudo-element OVER the content already there: a translucent veil +
-   a centred ring, with no text at all (styles.css:4028-4069). */
+   a centred ring, with no text at all (styles.css:4334-4381). */
 .cover{position:relative;overflow:hidden;min-height:96px;}
 .cover::before{content:"";position:absolute;inset:0;z-index:2;background:rgba(255,255,255,0.55);}
 .cover::after{content:"";position:absolute;top:50%;left:50%;z-index:3;width:2rem;height:2rem;margin:-1rem 0 0 -1rem;border:0.25rem solid #0f6cbf;border-right-color:transparent;border-radius:50%;animation:fwk-spin 750ms linear infinite;}
@@ -156,7 +156,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
   <div class="note" style="margin-top:6px;">
     The active tab's indicator is <code>box-shadow: inset 0 -2px 0</code> — it is what is painted above, not a
-    caption: <code>transparent</code> at the base in <code>styles.css:7239-7245</code>, active in
+    caption: <code>transparent</code> at the base in <code>styles.css:7587-7592</code>, active in
     <code>var(--bs-primary,#0f6cbf)</code> at <code>:7261-7265</code>, with the keyboard focus ring at
     <code>:7255-7259</code>. The active tab's text is Boost's dark grey (<code>#1d2125</code>), <b>not</b> the
     accent. The icon enters through the <b>label</b>: <code>central.php</code> assembles <code>$tabicons</code>
@@ -301,7 +301,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
   <div class="note" style="margin-top:6px;">
     The curtain covers the list that is <b>already</b> in the pane — it does not replace it, and it
-    <b>has no text</b>: <code>.local-dimensions-central-tab-loading</code> (<code>styles.css:4028-4031</code>, with
+    <b>has no text</b>: <code>.local-dimensions-central-tab-loading</code> (<code>styles.css:4340-4343</code>, with
     <code>min-height: var(--mds-loading-min-height)</code> = <code>12rem</code>, defined at <code>:34</code>)
     + a <code>::before</code> veil of <code>rgba(255,255,255,0.55)</code> (<code>:4033-4042</code>) +
     a <code>::after</code> ring of <code>2rem</code> in <code>#0f6cbf</code> (<code>:4044-4057</code>), animated by
@@ -417,7 +417,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   <div class="row" style="margin-top:5px;"><span class="idb">FWK-SCALES-LINK</span></div>
   <div class="note" style="margin-top:6px;">
     Injected by JS into the modal's <b>footer</b>, as the <b>first child</b> — it is the group's
-    <code>margin-right:auto</code> (<code>styles.css:5028-5034</code>) that pushes the form's Save/Cancel to the
+    <code>margin-right:auto</code> (<code>styles.css:5355-5361</code>) that pushes the form's Save/Cancel to the
     right, and the position above is the one the code produces
     (<code>injectScalesLink</code>, <code>frameworks.js:134-162</code>; insertion at <code>:161</code>). The same
     footer-link pattern as the participants modal: <code>div.local-dimensions-modal-footer-links</code> +
@@ -426,6 +426,6 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     (<code>:181</code>), with a duplicate guard (<code>:143</code>) and a gate on
     <code>data-canscalespage</code> (<code>:138</code>, the attribute at <code>frameworks.mustache:65</code>). The
     keyboard focus ring of the <code>btn-link</code> is redrawn by hand because Moodle 4.5's Bootstrap 4 zeroes it
-    (<code>styles.css:5041-5045</code>).
+    (<code>styles.css:5342-5354</code>).
   </div>
 </section>

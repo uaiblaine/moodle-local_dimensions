@@ -87,7 +87,7 @@ read as empty. (b) **`MOD.SCALE` trigger** (migrated, above). (c) **The "Open sc
 footer** — injected by `injectScalesLink` (`frameworks.js:134-162`) on `LOADED`, as the **first child of
 `.modal-footer`** (`:160`, so that `margin-right:auto` pushes Save/Cancel across), **only** when
 `activeRegion.dataset.canscalespage === '1'` (`:138`). The form's close chip comes from
-`.modal-form-dialogue` (pure CSS, `styles.css:5063-5103`), not from a class injected in JS —
+`.modal-form-dialogue` (pure CSS, `styles.css:5363-5413`), not from a class injected in JS —
 `injectScalesLink` stopped touching the dialogue (`025c2f6`); before that the class arrived on `LOADED`
 and produced a flash. (d) URL-only description.
 

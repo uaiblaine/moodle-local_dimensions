@@ -33,7 +33,7 @@ lives here**: it is the only place where it would be written.
   (`:29`) and `local_dimensions/collapsible_description` (`:34`)
 - **WS:** `local_dimensions_get_structure_node` (`db/services.php:125-132`) — **it always fetches the
   node fresh**, even when the caller already holds the data on the row (see rule 4)
-- **CSS:** [`styles.css:6660-6712`](../../../styles.css) — the whole contract (table below); plus the
+- **CSS:** [`styles.css:6989-6993`](../../../styles.css) — the whole contract (table below); plus the
   **exclusion** at `:5074`, `:5088`, `:5098-5099`, and the inherited card at `:5813-5817` (24px
   radius) and `:5823-5830` (the 140deg gradient)
 - **Behat:** none

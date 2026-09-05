@@ -191,7 +191,7 @@ templates that contain **all** the chosen competencies survive (`dynamictabs/pla
 | `PLN-FILTER` | `[no label]` | container | `plans.mustache:213` | `data-region="competency-filter"` | — |
 | `PLN-FILTER-LABEL` | "Filter by competencies" | label | `plans.mustache:215` | str `central_plans_filterbycompetencies` | — |
 | `PLN-FILTER-CLEAR` | Clear competency filter | button | `plans.mustache:217-219` | `data-action="clear-competency"` | `fa-times`; only with `{{#filteredbycompetency}}` (`:216`); clears the dataset and `reloadPane` (`plans.js:667-670`) |
-| `PLN-FILTER-CHIP` | competency name | chip (loop) | `plans.mustache:224-231` | `competencyfilters` | `badge local-dimensions-central-chip-accent` (`:224`) — the hub's **soft blue** chip (`styles.css:6808-6814`), not the header's `-plans-chip-accent`; label = `shortname` (`dynamictabs/plans.php:139-142`) |
+| `PLN-FILTER-CHIP` | competency name | chip (loop) | `plans.mustache:224-231` | `competencyfilters` | `badge local-dimensions-central-chip-accent` (`:224`) — the hub's **soft blue** chip (`styles.css:7146-7149`), not the header's `-plans-chip-accent`; label = `shortname` (`dynamictabs/plans.php:139-142`) |
 | `PLN-FILTER-CHIP-REMOVE` | "Remove {$a} from the filter" | icon button | `plans.mustache:226-230` | `data-action="remove-filter-competency"` | the `aria-label` embeds the name (`:228`); drops the id from the CSV and `reloadPane` (`plans.js:671-675`) |
 | `PLN-FILTER-ADD` | Add to filter | button | `plans.mustache:233-236` | `data-action="add-filter-competency"` | `fa-plus`; toggles the picker's `hidden` and moves focus to the input (`plans.js:676-692`). **Progressive disclosure** — `CLAUDE.md` warns: in Behat, open it before interacting |
 | `PLN-FILTER-PICKER` | `[no label]` | panel | `plans.mustache:238-245` | `data-region="competency-filter-picker"` | starts `hidden` (`:239`) |
@@ -221,10 +221,10 @@ templates that contain **all** the chosen competencies survive (`dynamictabs/pla
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
-| `PLN-DETAIL-HEADER` | `[no label]` | header | `plans.mustache:292-295` | `data-region="plan-detail-header"` | three stops through inline custom properties (`--ld-plans-hdr-0/-48/-100`) + the text `color`; the rule is `linear-gradient(140deg, …0%, …48%, …100%)` (`styles.css:5829`, block at `:5823-5837`). The server computes them: base = the template's `bgcolor` field **or `#0f6cbf`**, and the 48/100 stops are `helper::darken_hex(base, 0.16)` and `(base, 0.34)` (`dynamictabs/plans.php:274-275`, `:316-318`). For the `#0f6cbf` default that gives **`#0d5ba0`** and **`#0a477e`** (measured, reproducing `helper.php:3056-3071`). **Gotcha:** the CSS *fallbacks* (`#0d5a9f`, `#0a4680`, `styles.css:5829`) **do not match** what the PHP computes — but they are inert, because `:270` writes the three custom properties **unconditionally**, so the fallback never paints |
+| `PLN-DETAIL-HEADER` | `[no label]` | header | `plans.mustache:292-295` | `data-region="plan-detail-header"` | three stops through inline custom properties (`--ld-plans-hdr-0/-48/-100`) + the text `color`; the rule is `linear-gradient(140deg, …0%, …48%, …100%)` (`styles.css:6183`, block at `:5823-5837`). The server computes them: base = the template's `bgcolor` field **or `#0f6cbf`**, and the 48/100 stops are `helper::darken_hex(base, 0.16)` and `(base, 0.34)` (`dynamictabs/plans.php:274-275`, `:316-318`). For the `#0f6cbf` default that gives **`#0d5ba0`** and **`#0a477e`** (measured, reproducing `helper.php:3056-3071`). **Gotcha:** the CSS *fallbacks* (`#0d5a9f`, `#0a4680`, `styles.css:6186-6187`) **do not match** what the PHP computes — but they are inert, because `:270` writes the three custom properties **unconditionally**, so the fallback never paints |
 | `PLN-DETAIL-GLOW` | `[no label]` | glow | `plans.mustache:294-295` | `aria-hidden="true"` | white `radial-gradient` at 22% in the top-left corner, inline |
 | `PLN-DETAIL-TITLE` | template name | heading | `plans.mustache:300` | `selectedtemplatename` | `<h2>` |
-| `PLN-STATUS` | "Enabled" / "Hidden" | badge | `plans.mustache:301-306` | `selectedtemplatevisible` | `is-enabled` (str `central_plans_enabled`) or `is-disabled` (str `hidden, tool_lp`); colours at `styles.css:5882-5888` |
+| `PLN-STATUS` | "Enabled" / "Hidden" | badge | `plans.mustache:301-306` | `selectedtemplatevisible` | `is-enabled` (str `central_plans_enabled`) or `is-disabled` (str `hidden, tool_lp`); colours at `styles.css:6240-6248` |
 | `PLN-DETAIL-COUNT` | "Competencies {N}" | pill | `plans.mustache:309-312` | `competencycount` | `count($competencies)` (`dynamictabs/plans.php:332`) |
 | `PLN-COUNT-PLANS` | "Plans {N}" | pill | `plans.mustache:314-317` | `selectedtemplateplancount` | `helper::count_plans_by_template` (`dynamictabs/plans.php:324-326`); it also feeds `PLN-DELETE`'s `data-plancount` |
 | `PLN-COUNT-COHORTS` | "Cohorts {N}" | pill | `plans.mustache:319-322` | `selectedtemplatecohortcount` | `helper::count_cohorts_by_template` (`dynamictabs/plans.php:327-329`) |
@@ -233,7 +233,7 @@ templates that contain **all** the chosen competencies survive (`dynamictabs/pla
 | `PLN-DISP-TAX` | Show taxonomy | switch | `plans.mustache:336-341` | `data-display-toggle="tax"` | switches on `show-tax` on the list (`DISPLAY_CLASSES`, `plans.js:56`) |
 | `PLN-DISP-PATH` | Show paths | switch | `plans.mustache:342-347` | `data-display-toggle="path"` | switches on `show-path` |
 | `PLN-DISP-ID` | Show identifiers | switch | `plans.mustache:348-353` | `data-display-toggle="id"` | switches on `show-id`; `plansdetail` preference (`plans.js:296-304`) |
-| `PLN-CHIP-DISPLAY` | "Display format: {$a}" | chip | `plans.mustache:357-361` | `selectedtemplatehasdisplaymode` | `fa-eye`; the `-plans-chip-accent` variant (`styles.css:5976-5981`, `#495057` + `#fff`). Comes from `constants::display_mode_options()` (`dynamictabs/plans.php:259-261`) |
+| `PLN-CHIP-DISPLAY` | "Display format: {$a}" | chip | `plans.mustache:357-361` | `selectedtemplatehasdisplaymode` | `fa-eye`; the `-plans-chip-accent` variant (`styles.css:6303-6312`, `#495057` + `#fff`). Comes from `constants::display_mode_options()` (`dynamictabs/plans.php:259-261`) |
 | `PLN-CHIP-TYPE` | "Competency label: {$a}" | chip | `plans.mustache:362-366` | `selectedtemplatehastype` | `fa-tag`; glass variant; `type` custom field |
 | `PLN-CHIP-DUE` | "Due date: …" | chip | `plans.mustache:367-371` | `selectedtemplatehasduedate` | `fa-calendar`; **the colon and the space are literals in the template** (`:369`), they are not part of the string |
 | `PLN-CHIP-TAG1` | tag 1 | chip | `plans.mustache:372-374` | `selectedtemplatehastag1` | glass; custom field |
@@ -268,7 +268,7 @@ records why.
 | `PLN-COMP-DOWN` | Move down | dropdown-item | `plans.mustache:443-446` | `data-action="move-competency-down"` | `fa-arrow-down`; `disabled` when `{{#last}}` (`:444`); in-place likewise |
 | `PLN-COMP-MOVETO` | Move to position… | dropdown-item | `plans.mustache:449-452` | `data-action="move-competency-to"` | `fa-arrows-v`; opens `MOD.MOVETO` (`plans.js:538-596`) |
 | `PLN-COMP-REMOVE` | Remove competency | dropdown-item | `plans.mustache:456-459` | `data-action="remove-competency"` | `fa-times`; **`text-danger`** (`:456`) — unlike the footers, the menu item **does** carry a colour variant; separated by a `dropdown-divider` (`:454`); confirms with `saveCancelPromise` (`plans.js:280`) |
-| `PLN-COMP-GRIP` | "Move to position…: {shortname}" | drag grip | `plans.mustache:466-471` | `data-region="drag-handle"`, `data-action="move-competency-to"` | `fa-arrows-up-down-left-right` (`:470`). **Rendered AFTER the kebab on purpose** (comment at `:463-465`): the `aria-label` embeds the name (`:469`) and Behat's `"button"` selector takes the **first hit in document order** — the CSS `order: -1` (`styles.css:6856`) paints it on the **left** all the same. It is the exact trap recorded in `CLAUDE.md`. It starts at `opacity: 0` (`styles.css:6860`) and appears on row hover or on `:focus-visible` (`:6869-6873`) — **but stays interactable for WebDriver** |
+| `PLN-COMP-GRIP` | "Move to position…: {shortname}" | drag grip | `plans.mustache:466-471` | `data-region="drag-handle"`, `data-action="move-competency-to"` | `fa-arrows-up-down-left-right` (`:470`). **Rendered AFTER the kebab on purpose** (comment at `:463-465`): the `aria-label` embeds the name (`:469`) and Behat's `"button"` selector takes the **first hit in document order** — the CSS `order: -1` (`styles.css:7195`) paints it on the **left** all the same. It is the exact trap recorded in `CLAUDE.md`. It starts at `opacity: 0` (`styles.css:7195`) and appears on row hover or on `:focus-visible` (`:6869-6873`) — **but stays interactable for WebDriver** |
 
 ## Template actions — **the page's sticky footer** (`plans.mustache:488-514`)
 
@@ -328,7 +328,7 @@ itself.
 - **The flash is shared and respects `prefers-reduced-motion`.** `flashRow` no longer lives in this
   tab: it is the `local_dimensions/central/flash` module (`flash.js:34-48`, `3c0bf41`), which bails
   out early when the user asked for reduced motion (`:38-40`) and reads the duration from the
-  `--mds-motion-flash` token (`styles.css:32`) with a 1500ms fallback (`flash.js:43`).
+  `--mds-motion-flash` token (`styles.css:22`) with a 1500ms fallback (`flash.js:43`).
 - **`refreshMoveState` exists because in-place lies about `first`/`last`.** The server marks
   `first`/`last` at render time (`dynamictabs/plans.php:232-235`) and the template uses that to
   disable the arrows (`plans.mustache:438`, `:444`). Since the reorder does not reload,
@@ -377,10 +377,10 @@ itself.
   **does not paint that pair** — it paints three derived stops (`darken_hex` 0.16/0.34) and
   **translucent** chips on top of them. Nobody grades those derivatives. Measured for the `#0f6cbf`
   default: white text gives **5.36:1** (passes), but the `-plans-chip-glass` chips (white at 13%,
-  `styles.css:5983-5987`) give **4.22:1 over stop 0** — **below** the AA minimum — rising to 5.22:1
+  `styles.css:6303-6320`) give **4.22:1 over stop 0** — **below** the AA minimum — rising to 5.22:1
   at stop 48 and 6.71:1 at stop 100. That is: the same chip passes or fails depending on **where it
   falls in the gradient**. The fixed ones pass comfortably: `-plans-chip-accent`
-  (`styles.css:5976-5981`) and the count pill (`:5905-5917`) use `#495057` + `#fff` (**8.18:1**),
+  (`styles.css:6303-6312`) and the count pill (`:5905-5917`) use `#495057` + `#fff` (**8.18:1**),
   `status.is-enabled` `#217a37` (**5.38:1**), `status.is-disabled` `#6a737b` (**4.83:1**).
 - **One count query per row.** `PLN-TPL-COUNT` calls
   `api::count_competencies_in_template($id)` inside the loop (`dynamictabs/plans.php:176`), with no
@@ -405,12 +405,12 @@ the icon. In this tab the gap was **exclusively** `reloadPane`.
   `aria-busy="true"` (`tabs.js:44`, `:77-80`), and clears both in a `finally` **under the generation
   guard** (`:103-106`) — never only on success, so a failure does not leave the pane spinning
   forever, and a superseded reload does not switch off the newest one's blanket.
-- The visual is two pseudo-elements (`styles.css:4028-4069`): an `rgba(255,255,255,0.55)` veil on
+- The visual is two pseudo-elements (`styles.css:4334-4381`): an `rgba(255,255,255,0.55)` veil on
   `::before` (`:4033-4042`) and a 2rem ring on `::after` (`:4044-4057`) with a **keyframe of its own**
   (`@keyframes local-dimensions-central-spin`, `:4059-4063`) — no dependence on Bootstrap's
   `spinner-border` being present. `prefers-reduced-motion` stretches the rotation to 1500ms
   (`:4065-4069`).
-- The minimum height comes from the `--mds-loading-min-height: 12rem` token (`styles.css:34`,
+- The minimum height comes from the `--mds-loading-min-height: 12rem` token (`styles.css:22`,
   consumed at `:4030`), so the pane does not collapse behind the veil.
 - `aria-busy="true"` shipped as asked. The ARIA quartet that `states.html` specifies (`role="status"`
   + `aria-live="polite"` + `aria-label` + moving focus) does **not** belong to the blanket — it covers
@@ -465,7 +465,7 @@ in on the label **without** changing a core template — the comment at `central
 this.
 
 The indicator is CSS scoped to the hub's `body` (`central.php:57` adds
-`local-dimensions-central-page`), at `styles.css:7232-7271` — the only rule in the plugin that still
+`local-dimensions-central-page`), at `styles.css:7583-7631` — the only rule in the plugin that still
 carries the `IMP-10` tag in its comment (`:7233`). Base: `color: #6a737b`, `border: 0`,
 `box-shadow: inset 0 -2px 0 transparent` and a transition driven by the `--mds-motion-base`/`-ease`
 tokens (`:7239-7245`). Hover `#1d2125` (`:7247-7249`). Active: `#1d2125` + `font-weight: 500` +
@@ -473,7 +473,7 @@ tokens (`:7239-7245`). Hover `#1d2125` (`:7247-7249`). Active: `#1d2125` + `font
 Boost's dark grey, **not** the accent blue; the accent stays in the underline alone. And because
 `border: 0` plus the base `box-shadow` knocked out Boost's focus ring, a `:focus-visible` restores it
 with `outline: 2px solid var(--bs-primary, #0f6cbf)` (`:7255-7259`). `prefers-reduced-motion` cuts
-the transition (`:7267-7271`). mtube's `ResizeObserver` overflow dropdown was **not** ported (zero
+the transition (`:7653-7657`). mtube's `ResizeObserver` overflow dropdown was **not** ported (zero
 occurrences of `ResizeObserver` in `amd/src/central/`).
 
 Because `PLN` does **not** start active (`central.php:115`), it is the tab that exercises the

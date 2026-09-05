@@ -20,7 +20,7 @@
   /* Primary fill (the "Add selected"). It CANNOT be var(--text-accent): in dark that becomes the
      LIGHT blue and white on it fails. Hence the inversion in dark. */
   --prim-bg:#185fa5;--prim-fg:#fff;
-  /* Close chip: the three literals styles.css:5074-5103 publishes, with no dark variant. */
+  /* Close chip: the three literals styles.css:5374-5413 publishes, with no dark variant. */
   --close-bg:#e7f0f9;--close-bg-hover:#d4e6fb;--close-fg:#0f4d85;
   --prov-fg:#185fa5;--prov-bg:#e6f1fb;
   /* Bootstrap's alert-info: the structures empty state. Its own pair, measured in both themes. */
@@ -244,7 +244,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
         </div>
         <div class="row">
           <span class="idb">MOD.BROWSER-LIST · box UNCAPPED here (the 40vh cap is MOD.RELATED's alone)</span>
-          <span class="prov">tree.mustache:42-44 · styles.css:7284-7287</span>
+          <span class="prov">tree.mustache:42-44 · styles.css:7670-7673</span>
         </div>
         <div class="row">
           <span class="idb">MOD.BROWSER-ROW-TOGGLE · aria-label "See more: {name}"</span>
@@ -316,7 +316,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
     the close chip's, and it is <b>shipped</b>, not mine:
     <ul style="margin:4px 0 0;padding-left:16px;">
       <li><b><code>.m-x</code> fill, 1.15 in light</b> — it is the literal that
-        <code>styles.css:5074-5103</code> publishes (<code>#e7f0f9</code>), and it has <b>no dark
+        <code>styles.css:5374-5413</code> publishes (<code>#e7f0f9</code>), and it has <b>no dark
         variant</b>, so in dark the relation inverts (light chip on a dark surface). The tint is
         decorative; what signals the control is the ✕ glyph (<code>#0f4d85</code> on
         <code>#e7f0f9</code>), which passes at <b>7.53</b> in both themes. Reproduced faithfully,

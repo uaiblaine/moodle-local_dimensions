@@ -68,7 +68,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
 .m-body{padding:11px 12px;display:flex;flex-direction:column;gap:9px;}
 .m-foot{display:flex;align-items:center;gap:8px;padding:9px 12px;border-top:0.5px solid var(--border);}
 /* The FOUR header controls are the same 1.75rem chip: refresh and the expand/restore pair through
-   the combined base rule (styles.css:4929-4945), and close through core's restyled .btn-close
+   the combined base rule (styles.css:5229-5253), and close through core's restyled .btn-close
    (:5074-5102). No neutral 36x36 here — this is the geometry that is on air. */
 .m-acts{display:flex;align-items:center;gap:0.25rem;flex:none;}
 .chip{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;padding:0;border:0;border-radius:8px;background:var(--close-bg);color:var(--close-fg);font-size:0.8rem;line-height:1;cursor:pointer;flex:none;transition:background-color var(--mds-motion-fast) var(--mds-motion-ease);}
@@ -218,9 +218,9 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       swapping in JS</b>. On air the mechanics are the same:
       <code>modal_expander.js:97-99</code> injects both before the <code>.btn-close</code> and the CSS
       reveals whichever matches <code>.local-dimensions-modal-expanded</code> on the
-      <code>.modal-dialog</code> (<code>styles.css:4966-4976</code>). Here a checkbox is what drives
+      <code>.modal-dialog</code> (<code>styles.css:5255-5280</code>). Here a checkbox is what drives
       it; there it is the class. Expanded = <b>real fullscreen</b> (<code>3c91646</code>): edge to
-      edge, full height, square corners (<code>styles.css:4986-4991</code> on the dialogue,
+      edge, full height, square corners (<code>styles.css:5288-5295</code> on the dialogue,
       <code>:4993-4997</code> on the <code>.modal-content</code>, <code>:4999-5002</code> on the
       corners, <code>:5004-5006</code> on the body).
     </div>
@@ -236,12 +236,12 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <code>.btn-close</code>) — <code>modal_refresh.js:67-68</code> —, which gives the final order
       <b>[refresh][expand][restore][close]</b>. All four are the <b>same chip</b> of
       <code>1.75rem</code>: combined base rule <code>.local-dimensions-modal-sizetoggle,
-      .local-dimensions-modal-refresh</code> (<code>styles.css:4929-4945</code>), hover
+      .local-dimensions-modal-refresh</code> (<code>styles.css:5229-5253</code>), hover
       (<code>:4947-4953</code>), its own focus ring via <code>:focus-visible</code>
       (<code>:4955-4959</code>, no <code>.btn</code>), disabled (<code>:4962-4964</code>). The grouping
       with the close button comes from the rule
       <code>.modal-header:has(.local-dimensions-modal-sizetoggle) .modal-title</code>
-      (<code>styles.css:5015-5018</code>), <b>not</b> from insertion order.
+      (<code>styles.css:5313-5324</code>), <b>not</b> from insertion order.
       <b>Reach:</b> the two modules are called in <b>two</b> of the hub's modals — this one and the
       courses-and-activities one (<code>competency_links.js:909</code>); the other modal-building
       points in <code>amd/src/central/</code> get neither the refresh nor the expander. That is why the
@@ -293,7 +293,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <code>modal-xl</code> is <b>Bootstrap's own</b> (800px at <code>lg</code>, 1140px at
       <code>xl</code>, identical in 4 and 5) and core's API only exposes <code>setLarge()</code>, hence
       the hand-set class; the plugin's own class hooks <b>only</b> the <b>height</b> rule
-      (<code>styles.css:4900-4902</code>, full viewport height when there are autocomplete
+      (<code>styles.css:5191-5205</code>, full viewport height when there are autocomplete
       suggestions). There is no "modal with header links" class: the close chip arrives through the
       <code>:has(.modal-body [class*='local-dimensions-'])</code> arm because the body carries
       <code>.local-dimensions-participants</code> (comment at <code>:180-181</code>) — the old
@@ -304,7 +304,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       would fall back to 500px there.
     </div>
     <div class="note" style="margin-top:6px;">
-      <code>styles.css:5074-5075</code> is a <b>group of two selectors</b>: the first
+      <code>styles.css:5374-5377</code> is a <b>group of two selectors</b>: the first
       (<code>.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close</code>)
       gives the chip to the modals whose body carries a plugin class — this is one of them; the second
       (<code>.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close</code>) covers
@@ -334,7 +334,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <code>rel="noopener noreferrer"</code> (<code>:118-119</code>), and <b>the visible label is the
       accessible name</b> — no extra <code>title</code>/<code>aria-label</code> (comment at
       <code>:126</code>). The group sits <b>on the left</b> through <code>margin-right:auto</code> on
-      <code>.local-dimensions-modal-footer-links</code> (<code>styles.css:5028-5034</code>) — <b>not</b>
+      <code>.local-dimensions-modal-footer-links</code> (<code>styles.css:5355-5361</code>) — <b>not</b>
       through <code>justify-content:space-between</code> —, leaving any primary action (the framework
       form's Save/Cancel) on the right; the <code>btn-link</code> gets its own focus ring because BS4
       zeroes its own (<code>:5041-5045</code>).
@@ -346,7 +346,7 @@ code{font-family:var(--font-mono);font-size:10px;background:var(--surface-0);col
       <code>canenrolpage</code> —, and only the permitted ones are rendered (<code>:108-111</code>);
       <code>showFooterLinkFor</code> (<code>:76-91</code>, restored in <code>3c91646</code>) toggles the
       <code>d-none</code> of each <code>a[data-pane]</code> and <b>collapses the footer</b>
-      (<code>.local-dimensions-modal-footer-empty</code>, <code>styles.css:5051-5053</code>) on a tab
+      (<code>.local-dimensions-modal-footer-empty</code>, <code>styles.css:5347-5361</code>) on a tab
       with no permitted link. The flags are born on the server
       (<code>classes/output/dynamictabs/plans.php:241-246</code> → <code>:334-338</code> →
       <code>templates/central/plans.mustache:136</code>).

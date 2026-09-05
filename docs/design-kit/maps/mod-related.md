@@ -14,7 +14,7 @@ the reason it cannot be copied from its neighbour `MOD.BROWSER`.
 - **Mustache:** [`related_competencies.mustache`](../../../templates/central/related_competencies.mustache) (40 lines, shell), [`competency_tree_browser.mustache`](../../../templates/central/competency_tree_browser.mustache) (44 lines, partial shared with `MOD.BROWSER`)
 - **AMD:** [`related_competencies.js`](../../../amd/src/central/related_competencies.js) (299 lines) — builds the browser through [`competency_tree_browser.js`](../../../amd/src/central/competency_tree_browser.js) (511 lines, `initBrowser`/`applyMode`/`getCheckedIds`/`destroyBrowser`), flashes the new row with the shared helper [`flash.js`](../../../amd/src/central/flash.js) (import `:31`) and uses `errors.js` (`notifyError`, import `:35`)
 - **WS:** `local_dimensions_list_related_competencies` (`db/services.php:133-134` → [`classes/external/list_related_competencies.php`](../../../classes/external/list_related_competencies.php), relations + ancestor path), `local_dimensions_browse_competencies` (`db/services.php:109-110`, the tree/search), core's `core_competency_add_related_competency` and `core_competency_remove_related_competency` (writing)
-- **CSS:** [`styles.css:7278-7287`](../../../styles.css) (the 40vh cap on the tree box, exclusive to this modal), [`styles.css:6586-6658`](../../../styles.css) (the detail's chips)
+- **CSS:** [`styles.css:7623-7640`](../../../styles.css) (the 40vh cap on the tree box, exclusive to this modal), [`styles.css:6911-6987`](../../../styles.css) (the detail's chips)
 - **Screen in the DS:** [`screens/mod-related.html`](../screens/mod-related.html) (with the scripted, measured check→enable demonstration)
 
 > **A module and a button that do not exist — do not go looking for them.** `related_datasource.js` was born in `da4489a`
@@ -36,25 +36,25 @@ the reason it cannot be copied from its neighbour `MOD.BROWSER`.
 > **A naming trap — `.local-dimensions-related-modal` is not this modal.** The class looks like the
 > one belonging to this map and **is not**: what applies it is `competency_detail.js:285`, on the
 > modal **the chip** opens (`structure_related_modal.mustache`), whose `.modal-header` is hidden on
-> purpose (`styles.css:6671-6673`) because the card carries its **own** close button
+> purpose (`styles.css:6995-7008`) because the card carries its **own** close button
 > (`data-action="close-related-modal"`, `structure_related_modal.mustache:37`). The "Related
 > competencies" modal **receives no class at all** on its root — `related_competencies.js:239` is a
 > bare `ModalSaveCancel.create`.
 >
 > The consequence is easy to read backwards: the hub's close-chip restyle is
 > `.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-'])`
-> (`styles.css:5074`), and the comment above it (`:5067-5068`) says that "a referenced-competency
+> (`styles.css:5374`), and the comment above it (`:5067-5068`) says that "a referenced-competency
 > modal" is **excluded**. It is talking about the **chip's** modal, not this one. This modal
 > **matches** both sides of the selector (it does not carry the class; its body has
 > `.local-dimensions-central-related`) and **gets** the `1.75rem` blue chip as normal
-> (`styles.css:5074-5103`, background `#e7f0f9`, glyph `#0f4d85`).
+> (`styles.css:5374-5413`, background `#e7f0f9`, glyph `#0f4d85`).
 
 ## Modal shell
 
 | ID | Label | Type | Origin | Data | Rule / notes |
 | --- | --- | --- | --- | --- | --- |
 | `MOD.RELATED-TITLE` | Related competencies — {name} | title | `related_competencies.js:224` (str), `:239-244` (`ModalSaveCancel.create`) | str `central_related_title`, `$a` = name | Cancel/Save footer filled in by core; `removeOnClose: true` goes in `configure()` itself (`:242`), and save is born disabled (`setButtonDisabled('save', true)`, `:246`) |
-| `MOD.RELATED-ROOT` | `[no label]` | region/root | `related_competencies.mustache:31` | `data-region="related-competencies"` · `.local-dimensions-central-related` | the class is the hook for the 40vh cap (`styles.css:7284`). The delegated remove listener lands here (`js:274-278`) |
+| `MOD.RELATED-ROOT` | `[no label]` | region/root | `related_competencies.mustache:31` | `data-region="related-competencies"` · `.local-dimensions-central-related` | the class is the hook for the 40vh cap (`styles.css:7670`). The delegated remove listener lands here (`js:274-278`) |
 | `MOD.RELATED-ADDLABEL` | Add related competency | label | `related_competencies.mustache:32` | str `central_related_add` | it is a `<div class="small fw-medium">`, **not** a `<label>` — there is no `for`, because the target is a tree, not a field |
 | `MOD.RELATED-SAMEFW` | Only competencies from the same structure can be related. | note | `related_competencies.mustache:33` | str `central_related_sameframework` | it is core's constraint in prose: `competency::share_same_framework`, required by core's `related_competency` validator. That is why the partial enters **without** a structure selector |
 | `MOD.RELATED-TOAST` | `[no label]` | feedback | `related_competencies.js:266-269` | `addToastRegion(modal.getBody()[0])` on `ModalEvents.shown` | strs `central_related_added` / `central_related_removed`. See the toast section below |
@@ -68,7 +68,7 @@ the reason it cannot be copied from its neighbour `MOD.BROWSER`.
 | --- | --- | --- | --- | --- | --- |
 | `MOD.RELATED-FILTER` | Filter competencies | search field | `competency_tree_browser.mustache:31-35` | `data-region="filter"` · `aria-label` = the same str | str `central_browseframeworks_filter`. **250 ms** debounce (`browser.js:376-388`, the `250` at `:387`), minimum of **2** characters (`SEARCH_MIN`, `:47`, tested at `:382`); below that it returns to tree mode (`:384-385`) |
 | `MOD.RELATED-PATHS` | Show paths | switch | `competency_tree_browser.mustache:36-41` | `data-region="path-toggle"` · id with `{{uniqid}}` | str `central_browseframeworks_showpaths`. In **search** mode it is forced `checked` **and** `disabled` (`browser.js:328-329`), because `pathsVisible` is already always true there (`:72`). It governs **the tree only** — the relation rows always show the path |
-| `MOD.RELATED-TREE` | `[no label]` | JS container | `competency_tree_browser.mustache:42-44` | `data-region="competency-list"` (`:43`) inside the wrapper `.local-dimensions-cb-scroll` (`:42`) | `styles.css:7284-7287` gives `max-height:40vh` + `overflow-y:auto` **here only** (`MOD.BROWSER` leaves it loose): that is what keeps the relation rows below it reachable. The infinite-scroll sentinel is inserted **inside** the box on purpose (`browser.js:490-491`, with the reason in the comment at `:487-489`) |
+| `MOD.RELATED-TREE` | `[no label]` | JS container | `competency_tree_browser.mustache:42-44` | `data-region="competency-list"` (`:43`) inside the wrapper `.local-dimensions-cb-scroll` (`:42`) | `styles.css:7670-7673` gives `max-height:40vh` + `overflow-y:auto` **here only** (`MOD.BROWSER` leaves it loose): that is what keeps the relation rows below it reachable. The infinite-scroll sentinel is inserted **inside** the box on purpose (`browser.js:490-491`, with the reason in the comment at `:487-489`) |
 | `MOD.RELATED-ROW` | {name} | row (checkbox) | `competency_tree_browser.js:82-156` (`makeNode`; the checkbox at `:111-123`) | `input.form-check-input` + name + path | **no `for`**: the whole row is the click target (`:125-126`, `onListClick` `:416-442`), with Shift range selection (`handleShiftSelect`, `:354-364`). The selection is **persistent** (`state.checked`) and survives a re-render (`:120-122`). Indents `20px` per level (`INDENT_STEP`, `:48`, applied at `:94`) |
 | `MOD.RELATED-ROW-LOCK` | {name} (This competency) / (Already related) | locked row | `competency_tree_browser.js:117-119`, `:130` | `checked` + `disabled` · suffix on the name | the set is `state.excluded`: the competency itself plus the ones already related, rebuilt on every `loadRelations` (`js:110-114`). The suffix comes from `state.excludedsuffix` (`js:258`) → strs `central_related_self` / `central_related_alreadyrelated`. `getCheckedIds` filters out the excluded ones (`browser.js:451-453`) |
 | `MOD.RELATED-MORE` | Load more | button | `competency_tree_browser.js:180-192` (`appendLoadMore`; the label at `:186`) | str `central_browseframeworks_loadmore` | pages of **25** (`PAGE_SIZE`, `:46`) |
@@ -184,6 +184,6 @@ and no `querySelector` in the body. The `state.modal` kept on the `state` (`:252
 > the backstop. The `ModalSaveCancel` + `setButtonDisabled` call is reusable; **the save wiring is
 > not**. A future session that "simplifies" this handler into the conditional shape breaks the modal.
 
-**What the footer does not solve:** the `40vh` cap (`styles.css:7284-7287`) exists because of the
+**What the footer does not solve:** the `40vh` cap (`styles.css:7670-7673`) exists because of the
 **relation rows** below the tree, not because of the button — it stays. And the sentinel is still
 inside the box (`browser.js:490-491`), so pagination remains tied to that box's scrolling.

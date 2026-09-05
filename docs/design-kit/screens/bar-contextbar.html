@@ -108,7 +108,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
     <code>EST</code>/<code>FWK</code>/<code>PLN</code>. The two columns stay symmetrical: context gets the
     toggle, category gets the chip, both on the bottom line.
     <b>(3) The selection chip sits below the field.</b> That is CSS scoped over core's autocomplete:
-    <code>styles.css:7222-7225</code> stacks the <code>[data-region='category-wrapper']</code> as a column and
+    <code>styles.css:7574-7582</code> stacks the <code>[data-region='category-wrapper']</code> as a column and
     <code>:7227-7230</code> puts <code>order: 1</code> + <code>margin-top: 0.25rem</code> on the
     <code>.form-autocomplete-selection</code>, which core would render <b>above</b> the input. The counter
     (<code>:94</code>) and the <b>Refresh</b> (<code>:101</code>) carry an <code>align-self-center</code> of
@@ -117,7 +117,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:var(--sur
   </div>
   <div class="note" style="margin-top:6px;">
     <b>The trap recorded in the CSS itself.</b> The <code>:not([hidden])</code> guard at
-    <code>styles.css:7222</code> is mandatory: the rule beats the browser's <code>[hidden]{display:none}</code>,
+    <code>styles.css:7574</code> is mandatory: the rule beats the browser's <code>[hidden]{display:none}</code>,
     and without it the category wrapper would show up in System mode (the comment at
     <code>:7214-7221</code> describes exactly that, and asks for a re-check against the autocomplete's live DOM
     on every Moodle upgrade).
