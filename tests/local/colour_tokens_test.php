@@ -119,6 +119,19 @@ final class colour_tokens_test extends \basic_testcase {
     private const DARK_OWNED = ['shadow', 'scrim', 'favourite'];
 
     /**
+     * @var string The dark activation selector, both arms, exactly as the stylesheet writes it.
+     *
+     * Two arms because a host writes data-bs-theme in one of two places and the plugin has to
+     * follow both: core puts it on the html element, theme_moove puts it on document.body. The
+     * SUBJECT of both arms is body - the element the token block itself is declared on - and that
+     * is what forecloses the leak a bare attribute selector would allow, since body's only
+     * ancestor is html and no deeper scope can reach it.
+     */
+    private const DARK_ACTIVATION_SELECTOR = 'body[' . colour_mode::HOST_ATTRIBUTE . '="'
+        . colour_mode::DARK . '"], [' . colour_mode::HOST_ATTRIBUTE . '="'
+        . colour_mode::DARK . '"] body';
+
+    /**
      * @var array Core's own --bs-* values on the LIGHT page.
      *
      * Measured, not assumed: read out of the compiled Boost stylesheet of the running m502 stack
@@ -715,9 +728,10 @@ final class colour_tokens_test extends \basic_testcase {
      */
     private function contract_block_selectors(): array {
         return [
-            ':root',
-            ':root[' . colour_mode::HOST_ATTRIBUTE . '="' . colour_mode::DARK . '"]',
-            ':root[' . colour_mode::MEDIA_OPTIN_ATTRIBUTE . ']:not(['
+            'body',
+            self::DARK_ACTIVATION_SELECTOR,
+            ':root:not([' . colour_mode::HOST_ATTRIBUTE . '="' . colour_mode::LIGHT . '"]) body['
+                . colour_mode::MEDIA_OPTIN_ATTRIBUTE . ']:not(['
                 . colour_mode::HOST_ATTRIBUTE . '="' . colour_mode::LIGHT . '"])',
         ];
     }
@@ -736,7 +750,7 @@ final class colour_tokens_test extends \basic_testcase {
     private function token_block(?string $root = null, ?string $prefix = null): array {
         $prefix = $prefix ?? self::PREFIX;
         foreach ($this->rules(($root ?? $this->plugin_root()) . '/styles.css') as $rule) {
-            if ($rule['selector'] !== ':root') {
+            if ($rule['selector'] !== 'body') {
                 continue;
             }
             $declarations = $this->declarations($rule['body']);
@@ -754,7 +768,7 @@ final class colour_tokens_test extends \basic_testcase {
      * @return array Full token name => declaration text.
      */
     private function activation_block(): array {
-        $wanted = ':root[' . colour_mode::HOST_ATTRIBUTE . '="' . colour_mode::DARK . '"]';
+        $wanted = self::DARK_ACTIVATION_SELECTOR;
         foreach ($this->rules($this->plugin_root() . '/styles.css') as $rule) {
             if ($rule['selector'] !== $wanted) {
                 continue;
@@ -1053,7 +1067,7 @@ final class colour_tokens_test extends \basic_testcase {
         $this->assertSame(
             [],
             $offenders,
-            'The :root token block must declare exactly the ' . count(self::LIGHT) . ' contract tokens, '
+            'The body token block must declare exactly the ' . count(self::LIGHT) . ' contract tokens, '
                 . 'each with its exact chain: ' . implode('; ', $offenders)
         );
     }
@@ -1252,19 +1266,28 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /**
-     * Every colour-mode selector is anchored at the html element, and no dead mechanism survives.
+     * Every colour-mode selector has body as its subject, and no dead mechanism survives.
      *
-     * A bare attribute selector matches through any ancestor at any depth, and CSS descendant
-     * combinators have no nearest-ancestor-wins rule - theme_boost_union_fundaseg really does set
-     * the attribute on the navbar, which theme_boost_union then re-pins to light on five nested
-     * templates. :root restricts the match to the html element and forecloses that at zero cost.
+     * The hazard is unchanged: a BARE attribute selector matches through any ancestor at any
+     * depth, and CSS descendant combinators have no nearest-ancestor-wins rule -
+     * theme_boost_union_fundaseg really does set the attribute on the navbar, which
+     * theme_boost_union then re-pins to light on five nested templates. What changed is the
+     * answer to it. Anchoring at :root foreclosed the leak by refusing to see any scope at all,
+     * including the one theme_moove writes on document.body, which cost the plugin its entire
+     * dark palette there. Requiring body as the SUBJECT forecloses the same leak for the same
+     * reason and costs nothing: there is exactly one body and its only ancestor is html, so
+     * "[attr] body" can only ever mean "html[attr] body" and no deeper scope can reach it.
      *
-     * Mutations that must redden it: change one selector to a bare attribute selector; add a
+     * So a selector passes if it is body[attr...] or [attr...] body - the subject compiled by
+     * DARK_ACTIVATION_SELECTOR and by the inert media block - and fails otherwise.
+     *
+     * Mutations that must redden it: drop " body" from the second arm, leaving the bare attribute
+     * selector; put the subject back on :root, which no longer sees a body-scoped host; add a
      * .theme-dark rule of the kind the sibling carried 77 of.
      *
      * @return void
      */
-    public function test_activation_selectors_are_root_anchored(): void {
+    public function test_activation_selectors_have_body_as_subject(): void {
         $offenders = [];
         foreach ($this->stylesheets() as $path) {
             foreach ($this->rules($path) as $rule) {
@@ -1272,8 +1295,12 @@ final class colour_tokens_test extends \basic_testcase {
                     continue;
                 }
                 foreach (explode(',', $rule['selector']) as $part) {
-                    if (!str_starts_with(trim($part), ':root[')) {
-                        $offenders[] = $rule['file'] . ':' . $rule['line'] . ' ' . trim($part);
+                    $part = trim($part);
+                    /* The subject is the last compound in the selector. It must be body, either
+                       carrying the attribute itself or sitting under an html that does. */
+                    $subject = substr($part, (int) strrpos(' ' . $part, ' '));
+                    if (!str_starts_with($subject, 'body')) {
+                        $offenders[] = $rule['file'] . ':' . $rule['line'] . ' ' . $part;
                     }
                 }
             }
