@@ -32,6 +32,11 @@
  *   .local-dimensions-central-page    Competency hub (admin)
  *   .local-dimensions-return-fab      Return-to-Plan FAB
  *
- * This file is not linted by CI (grunt stylelint targets styles.css only),
- * so an override may use !important here when it is needed to win over the theme.
+ * CI's stylelint never reads this file. core's Gruntfile.js:101 builds the CSS list for a
+ * non-theme plugin as exactly "<component>/styles.css", so styles_*.css is unlinted.
+ * That is a reason for MORE care here, not less - it is why tests/local/colour_tokens_test.php
+ * globs styles_*.css alongside styles.css, and a colour literal in this file fails that suite
+ * exactly as it would in styles.css. In particular it does NOT license !important, which is
+ * banned fleet-wide: an override that has to beat a theme wins on specificity instead, and
+ * anchoring on two ids settles it on the id count, which is compared first.
  */
