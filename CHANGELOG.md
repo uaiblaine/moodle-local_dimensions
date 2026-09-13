@@ -95,6 +95,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a plan based on it, and a competency's only to those who may read its framework.
 
 ### Changed
+- **The colour token layer moved from `:root` to `body`, and the dark rule grew a second arm - so
+  the plugin follows a colour-mode scope wherever the host writes it.**
+  Thirty-one of the 34 tokens are DERIVED: each resolves a `var(--bs-*)` chain (the other three,
+  `shadow`, `scrim` and `favourite`, are plugin-owned literals), and Bootstrap redefines the
+  `--bs-*` set on whatever element carries `data-bs-theme`. Its own `color-mode` mixin emits an
+  UNANCHORED `[data-bs-theme="..."]` (`bootstrap/mixins/_color-mode.scss:16`) precisely so the
+  attribute can scope any subtree, and Bootstrap's components read `--bs-*` at the component for
+  the same reason. A derived layer pinned at `:root` snapshots the root's values and is then blind
+  to every scope, including core's own. Counted in the compiled 5.2 sheet: of 32
+  `[data-bs-theme="dark"]` rules, 28 are unanchored - Bootstrap's and core's - and the only 4
+  anchored at `:root` belonged to this fleet's plugins. The anchoring was ours, not the ecosystem's.
+
+  What it cost, measured on m502 at 1440x900 through `theme_moove`'s own dark switch (moove writes
+  the attribute on `document.body`, `amd/src/darkmode.js:35`): the page went to `#1d2125` while this
+  plugin's `surface` stayed `#f2f3f7`, and text inheriting the page's dark-mode colour landed at
+  **1.17:1** on the plugin's own card, against the 4.5:1 AA floor. After the move the same
+  measurement reads **12.44:1**, and `surface`, `line`, `ink`, `shadow` and `favourite` all flip.
+
+  `body` rather than the plugin's own surfaces, deliberately: it is the one ancestor every surface
+  has. The Return-to-Plan FAB renders on course pages outside every plugin wrapper, and
+  `core/modal` appends its dialogue to `document.body` as a SIBLING of the page container - the
+  case that once left a dialogue with no background at all when a token block was scoped to a page
+  class.
+
+  The activation rule is now `body[data-bs-theme="dark"], [data-bs-theme="dark"] body`. Naming body
+  as the SUBJECT is what still forecloses the leak the `:root` anchor existed to prevent - there is
+  exactly one body and its only ancestor is html, so the second arm can only ever mean
+  `html[data-bs-theme="dark"] body`, and no deeper scope (the navbar one `theme_boost_union`
+  re-pins on five templates) can reach it. Both arms verified in the browser: the first through
+  moove's switch, the second with the attribute on `<html>` as core writes it. The note that used
+  to prescribe a separate `:root:has(> body[...])` rule is superseded - it would have flipped only
+  the three plugin-owned tokens and left the other 31 reading the html element's light values,
+  which was the whole of the defect.
+
+  `colour_tokens_test` moved with the contract: `token_block()` reads the `body` rule,
+  `activation_block()` and `contract_block_selectors()` share a new `DARK_ACTIVATION_SELECTOR`
+  constant, and `test_activation_selectors_are_root_anchored` was re-founded as
+  `test_activation_selectors_have_body_as_subject`. Mutation-checked, three ways: a bare attribute
+  selector reddens it, a `.theme-dark` rule reddens it, and putting the token block back on `:root`
+  reddens five arms. `block_dimensions` moved in the same change - the two blocks are compared
+  byte-for-byte under a prefix sentinel, so they cannot travel apart.
 
 - **Eleven Bootstrap 4 class names migrated to their Bootstrap 5 spellings** - seven `sr-only`
   spans in `accordion.js`, `competency_view.js` and `central/competency_links.js` become
@@ -157,6 +198,68 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   definition pages keep the site-configuration guard, because field definitions are site-wide.
 
 ### Fixed
+
+- **Three more places a theme's own decisions reached into the plugin, all measured on m502 at
+  1440x900 and fixed in the sheet that owns the cause.**
+
+  - *The sticky filter toolbar anchored 10px too high on moove and 4px on trema.* It already
+    read `var(--navbar-height, 60px)`, which is the right channel - theme_almondb declares
+    `--navbar-height: 70px` for its 70px navbar and the toolbar lands exactly right there with
+    no help. moove (70px navbar) and trema (64px) leave core's 60px in place, so rows slid
+    under the navbar while scrolling. `styles_moove.css` and `styles_trema.css` now state the
+    measured height in the one place the plugin already reads, rather than overriding the
+    toolbar's `top` somewhere else and leaving two numbers to drift.
+
+  - *The Return-to-Plan FAB covered the theme's own footer button.* core Boost parks
+    `.btn-footer-popover` at `bottom: 2rem` with a 2rem box, i.e. the band 32-64px up from the
+    bottom edge; the FAB claimed 24-75px at `z-index: 9999` against the button's 1000, so the
+    theme's control was present, focusable and invisible. `styles_boost.css` lifts the FAB to
+    `calc(2rem + 2rem + 1rem)` - core's own arithmetic, so it follows if core moves the button -
+    which also clears moove's lower placement of the same button (16-48px) and trema's
+    `#goto-top-link` (0-38px). A second arm mirrors core's `.hasstickyfooter` offset. Verified
+    with the FAB actually rendered: measuring it while it was absent reported "no collision"
+    for the wrong reason, twice.
+
+  - *Competency cards lost their border on moove and trema.* `styles.css` styles them with
+    `border-color` only, riding on Bootstrap's `.card` carrying `border: 1px solid`; both themes
+    remove it, and the cascade resolves longhands independently, so the colour survived and
+    painted nothing. The two themes need different repairs and the difference is specificity,
+    not taste: trema writes `.card:not(.fp-navbar) { border: none }` at (0,2,0), which ties with
+    the plugin's own selector and wins on document order - taking `border-color` with it, which
+    is why its border measured `#373a3c` (`--bs-body-color`) rather than the token - so trema
+    restates the colour as a token read; moove writes `.card { border: none }` at (0,1,0), loses
+    `border-color` to the plugin, and needs only the two structural longhands.
+
+- **The hero sits against the navbar on every theme, and stops guessing at how far to move.**
+  `styles.css` pulled the hero up by a flat `margin-top: -1rem`, commented "pull the hero up to
+  overlap any remaining spacing" - one constant standing in for a number that is different in
+  every theme, so it was right in none of them. Measured on m502 at 1280px, logged in, on
+  `view-plan.php`, the white band between the navbar and the hero was 32px on boost, boost_union
+  and boost_union_fundaseg, 33px on almondb, 25px on trema and 9px on moove; on Moodle 4.5 it was
+  32px on boost and 121px on theme_academi, whose own navigation bar is static and 71px tall. The spacing does not belong to the hero at all - it is spent by the
+  containers above it, and the fix is to zero those, which lands the hero at `#page`'s own top
+  edge, a value every Boost child already sets to its navbar's height. The plugin therefore needs
+  to know nothing about any theme's navbar. New `styles_boost.css` carries it, because core loads
+  `styles_<candidate>.css` for every candidate in [base parent ... theme] and so reaches every
+  Boost child from one file; `styles_academi.css` carries the two deltas that are academi's own.
+  All eight theme/branch combinations now measure 0 or -1px, the -1 being the hero tucked a pixel
+  under an opaque fixed navbar.
+
+  Three things this cost, worth keeping:
+
+  - **Specificity, not `!important`.** The first attempt used `body.<class> #topofscroll` and lost
+    to Boost Union's `#page.drawers .main-inner`, which has one id and two classes: the class count
+    is compared before the element count. Anchoring on two ids settles it on the id count, which is
+    compared first, and needs no `!important` - still banned.
+  - **trema spends part of its spacing on `#page-content`**, the only theme measured that does, so
+    a fix aimed only at `#topofscroll` looked right on five themes and left 16px on the sixth. The
+    rule names the whole chain rather than the container that happened to be guilty first.
+  - **The last pixel is core's skip-link anchor.** Boost gives the empty `<span id="maincontent">`
+    a 1px height, and it sits immediately before the hero; on boost and boost_union_fundaseg it
+    lands in the 1px their `#page` margin is already short of the navbar and vanishes, while on
+    moove and trema it became a visible hairline. It is collapsed with `height: 0` - the same
+    thing core does for embedded media previews - and never with `display: none`, which would take
+    "Skip to main content" out of the accessibility tree with it.
 
 - **The admin's chosen hero text colour was inert, and had been for as long as the rule existed.**
   `styles.css` reads `--dimension-customtextcolor` five times - the hero title, description,

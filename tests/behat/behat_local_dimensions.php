@@ -201,8 +201,12 @@ class behat_local_dimensions extends behat_base {
     public function the_colour_token_should_resolve_to(string $token, string $value): void {
         $this->require_javascript();
         $escaped = addcslashes($token, "'\\");
+        /* Read at body, which is where the token block is declared. Custom properties inherit
+           DOWNWARDS only, so reading at documentElement returns the empty string for every one
+           of them. body is also correct against the older contract, when the block sat on
+           :root: the values were visible there by inheritance. */
         $actual = (string) $this->getSession()->evaluateScript(
-            'return window.getComputedStyle(document.documentElement).getPropertyValue(\'--'
+            'return window.getComputedStyle(document.body).getPropertyValue(\'--'
                 . $escaped . '\');'
         );
         $normalise = static function (string $raw): string {
