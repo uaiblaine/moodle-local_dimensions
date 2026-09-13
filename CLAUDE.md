@@ -65,8 +65,12 @@ before starting so you don't build on a stale base.
 `mdl grunt m501 local/dimensions` rebuilds `amd/build/*.min.js` + `.map` in a node
 container pinned to the version Moodle expects; never hand-edit minified output.
 `amd/build/**` is **tracked in git**: every `amd/src` edit ships its rebuilt output in the
-same commit, plus a `version.php` bump so the cache revision changes. The stacks run with
-`cachejs = false`, so during development just edit `amd/src` and reload.
+same commit, plus a `version.php` bump so the cache revision changes. **`cachejs = false` does not
+serve `amd/src`.** It only stops Moodle caching and bundling; `lib/requirejs.php` still loads
+`amd/build/<module>.min.js` (reading `amd/src` only when the `.map` beside it is missing), identically
+on 4.5, 5.1, 5.2 and 5.3-dev. An `amd/src` edit therefore reaches the page only after
+`mdl grunt m501 local/dimensions`. Measured on m502 on 2026-09-13: a mutation made in `amd/src` alone
+changed nothing until the rebuild, so a JS mutation test that skips `grunt` silently tests the old build.
 
 ### Gates (run locally before pushing)
 
@@ -126,9 +130,10 @@ git archive --format=zip --prefix="${comp#*_}/" HEAD -o ~/Downloads/moodle-$comp
 
 To package the **published** state instead, `git fetch origin` first and archive
 `origin/main` in place of `HEAD` (and read the SHA from `origin/main`) — the fetch
-is only needed there, to refresh the remote ref `origin/main` resolves to. For the JS dev loop, set *Site admin →
-Development → Debug = DEVELOPER* and *cachejs = off* so Moodle serves `amd/src`
-directly without a rebuild.
+is only needed there, to refresh the remote ref `origin/main` resolves to. For the JS dev loop, turning off *Site admin →
+Appearance → AJAX and Javascript → Cache Javascript* (`cachejs`) stops Moodle caching the bundle,
+but it still serves `amd/build`:
+rebuild with `mdl grunt` after each `amd/src` edit, then reload (see "Building JavaScript assets").
 
 ## CI gating
 
