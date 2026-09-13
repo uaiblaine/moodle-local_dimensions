@@ -93,6 +93,9 @@ $accordionsettings = [
         ),
 ];
 
+// Log the plan view as admin/tool/lp/plan.php does. Each competency's view is logged by accordion.js.
+\local_dimensions\local\view_events::plan_viewed($plan);
+
 // Start HTML Output.
 echo $OUTPUT->header();
 

@@ -257,4 +257,139 @@ class behat_local_dimensions extends behat_base {
             );
         }
     }
+
+    /**
+     * Convert page names to URLs for steps like 'When I am on the "[identifier]" "[page type]" page'.
+     *
+     * Recognised page names are:
+     * | Page type       | Identifier meaning                               | Description            |
+     * | View plan       | Learning plan name                               | The plan overview      |
+     * | View competency | Learning plan name > competency idnumber         | The competency tracker |
+     *
+     * @param string $type Identifies which type of page this is.
+     * @param string $identifier Identifies the particular page.
+     * @return moodle_url The corresponding URL.
+     * @throws Exception With a meaningful error message if the specified page cannot be found.
+     */
+    protected function resolve_page_instance_url(string $type, string $identifier): moodle_url {
+        switch (strtolower($type)) {
+            case 'view plan':
+                return new moodle_url('/local/dimensions/view-plan.php', [
+                    'id' => $this->get_plan_id_by_name($identifier),
+                ]);
+            case 'view competency':
+                [$planname, $idnumber] = array_map('trim', array_pad(explode('>', $identifier, 2), 2, ''));
+                return new moodle_url('/local/dimensions/view-competency.php', [
+                    'id' => $this->get_plan_id_by_name($planname),
+                    'competencyid' => $this->get_competency_id_by_idnumber($idnumber),
+                ]);
+            default:
+                throw new Exception('Unrecognised local_dimensions page type "' . $type . '."');
+        }
+    }
+
+    /**
+     * Asserts how many times a plan's view was logged.
+     *
+     * @Then the view of plan :planname should be logged :count time(s)
+     * @param string $planname The learning plan name.
+     * @param int $count The expected number of log rows.
+     * @return void
+     */
+    public function the_view_of_plan_should_be_logged(string $planname, int $count): void {
+        $this->assert_view_log_count('\core\event\competency_plan_viewed', $planname, null, $count);
+    }
+
+    /**
+     * Asserts how many times a competency's view in a plan that is not complete was logged.
+     *
+     * @Then the view of competency :idnumber in plan :planname should be logged :count time(s)
+     * @param string $idnumber The competency idnumber.
+     * @param string $planname The learning plan name.
+     * @param int $count The expected number of log rows.
+     * @return void
+     */
+    public function the_view_of_competency_in_plan_should_be_logged(string $idnumber, string $planname, int $count): void {
+        $this->assert_view_log_count('\core\event\competency_user_competency_viewed_in_plan', $planname, $idnumber, $count);
+    }
+
+    /**
+     * Asserts how many times a competency's view in a completed plan was logged.
+     *
+     * @Then the completed-plan view of competency :idnumber in plan :planname should be logged :count time(s)
+     * @param string $idnumber The competency idnumber.
+     * @param string $planname The learning plan name.
+     * @param int $count The expected number of log rows.
+     * @return void
+     */
+    public function the_completed_plan_view_of_competency_should_be_logged(string $idnumber, string $planname, int $count): void {
+        $this->assert_view_log_count('\core\event\competency_user_competency_plan_viewed', $planname, $idnumber, $count);
+    }
+
+    /**
+     * Polls the standard log store until one view event has left exactly the expected number of rows.
+     *
+     * Polled, not read once. The accordion logs a competency view from a fire-and-forget request sent
+     * after the detail renders; core/ajax registers no pending-JS token for it, so Behat's own wait
+     * does not cover it, and the log store only writes at the end of that request.
+     *
+     * @param string $eventname The fully qualified event class name.
+     * @param string $planname The learning plan name.
+     * @param string|null $idnumber The competency idnumber, or null for a plan-level event.
+     * @param int $expected The expected number of log rows.
+     * @return void
+     */
+    protected function assert_view_log_count(string $eventname, string $planname, ?string $idnumber, int $expected): void {
+        $planid = $this->get_plan_id_by_name($planname);
+        $competencyid = $idnumber === null ? null : $this->get_competency_id_by_idnumber($idnumber);
+
+        $this->spin(
+            function () use ($eventname, $planid, $competencyid, $expected): bool {
+                global $DB;
+
+                $actual = 0;
+                foreach ($DB->get_records('logstore_standard_log', ['eventname' => $eventname]) as $row) {
+                    $other = (array) json_decode((string) $row->other, true);
+                    $rowplanid = $competencyid === null ? (int) $row->objectid : (int) ($other['planid'] ?? 0);
+                    $rowcompetencyid = $competencyid === null ? null : (int) ($other['competencyid'] ?? 0);
+                    if ($rowplanid === $planid && $rowcompetencyid === $competencyid) {
+                        $actual++;
+                    }
+                }
+                if ($actual !== $expected) {
+                    throw new ExpectationException(
+                        'Expected ' . $expected . ' "' . $eventname . '" log rows, found ' . $actual . '.',
+                        $this->getSession()
+                    );
+                }
+                return true;
+            },
+            [],
+            behat_base::get_extended_timeout()
+        );
+    }
+
+    /**
+     * The id of a learning plan, looked up by name.
+     *
+     * @param string $name The learning plan name.
+     * @return int
+     */
+    protected function get_plan_id_by_name(string $name): int {
+        global $DB;
+
+        return (int) $DB->get_field('competency_plan', 'id', ['name' => $name], MUST_EXIST);
+    }
+
+    /**
+     * The id of a competency, looked up by idnumber.
+     *
+     * @param string $idnumber The competency idnumber.
+     * @return int
+     */
+    protected function get_competency_id_by_idnumber(string $idnumber): int {
+        global $DB;
+
+        return (int) $DB->get_field('competency', 'id', ['idnumber' => $idnumber], MUST_EXIST);
+    }
 }
