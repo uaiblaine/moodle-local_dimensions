@@ -7,6 +7,7 @@
 # (a path marked "set" is excluded from the archive; "unspecified" ships).
 
 docs                  export-ignore
+mutations             export-ignore
 .github               export-ignore
 .moodle-plugin-ci.yml export-ignore
 CLAUDE.md             export-ignore

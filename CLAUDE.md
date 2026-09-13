@@ -362,6 +362,25 @@ handler writes are auto-logged) and diff **effective** values via
 `get_value()`, redacting textarea bodies to `'(updated)'`. In PHPUnit, core
 refuses a module link unless the competency is on the course first.
 
+### Learner view events (`classes/local/view_events.php`, `accordion.js`)
+The learner pages log **core's** view events, the ones `tool_lp`'s pages log; the plugin defines
+none of its own. `view-plan.php` logs `competency_plan_viewed` and `view-competency.php` logs the
+competency view, both before `$OUTPUT->header()`. The tracker logs after its single-course redirect
+and skips a related competency outside the plan. Core has **two** competency-in-plan events and
+refuses the wrong one: `user_competency_plan_viewed` for a completed plan, `user_competency_viewed_in_plan`
+for every other status. `api::user_competency_plan_viewed` called on an active plan does not throw
+the `coding_exception` its code suggests. It fails earlier, with `dml_missing_record_exception` on
+user id 0. The accordion's detail is lazy, so its view is logged from JS in `logCompetencyView()`.
+That call goes through core's own web services, chained **after** the summary renders and never in
+the parallel batch, so it cannot race `get_plan_competency()`'s insert of a missing user competency
+row. It runs **once per (plan, competency) per page load** through `loggedViews`, which must stay
+separate from `loadedCompetencies`: the grid modal refetches on every open and pager step and a
+layout switch empties the fetch cache, so a log tied to fetches would count differently per layout.
+Its failures go to `Log.debug` only. `summary_view_logging_contract_test` pins the two summary fields
+the JS reads (`plan.iscompleted`, `plan.userid`) and the two service names it sends. The Behat log-count
+steps **poll**, because `core/ajax` registers no pending-JS token and the log store writes at request
+end.
+
 ## Colour tokens and dark mode
 
 **The plugin does not own a palette.** `styles.css` declares **34 colour tokens** on bare

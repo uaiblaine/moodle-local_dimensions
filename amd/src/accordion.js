@@ -32,6 +32,12 @@ define(
         // Cache for loaded competency summaries to avoid reloading.
         const loadedCompetencies = new Set();
 
+        /* The competencies whose view this page has already logged. Kept apart from the summary
+           cache on purpose: the grid modal refetches on every open and every pager step, and a
+           layout switch empties that cache, so tying the log to fetches would make the count
+           depend on the layout. Never cleared - a new page load logs again, as core's pages do. */
+        const loggedViews = new Set();
+
         /* The plan's completion tabs. Other controls reuse the .local-dimensions-filter-tab
            class for its pill styling: the chip filters (chip_filters.mustache), which live in
            a panel OUTSIDE the bar and so are already excluded by the bar scope, and the two
@@ -67,6 +73,39 @@ define(
             showlockeddate: false,
             lockedcardmode: 'blocked'
         };
+
+        /**
+         * Log a competency view the way tool_lp's user competency popup does, once per page load.
+         *
+         * Core has one event for a completed plan and another for every other status, and refuses
+         * the wrong one, so the summary's own plan state picks the web service. Fire and forget: a
+         * log that fails must never reach the learner, so the failure goes to the console only.
+         *
+         * @param {Object} summary The parsed competency summary, carrying plan.iscompleted and plan.userid
+         * @param {number} competencyId The competency ID
+         * @param {number} planId The plan ID
+         */
+        function logCompetencyView(summary, competencyId, planId) {
+            const key = planId + '-' + competencyId;
+            if (loggedViews.has(key) || !summary || !summary.plan) {
+                return;
+            }
+            loggedViews.add(key);
+
+            const methodname = summary.plan.iscompleted
+                ? 'core_competency_user_competency_plan_viewed'
+                : 'core_competency_user_competency_viewed_in_plan';
+            Ajax.call([{
+                methodname: methodname,
+                args: {
+                    competencyid: competencyId,
+                    userid: Number.parseInt(summary.plan.userid, 10),
+                    planid: planId
+                }
+            }])[0].catch(function(error) {
+                Log.debug('local_dimensions/accordion: competency view not logged: ' + (error && error.message));
+            });
+        }
 
         /**
          * Load competency summary via AJAX.
@@ -132,6 +171,11 @@ define(
 
                 // Render the summary content (including course cards).
                 renderCompetencySummary(contentEl, summaryResponse, coursesResponse, planId);
+
+                /* Only once the summary has arrived: a failed load logs nothing, and the summary
+                   request has already created any missing user competency row, so the log call
+                   cannot race it to the insert. */
+                logCompetencyView(summaryResponse, competencyId, planId);
                 return null;
             }).catch(function(error) {
                 // Hide loading, show error.
