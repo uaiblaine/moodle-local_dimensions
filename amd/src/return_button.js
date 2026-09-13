@@ -163,6 +163,26 @@ define([], function() {
     };
 
     /**
+     * Step the FAB out of any ancestor that hides it.
+     *
+     * Core places the footer hook's HTML inside #region-main, and a course format may hide
+     * that whole subtree while painting its own app elsewhere: format_mtube hides every child
+     * of #page but its #content-wrapper, so the button renders 0x0. A fixed element keeps its
+     * geometry wherever it sits, so move it out one ancestor at a time and stop at the first
+     * spot where it renders. On a page that hides nothing it never moves, and keeps its place
+     * in the main landmark and in tab order.
+     *
+     * @param {HTMLElement} fab
+     */
+    var escapeHiddenAncestors = function(fab) {
+        var anchor = fab.parentElement;
+        while (fab.getClientRects().length === 0 && anchor && anchor !== document.body) {
+            anchor.parentNode.insertBefore(fab, anchor.nextSibling);
+            anchor = fab.parentElement;
+        }
+    };
+
+    /**
      * Wire up pointer-based dragging on the FAB.
      *
      * @param {HTMLElement} fab
@@ -279,6 +299,7 @@ define([], function() {
 
             // Show the button (it ships hidden to avoid a flash inside iframes).
             fab.style.display = 'flex';
+            escapeHiddenAncestors(fab);
 
             // Restore any position the user set earlier this session.
             var saved = readSavedPosition();
