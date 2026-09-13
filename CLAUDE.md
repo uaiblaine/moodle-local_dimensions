@@ -283,6 +283,17 @@ the plan's own user** (staff reviewing someone else's plan must not pollute
 their session), and the `returncontext` session cache has a 4h defensive TTL.
 The FAB is draggable; its position persists in `sessionStorage` (per-tab,
 current session) — see `amd/src/return_button.js`.
+**Passing every gate above does not make the button visible.** Core puts the hook's HTML inside
+`#region-main`, and a course format may hide that whole subtree: `format_mtube` hides every child
+of `#page` but its own `#content-wrapper` (`display: none !important`), so on its course page the
+button rendered 0x0 with `display: flex` set and nothing in any log. `init()` therefore steps the
+button out one ancestor at a time while `getClientRects()` is empty and stops at the first spot
+where it renders — right after `#page` there. Keep it conditional: a plain `document.body` append
+would move it out of the main landmark and to the end of tab order on every page, to fix one
+format. The mtube corner offsets and the fullscreen `visibility` rule sit beside the FAB block in
+`styles.css`; the offsets carry `:not(.editing)` like the format's own hide rule, because in editing
+the format renders none of its chrome and the theme arms must keep clearing core's footer button; `visibility`, not `display`, because the inline `display` the script sets outranks
+any stylesheet `display` without `!important`.
 The tracker renders a **second, separate** return button of its own
 (`helper::tracker_return_context`, echoed by `view-competency.php`), because the
 hook cannot reach it: both learner views leave `$PAGE->pagelayout` at core's

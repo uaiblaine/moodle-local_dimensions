@@ -4788,6 +4788,44 @@ a.local-dimensions-course-act-row:focus-visible {
 }
 
 /*
+ * format_mtube (MooTube) course page. The format hides every child of #page except its own app,
+ * so return_button.js steps the FAB out to a sibling of #page, and the corner belongs to the
+ * format's own chrome, which these arms mirror rather than measure: its tools FAB (teachers only)
+ * sits at bottom 2rem / right 2rem in a 3rem box, drops to right 0.75rem below 576px, and opens
+ * its menu upward in that same column - so the return FAB aligns with it and stands one gap to
+ * its left, never above it. Below 768px the format shows a bottom bar (71px measured, no declared
+ * height), which 5rem clears. They yield to a sticky footer, whose lift the theme arms own, and
+ * to editing, where the format hides nothing and renders none of that chrome, so core's footer
+ * button is back in the corner and the theme arms must keep clearing it.
+ */
+body#page-course-view-mtube:not(.editing):not(.hasstickyfooter) .local-dimensions-return-fab {
+    bottom: 2rem;
+    right: 2rem;
+}
+
+body#page-course-view-mtube:not(.editing):not(.hasstickyfooter):has(#mtube-tools-fab) .local-dimensions-return-fab {
+    right: calc(2rem + 3rem + 1rem);
+}
+
+@media (width <= 767.98px) {
+    body#page-course-view-mtube:not(.editing):not(.hasstickyfooter) .local-dimensions-return-fab {
+        bottom: 5rem;
+    }
+}
+
+@media (width <= 575.98px) {
+    body#page-course-view-mtube:not(.editing):not(.hasstickyfooter):has(#mtube-tools-fab) .local-dimensions-return-fab {
+        right: calc(0.75rem + 3rem + 0.75rem);
+    }
+}
+
+/* The format's HTML frame fullscreen owns the whole viewport and hides its own tools FAB. The
+   inline display the script sets outranks any display rule here, so visibility does the hiding. */
+body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
+    visibility: hidden;
+}
+
+/*
  * Mode-aware by construction: the FAB is a branded island filled with the admin's colour
  * (or brand-fill when none is set), which does not flip, so the ring drawn around it is
  * the same on-fill ink in both modes.
