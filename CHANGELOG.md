@@ -199,6 +199,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **The Return to plan button never appeared on a MooTube (`format_mtube`) course page.** Every
+  gate passed and `init()` set `display: flex`, but core places the footer hook's HTML inside
+  `#region-main`, and the format hides every child of `#page` except its own app with
+  `display: none !important` - so the button rendered 0x0, with nothing in any log. Measured on
+  m502 as a student with a stored return context. `init()` now steps the button out one ancestor
+  at a time while it has no client rects and stops at the first spot where it renders (right after
+  `#page` there); on a page that hides nothing it does not move, so it keeps its place in the main
+  landmark and in tab order everywhere else. On that page, outside editing (where the format hides
+  nothing and core's footer button is back in the corner), it also takes the format's corner: aligned
+  with the format's tools button (bottom 2rem, right 2rem), one gap to its left when a teacher has
+  it (its menu opens upward in its own column), 5rem up below 768px to clear the format's bottom
+  bar, and hidden with the format's own chrome in its HTML frame fullscreen.
 - **Three more places a theme's own decisions reached into the plugin, all measured on m502 at
   1440x900 and fixed in the sheet that owns the cause.**
 
