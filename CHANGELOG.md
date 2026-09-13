@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **The learner pages log competency views the way core's pages do.** Neither the plan overview
+  nor the competency tracker logged anything, so a learner who only used them left no trace of
+  what they looked at. The plan overview now logs core's plan viewed event, as
+  `admin/tool/lp/plan.php` does. Opening a competency in the accordion or the grid logs its
+  view once per page load, through core's own `core_competency_user_competency_viewed_in_plan`
+  web service, or `core_competency_user_competency_plan_viewed` on a completed plan, the same
+  pair `tool_lp`'s user competency popup calls. The count stays one whether the learner
+  collapses and reopens, switches layout or pages through the grid modal. A failed log call
+  never reaches the learner. The competency tracker logs the same view before rendering, but
+  not when it redirects straight to a single course, and not for a related competency outside
+  the plan. Views of someone else's plan are logged too, with the viewer and the owner, as core
+  logs them. `classes/local/view_events.php` holds the server side, and
+  `tests/behat/view_plan_logging.feature` is the first Behat coverage of the plan overview.
 - **The whole colour contract is a build gate now, not a paragraph.**
   `tests/local/colour_tokens_test.php` grew from four accessibility arms to seventeen, covering
   every rule the design states: no colour literal outside the token block or a named exemption

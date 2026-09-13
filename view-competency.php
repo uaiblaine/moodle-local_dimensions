@@ -68,9 +68,8 @@ $templateid = (int) $plan->get('templateid');
 
 // Related-competency links can point at a competency that is not in this plan; there the plan
 // layer of the cascade does not apply (competency -> global only).
-$effectivetemplateid = \local_dimensions\helper::competency_in_plan($competencyid, $plan)
-    ? $templateid
-    : 0;
+$competencyinplan = \local_dimensions\helper::competency_in_plan($competencyid, $plan);
+$effectivetemplateid = $competencyinplan ? $templateid : 0;
 
 // Load the competency.
 $competency = $DB->get_record('competency', ['id' => $competencyid]);
@@ -143,6 +142,10 @@ if ($competency) {
         redirect(new moodle_url('/course/view.php', ['id' => $singlecourse->id]));
     }
 }
+
+/* Log the competency view as admin/tool/lp/user_competency_in_plan.php does. Only here, past the
+   single-course redirect: a learner bounced straight to the course never saw this page. */
+\local_dimensions\local\view_events::competency_viewed_in_plan($plan, $competencyid, $competencyinplan);
 
 // Start HTML Output.
 echo $OUTPUT->header();
