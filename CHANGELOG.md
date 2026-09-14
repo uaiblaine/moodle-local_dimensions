@@ -212,6 +212,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **A plan the viewer may not read is no longer reported as an invalid plan.** `view-plan.php` and
+  `view-competency.php` turned every exception from `api::read_plan()` into "Invalid learning
+  plan". Two refusals were misreported that way:
+  - Core's permission error. No default archetype holds `moodle/competency:planviewowndraft`, so
+    every learner on an unmodified site is refused their own draft, waiting-for-review or in-review
+    plan, and was told that plan did not exist.
+  - The "competencies are not enabled" error.
+
+  Both pages now read the plan through `classes/local/plan_access.php`. It reports only a missing
+  plan as invalid (a `dml_missing_record_exception`, for an unknown id or one below 1) and lets
+  every other error surface as core's own, as `admin/tool/lp/plan.php` does. The learner-facing
+  `block_dimensions` was checked and needs no change: its plan and competency cards come only from
+  active plans, so it never links a learner to a draft or in-review plan.
 - **A viewer allowed to read draft plans no longer gets an error from every competency.** Core
   lets a role holding only `moodle/competency:planviewdraft` read a draft, waiting-for-review or
   in-review plan. But each competency's detail goes through `api::get_plan_competency()`, which

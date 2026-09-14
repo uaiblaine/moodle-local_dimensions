@@ -401,6 +401,19 @@ either. `view_events::competency_viewed_in_plan()` skips logging for the same vi
 never reach this, since a manager holds every capability involved. The mutation spec is
 `mutations/detail_access.conf`.
 
+### Reading a plan (`plan_access`)
+Both learner pages read their plan through `classes/local/plan_access.php`. **Never wrap `api::read_plan()`
+in a `catch (\Exception)` that reports `invalidplan`**; that shape was the defect. It told a learner refused
+their own draft, waiting-for-review or in-review plan that the plan did not exist, because no default
+archetype holds `planviewowndraft`. It told an administrator the same thing when competencies were turned
+off. Only a `dml_missing_record_exception` means there is no plan: it comes from the plan row for an unknown
+id, and from `context_user::instance(0)` for an id below 1, which `core_competency\persistent` never loads.
+Every other failure must surface as core's own error, the way `admin/tool/lp/plan.php` shows it.
+Behat cannot assert on an exception page, so the refusals are pinned in `tests/local/plan_access_test.php`,
+and the mutation spec is `mutations/plan_access.conf`. `classes/external/get_competency_courses.php` still
+catches `\Exception` around `read_plan()`. That catch only picks the enrolment-filter cascade and shows no
+error, so it was left as it is.
+
 ## Colour tokens and dark mode
 
 **The plugin does not own a palette.** `styles.css` declares **34 colour tokens** on bare
