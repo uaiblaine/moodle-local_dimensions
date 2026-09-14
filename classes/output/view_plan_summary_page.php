@@ -32,6 +32,7 @@ use templatable;
 use renderer_base;
 use core_competency\api;
 use core_competency\plan;
+use core_competency\user_competency;
 use local_dimensions\constants;
 use local_dimensions\scss_manager;
 
@@ -219,6 +220,12 @@ class view_plan_summary_page implements renderable, templatable {
             ],
             'competencies' => [],
             'competencycount' => 0,
+            /* Whether this viewer may open a competency's detail. Every detail loads through
+               api::get_plan_competency(), which checks user_competency::can_read_user(), while the
+               plan itself was read through plan::can_read() - which accepts the draft capabilities
+               for a draft plan and so admits viewers that check refuses. Offering them a control
+               that can only fail was the defect; the template withholds it instead. */
+            'candetail' => user_competency::can_read_user((int) $this->plan->get('userid')),
         ];
 
         // Determine which property to use based on plan status.
