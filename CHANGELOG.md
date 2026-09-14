@@ -108,6 +108,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a plan based on it, and a competency's only to those who may read its framework.
 
 ### Changed
+- **The plan overview fetches each competency's detail once per page.** The cache that stopped a
+  second fetch recorded a rendered pane, not the data. The grid modal therefore dropped the
+  competency and called both detail web services again on every card open and every pager step,
+  and a switch between list and grid dropped every competency at once. The fetched summary and
+  course cards are now kept per page, apart from the record of which pane shows them, so paging
+  back, reopening a card or switching layout renders from what is already there. Measured on m502
+  over a session that opens three cards, pages back and forth and switches layout twice, the two
+  services went from 8 calls each to 3. A review request sent from the detail changes that data,
+  so it drops the competency and the next pane fetches it again. A rating made elsewhere shows on
+  the next page load, as it always did in an expanded list pane. Logging a competency view stays
+  once per page and is not tied to this cache. `tests/behat/view_plan_detail_cache.feature` asserts
+  the counts in the browser.
 - **The colour token layer moved from `:root` to `body`, and the dark rule grew a second arm - so
   the plugin follows a colour-mode scope wherever the host writes it.**
   Thirty-one of the 34 tokens are DERIVED: each resolves a `var(--bs-*)` chain (the other three,
@@ -212,6 +224,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **The Rules tab of a competency shown a second time no longer spins forever.** The tab fetched
+  its data once per page and marked the whole page as loaded, but every detail render builds a new
+  Rules pane. After a card was reopened, the modal stepped back to a competency, or the list pane
+  was rebuilt by a layout switch, the new pane found the page already marked and never filled in.
+  The mark now lives on the pane and the fetched data is kept per page, so a rebuilt pane renders
+  at once without fetching again.
 - **A plan the viewer may not read is no longer reported as an invalid plan.** `view-plan.php` and
   `view-competency.php` turned every exception from `api::read_plan()` into "Invalid learning
   plan". Two refusals were misreported that way:
