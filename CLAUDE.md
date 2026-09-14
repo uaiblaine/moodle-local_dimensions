@@ -381,6 +381,26 @@ the JS reads (`plan.iscompleted`, `plan.userid`) and the two service names it se
 steps **poll**, because `core/ajax` registers no pending-JS token and the log store writes at request
 end.
 
+### Competency detail access (`candetail`)
+Core reads a plan through `plan::can_read()`. For a draft, waiting-for-review or in-review plan that check
+accepts the **draft** capabilities (`planviewdraft`, `planviewowndraft`, the `planmanage*draft` pair).
+Every competency detail in the accordion and the grid goes through `api::get_plan_competency()`, which
+checks `user_competency::can_read_user()`: `usercompetencyview` OR the **non-draft**
+`plan::can_read_user()`. That check never consults the draft capabilities. A custom reviewer role holding
+only `planviewdraft` therefore reads the plan overview and its list while core refuses it every detail.
+`view_plan_summary_page` exports `candetail` from that exact check. When it is false the template renders
+each header as a plain `div` and omits the `competency-content-{id}` region. The `div` keeps the
+`local-dimensions-accordion-toggle` class for layout, but has no `aria-controls` and no chevron. The row
+gets `local-dimensions-nodetail`, and one notice explains why.
+
+**No JS knows about the flag.** The accordion's toggle handler returns when `aria-controls` resolves to
+nothing. `openDetailModal()` returns before `Modal.create()` when the detail region is missing, and that
+early return is the only thing stopping a nodetail grid card from opening an empty dialogue. The
+`@javascript` scenario in `view_plan_detail_access.feature` holds it; keep both paths intact when touching
+either. `view_events::competency_viewed_in_plan()` skips logging for the same viewer. Default archetypes
+never reach this, since a manager holds every capability involved. The mutation spec is
+`mutations/detail_access.conf`.
+
 ## Colour tokens and dark mode
 
 **The plugin does not own a palette.** `styles.css` declares **34 colour tokens** on bare
