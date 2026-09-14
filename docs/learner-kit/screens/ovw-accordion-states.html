@@ -117,7 +117,7 @@
       <span class="idb">alert alert-danger · unhidden in the .catch</span>
       <span class="idb r">no recovery control — the box is the end of the road</span>
     </div>
-    <div class="note">A third sibling — <code>.local-dimensions-competency-summary-content</code> (hidden until AJAX) — is where the loaded detail lands: tabs, status, courses (<span class="idb">OVW-TAB-NAV</span> <span class="idb">OVW-STATUS</span> <span class="idb">OVW-CRS</span>). Re-expanding a loaded item never refetches (<code>loadedCompetencies</code> Set, <code>accordion.js:84-86</code>). A failed item is <b>not</b> added to that Set, so collapsing and re-expanding does re-run the fetch — but the error box itself offers no control that does so.</div>
+    <div class="note">A third sibling — <code>.local-dimensions-competency-summary-content</code> (hidden until AJAX) — is where the loaded detail lands: tabs, status, courses (<span class="idb">OVW-TAB-NAV</span> <span class="idb">OVW-STATUS</span> <span class="idb">OVW-CRS</span>). Re-expanding a loaded item never refetches (<code>detailPanes</code> map, <code>loadCompetencySummary</code>). A failed item is removed from that map and its data forgotten, so collapsing and re-expanding does re-run the fetch — but the error box itself offers no control that does so.</div>
   </div>
 
 </div>

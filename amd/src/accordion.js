@@ -29,13 +29,25 @@ define(
         LearnerPrefs, ModalExpander) {
         'use strict';
 
-        // Cache for loaded competency summaries to avoid reloading.
-        const loadedCompetencies = new Set();
+        /* Which pane holds each competency's detail, rendered or on its way. It describes the DOM,
+           not the data: a layout switch empties it, and every modal open or step builds a fresh
+           pane that replaces its entry. A pane no longer listed here receives nothing, checked when
+           the data arrives and again when the strings do, so a torn-down pane never regains rendered
+           ids. */
+        const detailPanes = new Map();
 
-        /* The competencies whose view this page has already logged. Kept apart from the summary
-           cache on purpose: the grid modal refetches on every open and every pager step, and a
-           layout switch empties that cache, so tying the log to fetches would make the count
-           depend on the layout. Never cleared - a new page load logs again, as core's pages do. */
+        /* What has been fetched for each competency, as a promise of [summary, courses], for the
+           life of the page. Re-rendering a pane - a modal step back, a card reopened, a layout
+           switch - reuses it instead of calling both web services again. The one action on this
+           page that changes that data is a review request, which forgets it (see initEvidenceList).
+           A rating made elsewhere shows on the next page load, as it always did in an expanded list
+           pane. A failed fetch is forgotten too, so the next open retries. */
+        const competencyData = new Map();
+
+        /* The competencies whose view this page has already logged. Kept apart from the data cache
+           on purpose: a review request forgets a competency's data and its next render refetches,
+           so a log tied to fetches would count that as a second view. Never cleared - a new page
+           load logs again, as core's pages do. */
         const loggedViews = new Set();
 
         /* The plan's completion tabs. Other controls reuse the .local-dimensions-filter-tab
@@ -108,31 +120,27 @@ define(
         }
 
         /**
-         * Load competency summary via AJAX.
+         * The key a competency's fetched data is cached under.
          *
-         * @param {HTMLElement} contentElement The accordion content element
          * @param {number} competencyId The competency ID
          * @param {number} planId The plan ID
+         * @return {string}
          */
-        function loadCompetencySummary(contentElement, competencyId, planId) {
-            const loadingEl = contentElement.querySelector('.local-dimensions-competency-summary-loading');
-            const contentEl = contentElement.querySelector('.local-dimensions-competency-summary-content');
-            const errorEl = contentElement.querySelector('.local-dimensions-competency-summary-error');
+        function competencyDataKey(competencyId, planId) {
+            return planId + '-' + competencyId;
+        }
 
-            // Check if already loaded.
-            if (loadedCompetencies.has(competencyId)) {
-                return;
-            }
-
-            // Show loading state.
-            if (loadingEl) {
-                loadingEl.style.display = 'block';
-            }
-            if (contentEl) {
-                contentEl.style.display = 'none';
-            }
-            if (errorEl) {
-                errorEl.style.display = 'none';
+        /**
+         * Fetch a competency's summary and course cards, once per page until forgotten.
+         *
+         * @param {number} competencyId The competency ID
+         * @param {number} planId The plan ID
+         * @return {Promise} Resolves to [summary, courses]
+         */
+        function fetchCompetencyData(competencyId, planId) {
+            const key = competencyDataKey(competencyId, planId);
+            if (competencyData.has(key)) {
+                return competencyData.get(key);
             }
 
             // Call both webservices in parallel.
@@ -156,13 +164,55 @@ define(
                 args: {competencyid: competencyId, planid: planId}
             }])[0];
 
-            // Wait for both to complete.
-            Promise.all([summaryPromise, coursesPromise]).then(function(results) {
+            const request = Promise.all([summaryPromise, coursesPromise]);
+            competencyData.set(key, request);
+
+            /* A failure is not data. Forget it, unless a review request has already forgotten it and
+               a newer request taken its place. The caller still sees the rejection. */
+            request.catch(function() {
+                if (competencyData.get(key) === request) {
+                    competencyData.delete(key);
+                }
+            });
+            return request;
+        }
+
+        /**
+         * Render a competency's detail into a pane, fetching it only when this page has not yet.
+         *
+         * @param {HTMLElement} contentElement The accordion content element
+         * @param {number} competencyId The competency ID
+         * @param {number} planId The plan ID
+         */
+        function loadCompetencySummary(contentElement, competencyId, planId) {
+            const loadingEl = contentElement.querySelector('.local-dimensions-competency-summary-loading');
+            const contentEl = contentElement.querySelector('.local-dimensions-competency-summary-content');
+            const errorEl = contentElement.querySelector('.local-dimensions-competency-summary-error');
+
+            // This pane already holds the detail, or is waiting for it.
+            if (detailPanes.get(competencyId) === contentElement) {
+                return;
+            }
+            detailPanes.set(competencyId, contentElement);
+
+            // Show loading state.
+            if (loadingEl) {
+                loadingEl.style.display = 'block';
+            }
+            if (contentEl) {
+                contentEl.style.display = 'none';
+            }
+            if (errorEl) {
+                errorEl.style.display = 'none';
+            }
+
+            fetchCompetencyData(competencyId, planId).then(function(results) {
+                // Torn down, or replaced by a later modal step, while the data was on its way.
+                if (detailPanes.get(competencyId) !== contentElement) {
+                    return null;
+                }
                 const summaryResponse = results[0];
                 const coursesResponse = results[1];
-
-                // Mark as loaded.
-                loadedCompetencies.add(competencyId);
 
                 // Hide loading.
                 if (loadingEl) {
@@ -170,7 +220,9 @@ define(
                 }
 
                 // Render the summary content (including course cards).
-                renderCompetencySummary(contentEl, summaryResponse, coursesResponse, planId);
+                renderCompetencySummary(contentEl, summaryResponse, coursesResponse, planId, function() {
+                    return detailPanes.get(competencyId) === contentElement;
+                });
 
                 /* Only once the summary has arrived: a failed load logs nothing, and the summary
                    request has already created any missing user competency row, so the log call
@@ -178,6 +230,12 @@ define(
                 logCompetencyView(summaryResponse, competencyId, planId);
                 return null;
             }).catch(function(error) {
+                if (detailPanes.get(competencyId) !== contentElement) {
+                    return;
+                }
+                // Let the next open of this pane try again.
+                detailPanes.delete(competencyId);
+
                 // Hide loading, show error.
                 if (loadingEl) {
                     loadingEl.style.display = 'none';
@@ -196,9 +254,10 @@ define(
          * @param {Object} data The data from the webservice
          * @param {Array} courses The courses list from tool_lp_list_courses_using_competency
          * @param {number} planId The plan ID (used for related competency links)
+         * @param {Function} isCurrent Whether contentEl is still the pane that asked, checked again once the strings arrive
          * @return {Promise} Promise that resolves when rendering is complete
          */
-        function renderCompetencySummary(contentEl, data, courses, planId) {
+        function renderCompetencySummary(contentEl, data, courses, planId, isCurrent) {
             if (!contentEl) {
                 return Promise.resolve(null);
             }
@@ -392,6 +451,12 @@ define(
                     applicationPendingNote: strings[89]
                 };
 
+                /* The strings can be a network round trip of their own, and a layout switch landing
+                   during it tears this pane down: writing now would put rendered ids back into it. */
+                if (!isCurrent()) {
+                    return null;
+                }
+
                 const summaryState = getSummaryState(data, courses);
                 let html = '<div class="local-dimensions-competency-detail">';
                 html += renderSummaryTabs(summaryState, strMap, planId);
@@ -416,7 +481,7 @@ define(
                     || summaryState.competencyData?.scaleconfiguration
                     || null;
                 initEvidenceList(contentEl, summaryState.ucs ? summaryState.ucs.evidence : [], strMap, scaleConfig,
-                    summaryState.ucs);
+                    summaryState.ucs, planId);
                 initScaleAbout(contentEl, strMap, summaryState.scaleDescription);
                 initTaxonomyDefinition(contentEl, strMap);
 
@@ -871,23 +936,24 @@ define(
             setTimeout(refresh, 120);
         }
 
-        // Cache for loaded Rules tab panes to avoid re-fetching.
-        const loadedRulesPanes = new Set();
+        /* Fetched rule data, as a promise of the parsed payload, for the life of the page. Whether a
+           pane has asked for it is marked on the pane itself: every detail render builds a new rules
+           pane, and a page-wide marker left each one after the first on its spinner. */
+        const ruleData = new Map();
 
         /**
-         * Load Rules tab data via AJAX if not already loaded.
+         * Fill a Rules tab pane on its first activation, fetching only when this page has not yet.
          *
          * @param {HTMLElement} pane The rules tab pane element
          * @param {Object} strMap Language strings map
          */
         function loadRulesTabIfNeeded(pane, strMap) {
-            const competencyId = Number.parseInt(pane.dataset.competencyId, 10);
-            const cacheKey = competencyId + '-' + Number.parseInt(pane.dataset.planId, 10);
-            if (loadedRulesPanes.has(cacheKey)) {
+            if (pane.hasAttribute('data-rules-requested')) {
                 return;
             }
-            loadedRulesPanes.add(cacheKey);
+            pane.setAttribute('data-rules-requested', '1');
 
+            const competencyId = Number.parseInt(pane.dataset.competencyId, 10);
             const planId = Number.parseInt(pane.dataset.planId, 10);
             const loadingEl = pane.querySelector('.local-dimensions-rules-loading');
             const contentEl = pane.querySelector('.local-dimensions-rules-content');
@@ -899,15 +965,26 @@ define(
                 return;
             }
 
-            Ajax.call([{
-                methodname: 'local_dimensions_get_competency_rule_data',
-                args: {
-                    competencyid: competencyId,
-                    planid: planId
-                }
-            }])[0].then(function(response) {
-                const data = JSON.parse(response);
+            const key = competencyDataKey(competencyId, planId);
+            if (!ruleData.has(key)) {
+                const request = Ajax.call([{
+                    methodname: 'local_dimensions_get_competency_rule_data',
+                    args: {
+                        competencyid: competencyId,
+                        planid: planId
+                    }
+                }])[0].then(function(response) {
+                    return JSON.parse(response);
+                });
+                ruleData.set(key, request);
+                request.catch(function() {
+                    if (ruleData.get(key) === request) {
+                        ruleData.delete(key);
+                    }
+                });
+            }
 
+            ruleData.get(key).then(function(data) {
                 if (loadingEl) {
                     loadingEl.style.display = 'none';
                 }
@@ -921,7 +998,8 @@ define(
                 if (loadingEl) {
                     loadingEl.style.display = 'none';
                 }
-                loadedRulesPanes.delete(cacheKey);
+                // Let the next activation of this pane try again.
+                pane.removeAttribute('data-rules-requested');
                 Notification.exception(error);
             });
         }
@@ -1848,8 +1926,9 @@ define(
          * @param {Object} strMap Language strings map
          * @param {string|null} scaleConfig The scale configuration JSON string from the competency
          * @param {Object} ucs The user competency summary, for the review request
+         * @param {number} planId The plan ID, whose cached data a review request makes stale
          */
-        function initEvidenceList(contentEl, evidenceData, strMap, scaleConfig, ucs) {
+        function initEvidenceList(contentEl, evidenceData, strMap, scaleConfig, ucs, planId) {
             const list = contentEl.querySelector('.local-dimensions-ev-list');
             if (!list) {
                 return;
@@ -1865,6 +1944,10 @@ define(
                     methodname: 'core_competency_user_competency_request_review',
                     args: {userid: uc.userid, competencyid: uc.competencyid}
                 }])[0].then(function() {
+                    /* The status just changed on the server. This pane shows it below; the next pane
+                       built for the competency fetches again rather than offering the request twice. */
+                    competencyData.delete(competencyDataKey(Number.parseInt(uc.competencyid, 10), planId));
+
                     // Swap the control for the sent state; core rejects a second request anyway.
                     const sent = document.createElement('p');
                     sent.className = 'local-dimensions-ev-stale-sent';
@@ -3501,7 +3584,8 @@ define(
                     error.style.display = 'none';
                 }
             });
-            loadedCompetencies.clear();
+            // The panes go; the fetched data stays for whichever surface is built next.
+            detailPanes.clear();
         }
 
         /**
@@ -3598,9 +3682,8 @@ define(
             modalbody.appendChild(buildModalPager(item, modal, planId));
             modalbody.appendChild(shell.cloneNode(true));
 
-            /* The pane cache would otherwise short-circuit a second look at the same
-               competency, leaving the fresh modal body on its loading placeholder. */
-            loadedCompetencies.delete(competencyId);
+            /* The clone is a new pane, so it always renders; a competency this page has already
+               fetched renders from the data cache without calling the web services again. */
             loadCompetencySummary(modalbody.querySelector('.local-dimensions-accordion-body'), competencyId, planId);
         }
 
