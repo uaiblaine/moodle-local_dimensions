@@ -212,6 +212,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **A viewer allowed to read draft plans no longer gets an error from every competency.** Core
+  lets a role holding only `moodle/competency:planviewdraft` read a draft, waiting-for-review or
+  in-review plan. But each competency's detail goes through `api::get_plan_competency()`, which
+  checks `user_competency::can_read_user()`, and that check never consults the draft
+  capabilities. Such a reviewer could open the plan overview, while every competency they expanded
+  failed with an error in the row and an exception dialog. The page now works out server-side
+  whether the viewer can read the plan owner's user competencies. When they cannot, it renders the
+  list with plain headers, no detail region and no chevron, and says once, in a localised notice,
+  that the details are not available. Default roles are unaffected: a manager holds every
+  capability involved, and the owner reads an active plan normally.
 - **The Return to plan button never appeared on a MooTube (`format_mtube`) course page.** Every
   gate passed and `init()` set `display: flex`, but core places the footer hook's HTML inside
   `#region-main`, and the format hides every child of `#page` except its own app with

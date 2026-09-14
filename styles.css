@@ -2244,6 +2244,16 @@ body[data-bs-theme="dark"],
     cursor: pointer;
 }
 
+/* A viewer who cannot open a competency's detail (candetail) gets rows that do not look clickable. */
+.local-dimensions-grid-mode .local-dimensions-accordion-item.local-dimensions-nodetail,
+.local-dimensions-nodetail .local-dimensions-accordion-toggle {
+    cursor: default;
+}
+
+.local-dimensions-nodetail .local-dimensions-accordion-toggle:hover {
+    background: var(--local-dimensions-surface);
+}
+
 .local-dimensions-grid-mode .local-dimensions-accordion-content {
     display: none;
 }
