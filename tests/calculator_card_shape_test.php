@@ -536,13 +536,26 @@ final class calculator_card_shape_test extends \advanced_testcase {
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
 
         // The course's only tracked activity, in a section the teacher then hides.
-        $this->getDataGenerator()->create_module('page', [
+        $page = $this->getDataGenerator()->create_module('page', [
             'course' => $course->id,
             'section' => 1,
             'name' => 'Hidden away',
             'completion' => COMPLETION_TRACKING_MANUAL,
         ]);
-        set_section_visible($course->id, 1, 0);
+
+        /* Hidden through sectionactions::update(), which 4.5, 5.1 and 5.2 all ship with the same
+           signature. set_section_visible() is deprecated on 5.2 (MDL-86861) and its replacement,
+           sectionactions::set_visibility(), does not exist before 5.2; both end in this call, which
+           also hides the section's modules. */
+        \core_courseformat\formatactions::section($course->id)->update(
+            get_fast_modinfo($course->id)->get_section_info(1),
+            ['visible' => 0]
+        );
+
+        // The state the rest of the test depends on: the section and the activity in it are hidden.
+        $modinfo = get_fast_modinfo($course->id);
+        $this->assertSame(0, (int) $modinfo->get_section_info(1)->visible);
+        $this->assertSame(0, (int) $modinfo->get_cm($page->cmid)->visible);
 
         $this->setUser($user);
         $shape = calculator::resolve_card_shape((int) $course->id, (int) $user->id);
@@ -551,9 +564,12 @@ final class calculator_card_shape_test extends \advanced_testcase {
         // The resolver must not name it.
         $this->assertNull($shape['activity']);
 
-        // And no section the progress walk returns may count it.
+        /* And the progress walk neither lists the hidden section nor counts its activity anywhere. The two
+           visible sections are the control: the walk did run, and it still lists what it should. */
+        $hiddenurl = (new \moodle_url('/course/section.php', ['id' => $modinfo->get_section_info(1)->id]))->out(false);
+        $this->assertCount(2, $data['sections']);
+        $this->assertNotContains($hiddenurl, array_column($data['sections'], 'url'));
         foreach ($data['sections'] as $section) {
-            $this->assertNotSame('Hidden away', $section['name']);
             $this->assertFalse($section['has_activities']);
         }
     }
