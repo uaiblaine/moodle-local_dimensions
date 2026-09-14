@@ -30,6 +30,7 @@
         - id, planorder, shortname, isproficient, rating, hasrating, isfavourite
         - badgeproficienticonurl, badgewarningiconurl
         - sublinetext, hassublinetext, filtervaluesjson
+    * candetail (bool) - Whether the viewer may open a competency's detail; false renders plain headers and a notice
     * competencycount (int) - Total competencies
     * incompletecount (int) - Number of not-yet-proficient competencies
     * sortmode (string) - Stored sort: planorder, name, completed or favourites
@@ -63,10 +64,25 @@
             "hastextcolor": true,
             "textcolor": "#ffffff"
         },
-        "hascompetencies": false,
-        "competencies": [],
-        "competencycount": 0,
-        "incompletecount": 0,
+        "hascompetencies": true,
+        "candetail": false,
+        "subline_is_status": true,
+        "competencies": [
+            {
+                "id": 7,
+                "planorder": 0,
+                "shortname": "Communication",
+                "isproficient": false,
+                "rating": "Not evaluated",
+                "hasrating": false,
+                "isfavourite": false,
+                "sublinetext": "",
+                "hassublinetext": false,
+                "filtervaluesjson": "{}"
+            }
+        ],
+        "competencycount": 1,
+        "incompletecount": 1,
         "sortmode": "planorder",
         "sort_is_planorder": true,
         "sort_is_name": false,
@@ -253,6 +269,15 @@
             </div>
         {{/haschipfilters}}
 
+        {{^candetail}}
+        {{! Said once for the whole list: this viewer reads the plan but core refuses them every
+            competency's detail, so the rows below render without a control to open one. }}
+        <div class="local-dimensions-detail-unavailable alert alert-info" role="status">
+            <strong>{{#str}}detail_unavailable, local_dimensions{{/str}}</strong>
+            {{#str}}detail_unavailable_note, local_dimensions{{/str}}
+        </div>
+        {{/candetail}}
+
         {{! Competency accordion }}
         <div id="local-dimensions-viewplan-accordion"
              class="local-dimensions-competency-accordion {{#view_is_grid}}local-dimensions-grid-mode{{/view_is_grid}}"
@@ -261,7 +286,7 @@
              aria-live="polite"
              aria-relevant="additions removals">
             {{#competencies}}
-            <div class="local-dimensions-accordion-item {{#isproficient}}completed{{/isproficient}} {{#hasrating}}{{^isproficient}}rated{{/isproficient}}{{/hasrating}} {{#isfavourite}}local-dimensions-favourite{{/isfavourite}}"
+            <div class="local-dimensions-accordion-item {{#isproficient}}completed{{/isproficient}} {{#hasrating}}{{^isproficient}}rated{{/isproficient}}{{/hasrating}} {{#isfavourite}}local-dimensions-favourite{{/isfavourite}} {{^candetail}}local-dimensions-nodetail{{/candetail}}"
                  role="listitem"
                  data-competency-id="{{id}}"
                  data-planorder="{{planorder}}"
@@ -289,11 +314,19 @@
                         {{/isfavourite}}
                     </button>
                     {{/showstar}}
+                    {{! Without detail the header is plain text: no button, no chevron and no
+                        detail region, so neither the accordion nor the grid modal can open one
+                        (both bail out when the region is absent). }}
+                    {{#candetail}}
                     <button class="local-dimensions-accordion-toggle"
                             type="button"
                             aria-expanded="false"
                             aria-controls="competency-content-{{id}}"
                             id="competency-header-{{id}}">
+                    {{/candetail}}
+                    {{^candetail}}
+                    <div class="local-dimensions-accordion-toggle" id="competency-header-{{id}}">
+                    {{/candetail}}
                         <div class="local-dimensions-accordion-header-content">
                             <span class="local-dimensions-accordion-title">{{shortname}}</span>
                             {{#subline_is_status}}
@@ -329,10 +362,16 @@
                                 {{/hassublinetext}}
                             {{/subline_is_text}}
                         </div>
+                    {{#candetail}}
                         <i class="local-dimensions-accordion-icon fa fa-chevron-down" aria-hidden="true"></i>
                     </button>
+                    {{/candetail}}
+                    {{^candetail}}
+                    </div>
+                    {{/candetail}}
                     </div>
 
+                    {{#candetail}}
                     <div class="local-dimensions-accordion-content"
                          id="competency-content-{{id}}"
                          aria-labelledby="competency-header-{{id}}"
@@ -353,6 +392,7 @@
                             </div>
                         </div>
                     </div>
+                    {{/candetail}}
                 </div>
             </div>
             {{/competencies}}
