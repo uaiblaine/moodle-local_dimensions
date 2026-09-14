@@ -327,6 +327,62 @@ class behat_local_dimensions extends behat_base {
     }
 
     /**
+     * Asserts how many requests the current page has sent to one web service.
+     *
+     * Read from the browser's resource timing entries. core/ajax names the methods of a request in its
+     * URL (info=...) while the arguments travel in the body, so this counts calls to a method, not calls
+     * about one competency. Polled, because an entry lands only once its response has arrived.
+     *
+     * The browser keeps 250 entries by default and silently drops the rest, which would undercount. The
+     * first use of this step on a page enlarges the buffer; if the page had already filled it by then,
+     * requests may be missing and the step fails, because no count read from it can be trusted.
+     *
+     * @Then the page should have called the :methodname web service :count time(s)
+     * @param string $methodname The external function name.
+     * @param int $count The expected number of requests.
+     * @return void
+     */
+    public function the_page_should_have_called_the_web_service(string $methodname, int $count): void {
+        $filled = (int) $this->getSession()->evaluateScript(
+            'return (function() {'
+                . ' if (window.localDimensionsTimingBuffer) { return 0; }'
+                . ' var held = performance.getEntriesByType("resource").length;'
+                . ' performance.setResourceTimingBufferSize(10000);'
+                . ' window.localDimensionsTimingBuffer = true;'
+                . ' return held >= 250 ? held : 0;'
+                . '})();'
+        );
+        if ($filled > 0) {
+            throw new ExpectationException(
+                'The resource timing buffer was already full (' . $filled . ' entries), so requests may be missing from it.',
+                $this->getSession()
+            );
+        }
+
+        $script = 'return (function(name) {'
+            . ' return performance.getEntriesByType("resource").filter(function(entry) {'
+            . '     var match = entry.name.match(/[?&]info=([^&]*)/);'
+            . '     return match !== null && decodeURIComponent(match[1]).split(",").indexOf(name) !== -1;'
+            . ' }).length;'
+            . '})(' . json_encode($methodname) . ');';
+
+        $this->spin(
+            function () use ($script, $methodname, $count): bool {
+                $actual = (int) $this->getSession()->evaluateScript($script);
+                if ($actual !== $count) {
+                    throw new ExpectationException(
+                        'Expected ' . $count . ' requests to ' . $methodname . ', found ' . $actual . '.',
+                        $this->getSession()
+                    );
+                }
+                return true;
+            },
+            [],
+            behat_base::get_extended_timeout()
+        );
+    }
+
+    /**
      * Polls the standard log store until one view event has left exactly the expected number of rows.
      *
      * Polled, not read once. The accordion logs a competency view from a fire-and-forget request sent
@@ -367,6 +423,93 @@ class behat_local_dimensions extends behat_base {
             [],
             behat_base::get_extended_timeout()
         );
+    }
+
+    /**
+     * Moves a competency under a parent in the same framework.
+     *
+     * Core's generator takes a parent only as an id, which a feature cannot know. Updating the
+     * persistent recomputes the path and leaves the parent's rule alone, so a rule set by the
+     * generator survives the move.
+     *
+     * @Given the competency :childidnumber is a child of :parentidnumber
+     * @param string $childidnumber The idnumber of the competency to move.
+     * @param string $parentidnumber The idnumber of its new parent.
+     * @return void
+     */
+    public function the_competency_is_a_child_of(string $childidnumber, string $parentidnumber): void {
+        $child = new \core_competency\competency($this->get_competency_id_by_idnumber($childidnumber));
+        $child->set('parentid', $this->get_competency_id_by_idnumber($parentidnumber));
+        $child->update();
+    }
+
+    /**
+     * Records a logged evidence row, carrying a note, on a user's competency.
+     *
+     * @Given :username has an evidence note :note on competency :idnumber
+     * @param string $username The learner.
+     * @param string $note The note the evidence carries, which makes its row open a detail dialogue.
+     * @param string $idnumber The competency idnumber.
+     * @return void
+     */
+    public function has_an_evidence_note_on_competency(string $username, string $note, string $idnumber): void {
+        $this->get_competency_generator()->create_evidence([
+            'usercompetencyid' => $this->get_user_competency_id($username, $idnumber),
+            'action' => \core_competency\evidence::ACTION_LOG,
+            'descidentifier' => 'evidence_manualoverride',
+            'note' => $note,
+        ]);
+    }
+
+    /**
+     * Records a rule completion on a user's competency without rating it.
+     *
+     * The rating stays unset, which is the stale state the progress tab answers with a review request.
+     *
+     * @Given the rule of competency :idnumber was met by :username
+     * @param string $idnumber The competency idnumber.
+     * @param string $username The learner.
+     * @return void
+     */
+    public function the_rule_of_competency_was_met_by(string $idnumber, string $username): void {
+        $this->get_competency_generator()->create_evidence([
+            'usercompetencyid' => $this->get_user_competency_id($username, $idnumber),
+            'action' => \core_competency\evidence::ACTION_COMPLETE,
+            'grade' => 1,
+            'descidentifier' => 'evidence_competencyrule',
+        ]);
+    }
+
+    /**
+     * The core_competency data generator.
+     *
+     * @return \core_competency_generator
+     */
+    protected function get_competency_generator(): \core_competency_generator {
+        return \testing_util::get_data_generator()->get_plugin_generator('core_competency');
+    }
+
+    /**
+     * The id of a user's competency record, created when the user has none yet.
+     *
+     * @param string $username The learner.
+     * @param string $idnumber The competency idnumber.
+     * @return int
+     */
+    protected function get_user_competency_id(string $username, string $idnumber): int {
+        global $DB;
+
+        $userid = (int) $DB->get_field('user', 'id', ['username' => $username], MUST_EXIST);
+        $competencyid = $this->get_competency_id_by_idnumber($idnumber);
+        $existing = \core_competency\user_competency::get_record(['userid' => $userid, 'competencyid' => $competencyid]);
+        if ($existing) {
+            return (int) $existing->get('id');
+        }
+
+        return (int) $this->get_competency_generator()->create_user_competency([
+            'userid' => $userid,
+            'competencyid' => $competencyid,
+        ])->get('id');
     }
 
     /**

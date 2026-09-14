@@ -374,12 +374,41 @@ user id 0. The accordion's detail is lazy, so its view is logged from JS in `log
 That call goes through core's own web services, chained **after** the summary renders and never in
 the parallel batch, so it cannot race `get_plan_competency()`'s insert of a missing user competency
 row. It runs **once per (plan, competency) per page load** through `loggedViews`, which must stay
-separate from `loadedCompetencies`: the grid modal refetches on every open and pager step and a
-layout switch empties the fetch cache, so a log tied to fetches would count differently per layout.
+separate from the data cache (next section): a review request forgets a competency's data and its next
+render fetches again, so a log tied to fetches would count that as a second view.
 Its failures go to `Log.debug` only. `summary_view_logging_contract_test` pins the two summary fields
 the JS reads (`plan.iscompleted`, `plan.userid`) and the two service names it sends. The Behat log-count
 steps **poll**, because `core/ajax` registers no pending-JS token and the log store writes at request
 end.
+
+### Competency detail data (`accordion.js`)
+Three maps answer three different questions, and none of them may absorb another.
+- **`detailPanes`** (competency id → pane element) records which DOM pane holds a competency's detail,
+  rendered or on its way. It describes the DOM. `tearDownAccordionPanes()` clears it on every layout
+  switch, and every modal open or pager step builds a fresh cloned pane that replaces the entry. A pane
+  no longer listed receives nothing, so a torn-down pane never regains the rendered ids that the
+  one-surface invariant forbids. **The check runs twice**: when the data arrives, and again inside
+  `renderCompetencySummary()` once its ~90 strings arrive, because that `Str.get_strings` call is a
+  network round trip of its own on a cold string cache, and a layout switch can land during either.
+  No test holds either check, because both close a timing race.
+- **`competencyData`** ((plan, competency) → promise of `[summary, courses]`) holds what was fetched,
+  for the page's life. Re-rendering a pane never calls `local_dimensions_get_user_competency_summary_in_plan`
+  or `local_dimensions_get_competency_courses` again. A failed fetch is forgotten so the next open retries.
+  **The one action on the page that changes that data is `core_competency_user_competency_request_review`,
+  which forgets the entry on success.** Add any new in-detail action that writes competency state to
+  that list, or the next pane shows the state from before it. A rating or course completion made
+  elsewhere shows on the next page load, which is what an expanded list pane always did.
+- **`ruleData`** does the same for `local_dimensions_get_competency_rule_data`. Whether a rules pane has
+  asked is marked on the pane (`data-rules-requested`). Before 2026-09-14 that marker was a page-wide
+  Set, so every rules pane built after the first stayed on its spinner.
+
+Measured on m502 with a Behat walk (list: open A; grid: A, B, C, B, A, reopen C; list: A): the summary
+and course services went from 8 calls each to 3, and the rules tab of the rebuilt list pane filled in.
+The count came from the webserver's access log: `docker logs <stack>-webserver-1`, requests whose
+`service.php?...info=<method>` carries a `view-plan.php` referer. `view_plan_detail_cache.feature`
+asserts the counts in the browser, with the step "the page should have called the :methodname web
+service :count time(s)", which reads resource timing entries. That step counts per method, not per
+competency, because the arguments travel in the request body.
 
 ### Competency detail access (`candetail`)
 Core reads a plan through `plan::can_read()`. For a draft, waiting-for-review or in-review plan that check
