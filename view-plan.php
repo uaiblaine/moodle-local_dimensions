@@ -28,7 +28,6 @@
 require_once('../../config.php');
 
 use local_dimensions\output\view_plan_summary_page;
-use core_competency\api;
 
 // Parameters received via URL.
 $planid = required_param('id', PARAM_INT);
@@ -44,12 +43,9 @@ $PAGE->set_context($context);
 $PAGE->add_body_class('local-dimensions-viewplan');
 \local_dimensions\local\bootstrap::mark_page();
 
-// Get the plan using competency API.
-try {
-    $plan = api::read_plan($planid);
-} catch (\Exception $e) {
-    throw new moodle_exception('invalidplan', 'local_dimensions');
-}
+// Get the plan using competency API. Only a missing plan reads as invalid; a permission refusal
+// (a learner's own draft plan) or disabled competencies surface as core's own error.
+$plan = \local_dimensions\local\plan_access::read_plan($planid);
 
 // Get plan name for title.
 $pagetitle = format_string($plan->get('name'));

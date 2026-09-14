@@ -58,12 +58,9 @@ $PAGE->add_body_class('local-dimensions-viewcompetency');
 // by the accordion (when local_dimensions/showrelated is enabled) point at
 // competencies from competency_related, which is framework-wide and not bound
 // to competency_templatecomp / competency_plancomp. The competency framework's
-// own read permissions cover broader protection.
-try {
-    $plan = \core_competency\api::read_plan($planid);
-} catch (\Exception $e) {
-    throw new \moodle_exception('invalidplan', 'local_dimensions');
-}
+// own read permissions cover broader protection. Only a missing plan reads as invalid; a
+// permission refusal or disabled competencies surface as core's own error (see plan_access).
+$plan = \local_dimensions\local\plan_access::read_plan($planid);
 $templateid = (int) $plan->get('templateid');
 
 // Related-competency links can point at a competency that is not in this plan; there the plan
