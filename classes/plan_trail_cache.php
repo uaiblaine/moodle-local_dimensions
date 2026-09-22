@@ -55,25 +55,34 @@ class plan_trail_cache {
     /**
      * Build the cache key for a plan+user combination.
      *
+     * A completed plan and a live one answer from different tables, so they are different
+     * payloads and must not share a key: a plan completed mid-session would otherwise keep
+     * serving the live trail it cached minutes earlier.
+     *
      * @param int $planid Plan ID.
      * @param int $userid User ID.
+     * @param bool $iscomplete Whether the plan is complete.
      * @return string
      */
-    private static function cache_key(int $planid, int $userid): string {
-        return $planid . '_' . $userid;
+    private static function cache_key(int $planid, int $userid, bool $iscomplete = false): string {
+        return $planid . '_' . $userid . ($iscomplete ? '_c' : '');
     }
 
     /**
      * Get trail data for a plan, using session cache.
      *
+     * A completed plan reads the ratings core froze when it was completed, not the learner's
+     * current ones - see fetch_trail_data().
+     *
      * @param int $planid Plan ID.
      * @param int $userid User ID.
      * @param int|null $templateid Template ID (null for manual plans).
+     * @param bool $iscomplete Whether the plan's status is complete.
      * @return array{total: int, competencies: array}
      */
-    public static function get_trail_data(int $planid, int $userid, ?int $templateid): array {
+    public static function get_trail_data(int $planid, int $userid, ?int $templateid, bool $iscomplete = false): array {
         $cache = self::get_cache();
-        $key = self::cache_key($planid, $userid);
+        $key = self::cache_key($planid, $userid, $iscomplete);
         $payload = $cache->get($key);
 
         if ($payload !== false && is_array($payload) && isset($payload['total'])) {
@@ -82,7 +91,7 @@ class plan_trail_cache {
         }
 
         self::debug('cache miss for plan ' . $planid . ' user ' . $userid);
-        $payload = self::fetch_trail_data($planid, $userid, $templateid);
+        $payload = self::fetch_trail_data($planid, $userid, $templateid, $iscomplete);
         $cache->set($key, $payload);
         return $payload;
     }
@@ -94,7 +103,10 @@ class plan_trail_cache {
      * @param int $userid User ID.
      */
     public static function invalidate_plan(int $planid, int $userid): void {
-        self::get_cache()->delete(self::cache_key($planid, $userid));
+        $cache = self::get_cache();
+        // Both spellings of the key, because the caller does not know which one is cached.
+        $cache->delete(self::cache_key($planid, $userid, false));
+        $cache->delete(self::cache_key($planid, $userid, true));
         self::debug('cache invalidated for plan ' . $planid . ' user ' . $userid);
     }
 
@@ -125,21 +137,37 @@ class plan_trail_cache {
      * Returns scalar rows (id, shortname, proficiency) without
      * instantiating Persistent objects.
      *
+     * Proficiency comes from the table core itself reads for that plan status. On completion,
+     * api::complete_plan() archives every rating into {competency_usercompplan} keyed by planid,
+     * and api::list_plan_competencies() reads the archive for a complete plan and the live
+     * {competency_usercomp} for every other status. A trail that always read the live table would
+     * show the learner's CURRENT state on a plan that closed months ago, and disagree with the
+     * core plan page for the same plan.
+     *
      * @param int $planid Plan ID.
      * @param int $userid User ID.
      * @param int|null $templateid Template ID (null for manual plans).
+     * @param bool $iscomplete Whether the plan's status is complete.
      * @return array{total: int, competencies: array}
      */
-    private static function fetch_trail_data(int $planid, int $userid, ?int $templateid): array {
+    private static function fetch_trail_data(int $planid, int $userid, ?int $templateid, bool $iscomplete = false): array {
         global $DB;
+
+        $proficiency = $iscomplete
+            ? 'COALESCE(ucp.proficiency, 0) AS proficiency'
+            : 'COALESCE(uc.proficiency, 0) AS proficiency';
+        $ratingjoin = $iscomplete
+            ? 'LEFT JOIN {competency_usercompplan} ucp
+                       ON ucp.competencyid = c.id AND ucp.userid = :userid AND ucp.planid = :ratingplanid'
+            : 'LEFT JOIN {competency_usercomp} uc ON uc.competencyid = c.id AND uc.userid = :userid';
 
         if ($templateid) {
             // Template-based plan: competencies come from template_competency link.
             $sql = "SELECT c.id, c.shortname,
-                           COALESCE(uc.proficiency, 0) AS proficiency
+                           $proficiency
                       FROM {competency_templatecomp} tc
                       JOIN {competency} c ON c.id = tc.competencyid
-                 LEFT JOIN {competency_usercomp} uc ON uc.competencyid = c.id AND uc.userid = :userid
+                 $ratingjoin
                      WHERE tc.templateid = :templateid
                   ORDER BY tc.sortorder ASC, tc.id ASC";
 
@@ -150,10 +178,10 @@ class plan_trail_cache {
         } else {
             // Manual plan: competencies come from plan_competency link.
             $sql = "SELECT c.id, c.shortname,
-                           COALESCE(uc.proficiency, 0) AS proficiency
+                           $proficiency
                       FROM {competency_plancomp} pc
                       JOIN {competency} c ON c.id = pc.competencyid
-                 LEFT JOIN {competency_usercomp} uc ON uc.competencyid = c.id AND uc.userid = :userid
+                 $ratingjoin
                      WHERE pc.planid = :planid
                   ORDER BY pc.sortorder ASC, pc.id ASC";
 
@@ -161,6 +189,12 @@ class plan_trail_cache {
                 'userid' => $userid,
                 'planid' => $planid,
             ];
+        }
+
+        if ($iscomplete) {
+            /* A named placeholder may appear only once per statement (fix_sql_params counts
+               occurrences), so the archive join carries its own name for the same plan id. */
+            $params['ratingplanid'] = $planid;
         }
 
         $rows = $DB->get_records_sql($sql, $params);

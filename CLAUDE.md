@@ -342,6 +342,27 @@ validation, so neither the API nor `update()` can do it). The callbacks
 are discovered by `get_plugins_with_function()`, cached per `allversionshash`: adding one
 needs a `version.php` bump or it never runs. Only the category's own context per call.
 
+### A completed plan reads the frozen archive, not the live ratings
+
+`plan_trail_cache::get_trail_data()` takes the plan's completeness as its fourth
+argument. When it is true the query reads `{competency_usercompplan}` - the copy
+`api::complete_plan()` writes at completion, keyed by plan id - instead of the live
+`{competency_usercomp}`, which is exactly the branch `api::list_plan_competencies()`
+makes for the same status. Reading live on a completed plan makes the card disagree
+with core's own plan page about a plan that closed months ago, and neither page is
+obviously the wrong one when they differ.
+
+Two details are load-bearing. The archive join is scoped to the plan being read
+(`ucp.planid`), because the same competency can be archived under several plans of the
+same learner; the placeholder is named separately from `:planid` since a named
+placeholder may appear only once per statement. And the two readings are cached under
+different keys, because a plan completed mid-session would otherwise keep serving the
+live trail it cached minutes earlier; `invalidate_plan()` deletes both spellings.
+
+The only caller is `block_dimensions`' plan card, and the argument defaults to false,
+so an older sibling keeps working unchanged. `tests/plan_trail_cache_test.php` holds
+it, mutation spec in the session record.
+
 ### Caches and invalidation
 `observer.php` invalidates the metadata/trail caches on the relevant
 `core\event\competency_*` events. When you add a query that reads cached
