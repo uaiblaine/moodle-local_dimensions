@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **A completed plan's trail now reads the ratings core froze when the plan was completed.**
+  `api::complete_plan()` archives every rating into `competency_usercompplan`, keyed by the plan,
+  and `api::list_plan_competencies()` reads that archive for a complete plan and the live
+  `competency_usercomp` for every other status. `plan_trail_cache` always read the live table, so a
+  completed plan's trail would have shown the learner's CURRENT state and disagreed with core's own
+  plan page about a plan that closed months ago. Nothing showed it yet, because `block_dimensions`
+  renders active plans only; the defect would have arrived with its status filter, which is why it
+  is fixed first. `get_trail_data()` takes the plan's completeness as a fourth argument (defaulting
+  to the old behaviour, so the current caller is unaffected), the archive join is scoped to the plan
+  being read, and the two readings are cached under different keys - a plan completed mid-session
+  would otherwise keep serving the live trail it cached minutes earlier. `plan_trail_cache_test`
+  covers the manual plan, the template plan (a separate query), the plan scoping and the cache;
+  each of the three mutations - always read live, drop the plan scope, share one cache key -
+  reddens it.
+
 ### Added
 
 - **The learner pages log competency views the way core's pages do.** Neither the plan overview
