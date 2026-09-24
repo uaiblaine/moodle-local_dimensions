@@ -852,14 +852,15 @@ body[data-bs-theme="dark"],
  * Increased contrast preference (not Windows High Contrast, which is forced-colors).
  *
  * The hero is a branded island: its ground is the admin's colour or photograph in both colour
- * modes, so its ink is on-brand-fill, the one token that does not flip. ink or surface would be
- * wrong here in both modes.
+ * modes, so ink or surface would be wrong here in both modes. A text colour the admin set was
+ * chosen against that ground and stays; only the translucent fallback becomes solid
+ * on-brand-fill, the one token that does not flip. Forcing on-brand-fill over an admin's text
+ * colour would put white on whatever light ground they paired a dark ink with.
  */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
     .local-dimensions-hero-title,
-    .local-dimensions-hero-description,
-    .local-dimensions-hero-description p {
-        color: var(--local-dimensions-on-brand-fill);
+    .local-dimensions-hero-description {
+        color: var(--dimension-customtextcolor, var(--local-dimensions-on-brand-fill));
     }
 }
 
@@ -1561,13 +1562,9 @@ body[data-bs-theme="dark"],
  * 1.73:1 in light and 1.22:1 in dark, so a heavier groove would erase the boundary that carries
  * the value. Against the line token the arc reads at 10.89:1 in light and 3.50:1 in dark.
  */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
     .local-dimensions-progress-ring__bg {
         stroke: var(--local-dimensions-line);
-    }
-
-    .local-dimensions-progress-ring__progress {
-        stroke: var(--local-dimensions-success-ink);
     }
 
     .local-dimensions-progress-ring-container .local-dimensions-progress-text {
@@ -4199,14 +4196,16 @@ a.local-dimensions-course-act-row:focus-visible {
 
 /* ============================================
       HIGH CONTRAST - Evidence detail
-      Thickens two borders and declares no colour, so it holds in either colour mode.
+      Thickens two borders and declares no colour, so it holds in either colour mode. The last
+      section has no divider; the selector leaves it out rather than rely on the :last-child
+      rule outranking this one.
       ============================================ */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
     .local-dimensions-ev-modal-note {
         border-left-width: 4px;
     }
 
-    .local-dimensions-ev-modal-section {
+    .local-dimensions-ev-modal-section:not(:last-child) {
         border-bottom-width: 2px;
     }
 }
@@ -4720,7 +4719,7 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
  * (or brand-fill when none is set), which does not flip, so the ring drawn around it is
  * the same on-fill ink in both modes.
  */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
     .local-dimensions-return-fab {
         border: 2px solid var(--local-dimensions-on-brand-fill);
     }
