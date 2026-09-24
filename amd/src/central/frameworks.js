@@ -14,8 +14,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Frameworks tab: native management actions (edit modal, duplicate, visibility toggle, reason-gated
- * delete). The framework list is server-rendered; every action refreshes the pane via reloadPane.
+ * Frameworks tab (labelled "Structures"): create/edit modal, CSV import and export, duplicate,
+ * visibility toggle and delete. The framework list is server-rendered; every action that changes it
+ * reloads the pane via reloadPane.
  *
  * @module     local_dimensions/central/frameworks
  * @copyright  2026 Anderson Blaine
@@ -89,7 +90,7 @@ const openScaleConfigForForm = () => {
 /**
  * Set up document-level delegation for the framework form's scale-config button (once per page).
  * The dynamic form renders inside a modalform whose JS lifecycle does not run our init, so the button
- * is wired globally — the click bubbles to the document regardless of when the form body renders.
+ * is handled from the document, whenever the form body renders.
  *
  * @return {void}
  */
@@ -108,7 +109,7 @@ const setupScaleConfigDelegation = () => {
     }, true);
     document.addEventListener('change', (event) => {
         if (event.target.name !== 'scaleid' || event.target.hasAttribute('readonly')) {
-            // A frozen scale select (framework already graded) must not wipe the stored
+            // A frozen scale select (the framework has user competencies) must not wipe the stored
             // proficiency config: the server pins scaleid via a form constant anyway.
             return;
         }

@@ -120,10 +120,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
         $mform->addRule('shortname', null, 'required', null, 'client');
         $mform->addRule('shortname', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
 
-        /* Filepicker options must exist (their absence crashes tiny_media's embed dialog on
-           Moodle 5.0-5.2, MDL-78428), hence maxfiles=1; FILE_EXTERNAL keeps the upload repository
-           out of the picker, so media/images are insertable by URL only — descriptions have no
-           file area and internal/draft files would be silently lost on save. */
+        // The editor options are explained in competency_dynamic_form::definition().
         $mform->addElement(
             'editor',
             'description',
@@ -140,9 +137,9 @@ class template_dynamic_form extends \core_form\dynamic_form {
         $mform->addElement('date_time_selector', 'duedate', get_string('duedate', 'tool_lp'), ['optional' => true]);
         $mform->addHelpButton('duedate', 'duedate', 'tool_lp');
 
-        // Plugin custom fields. Pass '' to suppress the handler's page-level heading: inside the
-        // modal the core category headers already label the fields (parity with the competency modal).
-        // The hint names the context for the create path, where no template exists yet.
+        // Plugin custom fields. '' suppresses the handler's own heading: in the modal the core
+        // category headers already label the fields. The hint names the context for the create
+        // path, where no template exists yet.
         lp_handler::create()->set_edit_context_hint($this->get_context_for_dynamic_submission());
         lp_handler::create()->instance_form_definition($mform, $this->get_templateid(), '');
 
@@ -170,8 +167,8 @@ class template_dynamic_form extends \core_form\dynamic_form {
         // Show each cascade setting only for the display mode it affects. The displaymode select
         // submits the 1-based option index, which equals the DISPLAYMODE_* constant by construction.
         $displaymode = 'customfield_' . constants::CFIELD_DISPLAYMODE;
-        // Singlecourseredirect + the locked-card settings only affect the Trilha
-        // (Competency Tracker) view, so hide them when Panorama (plan) is selected.
+        // The single-course redirect and locked-card settings only affect the competency tracker,
+        // so hide them in plan mode.
         $mform->hideIf(
             'customfield_' . constants::CFIELD_SINGLECOURSEREDIRECT,
             $displaymode,
@@ -190,7 +187,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
             'eq',
             (string) constants::DISPLAYMODE_PLAN
         );
-        // Showrelated / showrelatedlink only affect the Panorama (Full Plan Overview) accordion.
+        // The related-competency settings only affect the plan overview accordion.
         $mform->hideIf(
             'customfield_' . constants::CFIELD_SHOWRELATED,
             $displaymode,
@@ -213,10 +210,10 @@ class template_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Apply the lp handler's after-data field tweaks (runs at render and at submit).
+     * Apply the lp handler's after-data field tweaks and attach the modal's JavaScript.
      *
-     * In a dynamic_form this is the correct place — get_data() only runs on submit, so the
-     * handler's after-data customisations would never apply when the modal is first rendered.
+     * Runs on both render and submit, so the tweaks apply when the modal first opens; see
+     * competency_dynamic_form::definition_after_data() for why the JavaScript is queued here.
      */
     public function definition_after_data() {
         global $PAGE;
@@ -228,8 +225,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
         // SCSS is plain text: pin its editor to FORMAT_PLAIN so it never opens as a rich editor.
         helper::force_customscss_plain($this->_form);
 
-        // Live swatch next to the bg/text colour custom fields; js_call_amd here reaches the
-        // modal (definition_after_data runs inside the JS-collection window, unlike definition()).
+        // Live swatch next to the bg/text colour custom fields.
         $PAGE->requires->js_call_amd('local_dimensions/central/colour_swatch', 'init', [
             constants::CFIELD_CUSTOMBGCOLOR,
             constants::CFIELD_CUSTOMTEXTCOLOR,
@@ -348,7 +344,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
             }
         }
 
-        // Block saving invalid custom SCSS (shared with the competency modal and legacy form).
+        // Block saving invalid custom SCSS (as the competency modal does).
         $errors = array_merge($errors, helper::validate_customscss($data));
 
         return $errors;

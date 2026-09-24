@@ -53,13 +53,13 @@ $PAGE->set_context($context);
 $PAGE->add_body_class('local-dimensions-viewcompetency');
 \local_dimensions\local\bootstrap::mark_page();
 
-// Authorization gate: read_plan() is the access check. We intentionally do NOT
-// require the competency to be in this plan — related-competency links rendered
-// by the accordion (when local_dimensions/showrelated is enabled) point at
-// competencies from competency_related, which is framework-wide and not bound
-// to competency_templatecomp / competency_plancomp. The competency framework's
-// own read permissions cover broader protection. Only a missing plan reads as invalid; a
-// permission refusal or disabled competencies surface as core's own error (see plan_access).
+// Authorization gate: read_plan() is the access check. The competency is deliberately not
+// required to be in this plan: related-competency links rendered by the accordion (when
+// local_dimensions/showrelated is enabled) point at competencies from competency_related,
+// which is framework-wide and not bound to competency_templatecomp / competency_plancomp.
+// The competency framework's own read permissions cover broader protection. Only a missing
+// plan reads as invalid; a permission refusal or disabled competencies surface as core's own
+// error (see plan_access).
 $plan = \local_dimensions\local\plan_access::read_plan($planid);
 $templateid = (int) $plan->get('templateid');
 
@@ -96,8 +96,8 @@ if ($competency) {
     }
 
     // Resolve the singlecourseredirect cascade (competency -> template -> global).
-    // The noredirect=1 flag is baked into every FAB URL this page writes, so a
-    // FAB click always renders the tracker instead of redirecting: the redirect
+    // The noredirect=1 flag is baked into every tracker URL this page stores for the
+    // FAB, so a FAB click always renders the tracker instead of redirecting: the redirect
     // conditions (course count, enrolment state, the cascade value) can start
     // holding after the URL was cached, and without the flag a stale FAB would
     // bounce straight back to the course the user clicked it from.
@@ -119,9 +119,8 @@ if ($competency) {
     ) {
         if ($willredirect) {
             /* Leave the destination course a button that points where this learner
-               is actually routed: the plan overview when the block sends them there,
-               and this tracker otherwise. The tracker URL carries noredirect=1, so
-               pressing the button renders it instead of redirecting again. */
+               is actually routed: the plan overview or this tracker. See
+               helper::redirect_return_url(). */
             \local_dimensions\helper::set_return_context_for_course(
                 (int) reset($courses)->id,
                 \local_dimensions\helper::redirect_return_url($planid, $competencyid, $templateid)
@@ -152,10 +151,10 @@ $page = new view_competency_page($competency, $courses, $USER->id);
 $templatedata = $page->export_for_template($OUTPUT);
 echo $OUTPUT->render_from_template('local_dimensions/view_competency', $templatedata);
 
-/* The tracker renders its own return button: the footer hook fires only on
-   course-content layouts and this page keeps core's default 'base'. Outside the
-   competency guard on purpose, because the empty state is where a learner has
-   the fewest ways out. */
+/* The tracker renders its own return button: the footer FAB needs a course in
+   context and a course-content layout, and this page has neither (see
+   helper::tracker_return_context()). Outside the competency guard on purpose,
+   because the empty state is where a learner has the fewest ways out. */
 
 /* The display-mode gate is about the tracker being a destination the plan
    routes learners to. With no competency there is no tracker to be a
@@ -184,9 +183,9 @@ if (!empty($templatedata['hascustomcss'])) {
     );
 }
 
-// Load AMD module for hero repositioning and progress loading.
+// Course cards: progress loading, filters and locked-card rendering.
 if ($competency) {
-    // Prepare locked card settings for JavaScript. Both cascade competency -> plan
+    // Prepare locked card settings for JavaScript. Both cascade competency -> template
     // -> global; the resolvers already apply the same "blocked"/true defaults the
     // global settings use, so no local fallback is needed here.
     $lockedcardmode = \local_dimensions\helper::resolve_lockedcardmode_for_view(

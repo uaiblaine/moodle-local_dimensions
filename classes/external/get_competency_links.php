@@ -97,9 +97,8 @@ class get_competency_links extends external_api {
         $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : 25;
         $excludeids = array_filter(array_map('intval', explode(',', $params['excludecourseids'])));
 
-        // Validated in the competency's framework context, never at the site: a manager holding
-        // competencyview in one course category only must not depend on the authenticated-user
-        // default there.
+        // Checked in the competency's framework context, not the system one, so a competencyview
+        // grant in the framework's category is enough.
         $competency = new competency($competencyid);
         $frameworkcontext = $competency->get_context();
         self::validate_context($frameworkcontext);

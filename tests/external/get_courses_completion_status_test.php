@@ -133,9 +133,8 @@ final class get_courses_completion_status_test extends \advanced_testcase {
     /**
      * Every requested id gets a row back, in order, gated or not.
      *
-     * The client pairs the rows with its own cards by course id and falls back to loading
-     * every card unprioritised when the call fails, so a missing row would silently drop a
-     * card's completion tab state rather than raise anything.
+     * The client queues each card for loading from its row (competency_view.js), so a missing
+     * row would leave that card never loaded and untagged, with no error raised.
      *
      * @return void
      */

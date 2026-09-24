@@ -38,20 +38,21 @@ class hook_callbacks {
      * Add the course floating return button before the footer, labelled for its destination.
      *
      * The button returns the learner to the plan overview or to the competency tracker,
-     * whichever the stored context for this course actually holds (`helper::return_destination_kind()`
-     * picks the label). This displays the button when:
+     * whichever the stored context for this course holds (`helper::return_destination_kind()`
+     * picks the label). It is rendered when:
      * 1. The feature is enabled in settings
-     * 2. User is currently on a course or activity page
-     * 3. The page is course content (not an administrative/report page)
-     * 4. There is a stored return context for the current course (came from a plan view)
-     * 5. Not running inside an iframe (H5P, etc.)
+     * 2. The user is logged in and not a guest
+     * 3. The page belongs to a course or an activity
+     * 4. The page is course content (not an administrative/report page)
+     * 5. There is a stored return context for the current course (came from a plan view)
+     * return_button.js then keeps it hidden inside iframes (H5P, etc.).
      *
      * @param before_footer_html_generation $hook
      */
     public static function before_footer_html_generation(before_footer_html_generation $hook): void {
         global $PAGE;
 
-        // Ensure all custom fields exist (runs once per session).
+        // Provision missing custom fields (admins only, throttled per session; see helper::ensure_all_fields()).
         if (get_config('core_competency', 'enabled')) {
             helper::ensure_all_fields();
         }
@@ -72,12 +73,10 @@ class hook_callbacks {
             return;
         }
 
-        // Show only on course-content layouts, where a student or a teacher
-        // testing a plan is actually consuming the content. The allowlist fails
-        // closed: a layout blocklist let the FAB render on 14 other layouts,
-        // including 'secure' (locked-down quiz attempt windows, where the button
-        // is a navigation escape), 'mypublic' (user profile inside a course),
-        // popups/print views, and 'base' (scripts that never set a layout).
+        // Only on course-content layouts, where the content is consumed. The allowlist fails
+        // closed, keeping the button off 'secure' (locked-down quiz attempt windows, where it
+        // would be a navigation escape), 'mypublic' (a user profile inside a course), popups,
+        // print views and 'base' (scripts that never set a layout).
         if (!in_array($PAGE->pagelayout, ['course', 'incourse'], true)) {
             return;
         }
@@ -105,7 +104,7 @@ class hook_callbacks {
             default => get_string('returntoplan', 'local_dimensions'),
         };
 
-        // Render the return button with iframe detection script.
+        // Render the return button; it ships hidden and return_button.js reveals it.
         $renderer = $hook->renderer;
         $html = $renderer->render_from_template('local_dimensions/return_button', [
             'returnurl' => $context['url'],
@@ -125,7 +124,7 @@ class hook_callbacks {
      * surfaces, so the layout allowlist alone cannot exclude them. Exact entries
      * are needed where core forges a course-view pagetype (user/index.php sets
      * 'course-view-participants'). The course enrolment page (enrol-index) is
-     * deliberately NOT listed: a learner arriving from a plan benefits from the
+     * deliberately not listed: a learner arriving from a plan benefits from the
      * return button while self-enrolling.
      *
      * @param string $pagetype The page type as reported by the page.

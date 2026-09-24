@@ -39,9 +39,10 @@ use local_dimensions\output\central\template_import_preview;
 /**
  * Web service: write the selected rows of a previewed import, and report each outcome.
  *
- * Note what the browser does NOT send: no competency ids, no template ids, no field values.
- * A selection is a choice among options the server itself computed, re-checked against a
- * projection the server rebuilds from the file and the database as they are now.
+ * The browser sends no competency ids, template ids or free field values: a selection names
+ * options the server computed (item keys, link keys, a remedy, an option label for the columns in
+ * {@see template_csv_importer::REMAPPABLE}), and the importer re-checks it against a projection
+ * rebuilt from the file and the database as they are now.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

@@ -16,11 +16,9 @@
 /**
  * Draggable divider between the two panes of a Competency hub master-detail layout.
  *
- * The layout is a CSS grid whose detail column reads its width from a custom
- * property; this module only maintains that property. The chosen width is
- * persisted in localStorage and reapplied on each init, so it survives pane
- * reloads. Supports pointer drag, dblclick reset and ArrowLeft/ArrowRight
- * keyboard resizing. Used by the Structure and Learning plans tabs.
+ * The layout is a flex row whose master (left) pane reads its width from a custom property and
+ * whose detail pane fills the rest; this module only maintains that property. Used by the
+ * Structure and Learning plans tabs.
  *
  * @module     local_dimensions/central/pane_resizer
  * @copyright  2026 Anderson Blaine
@@ -28,13 +26,13 @@
  */
 
 /**
- * Wire a resizer that adjusts the MASTER (left) pane's width from a divider on its right
- * edge. It writes the master width
- * to a CSS custom property so the detail flexes to fill the rest — the shape the redesigned
- * Learning plans tab uses. The divider tracks the pointer as a relative delta from the grab
- * point (so it never jumps on drag start), clamped so the detail keeps its reserve. The
- * chosen width persists in localStorage and is reapplied on each init. Supports pointer drag,
- * dblclick reset and ArrowLeft/ArrowRight keyboard resizing.
+ * Wire a resizer that sets the master (left) pane's width from a divider on its right edge.
+ *
+ * The divider tracks the pointer as a delta from the grab point, so it never jumps on drag start,
+ * and the width is clamped so the detail pane keeps its reserve. The chosen width persists in
+ * localStorage and is reapplied on each init, so it survives pane reloads and page visits.
+ * Supports pointer drag, double-click reset (back to the stylesheet default) and ArrowLeft/ArrowRight
+ * keyboard resizing in 24px steps.
  *
  * @param {Object} options
  * @param {HTMLElement} options.body Flex container of the two panes and the divider.

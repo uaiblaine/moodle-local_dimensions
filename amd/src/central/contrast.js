@@ -21,7 +21,7 @@
  * and AAA badges) and, when the pair fails AA, offers up to two one-click fixes.
  * It only reads and writes the two hex text inputs — it never touches how the
  * form saves. Wired from definition_after_data() via js_call_amd, alongside the
- * decorative colour_swatch module which owns the per-input swatch.
+ * colour_swatch module, which owns the per-input swatch and picker.
  *
  * The contrast maths follow WCAG 2.x exactly (sRGB linearisation, relative
  * luminance, (L1+0.05)/(L2+0.05)). Thresholds are fixed to normal text for now

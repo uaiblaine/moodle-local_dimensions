@@ -25,11 +25,12 @@
 /**
  * Creates frameworks and learning plan templates in a course category context.
  *
- * Core's competency generator hardcodes the system context when none is given and its Behat
- * generator has no way to name one, so a scenario about the hub's category entry could only
- * create site-wide objects, and would pass while proving nothing about category scoping. These
- * two methods take a course category id (the Behat generator resolves it from the idnumber) and
- * hand the matching context to core's generator.
+ * Core's competency generator falls back to the system context when none is given, and its Behat
+ * generator has no context column for frameworks and only a raw context id for templates, which a
+ * feature cannot know. A scenario about the hub's category entry could therefore only create
+ * site-wide objects, and would pass while proving nothing about category scoping. These two
+ * methods take a course category id (the Behat generator resolves it from the idnumber) and hand
+ * the matching context to core's generator.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

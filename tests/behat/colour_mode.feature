@@ -4,23 +4,19 @@ Feature: The plugin's colours follow the host page and nothing else
   As a site administrator
   The plugin's surfaces must track the host, and only the host
 
-  # The first three scenarios assert a RELATIVE invariant - the plugin surface equals the page
-  # surface - so they are true on every supported branch with no skip and no branch tag, including
-  # one whose compiled stylesheet nobody has measured. Only the last needs a real dark palette, and
-  # it detects one at runtime rather than guessing from a version number.
+  # The first three scenarios assert a relative invariant (the plugin surface equals the page
+  # surface), so they hold on every supported branch with no skip and no branch tag. Only the last
+  # needs a real dark palette, and it detects one at runtime rather than from the version number.
   #
-  # What these scenarios do NOT prove is that the OS-preference block in styles.css is inert:
-  # emulating prefers-color-scheme needs Emulation.setEmulatedMedia over the DevTools protocol, and
-  # headless Chrome reports light, so a scenario asserting the light value would pass vacuously.
-  # That gap is closed by colour_tokens_test::test_media_fallback_is_written_and_unreachable, which
-  # is strictly stronger: it proves nothing CAN set the gate, not merely that nothing did on one run.
+  # These scenarios do not prove that the prefers-color-scheme block in styles.css is inert:
+  # headless Chrome reports light, so such a scenario would pass vacuously.
+  # colour_tokens_test::test_media_fallback_is_written_and_unreachable covers it instead: every
+  # selector in that block carries a gate attribute that no runtime file writes.
 
-  # themedesignermode is on for one reason: Behat saves the compiled theme CSS when the site is
-  # initialised and restores it around every run (lib/behat/classes/util.php::restore_saved_themes),
-  # so a scenario about this stylesheet would otherwise read whatever styles.css said at
-  # behat-init time. Measured: with the theme cache in play, deleting the whole dark activation
-  # block left all four scenarios green - a suite that certifies nothing. Designer mode compiles
-  # the same CSS per request, which is what makes these assertions about the file in the tree.
+  # themedesignermode is on because Behat saves the compiled theme CSS when the site is initialised
+  # and restores it before every JavaScript scenario (behat_util::restore_saved_themes()), so
+  # without it these scenarios would read styles.css as it was at Behat init rather than the file
+  # in the tree. Designer mode compiles the CSS per request.
   Background:
     Given the following config values are set as admin:
       | enabled          | 1 | core_competency |

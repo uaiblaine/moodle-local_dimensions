@@ -48,10 +48,9 @@ class lp_handler extends handler {
     /**
      * The instance whose values are being saved right now, or 0.
      *
-     * Core resolves editability with get_editable_fields($isnewinstance ? 0 : $instance->id)
-     * (customfield/classes/handler.php:707), so on the create path can_edit() is asked about
-     * instance 0 and cannot see which template it is about — which is exactly the case a
-     * category-scoped manager hits. The id is remembered here for the duration of the save.
+     * {@see \core_customfield\handler::instance_form_save()} calls get_editable_fields(0) when
+     * $isnewinstance is true, so can_edit() cannot tell which template it is asked about. The id
+     * is remembered here for the duration of the save.
      *
      * @var int
      */
@@ -74,7 +73,7 @@ class lp_handler extends handler {
     }
 
     /**
-     * Run setup for the handler.
+     * The context the field definitions are configured in: always the system context.
      *
      * @return context
      */
@@ -95,12 +94,10 @@ class lp_handler extends handler {
     /**
      * Returns the context for the data instance.
      *
-     * Deliberately the system context, including for a template that lives in a course category.
-     * This is where every customfield_data row this plugin has ever written already sits, along
-     * with the file areas of the textarea and picture fields; switching new inserts to the
-     * template's own context would split the plugin's data across two contexts with no upgrade
-     * step, and leave the files of existing category templates unreachable. Moving it is a
-     * migration in its own right, not a side effect of the editing fix in can_edit().
+     * Always the system context, including for a template in a course category: existing
+     * customfield_data rows and the textarea and picture file areas all live there, so giving new
+     * rows the template's context would split the data across contexts and strand the files of
+     * existing category templates. Changing it needs a data migration.
      *
      * @param int $instanceid
      * @return context
@@ -132,11 +129,10 @@ class lp_handler extends handler {
     /**
      * Check if the current user can edit the custom fields.
      *
-     * Resolved at the TEMPLATE's own context when there is one. Resolving templatemanage at the
-     * system context meant handler::instance_form_save() — which saves only get_editable_fields()
-     * — silently wrote ZERO custom fields for a manager who holds the capability in a course
-     * category, the very place category templates live. That included the template ID number, so
-     * the identity key never landed and every re-import created a duplicate.
+     * templatemanage is checked in the template's own context (see resolve_edit_context()):
+     * core renders and saves only the fields can_edit() allows, so a system-context check would
+     * silently save nothing, the template ID number included, for a manager who holds the
+     * capability only in a course category.
      *
      * editcustomscss stays system-scoped: it gates RISK_XSS content that renders site-wide.
      *
@@ -154,8 +150,8 @@ class lp_handler extends handler {
     /**
      * The context a template's custom-field editing rights are resolved against.
      *
-     * Falls back to the system context with no instance — the field-configuration screens edit
-     * the field definitions themselves, which are site-wide.
+     * The template's own context when an instance is known (given, or latched while saving),
+     * the form's hint on the create path, and the system context otherwise.
      *
      * @param int $instanceid The template id, or 0.
      * @return context
@@ -262,6 +258,9 @@ class lp_handler extends handler {
     /**
      * Save form data including built-in image.
      *
+     * Always saves with $isnewinstance = true, for new and existing templates alike, so the
+     * values event reports isnew = true on every save through this method.
+     *
      * @param \stdClass $data The submitted form data.
      * @param int $instanceid The template ID.
      */
@@ -293,9 +292,7 @@ class lp_handler extends handler {
     public function instance_form_save(\stdClass $instance, bool $isnewinstance = false) {
         $instanceid = (int) ($instance->id ?? 0);
         $before = $this->snapshot_instance_values($instanceid);
-        /* Remembered for can_edit(), which core asks about instance 0 whenever $isnewinstance is
-           true. Without it a manager holding templatemanage only in a course category writes ZERO
-           fields on the create path — the very case the per-instance resolution exists for. */
+        // Remembered for can_edit() during the save, as described on the savinginstanceid property.
         $this->savinginstanceid = $instanceid;
         try {
             parent::instance_form_save($instance, $isnewinstance);

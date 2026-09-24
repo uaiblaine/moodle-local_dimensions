@@ -20,45 +20,29 @@
   */
 
 /*
- * Theme-specific overrides for theme_moove.
+ * Overrides for theme_moove, loaded by theme_config::get_css_files() only when theme_moove or
+ * a child of it is the active theme.
  *
- * Moodle core loads this file (see theme_config::get_css_files) ONLY when
- * theme_moove - or a child theme inheriting from it - is the active theme.
- * Under any other theme it is never read, so it costs nothing.
- *
- * Keep every rule scoped to a plugin surface so styles never leak:
+ * Keep every rule scoped to a plugin surface:
  *   .local-dimensions-viewplan        Full plan overview
  *   .local-dimensions-viewcompetency  Competency tracker / detail
  *   .local-dimensions-central-page    Competency hub (admin)
  *   .local-dimensions-return-fab      Return-to-Plan FAB
  *
- * CI's stylelint never reads this file. core's Gruntfile.js:101 builds the CSS list for a
- * non-theme plugin as exactly "<component>/styles.css", so styles_*.css is unlinted.
- * That is a reason for MORE care here, not less - it is why tests/local/colour_tokens_test.php
- * globs styles_*.css alongside styles.css, and a colour literal in this file fails that suite
- * exactly as it would in styles.css. In particular it does NOT license !important, which is
- * banned fleet-wide: an override that has to beat a theme wins on specificity instead, and
- * anchoring on two ids settles it on the id count, which is compared first.
+ * Core's grunt stylelint lints only styles.css for a non-theme plugin, so this file is not linted.
+ * Hold it to the same rules anyway: no colour literals (tests/local/colour_tokens_test.php scans
+ * it) and no !important - beat a theme rule on specificity instead, where two id anchors win on
+ * the id count, which is compared first.
  */
 
 /*
- * Sticky filter toolbar: tell the plugin this theme's real navbar height.
+ * Sticky filter toolbar: state this theme's navbar height.
  *
- * moove's navbar is 70px tall at every width measured (500px and 1440px viewports, m502,
- * logged in), but it leaves core's --navbar-height at the 60px theme_boost declares. The
- * plugin's sticky filter toolbar reads that variable (the `.local-dimensions-toolbar` rule in styles.css), so it anchored 10px
- * too high and the top 10px of each row slid under the navbar while scrolling.
- *
- * The variable is the right channel rather than a workaround: theme_almondb declares
- * --navbar-height: 70px for its own 70px navbar and the toolbar lands exactly right there with
- * no help from this plugin, which is what a theme is supposed to do. So this states moove's
- * measured height in the one place the plugin already reads, instead of overriding the
- * toolbar's `top` somewhere else and leaving two numbers to drift apart.
- *
- * Scoped to the plugin's own pages, so correcting the value cannot reach anything else the
- * theme paints. Re-measure if moove changes its navbar: the correct value here is whatever
- * the fixed navbar's height actually is, and a stale 70px would be the same defect with the
- * sign flipped.
+ * moove's navbar is 70px tall but leaves core's --navbar-height at Boost's 60px. The plugin's
+ * sticky toolbar (.local-dimensions-toolbar in styles.css) is positioned from that variable, so
+ * rows would slide 10px under the navbar. Correcting the variable keeps a single number rather
+ * than a second `top` override; theme_almondb declares its own 70px and needs nothing here.
+ * Update the value if moove's navbar height changes.
  */
 body.local-dimensions-viewplan,
 body.local-dimensions-viewcompetency,
@@ -67,28 +51,14 @@ body.local-dimensions-central-page {
 }
 
 /*
- * Competency cards: give the border back the two longhands moove removes.
+ * Competency cards: restore the border longhands moove removes.
  *
- * the `.local-dimensions-viewcompetency .card` rule in styles.css styles the tracker's cards with border-color only, riding on Bootstrap's
- * .card carrying "border: 1px solid" - and the comment there says why the border matters: it is
- * the line token, so a learner moving between this plugin and block_dimensions never meets two
- * card shapes. moove sets the card's border-style to none and its width to 0, and because the
- * cascade resolves longhands independently, the plugin's border-color survives and paints
- * nothing at all.
- *
- * Measured on m502 at 1440x900 on view-competency.php, first .card in the tracker:
- *
- *   boost   border-top: solid 1px rgb(222,226,230)   paints
- *   moove   border-top: none  0px rgb(222,226,230)   does not paint
- *   trema   border-top: none  0px rgb(55,58,60)      does not paint
- *
- * Only the two missing longhands are restored here. The colour stays where it belongs, in
- * styles.css, reading the token - declaring a colour in this file would both duplicate that
- * and trip tests/local/colour_tokens_test.php, which globs styles_*.css for literals.
- *
- * Scoped exactly as the styles.css rule is, to the tracker. view-plan.php builds its rows from
- * its own markup and carries no .card at all (checked on the same run), so widening this would
- * reach nothing here and someone else's cards later.
+ * styles.css (.local-dimensions-viewcompetency .card) sets only border-color and relies on
+ * Bootstrap's .card "border: 1px solid", so the tracker's cards match block_dimensions' card.
+ * moove's ".card { border: none }" zeroes border-style and border-width; the plugin's
+ * border-color still wins on specificity but paints nothing. Only the two longhands are restored;
+ * the colour stays in styles.css. view-plan.php renders no .card, so the rule stays scoped to
+ * the tracker.
  */
 body.local-dimensions-viewcompetency .card {
     border-style: solid;

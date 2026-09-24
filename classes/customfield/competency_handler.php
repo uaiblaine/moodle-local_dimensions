@@ -65,7 +65,7 @@ class competency_handler extends handler {
     }
 
     /**
-     * Run setup for the handler.
+     * The context the field definitions are configured in: always the system context.
      *
      * @return context
      */
@@ -85,6 +85,9 @@ class competency_handler extends handler {
 
     /**
      * Returns the context for the data instance.
+     *
+     * Always the system context, even for a competency in a category framework; see
+     * {@see lp_handler::get_instance_context()} for why.
      *
      * @param int $instanceid
      * @return context
@@ -146,10 +149,9 @@ class competency_handler extends handler {
      * The context a competency's custom-field editing rights are resolved against.
      *
      * The competency's framework context when an instance is known (given, or latched while
-     * saving a new one), the form's hint on the create path, and the system context otherwise -
-     * the field-configuration screens edit the definitions themselves, which are site-wide.
-     * Resolving at the system context regardless, as this handler did, made a category-scoped
-     * manager's competency modal render and save zero custom fields, silently.
+     * saving a new one), the form's hint on the create path, and the system context otherwise.
+     * A system-only check would make a category-scoped manager's form render and save no
+     * custom fields; see {@see lp_handler::can_edit()}.
      *
      * @param int $instanceid The competency id, or 0.
      * @return context
@@ -210,10 +212,9 @@ class competency_handler extends handler {
         ?string $headerlangidentifier = null,
         ?string $headerlangcomponent = null
     ) {
-        // No plugin-level heading: the core custom-field category headers (rendered by the
-        // parent) already label the fields, and the caller owns any section wrapper. Pass the
-        // identifier through untouched so the category names show verbatim — overriding it with
-        // a lang string here discarded the real category name in the hub modal.
+        // No plugin-level heading: the parent renders a header per custom-field category and the
+        // caller owns any section wrapper. The identifier is passed through untouched because
+        // core uses it as a lang string wrapping the category name.
         parent::instance_form_definition($mform, $instanceid, $headerlangidentifier, $headerlangcomponent);
 
         // In built-in mode, add filemanagers for background and card images.
@@ -271,8 +272,8 @@ class competency_handler extends handler {
     public function instance_form_save(\stdClass $instance, bool $isnewinstance = false) {
         $instanceid = (int) ($instance->id ?? 0);
         $before = $this->snapshot_instance_values($instanceid);
-        /* Remembered for can_edit(), which core asks about instance 0 whenever $isnewinstance is
-           true; without it a category-scoped manager writes ZERO fields on the create path. */
+        /* Remembered for can_edit(), which core asks about instance 0 when a new instance is
+           saved; see the savinginstanceid property of lp_handler. */
         $this->savinginstanceid = $instanceid;
         try {
             parent::instance_form_save($instance, $isnewinstance);

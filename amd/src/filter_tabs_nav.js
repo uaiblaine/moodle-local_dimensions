@@ -177,9 +177,8 @@ define([], function() {
     }
 
     FilterTabsNav.prototype._getActiveTab = function() {
-        // For chip filters, "active" means at least one chip pressed.
-        // The indicator follows the first pressed chip; if none, it follows
-        // the focused tab (if any) or the first tab as visual hint.
+        // For chip filters, "active" means pressed. The indicator follows the first
+        // pressed chip, else the focused one; with neither it is hidden.
         return this.itemsEl.querySelector('.local-dimensions-filter-tab[aria-pressed="true"]') ||
             this.itemsEl.querySelector('.local-dimensions-filter-tab:focus') ||
             null;

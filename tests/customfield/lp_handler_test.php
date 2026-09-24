@@ -86,8 +86,8 @@ final class lp_handler_test extends \advanced_testcase {
     }
 
     /**
-     * A category manager's values really land, which is what the capability fix is for: the
-     * handler saves only the fields can_edit() allows, so before the fix this wrote nothing.
+     * A category manager's values are written: core saves only the fields can_edit() allows, so
+     * a site-scoped check would silently write nothing.
      *
      * @return void
      */

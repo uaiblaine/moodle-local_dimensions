@@ -14,11 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * "Manage cohorts" modal for a learning plan template (Competency hub Plans tab).
+ * Cohorts pane of a learning plan template's participants modal (Competency hub Plans tab).
  *
  * Lists attached cohorts with member/plan counts, attaches new cohorts (cohort autocomplete that
  * excludes the already-attached ones), detaches them, and queues background plan generation. After an
- * attach the modal body is re-rendered so the autocomplete resets to an empty, ready state.
+ * attach the pane is re-rendered, because a single-select autocomplete has no API to clear it.
  *
  * @module     local_dimensions/central/cohort_manager
  * @copyright  2026 Anderson Blaine

@@ -32,7 +32,8 @@ use local_dimensions\helper;
 /**
  * Structure tab: navigate frameworks and their competencies without reloading.
  *
- * Args (from the pane data attributes / getContent): contexttype, categoryid, frameworkid.
+ * Args (from the pane data attributes / getContent): contexttype, categoryid, locked, frameworkid,
+ * showhidden.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

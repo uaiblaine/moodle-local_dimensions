@@ -65,9 +65,9 @@ class search_assignable_users extends external_api {
     /**
      * Search active users without a plan created from the template.
      *
-     * Matches the query against the user's full name, and — when the caller may view user
-     * identity — the email, ID number and username too, which are then echoed back in the
-     * identity string for the suggestion label.
+     * Matches the query against the user's full name and, when the caller has
+     * moodle/site:viewuseridentity, against the email, ID number and username too; the email and
+     * ID number are then returned in identity for the suggestion label.
      *
      * @param int $templateid The template id.
      * @param string $query Search text.
@@ -102,9 +102,9 @@ class search_assignable_users extends external_api {
         $sqlparams = ['guestid' => (int) $CFG->siteguest, 'templateid' => (int) $template->get('id')];
         $where .= ' AND u.id NOT IN (SELECT p.userid FROM {competency_plan} p WHERE p.templateid = :templateid)';
 
-        // Only users the caller may create a plan for (planmanage in the user's own context), the
-        // way core's tool_lp user search filters; templatemanage alone used to expose the whole
-        // site directory, with identity fields, to a manager scoped to one course category.
+        // Only users the caller may create a plan for (planmanage in the user's context), as core's
+        // tool_lp user search filters: templatemanage alone would expose the whole site directory,
+        // identity fields included, to a manager scoped to one course category.
         [$capsql, $capparams] = api::filter_users_with_capability_on_user_context_sql(
             'moodle/competency:planmanage',
             $USER->id,

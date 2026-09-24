@@ -29,7 +29,7 @@ namespace local_dimensions\external;
  */
 final class competency_course_links_test extends \advanced_testcase {
     /**
-     * Create a visible framework + competency and two courses.
+     * Create a framework (visible by default) with one competency, and two courses.
      *
      * @param int $frameworkvisible Whether the framework is visible.
      * @return array [int $competencyid, int $courseid1, int $courseid2]

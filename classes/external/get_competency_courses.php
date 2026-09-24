@@ -21,8 +21,9 @@
  * the enrolment-filter cascade (competency -> plan's template -> global
  * setting) to filter courses based on the user's enrollment status. Each
  * surviving course also carries its rule outcome, the competency's activity
- * links inside it, what the viewer can do with it (open, enrol or locked) and,
- * when the course resolves to exactly one trackable activity, that activity.
+ * links inside it, what the viewer can do with it (open, enrol, pending or
+ * locked) and its card shape: its single activity or single section when it
+ * resolves to one, otherwise the timeline.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -147,32 +148,20 @@ class get_competency_courses extends external_api {
                 }
             }
 
-            /* Get course progress for the current user. Deliberately not
-               core_completion\progress::get_course_progress_percentage(): on 4.5 its numerator
-               is not a subset of its denominator (MDL-60912, never backported there), so a
-               completion row belonging to a module already dropped from the denominator still
-               counts - and its denominator carries no visibility filter at all, so a hidden
-               activity keeps the bar off 100 for good. calculator reproduces what 5.1 and 5.2
-               core compute, on every branch alike. */
+            /* Not core_completion\progress::get_course_progress_percentage(), which miscounts on
+               Moodle 4.5 (MDL-60912); see calculator::course_completion_percentage(). */
             $progress = calculator::course_completion_percentage((int) $course->id, (int) $USER->id);
 
-            /* What the viewer can do with this course. calculator::is_locked() is deliberately
-               not used: it also reports true for anyone enrolled without the student role, which
-               would lock every card for a member of staff reviewing someone's plan. The question
-               here is the one the card's own link is about to answer - can this viewer open it. */
+            /* What the viewer can do with this course. Not calculator::is_locked(), which also
+               locks anyone enrolled without the student role, such as staff reviewing a plan;
+               the question here is whether this viewer can open the course. */
             $access = self::ACCESS_OPEN;
             $lockdate = 0;
             $isenrolstart = false;
             if (!is_enrolled($coursecontext, $USER->id, '', true)) {
-                /* Three outcomes, not two. A pending enrol_apply application is a suspended
-                   enrolment row: it fails the active test above and the predicate below
-                   declines to offer a second application, so without its own state the
-                   applicant is handed the padlock - the same card as somebody who was never
-                   eligible, saying nothing about the decision they are waiting on.
-
-                   Joining outranks waiting when both are true, which a course with an apply
-                   instance beside an open self one can be: a way in now is worth more than
-                   news about a way in later. */
+                /* A pending enrol_apply application gets its own state rather than the padlock;
+                   see calculator::current_user_has_pending_application(). Enrol is checked
+                   first: a course can offer an open way in beside a pending application. */
                 if (\local_dimensions\calculator::current_user_can_enrol((int) $course->id)) {
                     $access = self::ACCESS_ENROL;
                 } else if (\local_dimensions\calculator::current_user_has_pending_application((int) $course->id)) {
@@ -182,9 +171,7 @@ class get_competency_courses extends external_api {
                 }
             }
             if ($access === self::ACCESS_LOCKED) {
-                /* Fetched here rather than per card: the progress bar used to need the full
-                   record too, and now reads the course by id itself, so only the locked path
-                   is left asking for it. */
+                // Only a locked card needs the full course record, for its availability dates.
                 $fullcourse = get_course($course->id);
                 $lockdate = (int) \local_dimensions\calculator::get_availability_date($fullcourse, $USER->id);
                 $isenrolstart = \local_dimensions\calculator::get_enrolment_start_date(
@@ -207,9 +194,9 @@ class get_competency_courses extends external_api {
                 'activities' => $activitiesbycourse[(int) $course->id] ?? [],
             ];
 
-            /* The same resolver the tracker uses, so the two views cannot disagree about
-               the shape of the same course. A locked or enrol-gated card keeps its state
-               strip: naming an activity behind a lock helps nobody. */
+            /* The resolver the tracker uses too, so both views agree on a course's shape. Only an
+               open card resolves one; the others stay on the timeline, since naming an activity
+               the viewer cannot open helps nobody. */
             $row['cardmode'] = constants::CARDMODE_TIMELINE;
             if ($access === self::ACCESS_OPEN) {
                 $shape = \local_dimensions\calculator::resolve_card_shape(
@@ -240,10 +227,9 @@ class get_competency_courses extends external_api {
      * the restriction. Modules are read from modinfo rather than from the link rows, so a
      * link that outlived its module simply never matches.
      *
-     * The course-level lock is deliberately not applied here: unlike the tracker card, the
-     * plan accordion has no locked overlay to carry the message, and calculator::is_locked()
-     * also reports true for anyone enrolled without the student role - which would strip the
-     * links from staff whose course card link right above still works.
+     * The course-level lock is not applied: the plan accordion has no locked overlay to explain
+     * it, and calculator::is_locked() would strip the links from staff whose course card still
+     * opens.
      *
      * @param int $competencyid The competency id.
      * @param array $courseids Ids of the courses that survived the enrolment filter.

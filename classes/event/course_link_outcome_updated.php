@@ -67,7 +67,7 @@ class course_link_outcome_updated extends base {
     }
 
     /**
-     * No restore mapping: these events are not restored into course logs.
+     * No restore mapping: core has none for course_competency rows.
      *
      * @return string
      */

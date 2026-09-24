@@ -14,7 +14,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * "Manage participants" modal: a tabbed (Cohorts / Users) surface for a learning plan template.
+ * "Manage participants" modal for a learning plan template, with Cohorts, Users, Assign roles and
+ * Enrolment methods tabs; each tab's pane mounts lazily on first activation.
  *
  * @module     local_dimensions/central/participants_manager
  * @copyright  2026 Anderson Blaine
@@ -93,9 +94,9 @@ const showFooterLinkFor = (root, activepane) => {
 
 /**
  * Inject the "open the matching core admin page" links into the modal footer, one per allowed tab.
- * Each link is only added when the user can reach its page; giving the otherwise-empty footer a
- * child makes core reveal it. Only the active tab's link shows (showFooterLinkFor); a management
- * modal has no primary action on the right.
+ * Each link is only added when the user can reach its page. core/modal's show() reveals the footer
+ * only when it has children, so this must run before show(). Only the active tab's link shows
+ * (showFooterLinkFor); a management modal has no primary action on the right.
  *
  * @param {HTMLElement} root The modal root.
  * @param {HTMLElement} region The plans region (carries the capability flags).
@@ -174,16 +175,15 @@ export const show = async(pane, region) => {
     modal.setRemoveOnClose(true);
 
     const root = modal.getRoot()[0];
-    // Widen this data-dense modal (tabs + grids) responsively. Bootstrap's own modal-xl carries
-    // the sizing (identical on 4 and 5); core's modal API only exposes setLarge(), so add the
-    // class directly. The local-dimensions-participants-modal class only hooks the height rule.
+    // The core/modal API offers setLarge() but no extra-large size, so add Bootstrap's modal-xl (same
+    // sizing on 4 and 5) directly. local-dimensions-participants-modal only hooks the height rule.
     const dialog = root.querySelector('.modal-dialog');
     if (dialog) {
         // The close-button chip comes via the :has(.modal-body .local-dimensions-*) rule (the body
         // carries .local-dimensions-participants), so no header-link class is needed here.
         dialog.classList.add('modal-xl', 'local-dimensions-participants-modal');
     }
-    // Admin escape links live in the footer (D2); giving it a child makes core reveal the footer.
+    // Before show(), so core reveals the footer (see injectFooterLinks).
     await injectFooterLinks(root, region);
     const opts = {
         templateid: Number(pane.dataset.templateid),
@@ -211,7 +211,7 @@ export const show = async(pane, region) => {
         });
     };
     // Reload the active tab: its stored refresh handle if mounted, else a re-mount to recover a
-    // pane whose mount failed (this subsumes the enrol pane's old in-pane recovery button).
+    // pane whose mount failed.
     const refreshActiveTab = () => {
         const activetab = root.querySelector(`${SELECTORS.tabs} .nav-link.active`);
         const entry = activetab && MOUNTS[activetab.dataset.region];
@@ -222,15 +222,12 @@ export const show = async(pane, region) => {
         if (handle && handle.refresh) {
             return handle.refresh();
         }
-        // No handle yet. An in-flight mount no-ops on startMount's latch, so a mid-mount refresh
-        // never starts a second (double-wiring) one. A rejected mount released the latch, so
-        // startMount re-mounts to recover — always safe: every latch-releasing rejection happens
-        // before the pane wires its listeners (users/enrol post-wire failures resolve instead and
-        // keep the handle), so a recovery re-mount is always the first wiring, never a double.
+        // No handle yet: an in-flight mount no-ops on the latch, and a rejected one released it, so
+        // this re-mounts without double-wiring (see startMount).
         return startMount(...entry);
     };
-    // Header controls: the expander seeds the saved size synchronously, then the refresh button
-    // slots in to its left (order: refresh, expand, close). Both widen this dense modal.
+    // Header controls in the order refresh, expand, close: the refresh button anchors on the
+    // expander's buttons, so it is attached once they exist.
     attachExpander(dialog).then(() => attachRefresh(dialog, refreshActiveTab)).catch(notifyError);
     modal.getRoot().on(ModalEvents.shown, () => {
         // Host a toast region inside the modal body so the cohort/user managers' success toasts

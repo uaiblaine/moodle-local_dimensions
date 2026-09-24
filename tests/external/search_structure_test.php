@@ -146,7 +146,7 @@ final class search_structure_test extends \externallib_advanced_testcase {
             'shortname' => 'Shared term competency',
             'idnumber' => 'ST-001',
         ]);
-        // A matching competency in FW2 — must NOT appear in FW1-scoped search.
+        // A matching competency in FW2 — must not appear in FW1-scoped search.
         $gen->create_competency([
             'competencyframeworkid' => $fw2id,
             'shortname' => 'Shared term competency',
@@ -186,7 +186,7 @@ final class search_structure_test extends \externallib_advanced_testcase {
     /**
      * A user who may not read the framework gets nothing: the gate is the framework's context.
      *
-     * There is no site-level competencyview requirement any more (a manager holding it in one
+     * The service has no site-level competencyview requirement (a manager holding it in one
      * course category only must be able to search that category's frameworks), so an unreadable
      * framework reads as empty, exactly as an unknown one does.
      *

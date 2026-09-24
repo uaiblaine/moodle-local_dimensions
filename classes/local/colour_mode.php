@@ -17,30 +17,26 @@
 namespace local_dimensions\local;
 
 /**
- * Attribute names in the family's dark-mode activation contract.
+ * Attribute names of the dark-mode contract shared with block_dimensions.
  *
- * Constants only. This class deliberately exposes no is_dark()-style helper: whether the host page
- * is dark is not server-knowable - core's own 5.3 mechanism resolves it from a per-user preference,
- * a cookie and a synchronous head script reading matchMedia - so any PHP guess would eventually be
- * wrong, and a wrong guess is the exact defect this design exists to prevent: the plugin dark while
- * the page is light.
+ * Constants only, with deliberately no is_dark()-style helper: whether the host page is dark is not
+ * knowable on the server (Moodle 5.3 resolves it from a user preference, a cookie and a head script
+ * reading matchMedia), and a wrong guess would paint the plugin dark on a light page.
  *
- * HOST_ATTRIBUTE is Bootstrap 5.3's own colour-mode attribute and is what Moodle itself writes,
- * from theme_boost's before_html_attributes listener and from the head script that resolves "auto"
- * with window.matchMedia. The plugin only ever READS it, from CSS; colour_tokens_test's
- * test_plugin_never_writes_the_host_signal fails the build if any shipped file writes it, and only
- * Behat may name it, because a scenario exercises the host's side of the contract.
+ * HOST_ATTRIBUTE is Bootstrap's colour-mode attribute, written by Moodle itself (theme_boost's
+ * before_html_attributes listener and its head script). The plugin only reads it, from CSS:
+ * {@see \local_dimensions\local\colour_tokens_test::test_plugin_never_writes_the_host_signal()}
+ * fails if code in any other file names it, Behat steps apart. Those switch the dark layer on the
+ * way production does: set HOST_ATTRIBUTE to DARK on document.documentElement.
  *
- * The documented test hook is therefore the production signal itself: set HOST_ATTRIBUTE to DARK on
- * document.documentElement and the shipping contract runs, rather than a fixture of it.
- * block_dimensions ships the identical class under its own namespace with identical literal values.
+ * block_dimensions ships an identical class under its own namespace, with the same values.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class colour_mode {
-    /** @var string Bootstrap's own colour-mode attribute, set by the HOST on the html element. */
+    /** @var string Bootstrap's own colour-mode attribute, set by the host page on the html element. */
     public const HOST_ATTRIBUTE = 'data-bs-theme';
 
     /** @var string The value of HOST_ATTRIBUTE that activates the plugin's dark layer. */
@@ -49,6 +45,6 @@ class colour_mode {
     /** @var string The value of HOST_ATTRIBUTE that pins light. */
     public const LIGHT = 'light';
 
-    /** @var string Gate on the inert OS-preference block. Written by nothing; a test proves it. */
+    /** @var string Gate on the inert prefers-color-scheme block in styles.css; nothing writes it (tested). */
     public const MEDIA_OPTIN_ATTRIBUTE = 'data-dimensions-media-optin';
 }

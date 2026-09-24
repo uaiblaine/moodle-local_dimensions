@@ -17,8 +17,8 @@
 {{!
     @template local_dimensions/view_plan_summary
 
-    Full plan overview with competencies in accordion.
-    Displays when view-plan.php is accessed with only plan ID.
+    Learner plan overview (view-plan.php): the hero, a toolbar of filters, search, sort and
+    layout, and the plan's competencies as an accordion list or a grid.
 
     Context variables required:
     * planid (int) - Plan ID
@@ -126,7 +126,7 @@
             the checked sort and the favourites state come from the stored preference,
             resolved server-side. }}
         <div class="local-dimensions-filter-bar local-dimensions-toolbar {{#showstar}}{{#hasfavourites}}local-dimensions-has-fav{{/hasfavourites}}{{/showstar}}">
-            {{! Row one: the two filter axes as pill pairs, the shape the companion block uses.
+            {{! Row one: the two filter axes as pill pairs, the shape block_dimensions uses.
                 This whole row is what the narrow layout folds behind the adjustments button. }}
             <div class="local-dimensions-toolbar-filters" data-toolbar-more>
             {{#showstar}}
@@ -258,10 +258,8 @@
         </div>
 
         {{#haschipfilters}}
-            {{! Plain block toggled by the hidden attribute - not a Bootstrap collapse or
-                dropdown, so no data-toggle/data-bs-toggle pair is needed for 4.5 vs 5.x.
-                Must stay a plain block: .d-block and .d-flex are !important and would
-                defeat [hidden]. }}
+            {{! Plain block toggled by the hidden attribute (see chip_filters.js initPanel).
+                Keep .d-block and .d-flex off it: their !important display defeats [hidden]. }}
             <div class="local-dimensions-filter-panel" data-filter-panel hidden>
                 {{#chipfilters}}
                     {{> local_dimensions/chip_filters }}
@@ -302,10 +300,9 @@
                             data-competency-id="{{id}}"
                             aria-pressed="{{#isfavourite}}true{{/isfavourite}}{{^isfavourite}}false{{/isfavourite}}"
                             aria-label="{{#str}}fav_star, local_dimensions{{/str}}">
-                        {{! The glyph carries the state as well as the colour (WCAG 1.4.1):
-                            filled star when favourited, outline star when not. The companion
-                            block swaps the same two classes, and accordion.js keeps this in
-                            step when the star is toggled without a reload. }}
+                        {{! The glyph carries the state, not only the colour (WCAG 1.4.1): filled
+                            star when favourited, outline star when not. block_dimensions uses the
+                            same pair, and accordion.js swaps them when the star is toggled. }}
                         {{#isfavourite}}
                         <i class="fa fa-star" aria-hidden="true"></i>
                         {{/isfavourite}}
@@ -398,12 +395,10 @@
             {{/competencies}}
 
             {{#showstar}}
-            {{! Renders only while the favourites filter is on, so a learner cannot forget it
-                is on and conclude the rest of the plan has vanished. Activating it clears the
-                filter. It lives inside the list so the grid lays it out as one more cell -
-                it stands for the competencies the filter is holding back - but it must not
-                carry local-dimensions-accordion-item, whose display is forced once the
-                filter runs. }}
+            {{! Shown only while the favourites filter hides something, so the learner sees that
+                the rest of the plan is held back; activating it clears the filter. It sits inside
+                the list so the grid lays it out as one more cell, but must not carry
+                local-dimensions-accordion-item, whose display the filter forces. }}
             <div class="local-dimensions-ghost-slot" role="listitem" data-ghost-slot hidden>
                 <button type="button" class="local-dimensions-ghost" data-ghost>
                     <span class="local-dimensions-ghost-icon">

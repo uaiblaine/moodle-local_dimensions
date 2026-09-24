@@ -42,7 +42,8 @@ class chip_filters {
         $out = [];
         foreach ($parts as $part) {
             $part = trim($part);
-            // Custom field shortnames must be lowercase ASCII (Moodle convention).
+            // Core's field form only accepts lowercase letters, digits and underscores in a
+            // shortname, so anything else could never match a field.
             if ($part !== '' && preg_match('/^[a-z0-9_]+$/', $part)) {
                 $out[$part] = true;
             }
@@ -115,7 +116,7 @@ class chip_filters {
     }
 
     /**
-     * Read all course custom field values in a single batched query.
+     * Read every custom field value of the given courses, one course at a time.
      *
      * @param int[] $courseids
      * @return array<int, array<string, string>>
@@ -132,8 +133,7 @@ class chip_filters {
             return $out;
         }
 
-        // Use the per-instance API (works on every supported Moodle release).
-        // Performance trade-off: small N+1 contained by the chip cache above.
+        // One get_instance_data() call per course; get_course_values() only asks for cache misses.
         foreach ($courseids as $cid) {
             $cid = (int) $cid;
             try {
@@ -173,12 +173,10 @@ class chip_filters {
 
         [$insql, $inparams] = $DB->get_in_or_equal($shortnames, SQL_PARAMS_NAMED, 'sn');
 
-        // NOTE: direct query against core {customfield_*} tables — intentional for
-        // batch shape (one round-trip resolves the configured shortnames for a
-        // single instance). If core changes the customfield schema (already
-        // changed once between 4.x and 5.x), re-validate before upgrading.
-        // configdata carries the select options, so a select value can be mapped
-        // to its label here rather than surfacing the raw 1-based index.
+        // Direct query on core's customfield tables: one round trip for all configured
+        // shortnames of one instance. Revisit it if core changes that schema again (5.1 added
+        // component, area and itemid to customfield_data). configdata carries a select's
+        // options, so display_value() can map the stored index to its label.
         $sql = "SELECT f.shortname, f.type, f.configdata, d.value
                   FROM {customfield_field} f
                   JOIN {customfield_category} c ON c.id = f.categoryid
@@ -207,10 +205,9 @@ class chip_filters {
     /**
      * The label a chip should carry for a stored custom-field value.
      *
-     * A select field stores the chosen option as a 1-based index, so the raw value is a
-     * number; every other field type stores what it displays. Both the chip buttons and the
-     * per-instance data-filtervalues run through here, so the two always agree and the exact
-     * match still holds - they simply match on the label now instead of the index.
+     * A select field stores the chosen option as a 1-based index; every other field type
+     * stores what it displays. The chip buttons and each instance's data-filtervalues both go
+     * through here, so they match on the same label.
      *
      * @param string $type The custom-field type (e.g. select, text).
      * @param string|null $configdata The field's JSON config, holding a select's options.
@@ -278,11 +275,8 @@ class chip_filters {
             $cfarea = $area;
         }
 
-        // NOTE: direct query against core {customfield_*} tables — intentional
-        // because this also resolves labels for the core_course area (component
-        // = core_course), which the local_dimensions handlers do not own.
-        // If core changes the customfield schema (already changed once between
-        // 4.x and 5.x), re-validate this query before upgrading.
+        // Direct query on core's customfield tables because it also serves the core_course
+        // area, which this plugin's handlers do not own.
         $sql = "SELECT f.shortname, f.name
                   FROM {customfield_field} f
                   JOIN {customfield_category} c ON c.id = f.categoryid
@@ -306,7 +300,7 @@ class chip_filters {
      * @param string[] $shortnames Configured shortnames in display order.
      * @param array $instancevalues Map of instanceid => {shortname => value}.
      * @param array $labels Optional shortname => human label override.
-     * @return array<int, array{shortname:string,label:string,values:array<int,array{value:string}>}>
+     * @return array<int, array{shortname:string,groupid:string,label:string,values:array<int,array{value:string}>}>
      */
     public static function build_filterfields_payload(
         array $shortnames,

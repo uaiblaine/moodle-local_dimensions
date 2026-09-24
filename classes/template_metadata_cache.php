@@ -148,11 +148,9 @@ class template_metadata_cache {
                 'area' => 'lp',
             ];
 
-            // NOTE: direct query against core {customfield_*} tables — intentional
-            // for chunked bulk shape (one round-trip per 1000-template chunk).
-            // The customfield API does not expose this join shape. If core
-            // changes the customfield schema (already changed once between 4.x
-            // and 5.x), re-validate this query before upgrading.
+            // Direct query on core's customfield tables: one round trip per chunk, with no
+            // controller hydrated per template and field. It depends on that schema, which
+            // differs between Moodle 4.5 and 5.1.
             $sql = "SELECT d.id AS dataid, d.instanceid, f.shortname, f.configdata,
                            d.contextid, d.value, d.intvalue
                       FROM {customfield_data} d
@@ -291,11 +289,9 @@ class template_metadata_cache {
             'area' => 'lp',
         ] + $inparams;
 
-        // NOTE: direct query against core {customfield_*} tables — intentional for
-        // batch shape (single round-trip pulling shortname + value + intvalue +
-        // configdata in one go). The customfield API does not expose this
-        // join shape. If core changes the customfield schema (already changed
-        // once between 4.x and 5.x), re-validate this query before upgrading.
+        // Direct query on core's customfield tables, reading value, intvalue and configdata
+        // in one round trip without hydrating controllers. It depends on that schema, which
+        // differs between Moodle 4.5 and 5.1.
         $sql = "SELECT f.shortname,
                        f.configdata,
                        d.id AS dataid,
@@ -384,9 +380,11 @@ class template_metadata_cache {
      * Get display mode int value from the select field.
      *
      * The displaymode select field stores options as plain labels
-     * (e.g. "Competency Tracker\nFull Plan Overview"). The intvalue is
-     * a 1-based index into the options list, which by design maps directly
-     * to the DISPLAYMODE_* constant keys (1 = COMPETENCIES, 2 = PLAN).
+     * (e.g. "Competency tracker\nFull plan overview"). The intvalue is
+     * a 1-based index into the options list, which maps directly to the
+     * DISPLAYMODE_* constant keys (1 = COMPETENCIES, 2 = PLAN) because
+     * {@see helper::get_display_mode_field()} writes the options in
+     * {@see constants::display_mode_options()} order.
      *
      * @param array $records Records keyed by shortname.
      * @return int Display mode constant.
@@ -403,9 +401,6 @@ class template_metadata_cache {
             return constants::DISPLAYMODE_COMPETENCIES;
         }
 
-        // The display mode select field stores plain labels (not "key|label").
-        // The intvalue is the 1-based option index which, by design, maps
-        // directly to the DISPLAYMODE_* constant keys (1 = COMPETENCIES, 2 = PLAN).
         if (array_key_exists($selectedindex, constants::display_mode_options())) {
             return $selectedindex;
         }
@@ -541,7 +536,7 @@ class template_metadata_cache {
     }
 
     /**
-     * Ensure payload has the expected keys.
+     * Fill in missing keys and resolve the stored option keys against the site settings.
      *
      * @param array $payload Raw payload.
      * @return array<string, mixed>

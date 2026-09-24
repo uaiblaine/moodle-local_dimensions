@@ -43,11 +43,9 @@ class competency_metadata_cache {
     /**
      * Get the cache instance.
      *
-     * The MUC factory already memoises one loader per definition per request
-     * (cache_factory::$cachesfromdefinitions), so cache::make() is free to call
-     * each time. A plugin-level static handle would only add a reference that
-     * survives PHPUnit's resetAfterTest(), reading a stale store after the
-     * factory is reset.
+     * cache::make() is memoised per definition by the cache factory, so it is called each
+     * time rather than kept in a static, which would survive PHPUnit's resetAfterTest() and
+     * keep reading the store from before the reset.
      *
      * @return \cache
      */
@@ -79,8 +77,7 @@ class competency_metadata_cache {
     /**
      * Get metadata for multiple competencies in bulk.
      *
-     * Uses MUC get_many/set_many for efficiency. Missing entries are
-     * fetched from the database in a single bulk query.
+     * Uses MUC get_many/set_many; cache misses are loaded together by fetch_many().
      *
      * @param int[] $competencyids Competency IDs.
      * @return array<int, array<string, mixed>> Keyed by competency ID.
@@ -161,11 +158,9 @@ class competency_metadata_cache {
             'area' => 'competency',
         ] + $inparams;
 
-        // NOTE: direct query against core {customfield_*} tables — intentional for
-        // batch shape (single round-trip pulling shortname + value + intvalue +
-        // configdata in one go). The customfield API does not expose this
-        // join shape. If core changes the customfield schema (already changed
-        // once between 4.x and 5.x), re-validate this query before upgrading.
+        // Direct query on core's customfield tables: one round trip for every field's value,
+        // intvalue and configdata. Revisit it if core changes that schema again (5.1 added
+        // component, area and itemid to customfield_data).
         $sql = "SELECT f.shortname,
                        f.configdata,
                        d.id AS dataid,
@@ -211,10 +206,8 @@ class competency_metadata_cache {
         [$shortsql, $shortparams] = $DB->get_in_or_equal($shortnames, SQL_PARAMS_NAMED, 'sn');
         [$instsql, $instparams] = $DB->get_in_or_equal($competencyids, SQL_PARAMS_NAMED, 'inst');
 
-        // NOTE: direct query against core {customfield_*} tables — intentional for
-        // bulk shape (one round-trip resolves all shortnames for many instances).
-        // If core changes the customfield schema (already changed once between
-        // 4.x and 5.x), re-validate this query before upgrading.
+        // Direct query on core's customfield tables: one round trip for all fields of all the
+        // requested competencies. See fetch_competency_metadata() about the schema.
         $sql = "SELECT d.id AS dataid,
                        d.instanceid,
                        f.shortname,
@@ -429,6 +422,9 @@ class competency_metadata_cache {
 
     /**
      * Optional DEBUG_DEVELOPER logging for cache operations.
+     *
+     * Switched on by the config local_dimensions/debugcompetencymetadatacache, which has no
+     * admin setting; set it with set_config() or admin/cli/cfg.php.
      *
      * @param string $message Debug message.
      */

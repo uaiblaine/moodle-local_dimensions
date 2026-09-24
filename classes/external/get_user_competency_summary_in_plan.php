@@ -17,22 +17,6 @@
 /**
  * External API wrapper for tool_lp_data_for_user_competency_summary_in_plan.
  *
- * This wrapper exists to avoid a coding_exception that occurs when the core
- * webservice tool_lp_data_for_user_competency_summary_in_plan is called via AJAX.
- *
- * The issue: when the AJAX framework calls external_function_info() it resolves
- * the return type structure via _returns(). The core service's _returns() uses
- * complex exporters (user_competency_summary_in_plan_exporter) that chain into
- * user_summary_exporter → core\user::fill_properties_cache() → get_list_of_themes()
- * → theme_config->get_theme_name() → get_string(). If a theme's language file
- * (e.g. theme_scholastica) accesses $PAGE properties, it triggers
- * moodle_page->magic_get_context() BEFORE the AJAX framework has set the page
- * context, causing a coding_exception.
- *
- * This wrapper solves it by using a trivial _returns() (PARAM_RAW) that does NOT
- * trigger the exporter chain. The actual core API call happens inside execute()
- * where the page context has already been properly set.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -48,10 +32,18 @@ use core_competency\api;
 use local_dimensions\helper;
 
 /**
- * Wrapper for tool_lp_data_for_user_competency_summary_in_plan.
+ * Wrapper for tool_lp_data_for_user_competency_summary_in_plan, returning its data as JSON.
  *
- * Returns the same data as the core service but as a JSON-encoded string,
- * avoiding the exporter-based return type definition that causes context issues.
+ * Called over AJAX, the core service can hit an unset $PAGE->context, which moodle_page turns into
+ * a coding_exception under developer debugging and a debugging notice otherwise.
+ * external_function_info() resolves its return structure before the function runs, and the
+ * exporters behind it (user_summary_exporter, via core_user's property definitions) call
+ * get_list_of_themes(), which loads every theme's name string; a theme whose lang file reads $PAGE
+ * (theme_scholastica does) then asks for the context. This wrapper declares a PARAM_RAW return
+ * and calls the core function as a plain PHP method once validate_context() has run.
+ *
+ * The competency in the result also gains the taxonomy data and scale description the plugin's
+ * accordion shows.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -73,9 +65,7 @@ class get_user_competency_summary_in_plan extends external_api {
     /**
      * Get competency summary data for a user's learning plan.
      *
-     * Calls the core tool_lp external function directly as a PHP method call,
-     * bypassing the webservice framework's external_function_info() chain that
-     * would trigger the problematic exporter type resolution.
+     * Calls the core tool_lp external function as a PHP method; see the class docblock.
      *
      * @param int $competencyid The competency ID
      * @param int $planid The plan ID
@@ -88,18 +78,13 @@ class get_user_competency_summary_in_plan extends external_api {
             'planid' => $planid,
         ]);
 
-        // Set context BEFORE any code that might trigger theme/string loading.
-        // This is the key fix: the context is available when the core API
-        // internally uses exporters and renderers.
+        // Sets $PAGE's context before anything below can load theme strings.
         $context = context_system::instance();
         self::validate_context($context);
         require_capability('local/dimensions:view', $context);
 
-        // Call the core tool_lp external function directly (PHP method call).
-        // This does NOT trigger external_function_info() or _returns(), so
-        // the exporter type resolution chain is never invoked by the framework.
-        // The function internally calls validate_context() and uses the API +
-        // exporters at runtime, where context is already set.
+        // A plain method call, so its return structure is never resolved. It checks access to
+        // the plan itself.
         $result = \tool_lp\external::data_for_user_competency_summary_in_plan(
             $params['competencyid'],
             $params['planid']
@@ -124,9 +109,8 @@ class get_user_competency_summary_in_plan extends external_api {
     /**
      * Whether the "About this scale" link is enabled.
      *
-     * A setting that has never been written reads as false, which on an install upgrading
-     * into this release would silently remove a link it has today. Unset is therefore
-     * treated as on, matching the checkbox's own default.
+     * Unset reads as on, matching the checkbox's default, so an upgraded site that never saved
+     * the setting keeps the link.
      *
      * @return bool
      */
@@ -172,9 +156,7 @@ class get_user_competency_summary_in_plan extends external_api {
     /**
      * Define return type.
      *
-     * Returns PARAM_RAW (JSON string) instead of a complex exporter-based structure.
-     * This trivial return definition avoids the exporter chain that triggers
-     * theme loading and the subsequent $PAGE->context exception.
+     * A JSON string rather than the core exporter structure; see the class docblock.
      *
      * @return external_value
      */

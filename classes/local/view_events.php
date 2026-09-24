@@ -33,10 +33,10 @@ use local_dimensions\helper;
  * Logs the core competency view events for the plugin's learner pages, the way tool_lp's pages do.
  *
  * The plan overview and the competency tracker stand in for admin/tool/lp/plan.php and
- * admin/tool/lp/user_competency_in_plan.php, and neither logged anything, so a learner who only
- * ever used them left no competency views in the logs. Both methods run before $OUTPUT->header().
- * The overview's accordion and grid load each competency's detail lazily, so that view is logged
- * from amd/src/accordion.js through core's own web services instead, once per competency per page.
+ * admin/tool/lp/user_competency_in_plan.php, so they log the same events. Both methods run before
+ * $OUTPUT->header(). The overview's accordion and grid load each competency's detail lazily, so
+ * that view is logged from amd/src/accordion.js through core's own web services instead, once per
+ * competency per page.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

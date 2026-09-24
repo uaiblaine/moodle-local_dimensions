@@ -16,10 +16,9 @@
 /**
  * Thin wrapper over core/toast for the Competency hub: every hub toast gets a close button by
  * default, so a user firing a repeated action (which stacks several auto-hiding confirmations)
- * can dismiss them immediately instead of waiting out each 4s delay. The button is core's own
- * right-aligned btn-close (supported since Moodle 4.5; ignored gracefully on older cores).
- * The single source for the plugin's toast behaviour — hub modules import add/addToastRegion
- * from here, not straight from core/toast.
+ * can dismiss them immediately instead of waiting out each 4s delay. The button is core/toast's
+ * own closeButton option. The single source for the plugin's toast behaviour — hub modules
+ * import add/addToastRegion from here, not straight from core/toast.
  *
  * @module     local_dimensions/central/toast
  * @copyright  2026 Anderson Blaine

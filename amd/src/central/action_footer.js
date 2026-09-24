@@ -16,18 +16,16 @@
 /**
  * Shared owner of the page-level sticky footer for the Competency hub.
  *
- * The hub is one page with dynamic tabs, and Moodle allows a single sticky
- * footer per page, so all three tabs — Frameworks, Structure and Plans — drive
- * this one surface through here. The active tab calls show() with its rendered
- * button markup and a dispatch callback; a single delegated click listener routes
- * footer clicks to whichever dispatch is current. Switching tabs clears the footer
- * (the entering tab's own init re-asserts it, since dynamic tabs re-run init on
- * every entry).
+ * The hub is one page with dynamic tabs, and core/sticky-footer drives a single
+ * footer per page, so the Frameworks, Structure and Plans tabs all drive this one
+ * surface through here. The active tab calls show() with its rendered button
+ * markup and a dispatch callback; a single delegated click listener routes footer
+ * clicks to whichever dispatch is current. Switching tabs clears the footer (the
+ * entering tab's own init re-asserts it, since dynamic tabs re-run init on every
+ * entry).
  *
- * This surface is a launcher, not decoration: it reaches 10 of the hub's 17 modals
- * and is the only door to 7 of them (8 counting enrol_methods, which lives inside
- * participants). Dropping a tab's footer does not simplify a layout — it removes
- * the only way to act on the selected row. See docs/design-kit/sticky-footer.html.
+ * Several hub modals open only from this footer, so a tab that drops its footer
+ * loses those actions. See docs/design-kit/sticky-footer.html.
  *
  * The footer's inner HTML is replaced wholesale (the theme-agnostic approach core
  * bulkactions uses); callers supply the sticky-footer inner layout in their markup.
@@ -73,10 +71,9 @@ export const show = (html, dispatch) => {
     footer.innerHTML = html;
     currentDispatch = dispatch;
     enableStickyFooter();
-    // The core/sticky-footer no-manager fallback adds `v-hidden` (visibility: hidden) when a
-    // hide() runs before the theme registers its manager (e.g. the Frameworks tab's init on
-    // page load). The manager-path enable does not clear it, so remove it here or the bar
-    // stays invisible even though the theme slid it up.
+    // A hide() that runs before the theme registers its sticky-footer manager (the Frameworks
+    // tab's init on page load) takes core's fallback path, which adds `v-hidden`. The theme
+    // manager's enable never removes it, so without this the bar slides up invisible.
     footer.classList.remove('v-hidden');
 };
 
@@ -114,14 +111,12 @@ export const init = () => {
             currentDispatch(target, event);
         }
     });
-    // Switching to a different tab clears the footer for a clean slate; the entering
-    // tab's own init re-asserts it. Frameworks is selection-driven like Structure: it
-    // enters with no footer until a row is chosen, then drives it from frameworks.js.
-    // A native click is used rather than show.bs.tab because
-    // Moodle 4.5 runs Bootstrap 4, which dispatches tab events via jQuery — native
-    // 'show.bs.tab' listeners never fire there. The active-tab guard reads the pre-click
-    // state (this direct listener runs before Bootstrap's delegated one), so re-clicking
-    // the current tab does not wrongly clear its footer.
+    // Switching to a different tab clears the footer; the entering tab's own init
+    // re-asserts it. A native click is used rather than show.bs.tab because Moodle 4.5
+    // runs Bootstrap 4, which dispatches tab events through jQuery, so native
+    // 'show.bs.tab' listeners never fire there. This direct listener runs before
+    // Bootstrap's delegated one, so the active-tab guard reads the pre-click state and
+    // re-clicking the current tab keeps its footer.
     document.querySelectorAll(TAB_TOGGLE).forEach((toggle) => {
         toggle.addEventListener('click', () => {
             if (!toggle.classList.contains('active')) {

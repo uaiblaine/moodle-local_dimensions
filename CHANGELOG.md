@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Code comments are written for a Moodle developer, following Moodle's comment guidance.**
+  197 files lost the history, the measurements and the references to the local development
+  environment that had accumulated in them, and kept the reasons, contracts and edge cases a
+  maintainer needs at each line. 285 comments that no longer matched the code they describe were
+  corrected. No code changed: the comment-free token stream of every changed PHP and JS file is
+  identical before and after, and the AMD build was regenerated only because its module docblocks
+  and source maps carry the comment text.
+
 ### Fixed
 - **A completed plan's trail now reads the ratings core froze when the plan was completed.**
   `api::complete_plan()` archives every rating into `competency_usercompplan`, keyed by the plan,

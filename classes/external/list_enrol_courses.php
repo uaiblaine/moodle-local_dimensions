@@ -38,7 +38,7 @@ use local_dimensions\task\process_enrol_method;
 /**
  * Web service: one competency's configurable courses, loaded when its accordion group expands.
  *
- * Each row carries the status of BOTH methods against the selected cohort (configured /
+ * Each row carries the status of both methods against the selected cohort (configured /
  * processing / notconfigured plus the configured-since date), so switching the method
  * segment only repaints client-side and the details modal needs no extra call.
  *

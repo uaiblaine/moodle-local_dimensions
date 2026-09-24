@@ -66,10 +66,10 @@ class export_templates extends external_api {
             'contextid' => $contextid,
         ]);
 
-        /* validate_context() sets $PAGE's context, and a second change away from a course
-           category emits a debugging() notice, so it is called exactly ONCE on the requesting
-           hub context. Per-template access is then checked with require_capability(), which
-           does not touch $PAGE. */
+        /* validate_context() sets $PAGE's context, and changing it again away from a course
+           category context emits a debugging() notice, so it runs once, on the requesting hub
+           context. Each template is then checked with require_capability(), which leaves $PAGE
+           alone. */
         $context = self::get_context_from_params(['contextid' => $params['contextid']]);
         self::validate_context($context);
 

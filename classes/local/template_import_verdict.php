@@ -20,8 +20,8 @@
  *
  * The analyser assigns these, the preview renders them and the importer re-checks them, so
  * they are declared once here rather than as string literals in three places. Every label is
- * resolved by a LITERAL match() returning a fixed get_string key: the string checker cannot
- * verify a constructed id, so get_string('reason_' . $x) is forbidden.
+ * resolved by a literal match() returning a fixed get_string key, because the string checker
+ * cannot verify a constructed id.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -86,7 +86,7 @@ class template_import_verdict {
     /** @var string The description format is not one core accepts. */
     const REASON_INVALIDFORMAT = 'invalidformat';
 
-    /** @var string None of the plan's competencies resolve on this site. */
+    /** @var string None of the row's competencies resolve on this site. */
     const REASON_STRUCTUREMISSING = 'structuremissing';
 
     /** @var string The user cannot manage templates in the target context. */
@@ -134,7 +134,7 @@ class template_import_verdict {
     /** @var string The row names no competency at all. */
     const LINK_EMPTYREFERENCE = 'emptyreference';
 
-    /** @var string Resolved by the ID number, the only DB-enforced cross-site key. */
+    /** @var string Resolved by ID number (for a template, this plugin's ID number custom field). */
     const CONFIDENCE_EXACT = 'exact';
 
     /** @var string Resolved by the template's name. */
@@ -158,7 +158,7 @@ class template_import_verdict {
     /** @var string Move the past due date forward in whole years until it is in the future. */
     const REMEDY_SHIFTDUEDATE = 'shiftduedate';
 
-    /** @var string Keep the stored due date, offered only when it is byte-identical. */
+    /** @var string Leave the stored due date untouched; offered only against a matched template. */
     const REMEDY_KEEPDUEDATE = 'keepduedate';
 
     /** @var string Shorten an over-long name to the 100 characters core allows. */
@@ -170,7 +170,7 @@ class template_import_verdict {
     /** @var string Treat the same-named template in the context as the match. */
     const REMEDY_ADOPT = 'adopt';
 
-    /** @var string Create a separate template here, alongside the one in the other context. */
+    /** @var string Create a new template in the target context instead of using the match. */
     const REMEDY_CREATEHERE = 'createhere';
 
     /** @var string The template was created. */

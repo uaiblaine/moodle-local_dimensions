@@ -18,7 +18,7 @@
  * cohort-restricted self enrolment on the courses linked to the template's competencies.
  * Every action queues one background task per (course, method, cohort) combination; rows in
  * that state show Processing (checkbox swapped for a spinner) and a queue poll flips them to
- * their final status. Each row carries BOTH methods' status in its data attributes, so
+ * their final status. Each row carries both methods' status in its data attributes, so
  * switching the method segment only repaints client-side.
  *
  * @module     local_dimensions/central/enrol_methods
@@ -558,7 +558,8 @@ const loadCourses = async(state, competencyid, offset) => {
 const toggleGroup = async(state, button) => {
     const competencyid = Number(button.dataset.competencyid);
     const children = state.root.querySelector(`[data-children="${competencyid}"]`);
-    // The chevron rotation and the reveal animation are pure CSS, keyed on aria-expanded.
+    // The chevron rotation (keyed on aria-expanded) and the reveal animation (keyed on the
+    // container losing [hidden]) are pure CSS.
     if (button.getAttribute('aria-expanded') === 'true') {
         children.hidden = true;
         button.setAttribute('aria-expanded', 'false');
@@ -934,9 +935,9 @@ const init = async(state) => {
             },
         ]));
     } catch (e) {
-        // This load runs before any region is revealed, so a failure here would otherwise leave the
-        // pane blank with its refresh buttons trapped inside the still-hidden regions. Show the error
-        // region, whose own refresh sits outside them, then rethrow so mount's swallow still toasts.
+        // This load runs before any region is revealed, so a failure would otherwise leave the pane
+        // blank. Show the error region (the modal header refresh retries), then rethrow so the
+        // caller still reports the error.
         error.hidden = false;
         state.root.querySelector(SELECTORS.empty).hidden = true;
         state.root.querySelector(SELECTORS.nocourses).hidden = true;
@@ -952,7 +953,7 @@ const init = async(state) => {
     const bootstrap = compdata.bootstrap || {
         roles: [], defaultroleid: 0, categories: [], cohortenabled: true, selfenabled: true,
     };
-    // Neither method is enabled sitewide: the whole tab is inert, warn instead. The header
+    // Neither method is enabled sitewide: the whole tab is inert, warn instead. The modal footer
     // link to the enrol-plugins admin page (site admins only) is where this gets fixed.
     if (!bootstrap.cohortenabled && !bootstrap.selfenabled) {
         disabled.hidden = false;
@@ -972,7 +973,7 @@ const init = async(state) => {
     // The methods act on the courses linked to the plan's competencies. A plan with no
     // competencies, or none linked to a course the viewer may configure, has nothing to act on:
     // say so and point at the two steps that fill the pane, instead of an empty grid that reads
-    // as a permission problem (a category manager with every capability in place hit exactly that).
+    // as a permission problem.
     if (!compdata.total) {
         nocourses.hidden = false;
         main.hidden = true;
@@ -1117,11 +1118,10 @@ export const mount = async(container, opts) => {
 
     wireEvents(state);
     // The wireEvents listeners are delegated onto the container, which a remount would not discard,
-    // so mount() must reject only before it. Swallow the initial load to a toast so a failure here
-    // does not release the latch and let a re-click double-wire; a load that failed before revealing
-    // any region leaves the pane blank until the modal is reopened (a known gap for the enrol tab).
+    // so mount() must reject only before it. A failed initial load is reported and swallowed, so the
+    // host keeps its mount latch and never double-wires on a re-click.
     await init(state).catch(notifyError);
     // The host's header refresh re-runs init, which reloads in place (the delegated listeners
-    // survive) — so it never re-wires and never releases the latch.
+    // survive), so it also retries a failed initial load.
     return {refresh: () => init(state)};
 };

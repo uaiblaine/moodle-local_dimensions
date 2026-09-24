@@ -19,16 +19,12 @@ namespace local_dimensions;
 /**
  * The enrol_apply integration must stay optional for anybody installing this plugin.
  *
- * calculator::current_user_can_enrol() knows how to read an enrol_apply instance, and
- * .github/workflows/ci.yml now checks that plugin out on the 5.01 and 5.02 jobs so those tests
- * run against the real thing rather than skipping. Both of those make it easy for the
- * integration to become a requirement by accident, and the accident would be invisible: with
- * enrol_apply present on every 5.x leg and on the local m501/m502 stacks, a hard reference to
- * it would pass everything here and only fail on a site that never installed it.
+ * calculator reads enrol_apply instances only through a runtime is_callable() guard. CI installs
+ * enrol_apply on the Moodle 5.x jobs so those paths run for real, which also means a hard
+ * reference to it would pass there and fail only on a site without it.
  *
- * This file is the observer for that. It pins the two halves of the promise - nothing declared
- * in version.php, and nothing loaded unconditionally in the source - plus the behaviour a site
- * without the plugin actually sees.
+ * These tests pin both halves of the promise - nothing declared in version.php, and nothing
+ * loaded unconditionally in the source - plus the behaviour a site without the plugin sees.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -40,8 +36,7 @@ final class optional_enrol_apply_test extends \advanced_testcase {
     /**
      * version.php declares no dependency on any enrol plugin.
      *
-     * A declared dependency is what would make Moodle refuse to install this plugin without
-     * enrol_apply, and what would pull enrol_apply into every stack that mounts this one.
+     * A declared dependency would make Moodle refuse to install this plugin without enrol_apply.
      *
      * @return void
      */
@@ -68,12 +63,9 @@ final class optional_enrol_apply_test extends \advanced_testcase {
      * @return void
      */
     public function test_no_source_file_hard_requires_enrol_apply(): void {
-        /* The use-statement pattern is not redundant with the namespace one. An import is
-           spelled WITHOUT a leading backslash - `use enrol_apply\local\queue;` - and the code
-           then calls the short alias, so neither of the qualified patterns below would ever
-           see it. That is the likeliest shape this defect would actually take, and it became
-           likelier still when current_user_has_pending_application()'s docblock started
-           naming that very class as the authority for its SQL. */
+        /* The use-statement pattern is not redundant with the namespace one: an import is spelled
+           without a leading backslash (use enrol_apply\local\queue;) and the code then calls the
+           short alias, so none of the other patterns would see it. */
         $patterns = [
             '/(require|include)(_once)?\s*\(?[^;]*enrol\/apply/i' => 'loads a file from enrol/apply',
             '/^\s*use\s+\\\\?enrol_apply\\\\/i' => 'imports a class from the enrol_apply namespace',
@@ -108,9 +100,9 @@ final class optional_enrol_apply_test extends \advanced_testcase {
      * With enrol_apply switched off site-wide, the predicate answers no and does not fall over.
      *
      * This is the closest observable stand-in for "the plugin was never installed": both leave
-     * enrol_get_instances($courseid, true) with nothing of that type to return. The control
-     * below is what stops the test passing vacuously - the same course, the same instance, with
-     * the plugin switched back on.
+     * enrol_get_instances($courseid, true) with nothing of that type to return. The control -
+     * the same course and instance, checked first with the plugin enabled - stops the test
+     * passing vacuously.
      *
      * @return void
      */

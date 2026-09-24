@@ -21,13 +21,11 @@ use core_competency\plan;
 /**
  * Tests which failures of reading a plan the learner pages report as an invalid plan.
  *
- * view-plan.php and view-competency.php used to turn every exception from api::read_plan() into
- * 'invalidplan'. So a learner refused their own draft plan was told the plan did not exist, and so
- * was an administrator whose site had competencies turned off. Only a plan that cannot be found is
- * invalid now; everything else surfaces as core's own error, as admin/tool/lp/plan.php shows it.
+ * Only a plan that cannot be found is invalid; every other failure surfaces as core's own error,
+ * as admin/tool/lp/plan.php shows it. See {@see plan_access::read_plan()}.
  *
- * A class-level docblock rather than a CoversClass attribute: moodle-cs on the 4.05 leg cannot see
- * attributes, and this plugin still supports 4.5.
+ * The covers tag stays in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
+ * attributes.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

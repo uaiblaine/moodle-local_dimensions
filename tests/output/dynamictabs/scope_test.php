@@ -56,7 +56,7 @@ final class scope_test extends advanced_testcase {
     }
 
     /**
-     * Export a tab for the parent category, locked or not, and return the names it lists.
+     * Export a tab for a category, locked or not, and return the names it lists.
      *
      * @param string $tabclass The tab class.
      * @param int $categoryid The category id.
@@ -114,8 +114,8 @@ final class scope_test extends advanced_testcase {
     }
 
     /**
-     * The site entry stays 'self' even for a category picked in the bar: a stale locked flag is
-     * never inferred from the context type.
+     * Locked on the child category, the listing covers the child's subtree and never reaches up to
+     * the parent.
      *
      * @return void
      */

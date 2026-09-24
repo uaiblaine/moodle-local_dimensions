@@ -31,8 +31,9 @@ use navigation_node;
 /**
  * Who gets the Competency hub in a category's "More" menu, and where the node points.
  *
- * Core does not unit-test tool_lp's twin callback, so the function is called directly on a bare
- * container node, which is all settings_navigation::load_category_settings() hands it.
+ * Core has no unit test of tool_lp's twin callback to borrow from, so the function is called
+ * directly, on a bare container node standing in for the category node that
+ * settings_navigation::load_category_settings() passes it.
  *
  * @coversNothing
  */

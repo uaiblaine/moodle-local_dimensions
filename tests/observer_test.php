@@ -44,7 +44,7 @@ use local_dimensions\customfield\lp_handler;
  */
 final class observer_test extends \advanced_testcase {
     /**
-     * Set up: enable competency framework and reset DB after each test.
+     * Reset the database after each test and act as the admin user.
      */
     protected function setUp(): void {
         parent::setUp();
@@ -76,9 +76,9 @@ final class observer_test extends \advanced_testcase {
     }
 
     /**
-     * Creating a competency via the core API must NOT throw the
+     * Creating a competency via the core API must not throw the
      * "Caller must ensure that id is already set" coding_exception, even
-     * though no form was submitted (regression test for the original bug).
+     * though no form was submitted.
      */
     public function test_competency_created_does_not_throw_without_form(): void {
         $this->expectNotToPerformAssertions();
@@ -147,7 +147,6 @@ final class observer_test extends \advanced_testcase {
         // Insert a fake customfield_data row tied to this competency to verify cleanup.
         $handler = competency_handler::create();
         $contextid = $handler->get_instance_context($id)->id;
-        // Only insert if we have at least one configured field (skip otherwise).
         // The area has several configured fields; any one is enough for the
         // cleanup assertion, so pick the lowest id and ignore the rest.
         $fieldid = $DB->get_field_sql(

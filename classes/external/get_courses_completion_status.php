@@ -70,10 +70,8 @@ class get_courses_completion_status extends external_api {
         self::validate_context($context);
         require_capability('local/dimensions:view', $context);
 
-        /* Same gate as get_course_progress, and for the same reason: the capability above is
-           site-wide and held by every authenticated user, while the ids arrive raw from the
-           client. What leaks here is only the caller's own booleans, but the two services feed
-           one card list and must answer for exactly the same set of courses. */
+        /* The same per-course gate as get_course_progress::execute(): the two services feed one
+           card list and must answer for the same set of courses. */
         $readable = helper::readable_competency_courses($courseids);
 
         $results = [];

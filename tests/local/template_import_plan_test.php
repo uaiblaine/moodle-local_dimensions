@@ -29,8 +29,8 @@ final class template_import_plan_test extends \advanced_testcase {
     /**
      * Every constant in every set resolves to a real, non-empty label.
      *
-     * A missing string would resolve to '[[key]]' and emit a debugging notice, which fails the
-     * run under --fail-on-warning, so calling the label is itself half the assertion.
+     * A missing string resolves to '[[key]]' (and raises a debugging notice), which the assertions
+     * below reject.
      *
      * @return void
      */
@@ -90,9 +90,10 @@ final class template_import_plan_test extends \advanced_testcase {
     }
 
     /**
-     * An empty plan declares the full scalar set, all zero. This is the contract the preview
-     * web service's execute_returns() mirrors key for key: clean_returnvalue() silently strips
-     * anything the structure does not declare, so the two must not drift.
+     * An empty plan declares the full scalar set, all zero. This is the contract
+     * {@see \local_dimensions\external\preview_import_templates::execute_returns()} mirrors key for
+     * key: clean_returnvalue() silently strips anything the structure does not declare, so the two
+     * must not drift.
      *
      * @return void
      */
@@ -163,9 +164,8 @@ final class template_import_plan_test extends \advanced_testcase {
     }
 
     /**
-     * Both language files declare exactly the same keys, each in ascending byte order. CI's
-     * validate step enforces the ordering and the plugin's own rule is that the two files stay
-     * in sync; this feature adds keys in several passes, so the check is worth automating.
+     * Both language files declare exactly the same keys, each in ascending byte order, so a key
+     * added to only one of them fails here.
      *
      * @return void
      */
@@ -186,8 +186,8 @@ final class template_import_plan_test extends \advanced_testcase {
     /**
      * The string keys a language file declares, in file order.
      *
-     * Read as text rather than included: the point is to check the order the keys appear in,
-     * which an include() would throw away.
+     * Read as text rather than included, so the keys come back exactly as written, a key
+     * declared twice included; an include() would keep only one of the two.
      *
      * @param string $lang The language directory name.
      * @return array

@@ -80,7 +80,8 @@ class get_competency_module_links extends external_api {
         $canmanage = has_capability('moodle/competency:coursecompetencymanage', $coursecontext);
         $canedit = has_capability('moodle/course:manageactivities', $coursecontext);
 
-        // Existing activity links for this competency in this course, keyed by cmid.
+        // This competency's activity links in every course, keyed by cmid; only this course's
+        // modules are matched below.
         $outcomes = [];
         foreach (course_module_competency::get_records(['competencyid' => $competencyid]) as $record) {
             $outcomes[(int) $record->get('cmid')] = (int) $record->get('ruleoutcome');

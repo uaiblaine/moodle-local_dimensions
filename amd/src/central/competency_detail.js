@@ -149,7 +149,7 @@ const populateDetailChips = (content, data, isactive) => {
     setChip(content, SELECTORS.detailTag1, SELECTORS.detailTag1Wrap, data.tag1 || '');
     setChip(content, SELECTORS.detailTag2, SELECTORS.detailTag2Wrap, data.tag2 || '');
 
-    // Rule chip (accent) — only a node WITH children AND a rule shows it; a leaf never does.
+    // Rule chip: only a node with both children and a rule shows it; a leaf never does.
     const hasrule = data.haschildren === '1' && (data.ruletype || '') !== '';
     content.querySelector(SELECTORS.detailRuleWrap).hidden = !hasrule;
     if (hasrule) {
