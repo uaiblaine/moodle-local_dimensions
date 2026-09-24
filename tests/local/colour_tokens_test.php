@@ -19,20 +19,14 @@ namespace local_dimensions\local;
 /**
  * The whole colour contract, as a build gate.
  *
- * Nothing else in the pipeline reads a colour role. phpcs reads PHP, phpdoc reads docblocks, the
- * mustache lint reads markup structure, stylelint reads CSS syntax; not one of them can tell a
+ * No linter reads a colour role: phpcs, phpdoc, the mustache lint and stylelint cannot tell a
  * focus ring drawn with a box-shadow from one drawn with an outline, a token chain that terminates
  * in core's value from one that terminates in a frozen literal, a dark rule that assigns a
- * decorative shadow from one that assigns a whole surface, or an activation selector anchored at
- * the html element from one that fires off a navbar.
+ * decorative shadow from one that assigns a whole surface, or an activation selector scoped to
+ * body from one that matches through any ancestor. So each rule of the design is a test here.
  *
- * That is why every rule of the design is a method here rather than a paragraph somewhere. The
- * defect class this file exists for has shipped three times in this plugin with CI fully green,
- * was correctly root-caused each time, and recurred anyway. Prose is not a gate.
- *
- * Each test names the mutation that must redden it, because a test that passes against the
- * mutation it was written to catch is worse than no test: it certifies safety that is not there.
- * Two drafts of the companion bootstrap_compat_test did exactly that in this repository.
+ * Each test names the change that must make it fail. When editing a test, apply that change and
+ * confirm it does: a test that still passes against it certifies nothing.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -46,7 +40,7 @@ final class colour_tokens_test extends \basic_testcase {
     /** @var string The sentinel both plugins' prefixes are rewritten to before the blocks are compared. */
     private const SENTINEL = '--DIMENSIONS-';
 
-    /** @var string The family sibling whose token block must stay byte-identical to this one. */
+    /** @var string The family sibling whose token block must match this one under its own prefix. */
     private const SIBLING = 'block_dimensions';
 
     /** @var string That sibling's own token namespace. */
@@ -56,7 +50,7 @@ final class colour_tokens_test extends \basic_testcase {
      * @var array The 34 token suffixes, in declaration order.
      *
      * This array is byte-identical in both plugins' copies of this file and is the parity floor:
-     * it needs no sibling installed, so a rename in one plugin reddens that plugin's own build.
+     * it needs no sibling installed, so a rename in one plugin fails that plugin's own build.
      */
     private const SUFFIXES = [
         'surface', 'surface-alt', 'surface-inset', 'line',
@@ -73,10 +67,11 @@ final class colour_tokens_test extends \basic_testcase {
     ];
 
     /**
-     * @var array Suffix => the EXACT declaration text the token block must carry.
+     * @var array Suffix => the exact declaration text the token block must carry.
      *
-     * Equality, not a shape regex. A pattern match cannot prove a chain terminates in a literal,
-     * and the terminating literal is the whole of the plugin's Moodle 4.5 behaviour.
+     * Compared for equality, not with a shape regex: a pattern cannot prove which literal a chain
+     * terminates in, and that literal is what Moodle 4.5 renders wherever the chain has no
+     * Bootstrap 4 rung.
      */
     private const LIGHT = [
         'surface' => 'var(--bs-body-bg, var(--white, #fff))',
@@ -121,22 +116,20 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * @var string The dark activation selector, both arms, exactly as the stylesheet writes it.
      *
-     * Two arms because a host writes data-bs-theme in one of two places and the plugin has to
-     * follow both: core puts it on the html element, theme_moove puts it on document.body. The
-     * SUBJECT of both arms is body - the element the token block itself is declared on - and that
-     * is what forecloses the leak a bare attribute selector would allow, since body's only
-     * ancestor is html and no deeper scope can reach it.
+     * Two arms because hosts write data-bs-theme in two places: core (theme_boost, from 5.3) on
+     * the html element, theme_moove on document.body. The subject of both arms is body - the
+     * element the token block is declared on - so a nested element carrying the attribute cannot
+     * reach the plugin: body's only ancestor is html.
      */
     private const DARK_ACTIVATION_SELECTOR = 'body[' . colour_mode::HOST_ATTRIBUTE . '="'
         . colour_mode::DARK . '"], [' . colour_mode::HOST_ATTRIBUTE . '="'
         . colour_mode::DARK . '"] body';
 
     /**
-     * @var array Core's own --bs-* values on the LIGHT page.
+     * @var array Core's own --bs-* values on the light page.
      *
-     * Measured, not assumed: read out of the compiled Boost stylesheet of the running m502 stack
-     * (http://localhost:8502/theme/styles.php/boost/1/all) on 2026-09-05, from the
-     * ":root,[data-bs-theme=\"light\"]" block Bootstrap 5.3 compiles.
+     * As Boost compiles them on Moodle 5.2: the ":root,[data-bs-theme=\"light\"]" block of
+     * Bootstrap 5.3.
      */
     private const CORE_LIGHT = [
         '--bs-body-bg' => '#ffffff',
@@ -172,13 +165,13 @@ final class colour_tokens_test extends \basic_testcase {
     ];
 
     /**
-     * @var array Core's own --bs-* values on the DARK page, from the same measurement.
+     * @var array Core's own --bs-* values on the dark page, from the same compiled sheet.
      *
-     * A name absent here is a name core does not redefine under the dark attribute, and the light
-     * value stands. --bs-primary is the one that matters: it does NOT flip, which is why the brand
-     * is approved only as a solid fill under on-brand-fill and never as an ink.
-     * --bs-focus-ring-color is present and identical to its light value, which is core's own bug
-     * and the reason the plugin's ring chains --bs-emphasis-color instead.
+     * A name absent here is one core does not redefine under the dark attribute, so the light
+     * value stands. --bs-primary is the one that matters: it does not flip, so the brand is used
+     * only as a solid fill under on-brand-fill, never as an ink. --bs-focus-ring-color is listed
+     * with its unchanged light value because core does not flip it either, which is why the
+     * plugin's ring chains --bs-emphasis-color instead.
      */
     private const CORE_DARK = [
         '--bs-body-bg' => '#1d2125',
@@ -218,13 +211,11 @@ final class colour_tokens_test extends \basic_testcase {
      * Every row is checked in three resolutions - 5.x light, 5.x dark and the Moodle 4.5 fallback
      * literal - so a chain that is right on one branch and wrong on another cannot pass.
      *
-     * Three pairings are deliberately ABSENT and their absence is the design, not an oversight:
-     * accent, brand-ink and danger-ink as normal text on surface-inset measure 4.50, 4.50 and 4.20
-     * in dark. Those are core's own values failing against core's own surface - the same arithmetic
-     * applies to every core component on the page - so they are banned by rule instead of being
-     * asserted here, and test_no_low_contrast_ink_on_the_inset_surface is the ban. ink-faint is
-     * absent for the same kind of reason: 2.70:1 on surface-inset in light, which WCAG 1.4.3's
-     * incidental exception covers only for inactive controls.
+     * Omitted on purpose: accent, brand-ink and danger-ink as normal text on surface-inset measure
+     * 4.50, 4.50 and 4.20 in dark - core's own values against core's own surface - so they are
+     * banned by test_no_low_contrast_ink_on_the_inset_surface instead. ink-faint (3.07:1 on
+     * surface-inset in light) is allowed only as inactive-control text under WCAG 1.4.3's
+     * incidental exception; see test_ink_faint_is_only_inactive_text.
      */
     private const PAIRS = [
         ['ink', 'surface', 4.5],
@@ -262,20 +253,18 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * @var int Coloured-ink rules whose effective background the scanner cannot resolve.
      *
-     * A ratchet, asserted for EQUALITY: raising it reddens because the actual count is then below
-     * it, and adding an unresolvable pairing reddens because the count is above it. It may only
-     * ever be edited downwards, and only together with the rule that made a pairing resolvable.
+     * A ratchet asserted for equality, so raising it fails the test and so does adding an
+     * unresolvable pairing. Lower it only together with the change that made a pairing resolvable.
      */
     private const UNRESOLVED_BUDGET = 19;
 
     /**
      * @var array Rules painted with an admin-chosen colour, inside which no mode token may appear.
      *
-     * The boundary is the element carrying the admin colour. Inside it, "adapt" means relative to
-     * that colour, not relative to the page, so a mode token there would be measuring against the
-     * wrong ground - and the island does not go dark when the page does, correctly, because the
-     * admin's colour did not change. The glass chips are on the list for the same reason: they are
-     * alpha over the admin's own fill, not over the page.
+     * The boundary is the element carrying the admin colour. Inside it contrast is relative to that
+     * colour, not to the page, so a mode token there would measure against the wrong ground; the
+     * island stays as it is when the page goes dark, because the admin's colour does not change.
+     * The glass chips are listed because they are alpha over the admin's own fill.
      */
     private const ISLAND_ROOTS = [
         '.local-dimensions-hero',
@@ -289,13 +278,7 @@ final class colour_tokens_test extends \basic_testcase {
         '.local-dimensions-learnmore-btn',
     ];
 
-    /**
-     * @var array Custom properties that carry admin instance data, which the mode layer may not own.
-     *
-     * The sibling's own transport names are listed too: the ban is what stops one arriving here by
-     * copy-paste, and a ban that only names what already exists is a ban that arrives one commit
-     * late.
-     */
+    /** @var array Custom properties that carry admin instance data, which the mode layer may not own. */
     private const ADMIN_COLOUR_NAMES = [
         '--dimension-custombgcolor',
         '--dimension-customtextcolor',
@@ -310,10 +293,10 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * @var array Custom properties the stylesheet reads but deliberately never declares.
      *
-     * Two shapes, and both are set on the element rather than in the sheet: admin instance data
-     * emitted inline by a template, and a measurement written by an AMD module at runtime. Neither
-     * is a design token, so neither belongs in the token block - but each still has to be named
-     * somewhere, or test_every_token_read_is_declared could not tell one from a typo.
+     * Both kinds are set on the element rather than in the sheet: admin instance data emitted
+     * inline by a template (return_button.mustache), and a width written by an AMD module at
+     * runtime. Neither is a design token, but each has to be named here or
+     * test_every_token_read_is_declared would report it as a typo.
      */
     private const INLINE_DECLARED = [
         '--local-dimensions-fab-color',
@@ -324,10 +307,10 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * @var array The named literal exemptions, each of which must match at least one live literal.
      *
-     * "Add it to the allow-list" is the standard way an enforcement suite dies, so the list is
-     * checked in both directions: an unexempted literal fails, and an exemption matching nothing
-     * fails too. Keys are a selector substring, the property and the literal itself - a
-     * family-level entry would let a second literal ride in beside the first.
+     * Checked in both directions: an unexempted literal fails, and so does an exemption matching
+     * nothing, so the list cannot rot into a blanket allowance. Keys are a selector substring, the
+     * property and the literal itself; a family-level entry would let a second literal in beside
+     * the first.
      */
     private const LITERAL_EXEMPTIONS = [
         [
@@ -554,9 +537,9 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * Every stylesheet the plugin ships.
      *
-     * The styles_*.css theme overrides are included because CI's grunt leg lints styles.css only,
-     * which makes them exactly the place a banned value can re-enter unseen. The glob is empty
-     * today; that is why it is a glob and not a filename.
+     * Includes any styles_<theme>.css, which Moodle loads for the matching theme: Moodle's grunt
+     * stylelint task lints only a plugin's styles.css, so a banned value there would pass every
+     * other gate.
      *
      * @param string|null $root Plugin directory, defaulting to this plugin's own.
      * @return array List of absolute stylesheet paths.
@@ -661,8 +644,8 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * The declarations of one rule body, as property => value pairs.
      *
-     * Custom properties are included: a literal smuggled into a plugin-owned custom property is
-     * exactly as frozen as one written on a colour property, and rather harder to spot.
+     * Custom properties are included: a literal in a plugin-owned custom property is as frozen as
+     * one written on a colour property.
      *
      * @param string $body The text between a rule's braces.
      * @return array Lower-case property name => trimmed value.
@@ -739,9 +722,8 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * The token block's declarations, read out of the stylesheet.
      *
-     * This plugin carries a SECOND bare :root rule, declaring motion durations and a loading
-     * height, which the token block was deliberately placed after. So the block is identified by
-     * what it declares - the surface token - rather than by being the first :root in the file.
+     * The block is the bare body rule that declares the surface token, so any other bare body rule
+     * in the sheet cannot be mistaken for it.
      *
      * @param string|null $root Plugin directory, defaulting to this plugin's own.
      * @param string|null $prefix Token namespace to look for, defaulting to this plugin's own.
@@ -892,8 +874,9 @@ final class colour_tokens_test extends \basic_testcase {
      * Resolve one token to a concrete colour in one of the three resolutions.
      *
      * The declaration is read out of the stylesheet and followed exactly one hop: a chain
-     * var(--bs-NEW, var(--BS4-OLD, #literal)) yields core's measured value on 5.x and the
-     * terminating literal on 4.5, which is precisely what the browser does on each branch.
+     * var(--bs-NEW, var(--BS4-OLD, #literal)) yields core's value from CORE_LIGHT or CORE_DARK on
+     * 5.x and the terminating literal on 4.5. A browser on 4.5 stops at the Bootstrap 4 rung where
+     * there is one; every terminal literal in LIGHT equals that rung's 4.5 value, so the two agree.
      *
      * @param string $suffix Token suffix, e.g. ink-muted.
      * @param string $mode One of light, dark or bs4.
@@ -913,8 +896,9 @@ final class colour_tokens_test extends \basic_testcase {
             return null;
         }
         if ($mode === 'bs4') {
-            /* Moodle 4.5 declares no --bs-* and no --gray/--white/--primary either, so every
-               var() in the chain misses and the browser lands on the terminating literal. */
+            /* Moodle 4.5 declares no --bs-* name. The Bootstrap 4 names it does declare (--white,
+               --light, --gray-dark, --primary) equal the terminating literals, so the literal is
+               the 4.5 value. */
             if (preg_match_all('/#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\([^)]*\)/i', $declaration, $matches)) {
                 return end($matches[0]);
             }
@@ -933,7 +917,7 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /* --------------------------------------------------------------------------------------- */
-    /* T1-T3c - the literal ban, the declaration contract and the family lock.                   */
+    /* The literal ban, the declaration contract and the family lock.                            */
     /* --------------------------------------------------------------------------------------- */
 
     /**
@@ -986,11 +970,9 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * No colour literal may live outside the token block, the mode blocks or a named exemption.
      *
-     * Checked in both directions. An unexempted literal fails, which is the obvious half; and an
-     * exemption that matches nothing fails too, which is the half that keeps the allow-list from
-     * rotting into a blanket as rules are deleted around it.
+     * Checked in both directions; see LITERAL_EXEMPTIONS.
      *
-     * Mutations that must redden it: put color: #6c757d back on any component rule; and delete an
+     * Changes that must make it fail: put color: #6c757d back on any component rule; and delete an
      * exempted rule while leaving its allow-list entry behind.
      *
      * @return void
@@ -1034,11 +1016,9 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * The token block declares exactly the contract, with exactly the declared text.
      *
-     * Equality on the declaration string, not a shape regex: a pattern can prove a chain exists but
-     * not that it terminates in the right literal, and the terminating literal is the whole of the
-     * plugin's Moodle 4.5 behaviour.
+     * Equality on the declaration string, not a shape regex; see LIGHT.
      *
-     * Mutations that must redden it: rewrite one chain as a bare literal; delete a token; add a
+     * Changes that must make it fail: rewrite one chain as a bare literal; delete a token; add a
      * token to the CSS without adding it to LIGHT.
      *
      * @return void
@@ -1076,7 +1056,7 @@ final class colour_tokens_test extends \basic_testcase {
      * The declared suffixes are the family's, byte for byte.
      *
      * The parity floor. It needs no sibling installed and no CI checkout, so a rename in one plugin
-     * reddens that plugin's own build rather than waiting for a cross-repo comparison that might be
+     * fails that plugin's own build rather than waiting for a cross-repo comparison that might be
      * skipping.
      *
      * @return void
@@ -1102,15 +1082,12 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * The two plugins' token blocks must be the same block under two prefixes.
      *
-     * The comparison is over the DECLARATIONS, not the raw block text. The prose around them
-     * differs on purpose - each file explains itself to its own reader - and comparing prose would
-     * make this test fail for reasons that are not the contract. Every declaration, its exact value
-     * and the complete name set are compared, so the thing the design actually claims is pinned.
+     * Compared declaration by declaration - every name and its exact value - not as raw block
+     * text, so the comments around the two blocks may differ.
      *
-     * The residue check is what closes the objection that a normalising comparison is where a real
-     * difference hides: after each plugin's own prefix is rewritten to the sentinel, NEITHER
-     * original prefix may survive in EITHER string, so an unprefixed or wrong-prefixed name cannot
-     * pass by looking the same on both sides.
+     * After each plugin's own prefix is rewritten to the sentinel, neither original prefix may
+     * survive in either string, so an unprefixed or wrong-prefixed name cannot pass by looking the
+     * same on both sides.
      *
      * @return void
      */
@@ -1162,8 +1139,8 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * CI must check the family sibling out, or the cross-repo comparison silently stops running.
      *
-     * This is the anti-vacuity control for the test above. A skip nobody notices is how a cross-repo
-     * lock quietly stops running, and the only place that can be observed is the workflow file.
+     * The control for the test above, which skips when block_dimensions is not installed; the
+     * workflow file is the only place that condition can be checked.
      *
      * @return void
      */
@@ -1198,18 +1175,18 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /* --------------------------------------------------------------------------------------- */
-    /* T4-T6 - the activation contract.                                                          */
+    /* The activation contract.                                                                  */
     /* --------------------------------------------------------------------------------------- */
 
     /**
      * The mode layer may assign the three plugin-owned decorative tokens and nothing else.
      *
-     * This is the test that makes decision #1 structural rather than aspirational. The other 31
-     * tokens follow core's own --bs-* values, so a wrongly firing activation block can only deepen
-     * a shadow, darken a veil and brighten a star - it cannot give the plugin a surface or an ink
-     * that core did not supply, which is the only way a plugin ends up dark on a light page.
+     * The other 31 tokens follow core's own --bs-* values, so a wrongly firing activation block can
+     * only deepen a shadow, darken a veil and brighten a star - it cannot give the plugin a surface
+     * or an ink that core did not supply, which is the only way a plugin ends up dark on a light
+     * page.
      *
-     * Mutations that must redden it: assign a surface token in the dark block; add an ordinary CSS
+     * Changes that must make it fail: assign a surface token in the dark block; add an ordinary CSS
      * rule inside it.
      *
      * @return void
@@ -1222,10 +1199,9 @@ final class colour_tokens_test extends \basic_testcase {
         $offenders = [];
         $checked = 0;
         foreach ($this->stylesheets() as $path) {
-            /* The media block's own selectors, matched EXACTLY. Asking whether a rule's selector
-               appears anywhere in the block's text would make ":root" - the token block itself -
-               look like a member of it, because the gated selector begins with those five
-               characters. */
+            /* The media block's own selectors, matched exactly. Asking whether a rule's selector
+               appears anywhere in the block's text would count the token block (body) and the
+               motion rule (:root) as members, because the gated selector contains both. */
             $mediaselectors = [];
             foreach ($this->at_rule_bodies($path, '@media (prefers-color-scheme') as $body) {
                 foreach (explode('}', $body) as $chunk) {
@@ -1268,22 +1244,19 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * Every colour-mode selector has body as its subject, and no dead mechanism survives.
      *
-     * The hazard is unchanged: a BARE attribute selector matches through any ancestor at any
-     * depth, and CSS descendant combinators have no nearest-ancestor-wins rule -
-     * theme_boost_union_fundaseg really does set the attribute on the navbar, which
-     * theme_boost_union then re-pins to light on five nested templates. What changed is the
-     * answer to it. Anchoring at :root foreclosed the leak by refusing to see any scope at all,
-     * including the one theme_moove writes on document.body, which cost the plugin its entire
-     * dark palette there. Requiring body as the SUBJECT forecloses the same leak for the same
-     * reason and costs nothing: there is exactly one body and its only ancestor is html, so
-     * "[attr] body" can only ever mean "html[attr] body" and no deeper scope can reach it.
+     * A bare attribute selector matches through any ancestor at any depth, and CSS descendant
+     * combinators have no nearest-ancestor-wins rule; themes do set the attribute on nested
+     * elements (theme_boost_union on its navbar, re-pinning "light" on the menus inside it). With
+     * body as the subject, "[attr] body" can only mean "html[attr] body", so no nested scope can
+     * reach the plugin, while a host that writes the attribute on body itself (theme_moove) still
+     * switches it. See DARK_ACTIVATION_SELECTOR.
      *
      * So a selector passes if it is body[attr...] or [attr...] body - the subject compiled by
      * DARK_ACTIVATION_SELECTOR and by the inert media block - and fails otherwise.
      *
-     * Mutations that must redden it: drop " body" from the second arm, leaving the bare attribute
-     * selector; put the subject back on :root, which no longer sees a body-scoped host; add a
-     * .theme-dark rule of the kind the sibling carried 77 of.
+     * Changes that must make it fail: drop " body" from the second arm, leaving the bare attribute
+     * selector; put the subject back on :root, which does not see a body-scoped host; add a
+     * .theme-dark rule.
      *
      * @return void
      */
@@ -1324,11 +1297,10 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * The OS-preference fallback is written, is gated, and nothing can reach the gate.
      *
-     * Three independent assertions, so no two are one assertion wearing two names: the block must
-     * EXIST (not merely be absent), every selector in it must carry the gate, and the gate
-     * attribute must appear in no runtime file in this plugin or in the installed sibling.
+     * Three independent assertions: the block exists, every selector in it carries the gate, and
+     * the gate attribute appears in no runtime file in this plugin or in the installed sibling.
      *
-     * Mutations that must redden it, one per assertion: delete the whole media block; drop the gate
+     * Changes that must make it fail, one per assertion: delete the whole media block; drop the gate
      * from the selector; write the attribute into any template.
      *
      * @return void
@@ -1366,8 +1338,8 @@ final class colour_tokens_test extends \basic_testcase {
         foreach ($this->family_roots() as $component => $root) {
             foreach ($this->source_files($root) as $path) {
                 if (basename($path) === 'colour_mode.php' || str_contains($path, '/tests/')) {
-                    /* The constant declaration is the contract's own dictionary and a test is its
-                       observer; neither can put an attribute on a page. */
+                    /* colour_mode.php only declares the name and tests only read it; neither puts
+                       the attribute on a page. */
                     continue;
                 }
                 if (str_contains(file_get_contents($path), colour_mode::MEDIA_OPTIN_ATTRIBUTE)) {
@@ -1401,7 +1373,7 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /* --------------------------------------------------------------------------------------- */
-    /* T7-T8 - the contrast obligations.                                                         */
+    /* The contrast obligations.                                                                 */
     /* --------------------------------------------------------------------------------------- */
 
     /**
@@ -1440,9 +1412,8 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * The effective background token for a selector, resolved through its ancestors.
      *
-     * The longest recorded selector that this one descends from wins, which is the resolution a
-     * reader performs by eye and the reason the split-across-two-rules form of the defect is
-     * catchable at all.
+     * The longest recorded selector that this one descends from wins, so a pairing split across an
+     * ancestor rule and a descendant rule is still caught.
      *
      * @param string $selector One selector part, whitespace already collapsed.
      * @param array $map Selector part => token suffix, from background_map().
@@ -1471,11 +1442,11 @@ final class colour_tokens_test extends \basic_testcase {
      * page. Large text is exempt because all three clear 3:1, but a rule with no resolvable
      * font-size counts as normal, never as large.
      *
-     * The rule is satisfiable rather than a constraint on the design: the filter tab's rest label
-     * is ink-muted and its active label sits on the indicator pill, which paints surface, where
-     * accent measures 6.33:1 dark and 5.36:1 light.
+     * The rule is satisfiable: the filter tab's rest label is ink-muted and its active label sits
+     * on the indicator pill, which paints surface, where accent measures 6.33:1 dark and 5.36:1
+     * light.
      *
-     * Mutations that must redden it: write the denied pairing in one rule; write the SAME pairing
+     * Changes that must make it fail: write the denied pairing in one rule; write the SAME pairing
      * split across an ancestor rule and a descendant rule; raise UNRESOLVED_BUDGET.
      *
      * @return void
@@ -1536,11 +1507,10 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * Every declared pair clears its floor, in all three resolutions.
      *
-     * The values are read out of the stylesheet and followed one hop against core's measured --bs-*
-     * map. A test that compared one PHP constant against another would prove only that two literals
-     * match; this one fails when the CSS changes, which is the point.
+     * The values are read out of the stylesheet and followed one hop against core's --bs-* map
+     * (see resolve()), so the test fails when the CSS changes, not only when these constants do.
      *
-     * Mutations that must redden it, all of them applied to the CSS: point favourite at #fd7e14 in
+     * Changes that must make it fail, all of them applied to the CSS: point favourite at #fd7e14 in
      * light (2.57 on surface); put ink-muted's 4.5 fallback back to var(--gray, #6a737b) (4.07 on
      * surface-inset); chain focus-ring to --bs-focus-ring-color (core does not flip it).
      *
@@ -1586,7 +1556,7 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /* --------------------------------------------------------------------------------------- */
-    /* T9-T10 - the focus indicator.                                                             */
+    /* The focus indicator.                                                                      */
     /* --------------------------------------------------------------------------------------- */
 
     /**
@@ -1620,13 +1590,12 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * A focus indicator must survive forced-colors mode, so it must be a real outline.
      *
-     * Two offences, both of which have shipped in this family: a focus rule that switches the
-     * outline off without drawing another one, and a focus rule whose only visible signal is a
-     * box-shadow. Windows High Contrast Mode does not render box-shadow at all, and it does not
-     * restore an author's outline: none. Either alone leaves a keyboard user with no indicator
-     * whatsoever on the branch nobody tests by hand.
+     * Two offences: a focus rule that switches the outline off without drawing another one, and a
+     * focus rule whose only visible signal is a box-shadow. Windows High Contrast Mode does not
+     * render box-shadow at all, and it does not restore an author's outline: none, so either leaves
+     * a keyboard user there with no indicator.
      *
-     * Mutation that must redden it: revert a filter-tab focus rule to outline: none plus an inset
+     * Change that must make it fail: revert a filter-tab focus rule to outline: none plus an inset
      * box-shadow.
      *
      * @return void
@@ -1694,15 +1663,14 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * A focus ring may never be drawn in the brand colour, nor in a literal.
      *
-     * The ring is anchored to the emphasis extreme, which flips and is theme-independent. Core's own
-     * --bs-focus-ring-color does NOT flip - measured, it is the same rgba in both modes, 1.02:1
-     * against the dark page - and the site owner's link colour measures 2.33:1 on the dark card of
-     * the fleet's live theme. A 3:1 obligation cannot be delegated to a colour somebody else picks.
-     * currentcolor is accepted on a branded island, whose ground is the same colour in both modes
-     * and where the emphasis extreme would be measuring against the page instead of against the
-     * thing the ring encloses.
+     * The ring chains --bs-emphasis-color, which flips. Core's --bs-focus-ring-color is the same
+     * translucent primary in both modes (about 1.26:1 against the dark page), and a site's link
+     * or brand colour is theme-chosen and can fall below 3:1 on a dark surface, so neither can
+     * carry the 3:1 obligation. currentcolor is accepted on a branded island, whose ground is the
+     * same colour in both modes and where the emphasis colour would be measured against the page
+     * instead of against the thing the ring encloses.
      *
-     * Mutation that must redden it: point one focus ring at the accent token, or at a literal.
+     * Change that must make it fail: point one focus ring at the accent token, or at a literal.
      *
      * @return void
      */
@@ -1747,7 +1715,7 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /* --------------------------------------------------------------------------------------- */
-    /* T11-T13 - the admin-configured colours and their islands.                                 */
+    /* The admin-configured colours and their islands.                                           */
     /* --------------------------------------------------------------------------------------- */
 
     /**
@@ -1755,10 +1723,10 @@ final class colour_tokens_test extends \basic_testcase {
      *
      * The admin's colours are instance data, not design tokens: the stylesheet reads them and must
      * never own them, or a site's chosen brand colour stops being its colour the moment the page
-     * goes dark. The final assertion is the anti-vacuity control - a ban over names nothing
-     * mentions would guard nothing at all.
+     * goes dark. The final assertion is the control: the stylesheet must still read the transport
+     * properties, or the ban guards nothing.
      *
-     * Mutations that must redden it: declare --dimension-customtextcolor in the dark block; declare
+     * Changes that must make it fail: declare --dimension-customtextcolor in the dark block; declare
      * any of these names anywhere in the stylesheet.
      *
      * @return void
@@ -1806,18 +1774,16 @@ final class colour_tokens_test extends \basic_testcase {
      * The admin colour transport survives from the template to the stylesheet.
      *
      * The hero emits the admin's colours as custom properties on the element it paints, and
-     * styles.css reads them from there. Nothing else in the pipeline can see that chain: phpcs does
-     * not read Mustache, the mustache lint validates markup rather than cross-file cascade, and
-     * stylelint never opens a template. This plugin's hero text colour was inert for exactly that
-     * reason - read five times in the stylesheet, written nowhere.
+     * styles.css reads them from there. No linter follows that chain across a template and a
+     * stylesheet, so a property the stylesheet reads but no template writes goes unnoticed.
      *
-     * The second half pins the {{^hasbgimage}} guard on the background. Both flags are a real,
-     * designed-for simultaneous state, and the wrapper already handles it with an overlay; without
-     * the guard an opaque inline background-color paints over the admin's photograph, and the
-     * mitigation rule in styles.css cannot undo it, because a class selector never outranks an
-     * inline style and !important is banned fleet-wide.
+     * The second half pins the {{^hasbgimage}} guard on the background. A hero can carry both a
+     * colour and an image, and the wrapper handles that with an overlay; without the guard an
+     * opaque inline background-color paints over the admin's photograph, and the
+     * background-color: transparent rule in styles.css cannot undo it, because a class selector
+     * never outranks an inline style and Moodle's stylelint config forbids !important.
      *
-     * Mutations that must redden it: remove the custom property from the hero's style attribute;
+     * Changes that must make it fail: remove the custom property from the hero's style attribute;
      * remove the {{^hasbgimage}} guard.
      *
      * @return void
@@ -1888,12 +1854,9 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * Inside a branded island, nothing reads a mode token.
      *
-     * An island is a surface painted with a colour the admin chose. Inside it "adapt" means relative
-     * to that colour, not relative to the page, so a mode token there is measuring against the wrong
-     * ground - and the island does not go dark when the page does, correctly, because the admin's
-     * colour did not change.
+     * An island is a surface painted with a colour the admin chose; see ISLAND_ROOTS.
      *
-     * Mutation that must redden it: paint an island with an ink or surface token.
+     * Change that must make it fail: paint an island with an ink or surface token.
      *
      * @return void
      */
@@ -1943,19 +1906,18 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /* --------------------------------------------------------------------------------------- */
-    /* T14-T15, T17 - the host signal, the faint ink and the token reads.                        */
+    /* The host signal, the faint ink and the token reads.                                       */
     /* --------------------------------------------------------------------------------------- */
 
     /**
      * The plugin never writes the host's colour-mode signal.
      *
-     * Whether the page is dark is not server-knowable - core's own answer needs a stored preference
-     * plus a client-side matchMedia resolution - and a wrong guess is precisely the defect this
-     * whole design exists to prevent. The attribute is the HOST's to write; the plugin only reads
-     * it, from CSS. Only Behat may name it, because a scenario is exercising the host's side of the
-     * contract rather than the plugin's.
+     * Whether the page is dark is not server-knowable: core (theme_boost, from 5.3) resolves it from
+     * a stored preference plus a client-side matchMedia check. The attribute is the host's to
+     * write; the plugin only reads it, from CSS. Behat is exempt because a scenario plays the
+     * host's side of the contract.
      *
-     * Mutations that must redden it: setAttribute the attribute in an AMD module; move the Behat
+     * Changes that must make it fail: setAttribute the attribute in an AMD module; move the Behat
      * step's script body into one.
      *
      * @return void
@@ -1964,7 +1926,7 @@ final class colour_tokens_test extends \basic_testcase {
         $offenders = [];
         foreach ($this->source_files() as $path) {
             if (basename($path) === 'colour_mode.php') {
-                /* The constant declaration is the contract's own dictionary, not a writer. */
+                /* colour_mode.php only declares the name; it writes nothing. */
                 continue;
             }
             if (str_contains($path, '/tests/behat/')) {
@@ -1993,12 +1955,11 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * ink-faint is the colour of an inactive control, and of nothing else.
      *
-     * It measures 2.70:1 on surface-inset and 3.04:1 on surface-alt in LIGHT mode. WCAG 1.4.3's
-     * incidental exception covers text in an inactive component; it covers nothing else, and it
-     * covers no non-text use at all - a border, an icon fill or a background drawn in it has no
-     * exception to stand on.
+     * It measures 3.07:1 on surface-inset and 3.16:1 on surface-alt in light mode, below the 4.5:1
+     * text floor. WCAG 1.4.3's incidental exception covers text in an inactive component and
+     * nothing else: a border, an icon fill or a background drawn in it has no exception to stand on.
      *
-     * Mutations that must redden it: use it as a border colour; use it as the colour of an ordinary
+     * Changes that must make it fail: use it as a border colour; use it as the colour of an ordinary
      * caption.
      *
      * @return void
@@ -2042,17 +2003,15 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * Every token read names a token the contract declares, or a named runtime property.
      *
-     * An unresolved var() does not fall back to anything: the whole declaration is invalid at
-     * computed-value time, so a mistyped token name is not a wrong colour, it is no colour. That
-     * failure is silent in every gate the pipeline has, and it is what makes a typo the real hazard
-     * rather than a missing per-site literal fallback.
+     * A var() naming an undeclared property, with no fallback, makes the whole declaration invalid
+     * at computed-value time, so a mistyped token name is not a wrong colour but no colour, and no
+     * linter reports it.
      *
-     * Two assertions. The first is the typo net. The second keeps the escape hatch honest: a
-     * property that is read but declared nowhere in the stylesheet has to be one of the three the
-     * design says is set on the element at runtime, so the list cannot quietly grow a fourth
-     * pseudo-token that no test measures.
+     * Two assertions. The first is the typo net. The second pins INLINE_DECLARED exactly: a
+     * property read but declared nowhere in the stylesheet must be one of those set on the element
+     * at runtime, so the list cannot quietly grow.
      *
-     * Mutation that must redden it: misspell a token name at any consumption site.
+     * Change that must make it fail: misspell a token name at any consumption site.
      *
      * @return void
      */
@@ -2117,7 +2076,7 @@ final class colour_tokens_test extends \basic_testcase {
      *
      * Every file that touches the favourite-star hook either renders the star or updates it after a
      * click, so every one of them has to know about both glyphs. Colouring a single fa-star is a
-     * WCAG 1.4.1 failure and was the one this plugin had.
+     * WCAG 1.4.1 failure.
      *
      * @return void
      */

@@ -63,7 +63,7 @@ final class helper_customfield_categories_test extends \advanced_testcase {
         $this->assertSame($feelid, (int) $enrol->get('categoryid'));
         $this->assertSame($lookid, (int) $bgcolor->get('categoryid'));
 
-        // The new locked-card fields land in Feel too.
+        // The locked-card fields land in Feel too.
         $locked = helper::find_field_by_shortname(constants::CFIELD_LOCKEDCARDMODE, helper::AREA_LP);
         $showdate = helper::find_field_by_shortname(constants::CFIELD_SHOWLOCKEDDATE, helper::AREA_LP);
         $this->assertSame($feelid, (int) $locked->get('categoryid'));

@@ -138,26 +138,28 @@ class view_competency_page implements renderable, templatable {
         foreach ($this->courses as $course) {
             $locked = calculator::is_locked($course, $this->userid);
             $cid = (int) $course->id;
-            /* Course-area values for client-side chip filtering. The keys keep their
-               historical "course:" prefix so stored selections and the DOM lookups in
-               chip_filters.js continue to match. */
+            /* Course-area values for client-side chip filtering, keyed "course:<shortname>" to
+               match the group shortnames remapped below; chip_filters.js pairs them by key. */
             $combinedvalues = [];
             foreach (($coursevalues[$cid] ?? []) as $sn => $val) {
                 $combinedvalues['course:' . $sn] = $val;
             }
+            /* fullname lands in a triple stash, so it keeps the escaped spelling; the label lands in
+               a double-stashed aria-label, so it is built from the plain one. */
+            $coursecontext = \core\context\course::instance($cid);
+            $plainname = format_string($course->fullname, true, ['context' => $coursecontext, 'escape' => false]);
             $data['courses'][] = [
                 'courseid' => $course->id,
-                'fullname' => format_string($course->fullname),
+                'fullname' => format_string($course->fullname, true, ['context' => $coursecontext]),
                 'courseurl' => (new moodle_url('/course/view.php', ['id' => $course->id]))->out(false),
-                'viewcoursestr' => get_string('view_course', 'local_dimensions', format_string($course->fullname)),
+                'viewcoursestr' => get_string('view_course', 'local_dimensions', $plainname),
                 'locked' => $locked,
                 'filtervaluesjson' => json_encode((object) $combinedvalues),
             ];
         }
 
-        /* Build the chip-filter groups. Course-area only: a competency-area group was
-           built from the page's single competency, so every card carried the same value
-           and pressing a chip matched all cards or none. */
+        /* Build the chip-filter groups, course area only: a competency-area group would give
+           every card the page's single competency's value, so a chip would match all or none. */
         $chipgroups = [];
         if (!empty($courseshortnames)) {
             $courselabels = \local_dimensions\chip_filters::get_field_labels('course', $courseshortnames);

@@ -1,0 +1,1 @@
+s/            foreach \(\$identityfields as \$index => \$field\) \{\n                \/\/ One placeholder per field: a named placeholder may appear only once per statement\.\n                \$likes\[\] = helper::sql_like_ai\('u\.' \. \$field, ':qf' \. \$index\);\n                \$sqlparams\['qf' \. \$index\] = \$likevalue;\n            \}\n//;

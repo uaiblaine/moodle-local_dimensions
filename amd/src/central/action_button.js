@@ -16,10 +16,10 @@
 /**
  * Build a compact icon + text action button for the hub's table rows.
  *
- * Shared by the cohort / participants / roles managers so every row action looks the same:
- * an outlined secondary button with a Font Awesome icon followed by the visible label. The
- * decorative icon is aria-hidden; the visible text is the accessible name (the "button"
- * Behat/ARIA selector matches it), so no separate title/aria-label is needed.
+ * Shared by the cohort, participants, roles and enrolment-method managers so every row action
+ * looks the same: an outlined secondary button with a Font Awesome icon followed by the visible
+ * label. The icon is aria-hidden and the visible text is the accessible name, so no separate
+ * title or aria-label is needed.
  *
  * @module     local_dimensions/central/action_button
  * @copyright  2026 Anderson Blaine

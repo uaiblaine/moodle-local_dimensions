@@ -52,7 +52,7 @@ trait instance_change_logger {
     }
 
     /**
-     * Snapshot the EFFECTIVE custom field values of an instance.
+     * Snapshot the effective custom field values of an instance.
      *
      * Every field is captured through get_value(), which falls back to the
      * field default when no data row exists yet — so a form save that merely

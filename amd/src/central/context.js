@@ -15,11 +15,11 @@
 
 /**
  * Shared context selector for the Competency hub. Lives above the dynamic tabs and
- * governs both of them: switching System / Course category (or picking a category)
+ * governs all of them: switching System / Course category (or picking a category)
  * pushes the context onto every tab pane and refreshes the active one — no page reload.
  * The category picker searches on demand (category_datasource) rather than listing every
- * category of the site; the headline counter adapts to the active tab (frameworks in
- * Structure, learning plans in Plans) from the counts each hit and the selected option carry.
+ * category of the site; the headline counter adapts to the active tab (learning plans in
+ * Plans, frameworks in the other tabs) from the counts each hit and the selected option carry.
  *
  * @module     local_dimensions/central/context
  * @copyright  2026 Anderson Blaine
@@ -196,9 +196,9 @@ const refreshActive = () => {
 
 /**
  * Reload the active tab pane on demand, showing the refresh control busy while it fetches.
- * Mirrors the enrol pane's discipline — disable and spin in a finally so a failed reload still
- * releases the control (never spins forever) and can be retried. reloadPane already covers the
- * pane itself with its busy overlay; this only signals the control the user pressed.
+ * The busy state is cleared in a finally, so a failed reload still releases the control for a
+ * retry. reloadPane already covers the pane with its busy overlay; this only signals the control
+ * the user pressed.
  *
  * @param {HTMLElement} button The refresh control.
  * @return {Promise<void>}
@@ -296,8 +296,7 @@ const setCategory = (bar, select) => {
 /**
  * Enhance the category select into a searchable single-select autocomplete, and wire its
  * change handler. When `reset` is set the wrapper is first restored to its pristine markup
- * so a stale selection from a previous coursecat visit is dropped (form-autocomplete keeps
- * no reset API, so re-rendering the region is the supported way to clear it).
+ * so a stale selection from a previous coursecat visit is dropped (see pristineCategoryNode).
  *
  * @param {HTMLElement} bar
  * @param {Boolean} reset Whether to drop the current selection before enhancing.
@@ -384,8 +383,8 @@ export const init = () => {
         }
     }
 
-    // The "show hidden categories" toggle rebuilds the picker client-side; it lives outside the
-    // category wrapper, so it survives the wrapper reset that a context switch performs.
+    // Bound once: the "show hidden categories" toggle lives outside the category wrapper, so it
+    // survives the wrapper reset that a context switch performs.
     const hiddencb = bar.querySelector(SELECTORS.hiddenCatsToggle);
     if (hiddencb) {
         hiddencb.addEventListener('change', () => applyHiddenCats(bar));
@@ -405,10 +404,8 @@ export const init = () => {
     });
 
     /*
-     * Restoring the saved tab is NOT done here any more. This module initialises after core's
-     * dynamic_tabs has already opened and fetched a tab, so clicking the saved one from here
-     * fetched a second tab concurrently and threw the first away. The saved tab now reaches core
-     * through the URL fragment, written synchronously by the local_dimensions/central/tab_hash
-     * template before core initialises, and the server pre-renders that same tab.
+     * The saved tab is not restored here: this module initialises after core/dynamic_tabs has
+     * already opened and fetched a tab, so switching now would fetch a second one. It reaches
+     * core through the URL fragment instead; see the local_dimensions/central/tab_hash template.
      */
 };

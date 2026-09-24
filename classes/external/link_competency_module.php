@@ -87,7 +87,7 @@ class link_competency_module extends external_api {
 
         return [
             'cmid' => (int) $cm->id,
-            'name' => $cm->get_formatted_name(),
+            'name' => $cm->get_formatted_name(['escape' => false]),
             'modname' => $cm->modname,
             'iconurl' => $cm->get_icon_url()->out(false),
             'ruleoutcome' => (int) $link->get('ruleoutcome'),

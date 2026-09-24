@@ -40,11 +40,10 @@ use local_dimensions\output\dynamictabs\structure;
  * viewer's remembered context behind admin_externalpage_setup(), whose check_access() wants
  * competencymanage at the system context. A course category's "More" menu links here with
  * pagecontextid, the way tool_lp's category pages are linked, and that entry must never reach
- * admin_externalpage_setup(): it pins the page to the system context and refuses anyone without
- * moodle/site:config before a line of this file runs (measured on 5.2: HTTP 500 "Access denied"
- * for a manager holding the capabilities in one category only). The category entry follows
- * tool_lp's own sequence instead, is locked to that category, and is never written into the
- * saved preference.
+ * admin_externalpage_setup(): it pins the page to the system context and throws accessdenied for
+ * a manager holding the capabilities in one category only. The category entry follows tool_lp's
+ * own sequence instead, is locked to that category, and is never written into the saved
+ * preference.
  */
 $pagecontextid = optional_param('pagecontextid', 0, PARAM_INT);
 $entrycontext = $pagecontextid > 0 ? context::instance_by_id($pagecontextid) : null;
@@ -99,22 +98,17 @@ if (!in_array($activetab, ['frameworks', 'structure', 'plans'], true)) {
 }
 
 
-// Resolve the shared context once so the page-level selector and both tabs agree.
+// Resolve the shared context once so the page-level selector and every tab agree.
 $resolved = helper::resolve_central_context($contexttype, $categoryid);
 $contexttype = $resolved['contexttype'];
 $categoryid = (int) $resolved['categoryid'];
 
 /*
- * Build the three tabs. core/dynamic_tabs opens the FIRST tab in the DOM and ignores the server's
- * active flag — unless the URL fragment names a tab, which the tab_hash template below supplies
- * synchronously before core initialises. With the fragment in place, core opens the same tab the
- * server marked active, so pre-render THAT one: it paints immediately while core's unconditional
- * getContent re-fetches it.
- *
- * Until 2026-08-06 this pre-rendered Frameworks unconditionally and let context.js click the saved
- * tab after load. That cost two concurrent getContent calls on every visit whose saved tab was not
- * Frameworks — measured 845 ms and 1023 ms starting in the same millisecond — with the Frameworks
- * pane left fully rendered and invisible, on top of a PHP render core discarded.
+ * Build the three tabs. core/dynamic_tabs ignores the server's active flag and opens the first
+ * enabled tab, unless the URL fragment names one; the tab_hash template below supplies that
+ * fragment synchronously before core initialises, so core opens the tab the server marked active.
+ * Only that tab is pre-rendered: it paints immediately while core's unconditional getContent
+ * re-fetches it.
  */
 // The locked flag rides with the pane data: it widens the listing to the category's descendants
 // (as tool_lp's category pages list) on the category entry only; the site entry stays 'self'.
@@ -153,7 +147,7 @@ if ($activetab === '') {
 
 // Init the shared view-state store first (before the context selector) with the resolved nav +
 // display, so the client saves changes against the state the page actually rendered (e.g. a
-// downgraded coursecat context) and context.js can read the saved tab to restore it on load.
+// downgraded coursecat context).
 $prefs['nav'] = [
     'tab' => $activetab,
     'contexttype' => $contexttype,
@@ -168,10 +162,10 @@ $prefs['lockedcontext'] = $locked;
 $prefs['storedcontext'] = ['contexttype' => $nav['contexttype'], 'categoryid' => $nav['categoryid']];
 $PAGE->requires->js_call_amd('local_dimensions/central/preferences', 'init', [$prefs]);
 
-// The context selector is page-level (governs both tabs); init it once on load.
+// The context selector is page-level (governs every tab); init it once on load.
 $contextbar = new contextbar($contexttype, $categoryid, (bool) $nav['showhiddencats'], $locked);
 $PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
-// The page-level sticky footer is shared by both tabs; init its coordinator once.
+// The page-level sticky footer is shared by every tab; init its coordinator once.
 $PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
 
 $tablabels = [

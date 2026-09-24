@@ -38,7 +38,8 @@ use local_dimensions\customfield\lp_handler;
 use local_dimensions\customfield\competency_handler;
 
 /**
- * Helper functions for local_dimensions plugin.
+ * Custom-field provisioning and cascade resolution, CSV custom-field conversion, the return-button
+ * context and the Competency hub's queries.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -88,12 +89,11 @@ class helper {
     }
 
     /**
-     * Create a custom field if it does not exist.
+     * Create a custom field in the area's first category, creating a category when there is none.
      *
-     * IMPORTANT: The $description parameter accepts only a plain string, not a lang_string.
-     * Since custom field descriptions are stored in the database and don't support dynamic
-     * translation, it's recommended to leave $description empty to avoid fixed-language issues.
-     * Field names use lang_string and are properly localized.
+     * Field names and descriptions are stored as plain text, so $displayname is resolved once, in
+     * the current user's language. Callers pass an empty $description so that no text in a single
+     * language is stored.
      *
      * @param string $shortname
      * @param string $type Field type (text, select, picture, etc.)
@@ -101,7 +101,8 @@ class helper {
      * @param \lang_string|null $displayname Localized display name
      * @param array $config Additional field configuration
      * @param string $description Field description (leave empty to avoid i18n issues)
-     * @return field_controller|null
+     * @return field_controller|null Null when core refuses the field, e.g. its type plugin
+     *     (customfield_picture) is not installed.
      */
     protected static function create_custom_field(
         string $shortname,
@@ -147,7 +148,7 @@ class helper {
 
         $handler->save_field_configuration($field, $record);
 
-        // Fetch the field again because the categories cache was rebuilt.
+        // Saving cleared the handler's category cache; read the saved field back.
         return self::find_field_by_shortname($shortname, $area);
     }
 
@@ -179,7 +180,7 @@ class helper {
                 'options' => join("\n", $optionstext),
                 'defaultvalue' => (string) $options[constants::DISPLAYMODE_COMPETENCIES],
             ],
-            '' // Description removed to avoid fixed-language issue (field name is self-explanatory).
+            ''
         );
     }
 
@@ -203,7 +204,7 @@ class helper {
             $area,
             new \lang_string('customcard', 'local_dimensions'),
             [],
-            '' // Description removed to avoid fixed-language issue.
+            ''
         );
     }
 
@@ -227,7 +228,7 @@ class helper {
             $area,
             new \lang_string('custombgimage', 'local_dimensions'),
             [],
-            '' // Description removed to avoid fixed-language issue.
+            ''
         );
     }
 
@@ -256,7 +257,7 @@ class helper {
                 'ispassword' => 0,
                 'link' => '',
             ],
-            '' // Description removed to avoid fixed-language issue.
+            ''
         );
     }
 
@@ -285,7 +286,7 @@ class helper {
                 'ispassword' => 0,
                 'link' => '',
             ],
-            '' // Description removed to avoid fixed-language issue.
+            ''
         );
     }
 
@@ -311,7 +312,7 @@ class helper {
             [
                 'options' => get_string('tag1_options', 'local_dimensions'),
             ],
-            '' // Description removed to avoid fixed-language issue.
+            ''
         );
     }
 
@@ -337,7 +338,7 @@ class helper {
             [
                 'options' => get_string('tag2_options', 'local_dimensions'),
             ],
-            '' // Description removed to avoid fixed-language issue.
+            ''
         );
     }
 
@@ -363,16 +364,16 @@ class helper {
             [
                 'options' => get_string('type_options', 'local_dimensions'),
             ],
-            '' // Description removed to avoid fixed-language issue.
+            ''
         );
     }
 
     /**
      * Get or create the template identifier (text) field.
      *
-     * Templates only — there is no native idnumber column on competency_template,
-     * so this custom field fills the same role the framework's idnumber plays for
-     * competency frameworks (search/lookup hint shown next to the short name).
+     * Templates only: competency_template has no idnumber column, so this field plays the role
+     * a framework's idnumber plays. It is shown next to the template name in the hub and is the
+     * identity column that the template CSV import matches existing templates on.
      *
      * @return field_controller|null
      */
@@ -422,38 +423,33 @@ class helper {
                 'defaultvalue' => '',
                 'defaultvalueformat' => FORMAT_PLAIN,
             ],
-            '' // Description removed to avoid fixed-language issue.
+            ''
         );
     }
 
     /**
-     * Ensure all custom fields exist for a given area.
+     * Ensure every managed custom field of an area exists, then sort them into their categories.
      *
-     * This is useful for initialization during plugin setup or first access.
+     * Waits up to 10 s for the provisioning lock and does nothing when it is not granted.
      *
      * @param string $area The area (lp or competency)
      */
     public static function ensure_custom_fields_exist(string $area): void {
-        /* Provisioning is check-then-act and neither customfield_field nor
-           customfield_category has a unique index (the shortname check only
-           runs in the admin form, not on the programmatic create path), so two
-           concurrent first requests would silently create duplicate field
-           definitions. The lock serialises provisioning; the per-field
-           existence checks below then see whatever the winner created. */
+        /* Provisioning is check-then-act and neither customfield_field nor customfield_category
+           has a unique index (core checks shortname uniqueness only in the admin form), so two
+           concurrent first requests would create duplicate fields. The lock serialises them. */
         $lockfactory = \core\lock\lock_config::get_lock_factory('local_dimensions');
         $lock = $lockfactory->get_lock('provisionfields', 10);
         if (!$lock) {
-            // Another request is provisioning right now; nothing to do here.
+            // Another request is provisioning the same fields.
             return;
         }
         try {
-            /* The plugin handlers are singletons (they override create()), so a
-               category/field list cached earlier in this request — before the
-               lock wait — would hide what the lock winner just created and the
-               existence checks below would re-create duplicates. Re-read fresh. */
+            /* The plugin handlers are singletons, so a field list cached before the lock wait
+               would hide what the lock winner created and the checks below would duplicate it. */
             self::get_handler($area)->reset_configuration_cache();
 
-            // Display mode only for templates.
+            // Template-only fields.
             if ($area === self::AREA_LP) {
                 self::get_display_mode_field();
                 self::get_subline_source_field();
@@ -489,8 +485,8 @@ class helper {
                 self::get_customscss_field($area);
             }
 
-            // Sort every provisioned field into the localized Feel/Look categories
-            // (self-healing: also fixes installs provisioned before the split).
+            // Sort the fields into the Feel/Look categories (also repairs sites whose fields
+            // were provisioned before those categories existed).
             self::organize_customfield_categories($area);
         } finally {
             $lock->release();
@@ -523,9 +519,8 @@ class helper {
     /**
      * Ordered "Look" custom-field shortnames (visual styling).
      *
-     * The two picture fields exist only in external image-handler mode; in built-in
-     * mode the filemanagers are appended to the form after the last category, which is
-     * why "Look" is kept last (see {@see self::organize_customfield_categories()}).
+     * The two picture fields exist only in external image-handler mode; in built-in mode the
+     * images are filemanagers the handlers add instead ({@see self::organize_customfield_categories()}).
      *
      * @return string[] Shortnames in display order.
      */
@@ -545,12 +540,10 @@ class helper {
     /**
      * Find or create one of the plugin's managed field categories for an area.
      *
-     * The category name is localized from a lang string at creation time (mirroring
-     * how the tag option lists are seeded), so it reflects the provisioning admin's
-     * language. Because the stored name is not re-synced and can differ per language,
-     * the created id is remembered in plugin config (`cfcat_<slug>_<area>`): a later
-     * provisioning run under a different language reuses it instead of creating a
-     * duplicate. Admin renames of the category also survive (we track by id, not name).
+     * The name is taken from a lang string once, in the provisioning user's language, and never
+     * re-synced. The category is therefore tracked by id in plugin config (`cfcat_<slug>_<area>`),
+     * so a later run in another language, or after an admin renamed it, reuses it instead of
+     * creating a duplicate. A remembered id that no longer exists gets a new category.
      *
      * @param string $area The area (lp or competency)
      * @param string $slug Short category identifier ('feel' or 'look')
@@ -580,11 +573,11 @@ class helper {
     /**
      * Sort the plugin's provisioned custom fields into the Feel/Look categories.
      *
-     * Idempotent and self-healing: creates the two categories (once), moves each
-     * managed field that exists into its category in the declared order, drops the
-     * leftover default category once it is empty, then orders Feel before Look.
-     * "Look" is deliberately ordered last so the built-in image filemanagers — which
-     * the handlers append after the core fields — land inside its accordion section.
+     * Idempotent: creates the two categories once, moves each existing managed field into its
+     * category in the declared order, deletes any other empty category of the area (the
+     * auto-created default), then orders Feel before Look. Look must be the last category: in
+     * built-in image mode the handlers append the image filemanagers after the custom fields,
+     * so they land inside Look's form section.
      *
      * @param string $area The area (lp or competency)
      * @return void
@@ -596,11 +589,8 @@ class helper {
         $feelid = (int) $feel->get('id');
         $lookid = (int) $look->get('id');
 
-        // Move each managed field into its category, in the declared display order.
-        // On the first run every field is still in the auto-created default category,
-        // so they all move here in sequence and end up in list order. Only moving when
-        // the category actually differs keeps later (throttled) runs write-free — an
-        // append-always call would rewrite sortorders on every provisioning pass.
+        // A move appends to the target category, so the first run leaves the fields in list
+        // order; moving only fields that are elsewhere keeps later runs free of writes.
         foreach ([$feelid => self::feel_category_fields(), $lookid => self::look_category_fields()] as $categoryid => $shortnames) {
             foreach ($shortnames as $shortname) {
                 $field = self::find_field_by_shortname($shortname, $area);
@@ -610,11 +600,9 @@ class helper {
             }
         }
 
-        // Drop any now-empty category (e.g. the auto-created "Other fields" default),
-        // but never the two we manage. Re-read fresh so the moves above are visible.
-        // get_categories_with_fields() also merges in core's shared categories; those
-        // keep their real stored component/area (core_customfield/shared) even though
-        // their original_* is cloned to this handler, so the guard below skips them.
+        // Re-read so the moves above are visible. On Moodle 5.1+ the list also holds core's
+        // shared categories, whose stored component/area stay core_customfield/shared; the
+        // component/area check below keeps them from being deleted.
         $handler->reset_configuration_cache();
         foreach ($handler->get_categories_with_fields() as $category) {
             $categoryid = (int) $category->get('id');
@@ -629,7 +617,7 @@ class helper {
             }
         }
 
-        // Feel first, Look last (Look last keeps the appended image filemanagers in it).
+        // Feel before Look, and Look to the end (beforeid 0).
         $handler->move_category($feel, $lookid);
         $handler->move_category($look, 0);
     }
@@ -640,11 +628,10 @@ class helper {
     /**
      * Ensure all custom fields exist for both LP and competency areas.
      *
-     * Throttled by a session-scoped timestamp so the work runs at most once
-     * per {@see self::FIELDS_ENSURED_TTL} window per admin session. The TTL
-     * means a field accidentally deleted via the customfield admin UI is
-     * re-created within the window — install.php, the upgrade tail block, and
-     * the settings updated-callbacks cover the immediate cases.
+     * Lazy fallback run from the footer hook, only for holders of moodle/site:config. A session
+     * timestamp limits it to once per {@see self::FIELDS_ENSURED_TTL} per session, so a field
+     * deleted in the custom field admin UI comes back within that window; install, upgrade and
+     * the settings callbacks provision immediately.
      */
     public static function ensure_all_fields(): void {
         global $SESSION;
@@ -669,9 +656,8 @@ class helper {
     /**
      * Updated-callback target for admin settings that toggle conditional fields.
      *
-     * Wired from settings.php so toggling `imagehandler` or `enablecustomscss`
-     * provisions any newly-conditional fields immediately, without waiting for
-     * the lazy hook fallback to fire.
+     * Set on `imagehandler` and `enablecustomscss` in settings.php, so the fields those settings
+     * make conditional are provisioned as soon as they change.
      */
     public static function ensure_custom_fields_on_setting_change(): void {
         self::ensure_custom_fields_exist(self::AREA_LP);
@@ -716,8 +702,8 @@ class helper {
     /**
      * Resolve the configured subline source for a learning plan template.
      *
-     * Falls back to {@see constants::SUBLINE_STATUS} when no value is set, which
-     * preserves the legacy behaviour (rating badge or "to do" pill).
+     * Falls back to {@see constants::SUBLINE_STATUS} (rating badge or "to do" pill) when no
+     * value is set.
      *
      * @param int $templateid Learning plan template ID
      * @return string One of the constants::SUBLINE_* values
@@ -732,9 +718,7 @@ class helper {
 
         $fields = \core_customfield\api::get_instance_fields_data([$field->get('id') => $field], $templateid);
         foreach ($fields as $data) {
-            // Select fields store the option key as intvalue, but its
-            // representation depends on the field type configuration. Try both
-            // value and intvalue to be defensive.
+            // A select stores its 1-based option index; get_value() returns it as an int.
             $value = $data->get_value();
             if (is_int($value)) {
                 $optionkeys = array_keys(constants::subline_source_options());
@@ -792,12 +776,11 @@ class helper {
      * Append the "enrolled and joinable" option to an already-provisioned
      * enrollmentfilter select field, if missing.
      *
-     * The provisioning path short-circuits on an existing field and never re-syncs its
-     * option list, so sites installed before the option existed keep a four-option select.
-     * This appends the fifth option (index 5), leaving the first four indices — and therefore
-     * every stored override — untouched. Idempotent: a re-run with the option already present
-     * is a no-op. Reads configdata fresh from the DB by field id so a stale cached controller
-     * cannot mask the real state; quietly returns when the field was never provisioned.
+     * Provisioning never re-syncs the option list of an existing field, so a field created
+     * before the option existed keeps four options. This appends the fifth (index 5), leaving
+     * the first four indices, and so every stored value, untouched. Reads configdata from the
+     * DB rather than from the cached controller. Does nothing when the field does not exist or
+     * already lists the option label as the current language spells it.
      *
      * @param string $area One of self::AREA_LP or self::AREA_COMPETENCY.
      * @return void
@@ -871,7 +854,7 @@ class helper {
      *
      * Storage: select customfield. Default option is `inherit`, which resolves to
      * the next layer (template, then the site-wide `local_dimensions/lockedcardmode`
-     * setting) at read time. Only meaningful in the Competency Tracker view.
+     * setting) at read time. Applies to locked course cards in both learner views.
      *
      * @param string $area The area (lp or competency)
      * @return field_controller|null
@@ -908,7 +891,7 @@ class helper {
      *
      * Storage: select customfield. Default option is `inherit`, which resolves to
      * the next layer (template, then the site-wide `local_dimensions/showlockeddate`
-     * setting) at read time. Only meaningful in the Competency Tracker view.
+     * setting) at read time. Applies to locked course cards in both learner views.
      *
      * @param string $area The area (lp or competency)
      * @return field_controller|null
@@ -1140,8 +1123,8 @@ class helper {
      * Resolve the effective "show availability date" flag for a learning plan template.
      *
      * Returns a bool. When the template stores `inherit` (or no row exists), falls back
-     * to the global `local_dimensions/showlockeddate`, which itself defaults to true
-     * (the setting stores boolean false only when it has never been saved).
+     * to the global `local_dimensions/showlockeddate`, which counts as true until the
+     * setting is first saved (get_config() returns false only for a missing setting).
      *
      * @param int $templateid Learning plan template ID
      * @return bool true to show the availability date on locked cards
@@ -1217,7 +1200,7 @@ class helper {
      *
      * @param int $templateid Learning plan template ID.
      * @param field_controller|null $field The customfield, or null.
-     * @param array $options The inherit/yes/no options map (keys are the option ids).
+     * @param array $options Options keyed by the SHOWRELATED_INHERIT/YES/NO constants, in stored order.
      * @param bool $global The global default used when the field is unset or inherits.
      * @return bool
      */
@@ -1343,9 +1326,10 @@ class helper {
     /**
      * Convert CSV cf_* tokens into the customfield_* form-data an instance_form_save expects.
      *
-     * Every managed select is set explicitly (index 0 = cleared) so an empty CSV cell clears the
-     * value rather than leaving a stale one; selects map their label/key to the stored 1-based
-     * index, falling back to a bare numeric cell. SCSS is set only when its column is present.
+     * Only columns present in $cfrow are converted, so a partial CSV cannot wipe the fields it
+     * omits: an absent column leaves its field untouched, a present but empty cell clears it
+     * (select index 0, empty text). Selects map their label (tag1, tag2, type) or canonical key
+     * (the cascade selects) to the stored 1-based index, falling back to a bare numeric cell.
      *
      * @param array $cfrow Map of cf_* token => raw CSV cell value.
      * @param string $area One of self::AREA_COMPETENCY (default) or self::AREA_LP.
@@ -1353,9 +1337,6 @@ class helper {
      */
     public static function customfields_to_formdata(array $cfrow, string $area = self::AREA_COMPETENCY): array {
         $data = [];
-        // Only set a customfield_* key when its column is present in the CSV: an ABSENT column
-        // leaves the field untouched, while a present-but-empty cell clears it. (An unconditional
-        // set would wipe fields whose column a partial/hand-authored CSV happens to omit.)
         if (array_key_exists('cf_bgcolor', $cfrow)) {
             $data['customfield_' . constants::CFIELD_CUSTOMBGCOLOR] = (string) $cfrow['cf_bgcolor'];
         }
@@ -1410,12 +1391,11 @@ class helper {
     /**
      * Read a learning plan template's stored custom-field values as CSV tokens for export.
      *
-     * Only real stored values are emitted, never a synthesised default: the
-     * {@see self::read_competency_cf_data()} guard on the data row id keeps core's
-     * $adddefaults controllers out. The cascade selects deliberately carry their raw
-     * `inherit` key rather than the value the get_template_* resolvers would produce,
-     * which would bake this site's global settings into every exported row. The picture
-     * fields are file-backed and skipped (not round-trippable in CSV).
+     * Only real stored values are emitted, never a synthesised default
+     * ({@see self::read_competency_cf_data()}). The cascade selects carry their raw `inherit`
+     * key rather than what the get_template_* resolvers return, which would bake this site's
+     * global settings into every exported row. The picture fields are file-backed and skipped
+     * (not round-trippable in CSV).
      *
      * The returned map also carries the `template_idnumber` key, which is the identity
      * column of the template CSV rather than one of its cf_* columns.
@@ -1446,8 +1426,8 @@ class helper {
         $result['cf_tag1'] = self::read_competency_select_label($templateid, constants::CFIELD_TAG1, $area);
         $result['cf_tag2'] = self::read_competency_select_label($templateid, constants::CFIELD_TAG2, $area);
         $result['cf_type'] = self::read_competency_select_label($templateid, constants::CFIELD_TYPE, $area);
-        /* display mode is stored as the 1-based option index and its option array is keyed by
-           the DISPLAYMODE_* integers in the same order, so the index equals the constant. */
+        /* The display mode options are keyed by the DISPLAYMODE_* integers (1, 2) in stored
+           order, so the stored 1-based index equals the constant. */
         $result['cf_displaymode'] = self::read_competency_select_key(
             $templateid,
             constants::CFIELD_DISPLAYMODE,
@@ -1502,9 +1482,9 @@ class helper {
     /**
      * Convert template CSV tokens into the customfield_* form-data an instance_form_save expects.
      *
-     * Shares the competency engine for the ten fields both areas provision, then adds the five
-     * lp-only fields. The same present/absent contract applies throughout: an ABSENT key leaves
-     * the field untouched, a present-but-empty cell clears it (index 0 / empty text).
+     * Converts the ten fields both areas provision through {@see self::customfields_to_formdata()},
+     * then the five lp-only fields, with the same contract: an absent key leaves the field
+     * untouched, a present but empty cell clears it (index 0 / empty text).
      *
      * @param array $cfrow Map of cf_* token => raw CSV cell value, optionally plus template_idnumber.
      * @return array Form-data keyed by customfield_<shortname> (+ _editor for the SCSS textarea).
@@ -1516,8 +1496,8 @@ class helper {
             $data['customfield_' . constants::CFIELD_TEMPLATE_IDNUMBER] = (string) $cfrow['template_idnumber'];
         }
         if (array_key_exists('cf_displaymode', $cfrow)) {
-            /* display_mode_options() is keyed by the DISPLAYMODE_* integers, so the keys are
-               cast to strings before the strict in-array search below sees them. */
+            /* display_mode_options() is keyed by the DISPLAYMODE_* integers; cast the keys to
+               strings for select_key_to_index()'s strict search. */
             $data['customfield_' . constants::CFIELD_DISPLAYMODE] = self::select_key_to_index(
                 array_map('strval', array_keys(constants::display_mode_options())),
                 (string) $cfrow['cf_displaymode']
@@ -1546,6 +1526,9 @@ class helper {
 
     /**
      * The data_controller carrying an instance's real stored value for a field, or null.
+     *
+     * api::get_instance_fields_data() adds a default controller (id 0) when no row is stored;
+     * that one is skipped, so callers never see a synthesised default.
      *
      * @param int $instanceid Competency id, or template id when reading the lp area.
      * @param string $shortname Custom-field shortname.
@@ -1687,6 +1670,9 @@ class helper {
     /**
      * The raw (unformatted, newline-split) option list of a select custom-field.
      *
+     * Splits the way {@see \customfield_select\field_controller::get_options()} does, without
+     * its format_string() and its leading empty option, so position + 1 is the stored index.
+     *
      * @param field_controller $field Select field controller.
      * @return string[] Zero-based list of option labels.
      */
@@ -1811,9 +1797,8 @@ class helper {
     /**
      * Whether a competency belongs to a plan (directly or via its template).
      *
-     * Used to decide if the plan layer of the cascade applies: a related-competency page reached
-     * from the accordion may point at a competency that is not in the plan, in which case only the
-     * competency's own value and the global setting apply (the plan layer is skipped).
+     * A related-competency link can open the tracker for a competency outside the plan; callers
+     * then skip the plan layer of the cascade and log no view in the plan.
      *
      * @param int $competencyid Competency id.
      * @param \core_competency\plan $plan The plan.
@@ -1831,12 +1816,12 @@ class helper {
     /**
      * Return the localized taxonomy metadata for a framework level.
      *
-     * Mirrors Moodle core's competency_summary_exporter logic:
-     * competency level -> framework taxonomy constant -> localized lang string.
+     * Resolves the term the way {@see \tool_lp\external\competency_summary_exporter} does:
+     * level -> framework taxonomy constant -> localized name.
      *
      * @param \core_competency\competency_framework $framework The framework
      * @param int $level The framework level
-     * @return array<string, mixed>
+     * @return array<string, mixed> Keys: level (int), key (taxonomy constant), term (localized, '' if unknown).
      */
     public static function get_taxonomy_at_level(\core_competency\competency_framework $framework, int $level): array {
         $taxonomykey = $framework->get_taxonomy($level);
@@ -1948,7 +1933,11 @@ class helper {
      *
      * Each competency's `path` holds only its ancestors with a leading sentinel 0
      * (root `/0/`, child of X `/0/<X>/`), so the breadcrumb is the ancestor shortnames
-     * root to parent. Shared by search_structure and list_related_competencies.
+     * root to parent. Shared by the hub's competency search, browse and related-competency
+     * web services and the Plans tab.
+     *
+     * The path is the plain spelling (tags stripped, nothing escaped): every consumer escapes it
+     * once itself, through a Mustache double stash, textContent or an explicit escape.
      *
      * @param array $pathsbyid Map of competency id to its `path` string.
      * @param \context $context Context used to format the ancestor shortnames.
@@ -1981,7 +1970,7 @@ class helper {
             $crumbs = [];
             foreach ($ancestors as $ancestorid) {
                 if (isset($names[$ancestorid])) {
-                    $crumbs[] = format_string($names[$ancestorid]->shortname, true, ['context' => $context]);
+                    $crumbs[] = format_string($names[$ancestorid]->shortname, true, ['context' => $context, 'escape' => false]);
                 }
             }
             $result[$id] = [
@@ -2007,7 +1996,7 @@ class helper {
      * - it carries at least one competency link, the only reason these services would ever be
      *   asked about it (both views build their card lists from competency_coursecomp).
      *
-     * Asked once for the whole list rather than per course, so the gate costs a single query.
+     * Existence and the link check are one query for the whole list.
      *
      * @param array $courseids Raw course ids as received from the client.
      * @return array Course id => full course record, for the courses that survived.
@@ -2042,10 +2031,9 @@ class helper {
     /**
      * Whether the PostgreSQL `unaccent` extension is installed and usable right now.
      *
-     * Read-only - it asks the pg_extension catalogue and nothing else, so it is safe on a
-     * request path. On non-PostgreSQL databases it returns false (accent-insensitivity there
-     * comes from the collation, not unaccent()). Creating the extension is ensure_unaccent()'s
-     * job and happens at install/upgrade time only.
+     * Read-only (one pg_extension lookup), so it is safe on a request path. Returns false on
+     * other databases, where accent-insensitivity comes from the collation. The extension is
+     * created only by {@see self::ensure_unaccent()}, at install and upgrade.
      *
      * @return bool True when unaccent() can be used in SQL (PostgreSQL only).
      */
@@ -2054,20 +2042,17 @@ class helper {
         if ($DB->get_dbfamily() !== 'postgres') {
             return false;
         }
-        // Ask the catalogue on each call rather than caching: PostgreSQL PHPUnit wraps each test
-        // in a rolled-back transaction, so a cached "created" flag would go stale once the CREATE
-        // EXTENSION is undone, and a later query would reference a now-missing unaccent().
+        // Not cached: on PostgreSQL, advanced_testcase runs each test in a transaction it rolls
+        // back, CREATE EXTENSION included, so a cached flag would outlive the extension.
         return $DB->record_exists_sql("SELECT 1 FROM pg_extension WHERE extname = 'unaccent'");
     }
 
     /**
      * Provision the PostgreSQL `unaccent` extension, creating it when it is missing.
      *
-     * This is DDL, so it belongs to install and upgrade - never to a request path. A
-     * least-privilege database account cannot create extensions at all, which is why failure
-     * is swallowed rather than raised: the site simply keeps accent-sensitive search, and
-     * sql_like_ai() learns that from has_unaccent() instead of from a statement that fails on
-     * every keystroke of every search box.
+     * DDL, so call it from install and upgrade only. A least-privilege database account cannot
+     * create extensions, so failure is swallowed: the site keeps accent-sensitive search, which
+     * sql_like_ai() learns from has_unaccent().
      *
      * @return bool True when unaccent() can be used in SQL afterwards (PostgreSQL only).
      */
@@ -2088,12 +2073,12 @@ class helper {
     }
 
     /**
-     * Return a case- and accent-insensitive LIKE fragment that works on MySQL/MariaDB and
-     * PostgreSQL. On PostgreSQL it wraps both operands in unaccent() when the extension is
-     * already installed - it never tries to install it, since this runs inside search web
-     * services - and otherwise falls back to an accent-sensitive comparison; on other databases
-     * it relies on the collation via core sql_like(). The bound parameter value must still be
-     * built with sql_like_escape() and the surrounding wildcards by the caller.
+     * Return a case- and accent-insensitive LIKE fragment for MySQL/MariaDB and PostgreSQL.
+     *
+     * On PostgreSQL both operands are wrapped in unaccent() when the extension is installed
+     * (never installed from here: this runs in search web services); without it the comparison
+     * stays accent-sensitive. Other databases rely on the collation via core sql_like(). The
+     * caller builds the bound value with sql_like_escape() and its own wildcards.
      *
      * The PostgreSQL unaccent() approach (which core otherwise reports as unsupported) follows
      * the technique of the local_aise plugin, "Accent Insensitive Search Enabler", copyright
@@ -2116,7 +2101,8 @@ class helper {
      * Return the localized rule outcome text for a competency.
      *
      * @param string $ruletype Simplified rule type: points|all
-     * @param int $ruleoutcome Outcome id: 1|2|3
+     * @param int $ruleoutcome competency::OUTCOME_EVIDENCE (1), OUTCOME_COMPLETE (2) or OUTCOME_RECOMMEND (3);
+     *     any other value returns ''.
      * @param \core_competency\competency $competency The competency
      * @param \core_competency\competency_framework|null $framework Optional framework
      * @return string
@@ -2150,9 +2136,8 @@ class helper {
     /**
      * Store a per-course return URL in session cache.
      *
-     * Each course ID gets its own cache entry keyed as 'course_{id}'.
-     * This avoids key collisions when the same course belongs to multiple
-     * plans or is accessed from different views (view-competency / view-plan).
+     * One entry per course, keyed 'course_{id}': the last page that listed a course decides
+     * where that course's return button leads, whichever plan or view it came from.
      *
      * @param moodle_url $url The URL to store as return destination.
      * @param array $validcourseids Array of course IDs where the button should appear.
@@ -2168,8 +2153,8 @@ class helper {
     /**
      * Store a return URL for a single course in session cache.
      *
-     * Convenience wrapper used by block_dimensions and other external callers
-     * that already know the specific course being navigated to.
+     * For callers that know the course being entered: view-competency.php's single-course
+     * redirect and block_dimensions' set_return_context web service.
      *
      * @param int $courseid The course ID.
      * @param moodle_url $returnurl The URL to return to (typically a plan view page).
@@ -2217,8 +2202,9 @@ class helper {
      *
      * The display mode is a template custom field, and block_dimensions routes on
      * it: DISPLAYMODE_PLAN yields a plan card leading to the overview, anything
-     * else yields competency cards leading straight to the tracker. A plan with no
-     * template has no such field, and the block treats it as plan mode.
+     * else (including a template without the field) yields competency cards leading
+     * straight to the tracker. A plan with no template counts as plan mode. Keep in step
+     * with block_dimensions' \block_dimensions\local\dataset_provider::resolve_plan_display_context().
      *
      * @param int $templateid The plan's template id, or 0 when it has none.
      * @return bool True when the overview is part of this learner's journey.
@@ -2238,17 +2224,13 @@ class helper {
      * The URL a single-course redirect leaves behind for the destination course.
      *
      * When the plan overview is routed to, the course points back at it, because
-     * this page would only redirect again. When it is not - competency-card mode -
-     * the overview is a page the learner never sees, so the course points at the
-     * tracker instead, carrying noredirect=1 so that the tracker renders rather
-     * than bouncing the learner straight back into the course they just left.
+     * the tracker would only redirect again. Otherwise (competency-card mode) the learner
+     * never sees the overview, so the course points at the tracker with noredirect=1,
+     * which renders it instead of bouncing the learner back into the course.
      *
-     * Rebuilds the tracker URL from raw ids rather than taking a moodle_url
-     * parameter, so it stays testable without a $PAGE. view-competency.php's own
-     * non-redirect branch builds the same URL from $PAGE->url instead; the two
-     * agree today only because both list exactly id, competencyid and
-     * noredirect. Keep them in step: a third parameter added to the tracker's
-     * $PAGE->set_url() would silently leave this copy behind.
+     * The tracker URL is rebuilt from ids so this stays testable without a $PAGE, while
+     * view-competency.php's non-redirect branch builds it from $PAGE->url plus noredirect.
+     * Keep them in step: a parameter added to that page's $PAGE->set_url() must be added here.
      *
      * @param int $planid The plan being viewed.
      * @param int $competencyid The competency being viewed.
@@ -2270,15 +2252,14 @@ class helper {
     /**
      * Build the competency tracker's own return-button context.
      *
-     * The tracker cannot receive the footer FAB: it leaves the page layout at
-     * core's default 'base', which the hook's allowlist excludes. It needs no
-     * return-context cache either, because the plan id is a required parameter
-     * of the page, so this button is built from the request alone.
+     * The footer FAB never renders on the tracker: the page has no course in context and keeps
+     * core's default 'base' layout, both of which {@see hook_callbacks::before_footer_html_generation()}
+     * rejects. No return-context cache is needed, because the plan id is a required parameter
+     * of the page.
      *
-     * The button is suppressed when the plan's display mode routes learners to
-     * competency cards rather than the plan overview: block_dimensions never
-     * shows them a plan card, so the tracker is their root, and the button would
-     * be offering a page they have never seen and are never routed to.
+     * Suppressed when learners of this plan are routed to competency cards
+     * ({@see self::plan_overview_is_routed()}): the tracker is then their root, and the
+     * overview is a page they are never sent to.
      *
      * @param int $planid The plan the tracker was opened from.
      * @param int $templateid The plan's template id, or 0 when it has none.
@@ -2453,10 +2434,10 @@ class helper {
     /**
      * Count the learner plans per template that still read the template live.
      *
-     * Draft, active and in-review plans take their name, description and due date from the
-     * template — api::update_template() rewrites them through a raw bulk UPDATE — while
-     * complete plans are frozen against user_competency_plan and are not touched. The shipped
-     * {@see self::count_plans_by_template()} counts every status, so it cannot answer
+     * Every plan that is not complete takes its name, description and due date from the
+     * template: api::update_template() rewrites them with one bulk UPDATE
+     * ({@see \core_competency\plan::update_multiple_from_template()}), which skips complete
+     * plans. {@see self::count_plans_by_template()} counts every status, so it cannot answer
      * "how many learners' plans will this rename".
      *
      * @param int[] $templateids Template IDs.
@@ -2734,13 +2715,12 @@ class helper {
     /**
      * Search the course categories the viewer may pick in the Competency hub, in tree order.
      *
-     * Built for sites with thousands of categories: the query is one SQL search on the name
-     * (accent-insensitive where the site supports it), capped at $limit hits, and only the hits
-     * are inspected further. Visibility is core's: a hidden category is offered only when asked
-     * for and only to a viewer who may see it. Competency readability is checked per hit unless
-     * the viewer already reads at the site, where no category can widen what the site grants
-     * (a narrower override on a category still cannot leak: the page re-checks the chosen
-     * category before showing anything).
+     * Built for sites with thousands of categories: one SQL search on the name (accent-insensitive
+     * where the site supports it) fetches at most twice $limit rows, and only those are inspected
+     * further. Visibility is core's: a hidden category is offered only when asked for and only to
+     * a viewer who may see it. Competency readability is checked per hit unless the viewer reads
+     * at the site, where no category can widen what the site grants; a narrower override on a
+     * category cannot leak either, because the page re-checks the chosen category.
      *
      * @param string $query Search text matched against the category name; empty for the first page.
      * @param bool $includehidden Whether hidden categories the viewer may see are included.
@@ -2764,8 +2744,7 @@ class helper {
         }
         $select = $where ? implode(' AND ', $where) : '';
 
-        // Over-fetch a little so the per-hit visibility and readability filters rarely leave a
-        // short page; anything past $limit is dropped.
+        // Over-fetch so the per-hit filters below rarely leave a short page.
         $records = $DB->get_records_select('course_categories', $select, $params, 'sortorder ASC', 'id, visible', 0, $limit * 2);
 
         $readsatsite = self::can_read_competency_context(\context_system::instance());
@@ -2813,10 +2792,9 @@ class helper {
     /**
      * Shape picker options for a list of course category ids, in the given order.
      *
-     * Names are the plain nested spelling: core's make_categories_list() hands back names
-     * already run through format_string(), the escaped spelling, and the picker and the
-     * locked label are Mustache double stashes that escape for themselves - an ampersand
-     * would render as "&amp;". Counts come from two aggregate queries over the ids.
+     * Names are the unescaped nested spelling, because the picker and the locked label are
+     * Mustache double stashes; core's make_categories_list() returns escaped names, which would
+     * render '&' as "&amp;". Counts come from two aggregate queries over the ids.
      *
      * @param array $categoryids Course category ids.
      * @return array List of options, each: id, name, frameworkcount, templatecount,
@@ -2854,14 +2832,17 @@ class helper {
     /**
      * Shape a set of sibling competency records into Structure-tree nodes.
      *
-     * Used by both the server-rendered first page of roots and the browse_structure web
-     * service, so a server-rendered node and a lazily-fetched node are identical. Each node
-     * is: id, parentid (int), shortname, idnumber, taxonomy (string), coursecount,
-     * activitycount, templatecount (int), depth, indent (int), haschildren (bool),
-     * canmanage (bool), ruletype, ruleconfig (string|null), ruleoutcome (int),
-     * rulelabel (string). Four batch queries (has-children, linked-course counts,
-     * linked-activity counts, linked-template counts) cover the whole page; depth and
-     * taxonomy are derived from each record's path.
+     * Used by the server-rendered first page of roots and by the browse_structure and
+     * get_structure_node web services, so a server-rendered node and a lazily-fetched one are
+     * identical. The node keys are declared in
+     * {@see \local_dimensions\external\browse_structure::node_structure()}: a key added here
+     * must be added there, or clean_returnvalue() strips it from the web-service results.
+     * Batch queries cover the whole page (children, linked courses, activities and templates,
+     * scale names, custom fields); depth and taxonomy are derived from each record's path.
+     *
+     * Names and labels are the plain spelling. Every sink escapes them once itself: the
+     * structure_node template (double stashes, including the data-* attributes the detail pane
+     * reads back through textContent) and the web-service consumers.
      *
      * @param array $records Sibling competency persistent objects (core_competency\competency).
      * @param competency_framework $framework The owning framework (for taxonomy + context).
@@ -2938,8 +2919,8 @@ class helper {
 
         $canmanage = has_capability('moodle/competency:competencymanage', $framework->get_context());
 
-        // Batch: resolve scale display names once. A competency with scaleid 0 inherits the
-        // framework default; the detail pane shows that effective scale.
+        // Batch: scale names. A competency without its own scale uses the framework's, and the
+        // detail pane shows that effective scale.
         $frameworkscaleid = (int) $framework->get('scaleid');
         $scaleids = [$frameworkscaleid];
         foreach ($records as $record) {
@@ -2952,15 +2933,17 @@ class helper {
         $scalenames = [];
         if (!empty($scaleids)) {
             foreach ($DB->get_records_list('scale', 'id', $scaleids) as $scale) {
-                $scalenames[(int) $scale->id] = format_string($scale->name, true, ['context' => $context]);
+                $scalenames[(int) $scale->id] = format_string($scale->name, true, ['context' => $context, 'escape' => false]);
             }
         }
 
-        // Batch: per-competency custom-field data for this page — the type/tag1/tag2 select
-        // labels (metadata chips) plus the custom background/text colours the detail header
-        // wears (mirrors the Plans tab), in one grouped query.
+        // Batch: type/tag labels and custom colours, one query.
         $cfdata = self::structure_customfield_data($ids);
 
+        // The select labels are admin text read raw from the option list, so they go through
+        // format_string() like the names: filters apply and no tag reaches a PARAM_TEXT return
+        // field, where it would fail the whole response.
+        $plain = ['context' => $context, 'escape' => false];
         $nodes = [];
         foreach ($records as $record) {
             $id = (int) $record->get('id');
@@ -2982,7 +2965,7 @@ class helper {
             $nodes[] = [
                 'id' => $id,
                 'parentid' => (int) $record->get('parentid'),
-                'shortname' => format_string($record->get('shortname'), true, ['context' => $context]),
+                'shortname' => format_string($record->get('shortname'), true, $plain),
                 'idnumber' => (string) $record->get('idnumber'),
                 'taxonomy' => get_string('taxonomy_' . $taxonomy, 'core_competency'),
                 'scale' => (string) ($scalenames[$effectivescaleid] ?? ''),
@@ -2998,9 +2981,9 @@ class helper {
                 'ruleoutcome' => (int) $record->get('ruleoutcome'),
                 'ruleconfig' => $record->get('ruleconfig'),
                 'rulelabel' => self::get_competency_rule_label($record->get('ruletype')),
-                'type' => (string) ($cfdata[$id][constants::CFIELD_TYPE] ?? ''),
-                'tag1' => (string) ($cfdata[$id][constants::CFIELD_TAG1] ?? ''),
-                'tag2' => (string) ($cfdata[$id][constants::CFIELD_TAG2] ?? ''),
+                'type' => format_string((string) ($cfdata[$id][constants::CFIELD_TYPE] ?? ''), true, $plain),
+                'tag1' => format_string((string) ($cfdata[$id][constants::CFIELD_TAG1] ?? ''), true, $plain),
+                'tag2' => format_string((string) ($cfdata[$id][constants::CFIELD_TAG2] ?? ''), true, $plain),
                 'bgcolor' => (string) ($cfdata[$id][constants::CFIELD_CUSTOMBGCOLOR] ?? ''),
                 'textcolor' => (string) ($cfdata[$id][constants::CFIELD_CUSTOMTEXTCOLOR] ?? ''),
             ];
@@ -3039,9 +3022,9 @@ class helper {
             'area' => self::AREA_COMPETENCY,
         ];
 
-        // Direct query against the core {customfield_*} tables — intentional for the grouped
-        // batch shape (the customfield API has no batch read across instances). Mirrors
-        // template_metadata_cache; re-validate if core changes the customfield schema.
+        // Direct SQL rather than handler::get_instances_data(), which loads every field and builds
+        // a controller per instance and field: only five fields' stored rows are needed, with the
+        // option list joined in. Same approach as template_metadata_cache.
         $sql = "SELECT d.id AS dataid, d.instanceid, f.shortname, f.configdata, d.intvalue, d.value
                   FROM {customfield_data} d
                   JOIN {customfield_field} f ON f.id = d.fieldid
@@ -3108,10 +3091,8 @@ class helper {
     /**
      * Compute a competency's tree depth from its path (root = 0).
      *
-     * Core stores competency.path as the ancestor chain only (with a leading 0) and never the node's
-     * own id: a root is /0/, a child of root is /0/<rootid>/, a grandchild is /0/<rootid>/<childid>/.
-     * The depth therefore equals the number of ancestor competencies, i.e. the count of non-zero path
-     * segments.
+     * competency.path lists only the ancestors after a leading 0 (root '/0/', grandchild
+     * '/0/<rootid>/<childid>/'), so the depth is the number of non-zero segments.
      *
      * @param string $path The competency.path value (e.g. /0/5/ for a child of competency 5).
      * @return int Depth, 0 for a root.
@@ -3201,7 +3182,39 @@ class helper {
     }
 
     /**
+     * Role names in the plain spelling, keyed by role id, for the hub's role pickers and labels.
+     *
+     * Core's role_get_name() passes a custom role name through format_string() in its escaping
+     * mode, which the hub's sinks (textContent, double stashes) would escape a second time. The
+     * hub names roles only in system and category contexts, where no course alias applies, so the
+     * name is the role's own or, for a standard role left unnamed, core's localised default.
+     *
+     * @param array $roleids Role ids; unknown ids are skipped.
+     * @return array Map of role id => plain name.
+     */
+    public static function plain_role_names(array $roleids): array {
+        $wanted = array_flip(array_map('intval', $roleids));
+        $system = \context_system::instance();
+        $names = [];
+        foreach (get_all_roles() as $role) {
+            $roleid = (int) $role->id;
+            if (!isset($wanted[$roleid])) {
+                continue;
+            }
+            if (trim((string) $role->name) !== '') {
+                $names[$roleid] = format_string($role->name, true, ['context' => $system, 'escape' => false]);
+            } else {
+                $names[$roleid] = role_get_name($role, null, ROLENAME_ORIGINAL);
+            }
+        }
+        return $names;
+    }
+
+    /**
      * Build the framework management rows for a context (Frameworks tab).
+     *
+     * Names are the plain spelling, because frameworks_row renders them through double stashes
+     * and the tab's JS reads data-name back through textContent.
      *
      * @param \context $context The resolved page context (system or course category).
      * @param bool $includehidden Whether to include hidden frameworks (default visible-only).
@@ -3218,8 +3231,8 @@ class helper {
             }
             $id = (int) $framework->get('id');
             $competencyids = competency::get_ids_by_frameworkid($id);
-            // Plain, single-line description for the card (the template truncates it with an
-            // ellipsis and keeps the full text in a title tooltip).
+            // Plain single-line text: the card clips it with an ellipsis and repeats it in a title
+            // tooltip.
             $description = content_to_text(
                 (string) $framework->get('description'),
                 (int) $framework->get('descriptionformat')
@@ -3227,8 +3240,12 @@ class helper {
             $description = trim(preg_replace('/\s+/', ' ', $description));
             $rows[] = [
                 'id' => $id,
-                'shortname' => format_string($framework->get('shortname')),
-                'idnumber' => s($framework->get('idnumber')),
+                'shortname' => format_string(
+                    $framework->get('shortname'),
+                    true,
+                    ['context' => $framework->get_context(), 'escape' => false]
+                ),
+                'idnumber' => (string) $framework->get('idnumber'),
                 'description' => shorten_text($description, 300),
                 'competencycount' => count($competencyids),
                 'visible' => (bool) $framework->get('visible'),
@@ -3267,11 +3284,10 @@ class helper {
     /**
      * Pin the custom SCSS editor field to plain text in a modal form.
      *
-     * The SCSS field is a textarea customfield rendered as a core editor element. On a new
-     * instance the editor defaults to the rich (TinyMCE) editor, and once the value is plain it
-     * still exposes a format selector. SCSS is always plain text, so this pins the editor value's
-     * format to FORMAT_PLAIN (which renders the plain textarea editor). The now-redundant format
-     * selector is hidden for the hub modals in styles.css. Call from definition_after_data().
+     * The SCSS field is a textarea customfield, rendered as an editor that opens in the rich
+     * text editor on a new instance. Pinning the value's format to FORMAT_PLAIN renders the plain
+     * textarea; the format selector it still shows is hidden for the hub modals in styles.css.
+     * Call from definition_after_data().
      *
      * @param \MoodleQuickForm $mform The form being rendered.
      * @return void
@@ -3367,9 +3383,8 @@ class helper {
     /**
      * Darken a hex colour by mixing it towards black.
      *
-     * Used to build the Learning plans detail-header gradient, which shades the
-     * template's custom background colour progressively darker (mirrors the design
-     * kit: base 0% -> ~16% at 48% -> ~34% at the end). Accepts 3- or 6-digit hex
+     * Used for the stops of the Learning plans detail-header gradient
+     * ({@see \local_dimensions\output\dynamictabs\plans}). Accepts 3- or 6-digit hex
      * with or without a leading '#'; an unparseable value falls back to black so
      * the caller always gets a valid colour to emit.
      *
@@ -3400,14 +3415,14 @@ class helper {
      * Complements core's api::duplicate_template(), which copies only the
      * template row and its competency links: this clones the lp-area custom
      * field rows (with any files embedded in them) and the built-in card /
-     * background images. Cohort links are intentionally NOT copied — core's
-     * sync_plans_from_template_cohorts_task would mass-create plans for every
+     * background images. Cohort links are deliberately not copied: core's
+     * sync_plans_from_template_cohorts_task would create a plan for every
      * cohort member on the next cron run.
      *
      * The customfield_data rows are cloned by direct SQL rather than through
-     * the customfield handler: handler reads silently skip fields whose type
-     * plugin is disabled (e.g. legacy customfield_picture rows), while the
-     * metadata cache still serves their files.
+     * the customfield handler: handler reads skip fields whose type plugin is
+     * disabled (e.g. customfield_picture rows from the external image mode),
+     * while the metadata cache still serves their files.
      *
      * @param int $sourceid Source template id.
      * @param int $targetid Target (freshly duplicated) template id.
@@ -3422,7 +3437,7 @@ class helper {
         $fs = get_file_storage();
         $syscontextid = \core\context\system::instance()->id;
 
-        // Files embedded in a custom field's data are keyed by the DATA row id,
+        // Files embedded in a custom field's data are keyed by the data row id,
         // not the instance id, under the field type's own component.
         $embeddedfileareas = [
             'textarea' => ['customfield_textarea', 'value'],
@@ -3446,9 +3461,9 @@ class helper {
             $row->instanceid = $targetid;
             $row->timecreated = time();
             $row->timemodified = time();
-            /* The unique index instanceid-fieldid-component-area-itemid forbids a
-               second row; the target may already have one (re-run, or the
-               observer's form-repost path), so replace instead of colliding. */
+            /* customfield_data allows one row per instance and field (unique index),
+               and the target may already have one (a re-run, or the template_created
+               observer saving the submitted form), so replace it instead of colliding. */
             $DB->delete_records('customfield_data', ['fieldid' => $row->fieldid, 'instanceid' => $targetid]);
             $newdataid = (int) $DB->insert_record('customfield_data', $row);
             $copiedfields++;
@@ -3473,9 +3488,9 @@ class helper {
             }
         }
 
-        /* Mandatory, not defensive: template_scss has no TTL and caches an empty
-           string on a miss, so a learner render between core duplication and this
-           copy would poison css_{target} permanently. */
+        /* Required: template_scss has no TTL and caches '' on a miss, so a render
+           between core's duplication and this copy would keep css_{target} empty
+           until the cache is purged. */
         template_metadata_cache::invalidate_template($targetid);
         scss_manager::invalidate_cache($targetid, self::AREA_LP);
 

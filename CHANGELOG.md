@@ -6,7 +6,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+
+- **The competency tracker, the Rules tab data and the accordion's course cards answer only for a
+  competency the plan reaches.** `view-competency.php` rendered any competency by id to anyone who
+  could read a plan of their own; `local_dimensions_get_competency_rule_data` returned the plan
+  owner's ratings to a reader core would refuse them (a draft reader holding only
+  `planviewdraft`); and `local_dimensions_get_competency_courses` answered for any competency and
+  hid a failed plan read. All three now read the plan through `plan_access` and ask
+  `plan_access::competency_scope()`, which admits the plan's own competencies (the archive for a
+  completed plan), a related competency only when `showrelated` and `showrelatedlink` resolve on for
+  the template and the viewer holds `moodle/competency:competencyview` in its context (the links the
+  accordion renders), and a direct child of a rule-bearing plan competency (the Rules tab's links).
+  Anything else gets the same not-found answer as a missing id. The rule data service also asks
+  core's `user_competency::can_read_user()`, as `api::get_plan_competency()` does.
+- **The hub no longer shows hidden templates, or another template's courses, to those who may not
+  see them.** `local_dimensions_competency_usage` listed hidden templates to users holding only
+  `templateview`; `local_dimensions_get_enrol_queue_status` answered for any course id and any cohort.
+- **The participant search follows `showuseridentity`.** It searched and returned email, ID number
+  and username whenever the caller held `moodle/site:viewuseridentity`, so a site listing only email
+  (the default) exposed the other two and let the search confirm a username. It now uses core's
+  `\core_user\fields::get_identity_fields()`.
+- **An exception message can no longer void a whole web-service response.** The template import and
+  the course progress service returned raw exception text in `PARAM_TEXT` fields; under developer
+  debugging a DML error's SQL made `clean_returnvalue()` reject every row of the response.
+
+### Changed
+
+- **Code comments are written for a Moodle developer, following Moodle's comment guidance.**
+  197 files lost the history, the measurements and the references to the local development
+  environment that had accumulated in them, and kept the reasons, contracts and edge cases a
+  maintainer needs at each line. 285 comments that no longer matched the code they describe were
+  corrected. No code changed: the comment-free token stream of every changed PHP and JS file is
+  identical before and after, and the AMD build was regenerated only because its module docblocks
+  and source maps carry the comment text.
+
 ### Fixed
+- **Names are escaped exactly once, on the hub and on the learner pages.** Course, competency,
+  framework, cohort, role and activity names were escaped by the server and again by the page, so an
+  ampersand showed as `&amp;`. Web services and template data now carry the plain spelling and each
+  sink escapes once; the hub's HTML sinks share the new `local_dimensions/central/escape` module, and
+  values core's exporters already escaped are decoded rather than escaped again. The icon picker
+  setting had the same defect. `hub_plain_names_test` and `learner_plain_names_test` pin both
+  directions with a bare `&` and a `<`.
 - **A completed plan's trail now reads the ratings core froze when the plan was completed.**
   `api::complete_plan()` archives every rating into `competency_usercompplan`, keyed by the plan,
   and `api::list_plan_competencies()` reads that archive for a complete plan and the live

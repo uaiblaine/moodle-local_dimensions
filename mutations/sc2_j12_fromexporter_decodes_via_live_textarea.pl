@@ -1,0 +1,1 @@
+s/return new DOMParser\(\)\.parseFromString\(String\(text\), 'text\/html'\)\.body\.textContent \|\| '';/const ta = document.createElement('textarea');\n            ta.innerHTML = String(text);\n            return ta.value || '';/;

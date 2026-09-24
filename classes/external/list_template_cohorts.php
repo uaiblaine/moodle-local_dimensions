@@ -84,9 +84,10 @@ class list_template_cohorts extends external_api {
                     AND p.userid IN (SELECT cm.userid FROM {cohort_members} cm WHERE cm.cohortid = :cid)",
                 ['tid' => $template->get('id'), 'cid' => $cohortid]
             );
+            // Plain spelling: the participants modal and the enrolment tab write it through textContent.
             $cohorts[] = [
                 'cohortid' => $cohortid,
-                'name' => format_string($cohort->name, true, ['context' => $context]),
+                'name' => format_string($cohort->name, true, ['context' => $context, 'escape' => false]),
                 'members' => (int) $members,
                 'plans' => (int) $plans,
             ];

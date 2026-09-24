@@ -1,0 +1,1 @@
+s/'categoryname' => format_string\(\(string\) \$course->categoryname, true, \['context' => \$context, 'escape' => false\]\),/'categoryname' => format_string((string) \$course->categoryname, true, ['context' => \$context]),/;

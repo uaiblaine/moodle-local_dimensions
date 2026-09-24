@@ -20,18 +20,11 @@ namespace local_dimensions\local;
  * Guards the plugin's Bootstrap 4 / Bootstrap 5 contract.
  *
  * Moodle 4.5 ships Bootstrap 4 and 5.0+ ship Bootstrap 5, and the bridging is asymmetric:
- * 4.5's forward bridge (theme/boost/scss/moodle/bs5-bridge.scss) is 116 lines covering only
- * g-0, btn-close, the ms/me/ps/pe spacers and float/text/border/rounded-start/end, while 5.x's
- * backward bridge runs past a thousand. A BS5 utility outside that short list resolves to
- * nothing on 4.5.
- *
- * This defect class has shipped three times - see CHANGELOG.md and commit f84d30a - and was
- * correctly root-caused and documented each time. It recurred anyway, and a 2026-08-06 sweep
- * still found 90 sites. The reason is enforcement, not diligence: the sibling rule about JS
- * data attributes has held at 100% compliance because the 4.05 Behat leg throws when a dropdown
- * fails to open, while the class rules failed silently with CI fully green. Nothing else in the
- * pipeline can see a class name that resolves to nothing - not phpcs, not the mustache lint, not
- * stylelint, which never reads a Mustache or JS file. This test is that missing observer.
+ * 4.5's forward bridge (theme/boost/scss/moodle/bs5-bridge.scss) covers only g-0, btn-close,
+ * the ms/me/ps/pe spacers and float/text/border/rounded-start/end, while 5.x's backward bridge
+ * (bs4-compat.scss) is far broader. A BS5 utility outside that short list resolves to nothing
+ * on 4.5, silently: phpcs, the Mustache lint and stylelint never read a class name out of a
+ * Mustache or JS file.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -63,11 +56,10 @@ final class bootstrap_compat_test extends \basic_testcase {
     /**
      * Saturated background utilities that need an explicit light text colour.
      *
-     * Bootstrap 4's .badge sets no colour at all, so a saturated badge renders near-black text
-     * on a dark fill; Bootstrap 5's .badge defaults to white, so a LIGHT background renders white
-     * on near-white. Both directions were measured on the running stacks: bg-success gives 3.07:1
-     * on 4.5 and bg-secondary gives 1.49:1 on 5.2, against the 4.5:1 AA floor. The only markup
-     * that is correct on both branches states its text colour explicitly.
+     * Bootstrap 4's .badge sets no colour, so a saturated badge renders near-black text on a dark
+     * fill; Bootstrap 5's .badge defaults to white, so a light background renders white on
+     * near-white (bg-success is 3.07:1 on 4.5 and bg-secondary 1.49:1 on 5.2, against the 4.5:1
+     * AA floor). Only markup that states its text colour is correct on both branches.
      *
      * @return array Background utility => the text utility it requires.
      */
@@ -145,9 +137,8 @@ final class bootstrap_compat_test extends \basic_testcase {
     /**
      * The exact class tokens the polyfill block defines behind the Bootstrap 4 gate.
      *
-     * Deliberately token-level, not family-level. A family-level check ("is gap-* covered?")
-     * passes while gap-2 alone is missing, which is precisely the silent gap this whole test
-     * exists to close.
+     * Token-level on purpose: a family-level check ("is gap-* covered?") would pass while gap-2
+     * alone is missing.
      *
      * @return array List of class tokens, e.g. gap-2, without the leading dot.
      */
@@ -230,7 +221,8 @@ final class bootstrap_compat_test extends \basic_testcase {
         /*
          * Structural helpers the polyfill needs but no markup names on its own: the .form-check
          * parent it keys off, the .form-check-input and .form-check-label it repositions, the
-         * .btn-close and .modal chrome core emits, and the body gate itself.
+         * .btn-close and .modal chrome core emits, the hub's page body class, and the body gate
+         * itself.
          */
         $structural = [
             bootstrap::BODY_CLASS_BS4,
@@ -261,12 +253,9 @@ final class bootstrap_compat_test extends \basic_testcase {
      */
     public function test_badges_state_their_text_colour(): void {
         /*
-         * Checked on every line carrying a background utility, NOT only lines that also say
-         * "badge". The first version of this test filtered on that word and stayed green while
-         * template_import_verdict.php returned bare 'bg-success' from a match arm - the word
-         * "badge" was in the method name, one line up. The exceptions below are the surfaces that
-         * legitimately carry a background without a text utility, because the plugin's own CSS
-         * sets the colour for them.
+         * Checked on every line carrying a background utility, not only lines that also say
+         * "badge": a match arm returning a bare 'bg-success' carries no such word. The exceptions
+         * are surfaces whose text colour the plugin's own CSS sets.
          */
         $exceptions = ['hero_header.mustache'];
         $offenders = [];
@@ -300,8 +289,8 @@ final class bootstrap_compat_test extends \basic_testcase {
     /**
      * A component wired through Bootstrap's markup data-API must carry both attribute spellings.
      *
-     * This rule has never been broken, because the 4.05 Behat leg catches it. It is asserted here
-     * so the guarantee survives a change in what Behat covers.
+     * Behat on Moodle 4.5 catches a missing data-toggle only where a scenario opens that component;
+     * this check covers every file.
      *
      * @return void
      */
@@ -339,10 +328,10 @@ final class bootstrap_compat_test extends \basic_testcase {
     /**
      * The plugin must not declare custom properties inside core's design-system namespace.
      *
-     * Moodle 5.2 ships theme/boost/scss/design-system/ with $mds-* tokens and 5.3 LTS brings MDS
-     * React, so an --mds-* declaration in the plugin's stylesheet is squatting a namespace core is
-     * actively expanding. The design kit's own --mds-* references document core's palette and are
-     * not covered here - only shipped CSS is.
+     * Moodle 5.2 ships theme/boost/scss/design-system/ with $mds-* tokens, so an --mds-*
+     * declaration in the plugin's stylesheet squats a namespace core is expanding. The design
+     * kit's own --mds-* references document core's palette and are not covered here - only
+     * shipped CSS is.
      *
      * @return void
      */
@@ -369,12 +358,11 @@ final class bootstrap_compat_test extends \basic_testcase {
     /**
      * Bootstrap 4 class names that 5.x resolves only through its deprecation layer.
      *
-     * The asymmetry runs both ways, and this is the direction that is easy to miss. These names DO
-     * resolve on 5.x - but only through theme/boost/scss/moodle/bs4-compat.scss, which wraps each
-     * in an @include deprecated-styles() (a red outline under behat-site and themedesignermode) and
-     * which Moodle 6.0 removes entirely, MDL-84465. Their Bootstrap 5 spellings are all inside
-     * 4.5's own 116-line forward bridge, so the BS5 name ALONE is correct on both branches: writing
-     * "ml-2 ms-2" side by side buys nothing and costs a deprecation.
+     * These names resolve on 5.x only through theme/boost/scss/moodle/bs4-compat.scss, which wraps
+     * each in @include deprecated-styles() (a red outline under behat-site and themedesignermode)
+     * and which Moodle 6.0 removes (MDL-84465). Their Bootstrap 5 spellings are in 4.5's forward
+     * bridge, or for visually-hidden in the plugin's polyfill, so the BS5 name alone is correct on
+     * both branches: writing "ml-2 ms-2" side by side only adds a deprecation.
      *
      * @return array Regex matching the deprecated class => the Bootstrap 5 spelling to use instead.
      */
@@ -403,8 +391,6 @@ final class bootstrap_compat_test extends \basic_testcase {
      * The companion rule to test_every_bs5_utility_used_is_polyfilled, and the reason the fix for a
      * missing BS5 utility is the polyfill rather than the BS4 name: writing the old name moves the
      * breakage from 4.5 to Moodle 6.0 instead of removing it.
-     *
-     * Mutations that must redden it: revert one visually-hidden to sr-only; write ml-2 beside ms-2.
      *
      * @return void
      */
@@ -437,7 +423,7 @@ final class bootstrap_compat_test extends \basic_testcase {
      * The Bootstrap 4 marker must be added wherever the plugin sets one of its page body classes.
      *
      * The polyfill is gated on that marker, so an entry point that forgets it renders unstyled on
-     * 4.5 while every static gate stays green.
+     * 4.5, with no error anywhere.
      *
      * @return void
      */

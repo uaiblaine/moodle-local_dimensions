@@ -28,8 +28,8 @@ final class csv_formula_test extends \basic_testcase {
     /**
      * Cells a spreadsheet would evaluate, and the harmless ones beside them.
      *
-     * Kept as a plain array rather than a data provider: no other test in the plugin uses one,
-     * and PHPUnit 11 reports the doc-comment metadata as deprecated.
+     * Kept as a plain array rather than a data provider: PHPUnit 11 (Moodle 5.1+) reports
+     * data-provider doc-comment metadata as deprecated.
      *
      * @return array Raw cell value => expected escaped value.
      */

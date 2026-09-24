@@ -18,7 +18,7 @@
  * Applies the ticked part of a learning plan CSV import, re-validating at write time.
  *
  * The only write path of the feature. Every selection is checked against a projection built from
- * the file and the database AS THEY ARE NOW, not as they were when the preview was drawn: an item
+ * the file and the database as they are now, not as they were when the preview was drawn: an item
  * whose verdict or fingerprint moved is refused and repainted rather than written.
  *
  * @package    local_dimensions
@@ -94,7 +94,7 @@ class template_csv_importer {
     /**
      * Apply the selected items and report what happened to each.
      *
-     * The file is re-analysed ONCE per call, not once per selection: the projection is a whole
+     * The file is re-analysed once per call, not once per selection: the projection is a whole
      * view of the file against the site, and building it per item would both cost N times as much
      * and let two selections be checked against two different states.
      *
@@ -155,7 +155,7 @@ class template_csv_importer {
             return $this->result($itemkey, template_import_verdict::OUTCOME_SKIPPED, 0);
         }
 
-        /* Re-run the structure roll-up over the SELECTION, not just the projection: unticking
+        /* Re-run the structure roll-up over the selection, not just the projection: unticking
            every resolvable competency of a row whose remaining competencies do not exist here
            would otherwise write the empty template the roll-up exists to prevent. */
         if ((int) $item['linksunresolved'] > 0 && empty($this->selected_links($item, $selection))) {
@@ -220,10 +220,9 @@ class template_csv_importer {
             $added = $this->write_links($templateid, $links);
             $transaction->allow_commit();
         } catch (\Throwable $e) {
-            /* Catch Throwable, not moodle_exception: core's own per-item idiom misses \Error and
-               \TypeError, which leave the delegated transaction open and moodle_database's
-               force_rollback stuck true — every later write in the request then dies with
-               dml_transaction_exception and the run ends half-written with no report. */
+            /* Catch \Throwable, not only moodle_exception: an \Error or \TypeError escaping here
+               would abort the run with the transaction still open and no report for the rows
+               already written. rollback() always rethrows $e, hence the inner catch. */
             try {
                 $transaction->rollback($e);
             } catch (\Throwable $ignored) {
@@ -273,9 +272,8 @@ class template_csv_importer {
             $record->contextid = (int) $this->target->id;
             return (int) api::create_template($record)->get('id');
         }
-        /* contextid is deliberately NOT sent on update: core throws a coding_exception when a
-           submitted contextid differs from the stored one, and sending the stored value would be
-           a pointless way to find that out. */
+        /* contextid is not sent on update: api::update_template() throws a coding_exception for
+           any change of context, so a matched template keeps its own. */
         $record->id = (int) $item['matchedid'];
         api::update_template($record);
         return (int) $item['matchedid'];
@@ -325,10 +323,10 @@ class template_csv_importer {
     /**
      * Write the custom fields through the handler, back-filling the identity column on create.
      *
-     * Never by SQL and never through instance_form_save_with_image(), which hardcodes
-     * $isnew = true — so the audit flag would be wrong — and wraps the call in a
-     * dml_write_exception retry that cannot recover inside a PostgreSQL transaction a failed
-     * statement has already poisoned.
+     * Not by SQL, and not through {@see lp_handler::instance_form_save_with_image()}: that
+     * hardcodes $isnewinstance = true, which would mislabel the audit event, and retries on
+     * dml_write_exception, which cannot recover inside a PostgreSQL transaction that the failed
+     * statement has already aborted.
      *
      * @param array $item The freshly projected item.
      * @param \stdClass $row The parsed source row.
@@ -345,9 +343,7 @@ class template_csv_importer {
         array $selection
     ): void {
         $cf = (array) $row->cf;
-        /* An option label this site does not have would otherwise resolve to index 0 - cleared -
-           which is a silent change. The preview offered the target's own options, so what lands
-           is the operator's choice. */
+        // Apply the operator's remaps; see template_import_analyser::build_remaps() for why.
         foreach ((array) ($selection['remaps'] ?? []) as $remap) {
             $token = (string) ($remap['token'] ?? '');
             if (isset(self::REMAPPABLE[$token]) && array_key_exists($token, $cf)) {
@@ -369,10 +365,10 @@ class template_csv_importer {
     /**
      * Add the selected competencies, then renumber the whole final set.
      *
-     * Nothing is ever removed — a link that produced user_competency and evidence rows must not
-     * vanish with them — so the renumbering covers the file's links first and then the kept
-     * extras, which is also what stops the file's own order from colliding with the retained
-     * rows' existing sortorder and silently falling back to id order.
+     * Nothing is ever removed: a competency on the template but absent from the file stays, since
+     * removing it would also drop it from every open plan built on the template. The renumbering
+     * puts the file's links first and the kept ones after, so the file's order cannot tie with a
+     * retained row's sortorder (list_competencies() breaks ties by id).
      *
      * @param int $templateid The template being written.
      * @param array $links The selected, resolved link items.
@@ -392,8 +388,7 @@ class template_csv_importer {
                 continue;
             }
             $fileids[] = $competencyid;
-            // A false return is the committed-duplicate path, never an error, and must not reach
-            // an event trigger's ->get().
+            // False means the link already exists: not an error, and not counted as added.
             if (api::add_competency_to_template($templateid, $competencyid)) {
                 $added++;
             }
@@ -412,9 +407,8 @@ class template_csv_importer {
                 'templateid' => $templateid,
                 'competencyid' => $competencyid,
             ]);
-            /* The lookup is guarded because get_record() returns literal false, and ->set() on
-               false raises an \Error that is not a moodle_exception. This is reachable: the add
-               above returns false without creating a row when the link already exists. */
+            /* get_record() returns false for a missing row, and ->set() on false would raise an
+               \Error rather than a moodle_exception. */
             if (!$link) {
                 continue;
             }
@@ -478,6 +472,11 @@ class template_csv_importer {
     /**
      * One result entry.
      *
+     * The message is cleaned to its PARAM_TEXT spelling: the apply web service returns it in a
+     * PARAM_TEXT field, and clean_returnvalue() rejects the WHOLE response when strip_tags() would
+     * change one value. Under developer debugging (and in PHPUnit) a moodle_exception's message
+     * carries its debuginfo, which for a DML error is the SQL and the bound CSV values.
+     *
      * @param string $itemkey The item key.
      * @param string $outcome The outcome constant.
      * @param int $templateid The template written, or 0.
@@ -489,7 +488,7 @@ class template_csv_importer {
             'itemkey' => $itemkey,
             'outcome' => $outcome,
             'templateid' => $templateid,
-            'message' => $message,
+            'message' => clean_param($message, PARAM_TEXT),
         ];
     }
 }

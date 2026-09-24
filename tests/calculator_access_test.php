@@ -26,7 +26,7 @@ namespace local_dimensions;
  */
 final class calculator_access_test extends \advanced_testcase {
     /**
-     * Active enrolment makes a course accessible; a course with no enrolment and no self instance does not.
+     * Active enrolment makes a course accessible; an unenrolled course whose self instance is disabled (the default) is not.
      *
      * @return void
      */

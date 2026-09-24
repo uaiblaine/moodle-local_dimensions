@@ -18,6 +18,8 @@ namespace local_dimensions\local;
 
 use core_competency\template;
 use core_competency\template_competency;
+use core_external\external_api;
+use local_dimensions\external\apply_import_templates;
 use local_dimensions\helper;
 
 /**
@@ -53,7 +55,7 @@ final class template_csv_importer_test extends \advanced_testcase {
 
     /**
      * The identity column is back-filled on create, so importing the same file twice is an
-     * update rather than a duplicate. This is the whole point of promoting it to a column.
+     * update rather than a duplicate.
      *
      * @return void
      */
@@ -149,14 +151,14 @@ final class template_csv_importer_test extends \advanced_testcase {
         $this->assertSame(template_import_verdict::OUTCOME_CREATED, $results[1]['outcome']);
         $this->assertNotFalse(template::get_record(['shortname' => 'Second']));
 
-        /* The property that matters is that no transaction was left open and none was force-rolled
-           back, either of which poisons every later write in the request. is_transaction_started()
-           cannot express it: advanced_testcase::setUp() wraps each test in its own delegated
-           transaction, so it is ALWAYS true here. Writing again after the run is what proves it. */
+        /* No transaction may be left open or force-rolled back, either of which poisons every later
+           write in the request. is_transaction_started() cannot show it, because advanced_testcase
+           wraps each test in a delegated transaction of its own on PostgreSQL; writing again after
+           the run does. */
         $after = $this->getDataGenerator()->get_plugin_generator('core_competency')
             ->create_template(['shortname' => 'Written after the run']);
         $this->assertNotFalse(template::get_record(['id' => (int) $after->get('id')]));
-        // Two, not three: the refused row wrote nothing, which is what this test is about.
+        // Two, not three: the refused row wrote nothing.
         $this->assertSame(2, $DB->count_records('competency_template'));
     }
 
@@ -199,8 +201,8 @@ final class template_csv_importer_test extends \advanced_testcase {
     }
 
     /**
-     * The past-due-date remedies do what they say: clearing drops the date, and the row is
-     * written rather than blocked.
+     * The clear-due-date remedy drops a past due date, and the row is written rather than
+     * blocked.
      *
      * @return void
      */
@@ -277,6 +279,75 @@ final class template_csv_importer_test extends \advanced_testcase {
 
         $this->assertSame(template_import_verdict::OUTCOME_SKIPPED, $results[0]['outcome']);
         $this->assertSame($before, $DB->count_records('competency_template'));
+    }
+
+    /**
+     * A failed write reports its message in the PARAM_TEXT spelling the apply web service returns.
+     *
+     * A DML exception's message carries its debuginfo in PHPUnit (and under developer debugging):
+     * the SQL and the bound CSV values, markup included. Returned raw, one such message makes
+     * clean_returnvalue() reject the whole apply response, every other row's outcome with it.
+     *
+     * @return void
+     */
+    public function test_a_failure_message_keeps_the_response_valid(): void {
+        global $DB;
+
+        // The importer's transaction must be the outermost one, as it is in a web service request.
+        $this->preventResetByRollback();
+        $this->prepare_site();
+        $csv = $this->csv([
+            ['rowtype' => 'template', 'template_idnumber' => 'TPL-F', 'shortname' => 'Doomed'],
+        ]);
+        $selections = $this->tick($csv, false, ['t0']);
+        $importer = new class (
+            template_csv_serializer::parse($csv),
+            \context_system::instance(),
+            false
+        ) extends template_csv_importer {
+            /**
+             * Fail the way a DML error does, with markup in the bound values.
+             *
+             * @param array $item The freshly projected item.
+             * @param \stdClass $row The parsed source row.
+             * @param string $remedy The chosen remedy.
+             * @param bool $isnew Whether a template is being created.
+             * @return int
+             * @throws \dml_write_exception Always.
+             */
+            protected function write_core_row(array $item, \stdClass $row, string $remedy, bool $isnew): int {
+                throw new \dml_write_exception(
+                    'value too long',
+                    'UPDATE {competency_template} SET description = ? WHERE id <> ?',
+                    ['<p>R&D < Ops</p>', 0]
+                );
+            }
+        };
+
+        $before = $DB->count_records('competency_template');
+        $results = $importer->apply($selections);
+        $message = $results[0]['message'];
+
+        $this->assertSame(template_import_verdict::OUTCOME_FAILED, $results[0]['outcome']);
+        $this->assertSame($before, $DB->count_records('competency_template'));
+        $this->assertStringContainsString(get_string('dmlwriteexception', 'error'), $message);
+        // Tags stripped, text kept in its plain spelling: not escaped here, not twice anywhere.
+        $this->assertStringContainsString('R&D < Ops', $message);
+        $this->assertStringNotContainsString('<p>', $message);
+        $this->assertStringNotContainsString('&amp;', $message);
+
+        $counts = array_fill_keys(template_import_verdict::outcomes(), 0);
+        $counts[template_import_verdict::OUTCOME_FAILED] = 1;
+        $response = external_api::clean_returnvalue(apply_import_templates::execute_returns(), [
+            'results' => [[
+                'itemkey' => $results[0]['itemkey'],
+                'outcome' => $results[0]['outcome'],
+                'message' => $message,
+                'html' => '',
+            ]],
+            'counts' => $counts,
+        ]);
+        $this->assertSame($message, $response['results'][0]['message']);
     }
 
     /**

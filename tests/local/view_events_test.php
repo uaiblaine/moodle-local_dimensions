@@ -22,8 +22,8 @@ use core_competency\plan;
 /**
  * Tests the core competency view events the learner pages log.
  *
- * A class-level docblock rather than a CoversClass attribute: moodle-cs on the 4.05 leg cannot see
- * attributes, and this plugin still supports 4.5.
+ * The covers tag stays in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
+ * attributes.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

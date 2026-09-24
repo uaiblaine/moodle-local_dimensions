@@ -255,11 +255,8 @@ class picture_manager {
      * authenticated-user default at every category. A template's pictures are shown to learners
      * on their plans, who hold no template capability at all, so a VISIBLE template's pictures
      * go to any logged-in user, as core serves course images; a hidden template's only to those
-     * who may read it in its context or who hold a plan based on it.
-     *
-     * Before this check every picture was served to any logged-in user by id: harmless while
-     * only site administrators created these objects, a cross-category leak once categories are
-     * delegated to different managers.
+     * who may read it in its context or who hold a plan based on it. Login itself is required by
+     * the caller, local_dimensions_pluginfile().
      *
      * @param string $filearea One of the FILEAREA_* constants.
      * @param int $itemid The competency or template id the file area is keyed by.

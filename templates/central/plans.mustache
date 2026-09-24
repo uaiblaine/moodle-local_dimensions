@@ -17,18 +17,13 @@
 {{!
     @template local_dimensions/central/plans
 
-    Learning plans tab: a two-panel master/detail. The left "Templates" panel is a plain
-    card (gear-collapsed display options, search, "New template", competency filter and the
-    template rows). The right "Plan" panel wears the selected template's custom colours: a
-    140deg gradient header (background = local_dimensions_custombgcolor darkened, text/icons =
-    local_dimensions_customtextcolor) with the status badge, count pills, gear-collapsed
-    display toggles and metadata chips, then a white body with the description and the
-    competency list (grip, name, taxonomy/idnumber/path, structure badge, actions menu).
-
-    A 22px divider between the panels resizes the master (persisted); its grip is pinned to
-    the viewport centre so it stays reachable however far the panels scroll. Client-side
-    search over name/idnumber, a multi-competency tag filter and a "show disabled plans"
-    toggle are all preserved. Template-level actions live in the page sticky footer.
+    Learning plans tab: a two-panel master/detail. The left "Templates" panel holds the display
+    options, the client-side search over name/idnumber, the competency filter and the template
+    rows. The right "Plan" panel shows the selected template: a gradient header in its custom
+    colours (headerbgstop* from local_dimensions_custombgcolor, headertextcolor from
+    local_dimensions_customtextcolor), then its description and competency list. The divider
+    between the panels resizes the master, and the width is kept in localStorage. Template-level
+    actions live in the page sticky footer.
 
     The System / Course category context selector is rendered once at page level
     (local_dimensions/central/contextbar); this tab receives the resolved context via its
@@ -481,10 +476,9 @@
                 </div>
             </div>
             {{#canmanage}}
-            {{! Selected-template actions, fed into the page-level sticky footer by plans.js init.
-                Hidden holder so the markup is authored server-side (with the per-template data
-                attributes) and moved into #sticky-footer verbatim. Follows core's raw pattern
-                (btn py-0 d-flex flex-column): icon above a centred label, no colour variant. }}
+            {{! Selected-template actions, authored here with their per-template data attributes in a
+                hidden holder; plans.js init copies them into the page sticky footer and removes the
+                holder. Follows core's raw sticky-footer button pattern (btn py-0 d-flex flex-column). }}
             <div data-region="plans-footer-actions" hidden>
                 <div class="sticky-footer-content-wrapper h-100 d-flex justify-content-center">
                     <div class="sticky-footer-content local-dimensions-central-footer-actions w-100 d-flex align-items-center gap-2 px-3 py-2">

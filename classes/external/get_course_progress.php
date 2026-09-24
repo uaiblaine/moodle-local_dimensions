@@ -43,7 +43,9 @@ use core\context\system as context_system;
  */
 class get_course_progress extends external_api {
     /**
-     * Define input parameters (args)
+     * Define input parameters.
+     *
+     * @return external_function_parameters
      */
     public static function execute_parameters() {
         return new external_function_parameters([
@@ -65,10 +67,9 @@ class get_course_progress extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), ['courseids' => $courseids]);
         $courseids = $params['courseids'];
 
-        /* The capability is site-wide and its archetypes hand it to every authenticated user,
-           so it only says that the caller may use the tracker at all - never which courses it
-           may be asked about. The id list arrives raw from the client, so each course is gated
-           on its own below, before any of its structure is read. */
+        /* local/dimensions:view is granted to every authenticated user by default, so it only
+           admits the caller to the tracker. The course ids come from the client, so each one is
+           gated below (helper::readable_competency_courses()) before any of its structure is read. */
         $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
         require_capability('local/dimensions:view', $systemcontext);
@@ -112,9 +113,9 @@ class get_course_progress extends external_api {
                     }
                 }
 
-                /* When completion tracking is off, the calculator returns only the enabled
-                   flag, so every other key must be defaulted here. Both of the keys below
-                   are required by execute_returns and would otherwise be undefined. */
+                /* Both return paths of calculator::get_course_section_progress() set every key;
+                   the defaults are a guard, since a missing required key (locked,
+                   formatted_start_date) would fail the response. */
                 $row = [
                     'courseid' => $courseid,
                     'enabled' => $data['enabled'],
@@ -132,8 +133,7 @@ class get_course_progress extends external_api {
 
                 /* activity and section are null on the shapes that do not name them. A
                    declared external_single_structure rejects an explicit null, so the key is
-                   omitted rather than sent - mirroring how the 'activity' key above already
-                   worked before this shape existed. */
+                   omitted rather than sent. */
                 if (!empty($data['activity'])) {
                     $row['activity'] = $data['activity'];
                 }
@@ -155,12 +155,26 @@ class get_course_progress extends external_api {
                     'is_future_date' => false,
                     'course_url' => '',
                     'sections' => [],
-                    'error' => $e->getMessage(),
+                    'error' => self::error_text($e),
                 ];
             }
         }
 
         return $results;
+    }
+
+    /**
+     * The error field of a course whose progress could not be read.
+     *
+     * Cleaned to its PARAM_TEXT spelling because clean_returnvalue() rejects the WHOLE response, every
+     * other course included, when strip_tags() would change one value. Under developer debugging a
+     * moodle_exception's message carries its debuginfo: for a DML error, SQL such as "status <> :active".
+     *
+     * @param \Throwable $e What the calculator threw.
+     * @return string
+     */
+    private static function error_text(\Throwable $e): string {
+        return clean_param($e->getMessage(), PARAM_TEXT);
     }
 
     /**
@@ -192,7 +206,9 @@ class get_course_progress extends external_api {
     }
 
     /**
-     * Define return structure (JSON Schema)
+     * Define return structure.
+     *
+     * @return external_multiple_structure
      */
     public static function execute_returns() {
         return new external_multiple_structure(

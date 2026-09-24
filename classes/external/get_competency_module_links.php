@@ -80,7 +80,8 @@ class get_competency_module_links extends external_api {
         $canmanage = has_capability('moodle/competency:coursecompetencymanage', $coursecontext);
         $canedit = has_capability('moodle/course:manageactivities', $coursecontext);
 
-        // Existing activity links for this competency in this course, keyed by cmid.
+        // This competency's activity links in every course, keyed by cmid; only this course's
+        // modules are matched below.
         $outcomes = [];
         foreach (course_module_competency::get_records(['competencyid' => $competencyid]) as $record) {
             $outcomes[(int) $record->get('cmid')] = (int) $record->get('ruleoutcome');
@@ -95,9 +96,10 @@ class get_competency_module_links extends external_api {
                 continue;
             }
             if (array_key_exists((int) $cm->id, $outcomes)) {
+                // Plain spelling: the links modal writes activity names through textContent.
                 $row = [
                     'cmid' => (int) $cm->id,
-                    'name' => $cm->get_formatted_name(),
+                    'name' => $cm->get_formatted_name(['escape' => false]),
                     'modname' => $cm->modname,
                     'modtype' => (string) $cm->modfullname,
                     'iconurl' => $cm->get_icon_url()->out(false),
@@ -120,7 +122,7 @@ class get_competency_module_links extends external_api {
             } else {
                 $available[] = [
                     'cmid' => (int) $cm->id,
-                    'name' => $cm->get_formatted_name(),
+                    'name' => $cm->get_formatted_name(['escape' => false]),
                     'modname' => $cm->modname,
                     'modtype' => (string) $cm->modfullname,
                 ];

@@ -62,8 +62,8 @@ final class export_templates_test extends \advanced_testcase {
      * Two templates in two different course categories export in one call.
      *
      * validate_context() must run only once, on the requesting hub context: calling it per
-     * template would change $PAGE's context twice away from a course category and emit an
-     * unexpected debugging() notice, which fails PHPUnit under --fail-on-warning.
+     * template would move $PAGE from one course category context to another, which
+     * moodle_page::set_context() reports with a debugging() notice the test does not expect.
      *
      * @return void
      */

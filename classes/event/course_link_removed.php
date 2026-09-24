@@ -31,7 +31,7 @@ use core\event\base;
  *
  * Core's competency-to-course link api fires no event for the link
  * lifecycle, so the hub logs it itself.
- * Course ratings for the competency are deleted along with the link.
+ * Core also deletes the competency's activity links in that course; course ratings are kept.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -67,7 +67,7 @@ class course_link_removed extends base {
     }
 
     /**
-     * No restore mapping: these events are not restored into course logs.
+     * No restore mapping: core has none for course_competency rows.
      *
      * @return string
      */

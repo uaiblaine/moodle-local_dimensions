@@ -36,8 +36,9 @@ use local_dimensions\task\process_enrol_method;
 /**
  * Web service: which combinations are still pending, and the fresh configured state of rows.
  *
- * The pending list covers the template's linked courses for the selected method + cohort,
- * whatever template originally queued the task (the combination itself is what is busy).
+ * The pending list covers the template's linked courses the caller may configure, for the
+ * selected method + cohort, whatever template originally queued the task (the combination
+ * itself is what is busy). Tracked ids outside that set are dropped from the answer.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -67,10 +68,11 @@ class get_enrol_queue_status extends external_api {
      * Report pending combinations and the fresh configured state of the tracked courses.
      *
      * @param int $templateid Template id.
-     * @param int $cohortid Cohort id.
+     * @param int $cohortid Cohort id (must be attached to the template).
      * @param string $method 'cohort' or 'self'.
      * @param array $courseids Courses the client is tracking (may be empty).
      * @return array Keys: pendingcourseids, items.
+     * @throws \moodle_exception When the cohort is not attached to the template.
      */
     public static function execute(int $templateid, int $cohortid, string $method, array $courseids = []): array {
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -89,6 +91,9 @@ class get_enrol_queue_status extends external_api {
         $context = $template->get_context();
         self::validate_context($context);
         require_capability('moodle/competency:templatemanage', $context);
+        if (!enrol_methods::cohort_linked($template->get('id'), $params['cohortid'])) {
+            throw new \moodle_exception('central_roles_cohortnotlinked', 'local_dimensions');
+        }
 
         $linked = [];
         foreach (enrol_methods::competency_course_ids($template->get('id')) as $ids) {
@@ -111,7 +116,18 @@ class get_enrol_queue_status extends external_api {
             }
         }
 
-        $tracked = array_values(array_unique(array_map('intval', $params['courseids'])));
+        // Answer only for courses the tab itself lists: linked to the template and configurable by
+        // the caller, as list_enrol_courses and queue_enrol_action decide. Any other id would turn
+        // the poll into an oracle for another course's enrolment instances or queue.
+        $candidates = [];
+        foreach ($params['courseids'] as $courseid) {
+            if (isset($linked[(int) $courseid])) {
+                $candidates[(int) $courseid] = true;
+            }
+        }
+        $allowed = enrol_methods::allowed_map(array_keys($candidates + $pendingids));
+        $tracked = array_keys(array_intersect_key($candidates, $allowed));
+        $pendingids = array_intersect_key($pendingids, $allowed);
         $statuses = enrol_methods::status_map($tracked, $params['cohortid']);
         $items = [];
         foreach ($tracked as $courseid) {

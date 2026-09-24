@@ -67,7 +67,7 @@ class template_cohort_added extends base {
     }
 
     /**
-     * No restore mapping: system-scoped, never part of a course backup.
+     * No restore mapping: logged in the template's system or category context, never in a course backup.
      *
      * @return string
      */

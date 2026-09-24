@@ -1,0 +1,1 @@
+s/competency: \{\n                id: id,\n                ruletype: config\.ruletype,/competency: {\n                id: id,\n                shortname: row.dataset.name,\n                ruletype: config.ruletype,/;

@@ -17,8 +17,8 @@
  * Shared view-state store for the Competency hub. Holds the user's last-visited navigation
  * (tab / context / category / selected framework / template) and the display-toggle choices in
  * memory, seeded once from the server on page load, and persists changes to Moodle user
- * preferences (debounced) so the hub is restored on the next visit — across sessions and
- * devices. Replaces the previous per-session sessionStorage persistence.
+ * preferences (debounced) so the hub is restored on the next visit, across sessions and
+ * devices.
  *
  * @module     local_dimensions/central/preferences
  * @copyright  2026 Anderson Blaine
@@ -58,16 +58,16 @@ const DISPLAY_DEFAULTS = {
  */
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
-/** @type {Object} Live navigation state (authoritative for the session). */
+/** @type {Object} Live navigation state (authoritative for this page load). */
 let nav = clone(NAV_DEFAULTS);
-/** @type {Object} Live display state (authoritative for the session). */
+/** @type {Object} Live display state (authoritative for this page load). */
 let display = clone(DISPLAY_DEFAULTS);
 /** @type {Object} Pending debounce timer ids, keyed by preference name. */
 const timers = {};
 /**
- * On a page locked to the category it was entered from, the context the viewer had SAVED before
- * this visit, written back in place of the locked one on every navigation write. Null when the
- * page is not locked. The entry context wins for the visit and is never remembered.
+ * The context the viewer had saved before this visit, when the page is locked to the course
+ * category it was entered from; saveNav() writes it in place of the locked context, so the entry
+ * context wins for the visit but is never remembered. Null when the page is not locked.
  *
  * @type {Object|null}
  */
@@ -89,7 +89,7 @@ const scheduleSave = (name, value) => {
 /**
  * Seed the store from the server-rendered state. Called once on page load.
  *
- * @param {Object} state {nav: Object, display: Object} from the server.
+ * @param {Object} state {nav, display, lockedcontext, storedcontext} from the server (central.php).
  */
 export const init = (state) => {
     const seed = state || {};

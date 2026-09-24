@@ -159,7 +159,8 @@ class list_template_participants extends external_api {
                 array_map(static fn($r) => (int) $r->userid, $records),
                 $context
             );
-            $modelname = format_string($template->get('shortname'), true, ['context' => $context]);
+            // Plain spelling, like the cohort names: the grid writes its cells through textContent.
+            $modelname = format_string($template->get('shortname'), true, ['context' => $context, 'escape' => false]);
             foreach ($records as $record) {
                 $isindividual = $record->templateid === null;
                 $cohorts = $membership[(int) $record->userid] ?? [];
@@ -172,8 +173,9 @@ class list_template_participants extends external_api {
                     'isindividual' => $isindividual,
                     'modelo' => $isindividual ? '' : $modelname,
                     'cohorts' => implode(', ', $cohorts),
-                    // Unlink and delete need planmanage in the user's own context (core parity);
-                    // the grid renders the two actions only where this is true.
+                    // Core checks plan::can_manage() before unlink and delete, which for the non-draft
+                    // plans a template creates is plan::can_manage_user(). The grid renders the two
+                    // actions only where this is true.
                     'canmanage' => (int) plan::can_manage_user((int) $record->userid),
                 ];
             }
@@ -206,7 +208,7 @@ class list_template_participants extends external_api {
         );
         $map = [];
         foreach ($rows as $row) {
-            $map[(int) $row->userid][] = format_string($row->name, true, ['context' => $context]);
+            $map[(int) $row->userid][] = format_string($row->name, true, ['context' => $context, 'escape' => false]);
         }
         return $map;
     }

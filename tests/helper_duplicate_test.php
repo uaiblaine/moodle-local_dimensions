@@ -91,7 +91,7 @@ final class helper_duplicate_test extends \advanced_testcase {
             'filename' => 'card.png',
         ], 'card-bytes');
 
-        // A file embedded in the SCSS textarea data row, keyed by the DATA id.
+        // A file embedded in the SCSS textarea data row, keyed by the data row id, not the template id.
         $scssfieldid = $this->lp_field_id(constants::CFIELD_CUSTOMSCSS);
         $sourcedata = $DB->get_record(
             'customfield_data',
@@ -129,7 +129,7 @@ final class helper_duplicate_test extends \advanced_testcase {
         $this->assertSame('#112233', $copiedcolor->charvalue);
         $this->assertSame('#112233', $copiedcolor->value);
 
-        // Embedded file re-keyed to the NEW data row id; source untouched.
+        // Embedded file re-keyed to the new data row id; source untouched.
         $copieddata = $DB->get_record(
             'customfield_data',
             ['fieldid' => $scssfieldid, 'instanceid' => $targetid],

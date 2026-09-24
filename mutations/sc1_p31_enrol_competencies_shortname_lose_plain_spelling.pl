@@ -1,0 +1,1 @@
+s/\$shortname = format_string\(\$competency->get\('shortname'\), true, \['context' => \$context, 'escape' => false\]\);/\$shortname = format_string(\$competency->get('shortname'), true, ['context' => \$context]);/;

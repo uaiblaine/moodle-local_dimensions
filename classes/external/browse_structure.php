@@ -89,9 +89,8 @@ class browse_structure extends external_api {
         $limitfrom = max(0, $params['limitfrom']);
         $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : helper::STRUCTURE_PAGE_SIZE;
 
-        // Validated in the framework's own context, never at the site: a manager holding
-        // competencyview in one course category only must not depend on the authenticated-user
-        // default there. An unknown or unreadable framework reads as empty, as before.
+        // Checked in the framework's own context, not the system one, so a competencyview grant in
+        // the framework's category is enough. An unknown or unreadable framework returns no items.
         $framework = competency_framework::get_record(['id' => $frameworkid]);
         if (!$framework) {
             return ['items' => [], 'total' => 0];

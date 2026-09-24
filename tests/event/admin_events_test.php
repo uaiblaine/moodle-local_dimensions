@@ -159,7 +159,7 @@ final class admin_events_test extends \advanced_testcase {
         $this->assertCount(0, $again);
         $sink->clear();
 
-        // Re-submitting unchanged fields alongside one real edit lists ONLY the
+        // Re-submitting unchanged fields alongside one real edit lists only the
         // edit: the diff compares effective values, so rows materialised at
         // their default by the full-form submit are not reported as changes.
         $formdata->{'customfield_' . constants::CFIELD_CUSTOMBGCOLOR} = '#112233';

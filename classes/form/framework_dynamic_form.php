@@ -17,9 +17,9 @@
 /**
  * Modal (dynamic) form to create or edit a competency framework — for the Competency hub.
  *
- * Create and edit of basic fields + per-level taxonomies. Mirrors core tool_lp: the scale and its
- * proficiency configuration are always editable; only WHICH scale is frozen (readonly select + form
- * constant) once the framework has user competencies, exactly like the native edit page.
+ * Basic fields, scale and per-level taxonomies, as on tool_lp's framework edit page: once the
+ * framework has user competencies the scale choice is frozen (form constant), while its
+ * proficiency configuration stays editable.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -66,8 +66,9 @@ class framework_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Whether the scale CHOICE is frozen: once a framework has user competencies core forbids
-     * switching scales, but the proficiency configuration stays editable (native parity).
+     * Whether the scale choice is frozen: once a framework has user competencies core refuses a
+     * scale change (competency_framework::validate_scaleid()); the proficiency configuration
+     * stays editable.
      *
      * @param competency_framework|null $framework The framework, or null on create.
      * @return bool
@@ -150,10 +151,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         $mform->addRule('idnumber', null, 'required', null, 'client');
         $mform->addRule('idnumber', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
 
-        /* Filepicker options must exist (their absence crashes tiny_media's embed dialog on
-           Moodle 5.0-5.2, MDL-78428), hence maxfiles=1; FILE_EXTERNAL keeps the upload repository
-           out of the picker, so media/images are insertable by URL only — descriptions have no
-           file area and internal/draft files would be silently lost on save. */
+        // The editor options are explained in competency_dynamic_form::definition().
         $mform->addElement(
             'editor',
             'description',
@@ -171,12 +169,11 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         );
         $mform->setType('scaleid', PARAM_INT);
         if ($this->scale_frozen($framework)) {
-            /* The scale is in use, so only WHICH scale is frozen; the proficiency config stays
-               editable via the Configure scale button. Unlike the native form (readonly only,
-               which a select ignores visually), disabled truly locks the UI: the field then
-               stays out of the POST, but the constant supplies scaleid to get_data() and the
-               scale-config JS still reads .value from a disabled select. No required rule here:
-               it validates the SUBMITTED values, where a disabled field never appears. */
+            /* The scale is in use: freeze the choice, keep the proficiency config editable. Core's
+               form sets readonly only, which a select ignores; disabled locks it, and although a
+               disabled field is not posted, the constant supplies scaleid to get_data() and the
+               scale-config JS still reads the select's value. No required rule: it would check
+               the posted values, where a disabled field never appears. */
             $scaleel->updateAttributes(['readonly' => 'readonly', 'disabled' => 'disabled']);
             $mform->setConstant('scaleid', (int) $framework->get('scaleid'));
         } else {
@@ -229,9 +226,9 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         $data->scaleid = (int) $framework->get('scaleid');
         $data->scaleconfiguration = $framework->get('scaleconfiguration');
 
-        /* The persistent's magic getter already explodes the comma-joined column into the
-           per-level array indexed from 1 — casting that array to string was a warning, which
-           developer debugging (Behat) escalates into an exception before the modal opens. */
+        /* The persistent's getter already returns the per-level array, indexed from level one. Do not
+           cast it to a string: the warning that raises becomes an exception under developer
+           debugging (e.g. Behat), and the modal fails to open. */
         $data->taxonomies = $framework->get('taxonomies');
 
         $this->set_data($data);
@@ -272,7 +269,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Validate shortname uniqueness and the scale-proficiency config (when editable).
+     * Validate shortname uniqueness within the context and that the scale configuration is complete.
      *
      * @param array $data Submitted data.
      * @param array $files Submitted files.

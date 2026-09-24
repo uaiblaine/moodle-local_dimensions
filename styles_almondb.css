@@ -20,23 +20,17 @@
   */
 
 /*
- * Theme-specific overrides for theme_almondb.
+ * Overrides for theme_almondb, loaded by theme_config::get_css_files() only when theme_almondb or
+ * a child of it is the active theme.
  *
- * Moodle core loads this file (see theme_config::get_css_files) ONLY when
- * theme_almondb - or a child theme inheriting from it - is the active theme.
- * Under any other theme it is never read, so it costs nothing.
- *
- * Keep every rule scoped to a plugin surface so styles never leak:
+ * Keep every rule scoped to a plugin surface:
  *   .local-dimensions-viewplan        Full plan overview
  *   .local-dimensions-viewcompetency  Competency tracker / detail
  *   .local-dimensions-central-page    Competency hub (admin)
  *   .local-dimensions-return-fab      Return-to-Plan FAB
  *
- * CI's stylelint never reads this file. core's Gruntfile.js:101 builds the CSS list for a
- * non-theme plugin as exactly "<component>/styles.css", so styles_*.css is unlinted.
- * That is a reason for MORE care here, not less - it is why tests/local/colour_tokens_test.php
- * globs styles_*.css alongside styles.css, and a colour literal in this file fails that suite
- * exactly as it would in styles.css. In particular it does NOT license !important, which is
- * banned fleet-wide: an override that has to beat a theme wins on specificity instead, and
- * anchoring on two ids settles it on the id count, which is compared first.
+ * Core's grunt stylelint lints only styles.css for a non-theme plugin, so this file is not linted.
+ * Hold it to the same rules anyway: no colour literals (tests/local/colour_tokens_test.php scans
+ * it) and no !important - beat a theme rule on specificity instead, where two id anchors win on
+ * the id count, which is compared first.
  */

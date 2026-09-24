@@ -1,0 +1,1 @@
+s/'userfullname' => new external_value\(PARAM_RAW, 'Role holder full name, unformatted: write it as text'\),/'userfullname' => new external_value(PARAM_TEXT, 'Role holder full name, unformatted: write it as text'),/;

@@ -14,11 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * "Manage cohorts" modal for a learning plan template (Competency hub Plans tab).
+ * Cohorts pane of a learning plan template's participants modal (Competency hub Plans tab).
  *
  * Lists attached cohorts with member/plan counts, attaches new cohorts (cohort autocomplete that
  * excludes the already-attached ones), detaches them, and queues background plan generation. After an
- * attach the modal body is re-rendered so the autocomplete resets to an empty, ready state.
+ * attach the pane is re-rendered, because a single-select autocomplete has no API to clear it.
  *
  * @module     local_dimensions/central/cohort_manager
  * @copyright  2026 Anderson Blaine
@@ -30,6 +30,7 @@ import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast} from 'local_dimensions/central/toast';
 import {iconButton} from 'local_dimensions/central/action_button';
@@ -110,7 +111,8 @@ const refresh = async(state) => {
  */
 const removeCohort = async(state, row) => {
     const cohortid = Number(row.dataset.cohortid);
-    const name = row.querySelector('th').textContent;
+    // The cell holds the plain name and the confirm body is HTML: escaped here, once.
+    const name = escapeHtml(row.querySelector('th').textContent);
     const [title, body, removelabel] = await Promise.all([
         getString('central_cohorts_remove', 'local_dimensions'),
         getString('central_cohorts_remove_confirm', 'local_dimensions', name),

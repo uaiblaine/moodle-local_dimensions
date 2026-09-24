@@ -1,0 +1,1 @@
+s/        if \(!enrol_methods::cohort_linked\(\$template->get\('id'\), \$params\['cohortid'\]\)\) \{\n            throw new \\moodle_exception\('central_roles_cohortnotlinked', 'local_dimensions'\);\n        \}\n//;

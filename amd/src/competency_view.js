@@ -141,8 +141,8 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 return;
             }
 
-            // Pre-load strings used by the error/retry UI so the synchronous
-            // renderer below can reference them without race conditions.
+            // Strings for the error/retry UI, which renders synchronously; the English
+            // defaults cover the moment before get_strings resolves.
             var loaderStrings = {
                 error: 'Could not load progress.',
                 retry: 'Retry',
@@ -191,9 +191,9 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 data.iscompleted = container
                     .closest('.local-dimensions-course-card-wrapper')
                     .attr('data-completed') === '1';
-                /* One section and one activity are both the server's call now, and arrive
-                   as data.cardmode. The template needs a boolean per branch, because
-                   Mustache cannot compare a value. */
+                /* The server picks the card shape and sends it as data.cardmode. Mustache
+                   cannot compare a value, so the timeline branch gets a boolean of its own;
+                   the activity and section branches key on their own payloads. */
                 data.istimeline = data.cardmode === 'timeline';
                 /* A one-section course has exactly one row, and its percentage is the
                    course's own: every tracked activity lives in that section. */
@@ -272,8 +272,8 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
             /**
              * Fetch a single course's progress with a 2s soft-timeout race.
              *
-             * The promise returned by Race resolves either when the AJAX call
-             * completes OR after 2 seconds — whichever comes first. The next
+             * The returned promise resolves either when the AJAX call settles
+             * or after 2 seconds, whichever comes first. The next
              * card therefore begins loading even if the previous request is
              * still pending, but the late response is still rendered when it
              * arrives. Hard rejections fall through to the error state.
@@ -384,8 +384,8 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                     return loadSequentially(completedOrLockedIds);
                 });
             }).fail(function() {
-                // Lightweight call failed — fall back to the previous behaviour
-                // and load every course sequentially without prioritisation.
+                // The status call failed: load every course in page order, without
+                // prioritisation; the completion tabs stay hidden.
                 loadSequentially(courseIds);
             });
         }
@@ -415,8 +415,8 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
 
         var rect = document.createElementNS(SVG_NS, 'rect');
         rect.setAttribute('fill', 'none');
-        /* The stroke is a class, not an attribute: an attribute is invisible to the stylesheet,
-           so this one colour could never follow the page's colour mode. */
+        /* No stroke attribute: the colour comes from a token through this class in styles.css,
+           so it follows the page's colour mode. */
         rect.setAttribute('class', 'local-dimensions-locked-border-rect');
         rect.setAttribute('stroke-width', STROKE_WIDTH);
         rect.setAttribute('stroke-dasharray', DASH_ARRAY);
@@ -462,12 +462,11 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
     /**
      * Resolves a stored icon identifier to its full CSS class string.
      *
-     * All output uses "fa fa-fw" as base prefix for Moodle FA4/FA6 compatibility.
-     *
-     * Stored values follow the pattern from the icon picker:
-     * - Direct FA class: "fa-star" -> "fa fa-fw fa-star" (includes core icons post-fix)
-     * - FA Solid: "xxx:fa-book" -> "fa fa-fw fa-book"
-     * - FA Brand: "xxx:fab-github" -> "fa fa-fw fab fa-github"
+     * Stored values come from the icon picker (local_dimensions\admin\setting_iconpicker):
+     * - FA class, the form core icons are stored in: "fa-star" -> "fa fa-fw fa-star"
+     * - FA Solid: "<component>:fa-book" -> "fa fa-fw fa-book"
+     * - FA Brand: "<component>:fab-github" -> "fa fa-fw fab fa-github"
+     * - A full class string ("fa fa-fw fa-star") is returned unchanged.
      *
      * @param {string} iconIdentifier The stored icon value
      * @return {string} The CSS class(es) for the icon
@@ -492,8 +491,8 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 return 'fa fa-fw ' + iconName;
             }
 
-            // Legacy core Moodle identifiers ("core:i/xxx") can't be resolved
-            // client-side without an icon map. Log a warning for debugging.
+            // Legacy "core:i/xxx" values need the core icon map, which only the server
+            // has; re-saving the setting stores the plain FA class instead.
             // eslint-disable-next-line no-console
             console.warn('[local_dimensions] Cannot resolve icon "' + iconIdentifier + '". ' +
                 'Re-save the setting to update the stored value.');

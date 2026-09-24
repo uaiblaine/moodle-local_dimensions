@@ -38,7 +38,7 @@ class plan_status {
      * Localised label for a plan status code.
      *
      * @param int $status One of the plan::STATUS_* constants.
-     * @return string
+     * @return string The label, or '' for an unknown status.
      */
     public static function label(int $status): string {
         $names = [

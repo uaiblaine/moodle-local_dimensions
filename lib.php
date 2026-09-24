@@ -114,8 +114,8 @@ function local_dimensions_set_return_context(moodle_url $url, array $validcourse
 /**
  * Store return context for a single course.
  *
- * Used by block_dimensions and other external callers that already know
- * the specific course being navigated to.
+ * Procedural wrapper of {@see helper::set_return_context_for_course()}, for callers that
+ * already know the course being entered.
  *
  * @param int $courseid The course ID.
  * @param moodle_url $returnurl The URL to return to (typically a plan view page).
@@ -137,11 +137,11 @@ function local_dimensions_get_return_context_for_course(int $courseid): ?array {
 /**
  * Declare the plugin's AJAX-updatable user preferences (hub and learner view state).
  *
- * Registers the four JSON preferences that persist the Competency hub's last-visited view and
- * display-toggle choices, plus the learner views' chrome (sort, filter, layout) and favourite
- * competencies, and the list of learner heroes folded to slim. Declaring them here
- * is what lets core_user's preference web service accept them from the plugin's JavaScript - no
- * plugin web service is involved. Each is writable only by its owner. Discovered by
+ * Registers the five JSON preferences that persist the Competency hub's last-visited view and
+ * display-toggle choices, the learner views' chrome (sort, filter, layout), favourite
+ * competencies, and the learner heroes folded to slim. Declaring them here is what lets
+ * core_user's preference web service accept them from the plugin's JavaScript - no plugin web
+ * service is involved. Each is writable only by its owner. Discovered by
  * get_plugins_with_function().
  *
  * @return array Preference definitions keyed by preference name.
@@ -165,12 +165,10 @@ function local_dimensions_user_preferences(): array {
 /**
  * Add the Competency hub to a course category's settings navigation (its "More" menu).
  *
- * Discovered by get_plugins_with_function('extend_navigation_category_settings', 'lib.php') on
- * every branch the plugin supports, exactly as tool_lp adds its two category pages. The node is
- * gated on MANAGING frameworks or templates in the category, not on reading them: reading is an
- * authenticated-user default at every category, so a read gate would put a management surface
- * in every student's menu. The page itself admits readers (like tool_lp), so a deep link still
- * works for a viewer who can only read.
+ * Same callback tool_lp uses for its two category pages, but gated on managing frameworks or
+ * templates in the category rather than on reading them: moodle/competency:competencyview is an
+ * authenticated-user default, so a read gate would put a management surface in every user's
+ * menu. The page itself admits readers, as tool_lp's do, so a deep link still works for them.
  *
  * @param navigation_node $navigation The category settings node to extend.
  * @param context $coursecategorycontext The course category's context.

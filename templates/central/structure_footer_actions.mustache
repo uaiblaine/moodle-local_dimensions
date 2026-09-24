@@ -19,10 +19,9 @@
 
     CRUD actions for the selected competency, rendered into the page sticky footer by the
     Structure tab. Buttons act on the module-level active row, so they carry no per-item
-    dataset. Follows core's raw sticky-footer button pattern (btn py-0 d-flex flex-column):
-    the icon sits above a centred label, no colour variant; the row is centred. Wraps the
-    buttons in the sticky-footer inner layout because the coordinator replaces the footer's
-    inner HTML wholesale.
+    dataset. Follows core's sticky-footer button pattern (btn py-0 d-flex flex-column: icon
+    above a centred label, no colour variant). Includes the sticky-footer inner layout
+    because local_dimensions/central/action_footer replaces the footer's inner HTML wholesale.
 
     Context variables required for this template:
     * canmanage (bool) - whether the current user may manage the framework

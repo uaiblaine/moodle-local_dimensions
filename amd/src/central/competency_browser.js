@@ -29,6 +29,7 @@ import ModalSaveCancel from 'core/modal_save_cancel';
 import ModalEvents from 'core/modal_events';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
+import {decodeEntities} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {applyMode, destroyBrowser, getCheckedIds, initBrowser} from 'local_dimensions/central/competency_tree_browser';
 import {reloadPane} from 'local_dimensions/central/tabs';
@@ -93,7 +94,8 @@ export const show = async(pane, region) => {
         hasframeworks: frameworks.length > 0,
         frameworks: frameworks.map((framework, index) => ({
             id: framework.id,
-            shortname: framework.shortname,
+            // The core exporter escapes the name, and the template's double stash would do it again.
+            shortname: decodeEntities(framework.shortname),
             selected: index === 0,
         })),
     };

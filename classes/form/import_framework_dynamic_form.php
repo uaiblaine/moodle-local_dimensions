@@ -17,10 +17,10 @@
 /**
  * Modal (dynamic) form to import a competency framework CSV into a chosen context.
  *
- * Runs inside a modal (core_form/modalform); the uploaded file is read from the user's
- * draft area in process_dynamic_submission() (the proven core dynamic-form + filepicker
- * pattern), parsed, and imported synchronously into the requested context — which may be
- * a course category, unlike the core tool.
+ * Runs inside a modal (core_form/modalform). The filepicker posts only a draft item id, so
+ * process_dynamic_submission() reads the file from the user's draft area, parses it and imports
+ * it synchronously into the requested context, which may be a course category (tool_lpimportcsv
+ * imports into the system context only).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

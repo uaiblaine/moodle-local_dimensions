@@ -17,14 +17,12 @@
  * Learning plans tab: CSV transfer of learning plan templates.
  *
  * The export modal offers the templates the tab currently lists (its select is built from the
- * rendered rows, so the offering can never exceed what is on screen) and streams the CSV the
+ * rendered rows, so the offering can never exceed what is on screen) and downloads the CSV the
  * local_dimensions_export_templates web service returns.
  *
- * The import side is a two-step handoff: an upload-only dynamic form, then a preview modal that
- * shows what the file would do to this site. The preview modal opens on the upload modal's hidden
- * event rather than inside its submit handler, so it does not race Bootstrap's own body-class
- * cleanup, and the preview is re-fetched by a header refresh button — which is all the
- * re-validation the "import the missing structures in another tab, then re-check" flow needs.
+ * Import is two steps: an upload-only dynamic form, then a preview modal showing what the file
+ * would do to this site. The preview's header refresh button re-fetches it, so frameworks imported
+ * in another browser tab can be re-checked without uploading the file again.
  *
  * @module     local_dimensions/central/plans_transfer
  * @copyright  2026 Anderson Blaine
@@ -109,11 +107,11 @@ const toggleSelectAll = (body, checked) => {
 };
 
 /**
- * Offer every structure the exported plans reference as a companion download.
+ * Offer every framework the exported templates reference as a companion download.
  *
- * A plan without its structures cannot be imported anywhere, and the import preview says so from
- * the other side; this is the same fact offered where the operator already is. The download goes
- * through the Structures tab's own existing web service.
+ * A template's competency links cannot be imported where their frameworks are missing (the import
+ * preview reports them), so the export offers those frameworks too. Each download goes through the
+ * Frameworks tab's local_dimensions_export_framework web service.
  *
  * @param {HTMLElement} body The modal body.
  * @param {Array} frameworks The structures the export web service reported.
@@ -142,7 +140,7 @@ const offerFrameworks = (body, frameworks) => {
 };
 
 /**
- * Download one referenced structure through the Structures tab's export service.
+ * Download one referenced framework through the Frameworks tab's export service.
  *
  * @param {HTMLElement} button The structure's download button.
  * @return {Promise<void>}
@@ -263,8 +261,7 @@ const refreshPreview = async(modal, settings) => {
         args: settings,
     }])[0];
     modal.setBody(result.html);
-    // The toast region is re-added after every paint: setBody replaces the whole body, and the
-    // page-level wrapper sits below the modal's z-index.
+    // Modal setBody() replaces the whole body, toast region included, so re-add it after every paint.
     await addToastRegion(modal.getBody()[0]);
 };
 
@@ -287,8 +284,9 @@ const toggleGroup = (button) => {
  * Read the operator's choices off the rendered rows.
  *
  * Only choices travel: an item key, the verdict and fingerprint the row was drawn with, the
- * chosen remedy and the ticked competency keys. No ids, no field values — the server re-derives
- * everything else from the file and the database.
+ * chosen remedy, the ticked competency keys and any option remaps (a field token and the chosen
+ * option of this site). No ids: the server re-derives everything else from the file and the
+ * database.
  *
  * @param {HTMLElement} body The modal body.
  * @return {Array} One selection per ticked row.
@@ -339,8 +337,8 @@ const paintResults = async(body, response) => {
         if (!row || !result.html) {
             return;
         }
-        // Through core's own DOM replacement rather than innerHTML: the markup is server-rendered
-        // Mustache, and this is the path that also runs any JS a template ships with.
+        // Core's replaceNode rather than outerHTML, so filters are notified of the new content.
+        // The web service returns no JS, hence the empty third argument.
         await Templates.replaceNode(row, result.html, '');
         flashRow(body.querySelector(selector));
     }));
