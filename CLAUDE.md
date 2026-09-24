@@ -769,11 +769,15 @@ Each `db/upgrade.php` step ends with
 - `$DB->get_records()` / `getDataGenerator()->create_*()` return **string** ids
   under both drivers — cast to `(int)` for typed-int signatures and normalise
   haystacks before strict `assertContains`.
-- Two suites are **file scanners** on `\basic_testcase`, not DB tests, and they exist because the
+- Three suites are **file scanners** on `\basic_testcase`, not DB tests, and they exist because the
   pipeline is structurally blind to what they check: `local/colour_tokens_test.php` (the colour
-  token contract, 20 arms) and `local/bootstrap_compat_test.php` (Bootstrap 4/5 class vocabulary
-  and badge text colours). Nothing in phpcs, the mustache lint or stylelint reads a class name out
-  of a Mustache or JS file, or a custom property across a template/stylesheet boundary. **Every
+  token contract, 20 arms), `local/bootstrap_compat_test.php` (Bootstrap 4/5 class vocabulary
+  and badge text colours) and `local/preference_queries_test.php` (every preference media query
+  names a defined value — `prefers-contrast: high` matches in no browser, the value is `more` —
+  and no raised-contrast override loses on specificity or drops an admin colour; its cascade
+  helpers are `block_dimensions`' `card_layout_test`'s, so fix both together). Nothing in phpcs,
+  the mustache lint or stylelint reads a class name out of a Mustache or JS file, a custom
+  property across a template/stylesheet boundary, or whether a valid rule ever applies. **Every
   assertion in them was mutation-checked**, and that is not ceremony: earlier drafts of
   `bootstrap_compat_test` passed while blind to the very defect they were written for. When you
   add an arm, delete the production line it guards and confirm it actually reddens.
