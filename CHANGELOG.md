@@ -42,6 +42,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and source maps carry the comment text.
 
 ### Fixed
+- **A template's metadata has the same shape whether it comes from the cache or was just built.**
+  `template_metadata_cache::get_template_metadata()` and `get_metadata_for_many()` returned a
+  freshly built payload without resolving it, so a cold read lacked the `enrollmentfilter` and
+  `singlecourseredirect` keys, and ordered its keys differently from a warm read of the same template.
+  Both readers now resolve the payload on a miss as they did on a hit. The cache still stores
+  the unresolved `inherit` keys, so a change to the site settings applies without purging it.
+- **The template metadata cache reads a template's own enrolment filter and single-course redirect.**
+  It decoded both select fields by parsing each option as `key|label`, but the fields have been
+  provisioned with plain labels since May 2026. So every template read as `inherit`
+  and got the site setting, whatever it stored. It now decodes by the option's position, as
+  `helper::get_template_enrollmentfilter()` does, which also works for fields that still spell
+  `key|label`. No page read these two keys from the cache, so neither defect was visible;
+  `block_dimensions` now batches its template reads through `get_metadata_for_many()`.
+  `template_metadata_cache_test` compares cold and warm reads of both readers, a mixed batch, and
+  the two option spellings; `mutations/template_metadata_cache.conf` breaks each guard.
 - **The raised-contrast styles never applied.** All four blocks asked for `prefers-contrast: high`,
   an early draft value no browser shipped; they now ask for `more`, the value Media Queries Level 5
   defines. They reach users for the first time: a stronger progress-ring groove and readout, a
