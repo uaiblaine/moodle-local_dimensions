@@ -1,0 +1,1 @@
+s/return \$allowed\[\$optionindex\] \?\? \$default;/\$parts = explode('|', trim(\$options[\$optionindex]), 2);\n        \$key = trim((string)(\$parts[0] ?? ''));\n        return in_array(\$key, \$allowed, true) ? \$key : \$default;/;
