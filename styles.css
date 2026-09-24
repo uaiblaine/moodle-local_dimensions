@@ -1208,6 +1208,21 @@ body[data-bs-theme="dark"],
     transform: translateY(0);
 }
 
+/* The hover lift is motion started by the pointer; the brightness change still answers it. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-enrol-btn,
+    .local-dimensions-learnmore-btn {
+        transition: filter 0.2s ease;
+    }
+
+    .local-dimensions-enrol-btn:hover,
+    .local-dimensions-enrol-btn:active,
+    .local-dimensions-learnmore-btn:hover,
+    .local-dimensions-learnmore-btn:active {
+        transform: none;
+    }
+}
+
 /* Custom FA icon inside locked overlay */
 .local-dimensions-locked-icon i {
     font-size: 32px;
@@ -1341,6 +1356,13 @@ body[data-bs-theme="dark"],
 
 .local-dimensions-timeline-toggle[aria-expanded='true'] .fa-chevron-down {
     transform: rotate(180deg);
+}
+
+/* The chevron still turns to show the state; only the turn is not animated. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-timeline-toggle .fa-chevron-down {
+        transition: none;
+    }
 }
 
 /* Continue shortcut: quiet on purpose - it points at where the learner left off, it is not
@@ -1572,6 +1594,13 @@ body[data-bs-theme="dark"],
         font-weight: 800;
     }
 }
+
+/* The arc is drawn at its value straight away instead of sweeping to it. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-progress-ring__progress {
+        transition: none;
+    }
+}
 /* stylelint-enable selector-class-pattern */
 
 /* Content Text */
@@ -1763,6 +1792,13 @@ body[data-bs-theme="dark"],
 .local-dimensions-accordion-toggle[aria-expanded='true'] .local-dimensions-accordion-icon {
     transform: rotate(180deg);
     color: var(--local-dimensions-ink-muted);
+}
+
+/* The chevron still turns to show the state; only the turn is not animated. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-accordion-icon {
+        transition: none;
+    }
 }
 
 /* Accordion Content */
@@ -2452,7 +2488,6 @@ body[data-bs-theme="dark"],
     font-weight: 500;
     color: var(--local-dimensions-ink-muted);
     cursor: pointer;
-    transition: all 0.2s ease;
 }
 
 .local-dimensions-filter-tab:hover {
@@ -3061,6 +3096,13 @@ body[data-bs-theme="dark"],
     transition: width 0.3s ease;
 }
 
+/* The bar is drawn at its value straight away instead of growing to it. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-course-progress-fill-lg {
+        transition: none;
+    }
+}
+
 .local-dimensions-course-progress-pct-lg {
     font-size: 0.75rem;
     color: var(--local-dimensions-ink-muted);
@@ -3147,6 +3189,13 @@ body[data-bs-theme="dark"],
 
 .local-dimensions-course-acts-toggle[aria-expanded='true'] .local-dimensions-course-acts-chevron {
     transform: rotate(180deg);
+}
+
+/* The chevron still turns to show the state; only the turn is not animated. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-course-acts-chevron {
+        transition: none;
+    }
 }
 
 .local-dimensions-course-acts {
@@ -3933,6 +3982,13 @@ a.local-dimensions-course-act-row:focus-visible {
     }
 }
 
+/* The keyframes slide the pane in, so the entrance goes altogether. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-tab-pane.active {
+        animation: none;
+    }
+}
+
 /* Tab pane content wrapper */
 .local-dimensions-tabs-content {
     background: var(--local-dimensions-surface);
@@ -4378,6 +4434,13 @@ a.local-dimensions-course-act-row:focus-visible {
     transition: width 0.6s ease;
 }
 
+/* The bar is drawn at its value straight away instead of growing to it. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-rules-progress-fill {
+        transition: none;
+    }
+}
+
 .local-dimensions-rules-progress-context {
     font-size: 0.8rem;
     margin-bottom: 16px;
@@ -4626,12 +4689,6 @@ a.local-dimensions-course-act-row:focus-visible {
     transform: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .local-dimensions-return-fab.local-dimensions-fab-snapping {
-        transition: none;
-    }
-}
-
 /* While dragging: follow the pointer instantly and don't apply hover lift. */
 .local-dimensions-return-fab.local-dimensions-fab-dragging {
     cursor: grabbing;
@@ -4675,6 +4732,25 @@ a.local-dimensions-course-act-row:focus-visible {
 
 .local-dimensions-return-fab[style*='flex'] {
     animation: dimensions-fab-appear 0.4s ease-out;
+}
+
+/* No lift on hover, focus or press, no rise on appearing, and a released drag lands on the
+   edge without the spring. The deeper shadow still answers hover and focus. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-return-fab,
+    .local-dimensions-return-fab.local-dimensions-fab-snapping {
+        transition: none;
+    }
+
+    .local-dimensions-return-fab:hover,
+    .local-dimensions-return-fab:focus,
+    .local-dimensions-return-fab:active {
+        transform: none;
+    }
+
+    .local-dimensions-return-fab[style*='flex'] {
+        animation: none;
+    }
 }
 
 /*
@@ -4775,7 +4851,6 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 .local-dimensions-collapsible-content {
     max-height: var(--collapsible-max-vh);
     overflow: hidden;
-    transition: max-height 0.3s ease;
 }
 
 .local-dimensions-collapsible.is-expanded .local-dimensions-collapsible-content {
@@ -4831,7 +4906,6 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 
 .local-dimensions-collapsible-toggle .fa {
     font-size: 0.7rem;
-    transition: transform 200ms ease;
 }
 
 /* Hero variant: the clipped description fades via a mask on the text itself, so
@@ -5089,6 +5163,13 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
         left var(--local-dimensions-tabs-indicator-duration) ease-out,
         width var(--local-dimensions-tabs-indicator-duration) ease-out,
         opacity 160ms ease-out;
+}
+
+/* The indicator jumps to the selected chip instead of sliding there. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-filter-tabs-indicator {
+        transition: none;
+    }
 }
 
 /* --- Paddles --- */
@@ -6528,6 +6609,13 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
     transform: translateX(19px);
 }
 
+/* The knob still moves to show the state; only the slide is not animated. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-plans-switch-knob {
+        transition: none;
+    }
+}
+
 .local-dimensions-plans-switch-input:focus-visible ~ .local-dimensions-plans-switch-track {
     outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
@@ -7675,6 +7763,18 @@ a.local-dimensions-central-links-badge-warn:focus {
     }
 }
 
+/* The chevron still turns to show the state; the turn and the children's slide-in are not
+   animated. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-enrol-group [data-region='chevron'] {
+        transition: none;
+    }
+
+    .local-dimensions-enrol-group [data-children]:not([hidden]) {
+        animation: none;
+    }
+}
+
 .local-dimensions-enrol-group [data-children] td,
 .local-dimensions-enrol-group [data-children] th {
     vertical-align: middle;
@@ -7833,6 +7933,13 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-tplimport-grouphead[aria-expanded='false'] .local-dimensions-tplimport-chevron {
     transform: rotate(-90deg);
+}
+
+/* The chevron still turns to show the state; only the turn is not animated. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-tplimport-chevron {
+        transition: none;
+    }
 }
 
 .local-dimensions-tplimport-groupcount {
@@ -8125,6 +8232,13 @@ body.local-dimensions-bs4 .form-switch .form-check-input:checked ~ .form-check-l
 
 body.local-dimensions-bs4 .form-switch .form-check-input:checked ~ .form-check-label::after {
     transform: translateX(1em);
+}
+
+/* Bootstrap 5's own switch drops this transition under the same preference. */
+@media (prefers-reduced-motion: reduce) {
+    body.local-dimensions-bs4 .form-switch .form-check-label::after {
+        transition: none;
+    }
 }
 
 body.local-dimensions-bs4 .form-switch .form-check-input:focus ~ .form-check-label::before {

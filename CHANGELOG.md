@@ -66,6 +66,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   translucent default and keeps the admin's colour. `preference_queries_test` pins that every
   preference query uses a defined value, that no raised-contrast override loses on specificity, and
   that none drops an admin colour its base rule reads.
+- **Reduced motion now stops the movement it had missed.** With `prefers-reduced-motion: reduce`,
+  the Return to plan button no longer lifts on hover, focus or press, rises into view or springs
+  onto the screen edge after a drag. The enrol and Learn more buttons no longer lift. Progress
+  bars and the progress ring are drawn at their value instead of growing to it. The filter tab
+  indicator jumps instead of sliding, and the tab panes and enrolment groups appear without
+  sliding in. Chevrons and switch knobs still show their state but no longer animate the change.
+  Finding a competency in the hub's structure tree jumps to it instead of scrolling smoothly.
+  The hub's loading spinner keeps turning, slowed, since its motion is what says the page is
+  working. `preference_queries_test` now fails the build for a lift on interaction, a transition
+  of position, size or a transform, a moving keyframe animation or a smooth scroll that the
+  preference does not switch off.
 - **Names are escaped exactly once, on the hub and on the learner pages.** Course, competency,
   framework, cohort, role and activity names were escaped by the server and again by the page, so an
   ampersand showed as `&amp;`. Web services and template data now carry the plain spelling and each
