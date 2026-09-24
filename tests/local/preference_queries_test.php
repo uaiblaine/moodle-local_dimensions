@@ -24,6 +24,12 @@ namespace local_dimensions\local;
  * reads syntax, so it passes both. block_dimensions pins the same rules in its card_layout_test;
  * the cascade helpers here are that file's, and a fix to one belongs in both.
  *
+ * Under prefers-reduced-motion: reduce (WCAG 2.3.3) the plugin drops movement and keeps state:
+ * a lift on hover, focus or press goes; a transition that animates position, size or a transform
+ * goes, while the state it animated towards (a turned chevron, a switch knob at its end) stays;
+ * a keyframe animation that moves goes, except a looping busy indicator, which only slows down.
+ * Colour, shadow and opacity changes are not motion and may keep their transitions.
+ *
  * Each test names the change that must make it fail. When editing a test, apply that change and
  * confirm it does: a test that still passes against it certifies nothing.
  *
@@ -47,10 +53,28 @@ final class preference_queries_test extends \basic_testcase {
     ];
 
     /** @var string Pattern matching the at-rule preludes whose rules are compared as overrides. */
-    private const CONTRAST_PRELUDE = '/prefers-contrast/';
+    private const OVERRIDE_PRELUDE = '/prefers-contrast|prefers-reduced-motion:\s*reduce/';
+
+    /** @var string Pattern matching the reduced-motion prelude, whose rules are the motion resets. */
+    private const REDUCE_PRELUDE = '/prefers-reduced-motion:\s*reduce/';
 
     /** @var string Pattern matching every conditional prelude whose rules are never a base rule. */
     private const CONDITIONAL_PRELUDE = '/prefers-|forced-colors|(?<![\w-])print(?![\w-])/';
+
+    /**
+     * @var array Properties whose change moves an element or changes its size.
+     *
+     * all is here because it animates every one of them. margin-*, padding-* and inset-* longhands
+     * count too; see moves().
+     */
+    private const MOTION_PROPERTIES = [
+        'all', 'transform', 'translate', 'rotate', 'scale', 'left', 'top', 'right', 'bottom', 'inset',
+        'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height', 'margin', 'padding',
+        'font-size', 'stroke-dasharray', 'stroke-dashoffset',
+    ];
+
+    /** @var array Timing keywords of the transition shorthand, which are never a property name. */
+    private const TIMING_KEYWORDS = ['ease', 'ease-in', 'ease-out', 'ease-in-out', 'linear', 'step-start', 'step-end'];
 
     /** @var string Pattern matching a user-action pseudo-class, which puts a selector in a state. */
     private const STATE_PSEUDO = '/:(?:hover|active|focus(?:-visible|-within)?)(?![\w-])/';
@@ -189,8 +213,9 @@ final class preference_queries_test extends \basic_testcase {
      * The style rules the cascade tests compare, keyframes left out.
      *
      * @return array flat_rules() entries with these keys added: order (source position), override
-     *               (inside a prefers-contrast block), base (inside no conditional preference or
-     *               print block), parts (the selector list) and families (from families()).
+     *               (inside a prefers-contrast or prefers-reduced-motion: reduce block), reset
+     *               (inside the latter), base (inside no conditional preference or print block),
+     *               parts (the selector list) and families (from families()).
      */
     protected function cascade_rules(): array {
         $rules = [];
@@ -199,7 +224,8 @@ final class preference_queries_test extends \basic_testcase {
                 continue;
             }
             $rule['order'] = $order;
-            $rule['override'] = (bool) preg_match(self::CONTRAST_PRELUDE, $rule['at']);
+            $rule['override'] = (bool) preg_match(self::OVERRIDE_PRELUDE, $rule['at']);
+            $rule['reset'] = (bool) preg_match(self::REDUCE_PRELUDE, $rule['at']);
             $rule['base'] = !preg_match(self::CONDITIONAL_PRELUDE, $rule['at']);
             $rule['parts'] = array_map('trim', explode(',', $rule['selector']));
             $rule['families'] = $this->families($this->declarations($rule['body']));
@@ -210,7 +236,7 @@ final class preference_queries_test extends \basic_testcase {
     }
 
     /**
-     * Each pairing of a prefers-contrast override with a base rule it competes with.
+     * Each pairing of a preference override with a base rule it competes with.
      *
      * A pair is a base rule (keyframes aside) that sets the same property family to a different
      * value on the same subject compound (one set of simple selectors containing the other) in the
@@ -220,7 +246,7 @@ final class preference_queries_test extends \basic_testcase {
      * @return array List of arrays with keys override and base (cascade_rules() entries), family,
      *               basepart and rivals (the overlapping override parts).
      */
-    protected function contrast_pairs(): array {
+    protected function override_pairs(): array {
         $rules = $this->cascade_rules();
         $pairs = [];
         foreach ($rules as $override) {
@@ -313,27 +339,30 @@ final class preference_queries_test extends \basic_testcase {
     }
 
     /**
-     * A rule in a prefers-contrast block wins over the base rule it overrides.
+     * A rule in a prefers-contrast or prefers-reduced-motion: reduce block wins over the base rule
+     * it overrides.
      *
      * Such a block is written after the rule it overrides and relies on source order, which only
      * decides between equal specificities: a base rule written under an extra ancestor class
-     * outranks it wherever it comes. Only prefers-contrast overrides are compared. The
-     * forced-colors block restates outline parts that the base focus rules already set to the same
-     * effect, and the subject comparison cannot tell two button rules on different components
-     * apart, so widening the scope needs both handled first.
+     * outranks it wherever it comes. The forced-colors block is not compared: it restates outline
+     * parts that the base focus rules already set to the same effect, and the subject comparison
+     * cannot tell two button rules on different components apart, so widening the scope needs both
+     * handled first.
      *
      * Changes that must make it fail: write the raised-contrast readout rule as
-     * .local-dimensions-progress-text; drop :not(:last-child) from the evidence section divider.
+     * .local-dimensions-progress-text; drop :not(:last-child) from the evidence section divider;
+     * drop .local-dimensions-return-fab.local-dimensions-fab-snapping from the Return to plan
+     * button's reduced-motion transition reset.
      *
      * @return void
      */
-    public function test_contrast_overrides_are_not_outranked(): void {
+    public function test_preference_overrides_are_not_outranked(): void {
         $offenders = [];
         $overrides = 0;
         foreach ($this->cascade_rules() as $rule) {
             $overrides += (int) $rule['override'];
         }
-        $pairs = $this->contrast_pairs();
+        $pairs = $this->override_pairs();
         foreach ($pairs as $pair) {
             $override = $pair['override'];
             $base = $pair['base'];
@@ -343,18 +372,18 @@ final class preference_queries_test extends \basic_testcase {
             }
         }
 
-        $this->assertGreaterThan(0, $overrides, 'No prefers-contrast rule was found, so this test checks nothing.');
+        $this->assertGreaterThan(0, $overrides, 'No preference override was found, so this test checks nothing.');
         $this->assertNotEmpty($pairs, 'No override was compared with a base rule, so this test checks nothing.');
         sort($offenders);
         $this->assertSame(
             [],
             $offenders,
-            'A prefers-contrast override that loses on specificity never applies: ' . implode('; ', $offenders)
+            'A preference override that loses on specificity never applies: ' . implode('; ', $offenders)
         );
     }
 
     /**
-     * A prefers-contrast override keeps every admin colour its base rule reads.
+     * A preference override keeps every admin colour its base rule reads.
      *
      * On a branded island the admin chose the ground and the ink as a pair, so the only ink that is
      * known to contrast with the ground is the admin's own. An override that drops the admin's
@@ -366,10 +395,10 @@ final class preference_queries_test extends \basic_testcase {
      *
      * @return void
      */
-    public function test_contrast_overrides_keep_the_admin_colour(): void {
+    public function test_preference_overrides_keep_the_admin_colour(): void {
         $offenders = [];
         $reached = 0;
-        foreach ($this->contrast_pairs() as $pair) {
+        foreach ($this->override_pairs() as $pair) {
             $basevalue = implode(' ', $pair['base']['families'][$pair['family']]);
             $overridevalue = implode(' ', $pair['override']['families'][$pair['family']]);
             foreach (self::ADMIN_COLOURS as $name) {
@@ -395,6 +424,283 @@ final class preference_queries_test extends \basic_testcase {
             array_values(array_unique($offenders)),
             'A raised-contrast ink that replaces the admin\'s own is chosen against a ground it cannot see: '
                 . implode('; ', array_unique($offenders))
+        );
+    }
+
+    /**
+     * Whether a change of the property moves an element or changes its size.
+     *
+     * @param string $property A property name, lower case.
+     * @return bool
+     */
+    private function moves(string $property): bool {
+        return in_array($property, self::MOTION_PROPERTIES, true)
+            || (bool) preg_match('/^(?:margin|padding|inset)-/', $property);
+    }
+
+    /**
+     * The properties a transition value animates.
+     *
+     * Items are split at the commas outside parentheses, so a cubic-bezier() stays whole, and each
+     * item's property is its first word that is not a timing keyword.
+     *
+     * @param string $value A transition or transition-property value.
+     * @return array Property names: none for none, and all for an item that names no property.
+     */
+    private function transitioned_properties(string $value): array {
+        $properties = [];
+        foreach (preg_split('/,(?![^()]*\))/', $value) as $item) {
+            $property = 'all';
+            foreach (preg_split('/\s+/', trim($item)) as $token) {
+                if (preg_match('/^-?[a-z][a-z-]*$/', $token) && !in_array($token, self::TIMING_KEYWORDS, true)) {
+                    $property = $token;
+                    break;
+                }
+            }
+            if ($property !== 'none') {
+                $properties[] = $property;
+            }
+        }
+
+        return $properties;
+    }
+
+    /**
+     * The moving properties a rule's declarations transition.
+     *
+     * @param array $declarations Property => value, from declarations().
+     * @return array The distinct property names for which moves() is true.
+     */
+    private function moving_transitions(array $declarations): array {
+        $moving = [];
+        foreach (['transition', 'transition-property'] as $property) {
+            foreach ($this->transitioned_properties($declarations[$property] ?? 'none') as $name) {
+                if ($this->moves($name)) {
+                    $moving[] = $name;
+                }
+            }
+        }
+
+        return array_values(array_unique($moving));
+    }
+
+    /**
+     * Whether a reduced-motion reset covers one selector part of a base rule.
+     *
+     * A reset covers the part when a rule of a prefers-reduced-motion: reduce block, whose
+     * declarations $accepts, has a selector part in the same user-action state and on the same
+     * pseudo-element, naming no simple selector the base part does not (so it matches every element
+     * the base part matches), and that part wins the cascade against the base part.
+     *
+     * @param array $rules Entries from cascade_rules().
+     * @param array $base The base rule, from cascade_rules().
+     * @param string $basepart One selector part of that rule.
+     * @param callable $accepts Takes a rule's declarations and says whether they reset the motion.
+     * @return bool
+     */
+    private function reset_covers(array $rules, array $base, string $basepart, callable $accepts): bool {
+        [$basestate, $baseelement] = $this->subject($basepart);
+        $basetokens = $this->simple_selectors($basepart);
+        foreach ($rules as $reset) {
+            if (!$reset['reset'] || !$accepts($this->declarations($reset['body']))) {
+                continue;
+            }
+            foreach ($reset['parts'] as $part) {
+                [$state, $element] = $this->subject($part);
+                if ($state !== $basestate || $element !== $baseelement || array_diff($this->simple_selectors($part), $basetokens)) {
+                    continue;
+                }
+                if ($this->outranks($part, $reset['order'], $basepart, $base['order'])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * A transform set on hover, focus or press is switched off under reduced motion.
+     *
+     * The lift is motion the user's own interaction starts (WCAG 2.3.3). A transform outside a
+     * user-action state is left alone: it positions an element or shows a state, and what moves it
+     * is a transition, which test_motion_transitions_are_reset() covers.
+     *
+     * Changes that must make it fail: drop .local-dimensions-return-fab:focus from the Return to plan
+     * button's reset; delete the reset that follows the Learn more button's rules.
+     *
+     * @return void
+     */
+    public function test_interaction_movement_is_reset(): void {
+        $rules = $this->cascade_rules();
+        $accepts = static function (array $declarations): bool {
+            return ($declarations['transform'] ?? null) === 'none';
+        };
+        $offenders = [];
+        $checked = 0;
+        foreach ($rules as $base) {
+            $transform = $this->declarations($base['body'])['transform'] ?? 'none';
+            if (!$base['base'] || $transform === 'none') {
+                continue;
+            }
+            foreach ($base['parts'] as $part) {
+                if ($this->subject($part)[0] === '') {
+                    continue;
+                }
+                $checked++;
+                if (!$this->reset_covers($rules, $base, $part, $accepts)) {
+                    $offenders[] = 'styles.css:' . $base['line'] . ' (' . $part . ')';
+                }
+            }
+        }
+
+        $this->assertGreaterThan(0, $checked, 'No transform in a user-action state was found, so this test checks nothing.');
+        $this->assertSame(
+            [],
+            $offenders,
+            'These still move on interaction for a user who asked for reduced motion: ' . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * A transition that animates position, size or a transform is switched off under reduced motion.
+     *
+     * The reset may keep transitions of properties that do not move anything (colour, filter,
+     * shadow, opacity). The end state is left alone: a turned chevron still shows the state.
+     *
+     * Changes that must make it fail: delete the tab indicator's reset; delete the accordion
+     * chevron's reset; write the Learn more button's reset transition as filter 0.2s ease,
+     * transform 0.15s ease.
+     *
+     * @return void
+     */
+    public function test_motion_transitions_are_reset(): void {
+        $rules = $this->cascade_rules();
+        $accepts = function (array $declarations): bool {
+            $transitions = isset($declarations['transition']) || isset($declarations['transition-property']);
+
+            return $transitions && !$this->moving_transitions($declarations);
+        };
+        $offenders = [];
+        $checked = 0;
+        foreach ($rules as $base) {
+            $moving = $this->moving_transitions($this->declarations($base['body']));
+            if (!$base['base'] || !$moving) {
+                continue;
+            }
+            foreach ($base['parts'] as $part) {
+                $checked++;
+                if (!$this->reset_covers($rules, $base, $part, $accepts)) {
+                    $offenders[] = 'styles.css:' . $base['line'] . ' (' . $part . ': ' . implode(', ', $moving) . ')';
+                }
+            }
+        }
+
+        $this->assertGreaterThan(0, $checked, 'No transition of a moving property was found, so this test checks nothing.');
+        $this->assertSame(
+            [],
+            $offenders,
+            'These transitions still animate movement for a user who asked for reduced motion: '
+                . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * A keyframe animation that moves is switched off under reduced motion.
+     *
+     * A keyframe block moves when any of its steps sets a property for which moves() is true. The
+     * one exception is a looping busy indicator, whose motion is what says the page is working: its
+     * reset may slow it with animation-duration instead, as Bootstrap does for its own spinners.
+     *
+     * Changes that must make it fail: delete the tab pane's reset; delete the hub loading spinner's
+     * reset; drop the Return to plan button's appearing rule from its reset.
+     *
+     * @return void
+     */
+    public function test_moving_animations_are_reset(): void {
+        $moving = [];
+        foreach ($this->flat_rules() as $rule) {
+            if (!preg_match('/@keyframes\s+([\w-]+)/', $rule['at'], $m)) {
+                continue;
+            }
+            foreach (array_keys($this->declarations($rule['body'])) as $property) {
+                if ($this->moves($property)) {
+                    $moving[$m[1]] = true;
+                }
+            }
+        }
+        $rules = $this->cascade_rules();
+        $offenders = [];
+        $checked = 0;
+        foreach ($rules as $base) {
+            $declarations = $this->declarations($base['body']);
+            $value = $declarations['animation'] ?? ($declarations['animation-name'] ?? '');
+            $names = array_intersect(preg_split('/[\s,]+/', $value), array_keys($moving));
+            if (!$base['base'] || !$names) {
+                continue;
+            }
+            $looping = (bool) preg_match('/(?<![\w-])infinite(?![\w-])/', $value);
+            $accepts = static function (array $declarations) use ($looping): bool {
+                $animation = $declarations['animation'] ?? ($declarations['animation-name'] ?? null);
+
+                return $animation === 'none' || ($looping && isset($declarations['animation-duration']));
+            };
+            foreach ($base['parts'] as $part) {
+                $checked++;
+                if (!$this->reset_covers($rules, $base, $part, $accepts)) {
+                    $offenders[] = 'styles.css:' . $base['line'] . ' (' . $part . ': ' . implode(', ', $names) . ')';
+                }
+            }
+        }
+
+        $this->assertGreaterThan(0, $checked, 'No animation of moving keyframes was found, so this test checks nothing.');
+        $this->assertSame(
+            [],
+            $offenders,
+            'These animations still move for a user who asked for reduced motion: ' . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * Smooth scrolling is never unconditional.
+     *
+     * A smooth scroll is motion the page starts. In amd/src the behaviour must be chosen from
+     * prefers-reduced-motion, so a literal behavior: 'smooth' is refused; in styles.css
+     * scroll-behavior: smooth may only appear inside a prefers-reduced-motion: no-preference block.
+     *
+     * Change that must make it fail: write the scroll in central/structure.js's revealNode() as
+     * behavior: 'smooth' again.
+     *
+     * @return void
+     */
+    public function test_smooth_scrolling_follows_the_preference(): void {
+        $root = __DIR__ . '/../../amd/src';
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
+        $offenders = [];
+        $scanned = 0;
+        foreach ($files as $file) {
+            if ($file->getExtension() !== 'js') {
+                continue;
+            }
+            $scanned++;
+            foreach ((array) file($file->getPathname()) as $number => $line) {
+                if (preg_match('/behavior\s*:\s*[\'"]smooth[\'"]/', (string) $line)) {
+                    $offenders[] = 'amd/src/' . substr($file->getPathname(), strlen($root) + 1) . ':' . ($number + 1);
+                }
+            }
+        }
+        foreach ($this->flat_rules() as $rule) {
+            $behaviour = $this->declarations($rule['body'])['scroll-behavior'] ?? '';
+            if ($behaviour === 'smooth' && !preg_match('/prefers-reduced-motion:\s*no-preference/', $rule['at'])) {
+                $offenders[] = 'styles.css:' . $rule['line'] . ' (' . $rule['selector'] . ')';
+            }
+        }
+
+        $this->assertGreaterThan(0, $scanned, 'No module was found under amd/src, so this test checks nothing.');
+        $this->assertSame(
+            [],
+            $offenders,
+            'These scroll smoothly for a user who asked for reduced motion: ' . implode('; ', $offenders)
         );
     }
 
@@ -431,7 +737,9 @@ final class preference_queries_test extends \basic_testcase {
      * The parts of an override selector that target the same elements as a base selector part.
      *
      * Two parts overlap when they are in the same user-action state, name the same pseudo-element,
-     * and the simple selectors of one subject compound include those of the other.
+     * and the simple selectors of one subject compound include those of the other. A universal
+     * subject (.x *) names no simple selector, so it would include every other; its ancestors alone
+     * decide what it matches, which this comparison cannot see, so it is left out.
      *
      * @param array $parts The override rule's selector parts.
      * @param string $basepart One selector part of the base rule.
@@ -442,7 +750,7 @@ final class preference_queries_test extends \basic_testcase {
         $overlapping = [];
         foreach ($parts as $part) {
             [$state, $element, $tokens] = $this->subject($part);
-            if ($state !== $basestate || $element !== $baseelement) {
+            if ($state !== $basestate || $element !== $baseelement || !$tokens || !$basetokens) {
                 continue;
             }
             if (!array_diff($tokens, $basetokens) || !array_diff($basetokens, $tokens)) {
@@ -475,6 +783,28 @@ final class preference_queries_test extends \basic_testcase {
         sort($tokens);
 
         return [implode('', $state), $element, $tokens];
+    }
+
+    /**
+     * Every simple selector of a selector part, in all of its compounds.
+     *
+     * User-action pseudo-classes and the pseudo-element are left out, as subject() leaves them out
+     * of the subject compound.
+     *
+     * @param string $part One selector part.
+     * @return array The distinct simple selectors, sorted.
+     */
+    private function simple_selectors(string $part): array {
+        $tokens = [];
+        foreach (preg_split('/\s*[>+~]\s*|\s+/', preg_replace('/\s+/', ' ', trim($part))) as $compound) {
+            $compound = (string) preg_replace([self::STATE_PSEUDO, '/::[\w-]+/'], '', $compound);
+            preg_match_all('/[a-z][\w-]*|[#.][\w-]+|\[[^\]]*\]|:[\w-]+(?:\([^()]*\))?/i', $compound, $simple);
+            $tokens = array_merge($tokens, $simple[0]);
+        }
+        $tokens = array_values(array_unique($tokens));
+        sort($tokens);
+
+        return $tokens;
     }
 
     /**
