@@ -129,10 +129,11 @@ class browse_competencies extends external_api {
                 $pathsbyid[(int) $record->id] = $record->path;
             }
             $breadcrumbs = helper::competency_breadcrumbs($pathsbyid, $context);
+            // Plain spelling: the tree browser writes names through textContent and aria-label.
             foreach ($records as $record) {
                 $items[] = [
                     'id' => (int) $record->id,
-                    'shortname' => format_string($record->shortname, true, ['context' => $context]),
+                    'shortname' => format_string($record->shortname, true, ['context' => $context, 'escape' => false]),
                     'idnumber' => (string) $record->idnumber,
                     'haschildren' => !empty($haschildren[(int) $record->id]),
                     'path' => $breadcrumbs[(int) $record->id]['path'] ?? '',

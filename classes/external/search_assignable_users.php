@@ -49,6 +49,16 @@ class search_assignable_users extends external_api {
     const MAX_LIMIT = 100;
 
     /**
+     * The user table columns core offers as identity fields (showuseridentity in admin/settings/users.php).
+     *
+     * The only column names this search ever puts into SQL: showuseridentity is free text in config.php,
+     * so a listed name outside this set (password, lastip) is dropped rather than selected and shown.
+     *
+     * @var array
+     */
+    const IDENTITY_COLUMNS = ['username', 'idnumber', 'email', 'phone1', 'phone2', 'department', 'institution', 'city', 'country'];
+
+    /**
      * Define the input parameters.
      *
      * @return external_function_parameters
@@ -65,9 +75,8 @@ class search_assignable_users extends external_api {
     /**
      * Search active users without a plan created from the template.
      *
-     * Matches the query against the user's full name and, when the caller has
-     * moodle/site:viewuseridentity, against the email, ID number and username too; the email and
-     * ID number are then returned in identity for the suggestion label.
+     * Matches the query against the user's full name and against the identity fields the caller
+     * may see, which are then returned in identity for the suggestion label.
      *
      * @param int $templateid The template id.
      * @param string $query Search text.
@@ -95,7 +104,16 @@ class search_assignable_users extends external_api {
         $context = $template->get_context();
         self::validate_context($context);
         require_capability('moodle/competency:templatemanage', $context);
-        $canviewidentity = has_capability('moodle/site:viewuseridentity', $context);
+
+        /* Core's identity rule: nothing without moodle/site:viewuseridentity, then only the fields
+           listed in showuseridentity (default: email alone) and not hidden by hiddenuserfields. A
+           field is searched only when it is also shown, or the search would confirm a username or ID
+           number the caller may not see. Custom profile fields are left out, as in tool_lp's user
+           search (MDL-70456). */
+        $identityfields = array_values(array_intersect(
+            \core_user\fields::get_identity_fields($context, false),
+            self::IDENTITY_COLUMNS
+        ));
 
         // Active users only, minus everyone who already has a plan created from this template.
         $where = 'u.deleted = 0 AND u.suspended = 0 AND u.confirmed = 1 AND u.id <> :guestid';
@@ -119,13 +137,10 @@ class search_assignable_users extends external_api {
             $likes = [helper::sql_like_ai($fullname, ':q1')];
             $likevalue = '%' . $DB->sql_like_escape($query) . '%';
             $sqlparams['q1'] = $likevalue;
-            if ($canviewidentity) {
-                $likes[] = helper::sql_like_ai('u.email', ':q2');
-                $likes[] = helper::sql_like_ai('u.idnumber', ':q3');
-                $likes[] = helper::sql_like_ai('u.username', ':q4');
-                $sqlparams['q2'] = $likevalue;
-                $sqlparams['q3'] = $likevalue;
-                $sqlparams['q4'] = $likevalue;
+            foreach ($identityfields as $index => $field) {
+                // One placeholder per field: a named placeholder may appear only once per statement.
+                $likes[] = helper::sql_like_ai('u.' . $field, ':qf' . $index);
+                $sqlparams['qf' . $index] = $likevalue;
             }
             $where .= ' AND (' . implode(' OR ', $likes) . ')';
         }
@@ -133,8 +148,12 @@ class search_assignable_users extends external_api {
         $total = (int) $DB->count_records_sql("SELECT COUNT(1) FROM {user} u WHERE $where", $sqlparams);
 
         $namefields = \core_user\fields::for_name()->get_sql('u', false, '', '', false)->selects;
+        $identityselects = '';
+        foreach ($identityfields as $field) {
+            $identityselects .= ', u.' . $field;
+        }
         $records = $DB->get_records_sql(
-            "SELECT u.id, u.email, u.idnumber, $namefields
+            "SELECT u.id, $namefields $identityselects
                FROM {user} u
               WHERE $where
            ORDER BY u.lastname ASC, u.firstname ASC, u.id ASC",
@@ -145,14 +164,17 @@ class search_assignable_users extends external_api {
 
         $items = [];
         foreach ($records as $record) {
-            $identity = '';
-            if ($canviewidentity) {
-                $identity = implode(', ', array_filter([$record->email, $record->idnumber]));
+            $identity = [];
+            foreach ($identityfields as $field) {
+                $value = (string) ($record->$field ?? '');
+                if ($value !== '') {
+                    $identity[] = $value;
+                }
             }
             $items[] = [
                 'id' => (int) $record->id,
                 'fullname' => fullname($record),
-                'identity' => $identity,
+                'identity' => implode(', ', $identity),
             ];
         }
 

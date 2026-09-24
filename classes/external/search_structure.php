@@ -123,12 +123,13 @@ class search_structure extends external_api {
         }
         $breadcrumbs = helper::competency_breadcrumbs($pathsbyid, $fwcontext);
 
+        // Names and paths are the plain spelling: the Structure tab writes hits through textContent.
         $items = [];
         foreach ($records as $record) {
             $crumbs = $breadcrumbs[(int) $record->id] ?? ['path' => '', 'pathids' => []];
             $items[] = [
                 'id' => (int) $record->id,
-                'shortname' => format_string($record->shortname, true, ['context' => $fwcontext]),
+                'shortname' => format_string($record->shortname, true, ['context' => $fwcontext, 'escape' => false]),
                 'idnumber' => (string) $record->idnumber,
                 'path' => $crumbs['path'],
                 'pathids' => $crumbs['pathids'],

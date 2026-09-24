@@ -53,23 +53,22 @@ $PAGE->set_context($context);
 $PAGE->add_body_class('local-dimensions-viewcompetency');
 \local_dimensions\local\bootstrap::mark_page();
 
-// Authorization gate: read_plan() is the access check. The competency is deliberately not
-// required to be in this plan: related-competency links rendered by the accordion (when
-// local_dimensions/showrelated is enabled) point at competencies from competency_related,
-// which is framework-wide and not bound to competency_templatecomp / competency_plancomp.
-// The competency framework's own read permissions cover broader protection. Only a missing
-// plan reads as invalid; a permission refusal or disabled competencies surface as core's own
-// error (see plan_access).
+// Authorization gate: read_plan() is the access check. Only a missing plan reads as invalid; a
+// permission refusal or disabled competencies surface as core's own error (see plan_access).
 $plan = \local_dimensions\local\plan_access::read_plan($planid);
 $templateid = (int) $plan->get('templateid');
 
-// Related-competency links can point at a competency that is not in this plan; there the plan
-// layer of the cascade does not apply (competency -> global only).
-$competencyinplan = \local_dimensions\helper::competency_in_plan($competencyid, $plan);
+/* Reading the plan says nothing about the competency id: only one the plan reaches may be shown, which
+   takes in the related-competency and rule-child links the accordion renders outside the plan (see
+   plan_access::competency_scope()). Any other id gets the not-found state a missing one gets, with
+   nothing about the competency read, so a visitor cannot tell the two apart. */
+$scope = \local_dimensions\local\plan_access::competency_scope($plan, $competencyid);
+
+// Outside the plan the plan layer of the cascade does not apply (competency -> global only).
+$competencyinplan = $scope === \local_dimensions\local\plan_access::SCOPE_PLAN;
 $effectivetemplateid = $competencyinplan ? $templateid : 0;
 
-// Load the competency.
-$competency = $DB->get_record('competency', ['id' => $competencyid]);
+$competency = $scope === null ? false : $DB->get_record('competency', ['id' => $competencyid]);
 $pagetitle = $competency ? format_string($competency->shortname) : get_string('pluginname', 'local_dimensions');
 
 $PAGE->set_title($pagetitle);

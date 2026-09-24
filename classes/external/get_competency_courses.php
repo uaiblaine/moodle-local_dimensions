@@ -17,9 +17,11 @@
 /**
  * External API to get courses linked to a competency with enrollment filter.
  *
- * This webservice runs its own query over competency_coursecomp and resolves
- * the enrolment-filter cascade (competency -> plan's template -> global
- * setting) to filter courses based on the user's enrollment status. Each
+ * It answers only for a competency the given plan reaches, the rule
+ * view-competency.php applies (plan_access::competency_scope()). It then runs
+ * its own query over competency_coursecomp and resolves the enrolment-filter
+ * cascade (competency -> plan's template -> global setting) to filter courses
+ * based on the user's enrollment status. Each
  * surviving course also carries its rule outcome, the competency's activity
  * links inside it, what the viewer can do with it (open, enrol, pending or
  * locked) and its card shape: its single activity or single section when it
@@ -41,6 +43,7 @@ use core\context\system as context_system;
 use core\context\course as context_course;
 use local_dimensions\calculator;
 use local_dimensions\constants;
+use local_dimensions\local\plan_access;
 
 /**
  * External API to get courses linked to a competency with enrollment filter.
@@ -70,7 +73,10 @@ class get_competency_courses extends external_api {
     public static function execute_parameters() {
         return new external_function_parameters([
             'competencyid' => new external_value(PARAM_INT, 'The competency ID'),
-            'planid' => new external_value(PARAM_INT, 'The learning plan ID (drives the enrolment-filter cascade)'),
+            'planid' => new external_value(
+                PARAM_INT,
+                'The id of a learning plan the viewer may read and that reaches the competency'
+            ),
         ]);
     }
 
@@ -78,8 +84,11 @@ class get_competency_courses extends external_api {
      * Get courses linked to a competency, filtered by enrollment setting.
      *
      * @param int $competencyid The competency ID
-     * @param int $planid The learning plan ID (drives the enrolment-filter cascade)
+     * @param int $planid The learning plan ID, required: it gates the competency and drives the enrolment-filter cascade
      * @return array Filtered list of courses, each with its rule outcome and linked activities
+     * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan does not reach
+     *     the competency.
+     * @throws \required_capability_exception When the current user may not read the plan.
      */
     public static function execute($competencyid, $planid) {
         global $USER, $DB;
@@ -97,6 +106,15 @@ class get_competency_courses extends external_api {
         self::validate_context($systemcontext);
         require_capability('local/dimensions:view', $systemcontext);
 
+        /* The same gate as view-competency.php, before anything about the competency is read: a plan
+           the viewer may read (a refusal is core's own error, see plan_access), and a competency that
+           plan reaches. Without it any competency id would list its courses and activities. */
+        $plan = plan_access::read_plan($planid);
+        $scope = plan_access::require_competency_in_scope($plan, $competencyid);
+
+        // Outside the plan the plan layer of the cascade does not apply (competency -> global only).
+        $templateid = $scope === plan_access::SCOPE_PLAN ? (int) $plan->get('templateid') : 0;
+
         /* Get all courses linked to the competency (visible only). The unique index
            courseidcompetencyid guarantees one row per course, so selecting the link's
            ruleoutcome alongside cannot multiply the cards. */
@@ -108,15 +126,6 @@ class get_competency_courses extends external_api {
         $courses = $DB->get_records_sql($sql, ['competencyid' => $competencyid]);
 
         // Resolve the enrolment filter through the cascade (competency -> plan -> global).
-        // The accordion only lists the plan's own competencies, so the plan's template applies.
-        $templateid = 0;
-        if ($planid > 0) {
-            try {
-                $templateid = (int) \core_competency\api::read_plan($planid)->get('templateid');
-            } catch (\Exception $e) {
-                $templateid = 0;
-            }
-        }
         $filtermode = \local_dimensions\helper::resolve_enrollmentfilter_for_view($competencyid, $templateid);
         if ($filtermode !== \local_dimensions\constants::ENROLLMENTFILTER_ALL) {
             $courses = \local_dimensions\calculator::filter_courses_by_enrollment($courses, $USER->id, $filtermode);
@@ -180,10 +189,12 @@ class get_competency_courses extends external_api {
                 ) !== null;
             }
 
+            /* Names travel plain (tags stripped, nothing escaped): accordion.js escapes each one
+               once where it writes it into the page. */
             $row = [
                 'id' => (int) $course->id,
-                'fullname' => format_string($course->fullname, true, ['context' => $coursecontext]),
-                'shortname' => format_string($course->shortname, true, ['context' => $coursecontext]),
+                'fullname' => format_string($course->fullname, true, ['context' => $coursecontext, 'escape' => false]),
+                'shortname' => format_string($course->shortname, true, ['context' => $coursecontext, 'escape' => false]),
                 'courseimage' => $courseimage,
                 'progress' => $progress,
                 'visible' => 1,
@@ -317,7 +328,7 @@ class get_competency_courses extends external_api {
 
                 $rows[] = [
                     'cmid' => (int) $cm->id,
-                    'name' => $cm->get_formatted_name(),
+                    'name' => $cm->get_formatted_name(['escape' => false]),
                     'modtype' => (string) $cm->modfullname,
                     'iconurl' => $cm->get_icon_url()->out(false),
                     // Cast: a module that answers the feature with false rather than null yields a bool.
@@ -345,8 +356,8 @@ class get_competency_courses extends external_api {
         return new external_multiple_structure(
             new external_single_structure([
                 'id' => new external_value(PARAM_INT, 'Course ID'),
-                'fullname' => new external_value(PARAM_RAW, 'Course full name'),
-                'shortname' => new external_value(PARAM_RAW, 'Course short name'),
+                'fullname' => new external_value(PARAM_RAW, 'Course full name, plain text'),
+                'shortname' => new external_value(PARAM_RAW, 'Course short name, plain text'),
                 'courseimage' => new external_value(PARAM_URL, 'Course image URL', VALUE_OPTIONAL),
                 'progress' => new external_value(PARAM_INT, 'Course completion progress percentage'),
                 'visible' => new external_value(PARAM_INT, 'Course visibility'),
@@ -364,7 +375,7 @@ class get_competency_courses extends external_api {
                 'activity' => new external_single_structure(
                     [
                         'cmid' => new external_value(PARAM_INT, 'Course module id'),
-                        'name' => new external_value(PARAM_RAW, 'Activity name'),
+                        'name' => new external_value(PARAM_RAW, 'Activity name, plain text'),
                         'url' => new external_value(PARAM_URL, 'Activity URL, empty when it has no view page'),
                         'completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
                         'tracked' => new external_value(PARAM_BOOL, 'Whether completion is tracked for it'),
@@ -374,7 +385,7 @@ class get_competency_courses extends external_api {
                 ),
                 'section' => new external_single_structure(
                     [
-                        'name' => new external_value(PARAM_TEXT, 'Section name, empty when Moodle generated it'),
+                        'name' => new external_value(PARAM_TEXT, 'Section name, plain text, empty when Moodle generated it'),
                         'hasownname' => new external_value(PARAM_BOOL, 'Whether a teacher named the section'),
                         'url' => new external_value(PARAM_URL, 'URL of the section'),
                         'tracked' => new external_value(PARAM_BOOL, 'Whether the section holds a tracked activity'),
@@ -385,7 +396,7 @@ class get_competency_courses extends external_api {
                 'activities' => new external_multiple_structure(
                     new external_single_structure([
                         'cmid' => new external_value(PARAM_INT, 'Course module id'),
-                        'name' => new external_value(PARAM_RAW, 'Activity name'),
+                        'name' => new external_value(PARAM_RAW, 'Activity name, plain text'),
                         'modtype' => new external_value(PARAM_RAW, 'Localised module type name'),
                         'iconurl' => new external_value(PARAM_URL, 'Activity icon URL'),
                         'purpose' => new external_value(PARAM_ALPHANUMEXT, 'Module purpose, the icon container class'),

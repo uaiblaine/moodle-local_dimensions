@@ -107,6 +107,10 @@ class plans extends \core\output\dynamic_tabs\base {
         $templateid = (int) ($data['templateid'] ?? 0);
 
         $canmanage = has_capability('moodle/competency:templatemanage', $context);
+        // Names travel in the plain spelling: the plans template renders them through double
+        // stashes and str helper parameters, and the tab's JS reads the data-* copies back through
+        // textContent, so each is escaped exactly once.
+        $plain = ['context' => $context, 'escape' => false];
         // The export web service re-checks templateview on each template's own context; the
         // toolbar button mirrors that gate so it never offers a download the server refuses.
         $cantemplateview = has_capability('moodle/competency:templateview', $context);
@@ -152,7 +156,7 @@ class plans extends \core\output\dynamic_tabs\base {
             }
             $competencyfilters[] = [
                 'id' => $filterid,
-                'label' => format_string($competency->get('shortname')),
+                'label' => format_string($competency->get('shortname'), true, $plain),
             ];
         }
         $filteredbycompetency = !empty($competencyfilters);
@@ -177,7 +181,7 @@ class plans extends \core\output\dynamic_tabs\base {
         $hashiddentemplates = false;
         $templateoptions = [];
         foreach ($templates as $id => $template) {
-            $name = format_string($template->get('shortname'));
+            $name = format_string($template->get('shortname'), true, ['context' => $template->get_context(), 'escape' => false]);
             $idnumber = (string) (($metadatamap[$id] ?? [])['idnumber'] ?? '');
             $visible = (bool) $template->get('visible');
             $hashiddentemplates = $hashiddentemplates || !$visible;
@@ -233,11 +237,11 @@ class plans extends \core\output\dynamic_tabs\base {
                 }
                 $competencies[] = [
                     'id' => $cid,
-                    'shortname' => format_string($competency->get('shortname')),
+                    'shortname' => format_string($competency->get('shortname'), true, $plain),
                     'idnumber' => (string) $competency->get('idnumber'),
                     'taxonomy' => $taxonomy,
                     'path' => $breadcrumbs[$cid]['path'] ?? '',
-                    'frameworktag' => format_string($frameworktags[$fwid]),
+                    'frameworktag' => format_string($frameworktags[$fwid], true, $plain),
                     'frameworkid' => $fwid,
                     'first' => false,
                     'last' => false,
@@ -313,19 +317,21 @@ class plans extends \core\output\dynamic_tabs\base {
             'templatecount' => count($templateoptions),
             'canexport' => (int) (!$needscategory && !empty($templateoptions) && $cantemplateview),
             'selectedtemplateid' => $templateid,
-            'selectedtemplatename' => $selected ? format_string($selected->get('shortname')) : '',
-            'selectedtemplateidnumber' => s($selectedidnumber),
+            'selectedtemplatename' => $selected
+                ? format_string($selected->get('shortname'), true, ['context' => $selected->get_context(), 'escape' => false])
+                : '',
+            'selectedtemplateidnumber' => $selectedidnumber,
             'selectedtemplatehasidnumber' => $selectedidnumber !== '',
             'selectedtemplatedescription' => [
                 'html' => $selecteddescription,
                 'id' => 'local-dimensions-plans-desc-' . $templateid,
             ],
             'selectedtemplatehasdescription' => $selecteddescriptionplain !== '',
-            'selectedtemplatetype' => format_string($selectedtype),
+            'selectedtemplatetype' => format_string($selectedtype, true, $plain),
             'selectedtemplatehastype' => $selectedtype !== '',
-            'selectedtemplatetag1' => format_string($selectedtag1),
+            'selectedtemplatetag1' => format_string($selectedtag1, true, $plain),
             'selectedtemplatehastag1' => $selectedtag1 !== '',
-            'selectedtemplatetag2' => format_string($selectedtag2),
+            'selectedtemplatetag2' => format_string($selectedtag2, true, $plain),
             'selectedtemplatehastag2' => $selectedtag2 !== '',
             'selectedtemplatedisplaymode' => $selecteddisplaymode,
             'selectedtemplatehasdisplaymode' => $selecteddisplaymode !== '',

@@ -32,6 +32,7 @@ import Modal from 'core/modal';
 import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString, getStrings} from 'core/str';
 import {add as addToast} from 'local_dimensions/central/toast';
 import {iconButton} from 'local_dimensions/central/action_button';
@@ -628,7 +629,8 @@ const onToggleStatus = async(state, row) => {
             flashRow(twin);
         });
         const toastkey = data.active ? 'central_enrol_toast_enabled' : 'central_enrol_toast_disabled';
-        addToast(await getString(toastkey, 'local_dimensions', row.dataset.shortname));
+        // A toast message is HTML; the course short name is plain.
+        addToast(await getString(toastkey, 'local_dimensions', escapeHtml(row.dataset.shortname)));
     } finally {
         toggle.disabled = false;
     }
@@ -858,7 +860,8 @@ const showDetail = async(state, row) => {
         courseurl: data.courseurl,
         opencourselabel: state.labels.opencourse,
     });
-    const modal = await Modal.create({title: data.fullname, body: html, large: true});
+    // The body template escapes the names itself; the title is HTML and needs it done here.
+    const modal = await Modal.create({title: escapeHtml(data.fullname), body: html, large: true});
     modal.setRemoveOnClose(true);
     modal.show();
 };

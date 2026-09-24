@@ -81,13 +81,15 @@ class competency_usage extends external_api {
             throw new \required_capability_exception($context, 'moodle/competency:competencyview', 'nopermissions', '');
         }
 
-        // Courses (core filters each by the caller's per-course capabilities).
+        // Courses (core filters each by the caller's per-course capabilities). Names go out plain
+        // (escape off, tags still stripped): the usage modal prints them through double stashes.
         $courses = [];
         $activities = [];
         foreach (api::list_courses_using_competency($competencyid) as $course) {
             $coursecontext = \core\context\course::instance($course->id);
-            $coursename = format_string($course->fullname, true, ['context' => $coursecontext]);
-            $courseshortname = format_string($course->shortname, true, ['context' => $coursecontext]);
+            $plain = ['context' => $coursecontext, 'escape' => false];
+            $coursename = format_string($course->fullname, true, $plain);
+            $courseshortname = format_string($course->shortname, true, $plain);
             $courses[] = [
                 'id' => (int) $course->id,
                 'name' => $coursename,
@@ -105,7 +107,7 @@ class competency_usage extends external_api {
                 $cmurl = $cm->url;
                 $activities[] = [
                     'cmid' => (int) $cmid,
-                    'name' => format_string($cm->name, true, ['context' => $coursecontext]),
+                    'name' => $cm->get_formatted_name(['escape' => false]),
                     'coursename' => $coursename,
                     'courseshortname' => $courseshortname,
                     'url' => $cmurl ? $cmurl->out(false) : '',
@@ -121,9 +123,17 @@ class competency_usage extends external_api {
             if (!$template->can_read()) {
                 continue;
             }
+            // Hidden templates only for those who may manage them, as on the Plans tab and in core's
+            // list_templates_using_competency(): templateview alone does not reveal a hidden one.
+            if (!$template->get('visible') && !$template->can_manage()) {
+                continue;
+            }
             $templates[] = [
                 'id' => (int) $template->get('id'),
-                'name' => format_string($template->get('shortname')),
+                'name' => format_string($template->get('shortname'), true, [
+                    'context' => $template->get_context(),
+                    'escape' => false,
+                ]),
                 'visible' => (bool) $template->get('visible'),
             ];
         }

@@ -1,0 +1,1 @@
+s/const persistRule = \(row, config\) => \{\n    const id = Number\(row\.dataset\.id\);/const persistRule = (row, config) => {\n    const id = Number(row.dataset.id);\n    Ajax.call([{methodname: 'core_competency_read_competency', args: {id: id}}]);/;

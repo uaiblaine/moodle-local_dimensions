@@ -36,6 +36,7 @@ import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
 import {attach as attachExpander} from 'local_dimensions/central/modal_expander';
@@ -620,7 +621,8 @@ const restoreFocus = (state, preferred) => {
  */
 const removeCourse = async(state, courseEl) => {
     const courseid = Number(courseEl.dataset.courseid);
-    const name = courseEl.dataset.fullname || '';
+    // The name is plain and the confirm body is HTML, so it is escaped here, once.
+    const name = escapeHtml(courseEl.dataset.fullname || '');
     const [title, body] = await Promise.all([
         getString('central_links_removecourse', 'local_dimensions'),
         getString('central_links_removecourse_confirm', 'local_dimensions', name),
@@ -683,7 +685,8 @@ const addModule = async(state, courseEl, cmid) => {
  */
 const removeModule = async(state, moduleEl) => {
     const cmid = Number(moduleEl.dataset.cmid);
-    const name = moduleEl.dataset.name || '';
+    // Plain name into an HTML confirm body: escaped here, once.
+    const name = escapeHtml(moduleEl.dataset.name || '');
     const [title, body] = await Promise.all([
         getString('central_links_removeactivity', 'local_dimensions'),
         getString('central_links_removeactivity_confirm', 'local_dimensions', name),
@@ -822,12 +825,13 @@ const bindPicker = (state) => {
 /**
  * Open the Courses & activities modal.
  *
- * @param {Object} opts {competencyid, competencyname, courseoutcomes, moduleoutcomes, onClose}.
+ * @param {Object} opts {competencyid, competencyname (plain text), courseoutcomes, moduleoutcomes, onClose}.
  * @return {Promise<void>}
  */
 export const open = async(opts) => {
     const [title, labels] = await Promise.all([
-        getString('central_links_title', 'local_dimensions', opts.competencyname),
+        // The modal title is HTML and the competency name arrives plain.
+        getString('central_links_title', 'local_dimensions', escapeHtml(opts.competencyname)),
         Promise.all([
             getString('central_links_addcourse_placeholder', 'local_dimensions'),
             getString('central_links_addactivity', 'local_dimensions'),

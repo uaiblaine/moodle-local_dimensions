@@ -68,7 +68,8 @@ class setting_iconpicker extends \admin_setting_configtext {
             'elementid' => $elementid,
             'fullname' => $this->get_full_name(),
             'id' => $this->get_id(),
-            'value' => s($data),
+            // Plain: the template's double stashes escape it.
+            'value' => (string) $data,
             'hasvalue' => !empty($data) && !empty($currenthtml),
             'currenthtml' => $currenthtml,
             'placeholder' => get_string('cardicon_placeholder', 'local_dimensions'),

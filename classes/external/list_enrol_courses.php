@@ -32,6 +32,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_dimensions\helper;
 use local_dimensions\local\enrol_methods;
 use local_dimensions\task\process_enrol_method;
 
@@ -147,18 +148,19 @@ class list_enrol_courses extends external_api {
         }, $courses);
         $statuses = enrol_methods::status_map($pageids, $params['cohortid']);
         $pending = process_enrol_method::pending_map();
-        $rolenames = self::role_names($statuses, $context);
+        $rolenames = self::role_names($statuses);
         $dateformat = get_string('strftimedaydatetime', 'langconfig');
 
         $items = [];
         foreach ($courses as $course) {
             $courseid = (int) $course->id;
-            $coursecontext = \context_course::instance($courseid);
+            // Plain spelling: the enrolment tab writes these through textContent and double stashes.
+            $plain = ['context' => \context_course::instance($courseid), 'escape' => false];
             $item = [
                 'courseid' => $courseid,
-                'shortname' => format_string($course->shortname, true, ['context' => $coursecontext]),
-                'fullname' => format_string($course->fullname, true, ['context' => $coursecontext]),
-                'categoryname' => format_string((string) $course->categoryname, true, ['context' => $context]),
+                'shortname' => format_string($course->shortname, true, $plain),
+                'fullname' => format_string($course->fullname, true, $plain),
+                'categoryname' => format_string((string) $course->categoryname, true, ['context' => $context, 'escape' => false]),
                 'visible' => (bool) $course->visible,
                 'courseurl' => (new \moodle_url('/course/view.php', ['id' => $courseid]))->out(false),
             ];
@@ -183,13 +185,12 @@ class list_enrol_courses extends external_api {
     }
 
     /**
-     * Localised names of the roles referenced by the page's enrol instances.
+     * Localised names of the roles referenced by the page's enrol instances, in the plain spelling.
      *
      * @param array $statuses Status map from enrol_methods::status_map().
-     * @param \context $context Context the role names are localised for.
      * @return array Map of roleid => localised role name.
      */
-    private static function role_names(array $statuses, \context $context): array {
+    private static function role_names(array $statuses): array {
         $roleids = [];
         foreach ($statuses as $methods) {
             foreach ($methods as $state) {
@@ -201,13 +202,7 @@ class list_enrol_courses extends external_api {
         if (!$roleids) {
             return [];
         }
-        $names = [];
-        foreach (role_fix_names(get_all_roles(), $context, ROLENAME_ALIAS) as $role) {
-            if (isset($roleids[(int) $role->id])) {
-                $names[(int) $role->id] = $role->localname;
-            }
-        }
-        return $names;
+        return helper::plain_role_names(array_keys($roleids));
     }
 
     /**

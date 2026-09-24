@@ -32,6 +32,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_dimensions\helper;
 use tool_cohortroles\cohort_role_assignment;
 
 /**
@@ -76,13 +77,16 @@ class list_template_cohort_roles extends external_api {
         }
         require_capability('moodle/competency:templateview', $template->get_context());
 
+        // Every role name below is the plain spelling: the roles pane writes them through
+        // textContent. An assignment may hold any role, so names cover them all.
+        $rolenames = helper::plain_role_names(array_map(static fn($role): int => (int) $role->id, get_all_roles()));
+
         // Assignable user-context roles.
-        $rolenames = role_get_names();
         $roles = [];
         foreach (get_roles_for_contextlevels(CONTEXT_USER) as $roleid) {
             $roleid = (int) $roleid;
             if (isset($rolenames[$roleid])) {
-                $roles[] = ['id' => $roleid, 'name' => $rolenames[$roleid]->localname];
+                $roles[] = ['id' => $roleid, 'name' => $rolenames[$roleid]];
             }
         }
 
@@ -98,7 +102,11 @@ class list_template_cohort_roles extends external_api {
             $cohortids[] = $cohortid;
             $cohorts[] = [
                 'cohortid' => $cohortid,
-                'name' => format_string($cohort->name, true, ['context' => \context::instance_by_id($cohort->contextid)]),
+                'name' => format_string(
+                    $cohort->name,
+                    true,
+                    ['context' => \context::instance_by_id($cohort->contextid), 'escape' => false]
+                ),
                 'members' => (int) $DB->count_records('cohort_members', ['cohortid' => $cohortid]),
             ];
         }
@@ -120,9 +128,11 @@ class list_template_cohort_roles extends external_api {
                 $assignments[] = [
                     'id' => (int) $row->get('id'),
                     'userid' => $userid,
+                    // Returned raw (PARAM_RAW), like the participants grid's names: under PARAM_TEXT a stored
+                    // name holding "<" before a letter fails the returns check, and the whole listing with it.
                     'userfullname' => $user ? fullname($user) : (string) $userid,
                     'roleid' => $roleid,
-                    'rolename' => isset($rolenames[$roleid]) ? $rolenames[$roleid]->localname : (string) $roleid,
+                    'rolename' => $rolenames[$roleid] ?? (string) $roleid,
                     'cohortid' => $cohortid,
                     'cohortname' => (string) ($cohortnames[$cohortid] ?? $cohortid),
                     'status' => ($member > 0 && $synced >= $member) ? 'synced' : 'pending',
@@ -181,7 +191,7 @@ class list_template_cohort_roles extends external_api {
             'assignments' => new external_multiple_structure(new external_single_structure([
                 'id' => new external_value(PARAM_INT, 'Assignment id'),
                 'userid' => new external_value(PARAM_INT, 'Role holder user id'),
-                'userfullname' => new external_value(PARAM_TEXT, 'Role holder full name'),
+                'userfullname' => new external_value(PARAM_RAW, 'Role holder full name, unformatted: write it as text'),
                 'roleid' => new external_value(PARAM_INT, 'Role id'),
                 'rolename' => new external_value(PARAM_TEXT, 'Localised role name'),
                 'cohortid' => new external_value(PARAM_INT, 'Cohort id'),

@@ -318,7 +318,12 @@ class view_plan_summary_page implements renderable, templatable {
                 'id' => $comp->get('id'),
                 // The plan's own order, stamped before any sort so the client can restore it.
                 'planorder' => count($data['competencies']),
-                'shortname' => format_string($comp->get('shortname')),
+                // Plain: the template's double stash escapes it, and the name sort compares it.
+                'shortname' => format_string(
+                    $comp->get('shortname'),
+                    true,
+                    ['context' => $comp->get_context(), 'escape' => false]
+                ),
                 'isproficient' => $isproficient,
                 'rating' => $ratingtext,
                 'hasrating' => $hasrating,

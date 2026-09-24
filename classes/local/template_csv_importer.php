@@ -472,6 +472,11 @@ class template_csv_importer {
     /**
      * One result entry.
      *
+     * The message is cleaned to its PARAM_TEXT spelling: the apply web service returns it in a
+     * PARAM_TEXT field, and clean_returnvalue() rejects the WHOLE response when strip_tags() would
+     * change one value. Under developer debugging (and in PHPUnit) a moodle_exception's message
+     * carries its debuginfo, which for a DML error is the SQL and the bound CSV values.
+     *
      * @param string $itemkey The item key.
      * @param string $outcome The outcome constant.
      * @param int $templateid The template written, or 0.
@@ -483,7 +488,7 @@ class template_csv_importer {
             'itemkey' => $itemkey,
             'outcome' => $outcome,
             'templateid' => $templateid,
-            'message' => $message,
+            'message' => clean_param($message, PARAM_TEXT),
         ];
     }
 }

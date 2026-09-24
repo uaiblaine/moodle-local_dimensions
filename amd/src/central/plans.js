@@ -32,6 +32,7 @@ import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {openExportModal, openImportModal} from 'local_dimensions/central/plans_transfer';
 import {show as showCompetencyBrowser} from 'local_dimensions/central/competency_browser';
@@ -252,7 +253,8 @@ const deleteTemplate = async(pane, id, name, plancount) => {
         return;
     }
 
-    const title = await getString('deletetemplate', 'tool_lp', name);
+    // The name is plain (the modal template above escapes it itself); this body is HTML.
+    const title = await getString('deletetemplate', 'tool_lp', escapeHtml(name));
     try {
         await Notification.deleteCancelPromise(await getString('delete'), title);
     } catch (e) {
@@ -273,7 +275,7 @@ const removeCompetency = async(pane, id, name) => {
     const competencyid = Number(id);
     const [title, body, removelabel] = await Promise.all([
         getString('central_removecompetency', 'local_dimensions'),
-        getString('central_removecompetency_confirm', 'local_dimensions', name),
+        getString('central_removecompetency_confirm', 'local_dimensions', escapeHtml(name)),
         getString('remove'),
     ]);
     try {

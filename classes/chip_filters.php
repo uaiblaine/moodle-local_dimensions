@@ -288,7 +288,12 @@ class chip_filters {
         $rows = $DB->get_records_sql($sql, $params);
         foreach ($rows as $row) {
             if (!empty($row->name)) {
-                $labels[$row->shortname] = format_string($row->name);
+                // Plain: chip_filters.mustache prints the label through a double stash.
+                $labels[$row->shortname] = format_string(
+                    $row->name,
+                    true,
+                    ['context' => \core\context\system::instance(), 'escape' => false]
+                );
             }
         }
         return $labels;

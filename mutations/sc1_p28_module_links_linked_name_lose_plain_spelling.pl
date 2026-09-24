@@ -1,0 +1,1 @@
+s/\$row = \[\n                    'cmid' => \(int\) \$cm->id,\n                    'name' => \$cm->get_formatted_name\(\['escape' => false\]\),/\$row = [\n                    'cmid' => (int) \$cm->id,\n                    'name' => \$cm->get_formatted_name(),/;

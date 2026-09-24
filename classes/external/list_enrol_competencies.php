@@ -31,6 +31,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_dimensions\helper;
 use local_dimensions\local\enrol_methods;
 
 /**
@@ -125,7 +126,9 @@ class list_enrol_competencies extends external_api {
         $needle = self::normalize($params['query']);
         foreach (api::list_competencies_in_template($template->get('id')) as $competency) {
             $competencyid = (int) $competency->get('id');
-            $shortname = format_string($competency->get('shortname'), true, ['context' => $context]);
+            // Plain spelling: the tab renders it through double stashes and str parameters, and the
+            // name filter below must match what the user sees, not its escaped form.
+            $shortname = format_string($competency->get('shortname'), true, ['context' => $context, 'escape' => false]);
             if ($needle !== '' && strpos(self::normalize($shortname), $needle) === false) {
                 continue;
             }
@@ -178,9 +181,11 @@ class list_enrol_competencies extends external_api {
      */
     private static function bootstrap(\context $context, array $records, array $allowed): array {
         $eligible = enrol_methods::eligible_roles($context);
+        // The selects are filled through textContent, so role names travel plain too.
+        $plainroles = helper::plain_role_names(array_keys($eligible));
         $roles = [];
         foreach ($eligible as $roleid => $name) {
-            $roles[] = ['id' => (int) $roleid, 'name' => $name];
+            $roles[] = ['id' => (int) $roleid, 'name' => $plainroles[(int) $roleid] ?? $name];
         }
         $categories = [];
         foreach ($records as $course) {
@@ -191,7 +196,7 @@ class list_enrol_competencies extends external_api {
             }
             $categories[$catid] = [
                 'id' => $catid,
-                'name' => format_string((string) $course->categoryname, true, ['context' => $context]),
+                'name' => format_string((string) $course->categoryname, true, ['context' => $context, 'escape' => false]),
             ];
         }
         \core_collator::asort_array_of_arrays_by_key($categories, 'name');

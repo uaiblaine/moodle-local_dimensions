@@ -97,10 +97,12 @@ class link_competency_course extends external_api {
         $hascompletion = !empty($course->enablecompletion)
             && $DB->record_exists('course_completion_criteria', ['course' => $courseid]);
 
+        // Same plain spelling as get_competency_links, whose rows this one joins on screen.
+        $plain = ['context' => $coursecontext, 'escape' => false];
         $row = [
             'courseid' => (int) $course->id,
-            'fullname' => format_string($course->fullname, true, ['context' => $coursecontext]),
-            'shortname' => format_string($course->shortname, true, ['context' => $coursecontext]),
+            'fullname' => format_string($course->fullname, true, $plain),
+            'shortname' => format_string($course->shortname, true, $plain),
             'visible' => (int) $course->visible,
             'ruleoutcome' => (int) $link->ruleoutcome,
             'modulecount' => 0,

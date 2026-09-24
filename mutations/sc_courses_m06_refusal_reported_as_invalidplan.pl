@@ -1,0 +1,1 @@
+s/(\s*)\$plan = plan_access::read_plan\(\$planid\);/$1try {$1    \$plan = plan_access::read_plan(\$planid);$1} catch (\\Exception \$e) {$1    throw new \\moodle_exception('invalidplan', 'local_dimensions');$1}/;

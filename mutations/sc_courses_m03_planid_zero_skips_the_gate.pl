@@ -1,0 +1,1 @@
+s/\$plan = plan_access::read_plan\(\$planid\);\n(\s*)\$scope = plan_access::require_competency_in_scope\(\$plan, \$competencyid\);/\$plan = \$planid > 0 ? plan_access::read_plan(\$planid) : null;\n$1\$scope = \$plan ? plan_access::require_competency_in_scope(\$plan, \$competencyid) : null;/;
