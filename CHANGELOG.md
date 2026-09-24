@@ -42,6 +42,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and source maps carry the comment text.
 
 ### Fixed
+- **The raised-contrast styles never applied.** All four blocks asked for `prefers-contrast: high`,
+  an early draft value no browser shipped; they now ask for `more`, the value Media Queries Level 5
+  defines. They reach users for the first time: a stronger progress-ring groove and readout, a
+  solid hero title and description, thicker evidence dividers and a ringed Return to plan button.
+  The hero rule had kept a fixed white ink over any text colour the admin set, which would have
+  put white on a light hero the admin paired with dark text; it now strengthens only the
+  translucent default and keeps the admin's colour. `preference_queries_test` pins that every
+  preference query uses a defined value, that no raised-contrast override loses on specificity, and
+  that none drops an admin colour its base rule reads.
 - **Names are escaped exactly once, on the hub and on the learner pages.** Course, competency,
   framework, cohort, role and activity names were escaped by the server and again by the page, so an
   ampersand showed as `&amp;`. Web services and template data now carry the plain spelling and each
