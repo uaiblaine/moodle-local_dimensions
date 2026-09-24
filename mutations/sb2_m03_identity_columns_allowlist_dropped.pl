@@ -1,0 +1,1 @@
+s/\$identityfields = array_values\(array_intersect\(\n            \\core_user\\fields::get_identity_fields\(\$context, false\),\n            self::IDENTITY_COLUMNS\n        \)\);/\$identityfields = array_values(\\core_user\\fields::get_identity_fields(\$context, false));/;

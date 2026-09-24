@@ -144,11 +144,15 @@ class view_competency_page implements renderable, templatable {
             foreach (($coursevalues[$cid] ?? []) as $sn => $val) {
                 $combinedvalues['course:' . $sn] = $val;
             }
+            /* fullname lands in a triple stash, so it keeps the escaped spelling; the label lands in
+               a double-stashed aria-label, so it is built from the plain one. */
+            $coursecontext = \core\context\course::instance($cid);
+            $plainname = format_string($course->fullname, true, ['context' => $coursecontext, 'escape' => false]);
             $data['courses'][] = [
                 'courseid' => $course->id,
-                'fullname' => format_string($course->fullname),
+                'fullname' => format_string($course->fullname, true, ['context' => $coursecontext]),
                 'courseurl' => (new moodle_url('/course/view.php', ['id' => $course->id]))->out(false),
-                'viewcoursestr' => get_string('view_course', 'local_dimensions', format_string($course->fullname)),
+                'viewcoursestr' => get_string('view_course', 'local_dimensions', $plainname),
                 'locked' => $locked,
                 'filtervaluesjson' => json_encode((object) $combinedvalues),
             ];

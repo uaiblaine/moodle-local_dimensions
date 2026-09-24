@@ -182,10 +182,12 @@ class get_competency_links extends external_api {
             $courseid = (int) $record->courseid;
             $coursecontext = context_course::instance($courseid);
             $hascompletion = !empty($record->enablecompletion) && !empty($criteriacounts[$courseid]);
+            // Plain spelling: the links modal writes the names through textContent.
+            $plain = ['context' => $coursecontext, 'escape' => false];
             $item = [
                 'courseid' => $courseid,
-                'fullname' => format_string($record->fullname, true, ['context' => $coursecontext]),
-                'shortname' => format_string($record->shortname, true, ['context' => $coursecontext]),
+                'fullname' => format_string($record->fullname, true, $plain),
+                'shortname' => format_string($record->shortname, true, $plain),
                 'visible' => (int) $record->visible,
                 'ruleoutcome' => (int) $record->ruleoutcome,
                 'modulecount' => (int) ($modulecounts[$courseid] ?? 0),

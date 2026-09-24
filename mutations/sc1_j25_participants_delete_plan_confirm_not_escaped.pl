@@ -1,0 +1,1 @@
+s/getString\('central_participants_delete_confirm', 'local_dimensions', escapeHtml\(row\.querySelector\('td'\)\.textContent\)\)/getString('central_participants_delete_confirm', 'local_dimensions', row.querySelector('td').textContent)/;

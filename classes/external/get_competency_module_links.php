@@ -96,9 +96,10 @@ class get_competency_module_links extends external_api {
                 continue;
             }
             if (array_key_exists((int) $cm->id, $outcomes)) {
+                // Plain spelling: the links modal writes activity names through textContent.
                 $row = [
                     'cmid' => (int) $cm->id,
-                    'name' => $cm->get_formatted_name(),
+                    'name' => $cm->get_formatted_name(['escape' => false]),
                     'modname' => $cm->modname,
                     'modtype' => (string) $cm->modfullname,
                     'iconurl' => $cm->get_icon_url()->out(false),
@@ -121,7 +122,7 @@ class get_competency_module_links extends external_api {
             } else {
                 $available[] = [
                     'cmid' => (int) $cm->id,
-                    'name' => $cm->get_formatted_name(),
+                    'name' => $cm->get_formatted_name(['escape' => false]),
                     'modname' => $cm->modname,
                     'modtype' => (string) $cm->modfullname,
                 ];

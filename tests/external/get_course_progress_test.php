@@ -417,4 +417,39 @@ final class get_course_progress_test extends \advanced_testcase {
         $this->assertSame([], $row['sections']);
         $this->assertSame('', $row['formatted_start_date']);
     }
+
+    /**
+     * The error field is cleaned to its PARAM_TEXT spelling, so a message carrying debuginfo cannot
+     * fail the whole response, every other course's row included.
+     *
+     * No fixture makes the calculator throw for a course that passes the readable gate, so the field
+     * is produced by calling its producer directly; the row is then cleaned through the real returns
+     * structure. The DML exception carries its SQL in the message here, as under developer debugging.
+     *
+     * @return void
+     */
+    public function test_an_error_message_with_markup_keeps_the_response_valid(): void {
+        $exception = new \dml_read_exception(
+            'boom',
+            'SELECT 1 FROM {user_enrolments} WHERE status <> :active AND timeend > :now',
+            ['<b>R&D < Ops</b>']
+        );
+        $error = (new \ReflectionMethod(get_course_progress::class, 'error_text'))->invoke(null, $exception);
+
+        $this->assertStringContainsString(get_string('dmlreadexception', 'error'), $error);
+        // Tags and the SQL operator stripped, text kept in its plain spelling.
+        $this->assertStringContainsString('R&D < Ops', $error);
+        $this->assertStringNotContainsString('<b>', $error);
+        $this->assertStringNotContainsString('<>', $error);
+
+        $cleaned = external_api::clean_returnvalue(get_course_progress::execute_returns(), [[
+            'courseid' => 2,
+            'enabled' => false,
+            'locked' => false,
+            'formatted_start_date' => '',
+            'sections' => [],
+            'error' => $error,
+        ]]);
+        $this->assertSame($error, $cleaned[0]['error']);
+    }
 }

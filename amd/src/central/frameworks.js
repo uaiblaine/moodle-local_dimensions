@@ -30,6 +30,7 @@ import ModalForm from 'core_form/modalform';
 import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
 import {makeSpinner, triggerDownload} from 'local_dimensions/central/download';
@@ -369,10 +370,11 @@ const deleteFramework = async(pane, row) => {
         Notification.alert('', await getString('central_frameworks_delete_blocked', 'local_dimensions'));
         return;
     }
+    // The row carries the plain name and the confirm body is HTML.
     const [title, body] = await Promise.all([
         getString('delete'),
         getString('central_frameworks_delete_confirm', 'local_dimensions',
-            {name: row.dataset.name, count: row.dataset.count}),
+            {name: escapeHtml(row.dataset.name), count: row.dataset.count}),
     ]);
     try {
         await Notification.deleteCancelPromise(title, body);

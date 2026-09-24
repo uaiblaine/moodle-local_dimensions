@@ -1,0 +1,1 @@
+s/\$scalenames\[\(int\) \$scale->id\] = format_string\(\$scale->name, true, \['context' => \$context, 'escape' => false\]\);/\$scalenames[(int) \$scale->id] = format_string(\$scale->name, true, ['context' => \$context]);/;

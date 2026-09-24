@@ -155,12 +155,26 @@ class get_course_progress extends external_api {
                     'is_future_date' => false,
                     'course_url' => '',
                     'sections' => [],
-                    'error' => $e->getMessage(),
+                    'error' => self::error_text($e),
                 ];
             }
         }
 
         return $results;
+    }
+
+    /**
+     * The error field of a course whose progress could not be read.
+     *
+     * Cleaned to its PARAM_TEXT spelling because clean_returnvalue() rejects the WHOLE response, every
+     * other course included, when strip_tags() would change one value. Under developer debugging a
+     * moodle_exception's message carries its debuginfo: for a DML error, SQL such as "status <> :active".
+     *
+     * @param \Throwable $e What the calculator threw.
+     * @return string
+     */
+    private static function error_text(\Throwable $e): string {
+        return clean_param($e->getMessage(), PARAM_TEXT);
     }
 
     /**

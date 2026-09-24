@@ -32,6 +32,7 @@ import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
 import {applyMode, destroyBrowser, getCheckedIds, initBrowser} from 'local_dimensions/central/competency_tree_browser';
@@ -151,7 +152,8 @@ const restoreFocus = (state, preferred) => {
  */
 const removeRelated = async(state, rowEl) => {
     const relatedid = Number(rowEl.dataset.relatedid);
-    const name = rowEl.querySelector('.fw-medium').textContent;
+    // The row holds the plain name and the confirm body is HTML: escaped here, once.
+    const name = escapeHtml(rowEl.querySelector('.fw-medium').textContent);
     const [title, body] = await Promise.all([
         getString('central_related_remove', 'local_dimensions'),
         getString('central_related_remove_confirm', 'local_dimensions', name),
@@ -211,7 +213,7 @@ const addSelected = async(state) => {
 /**
  * Open the Related competencies modal.
  *
- * @param {Object} opts {competencyid, competencyname, frameworkid}.
+ * @param {Object} opts {competencyid, competencyname (plain text), frameworkid}.
  * @return {Promise<void>}
  */
 export const open = async(opts) => {
@@ -219,7 +221,7 @@ export const open = async(opts) => {
     const [title, addlabel, closelabel, removelabel, addedlabel, removedlabel, selflabel, relatedlabel,
         loadmorelabel, emptylabel] =
         await Promise.all([
-            getString('central_related_title', 'local_dimensions', opts.competencyname),
+            getString('central_related_title', 'local_dimensions', escapeHtml(opts.competencyname)),
             getString('central_browseframeworks_add', 'local_dimensions'),
             getString('closebuttontitle', 'core'),
             getString('central_related_remove', 'local_dimensions'),

@@ -189,10 +189,12 @@ class calculator {
                 if (trim($sectionname) === '') {
                     $sectionname = get_section_name($course, $section);
                 }
+                /* Plain spelling: get_course_progress hands it to progress_card_body, whose double
+                   stashes escape it once. */
                 $sectionname = format_string(
                     $sectionname,
                     true,
-                    ['context' => \core\context\course::instance($course->id)]
+                    ['context' => \core\context\course::instance($course->id), 'escape' => false]
                 );
 
                 $percentage = null;
@@ -680,7 +682,9 @@ class calculator {
 
         return [
             'cmid' => (int) $cm->id,
-            'name' => $cm->get_formatted_name(),
+            /* Plain, as is describe_section()'s name: accordion.js and progress_card_body each
+               escape it once. */
+            'name' => $cm->get_formatted_name(['escape' => false]),
             'url' => $cm->url ? $cm->url->out(false) : '',
             'completed' => $completed,
             'tracked' => $tracked,
@@ -706,7 +710,7 @@ class calculator {
         $context = \core\context\course::instance($course->id);
 
         return [
-            'name' => $ownname !== '' ? format_string($ownname, true, ['context' => $context]) : '',
+            'name' => $ownname !== '' ? format_string($ownname, true, ['context' => $context, 'escape' => false]) : '',
             'hasownname' => $ownname !== '',
             'url' => (new \moodle_url('/course/section.php', ['id' => $section->id]))->out(false),
             'tracked' => $tracked,

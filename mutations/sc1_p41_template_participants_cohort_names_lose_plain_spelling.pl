@@ -1,0 +1,1 @@
+s/\$map\[\(int\) \$row->userid\]\[\] = format_string\(\$row->name, true, \['context' => \$context, 'escape' => false\]\);/\$map[(int) \$row->userid][] = format_string(\$row->name, true, ['context' => \$context]);/;

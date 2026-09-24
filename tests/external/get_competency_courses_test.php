@@ -174,18 +174,26 @@ final class get_competency_courses_test extends \advanced_testcase {
      * Run the service as the given user and clean the payload through the returns structure.
      *
      * clean_returnvalue() drops undeclared keys silently, so asserting on the cleaned payload is
-     * what makes a key missing from execute_returns() fail the test. The plan id is 0, so the
-     * global filter applies directly; the template cascade has its own tests above.
+     * what makes a key missing from execute_returns() fail the test. The user's plan holds the
+     * competency and has no template, so the global filter applies directly; the template cascade
+     * has its own tests above.
      *
      * @param int $competencyid The competency id.
      * @param \stdClass $user The user to run as.
      * @return array The cleaned payload, keyed by course id.
      */
     private function cleaned_result_for(int $competencyid, \stdClass $user): array {
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $planid = (int) $ccg->create_plan([
+            'userid' => $user->id,
+            'status' => \core_competency\plan::STATUS_ACTIVE,
+        ])->get('id');
+        $ccg->create_plan_competency(['planid' => $planid, 'competencyid' => $competencyid]);
+
         $this->setUser($user);
         $result = external_api::clean_returnvalue(
             get_competency_courses::execute_returns(),
-            get_competency_courses::execute($competencyid, 0)
+            get_competency_courses::execute($competencyid, $planid)
         );
 
         return array_column($result, null, 'id');

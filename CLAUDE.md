@@ -471,9 +471,16 @@ off. Only a `dml_missing_record_exception` means there is no plan: it comes from
 id, and from `context_user::instance(0)` for an id below 1, which `core_competency\persistent` never loads.
 Every other failure must surface as core's own error, the way `admin/tool/lp/plan.php` shows it.
 Behat cannot assert on an exception page, so the refusals are pinned in `tests/local/plan_access_test.php`,
-and the mutation spec is `mutations/plan_access.conf`. `classes/external/get_competency_courses.php` still
-catches `\Exception` around `read_plan()`. That catch only picks the enrolment-filter cascade and shows no
-error, so it was left as it is.
+and the mutation spec is `mutations/plan_access.conf`.
+
+**Reading a plan says nothing about a competency id.** `plan_access::competency_scope()` decides which
+competencies a plan reaches, and `view-competency.php`, `get_competency_rule_data` and
+`get_competency_courses` all ask it before reading anything about the competency: the plan's own (the
+archive for a completed plan); a related competency only when `showrelated` AND `showrelatedlink` resolve
+on for the template and the viewer has `competencyview` in its context (core's check before listing
+related competencies); a direct child of a rule-bearing plan competency, because the Rules tab links there.
+Outside the plan the enrolment-filter cascade skips the template (competency -> site). Specs:
+`mutations/sec_scope.conf`, `mutations/sec_courses.conf`.
 
 ## Colour tokens and dark mode
 

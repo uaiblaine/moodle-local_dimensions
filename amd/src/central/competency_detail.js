@@ -29,6 +29,7 @@ import Ajax from 'core/ajax';
 import Modal from 'core/modal';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {notifyError} from 'local_dimensions/central/errors';
 import CollapsibleDescription from 'local_dimensions/collapsible_description';
@@ -275,7 +276,8 @@ export const openCompetencyDetailModal = async(competencyid) => {
         detailconfig: {linksclickable: false, showrelated: false},
     });
     const modal = await Modal.create({
-        title: data.name,
+        // The node's name is plain text and a modal title is HTML.
+        title: escapeHtml(data.name),
         body: html,
         large: true,
         show: true,

@@ -1,0 +1,1 @@
+s/\$parent\n            && \(int\) \$parent->get\('ruleoutcome'\) !== competency::OUTCOME_NONE\n            && !empty\(\$parent->get\('ruletype'\)\)\n/\$parent\n            && !empty(\$parent->get('ruletype'))\n/;

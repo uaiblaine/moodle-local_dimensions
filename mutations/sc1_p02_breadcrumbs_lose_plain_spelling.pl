@@ -1,0 +1,1 @@
+s/\$crumbs\[\] = format_string\(\$names\[\$ancestorid\]->shortname, true, \['context' => \$context, 'escape' => false\]\);/\$crumbs[] = format_string(\$names[\$ancestorid]->shortname, true, ['context' => \$context]);/;

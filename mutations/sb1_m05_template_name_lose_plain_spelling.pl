@@ -1,0 +1,1 @@
+s/'name' => format_string\(\$template->get\('shortname'\), true, \[\n                    'context' => \$template->get_context\(\),\n                    'escape' => false,\n                \]\),/'name' => format_string(\$template->get('shortname'), true, [\n                    'context' => \$template->get_context(),\n                ]),/;

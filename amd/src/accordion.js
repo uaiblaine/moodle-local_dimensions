@@ -1336,11 +1336,12 @@ define(
                open with a dash so the grid stays rectangular. */
             if (hasGrade) {
                 const proficient = isGradeProficient(ev.grade, scaleConfig);
+                const gradename = escapeHtml(fromExporter(ev.gradename));
                 html += '<span class="local-dimensions-tip local-dimensions-tip-bottom" data-dim-tip="' +
-                    escapeHtml(ev.gradename) + '">';
+                    gradename + '">';
                 html += '<span class="local-dimensions-ev-row-assess' +
                     (proficient ? ' local-dimensions-ev-row-assess-prof' : '') + '">' +
-                    escapeHtml(ev.gradename) + '</span>';
+                    gradename + '</span>';
                 html += '</span>';
             } else {
                 html += '<span class="local-dimensions-ev-row-assess local-dimensions-ev-row-assess-none">&mdash;</span>';
@@ -1550,7 +1551,8 @@ define(
                 url: hasUrl ? ev.url : '',
                 urllabel: hasUrl ? ev.url : '',
                 hasgrade: hasGrade,
-                gradename: hasGrade ? ev.gradename : '',
+                // Plain, for the template's double stash; description stays escaped for its triple stash.
+                gradename: hasGrade ? fromExporter(ev.gradename) : '',
                 gradeproficient: gradeProficient,
                 hasactionuser: hasActionUser,
                 actionusername: hasActionUser ? ev.actionuser.fullname : '',
@@ -2540,12 +2542,12 @@ define(
             if (showPath && data.competency) {
                 const pathParts = [];
                 if (data.framework?.shortname) {
-                    pathParts.push(escapeHtml(data.framework.shortname));
+                    pathParts.push(escapeHtml(fromExporter(data.framework.shortname)));
                 }
                 if (Array.isArray(data.compparents)) {
                     data.compparents.forEach(function(parent) {
                         if (parent.shortname) {
-                            pathParts.push(escapeHtml(parent.shortname));
+                            pathParts.push(escapeHtml(fromExporter(parent.shortname)));
                         }
                     });
                 }
@@ -2604,9 +2606,10 @@ define(
                     html += '<a href="' + escapeHtml(href) +
                         '" target="_blank" rel="noopener"' +
                         ' class="local-dimensions-related-pill-v2 local-dimensions-related-pill-link">'
-                        + escapeHtml(related.shortname) + '</a>';
+                        + escapeHtml(fromExporter(related.shortname)) + '</a>';
                 } else {
-                    html += '<span class="local-dimensions-related-pill-v2">' + escapeHtml(related.shortname) + '</span>';
+                    html += '<span class="local-dimensions-related-pill-v2">' +
+                        escapeHtml(fromExporter(related.shortname)) + '</span>';
                 }
             });
 
@@ -2648,7 +2651,7 @@ define(
                 return;
             }
             Modal.create({
-                title: strMap.taxonomyWhatIs.replace('{$a}', term),
+                title: strMap.taxonomyWhatIs.replace('{$a}', escapeHtml(term)),
                 body: definition,
                 show: true,
                 removeOnClose: true
@@ -2808,9 +2811,10 @@ define(
                tooltip rather than allowed to wrap the row. */
             html += '<div class="local-dimensions-status-headline">';
             if (hasGrade) {
+                const gradename = escapeHtml(fromExporter(uc.gradename));
                 html += '<span class="local-dimensions-tip local-dimensions-tip-bottom" data-dim-tip="' +
-                    escapeHtml(uc.gradename) + '">';
-                html += '<span class="local-dimensions-status-rating">' + escapeHtml(uc.gradename) + '</span>';
+                    gradename + '">';
+                html += '<span class="local-dimensions-status-rating">' + gradename + '</span>';
                 html += '</span>';
                 html += '<span class="local-dimensions-pill local-dimensions-pill-' +
                     (isProficient ? 'success' : 'warning') + '">';
@@ -2946,6 +2950,24 @@ define(
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        /**
+         * Turn a text field of a core exporter back into plain text, so escapeHtml() escapes it once.
+         *
+         * Core's exporters return every PARAM_TEXT property (shortnames, scale names) already
+         * HTML-escaped, and 5.x also turns quotes into entities. Written with escapeHtml() as it
+         * comes, 'R&D' would show as 'R&amp;D'. A DOMParser document is inert: nothing in it
+         * loads or runs, so decoding cannot execute markup.
+         *
+         * @param {string} text The exporter's escaped text
+         * @return {string} The plain text
+         */
+        function fromExporter(text) {
+            if (!text) {
+                return '';
+            }
+            return new DOMParser().parseFromString(String(text), 'text/html').body.textContent || '';
         }
 
         /**
@@ -3587,7 +3609,8 @@ define(
             }
 
             Modal.create({
-                title: title ? title.textContent.trim() : '',
+                // Plain text read from the page; core/modal writes its title as HTML.
+                title: title ? escapeHtml(title.textContent.trim()) : '',
                 body: '',
                 large: true,
                 show: true,
@@ -3636,7 +3659,7 @@ define(
                 return;
             }
 
-            modal.setTitle(title ? title.textContent.trim() : '');
+            modal.setTitle(title ? escapeHtml(title.textContent.trim()) : '');
 
             /* Appended as nodes, never as an HTML string. The shell is cloned from a torn-down pane,
                so the copy carries the loading placeholder and its translated strings but no rendered

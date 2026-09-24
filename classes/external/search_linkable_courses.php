@@ -127,11 +127,12 @@ class search_linkable_courses extends external_api {
 
         $items = [];
         foreach ($records as $record) {
-            $coursecontext = context_course::instance((int) $record->id);
+            // Plain spelling: course_datasource escapes each name once as it builds the label.
+            $plain = ['context' => context_course::instance((int) $record->id), 'escape' => false];
             $items[] = [
                 'id' => (int) $record->id,
-                'fullname' => format_string($record->fullname, true, ['context' => $coursecontext]),
-                'shortname' => format_string($record->shortname, true, ['context' => $coursecontext]),
+                'fullname' => format_string($record->fullname, true, $plain),
+                'shortname' => format_string($record->shortname, true, $plain),
             ];
         }
 

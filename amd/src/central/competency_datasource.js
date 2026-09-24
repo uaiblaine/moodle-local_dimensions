@@ -22,6 +22,7 @@
  */
 
 import Ajax from 'core/ajax';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 
 /**
@@ -47,18 +48,6 @@ export const transport = async(selector, query, success, failure) => {
     } catch (error) {
         failure(error);
     }
-};
-
-/**
- * HTML-escape a plain-text fragment for use inside a suggestion label.
- *
- * @param {String} text
- * @return {String}
- */
-const escapeHtml = (text) => {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 };
 
 /**

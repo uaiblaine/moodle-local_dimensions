@@ -1936,6 +1936,9 @@ class helper {
      * root to parent. Shared by the hub's competency search, browse and related-competency
      * web services and the Plans tab.
      *
+     * The path is the plain spelling (tags stripped, nothing escaped): every consumer escapes it
+     * once itself, through a Mustache double stash, textContent or an explicit escape.
+     *
      * @param array $pathsbyid Map of competency id to its `path` string.
      * @param \context $context Context used to format the ancestor shortnames.
      * @return array Map of competency id to ['path' => string, 'pathids' => int[]].
@@ -1967,7 +1970,7 @@ class helper {
             $crumbs = [];
             foreach ($ancestors as $ancestorid) {
                 if (isset($names[$ancestorid])) {
-                    $crumbs[] = format_string($names[$ancestorid]->shortname, true, ['context' => $context]);
+                    $crumbs[] = format_string($names[$ancestorid]->shortname, true, ['context' => $context, 'escape' => false]);
                 }
             }
             $result[$id] = [
@@ -2837,6 +2840,10 @@ class helper {
      * Batch queries cover the whole page (children, linked courses, activities and templates,
      * scale names, custom fields); depth and taxonomy are derived from each record's path.
      *
+     * Names and labels are the plain spelling. Every sink escapes them once itself: the
+     * structure_node template (double stashes, including the data-* attributes the detail pane
+     * reads back through textContent) and the web-service consumers.
+     *
      * @param array $records Sibling competency persistent objects (core_competency\competency).
      * @param competency_framework $framework The owning framework (for taxonomy + context).
      * @param \context $context Context for format_string.
@@ -2926,13 +2933,17 @@ class helper {
         $scalenames = [];
         if (!empty($scaleids)) {
             foreach ($DB->get_records_list('scale', 'id', $scaleids) as $scale) {
-                $scalenames[(int) $scale->id] = format_string($scale->name, true, ['context' => $context]);
+                $scalenames[(int) $scale->id] = format_string($scale->name, true, ['context' => $context, 'escape' => false]);
             }
         }
 
         // Batch: type/tag labels and custom colours, one query.
         $cfdata = self::structure_customfield_data($ids);
 
+        // The select labels are admin text read raw from the option list, so they go through
+        // format_string() like the names: filters apply and no tag reaches a PARAM_TEXT return
+        // field, where it would fail the whole response.
+        $plain = ['context' => $context, 'escape' => false];
         $nodes = [];
         foreach ($records as $record) {
             $id = (int) $record->get('id');
@@ -2954,7 +2965,7 @@ class helper {
             $nodes[] = [
                 'id' => $id,
                 'parentid' => (int) $record->get('parentid'),
-                'shortname' => format_string($record->get('shortname'), true, ['context' => $context]),
+                'shortname' => format_string($record->get('shortname'), true, $plain),
                 'idnumber' => (string) $record->get('idnumber'),
                 'taxonomy' => get_string('taxonomy_' . $taxonomy, 'core_competency'),
                 'scale' => (string) ($scalenames[$effectivescaleid] ?? ''),
@@ -2970,9 +2981,9 @@ class helper {
                 'ruleoutcome' => (int) $record->get('ruleoutcome'),
                 'ruleconfig' => $record->get('ruleconfig'),
                 'rulelabel' => self::get_competency_rule_label($record->get('ruletype')),
-                'type' => (string) ($cfdata[$id][constants::CFIELD_TYPE] ?? ''),
-                'tag1' => (string) ($cfdata[$id][constants::CFIELD_TAG1] ?? ''),
-                'tag2' => (string) ($cfdata[$id][constants::CFIELD_TAG2] ?? ''),
+                'type' => format_string((string) ($cfdata[$id][constants::CFIELD_TYPE] ?? ''), true, $plain),
+                'tag1' => format_string((string) ($cfdata[$id][constants::CFIELD_TAG1] ?? ''), true, $plain),
+                'tag2' => format_string((string) ($cfdata[$id][constants::CFIELD_TAG2] ?? ''), true, $plain),
                 'bgcolor' => (string) ($cfdata[$id][constants::CFIELD_CUSTOMBGCOLOR] ?? ''),
                 'textcolor' => (string) ($cfdata[$id][constants::CFIELD_CUSTOMTEXTCOLOR] ?? ''),
             ];
@@ -3171,7 +3182,39 @@ class helper {
     }
 
     /**
+     * Role names in the plain spelling, keyed by role id, for the hub's role pickers and labels.
+     *
+     * Core's role_get_name() passes a custom role name through format_string() in its escaping
+     * mode, which the hub's sinks (textContent, double stashes) would escape a second time. The
+     * hub names roles only in system and category contexts, where no course alias applies, so the
+     * name is the role's own or, for a standard role left unnamed, core's localised default.
+     *
+     * @param array $roleids Role ids; unknown ids are skipped.
+     * @return array Map of role id => plain name.
+     */
+    public static function plain_role_names(array $roleids): array {
+        $wanted = array_flip(array_map('intval', $roleids));
+        $system = \context_system::instance();
+        $names = [];
+        foreach (get_all_roles() as $role) {
+            $roleid = (int) $role->id;
+            if (!isset($wanted[$roleid])) {
+                continue;
+            }
+            if (trim((string) $role->name) !== '') {
+                $names[$roleid] = format_string($role->name, true, ['context' => $system, 'escape' => false]);
+            } else {
+                $names[$roleid] = role_get_name($role, null, ROLENAME_ORIGINAL);
+            }
+        }
+        return $names;
+    }
+
+    /**
      * Build the framework management rows for a context (Frameworks tab).
+     *
+     * Names are the plain spelling, because frameworks_row renders them through double stashes
+     * and the tab's JS reads data-name back through textContent.
      *
      * @param \context $context The resolved page context (system or course category).
      * @param bool $includehidden Whether to include hidden frameworks (default visible-only).
@@ -3197,8 +3240,12 @@ class helper {
             $description = trim(preg_replace('/\s+/', ' ', $description));
             $rows[] = [
                 'id' => $id,
-                'shortname' => format_string($framework->get('shortname')),
-                'idnumber' => s($framework->get('idnumber')),
+                'shortname' => format_string(
+                    $framework->get('shortname'),
+                    true,
+                    ['context' => $framework->get_context(), 'escape' => false]
+                ),
+                'idnumber' => (string) $framework->get('idnumber'),
                 'description' => shorten_text($description, 300),
                 'competencycount' => count($competencyids),
                 'visible' => (bool) $framework->get('visible'),

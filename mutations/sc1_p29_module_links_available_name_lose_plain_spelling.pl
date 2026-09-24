@@ -1,0 +1,1 @@
+s/\$available\[\] = \[\n                    'cmid' => \(int\) \$cm->id,\n                    'name' => \$cm->get_formatted_name\(\['escape' => false\]\),/\$available[] = [\n                    'cmid' => (int) \$cm->id,\n                    'name' => \$cm->get_formatted_name(),/;

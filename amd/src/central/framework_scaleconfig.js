@@ -29,6 +29,7 @@ import ModalSaveCancel from 'core/modal_save_cancel';
 import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
+import {decodeEntities} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 
 /**
@@ -109,7 +110,8 @@ const buildRows = (values, existing) => {
     });
     return values.map((value) => ({
         id: value.id,
-        name: value.name,
+        // Core returns the value name already escaped, and the template's double stashes escape it again.
+        name: decodeEntities(value.name),
         isdefault: Boolean(defaults[value.id]),
         isproficient: Boolean(proficients[value.id]),
     }));

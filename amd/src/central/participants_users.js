@@ -28,6 +28,7 @@ import Ajax from 'core/ajax';
 import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import {enhance} from 'core/form-autocomplete';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast} from 'local_dimensions/central/toast';
 import {iconButton} from 'local_dimensions/central/action_button';
@@ -177,7 +178,8 @@ const onRowsClick = (state, event) => {
         return;
     }
     if (event.target.closest('[data-action="delete-plan"]')) {
-        getString('central_participants_delete_confirm', 'local_dimensions', row.querySelector('td').textContent)
+        // The cell holds the user's name as plain text and the confirm body is HTML.
+        getString('central_participants_delete_confirm', 'local_dimensions', escapeHtml(row.querySelector('td').textContent))
             .then((body) => Notification.saveCancelPromise(state.deletelabel, body, state.deletelabel))
             .then(() => mutate(state, row, 'local_dimensions_delete_template_user_plan'))
             .catch(() => null);
