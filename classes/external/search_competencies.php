@@ -120,14 +120,16 @@ class search_competencies extends external_api {
         }
         $breadcrumbs = helper::competency_breadcrumbs($pathsbyid, $context);
 
+        // Plain spelling: competency_datasource escapes each part once as it builds the label.
+        $plain = ['context' => $context, 'escape' => false];
         $items = [];
         foreach ($records as $record) {
             $crumbs = $breadcrumbs[(int) $record->id] ?? ['path' => ''];
             $items[] = [
                 'id' => (int) $record->id,
-                'shortname' => format_string($record->shortname, true, ['context' => $context]),
+                'shortname' => format_string($record->shortname, true, $plain),
                 'idnumber' => (string) $record->idnumber,
-                'frameworktag' => format_string($tags[(int) $record->competencyframeworkid] ?? '', true, ['context' => $context]),
+                'frameworktag' => format_string($tags[(int) $record->competencyframeworkid] ?? '', true, $plain),
                 'path' => $crumbs['path'],
             ];
         }

@@ -140,9 +140,8 @@ class plan_trail_cache {
      * Proficiency comes from the table core itself reads for that plan status. On completion,
      * api::complete_plan() archives every rating into {competency_usercompplan} keyed by planid,
      * and api::list_plan_competencies() reads the archive for a complete plan and the live
-     * {competency_usercomp} for every other status. A trail that always read the live table would
-     * show the learner's CURRENT state on a plan that closed months ago, and disagree with the
-     * core plan page for the same plan.
+     * {competency_usercomp} for every other status. Reading the live table for a completed plan
+     * would show the learner's current state and disagree with core's page for the same plan.
      *
      * @param int $planid Plan ID.
      * @param int $userid User ID.

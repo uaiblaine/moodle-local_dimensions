@@ -143,10 +143,7 @@ class get_fontawesome_icons extends external_api {
     /**
      * Builds the icon map using Boost Union if available, otherwise from core.
      *
-     * Boost Union stores both solid and brand icons with the same key pattern
-     * (theme_boost_union:fa-xxx), making it impossible to distinguish them
-     * from the stored identifier alone. We post-process brand icon keys
-     * to use :fab- prefix so the stored value preserves the brand/solid distinction.
+     * Boost Union's brand keys are renamed; see normalize_brand_keys().
      *
      * @return array The icon map [name => ['class' => '...', 'source' => '...']]
      */
@@ -173,10 +170,9 @@ class get_fontawesome_icons extends external_api {
     /**
      * Normalize brand icon keys to use :fab- prefix instead of :fa-.
      *
-     * Boost Union stores brand icons as theme_boost_union:fa-xxx (same prefix
-     * as solid icons), but the source field is 'fabrand'. We rename the key
-     * to :fab- so the stored identifier encodes the brand/solid distinction,
-     * enabling correct CSS class resolution at render time.
+     * Boost Union keys brand icons as theme_boost_union:fa-xxx, the same prefix as
+     * solid icons, and marks them only with source 'fabrand'. The key becomes :fab-xxx
+     * so the stored identifier alone tells brand from solid when the icon is rendered.
      *
      * @param array $iconmap The raw icon map.
      * @return array The normalized icon map.

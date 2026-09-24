@@ -28,6 +28,7 @@ import Ajax from 'core/ajax';
 import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import {enhance} from 'core/form-autocomplete';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast} from 'local_dimensions/central/toast';
 import {iconButton} from 'local_dimensions/central/action_button';
@@ -177,7 +178,8 @@ const onRowsClick = (state, event) => {
         return;
     }
     if (event.target.closest('[data-action="delete-plan"]')) {
-        getString('central_participants_delete_confirm', 'local_dimensions', row.querySelector('td').textContent)
+        // The cell holds the user's name as plain text and the confirm body is HTML.
+        getString('central_participants_delete_confirm', 'local_dimensions', escapeHtml(row.querySelector('td').textContent))
             .then((body) => Notification.saveCancelPromise(state.deletelabel, body, state.deletelabel))
             .then(() => mutate(state, row, 'local_dimensions_delete_template_user_plan'))
             .catch(() => null);
@@ -216,16 +218,11 @@ const fillCohortFilter = async(state) => {
  */
 const wire = (state, pane) => {
     /*
-     * The filter controls live in a <form> inside the filters dropdown. Stop Enter in the search
-     * box from submitting it.
-     *
-     * Keeping the panel open while the user works in it is NOT free on Bootstrap 4, contrary to
-     * what this comment used to claim: BS4 has no data-bs-auto-close, and its Dropdown._clearMenus
-     * (theme/boost/amd/src/bootstrap/dropdown.js) exempts only input and textarea targets. The
-     * cohort <select> and the switch <label> are neither, so on Moodle 4.5 either one closed the
-     * panel mid-interaction. Swallow the click before it reaches the document listener that
-     * clears menus. Guarded on the Bootstrap 4 marker so 5.x keeps using data-bs-auto-close
-     * natively, and scoped to the form so the toggle button and any dropdown item still behave.
+     * The filter controls live in a <form> inside the filters dropdown; stop Enter in the search
+     * box from submitting it. Bootstrap 4 (Moodle 4.5) has no data-bs-auto-close, and its
+     * Dropdown._clearMenus exempts only input and textarea targets, so a click on the cohort
+     * <select> or the switch <label> would close the panel. On 4.5 only, stop clicks inside the
+     * form from reaching the document listener that clears menus; 5.x relies on data-bs-auto-close.
      */
     const filtersform = pane.querySelector(SELECTORS.filtersform);
     filtersform.addEventListener('submit', (event) => event.preventDefault());
@@ -323,8 +320,8 @@ export const mount = async(pane, opts) => {
     state.observer.observe(pane.querySelector(SELECTORS.sentinel));
 
     // The pane is wired now, so a first-page load failure still leaves it usable: the filter
-    // controls re-run applyFilters on this same state. Swallow to a toast so mount() rejects only
-    // before wire(), where the caller's retry is a clean remount rather than a double-wire.
+    // controls re-run applyFilters on this same state. Report and swallow it so mount() rejects
+    // only before wire(), where the caller's retry is a clean remount rather than a double-wire.
     await applyFilters(state).catch(notifyError);
     return {refresh: () => applyFilters(state)};
 };

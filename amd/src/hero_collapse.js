@@ -20,7 +20,7 @@
  * the plugin owns no tables and needs no web service of its own for this.
  *
  * The fold is per plan and per competency, so the preference holds the list of folded keys
- * rather than one flag. The page is seeded with the WHOLE list, not just its own key: a write
+ * rather than one flag. The page is seeded with the whole list, not just its own key: a write
  * replaces the entire preference, so saving only this hero's key would unfold every other one.
  *
  * The state is rendered server-side, so this module never applies it on load: it only
@@ -41,9 +41,9 @@ const PREF_HERO = 'local_dimensions_learner_hero';
 /** @type {String} Class that folds the hero to its slim state. */
 const SLIM_CLASS = 'local-dimensions-hero-slim';
 /**
- * @type {Number} How many folded heroes to keep. The preference value column holds 1333
- * characters, so an unbounded list would eventually fail to save; the least recently folded
- * hero is dropped instead, and simply opens the next time it is visited.
+ * @type {Number} How many folded heroes to keep. On Moodle 4.5 the preference value column holds
+ * 1333 characters (5.0 made it text), so an unbounded list would eventually fail to save there;
+ * the least recently folded hero is dropped instead, and simply opens the next time it is visited.
  */
 const MAX_FOLDED = 100;
 

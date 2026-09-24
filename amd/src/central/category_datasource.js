@@ -27,6 +27,7 @@
  */
 
 import Ajax from 'core/ajax';
+import {escapeHtml} from 'local_dimensions/central/escape';
 
 const SELECTORS = {
     bar: '[data-region="contextbar"]',
@@ -67,6 +68,9 @@ export const transport = (selector, query, success, failure) => {
 /**
  * Map hits to autocomplete {value, label} pairs, labelled with the active mode's count.
  *
+ * The name arrives plain and core/form-autocomplete inserts the label as HTML, so it is escaped
+ * here, once. The remembered name stays plain: context.js writes it through textContent.
+ *
  * @param {String} selector The originating select's selector.
  * @param {Array} results Raw items from transport().
  * @return {Array}
@@ -82,7 +86,7 @@ export const processResults = (selector, results) => {
             hidden: Boolean(item.hidden),
         });
         const count = mode === 'plans' ? item.templatecount : item.frameworkcount;
-        return {value: item.id, label: `${item.name} (${count})`};
+        return {value: item.id, label: `${escapeHtml(item.name)} (${count})`};
     });
 };
 

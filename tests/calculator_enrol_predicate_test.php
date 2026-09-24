@@ -19,12 +19,9 @@ namespace local_dimensions;
 /**
  * Tests for the per-plugin enrolability predicate behind every locked card.
  *
- * The enrol_apply half of this file is skipped when that plugin is not installed. ci.yml
- * checks it out on the 5.01 and 5.02 jobs, so those legs run it for real - a skip reported
- * there is a regression in coverage, not the design. The 4.05 job deliberately does not:
- * enrol_apply declares supported = [501, 502], so the integration cannot exist on Moodle 4.5
- * and the skip there is the truth. Locally the plugin is mounted on m501 and m502 only, for
- * the same reason, so run `mdl phpunit m502 local_dimensions` before pushing.
+ * The enrol_apply tests skip when that optional plugin is not installed. CI installs it on the
+ * Moodle 5.1 and 5.2 jobs, so a skip there is lost coverage; on 4.5 the skip is expected,
+ * because enrol_apply supports Moodle 5.1 and later only.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -102,7 +99,7 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
     }
 
     /**
-     * The self leg still answers - the dispatch rewrite must not have cost the original case.
+     * An open self enrolment instance still makes the course joinable.
      *
      * @return void
      */
@@ -135,9 +132,8 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
     /**
      * A course reachable only through enrol_apply is a way in, not a padlock.
      *
-     * This is the defect the predicate was widened for: enrol_apply does not override
-     * can_self_enrol(), so the self-only loop reported "cannot" for an applicant who was
-     * perfectly eligible and the card was drawn locked.
+     * enrol_apply does not override can_self_enrol(), so asking that method alone reports an
+     * eligible applicant as unable to join.
      *
      * @return void
      */
@@ -149,8 +145,8 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $this->add_apply_instance($plugin, $course);
 
-        /* Control: the default self instance is still shut, so the answer below can only be
-           coming from the apply leg - the point of the whole change. */
+        /* Control: the default self instance is still shut, so the answer below can only
+           come from the apply leg. */
         $this->assertNotSame(
             true,
             enrol_get_plugin('self')->can_self_enrol($this->self_instance($course), false)
@@ -229,8 +225,7 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
         $this->setUser($latecomer);
         $this->assertFalse(calculator::current_user_can_enrol((int) $course->id));
 
-        /* Control: allow_apply() itself says yes to this user, so the refusal above can only
-           be the cap - which is the half of the answer that lives outside it. */
+        // Control: allow_apply() itself accepts this user, so the refusal above can only be the cap.
         $this->assertTrue($plugin->allow_apply($instance) === true);
     }
 
@@ -289,7 +284,7 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
         $instance = $this->add_apply_instance($plugin, $course);
 
         $applicant = $this->getDataGenerator()->create_user();
-        // Exactly what enrol_apply::apply() writes: suspended, no role, no enrolment period.
+        // Exactly what enrol_apply_plugin::apply() writes: suspended, no role, no enrolment period.
         $plugin->enrol_user($instance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
         $this->setUser($applicant);
 
@@ -331,8 +326,8 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
         $this->setUser($suspended);
         $this->assertFalse(calculator::current_user_has_pending_application((int) $course->id));
 
-        /* Control, so the assertion above cannot pass by the sweep never running: the same
-           course, the same suspended state, on the apply instance instead. */
+        /* Control: the same suspended state on the apply instance of the same course is
+           pending, so the assertion above cannot pass by the check never running. */
         $applicant = $this->getDataGenerator()->create_user();
         $plugin->enrol_user($applyinstance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
         $this->setUser($applicant);
@@ -348,11 +343,9 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
     /**
      * An approved enrolment that later expired is not a pending application.
      *
-     * The clause that separates the two is easy to leave out, and enrol_apply's own
-     * queue::awaiting_decision_where() says so. With expiredaction set to suspend, core's
-     * process_expirations() returns a lapsed ACTIVE row to ENROL_USER_SUSPENDED and leaves
-     * timeend in the past, which is indistinguishable from a fresh application on status
-     * alone - and the learner would be told to wait for a decision nobody is going to take.
+     * With expiredaction set to suspend, core's process_expirations() re-suspends a lapsed active
+     * row and leaves timeend in the past, so only the timeend clause of
+     * {@see calculator::current_user_has_pending_application()} tells it from a fresh application.
      *
      * @return void
      */
@@ -377,9 +370,8 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
         $this->setUser($lapsed);
         $this->assertFalse(calculator::current_user_has_pending_application((int) $course->id));
 
-        /* Control: the same suspended state with no period - what apply() actually writes -
-           is pending, so the assertion above is about the dates and not about the sweep
-           never having run. */
+        /* Control: the same suspended state with no period, which is what apply() writes, is
+           pending, so the assertion above is about the dates. */
         $applicant = $this->getDataGenerator()->create_user();
         $plugin->enrol_user($instance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
         $this->setUser($applicant);

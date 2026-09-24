@@ -17,15 +17,14 @@
 {{!
     @template local_dimensions/return_button
 
-    Floating Action Button (FAB) for returning to learning plan view.
+    Floating action button (FAB) back to the learner's plan overview or competency tracker.
 
     Context variables required:
     * returnurl (string) - The URL to return to
     * label (string) - Button label text
 
-    Features:
-    - Detects if running inside an iframe (H5P, etc.) and hides itself
-    - Only shows in the main window
+    Rendered hidden: local_dimensions/return_button reveals it only in the top-level window,
+    so it stays out of iframes such as H5P activities.
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

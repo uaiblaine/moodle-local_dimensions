@@ -27,7 +27,7 @@
  */
 
 /**
- * Stream a CSV string to the browser as a downloaded file.
+ * Hand a CSV string to the browser as a downloaded file (through a temporary Blob URL).
  *
  * @param {String} filename The suggested filename.
  * @param {String} content The CSV content.

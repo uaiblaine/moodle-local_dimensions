@@ -58,7 +58,7 @@ final class helper_pick_available_tab_test extends basic_testcase {
     }
 
     /**
-     * A request the strip does not know, or an empty strip, cannot pick a tab by accident.
+     * An unknown request falls back like an unavailable one; a strip with nothing available yields ''.
      *
      * @return void
      */

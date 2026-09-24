@@ -1,0 +1,1 @@
+s/            \/\/ Hidden templates only for those who may manage them, as on the Plans tab and in core's\n            \/\/ list_templates_using_competency\(\): templateview alone does not reveal a hidden one\.\n            if \(!\$template->get\('visible'\) && !\$template->can_manage\(\)\) \{\n                continue;\n            \}\n//;

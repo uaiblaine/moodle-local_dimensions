@@ -43,7 +43,7 @@ final class plan_trail_cache_test extends \advanced_testcase {
     /**
      * One learner, one competency, and two plans holding it: a manual one and a template one.
      *
-     * The live rating says NOT proficient and the archived rating of both plans says proficient,
+     * The live rating says not proficient and the archived rating of both plans says proficient,
      * so every assertion below reads a value only one of the two tables can produce.
      */
     protected function setUp(): void {
@@ -75,8 +75,8 @@ final class plan_trail_cache_test extends \advanced_testcase {
             'templateid' => $this->templateid,
         ])->get('id');
 
-        /* Core refuses a proficiency without a grade, so both rows carry one; the default
-           generator scale is A,B,C,D, which makes 1 and 4 valid grades. */
+        /* Core refuses a live rating's proficiency without a grade, so every row carries one;
+           the default generator scale is A,B,C,D, which makes 1 and 4 valid grades. */
         $competency->create_user_competency([
             'userid' => $this->user->id,
             'competencyid' => $this->competencyid,
@@ -120,7 +120,7 @@ final class plan_trail_cache_test extends \advanced_testcase {
     }
 
     /**
-     * The template-based plan's own query needed the same switch, and is a separate branch.
+     * The template-based plan has its own query, a separate branch that must make the same switch.
      *
      * @return void
      */
@@ -134,7 +134,7 @@ final class plan_trail_cache_test extends \advanced_testcase {
     }
 
     /**
-     * The archive is read for THIS plan: another plan's archived rating never leaks in.
+     * The archive is read for this plan: another plan's archived rating never leaks in.
      *
      * The learner holds the same competency in two plans, archived proficient in both. Dropping
      * this plan's archive row must leave the trail unrated rather than borrowing the other one.

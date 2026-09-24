@@ -37,7 +37,8 @@ use local_dimensions\helper;
  */
 final class search_categories_test extends advanced_testcase {
     /**
-     * Categories with an ampersand, a child, and a hidden sibling, plus a framework in the parent.
+     * Categories with an ampersand, a child, and a hidden sibling, plus a framework in the parent
+     * and a template in the child.
      *
      * @return array Keys: parent, child, hidden (stdClass categories).
      */

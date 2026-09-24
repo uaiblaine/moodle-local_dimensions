@@ -215,9 +215,8 @@ final class helper_return_navigation_test extends advanced_testcase {
     }
 
     /**
-     * The empty state's call site passes 0, not the plan's own template id, so the
-     * display-mode gate never suppresses the button there: with no competency there
-     * is no tracker to be a routed destination, so the gate does not apply.
+     * The no-competency empty state passes template id 0 (see view-competency.php), which the
+     * display-mode gate never suppresses; the plan's own template id would.
      *
      * @return void
      */
@@ -280,15 +279,10 @@ final class helper_return_navigation_test extends advanced_testcase {
     /**
      * Create a learning plan template with its display mode custom field set to $displaymode.
      *
-     * Provisions the plugin's custom fields, creates a bare template via the core_competency
-     * generator, then writes the display mode through the lp custom-field handler — the same
-     * save path the template edit form uses (see tests/customfield/lp_handler_test.php) — so the
-     * value is stored the way `template_metadata_cache` actually reads it back. The cache is
-     * invalidated afterwards so the write is visible immediately instead of leaving a stale
-     * (or missing) cached entry from before the field existed. DISPLAYMODE_COMPETENCIES is
-     * also the fall-through default when the field is unset, so a silently no-op write would
-     * still read back as competency mode; asserting the write landed keeps a broken write
-     * path from passing every competency-mode test that uses this helper.
+     * The value goes through the lp handler, the save path the template edit form uses, and the
+     * metadata cache is invalidated so the read-back sees it. DISPLAYMODE_COMPETENCIES is also the
+     * default when the field is unset, so the helper asserts the write landed: a no-op write would
+     * otherwise pass every competency-mode test that uses it.
      *
      * @param int $displaymode One of constants::DISPLAYMODE_COMPETENCIES or DISPLAYMODE_PLAN.
      * @return int The new template's id.

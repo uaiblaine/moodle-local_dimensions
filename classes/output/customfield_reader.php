@@ -94,12 +94,9 @@ trait customfield_reader {
      *
      * @param int $competencyid The competency ID.
      * @param string $shortname The field shortname to retrieve.
-     * @return string|null The field value or null if not found.
+     * @return string|null The colour with a leading '#', or null when unset or not a hex colour.
      */
     protected function get_competency_custom_field(int $competencyid, string $shortname): ?string {
-        // Field controller is memoised across calls, so the per-shortname lookup
-        // happens once for the whole render even though this method runs inside
-        // the per-competency loop.
         $field = $this->get_field($shortname, 'competency');
         if (!$field) {
             return null;
@@ -115,10 +112,9 @@ trait customfield_reader {
             return null;
         }
 
-        // For text/color fields, the value is directly stored.
-        // Validate it looks like a hex color.
+        // Hex only: the value is written into a style attribute, where Mustache escaping
+        // does not protect.
         if (preg_match('/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $value)) {
-            // Ensure it starts with #.
             if ($value[0] !== '#') {
                 $value = '#' . $value;
             }

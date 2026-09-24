@@ -30,7 +30,7 @@ use core\event\base;
  * Event: an enrolment method was applied to a course by the hub's bulk action.
  *
  * Core fires enrol_instance_created for the row itself, but not the plugin-level decision
- * (which learning plan template, which cohort, which bulk request). The 'other' payload
+ * (which learning plan template and which cohort). The 'other' payload
  * carries templateid, cohortid, method (cohort|self) and roleid.
  *
  * @package    local_dimensions
@@ -67,7 +67,7 @@ class enrol_method_applied extends base {
     }
 
     /**
-     * No restore mapping: hub bulk actions are never part of a course backup.
+     * Not mapped on restore, although the event is logged in the course context.
      *
      * @return string
      */

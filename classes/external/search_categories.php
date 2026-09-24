@@ -35,11 +35,10 @@ use local_dimensions\helper;
 /**
  * Web service: paginated, name-matched search of the course categories a viewer may pick.
  *
- * The picker used to be rendered with every category the viewer could see, which a site with
- * thousands of categories cannot afford - on the server (a context and up to four capability
- * checks per category) nor in the browser (thousands of options for the autocomplete). Each
- * hit carries the plain nested name and both counts, so the bar's headline counter never
- * needs a second round-trip.
+ * Searched as the viewer types rather than rendered in full: a site may have thousands of
+ * categories, each needing a context and capability checks on the server and an option in the
+ * autocomplete. Each hit carries the plain nested name and both counts, so the bar's headline
+ * counter needs no second round-trip.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -65,9 +64,8 @@ class search_categories extends external_api {
     /**
      * Search the categories the viewer may see and read competencies in.
      *
-     * The system context is the login gate only: visibility is decided per category by core
-     * (hidden ones need viewhiddencategories there), and competency readability per category
-     * unless the viewer already reads at the site, in which case no category can widen it.
+     * The system context is the login gate only; category visibility and competency readability
+     * are checked per hit by {@see helper::central_category_search()}.
      *
      * @param string $query Search text; empty returns the first page in tree order.
      * @param bool $includehidden Whether hidden categories the viewer may see are included.

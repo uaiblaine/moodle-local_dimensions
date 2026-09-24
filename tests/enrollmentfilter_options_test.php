@@ -26,8 +26,8 @@ namespace local_dimensions;
  */
 final class enrollmentfilter_options_test extends \advanced_testcase {
     /**
-     * The option keys are append-only: the first four indices must never move,
-     * because the per-plan/per-competency select stores a 1-based index into this list.
+     * The option keys are append-only: no existing entry may move, because the
+     * per-template/per-competency select field stores a 1-based index into this list.
      *
      * @return void
      */

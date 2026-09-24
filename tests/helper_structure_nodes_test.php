@@ -84,14 +84,11 @@ final class helper_structure_nodes_test extends advanced_testcase {
     /**
      * A node carries the custom colours set on its competency.
      *
-     * This pins an assumption the node query depends on rather than a behaviour of our own.
-     * The colour fields are customfield **text** fields, whose data_controller::datafield() is
-     * `charvalue` — yet {@see helper::structure_nodes()} reads them from the generic `value`
-     * column. That is correct, because core's data_controller::instance_form_save() writes the
-     * submitted value to BOTH the type-specific column and `value`
-     * (`customfield/classes/data_controller.php:206-210`). If core ever stopped mirroring, three
-     * of this plugin's batch queries would silently start returning empty colours, and this test
-     * is what would say so.
+     * Pins a core assumption the node query depends on: the colour fields are customfield text
+     * fields, whose datafield() is `charvalue`, yet {@see helper::structure_nodes()} reads the
+     * generic `value` column. That works because
+     * {@see \core_customfield\data_controller::instance_form_save()} writes the submitted value to
+     * both columns; if core stopped mirroring, the colour queries would silently return nothing.
      *
      * @return void
      */

@@ -20,12 +20,11 @@
     Body of the export-templates modal on the Competency hub Learning plans tab. The multiple
     select is populated client-side from the tab's own template rows, so the modal offers
     exactly the templates the tab currently lists; the Download button calls the
-    local_dimensions_export_templates web service and streams the CSV as a file.
+    local_dimensions_export_templates web service and saves the returned CSV as a file.
 
-    The loader span carries role=status and a visually hidden label, so the wait is announced
-    rather than being a nameless spinner, and it deliberately has no d-inline-flex utility:
-    that class is display:inline-flex !important on Bootstrap 4 and would beat the hidden
-    attribute, leaving the loader permanently visible on the 4.5 branch.
+    The loader span carries role=status and a visually hidden label so the wait is announced. It
+    has no d-inline-flex utility on purpose: that class is display:inline-flex !important, which
+    comes after Bootstrap's own hidden-attribute rule and would keep the loader visible.
 
     Context variables required: none (static markup; strings resolved with str helpers).
 

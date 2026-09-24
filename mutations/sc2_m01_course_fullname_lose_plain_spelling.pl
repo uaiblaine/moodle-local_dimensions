@@ -1,0 +1,1 @@
+s/'fullname' => format_string\(\$course->fullname, true, \['context' => \$coursecontext, 'escape' => false\]\),/'fullname' => format_string(\$course->fullname, true, ['context' => \$coursecontext]),/;

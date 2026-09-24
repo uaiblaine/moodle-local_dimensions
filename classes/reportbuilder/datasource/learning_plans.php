@@ -68,7 +68,7 @@ class learning_plans extends datasource {
             ->add_join("LEFT JOIN {user} {$useralias} ON {$useralias}.id = {$planalias}.userid"));
 
         // Cohorts linked to the plan's template via competency_templatecohort.
-        // 1:N expansion only triggers if the report author selects a cohort column.
+        // 1:N expansion only triggers if the report uses a cohort column, filter or condition.
         $cohortentity = new cohort();
         $cohortalias = $cohortentity->get_table_alias('cohort');
         $tplcohortalias = database::generate_alias();

@@ -37,8 +37,8 @@ use local_dimensions\output\central\template_import_preview;
 /**
  * Web service: render the projected result of a learning plan CSV import.
  *
- * A read function in the strict sense — the analyser it drives holds no write at all, so calling
- * it twice on the same file changes nothing but the answer, if the site moved in between.
+ * Writes nothing: {@see template_import_analyser} only reads, so the call is safe to repeat on
+ * the same file.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -88,8 +88,8 @@ class preview_import_templates extends external_api {
             'updateexisting' => $updateexisting,
         ]);
 
-        // An id that names no context reaches this as an unhandled moodle_exception otherwise,
-        // which the modal can only show as a stack trace.
+        // Report an unknown context id as core's invalidcontext error rather than as the raw
+        // missing-record error instance_by_id() throws.
         try {
             $context = \context::instance_by_id($params['contextid']);
         } catch (\moodle_exception $e) {
@@ -144,9 +144,9 @@ class preview_import_templates extends external_api {
     /**
      * Define the return structure.
      *
-     * Every count is declared as its own flat scalar: clean_returnvalue() silently strips keys a
-     * structure does not declare, so a nested preview payload would fail by rendering a blank
-     * cell with no error anywhere. The key set mirrors template_import_plan::get_counts().
+     * The counts structure declares every key of
+     * {@see \local_dimensions\local\template_import_plan::get_counts()}; clean_returnvalue()
+     * silently drops undeclared keys, so keep the two in step.
      *
      * @return external_single_structure
      */

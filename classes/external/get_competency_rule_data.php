@@ -33,7 +33,9 @@ use core_external\external_function_parameters;
 use core_external\external_value;
 use core\context\system as context_system;
 use core_competency\api;
+use core_competency\user_competency;
 use local_dimensions\helper;
+use local_dimensions\local\plan_access;
 
 /**
  * Returns rule data for a competency within a learning plan.
@@ -61,6 +63,8 @@ class get_competency_rule_data extends external_api {
      * @param int $competencyid The parent competency ID
      * @param int $planid The learning plan ID
      * @return string JSON-encoded rule data
+     * @throws \required_capability_exception When the current user may not read the plan or its owner's ratings.
+     * @throws \moodle_exception 'competency_id_missing' when the competency is not in the plan's scope.
      */
     public static function execute($competencyid, $planid) {
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -75,6 +79,18 @@ class get_competency_rule_data extends external_api {
         // Read the plan to get the userid.
         $plan = api::read_plan($params['planid']);
         $userid = $plan->get('userid');
+
+        /* The children's ratings are the plan owner's. api::read_plan() accepts planviewdraft alone on a
+           draft plan, which grants no ratings, so ask what api::get_plan_competency() asks. */
+        if (!user_competency::can_read_user($userid)) {
+            throw new \required_capability_exception(
+                $plan->get_context(),
+                'moodle/competency:usercompetencyview',
+                'nopermissions',
+                ''
+            );
+        }
+        plan_access::require_competency_in_scope($plan, $params['competencyid']);
 
         // Read the parent competency.
         $competency = api::read_competency($params['competencyid']);
@@ -147,11 +163,14 @@ class get_competency_rule_data extends external_api {
 
         $hasgrade = !empty($grade) && !empty($gradename);
 
+        // Plain spellings: accordion.js escapes each value once as it builds the HTML.
+        $formatoptions = ['context' => $childcomp->get_context(), 'escape' => false];
+
         return [
             'id' => $childcomp->get('id'),
-            'shortname' => $childcomp->get('shortname'),
+            'shortname' => format_string($childcomp->get('shortname'), true, $formatoptions),
             'hasgrade' => $hasgrade,
-            'gradename' => $gradename,
+            'gradename' => format_string($gradename, true, $formatoptions),
             'isproficient' => $isproficient,
         ];
     }
@@ -300,7 +319,9 @@ class get_competency_rule_data extends external_api {
     }
 
     /**
-     * Return the available user competency record for this plan/competency pair.
+     * The user's rated record for a competency: the plan's archived rating (user_competency_plan,
+     * written when a plan is completed) when it holds a grade, else the live user_competency;
+     * null when neither holds a grade.
      *
      * @param int $childid Child competency ID
      * @param int $userid User ID

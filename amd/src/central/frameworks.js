@@ -14,8 +14,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Frameworks tab: native management actions (edit modal, duplicate, visibility toggle, reason-gated
- * delete). The framework list is server-rendered; every action refreshes the pane via reloadPane.
+ * Frameworks tab (labelled "Structures"): create/edit modal, CSV import and export, duplicate,
+ * visibility toggle and delete. The framework list is server-rendered; every action that changes it
+ * reloads the pane via reloadPane.
  *
  * @module     local_dimensions/central/frameworks
  * @copyright  2026 Anderson Blaine
@@ -29,6 +30,7 @@ import ModalForm from 'core_form/modalform';
 import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
 import {makeSpinner, triggerDownload} from 'local_dimensions/central/download';
@@ -89,7 +91,7 @@ const openScaleConfigForForm = () => {
 /**
  * Set up document-level delegation for the framework form's scale-config button (once per page).
  * The dynamic form renders inside a modalform whose JS lifecycle does not run our init, so the button
- * is wired globally — the click bubbles to the document regardless of when the form body renders.
+ * is handled from the document, whenever the form body renders.
  *
  * @return {void}
  */
@@ -108,7 +110,7 @@ const setupScaleConfigDelegation = () => {
     }, true);
     document.addEventListener('change', (event) => {
         if (event.target.name !== 'scaleid' || event.target.hasAttribute('readonly')) {
-            // A frozen scale select (framework already graded) must not wipe the stored
+            // A frozen scale select (the framework has user competencies) must not wipe the stored
             // proficiency config: the server pins scaleid via a form constant anyway.
             return;
         }
@@ -368,10 +370,11 @@ const deleteFramework = async(pane, row) => {
         Notification.alert('', await getString('central_frameworks_delete_blocked', 'local_dimensions'));
         return;
     }
+    // The row carries the plain name and the confirm body is HTML.
     const [title, body] = await Promise.all([
         getString('delete'),
         getString('central_frameworks_delete_confirm', 'local_dimensions',
-            {name: row.dataset.name, count: row.dataset.count}),
+            {name: escapeHtml(row.dataset.name), count: row.dataset.count}),
     ]);
     try {
         await Notification.deleteCancelPromise(title, body);

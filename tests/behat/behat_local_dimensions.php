@@ -99,14 +99,11 @@ class behat_local_dimensions extends behat_base {
     /**
      * Puts the page into the host's colour mode.
      *
-     * Sets Bootstrap's own colour-mode attribute on the document element - exactly what Moodle
-     * 5.3's theme_boost writes from the before_html_attributes hook and from its own colourmode AMD
-     * module, and exactly what Bootstrap 5.3's compiled token block reads. A step is needed only
-     * because no shipped theme in the 405-502 range turns it on yet, and the attribute is set from
-     * HERE rather than from plugin code on purpose: whether a page is dark is the host's decision,
-     * and colour_tokens_test::test_plugin_never_writes_the_host_signal fails the build if any
-     * shipped file of this plugin writes it. executeScript for a DOM attribute follows core's own
-     * idiom in lib/tests/behat/behat_navigation.php.
+     * Sets Bootstrap's colour-mode attribute on the document element, as Moodle 5.3's theme_boost
+     * does from its before_html_attributes hook and its colourmode AMD module. No theme shipped with
+     * Moodle 4.5 to 5.2 sets it, hence this step. It is set from Behat, never from plugin code,
+     * because whether a page is dark is the host's decision;
+     * colour_tokens_test::test_plugin_never_writes_the_host_signal() fails if plugin code writes it.
      *
      * @Given /^the page colour mode is "(?P<mode_string>light|dark)"$/
      * @param string $mode The colour mode to force.
@@ -137,11 +134,10 @@ class behat_local_dimensions extends behat_base {
     /**
      * Asserts the plugin surface tracks the page, whichever way the page went.
      *
-     * This is the design's first decision written as an executable biconditional, and it needs no
-     * branch tag: the element must equal the page's CURRENT background, so if the page moved when
-     * the attribute was set the element must have moved with it, and if the page did not move
-     * (Moodle 4.5, which ships no dark palette at all) the element must not have moved either.
-     * Correct on every supported branch, including one whose compiled sheet nobody has measured.
+     * The element must equal the page's current background: if setting the attribute moved the
+     * page, the element must have moved with it; if the page did not move (Moodle 4.5 ships no dark
+     * palette), neither may the element. So the step holds on every supported branch without a
+     * branch tag.
      *
      * @Then /^the "(?P<selector_string>[^"]*)" element background should still match the page$/
      * @param string $selector A CSS selector for the element under test.
@@ -156,11 +152,9 @@ class behat_local_dimensions extends behat_base {
             );
         }
         /*
-         * Poll until the colours settle. The cards carry a 0.12s background transition, so a read
-         * taken in the same tick as the attribute write returns an interpolated frame - measured,
-         * rgb(218, 219, 219) part way from white to the dark page - which is neither colour and is
-         * a false failure. Waiting cannot turn a genuinely wrong colour into a right one, so the
-         * assertion is unweakened; it just stops racing the compositor.
+         * Poll until the colours settle: the cards have a 0.12s background transition, so a read
+         * taken right after the attribute write can return an in-between colour. Waiting cannot
+         * turn a wrong colour into a right one, so the assertion is not weakened.
          */
         $page = $this->page_background_colour();
         $element = $this->element_background_colour($selector);
@@ -201,10 +195,8 @@ class behat_local_dimensions extends behat_base {
     public function the_colour_token_should_resolve_to(string $token, string $value): void {
         $this->require_javascript();
         $escaped = addcslashes($token, "'\\");
-        /* Read at body, which is where the token block is declared. Custom properties inherit
-           DOWNWARDS only, so reading at documentElement returns the empty string for every one
-           of them. body is also correct against the older contract, when the block sat on
-           :root: the values were visible there by inheritance. */
+        /* Read at body, where the token block is declared: custom properties inherit downwards
+           only, so documentElement would return the empty string for every token. */
         $actual = (string) $this->getSession()->evaluateScript(
             'return window.getComputedStyle(document.body).getPropertyValue(\'--'
                 . $escaped . '\');'
@@ -223,10 +215,9 @@ class behat_local_dimensions extends behat_base {
     /**
      * Skips the scenario on a branch whose core ships no dark palette.
      *
-     * Detected at RUNTIME, not from $CFG->branch: the step sets the attribute, reads --bs-body-bg
-     * back, restores the previous state, and skips if the value did not move. A branch-number guard
-     * would be an assumption where a measurement is available, and the plugin's supported range
-     * reaches branches whose compiled sheet this design never measured.
+     * Detected at runtime rather than from $CFG->branch: the step sets the attribute, reads
+     * --bs-body-bg back, restores the previous state, and skips if the value did not change. The
+     * answer then comes from the compiled theme itself, not from an assumption about the branch.
      *
      * @Given /^the site has a host colour mode$/
      * @throws \Moodle\BehatExtension\Exception\SkippedException

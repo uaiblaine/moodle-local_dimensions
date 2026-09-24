@@ -77,13 +77,14 @@ class list_related_competencies extends external_api {
         }
         $breadcrumbs = helper::competency_breadcrumbs($pathsbyid, $context);
 
+        // Plain spelling: the related list is written through textContent and a double stash.
         $items = [];
         foreach ($related as $rel) {
             $id = (int) $rel->get('id');
             $crumbs = $breadcrumbs[$id] ?? ['path' => '', 'pathids' => []];
             $items[] = [
                 'id' => $id,
-                'shortname' => format_string($rel->get('shortname'), true, ['context' => $context]),
+                'shortname' => format_string($rel->get('shortname'), true, ['context' => $context, 'escape' => false]),
                 'idnumber' => (string) $rel->get('idnumber'),
                 'path' => $crumbs['path'],
                 'pathids' => $crumbs['pathids'],

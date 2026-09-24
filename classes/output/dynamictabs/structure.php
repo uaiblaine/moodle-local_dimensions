@@ -32,7 +32,8 @@ use local_dimensions\helper;
 /**
  * Structure tab: navigate frameworks and their competencies without reloading.
  *
- * Args (from the pane data attributes / getContent): contexttype, categoryid, frameworkid.
+ * Args (from the pane data attributes / getContent): contexttype, categoryid, locked, frameworkid,
+ * showhidden.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -140,10 +141,16 @@ class structure extends \core\output\dynamic_tabs\base {
             }
             $ishidden = !((bool) $framework->get('visible'));
             $hashiddenframeworks = $hashiddenframeworks || $ishidden;
+            // Plain spelling: the option label is a double stash, and the tab's JS copies it
+            // back through textContent when "show hidden" filters the list.
             $frameworkoptions[] = [
                 'id' => $id,
-                'name' => format_string($framework->get('shortname')),
-                'idnumber' => s($framework->get('idnumber')),
+                'name' => format_string(
+                    $framework->get('shortname'),
+                    true,
+                    ['context' => $framework->get_context(), 'escape' => false]
+                ),
+                'idnumber' => (string) $framework->get('idnumber'),
                 'selected' => $id === $frameworkid,
                 'competencycount' => $competencycount,
                 'hidden' => $ishidden,
@@ -185,8 +192,10 @@ class structure extends \core\output\dynamic_tabs\base {
             'hasframeworks' => !empty($frameworkoptions),
             'frameworks' => $frameworkoptions,
             'selectedframeworkid' => $frameworkid,
-            'selectedframeworkname' => $selected ? format_string($selected->get('shortname')) : '',
-            'selectedframeworkidnumber' => $selected ? s($selected->get('idnumber')) : '',
+            'selectedframeworkname' => $selected
+                ? format_string($selected->get('shortname'), true, ['context' => $selected->get_context(), 'escape' => false])
+                : '',
+            'selectedframeworkidnumber' => $selected ? (string) $selected->get('idnumber') : '',
             'hascompetencies' => $count > 0,
             'competencycount' => $count,
             'competencies' => $rootnodes,

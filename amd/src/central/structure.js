@@ -37,6 +37,7 @@ import Templates from 'core/templates';
 import {show as showRuleConfigModal} from 'local_dimensions/central/rule_config';
 import {open as openLinksModal} from 'local_dimensions/central/competency_links';
 import {open as openRelatedModal} from 'local_dimensions/central/related_competencies';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast} from 'local_dimensions/central/toast';
 import {renderDetailInto, openCompetencyDetailModal} from 'local_dimensions/central/competency_detail';
@@ -715,9 +716,9 @@ const fetchAllChildren = async(parentid) => {
 /**
  * Refresh a single competency's node in place after an edit: re-render its row from fresh
  * server data (keeping the children container + expansion) and re-select it so the detail pane
- * updates — without reloading the whole tab, so the tree state is preserved (mirrors the Plans
- * tab). Falls back to a full reload when the node is gone, or to reload-and-reveal when it was
- * reparented during the edit (its position in the tree changed).
+ * updates — without reloading the whole tab, so the tree state is preserved. Falls back to a full
+ * reload when the node is gone, or to reload-and-reveal when it was reparented during the edit
+ * (its position in the tree changed).
  *
  * @param {HTMLElement} pane
  * @param {Number} id Competency id.
@@ -818,9 +819,11 @@ const openForm = async(pane, args, titlekey) => {
  * @param {HTMLElement} row
  */
 const confirmDelete = async(pane, row) => {
+    // The row carries the plain name, and both dialogue bodies below are HTML.
+    const name = escapeHtml(row.dataset.name || '');
     const [title, question] = await Promise.all([
         getString('delete'),
-        getString('deletecompetency', 'tool_lp', row.dataset.name || ''),
+        getString('deletecompetency', 'tool_lp', name),
     ]);
     try {
         await Notification.deleteCancelPromise(title, question);
@@ -830,7 +833,7 @@ const confirmDelete = async(pane, row) => {
     Ajax.call([{methodname: 'core_competency_delete_competency', args: {id: Number(row.dataset.id)}}])[0]
         .then(async(success) => {
             if (success === false) {
-                Notification.alert(null, await getString('competencycannotbedeleted', 'tool_lp', row.dataset.name || ''));
+                Notification.alert(null, await getString('competencycannotbedeleted', 'tool_lp', name));
                 return null;
             }
             return reloadPane(pane);
@@ -841,32 +844,27 @@ const confirmDelete = async(pane, row) => {
 /**
  * Persist a rule config via core_competency_update_competency, then update the node in place.
  *
+ * Only the id and the rule fields are sent; the service leaves every omitted field untouched.
+ * Echoing a core_competency_read_competency record back would store its display formatting: the
+ * name escaped once more on every rule save, the description as filtered HTML.
+ *
  * @param {HTMLElement} row The selected [data-action="select"] element to update + flash.
  * @param {Object} config {ruletype, ruleoutcome, ruleconfig}.
  * @return {Promise<void>}
  */
 const persistRule = (row, config) => {
     const id = Number(row.dataset.id);
-    return Ajax.call([{methodname: 'core_competency_read_competency', args: {id: id}}])[0]
-        .then((full) => Ajax.call([{
-            methodname: 'core_competency_update_competency',
-            args: {
-                competency: {
-                    id: full.id,
-                    shortname: full.shortname,
-                    idnumber: full.idnumber,
-                    description: full.description,
-                    descriptionformat: full.descriptionformat,
-                    parentid: full.parentid,
-                    competencyframeworkid: full.competencyframeworkid,
-                    scaleid: full.scaleid,
-                    scaleconfiguration: full.scaleconfiguration,
-                    ruletype: config.ruletype,
-                    ruleoutcome: config.ruleoutcome,
-                    ruleconfig: config.ruleconfig,
-                },
+    return Ajax.call([{
+        methodname: 'core_competency_update_competency',
+        args: {
+            competency: {
+                id: id,
+                ruletype: config.ruletype,
+                ruleoutcome: config.ruleoutcome,
+                ruleconfig: config.ruleconfig,
             },
-        }])[0])
+        },
+    }])[0]
         .then(() => getString('changessaved'))
         .then((message) => {
             // Update the node's rule data in place + flash, instead of reloading the whole pane.
@@ -1223,8 +1221,9 @@ const openUsageModal = async(row, section) => {
         templates: usage.templates,
     });
     await Modal.create({
+        // A modal title is HTML; the row's name is plain.
         title: getString(USAGE_SECTIONS[labelkey], 'local_dimensions')
-            .then((label) => label + ' — ' + (row.dataset.name || '')),
+            .then((label) => label + ' — ' + escapeHtml(row.dataset.name || '')),
         body: html,
         large: true,
         show: true,
@@ -1311,8 +1310,8 @@ const dispatchStructureAction = (target, event) => {
  * @param {HTMLElement} region
  */
 const initStructureResize = (region) => {
-    // The redesign gives the tree (master) an explicit, adjustable width (default 430px) and
-    // lets the detail flex to fill the rest; the divider drives that master width.
+    // The tree (master) has an explicit, adjustable width (default 430px in styles.css) and the
+    // detail flexes to fill the rest; the divider drives that master width.
     initMasterResizer({
         body: region.querySelector(SELECTORS.structureBody),
         resizer: region.querySelector(SELECTORS.structureResizer),
@@ -1346,8 +1345,8 @@ export const init = () => {
     }
 
     if (pane) {
-        // Keep the pane dataset in sync with the framework the server actually resolved
-        // (it may differ from a prior selection after a visibility-toggle fallback).
+        // Keep the pane dataset in sync with the framework the server actually resolved: when the
+        // requested one is not listed in the context, it falls back to the first visible framework.
         pane.dataset.frameworkid = frameworkid;
     }
 

@@ -32,9 +32,9 @@ use core_competency\api;
 /**
  * The read services validate in the framework's context, never at the site.
  *
- * The fixture withdraws the authenticated-user default for competencyview at the system context,
- * which is what makes these cases mutation-checkable: with the default in place a site-level
- * require_capability() passes for everyone and a test could not tell the two gates apart.
+ * The fixture prevents the authenticated-user default for competencyview at the system context:
+ * with that default in place a site-level require_capability() passes for everyone, and these
+ * tests could not tell a site-level gate from a framework-level one.
  *
  * @covers \local_dimensions\external\browse_competencies
  * @covers \local_dimensions\external\browse_structure
@@ -165,8 +165,8 @@ final class category_manager_reads_test extends advanced_testcase {
     /**
      * The usage popover lists the category's templates through their own context, not the site's.
      *
-     * Core's api::list_templates_using_competency() requires template read access at the SYSTEM
-     * context and throws otherwise; a category manager used to lose the whole popover to it.
+     * Core's api::list_templates_using_competency() requires templateview or templatemanage at the
+     * system context and throws otherwise, which would cost a category manager the whole popover.
      *
      * @return void
      */

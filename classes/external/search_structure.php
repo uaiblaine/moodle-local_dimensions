@@ -83,9 +83,9 @@ class search_structure extends external_api {
         $limitfrom = max(0, $params['limitfrom']);
         $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : 25;
 
-        // Validated in the framework's own context, never at the site: a manager holding
-        // competencyview in one course category only must not depend on the authenticated-user
-        // default there. An unknown or unreadable framework reads as empty, as before.
+        // Checked in the framework's context, not the site's, so a manager granted competencyview
+        // only in a course category passes without relying on the authenticated user role's
+        // site-level default. An unknown or unreadable framework returns no results.
         $framework = competency_framework::get_record(['id' => $frameworkid]);
         if (!$framework) {
             return ['items' => [], 'total' => 0];
@@ -116,19 +116,20 @@ class search_structure extends external_api {
             $limitnum
         );
 
-        // Build every hit's ancestor breadcrumb in one batch (shared with list_related_competencies).
+        // Build every hit's ancestor breadcrumb in one batch.
         $pathsbyid = [];
         foreach ($records as $record) {
             $pathsbyid[(int) $record->id] = $record->path;
         }
         $breadcrumbs = helper::competency_breadcrumbs($pathsbyid, $fwcontext);
 
+        // Names and paths are the plain spelling: the Structure tab writes hits through textContent.
         $items = [];
         foreach ($records as $record) {
             $crumbs = $breadcrumbs[(int) $record->id] ?? ['path' => '', 'pathids' => []];
             $items[] = [
                 'id' => (int) $record->id,
-                'shortname' => format_string($record->shortname, true, ['context' => $fwcontext]),
+                'shortname' => format_string($record->shortname, true, ['context' => $fwcontext, 'escape' => false]),
                 'idnumber' => (string) $record->idnumber,
                 'path' => $crumbs['path'],
                 'pathids' => $crumbs['pathids'],

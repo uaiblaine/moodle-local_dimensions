@@ -1,0 +1,1 @@
+s/\$modelname = format_string\(\$template->get\('shortname'\), true, \['context' => \$context, 'escape' => false\]\);/\$modelname = format_string(\$template->get('shortname'), true, ['context' => \$context]);/;

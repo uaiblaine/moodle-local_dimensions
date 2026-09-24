@@ -1,0 +1,1 @@
+s/format_string\(\$selected->get\('shortname'\), true, \['context' => \$selected->get_context\(\), 'escape' => false\]\)/format_string(\$selected->get('shortname'), true, ['context' => \$selected->get_context()])/;

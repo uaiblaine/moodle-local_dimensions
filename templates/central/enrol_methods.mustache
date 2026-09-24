@@ -21,7 +21,8 @@
     category selects, the method segment, the competency accordion and the footer counters are all
     filled by local_dimensions/central/enrol_methods (mount) from the enrol web services. The pane
     starts with every region hidden; mount reveals one of: the disabled warning (neither enrol
-    plugin enabled sitewide), the empty-state alert (no cohort linked) or the main region.
+    plugin enabled sitewide), the empty-state alert (no cohort linked), the no-courses alert
+    (nothing the viewer may configure), the load-error alert or the main region.
 
     Context variables required: (none - the skeleton is static; data is fetched client-side)
 
@@ -30,9 +31,8 @@
     }
 }}
 <div class="local-dimensions-enrol" data-region="enrol">
-    {{! The alerts toggle via el.hidden, so they stay plain blocks — a d-flex utility on the alert
-        itself would beat the hidden attribute (display !important). Reloading is the modal header
-        refresh now, so each alert carries just its message. }}
+    {{! The alerts toggle via el.hidden, so they stay plain blocks: a d-flex utility on the alert
+        itself would beat the hidden attribute (display !important). }}
     <div class="alert alert-warning" data-region="enrol-disabled" hidden>
         {{#str}}central_enrol_bothdisabled, local_dimensions{{/str}}
     </div>

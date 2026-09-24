@@ -1,0 +1,1 @@
+s/helper::resolve_showrelated_for_template\(\$templateid\)\n            && helper::resolve_showrelatedlink_for_template\(\$templateid\)\n/helper::resolve_showrelated_for_template(\$templateid)\n/;

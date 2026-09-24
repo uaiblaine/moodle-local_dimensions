@@ -20,18 +20,15 @@
   */
 
 /*
- * Overrides for theme_boost AND EVERY THEME THAT INHERITS FROM IT.
+ * Overrides for theme_boost and every theme that inherits from it.
  *
- * core's theme_config::get_css_files() builds the candidate list as
- * [base parent ... direct parent, the active theme] and loads styles_<candidate>.css for
- * each one it finds. So for any Boost child - boost_union, boost_union_fundaseg, moove,
- * almondb, trema, academi - the candidates are [boost, <theme>], and THIS file loads for
- * all of them, before the theme's own file. It is therefore the right home for anything
- * that is true of Boost's page STRUCTURE, and styles_<theme>.css is for that theme's
- * genuine deltas. A rule that belongs here and is copied into six per-theme sheets rots;
- * a rule that belongs here and is put in styles.css reaches non-Boost themes too.
+ * theme_config::get_css_files() loads styles_<name>.css for each theme in the active theme's
+ * chain, base parent first, so this file loads for every Boost child (boost_union, moove, trema,
+ * academi, almondb...) before that theme's own file. Put here what is true of Boost's page
+ * structure and keep a theme's own deltas in styles_<theme>.css; a rule in styles.css would also
+ * reach non-Boost themes.
  *
- * Scope every rule to a plugin surface so styles never leak:
+ * Scope every rule to a plugin surface:
  *   .local-dimensions-viewplan        Full plan overview
  *   .local-dimensions-viewcompetency  Competency tracker / detail
  *   .local-dimensions-central-page    Competency hub (admin)
@@ -41,39 +38,16 @@
 /*
  * Hero flush against the navbar.
  *
- * The hero is full-bleed and is the first thing in #region-main, so it has to start where
- * the fixed navbar ends. Boost's drawers layout puts three containers between #page and the
- * hero, and each theme spends a DIFFERENT amount of top spacing across them. Measured on
- * m502 at a 1280px viewport, logged in, on view-plan.php:
+ * The full-bleed hero is the first thing in #region-main, so it has to start where the fixed
+ * navbar ends. Themes spend their top spacing on different containers between #page and the
+ * hero (Boost: 24px + 24px on #topofscroll; trema also 16px on #page-content), so all of them
+ * are zeroed. The hero then starts at #page's top edge, which every Boost child already sets to
+ * its navbar height; a negative margin would be one constant standing in for a different value
+ * per theme. Only the top is zeroed: the hero's own margin-bottom keeps the gap below it.
  *
- *   theme                 navbar ends   spacing above the hero            white gap
- *   boost                 61px          #topofscroll  24 + 24             32px
- *   boost_union           61px          #topofscroll  24 + 24             32px
- *   boost_union_fundaseg  61px          #topofscroll  24 + 24             32px
- *   moove                 70px          #topofscroll   0 + 24              9px
- *   almondb               70px          #topofscroll  24 + 24             33px
- *   trema                 64px          #page-content 16 + #topofscroll 24 25px
- *
- * Note trema, which is the reason this rule names more than one container: it is the only
- * theme measured that spends part of its spacing on #page-content, so a fix aimed only at
- * #topofscroll leaves 16px behind there while looking correct everywhere else.
- *
- * This zeroes the spacing rather than cancelling it with a negative margin. styles.css used
- * to carry margin-top: -1rem on the wrapper, which is a single constant standing in for six
- * different values - right nowhere, and silently wrong again for every theme added later.
- * With the containers at zero the hero starts at #page's own top edge, which every Boost
- * child already sets to its navbar's height, so the result is correct without the plugin
- * knowing how tall any theme's navbar is.
- *
- * Only the TOP is zeroed. The hero carries its own margin-bottom, so the content below it
- * keeps the separation the theme intended.
- *
- * The redundant-looking "#page #id" is deliberate and is the whole reason a first attempt at
- * this failed: Boost Union styles the same element as "#page.drawers .main-inner", one id and
- * two classes, which outranks "body.<class> #topofscroll" (one id, one class, one element)
- * because the class count is compared before the element count. Anchoring on two ids settles
- * it on the id count, which is the first thing compared, so no theme wins this by adding
- * another class. !important would also have worked and is banned fleet-wide; it is not needed.
+ * "#page #id" anchors on two ids because Boost Union styles #topofscroll as
+ * "#page.drawers .main-inner" (one id, two classes), which outranks
+ * "body.<class> #topofscroll"; the id count is compared first.
  */
 
 body.local-dimensions-viewplan #page #topofscroll,
@@ -89,20 +63,13 @@ body.local-dimensions-viewcompetency #page #region-main {
 }
 
 /*
- * The last pixel: core's skip-link anchor.
+ * Core's skip-link anchor.
  *
- * Boost gives the empty <span id="maincontent"> a 1px height (theme/boost/scss/moodle/core.scss
- * :377), and it sits immediately before the hero, so once the containers above are at zero that
- * span is all that is left between the navbar and the hero. Whether it SHOWS depends on the
- * theme: boost and boost_union_fundaseg set #page's margin-top to 60px against a 61px navbar,
- * so the span lands in the 1px they were already short and the seam closes at exactly 0; moove
- * (70/70) and trema (64/64) have no such slack and the span becomes a visible hairline of page
- * background across the top of the hero.
- *
- * Zeroing the height keeps the anchor exactly as useful as it was - it is an empty element whose
- * only job is to be a scroll and focus target - and core does the same thing itself for embedded
- * media previews (same file, :1007). Do not use display:none instead: that would remove it from
- * the accessibility tree and break the "Skip to main content" link.
+ * Boost gives the empty <span id="maincontent"> a 1px height (theme/boost/scss/moodle/core.scss),
+ * and it sits right before the hero, so with the containers above at zero it shows as a hairline
+ * on themes whose #page margin equals their navbar height (moove, trema). A zero height keeps it a
+ * scroll and focus target, as core does for embedded media previews; display:none would remove it
+ * from the accessibility tree and break "Skip to main content".
  */
 body.local-dimensions-viewplan #page #maincontent,
 body.local-dimensions-viewcompetency #page #maincontent {
@@ -110,33 +77,21 @@ body.local-dimensions-viewcompetency #page #maincontent {
 }
 
 /*
- * Return-to-Plan FAB: stay out of the corner Boost parks its own controls in.
+ * Return-to-Plan FAB: clear the corner Boost uses for its own button.
  *
- * styles.css puts the FAB at bottom:24px right:24px. core Boost puts .btn-footer-popover (the
- * round "show footer" button) at bottom:2rem right:2rem with a 2rem box, so it occupies the
- * band 32-64px up from the bottom edge, inside the 24-75px band the FAB claims. Measured on
- * m502 at 1440x900 on view-competency.php: the FAB (z-index 9999) covered that button
- * (z-index 1000) completely - the theme's control was still there, still focusable, and
- * simply not visible. Same on boost_union and boost_union_fundaseg; on moove the same button
- * sits lower (16-48px) and on trema the corner is taken by its own #goto-top-link (0-38px),
- * which appears on scroll. All four are cleared by sitting above core's stack.
- *
- * The value is core's own arithmetic rather than a measured pixel: its button's bottom (2rem)
- * plus its box (2rem) plus a 1rem gap. If core moves the button, this moves with it.
- *
- * The FAB is draggable and its dragged position is kept in sessionStorage, so this only sets
- * where it STARTS - a reader who has moved it keeps their own position.
+ * styles.css places the FAB at bottom:24px, where it (z-index 9999) would cover Boost's
+ * .btn-footer-popover (bottom:2rem, a 2rem box). This starts it above that button, in core's own
+ * units: the button's bottom plus its box plus a 1rem gap. The FAB is draggable and a dragged
+ * position is kept in sessionStorage, so this only sets where it starts.
  */
 .local-dimensions-return-fab {
     bottom: calc(2rem + 2rem + 1rem);
 }
 
 /*
- * With a sticky footer (an activity's save bar, edit mode on a course page) core lifts its own
- * button to calc(1rem + $stickyfooter-height), $stickyfooter-height being max(80px, 3rem) =
- * 80px at the default root size. Its top edge is then 3rem + 80px, so the FAB clears it at
- * 4rem + 80px. This arm mirrors core's own selector and arithmetic; unlike the rule above it
- * was derived rather than measured, since it needs a page that carries a sticky footer.
+ * With a sticky footer core lifts its button to calc(1rem + $stickyfooter-height), where
+ * $stickyfooter-height is max(80px, 3 x $font-size-base) = 80px by default. Its top edge is then
+ * 3rem + 80px, so the FAB clears it at 4rem + 80px. Mirrors core's own selector and arithmetic.
  */
 .hasstickyfooter .local-dimensions-return-fab {
     bottom: calc(4rem + 80px);

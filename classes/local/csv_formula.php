@@ -28,16 +28,15 @@ namespace local_dimensions\local;
  * Neutralising and restoring spreadsheet formula triggers in CSV cells.
  *
  * A cell whose first non-blank character is one of = + - @ is read as a formula by Excel,
- * LibreOffice and Sheets, so an author who names a competency "=HYPERLINK(...)" turns every
- * export of it into a live formula on the next person's screen. escape() prefixes such a cell
- * with an apostrophe, which those applications consume as "this is text".
+ * LibreOffice and Sheets, so a competency named "=HYPERLINK(...)" would become a live formula
+ * in every export. escape() prefixes such a cell with an apostrophe, which those applications
+ * read as "this is text".
  *
- * The semantics deliberately match core's \core\dataformat::escape_spreadsheet_formula() (which
- * csv_export_writer applies to every core CSV, this plugin's formats included when they are
- * produced by tool_lp). Core is not called directly because it only arrived in a 4.5 point
- * release while the plugin still supports 4.5.0 - and because core provides no counterpart to
- * unescape(), which this plugin does need: its template and framework CSVs are round-trippable,
- * so what an export writes an import has to read back unchanged.
+ * escape() matches {@see \core\dataformat::escape_spreadsheet_formula()}, which core's
+ * csv_export_writer applies to every cell (tool_lpimportcsv's framework exports included).
+ * Core's function is not called because it only exists from Moodle 4.5.8, and core has no
+ * counterpart to unescape(): this plugin's template and framework CSVs round-trip, so an
+ * import must read back exactly what an export wrote.
  */
 class csv_formula {
     /** @var string[] The characters a spreadsheet reads as the start of a formula. */

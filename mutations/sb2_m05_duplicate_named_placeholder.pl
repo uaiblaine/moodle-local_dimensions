@@ -1,0 +1,1 @@
+s/\$likes\[\] = helper::sql_like_ai\('u\.' \. \$field, ':qf' \. \$index\);\n                \$sqlparams\['qf' \. \$index\] = \$likevalue;/\$likes[] = helper::sql_like_ai('u.' . \$field, ':qf');\n                \$sqlparams['qf'] = \$likevalue;/;

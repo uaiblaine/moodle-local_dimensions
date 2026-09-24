@@ -49,10 +49,6 @@ final class calculator_percentage_test extends \advanced_testcase {
     /**
      * The ring reaches 100 only when every activity is done, and 0 only when none is.
      *
-     * round() alone lies at both ends: 199 of 200 rounds to 100, which the external
-     * function then reads as "completed", and 1 of 201 rounds to 0, which reads as
-     * "not started".
-     *
      * @dataProvider progress_provider
      * @param int $completed How many activities are complete.
      * @param int $total How many activities the section counts.
@@ -64,7 +60,7 @@ final class calculator_percentage_test extends \advanced_testcase {
     }
 
     /**
-     * Raw values core can return, and the value a bar may display for them.
+     * Raw percentages, and the value a bar may display for them.
      *
      * @return array The cases, each raw value and expected percentage.
      */
@@ -82,13 +78,10 @@ final class calculator_percentage_test extends \advanced_testcase {
     }
 
     /**
-     * A course percentage from core is clamped to 0-100 before it is displayed.
-     *
-     * On Moodle releases without the MDL-60912 fix the core numerator is not a subset of
-     * its denominator, so a stale completion row can push the value above 100.
+     * A raw percentage is rounded and clamped to 0-100 before a bar displays it; null reads as 0.
      *
      * @dataProvider clamp_provider
-     * @param float|null $raw The value core returned.
+     * @param float|null $raw The raw percentage, or null when there was nothing to measure.
      * @param int $expected The percentage a bar may display.
      * @return void
      */

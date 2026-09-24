@@ -20,10 +20,11 @@
     A single competency node: row + (lazy) children container. Rendered server-side for
     roots and client-side (via core/templates) when a node is expanded.
 
-    The row line is `.d-flex` (kept as a stable hook: the drag code measures drop zones on
-    `.local-dimensions-central-node > .d-flex`). The grip sits after the row content in the
-    DOM (its aria-label embeds the name, and Behat name clicks take the first document-order
-    hit) — CSS order:-1 paints it at the fixed left edge, while the inner row indents by depth.
+    The row line keeps the `.d-flex` class as a hook: the drag code measures drop zones on
+    `.local-dimensions-central-node > .d-flex`. The drag grip comes after the row button in
+    the DOM because its aria-label embeds the name and Behat's name-based clicks take the
+    first document-order match; CSS order: -1 paints it at the left edge while the inner row
+    indents by depth.
 
     Context variables required:
     * id, parentid (int) · shortname, idnumber, taxonomy, scale, description (string)
@@ -106,8 +107,7 @@
             </button>
         </div>
         {{#canmanage}}
-        {{! After the row button (aria-label embeds the name; Behat name clicks take the first
-            document-order hit) — CSS order:-1 paints it at the left edge of the flex row. }}
+        {{! After the row button on purpose; see the template docblock. }}
         <button type="button" class="btn btn-link p-0 local-dimensions-central-plan-drag"
                 data-region="node-drag-handle"
                 title="{{#str}}central_plans_moveto, local_dimensions{{/str}}"

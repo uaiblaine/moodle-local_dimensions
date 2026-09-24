@@ -17,15 +17,12 @@
 {{!
     @template local_dimensions/central/structure
 
-    Structure tab: a framework sub-header (structure picker + item count + level-sensitive
-    "Add competency") over a two-panel master/detail. The left tree panel is a plain white
-    card (Expand/Collapse toolbar, gear-collapsed display toggles, search, and the lazy
-    competency tree). The right detail panel wears a brand gradient header (title + taxonomy
-    badge + Rule/label/ID/scale/tag chips) over a white body with the courses/activities/plans
-    metric cards and the description; it is `position: sticky` so it stays in view as the tree
-    scrolls. A 22px divider (sticky-centred grip) resizes the tree. The detail is populated
-    client-side from the selected node's data attributes; the node CRUD actions live in the
-    page sticky footer.
+    Structure tab: a framework sub-header (structure picker, item count and a level-sensitive
+    "Add competency") over a master/detail body. The left panel holds the tree toolbar,
+    display toggles, search and the lazy competency tree; a resizable divider separates it
+    from the sticky detail panel (local_dimensions/central/structure_detail_content), which
+    is filled client-side from the selected node's data attributes. The node actions live
+    in the page's sticky footer (local_dimensions/central/structure_footer_actions).
 
     The System / Course category context selector is rendered once at page level
     (local_dimensions/central/contextbar); this tab receives the resolved context via its

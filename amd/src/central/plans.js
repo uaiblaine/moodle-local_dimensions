@@ -32,6 +32,7 @@ import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {openExportModal, openImportModal} from 'local_dimensions/central/plans_transfer';
 import {show as showCompetencyBrowser} from 'local_dimensions/central/competency_browser';
@@ -168,8 +169,8 @@ const applyPlanSearch = (region) => {
 };
 
 /**
- * Wire the "show disabled plans" toggle: the choice persists per session and is
- * applied as a class on the rows container (the disabled rows stay in the DOM).
+ * Wire the "show disabled plans" toggle: the choice persists in the hub's display preference
+ * and is applied as a class on the rows container (the disabled rows stay in the DOM).
  *
  * @param {HTMLElement} region
  */
@@ -252,7 +253,8 @@ const deleteTemplate = async(pane, id, name, plancount) => {
         return;
     }
 
-    const title = await getString('deletetemplate', 'tool_lp', name);
+    // The name is plain (the modal template above escapes it itself); this body is HTML.
+    const title = await getString('deletetemplate', 'tool_lp', escapeHtml(name));
     try {
         await Notification.deleteCancelPromise(await getString('delete'), title);
     } catch (e) {
@@ -273,7 +275,7 @@ const removeCompetency = async(pane, id, name) => {
     const competencyid = Number(id);
     const [title, body, removelabel] = await Promise.all([
         getString('central_removecompetency', 'local_dimensions'),
-        getString('central_removecompetency_confirm', 'local_dimensions', name),
+        getString('central_removecompetency_confirm', 'local_dimensions', escapeHtml(name)),
         getString('remove'),
     ]);
     try {
@@ -420,9 +422,10 @@ const initListDisplayOptions = (region) => {
 
 /**
  * Drag-and-drop reordering of the plan's competencies. The drag starts from the grip
- * handle that appears on row hover; while dragging the row is live-repositioned at the
- * pointer's midpoint, and on release a single reorder web-service call persists the
- * final position (the kebab move up/down stays as the keyboard-accessible path).
+ * handle that appears on row hover; while dragging, the row moves before or after the row
+ * under the pointer depending on which half the pointer is in, and on release a single
+ * reorder web-service call persists the final position. Drag is pointer-only; the row
+ * menu's move up/down and "move to position" items are the keyboard path.
  *
  * @param {HTMLElement} region
  * @param {HTMLElement} pane
@@ -497,8 +500,9 @@ const initDragReorder = (region, pane) => {
         if (from === to || from === -1 || to === -1) {
             return;
         }
-        // Core's reorder puts "from" right AFTER "to" when moving down and right BEFORE
-        // it when moving up — so the reference row is the new previous/next sibling.
+        // Core's reorder puts "from" right after "to" when moving down and right before it when
+        // moving up, so the reference row is the new previous/next sibling. See
+        // core_competency\api::reorder_template_competency().
         const reference = to > from ? row.previousElementSibling : row.nextElementSibling;
         if (!reference || !reference.dataset.competency) {
             return;
@@ -652,8 +656,7 @@ const moveCompetency = async(pane, button, direction) => {
 
 /**
  * Click dispatch for the plans region, keyed by the clicked element's data-action.
- * Each handler receives (pane, region, target). Kept as a flat map so the click
- * listener stays trivial (one lookup) instead of a long if/else chain.
+ * Each handler receives (pane, region, target).
  *
  * @type {Object}
  */
@@ -779,12 +782,10 @@ export const init = () => {
     activeRegion = region;
     activePane = pane;
 
-    // Feed the selected template's actions into the shared page-level sticky footer, but
-    // only when this tab is actually active — dynamic tabs re-run init from an async load,
-    // so a late/out-of-order load for a tab the user already left must not drive the
-    // footer. The holder is removed after copying so its buttons are not duplicated in the
-    // DOM (a hidden duplicate earlier in document order would shadow name-based clicks).
-    // Re-runs on every tab entry and reloadPane, so it tracks the selected template.
+    // Feed the selected template's actions into the shared page-level sticky footer, only while
+    // this tab is active: init re-runs from async tab loads, and a late load for a tab the user
+    // has left must not drive the footer. The holder is removed after copying so its buttons are
+    // not duplicated (a hidden copy earlier in document order would catch name-based clicks).
     if (region.closest('.tab-pane.active')) {
         const footerholder = region.querySelector('[data-region="plans-footer-actions"]');
         if (footerholder) {
@@ -841,8 +842,8 @@ export const init = () => {
     initDisplayOptions(region);
     initListDisplayOptions(region);
     initDragReorder(region, pane);
-    // The redesign gives the master (templates) an explicit, adjustable width (default 400px)
-    // and lets the detail flex to fill the rest; the divider drives that master width.
+    // The template list (master) has an adjustable width, 400px by default in styles.css;
+    // the detail flexes to fill the rest.
     initMasterResizer({
         body: region.querySelector(SELECTORS.plansBody),
         resizer: region.querySelector(SELECTORS.plansResizer),

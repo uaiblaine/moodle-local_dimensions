@@ -16,8 +16,7 @@
 /**
  * Shared "flash" confirmation cue for the Competency hub: briefly highlight an element's
  * background so an in-place change (a row added, edited or moved without a full reload) is
- * visible where the user is looking. The single source for what were ten inline copies across
- * six hub modules.
+ * visible where the user is looking.
  *
  * @module     local_dimensions/central/flash
  * @copyright  2026 Anderson Blaine

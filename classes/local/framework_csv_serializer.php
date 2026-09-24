@@ -17,12 +17,12 @@
 /**
  * CSV serialization/parsing for competency frameworks (+ the plugin custom fields).
  *
- * The column contract is a SUPERSET of core admin/tool/lpimportcsv: the same 14
+ * The column contract is a superset of core admin/tool/lpimportcsv: the same 14
  * columns in the same order (so files interchange with the core tool, which
  * reads them positionally and ignores trailing columns), plus cf_* columns for
  * the plugin's competency custom fields. On parse the 14 core fields are read by
- * position (robust across languages / the core tool) and the cf_* fields by
- * header name (forward-compatible; a plain core CSV imports with empty CFs).
+ * position (the core tool's header row is localised) and the cf_* fields by
+ * header name (a plain core CSV imports with empty custom fields).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -53,7 +53,7 @@ class framework_csv_serializer {
     /**
      * The plugin custom-field columns, in export order. cf_customscss is emitted only
      * when the custom SCSS feature is enabled (kept last so the array_diff in headers()
-     * drops it cleanly). Kept in sync with helper's CF mapping.
+     * drops it cleanly). Keep in step with {@see helper::export_competency_customfields()}.
      *
      * @var string[]
      */
@@ -157,10 +157,9 @@ class framework_csv_serializer {
      * Encode one row as an RFC 4180 CSV line (every field quoted, internal quotes doubled).
      *
      * Built in memory rather than via csv_export_writer, whose fixed per-user temp path
-     * ("csvimport/<userid>/Moodle-data-export.csv") is double-unlinked — a PHP warning that
-     * fails phpunit --fail-on-warning — when two exports run in the same request. Writing the
-     * line by hand means the formula neutralisation core applies inside that writer has to be
-     * applied here too, which is what csv_formula::escape() is; parse() undoes it.
+     * ("csvimport/<userid>/Moodle-data-export.csv") is unlinked twice, raising a PHP warning,
+     * when two exports run in the same request. The formula neutralisation that writer applies
+     * is therefore applied here through csv_formula::escape(); parse() undoes it.
      *
      * @param array $row Cell values.
      * @return string
@@ -240,9 +239,9 @@ class framework_csv_serializer {
         $framework = null;
         $competencies = [];
         while ($row = $reader->next()) {
-            /* Formula neutralisation is undone on the way in: every writer of this format
-               applies it - encode_row() here, core's csv_export_writer for a tool_lp file - so
-               a guarding apostrophe is part of the encoding and never part of the value. */
+            /* Formula neutralisation is undone on the way in: the writers of this format apply
+               it (encode_row() here, and core's csv_export_writer from Moodle 4.5.8 for a
+               tool_lpimportcsv file), so a guarding apostrophe is never part of the value. */
             $get = static function (int $index) use ($row): string {
                 return isset($row[$index]) ? csv_formula::unescape((string) $row[$index]) : '';
             };

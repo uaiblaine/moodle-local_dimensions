@@ -83,9 +83,9 @@ class search_linkable_courses extends external_api {
         $limitfrom = max(0, $params['limitfrom']);
         $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : 25;
 
-        // Validated in the competency's framework context, never at the site: a manager holding
-        // competencyview in one course category only must not depend on the authenticated-user
-        // default there.
+        // Checked in the framework's context, not the site's, so a manager granted competencyview
+        // only in a course category passes without relying on the authenticated user role's
+        // site-level default.
         $frameworkcontext = (new competency($competencyid))->get_context();
         self::validate_context($frameworkcontext);
         require_capability('moodle/competency:competencyview', $frameworkcontext);
@@ -127,11 +127,12 @@ class search_linkable_courses extends external_api {
 
         $items = [];
         foreach ($records as $record) {
-            $coursecontext = context_course::instance((int) $record->id);
+            // Plain spelling: course_datasource escapes each name once as it builds the label.
+            $plain = ['context' => context_course::instance((int) $record->id), 'escape' => false];
             $items[] = [
                 'id' => (int) $record->id,
-                'fullname' => format_string($record->fullname, true, ['context' => $coursecontext]),
-                'shortname' => format_string($record->shortname, true, ['context' => $coursecontext]),
+                'fullname' => format_string($record->fullname, true, $plain),
+                'shortname' => format_string($record->shortname, true, $plain),
             ];
         }
 

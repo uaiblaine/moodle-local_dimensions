@@ -59,8 +59,8 @@ define([], function() {
             return;
         }
 
-        // Temporarily ensure the content is collapsed so scrollHeight reflects
-        // overflow against the CSS-imposed max-height.
+        // Not expanded, so the CSS max-height applies and any scroll overflow
+        // means the content is clipped.
         var overflows = content.scrollHeight - content.clientHeight > 1;
 
         if (overflows) {

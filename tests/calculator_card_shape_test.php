@@ -29,30 +29,12 @@ final class calculator_card_shape_test extends \advanced_testcase {
      * Writes the singleactivity format's 'activitytype' option straight into
      * course_format_options and rebuilds the course cache.
      *
-     * The value is written directly rather than passed to create_course() because
-     * create_course()'s 'activitytype' key is silently dropped: it flows through
-     * base::update_format_options() -> validate_format_options() ->
-     * course_format_options(true), which filters the option's legal values through
-     * has_capability("mod/{$activity}:addinstance", ...). create_course() runs before
-     * setUser(), so $USER->id is still 0 at that point, and has_capability() returns
-     * false unconditionally for user id 0 on any write/risky capability (mod/page:addinstance
-     * is both) - before any role lookup. The option is therefore never in the allowed
-     * select values, validate_format_options() drops it, and the course keeps the site
-     * default (forum).
-     *
-     * The write below is an update, not an insert, because update_format_options()
-     * already added a row for this option while create_course() was building the
-     * course: it iterates every option the format declares and, for one with no row
-     * yet, writes it unconditionally using the declared default (the site setting,
-     * i.e. forum) - see base::update_format_options() in
-     * course/format/classes/base.php. course_format_options carries a unique index
-     * named 'formatoption' on (courseid, format, sectionid, name) (lib/db/install.xml),
-     * exactly the four columns identifying this row, so writing a second row for them
-     * as a fresh insert throws a dml_write_exception. Updating the existing row and
-     * rebuilding is what makes the write stick: rebuild_course_cache() calls
-     * core_courseformat\base::reset_course_cache(), which clears the per-course format
-     * instance (and its formatoptions cache) so the next get_format_options() call
-     * rereads this row from the database.
+     * create_course() silently drops an 'activitytype' key: the format filters the option's
+     * legal values through has_capability('mod/<type>:addinstance'), which always refuses a
+     * write capability to user id 0, and no user is set yet. The row already exists, because
+     * {@see \core_courseformat\base::update_format_options()} stored the site default while the
+     * course was created, so this updates it; an insert would hit the 'formatoption' unique
+     * index. rebuild_course_cache() resets the cached format instance so the new value is read.
      *
      * @param int $courseid The course id.
      * @param string $activitytype The modname to store, e.g. 'page'.
@@ -128,9 +110,7 @@ final class calculator_card_shape_test extends \advanced_testcase {
     /**
      * A completed activity is reported as completed.
      *
-     * This branch decides whether the card reads "Completed" or "Not completed", and it
-     * is the coverage that `tests/calculator_single_activity_test.php` gained in review
-     * before Task 4 deletes it — it must not be lost with the file.
+     * This branch decides whether the card reads "Completed" or "Not completed".
      *
      * @return void
      */
@@ -161,13 +141,10 @@ final class calculator_card_shape_test extends \advanced_testcase {
 
     /**
      * A leftover module of a different type must not steal the slot: the resolver names
-     * the module matching the format's own 'activitytype' option, not merely the first
-     * user-visible module it meets. The url module is created before the page module, so
-     * it sits earlier in section 0's sequence - the exact ordering the pre-fix code
-     * (which walked every module and returned the first match) would have picked wrong.
-     * The decoy is also given manual completion tracking, so two modules are trackable and
-     * the count-based fallback branch cannot land on CARDMODE_ACTIVITY by itself - only
-     * resolve_main_activity() actually matching the configured 'activitytype' can.
+     * the module matching the format's 'activitytype' option, not the first visible module.
+     * The url decoy is created first, so it sits earlier in section 0's sequence, and it is
+     * tracked too, so the count-based fallback cannot reach CARDMODE_ACTIVITY on its own;
+     * only resolve_main_activity() matching 'activitytype' can.
      *
      * @return void
      */
@@ -200,10 +177,8 @@ final class calculator_card_shape_test extends \advanced_testcase {
     /**
      * A course that boils down to one tracked activity takes the same shape.
      *
-     * This is also the coverage `tests/calculator_single_activity_test.php` carried for a
-     * freshly-enrolled, not-yet-completed activity (completed reads false rather than
-     * defaulting true, and the URL is non-empty) before Task 4 deleted that file - ported
-     * here rather than lost with it.
+     * The activity is not yet completed, so this also pins that completed reads false rather
+     * than defaulting to true, and that the URL is non-empty.
      *
      * @return void
      */
@@ -236,14 +211,12 @@ final class calculator_card_shape_test extends \advanced_testcase {
     /**
      * An activity released later is workload, so the course no longer looks like one activity.
      *
-     * The shape resolver and the percentages have to be asked about the same set of activities.
-     * They were not: the resolver gated on uservisible, so a course of one open activity beside
-     * one released-later activity counted as a course of ONE, took the activity shape, and drew a
-     * completed tick over a course that was half undone - directly beside a bar reading 50%.
+     * The shape resolver must count the same activities as the percentages: one open activity
+     * beside one released later is two pieces of work, so a card showing the open one alone
+     * (ticked once done) would contradict a bar reading 50%.
      *
-     * The first assertion is the control. It is the same course without the second activity, and
-     * it must still be an activity card, so what follows measures the second activity's arrival
-     * rather than the activity shape having simply stopped working.
+     * The first assertion is the control: the same course without the second activity is still
+     * an activity card, so the second assertion measures that activity's arrival.
      *
      * @return void
      */
@@ -289,10 +262,9 @@ final class calculator_card_shape_test extends \advanced_testcase {
     /**
      * A course whose only work has not opened yet is not offered as an activity card.
      *
-     * The activity shape hands the template a URL and it renders a button, so it may only ever
-     * name an activity the learner can open. Counting work that is released later - which the
-     * percentages must do - would otherwise put a dead button on the card as soon as a course
-     * held exactly one such activity.
+     * The activity shape renders a button to the activity, so it may only name one the learner
+     * can open now. Work released later still counts for the percentages, so without that check
+     * a course holding exactly one such activity would get a dead button.
      *
      * The control is the same course before the restriction is applied.
      *
@@ -333,9 +305,8 @@ final class calculator_card_shape_test extends \advanced_testcase {
     /**
      * Puts a future date restriction on an activity, leaving it shown greyed.
      *
-     * Shown rather than hidden is the whole point: a hidden restriction takes the activity out of
-     * the learner's workload, while a shown one keeps it in - which is what makes it a second
-     * piece of work the card has to account for.
+     * Shown rather than hidden on purpose: a hidden restriction takes the activity out of the
+     * learner's workload, while a shown one keeps it in as work the card has to account for.
      *
      * @param int $cmid The activity to restrict.
      * @return void
@@ -358,12 +329,9 @@ final class calculator_card_shape_test extends \advanced_testcase {
     }
 
     /**
-     * A single untracked module leaves zero trackable candidates, the same as two - neither
-     * count resolves to the activity shape. Ported from
-     * `tests/calculator_single_activity_test.php::test_untracked_activity_returns_null`
-     * before Task 4 deleted that file: this exercises the per-module
-     * COMPLETION_TRACKING_NONE guard in collect_trackable_cms(), a different line from the
-     * course-level guard the next test covers.
+     * A single untracked module leaves no trackable candidate, so the course does not take the
+     * activity shape. Covers the per-module COMPLETION_TRACKING_NONE guard in
+     * counts_towards_progress(); the next test covers the course-level guard.
      *
      * @return void
      */
@@ -389,13 +357,10 @@ final class calculator_card_shape_test extends \advanced_testcase {
 
     /**
      * Course-level completion switched off: nothing is trackable, so the non-format path
-     * cannot resolve to the activity shape either. Ported from
-     * `tests/calculator_single_activity_test.php::test_completion_disabled_returns_null`
-     * before Task 4 deleted that file. Unlike
-     * test_single_activity_format_without_completion_still_names_it above, this course is
-     * NOT in the singleactivity format, so resolve_main_activity() cannot short-circuit
-     * the walk - this is the only surviving coverage of collect_trackable_cms()'s own
-     * course-level completion guard.
+     * cannot resolve to the activity shape either. Unlike
+     * test_single_activity_format_without_completion_still_names_it(), this course is not in
+     * the singleactivity format, so resolve_main_activity() cannot short-circuit and this
+     * covers collect_trackable_cms()'s course-level completion guard.
      *
      * @return void
      */
@@ -514,12 +479,10 @@ final class calculator_card_shape_test extends \advanced_testcase {
      * The shape resolver and the progress walk agree about a hidden section's activities.
      *
      * collect_trackable_cms() walks the whole course without filtering by section, while
-     * get_course_section_progress() skips hidden sections outright. The two only stay in
-     * agreement because a module in a hidden section is never uservisible to a student -
-     * the topics format allows the third visibility state ("available but not shown") in
-     * section 0 and visible sections only, so a module cannot be stealth its way out of a
-     * hidden section. This test pins that down: were it to change, the card could name an
-     * activity the progress walk never counts.
+     * get_course_section_progress() skips hidden sections outright. They agree only because a
+     * module in a hidden section is never uservisible to a student: the topics format allows
+     * stealth ("available but not shown") only in section 0 and visible sections. If that
+     * changed, the card could name an activity the progress walk never counts.
      *
      * @return void
      */

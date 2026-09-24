@@ -29,6 +29,7 @@ import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast} from 'local_dimensions/central/toast';
 import {iconButton} from 'local_dimensions/central/action_button';
@@ -188,7 +189,8 @@ const onRemove = async(state, row) => {
     const rolename = row.querySelector('[data-rolename]').dataset.rolename;
     const [title, body, removelabel] = await Promise.all([
         getString('central_roles_remove', 'local_dimensions'),
-        getString('central_roles_remove_confirm', 'local_dimensions', rolename),
+        // Plain role name into an HTML confirm body.
+        getString('central_roles_remove_confirm', 'local_dimensions', escapeHtml(rolename)),
         getString('remove'),
     ]);
     try {

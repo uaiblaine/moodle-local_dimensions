@@ -33,9 +33,20 @@ most expensive one — and is a defect, not a default:
 - `sonnet` — readers, graders, refuters, verifiers, measurers, stale-reference
   sweeps, mechanical renames, test files written against a stated contract.
 - `opus` — implementers of non-trivial code, ADR and documentation drafters,
-  consolidators, critics, estimators.
+  consolidators, critics, estimators. The alias means the **newest Opus**: since
+  2026-09-22 that is Claude Opus 5.5 (`claude-opus-5-5`), measured by asking a
+  subagent launched with `model: 'opus'` which model it runs on. Never pin
+  `claude-opus-5` or any older Opus id. The `Agent` tool accepts aliases only
+  (`sonnet`, `opus`, `haiku`, `fable`); `agent()` in a Workflow accepts an explicit
+  id as well, but the alias is what to write — it follows the newest Opus without
+  an edit here.
 - the session model — only for work done inline in the main loop, never for a
   subagent.
+- `effort` is set beside `model` on every call, never inherited: `high` for
+  verifiers, readers and refuters, `xhigh` for implementers and fixers (the
+  owner's rule of 2026-09-17). An omitted effort inherits the session's, and on
+  Opus 5.5 an explicit one matters twice over — that model's own default is
+  `medium`, one level below Opus 5.
 
 Multi-agent workflows stay opt-in and lean whatever mode is on: size the fan-out
 to the question (roughly 10 to 25 agents), one refuter per finding and only for
@@ -460,9 +471,16 @@ off. Only a `dml_missing_record_exception` means there is no plan: it comes from
 id, and from `context_user::instance(0)` for an id below 1, which `core_competency\persistent` never loads.
 Every other failure must surface as core's own error, the way `admin/tool/lp/plan.php` shows it.
 Behat cannot assert on an exception page, so the refusals are pinned in `tests/local/plan_access_test.php`,
-and the mutation spec is `mutations/plan_access.conf`. `classes/external/get_competency_courses.php` still
-catches `\Exception` around `read_plan()`. That catch only picks the enrolment-filter cascade and shows no
-error, so it was left as it is.
+and the mutation spec is `mutations/plan_access.conf`.
+
+**Reading a plan says nothing about a competency id.** `plan_access::competency_scope()` decides which
+competencies a plan reaches, and `view-competency.php`, `get_competency_rule_data` and
+`get_competency_courses` all ask it before reading anything about the competency: the plan's own (the
+archive for a completed plan); a related competency only when `showrelated` AND `showrelatedlink` resolve
+on for the template and the viewer has `competencyview` in its context (core's check before listing
+related competencies); a direct child of a rule-bearing plan competency, because the Rules tab links there.
+Outside the plan the enrolment-filter cascade skips the template (competency -> site). Specs:
+`mutations/sec_scope.conf`, `mutations/sec_courses.conf`.
 
 ## Colour tokens and dark mode
 

@@ -38,7 +38,8 @@ use local_dimensions\template_metadata_cache;
  * (which may come from several frameworks), with template CRUD, the cross-framework
  * competency picker and cohort/participant assignment all handled in place via modals.
  *
- * Args (from the pane data attributes / getContent): templateid.
+ * Args (from the pane data attributes / getContent): contexttype, categoryid, locked, templateid,
+ * competencyids (CSV of competency ids to filter by).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -57,13 +58,10 @@ class plans extends \core\output\dynamic_tabs\base {
     /**
      * Whether the current user may see this tab in the context the pane names.
      *
-     * Resolved from the pane's own contexttype/categoryid, never from the system context: a manager
-     * holding templatemanage in one course category only must get this tab there, and core's
-     * dynamic-tabs web service re-instantiates the tab from the same pane data before calling
-     * require_access(). Measured on 5.2 before this change: the Plans pane answered
-     * nopermissiontoaccesspage to exactly such a manager, because templateview carries no
-     * authenticated-user default at the system context. The resolver downgrades an unreadable
-     * category to the system context, so the check then correctly refuses a category-scoped viewer.
+     * Resolved from the pane's own contexttype/categoryid, never from the system context; see
+     * {@see structure::is_available()}. It matters most here: templateview has no default outside
+     * the manager archetype, so a system-context check would refuse a manager who holds
+     * templatemanage in one course category only.
      *
      * @return bool
      */
@@ -109,6 +107,10 @@ class plans extends \core\output\dynamic_tabs\base {
         $templateid = (int) ($data['templateid'] ?? 0);
 
         $canmanage = has_capability('moodle/competency:templatemanage', $context);
+        // Names travel in the plain spelling: the plans template renders them through double
+        // stashes and str helper parameters, and the tab's JS reads the data-* copies back through
+        // textContent, so each is escaped exactly once.
+        $plain = ['context' => $context, 'escape' => false];
         // The export web service re-checks templateview on each template's own context; the
         // toolbar button mirrors that gate so it never offers a download the server refuses.
         $cantemplateview = has_capability('moodle/competency:templateview', $context);
@@ -154,7 +156,7 @@ class plans extends \core\output\dynamic_tabs\base {
             }
             $competencyfilters[] = [
                 'id' => $filterid,
-                'label' => format_string($competency->get('shortname')),
+                'label' => format_string($competency->get('shortname'), true, $plain),
             ];
         }
         $filteredbycompetency = !empty($competencyfilters);
@@ -179,7 +181,7 @@ class plans extends \core\output\dynamic_tabs\base {
         $hashiddentemplates = false;
         $templateoptions = [];
         foreach ($templates as $id => $template) {
-            $name = format_string($template->get('shortname'));
+            $name = format_string($template->get('shortname'), true, ['context' => $template->get_context(), 'escape' => false]);
             $idnumber = (string) (($metadatamap[$id] ?? [])['idnumber'] ?? '');
             $visible = (bool) $template->get('visible');
             $hashiddentemplates = $hashiddentemplates || !$visible;
@@ -235,11 +237,11 @@ class plans extends \core\output\dynamic_tabs\base {
                 }
                 $competencies[] = [
                     'id' => $cid,
-                    'shortname' => format_string($competency->get('shortname')),
+                    'shortname' => format_string($competency->get('shortname'), true, $plain),
                     'idnumber' => (string) $competency->get('idnumber'),
                     'taxonomy' => $taxonomy,
                     'path' => $breadcrumbs[$cid]['path'] ?? '',
-                    'frameworktag' => format_string($frameworktags[$fwid]),
+                    'frameworktag' => format_string($frameworktags[$fwid], true, $plain),
                     'frameworkid' => $fwid,
                     'first' => false,
                     'last' => false,
@@ -251,8 +253,8 @@ class plans extends \core\output\dynamic_tabs\base {
             }
         }
 
-        // Capabilities for the "open the core admin page" shortcut in the participants modal
-        // header: each button only shows if the user can actually reach the page it opens.
+        // Capabilities for the "open the core admin page" shortcuts in the participants modal
+        // footer: each link only shows if the user can actually reach the page it opens.
         $syscontext = context_system::instance();
         $canassignroles = has_capability('moodle/role:manage', $syscontext);
         // Core's cohort page is context-aware (cohort/index.php?contextid=), and cohort:manage is a
@@ -315,19 +317,21 @@ class plans extends \core\output\dynamic_tabs\base {
             'templatecount' => count($templateoptions),
             'canexport' => (int) (!$needscategory && !empty($templateoptions) && $cantemplateview),
             'selectedtemplateid' => $templateid,
-            'selectedtemplatename' => $selected ? format_string($selected->get('shortname')) : '',
-            'selectedtemplateidnumber' => s($selectedidnumber),
+            'selectedtemplatename' => $selected
+                ? format_string($selected->get('shortname'), true, ['context' => $selected->get_context(), 'escape' => false])
+                : '',
+            'selectedtemplateidnumber' => $selectedidnumber,
             'selectedtemplatehasidnumber' => $selectedidnumber !== '',
             'selectedtemplatedescription' => [
                 'html' => $selecteddescription,
                 'id' => 'local-dimensions-plans-desc-' . $templateid,
             ],
             'selectedtemplatehasdescription' => $selecteddescriptionplain !== '',
-            'selectedtemplatetype' => format_string($selectedtype),
+            'selectedtemplatetype' => format_string($selectedtype, true, $plain),
             'selectedtemplatehastype' => $selectedtype !== '',
-            'selectedtemplatetag1' => format_string($selectedtag1),
+            'selectedtemplatetag1' => format_string($selectedtag1, true, $plain),
             'selectedtemplatehastag1' => $selectedtag1 !== '',
-            'selectedtemplatetag2' => format_string($selectedtag2),
+            'selectedtemplatetag2' => format_string($selectedtag2, true, $plain),
             'selectedtemplatehastag2' => $selectedtag2 !== '',
             'selectedtemplatedisplaymode' => $selecteddisplaymode,
             'selectedtemplatehasdisplaymode' => $selecteddisplaymode !== '',

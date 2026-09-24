@@ -17,8 +17,9 @@
 {{!
     @template local_dimensions/progress_card_body
 
-    Progress timeline component for course cards.
-    Shows section completion status with visual indicators.
+    Progress body of a course card: the lock overlay when the course is locked, then the
+    shape the server chose (cardmode): one activity, one section with its ring, or the
+    section timeline.
 
     Context variables required:
     * courseid (int) - Course ID, used to pair the collapse toggle with its timeline
@@ -127,9 +128,8 @@
             <div class="local-dimensions-enrol-note">{{#str}}enrolment_open, local_dimensions{{/str}}</div>
         {{/can_self_enrol}}
         {{^can_self_enrol}}
-        {{! Applied and waiting: no button, because there is nothing left to do, and no lock
-            message, because the learner is not the one being told no. The date block is
-            skipped for the same reason - the answer is a decision, not a date }}
+        {{! Applied and waiting: no button (nothing left to do), no lock message (the learner
+            has not been refused) and no date (the answer is a decision, not a date) }}
         {{#is_pending}}
             <div class="local-dimensions-locked-message">{{#str}}application_pending, local_dimensions{{/str}}</div>
             <div class="local-dimensions-enrol-note">{{#str}}application_pending_note, local_dimensions{{/str}}</div>
@@ -202,26 +202,21 @@
         {{/locked}}
     {{/enabled}}
 
-    {{! The disabled message above and the two bodies below are alternatives, never both: a
-        course with tracking off has no percentages or sequence to show, so it stops at the
-        message. (The activity body is the deliberate exception - it lives outside this guard,
-        above, so a single untracked activity still gets named and linked to.) }}
+    {{! The disabled message above and the two bodies below are alternatives: with tracking off
+        there is no percentage or sequence to show. The activity body sits outside this guard
+        on purpose, so a single untracked activity is still named and linked. }}
     {{#enabled}}
     {{! One visible section holding several activities: a timeline of a single row naming a
         section usually called "General" would inform nobody, so the card offers a way in
         instead. }}
     {{#section}}
     <div class="local-dimensions-single-section">
-        {{! A section with nothing trackable has no percentage to claim - the ring is
-            dropped rather than showing a misleading 0%, the same distinction the
-            timeline it replaces drew with its info icon. The card's job here is still
-            to offer a way in, so the name and call to action survive either way. }}
-        {{! The same ring the timeline draws for a started section, scaled up by CSS so the
-            arc geometry and the dasharray factor stay shared. Reusing the container is also
-            what makes percentagedisplaymode apply here for free: its rules target
-            .local-dimensions-progress-ring-container .local-dimensions-progress-text, so
-            fixed / hover / hidden reach this ring without a rule of their own. Under hidden
-            the arc still reports progress, which a bare number could not. }}
+        {{! No ring for a section with nothing trackable: a 0% would mislead (the timeline shows
+            its info icon for the same case). The name and call to action render either way. }}
+        {{! The timeline's own ring, scaled up by CSS so the arc geometry and dasharray factor
+            stay shared. Reusing the ring container also applies the percentage display mode
+            (fixed / hover / hidden) with no rule of its own; under hidden the arc still shows
+            progress. }}
         {{#tracked}}
         <div class="local-dimensions-progress-ring-container local-dimensions-progress-ring-lg"
              role="progressbar"

@@ -68,8 +68,8 @@ class competency_usage extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), ['competencyid' => $competencyid]);
         $competencyid = $params['competencyid'];
 
-        // Validated in the framework's own context: a manager holding competencyview in one course
-        // category only must not depend on the authenticated-user default at the site.
+        // Checked in the framework's own context, not the system one, so a competencyview grant in
+        // the framework's category is enough.
         $competency = competency::get_record(['id' => $competencyid], MUST_EXIST);
         $framework = competency_framework::get_record(
             ['id' => $competency->get('competencyframeworkid')],
@@ -81,13 +81,15 @@ class competency_usage extends external_api {
             throw new \required_capability_exception($context, 'moodle/competency:competencyview', 'nopermissions', '');
         }
 
-        // Courses (core filters each by the caller's per-course capabilities).
+        // Courses (core filters each by the caller's per-course capabilities). Names go out plain
+        // (escape off, tags still stripped): the usage modal prints them through double stashes.
         $courses = [];
         $activities = [];
         foreach (api::list_courses_using_competency($competencyid) as $course) {
             $coursecontext = \core\context\course::instance($course->id);
-            $coursename = format_string($course->fullname, true, ['context' => $coursecontext]);
-            $courseshortname = format_string($course->shortname, true, ['context' => $coursecontext]);
+            $plain = ['context' => $coursecontext, 'escape' => false];
+            $coursename = format_string($course->fullname, true, $plain);
+            $courseshortname = format_string($course->shortname, true, $plain);
             $courses[] = [
                 'id' => (int) $course->id,
                 'name' => $coursename,
@@ -105,7 +107,7 @@ class competency_usage extends external_api {
                 $cmurl = $cm->url;
                 $activities[] = [
                     'cmid' => (int) $cmid,
-                    'name' => format_string($cm->name, true, ['context' => $coursecontext]),
+                    'name' => $cm->get_formatted_name(['escape' => false]),
                     'coursename' => $coursename,
                     'courseshortname' => $courseshortname,
                     'url' => $cmurl ? $cmurl->out(false) : '',
@@ -113,18 +115,25 @@ class competency_usage extends external_api {
             }
         }
 
-        // Learning plan templates bundling the competency (hub "Plans" naming). Read through the
-        // persistent rather than api::list_templates_using_competency(), which requires template
-        // read access at the SYSTEM context and throws otherwise - a category-scoped manager lost
-        // the whole popover to it. Each template is filtered on its own context instead.
+        // Learning plan templates bundling the competency. Not api::list_templates_using_competency(),
+        // which requires template read access in the system context and throws otherwise, so a
+        // category-scoped manager would get no list at all; each template is checked in its own context.
         $templates = [];
         foreach (template_competency::list_templates($competencyid, false) as $template) {
             if (!$template->can_read()) {
                 continue;
             }
+            // Hidden templates only for those who may manage them, as on the Plans tab and in core's
+            // list_templates_using_competency(): templateview alone does not reveal a hidden one.
+            if (!$template->get('visible') && !$template->can_manage()) {
+                continue;
+            }
             $templates[] = [
                 'id' => (int) $template->get('id'),
-                'name' => format_string($template->get('shortname')),
+                'name' => format_string($template->get('shortname'), true, [
+                    'context' => $template->get_context(),
+                    'escape' => false,
+                ]),
                 'visible' => (bool) $template->get('visible'),
             ];
         }

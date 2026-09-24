@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * SCSS manager for compiling, caching and validating template SCSS.
+ * SCSS manager for compiling, caching and validating template and competency SCSS.
  *
  * Handles reading SCSS from the custom field, validating it using the
  * same approach as Moodle core's admin_setting_scsscode, compiling it
@@ -29,7 +29,7 @@
 namespace local_dimensions;
 
 /**
- * SCSS manager for compiling, caching and validating template SCSS.
+ * SCSS manager for compiling, caching and validating template and competency SCSS.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine (anderson@blaine.com.br)
@@ -46,10 +46,8 @@ class scss_manager {
     public static function get_scss(int $instanceid, string $area = 'lp'): ?string {
         global $DB;
 
-        // NOTE: direct query against core {customfield_*} tables — intentional to
-        // skip controller hydration on a per-instance cache miss path. If core
-        // changes the customfield schema (already changed once between 4.x and
-        // 5.x), re-validate this query before upgrading.
+        // Direct query on core's customfield tables, to skip controller hydration on a cache
+        // miss. It depends on that schema, which differs between Moodle 4.5 and 5.1.
         $sql = "SELECT d.id, d.value
                   FROM {customfield_data} d
                   JOIN {customfield_field} f ON f.id = d.fieldid

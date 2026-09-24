@@ -26,7 +26,7 @@ use local_dimensions\reportbuilder\local\entities\competency_extras;
  * Competencies datasource extended with local_dimensions customfields.
  *
  * Inherits everything the core competencies datasource provides (framework,
- * competency, usercompetency, user, cohort entities) and adds a
+ * context, competency, usercompetency, user, cohort entities) and adds a
  * {@see competency_extras} entity contributing the customfield columns and
  * filters local_dimensions defines in the `competency` area.
  *

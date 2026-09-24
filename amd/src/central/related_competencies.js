@@ -14,13 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * "Related competencies" modal: list a competency's related competencies, remove per row,
- * and add new ones through the same framework browser as the "Browse frameworks" modal —
- * debounced search plus the lazy competency tree with checkbox rows (shared
- * central/competency_tree_browser module) — minus the framework selector, because a
- * relation can only reference a competency of the same framework. The competency itself
- * and already-related competencies show as disabled rows. Rows are built in JS.
- * Relations are symmetric, so add/remove affects both directions.
+ * "Related competencies" modal: list a competency's related competencies, remove per row, and
+ * add new ones through the competency tree browser shared with the "Browse frameworks" modal
+ * (central/competency_tree_browser), without its framework selector: core only relates
+ * competencies of the same framework. The competency itself and already-related competencies
+ * show as disabled rows. Relations are symmetric, so add/remove affects both directions.
  *
  * @module     local_dimensions/central/related_competencies
  * @copyright  2026 Anderson Blaine
@@ -34,6 +32,7 @@ import ModalEvents from 'core/modal_events';
 import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
 import {applyMode, destroyBrowser, getCheckedIds, initBrowser} from 'local_dimensions/central/competency_tree_browser';
@@ -153,7 +152,8 @@ const restoreFocus = (state, preferred) => {
  */
 const removeRelated = async(state, rowEl) => {
     const relatedid = Number(rowEl.dataset.relatedid);
-    const name = rowEl.querySelector('.fw-medium').textContent;
+    // The row holds the plain name and the confirm body is HTML: escaped here, once.
+    const name = escapeHtml(rowEl.querySelector('.fw-medium').textContent);
     const [title, body] = await Promise.all([
         getString('central_related_remove', 'local_dimensions'),
         getString('central_related_remove_confirm', 'local_dimensions', name),
@@ -213,7 +213,7 @@ const addSelected = async(state) => {
 /**
  * Open the Related competencies modal.
  *
- * @param {Object} opts {competencyid, competencyname, frameworkid}.
+ * @param {Object} opts {competencyid, competencyname (plain text), frameworkid}.
  * @return {Promise<void>}
  */
 export const open = async(opts) => {
@@ -221,7 +221,7 @@ export const open = async(opts) => {
     const [title, addlabel, closelabel, removelabel, addedlabel, removedlabel, selflabel, relatedlabel,
         loadmorelabel, emptylabel] =
         await Promise.all([
-            getString('central_related_title', 'local_dimensions', opts.competencyname),
+            getString('central_related_title', 'local_dimensions', escapeHtml(opts.competencyname)),
             getString('central_browseframeworks_add', 'local_dimensions'),
             getString('closebuttontitle', 'core'),
             getString('central_related_remove', 'local_dimensions'),
@@ -233,9 +233,8 @@ export const open = async(opts) => {
             getString('central_browseframeworks_empty', 'local_dimensions'),
         ]);
     const {html} = await Templates.renderForPromise('local_dimensions/central/related_competencies', {});
-    // The primary action ("Add selected") lives in the footer the core reveals as soon as it has
-    // children — ModalSaveCancel fills it with Cancel (relabelled Close, this modal manages in place
-    // and has nothing to cancel) + the save button. See the ModalEvents.save wiring below.
+    // Cancel is relabelled Close: the modal applies every change in place, so there is nothing to
+    // cancel. Save is the "Add selected" action (see the ModalEvents.save handler below).
     const modal = await ModalSaveCancel.create({
         title,
         body: html,
@@ -288,9 +287,8 @@ export const open = async(opts) => {
             .catch(notifyError);
     });
     modal.getRoot().on(ModalEvents.save, (event) => {
-        // Adding never closes the dialog — the confirmation toast, the row flash and the refreshed
-        // relation list all land in it, and the user returns to the tree — so prevent the core's
-        // close-on-save unconditionally (unlike the browse modal, which closes on a real add).
+        // Adding never closes the dialog: the toast, the row flash and the refreshed relation list
+        // all land in it (the browse modal, by contrast, closes on a real add).
         event.preventDefault();
         addSelected(state).catch(notifyError);
     });

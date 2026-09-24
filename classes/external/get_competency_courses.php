@@ -17,12 +17,15 @@
 /**
  * External API to get courses linked to a competency with enrollment filter.
  *
- * This webservice runs its own query over competency_coursecomp and resolves
- * the enrolment-filter cascade (competency -> plan's template -> global
- * setting) to filter courses based on the user's enrollment status. Each
+ * It answers only for a competency the given plan reaches, the rule
+ * view-competency.php applies (plan_access::competency_scope()). It then runs
+ * its own query over competency_coursecomp and resolves the enrolment-filter
+ * cascade (competency -> plan's template -> global setting) to filter courses
+ * based on the user's enrollment status. Each
  * surviving course also carries its rule outcome, the competency's activity
- * links inside it, what the viewer can do with it (open, enrol or locked) and,
- * when the course resolves to exactly one trackable activity, that activity.
+ * links inside it, what the viewer can do with it (open, enrol, pending or
+ * locked) and its card shape: its single activity or single section when it
+ * resolves to one, otherwise the timeline.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -40,6 +43,7 @@ use core\context\system as context_system;
 use core\context\course as context_course;
 use local_dimensions\calculator;
 use local_dimensions\constants;
+use local_dimensions\local\plan_access;
 
 /**
  * External API to get courses linked to a competency with enrollment filter.
@@ -69,7 +73,10 @@ class get_competency_courses extends external_api {
     public static function execute_parameters() {
         return new external_function_parameters([
             'competencyid' => new external_value(PARAM_INT, 'The competency ID'),
-            'planid' => new external_value(PARAM_INT, 'The learning plan ID (drives the enrolment-filter cascade)'),
+            'planid' => new external_value(
+                PARAM_INT,
+                'The id of a learning plan the viewer may read and that reaches the competency'
+            ),
         ]);
     }
 
@@ -77,8 +84,11 @@ class get_competency_courses extends external_api {
      * Get courses linked to a competency, filtered by enrollment setting.
      *
      * @param int $competencyid The competency ID
-     * @param int $planid The learning plan ID (drives the enrolment-filter cascade)
+     * @param int $planid The learning plan ID, required: it gates the competency and drives the enrolment-filter cascade
      * @return array Filtered list of courses, each with its rule outcome and linked activities
+     * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan does not reach
+     *     the competency.
+     * @throws \required_capability_exception When the current user may not read the plan.
      */
     public static function execute($competencyid, $planid) {
         global $USER, $DB;
@@ -96,6 +106,15 @@ class get_competency_courses extends external_api {
         self::validate_context($systemcontext);
         require_capability('local/dimensions:view', $systemcontext);
 
+        /* The same gate as view-competency.php, before anything about the competency is read: a plan
+           the viewer may read (a refusal is core's own error, see plan_access), and a competency that
+           plan reaches. Without it any competency id would list its courses and activities. */
+        $plan = plan_access::read_plan($planid);
+        $scope = plan_access::require_competency_in_scope($plan, $competencyid);
+
+        // Outside the plan the plan layer of the cascade does not apply (competency -> global only).
+        $templateid = $scope === plan_access::SCOPE_PLAN ? (int) $plan->get('templateid') : 0;
+
         /* Get all courses linked to the competency (visible only). The unique index
            courseidcompetencyid guarantees one row per course, so selecting the link's
            ruleoutcome alongside cannot multiply the cards. */
@@ -107,15 +126,6 @@ class get_competency_courses extends external_api {
         $courses = $DB->get_records_sql($sql, ['competencyid' => $competencyid]);
 
         // Resolve the enrolment filter through the cascade (competency -> plan -> global).
-        // The accordion only lists the plan's own competencies, so the plan's template applies.
-        $templateid = 0;
-        if ($planid > 0) {
-            try {
-                $templateid = (int) \core_competency\api::read_plan($planid)->get('templateid');
-            } catch (\Exception $e) {
-                $templateid = 0;
-            }
-        }
         $filtermode = \local_dimensions\helper::resolve_enrollmentfilter_for_view($competencyid, $templateid);
         if ($filtermode !== \local_dimensions\constants::ENROLLMENTFILTER_ALL) {
             $courses = \local_dimensions\calculator::filter_courses_by_enrollment($courses, $USER->id, $filtermode);
@@ -147,32 +157,20 @@ class get_competency_courses extends external_api {
                 }
             }
 
-            /* Get course progress for the current user. Deliberately not
-               core_completion\progress::get_course_progress_percentage(): on 4.5 its numerator
-               is not a subset of its denominator (MDL-60912, never backported there), so a
-               completion row belonging to a module already dropped from the denominator still
-               counts - and its denominator carries no visibility filter at all, so a hidden
-               activity keeps the bar off 100 for good. calculator reproduces what 5.1 and 5.2
-               core compute, on every branch alike. */
+            /* Not core_completion\progress::get_course_progress_percentage(), which miscounts on
+               Moodle 4.5 (MDL-60912); see calculator::course_completion_percentage(). */
             $progress = calculator::course_completion_percentage((int) $course->id, (int) $USER->id);
 
-            /* What the viewer can do with this course. calculator::is_locked() is deliberately
-               not used: it also reports true for anyone enrolled without the student role, which
-               would lock every card for a member of staff reviewing someone's plan. The question
-               here is the one the card's own link is about to answer - can this viewer open it. */
+            /* What the viewer can do with this course. Not calculator::is_locked(), which also
+               locks anyone enrolled without the student role, such as staff reviewing a plan;
+               the question here is whether this viewer can open the course. */
             $access = self::ACCESS_OPEN;
             $lockdate = 0;
             $isenrolstart = false;
             if (!is_enrolled($coursecontext, $USER->id, '', true)) {
-                /* Three outcomes, not two. A pending enrol_apply application is a suspended
-                   enrolment row: it fails the active test above and the predicate below
-                   declines to offer a second application, so without its own state the
-                   applicant is handed the padlock - the same card as somebody who was never
-                   eligible, saying nothing about the decision they are waiting on.
-
-                   Joining outranks waiting when both are true, which a course with an apply
-                   instance beside an open self one can be: a way in now is worth more than
-                   news about a way in later. */
+                /* A pending enrol_apply application gets its own state rather than the padlock;
+                   see calculator::current_user_has_pending_application(). Enrol is checked
+                   first: a course can offer an open way in beside a pending application. */
                 if (\local_dimensions\calculator::current_user_can_enrol((int) $course->id)) {
                     $access = self::ACCESS_ENROL;
                 } else if (\local_dimensions\calculator::current_user_has_pending_application((int) $course->id)) {
@@ -182,9 +180,7 @@ class get_competency_courses extends external_api {
                 }
             }
             if ($access === self::ACCESS_LOCKED) {
-                /* Fetched here rather than per card: the progress bar used to need the full
-                   record too, and now reads the course by id itself, so only the locked path
-                   is left asking for it. */
+                // Only a locked card needs the full course record, for its availability dates.
                 $fullcourse = get_course($course->id);
                 $lockdate = (int) \local_dimensions\calculator::get_availability_date($fullcourse, $USER->id);
                 $isenrolstart = \local_dimensions\calculator::get_enrolment_start_date(
@@ -193,10 +189,12 @@ class get_competency_courses extends external_api {
                 ) !== null;
             }
 
+            /* Names travel plain (tags stripped, nothing escaped): accordion.js escapes each one
+               once where it writes it into the page. */
             $row = [
                 'id' => (int) $course->id,
-                'fullname' => format_string($course->fullname, true, ['context' => $coursecontext]),
-                'shortname' => format_string($course->shortname, true, ['context' => $coursecontext]),
+                'fullname' => format_string($course->fullname, true, ['context' => $coursecontext, 'escape' => false]),
+                'shortname' => format_string($course->shortname, true, ['context' => $coursecontext, 'escape' => false]),
                 'courseimage' => $courseimage,
                 'progress' => $progress,
                 'visible' => 1,
@@ -207,9 +205,9 @@ class get_competency_courses extends external_api {
                 'activities' => $activitiesbycourse[(int) $course->id] ?? [],
             ];
 
-            /* The same resolver the tracker uses, so the two views cannot disagree about
-               the shape of the same course. A locked or enrol-gated card keeps its state
-               strip: naming an activity behind a lock helps nobody. */
+            /* The resolver the tracker uses too, so both views agree on a course's shape. Only an
+               open card resolves one; the others stay on the timeline, since naming an activity
+               the viewer cannot open helps nobody. */
             $row['cardmode'] = constants::CARDMODE_TIMELINE;
             if ($access === self::ACCESS_OPEN) {
                 $shape = \local_dimensions\calculator::resolve_card_shape(
@@ -240,10 +238,9 @@ class get_competency_courses extends external_api {
      * the restriction. Modules are read from modinfo rather than from the link rows, so a
      * link that outlived its module simply never matches.
      *
-     * The course-level lock is deliberately not applied here: unlike the tracker card, the
-     * plan accordion has no locked overlay to carry the message, and calculator::is_locked()
-     * also reports true for anyone enrolled without the student role - which would strip the
-     * links from staff whose course card link right above still works.
+     * The course-level lock is not applied: the plan accordion has no locked overlay to explain
+     * it, and calculator::is_locked() would strip the links from staff whose course card still
+     * opens.
      *
      * @param int $competencyid The competency id.
      * @param array $courseids Ids of the courses that survived the enrolment filter.
@@ -331,7 +328,7 @@ class get_competency_courses extends external_api {
 
                 $rows[] = [
                     'cmid' => (int) $cm->id,
-                    'name' => $cm->get_formatted_name(),
+                    'name' => $cm->get_formatted_name(['escape' => false]),
                     'modtype' => (string) $cm->modfullname,
                     'iconurl' => $cm->get_icon_url()->out(false),
                     // Cast: a module that answers the feature with false rather than null yields a bool.
@@ -359,8 +356,8 @@ class get_competency_courses extends external_api {
         return new external_multiple_structure(
             new external_single_structure([
                 'id' => new external_value(PARAM_INT, 'Course ID'),
-                'fullname' => new external_value(PARAM_RAW, 'Course full name'),
-                'shortname' => new external_value(PARAM_RAW, 'Course short name'),
+                'fullname' => new external_value(PARAM_RAW, 'Course full name, plain text'),
+                'shortname' => new external_value(PARAM_RAW, 'Course short name, plain text'),
                 'courseimage' => new external_value(PARAM_URL, 'Course image URL', VALUE_OPTIONAL),
                 'progress' => new external_value(PARAM_INT, 'Course completion progress percentage'),
                 'visible' => new external_value(PARAM_INT, 'Course visibility'),
@@ -378,7 +375,7 @@ class get_competency_courses extends external_api {
                 'activity' => new external_single_structure(
                     [
                         'cmid' => new external_value(PARAM_INT, 'Course module id'),
-                        'name' => new external_value(PARAM_RAW, 'Activity name'),
+                        'name' => new external_value(PARAM_RAW, 'Activity name, plain text'),
                         'url' => new external_value(PARAM_URL, 'Activity URL, empty when it has no view page'),
                         'completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
                         'tracked' => new external_value(PARAM_BOOL, 'Whether completion is tracked for it'),
@@ -388,7 +385,7 @@ class get_competency_courses extends external_api {
                 ),
                 'section' => new external_single_structure(
                     [
-                        'name' => new external_value(PARAM_TEXT, 'Section name, empty when Moodle generated it'),
+                        'name' => new external_value(PARAM_TEXT, 'Section name, plain text, empty when Moodle generated it'),
                         'hasownname' => new external_value(PARAM_BOOL, 'Whether a teacher named the section'),
                         'url' => new external_value(PARAM_URL, 'URL of the section'),
                         'tracked' => new external_value(PARAM_BOOL, 'Whether the section holds a tracked activity'),
@@ -399,7 +396,7 @@ class get_competency_courses extends external_api {
                 'activities' => new external_multiple_structure(
                     new external_single_structure([
                         'cmid' => new external_value(PARAM_INT, 'Course module id'),
-                        'name' => new external_value(PARAM_RAW, 'Activity name'),
+                        'name' => new external_value(PARAM_RAW, 'Activity name, plain text'),
                         'modtype' => new external_value(PARAM_RAW, 'Localised module type name'),
                         'iconurl' => new external_value(PARAM_URL, 'Activity icon URL'),
                         'purpose' => new external_value(PARAM_ALPHANUMEXT, 'Module purpose, the icon container class'),

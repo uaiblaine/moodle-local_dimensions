@@ -17,10 +17,10 @@
  * "Courses & activities" modal: manage a competency's course and activity links, each with its own
  * rule outcome. Each linked course renders as a bordered card (course link, short name, linked-activity
  * count and a completion-rule badge); its activities expand inside the card border and load lazily on
- * first expand. Activities are added through a client-side search over the course's available modules
- * (name + localised module type) and listed as removable two-line rows: name (clamped, full name on
- * hover) with the module type, then the outcome select, completion-rule badge and shared-competency
- * warning. Outcome selects save on change. Rows are built in JS to avoid a template render per row.
+ * first expand. Activities are added through a client-side name search over the course's available
+ * modules and listed as removable two-line rows: name (clamped, full name on hover) with the module
+ * type, then the outcome select, completion-rule badge and shared-competency warning. Outcome selects
+ * save on change. Rows are built in JS to avoid a template render per row.
  * Closing the modal triggers the caller's onClose so the Structure tree count refreshes.
  *
  * @module     local_dimensions/central/competency_links
@@ -36,6 +36,7 @@ import Notification from 'core/notification';
 import {notifyError} from 'local_dimensions/central/errors';
 import Templates from 'core/templates';
 import {enhance} from 'core/form-autocomplete';
+import {escapeHtml} from 'local_dimensions/central/escape';
 import {getString} from 'core/str';
 import {add as addToast, addToastRegion} from 'local_dimensions/central/toast';
 import {attach as attachExpander} from 'local_dimensions/central/modal_expander';
@@ -466,10 +467,9 @@ const loadCourses = async(state) => {
         }])[0];
 
         state.hiddenframeworkEl.hidden = response.canlink;
-        /* Core's enhance() swapped the select for its own always-typeable input plus a separate
-           downarrow that opens the list on click, so disabling the select does nothing. Hide the
-           whole add-course block instead — that takes the input, the downarrow and the label out
-           of view and out of the tab order; the hiddenframework alert shown alongside says why. */
+        /* Disabling the select does nothing once core's enhance() has replaced it with its own
+           input and down arrow, so hide the whole add-course block (input, arrow and label). The
+           hidden-framework alert shown alongside says why. */
         state.addsel.parentElement.hidden = !response.canlink;
 
         response.items.forEach((course) => {
@@ -594,11 +594,11 @@ const restoreFocus = (state, preferred) => {
         return;
     }
     /* The fallback is the enhanced autocomplete input, never state.addsel: enhance() hides the
-       original select, so it is not focusable. Load more comes first while it is still on
-       screen — with a page pending it, and not the picker, is the way on. */
+       original select, so it cannot take focus. A visible Load more comes before the picker,
+       since more pages are still pending. */
     const container = state.addsel ? state.addsel.parentElement : null;
-    /* The picker input is a home only while its block is shown; when the framework is hidden the
-       block is gone, so its input is a dead display:none node — fall through to the visible alert. */
+    /* While the framework is hidden the picker block is hidden too, so its input cannot take
+       focus; fall through to the visible alert. */
     const picker = container && !container.hidden ? container.querySelector(SELECTORS.addInput) : null;
     const frameworkalert = state.hiddenframeworkEl && !state.hiddenframeworkEl.hidden
         ? state.hiddenframeworkEl
@@ -621,7 +621,8 @@ const restoreFocus = (state, preferred) => {
  */
 const removeCourse = async(state, courseEl) => {
     const courseid = Number(courseEl.dataset.courseid);
-    const name = courseEl.dataset.fullname || '';
+    // The name is plain and the confirm body is HTML, so it is escaped here, once.
+    const name = escapeHtml(courseEl.dataset.fullname || '');
     const [title, body] = await Promise.all([
         getString('central_links_removecourse', 'local_dimensions'),
         getString('central_links_removecourse_confirm', 'local_dimensions', name),
@@ -684,7 +685,8 @@ const addModule = async(state, courseEl, cmid) => {
  */
 const removeModule = async(state, moduleEl) => {
     const cmid = Number(moduleEl.dataset.cmid);
-    const name = moduleEl.dataset.name || '';
+    // Plain name into an HTML confirm body: escaped here, once.
+    const name = escapeHtml(moduleEl.dataset.name || '');
     const [title, body] = await Promise.all([
         getString('central_links_removeactivity', 'local_dimensions'),
         getString('central_links_removeactivity_confirm', 'local_dimensions', name),
@@ -734,7 +736,7 @@ const saveOutcome = (state, select) => {
 };
 
 /**
- * Add the selected course (from the autocomplete), then re-render the body to reset the picker.
+ * Add the selected course (from the autocomplete), then re-render the picker block to reset it.
  *
  * @param {Object} state Modal state.
  * @return {void}
@@ -823,12 +825,13 @@ const bindPicker = (state) => {
 /**
  * Open the Courses & activities modal.
  *
- * @param {Object} opts {competencyid, competencyname, courseoutcomes, moduleoutcomes, onClose}.
+ * @param {Object} opts {competencyid, competencyname (plain text), courseoutcomes, moduleoutcomes, onClose}.
  * @return {Promise<void>}
  */
 export const open = async(opts) => {
     const [title, labels] = await Promise.all([
-        getString('central_links_title', 'local_dimensions', opts.competencyname),
+        // The modal title is HTML and the competency name arrives plain.
+        getString('central_links_title', 'local_dimensions', escapeHtml(opts.competencyname)),
         Promise.all([
             getString('central_links_addcourse_placeholder', 'local_dimensions'),
             getString('central_links_addactivity', 'local_dimensions'),

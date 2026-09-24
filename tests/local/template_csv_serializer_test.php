@@ -181,7 +181,6 @@ final class template_csv_serializer_test extends \advanced_testcase {
         $this->assertSame('', $parsed['error']);
         $this->assertCount(1, $parsed['templates']);
         $this->assertCount(0, $parsed['links']);
-        // A link row with no parent is the analyser's problem, not the parser's: none is emitted here.
         $this->assertSame('Empty', $parsed['templates'][0]->shortname);
     }
 

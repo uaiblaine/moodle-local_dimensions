@@ -24,7 +24,7 @@ use local_dimensions\customfield\lp_handler;
 use local_dimensions\helper;
 
 /**
- * Tests for the Panorama courses web service's enrolment-filter cascade and related content.
+ * Tests for get_competency_courses: the enrolment-filter cascade and the per-course payload.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -173,20 +173,27 @@ final class get_competency_courses_test extends \advanced_testcase {
     /**
      * Run the service as the given user and clean the payload through the returns structure.
      *
-     * clean_returnvalue strips keys the structure does not declare, silently. Asserting on the
-     * cleaned payload is therefore the only way a missing allowlist entry fails the test rather
-     * than passing unnoticed. The plan id is 0 here: the template cascade has its own tests
-     * above, and this way the global filter applies directly.
+     * clean_returnvalue() drops undeclared keys silently, so asserting on the cleaned payload is
+     * what makes a key missing from execute_returns() fail the test. The user's plan holds the
+     * competency and has no template, so the global filter applies directly; the template cascade
+     * has its own tests above.
      *
      * @param int $competencyid The competency id.
      * @param \stdClass $user The user to run as.
      * @return array The cleaned payload, keyed by course id.
      */
     private function cleaned_result_for(int $competencyid, \stdClass $user): array {
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $planid = (int) $ccg->create_plan([
+            'userid' => $user->id,
+            'status' => \core_competency\plan::STATUS_ACTIVE,
+        ])->get('id');
+        $ccg->create_plan_competency(['planid' => $planid, 'competencyid' => $competencyid]);
+
         $this->setUser($user);
         $result = external_api::clean_returnvalue(
             get_competency_courses::execute_returns(),
-            get_competency_courses::execute($competencyid, 0)
+            get_competency_courses::execute($competencyid, $planid)
         );
 
         return array_column($result, null, 'id');
@@ -379,9 +386,8 @@ final class get_competency_courses_test extends \advanced_testcase {
     /**
      * A course reachable only through enrol_apply reports 'enrol', not 'locked'.
      *
-     * Skipped where enrol_apply is not installed. ci.yml checks it out on the 5.01 and 5.02
-     * jobs, so those legs run this for real; 4.05 does not, because enrol_apply declares
-     * supported = [501, 502] and the integration cannot exist there.
+     * Skipped where enrol_apply is not installed, which includes every Moodle 4.5 site:
+     * enrol_apply supports Moodle 5.1 and later only.
      *
      * @return void
      */

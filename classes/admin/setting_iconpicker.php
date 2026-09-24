@@ -17,8 +17,10 @@
 /**
  * Custom admin setting for FontAwesome icon picker using autocomplete.
  *
- * Uses the Moodle autocomplete form element with AJAX to search and select
- * FontAwesome icons, similar to the Boost Union Smart Menus icon picker.
+ * A search field with its own result dropdown (template and AMD module
+ * local_dimensions/setting_iconpicker, not core's autocomplete element) that searches
+ * FontAwesome icons through local_dimensions_get_fontawesome_icons, similar to the
+ * Boost Union Smart Menus icon picker.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -32,6 +34,10 @@ namespace local_dimensions\admin;
  *
  * Renders an autocomplete text input that searches FontAwesome icons via AJAX
  * and displays them with their visual preview and source badge.
+ *
+ * The stored value is the FA class of a core icon ("fa-lock"), or "<component>:fa-<name>" /
+ * "<component>:fab-<name>" for a FontAwesome solid or brand icon. Legacy "core:i/<name>"
+ * values are still resolved, through the core icon map.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -50,21 +56,20 @@ class setting_iconpicker extends \admin_setting_configtext {
 
         $default = $this->get_defaultsetting();
 
-        // Build the icon map for the valuehtmlcallback equivalent.
+        // Preview of the stored icon, shown beside the search field.
         $currenthtml = '';
         if (!empty($data)) {
             $currenthtml = $this->format_icon_display($data);
         }
 
-        // Generate a unique element ID.
         $elementid = $this->get_id() . '_iconpicker';
 
-        // Build template context.
         $templatedata = [
             'elementid' => $elementid,
             'fullname' => $this->get_full_name(),
             'id' => $this->get_id(),
-            'value' => s($data),
+            // Plain: the template's double stashes escape it.
+            'value' => (string) $data,
             'hasvalue' => !empty($data) && !empty($currenthtml),
             'currenthtml' => $currenthtml,
             'placeholder' => get_string('cardicon_placeholder', 'local_dimensions'),
@@ -72,7 +77,6 @@ class setting_iconpicker extends \admin_setting_configtext {
             'clear_title' => get_string('iconpicker_clear', 'local_dimensions'),
         ];
 
-        // Render the template.
         $renderer = $PAGE->get_renderer('core');
         $html = $renderer->render_from_template('local_dimensions/setting_iconpicker', $templatedata);
 

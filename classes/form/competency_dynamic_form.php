@@ -153,10 +153,10 @@ class competency_dynamic_form extends \core_form\dynamic_form {
         $mform->setType('idnumber', PARAM_RAW);
         $mform->addRule('idnumber', null, 'required', null, 'client');
 
-        /* Filepicker options must exist (their absence crashes tiny_media's embed dialog on
-           Moodle 5.0-5.2, MDL-78428), hence maxfiles=1; FILE_EXTERNAL keeps the upload repository
-           out of the picker, so media/images are insertable by URL only — descriptions have no
-           file area and internal/draft files would be silently lost on save. */
+        /* Filepicker options must exist, hence maxfiles=1: on Moodle 5.x tiny_media's embed dialogue
+           throws without them. FILE_EXTERNAL keeps the upload repository out of the picker, so media
+           and images are inserted by URL only: descriptions have no file area, and a draft file would
+           be lost on save. */
         $mform->addElement(
             'editor',
             'description',
@@ -204,17 +204,12 @@ class competency_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Attach the scale-configuration dialogue JS (tool_lp/scaleconfig).
+     * Attach the modal's JavaScript (scale configuration, colour swatch, contrast panel).
      *
-     * Requested here rather than in definition() for timing: definition() runs in the
-     * moodleform constructor, which core_form\external\dynamic_form invokes BEFORE it calls
-     * $PAGE->start_collecting_javascript_requirements(). A js_call_amd there is queued on the
-     * page's normal requirements and never reaches the modal. definition_after_data() runs
-     * during render() — inside the collection window — so get_end_code() captures it and
-     * core_form/modalform executes it after inserting the body.
-     *
-     * The selectors below are the fixed ids set in definition() (see the data-random-ids note);
-     * scaleconfig binds the dialogue trigger to these exact ids.
+     * Not in definition(): core_form\external\dynamic_form constructs the form before it calls
+     * $PAGE->start_collecting_javascript_requirements(), so a js_call_amd queued there never
+     * reaches the modal. definition_after_data() runs inside render(), within that window.
+     * The scaleconfig selectors are the fixed ids set in definition().
      */
     public function definition_after_data() {
         global $PAGE;
@@ -281,8 +276,8 @@ class competency_dynamic_form extends \core_form\dynamic_form {
         $id = (int) ($data->id ?? 0);
         $submittedparent = (int) ($data->parentid ?? 0);
 
-        // Keep the original parent for an edited competency so update_competency does not
-        // move it; reparenting is done explicitly via set_parent_competency below.
+        // Core's update_competency() ignores parentid, so a new parent for an edited competency
+        // goes through set_parent_competency() below, only when it differs from the stored one.
         $originalparent = $submittedparent;
         if ($id > 0 && ($existing = competency::get_record(['id' => $id]))) {
             $originalparent = (int) $existing->get('parentid');
@@ -338,7 +333,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
             $errors['idnumber'] = get_string('idnumberexists');
         }
 
-        // Block saving invalid custom SCSS (parity with the plan modal and the legacy form).
+        // Block saving invalid custom SCSS (as the template modal does).
         $errors = array_merge($errors, helper::validate_customscss($data));
 
         return $errors;
