@@ -2127,36 +2127,6 @@ body[data-bs-theme="dark"],
     outline-offset: -2px;
 }
 
-/*
- * Windows High Contrast (forced-colors), a different media feature from prefers-contrast.
- *
- * Under forced colours every background collapses to the system canvas and box-shadow is not
- * painted, so a selected state carried by a fill alone disappears. Outlines are painted (the
- * browser remaps their colour like a border's), so the selected pills and the list/grid toggle
- * draw one here, dashed so that selected and focused still look different in the same system
- * colour.
- *
- * Nothing else needs a rule: every focus indicator is a real outline, the tone chips carry a
- * border and a text label, the favourite star swaps its glyph, and the locked card states its
- * status in words.
- */
-@media (forced-colors: active) {
-    .local-dimensions-view-toggle button[aria-pressed='true'],
-    .local-dimensions-filter-tab[aria-pressed='true'],
-    .local-dimensions-filter-tab[aria-checked='true'],
-    .local-dimensions-filter-tab.active {
-        outline: 2px dashed var(--local-dimensions-focus-ring);
-        outline-offset: -2px;
-    }
-
-    /* A focused control that is also selected must change on screen: solid instead of the
-       selected rule's dashed outline. */
-    .local-dimensions-view-toggle button:focus-visible,
-    .local-dimensions-filter-tab:focus-visible {
-        outline-style: solid;
-    }
-}
-
 /* Grid mode: the same rows, laid out as compact cards. The detail lives in a modal here,
    so the panes are torn down rather than styled - see tearDownAccordionPanes. */
 .local-dimensions-grid-mode {
@@ -5144,6 +5114,37 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
     background: transparent;
     color: var(--local-dimensions-tabs-item-color-active, var(--local-dimensions-accent));
     opacity: 1;
+}
+
+/*
+ * Windows High Contrast (forced-colors), a different media feature from prefers-contrast.
+ *
+ * Under forced colours every background collapses to the system canvas and box-shadow is not
+ * painted, so a selected state carried by a fill alone disappears. Outlines are painted (the
+ * browser remaps their colour like a border's), so the selected pills and the list/grid toggle
+ * draw one here, dashed so that selected and focused still look different in the same system
+ * colour. The block sits after the last rule of both components, so it wins at their
+ * specificity by source order.
+ *
+ * Nothing else needs a rule: every focus indicator is a real outline, the tone chips carry a
+ * border and a text label, the favourite star swaps its glyph, and the locked card states its
+ * status in words.
+ */
+@media (forced-colors: active) {
+    .local-dimensions-view-toggle button[aria-pressed='true'],
+    .local-dimensions-filter-tab[aria-pressed='true'],
+    .local-dimensions-filter-tab[aria-checked='true'],
+    .local-dimensions-filter-tab.active {
+        outline: 2px dashed var(--local-dimensions-focus-ring);
+        outline-offset: -2px;
+    }
+
+    /* A focused control that is also selected must change on screen: solid instead of the
+       selected rule's dashed outline. */
+    .local-dimensions-view-toggle button:focus-visible,
+    .local-dimensions-filter-tab:focus-visible {
+        outline-style: solid;
+    }
 }
 
 /* --- Indicator: animated surface-coloured pill behind the active chip --- */
