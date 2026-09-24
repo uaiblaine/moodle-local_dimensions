@@ -774,8 +774,11 @@ Each `db/upgrade.php` step ends with
   token contract, 20 arms), `local/bootstrap_compat_test.php` (Bootstrap 4/5 class vocabulary
   and badge text colours) and `local/preference_queries_test.php` (every preference media query
   names a defined value — `prefers-contrast: high` matches in no browser, the value is `more` —
-  and no raised-contrast override loses on specificity or drops an admin colour; its cascade
-  helpers are `block_dimensions`' `card_layout_test`'s, so fix both together). Nothing in phpcs,
+  no raised-contrast or reduced-motion override loses on specificity or drops an admin colour,
+  and under `prefers-reduced-motion: reduce` every lift on interaction, transition of position,
+  size or a transform, moving keyframe animation and smooth scroll is switched off, while the
+  state a transition animated towards stays; its cascade helpers are `block_dimensions`'
+  `card_layout_test`'s, so fix both together). Nothing in phpcs,
   the mustache lint or stylelint reads a class name out of a Mustache or JS file, a custom
   property across a template/stylesheet boundary, or whether a valid rule ever applies. **Every
   assertion in them was mutation-checked**, and that is not ceremony: earlier drafts of
