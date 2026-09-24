@@ -53,7 +53,7 @@ final class preference_queries_test extends \basic_testcase {
     ];
 
     /** @var string Pattern matching the at-rule preludes whose rules are compared as overrides. */
-    private const OVERRIDE_PRELUDE = '/prefers-contrast|prefers-reduced-motion:\s*reduce/';
+    private const OVERRIDE_PRELUDE = '/prefers-contrast|prefers-reduced-motion:\s*reduce|forced-colors|(?<![\w-])print(?![\w-])/';
 
     /** @var string Pattern matching the reduced-motion prelude, whose rules are the motion resets. */
     private const REDUCE_PRELUDE = '/prefers-reduced-motion:\s*reduce/';
@@ -213,9 +213,10 @@ final class preference_queries_test extends \basic_testcase {
      * The style rules the cascade tests compare, keyframes left out.
      *
      * @return array flat_rules() entries with these keys added: order (source position), override
-     *               (inside a prefers-contrast or prefers-reduced-motion: reduce block), reset
-     *               (inside the latter), base (inside no conditional preference or print block),
-     *               parts (the selector list) and families (from families()).
+     *               (inside a prefers-contrast, prefers-reduced-motion: reduce, forced-colors or print
+     *               block), reset (inside a prefers-reduced-motion: reduce block), base (inside no
+     *               conditional preference or print block), parts (the selector list) and families
+     *               (from families()).
      */
     protected function cascade_rules(): array {
         $rules = [];
@@ -298,7 +299,7 @@ final class preference_queries_test extends \basic_testcase {
     /**
      * Whether the overlapping parts of one override rule win against a base selector part.
      *
-     * A rival whose subject compound names no simple selector the base part lacks matches every
+     * A rival naming no simple selector the base part lacks, in any of its compounds, matches every
      * element the base part matches, so when such broad rivals exist one of them has to win. A
      * narrower rival matches only some of those elements, so it cannot settle the pair for the
      * rest; without a broad rival, every narrow one has to win on the elements it does match.
@@ -310,12 +311,11 @@ final class preference_queries_test extends \basic_testcase {
      * @return bool True when the override applies wherever it competes with the base part.
      */
     private function rivals_win(array $rivals, int $order, string $basepart, int $baseorder): bool {
-        $basetokens = $this->subject($basepart)[2];
+        $basetokens = $this->simple_selectors($basepart);
         $broad = [];
         $narrow = [];
         foreach ($rivals as $part) {
-            $tokens = $this->subject($part)[2];
-            if (array_diff($tokens, $basetokens)) {
+            if (array_diff($this->simple_selectors($part), $basetokens)) {
                 $narrow[] = $part;
             } else {
                 $broad[] = $part;
@@ -339,20 +339,19 @@ final class preference_queries_test extends \basic_testcase {
     }
 
     /**
-     * A rule in a prefers-contrast or prefers-reduced-motion: reduce block wins over the base rule
-     * it overrides.
+     * A rule in a prefers-contrast, prefers-reduced-motion: reduce, forced-colors or print block
+     * wins over the base rule it overrides.
      *
      * Such a block is written after the rule it overrides and relies on source order, which only
      * decides between equal specificities: a base rule written under an extra ancestor class
-     * outranks it wherever it comes. The forced-colors block is not compared: it restates outline
-     * parts that the base focus rules already set to the same effect, and the subject comparison
-     * cannot tell two button rules on different components apart, so widening the scope needs both
-     * handled first.
+     * outranks it wherever it comes, and one written further down the file outranks it at the same
+     * specificity.
      *
      * Changes that must make it fail: write the raised-contrast readout rule as
      * .local-dimensions-progress-text; drop :not(:last-child) from the evidence section divider;
      * drop .local-dimensions-return-fab.local-dimensions-fab-snapping from the Return to plan
-     * button's reduced-motion transition reset.
+     * button's reduced-motion transition reset; move the forced-colors block back above the chip
+     * filter's own .local-dimensions-filter-tab rules.
      *
      * @return void
      */
@@ -737,9 +736,12 @@ final class preference_queries_test extends \basic_testcase {
      * The parts of an override selector that target the same elements as a base selector part.
      *
      * Two parts overlap when they are in the same user-action state, name the same pseudo-element,
-     * and the simple selectors of one subject compound include those of the other. A universal
-     * subject (.x *) names no simple selector, so it would include every other; its ancestors alone
-     * decide what it matches, which this comparison cannot see, so it is left out.
+     * the simple selectors of one subject compound include those of the other, and so do the simple
+     * selectors of the whole parts: then every element the longer part matches, the shorter one
+     * matches too. Parts that each name something the other lacks (.a button and button.b) may never
+     * meet on one element, and nothing here can tell, so they are not compared. A universal subject
+     * (.x *) names no simple selector, so it would include every other; its ancestors alone decide
+     * what it matches, so it is left out too.
      *
      * @param array $parts The override rule's selector parts.
      * @param string $basepart One selector part of the base rule.
@@ -747,13 +749,17 @@ final class preference_queries_test extends \basic_testcase {
      */
     private function overlapping_parts(array $parts, string $basepart): array {
         [$basestate, $baseelement, $basetokens] = $this->subject($basepart);
+        $basefull = $this->simple_selectors($basepart);
         $overlapping = [];
         foreach ($parts as $part) {
             [$state, $element, $tokens] = $this->subject($part);
             if ($state !== $basestate || $element !== $baseelement || !$tokens || !$basetokens) {
                 continue;
             }
-            if (!array_diff($tokens, $basetokens) || !array_diff($basetokens, $tokens)) {
+            $full = $this->simple_selectors($part);
+            $subjects = !array_diff($tokens, $basetokens) || !array_diff($basetokens, $tokens);
+            $wholes = !array_diff($full, $basefull) || !array_diff($basefull, $full);
+            if ($subjects && $wholes) {
                 $overlapping[] = $part;
             }
         }
