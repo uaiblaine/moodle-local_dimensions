@@ -462,7 +462,9 @@ const revealNode = async(region, targetid, pathids) => {
         list.hidden = true;
     }
     selectRow(region, row);
-    row.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+    // Under reduced motion the scroll is a jump; the selected row still marks where it landed.
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    row.scrollIntoView({block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth'});
     flashRow(row);
 };
 
