@@ -63,6 +63,10 @@ class template_metadata_cache {
     /**
      * Get metadata for a template using lazy MUC cache.
      *
+     * The cache stores the payload with the inherited option keys unresolved, and every
+     * read, hit or miss, returns it through {@see self::normalise_payload()}, so a change
+     * to the site defaults applies without invalidating anything.
+     *
      * @param int $templateid Template ID.
      * @return array<string, mixed>
      */
@@ -78,7 +82,7 @@ class template_metadata_cache {
         self::debug('cache miss for template ' . $templateid);
         $payload = self::fetch_template_metadata($templateid);
         $cache->set($templateid, $payload);
-        return $payload;
+        return self::normalise_payload($payload);
     }
 
     /**
@@ -218,7 +222,7 @@ class template_metadata_cache {
             }
 
             $cache->set($id, $payload);
-            $result[$id] = $payload;
+            $result[$id] = self::normalise_payload($payload);
         }
 
         self::debug('batch fetched metadata for ' . count($missing) . ' templates');
@@ -409,16 +413,17 @@ class template_metadata_cache {
     }
 
     /**
-     * Decode a select customfield's stored option key (the part before "|").
+     * Decode a cascade select customfield to its option key.
      *
-     * Select customfields store options as "key|label\nkey|label" and persist a
-     * 1-based intvalue pointing at the chosen line. This helper returns the key
-     * (validated against $allowed) rather than the joined "key|label" string
-     * that get_select_value() returns.
+     * The field lists its options in the order of $allowed ({@see helper::get_enrollmentfilter_field()})
+     * and stores a 1-based intvalue pointing at the chosen line, so the key is the one at that
+     * position in $allowed. The option text is not parsed: it is a localised label, and fields
+     * provisioned by older releases spell each line "key|label" instead, with the same positions.
+     * Keep in step with {@see helper::get_template_enrollmentfilter()}, which decodes the same way.
      *
      * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname to decode.
-     * @param string[] $allowed Allowed option keys; values outside fall back to $default.
+     * @param string[] $allowed Option keys in the field's option order.
      * @param string $default Default key when no row, invalid configdata, or out-of-range index.
      * @return string Option key from $allowed, or $default.
      */
@@ -449,10 +454,7 @@ class template_metadata_cache {
             return $default;
         }
 
-        $parts = explode('|', trim($options[$optionindex]), 2);
-        $key = trim((string)($parts[0] ?? ''));
-
-        return in_array($key, $allowed, true) ? $key : $default;
+        return $allowed[$optionindex] ?? $default;
     }
 
     /**
