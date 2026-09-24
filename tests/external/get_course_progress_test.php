@@ -72,8 +72,7 @@ final class get_course_progress_test extends \advanced_testcase {
     /**
      * A course with completion tracking off returns cleanly, with no notices.
      *
-     * Regression test for the payload guard: the calculator returns only the enabled flag in
-     * that case, so every other key has to be defaulted before the returns structure sees it.
+     * The completion-disabled branch must still produce every key the returns structure requires.
      *
      * @return void
      */
@@ -176,9 +175,8 @@ final class get_course_progress_test extends \advanced_testcase {
      * The card body renders three mutually exclusive shapes off can_self_enrol and is_pending,
      * so both flags have to arrive, and the precedence between them has to hold.
      *
-     * Skipped where enrol_apply is not installed. ci.yml checks it out on the 5.01 and 5.02
-     * jobs, so those legs run this for real; 4.05 does not, because enrol_apply declares
-     * supported = [501, 502].
+     * Skipped where enrol_apply is not installed, which includes every Moodle 4.5 site:
+     * enrol_apply supports Moodle 5.1 and later only.
      *
      * @return void
      */
@@ -261,17 +259,16 @@ final class get_course_progress_test extends \advanced_testcase {
 
         $row = $this->cleaned_row_for((int) $course->id);
 
-        /* Both are true of this learner, and the one that can be acted on now wins: news
-           about a decision is worth less than a door that is already open. */
+        // Both are true of this learner; the one that can be acted on now wins.
         $this->assertTrue($row['can_self_enrol']);
         $this->assertFalse($row['is_pending']);
     }
 
     /**
-     * Writes the singleactivity format's 'activitytype' option directly, exactly like
-     * calculator_card_shape_test::set_singleactivity_type() - see that method's docblock for
-     * why create_course()'s own 'activitytype' key is silently dropped and cannot be used
-     * instead.
+     * Writes the singleactivity format's 'activitytype' option directly.
+     *
+     * See calculator_card_shape_test::set_singleactivity_type() for why create_course() cannot
+     * set it.
      *
      * @param int $courseid The course id.
      * @param string $activitytype The modname to store, e.g. 'page'.
@@ -292,12 +289,10 @@ final class get_course_progress_test extends \advanced_testcase {
     /**
      * A single-activity course reports the activity shape and names its activity.
      *
-     * Without set_singleactivity_type() the course keeps the site's default activitytype
-     * (forum), so resolve_main_activity() finds no match and returns null - this test would
-     * then pass through the count-based fallback branch instead of the format branch its name
-     * and this comment claim to cover. The second, differently-typed module (url) is also
-     * tracked, so with two trackable candidates that fallback branch cannot land on
-     * CARDMODE_ACTIVITY by itself either - only the format match can.
+     * set_singleactivity_type() is required: with the site default (forum) resolve_main_activity()
+     * finds no match and the count-based fallback decides the shape instead. The second, tracked
+     * url module makes two trackable candidates, so only the format match can yield
+     * CARDMODE_ACTIVITY.
      *
      * @return void
      */
@@ -362,11 +357,10 @@ final class get_course_progress_test extends \advanced_testcase {
     /**
      * A hidden course tells an ordinary caller nothing, not even its section names.
      *
-     * The service takes a raw id list from the client and the capability gating it is held by
-     * every authenticated user, so the only thing standing between a caller and the structure
-     * of a course they cannot see is the per-course gate. The course here is linked and
-     * completion-tracked, so without that gate the row would carry its section names and its
-     * start date.
+     * The ids come from the client and local/dimensions:view is held by every authenticated user,
+     * so the per-course gate is all that keeps a hidden course's structure private. The course is
+     * linked and completion-tracked, so without that gate the row would carry its section names
+     * and start date.
      *
      * @return void
      */
@@ -399,9 +393,9 @@ final class get_course_progress_test extends \advanced_testcase {
     /**
      * A course carrying no competency link is none of this service's business.
      *
-     * The tracker builds its card list from competency_coursecomp, so an id that is not in
-     * there did not come from the page - and gets the same silent, locked row a hidden course
-     * gets, which is what keeps the two cases indistinguishable to a caller probing ids.
+     * The tracker builds its card list from competency_coursecomp, so an unlinked id did not come
+     * from the page. It gets the same locked row as a hidden course, so a caller probing ids
+     * cannot tell the two apart.
      *
      * @return void
      */

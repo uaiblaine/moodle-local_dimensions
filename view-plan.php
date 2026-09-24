@@ -53,15 +53,14 @@ $pagetitle = format_string($plan->get('name'));
 $PAGE->set_title($pagetitle);
 $PAGE->set_heading('');
 
-// Store the return URL and valid course IDs using cached template data.
-// This uses a single cache entry per template to serve all students efficiently.
+// Store this page as the return URL for the plan's courses (one cache entry per template;
+// a plan without a template is queried directly).
 // Own-plan only: a manager/teacher reviewing someone else's plan must not get
 // their session's return buttons repointed at that plan on every template course.
 if (
     get_config('local_dimensions', 'enablereturnbutton')
     && (int) $plan->get('userid') === (int) $USER->id
 ) {
-    // Get valid courses from cache (one entry per template serves all students).
     $validcourseids = \local_dimensions\template_course_cache::get_courses_for_plan($plan);
     \local_dimensions\helper::set_return_context($PAGE->url, $validcourseids);
 }
@@ -116,7 +115,7 @@ if (!empty($templatedata['hascustomcss'])) {
     );
 }
 
-// Core strings for accordion.
+// Strings for accordion.js.
 $PAGE->requires->string_for_js('rating_label', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_label', 'local_dimensions');
 $PAGE->requires->string_for_js('yes', 'local_dimensions');

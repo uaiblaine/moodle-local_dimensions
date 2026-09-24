@@ -53,7 +53,7 @@ final class template_csv_importer_test extends \advanced_testcase {
 
     /**
      * The identity column is back-filled on create, so importing the same file twice is an
-     * update rather than a duplicate. This is the whole point of promoting it to a column.
+     * update rather than a duplicate.
      *
      * @return void
      */
@@ -149,14 +149,14 @@ final class template_csv_importer_test extends \advanced_testcase {
         $this->assertSame(template_import_verdict::OUTCOME_CREATED, $results[1]['outcome']);
         $this->assertNotFalse(template::get_record(['shortname' => 'Second']));
 
-        /* The property that matters is that no transaction was left open and none was force-rolled
-           back, either of which poisons every later write in the request. is_transaction_started()
-           cannot express it: advanced_testcase::setUp() wraps each test in its own delegated
-           transaction, so it is ALWAYS true here. Writing again after the run is what proves it. */
+        /* No transaction may be left open or force-rolled back, either of which poisons every later
+           write in the request. is_transaction_started() cannot show it, because advanced_testcase
+           wraps each test in a delegated transaction of its own on PostgreSQL; writing again after
+           the run does. */
         $after = $this->getDataGenerator()->get_plugin_generator('core_competency')
             ->create_template(['shortname' => 'Written after the run']);
         $this->assertNotFalse(template::get_record(['id' => (int) $after->get('id')]));
-        // Two, not three: the refused row wrote nothing, which is what this test is about.
+        // Two, not three: the refused row wrote nothing.
         $this->assertSame(2, $DB->count_records('competency_template'));
     }
 
@@ -199,8 +199,8 @@ final class template_csv_importer_test extends \advanced_testcase {
     }
 
     /**
-     * The past-due-date remedies do what they say: clearing drops the date, and the row is
-     * written rather than blocked.
+     * The clear-due-date remedy drops a past due date, and the row is written rather than
+     * blocked.
      *
      * @return void
      */

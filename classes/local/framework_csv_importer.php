@@ -17,7 +17,7 @@
 /**
  * Persist a parsed framework CSV into a chosen context, with the plugin custom fields.
  *
- * Ports the proven core admin/tool/lpimportcsv algorithm (tree build by parentidnumber,
+ * Ports the core admin/tool/lpimportcsv algorithm (tree build by parentidnumber,
  * exportid→new-id map for rule/relation remapping, global-scale reuse) but takes the target
  * context as a parameter (so it can import into a course category, which the core tool cannot)
  * and writes the competency custom fields per node. The whole run is one DB transaction.

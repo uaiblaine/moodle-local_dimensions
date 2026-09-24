@@ -19,12 +19,8 @@
  *
  * Handles saving custom field data when competencies or learning plan
  * templates are created or updated via the core tool_lp forms, and keeps
- * MUC caches consistent on create/update/delete events.
- *
- * The Central hub's dynamic forms persist custom fields and invalidate caches
- * inline; their submissions carry no raw customfield_* POST keys (the data
- * travels as jsonformdata through core_form_dynamic_form), so the observer
- * short-circuits on those paths without any double-write.
+ * MUC caches consistent on create/update/delete events. The hub's dynamic
+ * forms save their own custom fields; see observer::save_customfields_for().
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -79,9 +75,8 @@ class observer {
             return;
         }
 
-        // Remove custom field data tied to this competency. delete_instance is a no-op
-        // if no data exists, so it is safe to call unconditionally. It also cleans up
-        // any associated files, but only while the instance context still exists.
+        // Remove custom field data tied to this competency, including files embedded in
+        // textarea values. delete_instance is a no-op if no data exists.
         try {
             competency_handler::create()->delete_instance($instanceid);
         } catch (\Throwable $e) {
@@ -89,9 +84,7 @@ class observer {
                 . $instanceid . ': ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
 
-        // Context-independent sweep: from Moodle 5.1 the instance context is
-        // destroyed before the *_deleted event fires, so delete_instance can no
-        // longer resolve the data and silently leaves the rows behind.
+        // Fallback sweep for rows delete_instance does not match; see delete_customfield_data().
         self::delete_customfield_data($instanceid, helper::AREA_COMPETENCY);
 
         self::invalidate_competency_caches($instanceid);
@@ -138,8 +131,7 @@ class observer {
                 . $instanceid . ': ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
 
-        // Context-independent sweep (see competency_deleted) — the template
-        // context is gone by the time this *_deleted event fires on 5.1+.
+        // Fallback sweep for rows delete_instance does not match; see delete_customfield_data().
         self::delete_customfield_data($instanceid, helper::AREA_LP);
 
         self::invalidate_template_caches($instanceid, true);
@@ -149,15 +141,14 @@ class observer {
      * Persist custom field data carried by the current form submission, if any.
      *
      * Implements the following safety contract before delegating to the core
-     * handler (which throws coding_exception when the instance id is missing or
-     * when the call originates outside a valid form context):
+     * handler (which throws coding_exception when the instance id is missing):
      *
      *  1. Require a valid form submission with a matching sesskey.
      *  2. Short-circuit when no customfield_* fields are present in the payload
      *     (mirrors the optimisation inside core_customfield\handler). The hub's
-     *     dynamic forms save inline and submit through core_form_dynamic_form,
-     *     so no raw customfield_* keys reach data_submitted() and this observer
-     *     never double-writes their data.
+     *     dynamic forms save their own fields and submit through a web service
+     *     call, so this observer finds no customfield_* keys there and never
+     *     double-writes their data.
      *  3. Inject the authoritative instance id from the event before calling
      *     the handler.
      *
@@ -199,9 +190,10 @@ class observer {
     /**
      * Delete every customfield_data row for one instance in a plugin area.
      *
-     * Context-independent: matches rows by instanceid and the area's field ids
-     * directly, so it still works once core has destroyed the instance context
-     * (which it does before the *_deleted event fires from Moodle 5.1).
+     * Matches rows by instanceid and the area's field ids only. From Moodle 5.1,
+     * handler::delete_instance() also filters on the customfield_data component,
+     * area and itemid columns, so a row written without them survives it; this
+     * sweep removes it. Embedded files are left to delete_instance().
      *
      * @param int $instanceid Competency or template id.
      * @param string $area local_dimensions customfield area (lp or competency).

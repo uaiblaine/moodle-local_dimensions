@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Accordion functionality for full plan overview with AJAX loading.
+ * Full plan overview: the competency list or card grid, its filters, and each competency's detail loaded on demand.
  *
  * @module     local_dimensions/accordion
  * @copyright  2026 Anderson Blaine
@@ -39,9 +39,10 @@ define(
         /* What has been fetched for each competency, as a promise of [summary, courses], for the
            life of the page. Re-rendering a pane - a modal step back, a card reopened, a layout
            switch - reuses it instead of calling both web services again. The one action on this
-           page that changes that data is a review request, which forgets it (see initEvidenceList).
-           A rating made elsewhere shows on the next page load, as it always did in an expanded list
-           pane. A failed fetch is forgotten too, so the next open retries. */
+           page that changes that data is a review request, which forgets it (see initEvidenceList);
+           any new in-detail action that writes competency state must forget it the same way. A
+           rating made elsewhere shows on the next page load. A failed fetch is forgotten too, so
+           the next open retries. */
         const competencyData = new Map();
 
         /* The competencies whose view this page has already logged. Kept apart from the data cache
@@ -50,21 +51,20 @@ define(
            load logs again, as core's pages do. */
         const loggedViews = new Set();
 
-        /* The plan's completion tabs. Other controls reuse the .local-dimensions-filter-tab
-           class for its pill styling: the chip filters (chip_filters.mustache), which live in
-           a panel OUTSIDE the bar and so are already excluded by the bar scope, and the two
-           favourites pills (view_plan_summary.mustache), which sit INSIDE the bar and are not.
-           The fav group is excluded by its own class. Without that, clicking a favourites pill
-           runs this completion handler, which strips .active from the real tabs and leaves
-           getActiveFilter reading undefined - the Phase 0 defect, one control further along. */
+        /* The plan's completion tabs. Other controls reuse the .local-dimensions-filter-tab class
+           for its pill styling: the chip filters (chip_filters.mustache) sit outside the bar, but
+           the two favourites pills (view_plan_summary.mustache) sit inside it, so their group is
+           excluded by its own class. Otherwise a favourites click would run the completion handler,
+           strip .active from the real tabs and leave getActiveFilter() reading undefined. */
         const FILTER_TAB_SELECTOR =
             '.local-dimensions-filter-bar .local-dimensions-filter-tabs:not(.local-dimensions-fav-group)'
             + ' .local-dimensions-filter-tab';
 
-        /* The two ruleoutcome values that conclude or advance a competency
-           (core_competency\course_competency OUTCOME_RECOMMEND / OUTCOME_COMPLETE). The other
-           two stay unbadged: OUTCOME_EVIDENCE is core's DB default, so badging it would mark
-           nearly every card instead of the few that decide anything. */
+        /* The two ruleoutcome values that conclude or advance a competency, OUTCOME_RECOMMEND and
+           OUTCOME_COMPLETE (same values in core_competency\course_competency and
+           course_module_competency). The other two stay unbadged: OUTCOME_EVIDENCE is the default
+           core gives every new link, so badging it would mark nearly every card instead of the few
+           that decide anything. */
         const OUTCOME_RECOMMEND = 2;
         const OUTCOME_COMPLETE = 3;
 
@@ -144,9 +144,8 @@ define(
             }
 
             // Call both webservices in parallel.
-            // Use local wrapper instead of tool_lp_data_for_user_competency_summary_in_plan
-            // to avoid a coding_exception caused by the core service's _returns() triggering
-            // exporter → theme → string loading → $PAGE->context access before context is set.
+            // The plugin's wrapper returns tool_lp_data_for_user_competency_summary_in_plan's data as a
+            // JSON string; see classes/external/get_user_competency_summary_in_plan.php for why.
             const summaryPromise = Ajax.call([{
                 methodname: 'local_dimensions_get_user_competency_summary_in_plan',
                 args: {
@@ -157,8 +156,8 @@ define(
                 return JSON.parse(response);
             });
 
-            // Always use the plugin WS: it resolves the enrolment-filter cascade
-            // (competency -> plan -> global) server-side and returns richer course cards.
+            // The plugin's service, not tool_lp's course list: it applies the enrolment-filter cascade
+            // (competency -> plan template -> site) server-side and returns what the course cards need.
             const coursesPromise = Ajax.call([{
                 methodname: 'local_dimensions_get_competency_courses',
                 args: {competencyid: competencyId, planid: planId}
@@ -252,7 +251,7 @@ define(
          *
          * @param {HTMLElement} contentEl The content container element
          * @param {Object} data The data from the webservice
-         * @param {Array} courses The courses list from tool_lp_list_courses_using_competency
+         * @param {Array} courses The course cards from local_dimensions_get_competency_courses
          * @param {number} planId The plan ID (used for related competency links)
          * @param {Function} isCurrent Whether contentEl is still the pane that asked, checked again once the strings arrive
          * @return {Promise} Promise that resolves when rendering is complete
@@ -474,9 +473,8 @@ define(
                 CollapsibleDescription.refresh(contentEl);
 
 
-                // Initialize evidence slider(s) — pass evidence data, strings, and scale config for modal.
-                // Competency-level scaleconfiguration is null when it inherits from the framework.
-                // Fall back to the resolved scaleconfiguration on the competency tree data object.
+                // A competency's own scaleconfiguration is null when it inherits the framework's; the
+                // competency summary (tool_lp's competency_summary_exporter) carries the resolved one.
                 const scaleConfig = summaryState.comp?.scaleconfiguration
                     || summaryState.competencyData?.scaleconfiguration
                     || null;
@@ -502,9 +500,8 @@ define(
         /**
          * Whether the competency has a non-empty ancestry to show in the path footnote.
          *
-         * The footnote renderer returns an empty string when both halves (framework shortname
-         * and parent breadcrumb) are empty, so a root competency with the setting on would
-         * otherwise open an empty Description tab.
+         * Mirrors renderDescriptionFootnote(), which draws no path when the framework shortname
+         * and the parent trail are both empty, so the Description tab is not opened for nothing.
          *
          * @param {Object} comp The competency record
          * @param {Object} competencyData The wrapped competency data (framework + compparents)
@@ -878,7 +875,7 @@ define(
                     activateTab(this, false);
                 });
 
-                // Keyboard navigation: Arrow Left/Right, Home, End (ARIA Authoring Practices).
+                // Keyboard navigation: arrow keys, Home, End (ARIA Authoring Practices).
                 btn.addEventListener('keydown', function(e) {
                     const wrapper = this.closest('.local-dimensions-tabs-wrapper');
                     if (!wrapper) {
@@ -938,7 +935,7 @@ define(
 
         /* Fetched rule data, as a promise of the parsed payload, for the life of the page. Whether a
            pane has asked for it is marked on the pane itself: every detail render builds a new rules
-           pane, and a page-wide marker left each one after the first on its spinner. */
+           pane, and a page-wide marker would leave each one after the first on its spinner. */
         const ruleData = new Map();
 
         /**
@@ -1025,9 +1022,8 @@ define(
 
             html += renderRuleHeadline(data, strMap);
 
-            /* Progress reads as a quiet status line, not a scoreboard. The warning triangle
-               that used to sit here is dropped: the missing-mandatory notice below says the
-               same thing in words, and two alarms for one condition read as two problems. */
+            /* A plain status line with no warning icon: the missing-mandatory notice below already
+               states that condition, and two alarms for one condition read as two problems. */
             html += '<div class="local-dimensions-rules-progress-header">';
             html += '<span class="local-dimensions-rules-progress-label">' + escapeHtml(strMap.rulesProgress) + '</span>';
             html += '<span class="local-dimensions-rules-progress-score">';
@@ -1286,9 +1282,9 @@ define(
         /**
          * Decide whether an evidence row is a competency-rule completion.
          *
-         * Core writes this exact pair only when a rule concludes the competency
-         * (OUTCOME_COMPLETE); the evidence and recommend outcomes are logged with ACTION_LOG.
-         * So the test is a direct read of the payload, never an inference.
+         * Core writes evidence_competencyrule with evidence::ACTION_COMPLETE (2) only when the rule's
+         * outcome is OUTCOME_COMPLETE; the evidence and recommend outcomes log it with ACTION_LOG.
+         * See core_competency\api::apply_competency_rules_from_usercompetency().
          *
          * @param {Object} ev An evidence row
          * @return {boolean}
@@ -1361,16 +1357,15 @@ define(
         }
 
         /**
-         * Render the evidence tab: what settled the competency, then how it got there.
+         * Render the Progress tab's evidence: what settled the competency, then how it got there.
          *
-         * The old slider gave every row the same weight and made the TYPE the headline, so a
-         * rule completion looked exactly like a note. Here a decisive rule completion is
-         * lifted out into a result strip and the rest stay as a plain chronological list.
+         * A decisive rule completion is lifted out into a result strip, so it does not read like
+         * any other row; the rest stay a plain list in core's order, newest first.
          *
          * @param {Object} ucs The user competency summary
          * @param {Object} strMap Language strings map
          * @param {string|null} scaleConfig The scale configuration JSON string
-         * @return {string} HTML for the evidence tab
+         * @return {string} HTML for the evidence section
          */
         function renderEvidenceList(ucs, strMap, scaleConfig) {
             const evidence = ucs ? ucs.evidence : [];
@@ -1409,10 +1404,10 @@ define(
                     escapeHtml(strMap.evidenceRuleViewRule) + '</button>';
                 html += '</div>';
 
-                /* Core does not let a rule overwrite a grade that is already set, and a rule has
-                   no override option of its own, so a rating made BEFORE the rule fired still
-                   stands. That leaves the learner reading "the rule was met" beside a status that
-                   never moved. Say so, and offer the review request that gets a human to look. */
+                /* A rule completion rates the competency only when it has no rating yet (unless the
+                   evidence that triggered the rule carried overridegrade), so an earlier rating still
+                   stands and the learner reads "the rule was met" beside a status that never moved.
+                   Say so, and offer the review request that gets a human to look. */
                 if (Number.parseInt(uc.proficiency, 10) !== 1) {
                     html += '<div class="local-dimensions-ev-stale" role="note">';
                     html += '<p class="local-dimensions-ev-stale-text">' + escapeHtml(strMap.evidenceRuleStale) + '</p>';
@@ -1427,10 +1422,8 @@ define(
                 }
             }
 
-            /* A heading over an empty list is worse than no heading, so the label and its count
-               render only once it is known that at least one row survives the decisive row's
-               removal. The rows become a real list; the wrapper keeps its class because
-               initEvidenceList delegates every handler from it. */
+            /* The heading and its count render only when a row survives the decisive row's removal.
+               The wrapper keeps its class because initEvidenceList delegates every handler from it. */
             const journey = evidence.filter(function(ev, index) {
                 return index !== decisiveIndex;
             });
@@ -2147,12 +2140,10 @@ define(
         /**
          * Render the section card's progress ring.
          *
-         * The same markup the tracker's timeline draws for a started section, scaled up by
-         * CSS rather than by a second geometry: the circle stays r=12 in a 32-unit viewBox,
-         * so the arc length is the percentage times the same 0.754 factor the tracker uses.
-         * Reusing the container is also what makes percentagedisplaymode apply here without
-         * a rule of its own - its selectors target this container and its text - and under
-         * the hidden mode the arc still reports progress where a bare number could not.
+         * The tracker's own ring markup (progress_card_body.mustache), enlarged by CSS: the circle
+         * stays r=12 in a 32-unit viewBox (circumference 75.4), so the arc length is the percentage
+         * times 0.754. Reusing the container also lets the percentagedisplaymode rules, which
+         * target it and its text, apply here; in the hidden mode the arc still shows progress.
          *
          * @param {number} percentage The section's completion percentage
          * @param {Object} strMap Language strings map
@@ -2181,12 +2172,10 @@ define(
         /**
          * Render the state strip that replaces a card's progress row.
          *
-         * A progress bar carries no meaning for a learner who cannot open the course (locked
-         * or enrol-gated access), on a course with one trackable activity it can only ever
-         * read 0% or 100%, and on a course with one section holding several activities a
-         * single-row timeline would say less than the section's own ring does. So the one row
-         * that is meaningless in each case is the one that is replaced - the image, the name,
-         * the outcome badge and the activities drawer all survive.
+         * A progress bar means nothing on a course the learner cannot open yet (enrol, pending
+         * application, locked), can only read 0% or 100% on a course with one trackable activity,
+         * and says less than the section's own ring on a course with one visible section. Only
+         * the progress row is replaced; the name, the outcome badge and the activities drawer stay.
          *
          * @param {Object} course A course row from the web service
          * @param {Object} strMap Language strings map
@@ -2203,9 +2192,9 @@ define(
                 return html;
             }
 
-            /* Applied and waiting. Neither of the other two strips fits: the card offers no
-               way in, so it is not an invitation, and the padlock would say the learner is
-               not eligible when the truth is that somebody has yet to decide. */
+            /* An enrolment application awaiting a decision. Neither other strip fits: the card
+               offers no way in, so it is not an invitation, and the padlock would say the learner
+               is not eligible when somebody has yet to decide. */
             if (course.access === 'pending') {
                 let html = '<span class="local-dimensions-course-state local-dimensions-course-state-pending">';
                 html += '<i class="fa fa-hourglass-half" aria-hidden="true"></i>';
@@ -2222,9 +2211,8 @@ define(
                 html += escapeHtml(strMap.lockedContent);
                 html += '</span>';
 
-                /* A date that has already passed explains nothing, so it is dropped rather than
-                   shown as history. showlockeddate is resolved server-side into the payload's
-                   own lockdate, which is 0 whenever there is nothing to say. */
+                /* A date that has already passed explains nothing, so it is dropped. showlockeddate is
+                   resolved per plan template in view-plan.php; lockdate is 0 when there is no date. */
                 const lockdate = Number.parseInt(course.lockdate, 10) || 0;
                 if (displaySettings.showlockeddate && lockdate * 1000 > Date.now()) {
                     const template = course.isenrolstart ? strMap.enrolmentStarts : strMap.availableAt;
@@ -2276,9 +2264,8 @@ define(
         /**
          * Render the call-to-action link for a compact card (activity or section mode).
          *
-         * The compact modes split the card's single anchor into two targets: the card itself
-         * (name, image slot) links to the course, and this link is the second target, to the
-         * one activity or the one section the card is summarising.
+         * In the compact modes the card itself links to the course, and this second link goes to
+         * the one activity or section the card summarises.
          *
          * @param {Object} course A course row from the web service
          * @param {Object} strMap Language strings map
@@ -2302,13 +2289,10 @@ define(
         /**
          * Render a course card's activities disclosure drawer, when there is one to show.
          *
-         * The activities list and course.activity come from two different queries - the
-         * former scoped to modules linked to this competency (get_linked_activities()), the
-         * latter to the course's card shape regardless of any link
-         * (calculator::resolve_card_shape()). They can share a display name without being the
-         * same module, so identity (cmid) is what settles it, not the label. When the card
-         * already shows the course's single trackable activity, a drawer listing that same
-         * activity would say it twice.
+         * The activities list (modules linked to this competency) and course.activity (the
+         * course's card shape, regardless of any link, from calculator::resolve_card_shape()) come
+         * from different queries and can share a name without being the same module, so they are
+         * compared by cmid. A drawer listing only the activity the card already shows is omitted.
          *
          * @param {Object} course A course row from the web service
          * @param {Array} activities The course's linked activities
@@ -2461,13 +2445,12 @@ define(
 
             html += '</div>'; // End local-dimensions-courses-scroll.
 
-            /* The way out to the tracker, from three courses up. A card can only summarise a
-               course as one percentage; the tracker shows per-section progress, locked sections
-               and availability dates. The threshold is a plain count of what is shown, not the
-               condition that reveals the scroll arrows - that one also fires with two cards on a
-               narrow screen, so the link would come and go on resize. No noredirect flag is
-               needed: the single-course redirect requires exactly one course to survive the
-               filter, so it cannot fire from three up. */
+            /* The link to the tracker, from three courses up: a card sums a course up as one
+               percentage, the tracker shows per-section progress, locks and availability dates.
+               The threshold counts the cards shown, not the scroll-arrow condition, which also
+               fires for two cards on a narrow screen and would make the link come and go on
+               resize. No noredirect flag: the tracker's single-course redirect needs exactly one
+               course to survive the same filter. */
             if (courses.length >= 3 && competencyId && planId) {
                 const baseUrl = displaySettings.viewcompetencyurl
                     || (M.cfg.wwwroot + '/local/dimensions/view-competency.php');
@@ -2653,12 +2636,6 @@ define(
         }
 
         /**
-         * Return icon metadata for a taxonomy card.
-         *
-         * @param {string} taxonomyKey Taxonomy key from the payload
-         * @return {Object} Icon metadata
-         */
-        /**
          * Open a modal explaining what a taxonomy type means.
          *
          * @param {string} key The core taxonomy key (behaviour, skill, ...)
@@ -2686,9 +2663,7 @@ define(
          * @return {Object} Type info with icon, label, colorClass
          */
         function getEvidenceTypeInfo(evidence, strMap) {
-            // Use descidentifier (exported by core_competency evidence_exporter) as the primary
-            // type selector. This field directly maps to the Moodle evidence type string identifiers
-            // and is reliable across all Moodle versions.
+            // The descidentifier is the lang string id core wrote the evidence with, so it names the type directly.
             const descidentifier = evidence.descidentifier || '';
 
             if (descidentifier === 'evidence_coursemodulecompleted') {
@@ -2739,11 +2714,9 @@ define(
                 };
             }
 
-            // Fallback heuristics for backward compatibility when descidentifier is absent.
-            // Evidence action constants from Moodle core_competency:
-            // 0 = EVIDENCE_ACTION_LOG, 1 = EVIDENCE_ACTION_SUGGEST,
-            // 2 = EVIDENCE_ACTION_COMPLETE, 3 = EVIDENCE_ACTION_OVERRIDE.
-            // JSON-encoded responses return numeric fields as strings; coerce to integer.
+            // Identifiers not matched above (e.g. core's evidence_manualoverrideincourse, or a plugin's
+            // own) fall back to heuristics. Actions are core_competency\evidence::ACTION_LOG (0),
+            // ACTION_COMPLETE (2) and ACTION_OVERRIDE (3); the JSON payload may carry them as strings.
             const action = Number.parseInt(evidence.action, 10) || 0;
 
             if (evidence.url?.includes('/mod/')) {
@@ -2829,11 +2802,10 @@ define(
             }
             html += '</div>';
 
-            /* The rating is the fact the learner wants; proficiency only qualifies it. So the
-               scale level leads as plain strong text and proficiency follows as a pill - and
-               with no grade there is nothing to qualify, so the pill is dropped entirely
-               rather than saying "No". Scale names are author-written and unbounded, so the
-               level is clipped with the tooltip pair rather than allowed to wrap the row. */
+            /* The rating leads and proficiency follows as a pill that qualifies it; with no rating
+               there is nothing to qualify, so the pill is omitted rather than saying "No". Scale
+               names are author-written and unbounded, so the rating is clipped and repeated in the
+               tooltip rather than allowed to wrap the row. */
             html += '<div class="local-dimensions-status-headline">';
             if (hasGrade) {
                 html += '<span class="local-dimensions-tip local-dimensions-tip-bottom" data-dim-tip="' +
@@ -2860,8 +2832,7 @@ define(
         }
 
         /**
-         * Render description section with "Ver mais" truncation.
-         * Now rendered inside a tab pane, no shadow card wrapper needed.
+         * Render the description inside the collapsible wrapper that clips it behind a show more toggle.
          *
          * @param {string} description The competency description HTML
          * @param {Object} strMap Language strings map
@@ -2872,10 +2843,8 @@ define(
             const descId = 'local-dimensions-acc-desc-' + competencyId;
             let html = '<div class="local-dimensions-desc-tab-content">';
 
-            // Reusable collapsible wrapper (max-height 30vh) — matches the
-            // local_dimensions/collapsible_description Mustache partial. The
-            // local_dimensions/collapsible_description AMD module activates
-            // it after this markup is inserted into the DOM.
+            // Same markup as the local_dimensions/collapsible_description partial; keep the two in step.
+            // The module of that name activates it once inserted (see CollapsibleDescription.refresh()).
             html += '<div class="local-dimensions-collapsible" data-collapsible-description>';
             html += '<div id="' + descId + '-content" class="local-dimensions-collapsible-content" aria-hidden="false">';
             html += description;
@@ -2919,8 +2888,9 @@ define(
         }
 
         /**
-         * Format a Unix timestamp using the Moodle strftimedaydate format.
-         * Uses Intl.DateTimeFormat for localized month names.
+         * Format a Unix timestamp with a Moodle strftime-style format (callers pass strftimedatefullshort).
+         *
+         * Supports %A %a %d %B %b %Y %y %m, each once; names come from toLocaleDateString() in the page language.
          *
          * @param {number} timestamp Unix timestamp (seconds)
          * @param {string} formatStr The strftime format string (e.g. "%d %B %Y")
@@ -2960,12 +2930,10 @@ define(
         /**
          * Escape HTML special characters, safe for both text-content and quoted-attribute sinks.
          *
-         * The textContent/innerHTML round-trip only encodes &, <, > and non-breaking space - that
-         * is text-node serialisation, and quotes are encoded only in attribute-value serialisation.
-         * Several call sites embed the result inside a double-quoted HTML attribute built by string
-         * concatenation, where an unescaped quote would close the attribute early, so both quote
-         * characters are escaped here as well. Doing so is harmless for text-content sinks too: the
-         * entity decodes back to the literal character when the browser parses the resulting HTML.
+         * The textContent/innerHTML round trip encodes only &, <, > and non-breaking space, so both
+         * quote characters are escaped as well: several call sites concatenate the result into a
+         * double-quoted attribute, where a bare quote would close it early. That is harmless in a text
+         * sink too: the entity decodes back to the literal character when the HTML is parsed.
          *
          * @param {string} text The text to escape
          * @return {string} The escaped text, safe for text content and single- or double-quoted
@@ -3051,10 +3019,9 @@ define(
                 });
             });
 
-            /* Seed the preference store with the WHOLE state the server resolved, before any
-               control can fire a save. A write replaces the entire preference, so seeding it
-               key by key means any key this page did not read is reset on the next save -
-               which is how choosing a sort used to throw away the grid layout. */
+            /* Seed the preference store with the whole state the server resolved, before any control
+               can save. A save replaces the entire preference, so a key this page did not seed would
+               be reset by the next save (choosing a sort would drop the grid layout). */
             const summary = document.querySelector('.local-dimensions-plan-summary');
             let viewstate = {};
             try {
@@ -3285,10 +3252,9 @@ define(
         /**
          * Show the favourites filter only once there is a favourite to filter to.
          *
-         * The same rule the companion block applies (its whole favourites pill group renders
-         * only when the count is above zero): a filter that can only ever return nothing is
-         * not a control, it is a dead end. Unstarring the last one also releases the filter,
-         * or the learner would be left looking at an empty plan with the control gone.
+         * The same rule block_dimensions applies to its favourites pills: a filter that can only
+         * return nothing is a dead end. Unstarring the last one also releases the filter, or the
+         * learner would face an empty plan with the control gone.
          */
         function syncFavouriteToggle() {
             const group = document.querySelector('.local-dimensions-fav-group');
@@ -3343,9 +3309,8 @@ define(
         /**
          * Wire the favourites controls: the per-row stars, the toolbar toggle and the ghost.
          *
-         * A star toggle deliberately does NOT re-sort, even under "Favourites first": rows
-         * leaping out from under the pointer at the moment of clicking is worse than an order
-         * that settles on the next visit.
+         * A star toggle does not re-sort, even under "Favourites first": rows jumping away from
+         * the pointer are worse than an order that settles on the next visit.
          */
         function initFavourites() {
             const summary = document.querySelector('.local-dimensions-plan-summary');
@@ -3421,7 +3386,7 @@ define(
          * Each mode is computed from the plan order rather than from the current DOM order,
          * so the result never depends on which sort ran before it.
          *
-         * @param {string} mode One of planorder, name, completed
+         * @param {string} mode One of planorder, name, completed, favourites
          */
         function applySort(mode) {
             const container = document.getElementById('local-dimensions-viewplan-accordion');
@@ -3529,11 +3494,9 @@ define(
         /**
          * Let a sort widen the filter that would otherwise make it a no-op.
          *
-         * Ordering by "completed first" while only the not-completed rows are shown sorts an
-         * empty set, and so does "favourites first" while only favourites are shown. Rather
-         * than hide or disable the option - which leaves the learner holding a control that
-         * does nothing, with no way to make it work - the choice is read as the intent it
-         * expresses and the filter opens far enough to honour it.
+         * "Completed first" changes nothing while only not-completed rows are shown, nor does
+         * "favourites first" while only favourites are. Rather than disable the option, picking it
+         * widens the filter far enough for the sort to show.
          *
          * @param {string} mode The sort the learner just picked
          */
@@ -3557,14 +3520,12 @@ define(
         /**
          * Empty every accordion detail pane and forget it was ever loaded.
          *
-         * This is the invariant that lets the grid modal exist at all. A rendered detail
-         * carries ids of the form local-dimensions-tab-{tabid}-{competencyId}, with no
-         * instance suffix, and getElementById returns the FIRST document-order match - so a
-         * pane and a modal holding the same competency would make the tab handler act on the
-         * wrong element. Exactly one surface may hold rendered detail at a time, and switching
-         * layout tears the outgoing one down before the incoming one is built.
-         *
-         * If a future change ever renders both at once, the instance-suffix work returns.
+         * A rendered detail carries ids of the form local-dimensions-tab-{tabid}-{competencyId}, with
+         * no instance suffix, so a pane and a modal holding the same competency would duplicate them
+         * and every aria-controls / aria-labelledby reference would resolve to the first copy in the
+         * document. Exactly one surface may hold rendered detail at a time: switching layout tears
+         * the outgoing one down before the incoming one is built. Rendering both at once would need
+         * instance-suffixed ids.
          */
         function tearDownAccordionPanes() {
             document.querySelectorAll('.local-dimensions-accordion-content').forEach(function(content) {
@@ -3609,6 +3570,10 @@ define(
         /**
          * Open one competency's detail in a modal, with a pager over the visible rows.
          *
+         * Does nothing for a row with no detail region: the template omits it when the viewer may
+         * not read the detail (candetail), and this early return keeps such a card from opening an
+         * empty dialogue.
+         *
          * @param {HTMLElement} item The accordion item whose detail to show
          * @param {number} planId The plan id
          */
@@ -3630,7 +3595,7 @@ define(
             }).then(function(modal) {
                 const root = modal.getRoot()[0];
 
-                // R4: a modal is appended to document.body, outside the percentagemode wrapper.
+                // The modal is appended to document.body, outside the percentagemode wrapper, so it needs the class too.
                 const summary = document.querySelector('.local-dimensions-plan-summary');
                 root.querySelector('.modal-body').classList.add(
                     'percentagemode-' + ((summary && summary.dataset.percentagemode) || 'hover')
@@ -3654,9 +3619,8 @@ define(
         /**
          * Fill an already-open modal with one competency's detail.
          *
-         * Paging replaces the contents of the SAME modal rather than destroying it and building
-         * the next: a destroy/create pair plays the close and open animations back to back,
-         * which reads as the dialog flashing on every step.
+         * Paging refills the same modal: destroying and recreating it would play the close and open
+         * animations back to back, and the dialog would flash on every step.
          *
          * @param {Object} modal The open modal
          * @param {HTMLElement} item The accordion item whose detail to show
@@ -3674,10 +3638,9 @@ define(
 
             modal.setTitle(title ? title.textContent.trim() : '');
 
-            /* Appended as nodes, never as an HTML string: the shell is cloned from a torn-down
-               pane, so the copy carries the loading placeholder and its already-translated
-               strings, and no rendered ids come with it. The pager has to be live too, or its
-               asynchronous labels would land on a detached copy nobody sees. */
+            /* Appended as nodes, never as an HTML string. The shell is cloned from a torn-down pane,
+               so the copy carries the loading placeholder and its translated strings but no rendered
+               ids; the pager must be the live element, or its late labels would land on a detached copy. */
             modalbody.textContent = '';
             modalbody.appendChild(buildModalPager(item, modal, planId));
             modalbody.appendChild(shell.cloneNode(true));
@@ -3704,7 +3667,7 @@ define(
          * Build the modal's prev / position / next row, live so its labels can arrive late.
          *
          * @param {HTMLElement} item The item the modal is opening for
-         * @param {Object} modal The open modal, replaced when the learner steps
+         * @param {Object} modal The open modal, refilled when the learner steps
          * @param {number} planId The plan id
          * @return {HTMLElement}
          */
@@ -3778,8 +3741,8 @@ define(
                 });
             });
 
-            /* One delegated handler rather than one per card: in grid mode the header button
-               opens the modal instead of its own pane, and the star keeps working. */
+            /* Capture phase on the container: in grid mode a click anywhere on a card opens the
+               modal and never reaches the header button's own pane handler. The star is let through. */
             container.addEventListener('click', function(event) {
                 if (!container.classList.contains('local-dimensions-grid-mode')) {
                     return;

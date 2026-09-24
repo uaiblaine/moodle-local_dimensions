@@ -26,7 +26,7 @@ Feature: Log competency views from the learner pages
     Then the view of plan "Behat plan" should be logged "1" time
     When I click on "Alpha competency" "button"
     Then the view of competency "AC1" in plan "Behat plan" should be logged "1" time
-    # Collapse, expand again, then reopen the same competency from the grid, which refetches it.
+    # Collapse, expand again, then reopen the same competency from the grid: still one view logged.
     When I click on "Alpha competency" "button"
     And I click on "Alpha competency" "button"
     And I click on "Grid view" "button"

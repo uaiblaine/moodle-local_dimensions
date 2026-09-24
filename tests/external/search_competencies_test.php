@@ -112,7 +112,7 @@ final class search_competencies_test extends \externallib_advanced_testcase {
     /**
      * A user who may read no framework gets nothing: the gate is per framework, not site-wide.
      *
-     * There is no site-level competencyview requirement any more (a manager holding it in one
+     * The service has no site-level competencyview requirement (a manager holding it in one
      * course category only must be able to search that category), so the answer is an empty
      * result rather than an exception.
      *

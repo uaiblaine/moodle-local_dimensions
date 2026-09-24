@@ -26,7 +26,7 @@ use local_dimensions\helper;
 /**
  * Competency customfield entity (Dimensions area).
  *
- * Standalone entity that contributes ONLY the customfield columns/filters
+ * Standalone entity that contributes only the customfield columns/filters
  * defined by local_dimensions in the `competency` area. It does not include
  * the competency table itself — the datasource that registers this entity is
  * expected to have already joined `{competency}` and to call

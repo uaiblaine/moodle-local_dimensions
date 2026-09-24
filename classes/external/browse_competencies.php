@@ -66,7 +66,7 @@ class browse_competencies extends external_api {
      *
      * @param int $frameworkid Framework id.
      * @param int $parentid Parent competency id (0 = roots); ignored in search mode.
-     * @param string $query Search text; non-empty switches to search mode.
+     * @param string $query Search text; MIN_QUERY_LENGTH characters or more switch to search mode.
      * @param int $limitfrom Offset.
      * @param int $limitnum Page size.
      * @return array Keys: items (list of {id, shortname, idnumber, haschildren, path}), total (int).
@@ -93,9 +93,8 @@ class browse_competencies extends external_api {
         $limitfrom = max(0, $params['limitfrom']);
         $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : 50;
 
-        // Validated in the framework's own context, never at the site: a manager holding
-        // competencyview in one course category only must not depend on the authenticated-user
-        // default there. An unknown or unreadable framework reads as empty, as before.
+        // Checked in the framework's own context, not the system one, so a competencyview grant in
+        // the framework's category is enough. An unknown or unreadable framework returns no items.
         $framework = competency_framework::get_record(['id' => $frameworkid]);
         if (!$framework) {
             return ['items' => [], 'total' => 0];

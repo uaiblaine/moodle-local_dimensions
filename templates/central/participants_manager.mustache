@@ -17,10 +17,11 @@
 {{!
     @template local_dimensions/central/participants_manager
 
-    Body of the "Manage participants" modal: a header and Cohorts/Users tabs. The Cohorts pane is filled
+    Body of the "Manage participants" modal: a header and the Cohorts, Users, Roles and Enrolment
+    methods tabs (the last two only with canassignroles / canmanageenrol). The Cohorts pane is filled
     by local_dimensions/central/cohort_manager (mount); the Users grid rows by
-    local_dimensions/central/participants_users; the Enrolment methods pane by
-    local_dimensions/central/enrol_methods.
+    local_dimensions/central/participants_users; the Roles pane by local_dimensions/central/roles_manager;
+    the Enrolment methods pane by local_dimensions/central/enrol_methods.
 
     Context variables required:
     * templatename (string) · contextid (int) · canassignroles (bool) · canmanageenrol (bool)
@@ -85,9 +86,8 @@
                             class="form-select"></select>
                 </div>
                 {{! Both data attributes: Moodle 4.5 is Bootstrap 4 (data-toggle), 5.x is BS5 (data-bs-toggle).
-                    data-bs-auto-close keeps the panel open for in-form clicks on BS5 only - it has no
-                    BS4 equivalent, and BS4 exempts just input and textarea targets, so the select and
-                    the switch label closed the panel. participants_users.js swallows those clicks on 4.5. }}
+                    data-bs-auto-close has no BS4 equivalent; participants_users.js keeps the panel
+                    open on 4.5. }}
                 <div class="dropdown" data-region="participant-filters">
                     <button class="btn btn-outline-secondary" type="button"
                             id="local-dimensions-participant-filters-toggle"

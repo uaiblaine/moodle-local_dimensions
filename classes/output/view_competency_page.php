@@ -138,9 +138,8 @@ class view_competency_page implements renderable, templatable {
         foreach ($this->courses as $course) {
             $locked = calculator::is_locked($course, $this->userid);
             $cid = (int) $course->id;
-            /* Course-area values for client-side chip filtering. The keys keep their
-               historical "course:" prefix so stored selections and the DOM lookups in
-               chip_filters.js continue to match. */
+            /* Course-area values for client-side chip filtering, keyed "course:<shortname>" to
+               match the group shortnames remapped below; chip_filters.js pairs them by key. */
             $combinedvalues = [];
             foreach (($coursevalues[$cid] ?? []) as $sn => $val) {
                 $combinedvalues['course:' . $sn] = $val;
@@ -155,9 +154,8 @@ class view_competency_page implements renderable, templatable {
             ];
         }
 
-        /* Build the chip-filter groups. Course-area only: a competency-area group was
-           built from the page's single competency, so every card carried the same value
-           and pressing a chip matched all cards or none. */
+        /* Build the chip-filter groups, course area only: a competency-area group would give
+           every card the page's single competency's value, so a chip would match all or none. */
         $chipgroups = [];
         if (!empty($courseshortnames)) {
             $courselabels = \local_dimensions\chip_filters::get_field_labels('course', $courseshortnames);

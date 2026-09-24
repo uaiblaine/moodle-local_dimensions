@@ -28,8 +28,8 @@ final class calculator_progress_test extends \advanced_testcase {
     /**
      * A locked course reports its lock even when completion tracking is switched off.
      *
-     * Regression test: the completion check used to return before the lock was resolved,
-     * so the card told a user who cannot open the course that completion was disabled.
+     * The lock must be resolved before the completion check returns, or the card tells a user
+     * who cannot open the course that completion is disabled.
      *
      * @return void
      */
@@ -111,9 +111,7 @@ final class calculator_progress_test extends \advanced_testcase {
     /**
      * A section one activity short of finished never reports a round hundred.
      *
-     * 199 of 200 rounds to 100, and get_course_progress reads any 100 as "completed" and
-     * swaps the ring for the done icon - so the card claimed a finished section while an
-     * activity was still open.
+     * Plain rounding makes 199 of 200 read 100, which get_course_progress reports as completed.
      *
      * @return void
      */
@@ -135,15 +133,11 @@ final class calculator_progress_test extends \advanced_testcase {
     /**
      * A subsection scheduled for deletion stops contributing its activities to its parent.
      *
-     * Deleting a subsection flags only the subsection module itself: every activity inside its
-     * delegated section keeps deletioninprogress = 0 and uservisible = true until
-     * mod_subsection's delete_instance() runs in the adhoc task, while the course page
-     * withdraws the whole subsection the moment it is flagged. The parent's ring therefore went
-     * on counting activities the learner could no longer reach - until the next cron run, or for
-     * good on a site whose delete task keeps failing.
+     * Core flags only the subsection module: the activities inside keep deletioninprogress = 0
+     * until the adhoc delete task runs, while the course page hides the whole subsection at once.
      *
-     * The first assertion is the control. It proves the cascade is switched on for this course,
-     * so the second cannot pass by the subsection's activities never having been counted at all.
+     * The first assertion is the control: it proves the subsection's activities were counted
+     * before the deletion.
      *
      * @return void
      */
@@ -268,11 +262,10 @@ final class calculator_progress_test extends \advanced_testcase {
     /**
      * Puts a module into the state core's asynchronous deletion leaves it in.
      *
-     * The state is built directly rather than through the delete API because that API is a
-     * different function on each supported branch - course_delete_module() is current on 5.0
-     * and 5.1 and deprecated on 5.2 in favour of formatactions::cm()->delete() (MDL-86856).
-     * Both end in the same two writes core's delete_async() performs, and those two writes are
-     * the whole of the state under test: the flag, and a cleared course cache.
+     * Built directly because the delete API differs by branch: course_delete_module() is
+     * deprecated on 5.2 in favour of formatactions::cm()->delete() (MDL-86856). The state under
+     * test is what core's delete_async() writes: the deletioninprogress flag and a cleared course
+     * cache.
      *
      * @param \stdClass $course The course the module belongs to.
      * @param int $cmid The course module scheduled for deletion.

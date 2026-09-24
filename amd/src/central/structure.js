@@ -715,9 +715,9 @@ const fetchAllChildren = async(parentid) => {
 /**
  * Refresh a single competency's node in place after an edit: re-render its row from fresh
  * server data (keeping the children container + expansion) and re-select it so the detail pane
- * updates — without reloading the whole tab, so the tree state is preserved (mirrors the Plans
- * tab). Falls back to a full reload when the node is gone, or to reload-and-reveal when it was
- * reparented during the edit (its position in the tree changed).
+ * updates — without reloading the whole tab, so the tree state is preserved. Falls back to a full
+ * reload when the node is gone, or to reload-and-reveal when it was reparented during the edit
+ * (its position in the tree changed).
  *
  * @param {HTMLElement} pane
  * @param {Number} id Competency id.
@@ -1311,8 +1311,8 @@ const dispatchStructureAction = (target, event) => {
  * @param {HTMLElement} region
  */
 const initStructureResize = (region) => {
-    // The redesign gives the tree (master) an explicit, adjustable width (default 430px) and
-    // lets the detail flex to fill the rest; the divider drives that master width.
+    // The tree (master) has an explicit, adjustable width (default 430px in styles.css) and the
+    // detail flexes to fill the rest; the divider drives that master width.
     initMasterResizer({
         body: region.querySelector(SELECTORS.structureBody),
         resizer: region.querySelector(SELECTORS.structureResizer),
@@ -1346,8 +1346,8 @@ export const init = () => {
     }
 
     if (pane) {
-        // Keep the pane dataset in sync with the framework the server actually resolved
-        // (it may differ from a prior selection after a visibility-toggle fallback).
+        // Keep the pane dataset in sync with the framework the server actually resolved: when the
+        // requested one is not listed in the context, it falls back to the first visible framework.
         pane.dataset.frameworkid = frameworkid;
     }
 

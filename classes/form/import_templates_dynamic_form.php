@@ -17,10 +17,10 @@
 /**
  * Modal (dynamic) form that uploads a learning plan template CSV — and imports nothing.
  *
- * Unlike the framework import form, this one is step one of two: it validates that the file can
- * be read and hands the draft file back to the caller, which then opens the preview. Its
- * process_dynamic_submission() therefore contains no write of any kind, which is what lets the
- * preview promise that nothing has happened yet.
+ * Step one of two, unlike the framework import form: it checks that the file can be read and
+ * hands the draft item back to the caller, which opens the preview
+ * ({@see \local_dimensions\external\preview_import_templates}). process_dynamic_submission()
+ * writes nothing, so the preview can state that nothing has changed yet.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -121,9 +121,10 @@ class import_templates_dynamic_form extends \core_form\dynamic_form {
         $mform->setType('encoding', PARAM_RAW);
         $mform->setDefault('encoding', 'UTF-8');
 
-        /* Off by default: on would pre-tick every matched template and arm, on the first Apply,
-           the bulk UPDATE that renames every open learner plan built from it. Off makes the
-           first run a pure comparison the operator opts into row by row. */
+        /* Off by default: on pre-ticks every matched template that differs, and applying one
+           rewrites the name, description and due date of every non-completed plan built from it
+           (core's plan::update_multiple_from_template()). Off makes the first run a comparison
+           the operator opts into row by row. */
         $mform->addElement(
             'advcheckbox',
             'updateexisting',
@@ -162,8 +163,8 @@ class import_templates_dynamic_form extends \core_form\dynamic_form {
     /**
      * Validate that a readable CSV carrying at least one template row was uploaded.
      *
-     * The reader's own error is carried through rather than replaced by a generic message: it
-     * names the actual problem (encoding, column count, empty file).
+     * The parser's own error is shown rather than a generic message, because it names the actual
+     * problem (e.g. an empty or unreadable file, or a framework CSV instead of a template CSV).
      *
      * @param array $data Submitted data.
      * @param array $files Submitted files.
@@ -193,8 +194,8 @@ class import_templates_dynamic_form extends \core_form\dynamic_form {
     /**
      * Read the raw content of a CSV in the current user's own draft area.
      *
-     * The draft area is user-scoped, so a draft item id belonging to somebody else is
-     * unreachable — which is what makes it safe to carry between the upload and the preview.
+     * The draft area is user-scoped, so another user's draft item id reads as empty; that is what
+     * makes the id safe to carry from the upload to the preview.
      *
      * @param int $draftid The filepicker draft item id.
      * @return string The file content, or '' when there is none.

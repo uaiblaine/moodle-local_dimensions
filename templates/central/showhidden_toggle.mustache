@@ -17,14 +17,14 @@
 {{!
     @template local_dimensions/central/showhidden_toggle
 
-    Standalone "show hidden rows" pill toggle, shared by the three hub tabs (Structures,
-    Competencies and Learning plans) so the control looks identical everywhere. The calling
-    tab renders it only when hidden content actually exists (the context object is null
-    otherwise), and each tab keeps its own data-action so its own JS drives the behaviour.
+    Standalone "show hidden" pill toggle, shared by the three hub tabs (Structures,
+    Competencies and Learning plans) and the context bar's hidden-categories switch, so the
+    control looks identical everywhere. Callers render it only when hidden content exists
+    (the context object is null otherwise) and pass their own data-action for their own JS.
 
-    The hidden checkbox still drives :checked / :focus-visible on the following track via the
-    shared local-dimensions-plans-switch-* mechanics; the wrapper lays the toggle out first
-    with the label to its right (see local-dimensions-central-showhidden in styles.css).
+    The hidden checkbox drives :checked / :focus-visible on the following track through the
+    shared local-dimensions-plans-switch-* rules; the toggle sits first with the label to its
+    right (local-dimensions-central-showhidden in styles.css).
 
     Context variables required:
     * id (string) - the checkbox id

@@ -30,13 +30,11 @@ use core_competency\plan;
 /**
  * Reads a learning plan for view-plan.php and view-competency.php, reporting only a missing plan as invalid.
  *
- * Both pages used to turn every exception from api::read_plan() into 'invalidplan'. Two refusals
- * came out as "Invalid learning plan" that way:
- * - the permission error a learner meets on their own draft, waiting-for-review or in-review plan,
- *   since no default archetype holds moodle/competency:planviewowndraft;
- * - the error an administrator meets with competencies turned off.
- * Only a plan that cannot be found is invalid now. Every other failure surfaces as core's own error,
- * as it does on admin/tool/lp/plan.php, which reads the plan with no catch at all.
+ * Every other failure surfaces as core's own error, as on admin/tool/lp/plan.php, which reads the
+ * plan with no catch at all. Reporting them as 'invalidplan' would tell a learner refused their own
+ * draft, waiting-for-review or in-review plan (no default archetype holds
+ * moodle/competency:planviewowndraft), or an administrator with competencies turned off, that the
+ * plan does not exist.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

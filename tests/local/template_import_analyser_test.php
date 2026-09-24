@@ -31,9 +31,9 @@ final class template_import_analyser_test extends \advanced_testcase {
     /**
      * Analysing a file that exercises every verdict writes nothing at all.
      *
-     * customfield_field and customfield_category are in the snapshot precisely because
-     * provisioning was deliberately removed from the analyser: ensure_custom_fields_exist()
-     * inserts into both, so a stray call would show up here rather than in production.
+     * The snapshot includes customfield_field and customfield_category because the analyser must
+     * never provision fields: ensure_custom_fields_exist() inserts into both, so a stray call shows
+     * up here.
      *
      * @return void
      */
@@ -148,7 +148,7 @@ final class template_import_analyser_test extends \advanced_testcase {
     }
 
     /**
-     * A template with no competency rows at all is a legitimate export and is NOT blocked:
+     * A template with no competency rows at all is a legitimate export and is not blocked:
      * the roll-up only fires when competencies were named and none of them resolved.
      *
      * @return void
@@ -300,7 +300,7 @@ final class template_import_analyser_test extends \advanced_testcase {
     }
 
     /**
-     * An empty template ID number is not a key. Tier 1 is skipped entirely, so a row with an
+     * An empty template ID number is not a key: the ID-number lookup is skipped, so a row with an
      * empty ID number cannot match a stored template whose ID number is also empty.
      *
      * @return void
@@ -352,8 +352,8 @@ final class template_import_analyser_test extends \advanced_testcase {
     }
 
     /**
-     * A row that changes nothing is in sync, and is left unticked: applying it still moves two
-     * timemodified columns and re-arms the cohort sync.
+     * A row that changes nothing is in sync, and is left unticked: applying it would still bump the
+     * template's timemodified, which re-arms core's cohort plan sync.
      *
      * @return void
      */
@@ -522,9 +522,7 @@ final class template_import_analyser_test extends \advanced_testcase {
     /**
      * One item as a one-line diagnosis, for assertion messages.
      *
-     * A bare "expected insync, got blocked" says nothing about WHY the analyser blocked; the
-     * reason and detail it already computed are what makes a failure readable, and CI is the
-     * only place these tests ever run.
+     * Carries the reason and detail the analyser computed, so a wrong verdict explains itself.
      *
      * @param array $item The projected item.
      * @return string

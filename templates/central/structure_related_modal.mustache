@@ -17,13 +17,14 @@
 {{!
     @template local_dimensions/central/structure_related_modal
 
-    Body of the referenced-competency modal on the Structure tab: the same competency
-    detail card as the inline pane (shared local_dimensions/central/structure_detail_content
-    partial) so the visual is identical, wrapped so it fills the dialog with its own close
-    button. The metric counters render as plain, non-interactive numbers (linksclickable off)
-    to avoid opening a usage modal over this one, and the referenced-competencies section is
-    omitted (showrelated off). Populated client-side by local_dimensions/central/structure
-    from the local_dimensions_get_structure_node web service response.
+    Body of the competency detail modal, opened from the Structure tab's referenced-competency
+    chips and the Learning plans tab's competency names: the same detail card as the inline
+    pane (shared local_dimensions/central/structure_detail_content partial), wrapped so it
+    fills the dialog with its own close button. The metric counters render as plain numbers
+    (linksclickable off) so no usage modal opens over this one, and the referenced-competencies
+    section is omitted (showrelated off). Filled client-side by
+    local_dimensions/central/competency_detail from the local_dimensions_get_structure_node
+    web service response.
 
     Context variables required:
     * detailconfig (object) {linksclickable, showrelated} · always {false, false} here

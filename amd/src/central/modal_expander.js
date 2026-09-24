@@ -14,10 +14,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Expand / restore control for the Competency hub's data-dense modals (participants, links). Two
- * buttons are always present in the modal header; the CSS shows whichever matches the dialog's
- * expanded state, so nothing swaps an icon in JS. The chosen size lives in the shared display
- * preference, so it follows the user across the two modals and across sessions and devices.
+ * Expand / restore control for data-dense modals: the hub's participants and "Courses & activities"
+ * modals, and the learner competency detail modal. Two buttons are always present in the modal header; the
+ * CSS shows whichever matches the dialog's expanded state, so nothing swaps an icon in JS. The hub
+ * stores the chosen size in its display user preference; other callers pass their own store.
  *
  * @module     local_dimensions/central/modal_expander
  * @copyright  2026 Anderson Blaine
@@ -30,9 +30,8 @@ import {getString} from 'core/str';
 /**
  * Where the expanded state is read and written when a caller does not say.
  *
- * The hub's own store, so the hub's call sites need no argument. A caller from outside the
- * hub MUST pass its own: a learner expanding a modal would otherwise write the admin hub's
- * display preference.
+ * The hub's own store, so the hub's call sites need no argument. A caller outside the hub must
+ * pass its own, or a learner expanding a modal would write the hub's display preference.
  *
  * @type {Object}
  */
@@ -93,7 +92,6 @@ export const attach = async(dialog, store) => {
         getString('central_modal_expand', 'local_dimensions'),
         getString('central_modal_restore', 'local_dimensions'),
     ]);
-    // Both buttons ship; the CSS reveals the one matching the state, so nothing swaps an icon here.
     const closebtn = header.querySelector('.btn-close');
     header.insertBefore(makeButton('modal-expand', 'fa-expand', expandlabel, 'local-dimensions-modal-expand'), closebtn);
     header.insertBefore(makeButton('modal-restore', 'fa-compress', restorelabel, 'local-dimensions-modal-restore'), closebtn);

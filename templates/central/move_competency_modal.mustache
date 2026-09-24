@@ -17,10 +17,11 @@
 {{!
     @template local_dimensions/central/move_competency_modal
 
-    Body of the "move competency to position" modal on the Plans tab: a single select
-    listing every position (numbered, annotated with the competency currently there).
-    Rendered client-side by local_dimensions/central/plans inside a core/modal_save_cancel;
-    the JS reads the selected index on save and issues one reorder web-service call.
+    Body of the "move competency to position" modal: a single select listing every position
+    (numbered, annotated with the competency currently there). Rendered client-side inside a
+    core/modal_save_cancel by local_dimensions/central/plans (a template's competencies) and
+    local_dimensions/central/structure (a competency's siblings); each reads the selected index
+    on save.
 
     Context variables required:
     * options (array) {value, label, selected} - One entry per list position.

@@ -28,7 +28,7 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
     'use strict';
 
     // Default to English literals so any handler firing before the get_strings
-    // promise resolves still shows usable text (matches pre-i18n behaviour).
+    // promise resolves still shows usable text.
     var strings = {
         errorLoading: 'Error loading icons.',
         tooManyResults: 'Too many results. Please refine your search.',
@@ -82,9 +82,8 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
             var elementId = config.elementId;
             var inputId = config.inputId;
 
-            // Resolve localised strings; English defaults remain as fallback if
-            // this fails or fires after a handler. No retry needed — the user
-            // can re-trigger a search and the cached promise will hit instantly.
+            // Replace the English defaults with the localised strings; if the
+            // call fails, the defaults stay for the life of the page.
             Str.get_strings([
                 {key: 'iconpicker_error_loading', component: 'local_dimensions'},
                 {key: 'iconpicker_too_many_results', component: 'local_dimensions'},

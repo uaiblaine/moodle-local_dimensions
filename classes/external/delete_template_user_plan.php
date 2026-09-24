@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Delete a user's plan created from a template.
+ * Delete a user's learning plan; the hub offers it for plans created from a template.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -32,7 +32,7 @@ use core_external\external_single_structure;
 use core_external\external_value;
 
 /**
- * Web service: delete a plan.
+ * Web service: delete a plan. It does not check that the plan came from a template.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

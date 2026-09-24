@@ -29,7 +29,7 @@ use local_dimensions\task\process_enrol_method;
 /**
  * Shared queries and policy for the participants modal's Enrolment methods tab.
  *
- * Concentrates what all four enrol web services need: which courses the template links
+ * Concentrates what the tab's five enrol web services need: which courses the template links
  * (per competency), which of them the current user may configure, which roles the tab
  * offers, and the configured state of both methods against one cohort.
  *
@@ -89,7 +89,7 @@ class enrol_methods {
     }
 
     /**
-     * Linked course ids of the template, grouped by competency (template order).
+     * Linked course ids of the template, grouped by competency (by competency id, then course id).
      *
      * @param int $templateid Template id.
      * @return array Map of competencyid => list of course ids.

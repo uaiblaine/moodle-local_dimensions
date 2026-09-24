@@ -26,8 +26,8 @@ defined('MOODLE_INTERNAL') || die();
 
 $definitions = [
     // Cache for storing valid course IDs per template.
-    // Key: template_id
-    // Value: array of course IDs linked to all competencies in the template.
+    // Key: templateid
+    // Value: int[] IDs of the courses linked to any competency of the template.
     'template_courses' => [
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
@@ -39,7 +39,7 @@ $definitions = [
 
     // Cache for template metadata consumed by block cards.
     // Key: templateid
-    // Value: type, tag1, tag2, bgcolor, textcolor, templatecardimageurl, timemodified.
+    // Value: the payload documented on \local_dimensions\template_metadata_cache.
     // Invalidated when template metadata or card image is updated.
     'template_metadata' => [
         'mode' => cache_store::MODE_APPLICATION,
@@ -52,7 +52,7 @@ $definitions = [
 
     // Cache for competency metadata consumed by block cards.
     // Key: competencyid
-    // Value: tag1, tag2, bgcolor, textcolor, cardimageurl, timemodified.
+    // Value: the payload documented on \local_dimensions\competency_metadata_cache.
     // Invalidated when competency metadata or card image is updated.
     'competency_metadata' => [
         'mode' => cache_store::MODE_APPLICATION,
@@ -101,7 +101,7 @@ $definitions = [
     ],
 
     // Session cache for plan trail data (competency id, shortname, proficiency).
-    // Key: planid_userid
+    // Key: {planid}_{userid}, suffixed _c for a completed plan (see plan_trail_cache::cache_key()).
     // Value: array with total count and competency trail rows.
     // Invalidated when user competency proficiency changes.
     'plan_trail' => [

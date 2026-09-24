@@ -30,7 +30,7 @@ use core\event\base;
  * Event: an enrolment method was removed from a course by the hub's bulk action.
  *
  * Core fires enrol_instance_deleted for the row itself, but not the plugin-level decision
- * (which learning plan template, which cohort, which bulk request). The 'other' payload
+ * (which learning plan template and which cohort). The 'other' payload
  * carries templateid, cohortid, method (cohort|self) and roleid; the objectid is captured
  * before the instance row is deleted.
  *
@@ -68,7 +68,7 @@ class enrol_method_removed extends base {
     }
 
     /**
-     * No restore mapping: hub bulk actions are never part of a course backup.
+     * Not mapped on restore, although the event is logged in the course context.
      *
      * @return string
      */

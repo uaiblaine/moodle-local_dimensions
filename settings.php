@@ -279,8 +279,8 @@ if (get_config('core_competency', 'enabled')) {
     // -----------------------------------------------------------------------
     // 4. Custom-field driven chip filters (view-plan + view-competency).
     // CSV of custom field shortnames the admin wants to expose as chip
-    // filters in each view. Defaults reuse the tag1/tag2 fields the plugin
-    // already provisions.
+    // filters in each view. The plan view's default reuses the tag1/tag2
+    // fields the plugin provisions; the tracker's course fields start empty.
     // -----------------------------------------------------------------------
     $settings->add(new admin_setting_heading(
         'local_dimensions/chipfilterheading',

@@ -26,7 +26,8 @@
  * Lets a feature create frameworks and learning plan templates inside a course category.
  *
  * Usage: the following "local_dimensions > frameworks" exist, with columns shortname, idnumber
- * and category (the course category's idnumber); the same for "local_dimensions > templates".
+ * and category (the course category's idnumber), plus an optional scale (the scale's name);
+ * "local_dimensions > templates" requires shortname and category.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

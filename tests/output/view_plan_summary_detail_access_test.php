@@ -26,12 +26,10 @@ use local_dimensions\external\get_user_competency_summary_in_plan;
  * Core reads a draft plan through the draft capabilities (plan::can_read_user_draft()), but every
  * competency detail goes through api::get_plan_competency(), which checks
  * user_competency::can_read_user() - a check that never consults them. A viewer holding only
- * moodle/competency:planviewdraft therefore reads the plan and its list, and every expanded
- * competency failed. The page now withholds the detail from that viewer instead of offering a
- * control that can only fail.
+ * moodle/competency:planviewdraft therefore reads the plan and its list but would be refused every
+ * detail, so the page withholds the detail controls from that viewer.
  *
- * A class-level docblock rather than a CoversClass attribute: moodle-cs on the 4.05 leg cannot see
- * attributes, and this plugin still supports 4.5.
+ * Coverage stays in a docblock annotation: moodle-cs for Moodle 4.5 cannot see PHP attributes.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -40,11 +38,10 @@ use local_dimensions\external\get_user_competency_summary_in_plan;
  */
 final class view_plan_summary_detail_access_test extends \advanced_testcase {
     /**
-     * The defect this guards: the draft-only reader reads the plan, but not a competency's detail.
+     * Core's side of the mismatch: the draft-only reader reads the plan, but not a competency's detail.
      *
-     * Asserts core's side of the mismatch, so the page's decision below stays tied to a real
-     * refusal: if core ever lets this viewer load the detail, this test goes red and the
-     * withholding can go.
+     * Keeps the page's withholding tied to a real refusal: if core ever lets this viewer load the
+     * detail, this test goes red and the withholding can go.
      *
      * @return void
      */

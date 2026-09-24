@@ -17,17 +17,18 @@
 /**
  * CSV serialization/parsing for learning plan templates (+ the plugin custom fields).
  *
- * The file has TWO row types, discriminated by a leading rowtype column: one `template`
+ * The file has two row types, discriminated by a leading rowtype column: one `template`
  * row per template followed by its `link` rows, in sortorder. Every column is read by
- * HEADER NAME using stable lowercase-ASCII tokens, unlike framework_csv_serializer whose
+ * header name using stable lowercase-ASCII tokens, unlike framework_csv_serializer whose
  * 14 positional columns exist only to interchange with core's tool_lpimportcsv - core has
  * no learning plan template import or export at all, so there is no positional contract to
- * honour here. Name indexing means a hand-authored file may omit any column: an ABSENT
- * column leaves the field untouched, a present-but-empty cell clears it.
+ * honour here. Name indexing means a hand-authored file may omit any column: an absent
+ * column leaves the field untouched, a present-but-empty cell clears it (visible and
+ * descriptionformat, which cannot be empty, are then left untouched too).
  *
- * A one-directional ingest shim reads a five-column admin/tool/lptmanager export. Our own
- * output is deliberately NOT readable by that plugin (its format cannot carry a second
- * framework, a custom field, visible, duedate or a context).
+ * A one-directional ingest shim reads a five-column export of the third-party
+ * admin/tool/lptmanager plugin. Our own output is deliberately not readable by that plugin
+ * (its format cannot carry a second framework, a custom field, visible, duedate or a context).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -212,11 +213,12 @@ class template_csv_serializer {
     /**
      * Describe a template's context for the preview, without ever being read back as a target.
      *
-     * Carries the category NAME as well as its idnumber, because most categories have no
+     * Carries the category name as well as its idnumber, because most categories have no
      * idnumber and a bare empty cell would be indistinguishable from the system context.
      *
      * @param template $tpl The template being exported.
-     * @return string 'system', or 'Category name (idnumber)' / 'Category name'.
+     * @return string 'system', 'Category name (idnumber)' or 'Category name'; '' when the
+     *     category cannot be read.
      */
     private static function describe_context(template $tpl): string {
         $context = $tpl->get_context();
@@ -279,10 +281,8 @@ class template_csv_serializer {
     /**
      * Encode one row as an RFC 4180 CSV line (every field quoted, internal quotes doubled).
      *
-     * Built in memory rather than via csv_export_writer, whose fixed per-user temp path is
-     * double-unlinked when two exports share a request - a PHP warning that fails
-     * phpunit --fail-on-warning. See framework_csv_serializer::encode_row(), including why the
-     * formula neutralisation core does inside that writer is applied here by hand.
+     * Built in memory rather than via csv_export_writer, for the reason given at
+     * {@see framework_csv_serializer::encode_row()}, which also explains the formula escaping.
      *
      * @param array $row Cell values.
      * @return string
@@ -298,7 +298,7 @@ class template_csv_serializer {
      *
      * Nothing is resolved against the database here and nothing is validated beyond the
      * shape of the file: template_import_analyser owns every verdict. In particular
-     * shortname is NOT passed through shorten_text(), so the analyser can report an
+     * shortname is not passed through shorten_text(), so the analyser can report an
      * over-long name rather than silently truncating it.
      *
      * @param string $text Raw CSV text.
@@ -326,8 +326,8 @@ class template_csv_serializer {
             return strtolower(trim((string) $name));
         }, (array) $reader->get_columns());
 
-        // A framework CSV has the same shape as a legacy template CSV to a loose test, so it
-        // is refused by name before the shim can misread its columns as template fields.
+        // A framework CSV has no rowtype column either; it gets its own message pointing at
+        // the framework import instead of the generic unknown-format error.
         if (self::looks_like_framework_csv($columns)) {
             $reader->close();
             $reader->cleanup();
@@ -375,9 +375,8 @@ class template_csv_serializer {
 
         while ($row = $reader->next()) {
             $rownumber++;
-            /* Formula neutralisation is undone here rather than at each field: every writer of
-               this format applies it, core's csv_export_writer included, so a guarding
-               apostrophe is part of the encoding and never part of the value. */
+            /* Formula neutralisation is undone in this one accessor: encode_row() applies it to
+               every exported cell, so a guarding apostrophe is never part of the value. */
             $get = static function (string $token) use ($row, $index): string {
                 if (!isset($index[$token])) {
                     return '';
@@ -442,11 +441,11 @@ class template_csv_serializer {
     }
 
     /**
-     * Read a five-column admin/tool/lptmanager export.
+     * Read a five-column export of the third-party admin/tool/lptmanager plugin.
      *
      * That format is positional (its own header row carries localised get_string() values, so
      * the names cannot be trusted) and carries no ordering metadata, so link sortorder is the
-     * ordinal of each comma-split idnumber. Nothing else about it is honoured on export.
+     * ordinal of each comma-split idnumber. This plugin never writes that format.
      *
      * @param \csv_import_reader $reader An initialised reader positioned at the first data row.
      * @return array{templates: array, links: array, error: string, legacy: bool}
@@ -458,8 +457,7 @@ class template_csv_serializer {
 
         while ($row = $reader->next()) {
             $rownumber++;
-            // See parse_native(): tool_lp writes this format through core's csv_export_writer,
-            // which neutralises formulas, so the guarding apostrophe comes off here as well.
+            // A formula-guarding apostrophe comes off here as well, as in parse_native().
             $cell = static function (int $position) use ($row): string {
                 return isset($row[$position]) ? trim(csv_formula::unescape((string) $row[$position])) : '';
             };

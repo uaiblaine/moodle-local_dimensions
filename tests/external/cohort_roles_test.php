@@ -125,7 +125,7 @@ final class cohort_roles_test extends \advanced_testcase {
     }
 
     /**
-     * remove_cohort_role deletes the mapping (and rejects an assignment outside the template's cohorts).
+     * remove_cohort_role deletes the mapping.
      *
      * @return void
      */

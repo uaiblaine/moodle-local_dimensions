@@ -22,9 +22,8 @@ use local_dimensions\customfield\lp_handler;
 /**
  * Tests for the accordion subline-source resolution and the competency select-label reader.
  *
- * Locks the fix for the "Accordion subtitle" bug: the tag1/tag2 sources must
- * resolve and surface the competency's select-option label (which the legacy
- * hex-only reader always returned as empty).
+ * The tag1/tag2 sources must resolve to the competency's select-option label, not to an
+ * empty string.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -66,7 +65,7 @@ final class helper_subline_test extends \advanced_testcase {
         $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
         $templateid = (int) $ccg->create_template()->get('id');
 
-        // A template with no stored value keeps the legacy status behaviour.
+        // A template with no stored value falls back to the status subline.
         $this->assertSame(
             constants::SUBLINE_STATUS,
             helper::get_template_subline_source($templateid)

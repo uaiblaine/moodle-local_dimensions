@@ -33,13 +33,11 @@ final class calculator_visibility_test extends \advanced_testcase {
     private $user;
 
     /**
-     * Work the learner cannot open YET counts; work they can never see does not.
+     * Work the learner cannot open yet counts; work they cannot see does not.
      *
-     * A date restriction set to "display greyed" is the case the whole standard turns on: the
-     * learner sees the activity and will have to do it, so it belongs in the denominator even
-     * though uservisible is false for it today. The hide-entirely activity beside it is the
-     * control - it proves the assertion is measuring the greyed one's inclusion rather than a
-     * predicate that simply counts everything.
+     * A date restriction shown greyed keeps the activity in the denominator although uservisible
+     * is false today: the learner sees it and will have to do it. The hide-entirely activity is
+     * the control, proving the predicate does not simply count everything.
      *
      * @return void
      */
@@ -53,8 +51,7 @@ final class calculator_visibility_test extends \advanced_testcase {
         $this->complete([$done]);
         $this->refresh();
 
-        /* One of the two the learner can see. The hide-entirely activity is invisible to them,
-           so it is not theirs to do and 50 rather than 33 is the honest answer. */
+        // One of the two the learner can see; the hide-entirely activity is not theirs to do.
         $this->assertSame(50, $this->bar());
         $this->assertSame(50, $this->ring());
     }
@@ -62,10 +59,9 @@ final class calculator_visibility_test extends \advanced_testcase {
     /**
      * A restriction the learner can never satisfy leaves their workload entirely.
      *
-     * The same activity, the same "display greyed" setting, measured for a learner inside the
-     * group and for one outside it. The member is the control: it proves the activity is one the
-     * count can see, so the non-member's exclusion is the group rule and not the fixture. Without
-     * this, a learner outside the group could never reach 100% in the course.
+     * A group restriction shown greyed excludes the activity for a non-member, who could otherwise
+     * never reach 100%. The member is the control: the same activity counts for them, so the
+     * non-member's exclusion comes from the group rule and not from the fixture.
      *
      * @return void
      */
@@ -84,9 +80,8 @@ final class calculator_visibility_test extends \advanced_testcase {
         $this->complete([$done], (int) $member->id);
         $this->refresh();
 
-        /* Control: the member has finished the same single activity, and reads 50 rather than
-           100 precisely because the group-only one IS in their workload. If it counted for
-           nobody, both learners would read 100 and the assertion below would prove nothing. */
+        /* Control: the member has finished the same single activity and reads 50, because the
+           group-only one is in their workload. */
         $this->assertSame(50, $this->bar((int) $member->id));
 
         // For a learner who will never be in that group it is not work at all.
@@ -97,9 +92,8 @@ final class calculator_visibility_test extends \advanced_testcase {
     /**
      * An activity available but not listed on the course page is still work the learner owes.
      *
-     * Stealth is the mirror image of the greyed case - openable right now, but not listed - and
-     * core's own denominator drops it. The rings have always counted it; the bar must agree.
-     * The control is the hidden activity, which is neither listed nor openable and must stay out.
+     * A stealth activity is openable but not listed, so is_visible_on_course_page() alone would
+     * drop it. The hidden activity is the control: neither listed nor openable, it must stay out.
      *
      * @return void
      */
@@ -125,15 +119,9 @@ final class calculator_visibility_test extends \advanced_testcase {
     /**
      * A hidden activity stays out even for a learner who is allowed to see hidden activities.
      *
-     * This is the clause the other cases cannot reach. For an ordinary student a hidden activity
-     * is excluded twice over - not listed on the course page and not openable - so nothing here
-     * depends on testing $cm->visible. Grant that same student
-     * moodle/course:viewhiddenactivities, though, and uservisible flips to true, the union half
-     * of the predicate admits it, and the workload of a course would start depending on who was
-     * looking at it. Reading $cm->visible first settles it: hidden is hidden for everybody, which
-     * is what the standard says.
-     *
-     * The plain activity is the control: it proves the elevated learner is being measured at all.
+     * With moodle/course:viewhiddenactivities, uservisible is true for a hidden activity, so only
+     * the explicit $cm->visible test keeps the workload from depending on who is looking. The
+     * plain activity is the control: it proves the elevated learner is measured at all.
      *
      * @return void
      */
@@ -246,9 +234,8 @@ final class calculator_visibility_test extends \advanced_testcase {
     /**
      * Puts one availability condition on an activity.
      *
-     * The show flag is the whole point of the fixture rather than a detail: true renders the
-     * activity greyed with its reason, false removes it from the page altogether, and the two
-     * land on opposite sides of the standard.
+     * The show flag matters: true lists the activity greyed with its reason, false removes it
+     * from the course page altogether.
      *
      * @param int $cmid The activity to restrict.
      * @param array $condition One core availability condition, as it is stored.

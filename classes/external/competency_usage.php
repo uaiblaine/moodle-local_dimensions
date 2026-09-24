@@ -68,8 +68,8 @@ class competency_usage extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), ['competencyid' => $competencyid]);
         $competencyid = $params['competencyid'];
 
-        // Validated in the framework's own context: a manager holding competencyview in one course
-        // category only must not depend on the authenticated-user default at the site.
+        // Checked in the framework's own context, not the system one, so a competencyview grant in
+        // the framework's category is enough.
         $competency = competency::get_record(['id' => $competencyid], MUST_EXIST);
         $framework = competency_framework::get_record(
             ['id' => $competency->get('competencyframeworkid')],
@@ -113,10 +113,9 @@ class competency_usage extends external_api {
             }
         }
 
-        // Learning plan templates bundling the competency (hub "Plans" naming). Read through the
-        // persistent rather than api::list_templates_using_competency(), which requires template
-        // read access at the SYSTEM context and throws otherwise - a category-scoped manager lost
-        // the whole popover to it. Each template is filtered on its own context instead.
+        // Learning plan templates bundling the competency. Not api::list_templates_using_competency(),
+        // which requires template read access in the system context and throws otherwise, so a
+        // category-scoped manager would get no list at all; each template is checked in its own context.
         $templates = [];
         foreach (template_competency::list_templates($competencyid, false) as $template) {
             if (!$template->can_read()) {

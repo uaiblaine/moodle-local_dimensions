@@ -17,12 +17,11 @@
 /**
  * Projects a parsed learning plan CSV against this site without writing anything.
  *
- * This class is the reason the feature can promise "nothing has been written yet". It contains no
- * core_competency write call, no DML write of any kind, no create or update call on a persistent,
- * and no custom-field provisioning call — provisioning writes a category row and up to fourteen
- * field rows, which would make the preview's own reassurance false. Provisioning already runs once
- * per session from the footer hook; a field that still resolves to null here is reported, not
- * created. The class is deliberately written so that grepping it for the write verbs finds nothing.
+ * The preview promises that nothing has been written yet, so this class makes no write of any
+ * kind: no core_competency write call, no DML write, no create or update on a persistent, and no
+ * custom-field provisioning (which inserts a category and field rows). Provisioning already runs
+ * once per session from the footer hook; a field that still resolves to null here is reported,
+ * not created.
  *
  * Validity is asked of core rather than reimplemented: persistent::validate() returns
  * true|lang_string[] and writes nothing.
@@ -188,7 +187,7 @@ class template_import_analyser {
         /* 'parents' and 'children' are mutually exclusive in api::get_related_contexts(), so the
            union is assembled from two calls: 'children' alone cannot see a system-context
            structure from a category, and 'parents' alone cannot see one in a subcategory. A
-           structure in a SIBLING category stays invisible and is reported as missing. */
+           structure in a sibling category stays invisible and is reported as missing. */
         foreach (['parents', 'children'] as $includes) {
             try {
                 foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $this->target, $includes, false) as $framework) {
@@ -446,7 +445,7 @@ class template_import_analyser {
      * Ask core whether the projected record is valid, without writing it.
      *
      * persistent::validate() writes nothing. The update path builds the persistent from the
-     * stored row FIRST and then applies the new values, because template::before_validate()
+     * stored row first and then applies the new values, because template::before_validate()
      * re-reads its own snapshot from the database and validate_duedate() short-circuits when
      * the new due date equals the stored one.
      *
@@ -507,14 +506,13 @@ class template_import_analyser {
         ];
         $idnumber = (string) $row->templateidnumber;
 
-        /* Tier 1 is skipped for an empty ID number rather than run with '': the unique indexes
-           permit one empty value per scope, so the lookup would match some other
-           empty-ID-number template and report an exact-confidence match for it. */
+        /* Tier 1 is skipped for an empty ID number rather than run with '': the lookup would
+           match any template whose stored ID number is empty and report it as an exact match. */
         if ($idnumber !== '') {
             $here = $this->templates_by_idnumber($idnumber, true);
             if (count($here) === 1) {
                 return array_merge($none, [
-                    // Keyed by template id, valued by context id: the KEY is the match.
+                    // Keyed by template id, valued by context id: the key is the match.
                     'id' => (int) array_key_first($here),
                     'confidence' => template_import_verdict::CONFIDENCE_EXACT,
                 ]);
@@ -536,9 +534,8 @@ class template_import_analyser {
         if ($shortname === '') {
             return $none;
         }
-        /* get_recordS, plural: get_record() with the default IGNORE_MISSING silently returns the
-           first of N and emits a debugging() notice, which hides the ambiguity and fails PHPUnit.
-           It does not throw dml_multiple_records. */
+        /* get_records(), not get_record(): with the default IGNORE_MISSING, get_record() returns
+           the first of several rows with only a debugging() notice, hiding the ambiguity. */
         $byname = template::get_records(['shortname' => $shortname, 'contextid' => (int) $this->target->id]);
         if (count($byname) > 1) {
             return array_merge($none, ['conflict' => template_import_verdict::REASON_AMBIGUOUS]);
@@ -572,7 +569,7 @@ class template_import_analyser {
      *
      * The category join is mandatory: the both-areas custom fields reuse the same shortname in
      * the lp and competency areas, so a bare shortname filter would cross them. d.component,
-     * d.area and d.itemid are never named — the plugin's own cross-version queries avoid them.
+     * d.area and d.itemid are not used: customfield_data only has them from Moodle 5.1.
      *
      * @param string $idnumber The template ID number to look for.
      * @param bool $inside True for templates in the target context, false for those outside it.
@@ -780,9 +777,8 @@ class template_import_analyser {
     /**
      * Resolve a structure by ID number, then by name among those readable from the target.
      *
-     * No cross-framework fallback exists by design: the same ID number in another structure is a
-     * different competency, and a silent cross-structure match is exactly the plausible-looking
-     * corruption this feature exists to prevent.
+     * There is deliberately no cross-framework fallback: the same ID number in another structure
+     * is a different competency, so such a match would silently link the wrong one.
      *
      * @param string $idnumber The structure ID number from the row.
      * @param string $shortname The structure name from the row.
@@ -903,8 +899,8 @@ class template_import_analyser {
     /**
      * What would change on a matched template, in the file's own column vocabulary.
      *
-     * Three normalisations are mandatory or the diff lies: description is compared through
-     * PARAM_CLEANHTML on BOTH sides, because persistent::validate() rewrites it silently and a
+     * Three normalisations keep the diff honest: description is compared through
+     * PARAM_CLEANHTML on both sides, because persistent::validate() rewrites it silently and a
      * naive export-import-diff would report a change nobody made; custom-field selects are
      * compared as resolved indexes rather than labels, so a label with no option on this site
      * compares equal to "none" instead of showing a change that will not happen; and the due
@@ -989,10 +985,9 @@ class template_import_analyser {
      * The per-value remap controls for option labels this site does not have.
      *
      * The admin-editable tag and type option lists are seeded once, never re-synced, and are
-     * separate per area, so their labels are genuinely site-local. Reporting the mismatch is not
-     * enough on its own: without a control the label would land on index 0 — cleared — which is
-     * a silent change. Offering the target's own options plus an explicit "clear" makes the
-     * outcome the operator's choice.
+     * separate per area, so their labels are site-local. Without a control, an unknown label
+     * would be saved as index 0 (cleared), a silent change; offering the target's own options
+     * plus an explicit "clear" makes the outcome the operator's choice.
      *
      * @param array $cf The row's custom-field cells.
      * @return array Each an array of token, value and options.
@@ -1037,9 +1032,10 @@ class template_import_analyser {
     /**
      * What applying an update would do to the learner plans already built from the template.
      *
-     * Draft and active plans read the template live, while complete plans are frozen against
-     * user_competency_plan, so the two are counted separately: only the open ones are renamed
-     * by the raw bulk UPDATE core's template update runs, and only they gain the new competencies.
+     * Plans that are not complete read the template live
+     * ({@see helper::count_open_plans_by_template()}), while complete plans are frozen, so the two
+     * are counted separately: only the open ones are renamed by a template update and gain the
+     * new competencies.
      *
      * @param int $templateid The matched template id.
      * @param array $links The resolved link items.
@@ -1270,8 +1266,8 @@ class template_import_analyser {
      * The descriptionformat cell as an int, or null when it is absent or empty.
      *
      * An empty cell is treated as "not specified" rather than as 0: 0 is FORMAT_MOODLE, a real
-     * choice, and silently turning a hand-authored file's HTML descriptions into auto-formatted
-     * ones is exactly the invisible change this preview exists to prevent.
+     * choice, and would silently turn a hand-authored file's HTML descriptions into
+     * auto-formatted ones.
      *
      * @param \stdClass $row The parsed template row.
      * @return int|null

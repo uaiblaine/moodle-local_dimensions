@@ -135,10 +135,10 @@ class contextbar implements renderable, templatable {
         }
 
         // The "show hidden categories" toggle renders only when a hidden category is actually
-        // reachable: one exists and the viewer may see hidden categories at the site (null
-        // otherwise, so the template skips it). It starts on when the user last left it on, or
-        // when the selected category is itself hidden (else that context would vanish from the
-        // picker). It reuses the shared showhidden_toggle partial.
+        // reachable: the page is not locked, one exists and the viewer may see hidden categories
+        // at the site (null otherwise, so the template skips it). It starts on when the user last
+        // left it on, or when the selected category is itself hidden (else that context would
+        // vanish from the picker). It reuses the shared showhidden_toggle partial.
         global $DB;
         $hashidden = !$this->locked
             && has_capability('moodle/category:viewhiddencategories', $systemcontext)

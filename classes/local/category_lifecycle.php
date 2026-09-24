@@ -25,22 +25,17 @@ use core_competency\template;
 /**
  * What happens to a course category's frameworks and learning plan templates when it goes.
  *
- * Core's course category deletion knows nothing about competency data: delete_full() moves
- * cohorts and deletes grade categories, content bank items and calendar events, then drops
- * the context, leaving competency_framework and competency_template rows pointing at a
- * deleted context - invisible in every listing, unreachable and undeletable. Neither core
- * nor tool_lp registers a callback. The category entry of the hub makes category-scoped
- * frameworks and templates normal rather than exceptional, so this class answers the four
- * callbacks core offers (lib.php forwards to it):
+ * Core's course category deletion ignores competency data: it deletes the category context and
+ * leaves competency_framework and competency_template rows pointing at it, where no listing
+ * shows them and nothing can delete them. Neither core nor tool_lp registers a callback, so
+ * this class answers the four core offers (lib.php forwards them):
  *
- * - "Delete all" refuses when anything in the category is in use, mirroring core's own
- *   refusal to delete a competency that a course, plan or template still references, and
- *   deletes the rest through the competency API so nothing is orphaned.
- * - "Move contents" re-homes the category's frameworks and templates to the destination,
- *   the way core moves the category's cohorts, and is offered only to a viewer who may
- *   manage them there.
+ * - "Delete all" refuses when anything in the category is in use, mirroring core's refusal to
+ *   delete a competency that is still referenced, and deletes the rest through the competency API.
+ * - "Move contents" re-homes the category's frameworks and templates to the destination
+ *   category, and is offered only to a viewer who may manage them there.
  *
- * Only the category's OWN context is handled per call: delete_full() recurses into child
+ * Only the category's own context is handled per call: delete_full() recurses into child
  * categories and calls the callbacks again for each, and delete_move() moves child
  * categories whole, contexts included.
  *
@@ -74,9 +69,9 @@ class category_lifecycle {
     /**
      * Count what the category holds and how much of it is in use.
      *
-     * A framework is in use when core would refuse to delete any of its competencies (linked
-     * to a course, an activity, a template or a plan); a template is in use when a plan is
-     * still linked to it.
+     * A framework is in use when core would refuse to delete any of its competencies
+     * ({@see competency::can_all_be_deleted()}: used by a template, plan, course, user
+     * competency or badge); a template is in use when a plan is still linked to it.
      *
      * @param int $categoryid The course category id.
      * @return array Keys: frameworks (int), templates (int), inuse (int, objects that block a deletion).
@@ -163,11 +158,11 @@ class category_lifecycle {
     /**
      * Re-home the category's frameworks and templates to another category's context.
      *
-     * One UPDATE per table, the way core's cohort_delete_category() moves cohorts: the
-     * persistents refuse a context change by validation ("the context must never change"),
-     * and this is the one moment the change is the point. Plans keep working (they reference
-     * the template by id), the plugin's custom-field data is keyed by instance id, and its
-     * pictures live at the system context.
+     * One UPDATE per table, the way core's cohort_delete_category() moves cohorts, because
+     * core refuses a context change otherwise: competency_framework::validate_contextid()
+     * rejects one, and api::update_template() throws. Plans keep working (they reference the
+     * template by id), and the plugin's custom-field data and pictures are keyed by instance
+     * id at the system context.
      *
      * @param int $categoryid The category being deleted.
      * @param int $newcategoryid The category its contents move to.

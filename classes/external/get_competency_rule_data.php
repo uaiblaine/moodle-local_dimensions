@@ -300,7 +300,9 @@ class get_competency_rule_data extends external_api {
     }
 
     /**
-     * Return the available user competency record for this plan/competency pair.
+     * The user's rated record for a competency: the plan's archived rating (user_competency_plan,
+     * written when a plan is completed) when it holds a grade, else the live user_competency;
+     * null when neither holds a grade.
      *
      * @param int $childid Child competency ID
      * @param int $userid User ID

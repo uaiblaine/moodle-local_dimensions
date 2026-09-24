@@ -30,7 +30,7 @@ use local_dimensions\helper;
 /**
  * Frameworks tab: list frameworks with native management (visibility, duplicate, delete, edit).
  *
- * Args (from the pane data attributes / getContent): contexttype, categoryid.
+ * Args (from the pane data attributes / getContent): contexttype, categoryid, locked, showhidden.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -49,11 +49,8 @@ class frameworks extends \core\output\dynamic_tabs\base {
     /**
      * Whether the current user may see this tab in the context the pane names.
      *
-     * Resolved from the pane's own contexttype/categoryid, never from the system context: a manager
-     * holding the competency capabilities in one course category only must get this tab there, and
-     * core's dynamic-tabs web service re-instantiates the tab from the same pane data before calling
-     * require_access(). The resolver downgrades an unreadable category to the system context, so the
-     * check then correctly refuses a category-scoped viewer instead of leaking a system listing.
+     * Resolved from the pane's own contexttype/categoryid, never from the system context; see
+     * {@see structure::is_available()}.
      *
      * @return bool
      */
@@ -129,9 +126,8 @@ class frameworks extends \core\output\dynamic_tabs\base {
         // the "· N hidden" suffix on the count so the number stays honest.
         $excludedcount = $showhidden ? 0 : $hiddencount;
         /*
-         * Same plural rule as the card label above — two literal keys, never a constructed key,
-         * which the string checker cannot verify. Here pt-BR inflects the adjective instead
-         * ("1 oculta" vs "2 ocultas"), and the count is interpolated into the plural form.
+         * Same two-key plural rule as the card label above. Here pt-BR inflects the adjective
+         * ("1 oculta" vs "2 ocultas"), and only the plural form interpolates the count.
          */
         if ($excludedcount === 1) {
             $hiddenlabel = get_string('central_frameworks_hiddencount_one', 'local_dimensions');
@@ -139,7 +135,7 @@ class frameworks extends \core\output\dynamic_tabs\base {
             $hiddenlabel = get_string('central_frameworks_hiddencount', 'local_dimensions', $excludedcount);
         }
         $canmanage = !$needscategory && competency_framework::can_manage_context($pagecontext);
-        // The create/edit modal's "Open scales page" header shortcut mirrors the page's own gate.
+        // The create/edit modal's "Open scales page" footer shortcut mirrors the page's own gate.
         $canscalespage = has_capability('moodle/course:managescales', \context_system::instance());
 
         $PAGE->requires->js_call_amd('local_dimensions/central/frameworks', 'init');

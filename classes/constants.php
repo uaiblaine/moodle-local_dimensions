@@ -47,13 +47,13 @@ class constants {
     /** @var string Custom field shortname for text color */
     const CFIELD_CUSTOMTEXTCOLOR = 'local_dimensions_customtextcolor';
 
-    /** @var string Custom field shortname for tag1 (Year/Ano) */
+    /** @var string Custom field shortname for tag1 (e.g. a year) */
     const CFIELD_TAG1 = 'local_dimensions_tag1';
 
-    /** @var string Custom field shortname for tag2 (Category/Categoria) */
+    /** @var string Custom field shortname for tag2 (e.g. a category) */
     const CFIELD_TAG2 = 'local_dimensions_tag2';
 
-    /** @var string Custom field shortname for type (e.g., unidade, modulo, etapa) */
+    /** @var string Custom field shortname for type (e.g. unit, module, stage) */
     const CFIELD_TYPE = 'local_dimensions_type';
 
     /** @var string Custom field shortname for custom SCSS code */
@@ -113,7 +113,7 @@ class constants {
     /** @var string Enrollment filter: show all linked courses */
     const ENROLLMENTFILTER_ALL = 'all';
 
-    /** @var string Enrollment filter: show only courses where user is enrolled */
+    /** @var string Enrollment filter: show courses where the user has any enrolment, suspended or future included */
     const ENROLLMENTFILTER_ENROLLED = 'enrolled';
 
     /** @var string Enrollment filter: show only courses with active enrollments */
@@ -161,7 +161,7 @@ class constants {
     /** @var string Subline source: hide the subline */
     const SUBLINE_NONE = 'none';
 
-    /** @var string Subline source: completion status (current default behaviour) */
+    /** @var string Subline source: completion status (the default) */
     const SUBLINE_STATUS = 'status';
 
     /** @var string Subline source: competency assessment rating */

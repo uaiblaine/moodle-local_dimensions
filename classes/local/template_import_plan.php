@@ -98,9 +98,9 @@ class template_import_plan {
     /**
      * The flat scalar tallies the preview summary strip and the web service declare.
      *
-     * Every value is an int and the key set is fixed: the preview web service's
-     * execute_returns() mirrors it key for key, and clean_returnvalue() silently strips
-     * anything it does not declare.
+     * Every value is an int and the key set is fixed: keep it in step with
+     * {@see \local_dimensions\external\preview_import_templates::execute_returns()}, since
+     * clean_returnvalue() silently strips anything it does not declare.
      *
      * @return array
      */

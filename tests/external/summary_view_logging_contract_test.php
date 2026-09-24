@@ -25,9 +25,8 @@ use core_external\external_api;
  *
  * The accordion picks core's view web service from the summary's plan.iscompleted and passes
  * plan.userid, so both fields are a contract with this wrapper's JSON, and the two method names it
- * sends are a contract with core's service registry. Nothing else in the pipeline reads either:
- * a renamed field or a mistyped method would only fail silently in the browser, where the failure
- * is deliberately swallowed.
+ * sends are a contract with core's service registry. A renamed field or a mistyped method would
+ * otherwise fail only in the browser, where the error is deliberately sent to Log.debug.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

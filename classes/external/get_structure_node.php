@@ -63,9 +63,8 @@ class get_structure_node extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), ['competencyid' => $competencyid]);
         $competencyid = $params['competencyid'];
 
-        // Validated in the framework's own context, never at the site: a manager holding
-        // competencyview in one course category only must not depend on the authenticated-user
-        // default there. An unknown or unreadable competency reads as not found, as before.
+        // Checked in the framework's own context, not the system one, so a competencyview grant in
+        // the framework's category is enough. An unknown or unreadable competency reads as not found.
         $competency = competency::get_record(['id' => $competencyid]);
         if (!$competency) {
             return ['found' => false, 'pathids' => []];

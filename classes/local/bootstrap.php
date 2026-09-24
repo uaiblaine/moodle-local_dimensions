@@ -27,17 +27,14 @@ namespace local_dimensions\local;
 /**
  * Tells the stylesheet which Bootstrap major version the current site runs.
  *
- * Moodle 4.5 ships Bootstrap 4 and 5.0+ ship Bootstrap 5, and the bridging between
- * them is asymmetric: 4.5's forward bridge (theme/boost/scss/moodle/bs5-bridge.scss)
- * is 116 lines covering only g-0, btn-close, the ms/me/ps/pe spacers and
- * float/text/border/rounded-start/end, while 5.x's backward bridge (bs4-compat.scss)
- * is over a thousand lines. A BS5 utility outside that short list resolves to nothing
- * on 4.5, so styles.css carries a polyfill for the families the plugin uses.
+ * Moodle 4.5 ships Bootstrap 4 and 5.0+ ship Bootstrap 5. 4.5's forward bridge
+ * (theme/boost/scss/moodle/bs5-bridge.scss) covers only g-0, btn-close, the ms/me/ps/pe
+ * spacers and float/text/border/rounded-start/end, so any other BS5 utility resolves to
+ * nothing on 4.5; styles.css carries a polyfill for the ones the plugin uses.
  *
- * That polyfill must not reach 5.x. Plugin CSS loads after core's, so a rule scoped to
- * a plugin surface would outrank core's own definition and freeze 4.5's metrics onto
- * the newer branch. Gating the block on a body class only 4.5 receives is what keeps it
- * inert there.
+ * The polyfill is gated on a body class only 4.5 receives. Plugin CSS loads after core's,
+ * so an ungated rule scoped to a plugin surface would outrank core's own definition on 5.x
+ * and impose 4.5's metrics there.
  */
 class bootstrap {
     /** @var string Body class added on sites running Bootstrap 4 (Moodle 4.5). */

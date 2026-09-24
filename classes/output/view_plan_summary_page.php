@@ -17,8 +17,7 @@
 /**
  * View full plan overview page renderable.
  *
- * Displays plan with competencies in accordion timeline when
- * view-plan.php is accessed with only plan ID (no competency ID).
+ * Rendered by view-plan.php: the plan's competencies as an accordion list or a card grid.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -68,7 +67,7 @@ class view_plan_summary_page implements renderable, templatable {
      * preference is user-writable through core's own repository, and a stale value survives
      * a redesign that drops an option.
      *
-     * @return array Keys: sort, filter.
+     * @return array Keys: sort, filter, favonly, view, expanded.
      */
     private static function resolve_view_preference(): array {
         $stored = json_decode((string) get_user_preferences(constants::PREF_LEARNER_VIEW, ''), true);
@@ -110,7 +109,7 @@ class view_plan_summary_page implements renderable, templatable {
      * Order the exported competency rows for the first paint.
      *
      * @param array $competencies Exported competency rows.
-     * @param string $sort One of planorder, name, completed.
+     * @param string $sort One of planorder, name, completed, favourites.
      * @return array The rows in display order.
      */
     private static function sort_competencies(array $competencies, string $sort): array {
@@ -223,8 +222,8 @@ class view_plan_summary_page implements renderable, templatable {
             /* Whether this viewer may open a competency's detail. Every detail loads through
                api::get_plan_competency(), which checks user_competency::can_read_user(), while the
                plan itself was read through plan::can_read() - which accepts the draft capabilities
-               for a draft plan and so admits viewers that check refuses. Offering them a control
-               that can only fail was the defect; the template withholds it instead. */
+               for a draft plan and so admits viewers that check refuses. The template withholds
+               the detail control from them rather than offer one that can only fail. */
             'candetail' => user_competency::can_read_user((int) $this->plan->get('userid')),
         ];
 
@@ -233,7 +232,7 @@ class view_plan_summary_page implements renderable, templatable {
         $ucproperty = $iscompleted ? 'usercompetencyplan' : 'usercompetency';
 
         // Resolve the configured accordion subline source for this template.
-        // Individual plans (no template) keep the legacy "status" behaviour.
+        // Individual plans (no template) use the "status" source.
         $sublinesource = $template
             ? \local_dimensions\helper::get_template_subline_source($template->get('id'))
             : constants::SUBLINE_STATUS;
@@ -261,7 +260,7 @@ class view_plan_summary_page implements renderable, templatable {
             $comp = $pc->competency;
             $usercomp = $pc->$ucproperty;
 
-            // Get proficiency status for timeline marker.
+            // Proficiency drives the row's completed state and its badge.
             $isproficient = $usercomp ? $usercomp->get('proficiency') : false;
 
             // Get grade/rating.
@@ -279,10 +278,9 @@ class view_plan_summary_page implements renderable, templatable {
                 }
             }
 
-            // Resolve the dynamic subline shown in the accordion header.
-            // The legacy behaviour (rating badge / "to do" pill) lives under
-            // the "status" source; other sources surface a configurable
-            // custom-field value.
+            // Resolve the dynamic subline shown in the accordion header. The "status" source
+            // is the rating badge or "to do" pill the template draws itself; rating and the
+            // tags surface a text value.
             $sublinetext = '';
             switch ($sublinesource) {
                 case constants::SUBLINE_RATING:
@@ -372,8 +370,7 @@ class view_plan_summary_page implements renderable, templatable {
 
         /* The whole resolved state, handed to the client as one object. A write replaces the
            entire preference, so seeding it key by key means any key the page forgot to read
-           is silently reset on the next save - which is how choosing a sort used to throw
-           away the grid layout. */
+           is silently reset on the next save. */
         $data['viewstatejson'] = json_encode([
             'sort' => $sort,
             'filter' => $view['filter'],
@@ -427,11 +424,13 @@ class view_plan_summary_page implements renderable, templatable {
     }
 
     /**
-     * Get a custom field value for a template.
+     * Get a colour custom field value for a template.
+     *
+     * Same hex-only rule as {@see customfield_reader::get_competency_custom_field()}.
      *
      * @param int $templateid The template ID.
      * @param string $shortname The field shortname to retrieve.
-     * @return string|null The field value or null if not found.
+     * @return string|null The colour with a leading '#', or null when unset or not a hex colour.
      */
     protected function get_template_custom_field(int $templateid, string $shortname): ?string {
         $field = $this->get_field($shortname, 'lp');

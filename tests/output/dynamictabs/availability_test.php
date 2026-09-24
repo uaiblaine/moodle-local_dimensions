@@ -32,13 +32,12 @@ use core_external\external_api;
 /**
  * The three hub tabs must answer is_available() for the context the pane names.
  *
- * The fixture is a manager who holds the competency capabilities in ONE course category and has
- * the authenticated-user default for competencyview withdrawn at the system context. That last
- * step is what makes the frameworks and structure cases mutation-checkable: with the default in
- * place a system-context check passes for everyone, and a test could not tell the two apart.
+ * The fixture is a manager who holds the competency capabilities in one course category and has
+ * the authenticated-user default for competencyview withdrawn at the system context. Without that
+ * withdrawal a system-context check passes for everyone, so the frameworks and structure cases
+ * could not tell a category check from a system check.
  *
- * Class-level docblock annotations rather than attributes: moodle-cs on the 4.05 CI leg cannot
- * see PHP attributes and reports every method as uncovered.
+ * Coverage stays in docblock annotations: moodle-cs for Moodle 4.5 cannot see PHP attributes.
  *
  * @covers \local_dimensions\output\dynamictabs\frameworks
  * @covers \local_dimensions\output\dynamictabs\structure
@@ -164,8 +163,9 @@ final class availability_test extends advanced_testcase {
      * The path the browser actually takes: core's dynamic-tabs web service serves the Learning plans
      * pane to a category manager in their category, and refuses it at the site.
      *
-     * The Plans pane is the one measured failing before the change, because templateview carries
-     * no authenticated-user default; the service returns the exception rather than throwing.
+     * Plans is the pane exercised because templateview has no authenticated-user default, so a
+     * system-context check would refuse this manager even in their own category.
+     * call_external_function() reports the refusal as an error result rather than throwing.
      *
      * @return void
      */

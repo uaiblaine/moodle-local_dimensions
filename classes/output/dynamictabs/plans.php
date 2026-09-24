@@ -38,7 +38,8 @@ use local_dimensions\template_metadata_cache;
  * (which may come from several frameworks), with template CRUD, the cross-framework
  * competency picker and cohort/participant assignment all handled in place via modals.
  *
- * Args (from the pane data attributes / getContent): templateid.
+ * Args (from the pane data attributes / getContent): contexttype, categoryid, locked, templateid,
+ * competencyids (CSV of competency ids to filter by).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -57,13 +58,10 @@ class plans extends \core\output\dynamic_tabs\base {
     /**
      * Whether the current user may see this tab in the context the pane names.
      *
-     * Resolved from the pane's own contexttype/categoryid, never from the system context: a manager
-     * holding templatemanage in one course category only must get this tab there, and core's
-     * dynamic-tabs web service re-instantiates the tab from the same pane data before calling
-     * require_access(). Measured on 5.2 before this change: the Plans pane answered
-     * nopermissiontoaccesspage to exactly such a manager, because templateview carries no
-     * authenticated-user default at the system context. The resolver downgrades an unreadable
-     * category to the system context, so the check then correctly refuses a category-scoped viewer.
+     * Resolved from the pane's own contexttype/categoryid, never from the system context; see
+     * {@see structure::is_available()}. It matters most here: templateview has no default outside
+     * the manager archetype, so a system-context check would refuse a manager who holds
+     * templatemanage in one course category only.
      *
      * @return bool
      */
@@ -251,8 +249,8 @@ class plans extends \core\output\dynamic_tabs\base {
             }
         }
 
-        // Capabilities for the "open the core admin page" shortcut in the participants modal
-        // header: each button only shows if the user can actually reach the page it opens.
+        // Capabilities for the "open the core admin page" shortcuts in the participants modal
+        // footer: each link only shows if the user can actually reach the page it opens.
         $syscontext = context_system::instance();
         $canassignroles = has_capability('moodle/role:manage', $syscontext);
         // Core's cohort page is context-aware (cohort/index.php?contextid=), and cohort:manage is a

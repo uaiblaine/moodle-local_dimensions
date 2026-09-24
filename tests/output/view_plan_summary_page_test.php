@@ -339,8 +339,8 @@ final class view_plan_summary_page_test extends advanced_testcase {
     /**
      * Every key the client can write is seeded, so a save cannot reset one by omission.
      *
-     * This is the regression guard for the whole-value preference: the store writes the object
-     * back entire, so a key missing here is a key silently reset to its default on the next save.
+     * The store writes the preference back entire, so a key missing here is reset to its default
+     * on the next save.
      *
      * @return void
      */

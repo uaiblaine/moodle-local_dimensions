@@ -88,7 +88,7 @@ export const save = (partial) => {
 };
 
 /**
- * Seed the favourites store with the WHOLE stored map, not just this plan's list.
+ * Seed the favourites store with the whole stored map, not just this plan's list.
  *
  * A write replaces the entire preference, so anything the page never saw would be lost.
  * Only the current plan's list is normalised; the other plans are passed back untouched.

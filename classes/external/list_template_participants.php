@@ -172,8 +172,9 @@ class list_template_participants extends external_api {
                     'isindividual' => $isindividual,
                     'modelo' => $isindividual ? '' : $modelname,
                     'cohorts' => implode(', ', $cohorts),
-                    // Unlink and delete need planmanage in the user's own context (core parity);
-                    // the grid renders the two actions only where this is true.
+                    // Core checks plan::can_manage() before unlink and delete, which for the non-draft
+                    // plans a template creates is plan::can_manage_user(). The grid renders the two
+                    // actions only where this is true.
                     'canmanage' => (int) plan::can_manage_user((int) $record->userid),
                 ];
             }

@@ -20,60 +20,38 @@
   */
 
 /*
- * Theme-specific overrides for theme_academi.
+ * Overrides for theme_academi, loaded by theme_config::get_css_files() only when theme_academi or
+ * a child of it is the active theme.
  *
- * Moodle core loads this file (see theme_config::get_css_files) ONLY when
- * theme_academi - or a child theme inheriting from it - is the active theme.
- * Under any other theme it is never read, so it costs nothing.
- *
- * Keep every rule scoped to a plugin surface so styles never leak:
+ * Keep every rule scoped to a plugin surface:
  *   .local-dimensions-viewplan        Full plan overview
  *   .local-dimensions-viewcompetency  Competency tracker / detail
  *   .local-dimensions-central-page    Competency hub (admin)
  *   .local-dimensions-return-fab      Return-to-Plan FAB
  *
- * CI's stylelint never reads this file. core's Gruntfile.js:101 builds the CSS list for a
- * non-theme plugin as exactly "<component>/styles.css", so styles_*.css is unlinted.
- * That is a reason for MORE care here, not less - it is why tests/local/colour_tokens_test.php
- * globs styles_*.css alongside styles.css, and a colour literal in this file fails that suite
- * exactly as it would in styles.css. In particular it does NOT license !important, which is
- * banned fleet-wide: an override that has to beat a theme wins on specificity instead, and
- * anchoring on two ids settles it on the id count, which is compared first.
+ * Core's grunt stylelint lints only styles.css for a non-theme plugin, so this file is not linted.
+ * Hold it to the same rules anyway: no colour literals (tests/local/colour_tokens_test.php scans
+ * it) and no !important - beat a theme rule on specificity instead, where two id anchors win on
+ * the id count, which is compared first.
  */
 
 /*
  * Hero flush against the theme's header.
  *
- * The Boost-wide part of this lives in styles_boost.css, which zeroes the top spacing of
- * #topofscroll / #page-content / #region-main-box / #region-main and collapses core's 1px
- * skip-link anchor. That alone lands the hero correctly on every other theme; academi needs
- * two more, and both are its own, not Moodle 4.5's - measured against theme_boost on the same
- * m405 site at a 1280px viewport, where the hero already sits at -1px with no help.
+ * styles_boost.css zeroes the top spacing of the Boost containers and core's skip-link anchor,
+ * which is enough on the other Boost children. academi adds two gaps of its own:
  *
- * What academi adds, and where the remaining 51px came from:
+ *   1. #page margin-top: 20px. On Boost this margin clears the fixed navbar; academi clears its
+ *      navbar on #page-wrapper and its static .header-main (71px) sits in the flow, so the 20px is
+ *      decoration. Zero it here only, never in styles_boost.css.
  *
- *   1. #page margin-top: 20px. On Boost this margin is LOAD-BEARING - it is what clears the
- *      fixed navbar (60px there). On academi it is not: the navbar clearance is spent on
- *      #page-wrapper (60px), the real navigation bar is .header-main, which is static and
- *      71px tall and sits IN the flow, and #page's 20px is decoration below it. So this may
- *      be zeroed here and must never be zeroed in styles_boost.css.
+ *   2. #page-header: 16px tall plus a 15px bottom margin, and empty on both plugin pages, where
+ *      other themes render it at zero height. display:none rather than a zero-height box: if the
+ *      region ever receives content, display:none also removes it from the accessibility tree,
+ *      whereas a collapsed box would leave focusable links reachable by keyboard but painted
+ *      nowhere.
  *
- *   2. #page-header: 16px tall with a 15px bottom margin. It is EMPTY on both plugin pages -
- *      innerText is "" for the whole subtree, #page-navbar, #course-header and the header
- *      actions container are all zero-height - so the 16px is an empty flex line box and the
- *      31px buys nothing. Every 5.x theme measured renders this same region at zero height on
- *      these pages, so collapsing it here makes academi agree with them rather than inventing
- *      a layout of its own.
- *
- * display:none rather than a zero height with hidden overflow, deliberately. If this region
- * ever does receive content, display:none takes it out of the accessibility tree with it; a
- * collapsed box would instead leave focusable links painted nowhere but still reachable by
- * keyboard and still announced - the exact defect this fleet has already shipped once, with
- * the clip technique in local_awareness.
- *
- * The doubled id anchor (#page #page-header) is for specificity: the theme styles these
- * elements with single-id and class selectors, and an id count is compared before anything
- * else, so this wins without !important, which is banned fleet-wide.
+ * The doubled id anchors outrank the theme's single-id and class selectors.
  */
 body.local-dimensions-viewplan #page-wrapper #page,
 body.local-dimensions-viewcompetency #page-wrapper #page {

@@ -28,21 +28,14 @@ final class calculator_course_percentage_test extends \advanced_testcase {
     /**
      * A deleted activity leaves the numerator as well as the denominator.
      *
-     * This is the defect the method exists for. On Moodle 4.5 core's own helper drops a module
-     * flagged for deletion from its denominator but keeps that module's completion row in its
-     * numerator, because count_modules_completed() takes no module list on that branch
-     * (MDL-60912, fixed in 5.0.7 and 5.1.4, never backported). Deleting an activity the learner
-     * had ALREADY COMPLETED therefore made the bar jump: two of four became two of three, 67%
-     * where 33% was the truth, and clamp_percentage() cannot see it because the value never
-     * passes 100.
+     * Pins the Moodle 4.5 core defect {@see calculator::course_completion_percentage()} works
+     * around: core keeps a completed module that is being deleted in its numerator, so deleting
+     * one of two completed activities out of four would read 67% instead of 33%.
      *
-     * The first assertion is the control. It proves both completed activities really are in the
-     * count, so the second cannot pass by the deleted one never having counted at all.
+     * The first assertion is the control: both completed activities count before the deletion,
+     * so the second cannot pass because the deleted one never counted.
      *
-     * Note this scenario discriminates only on 4.5: 5.1 and 5.2 answer 33 through core as well,
-     * and this method reproduces core's later definition rather than replacing it, so on those
-     * branches no test can tell the two apart. That is the intended outcome, not a gap -
-     * test_an_activity_restricted_until_later_still_counts() is the pin that holds on all three.
+     * Only the 4.5 run discriminates: core on 5.1.4+ and 5.2 also answers 33.
      *
      * @return void
      */
@@ -69,14 +62,12 @@ final class calculator_course_percentage_test extends \advanced_testcase {
     /**
      * An activity hidden from the learner leaves the denominator.
      *
-     * On Moodle 4.5 core applies no visibility filter to its denominator at all -
-     * completion_info::get_activities() keeps every trackable module, hidden or not - so a
-     * learner could never reach 100% in a course holding a hidden tracked activity, and the
-     * card showed a 50% bar above a 100% section ring for the same person. 5.1 and 5.2 already
-     * exclude it through get_user_activities_with_completion(), which this method reproduces.
+     * On Moodle 4.5 core's denominator, completion_info::get_activities(), keeps hidden tracked
+     * activities, so the learner could never reach 100% and the bar would disagree with the
+     * section ring. 5.1 and 5.2 exclude them through get_user_activities_with_completion(), which
+     * the calculator reproduces; the test checks that the bar and the ring agree.
      *
-     * The first assertion is the control: it proves the second activity is one the count can
-     * see, so what follows measures its exclusion rather than its absence.
+     * The first assertion is the control: the second activity counts before it is hidden.
      *
      * @return void
      */
@@ -108,16 +99,14 @@ final class calculator_course_percentage_test extends \advanced_testcase {
     }
 
     /**
-     * An activity the learner cannot open YET still counts.
+     * An activity the learner cannot open yet still counts.
      *
-     * This is the line between "what is left to do" and "what is open right now", and both the
-     * bar and the rings must answer the first. A date-restricted activity shown greyed is
-     * uservisible = false, so counting only what is openable would let the number reach a
-     * finished-looking 100% while released-later work remained - and then walk BACKWARDS on the
-     * release date. calculator_visibility_test covers the rest of that rule; this pins the bar.
+     * The bar and the rings measure what is left to do, not only what is open now. A
+     * date-restricted activity shown greyed is not uservisible; leaving it out would show 100%
+     * while work remains and then drop back on the release date. calculator_visibility_test
+     * covers the rest of that rule; this pins the bar.
      *
-     * The first assertion is the control: it proves the third activity counts before the
-     * restriction, so the second measures the restriction rather than the fixture.
+     * The first assertion is the control: the third activity counts before the restriction.
      *
      * @return void
      */
@@ -208,9 +197,9 @@ final class calculator_course_percentage_test extends \advanced_testcase {
     /**
      * Puts a module into the state core's asynchronous deletion leaves it in.
      *
-     * Built directly rather than through the delete API because that API is a different function
-     * on each supported branch - see the twin helper in calculator_progress_test - and these two
-     * writes are the whole of the state under test.
+     * Built directly rather than through the delete API, which differs by branch (see
+     * calculator_progress_test::schedule_deletion()); the flag and a rebuilt course cache are
+     * the whole state under test.
      *
      * @param int $courseid The course the module belongs to.
      * @param int $cmid The course module scheduled for deletion.
@@ -227,8 +216,8 @@ final class calculator_course_percentage_test extends \advanced_testcase {
     /**
      * Restricts a module by a future date, leaving it shown greyed rather than hidden.
      *
-     * showc true is what makes core count the module and the section ring skip it, which is the
-     * whole point of the fixture.
+     * showc true keeps the module listed (greyed) on the course page, so it stays in the
+     * learner's workload although it cannot be opened yet; that is the point of the fixture.
      *
      * @param int $cmid The course module to restrict.
      * @return void

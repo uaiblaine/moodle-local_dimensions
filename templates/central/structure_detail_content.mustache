@@ -17,12 +17,12 @@
 {{!
     @template local_dimensions/central/structure_detail_content
 
-    Shared body of the Structure-tab competency detail card: a brand gradient header
-    (title + taxonomy badge + rule/label/id/scale/tag chips) over a white body with the
-    linked courses/activities/plans metric cards, the description and — inline only — the
-    referenced-competency chips. All values are placeholders populated client-side by
-    local_dimensions/central/structure from the selected node (inline) or the
-    local_dimensions_get_structure_node web service (referenced-competency modal).
+    Shared body of the competency detail card: a brand gradient header (title, taxonomy
+    badge and rule/label/id/scale/tag chips) over a body with the linked courses/activities/
+    plans metric cards, the description and, inline only, the referenced-competency chips.
+    All values are placeholders filled client-side by local_dimensions/central/competency_detail,
+    from the selected node's data attributes (Structure tab pane) or from the
+    local_dimensions_get_structure_node web service (the detail modal).
 
     The same partial dresses both surfaces so they stay visually identical; two flags tune it:
     * linksclickable (bool) · metric values are clickable buttons that open the usage modal

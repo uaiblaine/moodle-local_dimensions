@@ -14,10 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Refresh control for the Competency hub's data-dense modals (participants, links). Injects one
- * header button that reloads the active content through a caller-supplied callback, and owns the
- * busy state (disable + spinning icon while the reload runs, cleared in a finally so a failed
- * reload never leaves the button stuck). Shares the close-button chip's look with the size toggle.
+ * Refresh control for the Competency hub's data-dense modals (participants, "Courses & activities",
+ * template import preview). Injects one header button that reloads the active content through a
+ * caller-supplied callback, and owns the busy state (disable + spinning icon while the reload runs,
+ * cleared in a finally so a failed reload never leaves the button stuck). Shares the close-button
+ * chip's look with the size toggle.
  *
  * @module     local_dimensions/central/modal_refresh
  * @copyright  2026 Anderson Blaine

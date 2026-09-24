@@ -27,9 +27,9 @@ namespace local_dimensions;
 /**
  * Cache helper for template-based course caching.
  *
- * This class provides efficient caching of valid course IDs per learning plan template.
- * Since all plans from the same template share the same competencies and linked courses,
- * we cache by template ID to serve hundreds of thousands of students with a single cache entry.
+ * Caches the ids of the courses linked to a learning plan template's competencies. Every plan
+ * based on a template shares its competencies, so one entry per template serves all its learners;
+ * a plan with no template is read uncached.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine (anderson@blaine.com.br)
@@ -53,7 +53,7 @@ class template_course_cache {
      * Get valid course IDs for a template.
      *
      * @param int $templateid The template ID.
-     * @return array Array of course IDs linked to all competencies in the template.
+     * @return array Ids of the courses linked to any competency in the template.
      */
     public static function get_courses_for_template(int $templateid): array {
         $cache = self::get_cache();
@@ -74,7 +74,7 @@ class template_course_cache {
      * Get valid course IDs for a plan (uses the plan's template).
      *
      * @param \core_competency\plan $plan The plan object.
-     * @return array Array of course IDs linked to all competencies in the plan's template.
+     * @return array Ids of the courses linked to any competency in the plan or its template.
      */
     public static function get_courses_for_plan(\core_competency\plan $plan): array {
         $templateid = $plan->get('templateid');
