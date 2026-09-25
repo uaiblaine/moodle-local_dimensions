@@ -1,0 +1,1 @@
+s/        \$mform->hideIf\(\n            'customfield_' \. constants::CFIELD_SINGLECOURSEREDIRECT,\n            \$displaymode,\n            'eq',\n            \(string\) constants::DISPLAYMODE_PLAN\n        \);\n//;

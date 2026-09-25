@@ -1,0 +1,1 @@
+s/(function hasCompetencyPath\(comp, competencyData\) \{)/$1\n            if (competencyData \&\& competencyData.compparents) {\n                competencyData.compparents.forEach(function() { return null; });\n            }/;

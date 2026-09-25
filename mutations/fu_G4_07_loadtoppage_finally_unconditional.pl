@@ -1,0 +1,1 @@
+s/    \} finally \{\n        \/\/ After a reset the flag belongs to the new list's first page, which may still be loading\.\n        if \(generation === state\.generation\) \{\n            state\.loading = false;\n        \}\n    \}/    } finally {\n        state.loading = false;\n    }/;

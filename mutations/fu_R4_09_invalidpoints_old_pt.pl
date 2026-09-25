@@ -1,0 +1,1 @@
+s/\$string\['central_rule_invalidpoints'\] = 'Os pontos devem ser números inteiros maiores ou iguais a zero\. Os pontos necessários devem ser pelo menos 1, e o total de pontos disponíveis deve ser ao menos igual aos pontos necessários\.';/\$string['central_rule_invalidpoints'] = 'O total de pontos disponíveis deve ser ao menos igual aos pontos necessários.';/;

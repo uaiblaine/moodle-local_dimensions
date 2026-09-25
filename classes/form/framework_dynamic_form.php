@@ -269,13 +269,15 @@ class framework_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Validate shortname uniqueness within the context and that the scale configuration is complete.
+     * Validate shortname and idnumber uniqueness and that the scale configuration is complete.
      *
      * @param array $data Submitted data.
      * @param array $files Submitted files.
      * @return array
      */
     public function validation($data, $files) {
+        global $DB;
+
         $errors = parent::validation($data, $files);
 
         $id = (int) ($data['id'] ?? 0);
@@ -285,6 +287,20 @@ class framework_dynamic_form extends \core_form\dynamic_form {
             $existing = competency_framework::get_record(['shortname' => $shortname, 'contextid' => $contextid]);
             if ($existing && (int) $existing->get('id') !== $id) {
                 $errors['shortname'] = get_string('central_plans_import_reason_shortnametaken', 'local_dimensions');
+            }
+        }
+
+        /* Site-wide, unlike the shortname: the same query as competency_framework::validate_idnumber(),
+           which otherwise refuses the save with an exception instead of a field error. */
+        $idnumber = $data['idnumber'] ?? '';
+        if ($idnumber !== '') {
+            $taken = $DB->record_exists_select(
+                competency_framework::TABLE,
+                'idnumber = :idnumber AND id <> :id',
+                ['idnumber' => $idnumber, 'id' => $id]
+            );
+            if ($taken) {
+                $errors['idnumber'] = get_string('idnumbertaken', 'error');
             }
         }
 

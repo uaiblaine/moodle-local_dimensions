@@ -1,0 +1,1 @@
+s/\$options = self::split_select_options\(\(string\) \$config\['options'\]\);\n        return \$options\[\$index - 1\] \?\? '';/\$options = explode("\\n", (string) \$config['options']);\n        return \$options[\$index - 1] ?? '';/;

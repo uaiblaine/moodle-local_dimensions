@@ -28,7 +28,6 @@
     * hascompetencies (bool) - Whether there are competencies
     * competencies (array) - Array of competency objects with:
         - id, planorder, shortname (plain text), isproficient, rating, hasrating, isfavourite
-        - badgeproficienticonurl, badgewarningiconurl
         - sublinetext, hassublinetext, filtervaluesjson
     * candetail (bool) - Whether the viewer may open a competency's detail; false renders plain headers and a notice
     * competencycount (int) - Total competencies
@@ -330,10 +329,10 @@
                                 {{#hasrating}}
                                 <span class="local-dimensions-grade-badge {{#isproficient}}badge-proficient{{/isproficient}}{{^isproficient}}badge-not-proficient{{/isproficient}}">
                                     {{#isproficient}}
-                                    <img class="local-dimensions-grade-badge-icon" src="{{badgeproficienticonurl}}" alt="" aria-hidden="true">
+                                    <span class="local-dimensions-grade-badge-icon local-dimensions-grade-badge-icon-proficient" aria-hidden="true"></span>
                                     {{/isproficient}}
                                     {{^isproficient}}
-                                    <img class="local-dimensions-grade-badge-icon" src="{{badgewarningiconurl}}" alt="" aria-hidden="true">
+                                    <span class="local-dimensions-grade-badge-icon local-dimensions-grade-badge-icon-warning" aria-hidden="true"></span>
                                     {{/isproficient}}
                                     {{rating}}
                                 </span>

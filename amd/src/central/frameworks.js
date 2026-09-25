@@ -281,9 +281,11 @@ const downloadFramework = async(modal) => {
     if (!frameworkid) {
         return;
     }
+    // Only this spinner is removed afterwards: the loader's visually hidden label is what it announces.
+    const spinner = makeSpinner();
     button.disabled = true;
     loader.hidden = false;
-    loader.append(makeSpinner());
+    loader.append(spinner);
     try {
         const result = await Ajax.call([{
             methodname: 'local_dimensions_export_framework',
@@ -296,7 +298,7 @@ const downloadFramework = async(modal) => {
     } finally {
         button.disabled = false;
         loader.hidden = true;
-        loader.replaceChildren();
+        spinner.remove();
     }
 };
 

@@ -70,7 +70,10 @@ class sync_template_cohort extends \core\task\adhoc_task {
     }
 
     /**
-     * Create the cohort's missing plans, skipping silently if the template/relation is gone.
+     * Create the cohort's missing plans.
+     *
+     * Skips silently when the template or the relation is gone, and prints the reason when core
+     * would refuse the pair ({@see self::refusal()}).
      *
      * @return void
      */
@@ -89,6 +92,45 @@ class sync_template_cohort extends \core\task\adhoc_task {
         if (!template_cohort::get_relation($templateid, $cohortid)->get('id')) {
             return;
         }
+        $refusal = self::refusal(new template($templateid), $cohortid);
+        if ($refusal !== '') {
+            mtrace('local_dimensions: no plans created from template ' . $templateid . ' for cohort '
+                . $cohortid . ': ' . $refusal . '.');
+            return;
+        }
         api::create_plans_from_template_cohort($templateid, $cohortid, $recreateunlinked);
+    }
+
+    /**
+     * Why api::create_plans_from_template_cohort() would refuse to run, checked before calling it.
+     *
+     * Mirrors the preconditions that method throws on, in its order, for the user the task runs
+     * as. Each one outlasts a retry, and a throwing adhoc task is retried and blocks a fresh
+     * queue() of the same pair, so the task reports them and finishes instead.
+     *
+     * @param template $template The template the plans come from.
+     * @param int $cohortid The cohort whose members get plans.
+     * @return string The reason, or '' when the plans can be created.
+     */
+    private static function refusal(template $template, int $cohortid): string {
+        global $DB;
+
+        if (!api::is_enabled()) {
+            return 'competencies are disabled';
+        }
+        if (!$template->can_read()) {
+            return 'the task user cannot view the template';
+        }
+        if (!$template->get('visible')) {
+            return 'the template is hidden';
+        }
+        $cohort = $DB->get_record('cohort', ['id' => $cohortid], 'id, contextid, visible');
+        if (!$cohort) {
+            return 'the cohort no longer exists';
+        }
+        if (!$cohort->visible && !has_capability('moodle/cohort:view', \context::instance_by_id($cohort->contextid))) {
+            return 'the task user cannot view the hidden cohort';
+        }
+        return '';
     }
 }

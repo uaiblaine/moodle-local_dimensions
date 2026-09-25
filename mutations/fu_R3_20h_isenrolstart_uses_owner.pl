@@ -1,0 +1,1 @@
+s/\$isenrolstart = \\local_dimensions\\calculator::get_enrolment_start_date\(\n                    \$fullcourse,\n                    \$USER->id\n                \) !== null;/\$isenrolstart = \\local_dimensions\\calculator::get_enrolment_start_date(\n                    \$fullcourse,\n                    \$ownerid\n                ) !== null;/;

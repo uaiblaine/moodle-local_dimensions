@@ -1,0 +1,1 @@
+s/\$categories = array_filter\(\n            \$handler->get_categories_with_fields\(\),\n            static fn\(category_controller \$category\): bool => \$category->get\('component'\) === \$handler->get_component\(\)\n                && \$category->get\('area'\) === \$handler->get_area\(\)\n        \);/\$categories = \$handler->get_categories_with_fields();/;

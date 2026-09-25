@@ -214,4 +214,75 @@ final class helper_cascade_test extends \advanced_testcase {
         $this->set_lp($templateid, constants::CFIELD_SHOWRELATED, $keys, constants::SHOWRELATED_YES);
         $this->assertTrue(helper::resolve_showrelated_for_template($templateid));
     }
+
+    /**
+     * singlecourseredirect resolves competency -> plan -> global, and templateid=0 skips the plan.
+     *
+     * @return void
+     */
+    public function test_singlecourseredirect_cascade(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+        helper::ensure_custom_fields_exist(helper::AREA_COMPETENCY);
+        set_config('singlecourseredirect', 1, 'local_dimensions');
+
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework();
+        $compid = (int) $ccg->create_competency(['competencyframeworkid' => $framework->get('id')])->get('id');
+        $templateid = (int) $ccg->create_template()->get('id');
+        $keys = array_keys(constants::singlecourseredirect_options());
+
+        // Both inherit -> global (on).
+        $this->assertTrue(helper::resolve_singlecourseredirect_for_view($compid, $templateid));
+
+        // Plan = no, competency inherits -> plan (off).
+        $this->set_lp($templateid, constants::CFIELD_SINGLECOURSEREDIRECT, $keys, constants::SINGLECOURSEREDIRECT_NO);
+        $this->assertFalse(helper::resolve_singlecourseredirect_for_view($compid, $templateid));
+        // A templateid of 0 skips the plan -> global (on).
+        $this->assertTrue(helper::resolve_singlecourseredirect_for_view($compid, 0));
+
+        // Competency = yes -> competency wins over the plan's no.
+        $cdata = (object) ['id' => $compid];
+        $cdata->{'customfield_' . constants::CFIELD_SINGLECOURSEREDIRECT} =
+            array_search(constants::SINGLECOURSEREDIRECT_YES, $keys, true) + 1;
+        competency_handler::create()->instance_form_save($cdata, false);
+        $this->assertTrue(helper::resolve_singlecourseredirect_for_view($compid, $templateid));
+
+        // Competency = no with a global on and a plan set to yes -> competency still wins.
+        $this->set_lp($templateid, constants::CFIELD_SINGLECOURSEREDIRECT, $keys, constants::SINGLECOURSEREDIRECT_YES);
+        $cdata->{'customfield_' . constants::CFIELD_SINGLECOURSEREDIRECT} =
+            array_search(constants::SINGLECOURSEREDIRECT_NO, $keys, true) + 1;
+        competency_handler::create()->instance_form_save($cdata, false);
+        $this->assertFalse(helper::resolve_singlecourseredirect_for_view($compid, $templateid));
+    }
+
+    /**
+     * showrelatedlink resolves plan -> global (2-level, no competency layer).
+     *
+     * @return void
+     */
+    public function test_showrelatedlink_cascade(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+        set_config('showrelatedlink', 1, 'local_dimensions');
+
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $templateid = (int) $ccg->create_template()->get('id');
+        $keys = array_keys(constants::showrelatedlink_options());
+
+        // Inherit -> global (on).
+        $this->assertTrue(helper::resolve_showrelatedlink_for_template($templateid));
+        // Plan = no -> off, whatever the global says.
+        $this->set_lp($templateid, constants::CFIELD_SHOWRELATEDLINK, $keys, constants::SHOWRELATED_NO);
+        $this->assertFalse(helper::resolve_showrelatedlink_for_template($templateid));
+        // Plan = yes -> on, even with the global off.
+        set_config('showrelatedlink', 0, 'local_dimensions');
+        $this->set_lp($templateid, constants::CFIELD_SHOWRELATEDLINK, $keys, constants::SHOWRELATED_YES);
+        $this->assertTrue(helper::resolve_showrelatedlink_for_template($templateid));
+        // Back to inherit -> global (off).
+        $this->set_lp($templateid, constants::CFIELD_SHOWRELATEDLINK, $keys, constants::SHOWRELATED_INHERIT);
+        $this->assertFalse(helper::resolve_showrelatedlink_for_template($templateid));
+    }
 }

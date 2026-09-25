@@ -122,6 +122,9 @@ final class view_plan_summary_page_test extends advanced_testcase {
      */
     public function test_defaults_keep_plan_order_and_enable_the_star(): void {
         $this->resetAfterTest();
+        // The test site's install stored the checkbox default, so it has to be removed here.
+        unset_config('enablefavourites', 'local_dimensions');
+        $this->assertFalse(get_config('local_dimensions', 'enablefavourites'));
         $fixture = $this->create_plan_with_competencies();
         $this->setUser($fixture['user']);
 
@@ -135,6 +138,25 @@ final class view_plan_summary_page_test extends advanced_testcase {
         $this->assertTrue($data['showstar']);
         $this->assertSame(0, $data['favouritecount']);
         $this->assertFalse($data['hasfavourites']);
+    }
+
+    /**
+     * A competency list core refuses surfaces as core's error, not as a plan with nothing in it.
+     *
+     * @return void
+     */
+    public function test_a_refused_competency_list_is_not_an_empty_plan(): void {
+        $this->resetAfterTest();
+        $fixture = $this->create_plan_with_competencies();
+        $this->setUser($fixture['user']);
+        // Control: the same viewer reads all three competencies while competencies are on.
+        $this->assertCount(3, $this->export($fixture['plan'])['competencies']);
+
+        set_config('enabled', 0, 'core_competency');
+
+        $this->expectException(\moodle_exception::class);
+        $this->expectExceptionMessage(get_string('competenciesarenotenabled', 'core_competency'));
+        $this->export($fixture['plan']);
     }
 
     /**

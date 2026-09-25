@@ -258,20 +258,21 @@ class lp_handler extends handler {
     /**
      * Save form data including built-in image.
      *
-     * Always saves with $isnewinstance = true, for new and existing templates alike, so the
-     * values event reports isnew = true on every save through this method.
+     * Both events of one save report the same isnew: the values event through
+     * instance_form_save(), and the image event.
      *
      * @param \stdClass $data The submitted form data.
+     * @param bool $isnew Whether the template was created by this submission.
      * @param int $instanceid The template ID.
      */
-    public function instance_form_save_with_image(\stdClass $data, int $instanceid): void {
+    public function instance_form_save_with_image(\stdClass $data, bool $isnew, int $instanceid): void {
         try {
-            $this->instance_form_save($data, true);
+            $this->instance_form_save($data, $isnew);
         } catch (\dml_write_exception $e) {
             /* Two users first-saving the same instance race the id-0 INSERT into
                customfield_data's unique index; the retry re-reads the instance
                data, finds the committed row and takes the update path. */
-            $this->instance_form_save($data, true);
+            $this->instance_form_save($data, $isnew);
         }
 
         // In built-in mode, save the uploaded image and log a change of it.
@@ -279,7 +280,7 @@ class lp_handler extends handler {
             $before = $this->snapshot_image_hashes('lp', $instanceid);
             picture_manager::save_all_from_form($data, 'lp', $instanceid);
             $changed = $this->diff_image_hashes($before, $this->snapshot_image_hashes('lp', $instanceid));
-            $this->trigger_customfields_updated(template_customfields_updated::class, $instanceid, false, $changed);
+            $this->trigger_customfields_updated(template_customfields_updated::class, $instanceid, $isnew, $changed);
         }
     }
 

@@ -167,22 +167,10 @@ class template_dynamic_form extends \core_form\dynamic_form {
         // Show each cascade setting only for the display mode it affects. The displaymode select
         // submits the 1-based option index, which equals the DISPLAYMODE_* constant by construction.
         $displaymode = 'customfield_' . constants::CFIELD_DISPLAYMODE;
-        // The single-course redirect and locked-card settings only affect the competency tracker,
-        // so hide them in plan mode.
+        // The single-course redirect acts on the competency tracker only, so plan mode hides it. The
+        // locked-card settings stay in both modes: view-plan.php passes them to the plan overview too.
         $mform->hideIf(
             'customfield_' . constants::CFIELD_SINGLECOURSEREDIRECT,
-            $displaymode,
-            'eq',
-            (string) constants::DISPLAYMODE_PLAN
-        );
-        $mform->hideIf(
-            'customfield_' . constants::CFIELD_LOCKEDCARDMODE,
-            $displaymode,
-            'eq',
-            (string) constants::DISPLAYMODE_PLAN
-        );
-        $mform->hideIf(
-            'customfield_' . constants::CFIELD_SHOWLOCKEDDATE,
             $displaymode,
             'eq',
             (string) constants::DISPLAYMODE_PLAN
@@ -312,8 +300,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
         }
 
         $data->id = $templateid;
-        // The lp_handler uses a 2-arg signature (data, instanceid), unlike competency_handler's 3-arg.
-        lp_handler::create()->instance_form_save_with_image($data, $templateid);
+        lp_handler::create()->instance_form_save_with_image($data, $id <= 0, $templateid);
 
         \local_dimensions\template_metadata_cache::invalidate_template($templateid);
         if (get_config('local_dimensions', 'enablecustomscss')) {

@@ -89,7 +89,7 @@ class get_course_progress extends external_api {
                     continue;
                 }
 
-                $data = calculator::get_course_section_progress($courseid);
+                $data = static::progress_data((int) $courseid);
 
                 // Prepare structured return.
                 $sections = [];
@@ -142,8 +142,8 @@ class get_course_progress extends external_api {
                 }
 
                 $results[] = $row;
-            } catch (\Exception $e) {
-                // Error fallback.
+            } catch (\Throwable $e) {
+                // One course's failure, an \Error included, becomes that course's row, not the whole response's.
                 $results[] = [
                     'courseid' => $courseid,
                     'enabled' => false,
@@ -161,6 +161,18 @@ class get_course_progress extends external_api {
         }
 
         return $results;
+    }
+
+    /**
+     * One course's progress, as the calculator reports it.
+     *
+     * Its own method so a test can make a single course fail and check that the others still answer.
+     *
+     * @param int $courseid A course the viewer may be told about.
+     * @return array The calculator's result.
+     */
+    protected static function progress_data(int $courseid): array {
+        return calculator::get_course_section_progress($courseid);
     }
 
     /**

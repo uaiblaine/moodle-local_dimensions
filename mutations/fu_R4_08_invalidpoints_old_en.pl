@@ -1,0 +1,1 @@
+s/\$string\['central_rule_invalidpoints'\] = 'Points must be whole numbers of zero or more\. The required points must be at least 1, and the total available points must be at least the required points\.';/\$string['central_rule_invalidpoints'] = 'The total available points must be at least the required points.';/;

@@ -1,0 +1,1 @@
+s/    protected static function format_value\(string \$value\): string \{\n        if \(\$value === ''\) \{\n            return '';\n        \}\n        return format_string\(\$value, true, \['context' => \\core\\context\\system::instance\(\), 'escape' => false\]\);\n    \}/    protected static function format_value(string \$value): string {\n        return \$value;\n    }/;

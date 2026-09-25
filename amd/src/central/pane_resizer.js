@@ -75,10 +75,12 @@ export const initMasterResizer = ({body, resizer, master, cssvar, storagekey, mi
     resizer.setAttribute('aria-valuemax', String(maximum));
     let startx = 0;
     let startwidth = 0;
+    let lastwidth = null;
     resizer.addEventListener('pointerdown', (event) => {
         event.preventDefault();
         startx = event.clientX;
         startwidth = master ? master.getBoundingClientRect().width : body.getBoundingClientRect().width;
+        lastwidth = null;
         body.classList.add('resizing');
         resizer.setPointerCapture(event.pointerId);
     });
@@ -87,7 +89,7 @@ export const initMasterResizer = ({body, resizer, master, cssvar, storagekey, mi
             return;
         }
         // Relative delta from the grab point keeps the divider under the cursor with no jump.
-        applyWidth(startwidth + event.clientX - startx);
+        lastwidth = applyWidth(startwidth + event.clientX - startx);
     });
     resizer.addEventListener('pointerup', (event) => {
         if (!body.classList.contains('resizing')) {
@@ -102,6 +104,21 @@ export const initMasterResizer = ({body, resizer, master, cssvar, storagekey, mi
         }
         persist(width);
     });
+    /* A drag the browser takes over (a touch turned into a pan) or loses the capture of gets no
+       pointerup, and a drag left open keeps resizing on any later hover. It ends here at the width
+       it last showed: a cancelled event's coordinates are not a drop point. After a normal pointerup
+       the drag is already over, so the lostpointercapture that follows it does nothing. */
+    const cancelDrag = () => {
+        if (!body.classList.contains('resizing')) {
+            return;
+        }
+        body.classList.remove('resizing');
+        if (lastwidth !== null) {
+            persist(lastwidth);
+        }
+    };
+    resizer.addEventListener('pointercancel', cancelDrag);
+    resizer.addEventListener('lostpointercapture', cancelDrag);
     resizer.addEventListener('dblclick', () => {
         body.style.removeProperty(cssvar);
         try {

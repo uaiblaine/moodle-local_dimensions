@@ -324,9 +324,8 @@ class template_csv_importer {
      * Write the custom fields through the handler, back-filling the identity column on create.
      *
      * Not by SQL, and not through {@see lp_handler::instance_form_save_with_image()}: that
-     * hardcodes $isnewinstance = true, which would mislabel the audit event, and retries on
-     * dml_write_exception, which cannot recover inside a PostgreSQL transaction that the failed
-     * statement has already aborted.
+     * retries on dml_write_exception, which cannot recover inside a PostgreSQL transaction that
+     * the failed statement has already aborted.
      *
      * @param array $item The freshly projected item.
      * @param \stdClass $row The parsed source row.

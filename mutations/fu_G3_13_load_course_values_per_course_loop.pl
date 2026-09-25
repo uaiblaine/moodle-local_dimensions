@@ -1,0 +1,1 @@
+s/\$instances = \\core_course\\customfield\\course_handler::create\(\)->get_instances_data\(\$courseids, true\);/\$instances = [];\n            foreach (\$courseids as \$cid) {\n                \$instances[\$cid] = \\core_course\\customfield\\course_handler::create()->get_instance_data(\$cid, true);\n            }/;

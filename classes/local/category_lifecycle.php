@@ -28,16 +28,18 @@ use core_competency\template;
  * Core's course category deletion ignores competency data: it deletes the category context and
  * leaves competency_framework and competency_template rows pointing at it, where no listing
  * shows them and nothing can delete them. Neither core nor tool_lp registers a callback, so
- * this class answers the four core offers (lib.php forwards them):
+ * this class answers the five core offers (lib.php forwards them):
  *
- * - "Delete all" refuses when anything in the category is in use, mirroring core's refusal to
- *   delete a competency that is still referenced, and deletes the rest through the competency API.
+ * - "Delete all" is not offered, and refuses, when anything in the category or below it is in
+ *   use, mirroring core's refusal to delete a competency that is still referenced; otherwise it
+ *   deletes the category's frameworks and templates through the competency API.
  * - "Move contents" re-homes the category's frameworks and templates to the destination
  *   category, and is offered only to a viewer who may manage them there.
  *
- * Only the category's own context is handled per call: delete_full() recurses into child
- * categories and calls the callbacks again for each, and delete_move() moves child
- * categories whole, contexts included.
+ * Deleting and moving handle the category's own context per call: delete_full() recurses into
+ * child categories and calls the callbacks again for each, and delete_move() moves child
+ * categories whole, contexts included. The in-use check alone reads the whole subtree, because
+ * delete_full() runs the parent's callback, which deletes, before any child's can refuse.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -94,6 +96,42 @@ class category_lifecycle {
     }
 
     /**
+     * Count the frameworks and templates in use in the category and every category below it.
+     *
+     * @param int $categoryid The course category id.
+     * @return int Objects that block a "Delete all" of the category.
+     */
+    public static function inuse_in_tree(int $categoryid): int {
+        global $DB;
+
+        $context = \context_coursecat::instance($categoryid, IGNORE_MISSING);
+        if (!$context) {
+            return 0;
+        }
+        $categoryids = $DB->get_fieldset_select(
+            'context',
+            'instanceid',
+            'contextlevel = :level AND (id = :contextid OR ' . $DB->sql_like('path', ':descendants') . ')',
+            ['level' => CONTEXT_COURSECAT, 'contextid' => $context->id, 'descendants' => $context->path . '/%']
+        );
+        $inuse = 0;
+        foreach ($categoryids as $id) {
+            $inuse += self::summary((int) $id)['inuse'];
+        }
+        return $inuse;
+    }
+
+    /**
+     * Whether "Delete all" may delete the category's competency data.
+     *
+     * @param int $categoryid The course category id.
+     * @return bool False while anything in the category or below it is in use.
+     */
+    public static function can_delete_contents(int $categoryid): bool {
+        return self::inuse_in_tree($categoryid) === 0;
+    }
+
+    /**
      * The line the category deletion form shows about competency data, or '' when there is none.
      *
      * @param int $categoryid The course category id.
@@ -108,20 +146,25 @@ class category_lifecycle {
     }
 
     /**
-     * Delete the category's frameworks and templates, or refuse when any of them is in use.
+     * Delete the category's frameworks and templates, or refuse when anything in its tree is in use.
      *
-     * Runs from core's pre_course_category_delete callback, before core deletes anything, so a
-     * refusal leaves the category and everything in it untouched.
+     * Runs from core's pre_course_category_delete callback, before core deletes anything in the
+     * category and before it recurses into the child categories, so a refusal leaves the whole
+     * tree untouched. The check is the one can_delete_contents() makes, repeated for callers that
+     * reach delete_full() without asking can_delete_full() first.
      *
      * @param \stdClass $category The course category record.
      * @return void
-     * @throws \moodle_exception When a framework or template in the category is still in use.
+     * @throws \moodle_exception When a framework or template in the category or below it is still in use.
      */
     public static function delete_contents(\stdClass $category): void {
-        $summary = self::summary((int) $category->id);
-        if ($summary['inuse'] > 0) {
-            $summary['category'] = format_string($category->name, true, ['context' => \context_system::instance()]);
-            throw new \moodle_exception('central_categorydelete_blocked', 'local_dimensions', '', (object) $summary);
+        $inuse = self::inuse_in_tree((int) $category->id);
+        if ($inuse > 0) {
+            $a = (object) [
+                'category' => format_string($category->name, true, ['context' => \context_system::instance()]),
+                'inuse' => $inuse,
+            ];
+            throw new \moodle_exception('central_categorydelete_blocked', 'local_dimensions', '', $a);
         }
         foreach (self::templates((int) $category->id) as $template) {
             api::delete_template((int) $template->get('id'), false);

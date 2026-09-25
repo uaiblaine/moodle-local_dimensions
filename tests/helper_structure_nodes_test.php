@@ -27,6 +27,7 @@ namespace local_dimensions;
 use advanced_testcase;
 use core_competency\api;
 use core_competency\competency;
+use core_competency\competency_framework;
 
 /**
  * Tests for helper::structure_nodes() activity-count and rule-label enrichment.
@@ -34,6 +35,17 @@ use core_competency\competency;
  * @covers \local_dimensions\helper::structure_nodes
  */
 final class helper_structure_nodes_test extends advanced_testcase {
+    /**
+     * Drop the handlers' cached field lists, which would outlive the rollback of the rows they hold.
+     *
+     * @return void
+     */
+    protected function tearDown(): void {
+        customfield\lp_handler::create()->reset_configuration_cache();
+        customfield\competency_handler::create()->reset_configuration_cache();
+        parent::tearDown();
+    }
+
     /**
      * A node reports its linked-course count, linked-activity count and a rule label.
      *
@@ -126,5 +138,80 @@ final class helper_structure_nodes_test extends advanced_testcase {
         $this->assertCount(1, $nodes);
         $this->assertSame('#ff0000', (string) $nodes[0]['bgcolor']);
         $this->assertSame('#ffffff', (string) $nodes[0]['textcolor']);
+    }
+
+    /**
+     * A blank line in a select's option text does not shift the label a node shows.
+     *
+     * Core's select skips blank lines, so with the options "Alpha", "", "Bravo" it offers two
+     * choices and stores Bravo as index 2.
+     *
+     * @return void
+     */
+    public function test_a_blank_option_line_does_not_shift_the_type_label(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        helper::ensure_custom_fields_exist(helper::AREA_COMPETENCY);
+
+        $field = helper::find_field_by_shortname(constants::CFIELD_TYPE, helper::AREA_COMPETENCY);
+        $this->assertNotNull($field);
+        $fieldid = (int) $field->get('id');
+        $config = json_decode((string) $DB->get_field('customfield_field', 'configdata', ['id' => $fieldid]), true);
+        $config['options'] = "Alpha\n\nBravo";
+        $DB->set_field('customfield_field', 'configdata', json_encode($config), ['id' => $fieldid]);
+        customfield\competency_handler::create()->reset_configuration_cache();
+
+        // Precondition: core's own select lists Bravo at index 2.
+        $field = helper::find_field_by_shortname(constants::CFIELD_TYPE, helper::AREA_COMPETENCY);
+        $this->assertSame(['', 'Alpha', 'Bravo'], array_values($field->get_options()));
+
+        $cgen = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $cgen->create_framework();
+        $competency = $cgen->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $competencyid = (int) $competency->get('id');
+        customfield\competency_handler::create()->instance_form_save(
+            (object) ['id' => $competencyid, 'customfield_' . constants::CFIELD_TYPE => 2],
+            false
+        );
+
+        $nodes = helper::structure_nodes([$competency], $framework, $framework->get_context());
+
+        $this->assertCount(1, $nodes);
+        $this->assertSame('Bravo', $nodes[0]['type']);
+        // The CSV export reads the same stored index through the field controller.
+        $this->assertSame('Bravo', helper::read_competency_select_label($competencyid, constants::CFIELD_TYPE));
+    }
+
+    /**
+     * Each node names the taxonomy its framework sets for the node's level, in core's words.
+     *
+     * @return void
+     */
+    public function test_nodes_name_the_taxonomy_of_their_level(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $cgen = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $cgen->create_framework([
+            'taxonomies' => implode(',', [
+                competency_framework::TAXONOMY_DOMAIN,
+                competency_framework::TAXONOMY_SKILL,
+            ]),
+        ]);
+        $root = $cgen->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $child = $cgen->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'parentid' => $root->get('id'),
+        ]);
+
+        $nodes = helper::structure_nodes([$root, $child], $framework, $framework->get_context());
+
+        $this->assertCount(2, $nodes);
+        $domain = (string) competency_framework::get_taxonomy_from_constant(competency_framework::TAXONOMY_DOMAIN);
+        $skill = (string) competency_framework::get_taxonomy_from_constant(competency_framework::TAXONOMY_SKILL);
+        $this->assertNotSame($domain, $skill);
+        $this->assertSame($domain, $nodes[0]['taxonomy']);
+        $this->assertSame($skill, $nodes[1]['taxonomy']);
     }
 }

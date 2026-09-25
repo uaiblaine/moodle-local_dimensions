@@ -1,0 +1,1 @@
+s/(        \/\* Core checks plan::can_manage\(\), which also admits planmanageown on the caller's own plan;\n           list_template_participants reports that same check as canmanage\. \*\/\n        api::delete_plan\(\$plan->get\('id'\)\);)/        require_capability('moodle\/competency:planmanage', \$plan->get_context());\n$1/;

@@ -268,7 +268,7 @@ define(
                 {key: 'yes', component: 'local_dimensions'},
                 {key: 'no', component: 'local_dimensions'},
                 {key: 'related_dimensions', component: 'local_dimensions'},
-                {key: 'evidence_type_file', component: 'local_dimensions'},
+                {key: 'rules_sr_progress_items', component: 'local_dimensions'},
                 {key: 'evidence_type_manual', component: 'local_dimensions'},
                 {key: 'evidence_type_activity', component: 'local_dimensions'},
                 {key: 'evidence_type_coursegrade', component: 'local_dimensions'},
@@ -360,7 +360,7 @@ define(
                     yesStr: strings[2],
                     noStr: strings[3],
                     relatedDimensions: strings[4],
-                    evidenceTypeFile: strings[5],
+                    rulesSrProgressItems: strings[5],
                     evidenceTypeManual: strings[6],
                     evidenceTypeActivity: strings[7],
                     evidenceTypeCoursegrade: strings[8],
@@ -498,20 +498,17 @@ define(
         }
 
         /**
-         * Whether the competency has a non-empty ancestry to show in the path footnote.
+         * Whether the competency has a path to show in the footnote.
          *
          * Mirrors renderDescriptionFootnote(), which draws no path when the framework shortname
-         * and the parent trail are both empty, so the Description tab is not opened for nothing.
+         * is empty, so the Description tab is not opened for nothing.
          *
          * @param {Object} comp The competency record
-         * @param {Object} competencyData The wrapped competency data (framework + compparents)
-         * @return {boolean} True when there is a framework shortname or at least one parent
+         * @param {Object} competencyData The wrapped competency data (competency + framework)
+         * @return {boolean} True when there is a framework shortname
          */
         function hasCompetencyPath(comp, competencyData) {
-            return !!(comp && displaySettings.showpath && (
-                competencyData?.framework?.shortname
-                || (Array.isArray(competencyData?.compparents) && competencyData.compparents.length > 0)
-            ));
+            return !!(comp && displaySettings.showpath && competencyData?.framework?.shortname);
         }
 
         /**
@@ -1027,7 +1024,7 @@ define(
             html += '<div class="local-dimensions-rules-progress-header">';
             html += '<span class="local-dimensions-rules-progress-label">' + escapeHtml(strMap.rulesProgress) + '</span>';
             html += '<span class="local-dimensions-rules-progress-score">';
-            html += data.earnedpoints + ' / ' + data.totalrequired + (isPoints ? ' pts' : '');
+            html += data.earnedpoints + ' / ' + data.totalrequired + (isPoints ? ' ' + escapeHtml(strMap.rulesPts) : '');
             html += '</span>';
             html += '</div>';
 
@@ -1035,7 +1032,8 @@ define(
             const pct = data.totalrequired > 0
                 ? Math.min(100, Math.round((data.earnedpoints / data.totalrequired) * 100))
                 : 0;
-            const srProgressText = strMap.rulesSrProgress
+            // An item-count rule reports completed children, not points, in the same two fields.
+            const srProgressText = (isPoints ? strMap.rulesSrProgress : strMap.rulesSrProgressItems)
                 .replace('{$a->earned}', data.earnedpoints)
                 .replace('{$a->total}', data.totalrequired);
             html += '<div class="local-dimensions-rules-progress-bar">';
@@ -1379,14 +1377,10 @@ define(
             let html = '<div class="local-dimensions-ev-list">';
 
             /* The decisive row leads and is then omitted from the journey below, so the same
-               fact is not stated twice. Only the LAST rule completion is decisive - an earlier
-               one was superseded. */
-            let decisiveIndex = -1;
-            evidence.forEach(function(ev, index) {
-                if (isRuleCompletion(ev)) {
-                    decisiveIndex = index;
-                }
-            });
+               fact is not stated twice. Only the most recent rule completion is decisive - an
+               earlier one was superseded - and core lists evidence newest first
+               (api::list_evidence), so it is the first match. */
+            const decisiveIndex = evidence.findIndex(isRuleCompletion);
 
             if (decisiveIndex >= 0) {
                 const decisive = evidence[decisiveIndex];
@@ -2539,24 +2533,11 @@ define(
          */
         function renderDescriptionFootnote(data, taxonomy, showPath, strMap) {
             let pathHtml = '';
-            if (showPath && data.competency) {
-                const pathParts = [];
-                if (data.framework?.shortname) {
-                    pathParts.push(escapeHtml(fromExporter(data.framework.shortname)));
-                }
-                if (Array.isArray(data.compparents)) {
-                    data.compparents.forEach(function(parent) {
-                        if (parent.shortname) {
-                            pathParts.push(escapeHtml(fromExporter(parent.shortname)));
-                        }
-                    });
-                }
-                if (pathParts.length > 0) {
-                    pathHtml = '<span class="local-dimensions-path-trail">' +
-                        '<i class="fa fa-sitemap" aria-hidden="true"></i> ' +
-                        pathParts.join(' <span class="local-dimensions-path-sep">&rsaquo;</span> ') +
-                        '</span>';
-                }
+            if (showPath && data.competency && data.framework?.shortname) {
+                pathHtml = '<span class="local-dimensions-path-trail">' +
+                    '<i class="fa fa-sitemap" aria-hidden="true"></i> ' +
+                    escapeHtml(fromExporter(data.framework.shortname)) +
+                    '</span>';
             }
 
             let taxHtml = '';
@@ -2701,15 +2682,9 @@ define(
                 };
             }
 
+            /* The payload says nothing about whether the linked evidence holds files: desca is the
+               name the learner gave it, so it cannot tell a file from any other prior learning. */
             if (descidentifier === 'evidence_evidenceofpriorlearninglinked') {
-                // Sub-check: if desca references a file, use file icon; otherwise prior learning.
-                if (evidence.desca?.includes('file')) {
-                    return {
-                        icon: 'fa-paperclip',
-                        label: strMap.evidenceTypeFile,
-                        colorClass: 'local-dimensions-evidence-file'
-                    };
-                }
                 return {
                     icon: 'fa-trophy',
                     label: strMap.evidenceTypePrior,
@@ -2743,14 +2718,6 @@ define(
                     icon: 'fa-pencil',
                     label: strMap.evidenceTypeManual,
                     colorClass: 'local-dimensions-evidence-manual'
-                };
-            }
-
-            if (evidence.desca?.includes('file')) {
-                return {
-                    icon: 'fa-paperclip',
-                    label: strMap.evidenceTypeFile,
-                    colorClass: 'local-dimensions-evidence-file'
                 };
             }
 

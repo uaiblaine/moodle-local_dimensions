@@ -105,6 +105,63 @@ final class competency_module_links_test extends \advanced_testcase {
     }
 
     /**
+     * Linking an activity that is already linked logs nothing: core adds no link, so there is no
+     * decision to record, while the row for the existing link still comes back.
+     *
+     * @return void
+     */
+    public function test_relinking_an_activity_logs_no_second_event(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$competencyid, , $cmid1] = $this->fixture();
+        $sink = $this->redirectEvents();
+
+        link_competency_module::execute($competencyid, $cmid1);
+        $again = link_competency_module::execute($competencyid, $cmid1);
+
+        $added = array_values(array_filter(
+            $sink->get_events(),
+            static fn($event): bool => $event instanceof \local_dimensions\event\module_link_added
+        ));
+        $sink->close();
+        // The control is the first call's event: the second adds none.
+        $this->assertCount(1, $added);
+        $linkid = (int) $DB->get_field('competency_modulecomp', 'id', ['competencyid' => $competencyid, 'cmid' => $cmid1]);
+        $this->assertSame($linkid, (int) $added[0]->objectid);
+        $this->assertSame($cmid1, (int) $again['cmid']);
+    }
+
+    /**
+     * Only the requested course's activity links are read: the same competency linked to an
+     * activity of another course, under another outcome, reaches neither list.
+     *
+     * @return void
+     */
+    public function test_links_in_another_course_stay_out(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$competencyid, $courseid, $cmid1, $cmid2] = $this->fixture();
+        $othercourseid = (int) $this->getDataGenerator()->create_course()->id;
+        link_competency_course::execute($competencyid, $othercourseid);
+        $othercmid = (int) $this->getDataGenerator()->create_module('assign', ['course' => $othercourseid])->cmid;
+        link_competency_module::execute($competencyid, $cmid1);
+        link_competency_module::execute($competencyid, $othercmid);
+        $recommend = \core_competency\course_module_competency::OUTCOME_RECOMMEND;
+        set_module_link_outcome::execute($competencyid, $othercmid, $recommend);
+
+        $result = get_competency_module_links::execute($competencyid, $courseid);
+
+        $this->assertSame([$cmid1], array_map(static fn($m): int => (int) $m['cmid'], $result['linked']));
+        $this->assertSame([$cmid2], array_map(static fn($m): int => (int) $m['cmid'], $result['available']));
+        $this->assertNotSame($recommend, (int) $result['linked'][0]['ruleoutcome']);
+        // The control: the other course reports its own link under its own outcome.
+        $other = get_competency_module_links::execute($competencyid, $othercourseid);
+        $this->assertSame([$othercmid], array_map(static fn($m): int => (int) $m['cmid'], $other['linked']));
+        $this->assertSame($recommend, (int) $other['linked'][0]['ruleoutcome']);
+    }
+
+    /**
      * Link / set outcome / unlink an activity round-trips.
      *
      * @return void

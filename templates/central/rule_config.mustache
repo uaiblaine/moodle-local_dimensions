@@ -19,7 +19,8 @@
 
     Body of the native competency rule-configuration modal: outcome selector, rule-type selector and
     (for the points rule) a per-child points table. The local_dimensions/central/rule_config AMD module
-    toggles the rule-type/points visibility and reads the values on save.
+    toggles the rule-type/points visibility and reads the values on save. Each per-child control is
+    named with tool_lp's own strings, as core's competency_rule_points template names them.
 
     Context variables required:
     * hasrule (bool) · ispoints (bool) · showerror (bool) · haschildren (bool) · requiredpoints (int)
@@ -82,13 +83,30 @@
                 {{#children}}
                 <tr data-competency="{{id}}">
                     <th scope="row">{{shortname}}</th>
-                    <td><input type="number" min="0" value="{{points}}" name="points" class="form-control"></td>
-                    <td><input type="checkbox" value="1" name="required" {{#required}}checked{{/required}}></td>
+                    <td>
+                        <label class="visually-hidden" for="local-dimensions-rule-points-{{id}}">
+                            {{#str}}pointsgivenfor, tool_lp, {{shortname}}{{/str}}
+                        </label>
+                        <input type="number" min="0" value="{{points}}" name="points" class="form-control"
+                               id="local-dimensions-rule-points-{{id}}">
+                    </td>
+                    <td>
+                        <label class="visually-hidden" for="local-dimensions-rule-required-{{id}}">
+                            {{#str}}aisrequired, tool_lp, {{shortname}}{{/str}}
+                        </label>
+                        <input type="checkbox" value="1" name="required" id="local-dimensions-rule-required-{{id}}"
+                               {{#required}}checked{{/required}}>
+                    </td>
                 </tr>
                 {{/children}}
                 <tr>
-                    <th scope="row">{{#str}}totalrequiredtocomplete, tool_lp{{/str}}</th>
-                    <td><input type="number" min="1" value="{{requiredpoints}}" name="requiredpoints" class="form-control"></td>
+                    <th scope="row" id="local-dimensions-rule-requiredpoints-label">
+                        {{#str}}totalrequiredtocomplete, tool_lp{{/str}}
+                    </th>
+                    <td>
+                        <input type="number" min="1" value="{{requiredpoints}}" name="requiredpoints" class="form-control"
+                               aria-labelledby="local-dimensions-rule-requiredpoints-label">
+                    </td>
                     <td></td>
                 </tr>
             </tbody>

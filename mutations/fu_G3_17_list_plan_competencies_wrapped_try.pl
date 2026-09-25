@@ -1,0 +1,1 @@
+s/\$pclist = api::list_plan_competencies\(\$this->plan->get\('id'\)\);/try {\n            \$pclist = api::list_plan_competencies(\$this->plan->get('id'));\n        } catch (\\Exception \$e) {\n            \$pclist = [];\n        }/;
