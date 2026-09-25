@@ -69,7 +69,8 @@ class chip_filters {
      * Read selected custom-field values for many courses.
      *
      * Uses the local_dimensions/course_customfields cache to avoid querying
-     * the same course twice across requests.
+     * the same course twice across requests. The cache holds the stored labels and is shared by
+     * every language, so the values are formatted for the viewer only after they leave it.
      *
      * @param int[] $courseids
      * @param string[] $shortnames
@@ -87,13 +88,11 @@ class chip_filters {
             $cid = (int) $cid;
             $cached = $cache->get($cid);
             if ($cached !== false && is_array($cached)) {
-                $result[$cid] = array_intersect_key($cached, array_flip($shortnames));
-                // Ensure every requested shortname is present (empty when missing).
+                $picked = [];
                 foreach ($shortnames as $sn) {
-                    if (!array_key_exists($sn, $result[$cid])) {
-                        $result[$cid][$sn] = '';
-                    }
+                    $picked[$sn] = self::format_value((string) ($cached[$sn] ?? ''));
                 }
+                $result[$cid] = $picked;
             } else {
                 $missing[] = $cid;
             }
@@ -106,7 +105,7 @@ class chip_filters {
                 $cache->set($cid, $values);
                 $picked = [];
                 foreach ($shortnames as $sn) {
-                    $picked[$sn] = $values[$sn] ?? '';
+                    $picked[$sn] = self::format_value((string) ($values[$sn] ?? ''));
                 }
                 $result[$cid] = $picked;
             }
@@ -116,38 +115,29 @@ class chip_filters {
     }
 
     /**
-     * Read every custom field value of the given courses, one course at a time.
+     * Read every custom field value of the given courses, in one query for all of them.
      *
      * @param int[] $courseids
      * @return array<int, array<string, string>>
      */
     protected static function load_course_values_batch(array $courseids): array {
-        $out = [];
-        foreach ($courseids as $cid) {
-            $out[(int) $cid] = [];
-        }
+        $courseids = array_map('intval', $courseids);
+        $out = array_fill_keys($courseids, []);
 
+        // Every field, not only the visible ones: that form runs can_view() per course, reading each course again.
         try {
-            $handler = \core_course\customfield\course_handler::create();
+            $instances = \core_course\customfield\course_handler::create()->get_instances_data($courseids, true);
         } catch (\Throwable $e) {
             return $out;
         }
 
-        // One get_instance_data() call per course; get_course_values() only asks for cache misses.
-        foreach ($courseids as $cid) {
-            $cid = (int) $cid;
-            try {
-                $datas = $handler->get_instance_data($cid, true);
-            } catch (\Throwable $e) {
-                continue;
-            }
+        foreach ($instances as $cid => $datas) {
             foreach ($datas as $data) {
                 $field = $data->get_field();
-                $shortname = $field->get('shortname');
                 // Same select-index-to-label resolution as the lp/competency path.
-                $out[$cid][$shortname] = self::display_value(
+                $out[(int) $cid][$field->get('shortname')] = self::display_value(
                     (string) $field->get('type'),
-                    (string) $field->get('configdata'),
+                    $field->get('configdata'),
                     $data->get_value()
                 );
             }
@@ -197,9 +187,29 @@ class chip_filters {
             $values[$sn] = '';
         }
         foreach ($rows as $row) {
-            $values[$row->shortname] = self::display_value($row->type, $row->configdata, $row->value);
+            $config = json_decode((string) $row->configdata, true);
+            $values[$row->shortname] = self::format_value(
+                self::display_value($row->type, is_array($config) ? $config : [], $row->value)
+            );
         }
         return $values;
+    }
+
+    /**
+     * A chip value as the viewer reads it: filtered (a multilang label resolves to one language)
+     * and stripped of markup, as core's own export_value() does for text and select fields.
+     *
+     * Plain spelling: the chips and each instance's data-filtervalues print it through double
+     * stashes, and both sides go through here, so they still match on the same value.
+     *
+     * @param string $value A stored value or select label from display_value().
+     * @return string
+     */
+    protected static function format_value(string $value): string {
+        if ($value === '') {
+            return '';
+        }
+        return format_string($value, true, ['context' => \core\context\system::instance(), 'escape' => false]);
     }
 
     /**
@@ -210,11 +220,12 @@ class chip_filters {
      * through here, so they match on the same label.
      *
      * @param string $type The custom-field type (e.g. select, text).
-     * @param string|null $configdata The field's JSON config, holding a select's options.
+     * @param array $config The field's decoded config, holding a select's options (the field
+     *                      persistent returns it decoded; a raw row carries it as JSON).
      * @param mixed $value The stored value.
      * @return string
      */
-    protected static function display_value(string $type, ?string $configdata, $value): string {
+    protected static function display_value(string $type, array $config, $value): string {
         if ($type !== 'select') {
             return self::stringify_value($value);
         }
@@ -222,8 +233,7 @@ class chip_filters {
         if ($index <= 0) {
             return '';
         }
-        $config = json_decode((string) $configdata, true);
-        $optstr = is_array($config) ? (string) ($config['options'] ?? '') : '';
+        $optstr = (string) ($config['options'] ?? '');
         $options = preg_split("/\s*\n\s*/", trim($optstr), -1, PREG_SPLIT_NO_EMPTY) ?: [];
         return $options[$index - 1] ?? '';
     }

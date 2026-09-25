@@ -1,0 +1,1 @@
+s/\$courses = \\local_dimensions\\calculator::filter_courses_by_enrollment\(\$courses, \$ownerid, \$filtermode\);/\$courses = \\local_dimensions\\calculator::filter_courses_by_enrollment(\$courses, \$USER->id, \$filtermode);/;

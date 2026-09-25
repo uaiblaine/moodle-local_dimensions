@@ -71,6 +71,19 @@ clone inside a checkout, no rsync. Everything runs through the fleet's `mdl` CLI
 agent's Bash), and git runs from this directory (or `git -C`). `git fetch && git pull`
 before starting so you don't build on a stale base.
 
+### In a Claude Code cloud session
+
+A cloud session has none of the above: no `mdl`, no stacks, no `~/dev/CLAUDE.md` (the fleet rules
+live in the owner's `moodle-dev` repo). The cloud environment's setup script, versioned as
+`moodle-dev/cloud/setup.sh`, installs `moodle-plugin-ci` and the `mpci` runner instead: run `mpci`
+from this directory for every gate on the highest branch, `mpci --branch MOODLE_405_STABLE` for the
+lowest, and `mpci --reuse --only phpunit --filter <test>` while iterating. It cannot run Behat, PHP
+8.4 or MariaDB, so the owner still runs `mdl ci moodle-local_dimensions --matrix --behat` before a
+merge: push a branch, open the pull request, and leave the merge to them. Rebuild `amd/build` with
+Moodle's own grunt inside the `mpci` install (`cd /tmp/mpci/<branch>/moodle && npx grunt amd
+--root=<the plugin path>`), never by hand. The next task is written down in
+`docs/superpowers/plans/2026-09-25-tracker-describes-owner.md`.
+
 ### Building JavaScript assets (required before committing JS)
 
 `mdl grunt m501 local/dimensions` rebuilds `amd/build/*.min.js` + `.map` in a node
@@ -183,9 +196,9 @@ settings.php                 Admin tree — added under the 'competencies' admin
                              pages sit behind $hassiteconfig — the hub page is
                              gated by its own capability at the system context
 lib.php                      Procedural hooks + SCSS injection
-styles.css                   Two :root blocks (5 motion/loading + 34 colour
-                             tokens), ONE activation rule
-                             :root[data-bs-theme="dark"], one inert
+styles.css                   A :root block (5 motion/loading tokens), a body
+                             block (34 colour tokens), ONE activation rule
+                             with body as its subject, one inert
                              prefers-color-scheme block, then the components,
                              then the Bootstrap 4 polyfill at the tail
 version.php                  component / version / requires / supported
@@ -343,32 +356,37 @@ ever drift apart, the button lies again.
 
 ### Course category deletion (`classes/local/category_lifecycle.php`)
 Core's `delete_full()` / `delete_move()` know nothing about competency data and would leave
-frameworks and templates pointing at a deleted context. `lib.php` answers all four callbacks
-core offers (`get_course_category_contents`, `pre_course_category_delete`,
-`can_course_category_delete_move`, `pre_course_category_delete_move`) through that class:
-refuse "delete all" while anything is in use (`competency::can_all_be_deleted()`, linked
-plans), delete the rest through the competency API, re-home on "move contents" with one
-UPDATE per table the way core moves cohorts (the persistents refuse a context change by
-validation, so neither the API nor `update()` can do it). The callbacks
-are discovered by `get_plugins_with_function()`, cached per `allversionshash`: adding one
-needs a `version.php` bump or it never runs. Only the category's own context per call.
+frameworks and templates pointing at a deleted context. `lib.php` answers all five callbacks
+core offers (`get_course_category_contents`, `can_course_category_delete`,
+`pre_course_category_delete`, `can_course_category_delete_move`,
+`pre_course_category_delete_move`) through that class: withhold and refuse "delete all" while
+anything is in use (`competency::can_all_be_deleted()`, linked plans), delete the rest through
+the competency API, re-home on "move contents" with one UPDATE per table the way core moves
+cohorts (the persistents refuse a context change by validation, so neither the API nor
+`update()` can do it). The callbacks are discovered by `get_plugins_with_function()`, cached per
+`allversionshash`: adding one needs a `version.php` bump or it never runs. Deleting and moving
+touch only the category's own context per call (`delete_full()` calls back for each child,
+`delete_move()` moves children whole), but the in-use check (`can_delete_contents()` /
+`inuse_in_tree()`) reads the whole subtree, because `delete_full()` runs the parent's callback,
+which deletes, before any child's can refuse.
 
 ### A completed plan reads the frozen archive, not the live ratings
 
 `plan_trail_cache::get_trail_data()` takes the plan's completeness as its fourth
 argument. When it is true the query reads `{competency_usercompplan}` - the copy
-`api::complete_plan()` writes at completion, keyed by plan id - instead of the live
-`{competency_usercomp}`, which is exactly the branch `api::list_plan_competencies()`
-makes for the same status. Reading live on a completed plan makes the card disagree
-with core's own plan page about a plan that closed months ago, and neither page is
+`api::complete_plan()` writes at completion, keyed by plan id - for both the competency
+list and the ratings, instead of the template's or plan's own competencies and the live
+`{competency_usercomp}`; that is the list `plan::get_competencies()` returns for the same
+status, in `user_competency_plan::list_competencies()`'s order. Reading live on a completed
+plan makes the card disagree with core's own plan page about a plan that closed months ago
+(competencies added to the template later appear, removed ones vanish), and neither page is
 obviously the wrong one when they differ.
 
-Two details are load-bearing. The archive join is scoped to the plan being read
+Two details are load-bearing. The archive query is scoped to the plan being read
 (`ucp.planid`), because the same competency can be archived under several plans of the
-same learner; the placeholder is named separately from `:planid` since a named
-placeholder may appear only once per statement. And the two readings are cached under
-different keys, because a plan completed mid-session would otherwise keep serving the
-live trail it cached minutes earlier; `invalidate_plan()` deletes both spellings.
+same learner. And the two readings are cached under different keys (`_c` suffix), because
+a plan completed mid-session would otherwise keep serving the live trail it cached minutes
+earlier; `invalidate_plan()` and `invalidate_user()` delete both spellings.
 
 The only caller is `block_dimensions`' plan card, and the argument defaults to false,
 so an older sibling keeps working unchanged. `tests/plan_trail_cache_test.php` holds
@@ -484,8 +502,9 @@ Outside the plan the enrolment-filter cascade skips the template (competency -> 
 
 ## Colour tokens and dark mode
 
-**The plugin does not own a palette.** `styles.css` declares **34 colour tokens** on bare
-`:root` — `--local-dimensions-*`, byte-identical suffixes to `block_dimensions`'
+**The plugin does not own a palette.** `styles.css` declares **34 colour tokens** on
+`body` (a theme may redefine the `--bs-*` set there, as theme_moove does, and a `:root` block
+would never see it) — `--local-dimensions-*`, byte-identical suffixes to `block_dimensions`'
 `--block-dimensions-*` — and every component rule reads one. **A colour literal outside that
 block fails the build.** Do not reintroduce one; do not add a per-site literal fallback at a
 consumption site.
@@ -497,8 +516,8 @@ literal is a safety net rather than a value the plugin expects to use. The liter
 compiled 5.2 light values, so every rung of a chain means the same thing.
 
 **Why there is almost no dark rule — read this before adding one.** Moodle 5.1/5.2 already compile
-a complete `[data-bs-theme="dark"]` token block; nothing writes the attribute yet, so those values
-are dormant, not absent. A colour written as `var(--bs-secondary-bg, #e9ecef)` is therefore
+a complete `[data-bs-theme="dark"]` token block; no core theme writes the attribute before 5.3, so
+on core those values are dormant, not absent. A colour written as `var(--bs-secondary-bg, #e9ecef)` is therefore
 **already dark-correct with no rule of its own**: the plugin's card face *is* `--bs-body-bg`, the
 same value `body`'s background uses, and the two cannot disagree because they are one value.
 **Never add a dark rule for any of those 30 tokens.** Only `shadow`, `scrim` and `favourite` carry
@@ -507,19 +526,17 @@ contents of the one activation rule. That bound is the second, independent guara
 plugin can never paint a dark surface on a light page: even if the rule fired on a branch with no
 dark palette at all, the worst outcome is a deeper shadow, a darker veil and a brighter star.
 
-**The activation rule is `:root[data-bs-theme="dark"]`, and the `:root` anchor is load-bearing.**
-A bare `[data-bs-theme="dark"]` matches through **any** ancestor at any depth, and CSS descendant
-combinators have no nearest-ancestor-wins rule. That is not hypothetical: `theme_boost_union_fundaseg`
-sets `data-bs-theme="dark"` on the **navbar element itself**, and `theme_boost_union` then re-pins
-`data-bs-theme="light"` by hand on five nested templates (`core/moremenu`, `core/user_menu`,
-`theme_boost/language_menu` and the two smartmenu children) to stop the dark scope leaking into its
-own submenus. A bare selector would ignore those re-pins. `:root` restricts the match to the `html`
-element and forecloses the whole class at zero cost. **`.theme-dark` and `body.dark` are not
+**The activation rule is `body[data-bs-theme="dark"], [data-bs-theme="dark"] body`, and `body`
+as its subject is load-bearing.** A bare `[data-bs-theme="dark"]` matches through **any** ancestor
+at any depth, and CSS descendant combinators have no nearest-ancestor-wins rule. That is not
+hypothetical: `theme_boost_union_fundaseg` sets `data-bs-theme="dark"` on the **navbar element
+itself**, and `theme_boost_union` then re-pins `data-bs-theme="light"` by hand on five nested
+templates (`core/moremenu`, `core/user_menu`, `theme_boost/language_menu` and the two smartmenu
+children) to stop the dark scope leaking into its own submenus. With `body` as the subject the only
+possible ancestor is `html`, so no nested scope can reach the plugin, while the first arm follows a
+theme that writes the attribute on `<body>` (theme_moove). **`.theme-dark` and `body.dark` are not
 accepted** — nothing in Moodle 4.5/5.0/5.1/5.2/5.3-dev, `theme_boost_union` or
-`theme_boost_union_fundaseg` has ever emitted either. If a theme ever scopes the attribute to
-`<body>`, add a **separate** rule `:root:has(> body[data-bs-theme="dark"])` with the same three
-declarations; never append it to the existing selector, because an unsupported `:has()` inside a
-comma-separated list invalidates the whole list and takes the working selector down with it.
+`theme_boost_union_fundaseg` has ever emitted either.
 
 `data-bs-theme` is written by the **host**, never by this plugin: core writes it from
 `theme_boost`'s `before_html_attributes` listener plus a head script resolving `auto` with
@@ -553,7 +570,7 @@ composited over an admin colour stay literals, under a named exemption.
 **Usage rules the tokens cannot enforce by themselves** (all measured, all with a test):
 `surface-inset` is a platter a control sits **in**, not a ground for coloured ink — in dark,
 `accent` and `brand-ink` are 4.50:1 on it and `danger-ink` 4.20:1. `ink-faint` is for
-inactive-control text and placeholders only (2.70:1 on `surface-inset` in **light**, riding WCAG
+inactive-control text and placeholders only (3.07:1 on `surface-inset` in **light**, riding WCAG
 1.4.3's incidental exception); never a border, fill or icon. `brand-fill` is a solid fill under
 `on-brand-fill` and nothing else — `--bs-primary` does not flip. Meaning rides `-ink` / `-tint` /
 `-edge`, which is what core's own `.alert-*` is built from.
@@ -568,7 +585,7 @@ High Contrast Mode renders no `box-shadow` and does not restore an author's `out
 
 ### The enforcement suite (`tests/local/colour_tokens_test.php`)
 
-Twenty arms, every one mutation-checked. Prose has failed at this repeatedly in this fleet; these
+Twenty-one arms, every one mutation-checked. Prose has failed at this repeatedly in this fleet; these
 are what actually hold the design. What each pins:
 
 - `test_no_colour_literal_outside_the_token_block` — the literal ban, **checked both ways**: an
@@ -581,8 +598,8 @@ are what actually hold the design. What each pins:
   with a residue check so an unprefixed name cannot pass by looking the same on both sides.
 - `test_ci_checks_out_the_family_sibling` — the anti-vacuity control for the one above.
 - `test_dark_activation_block_assigns_only_plugin_owned_tokens` — the three-token bound.
-- `test_activation_selectors_are_root_anchored` — the `:root` anchor and the absence of
-  `.theme-dark`.
+- `test_activation_selectors_have_body_as_subject` — `body` as the subject of every activation
+  selector and the absence of `.theme-dark`.
 - `test_media_fallback_is_written_and_unreachable` — three independent assertions: the block
   **exists**, every selector carries the gate, and no runtime file writes the gate attribute.
 - `test_no_low_contrast_ink_on_the_inset_surface` — resolves the **effective** background through a
@@ -590,6 +607,9 @@ are what actually hold the design. What each pins:
   rule with no resolvable font-size counts as normal text, never large.
 - `test_declared_values_clear_their_floor` — values read **out of the stylesheet** and followed one
   hop against core's measured `--bs-*` map, in all three resolutions (5.x light, 5.x dark, 4.5).
+- `test_bs4_resolution_reads_the_bootstrap4_rung` — the 4.5 resolution (`resolve_bs4()` over
+  `CORE_BS4`, as in `block_dimensions`' copy) takes a chain's Bootstrap 4 rung, not its literal, and
+  the literal behind each rung is that rung's 4.5 colour.
 - `test_focus_indicators_survive_forced_colors` and `test_focus_ring_is_never_brand_coloured`.
 - `test_admin_colours_are_never_declared_by_the_mode_layer`, `test_admin_colour_transport_is_intact`
   and `test_branded_islands_use_no_mode_token` — the branded-island contract.
@@ -702,7 +722,12 @@ Conventions here: a setting uses plain keys `<key>` + `<key>_desc` (e.g.
 `enablereturnbutton` / `enablereturnbutton_desc`); each cache definition has a
 `cachedef_<name>`; each capability a `dimensions:<capname>` (the `local/` prefix
 is dropped in the lang key). When adding a string, insert it in the correct
-alphabetic slot in **both** language files.
+alphabetic slot in **both** language files. Before deleting one, grep for its key: every key the
+shipped code names literally (`get_string`, `string_for_js`, `lang_string`, `{{#str}}`, and the AMD
+`getString` / `{key, component}` forms) must exist in both files, and
+`tests/lang_string_references_test.php` checks it. Nothing else would: `string_for_js()` looks the
+key up only when the page footer is written, so a missing one shows as a developer notice on every
+render of that page and in no other test.
 
 ## Web services
 - Function classes under `classes/external/`, one per file, extend
@@ -724,9 +749,17 @@ alphabetic slot in **both** language files.
 ## MUC caches (`db/caches.php`)
 Cache **keys must avoid `:`** (unsafe in file-store paths). This plugin's keys:
 `returncontext` → `course_{id}`, `*_scss` → `css_{id}`, `plan_trail` →
-`{planid}_{userid}`, metadata caches → bare id. Application caches use defensive
-TTLs + `staticacceleration`; session caches hold per-user transient state. Each
-definition needs a `cachedef_<name>` lang string.
+`{planid}_{userid}` (`_c` appended for a completed plan), `fontawesome_iconmap` →
+`iconmap`, metadata caches → bare id. Most application caches use defensive TTLs +
+`staticacceleration`; `returncontext` is the one session cache (per-user transient state).
+**`plan_trail` is application mode on purpose**: the change that stales a learner's trail (a
+teacher's rating, course evidence) happens in another user's request, which cannot reach the
+learner's session cache. A cache cannot be searched by key prefix, so `invalidate_user()` lists
+the user's plans and deletes both keys of each. `fontawesome_iconmap` holds the icon picker's
+core fallback map (Boost Union caches its own) with no TTL: it changes only with core code, and
+an upgrade purges every cache. Each definition needs a `cachedef_<name>` lang string whose words
+match its mode (`tests/cache_definition_names_test.php`), and a new definition needs a
+`version.php` bump, or `cache::make()` reparses the definitions and raises a developer notice.
 
 ## Mustache templates
 Every `templates/*.mustache` needs an `Example context (json):` block in its
@@ -769,10 +802,18 @@ Each `db/upgrade.php` step ends with
 - `$DB->get_records()` / `getDataGenerator()->create_*()` return **string** ids
   under both drivers — cast to `(int)` for typed-int signatures and normalise
   haystacks before strict `assertContains`.
-- Three suites are **file scanners** on `\basic_testcase`, not DB tests, and they exist because the
+- Five suites are **file scanners** on `\basic_testcase`, not DB tests, and they exist because the
   pipeline is structurally blind to what they check: `local/colour_tokens_test.php` (the colour
-  token contract, 20 arms), `local/bootstrap_compat_test.php` (Bootstrap 4/5 class vocabulary
-  and badge text colours) and `local/preference_queries_test.php` (every preference media query
+  token contract, 21 arms), `local/bootstrap_compat_test.php` (Bootstrap 4/5 class vocabulary
+  and badge text colours), `local/stylesheet_markup_contract_test.php` (timeline marker rules that
+  style no rendered markup, rules for a plugin class nothing writes, template controls without an
+  accessible name, export loaders that cannot be announced or hidden, HTML comments in templates,
+  pane dividers that lose touch drags), `local/status_icons_test.php` (status icons are empty
+  `aria-hidden` spans whose `pix/status` SVG mask is painted by a colour token, no fill/stroke rule
+  targets an HTML icon or `img`, glyph `::after` rules sit under `rtl:ignore`, and forced colours
+  keep every icon; an SVG shown through `<img>` keeps the colours in the file, so an icon that must
+  follow the theme is a mask)
+  and `local/preference_queries_test.php` (every preference media query
   names a defined value — `prefers-contrast: high` matches in no browser, the value is `more` —
   no raised-contrast, reduced-motion, forced-colors or print override loses on specificity or
   source order (so the forced-colors block sits after the filter tabs' last rule) or drops an
@@ -786,6 +827,14 @@ Each `db/upgrade.php` step ends with
   assertion in them was mutation-checked**, and that is not ceremony: earlier drafts of
   `bootstrap_compat_test` passed while blind to the very defect they were written for. When you
   add an arm, delete the production line it guards and confirm it actually reddens.
+- Two neighbours of those scanners. `local/customscss_field_styles_test.php` (an
+  `\advanced_testcase`) renders the custom SCSS field the way the hub modal forms do and matches
+  every `customscss` selector in `styles.css` against that markup, because each of those rules was
+  once keyed to a shortname, id or field type that no longer rendered. And with no JavaScript test
+  runner, the hub's JS guards are read out of `amd/src/central` with comments dropped
+  (`local/hub_javascript_guards_test.php`, `local/export_loader_script_test.php`): the function is
+  extracted and the guard must sit where it takes effect. After a JS mutation, rebuild before
+  trusting a browser, but these tests read the source and need no build.
 
 ## Behat (JS) — locator gotchas
 Run locally with `mdl behat m501 /var/www/html/public/local/dimensions/tests/behat/<x>.feature`
@@ -906,15 +955,19 @@ web services in a native `core/modal*` instead.
   `core/modal`, **host a toast region in the modal body** so `core/toast` renders *above* the
   dialog. The page-level `.toast-wrapper` is `z-index:1051` (below the modal's `1055`), so a toast
   fired from a modal lands behind it. On `ModalEvents.shown` call
-  `addToastRegion(modal.getBody()[0]).catch(Notification.exception)` (from `core/toast`); core's
+  `addToastRegion(modal.getBody()[0]).catch(notifyError)` (imported through
+  `local_dimensions/central/toast`, the hub's wrapper over `core/toast`; `notifyError` from
+  `central/errors` sends a connectivity drop to a toast and anything else to
+  `Notification.exception`); core's
   `core/modal` auto-removes it on close (`removeToastRegion(this.getBody())`), so no leak and **no
   global z-index override**. The **host** modal owns the region — modules that only `mount()` into
   it (`cohort_manager`, `participants_users`) must not add their own. For an *in-place* change (a row
-  added/edited without a full list reload) also briefly **flash** the affected element
-  (`el.animate([{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}], {duration: 1500})`)
-  so the confirmation is visible where the user is looking. JS-built `<select>`/inputs need an `id`
-  or `name` or the browser logs an autofill warning. (Wired in `competency_links` +
-  `participants_manager`.)
+  added/edited without a full list reload) also briefly **flash** the affected element with
+  `flashRow()` from `central/flash.js`, so the confirmation is visible where the user is looking. It
+  reads its colour from `--local-dimensions-warning-tint` and its duration from
+  `--local-dimensions-motion-flash`, and skips under reduced motion; never reintroduce a colour
+  literal there (`local/hub_javascript_guards_test.php` pins it). JS-built `<select>`/inputs need an
+  `id` or `name` or the browser logs an autofill warning.
 - **dataset-as-truth panes:** seed `pane.dataset.<arg>` from the server-rendered selected value
   in `init`, or a WS receives 0 → `context::instance_by_id()` "Invalid context id".
 - **PHP:** `array_flip([5])` → `[5 => 0]`, so `!empty($map[5])` is **false** — test membership

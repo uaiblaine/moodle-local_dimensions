@@ -100,12 +100,13 @@ $definitions = [
         'ttl' => 14400, // 4 hours defensive TTL.
     ],
 
-    // Session cache for plan trail data (competency id, shortname, proficiency).
+    // Cache for plan trail data (competency id, shortname, proficiency).
     // Key: {planid}_{userid}, suffixed _c for a completed plan (see plan_trail_cache::cache_key()).
     // Value: array with total count and competency trail rows.
-    // Invalidated when user competency proficiency changes.
+    // Invalidated when user competency proficiency changes. Application mode because that
+    // change is made in another user's request, which cannot reach the learner's session.
     'plan_trail' => [
-        'mode' => cache_store::MODE_SESSION,
+        'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
         'simpledata' => true,
         'ttl' => 300, // 5 minutes defensive TTL.
@@ -123,5 +124,17 @@ $definitions = [
         'staticacceleration' => true,
         'staticaccelerationsize' => 200,
         'ttl' => 600, // 10 minutes defensive TTL.
+    ],
+
+    // Cache for the icon picker's Font Awesome map, when Boost Union's own cached map is absent.
+    // Key: iconmap
+    // Value: map of icon key => ['class' => string, 'source' => string].
+    // No TTL or invalidation: the map is built from core code only, and an upgrade purges all caches.
+    'fontawesome_iconmap' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 1,
     ],
 ];

@@ -177,4 +177,55 @@ final class template_participants_test extends \advanced_testcase {
         $this->assertCount(1, $rows);
         $this->assertSame(0, $rows[0]['canmanage']);
     }
+    /**
+     * A learner holding only planmanageown may unlink and delete their own plan, as core and the
+     * grid's canmanage allow, and neither on someone else's.
+     *
+     * @return void
+     */
+    public function test_an_owner_with_planmanageown_manages_only_their_own_plan(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$templateid, , [$ownerid, $otherid]] = $this->fixture();
+        add_template_user_plan::execute($templateid, $ownerid);
+        add_template_user_plan::execute($templateid, $otherid);
+        $ownplanid = (int) plan::get_record(['templateid' => $templateid, 'userid' => $ownerid])->get('id');
+        $otherplanid = (int) plan::get_record(['templateid' => $templateid, 'userid' => $otherid])->get('id');
+        $roleid = $this->getDataGenerator()->create_role();
+        $syscontextid = \context_system::instance()->id;
+        assign_capability('moodle/competency:planmanageown', CAP_ALLOW, $roleid, $syscontextid);
+        role_assign($roleid, $ownerid, $syscontextid);
+        $this->setUser($ownerid);
+        // The precondition: the owner holds planmanageown and not planmanage.
+        $this->assertFalse(has_capability('moodle/competency:planmanage', \context_user::instance($ownerid)));
+        $this->assertTrue(plan::can_manage_user($ownerid));
+
+        foreach (['unlink', 'delete'] as $action) {
+            try {
+                $this->manage($action, $otherplanid);
+                $this->fail("The owner could $action another learner's plan.");
+            } catch (\required_capability_exception $e) {
+                $this->assertSame('nopermissions', $e->errorcode);
+            }
+        }
+        $this->assertSame($templateid, (int) plan::get_record(['id' => $otherplanid])->get('templateid'));
+
+        $this->assertTrue($this->manage('unlink', $ownplanid)['success']);
+        $this->assertNull(plan::get_record(['id' => $ownplanid])->get('templateid'));
+        $this->assertTrue($this->manage('delete', $ownplanid)['success']);
+        $this->assertFalse(plan::record_exists($ownplanid));
+    }
+
+    /**
+     * Unlink or delete a plan through its web service.
+     *
+     * @param string $action unlink or delete.
+     * @param int $planid The plan id.
+     * @return array The service's result.
+     */
+    private function manage(string $action, int $planid): array {
+        return $action === 'unlink'
+            ? unlink_template_user_plan::execute($planid)
+            : delete_template_user_plan::execute($planid);
+    }
 }

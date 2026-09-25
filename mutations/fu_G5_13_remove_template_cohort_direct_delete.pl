@@ -1,0 +1,1 @@
+s/            \/\/ Through core, which refuses while competencies are disabled on the site\.\n            api::delete_template_cohort\(\$template, \$params\['cohortid'\]\);/            template_cohort::get_relation(\$template->get('id'), \$params['cohortid'])->delete();/;

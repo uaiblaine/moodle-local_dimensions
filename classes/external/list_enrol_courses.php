@@ -51,6 +51,9 @@ class list_enrol_courses extends external_api {
     /** @var int Hard cap on the page size. */
     const MAX_LIMIT = 100;
 
+    /** @var int Page size when the caller sends none, or one below 1. */
+    const DEFAULT_LIMIT = 25;
+
     /**
      * Parameters.
      *
@@ -64,7 +67,7 @@ class list_enrol_courses extends external_api {
             'categoryid' => new external_value(PARAM_INT, 'Course category filter (0 = all)', VALUE_DEFAULT, 0),
             'includehidden' => new external_value(PARAM_BOOL, 'Include hidden courses', VALUE_DEFAULT, false),
             'limitfrom' => new external_value(PARAM_INT, 'Pagination offset', VALUE_DEFAULT, 0),
-            'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, 25),
+            'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, self::DEFAULT_LIMIT),
         ]);
     }
 
@@ -87,7 +90,7 @@ class list_enrol_courses extends external_api {
         int $categoryid = 0,
         bool $includehidden = false,
         int $limitfrom = 0,
-        int $limitnum = 25
+        int $limitnum = self::DEFAULT_LIMIT
     ): array {
         global $DB;
 
@@ -141,7 +144,10 @@ class list_enrol_courses extends external_api {
         \core_collator::asort_objects_by_property($courses, 'shortname', \core_collator::SORT_NATURAL);
         $courses = array_values($courses);
         $total = count($courses);
-        $courses = array_slice($courses, $params['limitfrom'], min($params['limitnum'], self::MAX_LIMIT));
+        // A negative offset would count from the end, and a size below 1 would return nothing.
+        $limitfrom = max(0, $params['limitfrom']);
+        $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : self::DEFAULT_LIMIT;
+        $courses = array_slice($courses, $limitfrom, $limitnum);
 
         $pageids = array_map(static function ($course) {
             return (int) $course->id;

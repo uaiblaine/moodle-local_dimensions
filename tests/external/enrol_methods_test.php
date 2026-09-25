@@ -268,8 +268,45 @@ final class enrol_methods_test extends \advanced_testcase {
         $this->assertCount(0, $result['items']);
 
         $unlinked = $this->getDataGenerator()->create_cohort();
-        $this->expectException(\moodle_exception::class);
-        list_enrol_courses::execute($fixture['templateid'], $fixture['comp1id'], (int) $unlinked->id);
+        try {
+            list_enrol_courses::execute($fixture['templateid'], $fixture['comp1id'], (int) $unlinked->id);
+            $this->fail('A cohort the template does not hold was accepted.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('central_roles_cohortnotlinked', $e->errorcode);
+        }
+    }
+
+    /**
+     * A negative offset reads the first page, not the tail, and a page size below 1 reads the
+     * default page, not nothing, in both lists of the tab.
+     *
+     * @return void
+     */
+    public function test_paging_is_clamped(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $fixture = $this->build_fixture();
+        $allcourses = [(int) $fixture['coursea']->id, (int) $fixture['courseb']->id];
+        $allcompetencies = [$fixture['comp1id'], $fixture['comp2id']];
+
+        // The control is the first pair: the page the tab asks for.
+        foreach ([[0, 25], [-1, 25], [0, 0], [-5, -3]] as [$limitfrom, $limitnum]) {
+            $label = "limitfrom $limitfrom, limitnum $limitnum";
+            $courses = list_enrol_courses::execute(
+                $fixture['templateid'],
+                $fixture['comp1id'],
+                $fixture['cohortid'],
+                0,
+                false,
+                $limitfrom,
+                $limitnum
+            );
+            $this->assertSame($allcourses, array_column($courses['items'], 'courseid'), $label);
+            $this->assertSame(2, $courses['total'], $label);
+            $competencies = list_enrol_competencies::execute($fixture['templateid'], 0, false, false, '', $limitfrom, $limitnum);
+            $this->assertSame($allcompetencies, array_column($competencies['items'], 'competencyid'), $label);
+            $this->assertSame(2, $competencies['total'], $label);
+        }
     }
 
     /**

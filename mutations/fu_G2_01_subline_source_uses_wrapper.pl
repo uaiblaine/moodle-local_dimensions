@@ -1,0 +1,1 @@
+s/\$field = self::find_field_by_shortname\(constants::CFIELD_SUBLINE_SOURCE, self::AREA_LP\);\n        if \(!\$field\) \{\n            return constants::SUBLINE_STATUS;/\$field = self::get_subline_source_field();\n        if (!\$field) {\n            return constants::SUBLINE_STATUS;/;

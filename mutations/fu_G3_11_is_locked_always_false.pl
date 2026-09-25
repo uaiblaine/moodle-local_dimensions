@@ -1,0 +1,1 @@
+s/            \}\n        \}\n\n        return true;\n    \}\n\n    \/\*\*\n     \* Gets the most relevant availability date/            }\n        }\n\n        return false;\n    }\n\n    \/**\n     * Gets the most relevant availability date/;

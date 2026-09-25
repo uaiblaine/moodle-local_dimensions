@@ -1,0 +1,1 @@
+s/html \+= data\.earnedpoints \+ ' \/ ' \+ data\.totalrequired \+ \(isPoints \? ' ' \+ escapeHtml\(strMap\.rulesPts\) : ''\);/html += data.earnedpoints + ' \/ ' + data.totalrequired + (isPoints ? ' pts' : '');/;

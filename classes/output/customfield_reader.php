@@ -90,19 +90,20 @@ trait customfield_reader {
     }
 
     /**
-     * Get a custom field color value for a competency.
+     * Get a colour custom field value for a competency or a template.
      *
-     * @param int $competencyid The competency ID.
+     * @param int $instanceid The competency or template ID.
      * @param string $shortname The field shortname to retrieve.
+     * @param string $area The custom field area ('competency' or 'lp').
      * @return string|null The colour with a leading '#', or null when unset or not a hex colour.
      */
-    protected function get_competency_custom_field(int $competencyid, string $shortname): ?string {
-        $field = $this->get_field($shortname, 'competency');
+    protected function get_colour_field(int $instanceid, string $shortname, string $area): ?string {
+        $field = $this->get_field($shortname, $area);
         if (!$field) {
             return null;
         }
 
-        $data = $this->get_field_data($field, $competencyid);
+        $data = $this->get_field_data($field, $instanceid);
         if (!$data) {
             return null;
         }

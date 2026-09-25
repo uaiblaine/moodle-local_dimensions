@@ -1,0 +1,1 @@
+s/\$description = file_rewrite_pluginfile_urls\(\n\s*\$scale->description,\n\s*'pluginfile\.php',\n\s*context_system::instance\(\)->id,\n\s*'grade',\n\s*'scale',\n\s*\$scale->id\n\s*\);/\$description = \$scale->description;/;

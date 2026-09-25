@@ -350,9 +350,12 @@ class template_metadata_cache {
     /**
      * Get select field label for a shortname.
      *
+     * The stored intvalue is a 1-based position in the option list as core's select counts it,
+     * so the text is split by {@see helper::split_select_options()}, which skips blank lines.
+     *
      * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname.
-     * @return string|null
+     * @return string|null The option label, or null when unset or past the last option.
      */
     private static function get_select_value(array $records, string $shortname): ?string {
         if (empty($records[$shortname])) {
@@ -370,14 +373,8 @@ class template_metadata_cache {
             return null;
         }
 
-        $options = explode("\n", $config['options']);
-        $optionindex = $selectedindex - 1;
-        if (!isset($options[$optionindex])) {
-            return null;
-        }
-
-        $value = trim($options[$optionindex]);
-        return $value !== '' ? $value : null;
+        $options = helper::split_select_options((string) $config['options']);
+        return $options[$selectedindex - 1] ?? null;
     }
 
     /**
@@ -416,10 +413,12 @@ class template_metadata_cache {
      * Decode a cascade select customfield to its option key.
      *
      * The field lists its options in the order of $allowed ({@see helper::get_enrollmentfilter_field()})
-     * and stores a 1-based intvalue pointing at the chosen line, so the key is the one at that
+     * and stores a 1-based intvalue pointing at the chosen option, so the key is the one at that
      * position in $allowed. The option text is not parsed: it is a localised label, and fields
      * provisioned by older releases spell each line "key|label" instead, with the same positions.
-     * Keep in step with {@see helper::get_template_enrollmentfilter()}, which decodes the same way.
+     * It is only counted, the way core's select counts it ({@see helper::split_select_options()}),
+     * so an index past the last option reads as $default, as core's select shows it unset.
+     * Keep the positions in step with {@see helper::get_template_enrollmentfilter()}.
      *
      * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname to decode.
@@ -448,7 +447,7 @@ class template_metadata_cache {
             return $default;
         }
 
-        $options = explode("\n", $config['options']);
+        $options = helper::split_select_options((string) $config['options']);
         $optionindex = $selectedindex - 1;
         if (!isset($options[$optionindex])) {
             return $default;

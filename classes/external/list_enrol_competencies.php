@@ -49,6 +49,9 @@ class list_enrol_competencies extends external_api {
     /** @var int Hard cap on the page size. */
     const MAX_LIMIT = 100;
 
+    /** @var int Page size when the caller sends none, or one below 1. */
+    const DEFAULT_LIMIT = 20;
+
     /**
      * Parameters.
      *
@@ -62,7 +65,7 @@ class list_enrol_competencies extends external_api {
             'includebootstrap' => new external_value(PARAM_BOOL, 'Include the tab bootstrap data', VALUE_DEFAULT, false),
             'query' => new external_value(PARAM_RAW_TRIMMED, 'Competency name filter', VALUE_DEFAULT, ''),
             'limitfrom' => new external_value(PARAM_INT, 'Pagination offset', VALUE_DEFAULT, 0),
-            'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, 20),
+            'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, self::DEFAULT_LIMIT),
         ]);
     }
 
@@ -85,7 +88,7 @@ class list_enrol_competencies extends external_api {
         bool $includebootstrap = false,
         string $query = '',
         int $limitfrom = 0,
-        int $limitnum = 20
+        int $limitnum = self::DEFAULT_LIMIT
     ): array {
         $params = self::validate_parameters(self::execute_parameters(), [
             'templateid' => $templateid,
@@ -149,7 +152,10 @@ class list_enrol_competencies extends external_api {
             ];
         }
         $total = count($items);
-        $items = array_slice($items, $params['limitfrom'], min($params['limitnum'], self::MAX_LIMIT));
+        // A negative offset would count from the end, and a size below 1 would return nothing.
+        $limitfrom = max(0, $params['limitfrom']);
+        $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : self::DEFAULT_LIMIT;
+        $items = array_slice($items, $limitfrom, $limitnum);
 
         $result = ['items' => $items, 'total' => $total, 'totalcourses' => count($passingids)];
         if ($params['includebootstrap']) {

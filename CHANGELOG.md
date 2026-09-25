@@ -6,6 +6,164 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+Decided by the owner after the comment audit's findings were re-checked against the current code:
+
+- The status icons on the competency tracker's course cards (completed, locked, not started, no
+  completion tracking) and the grade badge icons in the plan overview now take their colours from
+  the theme and follow dark mode and Windows high-contrast mode; in light mode the completed check
+  now uses the theme's success colour.
+- The learning plan template settings now show 'Locked card display mode' and 'Show availability
+  date' in 'Full plan overview' mode as well, because the plan overview uses them.
+- Plan accordion: when staff open a learner's plan, the course cards now show the learner's courses,
+  progress, activity completion, activity restrictions and card shape rather than the reviewer's
+  own; what clicking a card does (open, enrol, pending, locked and its date) is still the
+  reviewer's.
+- Learning plan CSV import: a competency structure named by ID number is now resolved only among the
+  structures offered in the target category (its parent and child contexts), so a structure in a
+  sibling category is reported as missing instead of being linked.
+
+### Fixed
+
+The findings the 2026-09-23 comment audit reported, re-checked on 2026-09-25 against the code other sessions had
+changed since, and fixed where they still held.
+
+#### Learner pages
+
+- The competency detail's result strip now shows the most recent rule completion instead of the
+  oldest one.
+- Prior-learning evidence is no longer labelled a file attachment because the word 'file' appears in
+  the name the learner gave it.
+- Favourite competencies are trimmed to what a Moodle 4.5 user preference can hold (other plans'
+  oldest favourites go first), instead of every later star silently failing to save.
+- Course cards on the learner pages unlock for learners enrolled under any student-archetype role,
+  not only a role whose shortname is 'student'.
+- The Rules tab's points unit comes from the language pack instead of a hardcoded English 'pts'.
+- The progress bar of a rule that counts completed items now announces items, not points, to screen
+  readers.
+- The competency tracker's course-card load error, retry button and loading text are never shown in
+  English on a non-English site.
+- The locked course card's opening date follows the language pack's short date format instead of a
+  fixed day/month/year order.
+- The plan overview now shows core's error when the plan's competencies cannot be read, instead of
+  an empty plan.
+- Course chip filters on the competency tracker now show values from select-type course custom
+  fields (their labels were empty, and every course field raised a PHP warning), and all courses'
+  values are read in one query.
+- Scale ratings, tag sublines and chip filter values on the learner pages are filtered to the
+  learner's language (multilang) and stripped of markup.
+
+#### Competency hub
+
+- Competency hub, Structure tab: closing 'Courses & activities' now updates the competency's
+  linked-course count with the true total, not only the courses loaded so far.
+- Competency hub, 'Browse frameworks' and 'Related competencies' pickers: a search or framework page
+  that answers after the filter or framework changed no longer adds old competencies, or a stray
+  empty-state message, to the list.
+- Competency hub, Enrolment methods tab: changing the method, cohort, category, hidden-course toggle
+  or search while a request is in flight no longer shows one method's status under the other or
+  lists competency groups twice.
+- Competency hub: script errors and broken server responses now open the error dialogue instead of a
+  misleading 'Connection lost' notice.
+- Competency hub, Structure and Learning plans tabs: a pane-divider drag that the browser interrupts
+  (for example a touch turned into a scroll) now ends cleanly instead of resizing on later hover.
+- Competency hub, competency rule dialogue: negative or fractional points are refused with the
+  inline message instead of failing when saved.
+- Competency hub: the highlight on a changed row now uses the theme's warning tint, so it follows
+  the site palette and dark mode.
+- The icon picker now caches the Font Awesome icon map it builds from core when Boost Union is not
+  installed. Each search no longer rebuilds it. The cache is listed as 'Font Awesome icon map for
+  the icon picker'.
+- The framework export dialog now announces 'Exporting...' to screen readers on every export, not
+  only the first one in the dialog.
+- The points-rule alert now names every condition that makes a points configuration invalid: points
+  must be whole numbers of zero or more, the required points must be at least 1, and the total
+  available points must be at least the required points.
+- The cache administration page no longer calls the plan trail cache a session cache.
+
+#### Web services and import
+
+- Rules tab: on a completed learning plan, each rule child the plan held now shows the rating
+  archived when the plan was completed, instead of a live rating given afterwards.
+- Linking a competency to a course or an activity that is already linked no longer logs a second
+  'link added' event.
+- The rating scale's 'About this scale' description is now formatted once, in the competency's
+  context, so text filters no longer run twice and their output is no longer stripped.
+- Enrolment methods tab: a negative offset or a page size below 1 now returns the first page at the
+  default size, instead of the list's tail or nothing.
+- Competency browser service: a page size below 1 now returns the declared default of 25 (it
+  returned 50), and the query parameter states its 2-character search threshold.
+- Participants grid: a learner holding only 'Manage own learning plans' can now unlink and delete
+  their own template-based plan, as core and the grid's own manage flag already allowed.
+- Detaching a cohort from a learning plan template now goes through core and is refused while
+  competencies are disabled on the site.
+- Template cohort roles listing now reads its cohorts, role holders and sync counts in a fixed
+  number of queries, however many rows there are.
+- A competency's activity links are now read for the requested course only, not for every course on
+  the site.
+- Learning plan import preview no longer fails outright when a missing structure's ID number or name
+  in the file contains markup.
+- Course progress: an error while reading one course now becomes that course's error card, instead
+  of failing the tracker response for every course.
+- Learning plan import preview: a competency matched by ID number inside a structure found only by
+  its name is now badged as a fallback match ('Matched by structure name'), not as an exact match.
+
+#### Custom fields and templates
+
+- Opening a learning plan no longer creates missing template custom fields outside the provisioning
+  lock. A missing field now falls back to the site-wide setting until provisioning restores it.
+- Custom-field provisioning no longer fails on Moodle 5.1+ when every plugin field category has been
+  deleted and a core shared category is enabled for the area. The fields now go into a new plugin
+  category.
+- In the Competency hub structure tree, type and tag labels no longer shift or disappear when a
+  select field's option list contains a blank line.
+- The audit events of a hub modal save now report 'isnew' correctly: editing a template or a
+  competency logs false and creating one logs true, in both the values event and the image event.
+- Copying plugin data onto a duplicated template now deletes the files embedded in the custom-field
+  rows it replaces, where they used to be left orphaned.
+- A blank line in a tag or type field's option list no longer shifts or blanks the label shown on
+  templates and competencies, and a template setting whose stored option no longer exists now reads
+  as inherit, which is how the settings form shows it.
+
+#### Caches, events and tasks
+
+- Plan cards: a completed plan lists the competencies it was completed with, as core's plan page
+  does, instead of the template's current list.
+- Plan cards: a learner's competency trail updates as soon as a teacher rates them or evidence
+  arrives. The plan_trail cache is now shared by all users, so invalidating it reaches the learner's
+  entry. Before, the old trail could stay for up to 5 minutes.
+- Competency and template observers: a POST without a sesskey (for example a web service call) is
+  now ignored quietly. It used to throw inside the observer and skip the cache invalidation.
+- Template cohort sync: the background plan generation now finishes and logs the reason when the
+  template is hidden, competencies are disabled, the task user can no longer view the template, or
+  the cohort is hidden from that user or deleted. Before, it failed and was retried.
+- Course category deletion: "Delete all" is not offered while a framework or template in the
+  category or any subcategory is in use. Before, an in-use subcategory let the parent's frameworks
+  and templates be deleted before the deletion stopped half way.
+- Framework modal: an ID number already used by another framework anywhere on the site is reported
+  on the field, not as an error on save.
+- Course log restore now maps the competency, course, course module, role and enrolment instance ids
+  of the hub's course link, module link and enrolment method events, and no longer prints a
+  developer warning.
+- Developer: removed the unused lib.php wrappers local_dimensions_set_return_context(),
+  local_dimensions_set_return_context_for_course() and
+  local_dimensions_get_return_context_for_course(); call \local_dimensions\helper directly.
+
+#### Accessibility and styles
+
+- the custom SCSS field in the Competency hub's competency and template dialogues now hides its
+  redundant text-format selector and shows its intended dark code-editor styling. Both rules
+  targeted an outdated field name and never applied.
+- screen readers now announce the wait while a structure (competency framework) is exported from the
+  Competency hub.
+- the per-competency points and required inputs and the total-required input in the competency rule
+  dialogue now have accessible names.
+- on touch devices, dragging the pane divider on the Competency hub's Structures and Learning plans
+  tabs no longer turns into a page scroll.
+- the course card header in the competency tracker uses the Bootstrap 5 bold utility (polyfilled on
+  Moodle 4.5), not a Bootstrap 4 name that Moodle 5.x deprecates.
+
 ### Security
 
 - **The competency tracker, the Rules tab data and the accordion's course cards answer only for a

@@ -1,0 +1,1 @@
+s/    await loadTopPage\(state\);\n    \/\/ A later switch owns the list now, and its own call fills in the empty message and the toggle\.\n    if \(generation !== state\.generation\) \{\n        return;\n    \}/    await loadTopPage(state);/;

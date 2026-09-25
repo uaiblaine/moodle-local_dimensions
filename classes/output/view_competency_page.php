@@ -89,8 +89,8 @@ class view_competency_page implements renderable, templatable {
 
         // Prepare hero header data.
         if ($this->competency) {
-            $bgcolor = $this->get_competency_custom_field($this->competency->id, constants::CFIELD_CUSTOMBGCOLOR);
-            $textcolor = $this->get_competency_custom_field($this->competency->id, constants::CFIELD_CUSTOMTEXTCOLOR);
+            $bgcolor = $this->get_colour_field((int) $this->competency->id, constants::CFIELD_CUSTOMBGCOLOR, 'competency');
+            $textcolor = $this->get_colour_field((int) $this->competency->id, constants::CFIELD_CUSTOMTEXTCOLOR, 'competency');
             $bgimage = $this->get_custom_field_image_url(
                 $this->competency->id,
                 constants::CFIELD_CUSTOMBGIMAGE,

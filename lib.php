@@ -24,7 +24,6 @@
 
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\customfield\lp_handler;
-use local_dimensions\helper;
 use local_dimensions\picture_manager;
 
 /**
@@ -102,39 +101,6 @@ function local_dimensions_customfield_get_handler(string $component, string $are
 }
 
 /**
- * Store per-course return URLs in session cache.
- *
- * @param moodle_url $url The URL to store as return destination.
- * @param array $validcourseids Array of course IDs where the button should appear.
- */
-function local_dimensions_set_return_context(moodle_url $url, array $validcourseids = []): void {
-    helper::set_return_context($url, $validcourseids);
-}
-
-/**
- * Store return context for a single course.
- *
- * Procedural wrapper of {@see helper::set_return_context_for_course()}, for callers that
- * already know the course being entered.
- *
- * @param int $courseid The course ID.
- * @param moodle_url $returnurl The URL to return to (typically a plan view page).
- */
-function local_dimensions_set_return_context_for_course(int $courseid, moodle_url $returnurl): void {
-    helper::set_return_context_for_course($courseid, $returnurl);
-}
-
-/**
- * Get the stored return context for a specific course.
- *
- * @param int $courseid The course ID to look up.
- * @return array|null Array with 'url' key, or null if not set.
- */
-function local_dimensions_get_return_context_for_course(int $courseid): ?array {
-    return helper::get_return_context_for_course($courseid);
-}
-
-/**
  * Declare the plugin's AJAX-updatable user preferences (hub and learner view state).
  *
  * Registers the five JSON preferences that persist the Competency hub's last-visited view and
@@ -203,6 +169,19 @@ function local_dimensions_extend_navigation_category_settings($navigation, $cour
  */
 function local_dimensions_get_course_category_contents(core_course_category $category): string {
     return \local_dimensions\local\category_lifecycle::describe((int) $category->id);
+}
+
+/**
+ * Whether "Delete all" may be offered for a course category.
+ *
+ * False while a framework or template in the category, or in any category below it, is in use.
+ * Core asks this once, for the category being deleted, and then deletes the tree top down.
+ *
+ * @param core_course_category $category The category about to be deleted.
+ * @return bool
+ */
+function local_dimensions_can_course_category_delete(core_course_category $category): bool {
+    return \local_dimensions\local\category_lifecycle::can_delete_contents((int) $category->id);
 }
 
 /**

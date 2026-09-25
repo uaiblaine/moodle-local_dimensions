@@ -110,4 +110,53 @@ final class browse_competencies_test extends \advanced_testcase {
         $this->assertSame(0, $result['total']);
         $this->assertSame([], $result['items']);
     }
+    /**
+     * A page size below 1 reads the declared default page, the same size a caller sending none gets.
+     *
+     * @return void
+     */
+    public function test_a_missing_page_size_reads_the_declared_default(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $fwid = (int) $ccg->create_framework()->get('id');
+        $roots = browse_competencies::DEFAULT_LIMIT + 5;
+        for ($i = 0; $i < $roots; $i++) {
+            $ccg->create_competency(['competencyframeworkid' => $fwid]);
+        }
+        $declared = browse_competencies::execute_parameters()->keys['limitnum']->default;
+        $this->assertSame(browse_competencies::DEFAULT_LIMIT, $declared);
+
+        // The control: a caller sending no page size.
+        $this->assertCount($declared, browse_competencies::execute($fwid)['items']);
+        foreach ([0, -1] as $limitnum) {
+            $result = browse_competencies::execute($fwid, 0, '', 0, $limitnum);
+            $this->assertCount($declared, $result['items'], "limitnum $limitnum");
+            $this->assertSame($roots, $result['total'], "limitnum $limitnum");
+        }
+    }
+
+    /**
+     * The query parameter's description states the length that switches to search mode, which is
+     * the length the service acts on: one character short of it browses the roots, at it the
+     * service searches every level.
+     *
+     * @return void
+     */
+    public function test_the_query_description_states_the_search_threshold(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $fwid = (int) $ccg->create_framework()->get('id');
+        $root = $ccg->create_competency(['competencyframeworkid' => $fwid, 'shortname' => 'Root']);
+        $ccg->create_competency(['competencyframeworkid' => $fwid, 'parentid' => $root->get('id'), 'shortname' => 'Leaf']);
+
+        $description = browse_competencies::execute_parameters()->keys['query']->desc;
+        $this->assertStringContainsString(browse_competencies::MIN_QUERY_LENGTH . ' or more characters', $description);
+
+        $atthreshold = substr('Leaf', 0, browse_competencies::MIN_QUERY_LENGTH);
+        $short = substr($atthreshold, 0, -1);
+        $this->assertSame(['Root'], array_column(browse_competencies::execute($fwid, 0, $short)['items'], 'shortname'));
+        $this->assertSame(['Leaf'], array_column(browse_competencies::execute($fwid, 0, $atthreshold)['items'], 'shortname'));
+    }
 }

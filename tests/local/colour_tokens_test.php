@@ -206,10 +206,28 @@ final class colour_tokens_test extends \basic_testcase {
     ];
 
     /**
+     * @var array The Bootstrap 4 legacy names Moodle 4.5's Boost declares on :root.
+     *
+     * Moodle 4.5 declares no --bs-* name, so there a chain var(--bs-NEW, var(--BS4-OLD, #literal))
+     * takes the value of its Bootstrap 4 rung when that name is listed here, and its literal only
+     * otherwise. The bs4 resolution in resolve() follows the same rule, so the 4.5 contrast check
+     * measures what the browser renders even if a literal drifts from core's 4.5 value. Identical
+     * in block_dimensions' copy of this test.
+     */
+    private const CORE_BS4 = [
+        '--white' => '#fff',
+        '--light' => '#f8f9fa',
+        '--gray' => '#6a737b',
+        '--gray-dark' => '#343a40',
+        '--primary' => '#0f6cbf',
+        '--secondary' => '#ced4da',
+    ];
+
+    /**
      * @var array Foreground token, background token, WCAG floor.
      *
      * Every row is checked in three resolutions - 5.x light, 5.x dark and the Moodle 4.5 fallback
-     * literal - so a chain that is right on one branch and wrong on another cannot pass.
+     * (see resolve_bs4()) - so a chain that is right on one branch and wrong on another cannot pass.
      *
      * Omitted on purpose: accent, brand-ink and danger-ink as normal text on surface-inset measure
      * 4.50, 4.50 and 4.20 in dark - core's own values against core's own surface - so they are
@@ -422,7 +440,7 @@ final class colour_tokens_test extends \basic_testcase {
             'why' => 'Catppuccin Mocha on the custom-SCSS editor: theme-invariant on purpose, like a diff view.',
         ],
         [
-            'selector' => '#id_customfield_customscss:focus',
+            'selector' => "customscss_editor']:focus",
             'property' => 'border-color',
             'value' => '#89b4fa',
             'why' => 'Catppuccin Mocha\'s own focus blue, chosen against that editor\'s fixed dark ground.',
@@ -871,12 +889,36 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /**
+     * Resolve a token declaration the way a browser on Moodle 4.5 does.
+     *
+     * The --bs-* rung is undefined there, so the fallback is taken; a Bootstrap 4 rung behind it
+     * that CORE_BS4 declares is where the value comes from; only a chain with no such rung reaches
+     * its terminal literal.
+     *
+     * @param string $declaration The token's declared value.
+     * @return string|null The resolved CSS colour, or null when the chain has neither.
+     */
+    private function resolve_bs4(string $declaration): ?string {
+        preg_match_all('/--[a-z0-9-]+/i', $declaration, $names);
+        foreach ($names[0] as $rung) {
+            if (isset(self::CORE_BS4[$rung])) {
+                return self::CORE_BS4[$rung];
+            }
+        }
+        if (preg_match_all('/#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\([^)]*\)/i', $declaration, $matches)) {
+            return end($matches[0]);
+        }
+
+        return null;
+    }
+
+    /**
      * Resolve one token to a concrete colour in one of the three resolutions.
      *
-     * The declaration is read out of the stylesheet and followed exactly one hop: a chain
-     * var(--bs-NEW, var(--BS4-OLD, #literal)) yields core's value from CORE_LIGHT or CORE_DARK on
-     * 5.x and the terminating literal on 4.5. A browser on 4.5 stops at the Bootstrap 4 rung where
-     * there is one; every terminal literal in LIGHT equals that rung's 4.5 value, so the two agree.
+     * The declaration is read out of the stylesheet. In light and dark mode the chain's first var()
+     * name is looked up in CORE_LIGHT / CORE_DARK, except that dark mode first takes the activation
+     * block's own value for the tokens it assigns. In bs4 mode see resolve_bs4(). A declaration that
+     * is not a var() chain is returned as written.
      *
      * @param string $suffix Token suffix, e.g. ink-muted.
      * @param string $mode One of light, dark or bs4.
@@ -896,14 +938,7 @@ final class colour_tokens_test extends \basic_testcase {
             return null;
         }
         if ($mode === 'bs4') {
-            /* Moodle 4.5 declares no --bs-* name. The Bootstrap 4 names it does declare (--white,
-               --light, --gray-dark, --primary) equal the terminating literals, so the literal is
-               the 4.5 value. */
-            if (preg_match_all('/#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\([^)]*\)/i', $declaration, $matches)) {
-                return end($matches[0]);
-            }
-
-            return null;
+            return $this->resolve_bs4($declaration);
         }
         if (!preg_match('/^var\(\s*(--[a-z0-9-]+)/i', $declaration, $m)) {
             return $declaration;
@@ -1140,13 +1175,19 @@ final class colour_tokens_test extends \basic_testcase {
      * CI must check the family sibling out, or the cross-repo comparison silently stops running.
      *
      * The control for the test above, which skips when block_dimensions is not installed; the
-     * workflow file is the only place that condition can be checked.
+     * workflow file is the only place that condition can be checked. A release install has no
+     * workflow file, because .gitattributes keeps .github out of the zip, so it skips there.
      *
      * @return void
      */
     public function test_ci_checks_out_the_family_sibling(): void {
         $workflow = $this->plugin_root() . '/.github/workflows/ci.yml';
-        $this->assertFileExists($workflow, 'The CI workflow is where the sibling checkout is declared.');
+        if (!is_readable($workflow)) {
+            $this->markTestSkipped(
+                'No .github/workflows/ci.yml: this is a release install (.gitattributes export-ignores .github), '
+                    . 'which has no CI to check.'
+            );
+        }
         $offenders = [];
         $jobs = preg_split('/\n  (?=[a-z0-9-]+:\n)/', file_get_contents($workflow));
         $found = 0;
@@ -1289,8 +1330,8 @@ final class colour_tokens_test extends \basic_testcase {
         $this->assertSame(
             [],
             $offenders,
-            'The host signal is read only from the html element, and no other dark mechanism may live '
-                . 'beside it: ' . implode('; ', $offenders)
+            'The host signal is read only from body itself or from the html element above it, and no other '
+                . 'dark mechanism may live beside it: ' . implode('; ', $offenders)
         );
     }
 
@@ -1551,7 +1592,49 @@ final class colour_tokens_test extends \basic_testcase {
             [],
             $offenders,
             'Every token pairing must clear its WCAG floor on the light page, on the dark page and on the '
-                . 'Moodle 4.5 fallback literals: ' . implode('; ', $offenders)
+                . 'Moodle 4.5 fallbacks: ' . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * On Moodle 4.5 a chain resolves to its Bootstrap 4 rung, and the literal behind the rung repeats it.
+     *
+     * The first two assertions hold resolve_bs4() itself, on chains written here, so the 4.5 half of
+     * test_declared_values_clear_their_floor measures what a 4.5 browser renders rather than the
+     * literal. The last holds the stylesheet: the literal behind a Bootstrap 4 rung is what a 4.5
+     * theme that declares no such name renders, so it must be the same colour.
+     *
+     * Changes that must make it fail: drop the CORE_BS4 lookup from resolve_bs4(); change the literal
+     * behind var(--primary, ...) in the accent token.
+     *
+     * @return void
+     */
+    public function test_bs4_resolution_reads_the_bootstrap4_rung(): void {
+        $this->assertSame('#0f6cbf', $this->resolve_bs4('var(--bs-link-color, var(--primary, #123456))'));
+        $this->assertSame('#e9ecef', $this->resolve_bs4('var(--bs-secondary-bg, #e9ecef)'));
+        $offenders = [];
+        $withrung = 0;
+        foreach ($this->token_block() as $name => $declaration) {
+            preg_match_all('/--[a-z0-9-]+/i', $declaration, $names);
+            $rungs = array_values(array_intersect($names[0], array_keys(self::CORE_BS4)));
+            if (!$rungs) {
+                continue;
+            }
+            $withrung++;
+            preg_match_all('/#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\([^)]*\)/i', $declaration, $matches);
+            $literal = $matches[0] ? end($matches[0]) : '';
+            $rungvalue = self::CORE_BS4[$rungs[0]];
+            if ($literal === '' || $this->parse_colour($literal) !== $this->parse_colour($rungvalue)) {
+                $offenders[] = $name . ' falls back to ' . ($literal ?: 'no literal') . ' behind ' . $rungs[0]
+                    . ', which is ' . $rungvalue . ' on Moodle 4.5';
+            }
+        }
+        $this->assertGreaterThan(0, $withrung, 'No token chains a Bootstrap 4 rung, so nothing was compared.');
+        $this->assertSame(
+            [],
+            $offenders,
+            'A literal behind a Bootstrap 4 rung must be the colour that rung has on Moodle 4.5: '
+                . implode('; ', $offenders)
         );
     }
 
@@ -1995,7 +2078,7 @@ final class colour_tokens_test extends \basic_testcase {
         $this->assertSame(
             [],
             $offenders,
-            $token . ' is 2.70:1 on the inset surface in light mode and is legitimate only as the text of '
+            $token . ' is 3.07:1 on the inset surface in light mode and is legitimate only as the text of '
                 . 'an inactive control or a placeholder: ' . implode('; ', $offenders)
         );
     }

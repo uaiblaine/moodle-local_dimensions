@@ -109,6 +109,10 @@ const buildContext = (competency, children, rulesModules, outcomelabels) => {
 /**
  * Read and validate the points rule config from the rendered points table.
  *
+ * Mirrors core_competency\competency_rule_points::validate_config(): every value a whole number,
+ * no competency below zero, at least one required point and a total that can reach it. A config
+ * core would refuse gets the inline alert instead of a server exception on save.
+ *
  * @param {HTMLElement} pointsEl The [data-region="points"] element.
  * @return {String|null} The ruleconfig JSON, or null when invalid.
  */
@@ -120,8 +124,10 @@ const readPointsConfig = (pointsEl) => {
         points: Number(rowel.querySelector('[name="points"]').value || 0),
         required: rowel.querySelector('[name="required"]').checked ? 1 : 0,
     }));
-    const total = competencies.reduce((sum, comp) => sum + Math.max(0, comp.points), 0);
-    if (requiredpoints < 1 || total < requiredpoints) {
+    const wholepoints = Number.isInteger(requiredpoints)
+        && competencies.every((comp) => Number.isInteger(comp.points) && comp.points >= 0);
+    const total = competencies.reduce((sum, comp) => sum + comp.points, 0);
+    if (!wholepoints || requiredpoints < 1 || total < requiredpoints) {
         return null;
     }
     return JSON.stringify({base: {points: requiredpoints}, competencies: competencies});

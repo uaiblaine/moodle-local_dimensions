@@ -1,0 +1,1 @@
+s/            state\.root\.querySelectorAll\(`\$\{SELECTORS\.row\}\[data-courseid="\$\{row\.dataset\.courseid\}"\]`\)\.forEach\(\(twin\) => \{\n                if \(method === 'cohort'\) \{/            state.root.querySelectorAll(`\${SELECTORS.row}[data-courseid="\${row.dataset.courseid}"]`).forEach((twin) => {\n                if (state.method === 'cohort') {/;

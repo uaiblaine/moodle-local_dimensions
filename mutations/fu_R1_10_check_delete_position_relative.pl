@@ -1,0 +1,1 @@
+s/\.local-dimensions-icon-check \{\n    --local-dimensions-icon-glyph: var\(--local-dimensions-surface\);\n    position: relative;\n/.local-dimensions-icon-check {\n    --local-dimensions-icon-glyph: var(--local-dimensions-surface);\n/;

@@ -26,7 +26,7 @@
  * The state contract (one object shared with the host) — seeded by the host: root, listEl,
  * frameworkid, excluded (Set of string ids), excludedsuffix (function id => label shown on
  * a disabled row), loadmorelabel, emptylabel; initBrowser() initialises the internal fields
- * (checked, togglelabel, mode, query, offset, total, loading, lastChecked, showpath,
+ * (checked, togglelabel, mode, query, offset, total, loading, generation, lastChecked, showpath,
  * debounce, sentinel, observer).
  *
  * Selection is persistent: checked ids live in state.checked and survive the re-renders
@@ -205,6 +205,7 @@ const loadChildren = async(state, node) => {
     }
     const depth = Number(node.dataset.depth) + 1;
     const offset = Number(container.dataset.offset);
+    const generation = state.generation;
     const response = await browse({
         frameworkid: state.frameworkid,
         parentid: Number(node.dataset.competency),
@@ -212,6 +213,10 @@ const loadChildren = async(state, node) => {
         limitfrom: offset,
         limitnum: PAGE_SIZE,
     });
+    // The list was reset meanwhile, so this node is no longer on screen.
+    if (generation !== state.generation) {
+        return;
+    }
     appendNodes(state, container, response.items, depth);
     container.dataset.offset = String(offset + response.items.length);
     if (offset + response.items.length < response.total) {
@@ -259,6 +264,7 @@ const loadTopPage = async(state) => {
     if (state.loading || (state.total && state.offset >= state.total)) {
         return;
     }
+    const generation = state.generation;
     state.loading = true;
     try {
         const response = await browse({
@@ -268,11 +274,19 @@ const loadTopPage = async(state) => {
             limitfrom: state.offset,
             limitnum: PAGE_SIZE,
         });
+        // A mode, query or framework switch reset the list while this page was in flight: the page
+        // answers the old request, and the offset and total now belong to the new one.
+        if (generation !== state.generation) {
+            return;
+        }
         appendNodes(state, state.listEl, response.items, 0);
         state.offset += response.items.length;
         state.total = response.total;
     } finally {
-        state.loading = false;
+        // After a reset the flag belongs to the new list's first page, which may still be loading.
+        if (generation === state.generation) {
+            state.loading = false;
+        }
     }
 };
 
@@ -283,6 +297,8 @@ const loadTopPage = async(state) => {
  * @return {void}
  */
 const resetList = (state) => {
+    // Makes every page still in flight stale (see loadTopPage and loadChildren).
+    state.generation += 1;
     state.listEl.textContent = '';
     state.offset = 0;
     state.total = 0;
@@ -302,7 +318,12 @@ export const applyMode = async(state, mode, query) => {
     state.mode = mode;
     state.query = query;
     resetList(state);
+    const generation = state.generation;
     await loadTopPage(state);
+    // A later switch owns the list now, and its own call fills in the empty message and the toggle.
+    if (generation !== state.generation) {
+        return;
+    }
     if (!state.listEl.querySelector('.local-dimensions-cb-node')) {
         const empty = document.createElement('div');
         empty.className = 'text-muted small';
@@ -467,6 +488,7 @@ export const initBrowser = async(state) => {
     state.offset = 0;
     state.total = 0;
     state.loading = false;
+    state.generation = 0;
     state.lastChecked = null;
     state.showpath = false;
     state.debounce = null;

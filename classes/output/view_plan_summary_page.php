@@ -106,6 +106,23 @@ class view_plan_summary_page implements renderable, templatable {
     }
 
     /**
+     * An admin-set label (a scale item, a select option) as the learner reads it.
+     *
+     * Both are stored as typed, so a multilang label must be filtered to one language. Plain
+     * spelling: the template prints it through a double stash.
+     *
+     * @param string $label The stored label.
+     * @param \core_competency\competency $competency The competency the label belongs to.
+     * @return string
+     */
+    private static function plain_label(string $label, \core_competency\competency $competency): string {
+        if ($label === '') {
+            return '';
+        }
+        return format_string($label, true, ['context' => $competency->get_context(), 'escape' => false]);
+    }
+
+    /**
      * Order the exported competency rows for the first paint.
      *
      * @param array $competencies Exported competency rows.
@@ -171,8 +188,8 @@ class view_plan_summary_page implements renderable, templatable {
         $bgcolor = null;
         $textcolor = null;
         if ($template) {
-            $bgcolor = $this->get_template_custom_field($template->get('id'), constants::CFIELD_CUSTOMBGCOLOR);
-            $textcolor = $this->get_template_custom_field($template->get('id'), constants::CFIELD_CUSTOMTEXTCOLOR);
+            $bgcolor = $this->get_colour_field((int) $template->get('id'), constants::CFIELD_CUSTOMBGCOLOR, 'lp');
+            $textcolor = $this->get_colour_field((int) $template->get('id'), constants::CFIELD_CUSTOMTEXTCOLOR, 'lp');
         }
 
         // Get due date if set.
@@ -249,12 +266,9 @@ class view_plan_summary_page implements renderable, templatable {
             (string) get_config('local_dimensions', 'viewplan_filter_fields')
         );
 
-        // Get all competencies in the plan with user data.
-        try {
-            $pclist = api::list_plan_competencies($this->plan->get('id'));
-        } catch (\Exception $e) {
-            $pclist = [];
-        }
+        /* Get all competencies in the plan with user data. A failure here is core's error to
+           show, as tool_lp's plan page does: an empty list would read as a plan with nothing in it. */
+        $pclist = api::list_plan_competencies($this->plan->get('id'));
 
         foreach ($pclist as $pc) {
             $comp = $pc->competency;
@@ -273,7 +287,7 @@ class view_plan_summary_page implements renderable, templatable {
                 if ($scale) {
                     $scalevalues = $scale->load_items();
                     if (isset($scalevalues[$grade - 1])) {
-                        $ratingtext = $scalevalues[$grade - 1];
+                        $ratingtext = self::plain_label($scalevalues[$grade - 1], $comp);
                     }
                 }
             }
@@ -287,19 +301,13 @@ class view_plan_summary_page implements renderable, templatable {
                     $sublinetext = $hasrating ? $ratingtext : '';
                     break;
                 case constants::SUBLINE_TAG1:
-                    // Tag1/tag2 are select custom fields: resolve the chosen
-                    // option label (get_competency_custom_field only reads hex
-                    // colour fields and would return null here).
-                    $sublinetext = \local_dimensions\helper::read_competency_select_label(
-                        $comp->get('id'),
-                        constants::CFIELD_TAG1
-                    );
+                    // Tag1/tag2 are select custom fields: resolve the chosen option label.
+                    $label = \local_dimensions\helper::read_competency_select_label($comp->get('id'), constants::CFIELD_TAG1);
+                    $sublinetext = self::plain_label($label, $comp);
                     break;
                 case constants::SUBLINE_TAG2:
-                    $sublinetext = \local_dimensions\helper::read_competency_select_label(
-                        $comp->get('id'),
-                        constants::CFIELD_TAG2
-                    );
+                    $label = \local_dimensions\helper::read_competency_select_label($comp->get('id'), constants::CFIELD_TAG2);
+                    $sublinetext = self::plain_label($label, $comp);
                     break;
                 case constants::SUBLINE_NONE:
                 case constants::SUBLINE_STATUS:
@@ -327,8 +335,6 @@ class view_plan_summary_page implements renderable, templatable {
                 'isproficient' => $isproficient,
                 'rating' => $ratingtext,
                 'hasrating' => $hasrating,
-                'badgeproficienticonurl' => $output->image_url('status/check-circle-fill', 'local_dimensions')->out(false),
-                'badgewarningiconurl' => $output->image_url('status/warning-triangle-fill', 'local_dimensions')->out(false),
                 'sublinetext' => $sublinetext,
                 'hassublinetext' => ($sublinetext !== ''),
                 'filtervaluesjson' => json_encode((object) $filtervalues),
@@ -426,41 +432,5 @@ class view_plan_summary_page implements renderable, templatable {
         }
 
         return $data;
-    }
-
-    /**
-     * Get a colour custom field value for a template.
-     *
-     * Same hex-only rule as {@see customfield_reader::get_competency_custom_field()}.
-     *
-     * @param int $templateid The template ID.
-     * @param string $shortname The field shortname to retrieve.
-     * @return string|null The colour with a leading '#', or null when unset or not a hex colour.
-     */
-    protected function get_template_custom_field(int $templateid, string $shortname): ?string {
-        $field = $this->get_field($shortname, 'lp');
-        if (!$field) {
-            return null;
-        }
-
-        $data = $this->get_field_data($field, $templateid);
-        if (!$data) {
-            return null;
-        }
-
-        $value = trim((string) $data->get('value'));
-        if ($value === '') {
-            return null;
-        }
-
-        // Validate hex color.
-        if (preg_match('/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $value)) {
-            if ($value[0] !== '#') {
-                $value = '#' . $value;
-            }
-            return $value;
-        }
-
-        return null;
     }
 }

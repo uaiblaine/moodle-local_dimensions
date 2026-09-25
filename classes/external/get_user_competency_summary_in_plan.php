@@ -96,7 +96,6 @@ class get_user_competency_summary_in_plan extends external_api {
 
         if (!empty($result->usercompetencysummary) && !empty($result->usercompetencysummary->competency)) {
             $result->usercompetencysummary->competency->taxonomy = (object) $taxonomydata;
-            $result->usercompetencysummary->competency->taxonomyterm = $taxonomydata['current']['term'];
             $result->usercompetencysummary->competency->scaledescription =
                 self::resolve_show_scale_description()
                     ? self::get_scale_description($competency)
@@ -131,26 +130,37 @@ class get_user_competency_summary_in_plan extends external_api {
      * at a deleted scale raises. That would take the whole accordion detail down over an
      * optional extra, so it is caught here and treated as "no description".
      *
+     * Formatted once, from the stored text. grade_scale::get_description() already returns
+     * formatted HTML (filtered in the page's context, and not cleaned), so formatting its result
+     * again would run the filters twice and clean their output. The file URLs are rewritten the
+     * way that method does, since the scale's files live in the system context.
+     *
      * @param \core_competency\competency $competency The competency being summarised.
      * @return string Formatted description HTML, or an empty string.
      */
     protected static function get_scale_description(\core_competency\competency $competency): string {
+        global $CFG;
+        require_once($CFG->libdir . '/filelib.php');
+
         try {
             $scale = $competency->get_scale();
         } catch (\Throwable $e) {
             return '';
         }
 
-        if (empty($scale)) {
+        if (empty($scale) || trim((string) $scale->description) === '') {
             return '';
         }
 
-        $description = $scale->get_description();
-        if (trim((string) $description) === '') {
-            return '';
-        }
-
-        return format_text($description, FORMAT_HTML, ['context' => $competency->get_context()]);
+        $description = file_rewrite_pluginfile_urls(
+            $scale->description,
+            'pluginfile.php',
+            context_system::instance()->id,
+            'grade',
+            'scale',
+            $scale->id
+        );
+        return format_text($description, $scale->descriptionformat, ['context' => $competency->get_context()]);
     }
 
     /**

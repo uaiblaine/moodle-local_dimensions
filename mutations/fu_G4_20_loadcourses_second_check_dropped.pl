@@ -1,0 +1,1 @@
+s/    const rows = await Promise\.all\(data\.items\.map\(\(item\) => makeRow\(state, item, name\)\)\);\n    if \(token !== state\.loadtoken\) \{\n        return;\n    \}\n    const tbody = children\.querySelector/    const rows = await Promise.all(data.items.map((item) => makeRow(state, item, name)));\n    const tbody = children.querySelector/;

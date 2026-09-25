@@ -70,7 +70,8 @@ class link_competency_module extends external_api {
         $modcontext = context_module::instance($cmid);
         self::validate_context($modcontext);
 
-        api::add_competency_to_course_module($cmid, $competencyid);
+        // False when the link already existed: nothing was added, so nothing is logged below.
+        $created = api::add_competency_to_course_module($cmid, $competencyid);
 
         [$course, $cm] = get_course_and_cm_from_cmid($cmid);
         $link = course_module_competency::get_record(
@@ -79,11 +80,13 @@ class link_competency_module extends external_api {
         );
 
         // Core fires no event for the module link lifecycle; log the decision.
-        \local_dimensions\event\module_link_added::create([
-            'context' => $modcontext,
-            'objectid' => (int) $link->get('id'),
-            'other' => ['competencyid' => $competencyid, 'cmid' => $cmid],
-        ])->trigger();
+        if ($created) {
+            \local_dimensions\event\module_link_added::create([
+                'context' => $modcontext,
+                'objectid' => (int) $link->get('id'),
+                'other' => ['competencyid' => $competencyid, 'cmid' => $cmid],
+            ])->trigger();
+        }
 
         return [
             'cmid' => (int) $cm->id,

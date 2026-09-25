@@ -1,0 +1,1 @@
+s/    \.local-dimensions-icon-info \{\n        --local-dimensions-icon-glyph: canvas;\n        forced-color-adjust: none;\n        background-color: currentcolor;\n    \}/    .local-dimensions-icon-info {\n        forced-color-adjust: none;\n        background-color: currentcolor;\n    }/;

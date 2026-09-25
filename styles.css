@@ -78,7 +78,7 @@
      and brand-ink (the same value) are 4.495:1 on it and danger-ink 4.20:1. Put coloured ink on
      surface or surface-alt; ink, ink-muted, ink-strong, success-ink, warning-ink, info-ink and
      neutral-ink are fine on it.
-   - ink-faint is for inactive-control text and placeholders only (2.70:1 on surface-inset in
+   - ink-faint is for inactive-control text and placeholders only (3.07:1 on surface-inset in
      light, under WCAG 1.4.3's "incidental" exception); never a border, fill, stroke or outline.
    - brand-fill is a solid fill under on-brand-fill and nothing else. --bs-primary does not flip
      (1.10:1 as text on the dark page), so it is never an ink, a state-carrying border or a focus
@@ -231,8 +231,10 @@ body[data-bs-theme="dark"],
 
 /* The custom SCSS field is a textarea customfield rendered as a core editor; the hub modals
    pin it to plain text (see helper::force_customscss_plain), so the redundant format selector
-   is hidden. The element id is randomised in modals, so target the stable name attribute. */
-.modal-form-dialogue select[name='customfield_customscss_editor[format]'] {
+   is hidden. Core names the editor 'customfield_' + the field shortname + '_editor'
+   (constants::CFIELD_CUSTOMSCSS); customscss_field_styles_test renders the field and checks
+   every customscss selector in this file against that markup. */
+.modal-form-dialogue select[name^='customfield_local_dimensions_customscss_editor'] {
     display: none;
 }
 
@@ -1442,52 +1444,114 @@ body[data-bs-theme="dark"],
     background-color: var(--local-dimensions-surface-alt);
 }
 
-.local-dimensions-timeline-marker .fa-check-circle {
-    font-size: 24px;
-    background: var(--local-dimensions-surface-alt);
-}
-
-/* Feather SVG Icons - Consistent sizing and colors */
+/*
+ * Status icons. The pix/status SVG is the mask and a colour token the paint, so the icon follows
+ * the theme and the colour mode: an SVG shown through <img> keeps the colours written in the file,
+ * and no stylesheet rule reaches inside it. Core writes each pix placeholder below as a
+ * root-relative theme/image.php path, so the mask comes from the page's own origin, which a mask
+ * needs: mask images are fetched in CORS mode. Chromium before 120 reads only the -webkit- mask
+ * properties. status_icons_test pins the markup and these rules.
+ */
 .local-dimensions-icon {
     display: block;
     flex-shrink: 0;
     width: 24px;
     height: 24px;
-    object-fit: contain;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+
+    /* The background is the whole icon, and printing drops backgrounds unless told not to. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 }
 
 .local-dimensions-icon-check {
-    fill: var(--local-dimensions-success-ink);
+    --local-dimensions-icon-glyph: var(--local-dimensions-surface);
+    position: relative;
+    background-color: var(--local-dimensions-success-ink);
+    -webkit-mask-image: url('[[pix:local_dimensions|status/check-circle-fill]]');
+    mask-image: url('[[pix:local_dimensions|status/check-circle-fill]]');
 }
 
 .local-dimensions-icon-lock {
-    stroke: var(--local-dimensions-ink-muted);
     width: 40px;
     height: 40px;
+    background-color: var(--local-dimensions-ink-muted);
+    -webkit-mask-image: url('[[pix:local_dimensions|status/lock]]');
+    mask-image: url('[[pix:local_dimensions|status/lock]]');
 }
 
 .local-dimensions-icon-lock-sm {
-    stroke: var(--local-dimensions-ink-muted);
     width: 20px;
     height: 20px;
+    background-color: var(--local-dimensions-ink-muted);
+    -webkit-mask-image: url('[[pix:local_dimensions|status/lock]]');
+    mask-image: url('[[pix:local_dimensions|status/lock]]');
 }
 
+/* A section with activities and no progress yet: an empty ring in the line colour, which is the
+   colour the SVG was drawn in. */
 .local-dimensions-icon-circle {
-    stroke: var(--local-dimensions-ink-muted);
+    background-color: var(--local-dimensions-line);
+    -webkit-mask-image: url('[[pix:local_dimensions|status/circle-outline]]');
+    mask-image: url('[[pix:local_dimensions|status/circle-outline]]');
 }
 
 .local-dimensions-icon-info {
-    stroke: var(--local-dimensions-ink-muted);
     opacity: 0.8;
+    background-color: var(--local-dimensions-ink-muted);
+    -webkit-mask-image: url('[[pix:local_dimensions|status/info-circle]]');
+    mask-image: url('[[pix:local_dimensions|status/info-circle]]');
 }
 
-/* Legacy: Keep fa-lock styles for backwards compatibility */
-.local-dimensions-timeline-marker .fa-lock {
-    font-size: 10px;
-    padding: 5px;
-    border: 2px solid var(--local-dimensions-ink-muted);
-    border-radius: 50%;
-    color: var(--local-dimensions-ink-muted);
+/*
+ * The check the SVG draws in white inside its disc. An alpha mask keeps the whole disc, so the
+ * stroke is drawn again as an L turned 45 degrees, in percentages of the icon so it scales with
+ * it (12px in a grade badge, 56px on a single-activity card). Its colour, --local-dimensions-icon-glyph,
+ * is the ground the icon sits on (the card surface, or the badge's tint), so it reads as the
+ * cut-out the SVG shows: white on the dark light-mode disc, dark on the light dark-mode one.
+ * rtl:ignore keeps Moodle's RTL flip from mirroring the offsets, since it does not flip the
+ * rotation with them.
+ */
+/* rtl:ignore */
+.local-dimensions-icon-check::after,
+.local-dimensions-grade-badge-icon-proficient::after {
+    content: '';
+    position: absolute;
+    top: 19%;
+    left: 36%;
+    width: 28%;
+    height: 50%;
+    background-image:
+        linear-gradient(var(--local-dimensions-icon-glyph), var(--local-dimensions-icon-glyph)),
+        linear-gradient(var(--local-dimensions-icon-glyph), var(--local-dimensions-icon-glyph));
+    background-position: left bottom, right top;
+    background-repeat: no-repeat;
+    background-size: 100% 21%, 38% 100%;
+    transform: rotate(45deg);
+}
+
+/*
+ * Forced colours replace every background colour with the system canvas and drop gradient
+ * backgrounds, which would erase an icon painted by its background and a glyph drawn in
+ * gradients. So the icon opts out and paints in currentcolor, the forced text colour it
+ * inherits, with the glyph in canvas. canvas travels in the custom property because stylelint's
+ * csstree data has no CSS Color 4 system colour names.
+ */
+@media (forced-colors: active) {
+    .local-dimensions-icon-check,
+    .local-dimensions-icon-lock,
+    .local-dimensions-icon-lock-sm,
+    .local-dimensions-icon-circle,
+    .local-dimensions-icon-info {
+        --local-dimensions-icon-glyph: canvas;
+        forced-color-adjust: none;
+        background-color: currentcolor;
+    }
 }
 
 /* Progress Ring SVG - Modern Design (larger to emphasize progress) */
@@ -1767,19 +1831,62 @@ body[data-bs-theme="dark"],
     color: var(--local-dimensions-neutral-ink);
 }
 
+/* The badge's status icon is drawn the way the status icons are (see .local-dimensions-icon): the
+   SVG is the mask, the badge's ink the paint and its tint the glyph. The proficient check shares
+   their check glyph rule. */
 .local-dimensions-grade-badge-icon {
+    position: relative;
     display: block;
     flex-shrink: 0;
     width: 12px;
     height: 12px;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 }
 
-.local-dimensions-grade-badge.badge-proficient .local-dimensions-grade-badge-icon {
-    fill: var(--local-dimensions-success-ink);
+.local-dimensions-grade-badge-icon-proficient {
+    --local-dimensions-icon-glyph: var(--local-dimensions-success-tint);
+    background-color: var(--local-dimensions-success-ink);
+    -webkit-mask-image: url('[[pix:local_dimensions|status/check-circle-fill]]');
+    mask-image: url('[[pix:local_dimensions|status/check-circle-fill]]');
 }
 
-.local-dimensions-grade-badge.badge-not-proficient .local-dimensions-grade-badge-icon {
-    fill: var(--local-dimensions-warning-ink);
+.local-dimensions-grade-badge-icon-warning {
+    --local-dimensions-icon-glyph: var(--local-dimensions-warning-tint);
+    background-color: var(--local-dimensions-warning-ink);
+    -webkit-mask-image: url('[[pix:local_dimensions|status/warning-triangle-fill]]');
+    mask-image: url('[[pix:local_dimensions|status/warning-triangle-fill]]');
+}
+
+/* The exclamation mark the SVG draws in white inside its triangle, drawn again as a bar and a dot
+   for the same reason as the check; not mirrored in RTL either. */
+/* rtl:ignore */
+.local-dimensions-grade-badge-icon-warning::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--local-dimensions-icon-glyph), var(--local-dimensions-icon-glyph)),
+        radial-gradient(closest-side, var(--local-dimensions-icon-glyph) 80%, transparent);
+    background-position: 50% 41%, 50% 76%;
+    background-repeat: no-repeat;
+    background-size: 9% 34%, 11% 11%;
+}
+
+/* See the status icons' forced-colours rule. */
+@media (forced-colors: active) {
+    .local-dimensions-grade-badge-icon-proficient,
+    .local-dimensions-grade-badge-icon-warning {
+        --local-dimensions-icon-glyph: canvas;
+        forced-color-adjust: none;
+        background-color: currentcolor;
+    }
 }
 
 /* Accordion Icon (chevron) */
@@ -1836,11 +1943,6 @@ body[data-bs-theme="dark"],
     .local-dimensions-grade-badge {
         font-size: 0.7rem;
     }
-}
-
-.local-dimensions-course-progress-check {
-    font-size: 0.875rem;
-    color: var(--local-dimensions-success-ink);
 }
 
 /* ============================================
@@ -2715,9 +2817,8 @@ body[data-bs-theme="dark"],
 }
 
 /* Evidence type colours. One definition per category: activity is success, grade is
-   brand, manual is warning, prior is danger, rule is info, and file and other share the
-   neutral tone (two greys would be indistinguishable). Each carries its tone's own border,
-   the way core's alerts do. */
+   brand, manual is warning, prior is danger, rule is info and other is neutral. Each
+   carries its tone's own border, the way core's alerts do. */
 .local-dimensions-evidence-activity {
     border: 1px solid var(--local-dimensions-success-edge);
     background: var(--local-dimensions-success-tint);
@@ -2734,12 +2835,6 @@ body[data-bs-theme="dark"],
     border: 1px solid var(--local-dimensions-warning-edge);
     background: var(--local-dimensions-warning-tint);
     color: var(--local-dimensions-warning-ink);
-}
-
-.local-dimensions-evidence-file {
-    border: 1px solid var(--local-dimensions-neutral-edge);
-    background: var(--local-dimensions-neutral-tint);
-    color: var(--local-dimensions-neutral-ink);
 }
 
 .local-dimensions-evidence-prior {
@@ -4004,10 +4099,6 @@ a.local-dimensions-course-act-row:focus-visible {
     overflow-wrap: anywhere;
 }
 
-.local-dimensions-path-sep {
-    color: var(--local-dimensions-ink-muted);
-}
-
 .local-dimensions-tax-link {
     padding: 0;
     border: none;
@@ -4237,15 +4328,16 @@ a.local-dimensions-course-act-row:focus-visible {
 }
 
 /* ============================================
-      CUSTOM SCSS TEXTAREA - Template edit form
+      CUSTOM SCSS TEXTAREA - competency and template modal forms
 
       Intentionally always dark: a code-editor skin (Catppuccin Mocha),
       theme-invariant in the way a diff view is, dark on a light page and
       unchanged in dark mode. Its literals are named exemptions in
       colour_tokens_test; do not replace them with tokens or lighten them.
+      The field renders as a core editor element (data-fieldtype editor), and
+      the selector is the editor's name, as for the format selector above.
       ============================================ */
-.fitem [data-fieldtype='textarea'] textarea[name*='customscss'],
-#id_customfield_customscss {
+.fitem [data-fieldtype='editor'] textarea[name^='customfield_local_dimensions_customscss_editor'] {
     font-family: SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.5;
@@ -4261,7 +4353,7 @@ a.local-dimensions-course-act-row:focus-visible {
     resize: vertical;
 }
 
-#id_customfield_customscss:focus {
+.fitem [data-fieldtype='editor'] textarea[name^='customfield_local_dimensions_customscss_editor']:focus {
     background-color: #1e1e2e;
     color: #cdd6f4;
     border-color: #89b4fa;
@@ -4271,13 +4363,6 @@ a.local-dimensions-course-act-row:focus-visible {
        the token is near-black on a light page. */
     outline: 2px solid currentcolor;
     outline-offset: 2px;
-}
-
-/* Hide the editor format selector for the custom SCSS field.
-      The value is forced to FORMAT_PLAIN server-side. */
-#fitem_id_customfield_customscss_editorformat,
-#fgroup_id_customfield_customscss_editorformat {
-    display: none;
 }
 
 /* ============================================================
@@ -5833,7 +5918,8 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 
 /* Plans + Structure divider: a 22px hit area whose grip is pinned to the middle of the viewport
    (position: sticky) so it stays reachable however far the panels scroll. The ::before is a
-   full-height guide line that only paints on hover/focus. */
+   full-height guide line that only paints on hover/focus. touch-action: none keeps a touch drag
+   on the divider from being taken over as a page pan, which would cancel the pointer mid-resize. */
 .local-dimensions-central-plans-resizer {
     position: relative;
     flex: none;
@@ -5843,6 +5929,7 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
     border: 0;
     background: transparent;
     cursor: col-resize;
+    touch-action: none;
 }
 
 .local-dimensions-central-plans-resizer::before {
@@ -7245,15 +7332,6 @@ button.local-dimensions-central-structure-metric-value:focus-visible {
     line-height: 1;
 }
 
-/* Type chip on the plan detail — a distinct hue from the accent count chip. */
-.local-dimensions-central-chip-type {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--local-dimensions-info-tint);
-    color: var(--local-dimensions-info-ink);
-    font-weight: 500;
-}
-
 /* Optional per-competency metadata on the plan detail (taxonomy / idnumber / path),
    toggled by show-* classes on the list — same pattern as the Structure tree. */
 .local-dimensions-central-plans .local-dimensions-central-tax,
@@ -8152,6 +8230,10 @@ body.local-dimensions-bs4 .gap-3 {
 
 /* Font weight and family utilities renamed in BS5. Only the weights the markup actually
    asks for: bootstrap_compat_test fails on a polyfill rule nothing uses. */
+body.local-dimensions-bs4 .fw-bold {
+    font-weight: 700;
+}
+
 body.local-dimensions-bs4 .fw-medium {
     font-weight: 500;
 }

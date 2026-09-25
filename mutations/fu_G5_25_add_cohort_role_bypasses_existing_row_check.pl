@@ -1,0 +1,1 @@
+s/\$assignment = \\tool_cohortroles\\api::create_cohort_role_assignment\(\(object\) \[(.*?)\n        \]\);/\$assignment = (new \\tool_cohortroles\\cohort_role_assignment(0, (object) [$1\n        ]))->create();/s;

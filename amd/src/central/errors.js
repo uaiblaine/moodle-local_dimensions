@@ -17,8 +17,8 @@
  * Network-aware error routing for the Competency hub.
  *
  * A transport failure (offline, dropped connection, timeout) rejects a core/ajax call, including
- * core/templates' core_output_load_template_with_dependencies, with a value that has no Moodle
- * errorcode. core/notification's exception() renders that as a YUI exception dialogue with an
+ * core/templates' core_output_load_template_with_dependencies, with a bare string rather than an
+ * error object. core/notification's exception() renders that as a YUI exception dialogue with an
  * "undefined" title and body. Connectivity drops therefore get a dismissible toast instead, while
  * application errors keep the exception dialogue.
  *
@@ -33,14 +33,15 @@ import {getString} from 'core/str';
 
 /**
  * Decide whether a rejected call failed because of a connectivity problem rather
- * than a genuine application error returned by Moodle.
+ * than a genuine application error.
  *
- * navigator.onLine === false is the strongest signal. Otherwise: a real
- * web-service exception always carries a Moodle `errorcode`; core/ajax rejects
- * transport failures with jQuery's bare errorThrown (an empty string or a plain
- * Error), which has none. Treating "no errorcode" as a network failure keeps
- * capability/param/coding errors on the technical path while connectivity drops
- * get the friendly notice.
+ * navigator.onLine === false is the strongest signal. Otherwise only core/ajax's
+ * requestFail() rejects with jQuery's bare errorThrown, a string ('' for a dropped
+ * connection, 'timeout', 'abort', or an HTTP error's status text, which this cannot
+ * tell apart), or with nothing at all. Every other rejection
+ * is an object and an error to show: a web-service exception (with a Moodle
+ * errorcode), a script fault (TypeError and friends), core/ajax's own
+ * Error('missing response') and jQuery's parse error on a broken response.
  *
  * @param {*} error The rejection value.
  * @return {Boolean} True when the failure looks like a connectivity drop.
@@ -49,7 +50,7 @@ export const isNetworkError = (error) => {
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         return true;
     }
-    return !(error && typeof error === 'object' && error.errorcode);
+    return typeof error === 'string' || !error;
 };
 
 /**

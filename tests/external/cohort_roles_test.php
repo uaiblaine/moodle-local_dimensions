@@ -111,17 +111,26 @@ final class cohort_roles_test extends \advanced_testcase {
      * @return void
      */
     public function test_add_validation(): void {
+        global $DB;
         $this->resetAfterTest();
         $this->setAdminUser();
         [$templateid, $cohortid, $roleid, $holderid] = $this->setup_fixture();
+        $crparams = ['userid' => $holderid, 'roleid' => $roleid, 'cohortid' => $cohortid];
 
         $this->assertTrue(add_cohort_role::execute($templateid, $holderid, $roleid, $cohortid)['success']);
+        $this->assertSame(1, $DB->count_records('tool_cohortroles', $crparams));
         // Idempotent: a duplicate does not error and does not create a second row.
         $this->assertTrue(add_cohort_role::execute($templateid, $holderid, $roleid, $cohortid)['success']);
+        $this->assertSame(1, $DB->count_records('tool_cohortroles', $crparams));
 
         $unlinked = $this->getDataGenerator()->create_cohort();
-        $this->expectException(\moodle_exception::class);
-        add_cohort_role::execute($templateid, $holderid, $roleid, (int) $unlinked->id);
+        try {
+            add_cohort_role::execute($templateid, $holderid, $roleid, (int) $unlinked->id);
+            $this->fail('A cohort the template does not hold was accepted.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('central_roles_cohortnotlinked', $e->errorcode);
+        }
+        $this->assertSame(0, $DB->count_records('tool_cohortroles', ['cohortid' => $unlinked->id]));
     }
 
     /**
@@ -162,8 +171,65 @@ final class cohort_roles_test extends \advanced_testcase {
         ]);
         $otherid = (int) $DB->get_field('tool_cohortroles', 'id', ['cohortid' => $othercohort->id]);
 
-        $this->expectException(\moodle_exception::class);
-        remove_cohort_role::execute($templateid, $otherid);
+        try {
+            remove_cohort_role::execute($templateid, $otherid);
+            $this->fail('An assignment over a cohort the template does not hold was removed.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('central_roles_cohortnotlinked', $e->errorcode);
+        }
+        $this->assertTrue($DB->record_exists('tool_cohortroles', ['id' => $otherid]));
+    }
+
+    /**
+     * The listing reads each cohort, holder and synced count in a fixed number of queries, however
+     * many cohorts and assignments the template carries, and still reports each one correctly.
+     *
+     * @return void
+     */
+    public function test_list_reads_do_not_grow_with_the_rows(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$templateid, $cohortid, $roleid, $holderid, $memberids] = $this->setup_fixture();
+        add_cohort_role::execute($templateid, $holderid, $roleid, $cohortid);
+        \tool_cohortroles\api::sync_all_cohort_roles();
+        list_template_cohort_roles::execute($templateid);
+
+        $before = $DB->perf_get_reads();
+        $one = list_template_cohort_roles::execute($templateid);
+        $readsforone = $DB->perf_get_reads() - $before;
+
+        $dg = $this->getDataGenerator();
+        $morecohortids = [];
+        for ($i = 0; $i < 3; $i++) {
+            $cohort = $dg->create_cohort(['name' => 'Extra ' . $i]);
+            cohort_add_member($cohort->id, $memberids[0]);
+            competencyapi::create_template_cohort($templateid, $cohort->id);
+            add_cohort_role::execute($templateid, (int) $dg->create_user()->id, $roleid, (int) $cohort->id);
+            $morecohortids[] = (int) $cohort->id;
+        }
+        list_template_cohort_roles::execute($templateid);
+
+        $before = $DB->perf_get_reads();
+        $four = list_template_cohort_roles::execute($templateid);
+        $readsforfour = $DB->perf_get_reads() - $before;
+
+        $this->assertCount(1, $one['assignments']);
+        $this->assertCount(4, $four['cohorts']);
+        $this->assertCount(4, $four['assignments']);
+        $this->assertSame($readsforone, $readsforfour);
+        // Each row still reports its own counts and holder.
+        $bycohort = array_column($four['assignments'], null, 'cohortid');
+        $this->assertSame('synced', $bycohort[$cohortid]['status']);
+        $this->assertSame(2, $bycohort[$cohortid]['syncedcount']);
+        $this->assertSame(fullname(\core_user::get_user($holderid)), $bycohort[$cohortid]['userfullname']);
+        foreach ($morecohortids as $morecohortid) {
+            $this->assertSame('pending', $bycohort[$morecohortid]['status']);
+            $this->assertSame(0, $bycohort[$morecohortid]['syncedcount']);
+            $this->assertSame(1, $bycohort[$morecohortid]['membercount']);
+        }
+        $members = array_column($four['cohorts'], 'members', 'cohortid');
+        $this->assertSame(2, $members[$cohortid]);
     }
 
     /**

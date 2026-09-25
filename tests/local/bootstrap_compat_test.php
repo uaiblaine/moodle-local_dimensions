@@ -247,7 +247,42 @@ final class bootstrap_compat_test extends \basic_testcase {
     }
 
     /**
+     * The class string a class token sits in: the text between the nearest quotes around it.
+     *
+     * One source line can carry two class strings, as a ternary choosing between two badges does,
+     * and a text utility in one of them says nothing about the other.
+     *
+     * @param string $line One raw source line.
+     * @param int $offset Byte offset of the token in the line.
+     * @param int $length Byte length of the token.
+     * @return string The enclosing quoted text, or the whole line when the token is not quoted.
+     */
+    private function class_string_around(string $line, int $offset, int $length): string {
+        $start = 0;
+        $end = strlen($line);
+        /* The third delimiter is the JS template-literal backtick; Moodle's phpcs forbids it literally. */
+        foreach (['"', "'", "\x60"] as $quote) {
+            $before = strrpos(substr($line, 0, $offset), $quote);
+            if ($before !== false && $before + 1 > $start) {
+                $start = $before + 1;
+            }
+            $after = strpos($line, $quote, $offset + $length);
+            if ($after !== false && $after < $end) {
+                $end = $after;
+            }
+        }
+        return substr($line, $start, $end - $start);
+    }
+
+    /**
      * Every badge background must state its text colour, so it reads on both branches.
+     *
+     * The text utility must be the one badge_text_colours() pairs with that background, in the
+     * same class string: text-dark on bg-success fails the AA floor on both branches.
+     *
+     * Changes that must make it fail: pair bg-success with text-dark in
+     * template_import_verdict::verdict_badge(); swap the two text utilities in the source
+     * colour ternary of amd/src/setting_iconpicker.js.
      *
      * @return void
      */
@@ -268,11 +303,16 @@ final class bootstrap_compat_test extends \basic_testcase {
                     continue;
                 }
                 foreach ($this->badge_text_colours() as $background => $required) {
-                    if (!preg_match('/\b' . preg_quote($background, '/') . '\b/', $line)) {
+                    $pattern = '/(?<![\w-])' . preg_quote($background, '/') . '(?![\w-])/';
+                    if (!preg_match_all($pattern, $line, $matches, PREG_OFFSET_CAPTURE)) {
                         continue;
                     }
-                    if (!preg_match('/\btext-(white|dark|body|muted)\b/', $line)) {
-                        $offenders[] = basename($path) . ':' . ($number + 1) . ' needs ' . $required;
+                    foreach ($matches[0] as [$token, $offset]) {
+                        $classes = $this->class_string_around($line, $offset, strlen($token));
+                        if (!preg_match('/(?<![\w-])' . preg_quote($required, '/') . '(?![\w-])/', $classes)) {
+                            $offenders[] = basename($path) . ':' . ($number + 1) . ' needs ' . $required
+                                . ' beside ' . $background;
+                        }
                     }
                 }
             }
@@ -382,6 +422,7 @@ final class bootstrap_compat_test extends \basic_testcase {
             '/\brounded-left\b/' => 'rounded-start',
             '/\brounded-right\b/' => 'rounded-end',
             '/\bno-gutters\b/' => 'g-0',
+            '/\bfont-weight-(light|lighter|normal|bold|bolder)\b/' => 'fw-*',
         ];
     }
 
@@ -420,25 +461,52 @@ final class bootstrap_compat_test extends \basic_testcase {
     }
 
     /**
+     * PHP source with its comments removed, so a mention in prose is not read as a call.
+     *
+     * @param string $contents The contents of a PHP file.
+     * @return string The same source without comment and docblock tokens.
+     */
+    private function php_code_only(string $contents): string {
+        $code = '';
+        foreach (token_get_all($contents) as $token) {
+            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+            $code .= is_array($token) ? $token[1] : $token;
+        }
+        return $code;
+    }
+
+    /**
      * The Bootstrap 4 marker must be added wherever the plugin sets one of its page body classes.
      *
      * The polyfill is gated on that marker, so an entry point that forgets it renders unstyled on
-     * 4.5, with no error anywhere.
+     * 4.5, with no error anywhere. Both the body class and the call are read from code, not from
+     * comments.
+     *
+     * Change that must make it fail: turn the mark_page() call in view-plan.php into a comment.
      *
      * @return void
      */
     public function test_entry_points_mark_the_bootstrap_version(): void {
         $root = $this->plugin_root();
         $offenders = [];
+        $checked = 0;
         foreach (glob($root . '/*.php') ?: [] as $path) {
-            $contents = file_get_contents($path);
-            if (!preg_match('/add_body_class\(\s*[\'"]local-dimensions-/', $contents)) {
+            $code = $this->php_code_only(file_get_contents($path));
+            if (!preg_match('/add_body_class\(\s*[\'"]local-dimensions-/', $code)) {
                 continue;
             }
-            if (!str_contains($contents, 'bootstrap::mark_page()')) {
+            $checked++;
+            if (!preg_match('/\bbootstrap::mark_page\(\s*\)\s*;/', $code)) {
                 $offenders[] = basename($path);
             }
         }
+        $this->assertGreaterThan(
+            0,
+            $checked,
+            'No entry point sets a local-dimensions- body class, so this test would pass over an empty list.'
+        );
         $this->assertSame(
             [],
             $offenders,
