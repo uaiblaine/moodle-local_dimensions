@@ -71,6 +71,19 @@ clone inside a checkout, no rsync. Everything runs through the fleet's `mdl` CLI
 agent's Bash), and git runs from this directory (or `git -C`). `git fetch && git pull`
 before starting so you don't build on a stale base.
 
+### In a Claude Code cloud session
+
+A cloud session has none of the above: no `mdl`, no stacks, no `~/dev/CLAUDE.md` (the fleet rules
+live in the owner's `moodle-dev` repo). The cloud environment's setup script, versioned as
+`moodle-dev/cloud/setup.sh`, installs `moodle-plugin-ci` and the `mpci` runner instead: run `mpci`
+from this directory for every gate on the highest branch, `mpci --branch MOODLE_405_STABLE` for the
+lowest, and `mpci --reuse --only phpunit --filter <test>` while iterating. It cannot run Behat, PHP
+8.4 or MariaDB, so the owner still runs `mdl ci moodle-local_dimensions --matrix --behat` before a
+merge: push a branch, open the pull request, and leave the merge to them. Rebuild `amd/build` with
+Moodle's own grunt inside the `mpci` install (`cd /tmp/mpci/<branch>/moodle && npx grunt amd
+--root=<the plugin path>`), never by hand. The next task is written down in
+`docs/superpowers/plans/2026-09-25-tracker-describes-owner.md`.
+
 ### Building JavaScript assets (required before committing JS)
 
 `mdl grunt m501 local/dimensions` rebuilds `amd/build/*.min.js` + `.map` in a node
