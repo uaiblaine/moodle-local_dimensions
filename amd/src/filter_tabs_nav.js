@@ -137,7 +137,6 @@ define([], function() {
         this.scrollAnimationFrame = 0;
         this.resizeDebounceTimer = 0;
         this.reducedMotion = false;
-        this._destroyed = false;
 
         this._onPaddleLeftClick = this._onPaddleLeftClick.bind(this);
         this._onPaddleRightClick = this._onPaddleRightClick.bind(this);
@@ -162,14 +161,9 @@ define([], function() {
         this.platterEl.classList.add('local-dimensions-filter-tabs-no-transition');
         var self = this;
         requestAnimationFrame(function() {
-            if (self._destroyed) {
-                return;
-            }
             self.update();
             requestAnimationFrame(function() {
-                if (!self._destroyed) {
-                    self.platterEl.classList.remove('local-dimensions-filter-tabs-no-transition');
-                }
+                self.platterEl.classList.remove('local-dimensions-filter-tabs-no-transition');
             });
         });
 
@@ -375,17 +369,12 @@ define([], function() {
     };
 
     FilterTabsNav.prototype._onResize = function() {
-        if (this._destroyed) {
-            return;
-        }
         this.platterEl.classList.add('local-dimensions-filter-tabs-no-transition');
         this._centerItem();
         var self = this;
         clearTimeout(this.resizeDebounceTimer);
         this.resizeDebounceTimer = window.setTimeout(function() {
-            if (!self._destroyed) {
-                self.platterEl.classList.remove('local-dimensions-filter-tabs-no-transition');
-            }
+            self.platterEl.classList.remove('local-dimensions-filter-tabs-no-transition');
         }, 250);
     };
 
@@ -407,30 +396,6 @@ define([], function() {
             ? (focusedIndex + 1) % tabs.length
             : (focusedIndex - 1 + tabs.length) % tabs.length;
         tabs[nextIndex].focus({preventScroll: true});
-    };
-
-    FilterTabsNav.prototype.destroy = function() {
-        this._destroyed = true;
-        cancelAnimationFrame(this.scrollAnimationFrame);
-        clearTimeout(this.resizeDebounceTimer);
-        if (this._resizeObserver) {
-            this._resizeObserver.disconnect();
-        }
-        if (this._reducedMotionMql && this._reducedMotionMql.removeEventListener) {
-            this._reducedMotionMql.removeEventListener('change', this._onReducedMotionChange);
-        }
-        if (this.paddleLeftEl) {
-            this.paddleLeftEl.removeEventListener('click', this._onPaddleLeftClick);
-        }
-        if (this.paddleRightEl) {
-            this.paddleRightEl.removeEventListener('click', this._onPaddleRightClick);
-        }
-        if (this.platterEl) {
-            this.platterEl.removeEventListener('keydown', this._onKeyDown);
-        }
-        if (this.wrapperEl) {
-            delete this.wrapperEl._localDimsFilterTabsNav;
-        }
     };
 
     /**
@@ -458,18 +423,6 @@ define([], function() {
         return instances;
     }
 
-    function destroyAll(container) {
-        if (!container) {
-            return;
-        }
-        var wrappers = container.querySelectorAll('.local-dimensions-filter-tabs-wrapper');
-        for (var i = 0; i < wrappers.length; i++) {
-            if (wrappers[i]._localDimsFilterTabsNav) {
-                wrappers[i]._localDimsFilterTabsNav.destroy();
-            }
-        }
-    }
-
     function updateAll(container) {
         if (!container) {
             return;
@@ -485,7 +438,6 @@ define([], function() {
     return {
         FilterTabsNav: FilterTabsNav,
         initAll: initAll,
-        destroyAll: destroyAll,
         updateAll: updateAll
     };
 });

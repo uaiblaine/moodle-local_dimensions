@@ -36,6 +36,12 @@ const PREF_VIEW = 'local_dimensions_learner_view';
 const PREF_FAV = 'local_dimensions_learner_fav';
 /** @type {Number} Debounce (ms) before a change is written to the server. */
 const SAVE_DELAY = 400;
+/**
+ * @type {Number} Longest favourites value a write may carry. On Moodle 4.5 the preference value
+ * column holds 1333 characters (5.0 made it text) and core refuses a longer value outright, so the
+ * write would fail and every later star would be lost with it.
+ */
+const MAX_FAV_LENGTH = 1333;
 /** @type {Object} Default view state, mirrored server-side. */
 const DEFAULTS = {sort: 'planorder', filter: 'incomplete', view: 'list'};
 
@@ -103,6 +109,35 @@ export const initFavourites = (planid, map) => {
 };
 
 /**
+ * The favourites map trimmed to fit one preference value.
+ *
+ * Other plans' empty lists are dropped outright. While the value is still too long, other plans'
+ * lists go next, lowest plan id (the oldest plan) first, then this plan's oldest favourites; the
+ * star just set is the last in its list and always stays.
+ *
+ * @param {Object} map Plan id => competency ids.
+ * @param {String} planid The plan this page is showing.
+ * @return {Object} A map whose JSON fits MAX_FAV_LENGTH.
+ */
+const fitFavourites = (map, planid) => {
+    const fitted = {};
+    Object.keys(map).forEach((key) => {
+        if (key === planid || (Array.isArray(map[key]) && map[key].length > 0)) {
+            fitted[key] = map[key];
+        }
+    });
+    // Integer-like keys enumerate in ascending numeric order, whatever order they were added in.
+    const others = Object.keys(fitted).filter((key) => key !== planid);
+    while (JSON.stringify(fitted).length > MAX_FAV_LENGTH && others.length > 0) {
+        delete fitted[others.shift()];
+    }
+    while (JSON.stringify(fitted).length > MAX_FAV_LENGTH && fitted[planid].length > 1) {
+        fitted[planid].shift();
+    }
+    return fitted;
+};
+
+/**
  * Add or remove a competency from this plan's favourites, and persist (debounced).
  *
  * @param {Number|String} competencyid The competency to toggle.
@@ -116,6 +151,7 @@ export const toggleFavourite = (competencyid) => {
     } else {
         list.splice(index, 1);
     }
+    favourites = fitFavourites(favourites, favplan);
     scheduleSave(PREF_FAV, favourites);
     return index === -1;
 };

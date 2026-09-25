@@ -26,8 +26,20 @@ use local_dimensions\customfield\lp_handler;
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \local_dimensions\helper::organize_customfield_categories
+ * @covers     \local_dimensions\helper::ensure_custom_fields_exist
  */
 final class helper_customfield_categories_test extends \advanced_testcase {
+    /**
+     * Drop the handlers' cached field lists, which would outlive the rollback of the rows they hold.
+     *
+     * @return void
+     */
+    protected function tearDown(): void {
+        lp_handler::create()->reset_configuration_cache();
+        competency_handler::create()->reset_configuration_cache();
+        parent::tearDown();
+    }
+
     /**
      * Provisioning sorts every field into exactly two categories (Feel + Look),
      * removes the empty default, places behaviour vs styling fields correctly, and
@@ -110,5 +122,59 @@ final class helper_customfield_categories_test extends \advanced_testcase {
                 && $category->get('area') === helper::AREA_COMPETENCY;
         });
         $this->assertCount(2, $owned);
+    }
+
+    /**
+     * With no own category left, provisioning creates one rather than using a core shared
+     * category enabled for the area, which core would refuse to move the fields out of.
+     *
+     * @return void
+     */
+    public function test_a_shared_category_never_receives_a_provisioned_field(): void {
+        global $DB;
+        if (!class_exists(\core_customfield\shared::class)) {
+            $this->markTestSkipped('Shared custom field categories exist from Moodle 5.1.');
+        }
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Every own category deleted, as an administrator can in the field admin UI.
+        $handler = lp_handler::create();
+        $handler->reset_configuration_cache();
+        foreach ($handler->get_categories_with_fields() as $category) {
+            if ($category->get('component') === 'local_dimensions' && $category->get('area') === helper::AREA_LP) {
+                $handler->delete_category($category);
+            }
+        }
+
+        // A shared category enabled for templates.
+        $shared = $this->getDataGenerator()->create_custom_field_category([
+            'component' => 'core_customfield',
+            'area' => 'shared',
+        ]);
+        $sharedid = (int) $shared->get('id');
+        $enabled = new \core_customfield\shared(0, (object) [
+            'categoryid' => $sharedid,
+            'component' => 'local_dimensions',
+            'area' => helper::AREA_LP,
+            'itemid' => 0,
+        ]);
+        $enabled->create();
+
+        // Precondition: the handler lists the shared category, and it is the only one.
+        $handler->reset_configuration_cache();
+        $listed = array_map(
+            static fn($category): int => (int) $category->get('id'),
+            array_values($handler->get_categories_with_fields())
+        );
+        $this->assertSame([$sharedid], $listed);
+
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+
+        $this->assertSame(0, $DB->count_records('customfield_field', ['categoryid' => $sharedid]));
+        $field = helper::find_field_by_shortname(constants::CFIELD_ENROLLMENTFILTER, helper::AREA_LP);
+        $this->assertNotNull($field);
+        $this->assertSame((int) get_config('local_dimensions', 'cfcat_feel_lp'), (int) $field->get('categoryid'));
+        $this->assertSame('local_dimensions', $field->get_category()->get('component'));
     }
 }

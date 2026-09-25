@@ -46,6 +46,9 @@ class browse_competencies extends external_api {
     /** @var int Hard cap on the page size. */
     const MAX_LIMIT = 100;
 
+    /** @var int Page size when the caller sends none, or one below 1. */
+    const DEFAULT_LIMIT = 25;
+
     /**
      * Define the parameters for the browse_competencies external function.
      *
@@ -55,9 +58,14 @@ class browse_competencies extends external_api {
         return new external_function_parameters([
             'frameworkid' => new external_value(PARAM_INT, 'Competency framework id'),
             'parentid' => new external_value(PARAM_INT, 'Parent competency id (0 = roots)', VALUE_DEFAULT, 0),
-            'query' => new external_value(PARAM_RAW_TRIMMED, 'Search text; non-empty switches to search mode', VALUE_DEFAULT, ''),
+            'query' => new external_value(
+                PARAM_RAW_TRIMMED,
+                'Search text; ' . self::MIN_QUERY_LENGTH . ' or more characters switch to search mode, fewer browse',
+                VALUE_DEFAULT,
+                ''
+            ),
             'limitfrom' => new external_value(PARAM_INT, 'Offset for pagination', VALUE_DEFAULT, 0),
-            'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, 25),
+            'limitnum' => new external_value(PARAM_INT, 'Page size', VALUE_DEFAULT, self::DEFAULT_LIMIT),
         ]);
     }
 
@@ -76,7 +84,7 @@ class browse_competencies extends external_api {
         int $parentid = 0,
         string $query = '',
         int $limitfrom = 0,
-        int $limitnum = 25
+        int $limitnum = self::DEFAULT_LIMIT
     ): array {
         global $DB;
 
@@ -91,7 +99,7 @@ class browse_competencies extends external_api {
         $parentid = max(0, $params['parentid']);
         $query = $params['query'];
         $limitfrom = max(0, $params['limitfrom']);
-        $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : 50;
+        $limitnum = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : self::DEFAULT_LIMIT;
 
         // Checked in the framework's own context, not the system one, so a competencyview grant in
         // the framework's category is enough. An unknown or unreadable framework returns no items.

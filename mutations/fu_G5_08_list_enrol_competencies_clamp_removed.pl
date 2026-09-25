@@ -1,0 +1,1 @@
+s/        \$limitfrom = max\(0, \$params\['limitfrom'\]\);\n        \$limitnum = \$params\['limitnum'\] > 0 \? min\(\$params\['limitnum'\], self::MAX_LIMIT\) : self::DEFAULT_LIMIT;\n        \$items = array_slice\(\$items, \$limitfrom, \$limitnum\);/        \$items = array_slice(\$items, \$params['limitfrom'], min(\$params['limitnum'], self::MAX_LIMIT));/;

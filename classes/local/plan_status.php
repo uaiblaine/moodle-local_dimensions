@@ -41,16 +41,14 @@ class plan_status {
      * @return string The label, or '' for an unknown status.
      */
     public static function label(int $status): string {
-        $names = [
-            plan::STATUS_DRAFT => 'draft',
-            plan::STATUS_ACTIVE => 'active',
-            plan::STATUS_COMPLETE => 'complete',
-            plan::STATUS_WAITING_FOR_REVIEW => 'waitingforreview',
-            plan::STATUS_IN_REVIEW => 'inreview',
-        ];
-        if (!isset($names[$status])) {
-            return '';
-        }
-        return get_string('planstatus' . $names[$status], 'core_competency');
+        // Literal string ids, so the string checker can verify each one.
+        return match ($status) {
+            plan::STATUS_DRAFT => get_string('planstatusdraft', 'core_competency'),
+            plan::STATUS_ACTIVE => get_string('planstatusactive', 'core_competency'),
+            plan::STATUS_COMPLETE => get_string('planstatuscomplete', 'core_competency'),
+            plan::STATUS_WAITING_FOR_REVIEW => get_string('planstatuswaitingforreview', 'core_competency'),
+            plan::STATUS_IN_REVIEW => get_string('planstatusinreview', 'core_competency'),
+            default => '',
+        };
     }
 }

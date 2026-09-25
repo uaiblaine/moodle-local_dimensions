@@ -241,6 +241,34 @@ final class competency_course_links_test extends \advanced_testcase {
     }
 
     /**
+     * Linking a course that is already linked logs nothing: core adds no link, so there is no
+     * decision to record, while the row for the existing link still comes back.
+     *
+     * @return void
+     */
+    public function test_relinking_a_course_logs_no_second_event(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$competencyid, $courseid] = $this->fixture();
+        $sink = $this->redirectEvents();
+
+        link_competency_course::execute($competencyid, $courseid);
+        $again = link_competency_course::execute($competencyid, $courseid);
+
+        $added = array_values(array_filter(
+            $sink->get_events(),
+            static fn($event): bool => $event instanceof \local_dimensions\event\course_link_added
+        ));
+        $sink->close();
+        // The control is the first call's event: the second adds none.
+        $this->assertCount(1, $added);
+        $linkid = (int) $DB->get_field('competency_coursecomp', 'id', ['competencyid' => $competencyid, 'courseid' => $courseid]);
+        $this->assertSame($linkid, (int) $added[0]->objectid);
+        $this->assertSame($courseid, (int) $again['courseid']);
+    }
+
+    /**
      * A user without coursecompetencymanage cannot link a course.
      *
      * @return void

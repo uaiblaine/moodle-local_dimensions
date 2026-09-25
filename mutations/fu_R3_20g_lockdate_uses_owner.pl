@@ -1,0 +1,1 @@
+s/\$lockdate = \(int\) \\local_dimensions\\calculator::get_availability_date\(\$fullcourse, \$USER->id\);/\$lockdate = (int) \\local_dimensions\\calculator::get_availability_date(\$fullcourse, \$ownerid);/;

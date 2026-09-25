@@ -1,0 +1,1 @@
+s/(if \(descidentifier === 'evidence_evidenceofpriorlearninglinked'\) \{)/if (evidence.desca \&\& evidence.desca.includes('file')) {\n                return {\n                    icon: 'fa-paperclip',\n                    label: strMap.evidenceTypeFile,\n                    colorClass: 'local-dimensions-evidence-file'\n                };\n            }\n\n            $1/;

@@ -1,0 +1,1 @@
+s/        if \(empty\(\$ids\)\) \{\n            throw new \\moodle_exception\('central_plans_export_none', 'local_dimensions'\);\n        \}/        if (empty(\$ids)) {\n            throw new \\moodle_exception('invalidtemplate', 'local_dimensions');\n        }/;

@@ -73,7 +73,8 @@ class link_competency_course extends external_api {
         $coursecontext = context_course::instance($courseid);
         self::validate_context($coursecontext);
 
-        api::add_competency_to_course($courseid, $competencyid);
+        // False when the link already existed: nothing was added, so nothing is logged below.
+        $created = api::add_competency_to_course($courseid, $competencyid);
 
         $course = $DB->get_record(
             'course',
@@ -89,11 +90,13 @@ class link_competency_course extends external_api {
         );
 
         // Core fires no event for the course link lifecycle; log the decision.
-        \local_dimensions\event\course_link_added::create([
-            'context' => $coursecontext,
-            'objectid' => (int) $link->id,
-            'other' => ['competencyid' => $competencyid, 'courseid' => $courseid],
-        ])->trigger();
+        if ($created) {
+            \local_dimensions\event\course_link_added::create([
+                'context' => $coursecontext,
+                'objectid' => (int) $link->id,
+                'other' => ['competencyid' => $competencyid, 'courseid' => $courseid],
+            ])->trigger();
+        }
         $hascompletion = !empty($course->enablecompletion)
             && $DB->record_exists('course_completion_criteria', ['course' => $courseid]);
 

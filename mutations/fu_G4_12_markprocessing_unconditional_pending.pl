@@ -1,0 +1,1 @@
+s/const markProcessing = \(state, courseid, method\) => \{\n    if \(method === state\.method\) \{\n        state\.pending\.add\(courseid\);\n        state\.selected\.delete\(courseid\);\n    \}/const markProcessing = (state, courseid, method) => {\n    state.pending.add(courseid);\n    state.selected.delete(courseid);/;

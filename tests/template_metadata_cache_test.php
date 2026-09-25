@@ -66,6 +66,81 @@ final class template_metadata_cache_test extends \advanced_testcase {
     }
 
     /**
+     * Drop the handler's cached field list, which would outlive the rollback of the rows it holds.
+     *
+     * @return void
+     */
+    protected function tearDown(): void {
+        lp_handler::create()->reset_configuration_cache();
+        parent::tearDown();
+    }
+
+    /**
+     * A blank line in a select's option text does not shift the label a template shows.
+     *
+     * Core's select skips blank lines, so with the options "Alpha", "", "Bravo" it offers two
+     * choices and stores Bravo as index 2.
+     *
+     * @return void
+     */
+    public function test_a_blank_option_line_does_not_shift_the_tag_label(): void {
+        $this->set_options(constants::CFIELD_TAG1, "Alpha\n\nBravo");
+
+        // Precondition: core's own select lists Bravo at index 2.
+        $field = helper::find_field_by_shortname(constants::CFIELD_TAG1, helper::AREA_LP);
+        $this->assertSame(['', 'Alpha', 'Bravo'], array_values($field->get_options()));
+
+        lp_handler::create()->instance_form_save(
+            (object) ['id' => $this->explicitid, 'customfield_' . constants::CFIELD_TAG1 => 2],
+            false
+        );
+        template_metadata_cache::purge_all();
+
+        $single = template_metadata_cache::get_template_metadata($this->explicitid);
+        template_metadata_cache::purge_all();
+        $batch = template_metadata_cache::get_metadata_for_many([$this->explicitid])[$this->explicitid];
+
+        $this->assertSame('Bravo', $single['tag1']);
+        $this->assertSame('Bravo', $batch['tag1']);
+    }
+
+    /**
+     * A cascade key stored past the options core's select still offers reads as unset.
+     *
+     * The explicit template stores "no", the third option. Once the field lists only the first
+     * two, with a blank line between them, core shows the select empty, so the template inherits.
+     *
+     * @return void
+     */
+    public function test_an_index_past_the_last_option_reads_as_inherit(): void {
+        global $DB;
+
+        $labels = array_map('strval', array_values(constants::singlecourseredirect_options()));
+        $this->set_options(constants::CFIELD_SINGLECOURSEREDIRECT, $labels[0] . "\n\n" . $labels[1]);
+
+        // Preconditions: the template stores index 3, and core's select no longer offers one.
+        $field = helper::find_field_by_shortname(constants::CFIELD_SINGLECOURSEREDIRECT, helper::AREA_LP);
+        $this->assertArrayNotHasKey(3, $field->get_options());
+        $stored = $DB->get_field(
+            'customfield_data',
+            'intvalue',
+            ['fieldid' => (int) $field->get('id'), 'instanceid' => $this->explicitid]
+        );
+        $this->assertSame(3, (int) $stored);
+
+        $single = template_metadata_cache::get_template_metadata($this->explicitid);
+        template_metadata_cache::purge_all();
+        $batch = template_metadata_cache::get_metadata_for_many([$this->explicitid])[$this->explicitid];
+
+        foreach ([$single, $batch] as $metadata) {
+            $this->assertSame(constants::SINGLECOURSEREDIRECT_INHERIT, $metadata['singlecourseredirect_raw']);
+            $this->assertTrue($metadata['singlecourseredirect']);
+            // Control: the same template's untouched field still decodes its stored key.
+            $this->assertSame(constants::ENROLLMENTFILTER_ENROLLED, $metadata['enrollmentfilter_raw']);
+        }
+    }
+
+    /**
      * A batch read built from the database returns what the same batch returns from the cache.
      *
      * @return void
@@ -187,6 +262,23 @@ final class template_metadata_cache_test extends \advanced_testcase {
 
         $this->assertSame(constants::ENROLLMENTFILTER_ENROLLED, $metadata['enrollmentfilter_raw']);
         $this->assertSame(constants::SINGLECOURSEREDIRECT_NO, $metadata['singlecourseredirect_raw']);
+    }
+
+    /**
+     * Replaces the option text of a template select field in the database.
+     *
+     * @param string $shortname Field shortname.
+     * @param string $options The new option text, one option per line.
+     * @return void
+     */
+    private function set_options(string $shortname, string $options): void {
+        global $DB;
+
+        $fieldid = (int) helper::find_field_by_shortname($shortname, helper::AREA_LP)->get('id');
+        $config = json_decode((string) $DB->get_field('customfield_field', 'configdata', ['id' => $fieldid]), true);
+        $config['options'] = $options;
+        $DB->set_field('customfield_field', 'configdata', json_encode($config), ['id' => $fieldid]);
+        lp_handler::create()->reset_configuration_cache();
     }
 
     /**

@@ -1,0 +1,1 @@
+s/\.local-dimensions-icon-circle \{\n    background-color: var\(--local-dimensions-line\);\n    -webkit-mask-image: url\('\[\[pix:local_dimensions\|status\/circle-outline\]\]'\);\n/.local-dimensions-icon-circle {\n    background-color: var(--local-dimensions-line);\n/;

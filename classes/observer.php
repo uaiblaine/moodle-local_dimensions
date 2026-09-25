@@ -143,7 +143,8 @@ class observer {
      * Implements the following safety contract before delegating to the core
      * handler (which throws coding_exception when the instance id is missing):
      *
-     *  1. Require a valid form submission with a matching sesskey.
+     *  1. Require a valid form submission with a matching sesskey; a POST without
+     *     one returns quietly.
      *  2. Short-circuit when no customfield_* fields are present in the payload
      *     (mirrors the optimisation inside core_customfield\handler). The hub's
      *     dynamic forms save their own fields and submit through a web service
@@ -161,9 +162,12 @@ class observer {
         handler $handler,
         bool $isnew
     ): void {
-        // 1. Only act on real form submissions with a valid sesskey.
+        /* 1. Only act on real form submissions with a valid sesskey. confirm_sesskey() with no
+           argument calls required_param(), which throws on a POST without one (a web service
+           call), and the throw would skip the cache invalidation that follows this call. */
         $formdata = data_submitted();
-        if (!$formdata || !confirm_sesskey()) {
+        $sesskey = optional_param('sesskey', '', PARAM_RAW);
+        if (!$formdata || $sesskey === '' || !confirm_sesskey($sesskey)) {
             return;
         }
 

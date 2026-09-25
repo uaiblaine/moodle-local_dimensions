@@ -1,0 +1,1 @@
+s/\$limitnum = \$params\['limitnum'\] > 0 \? min\(\$params\['limitnum'\], self::MAX_LIMIT\) : self::DEFAULT_LIMIT;/\$limitnum = \$params['limitnum'] > 0 ? min(\$params['limitnum'], self::MAX_LIMIT) : 50;/;

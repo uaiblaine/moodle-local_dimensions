@@ -1,0 +1,1 @@
+s/const decisiveIndex = evidence\.findIndex\(isRuleCompletion\);/let decisiveIndex = -1;\n            evidence.forEach(function(ev, idx) {\n                if (isRuleCompletion(ev)) {\n                    decisiveIndex = idx;\n                }\n            });/;

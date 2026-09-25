@@ -1,0 +1,1 @@
+s/const init = async\(state\) => \{\n    \/\/ A refresh is a reload too \(see reload\)\.\n    state\.loadtoken \+= 1;\n    const token = state\.loadtoken;/const init = async(state) => {\n    const token = state.loadtoken;/;

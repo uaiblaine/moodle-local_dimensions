@@ -133,6 +133,84 @@ final class category_lifecycle_test extends advanced_testcase {
     }
 
     /**
+     * "Delete all" is not offered while something in the category is in use.
+     *
+     * The check goes through core's can_delete_full(), which is what decides whether the
+     * deletion form offers the option, so it also proves the lib.php callback is wired.
+     *
+     * @return void
+     */
+    public function test_delete_all_is_not_offered_while_the_category_holds_something_in_use(): void {
+        $this->resetAfterTest();
+        $f = $this->fixture();
+        $category = \core_course_category::get((int) $f['category']->id);
+        $this->assertTrue($category->can_delete_full());
+
+        $course = $this->getDataGenerator()->create_course();
+        api::add_competency_to_course($course->id, $f['competency']->get('id'));
+
+        $this->assertFalse($category->can_delete_full());
+    }
+
+    /**
+     * "Delete all" is not offered while a category below it holds something in use.
+     *
+     * Core asks can_delete_full() once, for the category being deleted, never for its children.
+     *
+     * @return void
+     */
+    public function test_delete_all_is_not_offered_while_a_child_category_holds_something_in_use(): void {
+        $this->resetAfterTest();
+        $f = $this->fixture();
+        $parent = $this->getDataGenerator()->create_category(['name' => 'Parent']);
+        $child = \core_course_category::get((int) $f['category']->id);
+        $child->change_parent((int) $parent->id);
+        $parentcategory = \core_course_category::get((int) $parent->id);
+        $this->assertTrue($parentcategory->can_delete_full());
+
+        $learner = $this->getDataGenerator()->create_user();
+        api::create_plan_from_template($f['template']->get('id'), (int) $learner->id);
+
+        $this->assertFalse($parentcategory->can_delete_full());
+        $this->assertFalse(category_lifecycle::can_delete_contents((int) $parent->id));
+        // A sibling tree holding nothing in use is unaffected.
+        $this->assertTrue(category_lifecycle::can_delete_contents((int) $this->getDataGenerator()->create_category()->id));
+    }
+
+    /**
+     * A refusal in a child category leaves the parent's competency data untouched too.
+     *
+     * delete_full() runs the parent's callback, which deletes, before it recurses into the
+     * children, so the parent must refuse for the child or lose its data to a deletion that
+     * then stops half way.
+     *
+     * @return void
+     */
+    public function test_a_child_in_use_blocks_the_parent_before_anything_is_deleted(): void {
+        $this->resetAfterTest();
+        $f = $this->fixture();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $parent = $this->getDataGenerator()->create_category(['name' => 'Parent']);
+        $parentcontextid = context_coursecat::instance((int) $parent->id)->id;
+        $parentframework = $ccg->create_framework(['shortname' => 'Parent framework', 'contextid' => $parentcontextid]);
+        $parenttemplate = $ccg->create_template(['shortname' => 'Parent template', 'contextid' => $parentcontextid]);
+        \core_course_category::get((int) $f['category']->id)->change_parent((int) $parent->id);
+        $course = $this->getDataGenerator()->create_course();
+        api::add_competency_to_course($course->id, $f['competency']->get('id'));
+
+        try {
+            \core_course_category::get((int) $parent->id)->delete_full(false);
+            $this->fail('Deleting a category whose child holds an in-use competency must be refused');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('central_categorydelete_blocked', $e->errorcode);
+        }
+        $this->assertTrue(competency_framework::record_exists((int) $parentframework->get('id')));
+        $this->assertTrue(template::record_exists((int) $parenttemplate->get('id')));
+        $this->assertTrue(competency_framework::record_exists((int) $f['framework']->get('id')));
+        $this->assertNotNull(\core_course_category::get((int) $parent->id, IGNORE_MISSING));
+    }
+
+    /**
      * Deleting with "move contents" re-homes the frameworks and templates to the destination.
      *
      * @return void

@@ -89,11 +89,16 @@ class helper {
     }
 
     /**
-     * Create a custom field in the area's first category, creating a category when there is none.
+     * Create a custom field in the area's first own category, creating a category when there is none.
      *
      * Field names and descriptions are stored as plain text, so $displayname is resolved once, in
      * the current user's language. Callers pass an empty $description so that no text in a single
      * language is stored.
+     *
+     * Only the handler's own categories qualify: on Moodle 5.1+ get_categories_with_fields() also
+     * lists the core shared categories enabled for the area, and a field created in one of those
+     * makes {@see self::organize_customfield_categories()} fail, because core's move_field()
+     * refuses a move across components.
      *
      * @param string $shortname
      * @param string $type Field type (text, select, picture, etc.)
@@ -113,7 +118,11 @@ class helper {
         string $description = ''
     ): ?field_controller {
         $handler = self::get_handler($area);
-        $categories = $handler->get_categories_with_fields();
+        $categories = array_filter(
+            $handler->get_categories_with_fields(),
+            static fn(category_controller $category): bool => $category->get('component') === $handler->get_component()
+                && $category->get('area') === $handler->get_area()
+        );
 
         if (empty($categories)) {
             $categoryid = $handler->create_category();
@@ -432,6 +441,10 @@ class helper {
      *
      * Waits up to 10 s for the provisioning lock and does nothing when it is not granted.
      *
+     * The get-or-create getters belong to this method and to upgrade steps. Read paths look a
+     * field up with {@see self::find_field_by_shortname()} and fall back when it is missing, so
+     * no request creates a field outside the lock.
+     *
      * @param string $area The area (lp or competency)
      */
     public static function ensure_custom_fields_exist(string $area): void {
@@ -709,7 +722,7 @@ class helper {
      * @return string One of the constants::SUBLINE_* values
      */
     public static function get_template_subline_source(int $templateid): string {
-        $field = self::get_subline_source_field();
+        $field = self::find_field_by_shortname(constants::CFIELD_SUBLINE_SOURCE, self::AREA_LP);
         if (!$field) {
             return constants::SUBLINE_STATUS;
         }
@@ -998,7 +1011,7 @@ class helper {
             return $global;
         }
 
-        $field = self::get_enrollmentfilter_field();
+        $field = self::find_field_by_shortname(constants::CFIELD_ENROLLMENTFILTER, self::AREA_LP);
         if (!$field) {
             return $global;
         }
@@ -1044,7 +1057,7 @@ class helper {
             return $global;
         }
 
-        $field = self::get_singlecourseredirect_field();
+        $field = self::find_field_by_shortname(constants::CFIELD_SINGLECOURSEREDIRECT, self::AREA_LP);
         if (!$field) {
             return $global;
         }
@@ -1091,7 +1104,7 @@ class helper {
             return $global;
         }
 
-        $field = self::get_lockedcardmode_field();
+        $field = self::find_field_by_shortname(constants::CFIELD_LOCKEDCARDMODE, self::AREA_LP);
         if (!$field) {
             return $global;
         }
@@ -1137,7 +1150,7 @@ class helper {
             return $global;
         }
 
-        $field = self::get_showlockeddate_field();
+        $field = self::find_field_by_shortname(constants::CFIELD_SHOWLOCKEDDATE, self::AREA_LP);
         if (!$field) {
             return $global;
         }
@@ -1174,7 +1187,7 @@ class helper {
     public static function resolve_showrelated_for_template(int $templateid): bool {
         return self::resolve_lp_bool_toggle(
             $templateid,
-            self::get_showrelated_field(),
+            self::find_field_by_shortname(constants::CFIELD_SHOWRELATED, self::AREA_LP),
             constants::showrelated_options(),
             (bool) get_config('local_dimensions', 'showrelated')
         );
@@ -1189,7 +1202,7 @@ class helper {
     public static function resolve_showrelatedlink_for_template(int $templateid): bool {
         return self::resolve_lp_bool_toggle(
             $templateid,
-            self::get_showrelatedlink_field(),
+            self::find_field_by_shortname(constants::CFIELD_SHOWRELATEDLINK, self::AREA_LP),
             constants::showrelatedlink_options(),
             (bool) get_config('local_dimensions', 'showrelatedlink')
         );
@@ -1670,18 +1683,29 @@ class helper {
     /**
      * The raw (unformatted, newline-split) option list of a select custom-field.
      *
-     * Splits the way {@see \customfield_select\field_controller::get_options()} does, without
-     * its format_string() and its leading empty option, so position + 1 is the stored index.
-     *
      * @param field_controller $field Select field controller.
      * @return string[] Zero-based list of option labels.
      */
     public static function select_raw_options(field_controller $field): array {
-        $optstr = (string) $field->get_configdata_property('options');
-        if (trim($optstr) === '') {
+        return self::split_select_options((string) $field->get_configdata_property('options'));
+    }
+
+    /**
+     * Split a select custom field's stored option text into its option labels.
+     *
+     * Splits the way {@see \customfield_select\field_controller::get_options()} does, without
+     * its format_string() and its leading empty option, so position + 1 is the stored index.
+     * Blank lines are not options there, so they must not count here either: "A\n\nB" stores
+     * B as index 2.
+     *
+     * @param string $options The field's configdata 'options' text.
+     * @return string[] Zero-based list of option labels.
+     */
+    public static function split_select_options(string $options): array {
+        if (trim($options) === '') {
             return [];
         }
-        return preg_split("/\s*\n\s*/", trim($optstr), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        return preg_split("/\s*\n\s*/", trim($options), -1, PREG_SPLIT_NO_EMPTY) ?: [];
     }
 
     /**
@@ -2114,23 +2138,23 @@ class helper {
         ?\core_competency\competency_framework $framework = null
     ): string {
         $taxonomydata = self::get_competency_taxonomy_data($competency, $framework);
-        $taxonomyterm = $taxonomydata['current']['term'] ?? '';
-        $prefix = $ruletype === 'points' ? 'rules_points_outcome_' : 'rules_all_outcome_';
-        $suffix = '';
+        $term = $taxonomydata['current']['term'] ?? '';
 
-        if ($ruleoutcome === 1) {
-            $suffix = 'attach';
-        } else if ($ruleoutcome === 2) {
-            $suffix = 'complete';
-        } else if ($ruleoutcome === 3) {
-            $suffix = 'recommend';
+        // Literal keys, one per arm, so the string checker can verify each of them.
+        if ($ruletype === 'points') {
+            return match ($ruleoutcome) {
+                competency::OUTCOME_EVIDENCE => get_string('rules_points_outcome_attach', 'local_dimensions', $term),
+                competency::OUTCOME_COMPLETE => get_string('rules_points_outcome_complete', 'local_dimensions', $term),
+                competency::OUTCOME_RECOMMEND => get_string('rules_points_outcome_recommend', 'local_dimensions', $term),
+                default => '',
+            };
         }
-
-        if ($suffix === '') {
-            return '';
-        }
-
-        return get_string($prefix . $suffix, 'local_dimensions', $taxonomyterm);
+        return match ($ruleoutcome) {
+            competency::OUTCOME_EVIDENCE => get_string('rules_all_outcome_attach', 'local_dimensions', $term),
+            competency::OUTCOME_COMPLETE => get_string('rules_all_outcome_complete', 'local_dimensions', $term),
+            competency::OUTCOME_RECOMMEND => get_string('rules_all_outcome_recommend', 'local_dimensions', $term),
+            default => '',
+        };
     }
 
     /**
@@ -2940,6 +2964,9 @@ class helper {
         // Batch: type/tag labels and custom colours, one query.
         $cfdata = self::structure_customfield_data($ids);
 
+        // Core's own taxonomy labels, keyed by the TAXONOMY_* constants.
+        $taxonomies = competency_framework::get_taxonomies_list();
+
         // The select labels are admin text read raw from the option list, so they go through
         // format_string() like the names: filters apply and no tag reaches a PARAM_TEXT return
         // field, where it would fail the whole response.
@@ -2967,7 +2994,7 @@ class helper {
                 'parentid' => (int) $record->get('parentid'),
                 'shortname' => format_string($record->get('shortname'), true, $plain),
                 'idnumber' => (string) $record->get('idnumber'),
-                'taxonomy' => get_string('taxonomy_' . $taxonomy, 'core_competency'),
+                'taxonomy' => (string) ($taxonomies[$taxonomy] ?? $taxonomies[competency_framework::TAXONOMY_COMPETENCY]),
                 'scale' => (string) ($scalenames[$effectivescaleid] ?? ''),
                 'description' => $description,
                 'coursecount' => (int) ($counts[$id] ?? 0),
@@ -3084,8 +3111,8 @@ class helper {
         if (!is_array($config) || empty($config['options'])) {
             return '';
         }
-        $options = explode("\n", $config['options']);
-        return isset($options[$index - 1]) ? trim($options[$index - 1]) : '';
+        $options = self::split_select_options((string) $config['options']);
+        return $options[$index - 1] ?? '';
     }
 
     /**
@@ -3463,7 +3490,14 @@ class helper {
             $row->timemodified = time();
             /* customfield_data allows one row per instance and field (unique index),
                and the target may already have one (a re-run, or the template_created
-               observer saving the submitted form), so replace it instead of colliding. */
+               observer saving the submitted form), so replace it instead of colliding.
+               Its embedded files are keyed by its id, which nothing references once the
+               row is gone, so they go first. */
+            $oldtarget = $DB->get_record('customfield_data', ['fieldid' => $row->fieldid, 'instanceid' => $targetid]);
+            if ($oldtarget && isset($embeddedfileareas[$fieldtype])) {
+                [$component, $filearea] = $embeddedfileareas[$fieldtype];
+                $fs->delete_area_files((int) $oldtarget->contextid, $component, $filearea, (int) $oldtarget->id);
+            }
             $DB->delete_records('customfield_data', ['fieldid' => $row->fieldid, 'instanceid' => $targetid]);
             $newdataid = (int) $DB->insert_record('customfield_data', $row);
             $copiedfields++;

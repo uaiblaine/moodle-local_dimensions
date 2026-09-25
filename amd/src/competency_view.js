@@ -20,9 +20,9 @@
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/ajax', 'core/templates', 'core/str',
+define(['jquery', 'core/ajax', 'core/templates', 'core/str', 'core/notification',
     'local_dimensions/chip_filters', 'local_dimensions/collapsible_description'],
-function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
+function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescription) {
 
     /** @type {Object} The active chip selection, shortname => values. */
     var activeChipSelection = {};
@@ -113,12 +113,6 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                preference has to be honoured here rather than in a media query. */
             var reducedmotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             var animatelockedborder = !!settings.animatelockedborder && !reducedmotion;
-            var iconurls = {
-                lock: M.util.image_url('status/lock', 'local_dimensions'),
-                checkcircle: M.util.image_url('status/check-circle-fill', 'local_dimensions'),
-                circle: M.util.image_url('status/circle-outline', 'local_dimensions'),
-                info: M.util.image_url('status/info-circle', 'local_dimensions')
-            };
 
             // Resolve the card icon CSS class from the stored identifier.
             var cardiconclass = '';
@@ -141,22 +135,8 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 return;
             }
 
-            // Strings for the error/retry UI, which renders synchronously; the English
-            // defaults cover the moment before get_strings resolves.
-            var loaderStrings = {
-                error: 'Could not load progress.',
-                retry: 'Retry',
-                loading: 'Loading…'
-            };
-            Str.get_strings([
-                {key: 'course_load_error', component: 'local_dimensions'},
-                {key: 'course_load_retry', component: 'local_dimensions'},
-                {key: 'course_loading', component: 'local_dimensions'}
-            ]).done(function(s) {
-                loaderStrings.error = s[0];
-                loaderStrings.retry = s[1];
-                loaderStrings.loading = s[2];
-            });
+            // Strings for the error/retry UI, filled in before any card is requested (see below).
+            var loaderStrings = {};
 
             /**
              * Render a single course's progress data into its container.
@@ -169,10 +149,6 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 if (data.enabled && data.sections) {
                     $.each(data.sections, function(j, section) {
                         section.dasharray = (section.percentage * 0.754).toFixed(2);
-                        section.lockiconurl = iconurls.lock || '';
-                        section.checkiconurl = iconurls.checkcircle || '';
-                        section.circleiconurl = iconurls.circle || '';
-                        section.infoiconurl = iconurls.info || '';
 
                         /* The first section already under way but not finished is where the
                            learner left off. Locked sections are skipped: their URL points at
@@ -205,15 +181,12 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                    same factor: the r=12 circle's circumference is 75.4. Scaling is CSS's
                    job, which is why there is no second formula here. */
                 data.sectiondasharray = (data.sectionpercentage * 0.754).toFixed(2);
-                data.checkiconurl = iconurls.checkcircle || '';
-                data.circleiconurl = iconurls.circle || '';
                 data.islearnmore = (lockedcardmode === 'learnmore');
                 /* The date reads as an invitation ("Opens ..."), so a past one says nothing
                    next to a Learn more button and is dropped there. Blocked mode keeps it:
                    that card offers no way in, so the date is the only fact it has. */
                 data.showlockeddate = showlockeddate && (!data.islearnmore || !!data.is_future_date);
                 data.customicon = cardiconclass;
-                data.lockiconurl = iconurls.lock || '';
                 data.courseurl = data.course_url || '';
                 data.learnmorebuttoncolor = learnmorebuttoncolor;
 
@@ -351,43 +324,62 @@ function($, Ajax, Templates, Str, ChipFilters, CollapsibleDescription) {
                 return chain;
             }
 
-            // 2. PHASE A — lightweight batch lookup of completion + lock state.
-            // Used to (a) tag wrappers with data-completed for filtering and
-            // (b) prioritise not-completed/not-locked courses in the loader.
-            Ajax.call([{
-                methodname: 'local_dimensions_get_courses_completion_status',
-                args: {courseids: courseIds}
-            }])[0].done(function(statuses) {
-                var notCompletedIds = [];
-                var completedOrLockedIds = [];
-                var completedcount = 0;
-                $.each(statuses, function(i, s) {
-                    var $wrapper = $('.local-dimensions-course-card-wrapper[data-courseid="' + s.courseid + '"]');
-                    var done = !!s.iscompleted;
-                    $wrapper.attr('data-completed', done ? '1' : '0');
-                    if (done) {
-                        completedcount++;
-                    }
-                    if (s.islocked || done) {
-                        completedOrLockedIds.push(s.courseid);
-                    } else {
-                        notCompletedIds.push(s.courseid);
-                    }
-                });
+            /**
+             * Load every card: the completion batch first, then each course's progress.
+             */
+            function loadAllCourses() {
+                // 2. PHASE A — lightweight batch lookup of completion + lock state.
+                // Used to (a) tag wrappers with data-completed for filtering and
+                // (b) prioritise not-completed/not-locked courses in the loader.
+                Ajax.call([{
+                    methodname: 'local_dimensions_get_courses_completion_status',
+                    args: {courseids: courseIds}
+                }])[0].done(function(statuses) {
+                    var notCompletedIds = [];
+                    var completedOrLockedIds = [];
+                    var completedcount = 0;
+                    $.each(statuses, function(i, s) {
+                        var $wrapper = $('.local-dimensions-course-card-wrapper[data-courseid="' + s.courseid + '"]');
+                        var done = !!s.iscompleted;
+                        $wrapper.attr('data-completed', done ? '1' : '0');
+                        if (done) {
+                            completedcount++;
+                        }
+                        if (s.islocked || done) {
+                            completedOrLockedIds.push(s.courseid);
+                        } else {
+                            notCompletedIds.push(s.courseid);
+                        }
+                    });
 
-                // The completion tabs only become truthful here, so this is where they appear.
-                initCourseTabs(completedcount, courseIds.length);
+                    // The completion tabs only become truthful here, so this is where they appear.
+                    initCourseTabs(completedcount, courseIds.length);
 
-                // PHASE B — sequential FIFO with 2s soft timeout. Not-completed
-                // courses go first so the user sees actionable cards earliest.
-                return loadSequentially(notCompletedIds).then(function() {
-                    return loadSequentially(completedOrLockedIds);
+                    // PHASE B — sequential FIFO with 2s soft timeout. Not-completed
+                    // courses go first so the user sees actionable cards earliest.
+                    return loadSequentially(notCompletedIds).then(function() {
+                        return loadSequentially(completedOrLockedIds);
+                    });
+                }).fail(function() {
+                    // The status call failed: load every course in page order, without
+                    // prioritisation; the completion tabs stay hidden.
+                    loadSequentially(courseIds);
                 });
-            }).fail(function() {
-                // The status call failed: load every course in page order, without
-                // prioritisation; the completion tabs stay hidden.
-                loadSequentially(courseIds);
-            });
+            }
+
+            /* The error and retry text renders synchronously, so every request waits for the
+               strings: a fast failure must not draw its message before they arrive. */
+            Str.get_strings([
+                {key: 'course_load_error', component: 'local_dimensions'},
+                {key: 'course_load_retry', component: 'local_dimensions'},
+                {key: 'course_loading', component: 'local_dimensions'}
+            ]).then(function(s) {
+                loaderStrings.error = s[0];
+                loaderStrings.retry = s[1];
+                loaderStrings.loading = s[2];
+                loadAllCourses();
+                return null;
+            }).catch(Notification.exception);
         }
     };
 

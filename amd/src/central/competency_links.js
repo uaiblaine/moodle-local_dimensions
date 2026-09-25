@@ -483,6 +483,7 @@ const loadCourses = async(state) => {
         });
         state.addsel.dataset.exclude = Array.from(state.excluded).join(',');
         state.total = response.total;
+        state.totalknown = true;
 
         refreshListState(state);
     } finally {
@@ -505,6 +506,7 @@ const reloadCourses = (state) => {
     state.rowsEl.textContent = '';
     state.excluded.clear();
     state.total = 0;
+    state.totalknown = false;
     return loadCourses(state);
 };
 
@@ -825,7 +827,8 @@ const bindPicker = (state) => {
 /**
  * Open the Courses & activities modal.
  *
- * @param {Object} opts {competencyid, competencyname (plain text), courseoutcomes, moduleoutcomes, onClose}.
+ * @param {Object} opts {competencyid, competencyname (plain text), courseoutcomes, moduleoutcomes, onClose};
+ *     onClose receives the linked-course count, or null when it is not known.
  * @return {Promise<void>}
  */
 export const open = async(opts) => {
@@ -879,6 +882,8 @@ export const open = async(opts) => {
         addsel: null,
         addshtml: '',
         total: 0,
+        // Whether total holds a count the server reported: until a page arrives it is only a guess.
+        totalknown: false,
         loading: false,
         excluded: new Set(),
         addcourseplaceholder: labels[0],
@@ -939,10 +944,9 @@ export const open = async(opts) => {
     });
     modal.getRoot().on(ModalEvents.hidden, () => {
         if (typeof opts.onClose === 'function') {
-            // Report the current linked-course count so the caller can refresh in place
-            // (each child of the rows container is one linked-course card).
-            const count = state.rowsEl ? state.rowsEl.children.length : null;
-            opts.onClose(count);
+            // The server's count, which includes the pages never loaded; the cards on screen are
+            // only the pages Load more fetched. Null before the first page, so the caller keeps its own.
+            opts.onClose(state.totalknown ? state.total : null);
         }
     });
     modal.show();

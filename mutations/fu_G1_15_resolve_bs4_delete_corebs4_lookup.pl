@@ -1,0 +1,1 @@
+s/        preg_match_all\('\/--\[a-z0-9-\]\+\/i', \$declaration, \$names\);\n        foreach \(\$names\[0\] as \$rung\) \{\n            if \(isset\(self::CORE_BS4\[\$rung\]\)\) \{\n                return self::CORE_BS4\[\$rung\];\n            }\n        }\n//;

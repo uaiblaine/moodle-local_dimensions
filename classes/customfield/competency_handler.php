@@ -240,18 +240,21 @@ class competency_handler extends handler {
     /**
      * Save form data including built-in image.
      *
+     * Both events of one save report the same isnew: the values event through
+     * instance_form_save(), and the image event.
+     *
      * @param \stdClass $data The submitted form data.
      * @param bool $isnew Whether this is a new instance.
      * @param int $instanceid The competency ID.
      */
     public function instance_form_save_with_image(\stdClass $data, bool $isnew, int $instanceid): void {
         try {
-            $this->instance_form_save($data, !$isnew);
+            $this->instance_form_save($data, $isnew);
         } catch (\dml_write_exception $e) {
             /* Two users first-saving the same instance race the id-0 INSERT into
                customfield_data's unique index; the retry re-reads the instance
                data, finds the committed row and takes the update path. */
-            $this->instance_form_save($data, !$isnew);
+            $this->instance_form_save($data, $isnew);
         }
 
         // In built-in mode, save the uploaded image and log a change of it.

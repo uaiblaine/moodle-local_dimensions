@@ -1,0 +1,1 @@
+s/(            \$result->usercompetencysummary->competency->taxonomy = \(object\) \$taxonomydata;)/$1\n            \$result->usercompetencysummary->competency->taxonomyterm = \$taxonomydata['current']['term'];/;

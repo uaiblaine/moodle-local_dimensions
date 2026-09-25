@@ -25,7 +25,6 @@
 namespace local_dimensions\external;
 
 use core\context\course as context_course;
-use core_competency\course_module_competency;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
@@ -80,12 +79,16 @@ class get_competency_module_links extends external_api {
         $canmanage = has_capability('moodle/competency:coursecompetencymanage', $coursecontext);
         $canedit = has_capability('moodle/course:manageactivities', $coursecontext);
 
-        // This competency's activity links in every course, keyed by cmid; only this course's
-        // modules are matched below.
-        $outcomes = [];
-        foreach (course_module_competency::get_records(['competencyid' => $competencyid]) as $record) {
-            $outcomes[(int) $record->get('cmid')] = (int) $record->get('ruleoutcome');
-        }
+        // This competency's activity links in this course only, keyed by cmid; a competency can be
+        // linked to activities across the whole site.
+        $outcomes = $DB->get_records_sql_menu(
+            "SELECT mc.cmid, mc.ruleoutcome
+               FROM {competency_modulecomp} mc
+               JOIN {course_modules} cm ON cm.id = mc.cmid
+              WHERE mc.competencyid = :competencyid
+                AND cm.course = :courseid",
+            ['competencyid' => $competencyid, 'courseid' => $courseid]
+        );
 
         $completioninfo = new \completion_info(get_course($courseid));
         $modinfo = get_fast_modinfo($courseid);
@@ -103,7 +106,7 @@ class get_competency_module_links extends external_api {
                     'modname' => $cm->modname,
                     'modtype' => (string) $cm->modfullname,
                     'iconurl' => $cm->get_icon_url()->out(false),
-                    'ruleoutcome' => $outcomes[(int) $cm->id],
+                    'ruleoutcome' => (int) $outcomes[(int) $cm->id],
                     'hascompletion' => (int) ($completioninfo->is_enabled($cm) != COMPLETION_TRACKING_NONE),
                     'sharedcount' => 0,
                     'canmanage' => (int) $canmanage,

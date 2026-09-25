@@ -168,6 +168,116 @@ final class competency_rule_data_scope_test extends \advanced_testcase {
     }
 
     /**
+     * A completed plan answers from the ratings archived at completion, never from a live rating
+     * given since, and an archived child without a grade stays unrated.
+     *
+     * Both children are on the plan when it completes, so core archives both: the rated one with its
+     * grade and the unrated one without. Both live ratings then change. A third child joins the rule
+     * afterwards; the plan never held it, so no archive exists for it and its live rating is the only
+     * one there is.
+     *
+     * @return void
+     */
+    public function test_a_completed_plan_reads_the_archived_ratings(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $fixture = $this->build_fixture(plan::STATUS_ACTIVE);
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        foreach ([$fixture['ratedchild'], $fixture['unratedchild']] as $childid) {
+            $ccg->create_plan_competency(['planid' => $fixture['planid'], 'competencyid' => $childid]);
+        }
+        $this->setAdminUser();
+        api::complete_plan($fixture['planid']);
+        $frameworkid = (int) competency::get_record(['id' => $fixture['inplan']])->get('competencyframeworkid');
+        $outsidechild = (int) $ccg->create_competency([
+            'competencyframeworkid' => $frameworkid,
+            'parentid' => $fixture['inplan'],
+        ])->get('id');
+        $ccg->create_user_competency([
+            'userid' => $fixture['ownerid'],
+            'competencyid' => $outsidechild,
+            'grade' => 1,
+            'proficiency' => 1,
+        ]);
+        // The live ratings move on after completion.
+        $DB->set_field(
+            'competency_usercomp',
+            'grade',
+            2,
+            ['userid' => $fixture['ownerid'], 'competencyid' => $fixture['ratedchild']]
+        );
+        $DB->set_field(
+            'competency_usercomp',
+            'proficiency',
+            0,
+            ['userid' => $fixture['ownerid'], 'competencyid' => $fixture['ratedchild']]
+        );
+        $ccg->create_user_competency([
+            'userid' => $fixture['ownerid'],
+            'competencyid' => $fixture['unratedchild'],
+            'grade' => 2,
+            'proficiency' => 1,
+        ]);
+        // The precondition: core archived the unrated child without a grade.
+        $archived = $DB->get_record('competency_usercompplan', [
+            'userid' => $fixture['ownerid'],
+            'competencyid' => $fixture['unratedchild'],
+            'planid' => $fixture['planid'],
+        ], '*', MUST_EXIST);
+        $this->assertNull($archived->grade);
+        $this->setUser($fixture['ownerid']);
+
+        $response = $this->call($fixture['inplan'], $fixture['planid']);
+
+        $this->assertFalse($response['error'], json_encode($response));
+        $children = array_column(json_decode($response['data'], true)['children'], null, 'id');
+        $this->assertCount(3, $children);
+        $this->assertTrue($children[$fixture['ratedchild']]['hasgrade']);
+        $this->assertSame(self::PLAINNAME, $children[$fixture['ratedchild']]['gradename']);
+        $this->assertTrue($children[$fixture['ratedchild']]['isproficient']);
+        $this->assertFalse($children[$fixture['unratedchild']]['hasgrade']);
+        $this->assertFalse($children[$fixture['unratedchild']]['isproficient']);
+        $this->assertTrue($children[$outsidechild]['hasgrade']);
+        $this->assertTrue($children[$outsidechild]['isproficient']);
+    }
+
+    /**
+     * A plan that is not complete reads live ratings, whatever row sits in the archive table.
+     *
+     * The archive row is written by hand: core writes one only on completion and removes it on
+     * reopening, so an active plan meets one only if something else left it behind.
+     *
+     * @return void
+     */
+    public function test_an_active_plan_ignores_an_archived_rating(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $fixture = $this->build_fixture(plan::STATUS_ACTIVE);
+        $DB->insert_record('competency_usercompplan', (object) [
+            'userid' => $fixture['ownerid'],
+            'competencyid' => $fixture['unratedchild'],
+            'planid' => $fixture['planid'],
+            'grade' => 1,
+            'proficiency' => 1,
+            'sortorder' => 0,
+            'timecreated' => time(),
+            'timemodified' => time(),
+            'usermodified' => $fixture['ownerid'],
+        ]);
+        $this->setUser($fixture['ownerid']);
+
+        $response = $this->call($fixture['inplan'], $fixture['planid']);
+
+        $this->assertFalse($response['error'], json_encode($response));
+        $children = array_column(json_decode($response['data'], true)['children'], null, 'id');
+        $this->assertFalse($children[$fixture['unratedchild']]['hasgrade']);
+        // The control: the live rating is read.
+        $this->assertTrue($children[$fixture['ratedchild']]['hasgrade']);
+    }
+
+    /**
      * A learner's plan over one competency whose rule counts two children, one of them rated.
      *
      * The scale's first item is TAGGEDNAME, the rated child is named PLAINNAME and the other child

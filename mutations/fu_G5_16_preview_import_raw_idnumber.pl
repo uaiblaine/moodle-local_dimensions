@@ -1,0 +1,1 @@
+s/'idnumber' => format_string\(\(string\) \$structure\['idnumber'\], true, \$plain\),\n                'shortname' => format_string\(\(string\) \$structure\['shortname'\], true, \$plain\),/'idnumber' => (string) \$structure['idnumber'],\n                'shortname' => (string) \$structure['shortname'],/;

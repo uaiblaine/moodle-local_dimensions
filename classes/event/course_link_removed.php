@@ -74,4 +74,19 @@ class course_link_removed extends base {
     public static function get_objectid_mapping() {
         return base::NOT_MAPPED;
     }
+
+    /**
+     * Restore mapping of the ids in 'other'.
+     *
+     * The competency maps through the 'competency' mapping core's course competency restore
+     * sets, matched by idnumber in the target site.
+     *
+     * @return array
+     */
+    public static function get_other_mapping() {
+        return [
+            'competencyid' => ['db' => 'competency', 'restore' => 'competency'],
+            'courseid' => ['db' => 'course', 'restore' => 'course'],
+        ];
+    }
 }

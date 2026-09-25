@@ -198,6 +198,75 @@ final class helper_duplicate_test extends \advanced_testcase {
     }
 
     /**
+     * Replacing a target row the target already had deletes the files embedded in that row.
+     *
+     * They are keyed by the replaced row's id, which nothing references once the row is gone.
+     *
+     * @return void
+     */
+    public function test_replacing_a_target_row_deletes_its_embedded_files(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enablecustomscss', 1, 'local_dimensions');
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+
+        $lpg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $sourceid = (int) $lpg->create_template(['shortname' => 'Source'])->get('id');
+        $targetid = (int) $lpg->create_template(['shortname' => 'Copy'])->get('id');
+
+        // Both templates hold their own SCSS, each row with a file embedded in it.
+        $fs = get_file_storage();
+        $syscontextid = \core\context\system::instance()->id;
+        $scssfieldid = $this->lp_field_id(constants::CFIELD_CUSTOMSCSS);
+        $datarows = [];
+        foreach ([$sourceid => 'source.png', $targetid => 'stale.png'] as $templateid => $filename) {
+            $formdata = (object) [
+                'id' => $templateid,
+                'customfield_' . constants::CFIELD_CUSTOMSCSS . '_editor' => [
+                    'text' => ".t{$templateid} { color: red; }",
+                    'format' => FORMAT_PLAIN,
+                ],
+            ];
+            lp_handler::create()->instance_form_save($formdata, false);
+            $datarows[$templateid] = (int) $DB->get_field(
+                'customfield_data',
+                'id',
+                ['fieldid' => $scssfieldid, 'instanceid' => $templateid],
+                MUST_EXIST
+            );
+            $fs->create_file_from_string([
+                'contextid' => $syscontextid,
+                'component' => 'customfield_textarea',
+                'filearea' => 'value',
+                'itemid' => $datarows[$templateid],
+                'filepath' => '/',
+                'filename' => $filename,
+            ], $filename);
+        }
+
+        helper::copy_template_plugin_data($sourceid, $targetid);
+
+        $newrowid = (int) $DB->get_field(
+            'customfield_data',
+            'id',
+            ['fieldid' => $scssfieldid, 'instanceid' => $targetid],
+            MUST_EXIST
+        );
+        $this->assertNotSame($datarows[$targetid], $newrowid);
+        $this->assertSame(
+            [],
+            $fs->get_area_files($syscontextid, 'customfield_textarea', 'value', $datarows[$targetid], 'id', false),
+            'The replaced row kept its embedded files'
+        );
+        // Control: the source row's file reached the new row, and the source kept its own.
+        $this->assertNotEmpty($fs->get_file($syscontextid, 'customfield_textarea', 'value', $newrowid, '/', 'source.png'));
+        $this->assertNotEmpty(
+            $fs->get_file($syscontextid, 'customfield_textarea', 'value', $datarows[$sourceid], '/', 'source.png')
+        );
+    }
+
+    /**
      * A source with no plugin data leaves the target untouched (no rows, no files).
      *
      * @return void

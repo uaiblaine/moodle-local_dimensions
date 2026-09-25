@@ -1,0 +1,1 @@
+s/(private static function get_string_select_key\(.*?\): string \{.*?)\$options = helper::split_select_options\(\(string\) \$config\['options'\]\);/$1\$options = explode("\\n", (string) \$config['options']);/s;

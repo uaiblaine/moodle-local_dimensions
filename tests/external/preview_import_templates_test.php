@@ -95,6 +95,41 @@ final class preview_import_templates_test extends \advanced_testcase {
     }
 
     /**
+     * Structure cells holding markup do not fail the whole response: the returns declare PARAM_TEXT,
+     * so the payload carries them with the tags stripped, while the rendered preview still names them
+     * as the file spells them, escaped.
+     *
+     * @return void
+     */
+    public function test_a_missing_structure_with_markup_keeps_the_response_valid(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $this->prepare_site();
+
+        $draftitemid = $this->upload($this->csv([
+            ['rowtype' => 'template', 'template_idnumber' => 'TPL-5', 'shortname' => 'Needs structure'],
+            ['rowtype' => 'link', 'template_idnumber' => 'TPL-5', 'framework_idnumber' => 'FW<TI>',
+             'framework_shortname' => 'R&D <b', 'competency_idnumber' => 'C9', 'sortorder' => '0'],
+            ['rowtype' => 'template', 'template_idnumber' => 'TPL-6', 'shortname' => 'Plain structure'],
+            ['rowtype' => 'link', 'template_idnumber' => 'TPL-6', 'framework_idnumber' => 'R&D < Ops',
+             'framework_shortname' => 'Ops', 'competency_idnumber' => 'C9', 'sortorder' => '0'],
+        ]));
+
+        $result = preview_import_templates::execute($draftitemid, (int) \context_system::instance()->id);
+        $result = external_api::clean_returnvalue(preview_import_templates::execute_returns(), $result);
+
+        $this->assertSame(
+            [
+                ['idnumber' => 'FW', 'shortname' => 'R&D '],
+                // The control: text that only looks like markup travels in the plain spelling.
+                ['idnumber' => 'R&D < Ops', 'shortname' => 'Ops'],
+            ],
+            $result['missingframeworks']
+        );
+        $this->assertStringContainsString('FW&lt;TI&gt;', $result['html']);
+    }
+
+    /**
      * A user without templatemanage in the target context cannot preview an import there.
      *
      * @return void
@@ -143,8 +178,12 @@ final class preview_import_templates_test extends \advanced_testcase {
         $this->setAdminUser();
         $this->prepare_site();
 
-        $this->expectException(\moodle_exception::class);
-        preview_import_templates::execute(file_get_unused_draft_itemid(), (int) \context_system::instance()->id);
+        try {
+            preview_import_templates::execute(file_get_unused_draft_itemid(), (int) \context_system::instance()->id);
+            $this->fail('An empty draft area was previewed.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('central_plans_import_filegone', $e->errorcode);
+        }
     }
 
     /**

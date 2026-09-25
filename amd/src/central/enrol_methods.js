@@ -196,15 +196,16 @@ const rowStatus = (state, row) => {
 };
 
 /**
- * Store the row's status for the currently selected method.
+ * Store the row's status for a method. The caller names the method its answer was fetched for,
+ * because the segment can switch while that call is in flight.
  *
- * @param {Object} state Tab state.
  * @param {HTMLElement} row Course row.
+ * @param {String} method 'cohort' or 'self'.
  * @param {String} status New status.
  * @return {void}
  */
-const setRowStatus = (state, row, status) => {
-    if (state.method === 'cohort') {
+const setRowStatus = (row, method, status) => {
+    if (method === 'cohort') {
         row.dataset.cohortStatus = status;
     } else {
         row.dataset.selfStatus = status;
@@ -473,6 +474,7 @@ const makeRow = async(state, item, competencyname) => {
  * @return {Promise<void>}
  */
 const loadCompetencies = async(state, offset, preloaded = null) => {
+    const token = state.loadtoken;
     const data = preloaded || await Ajax.call([{
         methodname: 'local_dimensions_list_enrol_competencies',
         args: {
@@ -484,8 +486,15 @@ const loadCompetencies = async(state, offset, preloaded = null) => {
             limitnum: PAGE_COMPETENCIES,
         },
     }])[0];
+    // A reload while this page was in flight cleared the tree for another filter (see reload).
+    if (token !== state.loadtoken) {
+        return;
+    }
     const tree = state.root.querySelector(SELECTORS.tree);
     const parts = await Promise.all(data.items.map((item) => renderGroupHtml(state, item)));
+    if (token !== state.loadtoken) {
+        return;
+    }
     await Templates.appendNodeContents(tree, parts.join(''), '');
     if (!data.total && !offset) {
         const nothing = document.createElement('p');
@@ -499,7 +508,9 @@ const loadCompetencies = async(state, offset, preloaded = null) => {
     }
     getString('central_enrol_viscount', 'local_dimensions', data.totalcourses)
         .then((text) => {
-            state.root.querySelector(SELECTORS.viscount).textContent = text;
+            if (token === state.loadtoken) {
+                state.root.querySelector(SELECTORS.viscount).textContent = text;
+            }
             return null;
         })
         .catch(notifyError);
@@ -514,6 +525,7 @@ const loadCompetencies = async(state, offset, preloaded = null) => {
  * @return {Promise<void>}
  */
 const loadCourses = async(state, competencyid, offset) => {
+    const token = state.loadtoken;
     const data = await Ajax.call([{
         methodname: 'local_dimensions_list_enrol_courses',
         args: {
@@ -526,10 +538,17 @@ const loadCourses = async(state, competencyid, offset) => {
             limitnum: PAGE_COURSES,
         },
     }])[0];
+    // After a reload the group of that id, if any, is a new one built for another cohort or filter.
+    if (token !== state.loadtoken) {
+        return;
+    }
     const group = state.root.querySelector(`[data-group="${competencyid}"]`);
     const children = group.querySelector(`[data-children="${competencyid}"]`);
     const name = group.dataset.name;
     const rows = await Promise.all(data.items.map((item) => makeRow(state, item, name)));
+    if (token !== state.loadtoken) {
+        return;
+    }
     const tbody = children.querySelector('[data-region="enrol-rows"]');
     rows.forEach((row) => tbody.appendChild(row));
     children.querySelectorAll(SELECTORS.row).forEach((row) => {
@@ -580,17 +599,21 @@ const toggleGroup = async(state, button) => {
 };
 
 /**
- * Mark a course's rows as processing for the current method and drop it from the selection.
+ * Mark a course's rows as processing for a method and, while that method is on screen, track it and
+ * drop it from the selection. Under another method applyMethodChange picks it up on the way back.
  *
  * @param {Object} state Tab state.
  * @param {Number} courseid Course id.
+ * @param {String} method The method the action was queued for.
  * @return {void}
  */
-const markProcessing = (state, courseid) => {
-    state.pending.add(courseid);
-    state.selected.delete(courseid);
+const markProcessing = (state, courseid, method) => {
+    if (method === state.method) {
+        state.pending.add(courseid);
+        state.selected.delete(courseid);
+    }
     state.root.querySelectorAll(`${SELECTORS.row}[data-courseid="${courseid}"]`).forEach((row) => {
-        setRowStatus(state, row, 'processing');
+        setRowStatus(row, method, 'processing');
         paintRow(state, row);
     });
 };
@@ -605,7 +628,9 @@ const markProcessing = (state, courseid) => {
  */
 const onToggleStatus = async(state, row) => {
     const toggle = row.querySelector(SELECTORS.statustoggle);
-    const active = (state.method === 'cohort' ? row.dataset.cohortActive : row.dataset.selfActive) === '1';
+    const token = state.loadtoken;
+    const method = state.method;
+    const active = (method === 'cohort' ? row.dataset.cohortActive : row.dataset.selfActive) === '1';
     toggle.disabled = true;
     try {
         const data = await Ajax.call([{
@@ -614,20 +639,23 @@ const onToggleStatus = async(state, row) => {
                 templateid: state.templateid,
                 courseid: Number(row.dataset.courseid),
                 cohortid: state.cohortid,
-                method: state.method,
+                method: method,
                 enabled: !active,
             },
         }])[0];
-        const value = data.active ? '1' : '0';
-        state.root.querySelectorAll(`${SELECTORS.row}[data-courseid="${row.dataset.courseid}"]`).forEach((twin) => {
-            if (state.method === 'cohort') {
-                twin.dataset.cohortActive = value;
-            } else {
-                twin.dataset.selfActive = value;
-            }
-            paintRow(state, twin);
-            flashRow(twin);
-        });
+        // After a reload the twins on screen describe another cohort's instances.
+        if (token === state.loadtoken) {
+            const value = data.active ? '1' : '0';
+            state.root.querySelectorAll(`${SELECTORS.row}[data-courseid="${row.dataset.courseid}"]`).forEach((twin) => {
+                if (method === 'cohort') {
+                    twin.dataset.cohortActive = value;
+                } else {
+                    twin.dataset.selfActive = value;
+                }
+                paintRow(state, twin);
+                flashRow(twin);
+            });
+        }
         const toastkey = data.active ? 'central_enrol_toast_enabled' : 'central_enrol_toast_disabled';
         // A toast message is HTML; the course short name is plain.
         addToast(await getString(toastkey, 'local_dimensions', escapeHtml(row.dataset.shortname)));
@@ -648,8 +676,10 @@ const queueAction = async(state, action) => {
     if (!courseids.length) {
         return;
     }
+    const token = state.loadtoken;
+    const method = state.method;
     if (action === 'remove') {
-        const methodname = state.method === 'cohort' ? state.labels.methodcohort : state.labels.methodself;
+        const methodname = method === 'cohort' ? state.labels.methodcohort : state.labels.methodself;
         const [title, body, label] = await Promise.all([
             getString('central_enrol_confirm_remove_title', 'local_dimensions'),
             getString('central_enrol_confirm_remove', 'local_dimensions', {method: methodname, count: courseids.length}),
@@ -666,19 +696,22 @@ const queueAction = async(state, action) => {
         args: {
             templateid: state.templateid,
             cohortid: state.cohortid,
-            method: state.method,
+            method: method,
             roleid: state.roleid,
             action: action,
             courseids: courseids,
         },
     }])[0];
-    data.results.forEach((result) => {
-        if (result.status !== 'skipped') {
-            markProcessing(state, Number(result.courseid));
-        }
-    });
-    updateFooter(state);
-    ensurePolling(state);
+    // After a reload the rows on screen belong to another cohort or filter and carry their own status.
+    if (token === state.loadtoken) {
+        data.results.forEach((result) => {
+            if (result.status !== 'skipped') {
+                markProcessing(state, Number(result.courseid), method);
+            }
+        });
+        updateFooter(state);
+        ensurePolling(state);
+    }
     addToast(await getString('central_enrol_apply_queued', 'local_dimensions', data.queued));
 };
 
@@ -694,10 +727,17 @@ const poll = async(state) => {
         return;
     }
     const tracked = [...state.pending];
+    const token = state.loadtoken;
+    const method = state.method;
     const data = await Ajax.call([{
         methodname: 'local_dimensions_get_enrol_queue_status',
-        args: {templateid: state.templateid, cohortid: state.cohortid, method: state.method, courseids: tracked},
+        args: {templateid: state.templateid, cohortid: state.cohortid, method: method, courseids: tracked},
     }])[0];
+    // A reload or a method switch while the call was in flight rebuilt the pending set; this answer
+    // is about the old one, and the next tick polls the new one.
+    if (token !== state.loadtoken || method !== state.method) {
+        return;
+    }
     const stillpending = new Set(data.pendingcourseids.map(Number));
     const configured = new Map(data.items.map((item) => [Number(item.courseid), Boolean(item.configured)]));
     tracked.forEach((courseid) => {
@@ -707,7 +747,7 @@ const poll = async(state) => {
         state.pending.delete(courseid);
         const status = configured.get(courseid) ? 'configured' : 'notconfigured';
         state.root.querySelectorAll(`${SELECTORS.row}[data-courseid="${courseid}"]`).forEach((row) => {
-            setRowStatus(state, row, status);
+            setRowStatus(row, method, status);
             paintRow(state, row);
             flashRow(row);
         });
@@ -790,6 +830,8 @@ const applyMethodChange = (state, method) => {
  * @return {Promise<void>}
  */
 const reload = async(state) => {
+    // Every page, poll and action answer still in flight is about the tree cleared here.
+    state.loadtoken += 1;
     stopPolling(state);
     state.pending.clear();
     state.selected.clear();
@@ -912,6 +954,9 @@ const applyBootstrap = (state, bootstrap) => {
  * @return {Promise<void>}
  */
 const init = async(state) => {
+    // A refresh is a reload too (see reload).
+    state.loadtoken += 1;
+    const token = state.loadtoken;
     stopPolling(state);
     state.pending.clear();
     state.selected.clear();
@@ -938,6 +983,10 @@ const init = async(state) => {
             },
         ]));
     } catch (e) {
+        // A newer load owns the pane; this failure is about a request nobody is waiting for.
+        if (token !== state.loadtoken) {
+            return;
+        }
         // This load runs before any region is revealed, so a failure would otherwise leave the pane
         // blank. Show the error region (the modal header refresh retries), then rethrow so the
         // caller still reports the error.
@@ -947,6 +996,9 @@ const init = async(state) => {
         state.root.querySelector(SELECTORS.disabled).hidden = true;
         state.root.querySelector(SELECTORS.main).hidden = true;
         throw e;
+    }
+    if (token !== state.loadtoken) {
+        return;
     }
     error.hidden = true;
     const empty = state.root.querySelector(SELECTORS.empty);
@@ -1117,6 +1169,8 @@ export const mount = async(container, opts) => {
         selected: new Set(),
         pending: new Set(),
         polltimer: null,
+        // Bumped by every reload and refresh, so an answer that arrives later can tell it is stale.
+        loadtoken: 0,
     };
 
     wireEvents(state);

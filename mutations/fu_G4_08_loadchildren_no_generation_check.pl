@@ -1,0 +1,1 @@
+s/    \/\/ The list was reset meanwhile, so this node is no longer on screen\.\n    if \(generation !== state\.generation\) \{\n        return;\n    \}\n    appendNodes\(state, container, response\.items, depth\);/    appendNodes(state, container, response.items, depth);/;
