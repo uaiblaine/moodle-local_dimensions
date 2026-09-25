@@ -1,0 +1,1 @@
+s/    -webkit-print-color-adjust: exact;\n    print-color-adjust: exact;\n\}\n\n\.local-dimensions-grade-badge-icon-proficient \{/    -webkit-print-color-adjust: exact;\n}\n\n.local-dimensions-grade-badge-icon-proficient {/;

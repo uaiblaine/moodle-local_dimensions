@@ -1,0 +1,1 @@
+s/\$frameworkid = \(int\) reset\(\$found\)->get\('id'\);\n                if \(isset\(\$this->readableframeworks\[\$frameworkid\]\)\) \{\n                    \$resolved = \$this->readableframeworks\[\$frameworkid\];/if (competency_framework::can_read_context(reset(\$found)->get_context())) {\n                    \$resolved = reset(\$found);/;

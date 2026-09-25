@@ -55,6 +55,7 @@ class delete_template_user_plan extends external_api {
      *
      * @param int $planid Plan id.
      * @return array Key: success (bool).
+     * @throws \required_capability_exception When the caller may not manage the plan.
      */
     public static function execute(int $planid): array {
         $params = self::validate_parameters(self::execute_parameters(), ['planid' => $planid]);
@@ -63,7 +64,8 @@ class delete_template_user_plan extends external_api {
             return ['success' => false];
         }
         self::validate_context($plan->get_context());
-        require_capability('moodle/competency:planmanage', $plan->get_context());
+        /* Core checks plan::can_manage(), which also admits planmanageown on the caller's own plan;
+           list_template_participants reports that same check as canmanage. */
         api::delete_plan($plan->get('id'));
         return ['success' => true];
     }

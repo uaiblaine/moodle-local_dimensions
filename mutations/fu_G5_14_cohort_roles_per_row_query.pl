@@ -1,0 +1,1 @@
+s/\$users = \$holderids \? \$DB->get_records_list\('user', 'id', \$holderids\) : \[\];/\$users = [];\n            foreach (\$holderids as \$hid) {\n                \$users[\$hid] = \$DB->get_record('user', ['id' => \$hid]);\n            }/;

@@ -21,11 +21,10 @@
  * view-competency.php applies (plan_access::competency_scope()). It then runs
  * its own query over competency_coursecomp and resolves the enrolment-filter
  * cascade (competency -> plan's template -> global setting) to filter courses
- * based on the user's enrollment status. Each
- * surviving course also carries its rule outcome, the competency's activity
- * links inside it, what the viewer can do with it (open, enrol, pending or
- * locked) and its card shape: its single activity or single section when it
- * resolves to one, otherwise the timeline.
+ * by the plan owner's enrolment. Each surviving course also carries its rule
+ * outcome, the competency's activity links inside it, what the viewer can do
+ * with it (open, enrol, pending or locked) and its card shape: its single
+ * activity or single section when it resolves to one, otherwise the timeline.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -112,6 +111,11 @@ class get_competency_courses extends external_api {
         $plan = plan_access::read_plan($planid);
         $scope = plan_access::require_competency_in_scope($plan, $competencyid);
 
+        /* The cards describe the plan owner, who is not the viewer when staff review a learner's plan:
+           the enrolment filter, progress, the activities and the card shape are the owner's. Only
+           access and its lock date are the viewer's, because they decide what clicking the card does. */
+        $ownerid = (int) $plan->get('userid');
+
         // Outside the plan the plan layer of the cascade does not apply (competency -> global only).
         $templateid = $scope === plan_access::SCOPE_PLAN ? (int) $plan->get('templateid') : 0;
 
@@ -128,11 +132,11 @@ class get_competency_courses extends external_api {
         // Resolve the enrolment filter through the cascade (competency -> plan -> global).
         $filtermode = \local_dimensions\helper::resolve_enrollmentfilter_for_view($competencyid, $templateid);
         if ($filtermode !== \local_dimensions\constants::ENROLLMENTFILTER_ALL) {
-            $courses = \local_dimensions\calculator::filter_courses_by_enrollment($courses, $USER->id, $filtermode);
+            $courses = \local_dimensions\calculator::filter_courses_by_enrollment($courses, $ownerid, $filtermode);
         }
 
         // Activity links are resolved only for the courses that survived the filter.
-        $activitiesbycourse = self::get_linked_activities($competencyid, array_keys($courses));
+        $activitiesbycourse = self::get_linked_activities($competencyid, array_keys($courses), $ownerid);
 
         // Build the response with course image and progress.
         $result = [];
@@ -159,7 +163,7 @@ class get_competency_courses extends external_api {
 
             /* Not core_completion\progress::get_course_progress_percentage(), which miscounts on
                Moodle 4.5 (MDL-60912); see calculator::course_completion_percentage(). */
-            $progress = calculator::course_completion_percentage((int) $course->id, (int) $USER->id);
+            $progress = calculator::course_completion_percentage((int) $course->id, $ownerid);
 
             /* What the viewer can do with this course. Not calculator::is_locked(), which also
                locks anyone enrolled without the student role, such as staff reviewing a plan;
@@ -212,7 +216,7 @@ class get_competency_courses extends external_api {
             if ($access === self::ACCESS_OPEN) {
                 $shape = \local_dimensions\calculator::resolve_card_shape(
                     (int) $course->id,
-                    (int) $USER->id
+                    $ownerid
                 );
                 $row['cardmode'] = $shape['mode'];
                 if ($shape['activity'] !== null) {
@@ -244,10 +248,11 @@ class get_competency_courses extends external_api {
      *
      * @param int $competencyid The competency id.
      * @param array $courseids Ids of the courses that survived the enrolment filter.
+     * @param int $userid The plan owner, whose visibility and completion the rows describe.
      * @return array Course id => list of activity rows.
      */
-    private static function get_linked_activities(int $competencyid, array $courseids): array {
-        global $CFG, $DB, $USER;
+    private static function get_linked_activities(int $competencyid, array $courseids, int $userid): array {
+        global $CFG, $DB;
         require_once($CFG->libdir . '/completionlib.php');
 
         if (empty($courseids)) {
@@ -270,7 +275,7 @@ class get_competency_courses extends external_api {
 
         $result = [];
         foreach ($outcomesbycourse as $courseid => $outcomes) {
-            $modinfo = get_fast_modinfo($courseid);
+            $modinfo = get_fast_modinfo($courseid, $userid);
             $sectionbyid = [];
             foreach ($modinfo->get_section_info_all() as $sectioninfo) {
                 $sectionbyid[(int) $sectioninfo->id] = $sectioninfo;
@@ -321,7 +326,7 @@ class get_competency_courses extends external_api {
                 $hascompletion = $completion->is_enabled($cm) != COMPLETION_TRACKING_NONE;
                 $iscompleted = false;
                 if ($hascompletion) {
-                    $cmdata = $completion->get_data($cm, true, $USER->id);
+                    $cmdata = $completion->get_data($cm, true, $userid);
                     $iscompleted = $cmdata->completionstate == COMPLETION_COMPLETE
                         || $cmdata->completionstate == COMPLETION_COMPLETE_PASS;
                 }
@@ -359,7 +364,7 @@ class get_competency_courses extends external_api {
                 'fullname' => new external_value(PARAM_RAW, 'Course full name, plain text'),
                 'shortname' => new external_value(PARAM_RAW, 'Course short name, plain text'),
                 'courseimage' => new external_value(PARAM_URL, 'Course image URL', VALUE_OPTIONAL),
-                'progress' => new external_value(PARAM_INT, 'Course completion progress percentage'),
+                'progress' => new external_value(PARAM_INT, 'The plan owner\'s course completion percentage'),
                 'visible' => new external_value(PARAM_INT, 'Course visibility'),
                 'ruleoutcome' => new external_value(PARAM_INT, 'What completing the course does to the competency'),
                 'access' => new external_value(
@@ -377,7 +382,7 @@ class get_competency_courses extends external_api {
                         'cmid' => new external_value(PARAM_INT, 'Course module id'),
                         'name' => new external_value(PARAM_RAW, 'Activity name, plain text'),
                         'url' => new external_value(PARAM_URL, 'Activity URL, empty when it has no view page'),
-                        'completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
+                        'completed' => new external_value(PARAM_BOOL, 'Whether the plan owner completed the activity'),
                         'tracked' => new external_value(PARAM_BOOL, 'Whether completion is tracked for it'),
                     ],
                     'The single trackable activity, present only when the course resolves to exactly one',
@@ -404,10 +409,10 @@ class get_competency_courses extends external_api {
                             PARAM_URL,
                             'Activity URL, the course URL when restricted, empty when the module has no view page'
                         ),
-                        'locked' => new external_value(PARAM_BOOL, 'Whether an access restriction applies'),
+                        'locked' => new external_value(PARAM_BOOL, 'Whether an access restriction applies to the plan owner'),
                         'ruleoutcome' => new external_value(PARAM_INT, 'What completing the activity does to the competency'),
                         'has_completion' => new external_value(PARAM_BOOL, 'Whether completion is tracked'),
-                        'is_completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
+                        'is_completed' => new external_value(PARAM_BOOL, 'Whether the plan owner completed the activity'),
                     ])
                 ),
             ])

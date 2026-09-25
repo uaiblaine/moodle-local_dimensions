@@ -118,7 +118,11 @@ final class export_templates_test extends \advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
 
-        $this->expectException(\moodle_exception::class);
-        export_templates::execute('', \context_system::instance()->id);
+        try {
+            export_templates::execute('', \context_system::instance()->id);
+            $this->fail('An empty selection was exported.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('central_plans_export_none', $e->errorcode);
+        }
     }
 }

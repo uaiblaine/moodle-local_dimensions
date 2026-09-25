@@ -1,0 +1,1 @@
+s/trigger_customfields_updated\(template_customfields_updated::class, \$instanceid, \$isnew, \$changed\)/trigger_customfields_updated(template_customfields_updated::class, \$instanceid, false, \$changed)/;

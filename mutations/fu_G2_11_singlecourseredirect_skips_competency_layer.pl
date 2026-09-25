@@ -1,0 +1,1 @@
+s/if \(\$compraw !== constants::SINGLECOURSEREDIRECT_INHERIT\) \{\n            return \$compraw === constants::SINGLECOURSEREDIRECT_YES;\n        \}\n        if \(\$templateid > 0\) \{/if (\$templateid > 0) {/;

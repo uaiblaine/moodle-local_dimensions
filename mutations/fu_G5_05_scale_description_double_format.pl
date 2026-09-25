@@ -1,0 +1,1 @@
+s/return format_text\(\$description, \$scale->descriptionformat, \['context' => \$competency->get_context\(\)\]\);/return format_text(format_text(\$description, \$scale->descriptionformat, ['context' => \$competency->get_context()]), \$scale->descriptionformat, ['context' => \$competency->get_context()]);/;

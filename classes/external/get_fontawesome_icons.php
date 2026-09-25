@@ -143,7 +143,8 @@ class get_fontawesome_icons extends external_api {
     /**
      * Builds the icon map using Boost Union if available, otherwise from core.
      *
-     * Boost Union's brand keys are renamed; see normalize_brand_keys().
+     * Boost Union caches its own map; the core fallback is cached in the fontawesome_iconmap
+     * definition under the key iconmap. Boost Union's brand keys are renamed; see normalize_brand_keys().
      *
      * @return array The icon map [name => ['class' => '...', 'source' => '...']]
      */
@@ -163,8 +164,14 @@ class get_fontawesome_icons extends external_api {
             }
         }
 
-        // Fallback: build from Moodle core + FontAwesome SCSS.
-        return self::build_icon_map_fallback();
+        // Fallback: build from Moodle core + FontAwesome SCSS. Cached, since each search would otherwise rebuild it.
+        $cache = \cache::make('local_dimensions', 'fontawesome_iconmap');
+        $iconmap = $cache->get('iconmap');
+        if ($iconmap === false) {
+            $iconmap = self::build_icon_map_fallback();
+            $cache->set('iconmap', $iconmap);
+        }
+        return $iconmap;
     }
 
     /**

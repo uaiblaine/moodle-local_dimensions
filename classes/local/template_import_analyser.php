@@ -107,7 +107,7 @@ class template_import_analyser {
     /** @var bool Whether the readable-framework lookup was refused outright. */
     protected $frameworksunreadable = false;
 
-    /** @var array Framework resolution memo, keyed by 'i:<idnumber>' or 's:<shortname>'. */
+    /** @var array Framework resolution memo, keyed by 'i:<idnumber>' or 's:<shortname>', of resolve_framework() results. */
     protected $frameworkmemo = [];
 
     /** @var array Competencies prefetched per framework id. */
@@ -186,8 +186,9 @@ class template_import_analyser {
 
         /* 'parents' and 'children' are mutually exclusive in api::get_related_contexts(), so the
            union is assembled from two calls: 'children' alone cannot see a system-context
-           structure from a category, and 'parents' alone cannot see one in a subcategory. A
-           structure in a sibling category stays invisible and is reported as missing. */
+           structure from a category, and 'parents' alone cannot see one in a subcategory.
+           resolve_framework() searches only this set, by ID number as by name, so a structure in
+           a sibling category is reported as missing. */
         foreach (['parents', 'children'] as $includes) {
             try {
                 foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $this->target, $includes, false) as $framework) {
@@ -710,7 +711,10 @@ class template_import_analyser {
             return $this->label_link($link);
         }
 
-        $framework = $this->resolve_framework($link['frameworkidnumber'], $link['frameworkshortname']);
+        ['framework' => $framework, 'byname' => $frameworkbyname] = $this->resolve_framework(
+            $link['frameworkidnumber'],
+            $link['frameworkshortname']
+        );
         if (!$framework) {
             $link['status'] = template_import_verdict::LINK_MISSINGFRAMEWORK;
             $this->record_missing_structure($link['frameworkidnumber'], $link['frameworkshortname']);
@@ -734,6 +738,11 @@ class template_import_analyser {
         if (empty($matches) && $link['competencyshortname'] !== '') {
             $matches = $pool['shortname'][$link['competencyshortname']] ?? [];
             $confidence = template_import_verdict::CONFIDENCE_COMPETENCYSHORTNAME;
+        }
+        /* A competency ID number is unique only within its structure, so an ID number match inside a
+           structure found by name is no stronger than that name. A name match keeps its own label. */
+        if ($frameworkbyname && $confidence === template_import_verdict::CONFIDENCE_EXACT) {
+            $confidence = template_import_verdict::CONFIDENCE_FRAMEWORKSHORTNAME;
         }
 
         if (count($matches) > 1) {
@@ -775,29 +784,36 @@ class template_import_analyser {
     }
 
     /**
-     * Resolve a structure by ID number, then by name among those readable from the target.
+     * Resolve a structure by ID number, then by name, among those readable from the target.
+     *
+     * The ID number lookup is limited to that set too, the one prepare_target_state() builds, because
+     * core's add-competency-to-template call does not check where a structure lives: unlimited, it
+     * would link a structure in a sibling category.
      *
      * There is deliberately no cross-framework fallback: the same ID number in another structure
      * is a different competency, so such a match would silently link the wrong one.
      *
      * @param string $idnumber The structure ID number from the row.
      * @param string $shortname The structure name from the row.
-     * @return competency_framework|null
+     * @return array{framework: ?competency_framework, byname: bool} The structure, or null, and
+     *               whether it was found by name rather than by ID number.
      */
-    protected function resolve_framework(string $idnumber, string $shortname): ?competency_framework {
+    protected function resolve_framework(string $idnumber, string $shortname): array {
         $memokey = $idnumber !== '' ? 'i:' . $idnumber : 's:' . $shortname;
         if (array_key_exists($memokey, $this->frameworkmemo)) {
             return $this->frameworkmemo[$memokey];
         }
 
         $resolved = null;
+        $byname = false;
         if ($idnumber !== '') {
             $found = competency_framework::get_records(['idnumber' => $idnumber]);
             if (count($found) === 1) {
-                $framework = reset($found);
-                if (competency_framework::can_read_context($framework->get_context())) {
-                    $resolved = $framework;
+                $frameworkid = (int) reset($found)->get('id');
+                if (isset($this->readableframeworks[$frameworkid])) {
+                    $resolved = $this->readableframeworks[$frameworkid];
                 } else {
+                    // Unreadable, or in a context the target does not reach, such as a sibling category.
                     $this->add_notice('frameworkunreadable');
                 }
             }
@@ -811,14 +827,15 @@ class template_import_analyser {
             }
             if (count($named) === 1) {
                 $resolved = $named[0];
+                $byname = true;
             }
         }
         if (!$resolved && $this->frameworksunreadable) {
             $this->add_notice('frameworkunreadable');
         }
 
-        $this->frameworkmemo[$memokey] = $resolved;
-        return $resolved;
+        $this->frameworkmemo[$memokey] = ['framework' => $resolved, 'byname' => $byname];
+        return $this->frameworkmemo[$memokey];
     }
 
     /**

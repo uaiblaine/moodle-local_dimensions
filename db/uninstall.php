@@ -17,8 +17,9 @@
 /**
  * Uninstall script for local_dimensions.
  *
- * Removes custom field categories, fields, data, stored files and user preferences that were
- * created by this plugin.
+ * Removes custom field categories, fields, data and user preferences that were created by this
+ * plugin. The plugin's stored files are left to uninstall_plugin(), which deletes every file of
+ * the component, in every context, after this function returns.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -41,21 +42,7 @@ function xmldb_local_dimensions_uninstall() {
         $handler->delete_all();
     }
 
-    // 2. Delete all stored files (background and card images).
-    $fs = get_file_storage();
-    $context = \core\context\system::instance();
-    $fileareas = [
-        'competency_bgimage',
-        'competency_cardimage',
-        'template_bgimage',
-        'template_cardimage',
-    ];
-
-    foreach ($fileareas as $filearea) {
-        $fs->delete_area_files($context->id, 'local_dimensions', $filearea);
-    }
-
-    // 3. Delete this plugin's user preferences (Competency hub view state). Core does not purge
+    // 2. Delete this plugin's user preferences (Competency hub view state). Core does not purge
     // a component's user_preferences rows on uninstall (the table has no component column), so
     // remove them here by name prefix to avoid orphaned rows.
     \local_dimensions\helper::purge_user_preferences();

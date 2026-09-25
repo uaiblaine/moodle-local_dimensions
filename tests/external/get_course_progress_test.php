@@ -452,4 +452,56 @@ final class get_course_progress_test extends \advanced_testcase {
         ]]);
         $this->assertSame($error, $cleaned[0]['error']);
     }
+    /**
+     * An \Error thrown while one course is read becomes that course's error row; the other
+     * courses still answer and the response stays valid.
+     *
+     * The calculator cannot be made to throw from a fixture, so a subclass throws a TypeError for
+     * one course and reads every other course through the real calculator.
+     *
+     * @return void
+     */
+    public function test_an_error_in_one_course_leaves_the_others_answered(): void {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $broken = $this->getDataGenerator()->create_course(['enablecompletion' => 0]);
+        $healthy = $this->getDataGenerator()->create_course(['enablecompletion' => 0]);
+        foreach ([$broken, $healthy] as $course) {
+            $this->getDataGenerator()->enrol_user((int) $user->id, (int) $course->id, 'student');
+        }
+        $this->link_competency((int) $broken->id, (int) $healthy->id);
+        $this->setUser($user);
+        $service = new class extends get_course_progress {
+            /** @var int The course whose read throws. */
+            public static $brokenid = 0;
+
+            /**
+             * Throw for the broken course, read every other one.
+             *
+             * @param int $courseid The course id.
+             * @return array
+             */
+            protected static function progress_data(int $courseid): array {
+                if ($courseid === self::$brokenid) {
+                    throw new \TypeError('A <b>typed</b> argument received null');
+                }
+                return parent::progress_data($courseid);
+            }
+        };
+        $service::$brokenid = (int) $broken->id;
+
+        $rows = external_api::clean_returnvalue(
+            get_course_progress::execute_returns(),
+            $service::execute([(int) $broken->id, (int) $healthy->id])
+        );
+
+        $this->assertCount(2, $rows);
+        $this->assertSame((int) $broken->id, $rows[0]['courseid']);
+        $this->assertSame('A typed argument received null', $rows[0]['error']);
+        $this->assertSame([], $rows[0]['sections']);
+        // The control: the other course is read normally.
+        $this->assertSame((int) $healthy->id, $rows[1]['courseid']);
+        $this->assertSame('', $rows[1]['error']);
+        $this->assertFalse($rows[1]['locked']);
+    }
 }

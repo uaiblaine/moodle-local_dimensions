@@ -82,7 +82,7 @@ class calculator {
 
             // A future enrolment start date wins over the course start date.
             $availabilitydate = self::get_availability_date($course, $USER->id);
-            $formattedstartdate = userdate($availabilitydate, '%d/%m/%Y');
+            $formattedstartdate = userdate($availabilitydate, get_string('strftimedatefullshort', 'langconfig'));
 
             // Determine if this is an enrollment start date (user enrolled but not yet active).
             $isenrolmentstart = false;
@@ -720,8 +720,9 @@ class calculator {
     /**
      * Whether the course is locked for the user.
      *
-     * Unlocked only when the user is actively enrolled and holds the role with shortname
-     * 'student' in the course or a parent context.
+     * Unlocked only when the user is actively enrolled and holds a learner role in the course or
+     * a parent context: any role with the student archetype, whatever its shortname, or the role
+     * whose shortname is 'student' on a site that cleared that role's archetype.
      *
      * @param stdClass $course Course object
      * @param int $userid User ID
@@ -735,10 +736,11 @@ class calculator {
             return true;
         }
 
-        // 2. Check student role.
+        // 2. Check for a learner role.
+        $studentroleids = array_map('intval', array_keys(get_archetype_roles('student')));
         $roles = get_user_roles($coursecontext, $userid);
         foreach ($roles as $role) {
-            if ($role->shortname === 'student') {
+            if (in_array((int) $role->roleid, $studentroleids, true) || $role->shortname === 'student') {
                 return false;
             }
         }

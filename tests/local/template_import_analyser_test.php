@@ -100,6 +100,9 @@ final class template_import_analyser_test extends \advanced_testcase {
         $matchedlinks = $plan->get_item('t0')['links'];
         $matchedlink = reset($matchedlinks);
         $this->assertSame((int) $competency->get('id'), $matchedlink['competencyid']);
+        // Its structure is named by ID number, so the link reaches the exact tier, not a fallback.
+        $this->assertSame(template_import_verdict::LINK_MATCHED, $matchedlink['status']);
+        $this->assertSame(template_import_verdict::CONFIDENCE_EXACT, $matchedlink['confidence']);
     }
 
     /**
@@ -444,6 +447,53 @@ final class template_import_analyser_test extends \advanced_testcase {
         $this->assertSame(template_import_verdict::CONFIDENCE_COMPETENCYSHORTNAME, $link['confidence']);
         $this->assertTrue($link['preselected']);
         $this->assertSame('bg-warning text-dark', $link['statusbadge']);
+    }
+
+    /**
+     * A competency matched by ID number inside a structure found only by its name is a fallback
+     * match too: competency ID numbers are unique only within a structure.
+     *
+     * @return void
+     */
+    public function test_a_structure_matched_by_name_makes_the_link_a_fallback(): void {
+        $this->prepare_site();
+        $csv = $this->csv([
+            ['rowtype' => 'template', 'template_idnumber' => 'TPL-S', 'shortname' => 'By structure name'],
+            ['rowtype' => 'link', 'template_idnumber' => 'TPL-S', 'framework_idnumber' => '',
+             'framework_shortname' => 'FW', 'competency_idnumber' => 'C1', 'sortorder' => '0'],
+            ['rowtype' => 'link', 'template_idnumber' => 'TPL-S', 'framework_idnumber' => 'FW-RENAMED',
+             'framework_shortname' => 'FW', 'competency_idnumber' => 'C1', 'sortorder' => '1'],
+            ['rowtype' => 'link', 'template_idnumber' => 'TPL-S', 'framework_idnumber' => '',
+             'framework_shortname' => 'FW', 'competency_idnumber' => '', 'competency_shortname' => 'First',
+             'sortorder' => '2'],
+            ['rowtype' => 'template', 'template_idnumber' => 'TPL-X', 'shortname' => 'By structure ID number'],
+            ['rowtype' => 'link', 'template_idnumber' => 'TPL-X', 'framework_idnumber' => 'FW-1',
+             'framework_shortname' => 'FW', 'competency_idnumber' => 'C1', 'sortorder' => '0'],
+        ]);
+
+        $plan = $this->analyse($csv, \context_system::instance(), false);
+        $byname = array_values($plan->get_item('t0')['links']);
+        $byidnumber = array_values($plan->get_item('t1')['links']);
+
+        foreach ([0, 1] as $offset) {
+            $this->assertSame(template_import_verdict::LINK_MATCHEDFALLBACK, $byname[$offset]['status'], "link $offset");
+            $this->assertSame(
+                template_import_verdict::CONFIDENCE_FRAMEWORKSHORTNAME,
+                $byname[$offset]['confidence'],
+                "link $offset"
+            );
+            $this->assertSame(
+                get_string('central_plans_import_confidence_frameworkshortname', 'local_dimensions'),
+                $byname[$offset]['confidencelabel']
+            );
+            $this->assertTrue($byname[$offset]['preselected']);
+        }
+        // A competency matched by name keeps its own, weaker label.
+        $this->assertSame(template_import_verdict::LINK_MATCHEDFALLBACK, $byname[2]['status']);
+        $this->assertSame(template_import_verdict::CONFIDENCE_COMPETENCYSHORTNAME, $byname[2]['confidence']);
+        // The control: the same competency in the structure named by its ID number is an exact match.
+        $this->assertSame(template_import_verdict::LINK_MATCHED, $byidnumber[0]['status']);
+        $this->assertSame(template_import_verdict::CONFIDENCE_EXACT, $byidnumber[0]['confidence']);
     }
 
     /**

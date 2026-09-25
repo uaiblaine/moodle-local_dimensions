@@ -32,11 +32,7 @@
     * is_pending (bool) - Whether the learner has applied to join and is awaiting a decision
     * islearnmore (bool) - Whether to show "Learn More" button instead of "Locked Content"
     * showlockeddate (bool) - Whether to show the availability date
-    * customicon (string) - CSS class for custom locked icon (empty = default lock icon from pix)
-    * lockiconurl (string) - URL do fallback do cadeado
-    * checkiconurl (string) - URL do ícone de concluído
-    * circleiconurl (string) - URL do ícone neutro com atividades
-    * infoiconurl (string) - URL do ícone de informação sem rastreamento
+    * customicon (string) - CSS class for custom locked icon (empty = the default lock icon)
     * hascontinue (bool) - Whether a section is under way, so the Continue shortcut renders
     * continueurl (string) - URL of the section the learner left off at
     * continuename (string) - Name of that section, for the accessible label
@@ -75,10 +71,6 @@
         "showlockeddate": true,
         "customicon": "",
         "courseurl": "/course/view.php?id=42",
-        "lockiconurl": "/local/dimensions/pix/status/lock.svg",
-        "checkiconurl": "/local/dimensions/pix/status/check.svg",
-        "circleiconurl": "/local/dimensions/pix/status/circle.svg",
-        "infoiconurl": "/local/dimensions/pix/status/info.svg",
         "cardmode": "timeline",
         "activity": false,
         "section": false,
@@ -116,7 +108,7 @@
                         <i class="{{customicon}}" aria-hidden="true"></i>
                     {{/customicon}}
                     {{^customicon}}
-                        <img class="local-dimensions-icon local-dimensions-icon-lock local-dimensions-locked-icon-image" src="{{lockiconurl}}" alt="" aria-hidden="true">
+                        <span class="local-dimensions-icon local-dimensions-icon-lock" aria-hidden="true"></span>
                     {{/customicon}}
                 {{/is_pending}}
             {{/can_self_enrol}}
@@ -169,10 +161,10 @@
         {{#tracked}}
         <span class="local-dimensions-single-mark">
             {{#completed}}
-                <img class="local-dimensions-icon local-dimensions-icon-check" src="{{checkiconurl}}" alt="" aria-hidden="true">
+                <span class="local-dimensions-icon local-dimensions-icon-check" aria-hidden="true"></span>
             {{/completed}}
             {{^completed}}
-                <img class="local-dimensions-icon local-dimensions-icon-circle" src="{{circleiconurl}}" alt="" aria-hidden="true">
+                <span class="local-dimensions-icon local-dimensions-icon-circle" aria-hidden="true"></span>
             {{/completed}}
         </span>
         {{/tracked}}
@@ -271,21 +263,19 @@
             <div class="local-dimensions-timeline-marker">
                 {{! Priority order: locked > is_completed > is_started > empty/info }}
                 {{#locked}}
-                    <img class="local-dimensions-icon local-dimensions-icon-lock-sm" src="{{lockiconurl}}" alt="" aria-hidden="true">
+                    <span class="local-dimensions-icon local-dimensions-icon-lock-sm" aria-hidden="true"></span>
                 {{/locked}}
 
                 {{^locked}}
                     {{#is_completed}}
-                        <img class="local-dimensions-icon local-dimensions-icon-check" src="{{checkiconurl}}" alt="" aria-hidden="true">
+                        <span class="local-dimensions-icon local-dimensions-icon-check" aria-hidden="true"></span>
                     {{/is_completed}}
 
                     {{^is_completed}}
                         {{#is_started}}
                              <div class="local-dimensions-progress-ring-container" role="progressbar" aria-valuenow="{{percentage}}" aria-valuemin="0" aria-valuemax="100" aria-label="{{#str}}aria_completion_percentage, local_dimensions, {{percentage}}{{/str}}">
                                 <svg class="local-dimensions-progress-ring" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
-                                   <!-- Background circle (gray) -->
                                    <circle class="local-dimensions-progress-ring__bg" cx="16" cy="16" r="12" />
-                                   <!-- Progress circle (green) -->
                                    <circle class="local-dimensions-progress-ring__progress" cx="16" cy="16" r="12"
                                    style="stroke-dasharray: {{dasharray}} 75.4; stroke-dashoffset: 0;" />
                                 </svg>
@@ -295,10 +285,10 @@
 
                         {{^is_started}}
                             {{#has_activities}}
-                                <img class="local-dimensions-icon local-dimensions-icon-circle" src="{{circleiconurl}}" alt="" aria-hidden="true">
+                                <span class="local-dimensions-icon local-dimensions-icon-circle" aria-hidden="true"></span>
                             {{/has_activities}}
                             {{^has_activities}}
-                                <img class="local-dimensions-icon local-dimensions-icon-info" src="{{infoiconurl}}" alt="" aria-hidden="true" title="{{#str}}no_completion_tracking, local_dimensions{{/str}}">
+                                <span class="local-dimensions-icon local-dimensions-icon-info" aria-hidden="true" title="{{#str}}no_completion_tracking, local_dimensions{{/str}}"></span>
                             {{/has_activities}}
                         {{/is_started}}
                     {{/is_completed}}

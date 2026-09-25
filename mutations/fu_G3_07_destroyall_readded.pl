@@ -1,0 +1,1 @@
+s/    return \{\n        FilterTabsNav: FilterTabsNav,\n        initAll: initAll,\n        updateAll: updateAll\n    \};/    return {\n        FilterTabsNav: FilterTabsNav,\n        initAll: initAll,\n        updateAll: updateAll,\n        destroyAll: function() { return null; }\n    };/;

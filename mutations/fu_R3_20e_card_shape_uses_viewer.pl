@@ -1,0 +1,1 @@
+s/\$shape = \\local_dimensions\\calculator::resolve_card_shape\(\n                    \(int\) \$course->id,\n                    \$ownerid\n                \);/\$shape = \\local_dimensions\\calculator::resolve_card_shape(\n                    (int) \$course->id,\n                    (int) \$USER->id\n                );/;

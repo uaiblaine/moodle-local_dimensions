@@ -67,11 +67,26 @@ class enrol_method_applied extends base {
     }
 
     /**
-     * Not mapped on restore, although the event is logged in the course context.
+     * Restore mapping of the enrol instance id, which core's enrolment restore sets.
      *
-     * @return string
+     * @return array
      */
     public static function get_objectid_mapping() {
-        return base::NOT_MAPPED;
+        return ['db' => 'enrol', 'restore' => 'enrol'];
+    }
+
+    /**
+     * Restore mapping of the ids in 'other'.
+     *
+     * Neither the template nor the cohort is part of a course backup, so neither has a mapping.
+     *
+     * @return array
+     */
+    public static function get_other_mapping() {
+        return [
+            'templateid' => base::NOT_MAPPED,
+            'cohortid' => base::NOT_MAPPED,
+            'roleid' => ['db' => 'role', 'restore' => 'role'],
+        ];
     }
 }

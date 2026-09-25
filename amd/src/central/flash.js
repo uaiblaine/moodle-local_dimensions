@@ -24,8 +24,9 @@
  */
 
 /**
- * Briefly flash an element's background. A no-op when the element cannot animate, and skipped
- * entirely when the user has requested reduced motion (the flash is a redundant confirmation cue).
+ * Briefly flash an element's background. A no-op when the element cannot animate or the warning
+ * tint token does not reach it, and skipped entirely when the user has requested reduced motion
+ * (the flash is a redundant confirmation cue).
  *
  * @param {HTMLElement} el The element to flash.
  * @return {void}
@@ -39,9 +40,15 @@ export const flashRow = (el) => {
     }
     // Read the duration from the --local-dimensions-motion-flash token (styles.css :root, inherited here) so the
     // stylesheet stays the single source; fall back to 1500ms if the token is not set.
-    const duration = parseInt(getComputedStyle(el).getPropertyValue('--local-dimensions-motion-flash'), 10) || 1500;
+    const style = getComputedStyle(el);
+    const duration = parseInt(style.getPropertyValue('--local-dimensions-motion-flash'), 10) || 1500;
+    // The warning tint (declared on body) follows the theme and a dark page; a literal would not.
+    const colour = style.getPropertyValue('--local-dimensions-warning-tint').trim();
+    if (!colour) {
+        return;
+    }
     el.animate(
-        [{backgroundColor: '#fff3cd'}, {backgroundColor: 'transparent'}],
+        [{backgroundColor: colour}, {backgroundColor: 'transparent'}],
         {duration, easing: 'ease-out'}
     );
 };

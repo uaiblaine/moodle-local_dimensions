@@ -137,6 +137,33 @@ final class template_cohorts_test extends \advanced_testcase {
     }
 
     /**
+     * Detaching a cohort goes through core, so it is refused while competencies are disabled on
+     * the site, and nothing is removed.
+     *
+     * @return void
+     */
+    public function test_remove_is_refused_while_competencies_are_disabled(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$templateid, $cohortid] = $this->setup_fixture();
+        add_template_cohort::execute($templateid, $cohortid);
+        set_config('enabled', 0, 'core_competency');
+
+        try {
+            remove_template_cohort::execute($templateid, $cohortid);
+            $this->fail('A cohort was detached while competencies were disabled.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('competenciesarenotenabled', $e->errorcode);
+        }
+        $this->assertTrue(template_cohort::get_relation($templateid, $cohortid)->get('id') > 0);
+
+        // The control: enabled again, the same call detaches it.
+        set_config('enabled', 1, 'core_competency');
+        $this->assertTrue(remove_template_cohort::execute($templateid, $cohortid)['success']);
+        $this->assertSame(0, (int) template_cohort::get_relation($templateid, $cohortid)->get('id'));
+    }
+
+    /**
      * The sync service queues the adhoc task without creating a relation.
      *
      * @return void

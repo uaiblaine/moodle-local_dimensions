@@ -21,6 +21,10 @@
     select is populated client-side from the tab's framework rows; the Download button calls
     the local_dimensions_export_framework web service and saves the returned CSV as a file.
 
+    The loader span matches the one in plans_export: role=status and a visually hidden label so
+    the wait is announced, and no d-inline-flex, whose display:inline-flex !important would keep
+    it visible while hidden. The label reuses central_plans_exporting, whose text names no tab.
+
     Context variables required: none (static markup; strings resolved with str helpers).
 
     Example context (json):
@@ -38,6 +42,8 @@
         <button type="button" class="btn btn-primary" data-action="download">
             <i class="fa fa-download me-1" aria-hidden="true"></i>{{#str}}central_frameworks_export, local_dimensions{{/str}}
         </button>
-        <span data-region="export-loader" class="d-inline-flex" hidden></span>
+        <span data-region="export-loader" role="status" hidden>
+            <span class="visually-hidden">{{#str}}central_plans_exporting, local_dimensions{{/str}}</span>
+        </span>
     </div>
 </div>

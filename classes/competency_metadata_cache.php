@@ -307,9 +307,12 @@ class competency_metadata_cache {
     /**
      * Get select field label for a shortname.
      *
+     * The stored intvalue is a 1-based position in the option list as core's select counts it,
+     * so the text is split by {@see helper::split_select_options()}, which skips blank lines.
+     *
      * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname.
-     * @return string|null
+     * @return string|null The option label, or null when unset or past the last option.
      */
     private static function get_select_value(array $records, string $shortname): ?string {
         if (empty($records[$shortname])) {
@@ -327,14 +330,8 @@ class competency_metadata_cache {
             return null;
         }
 
-        $options = explode("\n", $config['options']);
-        $optionindex = $selectedindex - 1;
-        if (!isset($options[$optionindex])) {
-            return null;
-        }
-
-        $value = trim($options[$optionindex]);
-        return $value !== '' ? $value : null;
+        $options = helper::split_select_options((string) $config['options']);
+        return $options[$selectedindex - 1] ?? null;
     }
 
     /**

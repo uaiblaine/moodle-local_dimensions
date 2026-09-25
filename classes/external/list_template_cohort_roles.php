@@ -26,7 +26,6 @@ namespace local_dimensions\external;
 
 use core\context\system as context_system;
 use core_competency\template;
-use core_competency\template_cohort;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
@@ -90,32 +89,41 @@ class list_template_cohort_roles extends external_api {
             }
         }
 
-        // The plan's linked cohorts.
+        // The plan's linked cohorts, with their member counts and contexts, in one query.
+        $ctxfields = \context_helper::get_preload_record_columns_sql('ctx');
+        $cohortrecords = $DB->get_records_sql(
+            "SELECT c.id, c.name, c.contextid, $ctxfields,
+                    (SELECT COUNT(1) FROM {cohort_members} cm WHERE cm.cohortid = c.id) AS members
+               FROM {competency_templatecohort} tc
+               JOIN {cohort} c ON c.id = tc.cohortid
+               JOIN {context} ctx ON ctx.id = c.contextid
+              WHERE tc.templateid = :templateid
+           ORDER BY tc.id",
+            ['templateid' => $template->get('id')]
+        );
         $cohorts = [];
-        $cohortids = [];
-        foreach (template_cohort::get_relations_by_templateid($template->get('id')) as $relation) {
-            $cohortid = (int) $relation->get('cohortid');
-            $cohort = $DB->get_record('cohort', ['id' => $cohortid], 'id, name, contextid');
-            if (!$cohort) {
-                continue;
-            }
-            $cohortids[] = $cohortid;
+        foreach ($cohortrecords as $cohort) {
+            \context_helper::preload_from_record($cohort);
             $cohorts[] = [
-                'cohortid' => $cohortid,
+                'cohortid' => (int) $cohort->id,
                 'name' => format_string(
                     $cohort->name,
                     true,
                     ['context' => \context::instance_by_id($cohort->contextid), 'escape' => false]
                 ),
-                'members' => (int) $DB->count_records('cohort_members', ['cohortid' => $cohortid]),
+                'members' => (int) $cohort->members,
             ];
         }
+        $cohortids = array_column($cohorts, 'cohortid');
 
         // Existing assignments whose cohort is one of the plan's cohorts.
         $assignments = [];
         if (!empty($cohortids)) {
             [$insql, $inparams] = $DB->get_in_or_equal($cohortids, SQL_PARAMS_NAMED, 'c');
             $rows = cohort_role_assignment::get_records_select("cohortid $insql", $inparams, 'userid, roleid');
+            $holderids = array_unique(array_map(static fn($row): int => (int) $row->get('userid'), $rows));
+            $users = $holderids ? $DB->get_records_list('user', 'id', $holderids) : [];
+            $synced = self::synced_counts($cohortids);
             $cohortnames = array_column($cohorts, 'name', 'cohortid');
             $cohortmembers = array_column($cohorts, 'members', 'cohortid');
             foreach ($rows as $row) {
@@ -123,8 +131,8 @@ class list_template_cohort_roles extends external_api {
                 $roleid = (int) $row->get('roleid');
                 $cohortid = (int) $row->get('cohortid');
                 $member = (int) ($cohortmembers[$cohortid] ?? 0);
-                $synced = self::synced_count($userid, $roleid, $cohortid);
-                $user = $DB->get_record('user', ['id' => $userid], '*', IGNORE_MISSING);
+                $syncedcount = $synced[$userid . '_' . $roleid . '_' . $cohortid] ?? 0;
+                $user = $users[$userid] ?? null;
                 $assignments[] = [
                     'id' => (int) $row->get('id'),
                     'userid' => $userid,
@@ -135,8 +143,8 @@ class list_template_cohort_roles extends external_api {
                     'rolename' => $rolenames[$roleid] ?? (string) $roleid,
                     'cohortid' => $cohortid,
                     'cohortname' => (string) ($cohortnames[$cohortid] ?? $cohortid),
-                    'status' => ($member > 0 && $synced >= $member) ? 'synced' : 'pending',
-                    'syncedcount' => $synced,
+                    'status' => ($member > 0 && $syncedcount >= $member) ? 'synced' : 'pending',
+                    'syncedcount' => $syncedcount,
                     'membercount' => $member,
                 ];
             }
@@ -146,29 +154,31 @@ class list_template_cohort_roles extends external_api {
     }
 
     /**
-     * Count how many of a cohort's members already have the role assigned by tool_cohortroles.
+     * How many of each cohort's members already hold each role tool_cohortroles assigned, in one query.
      *
-     * @param int $userid The role holder.
-     * @param int $roleid The role.
-     * @param int $cohortid The cohort.
-     * @return int Number of synced member user-contexts.
+     * A member in two of the cohorts counts towards both, as tool_cohortroles assigns per cohort.
+     *
+     * @param array $cohortids The cohort ids.
+     * @return array Map of "userid_roleid_cohortid" to the number of member user contexts holding the role.
      */
-    private static function synced_count(int $userid, int $roleid, int $cohortid): int {
+    private static function synced_counts(array $cohortids): array {
         global $DB;
-        $sql = "SELECT COUNT(DISTINCT ra.contextid)
+        [$insql, $params] = $DB->get_in_or_equal($cohortids, SQL_PARAMS_NAMED, 'sc');
+        $sql = "SELECT ra.userid, ra.roleid, cm.cohortid, COUNT(DISTINCT ra.contextid) AS synced
                   FROM {role_assignments} ra
                   JOIN {context} ctx ON ctx.id = ra.contextid AND ctx.contextlevel = :usercontext
-                  JOIN {cohort_members} cm ON cm.userid = ctx.instanceid AND cm.cohortid = :cohortid
+                  JOIN {cohort_members} cm ON cm.userid = ctx.instanceid
                  WHERE ra.component = :component
-                   AND ra.roleid = :roleid
-                   AND ra.userid = :userid";
-        return (int) $DB->count_records_sql($sql, [
-            'usercontext' => CONTEXT_USER,
-            'cohortid' => $cohortid,
-            'component' => 'tool_cohortroles',
-            'roleid' => $roleid,
-            'userid' => $userid,
-        ]);
+                   AND cm.cohortid $insql
+              GROUP BY ra.userid, ra.roleid, cm.cohortid";
+        $params += ['usercontext' => CONTEXT_USER, 'component' => 'tool_cohortroles'];
+        $counts = [];
+        $records = $DB->get_recordset_sql($sql, $params);
+        foreach ($records as $record) {
+            $counts[$record->userid . '_' . $record->roleid . '_' . $record->cohortid] = (int) $record->synced;
+        }
+        $records->close();
+        return $counts;
     }
 
     /**

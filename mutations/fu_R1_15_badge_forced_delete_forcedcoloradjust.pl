@@ -1,0 +1,1 @@
+s/    \.local-dimensions-grade-badge-icon-warning \{\n        --local-dimensions-icon-glyph: canvas;\n        forced-color-adjust: none;\n        background-color: currentcolor;\n    \}/    .local-dimensions-grade-badge-icon-warning {\n        --local-dimensions-icon-glyph: canvas;\n        background-color: currentcolor;\n    }/;

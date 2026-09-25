@@ -73,6 +73,28 @@ define([], function() {
     }
 
     /**
+     * Drop the containers no longer in the document, and stop observing them.
+     *
+     * The accordion rebuilds its detail panes on every layout switch, so without this the list
+     * would keep every torn-down pane alive and re-measure it on each resize.
+     *
+     * @return {HTMLElement[]} The containers still in the document.
+     */
+    function pruneDisconnected() {
+        trackedContainers = trackedContainers.filter(function(container) {
+            if (container.isConnected) {
+                return true;
+            }
+            var content = container.querySelector(CONTENT_SELECTOR);
+            if (resizeObserver && content) {
+                resizeObserver.unobserve(content);
+            }
+            return false;
+        });
+        return trackedContainers;
+    }
+
+    /**
      * Update toggle button label/aria after expand/collapse.
      *
      * @param {HTMLElement} container
@@ -137,16 +159,17 @@ define([], function() {
         if (!windowListenerAttached) {
             windowListenerAttached = true;
             window.addEventListener('resize', function() {
-                trackedContainers.forEach(measure);
+                pruneDisconnected().forEach(measure);
             }, {passive: true});
         }
 
-        // Re-measure once embedded media (images/iframes) finish loading.
-        var media = content.querySelectorAll('img, iframe, video');
+        /* Re-measure once embedded images and iframes finish loading. A video fires no load
+           event; the ResizeObserver above sees it grow instead. */
+        var media = content.querySelectorAll('img, iframe');
         media.forEach(function(el) {
             el.addEventListener('load', function() {
- measure(container);
-}, {once: true});
+                measure(container);
+            }, {once: true});
         });
 
         measure(container);
@@ -194,7 +217,7 @@ define([], function() {
          * fitting) needs this once it is back on screen.
          */
         remeasure: function() {
-            trackedContainers.forEach(measure);
+            pruneDisconnected().forEach(measure);
         }
     };
 });

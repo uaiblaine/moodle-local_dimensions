@@ -383,7 +383,7 @@ final class learner_plain_names_test extends \advanced_testcase {
             $calls,
             PREG_SET_ORDER
         );
-        $this->assertCount(7, $calls);
+        $this->assertCount(6, $calls);
         foreach ($calls as $call) {
             if (preg_match('/gradename:\s*hasGrade\s*\?\s*$/', $call[1])) {
                 continue;

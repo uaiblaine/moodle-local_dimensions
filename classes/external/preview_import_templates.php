@@ -122,11 +122,15 @@ class preview_import_templates extends external_api {
         ]);
         $output = $PAGE->get_renderer('core');
 
+        /* The cells are the file's raw text and the returns declare PARAM_TEXT, which rejects the whole
+           response when stripping tags would change a value ("<TI>", "A<B"). Tags are stripped here, in
+           the plain spelling. */
+        $plain = ['context' => $context, 'escape' => false];
         $missing = [];
         foreach ($plan->get_missing_structures() as $structure) {
             $missing[] = [
-                'idnumber' => (string) $structure['idnumber'],
-                'shortname' => (string) $structure['shortname'],
+                'idnumber' => format_string((string) $structure['idnumber'], true, $plain),
+                'shortname' => format_string((string) $structure['shortname'], true, $plain),
             ];
         }
 

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Session cache for plan trail data used by plan cards.
+ * Cache for plan trail data used by plan cards.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -25,10 +25,14 @@
 namespace local_dimensions;
 
 /**
- * Session cache for plan trail data used by plan cards.
+ * Cache for plan trail data used by plan cards.
  *
  * Stores lightweight competency trail data (id, shortname, proficiency)
  * per plan per user, avoiding the overhead of core API Persistent objects.
+ *
+ * The definition is application-wide, not per session: the requests that change a learner's
+ * trail (a teacher rating, evidence from a course) belong to another user, and a session
+ * cache can only be invalidated from its own session.
  *
  * Cache payload:
  * - total: int (total competency count)
@@ -69,10 +73,10 @@ class plan_trail_cache {
     }
 
     /**
-     * Get trail data for a plan, using session cache.
+     * Get trail data for a plan, through the cache.
      *
-     * A completed plan reads the ratings core froze when it was completed, not the learner's
-     * current ones - see fetch_trail_data().
+     * A completed plan reads the competencies and ratings core froze when it was completed, not
+     * the template's or the learner's current ones - see fetch_trail_data().
      *
      * @param int $planid Plan ID.
      * @param int $userid User ID.
@@ -111,16 +115,25 @@ class plan_trail_cache {
     }
 
     /**
-     * Purge all cached trail data for a user.
+     * Invalidate cached trail data for every plan of a user.
      *
-     * Used when a competency is rated outside a specific plan context.
+     * Used when a competency is rated outside a specific plan context. The keys are listed from
+     * the user's plans, since a cache cannot be searched by key prefix.
      *
      * @param int $userid User ID.
      */
     public static function invalidate_user(int $userid): void {
-        // Session cache is per-user, so purging all keys is safe and correct.
-        self::get_cache()->purge();
-        self::debug('cache purged for user ' . $userid);
+        global $DB;
+
+        $keys = [];
+        foreach ($DB->get_fieldset_select('competency_plan', 'id', 'userid = ?', [$userid]) as $planid) {
+            $keys[] = self::cache_key((int) $planid, $userid, false);
+            $keys[] = self::cache_key((int) $planid, $userid, true);
+        }
+        if ($keys) {
+            self::get_cache()->delete_many($keys);
+        }
+        self::debug('cache invalidated for all plans of user ' . $userid);
     }
 
     /**
@@ -137,11 +150,14 @@ class plan_trail_cache {
      * Returns scalar rows (id, shortname, proficiency) without
      * instantiating Persistent objects.
      *
-     * Proficiency comes from the table core itself reads for that plan status. On completion,
-     * api::complete_plan() archives every rating into {competency_usercompplan} keyed by planid,
-     * and api::list_plan_competencies() reads the archive for a complete plan and the live
-     * {competency_usercomp} for every other status. Reading the live table for a completed plan
-     * would show the learner's current state and disagree with core's page for the same plan.
+     * Both the competency list and the proficiency come from the tables core reads for that plan
+     * status. On completion, api::complete_plan() archives every competency of the plan with its
+     * rating into {competency_usercompplan}, keyed by planid, and plan::get_competencies() then
+     * lists the plan from that archive ({@see \core_competency\user_competency_plan::list_competencies()},
+     * whose query and order the complete branch below repeats). Every other status lists the
+     * template's or the plan's own competencies with the live {competency_usercomp} rating. The
+     * live tables would show a completed plan gaining competencies added to its template later,
+     * and losing removed ones, where core's plan page shows the plan as it was completed.
      *
      * @param int $planid Plan ID.
      * @param int $userid User ID.
@@ -152,21 +168,26 @@ class plan_trail_cache {
     private static function fetch_trail_data(int $planid, int $userid, ?int $templateid, bool $iscomplete = false): array {
         global $DB;
 
-        $proficiency = $iscomplete
-            ? 'COALESCE(ucp.proficiency, 0) AS proficiency'
-            : 'COALESCE(uc.proficiency, 0) AS proficiency';
-        $ratingjoin = $iscomplete
-            ? 'LEFT JOIN {competency_usercompplan} ucp
-                       ON ucp.competencyid = c.id AND ucp.userid = :userid AND ucp.planid = :ratingplanid'
-            : 'LEFT JOIN {competency_usercomp} uc ON uc.competencyid = c.id AND uc.userid = :userid';
+        if ($iscomplete) {
+            // The archive holds the competency list too, whatever the plan's template.
+            $sql = "SELECT c.id, c.shortname,
+                           COALESCE(ucp.proficiency, 0) AS proficiency
+                      FROM {competency_usercompplan} ucp
+                      JOIN {competency} c ON c.id = ucp.competencyid
+                     WHERE ucp.planid = :planid AND ucp.userid = :userid
+                  ORDER BY ucp.sortorder ASC, ucp.id ASC";
 
-        if ($templateid) {
+            $params = [
+                'userid' => $userid,
+                'planid' => $planid,
+            ];
+        } else if ($templateid) {
             // Template-based plan: competencies come from template_competency link.
             $sql = "SELECT c.id, c.shortname,
-                           $proficiency
+                           COALESCE(uc.proficiency, 0) AS proficiency
                       FROM {competency_templatecomp} tc
                       JOIN {competency} c ON c.id = tc.competencyid
-                 $ratingjoin
+                 LEFT JOIN {competency_usercomp} uc ON uc.competencyid = c.id AND uc.userid = :userid
                      WHERE tc.templateid = :templateid
                   ORDER BY tc.sortorder ASC, tc.id ASC";
 
@@ -177,10 +198,10 @@ class plan_trail_cache {
         } else {
             // Manual plan: competencies come from plan_competency link.
             $sql = "SELECT c.id, c.shortname,
-                           $proficiency
+                           COALESCE(uc.proficiency, 0) AS proficiency
                       FROM {competency_plancomp} pc
                       JOIN {competency} c ON c.id = pc.competencyid
-                 $ratingjoin
+                 LEFT JOIN {competency_usercomp} uc ON uc.competencyid = c.id AND uc.userid = :userid
                      WHERE pc.planid = :planid
                   ORDER BY pc.sortorder ASC, pc.id ASC";
 
@@ -188,12 +209,6 @@ class plan_trail_cache {
                 'userid' => $userid,
                 'planid' => $planid,
             ];
-        }
-
-        if ($iscomplete) {
-            /* A named placeholder may appear only once per statement (fix_sql_params counts
-               occurrences), so the archive join carries its own name for the same plan id. */
-            $params['ratingplanid'] = $planid;
         }
 
         $rows = $DB->get_records_sql($sql, $params);

@@ -24,6 +24,7 @@
 
 namespace local_dimensions\external;
 
+use core_competency\api;
 use core_competency\template;
 use core_competency\template_cohort;
 use core_external\external_api;
@@ -57,6 +58,7 @@ class remove_template_cohort extends external_api {
      * @param int $templateid Template id.
      * @param int $cohortid Cohort id.
      * @return array Key: success (bool).
+     * @throws \moodle_exception When competencies are disabled on the site.
      */
     public static function execute(int $templateid, int $cohortid): array {
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -71,10 +73,10 @@ class remove_template_cohort extends external_api {
         self::validate_context($context);
         require_capability('moodle/competency:templatemanage', $context);
 
-        $relation = template_cohort::get_relation($template->get('id'), $params['cohortid']);
-        if ($relation->get('id')) {
-            $relationid = (int) $relation->get('id');
-            $relation->delete();
+        $relationid = (int) template_cohort::get_relation($template->get('id'), $params['cohortid'])->get('id');
+        if ($relationid) {
+            // Through core, which refuses while competencies are disabled on the site.
+            api::delete_template_cohort($template, $params['cohortid']);
 
             // Core fires no event for the template-cohort relation; log the decision.
             \local_dimensions\event\template_cohort_removed::create([

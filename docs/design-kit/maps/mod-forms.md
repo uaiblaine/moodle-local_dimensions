@@ -159,8 +159,8 @@ Gate: `moodle/competency:templatemanage` (`form.php:93`).
 | `FORM-TPL-VISIBLE` | Visible | selectyesno | `form.php:136-138` | default 1 | `addHelpButton` |
 | `FORM-TPL-DUEDATE` | Due date | date_time_selector | `form.php:140-141` | `['optional'=>true]` | an enable checkbox; 0 = no due date. The due-date hero only shows on the **plan** view, not on the tracker |
 | `FORM-TPL-CFIELD` | {core headers} | customfield (block) | `form.php:145` → `lp_handler:169-172` | `customfield_<shortname>` | the **lp area block**. The handler only emits an `<h2>` when the identifier is **not** `''` (`:169-172`); the modal passes `''` (`form.php:145`), so the heading is suppressed here. Besides the ones itemised below, the lp area also provisions `subline_source`, `template_idnumber`, `lockedcardmode`, `showlockeddate`, `tag1`/`tag2`/`type` and (in external mode) `customcard`/`custombgimage` — `helper::ensure_custom_fields_exist:457-490` |
-| `FORM-TPL-DISPLAYMODE` | Display mode | select (customfield) | `form.php:168-170` | 1=Competency tracker (`DISPLAYMODE_COMPETENCIES`), 2=Full plan overview (`DISPLAYMODE_PLAN`) | **the cascade's engine** — **five** `hideIf` rules depend on it (`:173-203`), and a sixth depends on `showrelated` (`:205-210`). The option's 1-based index **is** the `DISPLAYMODE_*` constant by construction (comment at `:168-169`; `constants.php:177`/`:180`) |
-| `FORM-TPL-REDIRECT` | Redirect single course | select (customfield) | `form.php:173-178` | `hideIf displaymode eq DISPLAYMODE_PLAN` (2) | only in **Competency tracker** mode. The `hideIf` rules on `lockedcardmode` (`:179-184`) and `showlockeddate` (`:185-190`) are the same rule, over the same two values |
+| `FORM-TPL-DISPLAYMODE` | Display mode | select (customfield) | `form.php:168-170` | 1=Competency tracker (`DISPLAYMODE_COMPETENCIES`), 2=Full plan overview (`DISPLAYMODE_PLAN`) | **the cascade's engine** — **three** `hideIf` rules depend on it (`:172-190`), and a fourth depends on `showrelated` (`:192-197`). The option's 1-based index **is** the `DISPLAYMODE_*` constant by construction (comment at `:168-169`; `constants.php:177`/`:180`) |
+| `FORM-TPL-REDIRECT` | Redirect single course | select (customfield) | `form.php:172-177` | `hideIf displaymode eq DISPLAYMODE_PLAN` (2) | only in **Competency tracker** mode. `lockedcardmode` and `showlockeddate` show in both modes, because the plan overview applies them too |
 | `FORM-TPL-SHOWRELATED` | Show related | select (customfield) | `form.php:192-197` | `hideIf displaymode eq DISPLAYMODE_COMPETENCIES` (1) | only in **Full plan overview** mode; the gate for the link below |
 | `FORM-TPL-SHOWRELATEDLINK` | Link related | select (customfield) | `form.php:198-203` + `:205-210` | **two** `hideIf` rules: displaymode eq 1 **and** showrelated eq index-of-No | only Full plan overview **and** with Show related = Yes. The 2nd value is **not** a literal: it is `array_search(SHOWRELATED_NO, array_keys(showrelated_options())) + 1` (`:209`), computed at definition time — `3` today, and reordering `showrelated_options()` is followed automatically |
 | `FORM-TPL-ENROLFILTER` | Enrollment filter | select (customfield) | `form.php:161-163` | — | the anchor for the cascade explainer (`insertElementBefore` above it) |
@@ -174,7 +174,7 @@ the colour pair (it advises), nor duedate/visible.
 
 **Design controls:** (1) **WCAG contrast panel** (`:236-239`) + (2) **swatch** (`:230-233`) — identical
 to the competency form, same `contrast.js`/`colour_swatch`, same relayout, same "advises, does not
-block". (3) **`hideIf` cascade** driven by `displaymode` (progressive disclosure, 5 rules + 1 depending
+block". (3) **`hideIf` cascade** driven by `displaymode` (progressive disclosure, 3 rules + 1 depending
 on `showrelated`). (4) Blocking **`FORMAT_PLAIN` SCSS**. (5) URL-only description. (6) **No toast** on
 save (diverges from the house pattern; the confirmation is the scroll-preserving reload).
 

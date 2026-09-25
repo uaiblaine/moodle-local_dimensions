@@ -33,7 +33,9 @@ use core_external\external_function_parameters;
 use core_external\external_value;
 use core\context\system as context_system;
 use core_competency\api;
+use core_competency\plan;
 use core_competency\user_competency;
+use core_competency\user_competency_plan;
 use local_dimensions\helper;
 use local_dimensions\local\plan_access;
 
@@ -109,9 +111,10 @@ class get_competency_rule_data extends external_api {
         $scale = self::get_competency_scale($competency);
         $framework = api::read_framework($competency->get('competencyframeworkid'));
 
+        $iscomplete = (int) $plan->get('status') === plan::STATUS_COMPLETE;
         $ruledata = $simpleruletype === 'points'
-            ? self::build_points_rule_data($config, $userid, $params['planid'], $scale)
-            : self::build_all_rule_data($competency, $userid, $params['planid'], $scale);
+            ? self::build_points_rule_data($config, $userid, $params['planid'], $iscomplete, $scale)
+            : self::build_all_rule_data($competency, $userid, $params['planid'], $iscomplete, $scale);
 
         $hasmissingmandatory = $ruledata['earnedpoints'] >= $ruledata['totalrequired']
             && $ruledata['pendingmandatorycount'] > 0;
@@ -141,14 +144,14 @@ class get_competency_rule_data extends external_api {
      * @param int $childid The child competency ID
      * @param int $userid The user ID
      * @param int $planid The plan ID
+     * @param bool $iscomplete Whether the plan is complete
      * @param \grade_scale|null $scale The scale object
      * @return array Child competency data
      */
-    private static function get_child_data($childid, $userid, $planid, $scale) {
+    private static function get_child_data($childid, $userid, $planid, bool $iscomplete, $scale) {
         $childcomp = api::read_competency($childid);
 
-        // Try to get user_competency_plan first, then fall back to user_competency.
-        $usercompetency = self::get_user_competency_record($childid, $userid, $planid);
+        $usercompetency = self::get_user_competency_record($childid, $userid, $planid, $iscomplete);
         $grade = $usercompetency ? $usercompetency->get('grade') : null;
         $isproficient = $usercompetency ? (bool) $usercompetency->get('proficiency') : false;
 
@@ -235,10 +238,11 @@ class get_competency_rule_data extends external_api {
      * @param array|null $config Rule config
      * @param int $userid User ID
      * @param int $planid Plan ID
+     * @param bool $iscomplete Whether the plan is complete
      * @param \grade_scale|null $scale Parent scale
      * @return array
      */
-    private static function build_points_rule_data(?array $config, int $userid, int $planid, $scale): array {
+    private static function build_points_rule_data(?array $config, int $userid, int $planid, bool $iscomplete, $scale): array {
         $children = [];
         $earnedpoints = 0;
         $hasrequired = false;
@@ -250,7 +254,7 @@ class get_competency_rule_data extends external_api {
         foreach ($childconfigs as $childconfig) {
             $childpoints = isset($childconfig['points']) ? (int) $childconfig['points'] : 0;
             $childrequired = !empty($childconfig['required']);
-            $childdata = self::get_child_data((int) $childconfig['id'], $userid, $planid, $scale);
+            $childdata = self::get_child_data((int) $childconfig['id'], $userid, $planid, $iscomplete, $scale);
             $childdata['points'] = $childpoints;
             $childdata['required'] = $childrequired;
 
@@ -285,10 +289,11 @@ class get_competency_rule_data extends external_api {
      * @param \core_competency\competency $competency Parent competency
      * @param int $userid User ID
      * @param int $planid Plan ID
+     * @param bool $iscomplete Whether the plan is complete
      * @param \grade_scale|null $scale Parent scale
      * @return array
      */
-    private static function build_all_rule_data($competency, int $userid, int $planid, $scale): array {
+    private static function build_all_rule_data($competency, int $userid, int $planid, bool $iscomplete, $scale): array {
         $children = [];
         $completedcount = 0;
         $childcompetencies = api::list_competencies([
@@ -297,7 +302,7 @@ class get_competency_rule_data extends external_api {
         ]);
 
         foreach ($childcompetencies as $childcomp) {
-            $childdata = self::get_child_data($childcomp->get('id'), $userid, $planid, $scale);
+            $childdata = self::get_child_data($childcomp->get('id'), $userid, $planid, $iscomplete, $scale);
             $childdata['points'] = 0;
             $childdata['required'] = false;
 
@@ -319,27 +324,33 @@ class get_competency_rule_data extends external_api {
     }
 
     /**
-     * The user's rated record for a competency: the plan's archived rating (user_competency_plan,
-     * written when a plan is completed) when it holds a grade, else the live user_competency;
-     * null when neither holds a grade.
+     * The user's rated record for a child competency, or null when it holds no grade.
+     *
+     * A completed plan answers from the ratings core archived at completion
+     * (api::complete_plan() writes one user_competency_plan row per plan competency), and an
+     * archived row is final even when it holds no grade: the learner's live rating may have
+     * changed since. A child the plan never held has no archived row anywhere, so it falls back
+     * to the live user_competency, as every child of a draft or active plan does.
      *
      * @param int $childid Child competency ID
      * @param int $userid User ID
      * @param int $planid Plan ID
-     * @return \core_competency\user_competency|\core_competency\user_competency_plan|null
+     * @param bool $iscomplete Whether the plan is complete
+     * @return user_competency|user_competency_plan|null
      */
-    private static function get_user_competency_record(int $childid, int $userid, int $planid) {
-        $planrecord = \core_competency\user_competency_plan::get_record([
-            'userid' => $userid,
-            'competencyid' => $childid,
-            'planid' => $planid,
-        ]);
-
-        if ($planrecord && $planrecord->get('grade')) {
-            return $planrecord;
+    private static function get_user_competency_record(int $childid, int $userid, int $planid, bool $iscomplete) {
+        if ($iscomplete) {
+            $planrecord = user_competency_plan::get_record([
+                'userid' => $userid,
+                'competencyid' => $childid,
+                'planid' => $planid,
+            ]);
+            if ($planrecord) {
+                return $planrecord->get('grade') ? $planrecord : null;
+            }
         }
 
-        $liverecord = \core_competency\user_competency::get_record([
+        $liverecord = user_competency::get_record([
             'userid' => $userid,
             'competencyid' => $childid,
         ]);
