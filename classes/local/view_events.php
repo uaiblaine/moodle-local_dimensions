@@ -63,7 +63,9 @@ final class view_events {
      * A related-competency link opens the tracker for a competency outside the plan, where
      * api::get_plan_competency() throws. And plan::can_read() accepts the draft capabilities for a
      * draft plan while user_competency::can_read_user() never does, so a viewer holding only those
-     * can read the page but cannot have this view logged.
+     * reads the plan but cannot have this view logged. The tracker page refuses that viewer before it
+     * gets here (plan_access::require_owner_readable()); the guard keeps the log call from throwing
+     * whoever calls it.
      *
      * On a plan that is not complete, api::get_plan_competency() creates the user competency row
      * when it is missing, exactly as core's own page does.

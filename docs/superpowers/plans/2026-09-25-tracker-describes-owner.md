@@ -1,5 +1,12 @@
 # Handoff: the competency tracker describes the plan owner
 
+**Status: implemented 2026-09-26 (version 2026092600).** Beyond this plan, the owner decided three
+things: the viewer's access to a card follows the accordion's rule (D1), the completed-courses count
+gets the same plan id (D2), and both card services also take the competency id and answer only for
+courses linked to it (D3, parity with the accordion). Review added one more gate: `view-competency.php`
+refuses a viewer who reads the plan but not the owner's user competencies
+(`plan_access::require_owner_readable()`). The list below is still open.
+
 Written 2026-09-25 at the end of the follow-up round of the comment audit (PR merged into `main` as
 "Fix the audit findings that still held, and the owner's four decisions", version 2026092500). This
 is the next task, decided by the owner and not started: no file was edited for it.

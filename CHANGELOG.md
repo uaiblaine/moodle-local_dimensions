@@ -20,6 +20,12 @@ Decided by the owner after the comment audit's findings were re-checked against 
   progress, activity completion, activity restrictions and card shape rather than the reviewer's
   own; what clicking a card does (open, enrol, pending, locked and its date) is still the
   reviewer's.
+- Competency tracker: when staff open it from a learner's plan, the course list, the course cards'
+  progress, completion, section restrictions and card shape, and the completed-courses count now
+  describe the learner rather than the reviewer; whether a card opens (and its lock, date, enrol and
+  pending state) is still the reviewer's, and a reviewer enrolled in a course without a student role
+  is no longer shown it as locked. A reviewer who may read a draft plan but not the learner's
+  competencies is refused the tracker, as on Moodle's own competency page for a plan.
 - Learning plan CSV import: a competency structure named by ID number is now resolved only among the
   structures offered in the target category (its parent and child contexts), so a structure in a
   sibling category is reported as missing instead of being linked.

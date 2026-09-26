@@ -50,20 +50,25 @@ class view_competency_page implements renderable, templatable {
     /** @var array The list of courses */
     private $courses;
 
-    /** @var int The user ID */
+    /** @var int The learner the cards describe: the plan owner */
     private $userid;
+
+    /** @var int The user viewing the page */
+    private $viewerid;
 
     /**
      * Constructor.
      *
      * @param object|null $competency The competency record or null
      * @param array $courses Array of course records
-     * @param int $userid The current user ID
+     * @param int $userid The learner the cards describe: the plan owner
+     * @param int $viewerid The user viewing the page; 0 when it is the learner
      */
-    public function __construct($competency, array $courses, int $userid) {
+    public function __construct($competency, array $courses, int $userid, int $viewerid = 0) {
         $this->competency = $competency;
         $this->courses = $courses;
         $this->userid = $userid;
+        $this->viewerid = $viewerid > 0 ? $viewerid : $userid;
     }
 
     /**
@@ -136,7 +141,9 @@ class view_competency_page implements renderable, templatable {
             : [];
 
         foreach ($this->courses as $course) {
-            $locked = calculator::is_locked($course, $this->userid);
+            /* Whether the viewer can open the course from the card, as the card services answer it: on the
+               learner's own page is_locked(), on a reviewer's whether the reviewer is enrolled. */
+            $locked = calculator::is_locked_for_viewer($course, $this->userid, $this->viewerid);
             $cid = (int) $course->id;
             /* Course-area values for client-side chip filtering, keyed "course:<shortname>" to
                match the group shortnames remapped below; chip_filters.js pairs them by key. */

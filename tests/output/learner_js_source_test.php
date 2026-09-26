@@ -47,6 +47,35 @@ final class learner_js_source_test extends \basic_testcase {
     }
 
     /**
+     * The code without its comments, so an assertion reads what runs rather than what is said about it.
+     *
+     * The same reduction as hub_javascript_guards_test::code().
+     *
+     * @param string $js JavaScript source.
+     * @return string
+     */
+    private function code(string $js): string {
+        $js = (string) preg_replace('#/\*.*?\*/#s', '', $js);
+        return (string) preg_replace('#(^|[^:])//[^\n]*#m', '$1', $js);
+    }
+
+    /**
+     * Assert that the fragments occur in the text, each after the previous one.
+     *
+     * @param string $text The text to search.
+     * @param array $fragments Literal fragments, in the order they must appear.
+     * @return void
+     */
+    private function assert_in_order(string $text, array $fragments): void {
+        $offset = 0;
+        foreach ($fragments as $fragment) {
+            $position = strpos($text, $fragment, $offset);
+            $this->assertNotFalse($position, "'{$fragment}' was not found in order.");
+            $offset = $position + strlen($fragment);
+        }
+    }
+
+    /**
      * The body of a named function declaration, up to its closing brace at the same indent.
      *
      * @param string $source The module source.
@@ -237,6 +266,45 @@ final class learner_js_source_test extends \basic_testcase {
             'local_dimensions_get_courses_completion_status',
             $this->function_body($source, 'loadAllCourses')
         );
+    }
+
+    /**
+     * Both tracker card services are sent the page's plan and competency, read from the init settings.
+     *
+     * Without them the services describe the caller, so a teacher opening a learner's tracker would see
+     * their own progress and locks over the learner's course list. view-competency.php hands both to
+     * init(); tracker_cards_owner_test reads them back from a rendered page.
+     *
+     * @return void
+     */
+    public function test_tracker_card_services_are_sent_the_plan(): void {
+        $source = $this->code($this->js_source('competency_view'));
+
+        $this->assert_in_order($source, [
+            'init: function(settings) {',
+            'settings = settings || {};',
+            'var planid = settings.planid || 0;',
+            'var competencyid = settings.competencyid || 0;',
+            'function loadCourseWithSoftTimeout(courseid) {',
+            'function loadAllCourses() {',
+        ]);
+        // Declared once, and never reassigned.
+        $this->assertSame(1, preg_match_all('/\bplanid =/', $source));
+        $this->assertSame(1, preg_match_all('/\bcompetencyid =/', $source));
+
+        $this->assertMatchesRegularExpression(
+            "/methodname: 'local_dimensions_get_course_progress',\s*"
+                . "args: \{courseids: \[courseid\], planid: planid, competencyid: competencyid\}/",
+            $this->function_body($source, 'loadCourseWithSoftTimeout')
+        );
+        $this->assertMatchesRegularExpression(
+            "/methodname: 'local_dimensions_get_courses_completion_status',\s*"
+                . "args: \{courseids: courseIds, planid: planid, competencyid: competencyid\}/",
+            $this->function_body($source, 'loadAllCourses')
+        );
+        // Each service is called from that one place only, so no call goes out without the plan.
+        $this->assertSame(1, substr_count($source, "'local_dimensions_get_course_progress'"));
+        $this->assertSame(1, substr_count($source, "'local_dimensions_get_courses_completion_status'"));
     }
 
     /**
