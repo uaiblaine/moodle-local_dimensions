@@ -25,13 +25,16 @@
 
     Context variables required for this template:
     * canmanage (bool) - whether the current user may manage the framework
+    * canrule (bool) - whether the selected competency has child competencies, which a competency
+      rule needs; without them the rule button is disabled and its title says why
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 
     Example context (json):
     {
-        "canmanage": true
+        "canmanage": true,
+        "canrule": true
     }
 }}
 <div class="sticky-footer-content-wrapper h-100 d-flex justify-content-center">
@@ -45,7 +48,8 @@
             <i class="fa fa-plus" aria-hidden="true"></i>
             <span>{{#str}}managecompetencies_addchild, local_dimensions{{/str}}</span>
         </button>
-        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="rules">
+        <button type="button" class="btn py-0 d-flex flex-column align-items-center" data-action="rules"
+            {{^canrule}}disabled title="{{#str}}central_rule_nochildren, local_dimensions{{/str}}"{{/canrule}}>
             <i class="fa fa-list" aria-hidden="true"></i>
             <span>{{#str}}competencyrule, tool_lp{{/str}}</span>
         </button>

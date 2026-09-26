@@ -553,6 +553,11 @@ const selectRow = (region, row) => {
     if (region.dataset.canmanage === '1') {
         Templates.renderForPromise('local_dimensions/central/structure_footer_actions', {
             canmanage: true,
+            /* A competency rule is computed from child competencies, so a competency without any takes
+               none; core resets a parent's rule whenever a child is created, deleted or moved, so a
+               leaf never keeps one to clear. Every path that changes children re-renders the row from
+               the server and re-renders this footer, so the flag is never stale. */
+            canrule: row.dataset.haschildren === '1',
         }).then(({html}) => {
             // Still the active row (guards rapid row switches) and still on the active
             // Structure tab (guards a tab switch during the async render).
@@ -1260,7 +1265,10 @@ const handleDetailAction = (region, pane, event, frameworkid) => {
     } else if (event.target.closest(SELECTORS.addChild)) {
         openForm(pane, {competencyframeworkid: frameworkid, parentid: activeRow.dataset.id, id: 0}, 'addcompetency');
     } else if (event.target.closest(SELECTORS.rules)) {
-        showRuleConfig(activeRow);
+        // The footer disables the button for a competency without children; the guard keeps that true here.
+        if (activeRow.dataset.haschildren === '1') {
+            showRuleConfig(activeRow);
+        }
     } else if (event.target.closest(SELECTORS.links)) {
         const row = activeRow;
         openLinksModal({

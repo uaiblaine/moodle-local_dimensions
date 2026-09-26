@@ -508,13 +508,16 @@ restrictions, completion and card shape are the owner's; whether a card opens, i
 pending state are the viewer's (`calculator::get_course_section_progress($courseid, $ownerid)`,
 `calculator::is_locked_for_viewer()`: `is_locked()` on the learner's own card, the viewer's active
 enrolment on anyone else's). `read_plan()` accepts `planviewdraft` alone on a draft plan, which grants
-nothing about the learner, so `view-competency.php` also asks `plan_access::require_owner_readable()`
-(`user_competency::can_read_user()`, what `api::get_plan_competency()` asks) before describing the owner.
+nothing about the learner, so `view-competency.php` and the accordion's `get_competency_courses` also ask
+`plan_access::require_owner_readable()` (`user_competency::can_read_user()`, what
+`api::get_plan_competency()` asks) before describing the owner; `get_competency_rule_data` asks the same
+inline. Every place that describes a plan owner to someone else goes through one of them.
 The two card services (`get_course_progress`, `get_courses_completion_status`) take optional `planid` and
 `competencyid`: with a plan they go through `plan_access::tracker_courses()` (read_plan, owner readable,
 competency in scope, each course readable by the viewer AND linked to that competency, else the same
 unavailable row as an unreadable course); without one they describe the caller as before. The redirect,
-the return context and the view log stay the viewer's. Spec: `mutations/followups_T1.conf`.
+the return context and the view log stay the viewer's. Specs: `mutations/followups_T1.conf`,
+`mutations/followups_T2.conf`.
 
 ## Colour tokens and dark mode
 
@@ -999,6 +1002,18 @@ The plugin repo (`main`) is separate from the Moodle checkout it's built inside 
 run git from the plugin dir (or `git -C`), since `cd` doesn't persist between Bash
 calls. When rebasing/cherry-picking conflicts on the `version.php` `$plugin->version`
 line, keep the **higher** number so the upgrade still triggers.
+
+**One branch serves every supported Moodle version, deliberately.** The fleet's per-Moodle-version
+branches (Boost Union style) are deferred for this plugin until 5.3 work starts; through 5.2 the
+Bootstrap 4/5 split is absorbed by the polyfill at the tail of `styles.css`. `aiplacement_dimensions`
+declares `supported = [501, 503]` against this plugin's `[405, 502]`: the AI API has what it needs only
+from 5.1, and the mismatch is accepted until the 5.3 branch is cut. Four conditions reopen the decision:
+5.3 LTS work starting (5.3 releases 2026-10-05); a divergence that cannot be written once in the
+plugin's **own** markup; Moodle 6.0 removing `bs4-compat.scss` while `405` is still supported; the
+polyfill passing ~150 lines or needing a version scope. **The last one already holds** (measured
+2026-09-26): the polyfill runs about 200 lines and is gated on `body.local-dimensions-bs4`, the class
+`classes/local/bootstrap.php` adds from `$CFG->branch`, because an ungated rule would outrank core's on
+5.x. So the branch decision is due with the 5.3 work, not after it.
 
 ## When in doubt
 Follow the patterns in existing files. The codebase is internally consistent —
