@@ -58,6 +58,14 @@ $PAGE->add_body_class('local-dimensions-viewcompetency');
 $plan = \local_dimensions\local\plan_access::read_plan($planid);
 $templateid = (int) $plan->get('templateid');
 
+/* The page describes the plan owner, who is not the viewer when staff review a learner's plan: which
+   courses the enrolment filter keeps and the cards' progress are the owner's, as on the plan accordion.
+   So it asks what its card services ask before describing the owner: read_plan() accepts planviewdraft
+   alone on a draft plan, which grants nothing about the learner (plan_access::require_owner_readable()).
+   What the viewer does from here stays theirs: the single-course redirect, the return button and the
+   view log below all use $USER. */
+$ownerid = \local_dimensions\local\plan_access::require_owner_readable($plan);
+
 /* Reading the plan says nothing about the competency id: only one the plan reaches may be shown, which
    takes in the related-competency and rule-child links the accordion renders outside the plan (see
    plan_access::competency_scope()). Any other id gets the not-found state a missing one gets, with
@@ -91,7 +99,7 @@ if ($competency) {
         $effectivetemplateid
     );
     if ($enrollmentfilter !== constants::ENROLLMENTFILTER_ALL) {
-        $courses = calculator::filter_courses_by_enrollment($courses, $USER->id, $enrollmentfilter);
+        $courses = calculator::filter_courses_by_enrollment($courses, $ownerid, $enrollmentfilter);
     }
 
     // Resolve the singlecourseredirect cascade (competency -> template -> global).
@@ -114,7 +122,7 @@ if ($competency) {
     // Own-plan only: see the matching guard in view-plan.php.
     if (
         get_config('local_dimensions', 'enablereturnbutton')
-        && (int) $plan->get('userid') === (int) $USER->id
+        && $ownerid === (int) $USER->id
     ) {
         if ($willredirect) {
             /* Leave the destination course a button that points where this learner
@@ -146,7 +154,7 @@ if ($competency) {
 echo $OUTPUT->header();
 
 // Render page content using Mustache template.
-$page = new view_competency_page($competency, $courses, $USER->id);
+$page = new view_competency_page($competency, $courses, $ownerid, (int) $USER->id);
 $templatedata = $page->export_for_template($OUTPUT);
 echo $OUTPUT->render_from_template('local_dimensions/view_competency', $templatedata);
 
@@ -207,6 +215,10 @@ if ($competency) {
         'cardicon' => $cardicon ? (string) $cardicon : '',
         'learnmorebuttoncolor' => $learnmorebuttoncolor,
         'animatelockedborder' => (bool) get_config('local_dimensions', 'animatelockedborder'),
+        /* With the plan and its competency, the card services describe the plan owner and answer only for
+           the courses linked to this competency (plan_access::tracker_courses()). */
+        'planid' => $planid,
+        'competencyid' => $competencyid,
     ];
 
     $PAGE->requires->string_for_js('learn_more', 'local_dimensions');

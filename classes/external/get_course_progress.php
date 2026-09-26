@@ -31,7 +31,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use local_dimensions\calculator;
 use local_dimensions\constants;
-use local_dimensions\helper;
+use local_dimensions\local\plan_access;
 use core\context\system as context_system;
 
 /**
@@ -53,43 +53,71 @@ class get_course_progress extends external_api {
                 new external_value(PARAM_INT, get_string('api_course_id', 'local_dimensions')),
                 'List of course IDs to calculate',
             ),
+            'planid' => new external_value(
+                PARAM_INT,
+                'A learning plan the caller may read, whose owner the cards describe; 0 for the caller\'s own cards',
+                VALUE_DEFAULT,
+                0
+            ),
+            'competencyid' => new external_value(
+                PARAM_INT,
+                'The competency of the plan whose linked courses are asked for; read only with a plan',
+                VALUE_DEFAULT,
+                0
+            ),
         ]);
     }
 
     /**
      * The main function that executes logic.
      *
+     * Without a plan the cards describe the caller. With one they describe the plan's owner, as the plan
+     * accordion's do: see calculator::get_course_section_progress() for what stays the viewer's.
+     *
      * @param array $courseids List of course IDs to calculate progress for.
+     * @param int $planid The learning plan whose owner the cards describe, 0 for the caller's own cards.
+     * @param int $competencyid The plan's competency the courses are linked to, read only with a plan.
      * @return array List of course progress results.
+     * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan does
+     *     not reach the competency.
+     * @throws \required_capability_exception When the current user may not read the plan or its owner's user
+     *     competencies.
      */
-    public static function execute($courseids) {
+    public static function execute($courseids, $planid = 0, $competencyid = 0) {
         // Automatic parameter validation.
-        $params = self::validate_parameters(self::execute_parameters(), ['courseids' => $courseids]);
+        $params = self::validate_parameters(self::execute_parameters(), [
+            'courseids' => $courseids,
+            'planid' => $planid,
+            'competencyid' => $competencyid,
+        ]);
         $courseids = $params['courseids'];
 
         /* local/dimensions:view is granted to every authenticated user by default, so it only
            admits the caller to the tracker. The course ids come from the client, so each one is
-           gated below (helper::readable_competency_courses()) before any of its structure is read. */
+           gated below (helper::readable_competency_courses()) before any of its structure is read.
+           A plan adds the accordion's gates and the link to its competency (plan_access::tracker_courses()). */
         $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
         require_capability('local/dimensions:view', $systemcontext);
 
-        $readable = helper::readable_competency_courses($courseids);
+        $cards = plan_access::tracker_courses($params['planid'], $params['competencyid'], $courseids);
+        $ownerid = $cards['ownerid'];
+        $readable = $cards['courses'];
 
         $results = [];
 
         foreach ($courseids as $courseid) {
             try {
                 /* Three answers collapse into one: the course does not exist, the viewer may
-                   not be told it exists, or it carries no competency link and so is none of
-                   this service's business. All three return the same locked, empty card, so
-                   the response never reveals which of the three it was. */
+                   not be told it exists, or it carries no competency link (with a plan: no link to
+                   the plan's competency) and so is none of this service's business. All three return
+                   the same locked, empty card, so the response never reveals which of the three it was. */
                 if (!isset($readable[(int) $courseid])) {
                     $results[] = self::unavailable_row((int) $courseid);
                     continue;
                 }
 
-                $data = static::progress_data((int) $courseid);
+                $data = static::progress_data((int) $courseid, $ownerid);
 
                 // Prepare structured return.
                 $sections = [];
@@ -169,10 +197,11 @@ class get_course_progress extends external_api {
      * Its own method so a test can make a single course fail and check that the others still answer.
      *
      * @param int $courseid A course the viewer may be told about.
+     * @param int $ownerid The learner the card describes: the plan owner, or the caller without a plan.
      * @return array The calculator's result.
      */
-    protected static function progress_data(int $courseid): array {
-        return calculator::get_course_section_progress($courseid);
+    protected static function progress_data(int $courseid, int $ownerid): array {
+        return calculator::get_course_section_progress($courseid, $ownerid);
     }
 
     /**
@@ -281,7 +310,7 @@ class get_course_progress extends external_api {
                         'cmid' => new external_value(PARAM_INT, 'Course module id'),
                         'name' => new external_value(PARAM_TEXT, 'Activity name'),
                         'url' => new external_value(PARAM_URL, 'Activity URL'),
-                        'completed' => new external_value(PARAM_BOOL, 'Whether the user completed the activity'),
+                        'completed' => new external_value(PARAM_BOOL, 'Whether the learner the card describes completed it'),
                         'tracked' => new external_value(PARAM_BOOL, 'Whether completion is tracked for it'),
                     ],
                     'The course\'s single activity, present only when cardmode is activity',

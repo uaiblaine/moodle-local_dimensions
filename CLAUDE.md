@@ -81,8 +81,10 @@ lowest, and `mpci --reuse --only phpunit --filter <test>` while iterating. It ca
 8.4 or MariaDB, so the owner still runs `mdl ci moodle-local_dimensions --matrix --behat` before a
 merge: push a branch, open the pull request, and leave the merge to them. Rebuild `amd/build` with
 Moodle's own grunt inside the `mpci` install (`cd /tmp/mpci/<branch>/moodle && npx grunt amd
---root=<the plugin path>`), never by hand. The next task is written down in
-`docs/superpowers/plans/2026-09-25-tracker-describes-owner.md`.
+--root=<the plugin path>`), never by hand. If `which mpci` prints nothing, the session was resumed on
+a container that skipped the setup script: attach `moodle-dev` and run `bash cloud/setup.sh` from it.
+The last handoff, `docs/superpowers/plans/2026-09-25-tracker-describes-owner.md`, is implemented; its
+"Left open on purpose" list still stands.
 
 ### Building JavaScript assets (required before committing JS)
 
@@ -499,6 +501,20 @@ on for the template and the viewer has `competencyview` in its context (core's c
 related competencies); a direct child of a rule-bearing plan competency, because the Rules tab links there.
 Outside the plan the enrolment-filter cascade skips the template (competency -> site). Specs:
 `mutations/sec_scope.conf`, `mutations/sec_courses.conf`.
+
+**Reading a plan says nothing about its owner either.** The tracker describes the plan OWNER, as the
+accordion does (`get_competency_courses`): the course list's enrolment filter, section progress,
+restrictions, completion and card shape are the owner's; whether a card opens, its lock date, enrol and
+pending state are the viewer's (`calculator::get_course_section_progress($courseid, $ownerid)`,
+`calculator::is_locked_for_viewer()`: `is_locked()` on the learner's own card, the viewer's active
+enrolment on anyone else's). `read_plan()` accepts `planviewdraft` alone on a draft plan, which grants
+nothing about the learner, so `view-competency.php` also asks `plan_access::require_owner_readable()`
+(`user_competency::can_read_user()`, what `api::get_plan_competency()` asks) before describing the owner.
+The two card services (`get_course_progress`, `get_courses_completion_status`) take optional `planid` and
+`competencyid`: with a plan they go through `plan_access::tracker_courses()` (read_plan, owner readable,
+competency in scope, each course readable by the viewer AND linked to that competency, else the same
+unavailable row as an unreadable course); without one they describe the caller as before. The redirect,
+the return context and the view log stay the viewer's. Spec: `mutations/followups_T1.conf`.
 
 ## Colour tokens and dark mode
 

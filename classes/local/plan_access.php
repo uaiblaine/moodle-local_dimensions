@@ -29,6 +29,7 @@ use core_competency\competency;
 use core_competency\competency_framework;
 use core_competency\plan;
 use core_competency\related_competency;
+use core_competency\user_competency;
 use local_dimensions\helper;
 
 /**
@@ -41,7 +42,8 @@ use local_dimensions\helper;
  * plan does not exist.
  *
  * It also decides which competencies a plan reaches, for view-competency.php and the accordion's rule
- * data and course cards: see competency_scope().
+ * data and course cards: see competency_scope(). And it gates the tracker page and its two card services,
+ * which describe the plan owner: see require_owner_readable() and tracker_courses().
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -133,6 +135,76 @@ final class plan_access {
         }
 
         return null;
+    }
+
+    /**
+     * Whose course cards the tracker's card services describe, and which of the requested courses they answer for.
+     *
+     * get_course_progress and get_courses_completion_status take their course ids from the client. Without
+     * a plan (plan id 0) they describe the caller, as they always have, and the competency id is not read.
+     * With one they describe the plan's owner, as the plan accordion does (get_competency_courses), and
+     * only past these gates, in order:
+     * - the caller may read the plan (read_plan(): a refusal is core's own error, never invalidplan);
+     * - the caller may read the owner's user competencies (require_owner_readable(), which the tracker
+     *   page asks too);
+     * - the plan reaches the competency (require_competency_in_scope(), which refuses 0 like any other id
+     *   outside the scope);
+     * - each course is one the caller may be told about (helper::readable_competency_courses()) and is
+     *   linked to that competency. A course failing either is left out of the result, so the service
+     *   answers it exactly as it answers an unreadable course and never says which check failed.
+     *
+     * @param int $planid The plan id from the request, 0 for none.
+     * @param int $competencyid The competency id from the request, read only with a plan.
+     * @param array $courseids Raw course ids from the client.
+     * @return array Keys ownerid (the id of the user the cards describe) and courses (course id => course
+     *     record, the requested courses the service may describe).
+     * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan
+     *     does not reach the competency.
+     * @throws \required_capability_exception When the current user may not read the plan or its owner's user
+     *     competencies.
+     */
+    public static function tracker_courses(int $planid, int $competencyid, array $courseids): array {
+        global $DB, $USER;
+
+        if ($planid === 0) {
+            return ['ownerid' => (int) $USER->id, 'courses' => helper::readable_competency_courses($courseids)];
+        }
+
+        $plan = self::read_plan($planid);
+        $ownerid = self::require_owner_readable($plan);
+        self::require_competency_in_scope($plan, $competencyid);
+
+        // The unique index on courseid and competencyid gives one link per course, so the keys are distinct.
+        $linked = $DB->get_records_menu('competency_coursecomp', ['competencyid' => $competencyid], '', 'courseid, id');
+        $courses = array_intersect_key(helper::readable_competency_courses($courseids), $linked);
+
+        return ['ownerid' => $ownerid, 'courses' => $courses];
+    }
+
+    /**
+     * Require the current user to be allowed to read the plan owner's user competencies.
+     *
+     * The tracker page and its two card services describe the plan owner, so they ask what
+     * api::get_plan_competency() asks, as get_competency_rule_data does: read_plan() accepts planviewdraft
+     * alone on a draft plan, which grants nothing about the learner. A viewer refused here is refused by
+     * core's own admin/tool/lp/user_competency_in_plan.php too.
+     *
+     * @param plan $plan A plan the current user may read.
+     * @return int The plan owner's user id.
+     * @throws \required_capability_exception When the current user may not read the owner's user competencies.
+     */
+    public static function require_owner_readable(plan $plan): int {
+        $ownerid = (int) $plan->get('userid');
+        if (!user_competency::can_read_user($ownerid)) {
+            throw new \required_capability_exception(
+                $plan->get_context(),
+                'moodle/competency:usercompetencyview',
+                'nopermissions',
+                ''
+            );
+        }
+
+        return $ownerid;
     }
 
     /**

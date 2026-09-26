@@ -113,6 +113,11 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                preference has to be honoured here rather than in a media query. */
             var reducedmotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             var animatelockedborder = !!settings.animatelockedborder && !reducedmotion;
+            /* The plan and competency the page shows. Both card services take them, so the cards
+               describe the plan's owner rather than the viewer, and answer only for the courses
+               linked to this competency. */
+            var planid = settings.planid || 0;
+            var competencyid = settings.competencyid || 0;
 
             // Resolve the card icon CSS class from the stored identifier.
             var cardiconclass = '';
@@ -257,7 +262,7 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
             function loadCourseWithSoftTimeout(courseid) {
                 var call = Ajax.call([{
                     methodname: 'local_dimensions_get_course_progress',
-                    args: {courseids: [courseid]}
+                    args: {courseids: [courseid], planid: planid, competencyid: competencyid}
                 }])[0];
 
                 var ajaxPromise = $.Deferred();
@@ -333,7 +338,7 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                 // (b) prioritise not-completed/not-locked courses in the loader.
                 Ajax.call([{
                     methodname: 'local_dimensions_get_courses_completion_status',
-                    args: {courseids: courseIds}
+                    args: {courseids: courseIds, planid: planid, competencyid: competencyid}
                 }])[0].done(function(statuses) {
                     var notCompletedIds = [];
                     var completedOrLockedIds = [];

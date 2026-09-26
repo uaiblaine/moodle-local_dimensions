@@ -30,7 +30,9 @@ use local_dimensions\helper;
  * as admin/tool/lp/plan.php shows it. See {@see plan_access::read_plan()}.
  *
  * Also which competencies a plan reaches: its own, and the related competencies and rule children
- * the accordion links to outside it. See {@see plan_access::competency_scope()}.
+ * the accordion links to outside it. See {@see plan_access::competency_scope()}. And that the tracker
+ * page, which describes the plan owner, refuses a viewer who may not read the owner's user
+ * competencies. See {@see plan_access::require_owner_readable()}.
  *
  * The covers tag stays in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
  * attributes.
@@ -446,6 +448,64 @@ final class plan_access_test extends \advanced_testcase {
         $this->assertStringContainsString($notfound, $html);
         $this->assertStringNotContainsString('Unreachable shortname', $html);
         $this->assertStringNotContainsString('Unreachable description', $html);
+    }
+
+    /**
+     * The tracker page refuses a viewer who reads a draft plan but not its owner's user competencies.
+     *
+     * The page lists the courses the plan owner is enrolled in, so it asks what its card services and
+     * core's own competency-in-plan page ask (plan_access::require_owner_readable()). A role holding
+     * planviewdraft alone reads the draft plan and is refused; the control grants the same role
+     * usercompetencyview, and the same page lists the owner's course.
+     *
+     * @return void
+     */
+    public function test_tracker_page_refuses_a_draft_reader_who_cannot_read_the_owner(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enrollmentfilter', constants::ENROLLMENTFILTER_ACTIVE, 'local_dimensions');
+        $dg = $this->getDataGenerator();
+        $ccg = $dg->get_plugin_generator('core_competency');
+        $frameworkid = (int) $ccg->create_framework()->get('id');
+        $competencyid = (int) $ccg->create_competency([
+            'competencyframeworkid' => $frameworkid,
+            'shortname' => 'Drafted shortname',
+        ])->get('id');
+        [$owner, $planid] = $this->create_plan(plan::STATUS_DRAFT);
+        $ccg->create_plan_competency(['planid' => $planid, 'competencyid' => $competencyid]);
+        $courseid = (int) $dg->create_course()->id;
+        \core_competency\api::add_competency_to_course($courseid, $competencyid);
+        $dg->enrol_user((int) $owner->id, $courseid, 'student');
+
+        $viewer = $dg->create_user();
+        $roleid = $dg->create_role();
+        $syscontextid = \context_system::instance()->id;
+        assign_capability('moodle/competency:planviewdraft', CAP_ALLOW, $roleid, $syscontextid);
+        role_assign($roleid, (int) $viewer->id, $syscontextid);
+        $this->setUser($viewer);
+        // The precondition: core lets this viewer read the draft plan.
+        $plan = plan_access::read_plan($planid);
+        $refusal = get_capability_string('moodle/competency:usercompetencyview');
+
+        try {
+            plan_access::require_owner_readable($plan);
+            $this->fail('The owner check must refuse a viewer who cannot read the owner.');
+        } catch (\required_capability_exception $e) {
+            $this->assertSame($refusal, $e->a);
+        }
+        try {
+            $this->render_tracker_page($planid, $competencyid);
+            $this->fail('The tracker page must refuse a viewer who cannot read the owner.');
+        } catch (\required_capability_exception $e) {
+            $this->assertSame($refusal, $e->a);
+        }
+
+        assign_capability('moodle/competency:usercompetencyview', CAP_ALLOW, $roleid, $syscontextid);
+
+        $this->assertSame((int) $owner->id, plan_access::require_owner_readable($plan));
+        $html = $this->render_tracker_page($planid, $competencyid);
+        $this->assertStringContainsString('Drafted shortname', $html);
+        $this->assertStringContainsString('data-courseid="' . $courseid . '"', $html);
     }
 
     /**
