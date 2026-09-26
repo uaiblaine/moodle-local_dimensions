@@ -232,7 +232,6 @@ class view_plan_summary_page implements renderable, templatable {
                 'slim' => $herostate['slim'],
                 'herokey' => $herostate['key'],
                 'herostatejson' => $herostate['statejson'],
-                'duedateiconurl' => $output->image_url('status/calendar-light', 'local_dimensions')->out(false),
             ],
             'competencies' => [],
             'competencycount' => 0,

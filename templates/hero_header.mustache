@@ -29,7 +29,6 @@
     * hastextcolor (bool) - Whether custom textcolor exists
     * duedate (string) - Formatted due date (optional)
     * hasduedate (bool) - Whether due date exists
-    * duedateiconurl (string) - URL for due date icon
     * slim (bool) - Whether the hero starts folded to its slim state (title + due date only)
     * herokey (string) - This hero's own key in the stored fold list ('p' or 'c' plus an id)
     * herostatejson (string) - The whole stored fold list, as JSON
@@ -54,7 +53,6 @@
         "hastextcolor": true,
         "duedate": "31 Jan 2026",
         "hasduedate": true,
-        "duedateiconurl": "/pluginfile.php/1/local_dimensions/status/calendar-light.svg",
         "slim": false,
         "herokey": "p12",
         "herostatejson": "[]"
@@ -75,7 +73,7 @@
             {{/hasdescription}}
             {{#hasduedate}}
             <div class="local-dimensions-duedate-card">
-                <img class="local-dimensions-duedate-icon" src="{{duedateiconurl}}" alt="" aria-hidden="true">
+                <span class="local-dimensions-icon local-dimensions-duedate-icon" aria-hidden="true"></span>
                 <div class="local-dimensions-duedate-content">
                     <span class="local-dimensions-duedate-label">{{#str}}duedate, local_dimensions{{/str}}</span>
                     <span class="local-dimensions-duedate-value">{{duedate}}</span>
