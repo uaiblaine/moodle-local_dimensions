@@ -824,8 +824,11 @@ Each `db/upgrade.php` step ends with
   and badge text colours), `local/stylesheet_markup_contract_test.php` (timeline marker rules that
   style no rendered markup, rules for a plugin class nothing writes, template controls without an
   accessible name, export loaders that cannot be announced or hidden, HTML comments in templates,
-  pane dividers that lose touch drags), `local/status_icons_test.php` (status icons are empty
-  `aria-hidden` spans whose `pix/status` SVG mask is painted by a colour token, no fill/stroke rule
+  pane dividers that lose touch drags), `local/status_icons_test.php` (status icons, in templates
+  and in the markup scripts build, are empty `aria-hidden` spans whose `pix/status` SVG mask is
+  painted by the colour token of their state, or on the hero's branded island by `currentcolor`
+  inherited from the admin's transported text colour; every `pix/status` SVG is a `currentColor`
+  single-colour mask; no fill/stroke rule
   targets an HTML icon or `img`, glyph `::after` rules sit under `rtl:ignore`, and forced colours
   keep every icon; an SVG shown through `<img>` keeps the colours in the file, so an icon that must
   follow the theme is a mask)

@@ -282,10 +282,13 @@ final class colour_tokens_test extends \basic_testcase {
      * The boundary is the element carrying the admin colour. Inside it contrast is relative to that
      * colour, not to the page, so a mode token there would measure against the wrong ground; the
      * island stays as it is when the page goes dark, because the admin's colour does not change.
-     * The glass chips are listed because they are alpha over the admin's own fill.
+     * The glass chips are listed because they are alpha over the admin's own fill, and so is the
+     * hero's due-date card with everything in it (its calendar icon among them), whose class names
+     * do not name the hero.
      */
     private const ISLAND_ROOTS = [
         '.local-dimensions-hero',
+        '.local-dimensions-duedate',
         '.local-dimensions-central-plans-detail-header',
         '.local-dimensions-central-plans-optpanel',
         '.local-dimensions-central-plans-chip-glass',
@@ -354,6 +357,12 @@ final class colour_tokens_test extends \basic_testcase {
             'property' => 'border',
             'value' => 'rgb(255 255 255 / 25%)',
             'why' => 'Glass over the admin\'s own fill or photograph; relative to the island, not to the page.',
+        ],
+        [
+            'selector' => '.local-dimensions-duedate-card',
+            'property' => 'color',
+            'value' => 'rgb(255 255 255 / 100%)',
+            'why' => 'Island ink for the calendar mask: the fallback when the admin set no text colour.',
         ],
         [
             'selector' => '.local-dimensions-duedate-label',

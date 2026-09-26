@@ -1087,32 +1087,21 @@ define(
             }
             let html = '<li class="' + cardClasses + '" data-required="' + (child.required ? 'true' : 'false') + '">';
 
-            // Status icon with a visually hidden label.
+            // Status icon with a visually hidden label. The icon is a mask painted by a colour
+            // token (see the status icons in styles.css), so it follows the theme and dark mode.
             html += '<div class="local-dimensions-rules-child-icon-wrapper">';
-            const rulesIconUrls = {
-                proficient: M.util.image_url('status/rules-proficient', 'local_dimensions'),
-                inprogress: M.util.image_url('status/rules-inprogress', 'local_dimensions'),
-                todo: M.util.image_url('status/rules-todo', 'local_dimensions')
-            };
+            html += '<div class="local-dimensions-rules-child-icon">';
             if (child.isproficient) {
-                html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-proficient">';
-                html += '<img class="local-dimensions-rules-child-icon-image" src="' +
-                    escapeHtml(rulesIconUrls.proficient || '') + '" alt="" aria-hidden="true">';
+                html += '<span class="local-dimensions-icon local-dimensions-icon-rules-proficient" aria-hidden="true"></span>';
                 html += '<span class="visually-hidden">' + escapeHtml(strMap.rulesSrProficient) + '</span>';
-                html += '</div>';
             } else if (child.hasgrade) {
-                html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-inprogress">';
-                html += '<img class="local-dimensions-rules-child-icon-image" src="' +
-                    escapeHtml(rulesIconUrls.inprogress || '') + '" alt="" aria-hidden="true">';
+                html += '<span class="local-dimensions-icon local-dimensions-icon-rules-inprogress" aria-hidden="true"></span>';
                 html += '<span class="visually-hidden">' + escapeHtml(strMap.rulesSrInprogress) + '</span>';
-                html += '</div>';
             } else {
-                html += '<div class="local-dimensions-rules-child-icon local-dimensions-rules-icon-todo">';
-                html += '<img class="local-dimensions-rules-child-icon-image" src="' +
-                    escapeHtml(rulesIconUrls.todo || '') + '" alt="" aria-hidden="true">';
+                html += '<span class="local-dimensions-icon local-dimensions-icon-rules-todo" aria-hidden="true"></span>';
                 html += '<span class="visually-hidden">' + escapeHtml(strMap.rulesSrTodo) + '</span>';
-                html += '</div>';
             }
+            html += '</div>';
             html += '</div>';
 
             // Content.
