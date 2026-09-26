@@ -5984,6 +5984,14 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
     font-size: 1.1rem;
 }
 
+/* A disabled action (the competency rule, for a competency without children) keeps Bootstrap's
+   muted opacity, but not its pointer-events: none, which Bootstrap 5 adds and which would stop the
+   title saying why from showing on hover. A disabled button still fires no click. */
+.local-dimensions-central-footer-actions .btn:disabled {
+    pointer-events: auto;
+    cursor: not-allowed;
+}
+
 /* On narrow screens the actions collapse to icon-only (the action-bar pattern), so the row
    fits without overflowing. The label is hidden visually but kept in the accessibility tree
    (sr-only technique) — the icons are aria-hidden, so the label is the button's only name. */
