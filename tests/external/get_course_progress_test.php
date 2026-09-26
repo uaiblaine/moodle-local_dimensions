@@ -479,13 +479,14 @@ final class get_course_progress_test extends \advanced_testcase {
              * Throw for the broken course, read every other one.
              *
              * @param int $courseid The course id.
+             * @param int $ownerid The learner the card describes.
              * @return array
              */
-            protected static function progress_data(int $courseid): array {
+            protected static function progress_data(int $courseid, int $ownerid): array {
                 if ($courseid === self::$brokenid) {
                     throw new \TypeError('A <b>typed</b> argument received null');
                 }
-                return parent::progress_data($courseid);
+                return parent::progress_data($courseid, $ownerid);
             }
         };
         $service::$brokenid = (int) $broken->id;

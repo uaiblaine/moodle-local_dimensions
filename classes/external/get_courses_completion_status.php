@@ -33,7 +33,7 @@ use core_external\external_value;
 use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use local_dimensions\calculator;
-use local_dimensions\helper;
+use local_dimensions\local\plan_access;
 use core\context\system as context_system;
 
 /**
@@ -51,28 +51,55 @@ class get_courses_completion_status extends external_api {
                 new external_value(PARAM_INT, 'Course ID'),
                 'List of course IDs',
             ),
+            'planid' => new external_value(
+                PARAM_INT,
+                'A learning plan the caller may read, whose owner the statuses describe; 0 for the caller\'s own',
+                VALUE_DEFAULT,
+                0
+            ),
+            'competencyid' => new external_value(
+                PARAM_INT,
+                'The competency of the plan whose linked courses are asked for; read only with a plan',
+                VALUE_DEFAULT,
+                0
+            ),
         ]);
     }
 
     /**
      * Return the completion + lock status for each requested course.
      *
+     * Without a plan both describe the caller. With one, completion is the plan owner's, and the lock is
+     * whether the caller can open the course (calculator::is_locked_for_viewer()), as on the progress cards.
+     *
      * @param int[] $courseids
+     * @param int $planid The learning plan whose owner the statuses describe, 0 for the caller's own.
+     * @param int $competencyid The plan's competency the courses are linked to, read only with a plan.
      * @return array<int, array{courseid:int,iscompleted:bool,islocked:bool}>
+     * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan does
+     *     not reach the competency.
+     * @throws \required_capability_exception When the current user may not read the plan or its owner's user
+     *     competencies.
      */
-    public static function execute($courseids) {
+    public static function execute($courseids, $planid = 0, $competencyid = 0) {
         global $USER;
 
-        $params = self::validate_parameters(self::execute_parameters(), ['courseids' => $courseids]);
+        $params = self::validate_parameters(self::execute_parameters(), [
+            'courseids' => $courseids,
+            'planid' => $planid,
+            'competencyid' => $competencyid,
+        ]);
         $courseids = $params['courseids'];
 
         $context = context_system::instance();
         self::validate_context($context);
         require_capability('local/dimensions:view', $context);
 
-        /* The same per-course gate as get_course_progress::execute(): the two services feed one
-           card list and must answer for the same set of courses. */
-        $readable = helper::readable_competency_courses($courseids);
+        /* The same gate as get_course_progress::execute(): the two services feed one card list and must
+           answer for the same set of courses, about the same learner. */
+        $cards = plan_access::tracker_courses($params['planid'], $params['competencyid'], $courseids);
+        $ownerid = $cards['ownerid'];
+        $readable = $cards['courses'];
 
         $results = [];
         foreach ($courseids as $cid) {
@@ -93,9 +120,9 @@ class get_courses_completion_status extends external_api {
                 $enabled = $completion->is_enabled();
                 $iscompleted = false;
                 if ($enabled) {
-                    $iscompleted = (bool) $completion->is_course_complete($USER->id);
+                    $iscompleted = (bool) $completion->is_course_complete($ownerid);
                 }
-                $islocked = (bool) calculator::is_locked($course, $USER->id);
+                $islocked = calculator::is_locked_for_viewer($course, $ownerid, (int) $USER->id);
                 $results[] = [
                     'courseid' => $cid,
                     'iscompleted' => $iscompleted,
@@ -121,8 +148,11 @@ class get_courses_completion_status extends external_api {
         return new external_multiple_structure(
             new external_single_structure([
                 'courseid' => new external_value(PARAM_INT, 'Course ID'),
-                'iscompleted' => new external_value(PARAM_BOOL, 'Whether the course is fully completed'),
-                'islocked' => new external_value(PARAM_BOOL, 'Whether the course is locked for the user'),
+                'iscompleted' => new external_value(
+                    PARAM_BOOL,
+                    'Whether the learner the statuses describe completed the course: the plan owner, or the caller without a plan'
+                ),
+                'islocked' => new external_value(PARAM_BOOL, 'Whether the caller cannot open the course from its card'),
             ])
         );
     }

@@ -34,19 +34,33 @@ namespace local_dimensions;
  */
 class calculator {
     /**
-     * The current user's course card data: lock state, card shape and per-section progress.
+     * A tracker course card's data: lock state, card shape and per-section progress.
+     *
+     * The card describes one learner, $userid: the owner of the plan being viewed, who is the
+     * current user on their own plan and someone else when staff review a learner's plan. The
+     * course's sections, their restrictions, the progress, the completion and the card shape are
+     * that learner's. The lock and what a click on a locked card offers (its date, enrolment start,
+     * enrol, pending) are the viewer's, the current user, because they decide what the viewer can
+     * open: on a learner's own card the lock is is_locked(), on anyone else's it is whether the
+     * viewer is actively enrolled ({@see self::is_locked_for_viewer()}), as the plan accordion
+     * decides (get_competency_courses). A card the viewer cannot open keeps the owner's
+     * percentages in the timeline shape, with its section links blanked.
      *
      * Subsection contents count towards their parent section. The caller must first check
      * that the viewer may see the course at all ({@see helper::readable_competency_courses()},
      * as get_course_progress does): section names are returned even for a locked course,
      * because the card shows them blurred behind its lock overlay. Progress is computed only
-     * for an unlocked, enrolled viewer.
+     * for an enrolled learner, and on their own card only while it is unlocked.
      *
      * @param int $courseid
+     * @param int $userid The learner the card describes, the plan owner; 0 for the current user.
      * @return array
      */
-    public static function get_course_section_progress($courseid) {
+    public static function get_course_section_progress($courseid, int $userid = 0) {
         global $DB, $USER;
+
+        $viewerid = (int) $USER->id;
+        $ownerid = $userid > 0 ? $userid : $viewerid;
 
         // Load the course ensuring all properties.
         $course = $DB->get_record('course', ['id' => $courseid], '*', \MUST_EXIST);
@@ -58,14 +72,15 @@ class calculator {
         $savedcourse = $COURSE ?? null;
         $COURSE = $course;
         try {
-            $modinfo = get_fast_modinfo($course);
+            // The owner's modinfo: which sections and activities they can reach is theirs.
+            $modinfo = get_fast_modinfo($course, $ownerid);
             $sections = $modinfo->get_section_info_all();
             $completion = new \completion_info($course);
 
             /* The lock and its dates are resolved before the completion check: a locked course
                with completion off must still report the lock, not "Completion disabled". */
 
-            $locked = self::is_locked($course, $USER->id);
+            $locked = self::is_locked_for_viewer($course, $ownerid, $viewerid);
 
             /* A locked card always takes the timeline shape with nothing named. The activity
                and section bodies carry live links, while the locked timeline has its section
@@ -74,31 +89,36 @@ class calculator {
                plan both get their shape from resolve_card_shape(). */
             $shape = $locked
                 ? ['mode' => constants::CARDMODE_TIMELINE, 'activity' => null, 'section' => null]
-                : self::resolve_card_shape((int) $course->id, $USER->id);
+                : self::resolve_card_shape((int) $course->id, $ownerid);
 
-            // Keep enrollment check for activity loop (extra security, though locked already covers it).
+            // The owner's active enrolment guards the activity loop: the progress is theirs.
             $coursecontext = \core\context\course::instance($course->id);
-            $isenrolled = is_enrolled($coursecontext, $USER->id, '', true);
+            $isenrolled = is_enrolled($coursecontext, $ownerid, '', true);
+
+            /* On the owner's own card the progress waits for the lock, as it always has. On a card
+               someone else views it is computed whenever the owner is enrolled, whatever the viewer
+               can open: the percentages describe the owner, the lock only what the viewer can click. */
+            $progresslocked = $ownerid === $viewerid && $locked;
 
             // A future enrolment start date wins over the course start date.
-            $availabilitydate = self::get_availability_date($course, $USER->id);
+            $availabilitydate = self::get_availability_date($course, $viewerid);
             $formattedstartdate = userdate($availabilitydate, get_string('strftimedatefullshort', 'langconfig'));
 
-            // Determine if this is an enrollment start date (user enrolled but not yet active).
+            // Determine if this is an enrollment start date (viewer enrolled but not yet active).
             $isenrolmentstart = false;
             if ($locked) {
-                $enrolstartdate = self::get_enrolment_start_date($course, $USER->id);
+                $enrolstartdate = self::get_enrolment_start_date($course, $viewerid);
                 $isenrolmentstart = ($enrolstartdate !== null);
             }
 
             /* Only a locked card uses these: it words the date as an invitation, so the client
-               needs to know whether the date is still ahead and whether the learner can join
+               needs to know whether the date is still ahead and whether the viewer can join
                instead of waiting. Each enrolment question walks the course's enrol instances.
                Pending is asked only when joining is not on offer: a course can have a pending
                application on one instance and an open way in on another, and joining now wins. */
             $canenrol = $locked && self::current_user_can_enrol((int) $course->id);
             $ispending = $locked && !$canenrol
-                && self::current_user_has_pending_application((int) $course->id);
+                && self::has_pending_application((int) $course->id, $viewerid);
             $isfuturedate = $locked && $availabilitydate > time();
 
             $courseurl = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
@@ -201,7 +221,7 @@ class calculator {
                 $hasactivities = false;
                 // A restricted section shows a lock icon instead of a percentage, so its progress is not computed.
 
-                $calculateprogress = !$locked && $isenrolled && !$sectionlocked;
+                $calculateprogress = !$progresslocked && $isenrolled && !$sectionlocked;
 
                 if ($calculateprogress) {
                     // Recursive collection of all activities in this section AND its children.
@@ -216,9 +236,9 @@ class calculator {
                             continue;
                         }
 
-                        if (self::counts_towards_progress($cm, (int) $USER->id)) {
+                        if (self::counts_towards_progress($cm, $ownerid)) {
                             $total++;
-                            $cmdata = $completion->get_data($cm, true, $USER->id);
+                            $cmdata = $completion->get_data($cm, true, $ownerid);
                             $iscomplete = $cmdata->completionstate == \COMPLETION_COMPLETE
                                 || $cmdata->completionstate == \COMPLETION_COMPLETE_PASS;
                             if ($iscomplete) {
@@ -718,6 +738,28 @@ class calculator {
     }
 
     /**
+     * Whether a tracker course card is locked for its viewer, on a card that describes $ownerid.
+     *
+     * On the learner's own card ($ownerid is the viewer) this is is_locked(), unchanged. On a card
+     * describing someone else, as when staff review a learner's plan, it is whether the viewer can
+     * open the course: actively enrolled, whatever the role, the rule the plan accordion applies
+     * (get_competency_courses). is_locked() there would lock every reviewer who holds no student role
+     * out of a course they teach.
+     *
+     * @param \stdClass $course A course record with at least an id.
+     * @param int $ownerid The learner the card describes, the plan owner.
+     * @param int $viewerid The user viewing the card.
+     * @return bool True when the viewer cannot open the course from the card.
+     */
+    public static function is_locked_for_viewer(\stdClass $course, int $ownerid, int $viewerid): bool {
+        if ($ownerid === $viewerid) {
+            return self::is_locked($course, $viewerid);
+        }
+
+        return !is_enrolled(\core\context\course::instance($course->id), $viewerid, '', true);
+    }
+
+    /**
      * Whether the course is locked for the user.
      *
      * Unlocked only when the user is actively enrolled and holds a learner role in the course or
@@ -950,13 +992,31 @@ class calculator {
      * timeend = 0 (apply() sets no period; moving a row to the waiting list clears it).
      *
      * Same rule as enrol_apply\local\queue::awaiting_decision_where(), copied rather than called
-     * so the integration stays optional. Keep the two in step.
+     * so the integration stays optional. Keep the two in step. See has_pending_application(), which
+     * asks the same of any user.
      *
      * @param int $courseid The course id.
      * @return bool
      */
     public static function current_user_has_pending_application(int $courseid): bool {
-        global $DB, $USER;
+        global $USER;
+
+        return self::has_pending_application($courseid, (int) $USER->id);
+    }
+
+    /**
+     * Whether a user has an enrol_apply application still awaiting a decision.
+     *
+     * The rule is current_user_has_pending_application()'s; unlike current_user_can_enrol(), whose
+     * self enrolment leg core answers only for $USER, it holds for any user id. The tracker's card asks
+     * it of its viewer ({@see self::get_course_section_progress()}).
+     *
+     * @param int $courseid The course id.
+     * @param int $userid The user whose application is looked for.
+     * @return bool
+     */
+    public static function has_pending_application(int $courseid, int $userid): bool {
+        global $DB;
 
         foreach (enrol_get_instances($courseid, true) as $instance) {
             if ($instance->enrol !== 'apply') {
@@ -967,7 +1027,7 @@ class calculator {
                 'userid = :userid AND enrolid = :enrolid AND status <> :active
                      AND (timeend = 0 OR timeend > :now)',
                 [
-                    'userid' => $USER->id,
+                    'userid' => $userid,
                     'enrolid' => $instance->id,
                     'active' => ENROL_USER_ACTIVE,
                     'now' => time(),
