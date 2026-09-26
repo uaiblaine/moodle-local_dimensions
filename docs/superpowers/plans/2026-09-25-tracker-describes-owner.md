@@ -59,8 +59,6 @@ sent. Write each guard into a new `mutations/followups_T1.conf` (format of `muta
   services, while the code now asks `plan::can_manage()` (informational metadata).
 - `helper`'s template select getters return `$allowed[index - 1]` for a stored index past the last
   option; the metadata cache now reads that case as inherit.
-- `pix/status/rules-*.svg` and `calendar-light.svg` still carry fixed colours (the status icons
-  became masks; these did not).
 - Outside this plugin: `aiplacement_dimensions`' framework picker double-escapes names, and core's
   `tool_lp` rule editor writes an escaped competency name back on every save (an MDL candidate).
 

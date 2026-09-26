@@ -20,11 +20,13 @@ namespace local_dimensions\local;
  * The status icons are masks painted by colour tokens, so they follow the theme and the colour mode.
  *
  * An SVG shown through an img element keeps the colours written in the file: a fill or stroke
- * rule on the img reaches nothing inside it, which is how the check, lock, circle and info icons
- * and the grade badge icons stayed light-mode green and grey on a dark page while the stylesheet
- * appeared to colour them. Each icon is now an empty span whose background is a token and whose
- * mask is the pix/status SVG. Nothing in the pipeline reads a template and the stylesheet
- * together, so these tests do. Each test names the change that must make it fail.
+ * rule on the img reaches nothing inside it, which is how the check, lock, circle and info icons,
+ * the grade badge icons, the Rules tab's child states and the hero's calendar stayed light-mode
+ * green, orange and grey on a dark page while the stylesheet appeared to colour them. Each icon is
+ * now an empty span whose background is a token (or, on the hero, the island's own text colour)
+ * and whose mask is the pix/status SVG. Nothing in the pipeline reads a template, a script, an SVG
+ * and the stylesheet together, so these tests do. Each test names the change that must make it
+ * fail.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -33,47 +35,96 @@ namespace local_dimensions\local;
  */
 final class status_icons_test extends \basic_testcase {
     /**
-     * @var array Icon class => the class every icon of its family carries, the pix image its mask
-     *            reads, and whether it draws a glyph (the white mark the SVG paints inside its
-     *            shape, which an alpha mask cannot keep).
+     * @var array Icon class => the class every icon of its family carries (base), the pix image its
+     *            mask reads (mask), what paints it (paint: a colour token, or currentcolor for an
+     *            icon on a branded island, which takes the island's text colour), and the token its
+     *            glyph is drawn in (glyph: the mark the icon shows inside its filled shape, which an
+     *            alpha mask cannot keep; null for an icon without one), and whether the state is
+     *            spoken by a visually hidden label right after the icon (label), because no visible
+     *            text beside it names the state.
      */
     private const ICONS = [
         'local-dimensions-icon-check' => [
             'base' => 'local-dimensions-icon',
             'mask' => 'status/check-circle-fill',
-            'glyph' => true,
+            'paint' => '--local-dimensions-success-ink',
+            'glyph' => '--local-dimensions-surface',
+            'label' => false,
         ],
         'local-dimensions-icon-lock' => [
             'base' => 'local-dimensions-icon',
             'mask' => 'status/lock',
-            'glyph' => false,
+            'paint' => '--local-dimensions-ink-muted',
+            'glyph' => null,
+            'label' => false,
         ],
         'local-dimensions-icon-lock-sm' => [
             'base' => 'local-dimensions-icon',
             'mask' => 'status/lock',
-            'glyph' => false,
+            'paint' => '--local-dimensions-ink-muted',
+            'glyph' => null,
+            'label' => false,
         ],
         'local-dimensions-icon-circle' => [
             'base' => 'local-dimensions-icon',
             'mask' => 'status/circle-outline',
-            'glyph' => false,
+            'paint' => '--local-dimensions-line',
+            'glyph' => null,
+            'label' => false,
         ],
         'local-dimensions-icon-info' => [
             'base' => 'local-dimensions-icon',
             'mask' => 'status/info-circle',
-            'glyph' => false,
+            'paint' => '--local-dimensions-ink-muted',
+            'glyph' => null,
+            'label' => false,
+        ],
+        'local-dimensions-icon-rules-proficient' => [
+            'base' => 'local-dimensions-icon',
+            'mask' => 'status/rules-proficient',
+            'paint' => '--local-dimensions-success-ink',
+            'glyph' => '--local-dimensions-surface',
+            'label' => true,
+        ],
+        'local-dimensions-icon-rules-inprogress' => [
+            'base' => 'local-dimensions-icon',
+            'mask' => 'status/rules-inprogress',
+            'paint' => '--local-dimensions-warning-ink',
+            'glyph' => null,
+            'label' => true,
+        ],
+        'local-dimensions-icon-rules-todo' => [
+            'base' => 'local-dimensions-icon',
+            'mask' => 'status/rules-todo',
+            'paint' => '--local-dimensions-neutral-ink',
+            'glyph' => null,
+            'label' => true,
+        ],
+        'local-dimensions-duedate-icon' => [
+            'base' => 'local-dimensions-icon',
+            'mask' => 'status/calendar-light',
+            'paint' => 'currentcolor',
+            'glyph' => null,
+            'label' => false,
         ],
         'local-dimensions-grade-badge-icon-proficient' => [
             'base' => 'local-dimensions-grade-badge-icon',
             'mask' => 'status/check-circle-fill',
-            'glyph' => true,
+            'paint' => '--local-dimensions-success-ink',
+            'glyph' => '--local-dimensions-success-tint',
+            'label' => false,
         ],
         'local-dimensions-grade-badge-icon-warning' => [
             'base' => 'local-dimensions-grade-badge-icon',
             'mask' => 'status/warning-triangle-fill',
-            'glyph' => true,
+            'paint' => '--local-dimensions-warning-ink',
+            'glyph' => '--local-dimensions-warning-tint',
+            'label' => false,
         ],
     ];
+
+    /** @var string What an icon on a branded island is painted with: the colour it inherits. */
+    private const ISLAND_PAINT = 'currentcolor';
 
     /** @var string The custom property a glyph is painted in. */
     private const GLYPH = '--local-dimensions-icon-glyph';
@@ -220,25 +271,35 @@ final class status_icons_test extends \basic_testcase {
     }
 
     /**
-     * Every opening tag in a template.
+     * Every opening tag in a template, or in the markup a script builds.
      *
-     * @param string $markup Template markup.
-     * @return array List of arrays with keys tag (lower-case name), attributes (raw text) and
-     *               after (the markup that follows the tag).
+     * A script builds its markup in single-quoted string literals, so in a script a tag may not
+     * cross a quote, a backtick or an angle bracket: a tag assembled by concatenation is not read,
+     * and an icon built that way counts as rendered by nothing.
+     *
+     * @param string $markup Template markup, or the source of an AMD module.
+     * @param bool $script Whether $markup is the source of an AMD module.
+     * @return array List of arrays with keys tag (lower-case name), attributes (raw text), start and
+     *               end (byte offsets of the tag in $markup) and after (the markup that follows it).
      */
-    private function tags(string $markup): array {
+    private function tags(string $markup, bool $script = false): array {
+        /* The backtick is written \x60, since the coding style keeps it out of string literals. */
+        $attributes = $script ? '((?:[^<>"\'\x60]|"[^"\'<>\x60]*")*)' : '((?:[^>"\']|"[^"]*"|\'[^\']*\')*)';
         preg_match_all(
-            '/<([a-zA-Z][a-zA-Z0-9]*)\b((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>/s',
+            '/<([a-zA-Z][a-zA-Z0-9]*)\b' . $attributes . '>/s',
             $markup,
             $matches,
             PREG_SET_ORDER | PREG_OFFSET_CAPTURE
         );
         $tags = [];
         foreach ($matches as $match) {
+            $end = $match[0][1] + strlen($match[0][0]);
             $tags[] = [
                 'tag' => strtolower($match[1][0]),
                 'attributes' => $match[2][0],
-                'after' => substr($markup, $match[0][1] + strlen($match[0][0])),
+                'start' => $match[0][1],
+                'end' => $end,
+                'after' => substr($markup, $end),
             ];
         }
         return $tags;
@@ -262,18 +323,28 @@ final class status_icons_test extends \basic_testcase {
      *
      * The icons are decorative: the text beside each one carries the state, which is why every img
      * they replace had an empty alt and aria-hidden. A span with content would put that content
-     * over the mask.
+     * over the mask. The Rules tab's icons are built by accordion.js, so the scripts are read as
+     * well as the templates, and their state is spoken only by the visually hidden label that
+     * follows each one, so that label has to stay.
      *
-     * Change that must make it fail: put an img back for any status icon, drop aria-hidden from one
-     * of the spans, or drop local-dimensions-icon from one of them.
+     * Change that must make it fail: put an img back for any status icon (in a template or in
+     * accordion.js), drop aria-hidden from one of the spans, drop local-dimensions-icon from one of
+     * them, or drop the visually hidden label after a Rules tab icon.
      *
      * @return void
      */
     public function test_status_icons_render_as_empty_hidden_spans(): void {
         $offenders = [];
         $rendered = [];
+        $sources = [];
         foreach ($this->templates() as $path => $markup) {
-            foreach ($this->tags($markup) as $tag) {
+            $sources[] = [$path, $this->tags($markup)];
+        }
+        foreach ($this->scripts() as $path => $source) {
+            $sources[] = [$path, $this->tags($source, true)];
+        }
+        foreach ($sources as [$path, $tags]) {
+            foreach ($tags as $index => $tag) {
                 $classes = $this->classes($tag['attributes']);
                 $icons = array_intersect(array_keys(self::ICONS), $classes);
                 $families = array_intersect(array_unique(array_column(self::ICONS, 'base')), $classes);
@@ -300,25 +371,40 @@ final class status_icons_test extends \basic_testcase {
                 if (!str_starts_with($tag['after'], '</' . $tag['tag'] . '>')) {
                     $offenders[] = $where . ' has content';
                 }
+                if (self::ICONS[$icon]['label']) {
+                    $next = $tags[$index + 1] ?? null;
+                    $spoken = $next !== null
+                        && $next['tag'] === 'span'
+                        && in_array('visually-hidden', $this->classes($next['attributes']), true)
+                        && !preg_match('/(?<![\w-])aria-hidden=/', $next['attributes'])
+                        && !str_starts_with($next['after'], '</span>');
+                    if (!$spoken) {
+                        $offenders[] = $where . ' is not followed by the visually hidden label that speaks its state';
+                    }
+                }
             }
         }
         foreach (array_keys(self::ICONS) as $icon) {
             if (!isset($rendered[$icon])) {
-                $offenders[] = $icon . ' is rendered by no template';
+                $offenders[] = $icon . ' is rendered by no template or script';
             }
         }
         $this->assertSame([], $offenders, 'Status icons must be empty aria-hidden spans: ' . implode('; ', $offenders));
     }
 
     /**
-     * Each status icon is a mask of its pix image, painted by a declared colour token.
+     * Each status icon is a mask of its pix image, painted by the colour token that carries its state.
      *
      * The base rule of each family sizes and places the mask and keeps the background in print,
-     * and every mask property has its -webkit- twin, which Chromium before 120 reads instead.
+     * and every mask property has its -webkit- twin, which Chromium before 120 reads instead. The
+     * token is the icon's meaning (success, warning, neutral), so it is pinned per icon rather than
+     * accepted as any declared token. An icon on a branded island is painted in currentcolor
+     * instead; see test_island_icons_take_the_island_ink.
      *
      * Change that must make it fail: set background-color: #198754 on .local-dimensions-icon-check,
-     * delete a -webkit-mask-image line, point a mask at an image pix/ does not hold, or delete the
-     * print-color-adjust declaration of a family.
+     * paint .local-dimensions-icon-rules-inprogress with the success ink, delete a -webkit-mask-image
+     * line, point a mask at an image pix/ does not hold, or delete the print-color-adjust declaration
+     * of a family.
      *
      * @return void
      */
@@ -354,8 +440,17 @@ final class status_icons_test extends \basic_testcase {
                 $offenders[] = '.' . $icon . ' masks with pix/' . $spec['mask'] . '.svg, which does not exist';
             }
             $paint = $declared['background-color'] ?? '';
-            if (!preg_match('/^var\((--local-dimensions-[a-z-]+)\)$/', $paint, $m) || !in_array($m[1], $tokens, true)) {
-                $offenders[] = '.' . $icon . ' is painted with "' . $paint . '", not a declared colour token';
+            if ($spec['paint'] === self::ISLAND_PAINT) {
+                if ($paint !== self::ISLAND_PAINT) {
+                    $offenders[] = '.' . $icon . ' is painted with "' . $paint . '", not ' . self::ISLAND_PAINT;
+                }
+                continue;
+            }
+            if (!in_array($spec['paint'], $tokens, true)) {
+                $offenders[] = '.' . $icon . ' expects ' . $spec['paint'] . ', which the token block does not declare';
+            }
+            if ($paint !== 'var(' . $spec['paint'] . ')') {
+                $offenders[] = '.' . $icon . ' is painted with "' . $paint . '", not var(' . $spec['paint'] . ')';
             }
         }
         $this->assertSame([], $offenders, 'Every status icon must be a token-painted mask: ' . implode('; ', $offenders));
@@ -369,7 +464,8 @@ final class status_icons_test extends \basic_testcase {
      * the defect the status icons carried.
      *
      * Change that must make it fail: add fill: var(--local-dimensions-success-ink) to
-     * .local-dimensions-icon-check, or stroke to .local-dimensions-rules-child-icon-image.
+     * .local-dimensions-icon-check, or stroke to .activityicon, the img accordion.js builds for an
+     * activity.
      *
      * @return void
      */
@@ -384,7 +480,7 @@ final class status_icons_test extends \basic_testcase {
         }
         $htmlclasses = array_values(array_unique($htmlclasses));
         $this->assertContains(
-            'local-dimensions-rules-child-icon-image',
+            'activityicon',
             $htmlclasses,
             'The img elements the scripts build were not found, so they would not be checked.'
         );
@@ -419,12 +515,14 @@ final class status_icons_test extends \basic_testcase {
      * Every glyph icon draws its glyph in a token over its own box, unmirrored in RTL.
      *
      * The glyph is a pseudo-element positioned against the icon, painted in the icon's glyph
-     * property, which has to name a declared token. Moodle's RTL flip swaps left and right offsets
-     * and background positions but not a rotation, so a glyph rule it does not skip lands off
-     * centre in a right-to-left language.
+     * property, which has to name the token of the ground the icon sits on, so the glyph reads as a
+     * cut-out of the shape. Moodle's RTL flip swaps left and right offsets and background positions
+     * but not a rotation, so a glyph rule it does not skip lands off centre in a right-to-left
+     * language.
      *
      * Change that must make it fail: delete position: relative from .local-dimensions-icon-check, the
-     * glyph property from a glyph icon, a selector from a ::after glyph rule, or its rtl:ignore.
+     * glyph property from a glyph icon, a selector from a ::after glyph rule (such as the Rules tab's
+     * proficient check), or its rtl:ignore.
      *
      * @return void
      */
@@ -449,8 +547,11 @@ final class status_icons_test extends \basic_testcase {
                 $offenders[] = '.' . $icon . ' is not positioned, so its glyph is placed against an ancestor';
             }
             $glyph = $declared[self::GLYPH] ?? '';
-            if (!preg_match('/^var\((--local-dimensions-[a-z-]+)\)$/', $glyph, $m) || !in_array($m[1], $tokens, true)) {
-                $offenders[] = '.' . $icon . ' sets ' . self::GLYPH . ' to "' . $glyph . '", not a declared colour token';
+            if (!in_array($spec['glyph'], $tokens, true)) {
+                $offenders[] = '.' . $icon . ' expects a ' . $spec['glyph'] . ' glyph, which the token block does not declare';
+            }
+            if ($glyph !== 'var(' . $spec['glyph'] . ')') {
+                $offenders[] = '.' . $icon . ' sets ' . self::GLYPH . ' to "' . $glyph . '", not var(' . $spec['glyph'] . ')';
             }
             $after = $this->declared_for('.' . $icon . '::after');
             if (!isset($after['content'])) {
@@ -462,7 +563,7 @@ final class status_icons_test extends \basic_testcase {
                 $offenders[] = '.' . $icon . '::after is not under rtl:ignore';
             }
         }
-        $this->assertSame(3, $checked, 'The glyph icons were not all checked.');
+        $this->assertSame(4, $checked, 'The glyph icons were not all checked.');
         $this->assertSame([], $offenders, 'Every glyph icon must draw its glyph: ' . implode('; ', $offenders));
     }
 
@@ -492,5 +593,139 @@ final class status_icons_test extends \basic_testcase {
             }
         }
         $this->assertSame([], $offenders, 'Forced colours would erase these icons: ' . implode('; ', $offenders));
+    }
+
+    /**
+     * An icon on a branded island paints in the island's own text colour and reads no mode token.
+     *
+     * The hero is painted with a colour the admin chose, so a colour token, which follows the page,
+     * would measure the calendar against the wrong ground. Its mask takes currentcolor instead, and
+     * it sets no colour of its own, so currentcolor is the colour of the element around it: the
+     * due-date card, whose colour is the admin's text colour, carried by --dimension-customtextcolor,
+     * with the island's white as the fallback. Under forced colours the card's colour is forced to
+     * the system text colour, which the icon then inherits.
+     *
+     * Change that must make it fail: paint .local-dimensions-duedate-icon with a --local-dimensions-
+     * token, give it a colour of its own, or take the transported text colour off the due-date card.
+     *
+     * @return void
+     */
+    public function test_island_icons_take_the_island_ink(): void {
+        $offenders = [];
+        $checked = 0;
+        foreach (self::ICONS as $icon => $spec) {
+            if ($spec['paint'] !== self::ISLAND_PAINT) {
+                continue;
+            }
+            $checked++;
+            foreach ($this->rules() as $rule) {
+                if (!preg_match('/\.' . preg_quote($icon, '/') . '(?![\w-])/', $rule['selector'])) {
+                    continue;
+                }
+                foreach ($this->declarations($rule['body']) as $property => $value) {
+                    if (preg_match('/--local-dimensions-(?!icon-glyph\b)[a-z-]+/', $value, $m)) {
+                        $offenders[] = $rule['selector'] . ' ' . $property . ' reads ' . $m[0] . ', not the island\'s ink';
+                    }
+                }
+            }
+            if (isset($this->declared_for('.' . $icon)['color'])) {
+                $offenders[] = '.' . $icon . ' sets a colour of its own, so currentcolor is not the island\'s ink';
+            }
+            $containers = 0;
+            foreach ($this->templates() as $path => $markup) {
+                $tags = $this->tags($markup);
+                foreach ($tags as $index => $tag) {
+                    if (!in_array($icon, $this->classes($tag['attributes']), true)) {
+                        continue;
+                    }
+                    $containers++;
+                    $where = basename($path) . ' (' . $icon . ')';
+                    $parent = $tags[$index - 1] ?? null;
+                    if ($parent === null || trim(substr($markup, $parent['end'], $tag['start'] - $parent['end'])) !== '') {
+                        $offenders[] = $where . ' is not the first child of the element whose colour it takes';
+                        continue;
+                    }
+                    $inked = false;
+                    foreach ($this->classes($parent['attributes']) as $class) {
+                        $colour = $this->declared_for('.' . $class)['color'] ?? '';
+                        if (
+                            str_starts_with($colour, 'var(--dimension-customtextcolor,')
+                            && !str_contains($colour, '--local-dimensions-')
+                        ) {
+                            $inked = true;
+                        }
+                    }
+                    if (!$inked) {
+                        $offenders[] = $where . ' sits in <' . $parent['tag'] . ' class="'
+                            . implode(' ', $this->classes($parent['attributes']))
+                            . '">, which does not carry the transported --dimension-customtextcolor';
+                    }
+                }
+            }
+            if ($containers === 0) {
+                $offenders[] = $icon . ' is rendered by no template, so the colour it takes was not checked';
+            }
+        }
+        $this->assertSame(1, $checked, 'The island icons were not all checked.');
+        $this->assertSame(
+            [],
+            $offenders,
+            'An icon on a branded island takes the admin\'s ink, never the page\'s: ' . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * Every pix/status image is a mask that carries no colour of its own.
+     *
+     * An alpha mask keeps every opaque pixel whatever its colour, so a second colour in the file is
+     * not a second colour on the page: the light fill inside the Rules tab's to-do ring would turn
+     * the ring into a solid disc, and a white glyph drawn inside a filled shape vanishes into it
+     * (the glyph icons draw theirs in CSS). So each file paints in currentColor alone, over a root
+     * that fills nothing, since a shape without a fill of its own is filled black by default. And
+     * every file is some status icon's mask: an image shown through an img keeps the colours in the
+     * file, which is the defect these masks replaced.
+     *
+     * Change that must make it fail: put stroke="#E8590C" back in rules-inprogress.svg, the light
+     * fill back on the rules-todo.svg ring, or delete the root fill="none" of calendar-light.svg.
+     *
+     * @return void
+     */
+    public function test_mask_images_carry_no_colour_of_their_own(): void {
+        $masks = array_unique(array_column(self::ICONS, 'mask'));
+        $files = glob($this->plugin_root() . '/pix/status/*.svg') ?: [];
+        $this->assertNotEmpty($files, 'No pix/status image was found, so nothing was compared.');
+        $offenders = [];
+        foreach ($files as $path) {
+            $name = 'status/' . basename($path, '.svg');
+            $where = 'pix/' . $name . '.svg';
+            if (!in_array($name, $masks, true)) {
+                $offenders[] = $where . ' is the mask of no status icon';
+                continue;
+            }
+            $svg = file_get_contents($path);
+            if (!preg_match('/<svg\b[^>]*\sfill="none"/', $svg)) {
+                $offenders[] = $where . ' leaves its root filled, so every shape without a fill of its own is solid';
+            }
+            preg_match_all('/(?<![\w-])(fill|stroke)\s*[=:]\s*["\']?([^"\';\s>]+)/i', $svg, $paints, PREG_SET_ORDER);
+            $painted = 0;
+            foreach ($paints as [, $property, $value]) {
+                if (strcasecmp($value, 'none') === 0) {
+                    continue;
+                }
+                if (strcasecmp($value, 'currentColor') !== 0) {
+                    $offenders[] = $where . ' paints ' . $property . ' ' . $value . ', not currentColor';
+                    continue;
+                }
+                $painted++;
+            }
+            if ($painted === 0) {
+                $offenders[] = $where . ' paints nothing, so its mask shows nothing';
+            }
+        }
+        $this->assertSame(
+            [],
+            $offenders,
+            'A status image is a single-colour mask; the stylesheet paints it: ' . implode('; ', $offenders)
+        );
     }
 }
