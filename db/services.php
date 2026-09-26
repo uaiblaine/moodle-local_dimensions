@@ -208,6 +208,10 @@ $functions = [
         'capabilities' => 'moodle/competency:templatemanage',
         'ajax' => true,
     ],
+    /* The two plan services below are gated by plan::can_manage(), which also admits planmanageown on the
+       caller's own plan and the draft pair on a draft. 'capabilities' names only planmanage, as core's own
+       core_competency_delete_plan does: the list is informational, and the web service token pages report
+       every capability in it that a user lacks, so listing the alternatives would flag users who hold one. */
     'local_dimensions_unlink_template_user_plan' => [
         'classname' => 'local_dimensions\external\unlink_template_user_plan',
         'methodname' => 'execute',
