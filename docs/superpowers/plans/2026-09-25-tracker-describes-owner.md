@@ -55,14 +55,22 @@ sent. Write each guard into a new `mutations/followups_T1.conf` (format of `muta
 - The file icon for prior-learning evidence: S09 stopped guessing "file" from the evidence name. A
   real icon needs a server-computed `hasfiles` flag in
   `get_user_competency_summary_in_plan` (a product decision).
-- `db/services.php` still lists only `moodle/competency:planmanage` for the unlink and delete plan
-  services, while the code now asks `plan::can_manage()` (informational metadata).
-- `helper`'s template select getters return `$allowed[index - 1]` for a stored index past the last
-  option; the metadata cache now reads that case as inherit.
 - `pix/status/rules-*.svg` and `calendar-light.svg` still carry fixed colours (the status icons
   became masks; these did not).
 - Outside this plugin: `aiplacement_dimensions`' framework picker double-escapes names, and core's
   `tool_lp` rule editor writes an escaped competency name back on every save (an MDL candidate).
+
+Closed on 2026-09-26, after the list was re-checked against the code:
+
+- The accordion's `get_competency_courses` described the plan owner behind `read_plan()` alone; it now
+  asks `plan_access::require_owner_readable()` like the tracker (`mutations/followups_T2.conf`).
+- `db/services.php` lists only `planmanage` for the unlink and delete plan services while the code asks
+  `plan::can_manage()`. Kept, with a comment: core's own `core_competency_delete_plan` does the same,
+  and the web service token pages report every listed capability a user lacks, so listing the
+  alternatives would flag users who hold one of them.
+- `helper`'s template select getters and the metadata cache already agree on a stored index past the
+  last option: the getter's `isset($allowed[$value - 1])` guard leaves a value no option matches, so
+  it resolves to inherit, which is what the cache reads.
 
 ## Where things are
 

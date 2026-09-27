@@ -401,6 +401,7 @@ $string['central_roles_status_pending'] = 'Pending sync';
 $string['central_roles_status_synced'] = 'Synced';
 $string['central_roles_tab'] = 'Assign roles';
 $string['central_rule_invalidpoints'] = 'Points must be whole numbers of zero or more. The required points must be at least 1, and the total available points must be at least the required points.';
+$string['central_rule_nochildren'] = 'A competency rule needs child competencies. Add one to set a rule.';
 $string['central_rule_type'] = 'Rule';
 $string['central_searchcompetency'] = 'Filter plans by competency';
 $string['central_structure_linkedplans'] = 'Linked learning plans';

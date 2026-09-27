@@ -87,7 +87,8 @@ class get_competency_courses extends external_api {
      * @return array Filtered list of courses, each with its rule outcome and linked activities
      * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan does not reach
      *     the competency.
-     * @throws \required_capability_exception When the current user may not read the plan.
+     * @throws \required_capability_exception When the current user may not read the plan or its owner's user
+     *     competencies.
      */
     public static function execute($competencyid, $planid) {
         global $USER, $DB;
@@ -113,8 +114,12 @@ class get_competency_courses extends external_api {
 
         /* The cards describe the plan owner, who is not the viewer when staff review a learner's plan:
            the enrolment filter, progress, the activities and the card shape are the owner's. Only
-           access and its lock date are the viewer's, because they decide what clicking the card does. */
-        $ownerid = (int) $plan->get('userid');
+           access and its lock date are the viewer's, because they decide what clicking the card does.
+           So the viewer must also be allowed to read the owner's user competencies, as the tracker page
+           and its card services require: read_plan() accepts planviewdraft alone on a draft plan, which
+           grants nothing about the learner. The accordion never asks for such a viewer, whose rows have
+           no detail region, but the service is callable directly. */
+        $ownerid = plan_access::require_owner_readable($plan);
 
         // Outside the plan the plan layer of the cascade does not apply (competency -> global only).
         $templateid = $scope === plan_access::SCOPE_PLAN ? (int) $plan->get('templateid') : 0;

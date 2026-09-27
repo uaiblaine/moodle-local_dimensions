@@ -29,6 +29,8 @@ Decided by the owner after the comment audit's findings were re-checked against 
 - Learning plan CSV import: a competency structure named by ID number is now resolved only among the
   structures offered in the target category (its parent and child contexts), so a structure in a
   sibling category is reported as missing instead of being linked.
+- Competency hub, Structure tab: the footer's 'Competency rule' button is disabled for a competency
+  without child competencies, which a rule cannot be set on, and its tooltip says why.
 
 ### Fixed
 
@@ -172,6 +174,12 @@ changed since, and fixed where they still held.
 
 ### Security
 
+- **The plan accordion's course cards answer only a viewer who may read the learner's competencies.**
+  `local_dimensions_get_competency_courses` returned a learner's enrolled courses, course progress
+  and activity completion to a viewer who could read their draft plan but not their competencies (a
+  custom role holding only `planviewdraft`), whom Moodle's own competency pages refuse. The accordion
+  never asked for that viewer, but the service could be called directly. It now asks what the
+  competency tracker asks (`plan_access::require_owner_readable()`).
 - **The competency tracker, the Rules tab data and the accordion's course cards answer only for a
   competency the plan reaches.** `view-competency.php` rendered any competency by id to anyone who
   could read a plan of their own; `local_dimensions_get_competency_rule_data` returned the plan
@@ -665,20 +673,14 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
     orphan link) with its field diff, its resolved competency links, its effect on existing
     learner plans, and per-row ways out of a conflict; **nothing is written until you apply**, and
     then only the rows you ticked, each in its own transaction and re-validated at write time so a
-    site that moved under you is refused rather than half-written.
+    site that moved under you is refused rather than half-written. The file has two row types
+    (`template` and `link`, every column read by its header), and a file exported by
+    `admin/tool/lptmanager` imports too (one direction only).
   - Modals: *Participants* (cohorts with background plan sync, individual users, cohort-role
     assignment), *Courses & activities* (linking with rule outcomes, activity search,
     completion-rule badges), *Related competencies* (shared tree browser).
   - ~30 AJAX web services back the hub; the front-end is ESM, zero-YUI, Bootstrap 4+5
     compatible.
-- **Learning plan template CSV transfer** — *groundwork only, not yet reachable from the UI*:
-  the two-row-type CSV format (`template` / `link` rows, every column read by header name)
-  carrying all fourteen template custom fields, cross-framework competency links and their
-  order, plus the `local_dimensions_export_templates` web service and a one-directional
-  ingest shim for `admin/tool/lptmanager` files. The hub toolbar, the dry-run import preview
-  and the partial-apply importer are specified in
-  `docs/superpowers/specs/2026-07-27-learning-plan-template-csv-transfer-design.md` and
-  planned in `docs/superpowers/plans/2026-07-27-template-csv.md`; tasks 2-8 remain.
 - **Per-user persistent hub state**: last tab/context/framework/template, display toggles and
   gear panels survive sessions and devices (two JSON user preferences + privacy provider).
 - **Bulk enrolment methods** (participants modal, 4th tab): apply/remove cohort sync
