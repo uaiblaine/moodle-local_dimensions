@@ -352,7 +352,8 @@ define(
                 {key: 'access_content', component: 'local_dimensions'},
                 {key: 'aria_completion_percentage', component: 'local_dimensions'},
                 {key: 'application_pending', component: 'local_dimensions'},
-                {key: 'application_pending_note', component: 'local_dimensions'}
+                {key: 'application_pending_note', component: 'local_dimensions'},
+                {key: 'evidence_hasfiles', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -447,7 +448,8 @@ define(
                     accessContent: strings[86],
                     ariaSectionProgress: strings[87],
                     applicationPending: strings[88],
-                    applicationPendingNote: strings[89]
+                    applicationPendingNote: strings[89],
+                    evidenceHasFiles: strings[90]
                 };
 
                 /* The strings can be a network round trip of their own, and a layout switch landing
@@ -1293,6 +1295,9 @@ define(
             const typeInfo = getEvidenceTypeInfo(ev, strMap);
             const hasGrade = !!(ev.grade && ev.gradename && ev.gradename !== '-');
             const hasExtraDetails = ev.note || ev.url || hasGrade;
+            /* Set by the server on a prior-learning row only, and only for a viewer who may open
+               the record; anyone else's payload has no such key. */
+            const hasFiles = ev.hasfiles === true;
 
             /* The grid, role="button" and its handlers live on this inner element rather than on
                the <li> itself - overriding an <li>'s implicit listitem role would drop it out of
@@ -1302,12 +1307,21 @@ define(
                 '" data-evidence-index="' + index + '"';
             if (hasExtraDetails) {
                 html += ' role="button" tabindex="0"';
-                html += ' aria-label="' + escapeHtml(strMap.evidenceViewDetails) + ': ' + escapeHtml(typeInfo.label) + '"';
+                /* A role="button" is named by its aria-label alone, so the marker's own hidden
+                   label below would never be read out here. */
+                html += ' aria-label="' + escapeHtml(strMap.evidenceViewDetails) + ': ' + escapeHtml(typeInfo.label) +
+                    (hasFiles ? ', ' + escapeHtml(strMap.evidenceHasFiles) : '') + '"';
             }
             html += '>';
 
             html += '<span class="local-dimensions-ev-row-icon ' + typeInfo.colorClass + '">';
             html += '<i class="fa ' + typeInfo.icon + '" aria-hidden="true"></i>';
+            if (hasFiles) {
+                html += '<span class="local-dimensions-ev-row-files">';
+                html += '<i class="fa fa-paperclip" aria-hidden="true"></i>';
+                html += '<span class="visually-hidden">' + escapeHtml(strMap.evidenceHasFiles) + '</span>';
+                html += '</span>';
+            }
             html += '</span>';
 
             html += '<span class="local-dimensions-ev-row-body">';
@@ -1527,6 +1541,8 @@ define(
                 typelabel: typeInfo.label,
                 typeicon: typeInfo.icon,
                 colorclass: typeInfo.colorClass,
+                hasfiles: ev.hasfiles === true,
+                strhasfiles: strMap.evidenceHasFiles,
                 description: ev.description || '',
                 hasnote: hasNote,
                 note: hasNote ? ev.note : '',
@@ -2671,8 +2687,9 @@ define(
                 };
             }
 
-            /* The payload says nothing about whether the linked evidence holds files: desca is the
-               name the learner gave it, so it cannot tell a file from any other prior learning. */
+            /* Prior learning stays one type whatever the record holds. Whether it holds files is
+               the server's hasfiles flag, drawn beside this icon by renderEvidenceRow() and the
+               evidence modal; desca is only the name the learner gave the record. */
             if (descidentifier === 'evidence_evidenceofpriorlearninglinked') {
                 return {
                     icon: 'fa-trophy',

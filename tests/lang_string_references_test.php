@@ -54,7 +54,7 @@ final class lang_string_references_test extends \basic_testcase {
      * The controls come first: one known reference for each form the patterns read, so a pattern or
      * a directory that stopped being read fails here instead of passing with nothing to check.
      *
-     * Change that must make it fail: delete $string['evidence_type_file'], which view-plan.php
+     * Change that must make it fail: delete $string['evidence_hasfiles'], which view-plan.php
      * passes to string_for_js(), from either language file.
      *
      * @return void
