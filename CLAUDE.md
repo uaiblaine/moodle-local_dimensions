@@ -83,8 +83,8 @@ merge: push a branch, open the pull request, and leave the merge to them. Rebuil
 Moodle's own grunt inside the `mpci` install (`cd /tmp/mpci/<branch>/moodle && npx grunt amd
 --root=<the plugin path>`), never by hand. If `which mpci` prints nothing, the session was resumed on
 a container that skipped the setup script: attach `moodle-dev` and run `bash cloud/setup.sh` from it.
-The last handoff, `docs/superpowers/plans/2026-09-25-tracker-describes-owner.md`, is implemented; its
-"Left open on purpose" list still stands.
+The last handoff, `docs/superpowers/plans/2026-09-25-tracker-describes-owner.md`, is implemented; of its
+"Left open on purpose" list only M19 (4.5 only, heals itself) and the two items outside this plugin remain.
 
 ### Building JavaScript assets (required before committing JS)
 
