@@ -169,17 +169,52 @@ final class competency_courses_scope_test extends \advanced_testcase {
     }
 
     /**
-     * A learner's active plan from a template over one competency with a rule, and competencies around it.
+     * A reader of a draft plan who may not read its owner's user competencies is refused.
+     *
+     * read_plan() accepts planviewdraft alone on a draft plan, which grants nothing about the learner, while
+     * the course list describes the learner's enrolment, progress and activity completion. The accordion
+     * never asks for this viewer (its rows have no detail region), but the service is callable directly.
+     * The control grants the same role usercompetencyview and gets the learner's courses.
+     *
+     * @return void
+     */
+    public function test_a_draft_reader_without_rating_access_is_refused(): void {
+        $this->resetAfterTest();
+        $fixture = $this->build_fixture(plan::STATUS_DRAFT);
+        $viewer = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        $syscontextid = \context_system::instance()->id;
+        assign_capability('moodle/competency:planviewdraft', CAP_ALLOW, $roleid, $syscontextid);
+        role_assign($roleid, (int) $viewer->id, $syscontextid);
+        $this->setUser($viewer);
+        // The precondition: core lets this viewer read the draft plan.
+        $this->assertSame($fixture['planid'], (int) \core_competency\api::read_plan($fixture['planid'])->get('id'));
+
+        $response = $this->call($fixture['inplan'], $fixture['planid']);
+        $this->assert_refused('nopermissions', $response, 'Draft reader');
+        $this->assertSame(
+            get_string('nopermissions', 'error', get_capability_string('moodle/competency:usercompetencyview')),
+            $response['exception']->message
+        );
+
+        assign_capability('moodle/competency:usercompetencyview', CAP_ALLOW, $roleid, $syscontextid);
+
+        $this->assertSame($fixture['allcourses'], $this->course_ids($this->call($fixture['inplan'], $fixture['planid'])));
+    }
+
+    /**
+     * A learner's plan from a template over one competency with a rule, and competencies around it.
      *
      * Every competency sits in one framework at the system context and is linked to two courses: one the
      * learner is enrolled in and one they are not. The site's enrolment filter is "active" and the
      * template's is "all". Both related-competency switches are on at the site. The learner is the current
      * user on return.
      *
+     * @param int $status The plan's status, active unless a test needs another.
      * @return array Keys: planid, inplan (in the plan, with a rule), child, grandchild, related, unrelated,
      *     enrolledcourse and allcourses (the two course ids, sorted).
      */
-    private function build_fixture(): array {
+    private function build_fixture(int $status = plan::STATUS_ACTIVE): array {
         $this->setAdminUser();
         helper::ensure_custom_fields_exist(helper::AREA_LP);
         helper::ensure_custom_fields_exist(helper::AREA_COMPETENCY);
@@ -216,7 +251,7 @@ final class competency_courses_scope_test extends \advanced_testcase {
         $planid = (int) $ccg->create_plan([
             'userid' => $owner->id,
             'templateid' => $templateid,
-            'status' => plan::STATUS_ACTIVE,
+            'status' => $status,
         ])->get('id');
 
         $enrolledcourse = (int) $dg->create_course()->id;
