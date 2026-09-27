@@ -401,6 +401,7 @@ $string['central_roles_status_pending'] = 'Sincronização pendente';
 $string['central_roles_status_synced'] = 'Sincronizado';
 $string['central_roles_tab'] = 'Atribuir papéis';
 $string['central_rule_invalidpoints'] = 'Os pontos devem ser números inteiros maiores ou iguais a zero. Os pontos necessários devem ser pelo menos 1, e o total de pontos disponíveis deve ser ao menos igual aos pontos necessários.';
+$string['central_rule_nochildren'] = 'Uma regra de competência precisa de competências filhas. Adicione uma para definir a regra.';
 $string['central_rule_type'] = 'Regra';
 $string['central_searchcompetency'] = 'Filtrar planos por competência';
 $string['central_structure_linkedplans'] = 'Planos de aprendizagem vinculados';
