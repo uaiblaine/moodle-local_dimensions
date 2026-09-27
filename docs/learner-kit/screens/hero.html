@@ -180,7 +180,7 @@
       <div class="hv text"><div class="hvc"><p class="hvt">Written Communication</p><p class="hvsub">customtextcolor · dark text, light bg</p></div></div>
     </div>
     <div class="note">Default = Bootstrap <code>.bg-primary</code> (#0f6cbf) &mdash; already Moodle DS. Custom bg/text are per-instance author values, not theme tokens, so no <code>--lk-*</code> token drives this screen.</div>
-    <div class="note" style="padding-top:6px">The due-date glyph is not inline SVG in the shipped markup: it is an <code>&lt;img&gt;</code> whose <code>src</code> is <code>duedateiconurl</code>, resolved from <code>pix/status/calendar-light.svg</code>. The drawing above reproduces that file's paths so the preview stays self-contained.</div>
+    <div class="note" style="padding-top:6px">The due-date glyph is not inline SVG in the shipped markup: it is an empty <code>aria-hidden</code> span (<code>.local-dimensions-duedate-icon</code>) whose CSS mask is <code>pix/status/calendar-light.svg</code>, painted in <code>currentcolor</code>, so it takes the card's text colour (the author's <code>customtextcolor</code>, or white). The drawing above reproduces that file's paths so the preview stays self-contained.</div>
     <div class="note" style="padding-top:6px"><span class="idb r">TRK-FAB</span> Return-to-Plan FAB is emitted on these pages by <code>hook_callbacks::before_footer_html_generation</code> &mdash; a global footer component, cross-referenced here, not a hero element. Its colour falls back to <code>#0f6cbf</code> (<code>styles.css:4616</code>, <code>return_button.mustache:45</code>), so it moved with the palette.</div>
 
     <div class="pend">

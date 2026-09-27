@@ -649,7 +649,8 @@ body[data-bs-theme="dark"],
     color: inherit;
 }
 
-/* Due Date Card - Horizontal glass-style card */
+/* Due Date Card - Horizontal glass-style card. Its text colour is the island's ink, which the
+   calendar icon's mask paints in (see .local-dimensions-duedate-icon with the status icons). */
 .local-dimensions-duedate-card {
     display: inline-flex;
     align-items: center;
@@ -660,13 +661,7 @@ body[data-bs-theme="dark"],
     backdrop-filter: blur(10px);
     border: 1px solid rgb(255 255 255 / 25%);
     border-radius: 0.5rem;
-}
-
-.local-dimensions-duedate-icon {
-    display: block;
-    flex-shrink: 0;
-    width: 20px;
-    height: 20px;
+    color: var(--dimension-customtextcolor, rgb(255 255 255 / 100%));
 }
 
 .local-dimensions-duedate-content {
@@ -1508,16 +1503,53 @@ body[data-bs-theme="dark"],
     mask-image: url('[[pix:local_dimensions|status/info-circle]]');
 }
 
+/* A Rules tab child's state (accordion.js), in the tones the tab already speaks: the success
+   check, the warning ink its progress bar fills with, and the neutral ink of an unrated grade. */
+.local-dimensions-icon-rules-proficient {
+    --local-dimensions-icon-glyph: var(--local-dimensions-surface);
+    position: relative;
+    background-color: var(--local-dimensions-success-ink);
+    -webkit-mask-image: url('[[pix:local_dimensions|status/rules-proficient]]');
+    mask-image: url('[[pix:local_dimensions|status/rules-proficient]]');
+}
+
+.local-dimensions-icon-rules-inprogress {
+    background-color: var(--local-dimensions-warning-ink);
+    -webkit-mask-image: url('[[pix:local_dimensions|status/rules-inprogress]]');
+    mask-image: url('[[pix:local_dimensions|status/rules-inprogress]]');
+}
+
+.local-dimensions-icon-rules-todo {
+    background-color: var(--local-dimensions-neutral-ink);
+    -webkit-mask-image: url('[[pix:local_dimensions|status/rules-todo]]');
+    mask-image: url('[[pix:local_dimensions|status/rules-todo]]');
+}
+
 /*
- * The check the SVG draws in white inside its disc. An alpha mask keeps the whole disc, so the
- * stroke is drawn again as an L turned 45 degrees, in percentages of the icon so it scales with
- * it (12px in a grade badge, 56px on a single-activity card). Its colour, --local-dimensions-icon-glyph,
- * is the ground the icon sits on (the card surface, or the badge's tint), so it reads as the
- * cut-out the SVG shows: white on the dark light-mode disc, dark on the light dark-mode one.
- * rtl:ignore keeps Moodle's RTL flip from mirroring the offsets, since it does not flip the
- * rotation with them.
+ * The hero's due-date calendar. The hero is a branded island, so no mode token paints it: the
+ * mask takes currentcolor, the text colour of the due-date card around it, which carries the
+ * admin's own (--dimension-customtextcolor) or the island's white. It is declared after
+ * .local-dimensions-icon so its size wins; the slim hero shrinks it further.
+ */
+.local-dimensions-duedate-icon {
+    width: 20px;
+    height: 20px;
+    background-color: currentcolor;
+    -webkit-mask-image: url('[[pix:local_dimensions|status/calendar-light]]');
+    mask-image: url('[[pix:local_dimensions|status/calendar-light]]');
+}
+
+/*
+ * The check inside a disc. The mask SVG is the bare disc, because an alpha mask keeps every
+ * opaque pixel whatever its colour, so the check is drawn over it as an L turned 45 degrees, in
+ * percentages of the icon so it scales with it (12px in a grade badge, 56px on a single-activity
+ * card). Its colour, --local-dimensions-icon-glyph, is the ground the icon sits on (the card
+ * surface, or the badge's tint), so it reads as a cut-out: light on the dark light-mode disc,
+ * dark on the light dark-mode one. rtl:ignore keeps Moodle's RTL flip from mirroring the offsets,
+ * since it does not flip the rotation with them.
  */
 /* rtl:ignore */
+.local-dimensions-icon-rules-proficient::after,
 .local-dimensions-icon-check::after,
 .local-dimensions-grade-badge-icon-proficient::after {
     content: '';
@@ -1544,6 +1576,10 @@ body[data-bs-theme="dark"],
  */
 @media (forced-colors: active) {
     .local-dimensions-icon-check,
+    .local-dimensions-icon-rules-proficient,
+    .local-dimensions-icon-rules-inprogress,
+    .local-dimensions-icon-rules-todo,
+    .local-dimensions-duedate-icon,
     .local-dimensions-icon-lock,
     .local-dimensions-icon-lock-sm,
     .local-dimensions-icon-circle,
@@ -1864,8 +1900,8 @@ body[data-bs-theme="dark"],
     mask-image: url('[[pix:local_dimensions|status/warning-triangle-fill]]');
 }
 
-/* The exclamation mark the SVG draws in white inside its triangle, drawn again as a bar and a dot
-   for the same reason as the check; not mirrored in RTL either. */
+/* The exclamation mark inside the triangle, drawn over the bare triangle as a bar and a dot for
+   the same reason as the check; not mirrored in RTL either. */
 /* rtl:ignore */
 .local-dimensions-grade-badge-icon-warning::after {
     content: '';
@@ -4571,11 +4607,9 @@ a.local-dimensions-course-act-row:focus-visible {
     justify-content: center;
 }
 
-.local-dimensions-rules-child-icon-image {
-    display: block;
+.local-dimensions-rules-child-icon .local-dimensions-icon {
     width: 20px;
     height: 20px;
-    object-fit: contain;
 }
 
 /* Body: name + assessment */

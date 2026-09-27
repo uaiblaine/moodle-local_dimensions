@@ -14,6 +14,9 @@ Decided by the owner after the comment audit's findings were re-checked against 
   completion tracking) and the grade badge icons in the plan overview now take their colours from
   the theme and follow dark mode and Windows high-contrast mode; in light mode the completed check
   now uses the theme's success colour.
+- The status icons on the competency detail's Rules tab (proficient, in progress, to do) and the
+  calendar beside a plan's due date now follow the theme, dark mode and Windows high-contrast mode
+  too; the calendar takes the text colour set for the plan's header.
 - The learning plan template settings now show 'Locked card display mode' and 'Show availability
   date' in 'Full plan overview' mode as well, because the plan overview uses them.
 - Plan accordion: when staff open a learner's plan, the course cards now show the learner's courses,

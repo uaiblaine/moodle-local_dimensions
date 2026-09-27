@@ -55,8 +55,6 @@ sent. Write each guard into a new `mutations/followups_T1.conf` (format of `muta
 - The file icon for prior-learning evidence: S09 stopped guessing "file" from the evidence name. A
   real icon needs a server-computed `hasfiles` flag in
   `get_user_competency_summary_in_plan` (a product decision).
-- `pix/status/rules-*.svg` and `calendar-light.svg` still carry fixed colours (the status icons
-  became masks; these did not).
 - Outside this plugin: `aiplacement_dimensions`' framework picker double-escapes names, and core's
   `tool_lp` rule editor writes an escaped competency name back on every save (an MDL candidate).
 
@@ -71,6 +69,8 @@ Closed on 2026-09-26, after the list was re-checked against the code:
 - `helper`'s template select getters and the metadata cache already agree on a stored index past the
   last option: the getter's `isset($allowed[$value - 1])` guard leaves a value no option matches, so
   it resolves to inherit, which is what the cache reads.
+- `pix/status/rules-*.svg` and `calendar-light.svg` carried fixed colours through `<img>`; they are
+  masks now, like the other status icons (`mutations/followups_T3.conf`).
 
 ## Where things are
 
