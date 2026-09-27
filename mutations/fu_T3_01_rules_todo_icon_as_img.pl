@@ -1,0 +1,1 @@
+s/<span class="local-dimensions-icon local-dimensions-icon-rules-todo" aria-hidden="true"><\/span>';/<img class="local-dimensions-rules-child-icon-image" src="' + M.util.image_url('status\/rules-todo', 'local_dimensions') + '" alt="" aria-hidden="true">';/;
