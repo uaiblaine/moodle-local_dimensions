@@ -52,9 +52,6 @@ sent. Write each guard into a new `mutations/followups_T1.conf` (format of `muta
 
 - M19: on Moodle 4.5 a single-activity course whose activity sits outside section 0 gets no activity
   card until someone opens the course page. 4.5 only, heals itself; low priority.
-- The file icon for prior-learning evidence: S09 stopped guessing "file" from the evidence name. A
-  real icon needs a server-computed `hasfiles` flag in
-  `get_user_competency_summary_in_plan` (a product decision).
 - Outside this plugin: `aiplacement_dimensions`' framework picker double-escapes names, and core's
   `tool_lp` rule editor writes an escaped competency name back on every save (an MDL candidate).
 
@@ -71,6 +68,12 @@ Closed on 2026-09-26, after the list was re-checked against the code:
   it resolves to inherit, which is what the cache reads.
 - `pix/status/rules-*.svg` and `calendar-light.svg` carried fixed colours through `<img>`; they are
   masks now, like the other status icons (`mutations/followups_T3.conf`).
+- On 2026-09-27 (version 2026092700): the file icon for prior-learning evidence. The owner chose to
+  keep the trophy as the type and add a paperclip beside it when the linked record holds files now.
+  `get_user_competency_summary_in_plan` sets `hasfiles` on each `evidence_evidenceofpriorlearninglinked`
+  row, matching the row's URL exactly against the owner's records linked to the competency today,
+  and only for a viewer who passes `user_evidence::can_read_user()`; anyone else gets no key. The
+  unused `evidence_type_file` string was deleted (`mutations/followups_T4.conf`).
 
 ## Where things are
 

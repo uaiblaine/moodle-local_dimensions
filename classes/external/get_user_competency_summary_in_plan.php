@@ -28,7 +28,10 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_value;
 use core\context\system as context_system;
+use core\context\user as context_user;
 use core_competency\api;
+use core_competency\url;
+use core_competency\user_evidence;
 use local_dimensions\helper;
 
 /**
@@ -43,7 +46,8 @@ use local_dimensions\helper;
  * and calls the core function as a plain PHP method once validate_context() has run.
  *
  * The competency in the result also gains the taxonomy data and scale description the plugin's
- * accordion shows.
+ * accordion shows, and each prior-learning evidence row gains whether its record holds files, for a
+ * viewer allowed to open that record.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -102,7 +106,89 @@ class get_user_competency_summary_in_plan extends external_api {
                     : '';
         }
 
+        if (!empty($result->usercompetencysummary->evidence)) {
+            self::add_prior_learning_files(
+                $result->usercompetencysummary->evidence,
+                (int) api::read_plan($params['planid'])->get('userid'),
+                (int) $params['competencyid']
+            );
+        }
+
         return json_encode($result);
+    }
+
+    /**
+     * Mark each prior-learning evidence row with whether its record holds files now.
+     *
+     * Core writes evidence_evidenceofpriorlearninglinked when a learner links a prior-learning record
+     * (core_competency\user_evidence) to a competency, with the record's own URL, and keeps no copy of
+     * its files. The flag is therefore the record's live state: the owner's records linked to this
+     * competency today are listed, each one's URL is built the way core built it, and a row takes the
+     * record whose URL it carries exactly. A row whose record was deleted or unlinked since matches
+     * nothing and reads false. Only the owner's records are listed and only the owner's user context
+     * is searched, so a row can never be answered from someone else's record.
+     *
+     * A viewer who may not open the owner's records gets no hasfiles key at all, so the payload does
+     * not tell them that attachments exist. Rows of every other evidence type never get the key.
+     *
+     * @param array $evidence The exported evidence rows, objects updated in place.
+     * @param int $ownerid The plan owner's user id.
+     * @param int $competencyid The competency id.
+     * @return void
+     */
+    protected static function add_prior_learning_files(array $evidence, int $ownerid, int $competencyid): void {
+        global $DB;
+
+        $rows = array_filter($evidence, static function ($row): bool {
+            return is_object($row) && ($row->descidentifier ?? '') === 'evidence_evidenceofpriorlearninglinked';
+        });
+        if (!$rows || !user_evidence::can_read_user($ownerid)) {
+            return;
+        }
+
+        $sql = "SELECT ue.id
+                  FROM {competency_userevidence} ue
+                  JOIN {competency_userevidencecomp} uec ON uec.userevidenceid = ue.id
+                 WHERE ue.userid = :userid
+                   AND uec.competencyid = :competencyid";
+        $linked = $DB->get_fieldset_sql($sql, ['userid' => $ownerid, 'competencyid' => $competencyid]);
+        $byurl = [];
+        foreach ($linked as $id) {
+            $byurl[url::user_evidence((int) $id)->out(false)] = (int) $id;
+        }
+
+        $matched = [];
+        foreach ($rows as $row) {
+            if (isset($row->url) && isset($byurl[$row->url])) {
+                $matched[$byurl[$row->url]] = true;
+            }
+        }
+
+        $withfiles = [];
+        if ($matched) {
+            [$insql, $params] = $DB->get_in_or_equal(array_keys($matched), SQL_PARAMS_NAMED);
+            $sql = "SELECT DISTINCT itemid
+                      FROM {files}
+                     WHERE contextid = :contextid
+                       AND component = :component
+                       AND filearea = :filearea
+                       AND itemid {$insql}
+                       AND filename <> :directory";
+            $params += [
+                'contextid' => context_user::instance($ownerid)->id,
+                'component' => 'core_competency',
+                'filearea' => 'userevidence',
+                'directory' => '.',
+            ];
+            foreach ($DB->get_fieldset_sql($sql, $params) as $itemid) {
+                $withfiles[(int) $itemid] = true;
+            }
+        }
+
+        foreach ($rows as $row) {
+            $id = isset($row->url) ? ($byurl[$row->url] ?? null) : null;
+            $row->hasfiles = $id !== null && isset($withfiles[$id]);
+        }
     }
 
     /**

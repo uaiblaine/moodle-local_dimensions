@@ -139,6 +139,79 @@ final class learner_js_source_test extends \basic_testcase {
     }
 
     /**
+     * The paperclip marks a prior-learning record with files only when the server said so, and is named.
+     *
+     * The server sets hasfiles on a prior-learning row only, and only for a viewer allowed to open the
+     * owner's records; prior_learning_files_test holds that side. The client must draw the marker on
+     * a strict true alone, so a row without the key (every other type, every other viewer) never shows
+     * it. The icon is decoration: the name is the loaded evidence_hasfiles string, hidden text in the
+     * marker and part of the row's aria-label, since a role="button" is named by that label alone.
+     * The type itself stays prior learning, with its trophy.
+     *
+     * @return void
+     */
+    public function test_the_files_marker_follows_the_server_flag(): void {
+        $source = $this->code($this->js_source('accordion'));
+
+        $row = $this->function_body($source, 'renderEvidenceRow');
+        $this->assertStringContainsString('const hasFiles = ev.hasfiles === true;', $row);
+        $this->assertSame(1, preg_match_all('/\bhasfiles\b/', $row), 'the row reads the flag once');
+        $this->assertMatchesRegularExpression(
+            '/if \(hasFiles\) \{\s*'
+                . preg_quote("html += '<span class=\"local-dimensions-ev-row-files\">';", '/') . '\s*'
+                . preg_quote("html += '<i class=\"fa fa-paperclip\" aria-hidden=\"true\"></i>';", '/') . '\s*'
+                . preg_quote(
+                    "html += '<span class=\"visually-hidden\">' + escapeHtml(strMap.evidenceHasFiles) + '</span>';",
+                    '/'
+                ) . '\s*'
+                . preg_quote("html += '</span>';", '/') . '\s*\}/',
+            $row
+        );
+        $this->assertStringContainsString(
+            "(hasFiles ? ', ' + escapeHtml(strMap.evidenceHasFiles) : '') + '\"'",
+            $row
+        );
+        // The marker is drawn in that one place: never unconditionally, never by the type.
+        $this->assertSame(1, substr_count($source, 'fa-paperclip'));
+        $this->assertSame(1, substr_count($source, 'local-dimensions-ev-row-files'));
+
+        $modal = $this->function_body($source, 'buildEvidenceModalContext');
+        $this->assertStringContainsString('hasfiles: ev.hasfiles === true,', $modal);
+        $this->assertStringContainsString('strhasfiles: strMap.evidenceHasFiles,', $modal);
+
+        $this->assertSame('evidence_hasfiles', $this->string_slots($source)['evidenceHasFiles']);
+
+        $type = $this->function_body($source, 'getEvidenceTypeInfo');
+        $this->assertStringNotContainsString('hasfiles', $type);
+        $this->assertMatchesRegularExpression(
+            "/descidentifier === 'evidence_evidenceofpriorlearninglinked'\) \{\s*return \{\s*icon: 'fa-trophy',"
+                . "\s*label: strMap\.evidenceTypePrior,\s*colorClass: 'local-dimensions-evidence-prior'\s*\};\s*\}/",
+            $type
+        );
+    }
+
+    /**
+     * The evidence modal draws the same marker inside its hasfiles section only, with the label beside it.
+     *
+     * @return void
+     */
+    public function test_the_evidence_modal_marks_files_only_under_the_flag(): void {
+        global $CFG;
+
+        $template = (string) file_get_contents($CFG->dirroot . '/local/dimensions/templates/evidence_detail_modal.mustache');
+        $markup = (string) preg_replace('/\{\{!.*?\}\}/s', '', $template);
+
+        $this->assertMatchesRegularExpression(
+            '/\{\{#hasfiles\}\}\s*<span class="local-dimensions-ev-modal-files">\s*'
+                . '<i class="fa fa-paperclip" aria-hidden="true"><\/i>\s*\{\{strhasfiles\}\}\s*<\/span>\s*\{\{\/hasfiles\}\}/',
+            $markup
+        );
+        $this->assertSame(1, substr_count($markup, 'fa-paperclip'));
+        $this->assertSame(1, substr_count($markup, '{{#hasfiles}}'));
+        $this->assertSame(1, substr_count($markup, '{{strhasfiles}}'));
+    }
+
+    /**
      * The rule progress line and bar speak the loaded strings, in the unit the rule counts.
      *
      * An item-count rule sends completed children in the same earnedpoints/totalrequired fields,
