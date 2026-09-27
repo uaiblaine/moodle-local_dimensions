@@ -34,6 +34,11 @@ Decided by the owner after the comment audit's findings were re-checked against 
   sibling category is reported as missing instead of being linked.
 - Competency hub, Structure tab: the footer's 'Competency rule' button is disabled for a competency
   without child competencies, which a rule cannot be set on, and its tooltip says why.
+- Plan overview, competency detail: prior-learning evidence keeps its trophy and now shows a
+  paperclip beside it, in the evidence list and in the evidence details, when the linked
+  prior-learning record holds attached files at that moment. Only people allowed to open the
+  learner's prior-learning records see it (the learner, and staff with that permission); for anyone
+  else the page does not say whether the record has files.
 
 ### Fixed
 

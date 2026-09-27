@@ -25,6 +25,8 @@
     * typelabel (string) - Evidence type label (e.g., "Manual rating")
     * typeicon (string) - FontAwesome icon class (e.g., "fa-pencil")
     * colorclass (string) - CSS class for type color (e.g., "local-dimensions-evidence-manual")
+    * hasfiles (bool) - Whether the linked prior-learning record holds files now (never set for other types)
+    * strhasfiles (string) - Localized "Has attached files" label
     * description (string) - Evidence description (HTML from server)
     * hasnote (bool) - Whether there is a note/annotation
     * note (string) - Note text
@@ -56,9 +58,11 @@
 
     Example context (json):
     {
-        "typelabel": "Manual rating",
-        "typeicon": "fa-pencil",
-        "colorclass": "local-dimensions-evidence-manual",
+        "typelabel": "Prior learning",
+        "typeicon": "fa-trophy",
+        "colorclass": "local-dimensions-evidence-prior",
+        "hasfiles": true,
+        "strhasfiles": "Has attached files",
         "description": "<p>Evidence description</p>",
         "hasnote": true,
         "note": "Teacher note",
@@ -108,6 +112,12 @@
             <i class="fa {{typeicon}}" aria-hidden="true"></i>
             {{typelabel}}
         </span>
+        {{#hasfiles}}
+        <span class="local-dimensions-ev-modal-files">
+            <i class="fa fa-paperclip" aria-hidden="true"></i>
+            {{strhasfiles}}
+        </span>
+        {{/hasfiles}}
     </div>
 
     {{! Description }}

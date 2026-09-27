@@ -131,7 +131,7 @@ $PAGE->requires->string_for_js('competency_path', 'local_dimensions');
 $PAGE->requires->string_for_js('related_dimensions', 'local_dimensions');
 
 // Evidence strings.
-$PAGE->requires->string_for_js('evidence_type_file', 'local_dimensions');
+$PAGE->requires->string_for_js('evidence_hasfiles', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_type_manual', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_type_activity', 'local_dimensions');
 $PAGE->requires->string_for_js('evidence_type_coursegrade', 'local_dimensions');
