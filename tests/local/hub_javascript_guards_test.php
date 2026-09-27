@@ -261,6 +261,35 @@ final class hub_javascript_guards_test extends \basic_testcase {
     }
 
     /**
+     * The footer's competency rule action is offered only for a competency with child competencies.
+     *
+     * A rule is computed from the children, so the footer renders its button disabled for a
+     * competency without any, from the selected row's own flag; and the action handler opens the rule
+     * editor only under the same condition.
+     *
+     * @return void
+     */
+    public function test_rule_action_needs_child_competencies(): void {
+        $source = $this->source('structure');
+
+        $footer = $this->between(
+            $this->body($source, 'selectRow'),
+            "Templates.renderForPromise('local_dimensions/central/structure_footer_actions', {",
+            '})'
+        );
+        $this->assertMatchesRegularExpression("/\n\s*canrule: row\.dataset\.haschildren === '1',\n/", $footer);
+
+        // The footer dispatches through handleDetailAction(), where every row action is routed.
+        $dispatch = $this->body($source, 'handleDetailAction');
+        $this->assertMatchesRegularExpression(
+            "/closest\(SELECTORS\.rules\)\) \{\s*if \(activeRow\.dataset\.haschildren === '1'\) \{\s*"
+                . "showRuleConfig\(activeRow\);\s*\}\s*\}/",
+            $dispatch
+        );
+        $this->assertSame(1, substr_count($source, 'showRuleConfig(activeRow)'));
+    }
+
+    /**
      * The code of a module under amd/src/central, without its comments.
      *
      * @param string $module The module name, without the extension.

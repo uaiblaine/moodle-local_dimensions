@@ -122,9 +122,9 @@ The single most important task in this plan. This defect class has now shipped *
 
 ## Task 9 — Record the deferral with its trigger
 
-- [ ] Note in `CLAUDE.md` that the fleet's per-Moodle-version branch plan is deferred for this plugin until 5.3 work starts, and that the mismatch with `aiplacement_dimensions` (`[501, 503]` against `[405, 502]`) is a deliberate consequence of the AI API's 5.1 floor, to be resolved when the 5.3 branch is cut.
-- [ ] Do **not** register a `$CFG->branch` body class unless Task 2 proves it necessary. Installing an unused version-scoping mechanism invites version-conditional CSS to spread before any rule requires it.
-- [ ] Record the four conditions that reopen the branch decision: 5.3 LTS work starting (2026-10-05); a divergence that cannot be written once in the plugin's **own** markup; Moodle 6.0 removing `bs4-compat.scss` while `405` is still supported; the polyfill block passing ~150 lines or needing a version scope.
+- [x] Note in `CLAUDE.md` that the fleet's per-Moodle-version branch plan is deferred for this plugin until 5.3 work starts, and that the mismatch with `aiplacement_dimensions` (`[501, 503]` against `[405, 502]`) is a deliberate consequence of the AI API's 5.1 floor, to be resolved when the 5.3 branch is cut.
+- [x] Do **not** register a `$CFG->branch` body class unless Task 2 proves it necessary. (Task 2 proved it: `classes/local/bootstrap.php` gates the polyfill, see its docblock.) Installing an unused version-scoping mechanism invites version-conditional CSS to spread before any rule requires it.
+- [x] Record the four conditions that reopen the branch decision (recorded in `CLAUDE.md`, "Git / version.php", 2026-09-26; the fourth already holds): 5.3 LTS work starting (2026-10-05); a divergence that cannot be written once in the plugin's **own** markup; Moodle 6.0 removing `bs4-compat.scss` while `405` is still supported; the polyfill block passing ~150 lines or needing a version scope.
 
 ## Already done (2026-08-06)
 
