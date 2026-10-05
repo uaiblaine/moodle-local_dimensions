@@ -513,8 +513,7 @@ Outside the plan the enrolment-filter cascade skips the template (competency -> 
 accordion does (`get_competency_courses`): the course list's enrolment filter, section progress,
 restrictions, completion and card shape are the owner's; whether a card opens, its lock date, enrol and
 pending state are the viewer's (`calculator::get_course_section_progress($courseid, $ownerid)`,
-`calculator::is_locked_for_viewer()`: `is_locked()` on the learner's own card, the viewer's active
-enrolment on anyone else's). `read_plan()` accepts `planviewdraft` alone on a draft plan, which grants
+`calculator::is_locked_for_viewer()`: the viewer's active enrolment, whatever its role, on every card). `read_plan()` accepts `planviewdraft` alone on a draft plan, which grants
 nothing about the learner, so `view-competency.php` and the accordion's `get_competency_courses` also ask
 `plan_access::require_owner_readable()` (`user_competency::can_read_user()`, what
 `api::get_plan_competency()` asks) before describing the owner; `get_competency_rule_data` asks the same

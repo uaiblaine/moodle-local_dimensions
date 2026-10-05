@@ -406,4 +406,80 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
         $this->assertFalse(calculator::current_user_has_pending_application((int) $course->id));
         $this->assertTrue(is_enrolled(\core\context\course::instance($course->id), $applicant, '', true));
     }
+
+    /**
+     * A lodged application survives its instance or its plugin being switched off, and only a live one does.
+     *
+     * The rows are the plugin's own queue: not active, and no period or one that has not ended. Every
+     * switched-off case is paired with the lapsed row and the user with no row, which stay not pending,
+     * so the answer comes from the application and not from the switch.
+     *
+     * @return void
+     */
+    public function test_a_lodged_application_stays_pending_when_apply_is_switched_off(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $plugin = $this->require_apply_plugin();
+        $course = $this->getDataGenerator()->create_course();
+        $instance = $this->add_apply_instance($plugin, $course);
+
+        $applicant = $this->getDataGenerator()->create_user();
+        $plugin->enrol_user($instance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
+        $lapsed = $this->getDataGenerator()->create_user();
+        $plugin->enrol_user($instance, (int) $lapsed->id, null, time() - (2 * WEEKSECS), time() - WEEKSECS, ENROL_USER_SUSPENDED);
+        $stranger = $this->getDataGenerator()->create_user();
+        $courseid = (int) $course->id;
+
+        // Instance switched off, plugin still enabled.
+        $plugin->update_status($instance, ENROL_INSTANCE_DISABLED);
+        $this->assertTrue(calculator::has_pending_application($courseid, (int) $applicant->id));
+        $this->assertFalse(calculator::has_pending_application($courseid, (int) $lapsed->id));
+        $this->assertFalse(calculator::has_pending_application($courseid, (int) $stranger->id));
+        $this->setUser($stranger);
+        $this->assertFalse(calculator::current_user_can_enrol($courseid));
+
+        // Plugin switched off as well.
+        $enabled = enrol_get_plugins(true);
+        unset($enabled['apply']);
+        set_config('enrol_plugins_enabled', implode(',', array_keys($enabled)));
+        $this->assertTrue(calculator::has_pending_application($courseid, (int) $applicant->id));
+        $this->assertFalse(calculator::has_pending_application($courseid, (int) $lapsed->id));
+        $this->assertFalse(calculator::has_pending_application($courseid, (int) $stranger->id));
+
+        // The row is on an apply instance of this course, so the answer is not about another course.
+        $other = $this->getDataGenerator()->create_course();
+        $this->assertFalse(calculator::has_pending_application((int) $other->id, (int) $applicant->id));
+        $this->assertTrue($DB->record_exists('user_enrolments', ['enrolid' => $instance->id, 'userid' => $applicant->id]));
+    }
+
+    /**
+     * A card for a learner whose application is lodged shows it as pending with no route, while apply is off.
+     *
+     * @return void
+     */
+    public function test_the_card_of_a_lodged_application_is_pending_with_no_route_when_apply_is_off(): void {
+        $this->resetAfterTest();
+        $plugin = $this->require_apply_plugin();
+        $course = $this->getDataGenerator()->create_course();
+        $instance = $this->add_apply_instance($plugin, $course);
+        $applicant = $this->getDataGenerator()->create_user();
+        $plugin->enrol_user($instance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
+        $this->setUser($applicant);
+
+        // Control: with apply on, the card is locked and pending, and offers no route to somebody who applied.
+        $row = calculator::get_course_section_progress((int) $course->id);
+        $this->assertTrue($row['locked']);
+        $this->assertTrue($row['is_pending']);
+        $this->assertFalse($row['can_self_enrol']);
+
+        $enabled = enrol_get_plugins(true);
+        unset($enabled['apply']);
+        set_config('enrol_plugins_enabled', implode(',', array_keys($enabled)));
+
+        $row = calculator::get_course_section_progress((int) $course->id);
+        $this->assertTrue($row['locked']);
+        $this->assertTrue($row['is_pending']);
+        $this->assertFalse($row['can_self_enrol']);
+    }
 }

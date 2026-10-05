@@ -65,7 +65,7 @@ final class tracker_cards_owner_test extends \advanced_testcase {
         $learnerid = (int) $f['learner']->id;
 
         // Preconditions: the teacher's own answer to each owner-side question differs from the learner's.
-        $this->assertTrue(calculator::is_locked(get_course($f['alpha']), $teacherid));
+        $this->assertFalse(calculator::is_locked(get_course($f['alpha']), $teacherid));
         $alphamodinfo = get_fast_modinfo($f['alpha'], $teacherid);
         $this->assertTrue($alphamodinfo->get_section_info(2)->uservisible);
         $this->assertFalse(get_fast_modinfo($f['alpha'], $learnerid)->get_section_info(2)->uservisible);
@@ -129,8 +129,9 @@ final class tracker_cards_owner_test extends \advanced_testcase {
     /**
      * Without a plan the progress service still describes its caller, on the same fixture.
      *
-     * The teacher holds no student role, so is_locked() locks every course of theirs: no progress and
-     * the timeline shape, where the call with the plan above opens Alpha and Delta on the learner's data.
+     * The teacher opens Alpha and Delta either way. Without the plan the numbers behind the cards are
+     * the teacher's own, who has completed nothing and ignores both restrictions, where the call with
+     * the plan above shows the learner's.
      *
      * @return void
      */
@@ -140,18 +141,23 @@ final class tracker_cards_owner_test extends \advanced_testcase {
         $this->setUser($f['teacher']);
         $rows = $this->rows(self::PROGRESS, $f['courseids']);
 
-        $this->assertTrue($rows[$f['alpha']]['locked']);
+        $this->assertFalse($rows[$f['alpha']]['locked']);
         $this->assertSame(0, $rows[$f['alpha']]['sections'][1]['percentage']);
-        $this->assertFalse($rows[$f['alpha']]['sections'][1]['has_activities']);
-        $this->assertSame('', $rows[$f['alpha']]['sections'][1]['url']);
-        $this->assertTrue($rows[$f['delta']]['locked']);
-        $this->assertSame(constants::CARDMODE_TIMELINE, $rows[$f['delta']]['cardmode']);
-        $this->assertArrayNotHasKey('activity', $rows[$f['delta']]);
+        $this->assertTrue($rows[$f['alpha']]['sections'][1]['has_activities']);
+        $this->assertFalse($rows[$f['alpha']]['sections'][2]['locked'] ?? false);
+        $this->assertFalse($rows[$f['delta']]['locked']);
+        $this->assertSame(constants::CARDMODE_ACTIVITY, $rows[$f['delta']]['cardmode']);
+        $this->assertFalse($rows[$f['delta']]['activity']['completed']);
+        // Charlie starts for the teacher in two weeks and Echo is not theirs: locked on their own terms.
+        $this->assertTrue($rows[$f['charlie']]['locked']);
+        $this->assertTrue($rows[$f['echo']]['locked']);
 
-        // The control: the same caller, with the plan, gets the learner's cards.
+        // The control: the same caller, with the plan, gets the learner's numbers on the same cards.
         $withplan = $this->rows(self::PROGRESS, $f['courseids'], $f['planid'], $f['competencyid']);
         $this->assertFalse($withplan[$f['alpha']]['locked']);
         $this->assertSame(50, $withplan[$f['alpha']]['sections'][1]['percentage']);
+        $this->assertTrue($withplan[$f['alpha']]['sections'][2]['locked']);
+        $this->assertTrue($withplan[$f['delta']]['activity']['completed']);
     }
 
     /**
@@ -177,18 +183,20 @@ final class tracker_cards_owner_test extends \advanced_testcase {
         $this->assertTrue($rows[$f['charlie']]['islocked']);
         $this->assertTrue($rows[$f['echo']]['islocked']);
 
-        // The control: without the plan both flags are the teacher's own, and is_locked() locks them out.
+        // The control: without the plan the completion is the teacher's own, and so is the lock.
         $own = $this->rows(self::STATUS, $f['courseids']);
         $this->assertFalse($own[$f['delta']]['iscompleted']);
-        $this->assertTrue($own[$f['delta']]['islocked']);
-        $this->assertTrue($own[$f['alpha']]['islocked']);
+        $this->assertFalse($own[$f['delta']]['islocked']);
+        $this->assertFalse($own[$f['alpha']]['islocked']);
+        $this->assertTrue($own[$f['charlie']]['islocked']);
+        $this->assertTrue($own[$f['echo']]['islocked']);
     }
 
     /**
-     * On their own plan the learner gets exactly the cards they get without the plan: is_locked() decides.
+     * On their own plan the learner gets exactly the cards they get without the plan.
      *
-     * India enrols the learner under a non-student role, which is_locked() locks and an enrolment
-     * check alone would open.
+     * India enrols the learner under a non-student role: an active enrolment opens the card whatever
+     * the role, as on the plan accordion.
      *
      * @return void
      */
@@ -202,7 +210,7 @@ final class tracker_cards_owner_test extends \advanced_testcase {
         $without = $this->rows(self::PROGRESS, $courseids);
 
         $this->assertSame($without, $withplan);
-        $this->assertTrue($withplan[$f['india']]['locked']);
+        $this->assertFalse($withplan[$f['india']]['locked']);
         $this->assertFalse($withplan[$f['alpha']]['locked']);
         $this->assertSame(50, $withplan[$f['alpha']]['sections'][1]['percentage']);
         $this->assertFalse($withplan[$f['charlie']]['locked']);
@@ -211,7 +219,7 @@ final class tracker_cards_owner_test extends \advanced_testcase {
 
         $statuswithplan = $this->rows(self::STATUS, $courseids, $f['planid'], $f['competencyid']);
         $this->assertSame($this->rows(self::STATUS, $courseids), $statuswithplan);
-        $this->assertTrue($statuswithplan[$f['india']]['islocked']);
+        $this->assertFalse($statuswithplan[$f['india']]['islocked']);
         $this->assertFalse($statuswithplan[$f['alpha']]['islocked']);
         $this->assertTrue($statuswithplan[$f['delta']]['iscompleted']);
     }
@@ -263,7 +271,7 @@ final class tracker_cards_owner_test extends \advanced_testcase {
      * The tracker page a teacher opens from a learner's plan lists the learner's courses, locks only what
      * the teacher cannot open, and hands the plan and competency to the card script.
      *
-     * The learner's own page is the control: the same course list, locked by is_locked().
+     * The learner's own page is the control: the same course list, locked by their own enrolments.
      *
      * @return void
      */
@@ -293,7 +301,7 @@ final class tracker_cards_owner_test extends \advanced_testcase {
         $this->assertFalse($own[$f['alpha']]);
         $this->assertFalse($own[$f['charlie']]);
         $this->assertFalse($own[$f['echo']]);
-        $this->assertTrue($own[$f['india']]);
+        $this->assertFalse($own[$f['india']]);
     }
 
     /**
