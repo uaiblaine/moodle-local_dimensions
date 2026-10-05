@@ -42,6 +42,18 @@ Decided by the owner after the comment audit's findings were re-checked against 
 
 ### Fixed
 
+- A course card no longer announces "Enrolment opens <date>" for an enrolment that cannot open: a
+  suspended enrolment, or one on a disabled enrolment method, gives no start date, and neither does a
+  period that ends before it starts. The card shows the generic locked state with the course start date.
+- An enrol_apply application stays shown as "Application pending" when the enrol_apply plugin or its
+  instance has been switched off, as long as the plugin's own queue still counts it. No way in is
+  offered while nobody can decide it.
+- The tracker card of a user's own course no longer locks an active enrolment that carries no student
+  role (a teacher, or an enrolment method that assigns no role), so it is never offered "Enrol to
+  start" while enrolled. It asks only whether the user is actively enrolled, as the plan accordion does.
+- The tracker card of a course the viewer may not be told about no longer shows an empty "Opens" date
+  chip, nor a "Learn more" button that links to nowhere, but the plain locked message.
+
 The findings the 2026-09-23 comment audit reported, re-checked on 2026-09-25 against the code other sessions had
 changed since, and fixed where they still held.
 

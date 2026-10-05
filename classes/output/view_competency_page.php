@@ -141,8 +141,8 @@ class view_competency_page implements renderable, templatable {
             : [];
 
         foreach ($this->courses as $course) {
-            /* Whether the viewer can open the course from the card, as the card services answer it: on the
-               learner's own page is_locked(), on a reviewer's whether the reviewer is enrolled. */
+            /* Whether the viewer can open the course from the card, as the card services answer it: whether
+               the viewer is actively enrolled, on the learner's own page and on a reviewer's alike. */
             $locked = calculator::is_locked_for_viewer($course, $this->userid, $this->viewerid);
             $cid = (int) $course->id;
             /* Course-area values for client-side chip filtering, keyed "course:<shortname>" to

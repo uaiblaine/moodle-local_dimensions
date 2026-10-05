@@ -1,1 +1,1 @@
-s/            \}\n        \}\n\n        return true;\n    \}\n\n    \/\*\*\n     \* Gets the most relevant availability date/            }\n        }\n\n        return false;\n    }\n\n    \/**\n     * Gets the most relevant availability date/;
+s/return !is_enrolled\(\\core\\context\\course::instance\(\$course->id\), \$userid, '', true\);/return false;/;
