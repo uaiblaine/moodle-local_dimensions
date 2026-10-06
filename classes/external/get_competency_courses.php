@@ -170,9 +170,8 @@ class get_competency_courses extends external_api {
                Moodle 4.5 (MDL-60912); see calculator::course_completion_percentage(). */
             $progress = calculator::course_completion_percentage((int) $course->id, $ownerid);
 
-            /* What the viewer can do with this course. Not calculator::is_locked(), which also
-               locks anyone enrolled without the student role, such as staff reviewing a plan;
-               the question here is whether this viewer can open the course. */
+            /* What the viewer can do with this course: it opens when the viewer is actively enrolled,
+               whatever the role, the question calculator::is_locked() asks of the tracker's cards. */
             $access = self::ACCESS_OPEN;
             $lockdate = 0;
             $isenrolstart = false;
@@ -247,9 +246,8 @@ class get_competency_courses extends external_api {
      * the restriction. Modules are read from modinfo rather than from the link rows, so a
      * link that outlived its module simply never matches.
      *
-     * The course-level lock is not applied: the plan accordion has no locked overlay to explain
-     * it, and calculator::is_locked() would strip the links from staff whose course card still
-     * opens.
+     * The viewer's course-level lock is not applied: the plan accordion has no locked overlay to
+     * explain it, and the card's own access state (renderCourseState) already carries it.
      *
      * @param int $competencyid The competency id.
      * @param array $courseids Ids of the courses that survived the enrolment filter.

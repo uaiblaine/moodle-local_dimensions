@@ -1,1 +1,1 @@
-s/return !is_enrolled\(\\core\\context\\course::instance\(\$course->id\), \$viewerid, '', true\);/return !is_enrolled(\\core\\context\\course::instance(\$course->id), \$ownerid, '', true);/;
+s/return self::is_locked\(\$course, \$viewerid\);/return self::is_locked(\$course, \$ownerid);/;

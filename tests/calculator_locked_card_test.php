@@ -29,14 +29,32 @@ namespace local_dimensions;
  */
 final class calculator_locked_card_test extends \advanced_testcase {
     /**
-     * A learner enrolled under a site's own student-archetype role is not locked out.
+     * Enrol a user on the course's manual instance with no role, as an instance that assigns none does.
      *
-     * The shortname is the site's to choose, so a learner role renamed or created under another
-     * one must open the course just like core's "student".
+     * The data generator falls back to the instance's own role when it is given none, so it cannot
+     * make this enrolment.
+     *
+     * @param \stdClass $course The course.
+     * @param \stdClass $user The user.
+     * @return void
+     */
+    private function enrol_without_role(\stdClass $course, \stdClass $user): void {
+        global $DB;
+
+        $instance = $DB->get_record('enrol', ['courseid' => $course->id, 'enrol' => 'manual'], '*', MUST_EXIST);
+        enrol_get_plugin('manual')->enrol_user($instance, (int) $user->id, 0);
+    }
+
+    /**
+     * An active enrolment opens the course whatever role it carries, or none.
+     *
+     * The question is whether the user can open the course, as the plan accordion asks it: a learner
+     * under a role the site renamed, a teacher, and a user enrolled through an instance that assigns
+     * no role all open it. The controls are the users an active enrolment is meant to exclude.
      *
      * @return void
      */
-    public function test_a_custom_learner_role_opens_the_course(): void {
+    public function test_an_active_enrolment_opens_the_course_whatever_its_role(): void {
         $this->resetAfterTest();
         $generator = $this->getDataGenerator();
         $course = $generator->create_course();
@@ -44,35 +62,78 @@ final class calculator_locked_card_test extends \advanced_testcase {
         $learnerroleid = create_role('Aluno', 'aluno', '', 'student');
         $learner = $generator->create_user();
         $generator->enrol_user($learner->id, $course->id, $learnerroleid);
-        $this->assertFalse(calculator::is_locked($course, (int) $learner->id));
-
-        // Controls: an enrolled teacher holds no learner role, and a stranger is not enrolled.
         $teacher = $generator->create_user();
         $generator->enrol_user($teacher->id, $course->id, 'editingteacher');
-        $this->assertTrue(calculator::is_locked($course, (int) $teacher->id));
+        $roleless = $generator->create_user();
+        $this->enrol_without_role($course, $roleless);
+        // Precondition: the third enrolment carries no role at all.
+        $this->assertSame([], get_user_roles(\core\context\course::instance($course->id), $roleless->id));
+
+        foreach ([$learner, $teacher, $roleless] as $user) {
+            $this->assertFalse(calculator::is_locked($course, (int) $user->id), "User {$user->id} should open the course");
+            $this->assertFalse(calculator::is_locked_for_viewer($course, (int) $user->id, (int) $user->id));
+        }
+
+        // Controls: somebody never enrolled, a suspended enrolment and one that has not started are locked.
         $stranger = $generator->create_user();
         $this->assertTrue(calculator::is_locked($course, (int) $stranger->id));
+        $suspended = $generator->create_user();
+        $generator->enrol_user($suspended->id, $course->id, 'student', 'manual', 0, 0, ENROL_USER_SUSPENDED);
+        $this->assertTrue(calculator::is_locked($course, (int) $suspended->id));
+        $scheduled = $generator->create_user();
+        $generator->enrol_user($scheduled->id, $course->id, 'student', 'manual', time() + WEEKSECS);
+        $this->assertTrue(calculator::is_locked($course, (int) $scheduled->id));
     }
 
     /**
-     * The role named "student" still opens the course on a site that cleared its archetype.
+     * The lock the card carries is the viewer's enrolment, whoever the card describes.
      *
      * @return void
      */
-    public function test_the_student_shortname_counts_without_its_archetype(): void {
-        global $DB;
+    public function test_the_lock_for_a_viewer_is_the_viewers_enrolment_not_the_owners(): void {
         $this->resetAfterTest();
         $generator = $this->getDataGenerator();
         $course = $generator->create_course();
-        $DB->set_field('role', 'archetype', '', ['shortname' => 'student']);
-        $studentroleid = (int) $DB->get_field('role', 'id', ['shortname' => 'student'], MUST_EXIST);
-        // Precondition: the archetype no longer names the role, so only its shortname can.
-        $this->assertArrayNotHasKey($studentroleid, get_archetype_roles('student'));
+        $enrolled = $generator->create_user();
+        $outsider = $generator->create_user();
+        $generator->enrol_user($enrolled->id, $course->id, 'student');
 
-        $learner = $generator->create_user();
-        $generator->enrol_user($learner->id, $course->id, 'student');
+        $this->assertFalse(calculator::is_locked_for_viewer($course, (int) $outsider->id, (int) $enrolled->id));
+        $this->assertTrue(calculator::is_locked_for_viewer($course, (int) $enrolled->id, (int) $outsider->id));
+    }
 
-        $this->assertFalse(calculator::is_locked($course, (int) $learner->id));
+    /**
+     * A user enrolled in the course is never offered "Enrol to start", even with a way in open.
+     *
+     * The user's enrolment carries no role. The course's self instance is open, so a locked card
+     * would have offered it; a user who is not enrolled in the same course is offered it, which is
+     * what makes the negative below mean something.
+     *
+     * @return void
+     */
+    public function test_an_enrolled_user_is_not_offered_enrol_to_start(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator();
+        $course = $generator->create_course();
+        $self = $DB->get_record('enrol', ['courseid' => $course->id, 'enrol' => 'self'], '*', MUST_EXIST);
+        enrol_get_plugin('self')->update_status($self, ENROL_INSTANCE_ENABLED);
+
+        $roleless = $generator->create_user();
+        $this->enrol_without_role($course, $roleless);
+        $stranger = $generator->create_user();
+
+        $this->setUser($stranger);
+        $row = calculator::get_course_section_progress((int) $course->id);
+        $this->assertTrue($row['locked']);
+        $this->assertTrue($row['can_self_enrol']);
+
+        $this->setUser($roleless);
+        $row = calculator::get_course_section_progress((int) $course->id);
+        $this->assertFalse($row['locked']);
+        $this->assertFalse($row['can_self_enrol']);
+        $this->assertFalse($row['is_pending']);
     }
 
     /**
