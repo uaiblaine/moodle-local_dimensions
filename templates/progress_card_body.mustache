@@ -26,7 +26,7 @@
     * enabled (bool) - Whether completion tracking is enabled
     * iscompleted (bool) - Whether the course itself is complete, from the batch status call
     * locked (bool) - Whether the course is locked for the user
-    * formatted_start_date (string) - When the course becomes available
+    * formatted_start_date (string) - When the course becomes available, empty when it names no date (no date chip then)
     * is_enrolment_start (bool) - Whether the date is an enrolment start date
     * can_self_enrol (bool) - Whether the learner may join the locked course right now
     * is_pending (bool) - Whether the learner has applied to join and is awaiting a decision
@@ -36,7 +36,7 @@
     * hascontinue (bool) - Whether a section is under way, so the Continue shortcut renders
     * continueurl (string) - URL of the section the learner left off at
     * continuename (string) - Name of that section, for the accessible label
-    * courseurl (string) - URL to the course page (for "Learn More" button)
+    * courseurl (string) - URL to the course page (for "Learn More" button), empty for a course the viewer may not be told about (plain text then)
     * learnmorebuttoncolor (string) - Hex color for the "Learn More" button background
     * cardmode (string) - Which shape the card takes: "activity", "section" or "timeline"
     * activity (object) - The single trackable activity {cmid, name, url, completed,
@@ -127,24 +127,33 @@
             <div class="local-dimensions-enrol-note">{{#str}}application_pending_note, local_dimensions{{/str}}</div>
         {{/is_pending}}
         {{^is_pending}}
-            {{! Message: "Learn More" button or "Locked Content" text }}
+            {{! Message: "Learn More" button or "Locked Content" text. A card with no course URL (a course
+                the viewer may not be told about) has nowhere to send the button, so it gets the text }}
             {{#islearnmore}}
-                <a href="{{courseurl}}" class="local-dimensions-learnmore-btn" style="background: {{learnmorebuttoncolor}};">{{#str}}learn_more, local_dimensions{{/str}}</a>
+                {{#courseurl}}
+                    <a href="{{courseurl}}" class="local-dimensions-learnmore-btn" style="background: {{learnmorebuttoncolor}};">{{#str}}learn_more, local_dimensions{{/str}}</a>
+                {{/courseurl}}
+                {{^courseurl}}
+                    <div class="local-dimensions-locked-message">{{#str}}locked_content, local_dimensions{{/str}}</div>
+                {{/courseurl}}
             {{/islearnmore}}
             {{^islearnmore}}
                 <div class="local-dimensions-locked-message">{{#str}}locked_content, local_dimensions{{/str}}</div>
             {{/islearnmore}}
-            {{! Date: the showlockeddate setting, already narrowed by the caller to drop a past date in learn-more mode }}
+            {{! Date: the showlockeddate setting, already narrowed by the caller to drop a past date in learn-more
+                mode, and never an empty chip when the row names no date }}
             {{#showlockeddate}}
-                <div class="local-dimensions-locked-date">
-                    <i class="fa fa-calendar" aria-hidden="true"></i>
-                    {{#is_enrolment_start}}
-                        {{#str}}enrolment_starts, local_dimensions, {{formatted_start_date}}{{/str}}
-                    {{/is_enrolment_start}}
-                    {{^is_enrolment_start}}
-                        {{#str}}available_at, local_dimensions, {{formatted_start_date}}{{/str}}
-                    {{/is_enrolment_start}}
-                </div>
+                {{#formatted_start_date}}
+                    <div class="local-dimensions-locked-date">
+                        <i class="fa fa-calendar" aria-hidden="true"></i>
+                        {{#is_enrolment_start}}
+                            {{#str}}enrolment_starts, local_dimensions, {{formatted_start_date}}{{/str}}
+                        {{/is_enrolment_start}}
+                        {{^is_enrolment_start}}
+                            {{#str}}available_at, local_dimensions, {{formatted_start_date}}{{/str}}
+                        {{/is_enrolment_start}}
+                    </div>
+                {{/formatted_start_date}}
             {{/showlockeddate}}
         {{/is_pending}}
         {{/can_self_enrol}}

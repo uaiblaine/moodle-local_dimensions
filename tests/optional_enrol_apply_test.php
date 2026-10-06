@@ -97,16 +97,17 @@ final class optional_enrol_apply_test extends \advanced_testcase {
     }
 
     /**
-     * With enrol_apply switched off site-wide, the predicate answers no and does not fall over.
+     * With enrol_apply switched off site-wide, no route is offered but a lodged application is still shown.
      *
-     * This is the closest observable stand-in for "the plugin was never installed": both leave
-     * enrol_get_instances($courseid, true) with nothing of that type to return. The control -
-     * the same course and instance, checked first with the plugin enabled - stops the test
-     * passing vacuously.
+     * Switching the plugin off leaves enrol_get_instances($courseid, true) with nothing of that type,
+     * which is also what a site that never installed it looks like, so no way in is offered. The
+     * application itself is a row the plugin's own queue still counts, so the learner who lodged it
+     * keeps being told it awaits a decision. The control - the same course and instance, checked first
+     * with the plugin enabled - stops the test passing vacuously.
      *
      * @return void
      */
-    public function test_the_predicate_is_inert_when_enrol_apply_is_disabled(): void {
+    public function test_a_disabled_enrol_apply_offers_no_route_but_keeps_the_application(): void {
         $plugin = enrol_get_plugin('apply');
         if (!$plugin || !is_callable([$plugin, 'allow_apply'])) {
             $this->markTestSkipped('enrol_apply is not installed on this site.');
@@ -136,13 +137,15 @@ final class optional_enrol_apply_test extends \advanced_testcase {
         $this->setUser($applicant);
         $this->assertTrue(calculator::current_user_has_pending_application((int) $course->id));
 
-        // Now take the plugin away, which is what a site that never installed it looks like.
+        // Now take the plugin away.
         unset($enabled['apply']);
         set_config('enrol_plugins_enabled', implode(',', array_keys($enabled)));
 
-        $this->assertFalse(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertTrue(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertFalse(calculator::current_user_can_enrol((int) $course->id));
         $this->setUser($this->getDataGenerator()->create_user());
         $this->assertFalse(calculator::current_user_can_enrol((int) $course->id));
+        $this->assertFalse(calculator::current_user_has_pending_application((int) $course->id));
     }
 
     /**

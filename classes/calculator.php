@@ -41,9 +41,8 @@ class calculator {
      * course's sections, their restrictions, the progress, the completion and the card shape are
      * that learner's. The lock and what a click on a locked card offers (its date, enrolment start,
      * enrol, pending) are the viewer's, the current user, because they decide what the viewer can
-     * open: on a learner's own card the lock is is_locked(), on anyone else's it is whether the
-     * viewer is actively enrolled ({@see self::is_locked_for_viewer()}), as the plan accordion
-     * decides (get_competency_courses). A card the viewer cannot open keeps the owner's
+     * open: whether the viewer is actively enrolled ({@see self::is_locked_for_viewer()}), as the
+     * plan accordion decides (get_competency_courses). A card the viewer cannot open keeps the owner's
      * percentages in the timeline shape, with its section links blanked.
      *
      * Subsection contents count towards their parent section. The caller must first check
@@ -740,11 +739,9 @@ class calculator {
     /**
      * Whether a tracker course card is locked for its viewer, on a card that describes $ownerid.
      *
-     * On the learner's own card ($ownerid is the viewer) this is is_locked(), unchanged. On a card
-     * describing someone else, as when staff review a learner's plan, it is whether the viewer can
-     * open the course: actively enrolled, whatever the role, the rule the plan accordion applies
-     * (get_competency_courses). is_locked() there would lock every reviewer who holds no student role
-     * out of a course they teach.
+     * The lock is what the viewer can open, so it does not depend on whose plan the card describes:
+     * {@see self::is_locked()} asked of the viewer. The owner is accepted so every caller states which
+     * learner the card is about, and so a reviewer's lock cannot silently become the learner's.
      *
      * @param \stdClass $course A course record with at least an id.
      * @param int $ownerid The learner the card describes, the plan owner.
@@ -752,42 +749,23 @@ class calculator {
      * @return bool True when the viewer cannot open the course from the card.
      */
     public static function is_locked_for_viewer(\stdClass $course, int $ownerid, int $viewerid): bool {
-        if ($ownerid === $viewerid) {
-            return self::is_locked($course, $viewerid);
-        }
-
-        return !is_enrolled(\core\context\course::instance($course->id), $viewerid, '', true);
+        return self::is_locked($course, $viewerid);
     }
 
     /**
      * Whether the course is locked for the user.
      *
-     * Unlocked only when the user is actively enrolled and holds a learner role in the course or
-     * a parent context: any role with the student archetype, whatever its shortname, or the role
-     * whose shortname is 'student' on a site that cleared that role's archetype.
+     * Locked unless the user is actively enrolled, whatever role the enrolment carries: this is the
+     * question the plan accordion asks (get_competency_courses). Asking for a learner role as well
+     * locked an enrolled teacher, or a user enrolled through an instance that assigns no role, out
+     * of their own course and then offered them "Enrol to start".
      *
      * @param stdClass $course Course object
      * @param int $userid User ID
      * @return bool True if locked
      */
     public static function is_locked($course, $userid) {
-        $coursecontext = \core\context\course::instance($course->id);
-
-        // 1. Check active enrollment.
-        if (!is_enrolled($coursecontext, $userid, '', true)) {
-            return true;
-        }
-
-        // 2. Check for a learner role.
-        $studentroleids = array_map('intval', array_keys(get_archetype_roles('student')));
-        $roles = get_user_roles($coursecontext, $userid);
-        foreach ($roles as $role) {
-            if (in_array((int) $role->roleid, $studentroleids, true) || $role->shortname === 'student') {
-                return false;
-            }
-        }
-
-        return true;
+        return !is_enrolled(\core\context\course::instance($course->id), $userid, '', true);
     }
 
     /**
@@ -811,7 +789,10 @@ class calculator {
     /**
      * Gets the user's enrollment start date if they have a future enrollment.
      *
-     * Checks user_enrolments joined with enrol for a record with timestart > now.
+     * Only an enrolment that will open on its date counts: an active row on an enabled instance whose
+     * period has not ended by the time it starts. A suspended row, or one on a disabled instance, never
+     * becomes active by itself, so it gives no date: core's is_enrolled() would not count it either.
+     * The earliest of the rows that qualify wins.
      *
      * @param \stdClass $course Course object
      * @param int $userid User ID
@@ -824,13 +805,18 @@ class calculator {
                   FROM {user_enrolments} ue
                   JOIN {enrol} e ON e.id = ue.enrolid
                  WHERE e.courseid = :courseid
+                   AND e.status = :enabled
                    AND ue.userid = :userid
+                   AND ue.status = :active
                    AND ue.timestart > :now
+                   AND (ue.timeend = 0 OR ue.timeend > ue.timestart)
               ORDER BY ue.timestart ASC";
 
         $record = $DB->get_record_sql($sql, [
             'courseid' => $course->id,
+            'enabled' => ENROL_INSTANCE_ENABLED,
             'userid' => $userid,
+            'active' => ENROL_USER_ACTIVE,
             'now' => time(),
         ], IGNORE_MULTIPLE);
 
@@ -981,8 +967,10 @@ class calculator {
      * current_user_can_enrol() will not offer a second application. Without this state the card
      * would show the same padlock as for somebody who was never eligible.
      *
-     * Only apply instances are read: a suspended row on a manual or self instance is an
-     * administrative suspension, not an application. The enrolment row is matched rather than
+     * Only apply instances are read, whether or not the instance or the plugin is enabled: the
+     * application stays lodged, and the card keeps telling the learner it awaits a decision, though
+     * no route is offered while nobody can decide it. A suspended row on a manual or self instance is
+     * an administrative suspension, not an application. The enrolment row is matched rather than
      * enrol_apply_applicationinfo, which is deleted as soon as a decision is taken (approval
      * makes the row active; cancellation unenrols the user).
      *
@@ -1018,27 +1006,27 @@ class calculator {
     public static function has_pending_application(int $courseid, int $userid): bool {
         global $DB;
 
-        foreach (enrol_get_instances($courseid, true) as $instance) {
-            if ($instance->enrol !== 'apply') {
-                continue;
-            }
-            $pending = $DB->record_exists_select(
-                'user_enrolments',
-                'userid = :userid AND enrolid = :enrolid AND status <> :active
-                     AND (timeend = 0 OR timeend > :now)',
-                [
-                    'userid' => $userid,
-                    'enrolid' => $instance->id,
-                    'active' => ENROL_USER_ACTIVE,
-                    'now' => time(),
-                ]
-            );
-            if ($pending) {
-                return true;
-            }
-        }
-
-        return false;
+        /* Read straight from the rows, with no enabled-instance or enabled-plugin filter, as the
+           enrol_apply queue does: an application lodged is still awaiting a decision when the plugin
+           or the instance has since been switched off. Whether a route is offered is a separate
+           question, which current_user_can_enrol() answers from enabled instances only. */
+        return $DB->record_exists_sql(
+            'SELECT 1
+               FROM {user_enrolments} ue
+               JOIN {enrol} e ON e.id = ue.enrolid
+              WHERE e.courseid = :courseid
+                AND e.enrol = :apply
+                AND ue.userid = :userid
+                AND ue.status <> :active
+                AND (ue.timeend = 0 OR ue.timeend > :now)',
+            [
+                'courseid' => $courseid,
+                'apply' => 'apply',
+                'userid' => $userid,
+                'active' => ENROL_USER_ACTIVE,
+                'now' => time(),
+            ]
+        );
     }
 
     /**
