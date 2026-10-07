@@ -51,13 +51,6 @@ final class status_icons_test extends \basic_testcase {
             'glyph' => '--local-dimensions-surface',
             'label' => false,
         ],
-        'local-dimensions-icon-lock' => [
-            'base' => 'local-dimensions-icon',
-            'mask' => 'status/lock',
-            'paint' => '--local-dimensions-ink-muted',
-            'glyph' => null,
-            'label' => false,
-        ],
         'local-dimensions-icon-lock-sm' => [
             'base' => 'local-dimensions-icon',
             'mask' => 'status/lock',

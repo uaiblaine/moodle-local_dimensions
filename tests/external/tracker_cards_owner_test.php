@@ -105,14 +105,13 @@ final class tracker_cards_owner_test extends \advanced_testcase {
             $this->assertSame('', $section['url']);
             $this->assertFalse($section['locked']);
         }
-        $this->assertSame(
-            userdate($f['teacherstart'], get_string('strftimedatefullshort', 'langconfig')),
-            $charlie['formatted_start_date']
-        );
-        $this->assertTrue($charlie['is_enrolment_start']);
+        $teacherdate = userdate($f['teacherstart'], get_string('strftimedatefullshort', 'langconfig'));
+        $this->assertSame($teacherdate, $charlie['formatted_start_date']);
+        $this->assertSame('scheduled', $charlie['state']['key']);
+        $this->assertSame(get_string('state_scheduled', 'local_dimensions', $teacherdate), $charlie['state']['label']);
         $this->assertTrue($charlie['is_future_date']);
-        $this->assertFalse($charlie['can_self_enrol']);
-        $this->assertFalse($charlie['is_pending']);
+        $this->assertSame('', $charlie['state']['actionurl']);
+        $this->assertSame('', $charlie['state']['routeurl']);
 
         // Delta: the learner's single activity, with the learner's completion.
         $this->assertFalse($rows[$f['delta']]['locked']);
@@ -122,8 +121,7 @@ final class tracker_cards_owner_test extends \advanced_testcase {
 
         // Echo: the teacher is not enrolled but may enrol themselves, whatever the learner's enrolment.
         $this->assertTrue($rows[$f['echo']]['locked']);
-        $this->assertTrue($rows[$f['echo']]['can_self_enrol']);
-        $this->assertFalse($rows[$f['echo']]['is_pending']);
+        $this->assertSame('open', $rows[$f['echo']]['state']['key']);
     }
 
     /**
@@ -263,8 +261,8 @@ final class tracker_cards_owner_test extends \advanced_testcase {
         $row = $this->rows(self::PROGRESS, [(int) $foxtrot->id], $f['planid'], $f['competencyid'])[(int) $foxtrot->id];
 
         $this->assertTrue($row['locked']);
-        $this->assertFalse($row['can_self_enrol']);
-        $this->assertTrue($row['is_pending']);
+        $this->assertSame('pending', $row['state']['key']);
+        $this->assertSame('', $row['state']['routeurl']);
     }
 
     /**

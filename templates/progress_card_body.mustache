@@ -17,26 +17,37 @@
 {{!
     @template local_dimensions/progress_card_body
 
-    Progress body of a course card: the lock overlay when the course is locked, then the
-    shape the server chose (cardmode): one activity, one section with its ring, or the
-    section timeline.
+    Progress body of a course card: the lock overlay when the course is locked, the state pill
+    when it is open, then the shape the server chose (cardmode): one activity, one section with
+    its ring, or the section timeline.
+
+    The overlay keeps its frame (the dashed border the card script draws, the 80px disc, the raised
+    message box, the 10px-radius buttons over the blurred timeline) and holds the shared state area
+    of the course cards: the disc in the state's colour family and icon, the pill in the message
+    box, the state's own action, then the route line and, for a card with nothing else to say,
+    the course start date.
 
     Context variables required:
     * courseid (int) - Course ID, used to pair the collapse toggle with its timeline
     * enabled (bool) - Whether completion tracking is enabled
     * iscompleted (bool) - Whether the course itself is complete, from the batch status call
     * locked (bool) - Whether the course is locked for the user
-    * formatted_start_date (string) - When the course becomes available, empty when it names no date (no date chip then)
-    * is_enrolment_start (bool) - Whether the date is an enrolment start date
-    * can_self_enrol (bool) - Whether the learner may join the locked course right now
-    * is_pending (bool) - Whether the learner has applied to join and is awaiting a decision
-    * islearnmore (bool) - Whether to show "Learn More" button instead of "Locked Content"
-    * showlockeddate (bool) - Whether to show the availability date
-    * customicon (string) - CSS class for custom locked icon (empty = the default lock icon)
+    * isenrolled (bool) - Client-derived: the card is open and its state is enrolled, so the pill
+      shows under the header
+    * state (object) - The state area, from the course progress service: key, label, icon, family,
+      actionlabel, actionurl, routelabel, routelinklabel, routeurl (texts plain, empty when absent)
+    * formatted_start_date (string) - The course start date a card in the none state shows, empty
+      when it names no date (no date chip then)
+    * islearnmore (bool) - Client-derived: learn-more mode on a card in the none state, so the
+      "Learn more" button replaces the message box
+    * showlockeddate (bool) - Client-derived: show the start date of a card in the none state
+    * customicon (string) - CSS class of the admin's icon for a card in the none state (empty = the
+      state's own icon)
     * hascontinue (bool) - Whether a section is under way, so the Continue shortcut renders
     * continueurl (string) - URL of the section the learner left off at
     * continuename (string) - Name of that section, for the accessible label
-    * courseurl (string) - URL to the course page (for "Learn More" button), empty for a course the viewer may not be told about (plain text then)
+    * courseurl (string) - URL to the course page (for "Learn More" button), empty for a course the viewer may not be told about
+      (the message box then)
     * learnmorebuttoncolor (string) - Hex color for the "Learn More" button background
     * cardmode (string) - Which shape the card takes: "activity", "section" or "timeline"
     * activity (object) - The single trackable activity {cmid, name, url, completed,
@@ -59,16 +70,25 @@
         "courseid": 42,
         "enabled": true,
         "iscompleted": false,
-        "locked": false,
+        "locked": true,
+        "isenrolled": false,
+        "state": {
+            "key": "pending",
+            "label": "Application under review",
+            "icon": "fa-hourglass-half",
+            "family": "local-dimensions-state-pending",
+            "actionlabel": "View status",
+            "actionurl": "/enrol/index.php?id=42",
+            "routelabel": "You can also enrol now",
+            "routelinklabel": "Enrol now",
+            "routeurl": "/enrol/index.php?id=42"
+        },
         "formatted_start_date": "01/02/2026",
-        "is_enrolment_start": false,
-        "can_self_enrol": false,
-        "is_pending": false,
-        "hascontinue": true,
-        "continueurl": "/course/section.php?id=1",
-        "continuename": "Section 1",
+        "hascontinue": false,
+        "continueurl": "",
+        "continuename": "",
         "islearnmore": false,
-        "showlockeddate": true,
+        "showlockeddate": false,
         "customicon": "",
         "courseurl": "/course/view.php?id=42",
         "cardmode": "timeline",
@@ -82,7 +102,7 @@
                 "name": "Section 1",
                 "percentage": 100,
                 "has_activities": true,
-                "url": "/course/section.php?id=1",
+                "url": "",
                 "is_completed": true,
                 "is_started": false,
                 "locked": false
@@ -92,73 +112,57 @@
 }}
 <div style="position: relative; height: 100%;">
     {{#locked}}
-    <div class="local-dimensions-locked-overlay">
-        {{! Icon: the enter icon when the learner may simply join, the hourglass while an
-            application is being decided, else the custom FA icon or the default lock }}
-        <div class="local-dimensions-locked-icon {{#can_self_enrol}}local-dimensions-locked-icon-enrol{{/can_self_enrol}}{{^can_self_enrol}}{{#is_pending}}local-dimensions-locked-icon-pending{{/is_pending}}{{/can_self_enrol}}">
-            {{#can_self_enrol}}
-                <i class="fa fa-sign-in" aria-hidden="true"></i>
-            {{/can_self_enrol}}
-            {{^can_self_enrol}}
-                {{#is_pending}}
-                    <i class="fa fa-hourglass-half" aria-hidden="true"></i>
-                {{/is_pending}}
-                {{^is_pending}}
-                    {{#customicon}}
-                        <i class="{{customicon}}" aria-hidden="true"></i>
-                    {{/customicon}}
-                    {{^customicon}}
-                        <span class="local-dimensions-icon local-dimensions-icon-lock" aria-hidden="true"></span>
-                    {{/customicon}}
-                {{/is_pending}}
-            {{/can_self_enrol}}
+    <div class="local-dimensions-locked-overlay" data-state="{{state.key}}">
+        {{! The disc: the state's colour family and icon, or the admin's icon on a card that
+            offers nothing }}
+        <div class="local-dimensions-locked-icon {{state.family}}">
+            {{#customicon}}
+                <i class="{{customicon}}" aria-hidden="true"></i>
+            {{/customicon}}
+            {{^customicon}}
+                <i class="fa {{state.icon}}" aria-hidden="true"></i>
+            {{/customicon}}
         </div>
-        {{! An open enrolment makes the card an invitation, so it takes precedence over both the
-            pending and the locked wording, and carries no date }}
-        {{#can_self_enrol}}
-            <a href="{{courseurl}}" class="local-dimensions-enrol-btn"><i class="fa fa-sign-in" aria-hidden="true"></i>{{#str}}enrol_to_start, local_dimensions{{/str}}</a>
-            <div class="local-dimensions-enrol-note">{{#str}}enrolment_open, local_dimensions{{/str}}</div>
-        {{/can_self_enrol}}
-        {{^can_self_enrol}}
-        {{! Applied and waiting: no button (nothing left to do), no lock message (the learner
-            has not been refused) and no date (the answer is a decision, not a date) }}
-        {{#is_pending}}
-            <div class="local-dimensions-locked-message">{{#str}}application_pending, local_dimensions{{/str}}</div>
-            <div class="local-dimensions-enrol-note">{{#str}}application_pending_note, local_dimensions{{/str}}</div>
-        {{/is_pending}}
-        {{^is_pending}}
-            {{! Message: "Learn More" button or "Locked Content" text. A card with no course URL (a course
-                the viewer may not be told about) has nowhere to send the button, so it gets the text }}
-            {{#islearnmore}}
-                {{#courseurl}}
-                    <a href="{{courseurl}}" class="local-dimensions-learnmore-btn" style="background: {{learnmorebuttoncolor}};">{{#str}}learn_more, local_dimensions{{/str}}</a>
-                {{/courseurl}}
-                {{^courseurl}}
-                    <div class="local-dimensions-locked-message">{{#str}}locked_content, local_dimensions{{/str}}</div>
-                {{/courseurl}}
-            {{/islearnmore}}
-            {{^islearnmore}}
-                <div class="local-dimensions-locked-message">{{#str}}locked_content, local_dimensions{{/str}}</div>
-            {{/islearnmore}}
-            {{! Date: the showlockeddate setting, already narrowed by the caller to drop a past date in learn-more
-                mode, and never an empty chip when the row names no date }}
-            {{#showlockeddate}}
-                {{#formatted_start_date}}
-                    <div class="local-dimensions-locked-date">
-                        <i class="fa fa-calendar" aria-hidden="true"></i>
-                        {{#is_enrolment_start}}
-                            {{#str}}enrolment_starts, local_dimensions, {{formatted_start_date}}{{/str}}
-                        {{/is_enrolment_start}}
-                        {{^is_enrolment_start}}
-                            {{#str}}available_at, local_dimensions, {{formatted_start_date}}{{/str}}
-                        {{/is_enrolment_start}}
-                    </div>
-                {{/formatted_start_date}}
-            {{/showlockeddate}}
-        {{/is_pending}}
-        {{/can_self_enrol}}
+        {{! Learn-more mode puts its button in place of the message box, on a card that offers
+            nothing; a card with no course URL (a course the viewer may not be told about) has
+            nowhere to send it and keeps the message box }}
+        {{#islearnmore}}
+            {{#courseurl}}
+                <a href="{{courseurl}}" class="local-dimensions-learnmore-btn" style="background: {{learnmorebuttoncolor}};">{{#str}}learn_more, local_dimensions{{/str}}</a>
+            {{/courseurl}}
+            {{^courseurl}}
+                <div class="local-dimensions-locked-message"><span class="local-dimensions-state-pill {{state.family}}"><i class="fa {{state.icon}}" aria-hidden="true"></i><span>{{state.label}}</span></span></div>
+            {{/courseurl}}
+        {{/islearnmore}}
+        {{^islearnmore}}
+            <div class="local-dimensions-locked-message"><span class="local-dimensions-state-pill {{state.family}}"><i class="fa {{state.icon}}" aria-hidden="true"></i><span>{{state.label}}</span></span></div>
+        {{/islearnmore}}
+        {{#state.actionurl}}
+            <a href="{{state.actionurl}}" class="local-dimensions-enrol-btn">{{state.actionlabel}}</a>
+        {{/state.actionurl}}
+        {{! The route line: another way in beside a relationship, under the action }}
+        {{#state.routeurl}}
+            <div class="local-dimensions-state-route"><i class="fa fa-arrow-right" aria-hidden="true"></i><span>{{state.routelabel}}</span> <a href="{{state.routeurl}}">{{state.routelinklabel}}</a></div>
+        {{/state.routeurl}}
+        {{! The course start date, under the pill of a card with nothing else to say, never an empty
+            chip when the row names no date }}
+        {{#showlockeddate}}
+            {{#formatted_start_date}}
+                <div class="local-dimensions-locked-date">
+                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                    {{#str}}available_at, local_dimensions, {{formatted_start_date}}{{/str}}
+                </div>
+            {{/formatted_start_date}}
+        {{/showlockeddate}}
     </div>
     {{/locked}}
+
+    {{! An open card names its state under the header, in the same pill as every other card }}
+    {{#isenrolled}}
+    <div class="local-dimensions-state-area">
+        <span class="local-dimensions-state-pill {{state.family}}"><i class="fa {{state.icon}}" aria-hidden="true"></i><span>{{state.label}}</span></span>
+    </div>
+    {{/isenrolled}}
 
     {{! A course that resolves to one trackable activity has no sequence to draw. The card
         shows that activity and its own state instead - the server decides when this applies,

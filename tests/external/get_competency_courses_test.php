@@ -352,7 +352,8 @@ final class get_competency_courses_test extends \advanced_testcase {
 
         $rows = $this->cleaned_result_for($competencyid, $user);
 
-        $this->assertSame('open', $rows[$course->id]['access']);
+        $this->assertSame('enrolled', $rows[$course->id]['state']['key']);
+        $this->assertSame(get_string('state_enrolled', 'local_dimensions'), $rows[$course->id]['state']['label']);
         $this->assertSame(0, $rows[$course->id]['lockdate']);
     }
 
@@ -380,11 +381,13 @@ final class get_competency_courses_test extends \advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $rows = $this->cleaned_result_for($competencyid, $user);
 
-        $this->assertSame('enrol', $rows[$course->id]['access']);
+        $this->assertSame('open', $rows[$course->id]['state']['key']);
+        $this->assertSame(get_string('state_cta_enrol', 'local_dimensions'), $rows[$course->id]['state']['actionlabel']);
+        $this->assertNotSame('', $rows[$course->id]['state']['actionurl']);
     }
 
     /**
-     * A course reachable only through enrol_apply reports 'enrol', not 'locked'.
+     * A course reachable only through enrol_apply reads open, not none.
      *
      * Skipped where enrol_apply is not installed, which includes every Moodle 4.5 site:
      * enrol_apply supports Moodle 5.1 and later only.
@@ -401,7 +404,7 @@ final class get_competency_courses_test extends \advanced_testcase {
 
         $rows = $this->cleaned_result_for($competencyid, $this->getDataGenerator()->create_user());
 
-        $this->assertSame('enrol', $rows[$course->id]['access']);
+        $this->assertSame('open', $rows[$course->id]['state']['key']);
     }
 
     /**
@@ -422,12 +425,12 @@ final class get_competency_courses_test extends \advanced_testcase {
 
         $rows = $this->cleaned_result_for($competencyid, $applicant);
 
-        $this->assertSame('pending', $rows[$course->id]['access']);
+        $this->assertSame('pending', $rows[$course->id]['state']['key']);
 
         /* Control: an untouched user on the same course is offered the way in, so 'pending'
            above is about this applicant's own row and not about the instance being shut. */
         $rows = $this->cleaned_result_for($competencyid, $this->getDataGenerator()->create_user());
-        $this->assertSame('enrol', $rows[$course->id]['access']);
+        $this->assertSame('open', $rows[$course->id]['state']['key']);
     }
 
     /**
@@ -469,7 +472,7 @@ final class get_competency_courses_test extends \advanced_testcase {
     }
 
     /**
-     * Neither enrolled nor able to join: locked, and the card gets a date to show.
+     * Neither enrolled nor able to join: the none state, and the card gets the course's date to show.
      *
      * @return void
      */
@@ -483,9 +486,10 @@ final class get_competency_courses_test extends \advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $rows = $this->cleaned_result_for($competencyid, $user);
 
-        $this->assertSame('locked', $rows[$course->id]['access']);
+        $this->assertSame('none', $rows[$course->id]['state']['key']);
+        $this->assertSame(get_string('state_none', 'local_dimensions'), $rows[$course->id]['state']['label']);
+        $this->assertSame('', $rows[$course->id]['state']['actionurl']);
         $this->assertSame($startdate, $rows[$course->id]['lockdate']);
-        $this->assertFalse($rows[$course->id]['isenrolstart']);
     }
 
     /**

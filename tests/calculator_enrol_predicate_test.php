@@ -470,8 +470,8 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
         // Control: with apply on, the card is locked and pending, and offers no route to somebody who applied.
         $row = calculator::get_course_section_progress((int) $course->id);
         $this->assertTrue($row['locked']);
-        $this->assertTrue($row['is_pending']);
-        $this->assertFalse($row['can_self_enrol']);
+        $this->assertSame('pending', $row['state']['state']);
+        $this->assertNull($row['state']['routeurl']);
 
         $enabled = enrol_get_plugins(true);
         unset($enabled['apply']);
@@ -479,7 +479,7 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
 
         $row = calculator::get_course_section_progress((int) $course->id);
         $this->assertTrue($row['locked']);
-        $this->assertTrue($row['is_pending']);
-        $this->assertFalse($row['can_self_enrol']);
+        $this->assertSame('pending', $row['state']['state']);
+        $this->assertNull($row['state']['routeurl']);
     }
 }
