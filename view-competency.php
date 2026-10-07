@@ -222,9 +222,7 @@ if ($competency) {
     ];
 
     $PAGE->requires->string_for_js('learn_more', 'local_dimensions');
-    $PAGE->requires->string_for_js('locked_content', 'local_dimensions');
     $PAGE->requires->string_for_js('available_at', 'local_dimensions');
-    $PAGE->requires->string_for_js('enrolment_starts', 'local_dimensions');
     $PAGE->requires->js_call_amd('local_dimensions/competency_view', 'init', [$uisettings]);
 }
 

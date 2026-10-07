@@ -265,6 +265,57 @@ final class colour_tokens_test extends \basic_testcase {
         ['neutral-ink', 'neutral-tint', 4.5],
     ];
 
+    /**
+     * @var array The enrolment state tokens, suffix => the token-block suffix each one aliases.
+     *
+     * Declared in a bare body rule of their own, outside the 34-token contract, and nothing but
+     * aliases: every state family is one of the tone families above, so a state adds no colour.
+     */
+    private const STATE_ALIASES = [
+        'state-enrolled-bg' => 'brand-fill',
+        'state-enrolled-ink' => 'on-brand-fill',
+        'state-enrolled-edge' => 'brand-fill',
+        'state-scheduled-bg' => 'brand-tint',
+        'state-scheduled-ink' => 'brand-ink',
+        'state-scheduled-edge' => 'brand-edge',
+        'state-pending-bg' => 'warning-tint',
+        'state-pending-ink' => 'warning-ink',
+        'state-pending-edge' => 'warning-edge',
+        'state-open-bg' => 'success-tint',
+        'state-open-ink' => 'success-ink',
+        'state-open-edge' => 'success-edge',
+        'state-guest-bg' => 'info-tint',
+        'state-guest-ink' => 'info-ink',
+        'state-guest-edge' => 'info-edge',
+        'state-neutral-bg' => 'surface-inset',
+        'state-neutral-ink' => 'neutral-ink',
+        'state-neutral-edge' => 'line',
+    ];
+
+    /**
+     * @var array Foreground, background and floor of every pair the state area paints.
+     *
+     * The pill (the family's ink on its fill, on both cards and in the tracker's disc), the
+     * tracker's message box (the family's ink on the box's surface, the pill being transparent
+     * there; never the enrolled family, which a locked card cannot be in), and the plan card's
+     * action button. The route line is ink-muted and accent on the surface (the tracker raises it
+     * onto one over the veil), pairs the token PAIRS above already hold.
+     */
+    private const STATE_PAIRS = [
+        ['state-enrolled-ink', 'state-enrolled-bg', 4.5],
+        ['state-scheduled-ink', 'state-scheduled-bg', 4.5],
+        ['state-pending-ink', 'state-pending-bg', 4.5],
+        ['state-open-ink', 'state-open-bg', 4.5],
+        ['state-guest-ink', 'state-guest-bg', 4.5],
+        ['state-neutral-ink', 'state-neutral-bg', 4.5],
+        ['state-scheduled-ink', 'surface', 4.5],
+        ['state-pending-ink', 'surface', 4.5],
+        ['state-open-ink', 'surface', 4.5],
+        ['state-guest-ink', 'surface', 4.5],
+        ['state-neutral-ink', 'surface', 4.5],
+        ['on-brand-fill', 'brand-fill', 4.5],
+    ];
+
     /** @var array Tokens that may not be normal-size text on surface-inset (dark: 4.50, 4.50, 4.20). */
     private const DENIED_ON_INSET = ['accent', 'brand-ink', 'danger-ink'];
 
@@ -1450,7 +1501,7 @@ final class colour_tokens_test extends \basic_testcase {
                         continue;
                     }
                     foreach (explode(',', $rule['selector']) as $part) {
-                        $map[trim($part)] = $m[1];
+                        $map[trim($part)] = self::STATE_ALIASES[$m[1]] ?? $m[1];
                     }
                 }
             }
@@ -1514,6 +1565,8 @@ final class colour_tokens_test extends \basic_testcase {
                 if (!preg_match('/' . preg_quote(self::PREFIX, '/') . '([a-z0-9-]+)/', $declarations['color'], $m)) {
                     continue;
                 }
+                // A state token is read through the one alias it is, or the scanner would be blind to it.
+                $m[1] = self::STATE_ALIASES[$m[1]] ?? $m[1];
                 if (!in_array($m[1], self::DENIED_ON_INSET, true)) {
                     continue;
                 }
@@ -1603,6 +1656,56 @@ final class colour_tokens_test extends \basic_testcase {
             'Every token pairing must clear its WCAG floor on the light page, on the dark page and on the '
                 . 'Moodle 4.5 fallbacks: ' . implode('; ', $offenders)
         );
+    }
+
+    /**
+     * The enrolment state tokens are aliases of the families and nothing else, and every pair the
+     * state area paints clears its floor on the light page, the dark page and Moodle 4.5.
+     *
+     * The block is found as the bare body rule that declares the enrolled fill, so the token
+     * block cannot be mistaken for it. A literal there, a typo or a family swapped for a pale one
+     * fails here; the ratios are computed through the alias with resolve(), as the token pairs are.
+     *
+     * Changes that must make it fail: point --local-dimensions-state-neutral-ink at ink-faint;
+     * write a hex value for any state token; drop a state token.
+     *
+     * @return void
+     */
+    public function test_state_tokens_alias_the_families_and_clear_their_floor(): void {
+        $block = [];
+        foreach ($this->rules($this->plugin_root() . '/styles.css') as $rule) {
+            if ($rule['selector'] !== 'body') {
+                continue;
+            }
+            $declarations = $this->declarations($rule['body']);
+            if (isset($declarations[self::PREFIX . 'state-enrolled-bg'])) {
+                $block = $declarations;
+            }
+        }
+        $expected = [];
+        foreach (self::STATE_ALIASES as $suffix => $target) {
+            $expected[self::PREFIX . $suffix] = 'var(' . self::PREFIX . $target . ')';
+        }
+        ksort($block);
+        ksort($expected);
+        $this->assertSame($expected, $block, 'The state block declares exactly one alias per state token.');
+
+        $offenders = [];
+        foreach (['light', 'dark', 'bs4'] as $mode) {
+            foreach (self::STATE_PAIRS as [$foreground, $background, $floor]) {
+                $fore = $this->resolve(self::STATE_ALIASES[$foreground] ?? $foreground, $mode);
+                $back = $this->resolve(self::STATE_ALIASES[$background] ?? $background, $mode);
+                $ratio = ($fore === null || $back === null) ? null : $this->contrast($fore, $back);
+                if ($ratio === null) {
+                    $offenders[] = $mode . ': ' . $foreground . ' on ' . $background . ' could not be resolved';
+                    continue;
+                }
+                if ($ratio + 0.005 < $floor) {
+                    $offenders[] = sprintf('%s: %s on %s is %.2f:1, floor %.1f', $mode, $foreground, $background, $ratio, $floor);
+                }
+            }
+        }
+        $this->assertSame([], $offenders, 'Every state pair must clear its floor: ' . implode('; ', $offenders));
     }
 
     /**

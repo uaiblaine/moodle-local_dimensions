@@ -103,7 +103,7 @@ final class calculator_locked_card_test extends \advanced_testcase {
     }
 
     /**
-     * A user enrolled in the course is never offered "Enrol to start", even with a way in open.
+     * A user enrolled in the course is never offered enrolment, even with a way in open.
      *
      * The user's enrolment carries no role. The course's self instance is open, so a locked card
      * would have offered it; a user who is not enrolled in the same course is offered it, which is
@@ -127,13 +127,15 @@ final class calculator_locked_card_test extends \advanced_testcase {
         $this->setUser($stranger);
         $row = calculator::get_course_section_progress((int) $course->id);
         $this->assertTrue($row['locked']);
-        $this->assertTrue($row['can_self_enrol']);
+        $this->assertSame('open', $row['state']['state']);
+        $this->assertNotNull($row['state']['actionurl']);
 
         $this->setUser($roleless);
         $row = calculator::get_course_section_progress((int) $course->id);
         $this->assertFalse($row['locked']);
-        $this->assertFalse($row['can_self_enrol']);
-        $this->assertFalse($row['is_pending']);
+        $this->assertSame('enrolled', $row['state']['state']);
+        $this->assertNull($row['state']['actionurl']);
+        $this->assertNull($row['state']['routeurl']);
     }
 
     /**
