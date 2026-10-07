@@ -561,8 +561,9 @@ The design record is `moodle-dev/docs/enrolment-status-matrix/` (decisions D1-D8
   provider (EP_19).
 - **Facts, then one presenter.** A provider returns facts (`state`, `date`, `prerequisiteid`, `actionurl`,
   `routeurl`); `enrolment_state::export()` turns them into the payload both services return
-  (`enrolment_state::returns()`): label, icon, family class, action, route line, every text plain. The
-  route line exists only beside a relationship (`RELATIONSHIP_STATES`), an offer being its own way in.
+  (`enrolment_state::returns()`): label, icon, family class, action, route line, every text plain. Each
+  provider hands a route line only to a relationship, an offer being its own way in
+  (`enrolment_provider_test::test_only_a_relationship_keeps_a_route_line`).
   The labels are the theme's (`category_state_*`), so a state reads the same on every card of the site.
 - **The two cards render the same payload.** The tracker's overlay keeps its frame and swaps its contents
   (`progress_card_body.mustache`); `competency_view.js` lets learn-more mode, the admin's icon and the

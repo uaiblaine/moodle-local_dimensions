@@ -84,18 +84,6 @@ abstract class enrolment_provider {
     /** @var string Nothing ties the viewer to the course and nothing is on offer. */
     public const STATE_NONE = 'none';
 
-    /**
-     * @var array The states that are a relationship with the course rather than an offer. A route
-     *            line is drawn beside these only: an offer is itself the way in.
-     */
-    public const RELATIONSHIP_STATES = [
-        self::STATE_SCHEDULED,
-        self::STATE_PENDING,
-        self::STATE_WAITLISTED,
-        self::STATE_SUSPENDED,
-        self::STATE_EXPIRED,
-    ];
-
     /** @var string The setting that selects local_unlistedcourses; only a stored '1' switches it on. */
     public const SETTING = 'useunlistedcourses';
 
@@ -202,7 +190,9 @@ abstract class enrolment_provider {
      * @param int $courseid The course id.
      * @param int $date The start of a scheduled enrolment or the end of an ended one, else 0.
      * @param string|null $actionurl Where the state's own action leads, null when it has none.
-     * @param string|null $routeurl Where the route line beside a relationship leads, null for none.
+     * @param string|null $routeurl Where the route line beside a relationship leads, null for none. Only a
+     *        relationship (scheduled, pending, waitlisted, suspended, expired) is given one: an offer
+     *        (open, free, key, conditional) is itself the way in.
      * @param int $prerequisiteid The course a conditional state waits for, else 0.
      * @return array The state facts.
      */
@@ -220,8 +210,7 @@ abstract class enrolment_provider {
             'date' => $date,
             'prerequisiteid' => $prerequisiteid,
             'actionurl' => $actionurl,
-            // A route line is a second way in beside a relationship; an offer has none of its own.
-            'routeurl' => in_array($state, self::RELATIONSHIP_STATES, true) ? $routeurl : null,
+            'routeurl' => $routeurl,
         ];
     }
 
