@@ -1,1 +1,1 @@
-s/if \(!is_enrolled\(\$coursecontext, \$USER->id, '', true\)\) \{/if (!is_enrolled(\$coursecontext, \$ownerid, '', true)) {/;
+s/if \(!is_enrolled\(context_course::instance\(\$course->id\), \$USER->id, '', true\)\) \{/if (!is_enrolled(context_course::instance(\$course->id), \$ownerid, '', true)) {/;
