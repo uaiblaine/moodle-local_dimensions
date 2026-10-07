@@ -22,9 +22,10 @@
  * its own query over competency_coursecomp and resolves the enrolment-filter
  * cascade (competency -> plan's template -> global setting) to filter courses
  * by the plan owner's enrolment. Each surviving course also carries its rule
- * outcome, the competency's activity links inside it, what the viewer can do
- * with it (open, enrol, pending or locked) and its card shape: its single
- * activity or single section when it resolves to one, otherwise the timeline.
+ * outcome, the competency's activity links inside it, the viewer's enrolment
+ * state (the shared state area of the course cards) and its card shape: its
+ * single activity or single section when it resolves to one, otherwise the
+ * timeline.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -42,6 +43,8 @@ use core\context\system as context_system;
 use core\context\course as context_course;
 use local_dimensions\calculator;
 use local_dimensions\constants;
+use local_dimensions\local\enrolment_provider;
+use local_dimensions\local\enrolment_state;
 use local_dimensions\local\plan_access;
 
 /**
@@ -52,18 +55,6 @@ use local_dimensions\local\plan_access;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class get_competency_courses extends external_api {
-    /** @var string The viewer is actively enrolled and can open the course. */
-    private const ACCESS_OPEN = 'open';
-
-    /** @var string The viewer is not enrolled but a way in is open to them right now. */
-    private const ACCESS_ENROL = 'enrol';
-
-    /** @var string The viewer has applied to join and is waiting for a decision. */
-    private const ACCESS_PENDING = 'pending';
-
-    /** @var string The viewer can neither open the course nor join it. */
-    private const ACCESS_LOCKED = 'locked';
-
     /**
      * Define input parameters.
      *
@@ -143,6 +134,17 @@ class get_competency_courses extends external_api {
         // Activity links are resolved only for the courses that survived the filter.
         $activitiesbycourse = self::get_linked_activities($competencyid, array_keys($courses), $ownerid);
 
+        /* What the viewer can do with each course: it opens when the viewer is actively enrolled,
+           whatever the role, the question calculator::is_locked() asks of the tracker's cards. The
+           others are described by the site's enrolment provider, in one batch for the whole list. */
+        $locked = [];
+        foreach ($courses as $course) {
+            if (!is_enrolled(context_course::instance($course->id), $USER->id, '', true)) {
+                $locked[(int) $course->id] = $course;
+            }
+        }
+        $states = enrolment_provider::get()->locked_states($locked, (int) $USER->id);
+
         // Build the response with course image and progress.
         $result = [];
         foreach ($courses as $course) {
@@ -170,31 +172,16 @@ class get_competency_courses extends external_api {
                Moodle 4.5 (MDL-60912); see calculator::course_completion_percentage(). */
             $progress = calculator::course_completion_percentage((int) $course->id, $ownerid);
 
-            /* What the viewer can do with this course: it opens when the viewer is actively enrolled,
-               whatever the role, the question calculator::is_locked() asks of the tracker's cards. */
-            $access = self::ACCESS_OPEN;
+            $isopen = !isset($locked[(int) $course->id]);
+            $state = $isopen
+                ? enrolment_provider::enrolled_state((int) $course->id)
+                : ($states[(int) $course->id] ?? enrolment_provider::none_state((int) $course->id));
             $lockdate = 0;
-            $isenrolstart = false;
-            if (!is_enrolled($coursecontext, $USER->id, '', true)) {
-                /* A pending enrol_apply application gets its own state rather than the padlock;
-                   see calculator::current_user_has_pending_application(). Enrol is checked
-                   first: a course can offer an open way in beside a pending application. */
-                if (\local_dimensions\calculator::current_user_can_enrol((int) $course->id)) {
-                    $access = self::ACCESS_ENROL;
-                } else if (\local_dimensions\calculator::current_user_has_pending_application((int) $course->id)) {
-                    $access = self::ACCESS_PENDING;
-                } else {
-                    $access = self::ACCESS_LOCKED;
-                }
-            }
-            if ($access === self::ACCESS_LOCKED) {
-                // Only a locked card needs the full course record, for its availability dates.
-                $fullcourse = get_course($course->id);
-                $lockdate = (int) \local_dimensions\calculator::get_availability_date($fullcourse, $USER->id);
-                $isenrolstart = \local_dimensions\calculator::get_enrolment_start_date(
-                    $fullcourse,
-                    $USER->id
-                ) !== null;
+            if ($state['state'] === enrolment_provider::STATE_NONE) {
+                /* Only a card with nothing else to say shows a date under its pill: the course's start.
+                   A later enrolment of the viewer's would have made the card scheduled, whichever
+                   provider answered, so no enrolment date can be the one shown here. */
+                $lockdate = (int) get_course($course->id)->startdate;
             }
 
             /* Names travel plain (tags stripped, nothing escaped): accordion.js escapes each one
@@ -207,9 +194,8 @@ class get_competency_courses extends external_api {
                 'progress' => $progress,
                 'visible' => 1,
                 'ruleoutcome' => (int) $course->ruleoutcome,
-                'access' => $access,
+                'state' => enrolment_state::export($state),
                 'lockdate' => $lockdate,
-                'isenrolstart' => $isenrolstart,
                 'activities' => $activitiesbycourse[(int) $course->id] ?? [],
             ];
 
@@ -217,7 +203,7 @@ class get_competency_courses extends external_api {
                open card resolves one; the others stay on the timeline, since naming an activity
                the viewer cannot open helps nobody. */
             $row['cardmode'] = constants::CARDMODE_TIMELINE;
-            if ($access === self::ACCESS_OPEN) {
+            if ($isopen) {
                 $shape = \local_dimensions\calculator::resolve_card_shape(
                     (int) $course->id,
                     $ownerid
@@ -370,12 +356,8 @@ class get_competency_courses extends external_api {
                 'progress' => new external_value(PARAM_INT, 'The plan owner\'s course completion percentage'),
                 'visible' => new external_value(PARAM_INT, 'Course visibility'),
                 'ruleoutcome' => new external_value(PARAM_INT, 'What completing the course does to the competency'),
-                'access' => new external_value(
-                    PARAM_ALPHA,
-                    'What the viewer can do with the course: open, enrol, pending or locked'
-                ),
-                'lockdate' => new external_value(PARAM_INT, 'Availability timestamp when locked, 0 otherwise'),
-                'isenrolstart' => new external_value(PARAM_BOOL, 'Whether the lock date is an enrolment start date'),
+                'state' => enrolment_state::returns(),
+                'lockdate' => new external_value(PARAM_INT, 'The course start date a card in the none state shows, 0 otherwise'),
                 'cardmode' => new external_value(
                     PARAM_ALPHA,
                     'Which shape the card takes: activity, section or timeline'

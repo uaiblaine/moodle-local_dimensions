@@ -17,6 +17,8 @@
 namespace local_dimensions\external;
 
 use core_external\external_api;
+use local_dimensions\local\enrolment_provider;
+use local_dimensions\local\enrolment_state;
 
 /**
  * Tests for the tracker's course progress web service.
@@ -165,15 +167,18 @@ final class get_course_progress_test extends \advanced_testcase {
         $row = $this->cleaned_row_for((int) $course->id);
 
         $this->assertTrue($row['locked']);
-        $this->assertTrue($row['can_self_enrol']);
+        $this->assertSame('open', $row['state']['key']);
+        $this->assertSame(get_string('state_open', 'local_dimensions'), $row['state']['label']);
+        $this->assertSame(get_string('state_cta_enrol', 'local_dimensions'), $row['state']['actionlabel']);
+        $this->assertSame((new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false), $row['state']['actionurl']);
+        $this->assertSame('', $row['state']['routeurl']);
         $this->assertTrue($row['is_future_date']);
     }
 
     /**
      * A lodged application reaches the tracker card as its own state, not as self-enrolment.
      *
-     * The card body renders three mutually exclusive shapes off can_self_enrol and is_pending,
-     * so both flags have to arrive, and the precedence between them has to hold.
+     * The card body renders whatever state arrives, so the service is where the two are told apart.
      *
      * Skipped where enrol_apply is not installed, which includes every Moodle 4.5 site:
      * enrol_apply supports Moodle 5.1 and later only.
@@ -209,25 +214,29 @@ final class get_course_progress_test extends \advanced_testcase {
         $this->setUser($newcomer);
         $row = $this->cleaned_row_for((int) $course->id);
         $this->assertTrue($row['locked']);
-        $this->assertTrue($row['can_self_enrol']);
-        $this->assertFalse($row['is_pending']);
+        $this->assertSame('open', $row['state']['key']);
 
-        // Having applied, the same card becomes a wait rather than an invitation.
+        // Having applied, the same card becomes a wait rather than an invitation, with nothing to press.
         $applicant = $this->getDataGenerator()->create_user();
         $plugin->enrol_user($instance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
         $this->setUser($applicant);
         $row = $this->cleaned_row_for((int) $course->id);
         $this->assertTrue($row['locked']);
-        $this->assertFalse($row['can_self_enrol']);
-        $this->assertTrue($row['is_pending']);
+        $this->assertSame('pending', $row['state']['key']);
+        $this->assertSame(get_string('state_pending', 'local_dimensions'), $row['state']['label']);
+        $this->assertSame('', $row['state']['actionurl']);
+        $this->assertSame('', $row['state']['routeurl']);
     }
 
     /**
-     * An open way in outranks an application already lodged elsewhere on the same course.
+     * An application already lodged stays the card's state, with an open way in beside it.
+     *
+     * The relationship is the pill and the route is the line under it (the enrolment matrix's
+     * decision D2): the card says both that the learner applied and that they may enrol now.
      *
      * @return void
      */
-    public function test_execute_prefers_an_open_enrolment_over_a_pending_application(): void {
+    public function test_execute_shows_a_pending_application_with_the_open_route_beside_it(): void {
         global $DB;
 
         $this->resetAfterTest();
@@ -259,9 +268,10 @@ final class get_course_progress_test extends \advanced_testcase {
 
         $row = $this->cleaned_row_for((int) $course->id);
 
-        // Both are true of this learner; the one that can be acted on now wins.
-        $this->assertTrue($row['can_self_enrol']);
-        $this->assertFalse($row['is_pending']);
+        $this->assertSame('pending', $row['state']['key']);
+        $this->assertSame((new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false), $row['state']['routeurl']);
+        $this->assertSame(get_string('state_route_enrol', 'local_dimensions'), $row['state']['routelabel']);
+        $this->assertSame(get_string('state_cta_enrolnow', 'local_dimensions'), $row['state']['routelinklabel']);
     }
 
     /**
@@ -419,6 +429,41 @@ final class get_course_progress_test extends \advanced_testcase {
     }
 
     /**
+     * A course the gate withholds gets the none state without the enrolment provider being asked.
+     *
+     * The course has an open self instance, so a provider asked about it would answer open and the
+     * row would carry an enrolment link: the very fact the gate withholds. Its row must be the row
+     * of a course that does not exist, byte for byte apart from the id the caller sent. The control
+     * links the same course to a competency, after which the caller may be told about it and the
+     * same viewer reads it open.
+     *
+     * @return void
+     */
+    public function test_a_withheld_course_reads_like_a_missing_one_whatever_it_offers(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $self = $DB->get_record('enrol', ['courseid' => $course->id, 'enrol' => 'self'], '*', MUST_EXIST);
+        enrol_get_plugin('self')->update_status($self, ENROL_INSTANCE_ENABLED);
+        $missingid = (int) $DB->get_field_sql('SELECT MAX(id) FROM {course}') + 1000;
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        $withheld = $this->cleaned_row_for((int) $course->id);
+        $missing = $this->cleaned_row_for($missingid);
+        unset($withheld['courseid'], $missing['courseid']);
+        $this->assertSame($missing, $withheld);
+        $this->assertSame('none', $withheld['state']['key']);
+        $this->assertSame('', $withheld['state']['actionurl']);
+
+        // Control: once the course is the caller's business, the same viewer is offered the route.
+        $this->link_competency((int) $course->id);
+        $this->setUser($user);
+        $this->assertSame('open', $this->cleaned_row_for((int) $course->id)['state']['key']);
+    }
+
+    /**
      * The error field is cleaned to its PARAM_TEXT spelling, so a message carrying debuginfo cannot
      * fail the whole response, every other course's row included.
      *
@@ -447,6 +492,7 @@ final class get_course_progress_test extends \advanced_testcase {
             'enabled' => false,
             'locked' => false,
             'formatted_start_date' => '',
+            'state' => enrolment_state::export(enrolment_provider::none_state(2)),
             'sections' => [],
             'error' => $error,
         ]]);

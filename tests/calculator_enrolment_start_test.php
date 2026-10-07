@@ -168,7 +168,7 @@ final class calculator_enrolment_start_test extends \advanced_testcase {
     }
 
     /**
-     * A row that cannot open leaves the card on the course start date, with no enrolment start.
+     * A row that cannot open leaves the card on the course start date, in no scheduled state.
      *
      * @return void
      */
@@ -184,17 +184,18 @@ final class calculator_enrolment_start_test extends \advanced_testcase {
         $this->enrol($course, $suspended, $start, 0, ENROL_USER_SUSPENDED);
         $format = get_string('strftimedatefullshort', 'langconfig');
 
-        // Control: the active row announces its enrolment start.
+        // Control: the active row is a scheduled enrolment, on its own date.
         $this->setUser($control);
         $row = calculator::get_course_section_progress((int) $course->id);
         $this->assertTrue($row['locked']);
-        $this->assertTrue($row['is_enrolment_start']);
+        $this->assertSame('scheduled', $row['state']['state']);
+        $this->assertSame($start, $row['state']['date']);
         $this->assertSame(userdate($start, $format), $row['formatted_start_date']);
 
         $this->setUser($suspended);
         $row = calculator::get_course_section_progress((int) $course->id);
         $this->assertTrue($row['locked']);
-        $this->assertFalse($row['is_enrolment_start']);
+        $this->assertSame('none', $row['state']['state']);
         $this->assertSame(userdate($coursestart, $format), $row['formatted_start_date']);
     }
 }

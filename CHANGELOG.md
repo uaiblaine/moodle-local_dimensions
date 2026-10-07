@@ -6,7 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Course cards (competency tracker and plan overview): a shared state area. Each card names the
+  viewer's enrolment in one pill, with an icon and the same words and colours as the course cards of
+  the FUNDASEG theme: "Enrolled", "Access from <date>", "Application under review", "Open for
+  enrolment" and "No enrolment available". When the viewer may also enrol now beside an enrolment that
+  starts later or an application, the card says both, with "You can also enrol now" under the pill.
+  On the tracker the locked card keeps its frame (dashed border, disc, raised message box, blurred
+  sections); the disc and the message take the state's colour and icon. On the plan overview, a card
+  the viewer cannot open dims its image only and is no longer a link: its button leads on.
+- Optional setting "Use the enrolment rules of Unlisted courses", shown only where the
+  local_unlistedcourses plugin (Moodle 5.2 and later) is installed, off by default. When on, the cards
+  also show "On the waiting list", "Enrolment suspended", "Enrolment ended <date>", "Free access",
+  "Access with a key" and "Unlocks when you complete <course>", with that plugin's rules and links to
+  the enrolment page; local_dimensions keeps no copy of those rules.
+
 ### Changed
+
+- Course cards: an enrolment that starts later is named in the pill ("Access from <date>") whatever
+  the "Show availability date" setting says; that setting now shows the course start date on a locked
+  card that offers no way in. The custom locked-card icon and the "Learn More" mode apply to that card
+  only. A pending application no longer gives way to an open enrolment: the card says both.
 
 Decided by the owner after the comment audit's findings were re-checked against the current code:
 

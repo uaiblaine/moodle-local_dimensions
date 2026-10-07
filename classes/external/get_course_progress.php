@@ -31,6 +31,8 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use local_dimensions\calculator;
 use local_dimensions\constants;
+use local_dimensions\local\enrolment_provider;
+use local_dimensions\local\enrolment_state;
 use local_dimensions\local\plan_access;
 use core\context\system as context_system;
 
@@ -149,9 +151,7 @@ class get_course_progress extends external_api {
                     'enabled' => $data['enabled'],
                     'locked' => $data['locked'] ?? false,
                     'formatted_start_date' => $data['formatted_start_date'] ?? '',
-                    'is_enrolment_start' => !empty($data['is_enrolment_start']),
-                    'can_self_enrol' => !empty($data['can_self_enrol']),
-                    'is_pending' => !empty($data['is_pending']),
+                    'state' => enrolment_state::export($data['state'] ?? enrolment_provider::none_state((int) $courseid)),
                     'is_future_date' => !empty($data['is_future_date']),
                     'course_url' => $data['course_url'] ?? '',
                     'sections' => $sections,
@@ -177,9 +177,7 @@ class get_course_progress extends external_api {
                     'enabled' => false,
                     'locked' => false,
                     'formatted_start_date' => '',
-                    'is_enrolment_start' => false,
-                    'can_self_enrol' => false,
-                    'is_pending' => false,
+                    'state' => enrolment_state::export(enrolment_provider::none_state((int) $courseid)),
                     'is_future_date' => false,
                     'course_url' => '',
                     'sections' => [],
@@ -221,10 +219,12 @@ class get_course_progress extends external_api {
     /**
      * The row returned for a course this viewer may not be told anything about.
      *
-     * Shaped like a locked card with nothing named: no date, no course URL, no sections. The
-     * client already draws the lock overlay for a course the learner cannot open, so an id
-     * that should never have been asked for degrades into that instead of an error - and the
-     * row carries none of the structure the gate exists to withhold.
+     * Shaped like a locked card with nothing named: no date, no course URL, no sections, and the
+     * none state with no action and no route, built here rather than asked of the enrolment provider,
+     * which must never hear about a course before the gate. The client already draws the lock overlay
+     * for a course the learner cannot open, so an id that should never have been asked for degrades
+     * into that instead of an error - and the row carries none of the structure the gate exists to
+     * withhold.
      *
      * @param int $courseid The requested course id.
      * @return array The response row.
@@ -235,9 +235,7 @@ class get_course_progress extends external_api {
             'enabled' => false,
             'locked' => true,
             'formatted_start_date' => '',
-            'is_enrolment_start' => false,
-            'can_self_enrol' => false,
-            'is_pending' => false,
+            'state' => enrolment_state::export(enrolment_provider::none_state($courseid)),
             'is_future_date' => false,
             'course_url' => '',
             'sections' => [],
@@ -275,21 +273,7 @@ class get_course_progress extends external_api {
                     PARAM_TEXT,
                     get_string('api_formatted_start_date', 'local_dimensions'),
                 ),
-                'is_enrolment_start' => new external_value(
-                    PARAM_BOOL,
-                    'Whether the date is an enrolment start date',
-                    VALUE_OPTIONAL,
-                ),
-                'can_self_enrol' => new external_value(
-                    PARAM_BOOL,
-                    'Whether the viewer can enrol themselves into this locked course',
-                    VALUE_OPTIONAL,
-                ),
-                'is_pending' => new external_value(
-                    PARAM_BOOL,
-                    'Whether the viewer has an enrolment application awaiting a decision',
-                    VALUE_OPTIONAL,
-                ),
+                'state' => enrolment_state::returns(),
                 'is_future_date' => new external_value(
                     PARAM_BOOL,
                     'Whether the availability date still lies ahead',
