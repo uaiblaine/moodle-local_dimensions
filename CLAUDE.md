@@ -534,6 +534,51 @@ unavailable row as an unreadable course); without one they describe the caller a
 the return context and the view log stay the viewer's. Specs: `mutations/followups_T1.conf`,
 `mutations/followups_T2.conf`.
 
+### The cards' enrolment state (`local\enrolment_provider`, stage 5c of the enrolment matrix)
+
+The design record is `moodle-dev/docs/enrolment-status-matrix/` (decisions D1-D8, the owner's answers of
+2026-10-06, `cards/dimensions.md`, the mockup). What the code rests on:
+
+- **The rule lives in local_unlistedcourses, never here.** `enrolment_provider::get()` returns
+  `enrolment_provider_core` (the rule this plugin always had, FROZEN: an enrolment start date, a pending
+  enrol_apply application, a self or apply route, all calculator predicates) or, when the
+  `useunlistedcourses` setting is a stored `'1'` AND `unlisted_available()` says yes,
+  `enrolment_provider_unlisted`, which only translates the plugin's `get_enrolment_state()`,
+  `get_next_action()` and, for the plan accordion's list, `get_next_actions()`. Waitlisted, suspended,
+  expired, free, key and conditional exist only through that plugin; adding a rule to the core provider is
+  re-implementing the plugin, which the owner refused. Nothing outside the three classes knows which one runs.
+- **The plugin is optional and absent from 4.5 and 5.1.** It is reached only through the string
+  `UNLISTED_API`, behind `unlisted_available()` (branch >= 502 and every API method present;
+  `method_exists()` autoloads and answers false with no class), and its values are mapped from LITERALS in
+  `enrolment_provider_unlisted::RELATIONSHIPS` / `NEXT_ACTIONS`: a constant of a class that does not exist
+  throws. `enrolment_provider_unlisted_test` holds the literals against the plugin's constants where it is
+  installed, and `optional_unlistedcourses_test` fails any other reference. The settings checkbox is shown
+  only where it is available, and the provider re-checks, so a stored `'1'` outlives a removed plugin.
+- **Neither provider decides the lock.** A card opens on core's `is_enrolled()` (D7) whatever the provider;
+  the provider is asked only about a locked card, for the current user (both rules are `$USER`-only), with
+  the viewer handed in by the caller so a reviewer's card cannot ask about the owner (T1_11). A withheld
+  course's row (`get_course_progress::unavailable_row()`) is the fixed none state and never reaches the
+  provider (EP_19).
+- **Facts, then one presenter.** A provider returns facts (`state`, `date`, `prerequisiteid`, `actionurl`,
+  `routeurl`); `enrolment_state::export()` turns them into the payload both services return
+  (`enrolment_state::returns()`): label, icon, family class, action, route line, every text plain. The
+  route line exists only beside a relationship (`RELATIONSHIP_STATES`), an offer being its own way in.
+  The labels are the theme's (`category_state_*`), so a state reads the same on every card of the site.
+- **The two cards render the same payload.** The tracker's overlay keeps its frame and swaps its contents
+  (`progress_card_body.mustache`); `competency_view.js` lets learn-more mode, the admin's icon and the
+  start date dress the none state only. The plan accordion (`accordion.js`) links only an enrolled card;
+  any other state dims the image and carries its action as a link of its own, learn-more mode lending the
+  course page to the none state.
+- **Colours are aliases.** `--local-dimensions-state-*` live in a second bare `body` rule, each one a
+  `var()` of a family token, because the token block is the 34-token contract shared with block_dimensions;
+  `colour_tokens_test::test_state_tokens_alias_the_families_and_clear_their_floor` holds the aliases and
+  the contrast of every painted pair, and the inset scanner reads a state token through its alias.
+- **What `mdl ci` cannot run.** local_unlistedcourses is not installed there, so the real-plugin tests skip
+  (`enrolment_provider_unlisted_test`'s last two, and the plugin half of
+  `enrolment_provider_test::test_availability_follows_the_plugin_and_the_branch`): run the full suite on a
+  5.2 stack that mounts it before merging. Specs: `mutations/enrolment_provider.conf` (`--fast`, both
+  database families) and `mutations/enrolment_provider_stack.conf` (stack mode, with the plugin).
+
 ## Colour tokens and dark mode
 
 **The plugin does not own a palette.** `styles.css` declares **34 colour tokens** on
