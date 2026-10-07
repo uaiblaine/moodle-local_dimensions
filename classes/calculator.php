@@ -24,6 +24,7 @@
 
 namespace local_dimensions;
 
+use local_dimensions\local\enrolment_provider;
 
 /**
  * Calculator class for course progress calculations.
@@ -39,11 +40,12 @@ class calculator {
      * The card describes one learner, $userid: the owner of the plan being viewed, who is the
      * current user on their own plan and someone else when staff review a learner's plan. The
      * course's sections, their restrictions, the progress, the completion and the card shape are
-     * that learner's. The lock and what a click on a locked card offers (its date, enrolment start,
-     * enrol, pending) are the viewer's, the current user, because they decide what the viewer can
-     * open: whether the viewer is actively enrolled ({@see self::is_locked_for_viewer()}), as the
-     * plan accordion decides (get_competency_courses). A card the viewer cannot open keeps the owner's
-     * percentages in the timeline shape, with its section links blanked.
+     * that learner's. The lock and what a locked card says (its date and its enrolment state) are the
+     * viewer's, the current user, because they decide what the viewer can open: whether the viewer is
+     * actively enrolled ({@see self::is_locked_for_viewer()}), as the plan accordion decides
+     * (get_competency_courses), and then what the site's enrolment provider says about the course
+     * ({@see \local_dimensions\local\enrolment_provider}). A card the viewer cannot open keeps the
+     * owner's percentages in the timeline shape, with its section links blanked.
      *
      * Subsection contents count towards their parent section. The caller must first check
      * that the viewer may see the course at all ({@see helper::readable_competency_courses()},
@@ -99,26 +101,17 @@ class calculator {
                can open: the percentages describe the owner, the lock only what the viewer can click. */
             $progresslocked = $ownerid === $viewerid && $locked;
 
-            // A future enrolment start date wins over the course start date.
+            /* The date a locked card with nothing else to say shows under its pill, when the page
+               shows dates: a future enrolment start date wins over the course start date. */
             $availabilitydate = self::get_availability_date($course, $viewerid);
             $formattedstartdate = userdate($availabilitydate, get_string('strftimedatefullshort', 'langconfig'));
-
-            // Determine if this is an enrollment start date (viewer enrolled but not yet active).
-            $isenrolmentstart = false;
-            if ($locked) {
-                $enrolstartdate = self::get_enrolment_start_date($course, $viewerid);
-                $isenrolmentstart = ($enrolstartdate !== null);
-            }
-
-            /* Only a locked card uses these: it words the date as an invitation, so the client
-               needs to know whether the date is still ahead and whether the viewer can join
-               instead of waiting. Each enrolment question walks the course's enrol instances.
-               Pending is asked only when joining is not on offer: a course can have a pending
-               application on one instance and an open way in on another, and joining now wins. */
-            $canenrol = $locked && self::current_user_can_enrol((int) $course->id);
-            $ispending = $locked && !$canenrol
-                && self::has_pending_application((int) $course->id, $viewerid);
             $isfuturedate = $locked && $availabilitydate > time();
+
+            /* What the state area says. An open card is enrolled whatever the provider would say;
+               a locked one is the viewer's state as the site's provider reads it. */
+            $state = $locked
+                ? enrolment_provider::get()->locked_state($course, $viewerid)
+                : enrolment_provider::enrolled_state((int) $course->id);
 
             $courseurl = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
 
@@ -127,9 +120,7 @@ class calculator {
                     'enabled' => false,
                     'locked' => $locked,
                     'formatted_start_date' => $formattedstartdate,
-                    'is_enrolment_start' => $isenrolmentstart,
-                    'can_self_enrol' => $canenrol,
-                    'is_pending' => $ispending,
+                    'state' => $state,
                     'is_future_date' => $isfuturedate,
                     'course_url' => $courseurl,
                     'sections' => [],
@@ -276,9 +267,7 @@ class calculator {
                 'enabled' => true,
                 'locked' => $locked,
                 'formatted_start_date' => $formattedstartdate,
-                'is_enrolment_start' => $isenrolmentstart,
-                'can_self_enrol' => $canenrol,
-                'is_pending' => $ispending,
+                'state' => $state,
                 'is_future_date' => $isfuturedate,
                 'course_url' => $courseurl,
                 'sections' => $results,

@@ -79,11 +79,12 @@ final class competency_courses_owner_test extends \advanced_testcase {
         $this->assertSame(constants::CARDMODE_ACTIVITY, $rows[$f['delta']]['cardmode']);
         $this->assertTrue($rows[$f['delta']]['activity']['completed']);
 
-        // Access is the viewer's: the teacher's enrolment in Charlie starts later, the learner's is active.
-        $this->assertSame('open', $rows[$f['alpha']]['access']);
-        $this->assertSame('locked', $rows[$f['charlie']]['access']);
-        $this->assertSame($f['teacherstart'], $rows[$f['charlie']]['lockdate']);
-        $this->assertTrue($rows[$f['charlie']]['isenrolstart']);
+        // The state is the viewer's: the teacher's enrolment in Charlie starts later, the learner's is active.
+        $this->assertSame('enrolled', $rows[$f['alpha']]['state']['key']);
+        $this->assertSame('scheduled', $rows[$f['charlie']]['state']['key']);
+        $teacherdate = userdate($f['teacherstart'], get_string('strftimedatefullshort', 'langconfig'));
+        $this->assertSame(get_string('state_scheduled', 'local_dimensions', $teacherdate), $rows[$f['charlie']]['state']['label']);
+        $this->assertSame(0, $rows[$f['charlie']]['lockdate']);
     }
 
     /**
@@ -108,9 +109,8 @@ final class competency_courses_owner_test extends \advanced_testcase {
         $this->assertSame($rows[$f['alpha']], $teacherrows[$f['alpha']]);
         $this->assertSame($rows[$f['delta']], $teacherrows[$f['delta']]);
 
-        $this->assertSame('open', $rows[$f['charlie']]['access']);
+        $this->assertSame('enrolled', $rows[$f['charlie']]['state']['key']);
         $this->assertSame(0, $rows[$f['charlie']]['lockdate']);
-        $this->assertFalse($rows[$f['charlie']]['isenrolstart']);
     }
 
     /**

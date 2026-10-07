@@ -199,6 +199,48 @@ body[data-bs-theme="dark"],
 }
 
 /* ============================================
+   ENROLMENT STATE TOKENS (--local-dimensions-state-*)
+   ============================================
+
+   The colour families of the course cards' shared state area: one pill per enrolment state, read
+   by the tracker's card and the plan's, the same families theme_boost_union_fundaseg's card uses.
+   Every one is an alias of a tone family of the token block above, so a state follows the site's
+   palette and the page's colour mode exactly as that block does, and adds no colour of its own:
+
+   - enrolled: the brand fill under its ink;
+   - scheduled (and conditional): the brand tint;
+   - pending (and waitlisted): the warning tint;
+   - open: the success tint;
+   - guest (free and key): the info tint;
+   - neutral (suspended, expired, none): the inset surface under the neutral ink.
+
+   A second bare body rule, not lines of the token block, because that block is a 34-token contract
+   shared declaration for declaration with block_dimensions (colour_tokens_test). The pairs each
+   family paints, and their contrast on the light page, the dark page and Moodle 4.5, are held by
+   colour_tokens_test::test_state_tokens_alias_the_families_and_clear_their_floor.
+   ============================================ */
+body {
+    --local-dimensions-state-enrolled-bg: var(--local-dimensions-brand-fill);
+    --local-dimensions-state-enrolled-ink: var(--local-dimensions-on-brand-fill);
+    --local-dimensions-state-enrolled-edge: var(--local-dimensions-brand-fill);
+    --local-dimensions-state-scheduled-bg: var(--local-dimensions-brand-tint);
+    --local-dimensions-state-scheduled-ink: var(--local-dimensions-brand-ink);
+    --local-dimensions-state-scheduled-edge: var(--local-dimensions-brand-edge);
+    --local-dimensions-state-pending-bg: var(--local-dimensions-warning-tint);
+    --local-dimensions-state-pending-ink: var(--local-dimensions-warning-ink);
+    --local-dimensions-state-pending-edge: var(--local-dimensions-warning-edge);
+    --local-dimensions-state-open-bg: var(--local-dimensions-success-tint);
+    --local-dimensions-state-open-ink: var(--local-dimensions-success-ink);
+    --local-dimensions-state-open-edge: var(--local-dimensions-success-edge);
+    --local-dimensions-state-guest-bg: var(--local-dimensions-info-tint);
+    --local-dimensions-state-guest-ink: var(--local-dimensions-info-ink);
+    --local-dimensions-state-guest-edge: var(--local-dimensions-info-edge);
+    --local-dimensions-state-neutral-bg: var(--local-dimensions-surface-inset);
+    --local-dimensions-state-neutral-ink: var(--local-dimensions-neutral-ink);
+    --local-dimensions-state-neutral-edge: var(--local-dimensions-line);
+}
+
+/* ============================================
       PAGE-SPECIFIC OVERRIDES
       Hide the default page header on view-plan / view-competency pages: the hero replaces it.
       ============================================ */
@@ -1129,20 +1171,6 @@ body[data-bs-theme="dark"],
     font-size: 0.8rem;
 }
 
-/* Enrolment open: the lock becomes a way in. */
-.local-dimensions-locked-icon-enrol {
-    border-color: var(--local-dimensions-brand-edge);
-    background-color: var(--local-dimensions-brand-tint);
-    color: var(--local-dimensions-brand-ink);
-}
-
-/* Applied and waiting: neither the brand of an invitation nor the grey of a refusal. */
-.local-dimensions-locked-icon-pending {
-    border-color: var(--local-dimensions-warning-edge);
-    background-color: var(--local-dimensions-warning-tint);
-    color: var(--local-dimensions-warning-ink);
-}
-
 .local-dimensions-enrol-btn {
     display: inline-flex;
     align-items: center;
@@ -1173,11 +1201,6 @@ body[data-bs-theme="dark"],
 .local-dimensions-enrol-btn:focus-visible {
     outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
-}
-
-.local-dimensions-enrol-note {
-    color: var(--local-dimensions-ink-muted);
-    font-size: 0.78rem;
 }
 
 /* "Learn More" button for locked cards */
@@ -1224,6 +1247,145 @@ body[data-bs-theme="dark"],
 .local-dimensions-locked-icon i {
     font-size: 32px;
     line-height: 1;
+}
+
+/* ============================================
+   SHARED STATE AREA
+   One pill per enrolment state, the same on the tracker's card and the plan's: the state's icon
+   and sentence in its colour family. Every text states its colour; the icon is aria-hidden and the
+   sentence carries the state, so no state rests on colour alone.
+   ============================================ */
+.local-dimensions-state-area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375rem;
+}
+
+.local-dimensions-state-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    max-width: 100%;
+    padding: 0.1875rem 0.625rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.local-dimensions-state-pill .fa {
+    flex: none;
+    font-size: 0.875rem;
+}
+
+.local-dimensions-state-enrolled {
+    background-color: var(--local-dimensions-state-enrolled-bg);
+    color: var(--local-dimensions-state-enrolled-ink);
+}
+
+.local-dimensions-state-scheduled {
+    background-color: var(--local-dimensions-state-scheduled-bg);
+    color: var(--local-dimensions-state-scheduled-ink);
+}
+
+.local-dimensions-state-pending {
+    background-color: var(--local-dimensions-state-pending-bg);
+    color: var(--local-dimensions-state-pending-ink);
+}
+
+.local-dimensions-state-open {
+    background-color: var(--local-dimensions-state-open-bg);
+    color: var(--local-dimensions-state-open-ink);
+}
+
+.local-dimensions-state-guest {
+    background-color: var(--local-dimensions-state-guest-bg);
+    color: var(--local-dimensions-state-guest-ink);
+}
+
+.local-dimensions-state-neutral {
+    background-color: var(--local-dimensions-state-neutral-bg);
+    color: var(--local-dimensions-state-neutral-ink);
+}
+
+/* The tracker's disc wears the family too, edge included; two classes, so it outranks the disc's
+   own surface and border above whatever the source order. */
+.local-dimensions-locked-icon.local-dimensions-state-enrolled {
+    border-color: var(--local-dimensions-state-enrolled-edge);
+}
+
+.local-dimensions-locked-icon.local-dimensions-state-scheduled {
+    border-color: var(--local-dimensions-state-scheduled-edge);
+}
+
+.local-dimensions-locked-icon.local-dimensions-state-pending {
+    border-color: var(--local-dimensions-state-pending-edge);
+}
+
+.local-dimensions-locked-icon.local-dimensions-state-open {
+    border-color: var(--local-dimensions-state-open-edge);
+}
+
+.local-dimensions-locked-icon.local-dimensions-state-guest {
+    border-color: var(--local-dimensions-state-guest-edge);
+}
+
+.local-dimensions-locked-icon.local-dimensions-state-neutral {
+    border-color: var(--local-dimensions-state-neutral-edge);
+}
+
+/* In the tracker's raised message box the pill is the box's sentence, at the box's size: the
+   family's ink on the box's own surface. */
+.local-dimensions-locked-message .local-dimensions-state-pill {
+    padding: 0;
+    background-color: transparent;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.local-dimensions-locked-message .local-dimensions-state-pill .fa {
+    font-size: 1rem;
+}
+
+/* The route line: another way in beside a relationship. */
+.local-dimensions-state-route {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.78rem;
+}
+
+/* Written per card, under the element that paints the link's ground, so the contrast scanner can
+   resolve it: the tracker raises the line onto a surface (below), the plan's card is one. */
+.local-dimensions-locked-overlay .local-dimensions-state-route a,
+.local-dimensions-course-card-lg .local-dimensions-state-route a {
+    color: var(--local-dimensions-accent);
+    font-weight: 600;
+}
+
+.local-dimensions-state-route a:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+/* Over the tracker's veil it is a raised note like the message box: on the translucent scrim over
+   the blurred timeline, small muted text and a link could not promise their contrast. */
+.local-dimensions-locked-overlay .local-dimensions-state-route {
+    margin-bottom: 0.5rem;
+    padding: 4px 12px;
+    border-radius: 10px;
+    background-color: var(--local-dimensions-surface);
+    box-shadow: 0 3px 10px var(--local-dimensions-shadow);
+}
+
+/* An open tracker card names its state under the header, level with the timeline's text. */
+.local-dimensions-progress-container .local-dimensions-state-area {
+    margin-bottom: 0.75rem;
+    padding-left: 30px;
 }
 
 /* Single-activity course: one prominent state, the activity's name, and a way in. */
@@ -1472,14 +1634,6 @@ body[data-bs-theme="dark"],
     mask-image: url('[[pix:local_dimensions|status/check-circle-fill]]');
 }
 
-.local-dimensions-icon-lock {
-    width: 40px;
-    height: 40px;
-    background-color: var(--local-dimensions-ink-muted);
-    -webkit-mask-image: url('[[pix:local_dimensions|status/lock]]');
-    mask-image: url('[[pix:local_dimensions|status/lock]]');
-}
-
 .local-dimensions-icon-lock-sm {
     width: 20px;
     height: 20px;
@@ -1580,7 +1734,6 @@ body[data-bs-theme="dark"],
     .local-dimensions-icon-rules-inprogress,
     .local-dimensions-icon-rules-todo,
     .local-dimensions-duedate-icon,
-    .local-dimensions-icon-lock,
     .local-dimensions-icon-lock-sm,
     .local-dimensions-icon-circle,
     .local-dimensions-icon-info {
@@ -2987,7 +3140,7 @@ body[data-bs-theme="dark"],
     opacity: 0.5;
 }
 
-/* Blocked mode drops the card's link, so it must not look clickable. */
+/* A card the viewer cannot open drops the card's link, so it must not look clickable. */
 .local-dimensions-course-card-blocked .local-dimensions-course-link {
     cursor: default;
 }
@@ -3001,40 +3154,39 @@ body[data-bs-theme="dark"],
         0 2px 4px -2px var(--local-dimensions-shadow);
 }
 
-.local-dimensions-course-state {
-    display: flex;
+/* On the plan's card the state area sits under the outcome badge, where the progress row of an
+   open card starts. */
+.local-dimensions-course-body .local-dimensions-state-area {
+    margin-bottom: 0.5rem;
+}
+
+.local-dimensions-course-body .local-dimensions-state-route {
+    justify-content: flex-start;
+}
+
+/* A card the viewer cannot open is not a link, so its state's action is the way in. */
+.local-dimensions-course-cta {
+    display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.5rem;
+    padding: 0.3rem 0.75rem;
     border-radius: 0.4rem;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    line-height: 1.25;
-}
-
-.local-dimensions-course-state-locked {
-    background: var(--local-dimensions-surface-alt);
-    border: 1px solid var(--local-dimensions-line);
-    color: var(--local-dimensions-ink-muted);
-}
-
-.local-dimensions-course-state-enrol {
-    justify-content: center;
     background: var(--local-dimensions-brand-fill);
     color: var(--local-dimensions-on-brand-fill);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
 }
 
-.local-dimensions-course-state-pending {
-    justify-content: center;
-    border: 1px solid var(--local-dimensions-warning-edge);
-    background: var(--local-dimensions-warning-tint);
-    color: var(--local-dimensions-warning-ink);
+.local-dimensions-course-cta:hover,
+.local-dimensions-course-cta:focus {
+    color: var(--local-dimensions-on-brand-fill);
+    text-decoration: none;
+    filter: brightness(0.88);
 }
 
-.local-dimensions-course-hint {
-    font-size: 0.75rem;
-    color: var(--local-dimensions-ink-muted);
-    text-align: center;
+.local-dimensions-course-cta:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
 }
 
 .local-dimensions-course-when {

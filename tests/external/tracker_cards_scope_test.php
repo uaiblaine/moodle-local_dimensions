@@ -268,9 +268,9 @@ final class tracker_cards_scope_test extends \advanced_testcase {
             'cardmode' => \local_dimensions\constants::CARDMODE_TIMELINE,
             'locked' => true,
             'formatted_start_date' => '',
-            'is_enrolment_start' => false,
-            'can_self_enrol' => false,
-            'is_pending' => false,
+            'state' => \local_dimensions\local\enrolment_state::export(
+                \local_dimensions\local\enrolment_provider::none_state((int) $progress['courseid'])
+            ),
             'is_future_date' => false,
             'course_url' => '',
             'error' => '',

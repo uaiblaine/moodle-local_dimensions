@@ -1,0 +1,1 @@
+s/'state' => enrolment_state::export\(enrolment_provider::none_state\(\$courseid\)\),/'state' => enrolment_state::export(enrolment_provider::get()->locked_state((object) ['id' => \$courseid], (int) \$GLOBALS['USER']->id)),/;

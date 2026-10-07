@@ -341,18 +341,13 @@ define(
                 {key: 'progress_tab', component: 'local_dimensions'},
                 {key: 'evidence_journey', component: 'local_dimensions'},
                 {key: 'view_detailed_progress', component: 'local_dimensions'},
-                {key: 'enrol_to_start', component: 'local_dimensions'},
-                {key: 'enrolment_open', component: 'local_dimensions'},
-                {key: 'locked_content', component: 'local_dimensions'},
+                {key: 'learn_more', component: 'local_dimensions'},
                 {key: 'available_at', component: 'local_dimensions'},
-                {key: 'enrolment_starts', component: 'local_dimensions'},
                 {key: 'course_completed', component: 'local_dimensions'},
                 {key: 'filter_not_completed', component: 'local_dimensions'},
                 {key: 'go_to_activity', component: 'local_dimensions'},
                 {key: 'access_content', component: 'local_dimensions'},
                 {key: 'aria_completion_percentage', component: 'local_dimensions'},
-                {key: 'application_pending', component: 'local_dimensions'},
-                {key: 'application_pending_note', component: 'local_dimensions'},
                 {key: 'evidence_hasfiles', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
@@ -437,19 +432,14 @@ define(
                     progressTab: strings[75],
                     evidenceJourney: strings[76],
                     viewDetailedProgress: strings[77],
-                    enrolToStart: strings[78],
-                    enrolmentOpen: strings[79],
-                    lockedContent: strings[80],
-                    availableAt: strings[81],
-                    enrolmentStarts: strings[82],
-                    courseCompleted: strings[83],
-                    notCompleted: strings[84],
-                    goToActivity: strings[85],
-                    accessContent: strings[86],
-                    ariaSectionProgress: strings[87],
-                    applicationPending: strings[88],
-                    applicationPendingNote: strings[89],
-                    evidenceHasFiles: strings[90]
+                    learnMore: strings[78],
+                    availableAt: strings[79],
+                    courseCompleted: strings[80],
+                    notCompleted: strings[81],
+                    goToActivity: strings[82],
+                    accessContent: strings[83],
+                    ariaSectionProgress: strings[84],
+                    evidenceHasFiles: strings[85]
                 };
 
                 /* The strings can be a network round trip of their own, and a layout switch landing
@@ -2171,60 +2161,81 @@ define(
         }
 
         /**
-         * Render the state strip that replaces a card's progress row.
+         * Render the shared state pill: the state's icon and sentence in its colour family.
          *
-         * A progress bar means nothing on a course the learner cannot open yet (enrol, pending
-         * application, locked), can only read 0% or 100% on a course with one trackable activity,
-         * and says less than the section's own ring on a course with one visible section. Only
-         * the progress row is replaced; the name, the outcome badge and the activities drawer stay.
+         * The server composes every part of it (the enrolment_state class), so the plan's card and
+         * the tracker's read the same whichever enrolment provider answered.
+         *
+         * @param {Object} state The state payload of a course row
+         * @return {string} HTML for the pill
+         */
+        function renderStatePill(state) {
+            return '<span class="local-dimensions-state-pill ' + escapeHtml(state.family) + '">' +
+                '<i class="fa ' + escapeHtml(state.icon) + '" aria-hidden="true"></i>' +
+                '<span>' + escapeHtml(state.label) + '</span></span>';
+        }
+
+        /**
+         * Render the state area of a card the viewer cannot open, in place of its progress row.
+         *
+         * The pill, then for a card that offers nothing the course start date, then the state's own
+         * action and the route line beside a relationship. Such a card is not a link, so the action
+         * is the way in; in learn-more mode a card that offers nothing gets the course page as its
+         * action, which is where its whole-card link used to lead.
+         *
+         * @param {Object} course A course row from the web service
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML for the state area
+         */
+        function renderLockedState(course, strMap) {
+            const state = course.state;
+            const isnone = state.key === 'none';
+            let html = '<div class="local-dimensions-state-area">';
+            html += renderStatePill(state);
+
+            /* A date that has already passed explains nothing, so it is dropped. showlockeddate is
+               resolved per plan template in view-plan.php; lockdate is 0 when there is no date. */
+            const lockdate = Number.parseInt(course.lockdate, 10) || 0;
+            if (isnone && displaySettings.showlockeddate && lockdate * 1000 > Date.now()) {
+                html += '<span class="local-dimensions-course-when">';
+                html += '<i class="fa fa-calendar" aria-hidden="true"></i>';
+                html += escapeHtml(strMap.availableAt.replace('{$a}', formatTimestamp(lockdate, strMap.dateFormat)));
+                html += '</span>';
+            }
+
+            let actionlabel = state.actionlabel;
+            let actionurl = state.actionurl;
+            if (!actionurl && isnone && displaySettings.lockedcardmode === 'learnmore') {
+                actionlabel = strMap.learnMore;
+                actionurl = M.cfg.wwwroot + '/course/view.php?id=' + course.id;
+            }
+            if (actionurl) {
+                html += '<a class="local-dimensions-course-cta" href="' + escapeHtml(actionurl) + '">' +
+                    escapeHtml(actionlabel) + '</a>';
+            }
+            if (state.routeurl) {
+                html += '<span class="local-dimensions-state-route">';
+                html += '<i class="fa fa-arrow-right" aria-hidden="true"></i>';
+                html += '<span>' + escapeHtml(state.routelabel) + '</span> ';
+                html += '<a href="' + escapeHtml(state.routeurl) + '">' + escapeHtml(state.routelinklabel) + '</a>';
+                html += '</span>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        /**
+         * Render the compact shape of an open card in place of its progress bar.
+         *
+         * A progress bar can only read 0% or 100% on a course with one trackable activity, and says
+         * less than the section's own ring on a course with one visible section. Only the progress
+         * row is replaced; the name, the outcome badge and the activities drawer stay.
          *
          * @param {Object} course A course row from the web service
          * @param {Object} strMap Language strings map
          * @return {string} HTML, or an empty string when the normal progress bar should render
          */
-        function renderCourseState(course, strMap) {
-            if (course.access === 'enrol') {
-                let html = '<span class="local-dimensions-course-state local-dimensions-course-state-enrol">';
-                html += '<i class="fa fa-sign-in" aria-hidden="true"></i>';
-                html += escapeHtml(strMap.enrolToStart);
-                html += '</span>';
-                html += '<span class="local-dimensions-course-hint">' +
-                    escapeHtml(strMap.enrolmentOpen) + '</span>';
-                return html;
-            }
-
-            /* An enrolment application awaiting a decision. Neither other strip fits: the card
-               offers no way in, so it is not an invitation, and the padlock would say the learner
-               is not eligible when somebody has yet to decide. */
-            if (course.access === 'pending') {
-                let html = '<span class="local-dimensions-course-state local-dimensions-course-state-pending">';
-                html += '<i class="fa fa-hourglass-half" aria-hidden="true"></i>';
-                html += escapeHtml(strMap.applicationPending);
-                html += '</span>';
-                html += '<span class="local-dimensions-course-hint">' +
-                    escapeHtml(strMap.applicationPendingNote) + '</span>';
-                return html;
-            }
-
-            if (course.access === 'locked') {
-                let html = '<span class="local-dimensions-course-state local-dimensions-course-state-locked">';
-                html += '<i class="fa fa-lock" aria-hidden="true"></i>';
-                html += escapeHtml(strMap.lockedContent);
-                html += '</span>';
-
-                /* A date that has already passed explains nothing, so it is dropped. showlockeddate is
-                   resolved per plan template in view-plan.php; lockdate is 0 when there is no date. */
-                const lockdate = Number.parseInt(course.lockdate, 10) || 0;
-                if (displaySettings.showlockeddate && lockdate * 1000 > Date.now()) {
-                    const template = course.isenrolstart ? strMap.enrolmentStarts : strMap.availableAt;
-                    html += '<span class="local-dimensions-course-when">';
-                    html += '<i class="fa fa-calendar" aria-hidden="true"></i>';
-                    html += escapeHtml(template.replace('{$a}', formatTimestamp(lockdate, strMap.dateFormat)));
-                    html += '</span>';
-                }
-                return html;
-            }
-
+        function renderCourseShape(course, strMap) {
             if (course.cardmode === 'section' && course.section) {
                 let html = '<span class="local-dimensions-course-single">';
                 // A section with nothing trackable has no percentage to claim.
@@ -2390,24 +2401,22 @@ define(
                 const activities = course.activities || [];
                 const iscompact = course.cardmode === 'activity' || course.cardmode === 'section';
 
-                const isReachable = course.access !== 'locked' && course.access !== 'enrol'
-                    && course.access !== 'pending';
-                const isBlocked = course.access === 'locked'
-                    && displaySettings.lockedcardmode === 'blocked';
+                /* Only a card the viewer can open is a link and wears the open look. Any other
+                   state dims its image only, keeping the name, the outcome badge and the drawer at
+                   full strength, and drops the whole-card link: its state area carries the way in,
+                   when there is one, as a link of its own. */
+                const isReachable = !!course.state && course.state.key === 'enrolled';
 
                 html += '<div class="local-dimensions-course-card-lg' +
-                    (isReachable ? '' : ' local-dimensions-course-card-dim') +
-                    (isBlocked ? ' local-dimensions-course-card-blocked' : '') +
+                    (isReachable ? '' : ' local-dimensions-course-card-dim local-dimensions-course-card-blocked') +
                     (iscompact ? ' local-dimensions-course-card-compact' : '') + '">';
 
                 /* The whole card links to the course; a compact card (single activity or single
                    section) adds a second target below for its call to action - see
-                   renderCourseGoLink. In blocked mode a locked card leads nowhere, so it is a
-                   span - core would only show the same restriction message the card already
-                   carries. */
-                html += isBlocked
-                    ? '<span class="local-dimensions-course-link">'
-                    : '<a href="' + escapeHtml(courseUrl) + '" class="local-dimensions-course-link">';
+                   renderCourseGoLink. */
+                html += isReachable
+                    ? '<a href="' + escapeHtml(courseUrl) + '" class="local-dimensions-course-link">'
+                    : '<div class="local-dimensions-course-link">';
 
                 // Course image - the compact modes carry no cover image.
                 if (!iscompact) {
@@ -2429,11 +2438,16 @@ define(
                 html += '<h3 class="local-dimensions-course-name-lg">' + escapeHtml(courseName) + '</h3>';
                 html += renderOutcomeBadge(course.ruleoutcome, strMap);
 
-                const state = renderCourseState(course, strMap);
-                html += state === '' ? renderCourseProgress(course) : state;
+                if (isReachable) {
+                    html += '<div class="local-dimensions-state-area">' + renderStatePill(course.state) + '</div>';
+                    const shape = renderCourseShape(course, strMap);
+                    html += shape === '' ? renderCourseProgress(course) : shape;
+                } else {
+                    html += renderLockedState(course, strMap);
+                }
 
                 html += '</div>'; // End local-dimensions-course-body.
-                html += isBlocked ? '</span>' : '</a>';
+                html += isReachable ? '</a>' : '</div>';
 
                 if (iscompact) {
                     html += renderCourseGoLink(course, strMap);

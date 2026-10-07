@@ -381,6 +381,70 @@ final class learner_js_source_test extends \basic_testcase {
     }
 
     /**
+     * The tracker's locked-card settings dress only a card that offers nothing.
+     *
+     * Learn-more mode, the admin's icon and the start date belong to the none state: a card with a
+     * state of its own (an application, a later enrolment, an open route) says that state, which the
+     * server composed, and a Learn more button or a lock icon over it would hide it.
+     *
+     * @return void
+     */
+    public function test_tracker_locked_card_settings_dress_only_the_none_state(): void {
+        $source = $this->code($this->js_source('competency_view'));
+
+        $this->assert_in_order($source, [
+            "var statekey = data.state ? data.state.key : '';",
+            "data.isenrolled = !data.locked && statekey === 'enrolled';",
+            "var isnone = statekey === 'none';",
+            "data.islearnmore = isnone && lockedcardmode === 'learnmore';",
+            'data.showlockeddate = isnone && showlockeddate && (!data.islearnmore || !!data.is_future_date);',
+            "data.customicon = isnone ? cardiconclass : '';",
+        ]);
+        // Each flag is written once, so nothing widens it afterwards.
+        foreach (['data.islearnmore =', 'data.showlockeddate =', 'data.customicon =', 'data.isenrolled ='] as $assignment) {
+            $this->assertSame(1, substr_count($source, $assignment), $assignment);
+        }
+    }
+
+    /**
+     * Only a plan card the viewer can open is a link; every other state carries its own way in.
+     *
+     * The card's state comes from the course list service as a whole state area; the script reads its
+     * key and nothing else of the old access field.
+     *
+     * @return void
+     */
+    public function test_plan_cards_link_only_an_enrolled_course(): void {
+        $source = $this->code($this->js_source('accordion'));
+        $cards = $this->function_body($source, 'renderCourseCardsScrollable');
+
+        $this->assertStringContainsString("const isReachable = !!course.state && course.state.key === 'enrolled';", $cards);
+        $this->assertMatchesRegularExpression(
+            "/html \+= isReachable\s*\? '<a href=\"' \+ escapeHtml\(courseUrl\) \+ '\" class=\"local-dimensions-course-link\">'"
+                . "\s*: '<div class=\"local-dimensions-course-link\">';/",
+            $cards
+        );
+        $this->assert_in_order($cards, [
+            'if (isReachable) {',
+            'renderStatePill(course.state)',
+            '} else {',
+            'html += renderLockedState(course, strMap);',
+        ]);
+        $this->assertStringNotContainsString('course.access', $source);
+
+        // The locked state area: learn-more mode lends the course page only to a card that offers nothing.
+        $locked = $this->function_body($source, 'renderLockedState');
+        $this->assertStringContainsString(
+            "if (!actionurl && isnone && displaySettings.lockedcardmode === 'learnmore') {",
+            $locked
+        );
+        $this->assertStringContainsString(
+            'if (isnone && displaySettings.showlockeddate && lockdate * 1000 > Date.now()) {',
+            $locked
+        );
+    }
+
+    /**
      * The filter tabs offer no teardown, since a re-initialisation after one would wrap twice.
      *
      * @return void

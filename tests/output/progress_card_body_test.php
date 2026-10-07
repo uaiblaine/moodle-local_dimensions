@@ -17,12 +17,13 @@
 namespace local_dimensions\output;
 
 /**
- * The locked overlay of a tracker course card never draws an empty date chip or an empty link.
+ * The tracker course card's state area: the locked overlay's contents and the open card's pill.
  *
- * The card body is rendered in the browser from the course progress service's row, and the row of a
- * course the viewer may not be told about carries no date and no course URL. The template has to
- * degrade into the plain locked message for it: "Opens" followed by nothing, or a Learn more button
- * whose href is empty and leads back to the same page, says something no row ever meant.
+ * The card body is rendered in the browser from the course progress service's row, which carries
+ * the state area ready to print (local_dimensions\local\enrolment_state). The overlay keeps its
+ * frame and its guards: no empty date chip and no empty link, which a row for a course the viewer
+ * may not be told about would otherwise produce. Every state is rendered through the real template,
+ * a bare ampersand in a label included, which the template must escape exactly once.
  *
  * The covers tag is not needed here: the test renders a template and executes no plugin class.
  *
@@ -33,7 +34,31 @@ namespace local_dimensions\output;
  */
 final class progress_card_body_test extends \advanced_testcase {
     /**
+     * A state payload as the service sends it.
+     *
+     * @param string $key The state.
+     * @param array $overrides Fields replacing the defaults.
+     * @return array The payload.
+     */
+    private function state(string $key, array $overrides = []): array {
+        return $overrides + [
+            'key' => $key,
+            'label' => 'Label of ' . $key,
+            'icon' => 'fa-circle-minus',
+            'family' => 'local-dimensions-state-neutral',
+            'actionlabel' => '',
+            'actionurl' => '',
+            'routelabel' => '',
+            'routelinklabel' => '',
+            'routeurl' => '',
+        ];
+    }
+
+    /**
      * Render the card body for a locked card, with the flags the card script derives from the row.
+     *
+     * The defaults are a card in the none state in blocked mode with a date to show, which is what
+     * the script derives for such a row.
      *
      * @param array $overrides Context values replacing the defaults.
      * @return string The rendered HTML.
@@ -47,10 +72,9 @@ final class progress_card_body_test extends \advanced_testcase {
             'courseid' => 42,
             'enabled' => false,
             'locked' => true,
+            'isenrolled' => false,
+            'state' => $this->state('none', ['label' => 'No enrolment available']),
             'formatted_start_date' => '15 Jan 2031',
-            'is_enrolment_start' => false,
-            'can_self_enrol' => false,
-            'is_pending' => false,
             'is_future_date' => true,
             'islearnmore' => false,
             'showlockeddate' => true,
@@ -61,6 +85,18 @@ final class progress_card_body_test extends \advanced_testcase {
             'istimeline' => true,
             'sections' => [],
         ]);
+    }
+
+    /**
+     * The overlay of the given HTML, from its opening tag to the end of the body.
+     *
+     * @param string $html The rendered card body.
+     * @return string The overlay's markup and what follows it.
+     */
+    private function overlay(string $html): string {
+        $start = strpos($html, 'local-dimensions-locked-overlay');
+        $this->assertNotFalse($start, 'The card has no overlay.');
+        return substr($html, $start);
     }
 
     /**
@@ -81,20 +117,7 @@ final class progress_card_body_test extends \advanced_testcase {
     }
 
     /**
-     * An enrolment start date takes the same guard.
-     *
-     * @return void
-     */
-    public function test_an_enrolment_start_chip_needs_a_date_too(): void {
-        $withdate = $this->render_locked(['is_enrolment_start' => true]);
-        $this->assertStringContainsString('local-dimensions-locked-date', $withdate);
-
-        $withoutdate = $this->render_locked(['is_enrolment_start' => true, 'formatted_start_date' => '']);
-        $this->assertStringNotContainsString('local-dimensions-locked-date', $withoutdate);
-    }
-
-    /**
-     * In learn-more mode a row with no course URL gets the plain locked message, not an empty link.
+     * In learn-more mode a row with no course URL gets the message box, not an empty link.
      *
      * @return void
      */
@@ -114,35 +137,145 @@ final class progress_card_body_test extends \advanced_testcase {
     /**
      * The unavailable row of the web service, rendered as the card script would, draws neither.
      *
-     * The row is what get_course_progress hands back for a course the viewer may not be told about;
-     * both modes are checked, with the date shown as the script's setting would have it.
+     * The row is what get_course_progress hands back for a course the viewer may not be told about:
+     * the none state with no action and no route, no date and no course URL. Both modes are checked,
+     * with the date shown as the script's setting would have it.
      *
      * @return void
      */
     public function test_the_unavailable_row_draws_neither_in_either_mode(): void {
-        $row = [
-            'courseid' => 42,
-            'enabled' => false,
-            'locked' => true,
-            'formatted_start_date' => '',
-            'is_enrolment_start' => false,
-            'can_self_enrol' => false,
-            'is_pending' => false,
-            'is_future_date' => false,
-            'course_url' => '',
-            'sections' => [],
-            'cardmode' => 'timeline',
-        ];
         foreach ([false, true] as $learnmore) {
             $html = $this->render_locked([
                 'islearnmore' => $learnmore,
                 'showlockeddate' => !$learnmore,
-                'formatted_start_date' => $row['formatted_start_date'],
-                'courseurl' => $row['course_url'],
+                'formatted_start_date' => '',
+                'courseurl' => '',
             ]);
             $this->assertStringContainsString('local-dimensions-locked-message', $html);
             $this->assertStringNotContainsString('local-dimensions-locked-date', $html);
             $this->assertStringNotContainsString('local-dimensions-learnmore-btn', $html);
+            $this->assertStringNotContainsString('local-dimensions-enrol-btn', $html);
+            $this->assertStringNotContainsString('href=""', $html);
         }
+    }
+
+    /**
+     * The overlay holds the shared state area: the disc in the family and icon, the pill, the action, the route line.
+     *
+     * @return void
+     */
+    public function test_the_overlay_holds_the_state_area(): void {
+        $html = $this->overlay($this->render_locked([
+            'state' => $this->state('pending', [
+                'label' => 'Application under review',
+                'icon' => 'fa-hourglass-half',
+                'family' => 'local-dimensions-state-pending',
+                'actionlabel' => 'View status',
+                'actionurl' => '/enrol/index.php?id=42',
+                'routelabel' => 'You can also enrol now',
+                'routelinklabel' => 'Enrol now',
+                'routeurl' => '/enrol/index.php?id=42&amp;x=1',
+            ]),
+            'showlockeddate' => false,
+        ]));
+
+        $this->assertMatchesRegularExpression(
+            '~class="local-dimensions-locked-icon local-dimensions-state-pending">\s*'
+                . '<i class="fa fa-hourglass-half" aria-hidden="true">~',
+            $html
+        );
+        $this->assertStringContainsString(
+            '<div class="local-dimensions-locked-message">'
+                . '<span class="local-dimensions-state-pill local-dimensions-state-pending">'
+                . '<i class="fa fa-hourglass-half" aria-hidden="true"></i><span>Application under review</span>',
+            $html
+        );
+        $this->assertStringContainsString(
+            '<a href="/enrol/index.php?id=42" class="local-dimensions-enrol-btn">View status</a>',
+            $html
+        );
+        $this->assertStringContainsString('<div class="local-dimensions-state-route">', $html);
+        $this->assertStringContainsString('You can also enrol now', $html);
+        $this->assertStringContainsString('>Enrol now</a>', $html);
+        // The action comes before the route line: the line is the note under the action.
+        $this->assertLessThan(strpos($html, 'local-dimensions-state-route'), strpos($html, 'local-dimensions-enrol-btn'));
+    }
+
+    /**
+     * A state with neither action nor route draws neither, and no learn-more mode applies to it.
+     *
+     * @return void
+     */
+    public function test_a_state_without_an_action_or_route_draws_neither(): void {
+        $html = $this->overlay($this->render_locked([
+            'state' => $this->state('scheduled', ['label' => 'Access from 15 Jan 2031']),
+            'showlockeddate' => false,
+        ]));
+
+        $this->assertStringContainsString('Access from 15 Jan 2031', $html);
+        $this->assertStringNotContainsString('local-dimensions-enrol-btn', $html);
+        $this->assertStringNotContainsString('local-dimensions-state-route', $html);
+        $this->assertStringNotContainsString('local-dimensions-locked-date', $html);
+    }
+
+    /**
+     * The admin's icon replaces the state's icon in the disc.
+     *
+     * @return void
+     */
+    public function test_the_admins_icon_replaces_the_states_in_the_disc(): void {
+        $html = $this->overlay($this->render_locked(['customicon' => 'fa fa-fw fa-star']));
+        $disc = substr($html, 0, (int) strpos($html, 'local-dimensions-locked-message'));
+
+        $this->assertStringContainsString('<i class="fa fa-fw fa-star" aria-hidden="true"></i>', $disc);
+        $this->assertStringNotContainsString('fa-circle-minus', $disc);
+
+        // Control: without it, the state's own icon.
+        $html = $this->overlay($this->render_locked([]));
+        $disc = substr($html, 0, (int) strpos($html, 'local-dimensions-locked-message'));
+        $this->assertStringContainsString('<i class="fa fa-circle-minus" aria-hidden="true"></i>', $disc);
+    }
+
+    /**
+     * A label is escaped exactly once: a bare ampersand prints as one entity, never two.
+     *
+     * @return void
+     */
+    public function test_a_label_is_escaped_once(): void {
+        $html = $this->render_locked([
+            'state' => $this->state('conditional', ['label' => 'Unlocks when you complete Safety & Health']),
+        ]);
+
+        $this->assertStringContainsString('Unlocks when you complete Safety &amp; Health', $html);
+        $this->assertStringNotContainsString('&amp;amp;', $html);
+        $this->assertStringNotContainsString('Safety & Health', $html);
+    }
+
+    /**
+     * An open card shows its pill under the header and no overlay; a locked one shows no such pill.
+     *
+     * @return void
+     */
+    public function test_an_open_card_shows_its_pill_and_no_overlay(): void {
+        $html = $this->render_locked([
+            'locked' => false,
+            'isenrolled' => true,
+            'state' => $this->state('enrolled', [
+                'label' => 'Enrolled',
+                'icon' => 'fa-circle-check',
+                'family' => 'local-dimensions-state-enrolled',
+            ]),
+        ]);
+
+        $this->assertStringNotContainsString('local-dimensions-locked-overlay', $html);
+        $this->assertMatchesRegularExpression(
+            '~<div class="local-dimensions-state-area">\s*'
+                . '<span class="local-dimensions-state-pill local-dimensions-state-enrolled">~',
+            $html
+        );
+
+        // Control: a locked card has no state area outside its overlay.
+        $locked = $this->render_locked([]);
+        $this->assertStringNotContainsString('local-dimensions-state-area', $locked);
     }
 }
