@@ -309,6 +309,36 @@ final class enrolment_provider_unlisted_test extends \advanced_testcase {
     }
 
     /**
+     * The 5.02 CI job must check local_unlistedcourses out, or the real-plugin cases skip on every leg.
+     *
+     * The control for the cases above that skip without the plugin; the workflow file is the only place
+     * that condition can be checked. Only the 5.02 job is held to it, because the plugin declares
+     * $plugin->supported = [502, 502].
+     *
+     * @return void
+     */
+    public function test_ci_checks_out_unlistedcourses_on_the_502_leg(): void {
+        $workflow = dirname(__DIR__, 2) . '/.github/workflows/ci.yml';
+        if (!is_readable($workflow)) {
+            $this->markTestSkipped('No .github/workflows/ci.yml: a release install export-ignores .github.');
+        }
+        $jobs = preg_split('/\n  (?=[a-z0-9-]+:\n)/', file_get_contents($workflow));
+        $found = false;
+        foreach ($jobs as $job) {
+            if (!str_contains($job, 'MOODLE_502_STABLE')) {
+                continue;
+            }
+            $found = true;
+            $this->assertMatchesRegularExpression(
+                '/plugin-dependencies:.*\n(\s+.*\n)*?\s*\S*moodle-local_unlistedcourses,main\b/',
+                $job,
+                'The 5.02 CI job does not check out moodle-local_unlistedcourses under plugin-dependencies.'
+            );
+        }
+        $this->assertTrue($found, 'No MOODLE_502_STABLE job was found in ci.yml.');
+    }
+
+    /**
      * The state and date of a translated answer.
      *
      * @param array $state The state facts.

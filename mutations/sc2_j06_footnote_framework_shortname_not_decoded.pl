@@ -1,1 +1,1 @@
-s/pathParts\.push\(escapeHtml\(fromExporter\(data\.framework\.shortname\)\)\);/pathParts.push(escapeHtml(data.framework.shortname));/;
+s/escapeHtml\(fromExporter\(data\.framework\.shortname\)\)/escapeHtml(data.framework.shortname)/;
