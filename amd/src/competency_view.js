@@ -194,10 +194,9 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                 data.isenrolled = !data.locked && statekey === 'enrolled';
                 var isnone = statekey === 'none';
                 data.islearnmore = isnone && lockedcardmode === 'learnmore';
-                /* The date reads as an invitation ("Opens ..."), so a past one says nothing
-                   next to a Learn more button and is dropped there. Blocked mode keeps it:
-                   that card offers no way in, so the date is the only fact it has. */
-                data.showlockeddate = isnone && showlockeddate && (!data.islearnmore || !!data.is_future_date);
+                /* The start date tells a learner that a later course or stage exists, so it shows
+                   only while it is still ahead: a date that has passed says nothing true. */
+                data.showlockeddate = isnone && showlockeddate && !!data.is_future_date;
                 data.customicon = isnone ? cardiconclass : '';
                 data.courseurl = data.course_url || '';
                 data.learnmorebuttoncolor = learnmorebuttoncolor;
