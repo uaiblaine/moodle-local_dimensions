@@ -397,7 +397,7 @@ final class learner_js_source_test extends \basic_testcase {
             "data.isenrolled = !data.locked && statekey === 'enrolled';",
             "var isnone = statekey === 'none';",
             "data.islearnmore = isnone && lockedcardmode === 'learnmore';",
-            'data.showlockeddate = isnone && showlockeddate && (!data.islearnmore || !!data.is_future_date);',
+            'data.showlockeddate = isnone && showlockeddate && !!data.is_future_date;',
             "data.customicon = isnone ? cardiconclass : '';",
         ]);
         // Each flag is written once, so nothing widens it afterwards.

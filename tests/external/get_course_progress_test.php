@@ -176,6 +176,34 @@ final class get_course_progress_test extends \advanced_testcase {
     }
 
     /**
+     * A locked course with nothing on offer carries a past start date as not-future, a future one as future.
+     *
+     * The tracker shows the "Opens on" chip only for a date still ahead, and reads that from this flag.
+     *
+     * @return void
+     */
+    public function test_execute_flags_only_a_future_start_date_on_a_locked_none_course(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $past = $this->getDataGenerator()->create_course(['startdate' => time() - WEEKSECS]);
+        $future = $this->getDataGenerator()->create_course(['startdate' => time() + WEEKSECS]);
+        $user = $this->getDataGenerator()->create_user();
+        $this->link_competency((int) $past->id, (int) $future->id);
+        $this->setUser($user);
+
+        $pastrow = $this->cleaned_row_for((int) $past->id);
+        $this->assertTrue($pastrow['locked']);
+        $this->assertSame('none', $pastrow['state']['key']);
+        $this->assertFalse($pastrow['is_future_date']);
+
+        $futurerow = $this->cleaned_row_for((int) $future->id);
+        $this->assertTrue($futurerow['locked']);
+        $this->assertSame('none', $futurerow['state']['key']);
+        $this->assertTrue($futurerow['is_future_date']);
+    }
+
+    /**
      * A lodged application reaches the tracker card as its own state, not as self-enrolment.
      *
      * The card body renders whatever state arrives, so the service is where the two are told apart.

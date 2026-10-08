@@ -63,6 +63,8 @@ Decided by the owner after the comment audit's findings were re-checked against 
 
 ### Fixed
 
+- The tracker card shows "Opens on <date>" only while the course start date is still ahead, in both
+  locked-card modes, as the plan accordion already did. A start date that has passed is no longer shown.
 - A course card no longer announces "Enrolment opens <date>" for an enrolment that cannot open: a
   suspended enrolment, or one on a disabled enrolment method, gives no start date, and neither does a
   period that ends before it starts. The card shows the generic locked state with the course start date.
