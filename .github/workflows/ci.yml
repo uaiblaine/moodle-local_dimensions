@@ -42,6 +42,14 @@ jobs:
   # test_ci_checks_out_the_family_sibling reads this file and fails the build for
   # any job that drops the line.
   #
+  # local_unlistedcourses is the optional provider behind the useunlistedcourses switch, reached
+  # only through UNLISTED_API behind unlisted_available() (branch >= 502); it is not a runtime
+  # dependency. It is checked out so the real-plugin cases of enrolment_provider_unlisted_test and
+  # the plugin half of enrolment_provider_test::test_availability_follows_the_plugin_and_the_branch
+  # run instead of skipping. Only ci-502 lists it: the plugin declares $plugin->supported =
+  # [502, 502] and its 5.2 branch is main. test_ci_checks_out_unlistedcourses_on_the_502_leg
+  # fails the build if the line is dropped.
+  #
   # 4.05 lists only block_dimensions: enrol_apply declares
   # $plugin->supported = [501, 502] and cannot install on Moodle 4.5, so the
   # apply tests skip on that leg. block_dimensions declares [405, 502].
@@ -53,6 +61,7 @@ jobs:
       plugin-dependencies: |
         uaiblaine/moodle-enrol_apply,master
         uaiblaine/moodle-block_dimensions,main
+        uaiblaine/moodle-local_unlistedcourses,main
 
   ci-501:
     name: Moodle 5.01
