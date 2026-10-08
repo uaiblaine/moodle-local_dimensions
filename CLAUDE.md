@@ -56,9 +56,9 @@ mdl mutate moodle-local_dimensions mutations/<spec>.conf --fast     # both --db 
 
 - `amd/build/**` is tracked: rebuild and commit with the source plus a `version.php` bump.
 - A `version.php` bump stales the test sites: `mdl phpunit-init` / `mdl behat-init` first.
-- `mdl ci` cannot install `local_unlistedcourses`, so the real-plugin halves of
-  `enrolment_provider_unlisted_test` and `enrolment_provider_test` skip there: run the full
-  suite on a 5.2 stack that mounts it before merging.
+- The 5.02 legs (GitHub and `mdl ci`) install `local_unlistedcourses`, so the real-plugin halves
+  of `enrolment_provider_unlisted_test` and `enrolment_provider_test` run there and skip on 5.01
+  and 4.05; `test_ci_checks_out_unlistedcourses_on_the_502_leg` fails if the job drops it.
 - Cloud session (no `mdl`): `mpci` from this directory, `mpci --branch MOODLE_405_STABLE`,
   `mpci --reuse --only phpunit --filter <test>`; the owner runs the matrix before merging.
 - Test zip: `git archive --format=zip --prefix=dimensions/ HEAD -o
