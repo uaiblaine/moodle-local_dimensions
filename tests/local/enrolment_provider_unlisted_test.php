@@ -179,6 +179,85 @@ final class enrolment_provider_unlisted_test extends \advanced_testcase {
     }
 
     /**
+     * A blocked answer with the plugin's opening date is the none state carrying that date.
+     *
+     * The date is the plugin's: it fills opens only on a blocked answer, so only there is it read.
+     *
+     * @return void
+     */
+    public function test_a_blocked_answer_carries_its_opening_date(): void {
+        $norow = ['type' => 'none', 'startsat' => 0, 'endsat' => 0];
+        $opens = 1893456000;
+        $blocked = ['type' => 'blocked', 'routes' => [], 'blocked' => 'window', 'opens' => $opens];
+
+        $state = enrolment_provider_unlisted::translate(self::COURSE, $norow, $blocked);
+        $this->assertSame([enrolment_provider::STATE_NONE, $opens], [$state['state'], $state['opens']]);
+        $this->assertNull($state['actionurl']);
+        $this->assertNull($state['routeurl']);
+
+        // Controls: no date, a null date, or a date on an answer that is not blocked carry none.
+        $none = enrolment_provider::none_state(self::COURSE);
+        unset($blocked['opens']);
+        $this->assertSame($none, enrolment_provider_unlisted::translate(self::COURSE, $norow, $blocked));
+        $blocked['opens'] = null;
+        $this->assertSame($none, enrolment_provider_unlisted::translate(self::COURSE, $norow, $blocked));
+        $nothing = ['type' => 'none', 'routes' => [], 'opens' => $opens];
+        $this->assertSame($none, enrolment_provider_unlisted::translate(self::COURSE, $norow, $nothing));
+    }
+
+    /**
+     * A suspended or ended relationship carries the opening date; the other relationships do not.
+     *
+     * The next action is independent of the relationship, so a learner whose enrolment was suspended
+     * or has ended may still be told when a window opens. A scheduled, pending or waitlisted card
+     * already names its own date or way in.
+     *
+     * @return void
+     */
+    public function test_only_a_suspended_or_ended_relationship_carries_an_opening_date(): void {
+        $opens = 1893456000;
+        $blocked = ['type' => 'blocked', 'routes' => [], 'blocked' => 'window', 'opens' => $opens];
+
+        foreach (['suspended', 'expired'] as $type) {
+            $state = enrolment_provider_unlisted::translate(self::COURSE, ['type' => $type, 'endsat' => 1000], $blocked);
+            $this->assertSame([$type, $opens], [$state['state'], $state['opens']], $type);
+            // Control: the same date on an answer that is not blocked is not read.
+            $nothing = ['type' => 'none', 'routes' => [], 'opens' => $opens];
+            $this->assertSame(0, enrolment_provider_unlisted::translate(self::COURSE, ['type' => $type], $nothing)['opens'], $type);
+        }
+        foreach (['scheduled', 'pending', 'waitlisted'] as $type) {
+            $state = enrolment_provider_unlisted::translate(self::COURSE, ['type' => $type], $blocked);
+            $this->assertSame([$type, 0], [$state['state'], $state['opens']], $type);
+        }
+    }
+
+    /**
+     * A build of the plugin without the opens key reads as no date, through the batch and the single card.
+     *
+     * The stand-in answers as such a build does: its blocked answer has no opens key.
+     *
+     * @return void
+     */
+    public function test_an_answer_without_the_opens_key_gives_no_chip(): void {
+        $this->resetAfterTest();
+        unlisted_access_stub::$nextactions[5] = ['type' => 'blocked', 'routes' => [], 'blocked' => 'window'];
+        unlisted_access_stub::$nextactions[6] = ['type' => 'blocked', 'routes' => [], 'blocked' => 'window', 'opens' => 1893456000];
+        $provider = new stubbed_unlisted_provider();
+
+        $states = $provider->locked_states([5 => (object) ['id' => 5], 6 => (object) ['id' => 6]], 0);
+        $single = $provider->locked_state((object) ['id' => 5], 0);
+
+        foreach ([$states[5], $single] as $state) {
+            $payload = enrolment_state::export($state);
+            $this->assertSame(['none', 0, ''], [$payload['key'], $payload['opens'], $payload['openslabel']]);
+        }
+        // Control: the build that has the key gets the chip through the same batch.
+        $payload = enrolment_state::export($states[6]);
+        $this->assertSame(1893456000, $payload['opens']);
+        $this->assertNotSame('', $payload['openslabel']);
+    }
+
+    /**
      * One card asks the plugin's per-course pair, and nothing else.
      *
      * @return void
@@ -258,6 +337,7 @@ final class enrolment_provider_unlisted_test extends \advanced_testcase {
         sort($mappednext);
         $this->assertSame($nextactions, $mappednext);
         $this->assertSame(constant($api . '::GUEST_KEY'), enrolment_provider_unlisted::GUEST_KEY);
+        $this->assertSame(constant($api . '::NEXT_BLOCKED'), enrolment_provider_unlisted::BLOCKED);
     }
 
     /**

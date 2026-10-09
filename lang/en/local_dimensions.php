@@ -483,6 +483,7 @@ $string['enrollmentfilter_desc'] = 'Filter which courses are displayed in the Co
 $string['enrollmentfilter_enrolled'] = 'Show only enrolled courses (includes future enrolments)';
 $string['enrollmentfilter_enrolledorself'] = 'Show enrolled courses and those the learner may join';
 $string['enrollmentfilter_inherit'] = 'Use global setting (default)';
+$string['enrolmentopens'] = 'Enrolment opens on {$a}';
 $string['entityname_competency_extras'] = 'Competency: Dimensions custom fields';
 $string['entityname_plan'] = 'Learning plan';
 $string['entityname_template'] = 'Learning plan template';

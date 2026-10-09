@@ -2178,10 +2178,12 @@ define(
         /**
          * Render the state area of a card the viewer cannot open, in place of its progress row.
          *
-         * The pill, then for a card that offers nothing the course start date, then the state's own
-         * action and the route line beside a relationship. Such a card is not a link, so the action
-         * is the way in; in learn-more mode a card that offers nothing gets the course page as its
-         * action, which is where its whole-card link used to lead.
+         * The pill, then the day its enrolment opens when the server names one, else for a card that
+         * offers nothing the course start date, then the state's own action and the route line beside
+         * a relationship.
+         * Such a card is not a link, so the action is the way in; in learn-more mode a card that
+         * offers nothing gets the course page as its action, which is where its whole-card link used
+         * to lead.
          *
          * @param {Object} course A course row from the web service
          * @param {Object} strMap Language strings map
@@ -2192,6 +2194,16 @@ define(
             const isnone = state.key === 'none';
             let html = '<div class="local-dimensions-state-area">';
             html += renderStatePill(state);
+
+            /* The day the enrolment window opens, whatever showlockeddate says. The server sends the
+               chip's sentence ready to print on a none, suspended or ended card, and on a none card
+               then sends lockdate 0. */
+            if (state.openslabel) {
+                html += '<span class="local-dimensions-course-when" data-region="enrolment-opens">';
+                html += '<i class="fa fa-calendar" aria-hidden="true"></i>';
+                html += escapeHtml(state.openslabel);
+                html += '</span>';
+            }
 
             /* A date that has already passed explains nothing, so it is dropped. showlockeddate is
                resolved per plan template in view-plan.php; lockdate is 0 when there is no date. */
