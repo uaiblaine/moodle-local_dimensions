@@ -186,12 +186,10 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                    same factor: the r=12 circle's circumference is 75.4. Scaling is CSS's
                    job, which is why there is no second formula here. */
                 data.sectiondasharray = (data.sectionpercentage * 0.754).toFixed(2);
-                /* The state area comes from the server, label and destinations included. Two of
-                   its states change the card's frame: an open card shows its pill under the
-                   header, and a locked card that offers nothing (none) is the one the locked-card
-                   settings dress - the learn-more button, the admin's icon and the start date. */
+                /* The state area comes from the server, label and destinations included. A locked
+                   card that offers nothing (none) is the one the locked-card settings dress - the
+                   learn-more button, the admin's icon and the start date. */
                 var statekey = data.state ? data.state.key : '';
-                data.isenrolled = !data.locked && statekey === 'enrolled';
                 var isnone = statekey === 'none';
                 data.islearnmore = isnone && lockedcardmode === 'learnmore';
                 /* The start date tells a learner that a later course or stage exists, so it shows
