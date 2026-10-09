@@ -204,6 +204,36 @@ final class progress_card_body_test extends \advanced_testcase {
     }
 
     /**
+     * The pill of a learn-more card with no course URL holds the label and no icon, as the default pill does.
+     *
+     * @return void
+     */
+    public function test_the_learn_more_pill_without_a_course_url_carries_no_icon(): void {
+        $html = $this->overlay($this->render_locked([
+            'state' => $this->state('pending', [
+                'label' => 'Application under review',
+                'icon' => 'fa-hourglass-half',
+                'family' => 'local-dimensions-state-pending',
+            ]),
+            'islearnmore' => true,
+            'courseurl' => '',
+            'showlockeddate' => false,
+        ]));
+
+        // Control: the disc keeps the state's icon, so this is a locked card in the learn-more branch.
+        $this->assertStringContainsString('<i class="fa fa-hourglass-half" aria-hidden="true"></i>', $html);
+        $this->assertStringNotContainsString('local-dimensions-learnmore-btn', $html);
+
+        $this->assertSame(1, preg_match('~<div class="local-dimensions-locked-message">(.*?)</div>~s', $html, $message));
+        $this->assertStringContainsString(
+            '<span class="local-dimensions-state-pill local-dimensions-state-pending">'
+                . '<span>Application under review</span>',
+            $message[1]
+        );
+        $this->assertStringNotContainsString('<i ', $message[1]);
+    }
+
+    /**
      * A state with neither action nor route draws neither, and no learn-more mode applies to it.
      *
      * @return void
