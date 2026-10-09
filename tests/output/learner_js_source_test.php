@@ -394,14 +394,13 @@ final class learner_js_source_test extends \basic_testcase {
 
         $this->assert_in_order($source, [
             "var statekey = data.state ? data.state.key : '';",
-            "data.isenrolled = !data.locked && statekey === 'enrolled';",
             "var isnone = statekey === 'none';",
             "data.islearnmore = isnone && lockedcardmode === 'learnmore';",
             'data.showlockeddate = isnone && showlockeddate && !!data.is_future_date;',
             "data.customicon = isnone ? cardiconclass : '';",
         ]);
         // Each flag is written once, so nothing widens it afterwards.
-        foreach (['data.islearnmore =', 'data.showlockeddate =', 'data.customicon =', 'data.isenrolled ='] as $assignment) {
+        foreach (['data.islearnmore =', 'data.showlockeddate =', 'data.customicon ='] as $assignment) {
             $this->assertSame(1, substr_count($source, $assignment), $assignment);
         }
     }
@@ -424,9 +423,12 @@ final class learner_js_source_test extends \basic_testcase {
                 . "\s*: '<div class=\"local-dimensions-course-link\">';/",
             $cards
         );
+        // An enrolled card draws no state area, and a card that is not open keeps its pill in renderLockedState().
+        $this->assertStringNotContainsString('renderStatePill', $cards);
+        $this->assertStringNotContainsString('local-dimensions-state-area', $cards);
         $this->assert_in_order($cards, [
             'if (isReachable) {',
-            'renderStatePill(course.state)',
+            'renderCourseShape(course, strMap)',
             '} else {',
             'html += renderLockedState(course, strMap);',
         ]);
