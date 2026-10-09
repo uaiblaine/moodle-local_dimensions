@@ -45,6 +45,10 @@ namespace local_dimensions\local;
  * form is; free guest access to the course itself; a prerequisite to that course, which the plugin
  * names only to a viewer actively enrolled in it.
  *
+ * A blocked answer stays the none state, and carries the plugin's `opens` date when it has one: the
+ * day an enrolment window that is the only refusal opens. The date is the plugin's to work out; a
+ * build of it older than that key answers without one, which reads as no date.
+ *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -84,6 +88,9 @@ class enrolment_provider_unlisted extends enrolment_provider {
 
     /** @var string The next action's guest value for access behind a key (access::GUEST_KEY). */
     public const GUEST_KEY = 'key';
+
+    /** @var string The next action of a viewer every method refuses now (access::NEXT_BLOCKED). */
+    public const BLOCKED = 'blocked';
 
     /**
      * Which implementation this is.
@@ -153,7 +160,8 @@ class enrolment_provider_unlisted extends enrolment_provider {
      *
      * @param int $courseid The course id.
      * @param array $relationship The answer of access::get_enrolment_state(): type, startsat, endsat.
-     * @param array $next The answer of access::get_next_action(): type, routes, guest, conditional.
+     * @param array $next The answer of access::get_next_action(): type, routes, guest, conditional,
+     *        and opens on a build that has it.
      * @return array The state facts.
      */
     public static function translate(int $courseid, array $relationship, array $next): array {
@@ -192,6 +200,10 @@ class enrolment_provider_unlisted extends enrolment_provider {
                 }
                 return self::state($state, $courseid, 0, self::course_url($prerequisiteid), null, $prerequisiteid);
             default:
+                $opens = ($next['type'] ?? null) === self::BLOCKED ? (int) ($next['opens'] ?? 0) : 0;
+                if ($opens > 0) {
+                    return self::state(self::STATE_NONE, $courseid, 0, null, null, 0, $opens);
+                }
                 return self::none_state($courseid);
         }
     }

@@ -43,8 +43,10 @@ namespace local_dimensions\local;
  * A state is a plain array of facts, rendered by {@see enrolment_state::export()}:
  * state (one of the STATE_* constants), courseid, date (the start of a scheduled enrolment, the end
  * of an ended one, 0 otherwise), prerequisiteid (the course a conditional state waits for, 0
- * otherwise), actionurl (where the state's own action leads, null for a state with none) and
- * routeurl (where the route line beside a relationship leads, null when no route is open).
+ * otherwise), actionurl (where the state's own action leads, null for a state with none),
+ * routeurl (where the route line beside a relationship leads, null when no route is open) and
+ * opens (when an enrolment window that is the only thing refusing the viewer opens, on a none
+ * state only, 0 otherwise; only local_unlistedcourses knows it, so the core rule never sets it).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -194,6 +196,7 @@ abstract class enrolment_provider {
      *        relationship (scheduled, pending, waitlisted, suspended, expired) is given one: an offer
      *        (open, free, key, conditional) is itself the way in.
      * @param int $prerequisiteid The course a conditional state waits for, else 0.
+     * @param int $opens When the enrolment window refusing a none state opens, else 0.
      * @return array The state facts.
      */
     protected static function state(
@@ -202,7 +205,8 @@ abstract class enrolment_provider {
         int $date = 0,
         ?string $actionurl = null,
         ?string $routeurl = null,
-        int $prerequisiteid = 0
+        int $prerequisiteid = 0,
+        int $opens = 0
     ): array {
         return [
             'state' => $state,
@@ -211,6 +215,7 @@ abstract class enrolment_provider {
             'prerequisiteid' => $prerequisiteid,
             'actionurl' => $actionurl,
             'routeurl' => $routeurl,
+            'opens' => $opens,
         ];
     }
 
