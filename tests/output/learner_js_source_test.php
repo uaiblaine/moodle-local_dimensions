@@ -447,6 +447,34 @@ final class learner_js_source_test extends \basic_testcase {
     }
 
     /**
+     * The day enrolment opens is printed from the server's sentence, ahead of the course start, ungated.
+     *
+     * The plan card prints state.openslabel whatever showlockeddate says, and formats no date of its
+     * own for it: the date is local_unlistedcourses', and the server already withdrew lockdate on such
+     * a card. The tracker's card prints the same sentence from its template, so its script never
+     * reads the date.
+     *
+     * @return void
+     */
+    public function test_cards_print_the_enrolment_opening_from_the_payload(): void {
+        $accordion = $this->code($this->js_source('accordion'));
+        $locked = $this->function_body($accordion, 'renderLockedState');
+
+        $this->assert_in_order($locked, [
+            'html += renderStatePill(state);',
+            'if (state.openslabel) {',
+            'html += escapeHtml(state.openslabel);',
+            'const lockdate = Number.parseInt(course.lockdate, 10) || 0;',
+        ]);
+        $this->assertSame(1, preg_match('/if \(state\.openslabel\) \{\n(.*?)\n\s*\}/s', $locked, $match));
+        $this->assertStringNotContainsString('showlockeddate', $match[1]);
+        $this->assertDoesNotMatchRegularExpression('/state\.opens\b/', $accordion);
+
+        $tracker = $this->code($this->js_source('competency_view'));
+        $this->assertDoesNotMatchRegularExpression('/state\.opens\b/', $tracker);
+    }
+
+    /**
      * The filter tabs offer no teardown, since a re-initialisation after one would wrap twice.
      *
      * @return void

@@ -49,6 +49,7 @@ final class enrolment_state_test extends \advanced_testcase {
             'prerequisiteid' => 0,
             'actionurl' => null,
             'routeurl' => null,
+            'opens' => 0,
         ];
     }
 
@@ -179,6 +180,53 @@ final class enrolment_state_test extends \advanced_testcase {
     }
 
     /**
+     * A none state carrying the day its enrolment window opens exports that date and its chip.
+     *
+     * @return void
+     */
+    public function test_a_none_state_names_the_day_its_enrolment_opens(): void {
+        $this->resetAfterTest();
+        $opens = 1893456000;
+        $payload = enrolment_state::export($this->facts(provider::STATE_NONE, ['opens' => $opens]));
+
+        $date = userdate($opens, get_string('strftimedatefullshort', 'langconfig'));
+        $this->assertSame($opens, $payload['opens']);
+        $this->assertSame('Enrolment opens on ' . $date, $payload['openslabel']);
+        // The pill keeps the none state's own sentence: the card is still one that offers nothing now.
+        $this->assertSame(['none', 'No enrolment available'], [$payload['key'], $payload['label']]);
+        $this->assertTrue(enrolment_state::course_start_yields($this->facts(provider::STATE_NONE, ['opens' => $opens])));
+
+        // Control: the same none state without the date has no chip and keeps the course start.
+        $payload = enrolment_state::export($this->facts(provider::STATE_NONE));
+        $this->assertSame([0, ''], [$payload['opens'], $payload['openslabel']]);
+        $this->assertFalse(enrolment_state::course_start_yields($this->facts(provider::STATE_NONE)));
+        // Facts from before the key existed read as no date.
+        $old = $this->facts(provider::STATE_NONE);
+        unset($old['opens']);
+        $this->assertSame([0, ''], [enrolment_state::export($old)['opens'], enrolment_state::export($old)['openslabel']]);
+    }
+
+    /**
+     * A suspended or ended card carries the opening chip too, and only a none card's course start yields.
+     *
+     * Every other state, and a conditional state demoted to none, carries no date.
+     *
+     * @return void
+     */
+    public function test_only_a_card_with_no_way_in_carries_an_opening_date(): void {
+        $this->resetAfterTest();
+        $opens = 1893456000;
+        $label = 'Enrolment opens on ' . userdate($opens, get_string('strftimedatefullshort', 'langconfig'));
+        foreach (array_keys(enrolment_state::LOOK) as $state) {
+            $facts = $this->facts($state, ['opens' => $opens, 'date' => 1000]);
+            $payload = enrolment_state::export($facts);
+            $carries = in_array($state, [provider::STATE_NONE, provider::STATE_SUSPENDED, provider::STATE_EXPIRED], true);
+            $this->assertSame($carries ? [$opens, $label] : [0, ''], [$payload['opens'], $payload['openslabel']], $state);
+            $this->assertSame($state === provider::STATE_NONE, enrolment_state::course_start_yields($facts), $state);
+        }
+    }
+
+    /**
      * Every payload survives the returns structure both card services declare, a bare ampersand included.
      *
      * @return void
@@ -192,6 +240,7 @@ final class enrolment_state_test extends \advanced_testcase {
                 'prerequisiteid' => (int) $prerequisite->id,
                 'actionurl' => self::URL,
                 'routeurl' => self::URL,
+                'opens' => time(),
             ]));
             $this->assertSame($payload, external_api::clean_returnvalue(enrolment_state::returns(), $payload), $state);
         }

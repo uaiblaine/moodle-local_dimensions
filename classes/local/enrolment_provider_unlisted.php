@@ -45,6 +45,11 @@ namespace local_dimensions\local;
  * form is; free guest access to the course itself; a prerequisite to that course, which the plugin
  * names only to a viewer actively enrolled in it.
  *
+ * A blocked answer carries the plugin's `opens` date when it has one, the day an enrolment window
+ * that is the only refusal opens, onto the none state and onto a suspended or ended relationship
+ * (the next action is independent of the relationship). The date is the plugin's to work out; a
+ * build of it older than that key answers without one, which reads as no date.
+ *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -84,6 +89,9 @@ class enrolment_provider_unlisted extends enrolment_provider {
 
     /** @var string The next action's guest value for access behind a key (access::GUEST_KEY). */
     public const GUEST_KEY = 'key';
+
+    /** @var string The next action of a viewer every method refuses now (access::NEXT_BLOCKED). */
+    public const BLOCKED = 'blocked';
 
     /**
      * Which implementation this is.
@@ -153,7 +161,8 @@ class enrolment_provider_unlisted extends enrolment_provider {
      *
      * @param int $courseid The course id.
      * @param array $relationship The answer of access::get_enrolment_state(): type, startsat, endsat.
-     * @param array $next The answer of access::get_next_action(): type, routes, guest, conditional.
+     * @param array $next The answer of access::get_next_action(): type, routes, guest, conditional,
+     *        and opens on a build that has it.
      * @return array The state facts.
      */
     public static function translate(int $courseid, array $relationship, array $next): array {
@@ -169,7 +178,10 @@ class enrolment_provider_unlisted extends enrolment_provider {
             };
             // An application is decided elsewhere; its own page says where it stands.
             $isapplication = $state === self::STATE_PENDING || $state === self::STATE_WAITLISTED;
-            return self::state($state, $courseid, $date, $isapplication ? $enrolurl : null, $route);
+            /* A suspended or ended enrolment may be followed by a window that opens later; the other
+               relationships already name their own date or way in. */
+            $opens = $state === self::STATE_SUSPENDED || $state === self::STATE_EXPIRED ? self::opening($next) : 0;
+            return self::state($state, $courseid, $date, $isapplication ? $enrolurl : null, $route, 0, $opens);
         }
 
         $state = self::NEXT_ACTIONS[(string) ($next['type'] ?? '')] ?? self::STATE_NONE;
@@ -192,7 +204,27 @@ class enrolment_provider_unlisted extends enrolment_provider {
                 }
                 return self::state($state, $courseid, 0, self::course_url($prerequisiteid), null, $prerequisiteid);
             default:
+                $opens = self::opening($next);
+                if ($opens > 0) {
+                    return self::state(self::STATE_NONE, $courseid, 0, null, null, 0, $opens);
+                }
                 return self::none_state($courseid);
         }
+    }
+
+    /**
+     * The day the plugin says an enrolment window that is the only refusal opens, or 0.
+     *
+     * The plugin fills opens only on a blocked answer, and only when the viewer would be taken once
+     * the window opens (no cohort, places or own-row refusal); this reads it from that answer alone.
+     *
+     * @param array $next The answer of access::get_next_action().
+     * @return int The timestamp, or 0.
+     */
+    private static function opening(array $next): int {
+        if (($next['type'] ?? null) !== self::BLOCKED) {
+            return 0;
+        }
+        return max(0, (int) ($next['opens'] ?? 0));
     }
 }
