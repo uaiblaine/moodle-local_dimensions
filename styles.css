@@ -1228,6 +1228,11 @@ body {
     transform: translateY(0);
 }
 
+/* In learn-more mode the "Enrolment opens on" chip sits above the button. */
+.local-dimensions-locked-overlay .local-dimensions-locked-date + .local-dimensions-learnmore-btn {
+    margin-top: 0.5rem;
+}
+
 /* The hover lift is motion started by the pointer; the brightness change still answers it. */
 @media (prefers-reduced-motion: reduce) {
     .local-dimensions-enrol-btn,

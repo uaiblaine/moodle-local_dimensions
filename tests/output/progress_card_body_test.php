@@ -121,7 +121,8 @@ final class progress_card_body_test extends \advanced_testcase {
      * A none card naming the day its enrolment opens prints that chip whatever showlockeddate says.
      *
      * The service sends the chip's sentence plain and withdraws the course start date on that card, so
-     * the row below is what the card script receives; the chip is escaped once, in either mode.
+     * the row below is what the card script receives; the chip is escaped once, in every mode, and
+     * sits above the Learn more button when there is one.
      *
      * @return void
      */
@@ -132,8 +133,13 @@ final class progress_card_body_test extends \advanced_testcase {
             'is_future_date' => false,
             'showlockeddate' => false,
         ];
-        foreach ([false, true] as $islearnmore) {
-            $overlay = $this->overlay($this->render_locked(['islearnmore' => $islearnmore] + $opening));
+        $modes = [
+            'blocked' => ['islearnmore' => false],
+            'learn more' => ['islearnmore' => true],
+            'learn more without a course URL' => ['islearnmore' => true, 'courseurl' => ''],
+        ];
+        foreach ($modes as $mode => $flags) {
+            $overlay = $this->overlay($this->render_locked($flags + $opening));
             $this->assertMatchesRegularExpression(
                 '#<div class="local-dimensions-locked-date" data-region="enrolment-opens">\s*'
                     . '<i class="fa fa-calendar" aria-hidden="true"></i>\s*Enrolment opens on 1/1/30 &amp; on\s*</div>#',
@@ -141,7 +147,15 @@ final class progress_card_body_test extends \advanced_testcase {
             );
             $this->assertStringNotContainsString('&amp;amp;', $overlay);
             // Only that chip: the course start date chip is not drawn beside it.
-            $this->assertSame(1, substr_count($overlay, 'local-dimensions-locked-date'));
+            $this->assertSame(1, substr_count($overlay, 'local-dimensions-locked-date'), $mode);
+            $chip = strpos($overlay, 'data-region="enrolment-opens"');
+            if ($mode === 'learn more') {
+                // Above the button: side by side there is not room for both.
+                $this->assertLessThan(strpos($overlay, 'local-dimensions-learnmore-btn'), $chip, $mode);
+            } else {
+                // Under the message box, which a card without the button keeps.
+                $this->assertGreaterThan(strpos($overlay, 'local-dimensions-locked-message'), $chip, $mode);
+            }
         }
 
         // Control: the same card without the sentence draws no opening chip.

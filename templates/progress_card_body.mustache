@@ -24,8 +24,9 @@
     The overlay keeps its frame (the dashed border the card script draws, the 80px disc, the raised
     message box, the 10px-radius buttons over the blurred timeline) and holds the shared state area
     of the course cards: the disc in the state's colour family and icon, the pill in the message
-    box, the state's own action, then the route line and, for a card with nothing else to say,
-    the day its enrolment opens or else the course start date.
+    box, the state's own action, then the route line, the day the enrolment window opens when the
+    state names one (above the button in learn-more mode) and, for a card with nothing else to
+    say, the course start date.
 
     Context variables required:
     * courseid (int) - Course ID, used to pair the collapse toggle with its timeline
@@ -34,7 +35,8 @@
     * locked (bool) - Whether the course is locked for the user
     * state (object) - The state area, from the course progress service: key, label, icon, family,
       actionlabel, actionurl, routelabel, routelinklabel, routeurl, opens, openslabel (texts plain,
-      empty when absent; openslabel names the day the enrolment window refusing a none card opens)
+      empty when absent; openslabel names the day the enrolment window refusing a none, suspended
+      or ended card opens)
     * formatted_start_date (string) - The course start date a card in the none state shows, empty
       when it names no date (no date chip then)
     * islearnmore (bool) - Client-derived: learn-more mode on a card in the none state, so the
@@ -126,12 +128,16 @@
         {{! Learn-more mode puts its button in place of the message box, on a card that offers
             nothing; a card with no course URL (a course the viewer may not be told about) has
             nowhere to send it and keeps the message box }}
+        {{! In learn-more mode, which only a none card takes (no action, no route), the day its
+            enrolment opens sits above the button, or under the message box that replaces it }}
         {{#islearnmore}}
             {{#courseurl}}
+                {{> local_dimensions/enrolment_opens_chip}}
                 <a href="{{courseurl}}" class="local-dimensions-learnmore-btn" style="background: {{learnmorebuttoncolor}};">{{#str}}learn_more, local_dimensions{{/str}}</a>
             {{/courseurl}}
             {{^courseurl}}
                 <div class="local-dimensions-locked-message"><span class="local-dimensions-state-pill {{state.family}}"><span>{{state.label}}</span></span></div>
+                {{> local_dimensions/enrolment_opens_chip}}
             {{/courseurl}}
         {{/islearnmore}}
         {{^islearnmore}}
@@ -145,13 +151,11 @@
             <div class="local-dimensions-state-route"><i class="fa fa-arrow-right" aria-hidden="true"></i><span>{{state.routelabel}}</span> <a href="{{state.routeurl}}">{{state.routelinklabel}}</a></div>
         {{/state.routeurl}}
         {{! The day the enrolment window opens, whatever showlockeddate says: the service sends it
-            only on a none card, and then withdraws the course start date below }}
-        {{#state.openslabel}}
-            <div class="local-dimensions-locked-date" data-region="enrolment-opens">
-                <i class="fa fa-calendar" aria-hidden="true"></i>
-                {{state.openslabel}}
-            </div>
-        {{/state.openslabel}}
+            on a none, suspended or ended card, and on a none card withdraws the course start date
+            below }}
+        {{^islearnmore}}
+            {{> local_dimensions/enrolment_opens_chip}}
+        {{/islearnmore}}
         {{! The course start date, under the pill of a card with nothing else to say, never an empty
             chip when the row names no date }}
         {{#showlockeddate}}

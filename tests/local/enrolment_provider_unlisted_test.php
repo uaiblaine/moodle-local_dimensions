@@ -206,14 +206,26 @@ final class enrolment_provider_unlisted_test extends \advanced_testcase {
     }
 
     /**
-     * A relationship is the card's state, and an opening date beside it is not carried.
+     * A suspended or ended relationship carries the opening date; the other relationships do not.
+     *
+     * The next action is independent of the relationship, so a learner whose enrolment was suspended
+     * or has ended may still be told when a window opens. A scheduled, pending or waitlisted card
+     * already names its own date or way in.
      *
      * @return void
      */
-    public function test_a_relationship_carries_no_opening_date(): void {
-        $blocked = ['type' => 'blocked', 'routes' => [], 'blocked' => 'window', 'opens' => 1893456000];
+    public function test_only_a_suspended_or_ended_relationship_carries_an_opening_date(): void {
+        $opens = 1893456000;
+        $blocked = ['type' => 'blocked', 'routes' => [], 'blocked' => 'window', 'opens' => $opens];
 
-        foreach (['scheduled', 'pending', 'waitlisted', 'suspended', 'expired'] as $type) {
+        foreach (['suspended', 'expired'] as $type) {
+            $state = enrolment_provider_unlisted::translate(self::COURSE, ['type' => $type, 'endsat' => 1000], $blocked);
+            $this->assertSame([$type, $opens], [$state['state'], $state['opens']], $type);
+            // Control: the same date on an answer that is not blocked is not read.
+            $nothing = ['type' => 'none', 'routes' => [], 'opens' => $opens];
+            $this->assertSame(0, enrolment_provider_unlisted::translate(self::COURSE, ['type' => $type], $nothing)['opens'], $type);
+        }
+        foreach (['scheduled', 'pending', 'waitlisted'] as $type) {
             $state = enrolment_provider_unlisted::translate(self::COURSE, ['type' => $type], $blocked);
             $this->assertSame([$type, 0], [$state['state'], $state['opens']], $type);
         }

@@ -17,8 +17,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Course cards (competency tracker and plan overview), with "Use the enrolment rules of Unlisted
   courses" on: a locked card whose only refusal is an enrolment window that has not opened yet says
-  "Enrolment opens on <date>", whatever "Show availability date" says, and that chip
-  replaces the "Opens <course start>" chip on that card. The date is local_unlistedcourses' (its next
+  "Enrolment opens on <date>", whatever "Show availability date" says; on a card with no
+  enrolment that chip replaces the "Opens <course start>" chip, and a learner whose enrolment is
+  suspended or has ended gets it too. In learn-more mode the chip sits above the "Learn more"
+  button. The date is local_unlistedcourses' (its next
   action's `opens`, from version 2026042005); an older build of that plugin shows no chip. Both card
   services return the date and the chip's sentence in the state area (`opens`, `openslabel`).
 - Course cards (competency tracker and plan overview): a shared state area. Each card names the
