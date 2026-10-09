@@ -141,13 +141,73 @@ final class enrolment_opens_chip_test extends \advanced_testcase {
     }
 
     /**
+     * A suspended or ended learner is told the day enrolment opens too, on both cards.
+     *
+     * The rows are manual ones, so the self enrolment instance holds no row of theirs and its window
+     * is its only refusal. Neither card shows a course start, so nothing stands down.
+     *
+     * @return void
+     */
+    public function test_a_suspended_or_ended_learner_is_told_the_day_enrolment_opens(): void {
+        $opens = time() + DAYSECS;
+        $course = $this->course_with_self_window($opens, 0);
+        $suspended = $this->getDataGenerator()->create_user();
+        $this->enrol_manual($suspended, $course, 0, 0, ENROL_USER_SUSPENDED);
+        $ended = $this->getDataGenerator()->create_user();
+        $this->enrol_manual($ended, $course, time() - WEEKSECS, time() - DAYSECS, ENROL_USER_ACTIVE);
+
+        foreach (['suspended' => $suspended, 'expired' => $ended] as $key => $user) {
+            foreach ([$this->tracker_row($course, $user), $this->accordion_row($course, $user)] as $row) {
+                $this->assertSame([$key, $opens, $this->label($opens)], $this->chip($row), $key);
+            }
+        }
+    }
+
+    /**
+     * Controls: a refusal beside the window (a cohort, the learner's own row) gives no chip.
+     *
+     * local_unlistedcourses dates a window only when the learner would be taken once it opens; these
+     * hold that its answer is printed as it is, never re-derived from the window here.
+     *
+     * @return void
+     */
+    public function test_a_refusal_besides_the_window_gives_no_chip(): void {
+        global $DB;
+
+        $this->setAdminUser();
+        $cohort = $this->getDataGenerator()->create_cohort();
+        $course = $this->course_with_self_window(time() + DAYSECS, 0, (int) $cohort->id);
+        $suspended = $this->getDataGenerator()->create_user();
+        $this->enrol_manual($suspended, $course, 0, 0, ENROL_USER_SUSPENDED);
+
+        $tracker = $this->tracker_row($course);
+        $this->assertSame(['none', 0, ''], $this->chip($tracker));
+        $this->assertTrue($tracker['is_future_date']);
+        $accordion = $this->accordion_row($course);
+        $this->assertSame([0, ''], [$accordion['state']['opens'], $accordion['state']['openslabel']]);
+        $this->assertSame($this->startdate, $accordion['lockdate']);
+        $this->assertSame(['suspended', 0, ''], $this->chip($this->tracker_row($course, $suspended)));
+
+        // A suspended row on the self instance itself: enrol_self refuses its own row, window or not.
+        $course = $this->course_with_self_window(time() + DAYSECS, 0);
+        $self = $DB->get_record('enrol', ['courseid' => $course->id, 'enrol' => 'self'], '*', MUST_EXIST);
+        $ownrow = $this->getDataGenerator()->create_user();
+        $studentroleid = (int) $DB->get_field('role', 'id', ['shortname' => 'student'], MUST_EXIST);
+        enrol_get_plugin('self')->enrol_user($self, (int) $ownrow->id, $studentroleid, 0, 0, ENROL_USER_SUSPENDED);
+        foreach ([$this->tracker_row($course, $ownrow), $this->accordion_row($course, $ownrow)] as $row) {
+            $this->assertSame(['suspended', 0, ''], $this->chip($row));
+        }
+    }
+
+    /**
      * A course starting later, linked to a fresh competency, with an enabled self enrolment window.
      *
      * @param int $start The window's enrolstartdate, 0 for none.
      * @param int $end The window's enrolenddate, 0 for none.
+     * @param int $cohortid The cohort the instance admits alone, 0 for anybody.
      * @return \stdClass The course, with competencyid set to the linked competency.
      */
-    private function course_with_self_window(int $start, int $end): \stdClass {
+    private function course_with_self_window(int $start, int $end, int $cohortid = 0): \stdClass {
         global $DB;
 
         $this->setAdminUser();
@@ -161,6 +221,7 @@ final class enrolment_opens_chip_test extends \advanced_testcase {
             'status' => ENROL_INSTANCE_ENABLED,
             'enrolstartdate' => $start,
             'enrolenddate' => $end,
+            'customint5' => $cohortid,
         ]);
         $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
         $framework = $ccg->create_framework(['visible' => 1]);
@@ -173,13 +234,14 @@ final class enrolment_opens_chip_test extends \advanced_testcase {
     }
 
     /**
-     * The tracker's row for the course, as a fresh learner, cleaned through the returns structure.
+     * The tracker's row for the course, cleaned through the returns structure.
      *
      * @param \stdClass $course The course.
+     * @param \stdClass|null $user The learner, a fresh one when null.
      * @return array The row.
      */
-    private function tracker_row(\stdClass $course): array {
-        $this->setUser($this->getDataGenerator()->create_user());
+    private function tracker_row(\stdClass $course, ?\stdClass $user = null): array {
+        $this->setUser($user ?? $this->getDataGenerator()->create_user());
         $this->reset_unlisted_caches();
         $result = external_api::clean_returnvalue(
             get_course_progress::execute_returns(),
@@ -189,13 +251,14 @@ final class enrolment_opens_chip_test extends \advanced_testcase {
     }
 
     /**
-     * The plan accordion's row for the course, as a fresh learner whose plan holds the competency.
+     * The plan accordion's row for the course, as a learner whose new plan holds the competency.
      *
      * @param \stdClass $course The course.
+     * @param \stdClass|null $user The learner, a fresh one when null.
      * @return array The row.
      */
-    private function accordion_row(\stdClass $course): array {
-        $user = $this->getDataGenerator()->create_user();
+    private function accordion_row(\stdClass $course, ?\stdClass $user = null): array {
+        $user = $user ?? $this->getDataGenerator()->create_user();
         $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
         $this->setAdminUser();
         $planid = (int) $ccg->create_plan([
@@ -213,6 +276,31 @@ final class enrolment_opens_chip_test extends \advanced_testcase {
         $rows = array_column($result, null, 'id');
         $this->assertArrayHasKey((int) $course->id, $rows);
         return $rows[(int) $course->id];
+    }
+
+    /**
+     * Give a learner a manual enrolment in the course.
+     *
+     * @param \stdClass $user The learner.
+     * @param \stdClass $course The course.
+     * @param int $timestart The row's start, 0 for none.
+     * @param int $timeend The row's end, 0 for none.
+     * @param int $status ENROL_USER_ACTIVE or ENROL_USER_SUSPENDED.
+     * @return void
+     */
+    private function enrol_manual(\stdClass $user, \stdClass $course, int $timestart, int $timeend, int $status): void {
+        $generator = $this->getDataGenerator();
+        $generator->enrol_user((int) $user->id, (int) $course->id, 'student', 'manual', $timestart, $timeend, $status);
+    }
+
+    /**
+     * A row's state key, opening date and chip sentence.
+     *
+     * @param array $row A row of either card service.
+     * @return array [key, opens, openslabel].
+     */
+    private function chip(array $row): array {
+        return [$row['state']['key'], $row['state']['opens'], $row['state']['openslabel']];
     }
 
     /**
