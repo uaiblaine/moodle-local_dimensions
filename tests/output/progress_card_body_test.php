@@ -72,7 +72,6 @@ final class progress_card_body_test extends \advanced_testcase {
             'courseid' => 42,
             'enabled' => false,
             'locked' => true,
-            'isenrolled' => false,
             'state' => $this->state('none', ['label' => 'No enrolment available']),
             'formatted_start_date' => '15 Jan 2031',
             'is_future_date' => true,
@@ -187,9 +186,12 @@ final class progress_card_body_test extends \advanced_testcase {
         $this->assertStringContainsString(
             '<div class="local-dimensions-locked-message">'
                 . '<span class="local-dimensions-state-pill local-dimensions-state-pending">'
-                . '<i class="fa fa-hourglass-half" aria-hidden="true"></i><span>Application under review</span>',
+                . '<span>Application under review</span>',
             $html
         );
+        // The tracker's pill carries no icon of its own; the disc above keeps the state's.
+        $this->assertSame(1, preg_match('~<div class="local-dimensions-locked-message">(.*?)</div>~s', $html, $message));
+        $this->assertStringNotContainsString('<i ', $message[1]);
         $this->assertStringContainsString(
             '<a href="/enrol/index.php?id=42" class="local-dimensions-enrol-btn">View status</a>',
             $html
@@ -199,6 +201,36 @@ final class progress_card_body_test extends \advanced_testcase {
         $this->assertStringContainsString('>Enrol now</a>', $html);
         // The action comes before the route line: the line is the note under the action.
         $this->assertLessThan(strpos($html, 'local-dimensions-state-route'), strpos($html, 'local-dimensions-enrol-btn'));
+    }
+
+    /**
+     * The pill of a learn-more card with no course URL holds the label and no icon, as the default pill does.
+     *
+     * @return void
+     */
+    public function test_the_learn_more_pill_without_a_course_url_carries_no_icon(): void {
+        $html = $this->overlay($this->render_locked([
+            'state' => $this->state('pending', [
+                'label' => 'Application under review',
+                'icon' => 'fa-hourglass-half',
+                'family' => 'local-dimensions-state-pending',
+            ]),
+            'islearnmore' => true,
+            'courseurl' => '',
+            'showlockeddate' => false,
+        ]));
+
+        // Control: the disc keeps the state's icon, so this is a locked card in the learn-more branch.
+        $this->assertStringContainsString('<i class="fa fa-hourglass-half" aria-hidden="true"></i>', $html);
+        $this->assertStringNotContainsString('local-dimensions-learnmore-btn', $html);
+
+        $this->assertSame(1, preg_match('~<div class="local-dimensions-locked-message">(.*?)</div>~s', $html, $message));
+        $this->assertStringContainsString(
+            '<span class="local-dimensions-state-pill local-dimensions-state-pending">'
+                . '<span>Application under review</span>',
+            $message[1]
+        );
+        $this->assertStringNotContainsString('<i ', $message[1]);
     }
 
     /**
@@ -252,14 +284,13 @@ final class progress_card_body_test extends \advanced_testcase {
     }
 
     /**
-     * An open card shows its pill under the header and no overlay; a locked one shows no such pill.
+     * An open (enrolled) card shows no state pill and no overlay; a locked card keeps its pill.
      *
      * @return void
      */
-    public function test_an_open_card_shows_its_pill_and_no_overlay(): void {
+    public function test_an_open_card_shows_no_pill_and_no_overlay(): void {
         $html = $this->render_locked([
             'locked' => false,
-            'isenrolled' => true,
             'state' => $this->state('enrolled', [
                 'label' => 'Enrolled',
                 'icon' => 'fa-circle-check',
@@ -268,14 +299,12 @@ final class progress_card_body_test extends \advanced_testcase {
         ]);
 
         $this->assertStringNotContainsString('local-dimensions-locked-overlay', $html);
-        $this->assertMatchesRegularExpression(
-            '~<div class="local-dimensions-state-area">\s*'
-                . '<span class="local-dimensions-state-pill local-dimensions-state-enrolled">~',
-            $html
-        );
+        $this->assertStringNotContainsString('local-dimensions-state-area', $html);
+        $this->assertStringNotContainsString('local-dimensions-state-pill', $html);
+        $this->assertStringNotContainsString('Enrolled', $html);
 
-        // Control: a locked card has no state area outside its overlay.
+        // Control: a locked card has its pill inside the overlay, and the disc keeps the icon.
         $locked = $this->render_locked([]);
-        $this->assertStringNotContainsString('local-dimensions-state-area', $locked);
+        $this->assertStringContainsString('local-dimensions-state-pill', $locked);
     }
 }

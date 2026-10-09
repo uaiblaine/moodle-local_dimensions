@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Course cards: an enrolled card no longer shows an "Enrolled" pill, on the competency tracker and
+  the plan accordion; every other state keeps its pill. On the tracker the state pill carries no
+  icon (the locked card's disc keeps it). The "cardicon" setting description now says the icon
+  replaces the disc icon only on a locked card with no enrolment available.
+
 ### Added
 
 - Course cards (competency tracker and plan overview): a shared state area. Each card names the

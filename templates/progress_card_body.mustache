@@ -32,8 +32,6 @@
     * enabled (bool) - Whether completion tracking is enabled
     * iscompleted (bool) - Whether the course itself is complete, from the batch status call
     * locked (bool) - Whether the course is locked for the user
-    * isenrolled (bool) - Client-derived: the card is open and its state is enrolled, so the pill
-      shows under the header
     * state (object) - The state area, from the course progress service: key, label, icon, family,
       actionlabel, actionurl, routelabel, routelinklabel, routeurl (texts plain, empty when absent)
     * formatted_start_date (string) - The course start date a card in the none state shows, empty
@@ -71,7 +69,6 @@
         "enabled": true,
         "iscompleted": false,
         "locked": true,
-        "isenrolled": false,
         "state": {
             "key": "pending",
             "label": "Application under review",
@@ -131,11 +128,11 @@
                 <a href="{{courseurl}}" class="local-dimensions-learnmore-btn" style="background: {{learnmorebuttoncolor}};">{{#str}}learn_more, local_dimensions{{/str}}</a>
             {{/courseurl}}
             {{^courseurl}}
-                <div class="local-dimensions-locked-message"><span class="local-dimensions-state-pill {{state.family}}"><i class="fa {{state.icon}}" aria-hidden="true"></i><span>{{state.label}}</span></span></div>
+                <div class="local-dimensions-locked-message"><span class="local-dimensions-state-pill {{state.family}}"><span>{{state.label}}</span></span></div>
             {{/courseurl}}
         {{/islearnmore}}
         {{^islearnmore}}
-            <div class="local-dimensions-locked-message"><span class="local-dimensions-state-pill {{state.family}}"><i class="fa {{state.icon}}" aria-hidden="true"></i><span>{{state.label}}</span></span></div>
+            <div class="local-dimensions-locked-message"><span class="local-dimensions-state-pill {{state.family}}"><span>{{state.label}}</span></span></div>
         {{/islearnmore}}
         {{#state.actionurl}}
             <a href="{{state.actionurl}}" class="local-dimensions-enrol-btn">{{state.actionlabel}}</a>
@@ -157,12 +154,7 @@
     </div>
     {{/locked}}
 
-    {{! An open card names its state under the header, in the same pill as every other card }}
-    {{#isenrolled}}
-    <div class="local-dimensions-state-area">
-        <span class="local-dimensions-state-pill {{state.family}}"><i class="fa {{state.icon}}" aria-hidden="true"></i><span>{{state.label}}</span></span>
-    </div>
-    {{/isenrolled}}
+    {{! An open card shows no state pill: being enrolled is the ordinary case and says nothing }}
 
     {{! A course that resolves to one trackable activity has no sequence to draw. The card
         shows that activity and its own state instead - the server decides when this applies,

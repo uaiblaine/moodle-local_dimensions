@@ -1344,10 +1344,6 @@ body {
     font-weight: 700;
 }
 
-.local-dimensions-locked-message .local-dimensions-state-pill .fa {
-    font-size: 1rem;
-}
-
 /* The route line: another way in beside a relationship. */
 .local-dimensions-state-route {
     display: inline-flex;

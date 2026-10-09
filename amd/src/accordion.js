@@ -2439,7 +2439,7 @@ define(
                 html += renderOutcomeBadge(course.ruleoutcome, strMap);
 
                 if (isReachable) {
-                    html += '<div class="local-dimensions-state-area">' + renderStatePill(course.state) + '</div>';
+                    // An enrolled card shows no state pill: it is the ordinary case.
                     const shape = renderCourseShape(course, strMap);
                     html += shape === '' ? renderCourseProgress(course) : shape;
                 } else {
