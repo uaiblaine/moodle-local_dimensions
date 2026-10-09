@@ -177,10 +177,11 @@ class get_competency_courses extends external_api {
                 ? enrolment_provider::enrolled_state((int) $course->id)
                 : ($states[(int) $course->id] ?? enrolment_provider::none_state((int) $course->id));
             $lockdate = 0;
-            if ($state['state'] === enrolment_provider::STATE_NONE) {
+            if ($state['state'] === enrolment_provider::STATE_NONE && !enrolment_state::course_start_yields($state)) {
                 /* Only a card with nothing else to say shows a date under its pill: the course's start.
                    A later enrolment of the viewer's would have made the card scheduled, whichever
-                   provider answered, so no enrolment date can be the one shown here. */
+                   provider answered, so no enrolment date can be the one shown here; a window that
+                   opens later names its own date in the state payload instead. */
                 $lockdate = (int) get_course($course->id)->startdate;
             }
 
@@ -357,7 +358,10 @@ class get_competency_courses extends external_api {
                 'visible' => new external_value(PARAM_INT, 'Course visibility'),
                 'ruleoutcome' => new external_value(PARAM_INT, 'What completing the course does to the competency'),
                 'state' => enrolment_state::returns(),
-                'lockdate' => new external_value(PARAM_INT, 'The course start date a card in the none state shows, 0 otherwise'),
+                'lockdate' => new external_value(
+                    PARAM_INT,
+                    'The course start date a none card shows, 0 otherwise or when its state names the day enrolment opens'
+                ),
                 'cardmode' => new external_value(
                     PARAM_ALPHA,
                     'Which shape the card takes: activity, section or timeline'

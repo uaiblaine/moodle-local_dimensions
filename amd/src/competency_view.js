@@ -193,7 +193,9 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                 var isnone = statekey === 'none';
                 data.islearnmore = isnone && lockedcardmode === 'learnmore';
                 /* The start date tells a learner that a later course or stage exists, so it shows
-                   only while it is still ahead: a date that has passed says nothing true. */
+                   only while it is still ahead: a date that has passed says nothing true. A card
+                   whose enrolment opens later carries state.openslabel, which the template prints
+                   whatever this setting says; the service then sends is_future_date false. */
                 data.showlockeddate = isnone && showlockeddate && !!data.is_future_date;
                 data.customicon = isnone ? cardiconclass : '';
                 data.courseurl = data.course_url || '';

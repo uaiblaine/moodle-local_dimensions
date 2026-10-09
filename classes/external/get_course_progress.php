@@ -146,13 +146,16 @@ class get_course_progress extends external_api {
                 /* Both return paths of calculator::get_course_section_progress() set every key;
                    the defaults are a guard, since a missing required key (locked,
                    formatted_start_date) would fail the response. */
+                $facts = $data['state'] ?? enrolment_provider::none_state((int) $courseid);
+                // A card naming the day its enrolment opens shows that date instead of the course's.
+                $startyields = enrolment_state::course_start_yields($facts);
                 $row = [
                     'courseid' => $courseid,
                     'enabled' => $data['enabled'],
                     'locked' => $data['locked'] ?? false,
-                    'formatted_start_date' => $data['formatted_start_date'] ?? '',
-                    'state' => enrolment_state::export($data['state'] ?? enrolment_provider::none_state((int) $courseid)),
-                    'is_future_date' => !empty($data['is_future_date']),
+                    'formatted_start_date' => $startyields ? '' : ($data['formatted_start_date'] ?? ''),
+                    'state' => enrolment_state::export($facts),
+                    'is_future_date' => !$startyields && !empty($data['is_future_date']),
                     'course_url' => $data['course_url'] ?? '',
                     'sections' => $sections,
                     'cardmode' => $data['cardmode'] ?? '',

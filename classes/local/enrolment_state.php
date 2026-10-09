@@ -69,8 +69,9 @@ class enrolment_state {
      * prerequisite or offers nothing.
      *
      * @param array $facts A state from {@see enrolment_provider}.
-     * @return array key, label, icon, family, actionlabel, actionurl, routelabel, routelinklabel and
-     *               routeurl; a text or URL the state does not carry is the empty string.
+     * @return array key, label, icon, family, actionlabel, actionurl, routelabel, routelinklabel,
+     *               routeurl, opens and openslabel; a text or URL the state does not carry is the
+     *               empty string, a date it does not carry 0.
      */
     public static function export(array $facts): array {
         $state = isset(self::LOOK[$facts['state'] ?? '']) ? $facts['state'] : provider::STATE_NONE;
@@ -86,6 +87,7 @@ class enrolment_state {
         $actionlabel = $actionurl === '' ? '' : self::action_label($state);
         $routeurl = $islive ? (string) ($facts['routeurl'] ?? '') : '';
         [$family, $icon] = self::LOOK[$state];
+        $opens = self::opening_date($facts);
 
         return [
             'key' => $state,
@@ -97,7 +99,41 @@ class enrolment_state {
             'routelabel' => $routeurl === '' ? '' : get_string('state_route_enrol', 'local_dimensions'),
             'routelinklabel' => $routeurl === '' ? '' : get_string('state_cta_enrolnow', 'local_dimensions'),
             'routeurl' => $routeurl,
+            'opens' => $opens,
+            // The plugin's own string: the theme has no sentence for this chip yet.
+            'openslabel' => $opens === 0 ? '' : get_string('enrolmentopens', 'local_dimensions', self::date($opens)),
         ];
+    }
+
+    /**
+     * When the enrolment window refusing a card opens, the date its chip names, or 0.
+     *
+     * Only a none state carries one: a relationship or an offer says something else, and a state
+     * export() demotes to none (a conditional state without its prerequisite) never had the date.
+     *
+     * @param array $facts A state from {@see enrolment_provider}.
+     * @return int The timestamp, or 0.
+     */
+    public static function opening_date(array $facts): int {
+        if (($facts['state'] ?? '') !== provider::STATE_NONE) {
+            return 0;
+        }
+        return max(0, (int) ($facts['opens'] ?? 0));
+    }
+
+    /**
+     * Whether a card's course start date chip stands down for the enrolment window's own date.
+     *
+     * The one place the precedence is decided: a card that names the day its enrolment opens shows
+     * that chip only, whatever the showlockeddate setting says, so both card services withdraw the
+     * course start date they would otherwise send (the tracker's formatted_start_date and
+     * is_future_date, the accordion's lockdate) when this answers true.
+     *
+     * @param array $facts A state from {@see enrolment_provider}.
+     * @return bool True when the course start date must not be shown.
+     */
+    public static function course_start_yields(array $facts): bool {
+        return self::opening_date($facts) > 0;
     }
 
     /**
@@ -119,6 +155,8 @@ class enrolment_state {
             'routelabel' => new external_value(PARAM_RAW, 'The route line beside a relationship, plain text, empty for none'),
             'routelinklabel' => new external_value(PARAM_RAW, 'The label of the route line\'s link, plain text'),
             'routeurl' => new external_value(PARAM_URL, 'Where the route line leads, empty for none'),
+            'opens' => new external_value(PARAM_INT, 'When the enrolment window refusing a none card opens, 0 otherwise'),
+            'openslabel' => new external_value(PARAM_RAW, 'The chip naming that date, plain text, empty for none'),
         ]);
     }
 

@@ -483,6 +483,7 @@ $string['enrollmentfilter_desc'] = 'Filtre os cursos exibidos na visualização 
 $string['enrollmentfilter_enrolled'] = 'Exibir apenas cursos inscritos (inclui inscrições futuras)';
 $string['enrollmentfilter_enrolledorself'] = 'Exibir cursos inscritos e aqueles em que o aluno pode se inscrever';
 $string['enrollmentfilter_inherit'] = 'Usar configuração global (padrão)';
+$string['enrolmentopens'] = 'Inscrições abrem em {$a}';
 $string['entityname_competency_extras'] = 'Competência: campos personalizados do Dimensions';
 $string['entityname_plan'] = 'Plano de aprendizagem';
 $string['entityname_template'] = 'Modelo de plano de aprendizagem';
