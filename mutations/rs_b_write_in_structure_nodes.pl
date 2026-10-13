@@ -1,0 +1,1 @@
+s/(    public static function structure_nodes\(array \$records, competency_framework \$framework, \\context \$context\): array \{\n        global \$DB;\n)/$1        \$GLOBALS['SESSION']->local_dimensions_mutant = 1;\n/;
