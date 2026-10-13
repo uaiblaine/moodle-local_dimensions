@@ -93,6 +93,14 @@ Decided by the owner after the comment audit's findings were re-checked against 
 
 ### Fixed
 
+- `get_courses_completion_status` no longer fails with `Class "completion_info" not found` when a
+  request carries it alone: it loads `lib/completionlib.php` itself instead of relying on a service
+  earlier in the same `core/ajax` batch to have loaded it. `calculator::get_course_section_progress()`
+  loads it too, rather than through `get_fast_modinfo()` pulling in `course/lib.php`.
+  `tests/local/completionlib_require_test.php` fails when a method under `classes/` names
+  `completion_info` without requiring the file itself; a behavioural test cannot go red for this,
+  because the PHPUnit bootstrap loads completionlib (through `mod/glossary/lib.php`) in every process,
+  separate ones included.
 - The tracker card shows "Opens on <date>" only while the course start date is still ahead, in both
   locked-card modes, as the plan accordion already did. A start date that has passed is no longer shown.
 - A course card no longer announces "Enrolment opens <date>" for an enrolment that cannot open: a

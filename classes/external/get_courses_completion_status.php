@@ -82,7 +82,8 @@ class get_courses_completion_status extends external_api {
      *     competencies.
      */
     public static function execute($courseids, $planid = 0, $competencyid = 0) {
-        global $USER;
+        global $CFG, $USER;
+        require_once($CFG->libdir . '/completionlib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseids' => $courseids,
