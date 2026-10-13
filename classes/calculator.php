@@ -58,7 +58,8 @@ class calculator {
      * @return array
      */
     public static function get_course_section_progress($courseid, int $userid = 0) {
-        global $DB, $USER;
+        global $CFG, $DB, $USER;
+        require_once($CFG->libdir . '/completionlib.php');
 
         $viewerid = (int) $USER->id;
         $ownerid = $userid > 0 ? $userid : $viewerid;
