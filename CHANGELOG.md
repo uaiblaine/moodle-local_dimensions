@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Web services: the 27 read services now declare `'readonlysession' => true`, as core does for its
+  own reads, so they no longer hold the session lock for the whole call. This covers the plan
+  accordion's per-competency loads (`get_competency_courses`, `get_user_competency_summary_in_plan`,
+  `get_course_progress`), the tracker's, every read of the Competency hub, and the enrolment-queue
+  poll. They no longer wait for one another, or for the page's other requests of the same session.
+  It takes effect only on a site that sets `$CFG->enable_read_only_sessions`, with its
+  session-mode caches mapped outside the session store. Nothing on these paths writes `$SESSION`:
+  `helper::ensure_all_fields()`, the plugin's one session writer, runs only from the footer hook,
+  and `returncontext`, the one session-mode cache, is touched only by the return-context write
+  service. `tests/external/readonly_session_test.php` checks every read and no write carries the
+  flag, and compares `$SESSION` around each of the 27 calls. Measured on Moodle 5.2 with the site
+  flag on, four simultaneous calls of one service took 3.1 to 7.3 times one call before the change
+  and 1.0 to 2.3 times after it. Two accordion expansions fired together went from 463-479 ms to
+  118 ms.
+
 - Course cards: an enrolled card no longer shows an "Enrolled" pill, on the competency tracker and
   the plan accordion; every other state keeps its pill. On the tracker the state pill carries no
   icon (the locked card's disc keeps it). The "cardicon" setting description now says the icon
