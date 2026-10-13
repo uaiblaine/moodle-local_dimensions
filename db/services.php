@@ -32,6 +32,7 @@ $functions = [
         'description' => 'Calculate the progress of course sections.',
         'type' => 'read',
         'ajax' => true,
+        'readonlysession' => true,
     ],
 
     'local_dimensions_get_courses_completion_status' => [
@@ -41,6 +42,7 @@ $functions = [
         'description' => 'Lightweight batch lookup of completion + lock status for many courses.',
         'type' => 'read',
         'ajax' => true,
+        'readonlysession' => true,
     ],
 
     'local_dimensions_get_fontawesome_icons' => [
@@ -50,6 +52,7 @@ $functions = [
         'description' => 'Get FontAwesome icons matching a search query for the icon picker.',
         'type' => 'read',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_get_competency_courses' => [
         'classname' => 'local_dimensions\external\get_competency_courses',
@@ -58,6 +61,7 @@ $functions = [
         'description' => 'Get courses linked to a competency with enrollment filter applied.',
         'type' => 'read',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_get_user_competency_summary_in_plan' => [
         'classname' => 'local_dimensions\external\get_user_competency_summary_in_plan',
@@ -66,6 +70,7 @@ $functions = [
         'description' => 'Get user competency summary in plan (wrapper to avoid context issues with theme string loading).',
         'type' => 'read',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_get_competency_rule_data' => [
         'classname' => 'local_dimensions\external\get_competency_rule_data',
@@ -74,6 +79,7 @@ $functions = [
         'description' => 'Get competency rule data (children, points, required status) for the Rules tab.',
         'type' => 'read',
         'ajax' => true,
+        'readonlysession' => true,
     ],
 
     // Competency hub Plans tab — autocomplete search.
@@ -84,6 +90,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
 
     // Competency hub Structure tab — read-only usage lists behind the detail counters.
@@ -94,6 +101,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
 
     // Competency hub Structure tab — in-tree search with ancestor path.
@@ -104,6 +112,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
 
     'local_dimensions_browse_competencies' => [
@@ -113,6 +122,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_browse_structure' => [
         'classname' => 'local_dimensions\external\browse_structure',
@@ -121,6 +131,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_get_structure_node' => [
         'classname' => 'local_dimensions\external\get_structure_node',
@@ -129,6 +140,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_list_related_competencies' => [
         'classname' => 'local_dimensions\external\list_related_competencies',
@@ -137,6 +149,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
 
     // Competency hub Plans tab — template cohort management + background plan sync.
@@ -147,6 +160,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:templateview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_add_template_cohort' => [
         'classname' => 'local_dimensions\external\add_template_cohort',
@@ -191,6 +205,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:templateview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_search_assignable_users' => [
         'classname' => 'local_dimensions\external\search_assignable_users',
@@ -199,6 +214,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:templatemanage',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_add_template_user_plan' => [
         'classname' => 'local_dimensions\external\add_template_user_plan',
@@ -237,6 +253,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_search_linkable_courses' => [
         'classname' => 'local_dimensions\external\search_linkable_courses',
@@ -245,6 +262,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_link_competency_course' => [
         'classname' => 'local_dimensions\external\link_competency_course',
@@ -277,6 +295,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:coursecompetencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_link_competency_module' => [
         'classname' => 'local_dimensions\external\link_competency_module',
@@ -319,6 +338,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
 
     // Competency hub Plans tab — CSV transfer.
@@ -329,6 +349,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:templateview',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_preview_import_templates' => [
         'classname' => 'local_dimensions\external\preview_import_templates',
@@ -337,6 +358,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:templatemanage',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_apply_import_templates' => [
         'classname' => 'local_dimensions\external\apply_import_templates',
@@ -355,6 +377,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/role:manage',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_add_cohort_role' => [
         'classname' => 'local_dimensions\external\add_cohort_role',
@@ -381,6 +404,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:templatemanage',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_list_enrol_courses' => [
         'classname' => 'local_dimensions\external\list_enrol_courses',
@@ -389,6 +413,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:templatemanage',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_queue_enrol_action' => [
         'classname' => 'local_dimensions\external\queue_enrol_action',
@@ -405,6 +430,7 @@ $functions = [
         'type' => 'read',
         'capabilities' => 'moodle/competency:templatemanage',
         'ajax' => true,
+        'readonlysession' => true,
     ],
     'local_dimensions_set_enrol_instance_status' => [
         'classname' => 'local_dimensions\external\set_enrol_instance_status',
@@ -423,5 +449,6 @@ $functions = [
         'type' => 'read',
         'capabilities' => '',
         'ajax' => true,
+        'readonlysession' => true,
     ],
 ];
