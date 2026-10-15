@@ -9,7 +9,8 @@ A Moodle local plugin that extends the core competency system in both directions
 Requirements
 ------------
 
-- Moodle 4.5 or later (tested up to Moodle 5.2)
+- Moodle 5.2 (branch `MOODLE_502_STABLE`; each Moodle version has its own branch:
+  `MOODLE_405_STABLE`, `MOODLE_501_STABLE`, `MOODLE_502_STABLE`, `MOODLE_503_STABLE` = `main`)
 - Core competencies enabled (`core_competency`)
 
 **Optional integration.** Where `enrol_apply` is installed, a locked course card recognises it

@@ -65,4 +65,31 @@ final class sync_enrollmentfilter_option_test extends \advanced_testcase {
         $again = json_decode($DB->get_field('customfield_field', 'configdata', ['id' => $fieldid]), true);
         $this->assertSame($after['options'], $again['options']);
     }
+
+    /**
+     * A fifth option spelled in another language counts as present.
+     *
+     * db/upgrade.php runs the sync on every upgrade, so a field provisioned in one language
+     * meets upgrades run in another; the label alone would append the option a second time.
+     *
+     * @return void
+     */
+    public function test_sync_leaves_a_fifth_option_in_another_language(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        helper::ensure_custom_fields_exist(helper::AREA_COMPETENCY);
+        $field = helper::find_field_by_shortname(constants::CFIELD_ENROLLMENTFILTER, helper::AREA_COMPETENCY);
+        $fieldid = (int) $field->get('id');
+
+        $config = json_decode($DB->get_field('customfield_field', 'configdata', ['id' => $fieldid]), true);
+        $lines = explode("\n", $config['options']);
+        $lines[4] = 'Matriculado ou com autoinscrição';
+        $config['options'] = implode("\n", $lines);
+        $DB->set_field('customfield_field', 'configdata', json_encode($config), ['id' => $fieldid]);
+
+        helper::sync_enrollmentfilter_option(helper::AREA_COMPETENCY);
+        $after = json_decode($DB->get_field('customfield_field', 'configdata', ['id' => $fieldid]), true);
+        $this->assertSame($config['options'], $after['options']);
+    }
 }
