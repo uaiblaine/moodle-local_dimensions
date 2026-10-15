@@ -11,10 +11,26 @@ Plugin context: a Moodle **local** plugin ("Competency Dimensions") that extends
 competencies and learning plan templates with custom fields and renders two learner views, the
 **Competency tracker** (course-card grid) and the **Full plan overview** (accordion), plus a
 draggable "Return to Plan" FAB and the admin **Competency hub** (`central.php`). **No own
-tables**: everything lives in core competency tables and `customfield_data`. Supports Moodle
-**4.5 through 5.2** (`$plugin->supported = [405, 502]`); CI is the MAH reusable workflow, one
-job per supported branch in `.github/workflows/ci.yml` (update them when `supported` changes).
-Development on m501/m502; mounted on m405, m501, m502 at `local/dimensions`.
+tables**: everything lives in core competency tables and `customfield_data`.
+
+**One branch per Moodle version** (since v*-r1, 2026-10-15), each `$plugin->supported = [N, N]`
+with its own `version.php`, `ci.yml` (one MAH job, full matrix) and README line:
+
+| Branch | Version namespace | Checkout (`~/dev`) | Stacks |
+|---|---|---|---|
+| `MOODLE_405_STABLE` | `20241007XX` | `moodle-local_dimensions-405` | m405 |
+| `MOODLE_501_STABLE` | `20251006XX` | `moodle-local_dimensions-501` | m501 |
+| `MOODLE_502_STABLE` | `20260420XX` | `moodle-local_dimensions-502` | m502, m502b |
+| `MOODLE_503_STABLE` = `main` | `20261005XX` | `moodle-local_dimensions` | m503, m503b |
+
+- 4.5, 5.1 and 5.2 carry the same code; only 5.3 (`main`) sheds the 4.5 compatibility code and
+  takes new features. A fix lands on `main` and is cherry-picked to the other three, each keeping
+  its own `version.php` and bumping its own counter; after a `version.php` conflict re-read all
+  `$plugin->` lines.
+- `block_dimensions` follows the same branches and depends on this plugin's same-branch number.
+  `aiplacement_dimensions` (one `main`, [501, 503]) depends on the lowest 5.1 number.
+- No numbered upgrade steps: `local\legacy_repair::run()` applies every former step's effect
+  on each upgrade and must stay idempotent in any language (`legacy_repair_test`).
 
 ## Agent orchestration budget (fleet rule, repeated here on purpose)
 
@@ -46,20 +62,21 @@ definition, and none runs on the session model.
 ## Commands
 
 ```sh
-mdl ci moodle-local_dimensions --only phpcs,phpdoc,mustache,grunt   # static pass, one leg
-mdl ci moodle-local_dimensions --matrix --behat                     # every leg GitHub runs: the pre-merge gate
-mdl phpunit m501 local_dimensions                                   # or a path under local/dimensions/tests/
-mdl behat m501 /var/www/html/public/local/dimensions/tests/behat/<x>.feature   # absolute container path
-mdl grunt m501 local/dimensions                                     # after every amd/src edit; cachejs off still serves amd/build
+mdl ci moodle-local_dimensions --branch MOODLE_503_STABLE --only phpcs,phpdoc,mustache,grunt   # static pass, one leg
+mdl ci moodle-local_dimensions-502 --matrix --behat                 # the branch's checkout: the pre-merge gate
+mdl phpunit m503 local_dimensions                                   # or a path under local/dimensions/tests/
+mdl behat m503 /var/www/html/public/local/dimensions/tests/behat/<x>.feature   # absolute container path
+mdl grunt m503 local/dimensions                                     # builds the checkout that stack mounts
 mdl mutate moodle-local_dimensions mutations/<spec>.conf --fast     # both --db families; run BEFORE the commit that adds gates
 ```
 
 - `amd/build/**` is tracked: rebuild and commit with the source plus a `version.php` bump.
 - A `version.php` bump stales the test sites: `mdl phpunit-init` / `mdl behat-init` first.
-- The 5.02 legs (GitHub and `mdl ci`) install `local_unlistedcourses`, so the real-plugin halves
-  of `enrolment_provider_unlisted_test` and `enrolment_provider_test` run there and skip on 5.01
-  and 4.05; `test_ci_checks_out_unlistedcourses_on_the_502_leg` fails if the job drops it.
-- Cloud session (no `mdl`): `mpci` from this directory, `mpci --branch MOODLE_405_STABLE`,
+- The 5.2 and 5.3 branches (GitHub and `mdl ci`) install `local_unlistedcourses` from its own
+  branch for that version, so the real-plugin halves of `enrolment_provider_unlisted_test` and
+  `enrolment_provider_test` run there and skip on 5.1 and 4.5;
+  `test_ci_checks_out_unlistedcourses_where_it_exists` fails if the job drops it.
+- Cloud session (no `mdl`): `mpci` from this directory, `mpci --branch MOODLE_503_STABLE`,
   `mpci --reuse --only phpunit --filter <test>`; the owner runs the matrix before merging.
 - Test zip: `git archive --format=zip --prefix=dimensions/ HEAD -o
   ~/Downloads/moodle-local_dimensions-<version>-<shortSHA>.zip` (the prefix is the install
@@ -209,15 +226,15 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   toasts from a modal go to a region in the modal body; `flashRow()` for in-place changes;
   `pane.dataset` seeded from the server-rendered value; `array_flip([5])` makes
   `!empty($map[5])` false, test membership with `isset`.
-- One branch serves every supported Moodle version until the 5.3 work starts; the polyfill
-  already runs ~200 lines, so the branch split is due with that work.
+- The Bootstrap 4 polyfill serves only `MOODLE_405_STABLE`; it is dead code on the other branches
+  and leaves `main` (5.3) with the 4.5 compatibility code (`docs/moodle-53-branch-plan.md`, S5).
 
 ## MDL Shield reviews
 
 Manual only (`!mdlshield review` / `review full`, by the owner), 100 reviews a month shared by
 every repo, 3,000 effective lines soft limit (`mdl mdlshield size`). Config and context read
-from `main` only; `moodle.versions: ["5.2"]` although the plugin runs on 4.5 and 5.1;
-`fail_on.severity: high`. Ask for a review early on any change touching plan access, the two
+from `main` only, so `moodle.versions: ["5.3"]`: review the change on `main`, never its
+cherry-picks; `fail_on.severity: high`. Ask for a review early on any change touching plan access, the two
 card services, the hub's web services or the custom SCSS field, after the `security-diff-read`
 skill. Rules and reasons: fleet file, "MDL Shield reviews".
 

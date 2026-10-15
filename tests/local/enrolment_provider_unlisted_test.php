@@ -389,33 +389,42 @@ final class enrolment_provider_unlisted_test extends \advanced_testcase {
     }
 
     /**
-     * The 5.02 CI job must check local_unlistedcourses out, or the real-plugin cases skip on every leg.
+     * Each CI job on a Moodle version local_unlistedcourses serves must check it out, on that version's branch.
      *
      * The control for the cases above that skip without the plugin; the workflow file is the only place
-     * that condition can be checked. Only the 5.02 job is held to it, because the plugin declares
-     * $plugin->supported = [502, 502].
+     * that condition can be checked. The plugin has a branch for 5.2 (its main) and for 5.3, and none
+     * below: on the 4.5 and 5.1 branches of this plugin no job is held to it, and the test says so.
      *
      * @return void
      */
-    public function test_ci_checks_out_unlistedcourses_on_the_502_leg(): void {
+    public function test_ci_checks_out_unlistedcourses_where_it_exists(): void {
+        $checkouts = [
+            'MOODLE_502_STABLE' => 'main',
+            'MOODLE_503_STABLE' => 'MOODLE_503_STABLE',
+        ];
         $workflow = dirname(__DIR__, 2) . '/.github/workflows/ci.yml';
         if (!is_readable($workflow)) {
             $this->markTestSkipped('No .github/workflows/ci.yml: a release install export-ignores .github.');
         }
         $jobs = preg_split('/\n  (?=[a-z0-9-]+:\n)/', file_get_contents($workflow));
-        $found = false;
+        $held = 0;
         foreach ($jobs as $job) {
-            if (!str_contains($job, 'MOODLE_502_STABLE')) {
+            if (!preg_match('/moodle-core-branch:\s*(MOODLE_\d+_STABLE)/', $job, $match)) {
                 continue;
             }
-            $found = true;
+            if (!isset($checkouts[$match[1]])) {
+                continue;
+            }
+            $held++;
             $this->assertMatchesRegularExpression(
-                '/plugin-dependencies:.*\n(\s+.*\n)*?\s*\S*moodle-local_unlistedcourses,main\b/',
+                '/plugin-dependencies:.*\n(\s+.*\n)*?\s*\S*moodle-local_unlistedcourses,' . $checkouts[$match[1]] . '\b/',
                 $job,
-                'The 5.02 CI job does not check out moodle-local_unlistedcourses under plugin-dependencies.'
+                "The {$match[1]} CI job does not check out moodle-local_unlistedcourses," . $checkouts[$match[1]] . '.'
             );
         }
-        $this->assertTrue($found, 'No MOODLE_502_STABLE job was found in ci.yml.');
+        if ($held === 0) {
+            $this->markTestSkipped('No CI job on this branch runs a Moodle version local_unlistedcourses serves.');
+        }
     }
 
     /**
