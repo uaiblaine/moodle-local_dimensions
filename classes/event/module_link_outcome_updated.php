@@ -40,6 +40,7 @@ class module_link_outcome_updated extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['objecttable'] = \core_competency\course_module_competency::TABLE;
         $this->data['crud'] = 'u';
@@ -51,6 +52,7 @@ class module_link_outcome_updated extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventmodulelinkoutcomeupdated', 'local_dimensions');
     }
@@ -60,6 +62,7 @@ class module_link_outcome_updated extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         return "The user with id '$this->userid' changed the rule outcome of the link between the competency "
             . "with id '{$this->other['competencyid']}' and the course module with id '{$this->other['cmid']}' "
@@ -71,6 +74,7 @@ class module_link_outcome_updated extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_objectid_mapping() {
         return base::NOT_MAPPED;
     }
@@ -83,6 +87,7 @@ class module_link_outcome_updated extends base {
      *
      * @return array
      */
+    #[\Override]
     public static function get_other_mapping() {
         return [
             'competencyid' => ['db' => 'competency', 'restore' => 'competency'],

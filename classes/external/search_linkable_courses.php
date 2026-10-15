@@ -42,7 +42,7 @@ use local_dimensions\helper;
  */
 class search_linkable_courses extends external_api {
     /** @var int Hard cap on the page size. */
-    const MAX_LIMIT = 100;
+    const int MAX_LIMIT = 100;
 
     /**
      * Define the input parameters.

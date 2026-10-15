@@ -43,6 +43,7 @@ class competency_customfields_updated extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['objecttable'] = \core_competency\competency::TABLE;
         $this->data['crud'] = 'u';
@@ -54,6 +55,7 @@ class competency_customfields_updated extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventcompetencycustomfieldsupdated', 'local_dimensions');
     }
@@ -63,6 +65,7 @@ class competency_customfields_updated extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         $fields = implode(', ', array_map(static function ($key) {
             return str_replace('local_dimensions_', '', $key);
@@ -76,6 +79,7 @@ class competency_customfields_updated extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_objectid_mapping() {
         return base::NOT_MAPPED;
     }

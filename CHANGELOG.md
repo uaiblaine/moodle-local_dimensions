@@ -31,6 +31,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- The 5.3 line uses PHP 8.3 constructs: `#[\Override]` on the 185 methods that override or implement
+  a core or plugin method (core signature drift is now a compile error, not a silent new method),
+  typed class constants on all 180 constants under `classes/`, and readonly properties on value
+  objects (`view_competency_page`, `view_plan_summary_page`, the hub's `contextbar` and
+  `template_import_preview`, and `template_import_plan`'s constructor-built fields). Branches for
+  Moodle 4.5, 5.1 and 5.2 keep the older syntax.
+
 - Web services: the 27 read services now declare `'readonlysession' => true`, as core does for its
   own reads, so they no longer hold the session lock for the whole call. This covers the plan
   accordion's per-competency loads (`get_competency_courses`, `get_user_competency_summary_in_plan`,
@@ -116,6 +123,9 @@ Decided by the owner after the comment audit's findings were re-checked against 
 
 ### Fixed
 
+- `get_competency_rule_data` no longer fails with a `TypeError` when a competency's stored rule
+  configuration is a JSON scalar (`5`, `true`, `"x"`): only a JSON object or array is read as a
+  configuration, and anything else, malformed JSON included, reads as none.
 - `get_courses_completion_status` no longer fails with `Class "completion_info" not found` when a
   request carries it alone: it loads `lib/completionlib.php` itself instead of relying on a service
   earlier in the same `core/ajax` batch to have loaded it. `calculator::get_course_section_progress()`

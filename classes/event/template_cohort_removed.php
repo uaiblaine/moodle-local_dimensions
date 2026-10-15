@@ -40,6 +40,7 @@ class template_cohort_removed extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['objecttable'] = \core_competency\template_cohort::TABLE;
         $this->data['crud'] = 'd';
@@ -51,6 +52,7 @@ class template_cohort_removed extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventtemplatecohortremoved', 'local_dimensions');
     }
@@ -60,6 +62,7 @@ class template_cohort_removed extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         return "The user with id '$this->userid' detached the cohort with id '{$this->other['cohortid']}' from the "
             . "learning plan template with id '{$this->other['templateid']}' (existing plans were kept).";
@@ -70,6 +73,7 @@ class template_cohort_removed extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_objectid_mapping() {
         return base::NOT_MAPPED;
     }

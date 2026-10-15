@@ -40,6 +40,7 @@ class course_link_added extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['objecttable'] = \core_competency\course_competency::TABLE;
         $this->data['crud'] = 'c';
@@ -51,6 +52,7 @@ class course_link_added extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventcourselinkadded', 'local_dimensions');
     }
@@ -60,6 +62,7 @@ class course_link_added extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         return "The user with id '$this->userid' linked the competency with id '{$this->other['competencyid']}' "
             . "to the course with id '{$this->other['courseid']}'.";
@@ -70,6 +73,7 @@ class course_link_added extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_objectid_mapping() {
         return base::NOT_MAPPED;
     }
@@ -82,6 +86,7 @@ class course_link_added extends base {
      *
      * @return array
      */
+    #[\Override]
     public static function get_other_mapping() {
         return [
             'competencyid' => ['db' => 'competency', 'restore' => 'competency'],

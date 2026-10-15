@@ -44,6 +44,7 @@ class template_customfields_updated extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['objecttable'] = \core_competency\template::TABLE;
         $this->data['crud'] = 'u';
@@ -55,6 +56,7 @@ class template_customfields_updated extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventtemplatecustomfieldsupdated', 'local_dimensions');
     }
@@ -64,6 +66,7 @@ class template_customfields_updated extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         $fields = implode(', ', array_map(static function ($key) {
             return str_replace('local_dimensions_', '', $key);
@@ -77,6 +80,7 @@ class template_customfields_updated extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_objectid_mapping() {
         return base::NOT_MAPPED;
     }

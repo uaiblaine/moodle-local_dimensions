@@ -46,7 +46,7 @@ use local_dimensions\helper;
  */
 class search_categories extends external_api {
     /** @var int Hard cap on the page size. */
-    const MAX_LIMIT = 50;
+    const int MAX_LIMIT = 50;
 
     /**
      * Define the input parameters.

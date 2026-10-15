@@ -47,10 +47,10 @@ use local_dimensions\local\enrol_methods;
  */
 class list_enrol_competencies extends external_api {
     /** @var int Hard cap on the page size. */
-    const MAX_LIMIT = 100;
+    const int MAX_LIMIT = 100;
 
     /** @var int Page size when the caller sends none, or one below 1. */
-    const DEFAULT_LIMIT = 20;
+    const int DEFAULT_LIMIT = 20;
 
     /**
      * Parameters.

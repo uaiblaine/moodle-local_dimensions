@@ -41,6 +41,7 @@ class template_duplicated extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['objecttable'] = \core_competency\template::TABLE;
         $this->data['crud'] = 'c';
@@ -52,6 +53,7 @@ class template_duplicated extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventtemplateduplicated', 'local_dimensions');
     }
@@ -61,6 +63,7 @@ class template_duplicated extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         return "The user with id '$this->userid' duplicated the learning plan template with id "
             . "'{$this->other['sourceid']}' into the template with id '$this->objectid', copying "
@@ -72,6 +75,7 @@ class template_duplicated extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_objectid_mapping() {
         return base::NOT_MAPPED;
     }

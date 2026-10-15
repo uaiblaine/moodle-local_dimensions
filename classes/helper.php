@@ -47,13 +47,13 @@ use local_dimensions\customfield\competency_handler;
  */
 class helper {
     /** @var string Area for learning plan templates */
-    const AREA_LP = 'lp';
+    const string AREA_LP = 'lp';
 
     /** @var string Area for competencies */
-    const AREA_COMPETENCY = 'competency';
+    const string AREA_COMPETENCY = 'competency';
 
     /** @var int Page size for the lazy Structure tree (roots + children). */
-    const STRUCTURE_PAGE_SIZE = 25;
+    const int STRUCTURE_PAGE_SIZE = 25;
 
     /**
      * Get the handler for a given area.
@@ -636,7 +636,7 @@ class helper {
     }
 
     /** @var int Re-check window for the lazy-provisioning hook fallback (seconds). */
-    const FIELDS_ENSURED_TTL = 3600;
+    const int FIELDS_ENSURED_TTL = 3600;
 
     /**
      * Ensure all custom fields exist for both LP and competency areas.

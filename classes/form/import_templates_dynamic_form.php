@@ -44,6 +44,7 @@ class import_templates_dynamic_form extends \core_form\dynamic_form {
      *
      * @return \context
      */
+    #[\Override]
     protected function get_context_for_dynamic_submission(): \context {
         $contextid = $this->optional_param('contextid', 0, PARAM_INT);
         if ($contextid > 0) {
@@ -61,6 +62,7 @@ class import_templates_dynamic_form extends \core_form\dynamic_form {
      *
      * @return void
      */
+    #[\Override]
     protected function check_access_for_dynamic_submission(): void {
         $context = $this->get_context_for_dynamic_submission();
         if ($context->contextlevel !== CONTEXT_SYSTEM && $context->contextlevel !== CONTEXT_COURSECAT) {
@@ -74,6 +76,7 @@ class import_templates_dynamic_form extends \core_form\dynamic_form {
      *
      * @return \moodle_url
      */
+    #[\Override]
     protected function get_page_url_for_dynamic_submission(): \moodle_url {
         return \local_dimensions\helper::hub_page_url($this->get_context_for_dynamic_submission());
     }
@@ -83,6 +86,7 @@ class import_templates_dynamic_form extends \core_form\dynamic_form {
      *
      * @return void
      */
+    #[\Override]
     public function definition() {
         global $CFG;
         require_once($CFG->libdir . '/csvlib.class.php');
@@ -140,6 +144,7 @@ class import_templates_dynamic_form extends \core_form\dynamic_form {
      *
      * @return void
      */
+    #[\Override]
     public function set_data_for_dynamic_submission(): void {
         $this->set_data((object) ['contextid' => $this->get_context_for_dynamic_submission()->id]);
     }
@@ -149,6 +154,7 @@ class import_templates_dynamic_form extends \core_form\dynamic_form {
      *
      * @return array{draftitemid: int, contextid: int, delimiter: string, encoding: string, updateexisting: int}
      */
+    #[\Override]
     public function process_dynamic_submission() {
         $data = $this->get_data();
         return [
@@ -170,6 +176,7 @@ class import_templates_dynamic_form extends \core_form\dynamic_form {
      * @param array $files Submitted files.
      * @return array
      */
+    #[\Override]
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 

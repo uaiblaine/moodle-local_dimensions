@@ -42,6 +42,7 @@ class enrol_method_removed extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['objecttable'] = 'enrol';
         $this->data['crud'] = 'd';
@@ -53,6 +54,7 @@ class enrol_method_removed extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventenrolmethodremoved', 'local_dimensions');
     }
@@ -62,6 +64,7 @@ class enrol_method_removed extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         return "The user with id '$this->userid' removed the '{$this->other['method']}' enrolment method bound to "
             . "the cohort with id '{$this->other['cohortid']}' from the course with id '$this->courseid'.";
@@ -72,6 +75,7 @@ class enrol_method_removed extends base {
      *
      * @return array
      */
+    #[\Override]
     public static function get_objectid_mapping() {
         return ['db' => 'enrol', 'restore' => 'enrol'];
     }
@@ -83,6 +87,7 @@ class enrol_method_removed extends base {
      *
      * @return array
      */
+    #[\Override]
     public static function get_other_mapping() {
         return [
             'templateid' => base::NOT_MAPPED,

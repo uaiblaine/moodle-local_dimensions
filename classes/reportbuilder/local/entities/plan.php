@@ -42,6 +42,7 @@ class plan extends base {
      *
      * @return string[]
      */
+    #[\Override]
     protected function get_default_tables(): array {
         return ['competency_plan'];
     }
@@ -49,6 +50,7 @@ class plan extends base {
     /**
      * The default title for this entity.
      */
+    #[\Override]
     protected function get_default_entity_title(): lang_string {
         return new lang_string('entityname_plan', 'local_dimensions');
     }
@@ -56,6 +58,7 @@ class plan extends base {
     /**
      * Initialise the entity.
      */
+    #[\Override]
     public function initialise(): base {
         foreach ($this->get_all_columns() as $col) {
             $this->add_column($col);

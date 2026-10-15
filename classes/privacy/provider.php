@@ -56,6 +56,7 @@ class provider implements \core_privacy\local\metadata\provider, user_preference
      * @param collection $collection The metadata collection to add to.
      * @return collection The updated collection.
      */
+    #[\Override]
     public static function get_metadata(collection $collection): collection {
         $collection->add_user_preference(
             constants::PREF_CENTRAL_NAV,
@@ -86,6 +87,7 @@ class provider implements \core_privacy\local\metadata\provider, user_preference
      * @param int $userid The id of the user to export for.
      * @return void
      */
+    #[\Override]
     public static function export_user_preferences(int $userid): void {
         self::export_preference(
             $userid,
