@@ -47,8 +47,8 @@ jobs:
   # dependency. It is checked out so the real-plugin cases of enrolment_provider_unlisted_test and
   # the plugin half of enrolment_provider_test::test_availability_follows_the_plugin_and_the_branch
   # run instead of skipping. Only ci-502 lists it: the plugin declares $plugin->supported =
-  # [502, 502] and its 5.2 branch is main. test_ci_checks_out_unlistedcourses_on_the_502_leg
-  # fails the build if the line is dropped.
+  # [502, 502] and its main branch is 5.3, so the job names its 5.2 stable branch.
+  # test_ci_checks_out_unlistedcourses_on_the_502_leg fails the build if the line is dropped.
   #
   # 4.05 lists only block_dimensions: enrol_apply declares
   # $plugin->supported = [501, 502] and cannot install on Moodle 4.5, so the
@@ -61,7 +61,7 @@ jobs:
       plugin-dependencies: |
         uaiblaine/moodle-enrol_apply,master
         uaiblaine/moodle-block_dimensions,main
-        uaiblaine/moodle-local_unlistedcourses,main
+        uaiblaine/moodle-local_unlistedcourses,MOODLE_502_STABLE
 
   ci-501:
     name: Moodle 5.01
