@@ -39,5 +39,8 @@ function xmldb_local_dimensions_install() {
        database account without the privilege simply keeps accent-sensitive search. */
     \local_dimensions\helper::ensure_unaccent();
 
+    // Records the once-only upgrade repairs as applied; on a new site they find nothing to change.
+    \local_dimensions\local\legacy_repair::run();
+
     return true;
 }
