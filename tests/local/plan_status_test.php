@@ -17,6 +17,7 @@
 namespace local_dimensions\local;
 
 use core_competency\plan;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the plan status labels.
@@ -24,8 +25,8 @@ use core_competency\plan;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\plan_status
  */
+#[CoversClass(\local_dimensions\local\plan_status::class)]
 final class plan_status_test extends \basic_testcase {
     /**
      * Each status reads core's own label for it, and an unknown status reads nothing.

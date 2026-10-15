@@ -22,6 +22,7 @@ use local_dimensions\constants;
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Admin-set labels on the learner pages reach the learner filtered to one language.
@@ -30,15 +31,12 @@ use local_dimensions\helper;
  * multilang pair, which only format_string() resolves: the raw value carries both languages and
  * their markup, so a label that skipped formatting cannot pass.
  *
- * The class-level covers tags stay in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes, and the plugin still supports 4.5.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\output\view_plan_summary_page
- * @covers     \local_dimensions\chip_filters
  */
+#[CoversClass(\local_dimensions\output\view_plan_summary_page::class)]
+#[CoversClass(\local_dimensions\chip_filters::class)]
 final class learner_labels_test extends \advanced_testcase {
     /** @var string A label in two languages, as an admin stores it. */
     private const MULTILANG = '<span lang="en" class="multilang">Leadership</span><span lang="de" class="multilang">Leitung</span>';

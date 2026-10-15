@@ -22,6 +22,7 @@ use core_external\external_api;
 use local_dimensions\constants;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for get_competency_courses: the enrolment-filter cascade and the per-course payload.
@@ -29,8 +30,8 @@ use local_dimensions\helper;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_competency_courses
  */
+#[CoversClass(\local_dimensions\external\get_competency_courses::class)]
 final class get_competency_courses_test extends \advanced_testcase {
     /**
      * A per-plan (template-level) enrollmentfilter of "active" hides an un-enrolled linked course.

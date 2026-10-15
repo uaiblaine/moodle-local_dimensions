@@ -21,6 +21,7 @@ use local_dimensions\constants;
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Both learner heroes read their admin colours through one hex-only rule.
@@ -29,16 +30,13 @@ use local_dimensions\helper;
  * but a hex colour must be dropped. The plan hero (template area) and the competency hero
  * (competency area) share the reader, and a second copy of the rule is how the two drift apart.
  *
- * The class-level covers tags stay in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes, and the plugin still supports 4.5.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\output\customfield_reader
- * @covers     \local_dimensions\output\view_plan_summary_page
- * @covers     \local_dimensions\output\view_competency_page
  */
+#[CoversClass(\local_dimensions\output\customfield_reader::class)]
+#[CoversClass(\local_dimensions\output\view_plan_summary_page::class)]
+#[CoversClass(\local_dimensions\output\view_competency_page::class)]
 final class colour_field_test extends \advanced_testcase {
     /** @var string A value that is not a colour and would extend the style attribute. */
     private const HOSTILE = 'red; background-image: url(x)';

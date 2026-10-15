@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -31,14 +33,11 @@ require_once($CFG->dirroot . '/local/dimensions/tests/fixtures/stubbed_unlisted_
  * values the translation maps are held against the plugin's own constants, and the provider is run
  * against the real plugin.
  *
- * The class-level covers tag stays in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\enrolment_provider_unlisted
  */
+#[CoversClass(\local_dimensions\local\enrolment_provider_unlisted::class)]
 final class enrolment_provider_unlisted_test extends \advanced_testcase {
     /** @var int A course id the translation is asked about. */
     private const COURSE = 42;

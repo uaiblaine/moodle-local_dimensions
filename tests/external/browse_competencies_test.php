@@ -16,14 +16,16 @@
 
 namespace local_dimensions\external;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for the browse_competencies external function.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\browse_competencies
  */
+#[CoversClass(\local_dimensions\external\browse_competencies::class)]
 final class browse_competencies_test extends \advanced_testcase {
     /**
      * Browse roots, then children, and verify haschildren + structure order.

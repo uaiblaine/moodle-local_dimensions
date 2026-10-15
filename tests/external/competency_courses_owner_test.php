@@ -21,6 +21,7 @@ use core_external\external_api;
 use local_dimensions\calculator;
 use local_dimensions\constants;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Whose data the accordion's course cards carry when a teacher opens a learner's plan.
@@ -29,14 +30,11 @@ use local_dimensions\helper;
  * activities' completion and restrictions, and the card shape. Only the access state and its lock
  * date are the viewer's, since they decide what clicking the card does.
  *
- * The covers tag stays in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
- * attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_competency_courses
  */
+#[CoversClass(\local_dimensions\external\get_competency_courses::class)]
 final class competency_courses_owner_test extends \advanced_testcase {
     /** @var string Web service under test. */
     private const WSNAME = 'local_dimensions_get_competency_courses';

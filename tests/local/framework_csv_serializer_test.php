@@ -20,6 +20,7 @@ use core_competency\api;
 use local_dimensions\constants;
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the framework CSV serializer (export + parse round-trip).
@@ -27,8 +28,8 @@ use local_dimensions\helper;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\framework_csv_serializer
  */
+#[CoversClass(\local_dimensions\local\framework_csv_serializer::class)]
 final class framework_csv_serializer_test extends \advanced_testcase {
     /**
      * Export a framework with custom fields, then parse it back and check the reconstruction.

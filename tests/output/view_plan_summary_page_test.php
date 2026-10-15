@@ -27,6 +27,7 @@ namespace local_dimensions\output;
 use advanced_testcase;
 use core_competency\plan;
 use local_dimensions\constants;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for the plan overview's sort order, view state and favourites resolution.
@@ -34,9 +35,8 @@ use local_dimensions\constants;
  * The three resolvers are private statics, but the gates deciding whether they apply at all -
  * the admin setting and the own-plan guard - live in export_for_template. Driving the export is
  * therefore both the shorter test and the one that covers the wiring between them.
- *
- * @covers \local_dimensions\output\view_plan_summary_page
  */
+#[CoversClass(\local_dimensions\output\view_plan_summary_page::class)]
 final class view_plan_summary_page_test extends advanced_testcase {
     /**
      * Build a template-backed plan whose competency names sort against their plan order.

@@ -16,6 +16,8 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * The enrol_apply integration must stay optional for anybody installing this plugin.
  *
@@ -29,9 +31,9 @@ namespace local_dimensions;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\calculator::current_user_can_enrol
- * @covers     \local_dimensions\calculator::current_user_has_pending_application
  */
+#[CoversMethod(\local_dimensions\calculator::class, 'current_user_can_enrol')]
+#[CoversMethod(\local_dimensions\calculator::class, 'current_user_has_pending_application')]
 final class optional_enrol_apply_test extends \advanced_testcase {
     /**
      * version.php declares no dependency on any enrol plugin.

@@ -19,6 +19,7 @@ namespace local_dimensions;
 use local_dimensions\local\enrolment_provider;
 use local_dimensions\local\testable_enrolment_provider;
 use local_dimensions\local\unlisted_access_stub;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -34,14 +35,11 @@ require_once($CFG->dirroot . '/local/dimensions/tests/fixtures/unlisted_access_s
  * class name held as a string, behind enrolment_provider::unlisted_available(), and that is the only
  * way in.
  *
- * The class-level covers tag stays in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\enrolment_provider
  */
+#[CoversClass(\local_dimensions\local\enrolment_provider::class)]
 final class optional_unlistedcourses_test extends \advanced_testcase {
     /**
      * version.php declares no dependency on local_unlistedcourses.

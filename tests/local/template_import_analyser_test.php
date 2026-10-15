@@ -18,6 +18,7 @@ namespace local_dimensions\local;
 
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the learning plan import analyser, starting with its zero-writes guarantee.
@@ -25,8 +26,8 @@ use local_dimensions\helper;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\template_import_analyser
  */
+#[CoversClass(\local_dimensions\local\template_import_analyser::class)]
 final class template_import_analyser_test extends \advanced_testcase {
     /**
      * Analysing a file that exercises every verdict writes nothing at all.

@@ -17,6 +17,7 @@
 namespace local_dimensions\external;
 
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The icon picker's core fallback map is read from its cache and built only on a miss.
@@ -28,8 +29,8 @@ use core_external\external_api;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_fontawesome_icons
  */
+#[CoversClass(\local_dimensions\external\get_fontawesome_icons::class)]
 final class fontawesome_icons_cache_test extends \advanced_testcase {
     /** @var array A map no build produces, so finding it in a search proves the cache was read. */
     private const SENTINEL = [

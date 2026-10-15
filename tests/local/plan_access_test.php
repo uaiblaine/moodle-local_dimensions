@@ -22,6 +22,7 @@ use core_competency\plan;
 use local_dimensions\constants;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests which failures of reading a plan the learner pages report as an invalid plan.
@@ -34,14 +35,11 @@ use local_dimensions\helper;
  * page, which describes the plan owner, refuses a viewer who may not read the owner's user
  * competencies. See {@see plan_access::require_owner_readable()}.
  *
- * The covers tag stays in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
- * attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\plan_access
  */
+#[CoversClass(\local_dimensions\local\plan_access::class)]
 final class plan_access_test extends \advanced_testcase {
     /**
      * The owner reads their own active plan.

@@ -18,6 +18,7 @@ namespace local_dimensions;
 
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\customfield\lp_handler;
+use PHPUnit\Framework\Attributes\CoversMethod;
 
 /**
  * Tests for the Feel/Look custom-field category reorganization.
@@ -25,9 +26,9 @@ use local_dimensions\customfield\lp_handler;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper::organize_customfield_categories
- * @covers     \local_dimensions\helper::ensure_custom_fields_exist
  */
+#[CoversMethod(\local_dimensions\helper::class, 'organize_customfield_categories')]
+#[CoversMethod(\local_dimensions\helper::class, 'ensure_custom_fields_exist')]
 final class helper_customfield_categories_test extends \advanced_testcase {
     /**
      * Drop the handlers' cached field lists, which would outlive the rollback of the rows they hold.

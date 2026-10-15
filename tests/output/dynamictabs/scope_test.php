@@ -26,14 +26,14 @@ namespace local_dimensions\output\dynamictabs;
 
 use advanced_testcase;
 use context_coursecat;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The locked category entry lists the category and its descendants; the site entry lists one context.
- *
- * @covers \local_dimensions\output\dynamictabs\frameworks
- * @covers \local_dimensions\output\dynamictabs\structure
- * @covers \local_dimensions\output\dynamictabs\plans
  */
+#[CoversClass(\local_dimensions\output\dynamictabs\frameworks::class)]
+#[CoversClass(\local_dimensions\output\dynamictabs\structure::class)]
+#[CoversClass(\local_dimensions\output\dynamictabs\plans::class)]
 final class scope_test extends advanced_testcase {
     /**
      * A category with a child category, one framework and one template in each.

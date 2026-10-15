@@ -31,6 +31,7 @@ use core_competency\plan;
 use core_external\external_api;
 use local_dimensions\helper;
 use local_dimensions\local\template_csv_serializer;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * A service declared 'readonlysession' runs without the session lock, so nothing it writes to
@@ -43,38 +44,34 @@ use local_dimensions\local\template_csv_serializer;
  * every fill runs. $USER is not compared, as core does not compare it. No key is left out of the
  * comparison: the plugin's one session-mode cache, `returncontext`, is written only by the
  * learner pages and read by the Return FAB, never by a web service.
- *
- * The class-level covers tags stay in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes, and the plugin still supports 4.5.
- *
- * @covers     \local_dimensions\external\get_course_progress
- * @covers     \local_dimensions\external\get_courses_completion_status
- * @covers     \local_dimensions\external\get_fontawesome_icons
- * @covers     \local_dimensions\external\get_competency_courses
- * @covers     \local_dimensions\external\get_user_competency_summary_in_plan
- * @covers     \local_dimensions\external\get_competency_rule_data
- * @covers     \local_dimensions\external\search_competencies
- * @covers     \local_dimensions\external\competency_usage
- * @covers     \local_dimensions\external\search_structure
- * @covers     \local_dimensions\external\browse_competencies
- * @covers     \local_dimensions\external\browse_structure
- * @covers     \local_dimensions\external\get_structure_node
- * @covers     \local_dimensions\external\list_related_competencies
- * @covers     \local_dimensions\external\list_template_cohorts
- * @covers     \local_dimensions\external\list_template_participants
- * @covers     \local_dimensions\external\search_assignable_users
- * @covers     \local_dimensions\external\get_competency_links
- * @covers     \local_dimensions\external\search_linkable_courses
- * @covers     \local_dimensions\external\get_competency_module_links
- * @covers     \local_dimensions\external\export_framework
- * @covers     \local_dimensions\external\export_templates
- * @covers     \local_dimensions\external\preview_import_templates
- * @covers     \local_dimensions\external\list_template_cohort_roles
- * @covers     \local_dimensions\external\list_enrol_competencies
- * @covers     \local_dimensions\external\list_enrol_courses
- * @covers     \local_dimensions\external\get_enrol_queue_status
- * @covers     \local_dimensions\external\search_categories
  */
+#[CoversClass(\local_dimensions\external\get_course_progress::class)]
+#[CoversClass(\local_dimensions\external\get_courses_completion_status::class)]
+#[CoversClass(\local_dimensions\external\get_fontawesome_icons::class)]
+#[CoversClass(\local_dimensions\external\get_competency_courses::class)]
+#[CoversClass(\local_dimensions\external\get_user_competency_summary_in_plan::class)]
+#[CoversClass(\local_dimensions\external\get_competency_rule_data::class)]
+#[CoversClass(\local_dimensions\external\search_competencies::class)]
+#[CoversClass(\local_dimensions\external\competency_usage::class)]
+#[CoversClass(\local_dimensions\external\search_structure::class)]
+#[CoversClass(\local_dimensions\external\browse_competencies::class)]
+#[CoversClass(\local_dimensions\external\browse_structure::class)]
+#[CoversClass(\local_dimensions\external\get_structure_node::class)]
+#[CoversClass(\local_dimensions\external\list_related_competencies::class)]
+#[CoversClass(\local_dimensions\external\list_template_cohorts::class)]
+#[CoversClass(\local_dimensions\external\list_template_participants::class)]
+#[CoversClass(\local_dimensions\external\search_assignable_users::class)]
+#[CoversClass(\local_dimensions\external\get_competency_links::class)]
+#[CoversClass(\local_dimensions\external\search_linkable_courses::class)]
+#[CoversClass(\local_dimensions\external\get_competency_module_links::class)]
+#[CoversClass(\local_dimensions\external\export_framework::class)]
+#[CoversClass(\local_dimensions\external\export_templates::class)]
+#[CoversClass(\local_dimensions\external\preview_import_templates::class)]
+#[CoversClass(\local_dimensions\external\list_template_cohort_roles::class)]
+#[CoversClass(\local_dimensions\external\list_enrol_competencies::class)]
+#[CoversClass(\local_dimensions\external\list_enrol_courses::class)]
+#[CoversClass(\local_dimensions\external\get_enrol_queue_status::class)]
+#[CoversClass(\local_dimensions\external\search_categories::class)]
 final class readonly_session_test extends \advanced_testcase {
     /** @var string[] The plugin's application-mode cache definitions (db/caches.php), purged before every call. */
     private const CACHES = [

@@ -16,15 +16,17 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for the learning plan import verdict model and its immutable plan value object.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\template_import_verdict
- * @covers     \local_dimensions\local\template_import_plan
  */
+#[CoversClass(\local_dimensions\local\template_import_verdict::class)]
+#[CoversClass(\local_dimensions\local\template_import_plan::class)]
 final class template_import_plan_test extends \advanced_testcase {
     /**
      * Every constant in every set resolves to a real, non-empty label.

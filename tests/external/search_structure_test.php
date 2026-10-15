@@ -24,6 +24,8 @@
 
 namespace local_dimensions\external;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -35,8 +37,8 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \local_dimensions\external\search_structure
  */
+#[CoversClass(\local_dimensions\external\search_structure::class)]
 final class search_structure_test extends \externallib_advanced_testcase {
     /**
      * Helper: clean a raw execute() return value through the declared return structure.

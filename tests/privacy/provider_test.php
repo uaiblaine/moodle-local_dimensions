@@ -28,12 +28,12 @@ use advanced_testcase;
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\writer;
 use local_dimensions\constants;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for the preference-only privacy provider.
- *
- * @covers \local_dimensions\privacy\provider
  */
+#[CoversClass(\local_dimensions\privacy\provider::class)]
 final class provider_test extends advanced_testcase {
     /**
      * Reset the privacy writer between tests so an export in one case does not leak into another.

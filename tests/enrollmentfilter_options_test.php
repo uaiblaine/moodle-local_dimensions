@@ -16,14 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * Tests for the enrollmentfilter option list ordering.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\constants::enrollmentfilter_options
  */
+#[CoversMethod(\local_dimensions\constants::class, 'enrollmentfilter_options')]
 final class enrollmentfilter_options_test extends \advanced_testcase {
     /**
      * The option keys are append-only: no existing entry may move, because the

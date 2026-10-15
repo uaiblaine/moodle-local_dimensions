@@ -16,14 +16,16 @@
 
 namespace local_dimensions\external;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for the export_templates external function.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\export_templates
  */
+#[CoversClass(\local_dimensions\external\export_templates::class)]
 final class export_templates_test extends \advanced_testcase {
     /**
      * Export one system-context template and check the returned CSV.

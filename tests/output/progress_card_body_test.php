@@ -16,6 +16,8 @@
 
 namespace local_dimensions\output;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * The tracker course card's state area: the locked overlay's contents and the open card's pill.
  *
@@ -30,8 +32,8 @@ namespace local_dimensions\output;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class progress_card_body_test extends \advanced_testcase {
     /**
      * A state payload as the service sends it.

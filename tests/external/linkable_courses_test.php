@@ -16,14 +16,16 @@
 
 namespace local_dimensions\external;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for the search_linkable_courses external function.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\search_linkable_courses
  */
+#[CoversClass(\local_dimensions\external\search_linkable_courses::class)]
 final class linkable_courses_test extends \advanced_testcase {
     /**
      * As admin, the picker returns matching courses and excludes already-linked ones.

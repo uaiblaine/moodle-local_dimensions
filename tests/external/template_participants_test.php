@@ -18,6 +18,7 @@ namespace local_dimensions\external;
 
 use core_competency\api;
 use core_competency\plan;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the template participant external functions.
@@ -25,11 +26,11 @@ use core_competency\plan;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\list_template_participants
- * @covers     \local_dimensions\external\add_template_user_plan
- * @covers     \local_dimensions\external\unlink_template_user_plan
- * @covers     \local_dimensions\external\delete_template_user_plan
  */
+#[CoversClass(\local_dimensions\external\list_template_participants::class)]
+#[CoversClass(\local_dimensions\external\add_template_user_plan::class)]
+#[CoversClass(\local_dimensions\external\unlink_template_user_plan::class)]
+#[CoversClass(\local_dimensions\external\delete_template_user_plan::class)]
 final class template_participants_test extends \advanced_testcase {
     /**
      * Make a visible template, a cohort with two members, and one extra non-cohort user.

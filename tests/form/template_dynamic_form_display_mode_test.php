@@ -19,6 +19,7 @@ namespace local_dimensions\form;
 use local_dimensions\constants;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests which template settings the modal hides for each display mode.
@@ -26,8 +27,8 @@ use local_dimensions\helper;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\form\template_dynamic_form
  */
+#[CoversClass(\local_dimensions\form\template_dynamic_form::class)]
 final class template_dynamic_form_display_mode_test extends \advanced_testcase {
     /**
      * Drop the handler's cached field list, which would outlive the rollback of the rows it holds.

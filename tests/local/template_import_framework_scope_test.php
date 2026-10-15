@@ -19,6 +19,7 @@ namespace local_dimensions\local;
 use core_competency\template;
 use core_competency\template_competency;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Which competency structures a learning plan CSV can resolve and link, by the context it is imported into.
@@ -28,15 +29,12 @@ use local_dimensions\helper;
  * sibling's is in neither direction, so only the first two may be resolved; from the system context
  * all three are readable, which is the control proving the sibling rows are resolvable at all.
  *
- * The covers tags stay in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
- * attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\template_import_analyser
- * @covers     \local_dimensions\local\template_csv_importer
  */
+#[CoversClass(\local_dimensions\local\template_import_analyser::class)]
+#[CoversClass(\local_dimensions\local\template_csv_importer::class)]
 final class template_import_framework_scope_test extends \advanced_testcase {
     /**
      * A structure ID number resolves only among the structures readable from the target.
