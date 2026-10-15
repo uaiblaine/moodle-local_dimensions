@@ -54,4 +54,4 @@ jobs:
       plugin-dependencies: |
         uaiblaine/moodle-enrol_apply,master
         uaiblaine/moodle-block_dimensions,MOODLE_502_STABLE
-        uaiblaine/moodle-local_unlistedcourses,main
+        uaiblaine/moodle-local_unlistedcourses,MOODLE_502_STABLE
