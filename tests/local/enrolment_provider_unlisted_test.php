@@ -392,14 +392,14 @@ final class enrolment_provider_unlisted_test extends \advanced_testcase {
      * Each CI job on a Moodle version local_unlistedcourses serves must check it out, on that version's branch.
      *
      * The control for the cases above that skip without the plugin; the workflow file is the only place
-     * that condition can be checked. The plugin has a branch for 5.2 (its main) and for 5.3, and none
+     * that condition can be checked. The plugin has a branch for 5.2 and for 5.3 (its main), and none
      * below: on the 4.5 and 5.1 branches of this plugin no job is held to it, and the test says so.
      *
      * @return void
      */
     public function test_ci_checks_out_unlistedcourses_where_it_exists(): void {
         $checkouts = [
-            'MOODLE_502_STABLE' => 'main',
+            'MOODLE_502_STABLE' => 'MOODLE_502_STABLE',
             'MOODLE_503_STABLE' => 'MOODLE_503_STABLE',
         ];
         $workflow = dirname(__DIR__, 2) . '/.github/workflows/ci.yml';
