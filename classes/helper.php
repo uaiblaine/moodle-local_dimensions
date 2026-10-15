@@ -792,8 +792,8 @@ class helper {
      * Provisioning never re-syncs the option list of an existing field, so a field created
      * before the option existed keeps four options. This appends the fifth (index 5), leaving
      * the first four indices, and so every stored value, untouched. Reads configdata from the
-     * DB rather than from the cached controller. Does nothing when the field does not exist or
-     * already lists the option label as the current language spells it.
+     * DB rather than from the cached controller. Does nothing unless the field exists and lists
+     * exactly one option fewer than {@see constants::enrollmentfilter_options()}.
      *
      * @param string $area One of self::AREA_LP or self::AREA_COMPETENCY.
      * @return void
@@ -813,13 +813,15 @@ class helper {
             return;
         }
 
+        // Decided by the number of lines, not by the label: the label is spelled in the language of
+        // whoever runs the upgrade, and db/upgrade.php calls this on every upgrade, so a field
+        // provisioned in Portuguese would gain a second fifth option on an upgrade run in English.
         $lines = explode("\n", (string) $config['options']);
-        $label = (string) new \lang_string('enrollmentfilter_enrolledorself', 'local_dimensions');
-        if (in_array($label, $lines, true)) {
+        if (count($lines) !== count(constants::enrollmentfilter_options()) - 1) {
             return;
         }
 
-        $lines[] = $label;
+        $lines[] = (string) new \lang_string('enrollmentfilter_enrolledorself', 'local_dimensions');
         $config['options'] = implode("\n", $lines);
         $DB->set_field('customfield_field', 'configdata', json_encode($config), ['id' => $fieldid]);
         self::get_handler($area)->reset_configuration_cache();
