@@ -4,7 +4,30 @@ All notable changes to the **local_dimensions** plugin will be documented in thi
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [v4.5-r1] - Unreleased
+
+### Upgrading
+
+- **One branch per Moodle version.** This is `MOODLE_405_STABLE`, for Moodle 4.5 only
+  (`$plugin->supported = [405, 405]`, version `2024100700`). The other Moodle versions are
+  served by `MOODLE_501_STABLE`, `MOODLE_502_STABLE`, `MOODLE_503_STABLE`. Each branch numbers its releases inside its Moodle version's
+  namespace, as moodle.org expects, so every number is below the date-numbered releases that
+  came before (the last was `2026101301`, v1.0). Moodle 5.0 is no longer supported.
+- **Switching a site from a date-numbered release** (any of them; no intermediate release is
+  needed):
+  1. Replace the plugin's files with this branch.
+  2. `php admin/cli/cfg.php --component=local_dimensions --name=version --set=2024100699`
+     (do the same for block_dimensions when it is installed, with its own branch).
+  3. `php admin/cli/upgrade.php`.
+
+  Step 2 comes after step 1; without it Moodle refuses the new files as a downgrade.
+- **Upgrade steps are repairs now.** The numbered steps of the date-numbered releases are gone.
+  Their lasting effects (prefixed custom field shortnames, the fifth enrolment-filter option,
+  two retired settings, PostgreSQL's `unaccent` extension) are applied by
+  `local\legacy_repair` on every upgrade, and each leaves an up-to-date site unchanged. The
+  enrolment-filter repair now counts the options instead of comparing the label, so an upgrade
+  run in another language no longer adds the option twice. The shortname repair leaves a field
+  alone when its area already has a field with the new name.
 
 ### Changed
 

@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_dimensions';
-$plugin->version = 2026101301;
+$plugin->version = 2024100700;
 $plugin->requires = 2024100700;
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = 'v1.0';
-$plugin->supported = [405, 502];
+$plugin->maturity = MATURITY_STABLE;
+$plugin->release = 'v4.5-r1';
+$plugin->supported = [405, 405];

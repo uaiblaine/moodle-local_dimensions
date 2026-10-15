@@ -4,7 +4,7 @@
 templates with custom fields, adds learner-facing views (a competency tracker and a full plan
 overview, plus a draggable return button), and provides an administrative hub for frameworks,
 templates, cohort links and course and module links. It is a local plugin that supports
-Moodle 4.5 through 5.2 on one branch. **It defines no database tables of its own**: all data
+Moodle 4.5 through 5.3, one branch per Moodle version (main is 5.3). **It defines no database tables of its own**: all data
 lives in core competency tables and `customfield_data`.
 
 ## Who is trusted
@@ -56,8 +56,9 @@ lives in core competency tables and `customfield_data`.
 - **`styles.css` ends with a Bootstrap 4 polyfill** gated by a body class that the plugin adds
   only below Moodle 5.0, and colours come from theme tokens with fallbacks. Neither is a
   security matter.
-- **The plugin declares `$plugin->supported = [405, 502]` on one branch**, so code that
-  branches on `$CFG->branch` or checks for a helper before calling it is deliberate.
+- **Each branch serves one Moodle version, and 4.5 through 5.2 carry the code of the 5.3
+  `main` from before its 4.5 compatibility code was dropped**, so code that branches on
+  `$CFG->branch` or checks for a helper before calling it may still be on a branch, deliberately.
 
 ## De-emphasise
 
