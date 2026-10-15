@@ -40,6 +40,7 @@ class learning_plans extends datasource {
     /**
      * Human-readable name shown in the report-builder UI.
      */
+    #[\Override]
     public static function get_name(): string {
         return get_string('datasource_learning_plans', 'local_dimensions');
     }
@@ -47,6 +48,7 @@ class learning_plans extends datasource {
     /**
      * Wire entities and joins.
      */
+    #[\Override]
     protected function initialise(): void {
         // Main entity: competency_plan.
         $planentity = new plan();
@@ -88,6 +90,7 @@ class learning_plans extends datasource {
      *
      * @return string[]
      */
+    #[\Override]
     public function get_default_columns(): array {
         return [
             'plan:name',
@@ -102,6 +105,7 @@ class learning_plans extends datasource {
      *
      * @return int[]
      */
+    #[\Override]
     public function get_default_column_sorting(): array {
         return [
             'plan:name' => SORT_ASC,
@@ -113,6 +117,7 @@ class learning_plans extends datasource {
      *
      * @return string[]
      */
+    #[\Override]
     public function get_default_filters(): array {
         return [
             'plan:status',
@@ -126,6 +131,7 @@ class learning_plans extends datasource {
      *
      * @return string[]
      */
+    #[\Override]
     public function get_default_conditions(): array {
         return [
             'plan:status',

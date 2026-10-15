@@ -230,6 +230,10 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   `local\bootstrap`, which adds that body class; both `data-toggle` spellings; the
   `bootstrap_compat_test` arms that hold them; `enrolment_provider::UNLISTED_MIN_BRANCH`. A fix
   cherry-picked there keeps them (`docs/moodle-53-branch-plan.md`, S5).
+- The 5.3 line (`main`) uses PHP 8.3 constructs the other branches cannot parse or do not need:
+  `#[\Override]` on every method that overrides a core or plugin method (never on `execute*` of an
+  `external_api` class, which core does not declare), typed class constants, readonly value
+  objects. A cherry-pick to 502, 501 or 405 drops them (S5 of `docs/moodle-53-branch-plan.md`).
 
 ## MDL Shield reviews
 

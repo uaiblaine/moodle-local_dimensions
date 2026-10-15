@@ -48,7 +48,7 @@ class enrolment_state {
      *            read the --local-dimensions-state-* tokens in styles.css; the icons are the theme
      *            card's, in names Moodle 4.5, 5.1 and 5.2 all ship.
      */
-    public const LOOK = [
+    public const array LOOK = [
         provider::STATE_ENROLLED => ['local-dimensions-state-enrolled', 'fa-circle-check'],
         provider::STATE_SCHEDULED => ['local-dimensions-state-scheduled', 'fa-calendar'],
         provider::STATE_PENDING => ['local-dimensions-state-pending', 'fa-hourglass-half'],
@@ -63,7 +63,7 @@ class enrolment_state {
     ];
 
     /** @var array The states that may name the day an enrolment window opens ({@see opening_date()}). */
-    public const OPENING_STATES = [provider::STATE_NONE, provider::STATE_SUSPENDED, provider::STATE_EXPIRED];
+    public const array OPENING_STATES = [provider::STATE_NONE, provider::STATE_SUSPENDED, provider::STATE_EXPIRED];
 
     /**
      * The payload a card renders for one state.

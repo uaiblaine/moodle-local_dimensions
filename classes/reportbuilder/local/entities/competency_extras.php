@@ -46,6 +46,7 @@ class competency_extras extends base {
      *
      * @return string[]
      */
+    #[\Override]
     protected function get_default_tables(): array {
         return ['competency'];
     }
@@ -53,6 +54,7 @@ class competency_extras extends base {
     /**
      * The default title for this entity.
      */
+    #[\Override]
     protected function get_default_entity_title(): lang_string {
         return new lang_string('entityname_competency_extras', 'local_dimensions');
     }
@@ -61,6 +63,7 @@ class competency_extras extends base {
      * Initialise the entity: auto-generate columns and filters from the
      * `competency` area customfield handler.
      */
+    #[\Override]
     public function initialise(): base {
         $tablealias = $this->get_table_alias('competency');
 

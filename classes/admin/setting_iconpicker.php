@@ -51,6 +51,7 @@ class setting_iconpicker extends \admin_setting_configtext {
      * @param string $query Search query (for highlighting)
      * @return string HTML output
      */
+    #[\Override]
     public function output_html($data, $query = '') {
         global $PAGE;
 

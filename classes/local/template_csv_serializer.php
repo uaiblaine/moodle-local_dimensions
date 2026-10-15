@@ -51,13 +51,13 @@ use local_dimensions\helper;
  */
 class template_csv_serializer {
     /** @var string The rowtype value marking a template row. */
-    const ROWTYPE_TEMPLATE = 'template';
+    const string ROWTYPE_TEMPLATE = 'template';
 
     /** @var string The rowtype value marking a competency-link row. */
-    const ROWTYPE_LINK = 'link';
+    const string ROWTYPE_LINK = 'link';
 
     /** @var string[] The core columns, in export order. Read by name, never by position. */
-    const HEADERS_CORE = [
+    const array HEADERS_CORE = [
         'rowtype', 'template_idnumber', 'shortname', 'description', 'descriptionformat',
         'visible', 'duedate', 'sourcecontext',
         'framework_idnumber', 'framework_shortname', 'competency_idnumber', 'competency_shortname', 'sortorder',
@@ -71,7 +71,7 @@ class template_csv_serializer {
      *
      * @var string[]
      */
-    const HEADERS_CF = [
+    const array HEADERS_CF = [
         'cf_displaymode', 'cf_subline_source', 'cf_showrelated', 'cf_showrelatedlink',
         'cf_bgcolor', 'cf_textcolor', 'cf_tag1', 'cf_tag2', 'cf_type',
         'cf_enrollmentfilter', 'cf_singlecourseredirect', 'cf_lockedcardmode', 'cf_showlockeddate',

@@ -44,13 +44,13 @@ class template_import_preview implements renderable, templatable {
      * A multi-thousand-row file would otherwise become a multi-megabyte payload injected into a
      * modal DOM. What was left out is stated rather than silently dropped.
      */
-    const MAX_ROWS = 500;
+    const int MAX_ROWS = 500;
 
     /** @var template_import_plan The projection being rendered. */
-    protected $plan;
+    protected readonly template_import_plan $plan;
 
     /** @var array The draft handle and parse settings the apply step will resend. */
-    protected $settings;
+    protected readonly array $settings;
 
     /**
      * Build the renderable.
@@ -78,6 +78,7 @@ class template_import_preview implements renderable, templatable {
      * @param renderer_base $output The renderer.
      * @return array
      */
+    #[\Override]
     public function export_for_template(renderer_base $output): array {
         $counts = $this->plan->get_counts();
         $items = $this->plan->get_items();

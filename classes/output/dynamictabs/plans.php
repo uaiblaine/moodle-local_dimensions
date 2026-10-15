@@ -51,6 +51,7 @@ class plans extends \core\output\dynamic_tabs\base {
      *
      * @return string
      */
+    #[\Override]
     public function get_tab_label(): string {
         return get_string('learningplans', 'local_dimensions');
     }
@@ -65,6 +66,7 @@ class plans extends \core\output\dynamic_tabs\base {
      *
      * @return bool
      */
+    #[\Override]
     public function is_available(): bool {
         $data = $this->get_data();
         $resolved = helper::resolve_central_context(
@@ -79,6 +81,7 @@ class plans extends \core\output\dynamic_tabs\base {
      *
      * @return string
      */
+    #[\Override]
     public function get_template(): string {
         return 'local_dimensions/central/plans';
     }
@@ -89,6 +92,7 @@ class plans extends \core\output\dynamic_tabs\base {
      * @param \renderer_base $output
      * @return array
      */
+    #[\Override]
     public function export_for_template(\renderer_base $output): array {
         global $PAGE;
 

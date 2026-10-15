@@ -70,6 +70,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
      *
      * @return \context
      */
+    #[\Override]
     protected function get_context_for_dynamic_submission(): \context {
         $id = $this->get_templateid();
         if ($id > 0 && ($template = template::get_record(['id' => $id]))) {
@@ -89,6 +90,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
     /**
      * Only template managers may submit.
      */
+    #[\Override]
     protected function check_access_for_dynamic_submission(): void {
         require_capability('moodle/competency:templatemanage', $this->get_context_for_dynamic_submission());
     }
@@ -98,6 +100,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
      *
      * @return \moodle_url
      */
+    #[\Override]
     protected function get_page_url_for_dynamic_submission(): \moodle_url {
         return \local_dimensions\helper::hub_page_url($this->get_context_for_dynamic_submission());
     }
@@ -105,6 +108,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
     /**
      * Form fields: basic info, publication, and the plugin (lp) custom fields.
      */
+    #[\Override]
     public function definition() {
         $mform = $this->_form;
         $context = $this->get_context_for_dynamic_submission();
@@ -203,6 +207,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
      * Runs on both render and submit, so the tweaks apply when the modal first opens; see
      * competency_dynamic_form::definition_after_data() for why the JavaScript is queued here.
      */
+    #[\Override]
     public function definition_after_data() {
         global $PAGE;
 
@@ -229,6 +234,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
     /**
      * Load existing values (and custom field data) when editing.
      */
+    #[\Override]
     public function set_data_for_dynamic_submission(): void {
         $id = $this->get_templateid();
 
@@ -256,6 +262,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
      *
      * @return object|null
      */
+    #[\Override]
     public function get_data() {
         $data = parent::get_data();
         if ($data) {
@@ -279,6 +286,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
      *
      * @return array{templateid: int}
      */
+    #[\Override]
     public function process_dynamic_submission() {
         $data = $this->get_data();
         $id = (int) ($data->id ?? 0);
@@ -317,6 +325,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
      * @param array $files
      * @return array
      */
+    #[\Override]
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 

@@ -44,28 +44,28 @@ use local_dimensions\scss_manager;
 class view_competency_page implements renderable, templatable {
     use customfield_reader;
 
-    /** @var object|null The competency object */
-    private $competency;
+    /** @var \stdClass|null The competency record, or null when the page has none */
+    private readonly ?\stdClass $competency;
 
     /** @var array The list of courses */
-    private $courses;
+    private readonly array $courses;
 
     /** @var int The learner the cards describe: the plan owner */
-    private $userid;
+    private readonly int $userid;
 
     /** @var int The user viewing the page */
-    private $viewerid;
+    private readonly int $viewerid;
 
     /**
      * Constructor.
      *
-     * @param object|null $competency The competency record or null
+     * @param \stdClass|false|null $competency The competency record; false (a failed get_record) or null when there is none
      * @param array $courses Array of course records
      * @param int $userid The learner the cards describe: the plan owner
      * @param int $viewerid The user viewing the page; 0 when it is the learner
      */
-    public function __construct($competency, array $courses, int $userid, int $viewerid = 0) {
-        $this->competency = $competency;
+    public function __construct(\stdClass|false|null $competency, array $courses, int $userid, int $viewerid = 0) {
+        $this->competency = $competency ?: null;
         $this->courses = $courses;
         $this->userid = $userid;
         $this->viewerid = $viewerid > 0 ? $viewerid : $userid;
@@ -77,6 +77,7 @@ class view_competency_page implements renderable, templatable {
      * @param renderer_base $output The renderer
      * @return array Template context data
      */
+    #[\Override]
     public function export_for_template(renderer_base $output): array {
         // Get percentage display mode setting.
         $percentagemode = get_config('local_dimensions', 'percentagedisplaymode');
