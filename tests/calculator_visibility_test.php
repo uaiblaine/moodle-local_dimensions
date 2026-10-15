@@ -16,15 +16,17 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * Which activities belong in a learner's required workload, for the bar and the rings alike.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\calculator::get_course_section_progress
- * @covers     \local_dimensions\calculator::course_completion_percentage
  */
+#[CoversMethod(\local_dimensions\calculator::class, 'get_course_section_progress')]
+#[CoversMethod(\local_dimensions\calculator::class, 'course_completion_percentage')]
 final class calculator_visibility_test extends \advanced_testcase {
     /** @var \stdClass The course under test. */
     private $course;

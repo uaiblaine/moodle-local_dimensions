@@ -21,6 +21,7 @@ use core_competency\evidence;
 use core_competency\url;
 use core_competency\user_evidence;
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests the competency summary's hasfiles flag on prior-learning evidence.
@@ -29,14 +30,11 @@ use core_external\external_api;
  * the 'linked' evidence row core writes with the record's URL. The flag describes the record as it is
  * now, and only for a viewer allowed to open the owner's records.
  *
- * The covers tag stays in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
- * attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_user_competency_summary_in_plan
  */
+#[CoversClass(\local_dimensions\external\get_user_competency_summary_in_plan::class)]
 final class prior_learning_files_test extends \advanced_testcase {
     /** @var string Web service under test. */
     private const WSNAME = 'local_dimensions_get_user_competency_summary_in_plan';

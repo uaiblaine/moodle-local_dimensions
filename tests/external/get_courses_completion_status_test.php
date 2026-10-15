@@ -17,6 +17,7 @@
 namespace local_dimensions\external;
 
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the tracker's batched completion + lock service.
@@ -24,8 +25,8 @@ use core_external\external_api;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_courses_completion_status
  */
+#[CoversClass(\local_dimensions\external\get_courses_completion_status::class)]
 final class get_courses_completion_status_test extends \advanced_testcase {
     /**
      * Run the service and clean the payload through the returns structure, keyed by course id.

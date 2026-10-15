@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * The points rule alert names every condition the rule modal refuses a points config for.
  *
@@ -27,8 +29,8 @@ namespace local_dimensions\local;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class rule_points_alert_test extends \basic_testcase {
     /** @var array Refusal in readPointsConfig() => the phrase naming it, per language. */
     private const CONDITIONS = [

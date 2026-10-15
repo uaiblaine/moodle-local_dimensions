@@ -17,6 +17,7 @@
 namespace local_dimensions\local;
 
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The custom SCSS rules of styles.css reach the field core renders.
@@ -30,8 +31,8 @@ use local_dimensions\helper;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper
  */
+#[CoversClass(\local_dimensions\helper::class)]
 final class customscss_field_styles_test extends \advanced_testcase {
     /**
      * Render the custom SCSS field as the competency and template modal forms do.

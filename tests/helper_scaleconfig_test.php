@@ -16,14 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * Tests for helper::scaleconfig_is_complete.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper::scaleconfig_is_complete
  */
+#[CoversMethod(\local_dimensions\helper::class, 'scaleconfig_is_complete')]
 final class helper_scaleconfig_test extends \advanced_testcase {
     /**
      * A config with at least one default and one proficient value is complete.

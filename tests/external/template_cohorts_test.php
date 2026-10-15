@@ -18,6 +18,7 @@ namespace local_dimensions\external;
 
 use core_competency\template_cohort;
 use local_dimensions\task\sync_template_cohort as sync_task;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the template-cohort external functions and the sync adhoc task.
@@ -25,12 +26,12 @@ use local_dimensions\task\sync_template_cohort as sync_task;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\add_template_cohort
- * @covers     \local_dimensions\external\list_template_cohorts
- * @covers     \local_dimensions\external\remove_template_cohort
- * @covers     \local_dimensions\external\sync_template_cohort
- * @covers     \local_dimensions\task\sync_template_cohort
  */
+#[CoversClass(\local_dimensions\external\add_template_cohort::class)]
+#[CoversClass(\local_dimensions\external\list_template_cohorts::class)]
+#[CoversClass(\local_dimensions\external\remove_template_cohort::class)]
+#[CoversClass(\local_dimensions\external\sync_template_cohort::class)]
+#[CoversClass(\local_dimensions\task\sync_template_cohort::class)]
 final class template_cohorts_test extends \advanced_testcase {
     /**
      * Set up a visible template and a cohort with two members.

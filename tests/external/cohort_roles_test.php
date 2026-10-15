@@ -17,6 +17,7 @@
 namespace local_dimensions\external;
 
 use core_competency\api as competencyapi;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the cohort-roles web services + sync task.
@@ -24,11 +25,11 @@ use core_competency\api as competencyapi;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\list_template_cohort_roles
- * @covers     \local_dimensions\external\add_cohort_role
- * @covers     \local_dimensions\external\remove_cohort_role
- * @covers     \local_dimensions\task\sync_cohort_roles
  */
+#[CoversClass(\local_dimensions\external\list_template_cohort_roles::class)]
+#[CoversClass(\local_dimensions\external\add_cohort_role::class)]
+#[CoversClass(\local_dimensions\external\remove_cohort_role::class)]
+#[CoversClass(\local_dimensions\task\sync_cohort_roles::class)]
 final class cohort_roles_test extends \advanced_testcase {
     /**
      * Create a template, a cohort linked to it with members, and a user-context-assignable role.

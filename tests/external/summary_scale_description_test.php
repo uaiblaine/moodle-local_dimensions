@@ -16,14 +16,16 @@
 
 namespace local_dimensions\external;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests the rating scale's description in the competency summary: its admin gate and its formatting.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_user_competency_summary_in_plan
  */
+#[CoversClass(\local_dimensions\external\get_user_competency_summary_in_plan::class)]
 final class summary_scale_description_test extends \advanced_testcase {
     /**
      * With the setting on, the payload carries the scale's own description.

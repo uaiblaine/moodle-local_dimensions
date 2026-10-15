@@ -26,6 +26,7 @@ use local_dimensions\output\dynamictabs\frameworks;
 use local_dimensions\output\dynamictabs\plans;
 use local_dimensions\output\dynamictabs\structure;
 use local_dimensions\template_metadata_cache;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Names in the Competency hub reach the reader escaped exactly once.
@@ -40,33 +41,30 @@ use local_dimensions\template_metadata_cache;
  * confirm dialogues, toasts, autocomplete labels) are pinned by reading its source, the way
  * bootstrap_markup_test pins class names.
  *
- * The class-level covers tags stay in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes, and the plugin still supports 4.5.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper
- * @covers     \local_dimensions\output\dynamictabs\frameworks
- * @covers     \local_dimensions\output\dynamictabs\structure
- * @covers     \local_dimensions\output\dynamictabs\plans
- * @covers     \local_dimensions\external\browse_competencies
- * @covers     \local_dimensions\external\browse_structure
- * @covers     \local_dimensions\external\get_competency_links
- * @covers     \local_dimensions\external\get_competency_module_links
- * @covers     \local_dimensions\external\get_structure_node
- * @covers     \local_dimensions\external\link_competency_course
- * @covers     \local_dimensions\external\link_competency_module
- * @covers     \local_dimensions\external\list_enrol_competencies
- * @covers     \local_dimensions\external\list_enrol_courses
- * @covers     \local_dimensions\external\list_related_competencies
- * @covers     \local_dimensions\external\list_template_cohort_roles
- * @covers     \local_dimensions\external\list_template_cohorts
- * @covers     \local_dimensions\external\list_template_participants
- * @covers     \local_dimensions\external\search_competencies
- * @covers     \local_dimensions\external\search_linkable_courses
- * @covers     \local_dimensions\external\search_structure
  */
+#[CoversClass(\local_dimensions\helper::class)]
+#[CoversClass(\local_dimensions\output\dynamictabs\frameworks::class)]
+#[CoversClass(\local_dimensions\output\dynamictabs\structure::class)]
+#[CoversClass(\local_dimensions\output\dynamictabs\plans::class)]
+#[CoversClass(\local_dimensions\external\browse_competencies::class)]
+#[CoversClass(\local_dimensions\external\browse_structure::class)]
+#[CoversClass(\local_dimensions\external\get_competency_links::class)]
+#[CoversClass(\local_dimensions\external\get_competency_module_links::class)]
+#[CoversClass(\local_dimensions\external\get_structure_node::class)]
+#[CoversClass(\local_dimensions\external\link_competency_course::class)]
+#[CoversClass(\local_dimensions\external\link_competency_module::class)]
+#[CoversClass(\local_dimensions\external\list_enrol_competencies::class)]
+#[CoversClass(\local_dimensions\external\list_enrol_courses::class)]
+#[CoversClass(\local_dimensions\external\list_related_competencies::class)]
+#[CoversClass(\local_dimensions\external\list_template_cohort_roles::class)]
+#[CoversClass(\local_dimensions\external\list_template_cohorts::class)]
+#[CoversClass(\local_dimensions\external\list_template_participants::class)]
+#[CoversClass(\local_dimensions\external\search_competencies::class)]
+#[CoversClass(\local_dimensions\external\search_linkable_courses::class)]
+#[CoversClass(\local_dimensions\external\search_structure::class)]
 final class hub_plain_names_test extends \advanced_testcase {
     /** @var string Every fixture name, in the plain spelling. */
     private const NAME = 'R&D < Ops';

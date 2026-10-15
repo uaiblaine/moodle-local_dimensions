@@ -16,14 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * Tests for calculator::course_completion_percentage.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\calculator::course_completion_percentage
  */
+#[CoversMethod(\local_dimensions\calculator::class, 'course_completion_percentage')]
 final class calculator_course_percentage_test extends \advanced_testcase {
     /**
      * A deleted activity leaves the numerator as well as the denominator.

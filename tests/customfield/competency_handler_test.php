@@ -26,15 +26,15 @@ namespace local_dimensions\customfield;
 
 use local_dimensions\constants;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * A manager holding competencymanage only in a course category edits that category's competencies.
  *
  * Core filters both the rendered and the saved fields through can_edit(), so the save test
  * asserts the value actually written: a wrong context fails silently, writing nothing.
- *
- * @covers \local_dimensions\customfield\competency_handler
  */
+#[CoversClass(\local_dimensions\customfield\competency_handler::class)]
 final class competency_handler_test extends \advanced_testcase {
     /**
      * A category with a framework and one competency, a system framework with one competency,

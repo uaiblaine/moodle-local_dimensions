@@ -18,6 +18,7 @@ namespace local_dimensions\task;
 
 use local_dimensions\event\enrol_method_applied;
 use local_dimensions\event\enrol_method_removed;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the bulk enrolment-method adhoc task.
@@ -25,10 +26,10 @@ use local_dimensions\event\enrol_method_removed;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\task\process_enrol_method
- * @covers     \local_dimensions\event\enrol_method_applied
- * @covers     \local_dimensions\event\enrol_method_removed
  */
+#[CoversClass(\local_dimensions\task\process_enrol_method::class)]
+#[CoversClass(\local_dimensions\event\enrol_method_applied::class)]
+#[CoversClass(\local_dimensions\event\enrol_method_removed::class)]
 final class process_enrol_method_test extends \advanced_testcase {
     /**
      * Build the shared fixture: template + competency + linked course + cohort with a member.

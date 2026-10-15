@@ -16,14 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * Tests for calculator::user_can_access_course.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\calculator::user_can_access_course
  */
+#[CoversMethod(\local_dimensions\calculator::class, 'user_can_access_course')]
 final class calculator_access_test extends \advanced_testcase {
     /**
      * Active enrolment makes a course accessible; an unenrolled course whose self instance is disabled (the default) is not.

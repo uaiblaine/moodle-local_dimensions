@@ -19,6 +19,7 @@ namespace local_dimensions\local;
 use local_dimensions\constants;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the learning plan template CSV serializer (export + parse round-trip).
@@ -26,8 +27,8 @@ use local_dimensions\helper;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\template_csv_serializer
  */
+#[CoversClass(\local_dimensions\local\template_csv_serializer::class)]
 final class template_csv_serializer_test extends \advanced_testcase {
     /**
      * Export a template with custom fields and links, then parse it back.

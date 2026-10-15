@@ -17,6 +17,7 @@
 namespace local_dimensions\form;
 
 use core_competency\competency_framework;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the framework modal's idnumber check.
@@ -27,8 +28,8 @@ use core_competency\competency_framework;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\form\framework_dynamic_form
  */
+#[CoversClass(\local_dimensions\form\framework_dynamic_form::class)]
 final class framework_dynamic_form_idnumber_test extends \advanced_testcase {
     /** @var competency_framework A framework in a course category, holding the idnumber 'taken'. */
     protected $existing;

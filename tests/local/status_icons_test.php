@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * The status icons are masks painted by colour tokens, so they follow the theme and the colour mode.
  *
@@ -31,8 +33,8 @@ namespace local_dimensions\local;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class status_icons_test extends \basic_testcase {
     /**
      * @var array Icon class => the class every icon of its family carries (base), the pix image its

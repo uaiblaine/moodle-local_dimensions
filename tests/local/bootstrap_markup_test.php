@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * Guards the Bootstrap 5 markup the plugin emits.
  *
@@ -26,8 +28,8 @@ namespace local_dimensions\local;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class bootstrap_markup_test extends \basic_testcase {
     /**
      * Saturated background utilities that need an explicit light text colour.

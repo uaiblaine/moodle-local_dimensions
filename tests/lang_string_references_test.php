@@ -16,6 +16,8 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * Every string key the shipped code names literally exists in both language files.
  *
@@ -28,8 +30,8 @@ namespace local_dimensions;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class lang_string_references_test extends \basic_testcase {
     /** @var array File extension => patterns whose first group is a key of this plugin. */
     private const PATTERNS = [

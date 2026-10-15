@@ -17,6 +17,7 @@
 namespace local_dimensions;
 
 use local_dimensions\customfield\lp_handler;
+use PHPUnit\Framework\Attributes\CoversMethod;
 
 /**
  * Tests for the plugin-side data copy behind full template duplication.
@@ -24,8 +25,8 @@ use local_dimensions\customfield\lp_handler;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper::copy_template_plugin_data
  */
+#[CoversMethod(\local_dimensions\helper::class, 'copy_template_plugin_data')]
 final class helper_duplicate_test extends \advanced_testcase {
     /**
      * Resolve an lp-area field id by shortname.

@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -32,15 +34,12 @@ require_once($CFG->dirroot . '/local/dimensions/tests/fixtures/unlisted_access_s
  * had; the control of its frozen size is that the rows local_unlistedcourses reads as suspended or
  * ended read here as none.
  *
- * The class-level covers tag stays in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\enrolment_provider
- * @covers     \local_dimensions\local\enrolment_provider_core
  */
+#[CoversClass(\local_dimensions\local\enrolment_provider::class)]
+#[CoversClass(\local_dimensions\local\enrolment_provider_core::class)]
 final class enrolment_provider_test extends \advanced_testcase {
     /**
      * Forget what a test made the stand-in answer.

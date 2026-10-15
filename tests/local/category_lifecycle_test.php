@@ -29,15 +29,15 @@ use context_coursecat;
 use core_competency\api;
 use core_competency\competency_framework;
 use core_competency\template;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Category deletion refuses in-use competency data, deletes the rest, and moves what moves.
  *
  * The scenarios go through core's own delete_full() and delete_move(), so they prove the
  * lib.php callbacks are discovered and wired, not only the class.
- *
- * @covers \local_dimensions\local\category_lifecycle
  */
+#[CoversClass(\local_dimensions\local\category_lifecycle::class)]
 final class category_lifecycle_test extends advanced_testcase {
     /**
      * A category with one framework (one competency) and one template.

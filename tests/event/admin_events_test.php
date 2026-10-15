@@ -19,6 +19,7 @@ namespace local_dimensions\event;
 use local_dimensions\constants;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the hub's administrative audit events.
@@ -26,20 +27,20 @@ use local_dimensions\helper;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\event\template_cohort_added
- * @covers     \local_dimensions\event\template_cohort_removed
- * @covers     \local_dimensions\event\cohort_role_added
- * @covers     \local_dimensions\event\cohort_role_removed
- * @covers     \local_dimensions\event\template_customfields_updated
- * @covers     \local_dimensions\event\course_link_added
- * @covers     \local_dimensions\event\course_link_outcome_updated
- * @covers     \local_dimensions\event\course_link_removed
- * @covers     \local_dimensions\event\module_link_added
- * @covers     \local_dimensions\event\module_link_outcome_updated
- * @covers     \local_dimensions\event\module_link_removed
- * @covers     \local_dimensions\event\template_duplicated
- * @covers     \local_dimensions\customfield\lp_handler
  */
+#[CoversClass(\local_dimensions\event\template_cohort_added::class)]
+#[CoversClass(\local_dimensions\event\template_cohort_removed::class)]
+#[CoversClass(\local_dimensions\event\cohort_role_added::class)]
+#[CoversClass(\local_dimensions\event\cohort_role_removed::class)]
+#[CoversClass(\local_dimensions\event\template_customfields_updated::class)]
+#[CoversClass(\local_dimensions\event\course_link_added::class)]
+#[CoversClass(\local_dimensions\event\course_link_outcome_updated::class)]
+#[CoversClass(\local_dimensions\event\course_link_removed::class)]
+#[CoversClass(\local_dimensions\event\module_link_added::class)]
+#[CoversClass(\local_dimensions\event\module_link_outcome_updated::class)]
+#[CoversClass(\local_dimensions\event\module_link_removed::class)]
+#[CoversClass(\local_dimensions\event\template_duplicated::class)]
+#[CoversClass(\local_dimensions\customfield\lp_handler::class)]
 final class admin_events_test extends \advanced_testcase {
     /**
      * Attaching and detaching a cohort fires the template_cohort events.

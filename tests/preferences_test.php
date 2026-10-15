@@ -25,13 +25,13 @@
 namespace local_dimensions;
 
 use advanced_testcase;
+use PHPUnit\Framework\Attributes\CoversMethod;
 
 /**
  * Unit tests for the preference callback, helper reader and uninstall purge.
- *
- * @covers \local_dimensions\helper::get_central_prefs
- * @covers \local_dimensions\helper::purge_user_preferences
  */
+#[CoversMethod(\local_dimensions\helper::class, 'get_central_prefs')]
+#[CoversMethod(\local_dimensions\helper::class, 'purge_user_preferences')]
 final class preferences_test extends advanced_testcase {
     /**
      * The lib callback declares every preference with the expected type and owner gate.

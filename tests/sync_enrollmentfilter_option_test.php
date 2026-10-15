@@ -16,14 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * Tests for helper::sync_enrollmentfilter_option.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper::sync_enrollmentfilter_option
  */
+#[CoversMethod(\local_dimensions\helper::class, 'sync_enrollmentfilter_option')]
 final class sync_enrollmentfilter_option_test extends \advanced_testcase {
     /**
      * Sync appends the fifth option to a pre-upgrade (four-option) field, idempotently.

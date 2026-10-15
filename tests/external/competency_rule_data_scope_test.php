@@ -29,15 +29,12 @@ use core_competency\competency;
 use core_competency\competency_rule_all;
 use core_competency\plan;
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The rule data answers only a viewer who may read the plan owner's ratings, and only for a competency the plan reaches.
- *
- * The covers tag stays in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
- * attributes.
- *
- * @covers \local_dimensions\external\get_competency_rule_data
  */
+#[CoversClass(\local_dimensions\external\get_competency_rule_data::class)]
 final class competency_rule_data_scope_test extends \advanced_testcase {
     /** @var string Web service under test. */
     private const WSNAME = 'local_dimensions_get_competency_rule_data';

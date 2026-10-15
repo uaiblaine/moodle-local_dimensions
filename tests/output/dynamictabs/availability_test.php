@@ -28,6 +28,8 @@ use advanced_testcase;
 use context_coursecat;
 use context_system;
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * The three hub tabs must answer is_available() for the context the pane names.
@@ -36,13 +38,10 @@ use core_external\external_api;
  * the authenticated-user default for competencyview withdrawn at the system context. Without that
  * withdrawal a system-context check passes for everyone, so the frameworks and structure cases
  * could not tell a category check from a system check.
- *
- * Coverage stays in docblock annotations: moodle-cs for Moodle 4.5 cannot see PHP attributes.
- *
- * @covers \local_dimensions\output\dynamictabs\frameworks
- * @covers \local_dimensions\output\dynamictabs\structure
- * @covers \local_dimensions\output\dynamictabs\plans
  */
+#[CoversClass(\local_dimensions\output\dynamictabs\frameworks::class)]
+#[CoversClass(\local_dimensions\output\dynamictabs\structure::class)]
+#[CoversClass(\local_dimensions\output\dynamictabs\plans::class)]
 final class availability_test extends advanced_testcase {
     /**
      * Create a manager scoped to a fresh course category, with no competency access at the site.
@@ -95,10 +94,10 @@ final class availability_test extends advanced_testcase {
     /**
      * A category manager gets every tab in their category and none at the site.
      *
-     * @dataProvider tab_classes
      * @param string $tabclass The tab class under test.
      * @return void
      */
+    #[DataProvider('tab_classes')]
     public function test_a_category_manager_gets_the_tab_in_their_category_only(string $tabclass): void {
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -123,10 +122,10 @@ final class availability_test extends advanced_testcase {
      * The resolver downgrades both to the system context, which the fixture has made unreadable,
      * so the answer is a refusal rather than a silent system listing.
      *
-     * @dataProvider tab_classes
      * @param string $tabclass The tab class under test.
      * @return void
      */
+    #[DataProvider('tab_classes')]
     public function test_an_unreadable_or_missing_category_is_refused(string $tabclass): void {
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -144,10 +143,10 @@ final class availability_test extends advanced_testcase {
     /**
      * Control: the site administrator is admitted everywhere, including the guided empty state.
      *
-     * @dataProvider tab_classes
      * @param string $tabclass The tab class under test.
      * @return void
      */
+    #[DataProvider('tab_classes')]
     public function test_an_administrator_is_admitted_in_every_context(string $tabclass): void {
         $this->resetAfterTest();
         $this->setAdminUser();

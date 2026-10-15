@@ -16,14 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * Tests for calculator::get_course_section_progress.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\calculator::get_course_section_progress
  */
+#[CoversMethod(\local_dimensions\calculator::class, 'get_course_section_progress')]
 final class calculator_progress_test extends \advanced_testcase {
     /**
      * A locked course reports its lock even when completion tracking is switched off.

@@ -20,6 +20,7 @@ use core_competency\api;
 use core_competency\plan;
 use core_external\external_api;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * What the tracker's card services refuse once they are given a plan.
@@ -29,16 +30,13 @@ use local_dimensions\helper;
  * may be told about that are linked to that competency. Every refusal sits beside a control: the same
  * call answered when only the refused condition changes.
  *
- * The covers tags stay in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
- * attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_course_progress
- * @covers     \local_dimensions\external\get_courses_completion_status
- * @covers     \local_dimensions\local\plan_access
  */
+#[CoversClass(\local_dimensions\external\get_course_progress::class)]
+#[CoversClass(\local_dimensions\external\get_courses_completion_status::class)]
+#[CoversClass(\local_dimensions\local\plan_access::class)]
 final class tracker_cards_scope_test extends \advanced_testcase {
     /** @var string The progress web service. */
     private const PROGRESS = 'local_dimensions_get_course_progress';

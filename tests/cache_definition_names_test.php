@@ -16,6 +16,8 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * The names the cache administration page shows for this plugin's cache definitions.
  *
@@ -26,8 +28,8 @@ namespace local_dimensions;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class cache_definition_names_test extends \basic_testcase {
     /**
      * Every definition has its cachedef_ string in both languages.

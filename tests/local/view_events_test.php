@@ -18,18 +18,16 @@ namespace local_dimensions\local;
 
 use core_competency\api;
 use core_competency\plan;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests the core competency view events the learner pages log.
  *
- * The covers tag stays in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
- * attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\view_events
  */
+#[CoversClass(\local_dimensions\local\view_events::class)]
 final class view_events_test extends \advanced_testcase {
     /**
      * The plan overview logs core's plan viewed event, for the plan on screen.

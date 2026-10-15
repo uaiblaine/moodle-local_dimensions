@@ -19,6 +19,7 @@ namespace local_dimensions\external;
 use core_external\external_api;
 use local_dimensions\helper;
 use local_dimensions\local\template_csv_serializer;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the learning plan CSV import preview web service.
@@ -26,8 +27,8 @@ use local_dimensions\local\template_csv_serializer;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\preview_import_templates
  */
+#[CoversClass(\local_dimensions\external\preview_import_templates::class)]
 final class preview_import_templates_test extends \advanced_testcase {
     /**
      * The preview comes back through clean_returnvalue() with every count declared, and it

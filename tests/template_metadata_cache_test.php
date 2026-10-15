@@ -17,6 +17,7 @@
 namespace local_dimensions;
 
 use local_dimensions\customfield\lp_handler;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests that a template's metadata has one shape whether it was read from the cache or built.
@@ -24,8 +25,8 @@ use local_dimensions\customfield\lp_handler;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\template_metadata_cache
  */
+#[CoversClass(\local_dimensions\template_metadata_cache::class)]
 final class template_metadata_cache_test extends \advanced_testcase {
     /** @var int A timemodified no template created by the test can carry. */
     private const TOUCHED = 12345;

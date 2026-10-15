@@ -16,6 +16,8 @@
 
 namespace local_dimensions\output;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * Pins behaviour of the learner pages' JavaScript that no PHP test can run.
  *
@@ -23,14 +25,11 @@ namespace local_dimensions\output;
  * reads class names: each assertion names the shape a fix gave the code and fails when the shape
  * it replaced comes back.
  *
- * The class-level covers tag stays in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes, and the plugin still supports 4.5.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class learner_js_source_test extends \basic_testcase {
     /**
      * Read one of the learner pages' AMD sources.

@@ -16,14 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for the trail a plan card shows, and for invalidating it from another user's request.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\plan_trail_cache
  */
+#[CoversClass(\local_dimensions\plan_trail_cache::class)]
 final class plan_trail_cache_test extends \advanced_testcase {
     /** @var \stdClass The plan owner. */
     protected $user;
