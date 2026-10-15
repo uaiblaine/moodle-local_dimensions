@@ -85,13 +85,10 @@
                     <select id="local-dimensions-participant-add" data-region="participant-add"
                             class="form-select"></select>
                 </div>
-                {{! Both data attributes: Moodle 4.5 is Bootstrap 4 (data-toggle), 5.x is BS5 (data-bs-toggle).
-                    data-bs-auto-close has no BS4 equivalent; participants_users.js keeps the panel
-                    open on 4.5. }}
                 <div class="dropdown" data-region="participant-filters">
                     <button class="btn btn-outline-secondary" type="button"
                             id="local-dimensions-participant-filters-toggle"
-                            data-toggle="dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside"
                             aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-filter me-1" aria-hidden="true"></i>{{#str}}filters, moodle{{/str}}
                     </button>

@@ -1022,14 +1022,10 @@ final class colour_tokens_test extends \basic_testcase {
      */
     private function literal_findings(): array {
         $contractselectors = $this->contract_block_selectors();
-        $gate = 'body.' . bootstrap::BODY_CLASS_BS4;
         $findings = [];
         foreach ($this->stylesheets() as $path) {
             foreach ($this->rules($path) as $rule) {
                 if (in_array($rule['selector'], $contractselectors, true)) {
-                    continue;
-                }
-                if (str_contains($rule['selector'], $gate)) {
                     continue;
                 }
                 foreach ($this->declarations($rule['body']) as $property => $value) {

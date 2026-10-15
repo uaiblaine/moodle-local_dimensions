@@ -219,16 +219,11 @@ const fillCohortFilter = async(state) => {
 const wire = (state, pane) => {
     /*
      * The filter controls live in a <form> inside the filters dropdown; stop Enter in the search
-     * box from submitting it. Bootstrap 4 (Moodle 4.5) has no data-bs-auto-close, and its
-     * Dropdown._clearMenus exempts only input and textarea targets, so a click on the cohort
-     * <select> or the switch <label> would close the panel. On 4.5 only, stop clicks inside the
-     * form from reaching the document listener that clears menus; 5.x relies on data-bs-auto-close.
+     * box from submitting it. Clicks inside the panel keep it open through the toggle's
+     * data-bs-auto-close="outside".
      */
     const filtersform = pane.querySelector(SELECTORS.filtersform);
     filtersform.addEventListener('submit', (event) => event.preventDefault());
-    if (document.body.classList.contains('local-dimensions-bs4')) {
-        filtersform.addEventListener('click', (event) => event.stopPropagation());
-    }
     state.cohortsel.addEventListener('change', () => {
         state.cohortid = Number(state.cohortsel.value);
         applyFilters(state).catch(notifyError);

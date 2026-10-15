@@ -21,10 +21,10 @@ use local_dimensions\local\enrolment_provider;
 /**
  * local_unlistedcourses stays optional: no dependency, one guarded way in, a setting only where it applies.
  *
- * The plugin supports Moodle 4.5 to 5.2 and local_unlistedcourses installs on 5.2 and later only, so
- * any reference that has to resolve on every site would make this plugin uninstallable where that
- * one cannot go. The enrolment provider reaches it through a class name held as a string, behind
- * enrolment_provider::unlisted_available(), and that is the only way in.
+ * local_unlistedcourses is optional, so any reference that has to resolve on every site would make
+ * this plugin uninstallable where that one is absent. The enrolment provider reaches it through a
+ * class name held as a string, behind enrolment_provider::unlisted_available(), and that is the only
+ * way in.
  *
  * The class-level covers tag stays in docblock form on purpose: moodle-cs on the 4.05 leg cannot
  * see PHP attributes.

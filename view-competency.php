@@ -51,7 +51,6 @@ $PAGE->set_url(new moodle_url('/local/dimensions/view-competency.php', [
 ]));
 $PAGE->set_context($context);
 $PAGE->add_body_class('local-dimensions-viewcompetency');
-\local_dimensions\local\bootstrap::mark_page();
 
 // Authorization gate: read_plan() is the access check. Only a missing plan reads as invalid; a
 // permission refusal or disabled competencies surface as core's own error (see plan_access).

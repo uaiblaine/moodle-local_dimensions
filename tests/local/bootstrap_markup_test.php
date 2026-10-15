@@ -17,49 +17,25 @@
 namespace local_dimensions\local;
 
 /**
- * Guards the plugin's Bootstrap 4 / Bootstrap 5 contract.
+ * Guards the Bootstrap 5 markup the plugin emits.
  *
- * Moodle 4.5 ships Bootstrap 4 and 5.0+ ship Bootstrap 5, and the bridging is asymmetric:
- * 4.5's forward bridge (theme/boost/scss/moodle/bs5-bridge.scss) covers only g-0, btn-close,
- * the ms/me/ps/pe spacers and float/text/border/rounded-start/end, while 5.x's backward bridge
- * (bs4-compat.scss) is far broader. A BS5 utility outside that short list resolves to nothing
- * on 4.5, silently: phpcs, the Mustache lint and stylelint never read a class name out of a
- * Mustache or JS file.
+ * phpcs, the Mustache lint and stylelint never read a class name or a data attribute out of a
+ * Mustache, JS or PHP file, so a deprecated Bootstrap 4 spelling or a badge without its text
+ * colour reaches the browser silently. These scans read the sources instead.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\bootstrap
+ * @coversNothing
  */
-final class bootstrap_compat_test extends \basic_testcase {
-    /**
-     * Bootstrap 5 utilities that do not exist on Moodle 4.5.
-     *
-     * Each entry maps a regular expression matching the class in a class attribute or a JS class
-     * string to the human-readable family name reported when it is found unpolyfilled. Source of
-     * truth for what 4.5 does bridge: theme/boost/scss/moodle/bs5-bridge.scss.
-     *
-     * @return array Regex => family label.
-     */
-    private function bs5_only_utilities(): array {
-        return [
-            '/\bvisually-hidden\b/' => 'visually-hidden',
-            '/\bform-select(-sm)?\b/' => 'form-select',
-            '/\bgap-[0-9]\b/' => 'gap-*',
-            '/\bfw-(bold|medium|normal|semibold|light)\b/' => 'fw-*',
-            '/\bfont-monospace\b/' => 'font-monospace',
-            '/\bform-switch\b/' => 'form-switch',
-            '/\bform-label\b/' => 'form-label',
-        ];
-    }
-
+final class bootstrap_markup_test extends \basic_testcase {
     /**
      * Saturated background utilities that need an explicit light text colour.
      *
-     * Bootstrap 4's .badge sets no colour, so a saturated badge renders near-black text on a dark
-     * fill; Bootstrap 5's .badge defaults to white, so a light background renders white on
-     * near-white (bg-success is 3.07:1 on 4.5 and bg-secondary 1.49:1 on 5.2, against the 4.5:1
-     * AA floor). Only markup that states its text colour is correct on both branches.
+     * Bootstrap 5's .badge defaults to white text, so a light background renders white on
+     * near-white (bg-secondary is 1.49:1, against the 4.5:1 AA floor). Stating the text colour on
+     * every background, saturated ones included, keeps the pairing in the markup rather than in a
+     * default a theme can change.
      *
      * @return array Background utility => the text utility it requires.
      */
@@ -118,8 +94,8 @@ final class bootstrap_compat_test extends \basic_testcase {
     /**
      * Whether a line is prose rather than markup.
      *
-     * The rules below are about what reaches the browser. A comment that names an attribute in
-     * order to explain the rule - as amd/src/central/context.js does - is not a violation of it.
+     * The rules below are about what reaches the browser. A comment that names a class or an
+     * attribute in order to explain a rule is not a violation of it.
      *
      * @param string $line One raw source line.
      * @return bool True when the line opens with a PHP, JS or Mustache comment marker.
@@ -132,118 +108,6 @@ final class bootstrap_compat_test extends \basic_testcase {
             || str_starts_with($trimmed, '/*')
             || str_starts_with($trimmed, '*')
             || str_starts_with($trimmed, '{{!');
-    }
-
-    /**
-     * The exact class tokens the polyfill block defines behind the Bootstrap 4 gate.
-     *
-     * Token-level on purpose: a family-level check ("is gap-* covered?") would pass while gap-2
-     * alone is missing.
-     *
-     * @return array List of class tokens, e.g. gap-2, without the leading dot.
-     */
-    private function polyfilled_tokens(): array {
-        $css = file_get_contents($this->plugin_root() . '/styles.css');
-        /* Strip comments first: the block's own prose names files and classes it does not define. */
-        $css = preg_replace('~/\*.*?\*/~s', '', $css);
-        $gate = preg_quote(bootstrap::BODY_CLASS_BS4, '/');
-        $tokens = [];
-        foreach (explode('}', $css) as $block) {
-            $selector = explode('{', $block)[0];
-            if (!preg_match('/body\.' . $gate . '\b/', $selector)) {
-                continue;
-            }
-            preg_match_all('/\.([a-z][a-z0-9-]*)/', $selector, $matches);
-            foreach ($matches[1] as $token) {
-                $tokens[] = $token;
-            }
-        }
-        return array_values(array_unique($tokens));
-    }
-
-    /**
-     * The exact Bootstrap 5 class tokens the plugin emits that 4.5 does not define.
-     *
-     * @return array Token => list of file basenames using it.
-     */
-    private function used_bs5_tokens(): array {
-        $used = [];
-        foreach ($this->markup_files() as $path) {
-            foreach (file($path) as $line) {
-                if ($this->is_comment_line($line)) {
-                    continue;
-                }
-                foreach ($this->bs5_only_utilities() as $pattern => $unusedlabel) {
-                    if (!preg_match_all($pattern, $line, $matches)) {
-                        continue;
-                    }
-                    foreach ($matches[0] as $token) {
-                        $used[$token][basename($path)] = true;
-                    }
-                }
-            }
-        }
-        return array_map('array_keys', $used);
-    }
-
-    /**
-     * Every Bootstrap 5 class the plugin emits must be defined by the polyfill for 4.5.
-     *
-     * @return void
-     */
-    public function test_every_bs5_utility_used_is_polyfilled(): void {
-        $polyfilled = $this->polyfilled_tokens();
-        $missing = [];
-        foreach ($this->used_bs5_tokens() as $token => $files) {
-            if (!in_array($token, $polyfilled, true)) {
-                $missing[] = $token . ' (used in ' . implode(', ', array_slice($files, 0, 3)) . ')';
-            }
-        }
-        sort($missing);
-        $this->assertSame(
-            [],
-            $missing,
-            'These Bootstrap 5 classes are used but resolve to nothing on Moodle 4.5. Either add them '
-                . 'to the Bootstrap 4 utility polyfill at the tail of styles.css, or stop using them: '
-                . implode('; ', $missing)
-        );
-    }
-
-    /**
-     * The polyfill must not grow rules for classes the plugin no longer uses.
-     *
-     * A compatibility layer that outlives its callers is how a temporary shim becomes permanent.
-     *
-     * @return void
-     */
-    public function test_polyfill_carries_nothing_unused(): void {
-        $used = array_keys($this->used_bs5_tokens());
-        /*
-         * Structural helpers the polyfill needs but no markup names on its own: the .form-check
-         * parent it keys off, the .form-check-input and .form-check-label it repositions, the
-         * .btn-close and .modal chrome core emits, the hub's page body class, and the body gate
-         * itself.
-         */
-        $structural = [
-            bootstrap::BODY_CLASS_BS4,
-            'local-dimensions-central-page',
-            'form-check',
-            'form-check-input',
-            'form-check-label',
-            'btn-close',
-            'modal',
-            'modal-header',
-            'modal-body',
-            'modal-form-dialogue',
-        ];
-        $unused = array_values(array_diff($this->polyfilled_tokens(), $used, $structural));
-        sort($unused);
-        $this->assertSame(
-            [],
-            $unused,
-            'The Bootstrap 4 polyfill defines classes nothing uses any more; delete them: '
-                . implode(', ', $unused)
-        );
     }
 
     /**
@@ -275,10 +139,10 @@ final class bootstrap_compat_test extends \basic_testcase {
     }
 
     /**
-     * Every badge background must state its text colour, so it reads on both branches.
+     * Every badge background must state its text colour.
      *
      * The text utility must be the one badge_text_colours() pairs with that background, in the
-     * same class string: text-dark on bg-success fails the AA floor on both branches.
+     * same class string: text-dark on bg-success fails the AA floor.
      *
      * Changes that must make it fail: pair bg-success with text-dark in
      * template_import_verdict::verdict_badge(); swap the two text utilities in the source
@@ -320,23 +184,27 @@ final class bootstrap_compat_test extends \basic_testcase {
         $this->assertSame(
             [],
             $offenders,
-            'Bootstrap 4 gives .badge no text colour and Bootstrap 5 defaults it to white, so a badge '
-                . 'that does not state its own colour fails contrast on one branch or the other: '
+            'Bootstrap 5 defaults .badge text to white, so a badge that does not state its own colour '
+                . 'fails contrast on a light background: '
                 . implode('; ', $offenders)
         );
     }
 
     /**
-     * A component wired through Bootstrap's markup data-API must carry both attribute spellings.
+     * A component wired through Bootstrap's markup data-API uses only the Bootstrap 5 spelling.
      *
-     * Behat on Moodle 4.5 catches a missing data-toggle only where a scenario opens that component;
-     * this check covers every file.
+     * Bootstrap 5 listens on data-bs-toggle, data-bs-target, data-bs-dismiss and data-bs-parent
+     * only, so the Bootstrap 4 attribute is dead markup: beside the BS5 one it adds nothing, and
+     * alone it leaves the component inert.
+     *
+     * Change that must make it fail: add data-toggle="dropdown" back beside data-bs-toggle in
+     * templates/central/plans.mustache.
      *
      * @return void
      */
-    public function test_data_api_attributes_are_paired(): void {
+    public function test_data_api_attributes_use_the_bootstrap5_spelling(): void {
         $offenders = [];
-        $pairs = [
+        $spellings = [
             'data-toggle' => 'data-bs-toggle',
             'data-target' => 'data-bs-target',
             'data-dismiss' => 'data-bs-dismiss',
@@ -347,12 +215,10 @@ final class bootstrap_compat_test extends \basic_testcase {
                 if ($this->is_comment_line($line)) {
                     continue;
                 }
-                foreach ($pairs as $bs4 => $bs5) {
+                foreach ($spellings as $bs4 => $bs5) {
                     /* Match the attribute itself, never a longer name that merely starts with it. */
-                    $hasbs4 = preg_match('/(?<![-\w])' . preg_quote($bs4, '/') . '(?![-\w])/', $line);
-                    $hasbs5 = preg_match('/(?<![-\w])' . preg_quote($bs5, '/') . '(?![-\w])/', $line);
-                    if ($hasbs4 !== $hasbs5) {
-                        $offenders[] = basename($path) . ':' . ($number + 1) . ' has only ' . ($hasbs4 ? $bs4 : $bs5);
+                    if (preg_match('/(?<![-\w])' . preg_quote($bs4, '/') . '(?![-\w])/', $line)) {
+                        $offenders[] = basename($path) . ':' . ($number + 1) . ' should use ' . $bs5;
                     }
                 }
             }
@@ -360,8 +226,8 @@ final class bootstrap_compat_test extends \basic_testcase {
         $this->assertSame(
             [],
             $offenders,
-            'Bootstrap 4 listens on data-toggle and Bootstrap 5 on data-bs-toggle, so markup-wired '
-                . 'components need both spellings side by side: ' . implode('; ', $offenders)
+            'Bootstrap 5 ignores the Bootstrap 4 data-API attributes; use the data-bs- spelling alone: '
+                . implode('; ', $offenders)
         );
     }
 
@@ -400,9 +266,8 @@ final class bootstrap_compat_test extends \basic_testcase {
      *
      * These names resolve on 5.x only through theme/boost/scss/moodle/bs4-compat.scss, which wraps
      * each in @include deprecated-styles() (a red outline under behat-site and themedesignermode)
-     * and which Moodle 6.0 removes (MDL-84465). Their Bootstrap 5 spellings are in 4.5's forward
-     * bridge, or for visually-hidden in the plugin's polyfill, so the BS5 name alone is correct on
-     * both branches: writing "ml-2 ms-2" side by side only adds a deprecation.
+     * and which Moodle 6.0 removes (MDL-84465). Writing "ml-2 ms-2" side by side only adds a
+     * deprecation.
      *
      * @return array Regex matching the deprecated class => the Bootstrap 5 spelling to use instead.
      */
@@ -429,9 +294,8 @@ final class bootstrap_compat_test extends \basic_testcase {
     /**
      * The plugin emits no Bootstrap 4 class name that 5.x has already deprecated.
      *
-     * The companion rule to test_every_bs5_utility_used_is_polyfilled, and the reason the fix for a
-     * missing BS5 utility is the polyfill rather than the BS4 name: writing the old name moves the
-     * breakage from 4.5 to Moodle 6.0 instead of removing it.
+     * Change that must make it fail: write font-weight-bold for fw-bold on the card header in
+     * templates/course_card.mustache.
      *
      * @return void
      */
@@ -455,63 +319,8 @@ final class bootstrap_compat_test extends \basic_testcase {
             [],
             $offenders,
             'Moodle 5.x resolves these Bootstrap 4 names only through bs4-compat.scss, which marks each '
-                . 'one deprecated and which Moodle 6.0 deletes; the Bootstrap 5 spelling alone is correct '
-                . 'on both branches: ' . implode('; ', $offenders)
-        );
-    }
-
-    /**
-     * PHP source with its comments removed, so a mention in prose is not read as a call.
-     *
-     * @param string $contents The contents of a PHP file.
-     * @return string The same source without comment and docblock tokens.
-     */
-    private function php_code_only(string $contents): string {
-        $code = '';
-        foreach (token_get_all($contents) as $token) {
-            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
-                continue;
-            }
-            $code .= is_array($token) ? $token[1] : $token;
-        }
-        return $code;
-    }
-
-    /**
-     * The Bootstrap 4 marker must be added wherever the plugin sets one of its page body classes.
-     *
-     * The polyfill is gated on that marker, so an entry point that forgets it renders unstyled on
-     * 4.5, with no error anywhere. Both the body class and the call are read from code, not from
-     * comments.
-     *
-     * Change that must make it fail: turn the mark_page() call in view-plan.php into a comment.
-     *
-     * @return void
-     */
-    public function test_entry_points_mark_the_bootstrap_version(): void {
-        $root = $this->plugin_root();
-        $offenders = [];
-        $checked = 0;
-        foreach (glob($root . '/*.php') ?: [] as $path) {
-            $code = $this->php_code_only(file_get_contents($path));
-            if (!preg_match('/add_body_class\(\s*[\'"]local-dimensions-/', $code)) {
-                continue;
-            }
-            $checked++;
-            if (!preg_match('/\bbootstrap::mark_page\(\s*\)\s*;/', $code)) {
-                $offenders[] = basename($path);
-            }
-        }
-        $this->assertGreaterThan(
-            0,
-            $checked,
-            'No entry point sets a local-dimensions- body class, so this test would pass over an empty list.'
-        );
-        $this->assertSame(
-            [],
-            $offenders,
-            'These entry points set a plugin body class but never call bootstrap::mark_page(), so the '
-                . 'Bootstrap 4 polyfill will not reach them: ' . implode(', ', $offenders)
+                . 'one deprecated and which Moodle 6.0 deletes; use the Bootstrap 5 spelling: '
+                . implode('; ', $offenders)
         );
     }
 }

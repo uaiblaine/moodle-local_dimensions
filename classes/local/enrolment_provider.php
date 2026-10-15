@@ -96,14 +96,11 @@ abstract class enrolment_provider {
     /** @var array The methods of that API the unlisted implementation calls; a build without any of them is not used. */
     public const UNLISTED_METHODS = ['get_enrolment_state', 'get_next_action', 'get_next_actions'];
 
-    /** @var int The first Moodle branch local_unlistedcourses installs on. */
-    public const UNLISTED_MIN_BRANCH = 502;
-
     /**
      * The implementation the site has chosen, falling back to the frozen core rule.
      *
-     * The setting alone is not enough: a site that ticked it and later removed local_unlistedcourses,
-     * or moved to a branch it does not install on, keeps a stored '1' and must still get cards.
+     * The setting alone is not enough: a site that ticked it and later removed local_unlistedcourses
+     * keeps a stored '1' and must still get cards.
      *
      * @return enrolment_provider
      */
@@ -117,17 +114,11 @@ abstract class enrolment_provider {
     /**
      * Whether local_unlistedcourses is installed with the API this plugin calls.
      *
-     * Every reference to that plugin goes through here or behind it: it is optional, and it does not
-     * install on Moodle 4.5 or 5.1, which this plugin supports.
+     * Every reference to that plugin goes through here or behind it, because it is optional.
      *
      * @return bool
      */
     public static function unlisted_available(): bool {
-        global $CFG;
-
-        if ((int) ($CFG->branch ?? 0) < self::UNLISTED_MIN_BRANCH) {
-            return false;
-        }
         /* method_exists() autoloads the class and answers false when there is none, so this also
            refuses a site without the plugin, and a build of it older than this API. */
         foreach (self::UNLISTED_METHODS as $method) {

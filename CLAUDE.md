@@ -103,8 +103,8 @@ classes/
   scss_manager.php, picture_manager.php, chip_filters.php
   customfield/         competency_handler + lp_handler (singleton create(), two areas)
   event/, external/ (one WS class per file), form/ (dynamic_form), task/, reportbuilder/
-  local/               plan_access, plan_status, bootstrap (BS4 body class), colour_mode
-                       (constants only), enrolment_provider*, view_events, category_lifecycle
+  local/               plan_access, plan_status, colour_mode (constants only),
+                       enrolment_provider*, view_events, category_lifecycle
   output/              renderables: learner pages and hub tabs
   privacy/             preference-only provider (core_user owns preference deletion)
 db/                    access, caches, events, hooks, services, install, upgrade, uninstall; NO install.xml
@@ -169,14 +169,13 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
 - **Enrolment state of the cards** (`local\enrolment_provider`, stage 5c; design record
   `moodle-dev/docs/enrolment-status-matrix/`): the rule lives in `local_unlistedcourses`, never
   here. `enrolment_provider_core` is FROZEN; `enrolment_provider_unlisted` only translates the
-  plugin's API behind `unlisted_available()` (branch ≥ 502, every method present) and maps its
-  constants from LITERALS, because the plugin is absent on 4.5/5.1 and a constant of a missing
-  class throws. Neither provider decides the lock (core's `is_enrolled()` does, D7); a provider is
+  plugin's API behind `unlisted_available()` (every method present) and maps its constants
+  from LITERALS, because the plugin is optional and a constant of a missing class throws.
+  Neither provider decides the lock (core's `is_enrolled()` does, D7); a provider is
   asked only about a locked card, for `$USER`, with the viewer handed in; providers return
   facts and `enrolment_state::export()` is the one presenter; a route line goes only to a
-  relationship; state colours are aliases of the family tokens. Specs
-  `enrolment_provider.conf` (`--fast`) and `enrolment_provider_stack.conf` (stack, with the
-  plugin).
+  relationship; state colours are aliases of the family tokens. Spec
+  `enrolment_provider.conf` (`--fast`).
 
 ## Colour tokens and dark mode
 
@@ -209,7 +208,7 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
 - Forms: `require_once($CFG->libdir . '/formslib.php')`; a submit label differs from any
   section header label; editors populated through `set_data()`.
 - PHPUnit: five file-scanner suites on `\basic_testcase` under `tests/local/`
-  (`colour_tokens_test`, `bootstrap_compat_test`, `stylesheet_markup_contract_test`,
+  (`colour_tokens_test`, `bootstrap_markup_test`, `stylesheet_markup_contract_test`,
   `status_icons_test`, `preference_queries_test`) plus `customscss_field_styles_test`,
   `hub_javascript_guards_test` and `export_loader_script_test`; every arm was mutation-checked
   and a new arm must be (delete the production line, confirm the red). `@covers` stays a
@@ -220,14 +219,16 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   runs) and asserts relative invariants, with the dark palette detected at runtime. Locator
   rules in the fleet file; a hover-revealed helper whose `aria-label` embeds the row name steals
   name-based clicks, so it sits after the main control in the DOM. Long form: "Behat (JS)".
-- Hub front end: ESM, zero YUI; autocomplete enhanced on `ModalEvents.shown`; `form-select`
-  (polyfilled on 4.5), never `custom-select`; BS5 utilities only through the polyfill block at
-  the tail of `styles.css`, gated on `body.local-dimensions-bs4`; both `data-toggle` spellings;
+- Hub front end: ESM, zero YUI; autocomplete enhanced on `ModalEvents.shown`; `form-select`,
+  never `custom-select`; `data-bs-toggle` alone (`bootstrap_markup_test` refuses `data-toggle`);
   toasts from a modal go to a region in the modal body; `flashRow()` for in-place changes;
   `pane.dataset` seeded from the server-rendered value; `array_flip([5])` makes
   `!empty($map[5])` false, test membership with `isset`.
-- The Bootstrap 4 polyfill serves only `MOODLE_405_STABLE`; it is dead code on the other branches
-  and leaves `main` (5.3) with the 4.5 compatibility code (`docs/moodle-53-branch-plan.md`, S5).
+- The 4.5 compatibility code exists only on `MOODLE_405_STABLE` (and, dead, on 501 and 502): the
+  Bootstrap 4 utility polyfill at the tail of `styles.css`, gated on `body.local-dimensions-bs4`;
+  `local\bootstrap`, which adds that body class; both `data-toggle` spellings; the
+  `bootstrap_compat_test` arms that hold them; `enrolment_provider::UNLISTED_MIN_BRANCH`. A fix
+  cherry-picked there keeps them (`docs/moodle-53-branch-plan.md`, S5).
 
 ## MDL Shield reviews
 

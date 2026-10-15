@@ -172,9 +172,9 @@ if (get_config('core_competency', 'enabled')) {
     ));
 
     /* The enrolment rules of local_unlistedcourses on the course cards. Offered only where that
-       optional plugin is installed with the API the cards call (it installs on Moodle 5.2 and later
-       only), and off by default: a site switches the extra states on deliberately. The provider
-       checks the same availability again, so a stored value outlives a removed plugin harmlessly. */
+       optional plugin is installed with the API the cards call, and off by default: a site switches
+       the extra states on deliberately. The provider checks the same availability again, so a stored
+       value outlives a removed plugin harmlessly. */
     if (\local_dimensions\local\enrolment_provider::unlisted_available()) {
         $settings->add(new admin_setting_configcheckbox(
             'local_dimensions/' . \local_dimensions\local\enrolment_provider::SETTING,
