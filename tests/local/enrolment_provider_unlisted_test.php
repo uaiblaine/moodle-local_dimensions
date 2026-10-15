@@ -410,7 +410,7 @@ final class enrolment_provider_unlisted_test extends \advanced_testcase {
             }
             $found = true;
             $this->assertMatchesRegularExpression(
-                '/plugin-dependencies:.*\n(\s+.*\n)*?\s*\S*moodle-local_unlistedcourses,main\b/',
+                '/plugin-dependencies:.*\n(\s+.*\n)*?\s*\S*moodle-local_unlistedcourses,MOODLE_502_STABLE\b/',
                 $job,
                 'The 5.02 CI job does not check out moodle-local_unlistedcourses under plugin-dependencies.'
             );
