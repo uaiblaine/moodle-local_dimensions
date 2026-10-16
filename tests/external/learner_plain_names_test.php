@@ -32,7 +32,7 @@ use local_dimensions\output\view_plan_summary_page;
  * and a rendered page must hold the escaped spelling once and never "&amp;amp;".
  *
  * The accordion's JavaScript cannot run here, so its sinks are pinned by reading its source,
- * the way bootstrap_compat_test pins class names.
+ * the way bootstrap_markup_test pins class names.
  *
  * The class-level covers tags stay in docblock form on purpose: moodle-cs on the 4.05 leg cannot
  * see PHP attributes, and the plugin still supports 4.5.

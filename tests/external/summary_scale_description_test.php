@@ -149,7 +149,7 @@ final class summary_scale_description_test extends \advanced_testcase {
      *
      * The taxonomy terms are core language strings with no character the two spellings treat
      * differently, and core caches them for the whole process, so a run cannot tell them apart. The
-     * source is read instead, as bootstrap_compat_test reads templates.
+     * source is read instead, as bootstrap_markup_test reads templates.
      *
      * @return void
      */

@@ -868,6 +868,15 @@ Macro view of everything since v1.0 — per-change detail lives in the commit hi
 - The **comments** feature (accordion reply threads, its services, JS, CSS and strings).
 - Client-side SCSS validation (the server-side validator is the single gate) and the unused
   customfield-aware CRUD web services.
+- **The Moodle 4.5 compatibility code.** This branch serves Moodle 5.3 only, and 4.5 keeps that
+  code on `MOODLE_405_STABLE`. Gone: `local\bootstrap` and the `local-dimensions-bs4` body class
+  it put on the hub, plan and competency pages; the Bootstrap 4 utility polyfill at the tail of
+  `styles.css`; the participants filter panel's 4.5-only click guard; the `data-toggle` attribute
+  beside `data-bs-toggle` on the hub's dropdowns, and the hub's match on core's 4.5 tab toggle; the
+  Moodle 5.2 branch check in `enrolment_provider::unlisted_available()` (`UNLISTED_MIN_BRANCH`),
+  which only the plugin-presence check replaces. `tests/local/bootstrap_compat_test.php` becomes
+  `tests/local/bootstrap_markup_test.php` without its polyfill and marker checks; the data-API
+  check now refuses the Bootstrap 4 attribute instead of requiring it.
 
 ### Fixed
 - **A course you can only get into by applying is no longer drawn as a padlock.** The predicate

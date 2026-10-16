@@ -20,6 +20,8 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/local/dimensions/tests/fixtures/testable_enrolment_provider.php');
+require_once($CFG->dirroot . '/local/dimensions/tests/fixtures/unlisted_access_partial.php');
+require_once($CFG->dirroot . '/local/dimensions/tests/fixtures/unlisted_access_stub.php');
 
 /**
  * Which enrolment provider the cards ask, and the frozen rule of the core one.
@@ -47,6 +49,7 @@ final class enrolment_provider_test extends \advanced_testcase {
      */
     protected function tearDown(): void {
         testable_enrolment_provider::$available = false;
+        testable_enrolment_provider::probe_api(enrolment_provider::UNLISTED_API);
         parent::tearDown();
     }
 
@@ -79,37 +82,38 @@ final class enrolment_provider_test extends \advanced_testcase {
     }
 
     /**
-     * The real availability check answers no wherever local_unlistedcourses cannot run, and yes where it is.
-     *
-     * Every Moodle 4.5 and 5.1 site is the first case, and so is a Moodle 5.2 site without the plugin;
-     * with the plugin installed, the branch is the guard that still says no below 5.2.
+     * The real availability check answers no where local_unlistedcourses is absent, and yes where it is.
      *
      * @return void
      */
-    public function test_availability_follows_the_plugin_and_the_branch(): void {
-        global $CFG;
-
+    public function test_availability_follows_the_plugin(): void {
         $this->resetAfterTest();
         set_config(enrolment_provider::SETTING, '1', 'local_dimensions');
         $installed = \core_component::get_component_directory('local_unlistedcourses') !== null;
 
-        if (!$installed) {
+        // Control: the real API class, whatever the site has.
+        if ($installed) {
+            $this->assertTrue(enrolment_provider::unlisted_available());
+            $this->assertSame('unlisted', enrolment_provider::get()->name());
+        } else {
             $this->assertFalse(enrolment_provider::unlisted_available());
-            // The stored setting cannot reach an API that is not there.
             $this->assertSame('core', enrolment_provider::get()->name());
-            return;
         }
 
+        // A site without the plugin, modelled on any site: the stored setting cannot reach the API.
+        testable_enrolment_provider::probe_api('local_dimensions\\local\\no_such_unlisted_api');
+        $this->assertFalse(enrolment_provider::unlisted_available());
+        $this->assertSame('core', enrolment_provider::get()->name());
+
+        // A build older than this API: one method missing is enough to refuse it.
+        testable_enrolment_provider::probe_api(unlisted_access_partial::class);
+        $this->assertFalse(enrolment_provider::unlisted_available());
+        $this->assertSame('core', enrolment_provider::get()->name());
+
+        // Control: a class with every method is used, so the refusals above came from the missing ones.
+        testable_enrolment_provider::probe_api(unlisted_access_stub::class);
         $this->assertTrue(enrolment_provider::unlisted_available());
         $this->assertSame('unlisted', enrolment_provider::get()->name());
-        $branch = $CFG->branch;
-        try {
-            $CFG->branch = '501';
-            $this->assertFalse(enrolment_provider::unlisted_available());
-            $this->assertSame('core', enrolment_provider::get()->name());
-        } finally {
-            $CFG->branch = $branch;
-        }
     }
 
     /**
