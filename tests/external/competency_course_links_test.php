@@ -16,17 +16,19 @@
 
 namespace local_dimensions\external;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for the competency course-link external functions.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_competency_links
- * @covers     \local_dimensions\external\link_competency_course
- * @covers     \local_dimensions\external\unlink_competency_course
- * @covers     \local_dimensions\external\set_course_link_outcome
  */
+#[CoversClass(\local_dimensions\external\get_competency_links::class)]
+#[CoversClass(\local_dimensions\external\link_competency_course::class)]
+#[CoversClass(\local_dimensions\external\unlink_competency_course::class)]
+#[CoversClass(\local_dimensions\external\set_course_link_outcome::class)]
 final class competency_course_links_test extends \advanced_testcase {
     /**
      * Create a framework (visible by default) with one competency, and two courses.

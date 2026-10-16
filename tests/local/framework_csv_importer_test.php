@@ -21,6 +21,7 @@ use core_competency\competency;
 use core_competency\competency_framework;
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the context-aware framework CSV importer.
@@ -28,8 +29,8 @@ use local_dimensions\helper;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\framework_csv_importer
  */
+#[CoversClass(\local_dimensions\local\framework_csv_importer::class)]
 final class framework_csv_importer_test extends \advanced_testcase {
     /**
      * Build a source framework with a two-level tree and one custom-field value, export it, then

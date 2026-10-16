@@ -22,6 +22,7 @@ use local_dimensions\constants;
 use local_dimensions\helper;
 use local_dimensions\output\view_competency_page;
 use local_dimensions\output\view_plan_summary_page;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Names on the learner pages reach the reader escaped exactly once.
@@ -34,19 +35,16 @@ use local_dimensions\output\view_plan_summary_page;
  * The accordion's JavaScript cannot run here, so its sinks are pinned by reading its source,
  * the way bootstrap_markup_test pins class names.
  *
- * The class-level covers tags stay in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes, and the plugin still supports 4.5.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_competency_courses
- * @covers     \local_dimensions\external\get_course_progress
- * @covers     \local_dimensions\calculator
- * @covers     \local_dimensions\chip_filters
- * @covers     \local_dimensions\output\view_plan_summary_page
- * @covers     \local_dimensions\output\view_competency_page
  */
+#[CoversClass(\local_dimensions\external\get_competency_courses::class)]
+#[CoversClass(\local_dimensions\external\get_course_progress::class)]
+#[CoversClass(\local_dimensions\calculator::class)]
+#[CoversClass(\local_dimensions\chip_filters::class)]
+#[CoversClass(\local_dimensions\output\view_plan_summary_page::class)]
+#[CoversClass(\local_dimensions\output\view_competency_page::class)]
 final class learner_plain_names_test extends \advanced_testcase {
     /** @var string Course full name. */
     private const COURSE = 'R&D < Ops';

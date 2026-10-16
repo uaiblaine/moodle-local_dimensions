@@ -16,14 +16,16 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for the CSV formula escaper.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\csv_formula
  */
+#[CoversClass(\local_dimensions\local\csv_formula::class)]
 final class csv_formula_test extends \basic_testcase {
     /**
      * Cells a spreadsheet would evaluate, and the harmless ones beside them.

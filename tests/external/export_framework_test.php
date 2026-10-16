@@ -16,14 +16,16 @@
 
 namespace local_dimensions\external;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for the export_framework external function.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\export_framework
  */
+#[CoversClass(\local_dimensions\external\export_framework::class)]
 final class export_framework_test extends \advanced_testcase {
     /**
      * Export a system-context framework and check the returned CSV.

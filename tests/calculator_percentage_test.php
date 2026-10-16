@@ -16,15 +16,18 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\DataProvider;
+
 /**
  * Tests for the two percentage rules a progress ring or bar is allowed to show.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\calculator::progress_percentage
- * @covers     \local_dimensions\calculator::clamp_percentage
  */
+#[CoversMethod(\local_dimensions\calculator::class, 'progress_percentage')]
+#[CoversMethod(\local_dimensions\calculator::class, 'clamp_percentage')]
 final class calculator_percentage_test extends \advanced_testcase {
     /**
      * Counts and the percentage the ring may honestly show for them.
@@ -49,12 +52,12 @@ final class calculator_percentage_test extends \advanced_testcase {
     /**
      * The ring reaches 100 only when every activity is done, and 0 only when none is.
      *
-     * @dataProvider progress_provider
      * @param int $completed How many activities are complete.
      * @param int $total How many activities the section counts.
      * @param int|null $expected The percentage the ring may show.
      * @return void
      */
+    #[DataProvider('progress_provider')]
     public function test_progress_percentage(int $completed, int $total, ?int $expected): void {
         $this->assertSame($expected, calculator::progress_percentage($completed, $total));
     }
@@ -80,11 +83,11 @@ final class calculator_percentage_test extends \advanced_testcase {
     /**
      * A raw percentage is rounded and clamped to 0-100 before a bar displays it; null reads as 0.
      *
-     * @dataProvider clamp_provider
      * @param float|null $raw The raw percentage, or null when there was nothing to measure.
      * @param int $expected The percentage a bar may display.
      * @return void
      */
+    #[DataProvider('clamp_provider')]
     public function test_clamp_percentage(?float $raw, int $expected): void {
         $this->assertSame($expected, calculator::clamp_percentage($raw));
     }

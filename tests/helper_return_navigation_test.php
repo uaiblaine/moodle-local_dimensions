@@ -27,17 +27,17 @@ namespace local_dimensions;
 use advanced_testcase;
 use moodle_url;
 use local_dimensions\customfield\lp_handler;
+use PHPUnit\Framework\Attributes\CoversMethod;
 
 /**
  * Tests for the return-context classification and the tracker's return button.
- *
- * @covers \local_dimensions\helper::return_destination_kind
- * @covers \local_dimensions\helper::tracker_return_context
- * @covers \local_dimensions\helper::plan_overview_is_routed
- * @covers \local_dimensions\helper::redirect_return_url
- * @covers \local_dimensions\helper::set_return_context
- * @covers \local_dimensions\helper::get_return_context_for_course
  */
+#[CoversMethod(\local_dimensions\helper::class, 'return_destination_kind')]
+#[CoversMethod(\local_dimensions\helper::class, 'tracker_return_context')]
+#[CoversMethod(\local_dimensions\helper::class, 'plan_overview_is_routed')]
+#[CoversMethod(\local_dimensions\helper::class, 'redirect_return_url')]
+#[CoversMethod(\local_dimensions\helper::class, 'set_return_context')]
+#[CoversMethod(\local_dimensions\helper::class, 'get_return_context_for_course')]
 final class helper_return_navigation_test extends advanced_testcase {
     /**
      * A stored plan URL classifies as the plan.

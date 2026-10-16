@@ -24,6 +24,8 @@
 
 namespace local_dimensions\output;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * The competency rule action is disabled for a competency without child competencies.
  *
@@ -32,13 +34,11 @@ namespace local_dimensions\output;
  * action alone. structure.js hands the template the selected row's flag
  * (hub_javascript_guards_test::test_rule_action_needs_child_competencies).
  *
- * Coverage stays in a docblock annotation: moodle-cs for Moodle 4.5 cannot see PHP attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class structure_footer_actions_test extends \advanced_testcase {
     /**
      * Without child competencies only the rule button is disabled, and it says why.

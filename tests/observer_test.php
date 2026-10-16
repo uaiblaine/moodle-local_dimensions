@@ -27,6 +27,7 @@ namespace local_dimensions;
 use core_competency\api;
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\customfield\lp_handler;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Observer test class.
@@ -40,8 +41,8 @@ use local_dimensions\customfield\lp_handler;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \local_dimensions\observer
  */
+#[CoversClass(\local_dimensions\observer::class)]
 final class observer_test extends \advanced_testcase {
     /**
      * Reset the database after each test and act as the admin user.

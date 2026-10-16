@@ -18,6 +18,7 @@ namespace local_dimensions\local;
 
 use local_dimensions\constants;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the repairs db/upgrade.php runs on every upgrade.
@@ -28,8 +29,8 @@ use local_dimensions\helper;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\legacy_repair
  */
+#[CoversClass(\local_dimensions\local\legacy_repair::class)]
 final class legacy_repair_test extends \advanced_testcase {
     /**
      * Provision both areas, as a site coming from a date-numbered release, and return the plugin's category id per area.

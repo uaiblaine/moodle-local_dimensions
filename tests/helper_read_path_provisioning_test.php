@@ -18,6 +18,7 @@ namespace local_dimensions;
 
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\customfield\lp_handler;
+use PHPUnit\Framework\Attributes\CoversMethod;
 
 /**
  * Tests that the template setting resolvers read their fields and never create them.
@@ -28,14 +29,14 @@ use local_dimensions\customfield\lp_handler;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper::get_template_subline_source
- * @covers     \local_dimensions\helper::get_template_enrollmentfilter
- * @covers     \local_dimensions\helper::get_template_singlecourseredirect
- * @covers     \local_dimensions\helper::get_template_lockedcardmode
- * @covers     \local_dimensions\helper::get_template_showlockeddate
- * @covers     \local_dimensions\helper::resolve_showrelated_for_template
- * @covers     \local_dimensions\helper::resolve_showrelatedlink_for_template
  */
+#[CoversMethod(\local_dimensions\helper::class, 'get_template_subline_source')]
+#[CoversMethod(\local_dimensions\helper::class, 'get_template_enrollmentfilter')]
+#[CoversMethod(\local_dimensions\helper::class, 'get_template_singlecourseredirect')]
+#[CoversMethod(\local_dimensions\helper::class, 'get_template_lockedcardmode')]
+#[CoversMethod(\local_dimensions\helper::class, 'get_template_showlockeddate')]
+#[CoversMethod(\local_dimensions\helper::class, 'resolve_showrelated_for_template')]
+#[CoversMethod(\local_dimensions\helper::class, 'resolve_showrelatedlink_for_template')]
 final class helper_read_path_provisioning_test extends \advanced_testcase {
     /**
      * Drop the handlers' cached field lists, which would outlive the rollback of the rows they hold.

@@ -21,6 +21,7 @@ use core_external\external_api;
 use local_dimensions\calculator;
 use local_dimensions\constants;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Whose data the competency tracker carries when a teacher opens it from a learner's plan.
@@ -32,17 +33,14 @@ use local_dimensions\helper;
  * cannot open carries the viewer's lock date, enrolment start, enrol and pending state. Without a plan
  * the services describe the caller, and on the learner's own plan nothing changes.
  *
- * The covers tags stay in this docblock because moodle-cs for Moodle 4.5 cannot see PHPUnit
- * attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_course_progress
- * @covers     \local_dimensions\external\get_courses_completion_status
- * @covers     \local_dimensions\calculator
- * @covers     \local_dimensions\output\view_competency_page
  */
+#[CoversClass(\local_dimensions\external\get_course_progress::class)]
+#[CoversClass(\local_dimensions\external\get_courses_completion_status::class)]
+#[CoversClass(\local_dimensions\calculator::class)]
+#[CoversClass(\local_dimensions\output\view_competency_page::class)]
 final class tracker_cards_owner_test extends \advanced_testcase {
     /** @var string The progress web service. */
     private const PROGRESS = 'local_dimensions_get_course_progress';

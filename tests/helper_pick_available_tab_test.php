@@ -25,12 +25,12 @@
 namespace local_dimensions;
 
 use basic_testcase;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Pure logic: which tab the hub opens given what the viewer may see.
- *
- * @covers \local_dimensions\helper
  */
+#[CoversClass(\local_dimensions\helper::class)]
 final class helper_pick_available_tab_test extends basic_testcase {
     /**
      * The requested tab wins whenever it is available, whatever its position in the strip.

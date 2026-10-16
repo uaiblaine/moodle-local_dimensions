@@ -16,6 +16,8 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for the enrolment start date a locked course card announces.
  *
@@ -23,14 +25,11 @@ namespace local_dimensions;
  * instance whose period has not ended by the time it starts. Each condition has its own test, with a
  * control that the same row passes while it meets the condition. None of them needs enrol_apply.
  *
- * The class-level covers tag stays in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes, and the plugin still supports 4.5.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\calculator
  */
+#[CoversClass(\local_dimensions\calculator::class)]
 final class calculator_enrolment_start_test extends \advanced_testcase {
     /**
      * Enrol a user on the course's manual instance with the given period and row status.

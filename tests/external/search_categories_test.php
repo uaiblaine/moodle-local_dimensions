@@ -28,13 +28,13 @@ use advanced_testcase;
 use context_coursecat;
 use context_system;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The picker's search: name match, plain nested names, counts, visibility and readability.
- *
- * @covers \local_dimensions\external\search_categories
- * @covers \local_dimensions\helper
  */
+#[CoversClass(\local_dimensions\external\search_categories::class)]
+#[CoversClass(\local_dimensions\helper::class)]
 final class search_categories_test extends advanced_testcase {
     /**
      * Categories with an ampersand, a child, and a hidden sibling, plus a framework in the parent

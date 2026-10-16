@@ -18,6 +18,7 @@ namespace local_dimensions;
 
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\customfield\lp_handler;
+use PHPUnit\Framework\Attributes\CoversMethod;
 
 /**
  * Tests for the accordion subline-source resolution and the competency select-label reader.
@@ -28,9 +29,9 @@ use local_dimensions\customfield\lp_handler;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper::get_template_subline_source
- * @covers     \local_dimensions\helper::read_competency_select_label
  */
+#[CoversMethod(\local_dimensions\helper::class, 'get_template_subline_source')]
+#[CoversMethod(\local_dimensions\helper::class, 'read_competency_select_label')]
 final class helper_subline_test extends \advanced_testcase {
     /**
      * Store a subline-source option key on a learning-plan template.

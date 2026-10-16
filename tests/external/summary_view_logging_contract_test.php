@@ -19,6 +19,7 @@ namespace local_dimensions\external;
 use core_competency\api;
 use core_competency\plan;
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Pins what amd/src/accordion.js relies on to log a competency view.
@@ -31,8 +32,8 @@ use core_external\external_api;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_user_competency_summary_in_plan
  */
+#[CoversClass(\local_dimensions\external\get_user_competency_summary_in_plan::class)]
 final class summary_view_logging_contract_test extends \advanced_testcase {
     /** @var string The web service the accordion calls for a plan that is not complete. */
     private const VIEWED_IN_PLAN = 'core_competency_user_competency_viewed_in_plan';

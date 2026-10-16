@@ -20,6 +20,7 @@ use core_external\external_api;
 use local_dimensions\constants;
 use local_dimensions\helper;
 use local_dimensions\local\enrolment_provider;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The "Enrolment opens on" chip on both learner cards, against the real local_unlistedcourses.
@@ -31,16 +32,13 @@ use local_dimensions\local\enrolment_provider;
  * which includes every Moodle 4.5 and 5.1 site; the translation itself is tested everywhere in
  * enrolment_provider_unlisted_test against a stand-in.
  *
- * The class-level covers tags stay in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_course_progress
- * @covers     \local_dimensions\external\get_competency_courses
- * @covers     \local_dimensions\local\enrolment_state
  */
+#[CoversClass(\local_dimensions\external\get_course_progress::class)]
+#[CoversClass(\local_dimensions\external\get_competency_courses::class)]
+#[CoversClass(\local_dimensions\local\enrolment_state::class)]
 final class enrolment_opens_chip_test extends \advanced_testcase {
     /** @var int The course start date, a week after the window opens. */
     private int $startdate = 0;

@@ -28,6 +28,7 @@ use advanced_testcase;
 use context_coursecat;
 use context_system;
 use core_competency\api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The read services validate in the framework's context, never at the site.
@@ -35,16 +36,15 @@ use core_competency\api;
  * The fixture prevents the authenticated-user default for competencyview at the system context:
  * with that default in place a site-level require_capability() passes for everyone, and these
  * tests could not tell a site-level gate from a framework-level one.
- *
- * @covers \local_dimensions\external\browse_competencies
- * @covers \local_dimensions\external\browse_structure
- * @covers \local_dimensions\external\get_structure_node
- * @covers \local_dimensions\external\search_structure
- * @covers \local_dimensions\external\search_competencies
- * @covers \local_dimensions\external\get_competency_links
- * @covers \local_dimensions\external\search_linkable_courses
- * @covers \local_dimensions\external\competency_usage
  */
+#[CoversClass(\local_dimensions\external\browse_competencies::class)]
+#[CoversClass(\local_dimensions\external\browse_structure::class)]
+#[CoversClass(\local_dimensions\external\get_structure_node::class)]
+#[CoversClass(\local_dimensions\external\search_structure::class)]
+#[CoversClass(\local_dimensions\external\search_competencies::class)]
+#[CoversClass(\local_dimensions\external\get_competency_links::class)]
+#[CoversClass(\local_dimensions\external\search_linkable_courses::class)]
+#[CoversClass(\local_dimensions\external\competency_usage::class)]
 final class category_manager_reads_test extends advanced_testcase {
     /**
      * A category manager, a framework with one competency in their category, and a system framework.

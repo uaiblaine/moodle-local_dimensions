@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * The whole colour contract, as a build gate.
  *
@@ -31,8 +33,8 @@ namespace local_dimensions\local;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\colour_mode
  */
+#[CoversClass(\local_dimensions\local\colour_mode::class)]
 final class colour_tokens_test extends \basic_testcase {
     /** @var string This plugin's token namespace. The sibling's differs only in the frankenstyle part. */
     private const PREFIX = '--local-dimensions-';

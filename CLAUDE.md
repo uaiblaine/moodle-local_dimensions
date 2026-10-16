@@ -211,8 +211,9 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   (`colour_tokens_test`, `bootstrap_markup_test`, `stylesheet_markup_contract_test`,
   `status_icons_test`, `preference_queries_test`) plus `customscss_field_styles_test`,
   `hub_javascript_guards_test` and `export_loader_script_test`; every arm was mutation-checked
-  and a new arm must be (delete the production line, confirm the red). `@covers` stays a
-  docblock while 405 is supported.
+  and a new arm must be (delete the production line, confirm the red). Test metadata (`#[CoversClass]`,
+  `#[CoversMethod]`, `#[DataProvider]`) is in attributes on main (5.3) and in docblocks on the
+  `MOODLE_405/501/502_STABLE` branches.
 - Behat: step definitions are site-global, and a step worded like `block_dimensions`' kills
   both suites; the two plugins' colour-mode steps diverge on purpose (table in the long form).
   `colour_mode.feature` sets `themedesignermode` (Behat restores the compiled theme CSS around

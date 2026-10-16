@@ -19,6 +19,7 @@ namespace local_dimensions\output;
 use core_competency\api;
 use core_competency\plan;
 use local_dimensions\external\get_user_competency_summary_in_plan;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests who is offered each competency's detail on the plan overview.
@@ -29,13 +30,11 @@ use local_dimensions\external\get_user_competency_summary_in_plan;
  * moodle/competency:planviewdraft therefore reads the plan and its list but would be refused every
  * detail, so the page withholds the detail controls from that viewer.
  *
- * Coverage stays in a docblock annotation: moodle-cs for Moodle 4.5 cannot see PHP attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\output\view_plan_summary_page
  */
+#[CoversClass(\local_dimensions\output\view_plan_summary_page::class)]
 final class view_plan_summary_detail_access_test extends \advanced_testcase {
     /**
      * Core's side of the mismatch: the draft-only reader reads the plan, but not a competency's detail.

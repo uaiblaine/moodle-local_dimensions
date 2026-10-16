@@ -18,6 +18,7 @@ namespace local_dimensions\external;
 
 use core_competency\api as competencyapi;
 use local_dimensions\task\process_enrol_method;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the Enrolment methods tab web services.
@@ -25,13 +26,13 @@ use local_dimensions\task\process_enrol_method;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\list_enrol_competencies
- * @covers     \local_dimensions\external\list_enrol_courses
- * @covers     \local_dimensions\external\queue_enrol_action
- * @covers     \local_dimensions\external\get_enrol_queue_status
- * @covers     \local_dimensions\external\set_enrol_instance_status
- * @covers     \local_dimensions\local\enrol_methods
  */
+#[CoversClass(\local_dimensions\external\list_enrol_competencies::class)]
+#[CoversClass(\local_dimensions\external\list_enrol_courses::class)]
+#[CoversClass(\local_dimensions\external\queue_enrol_action::class)]
+#[CoversClass(\local_dimensions\external\get_enrol_queue_status::class)]
+#[CoversClass(\local_dimensions\external\set_enrol_instance_status::class)]
+#[CoversClass(\local_dimensions\local\enrol_methods::class)]
 final class enrol_methods_test extends \advanced_testcase {
     /**
      * Two competencies over two courses in different categories, plus a linked cohort.

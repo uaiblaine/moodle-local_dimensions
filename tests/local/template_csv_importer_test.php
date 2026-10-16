@@ -21,6 +21,7 @@ use core_competency\template_competency;
 use core_external\external_api;
 use local_dimensions\external\apply_import_templates;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the learning plan CSV importer: the only write path of the transfer.
@@ -28,8 +29,8 @@ use local_dimensions\helper;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\template_csv_importer
  */
+#[CoversClass(\local_dimensions\local\template_csv_importer::class)]
 final class template_csv_importer_test extends \advanced_testcase {
     /**
      * Only the ticked rows are written, and the untouched ones leave no trace.

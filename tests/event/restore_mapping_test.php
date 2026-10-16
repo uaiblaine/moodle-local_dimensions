@@ -17,6 +17,8 @@
 namespace local_dimensions\event;
 
 use core\event\base;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Tests for how the events logged in a course or module context map their ids on course restore.
@@ -27,15 +29,15 @@ use core\event\base;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\event\course_link_added
- * @covers     \local_dimensions\event\course_link_outcome_updated
- * @covers     \local_dimensions\event\course_link_removed
- * @covers     \local_dimensions\event\module_link_added
- * @covers     \local_dimensions\event\module_link_outcome_updated
- * @covers     \local_dimensions\event\module_link_removed
- * @covers     \local_dimensions\event\enrol_method_applied
- * @covers     \local_dimensions\event\enrol_method_removed
  */
+#[CoversClass(\local_dimensions\event\course_link_added::class)]
+#[CoversClass(\local_dimensions\event\course_link_outcome_updated::class)]
+#[CoversClass(\local_dimensions\event\course_link_removed::class)]
+#[CoversClass(\local_dimensions\event\module_link_added::class)]
+#[CoversClass(\local_dimensions\event\module_link_outcome_updated::class)]
+#[CoversClass(\local_dimensions\event\module_link_removed::class)]
+#[CoversClass(\local_dimensions\event\enrol_method_applied::class)]
+#[CoversClass(\local_dimensions\event\enrol_method_removed::class)]
 final class restore_mapping_test extends \advanced_testcase {
     /**
      * Each event's 'other' keys, as its trigger site fills them, and the mapping each id needs.
@@ -75,11 +77,11 @@ final class restore_mapping_test extends \advanced_testcase {
     /**
      * Every id an event carries in 'other' has a declared mapping, and nothing else does.
      *
-     * @dataProvider other_mapping_provider
      * @param string $classname The event class.
      * @param array $expected The mapping, keyed by 'other' key.
      * @return void
      */
+    #[DataProvider('other_mapping_provider')]
     public function test_other_ids_declare_their_restore_mapping(string $classname, array $expected): void {
         $this->assertSame($expected, $classname::get_other_mapping());
         $this->assertDebuggingNotCalled();

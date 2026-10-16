@@ -27,6 +27,7 @@ namespace local_dimensions;
 use advanced_testcase;
 use context_coursecat;
 use navigation_node;
+use PHPUnit\Framework\Attributes\CoversNothing;
 
 /**
  * Who gets the Competency hub in a category's "More" menu, and where the node points.
@@ -34,9 +35,8 @@ use navigation_node;
  * Core has no unit test of tool_lp's twin callback to borrow from, so the function is called
  * directly, on a bare container node standing in for the category node that
  * settings_navigation::load_category_settings() passes it.
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class lib_navigation_test extends advanced_testcase {
     /**
      * Load the plugin's lib.php once per test.

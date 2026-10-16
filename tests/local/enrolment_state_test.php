@@ -18,18 +18,16 @@ namespace local_dimensions\local;
 
 use core_external\external_api;
 use local_dimensions\local\enrolment_provider as provider;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The payload of the shared state area, state by state.
  *
- * The class-level covers tag stays in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\enrolment_state
  */
+#[CoversClass(\local_dimensions\local\enrolment_state::class)]
 final class enrolment_state_test extends \advanced_testcase {
     /** @var string A destination, for the states that lead somewhere. */
     private const URL = 'https://example.com/enrol/index.php?id=9';

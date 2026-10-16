@@ -23,6 +23,7 @@ use local_dimensions\form\competency_dynamic_form;
 use local_dimensions\form\template_dynamic_form;
 use local_dimensions\helper;
 use local_dimensions\picture_manager;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests that a hub modal save logs whether it created the instance, in both of its events.
@@ -33,10 +34,10 @@ use local_dimensions\picture_manager;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\customfield\lp_handler
- * @covers     \local_dimensions\customfield\competency_handler
- * @covers     \local_dimensions\form\template_dynamic_form
  */
+#[CoversClass(\local_dimensions\customfield\lp_handler::class)]
+#[CoversClass(\local_dimensions\customfield\competency_handler::class)]
+#[CoversClass(\local_dimensions\form\template_dynamic_form::class)]
 final class customfields_updated_isnew_test extends \advanced_testcase {
     /**
      * A user draft area holding one image, to post as a filemanager's value.
