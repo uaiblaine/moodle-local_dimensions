@@ -60,6 +60,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **The filter line** (version 2026100504; the fleet's contract in
+  `moodle-dev/docs/filter-line/CONTRACT.md`, stage D1). The plan overview's sticky toolbar is one
+  line in the contract's order: the scope ("To do" and "All", a radio group with arrow keys), a pill
+  search with an eraser, a favourites star that replaces the two favourites pills and keeps the same
+  stored "favourites only" choice, Filters (the chip panel, with a count badge, a count on every chip
+  and "Show N" at its foot), Organise (the sort menu) and List and Cards. A row of chips under the
+  line names each active filter, with "Clear all" from two chips up. The line folds on its own width
+  in four steps - Filters loses its word, the search becomes an icon, then two lines with the scope on
+  the second and the view inside Organise ("Show as") - so the narrow-screen "Show filters" button is
+  gone. From the third step the search grows over the line, with a close button, Escape, and the focus
+  given back to the control that opened it; the suggestions offer the filters first (each with the
+  number it would leave without the typed text, matched without accents or case) and then the
+  competencies whose names match, and `/` opens the search. At the fourth step the Filters panel is a
+  bottom sheet. The competency tracker gets the same line: the scope (now opening on "To do"; a
+  learner who chose "All" keeps it), a search over the course cards with a "no results" state, and
+  Filters where course fields are configured. Each view remembers its own scope in
+  `local_dimensions_learner_view` (`filter` for the plan, `trackerfilter` for the tracker); the search
+  text is never remembered. New module `local_dimensions/filter_line`, template
+  `local_dimensions/filter_line`, class `local\learner_view`; strings `line_*`; the strings the old
+  toolbar alone used are removed (`fav_only`, `fav_showall`, `filter_toggle`, `search_competencies`,
+  `sort_label`, `toolbar_adjust`, `view_grid`, `view_label`, `view_list`).
 - **Family colour tokens.** Under `theme_dimensions` the plugin reads the theme's family tokens
   (`--dimensions-*`, contract in `theme_dimensions/docs/tokens.md`) first, in the light and the dark
   rules (including the local-only motion and state tokens), with its own chain as the fallback.

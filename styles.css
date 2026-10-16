@@ -2136,249 +2136,845 @@ body {
 }
 
 /* ============================================
-      FILTER BAR - Tabs + Search
+      THE FILTER LINE
       ============================================ */
 
-/* Flex row on desktop, column on mobile */
-.local-dimensions-filter-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    width: 100%;
-    margin-bottom: 1.5rem;
-}
-
-/* Toolbar: one wrapping flex row whose parts line up as two visual rows. Line 1 holds the
-   filter pills (left) and the layout toggle (pushed right); line 2 is forced to wrap by the
-   search row's full-width basis, and there the search takes all the slack so a control that
-   grows - the filter button gaining its active count - only shrinks the search, never moves
-   the right edge. Sticky at every width, since the plan runs to dozens of rows on a desktop
-   too; anchored to the theme's navbar height so it stops below a fixed header. Capped and
-   centred so the end controls do not fling apart on a wide card. */
+/* The learner views' filter line (templates/filter_line.mustache, amd/src/filter_line.js;
+   moodle-dev/docs/filter-line/CONTRACT.md). The toolbar is sticky at every width, since the plan
+   runs to dozens of rows on a desktop too, anchored to the theme's navbar height so it stops below
+   a fixed header, and capped and centred so the end controls do not fling apart on a wide card. It
+   holds the line and, under it, the row of chips. */
 .local-dimensions-toolbar {
     position: sticky;
     top: var(--navbar-height, 60px);
     z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
     max-width: 880px;
-    margin-inline: auto;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.6rem;
+    margin: 0 auto 1.5rem;
     padding: 0.6rem 0.65rem;
     border-radius: 1.25rem;
     background: var(--local-dimensions-scrim);
     backdrop-filter: blur(8px);
 }
 
-.local-dimensions-toolbar-filters {
+/* While the Filters panel is a bottom sheet the toolbar drops its backdrop filter: a filter makes
+   its element the containing block of every fixed descendant, and the sheet is one. It also rises
+   over the page, under the site's own fixed navbar, which the sheet never reaches. */
+.local-dimensions-toolbar.local-dimensions-toolbar--sheet {
+    z-index: 1029;
+    backdrop-filter: none;
+}
+
+/* ONE row in the contract's slot order: scope, search, star, Filters, Organise, view. It wraps where
+   it does not fit, which is the whole of its narrow behaviour without the module; the search is the
+   item that grows and shrinks. It is the positioned ancestor of every floating layer, which opens
+   under the LINE rather than under its own control. */
+.local-dimensions-line {
+    position: relative;
     display: flex;
-    align-items: center;
     flex-wrap: wrap;
-    gap: 0.6rem;
-    min-width: 0;
-}
-
-/* The layout toggle ends line 1, kept off the fold so it is reachable at every width. */
-.local-dimensions-toolbar .local-dimensions-view-toggle {
-    margin-left: auto;
-}
-
-/* Full basis forces the search row onto its own line under the pills. */
-.local-dimensions-toolbar-row {
-    display: flex;
     align-items: center;
-    gap: 0.6rem;
-    flex-basis: 100%;
+    gap: 0.5rem;
+}
+
+/* The scope: a radio group drawn as a platter, a grey track holding counted cells, the chosen one
+   raised in the page's surface. */
+.local-dimensions-line-scope {
+    flex: 0 1 auto;
     min-width: 0;
 }
 
-.local-dimensions-toolbar-row .local-dimensions-search-wrapper {
-    flex: 1 1 auto;
+.local-dimensions-line-cells {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--local-dimensions-surface-inset);
+}
+
+.local-dimensions-line-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 34px;
+    padding: 0.25rem 0.85rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.local-dimensions-line-cell:hover {
+    background: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-line-cell[aria-checked='true'] {
+    border-color: var(--local-dimensions-line);
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    font-weight: 600;
+    box-shadow: 0 1px 3px var(--local-dimensions-shadow);
+}
+
+/* Inset: on the two-line step the scope scrolls sideways, and a scroll container clips an outward ring. */
+.local-dimensions-line-cell:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
+.local-dimensions-line-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.local-dimensions-line-cell[aria-checked='true'] .local-dimensions-line-count {
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
+}
+
+/* The search is a pill, its magnifier at the start and its eraser at the end. The field keeps the
+   eraser's room whether or not it shows. */
+.local-dimensions-line-search {
+    position: relative;
+    flex: 1 1 14rem;
     min-width: 0;
-    max-width: none;
 }
 
-/* Sort and filter sit inline in the search row. */
-.local-dimensions-toolbar-more {
-    display: contents;
+.local-dimensions-line-searchicon {
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.8125rem;
+    transform: translateY(-50%);
+    pointer-events: none;
 }
 
-/* No favourites group: the search row stops claiming its own line and everything folds onto
-   one, ordered completion tabs, search (growing), sort, filter, layout toggle. Desktop only -
-   on a narrow screen the fold layout below governs regardless of the favourites state. */
-@media (width >= 576px) {
-    .local-dimensions-toolbar:not(.local-dimensions-has-fav) .local-dimensions-toolbar-filters {
-        order: 1;
-    }
-
-    .local-dimensions-toolbar:not(.local-dimensions-has-fav) .local-dimensions-toolbar-row {
-        order: 2;
-        flex: 1 1 320px;
-    }
-
-    .local-dimensions-toolbar:not(.local-dimensions-has-fav) .local-dimensions-view-toggle {
-        order: 3;
-        margin-left: 0;
-    }
+.local-dimensions-line-search .local-dimensions-search-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 2.6rem 0 2.3rem;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 999px;
+    background: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink);
+    font-size: 0.875rem;
+    appearance: none;
+    transition: border-color 150ms ease, background-color 150ms ease;
 }
 
-/* The adjustments button and the fold's line breaks exist only where the bar folds. */
-.local-dimensions-toolbar-adjust,
-.local-dimensions-toolbar-break,
-.local-dimensions-toolbar-favbreak,
-.local-dimensions-toolbar-searchbreak {
+.local-dimensions-line-search .local-dimensions-search-input::placeholder {
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-line-search .local-dimensions-search-input:focus {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+    border-color: var(--local-dimensions-accent);
+    background: var(--local-dimensions-surface);
+}
+
+/* The eraser is the field's one way to empty itself: the browser's own cross goes, because the
+   contract's eraser is never a cross. */
+.local-dimensions-line-search .local-dimensions-search-input::-webkit-search-cancel-button {
     display: none;
 }
 
+.local-dimensions-line-eraser {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--local-dimensions-ink-muted);
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.local-dimensions-line-eraser:hover {
+    background: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-line-eraser:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+/* The line's icon buttons - the search's icon and its close button, the star, Organise - are 40px
+   discs, the same face as the Filters control beside them. */
+.local-dimensions-line-iconbtn {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 999px;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.local-dimensions-line-iconbtn:hover {
+    background: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-line-iconbtn:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+.local-dimensions-line-iconbtn[aria-expanded='true'] {
+    border-color: var(--local-dimensions-accent);
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
+}
+
+/* The star pressed: the filled glyph carries the state, the favourite colour repeats it. */
+.local-dimensions-line-star[aria-pressed='true'] {
+    border-color: var(--local-dimensions-favourite);
+    color: var(--local-dimensions-favourite);
+}
+
+/* Filters: the sliders glyph, the word and the count badge. Its wrapper is no positioned box, so
+   the panel opens under the line. */
+.local-dimensions-line-filters,
+.local-dimensions-line-organise {
+    flex: 0 0 auto;
+}
+
+.local-dimensions-line-filterstoggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 40px;
+    padding: 0 1rem;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 999px;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.local-dimensions-line-filterstoggle:hover {
+    background: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-line-filterstoggle:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+.local-dimensions-line-filterstoggle[aria-expanded='true'] {
+    border-color: var(--local-dimensions-accent);
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
+}
+
+.local-dimensions-line-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The panel and the menu are popovers under the line, at its end; the module writes their top from
+   the line's measured bottom. The panel grows with its chips up to the line's width. */
+.local-dimensions-filter-panel,
+.local-dimensions-line-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 20;
+    border: 1px solid var(--local-dimensions-line);
+    background: var(--local-dimensions-surface);
+    box-shadow: 0 8px 24px var(--local-dimensions-shadow);
+}
+
+.local-dimensions-filter-panel {
+    width: max-content;
+    max-width: 100%;
+    padding: 1rem 1.25rem;
+    border-radius: 0.75rem;
+}
+
+.local-dimensions-filter-panel .local-dimensions-chip-filters {
+    padding: 0;
+    margin-bottom: 0;
+}
+
+/* The panel's foot: "Show N", which closes it on the list. */
+.local-dimensions-line-panelfoot {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.75rem;
+}
+
+.local-dimensions-line-show {
+    min-height: 36px;
+    padding: 0 1rem;
+    border: 1px solid var(--local-dimensions-brand-fill);
+    border-radius: 999px;
+    background: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.local-dimensions-line-show:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+.local-dimensions-line-menu {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    padding: 0.35rem;
+    border-radius: 0.5rem;
+}
+
+/* "Show as": the view toggle's place in the Organise menu, at the two-line step only. */
+.local-dimensions-line .local-dimensions-line-showas {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 0.35rem;
+    padding: 0.5rem 0.6rem 0.35rem;
+    border-top: 1px solid var(--local-dimensions-line);
+}
+
+.local-dimensions-line-showas > .local-dimensions-sort-heading {
+    flex: 1 1 100%;
+    padding: 0;
+}
+
+.local-dimensions-line-showasbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 6px 12px;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 999px;
+    background: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.local-dimensions-line-showasbtn[aria-pressed='true'] {
+    border-color: var(--local-dimensions-brand-fill);
+    background: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
+}
+
+.local-dimensions-line-showasbtn:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+/* The view toggle at the line's height. */
+.local-dimensions-line-view button {
+    width: 40px;
+    height: 38px;
+}
+
+/* What only the module draws: the search's icon and the close button of the search grown over the
+   line. Each step that wants one says so below. */
+.local-dimensions-line .local-dimensions-line-searchopen,
+.local-dimensions-line .local-dimensions-line-searchclose {
+    display: none;
+}
+
+/* ---- Folded by the module ---------------------------------------------------------------------
+   The module measures the line's OWN width and writes one step on it (local-dimensions-line--s1 to
+   s4): full; Filters without its word; the search as an icon (local-dimensions-line--folded); two
+   lines, the scope on the second and the view toggle in the Organise menu. Without the module no
+   step is ever written, so nothing below applies and the line wraps. */
+
+/* While measuring the line is one row that never wraps and no control shrinks but the search, so a
+   line that does not fit pushes a control past its edge, which is what the module reads. On the
+   two-line step the scope, which has a line of its own, is out of the measure. Nothing is in
+   transition: the morph's rules are gated on the class's absence. */
+.local-dimensions-line.local-dimensions-line--measuring {
+    flex-wrap: nowrap;
+}
+
+.local-dimensions-line--measuring > * {
+    flex-shrink: 0;
+}
+
+.local-dimensions-line--measuring > .local-dimensions-line-search {
+    flex-shrink: 1;
+}
+
+.local-dimensions-line--measuring .local-dimensions-line-cells {
+    flex-wrap: nowrap;
+}
+
+.local-dimensions-line--measuring.local-dimensions-line--s4 > .local-dimensions-line-scope {
+    display: none;
+}
+
+/* The one-line steps keep their one line: the module chose the step at which it fits. */
+.local-dimensions-line.local-dimensions-line--s1,
+.local-dimensions-line.local-dimensions-line--s2,
+.local-dimensions-line.local-dimensions-line--s3 {
+    flex-wrap: nowrap;
+}
+
+.local-dimensions-line--s1 .local-dimensions-line-cells,
+.local-dimensions-line--s2 .local-dimensions-line-cells,
+.local-dimensions-line--s3 .local-dimensions-line-cells {
+    flex-wrap: nowrap;
+}
+
+/* The field's floor where it shares the line with every control: under it, the next step. */
+.local-dimensions-line--s1 > .local-dimensions-line-search,
+.local-dimensions-line--s2 > .local-dimensions-line-search {
+    min-width: 13rem;
+}
+
+/* From the second step Filters keeps its icon and its badge, and its word leaves the picture but
+   never the document: it is the button's accessible name. The badge sits on the control's corner. */
+.local-dimensions-line--s2 .local-dimensions-line-label,
+.local-dimensions-line--s3 .local-dimensions-line-label,
+.local-dimensions-line--s4 .local-dimensions-line-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+.local-dimensions-line--s2 .local-dimensions-line-filterstoggle,
+.local-dimensions-line--s3 .local-dimensions-line-filterstoggle,
+.local-dimensions-line--s4 .local-dimensions-line-filterstoggle {
+    justify-content: center;
+    min-width: 40px;
+    padding: 0 11px;
+}
+
+.local-dimensions-line--s2 .local-dimensions-line-badge,
+.local-dimensions-line--s3 .local-dimensions-line-badge,
+.local-dimensions-line--s4 .local-dimensions-line-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+}
+
+/* The third step, and the fourth where the field does not fit beside the other controls: the field
+   gives way to its icon. */
+.local-dimensions-line--folded > .local-dimensions-line-search {
+    display: none;
+}
+
+.local-dimensions-line.local-dimensions-line--folded > .local-dimensions-line-searchopen {
+    display: inline-flex;
+}
+
+/* The fourth step: two lines. The first holds the search, the star, Filters and Organise; the view
+   toggle moves into the Organise menu, and the scope takes the second line, after every control in
+   the document as on the screen (the module moves it). It scrolls sideways there and never wraps. */
+.local-dimensions-line--s4 > .local-dimensions-line-search {
+    flex: 1 1 8rem;
+    min-width: 7rem;
+}
+
+.local-dimensions-line--s4 > .local-dimensions-line-view {
+    display: none;
+}
+
+.local-dimensions-line--s4 > .local-dimensions-line-scope {
+    flex: 0 0 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.local-dimensions-line--s4 .local-dimensions-line-cells {
+    flex-wrap: nowrap;
+    width: max-content;
+}
+
+.local-dimensions-line.local-dimensions-line--s4 .local-dimensions-line-showas {
+    display: flex;
+}
+
+/* At the two-line step the panel is a bottom sheet: fixed to the foot of the screen, the whole
+   width, its top corners rounded, at most 80% of the screen tall and scrolling inside itself. */
+.local-dimensions-line--s4 .local-dimensions-filter-panel {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-width: none;
+    max-height: 80vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-width: 1px 0 0;
+    border-radius: 1rem 1rem 0 0;
+}
+
+/* ---- The search grows over the line (the third and fourth steps) ------------------------------
+   Pressing the icon, or focusing the field where it shows, opens it (local-dimensions-line--searching):
+   the other controls (local-dimensions-line-slides, and the scope of the third step) slide out - their
+   cap, their size and their opacity - the field takes the line and the close button its last place;
+   the scope of the two-line step stays on its own line. A control slid out is hidden once it is out,
+   so it leaves the focus order. At the first two steps nothing moves: the suggestions open under the
+   field. */
+.local-dimensions-line.local-dimensions-line--searching {
+    column-gap: 0;
+}
+
+.local-dimensions-line--searching > .local-dimensions-line-search {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.local-dimensions-line.local-dimensions-line--searching > .local-dimensions-line-searchopen {
+    display: none;
+}
+
+.local-dimensions-line.local-dimensions-line--searching > .local-dimensions-line-searchclose {
+    display: inline-flex;
+    margin-inline-start: 0.5rem;
+}
+
+.local-dimensions-line--searching.local-dimensions-line--s3 > .local-dimensions-line-slides,
+.local-dimensions-line--searching.local-dimensions-line--s3 > .local-dimensions-line-scope,
+.local-dimensions-line--searching.local-dimensions-line--s4 > .local-dimensions-line-slides {
+    flex: 0 0 0;
+    min-width: 0;
+    max-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border-width: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* The slide, where motion is welcome: a cap to travel from at rest, 220ms for the size and 160ms for
+   the opacity, and the visibility dropped only once the slide is over (and given back at once).
+   While the module measures nothing is in transition: the last rule, which wins every tie. */
+@media (prefers-reduced-motion: no-preference) {
+    .local-dimensions-line.local-dimensions-line--s3,
+    .local-dimensions-line.local-dimensions-line--s4 {
+        transition: column-gap 220ms ease;
+    }
+
+    .local-dimensions-line--s3 > .local-dimensions-line-slides,
+    .local-dimensions-line--s3 > .local-dimensions-line-scope,
+    .local-dimensions-line--s4 > .local-dimensions-line-slides {
+        max-width: 40rem;
+        transition:
+            max-width 220ms ease,
+            flex-basis 220ms ease,
+            opacity 160ms ease,
+            background-color 150ms ease,
+            color 150ms ease;
+    }
+
+    .local-dimensions-line--searching.local-dimensions-line--s3 > .local-dimensions-line-slides,
+    .local-dimensions-line--searching.local-dimensions-line--s3 > .local-dimensions-line-scope,
+    .local-dimensions-line--searching.local-dimensions-line--s4 > .local-dimensions-line-slides {
+        transition:
+            max-width 220ms ease,
+            flex-basis 220ms ease,
+            opacity 160ms ease,
+            visibility 0s linear 220ms;
+    }
+
+    .local-dimensions-line.local-dimensions-line.local-dimensions-line--measuring,
+    .local-dimensions-line.local-dimensions-line--measuring > .local-dimensions-line-slides,
+    .local-dimensions-line.local-dimensions-line--measuring > .local-dimensions-line-scope {
+        transition: none;
+    }
+}
+
+/* ---- The suggestions: one listbox under the line ----------------------------------------------
+   The module places it under the line's real bottom (its top, measured) and, at the first two
+   steps, under the field (local-dimensions-line-suggest--anchored, its left and width measured);
+   from the third it spans the line. The active option (the field's aria-activedescendant) wears the
+   focus ring inside its box, where the list's own scroll cannot clip it. */
+.local-dimensions-line-suggest {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    left: 0;
+    z-index: 21;
+    display: flex;
+    flex-direction: column;
+    max-height: 22rem;
+    padding: 6px;
+    overflow-y: auto;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 0.75rem;
+    background: var(--local-dimensions-surface);
+    box-shadow: 0 8px 24px var(--local-dimensions-shadow);
+}
+
+.local-dimensions-line-suggest.local-dimensions-line-suggest--anchored {
+    right: auto;
+}
+
+.local-dimensions-line-suggesthead {
+    padding: 6px 10px 4px;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.local-dimensions-line-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 6px 10px;
+    border-radius: 0.5rem;
+    color: var(--local-dimensions-ink);
+    font-size: 0.88rem;
+    cursor: pointer;
+}
+
+.local-dimensions-line-option:hover {
+    background: var(--local-dimensions-surface-alt);
+}
+
+.local-dimensions-line-option.local-dimensions-line-option--active {
+    background: var(--local-dimensions-surface-alt);
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
+.local-dimensions-line-optionglyph {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
+    font-size: 0.7rem;
+}
+
+.local-dimensions-line-optionlabel {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-line-optiongroup {
+    flex: none;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.78rem;
+}
+
+.local-dimensions-line-optioncount {
+    flex: none;
+    min-width: 1.5rem;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+}
+
+.local-dimensions-line-mark {
+    padding: 0;
+    background: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+    font-weight: 600;
+}
+
+/* ---- The row under the line -------------------------------------------------------------------
+   A chip per active filter and "Clear all" from two chips up. It scrolls sideways at full control
+   height, keeping 5px of room for the focus ring and giving it back as a negative margin. */
+.local-dimensions-line-chips {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin: -5px;
+    padding: 5px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.local-dimensions-line-chips > * {
+    flex: none;
+}
+
+.local-dimensions-line-chiplist {
+    display: flex;
+    gap: 6px;
+}
+
+.local-dimensions-line-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 0.75rem;
+    border: 1px solid var(--local-dimensions-brand-edge);
+    border-radius: 999px;
+    background: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.local-dimensions-line-chip:hover {
+    border-color: var(--local-dimensions-accent);
+}
+
+.local-dimensions-line-chip:focus-visible,
+.local-dimensions-line-clearall:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+.local-dimensions-line-clearall {
+    min-height: 32px;
+    padding: 0 0.25rem;
+    border: 0;
+    background: none;
+    color: var(--local-dimensions-ink);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* ---- The rows that scroll sideways: a fade on the side that hides something ---------------------
+   The scope on the two-line step and the row under the line; the module writes the class of each
+   side as the row scrolls. A mask reads the ALPHA of its image and nothing else, so its opaque stop
+   is the page's ink, which is opaque in both colour modes, and no colour of its own. */
+.local-dimensions-scroll--fade-left {
+    mask-image: linear-gradient(90deg, transparent, var(--local-dimensions-ink) 28px);
+}
+
+.local-dimensions-scroll--fade-right {
+    mask-image: linear-gradient(90deg, var(--local-dimensions-ink) calc(100% - 28px), transparent);
+}
+
+.local-dimensions-scroll--fade-left.local-dimensions-scroll--fade-right {
+    mask-image:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--local-dimensions-ink) 28px,
+            var(--local-dimensions-ink) calc(100% - 28px),
+            transparent
+        );
+}
+
+/* Text for a screen reader alone: the line's search label, the star's words, a chip's remove label. */
+.local-dimensions-line-sronly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* On a phone every control of the line is 44px. */
 @media (width <= 575.98px) {
-    /* Flatten the two row boxes so every control is a direct child of the toolbar's flex
-       context; order then lays them out individually, which the desktop nesting cannot. Line
-       one is the fold trigger and the layout toggle. Search sits on its own line and grows to
-       fill it (the same logic as desktop). The folded controls reveal below on open: sort
-       joins the end of the search line, the favourites pills take a line, and the completion
-       pills sit beside the filter button - which opens its panel just underneath, so the two
-       belong together. */
-    .local-dimensions-toolbar-filters,
-    .local-dimensions-toolbar-row {
-        display: contents;
-    }
-
-    .local-dimensions-toolbar-adjust {
-        display: inline-flex;
-        order: -1;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        width: 36px;
-        height: 36px;
-        border: 1px solid var(--local-dimensions-line);
-        border-radius: 50%;
-        background: var(--local-dimensions-surface);
-        color: var(--local-dimensions-ink-muted);
-        cursor: pointer;
-        transition: background-color 150ms ease, color 150ms ease;
-    }
-
-    .local-dimensions-toolbar-adjust[aria-expanded='true'] {
-        border-color: var(--local-dimensions-accent);
-        background: var(--local-dimensions-brand-tint);
-        color: var(--local-dimensions-brand-ink);
-    }
-
-    .local-dimensions-toolbar-adjust:focus-visible {
-        outline: 2px solid var(--local-dimensions-focus-ring);
-        outline-offset: 2px;
-    }
-
-    /* Tighten the pills and the filter button so the completion pills and the filter share a
-       line on a common phone width rather than the filter dropping below. Below ~340px the
-       completion group alone leaves no room and the filter wraps, which flex-wrap handles. */
     .local-dimensions-toolbar {
-        gap: 0.45rem;
+        padding: 0.5rem;
+        border-radius: 1rem;
     }
 
-    .local-dimensions-toolbar .local-dimensions-fav-group .local-dimensions-filter-tab,
-    .local-dimensions-toolbar .local-dimensions-completion-group .local-dimensions-filter-tab {
-        padding: 0.3rem 0.65rem;
-        font-size: 0.8rem;
+    .local-dimensions-line-search .local-dimensions-search-input,
+    .local-dimensions-line-filterstoggle {
+        height: 44px;
     }
 
-    .local-dimensions-toolbar .local-dimensions-filter-toggle {
-        padding: 0.35rem 0.7rem;
-        font-size: 0.8rem;
-        gap: 0.3rem;
+    .local-dimensions-line-iconbtn {
+        width: 44px;
+        height: 44px;
     }
 
-    .local-dimensions-toolbar .local-dimensions-view-toggle {
-        order: 1;
-        margin-left: auto;
+    .local-dimensions-line-cell {
+        min-height: 38px;
     }
 
-    /* Always-on line break after the chrome row, so search and sort drop to their own line
-       below the adjustments button and the layout toggle. */
-    .local-dimensions-toolbar-searchbreak {
-        display: block;
-        order: 2;
-        flex-basis: 100%;
-        height: 0;
+    .local-dimensions-line-view button {
+        height: 42px;
     }
 
-    /* Search and sort are result controls, kept on line two at every state - sort pinned to
-       the right of the search that grows to fill the rest. A zero basis (not auto) is what
-       keeps them together: at content width the search already fills the line and pushes sort
-       to wrap, so it starts from nothing and grows into the space sort leaves. */
-    .local-dimensions-toolbar-row .local-dimensions-search-wrapper {
-        order: 3;
-        flex: 1 1 0;
-    }
-
-    .local-dimensions-sort {
-        order: 4;
-        flex: none;
-    }
-
-    /* Each pill group keeps its content width and centres on its own line, rather than
-       stretching to a full-width slab that reads as a button. A break before the favourites
-       pills forces them onto their own line at any width - without it they ride up beside the
-       search whenever they happen to fit - and a second break drops the completion pills below
-       them. margin-inline centres each control whether it sits alone on a line or shares one,
-       so completion and filter read as a centred pair when they fit and each stays centred
-       when a narrow screen wraps them apart. */
-    .local-dimensions-toolbar-favbreak {
-        order: 5;
-        flex-basis: 100%;
-        height: 0;
-    }
-
-    .local-dimensions-fav-group {
-        order: 6;
-        margin-inline: auto;
-    }
-
-    .local-dimensions-toolbar-break {
-        order: 7;
-        flex-basis: 100%;
-        height: 0;
-    }
-
-    .local-dimensions-completion-group {
-        order: 8;
-        margin-inline: auto;
-    }
-
-    .local-dimensions-filter-toggle {
-        order: 9;
-        margin-inline: auto;
-    }
-
-    /* Folded until the adjustments button reveals them. Scoped under the toolbar so the fold
-       outranks the later generic .local-dimensions-filter-tabs display rule, which would
-       otherwise win on source order and leave the pills always visible. */
-    .local-dimensions-toolbar .local-dimensions-fav-group,
-    .local-dimensions-toolbar .local-dimensions-completion-group,
-    .local-dimensions-toolbar .local-dimensions-filter-toggle,
-    .local-dimensions-toolbar .local-dimensions-toolbar-break {
-        display: none;
-    }
-
-    /* :not([hidden]) so an empty favourites group - no stars yet - stays folded even open. */
-    .local-dimensions-toolbar-open .local-dimensions-fav-group:not([hidden]),
-    .local-dimensions-toolbar-open .local-dimensions-completion-group {
-        display: inline-flex;
-    }
-
-    .local-dimensions-toolbar-open .local-dimensions-filter-toggle {
-        display: inline-flex;
-    }
-
-    /* The pill breaks earn a line only when the favourites group is actually showing; with no
-       stars the completion pills stand alone and need no separators above them. */
-    .local-dimensions-toolbar-open:has(.local-dimensions-fav-group:not([hidden])) .local-dimensions-toolbar-favbreak,
-    .local-dimensions-toolbar-open:has(.local-dimensions-fav-group:not([hidden])) .local-dimensions-toolbar-break {
-        display: block;
+    .local-dimensions-line-chip,
+    .local-dimensions-line-clearall,
+    .local-dimensions-line-show {
+        min-height: 44px;
     }
 }
 
@@ -2513,27 +3109,6 @@ body {
     font-weight: 600;
 }
 
-/* Favourites filter: the same pill, colour and count badge the companion block uses for
-   its own favourites control, so the two plugins read as one product. It stays a toggle
-   rather than a radio pair, because the completion segment beside it is a separate axis -
-   a learner can ask for their favourites that are also not yet done. */
-.local-dimensions-fav-group {
-    flex-shrink: 0;
-}
-
-/* The selected favourites pill is filled, like the block's. The completion pills keep
-   their own sliding-indicator treatment, so only this group is restyled. */
-.local-dimensions-fav-group .local-dimensions-filter-tab.active {
-    background: var(--local-dimensions-brand-fill);
-    color: var(--local-dimensions-on-brand-fill);
-    opacity: 1;
-}
-
-.local-dimensions-fav-group .local-dimensions-filter-tab.active .local-dimensions-filter-count {
-    background: var(--local-dimensions-brand-tint);
-    color: var(--local-dimensions-brand-ink);
-}
-
 .local-dimensions-star:focus-visible {
     outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
@@ -2645,49 +3220,11 @@ body {
     font-size: 0.8rem;
 }
 
-/* Sort menu: a plain block toggled by [hidden], anchored to its icon button. */
-.local-dimensions-sort {
-    position: relative;
-    flex-shrink: 0;
-}
-
-.local-dimensions-sort-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid var(--local-dimensions-line);
-    border-radius: 999px;
-    background: var(--local-dimensions-surface);
-    color: var(--local-dimensions-ink-muted);
-    cursor: pointer;
-    transition: background-color 150ms ease;
-}
-
-.local-dimensions-sort-toggle:hover,
-.local-dimensions-sort-toggle[aria-expanded='true'] {
-    background: var(--local-dimensions-surface-inset);
-}
-
-.local-dimensions-sort-toggle:focus-visible {
-    outline: 2px solid var(--local-dimensions-focus-ring);
-    outline-offset: 2px;
-}
-
+/* The sort menu inside the Organise popover (local-dimensions-line-menu), on the popover's surface. */
 .local-dimensions-sort-menu {
-    position: absolute;
-    top: calc(100% + 0.35rem);
-    right: 0;
-    z-index: 20;
     display: flex;
     flex-direction: column;
-    min-width: 200px;
-    padding: 0.35rem;
-    border: 1px solid var(--local-dimensions-line);
-    border-radius: 0.5rem;
     background: var(--local-dimensions-surface);
-    box-shadow: 0 4px 14px var(--local-dimensions-shadow);
 }
 
 .local-dimensions-sort-heading {
@@ -2788,153 +3325,16 @@ body {
     font-weight: 600;
 }
 
-/* Filter button + its panel. The panel must stay a plain block: Bootstrap's
-   display utilities are !important and would defeat the hidden attribute. */
-.local-dimensions-filter-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--local-dimensions-line);
-    border-radius: 999px;
-    background: var(--local-dimensions-surface);
-    color: var(--local-dimensions-ink-muted);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 150ms ease;
-}
-
-.local-dimensions-filter-toggle:hover {
-    background: var(--local-dimensions-surface-alt);
-}
-
-.local-dimensions-filter-toggle[aria-expanded='true'] {
-    border-color: var(--local-dimensions-accent);
-    color: var(--local-dimensions-accent);
-}
-
-.local-dimensions-filter-toggle-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    background: var(--local-dimensions-brand-tint);
-    color: var(--local-dimensions-brand-ink);
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.local-dimensions-filter-panel {
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid var(--local-dimensions-line);
-    border-radius: 0.5rem;
-    background: var(--local-dimensions-surface);
-}
-
-.local-dimensions-filter-panel .local-dimensions-chip-filters {
-    padding: 0;
-    margin-bottom: 0;
-}
-
 .local-dimensions-filter-tab.active .local-dimensions-filter-count {
     background: var(--local-dimensions-brand-tint);
     color: var(--local-dimensions-brand-ink);
 }
 
-/* Search input */
-.local-dimensions-search-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    max-width: 240px;
-    flex-shrink: 1;
-}
-
-.local-dimensions-search-icon {
-    position: absolute;
-    left: 0.75rem;
-    color: var(--local-dimensions-ink-muted);
-    font-size: 0.8125rem;
-    pointer-events: none;
-    z-index: 1;
-}
-
-.local-dimensions-search-input {
-    width: 100%;
-    padding: 0.5rem 2rem 0.5rem 2.125rem;
-    border: 1px solid var(--local-dimensions-line);
-    border-radius: 999px;
-    background: var(--local-dimensions-surface-alt);
-    font-size: 0.8125rem;
-    color: var(--local-dimensions-ink);
-    transition: border-color 0.2s ease, background 0.2s ease;
-    line-height: 1.3;
-}
-
-.local-dimensions-search-input::placeholder {
-    color: var(--local-dimensions-ink-muted);
-}
-
-.local-dimensions-search-input:focus {
-    outline: 2px solid var(--local-dimensions-focus-ring);
-    outline-offset: 2px;
-    border-color: var(--local-dimensions-accent);
-    background: var(--local-dimensions-surface);
-}
-
-.local-dimensions-search-clear {
-    position: absolute;
-    right: 0.375rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--local-dimensions-ink-muted);
-    cursor: pointer;
-    padding: 0;
-    transition: background 0.15s ease;
-}
-
-.local-dimensions-search-clear:hover {
-    background: var(--local-dimensions-surface-inset);
-}
-
-.local-dimensions-search-clear .fa {
-    font-size: 0.6875rem;
-}
-
 /* Responsive — stack on mobile */
 @media (width <= 575.98px) {
-    /* Not the toolbar: it owns its own stacking, and centring its children would turn the
-       expanded narrow layout into a column of floating controls. */
-    .local-dimensions-filter-bar:not(.local-dimensions-toolbar) {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .local-dimensions-filter-bar:not(.local-dimensions-toolbar) .local-dimensions-filter-tabs {
-        justify-content: center;
-    }
-
     .local-dimensions-filter-tab {
         padding: 0.5rem 0.75rem;
         font-size: 0.8rem;
-    }
-
-    .local-dimensions-search-wrapper {
-        max-width: 300px;
-        width: 100%;
     }
 }
 
