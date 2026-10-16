@@ -14,10 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * View-state store for the learner views: which sort, which completion filter and which
- * layout the learner last chose. Seeded from the server-rendered markup so the first paint
- * is already correct, then persisted (debounced) to a Moodle user preference through core's
- * own repository - the plugin owns no tables and needs no web service of its own for this.
+ * View-state store for the learner views: which sort, which completion filter (the plan's and the
+ * tracker's, each its own key) and which layout the learner last chose. Seeded from the
+ * server-rendered markup so the first paint is already correct, then persisted (debounced) to a
+ * Moodle user preference through core's own repository - the plugin owns no tables and needs no
+ * web service of its own for this.
  *
  * A failed write is logged, not raised: losing a chrome preference must not interrupt the
  * learner with a modal.
@@ -42,8 +43,8 @@ const SAVE_DELAY = 400;
  * write would fail and every later star would be lost with it.
  */
 const MAX_FAV_LENGTH = 1333;
-/** @type {Object} Default view state, mirrored server-side. */
-const DEFAULTS = {sort: 'planorder', filter: 'incomplete', view: 'list'};
+/** @type {Object} Default view state, mirrored server-side (local_dimensions\local\learner_view). */
+const DEFAULTS = {sort: 'planorder', filter: 'incomplete', view: 'list', trackerfilter: 'incomplete'};
 
 /** @type {Object} Live view state (authoritative for the session). */
 let state = {...DEFAULTS};

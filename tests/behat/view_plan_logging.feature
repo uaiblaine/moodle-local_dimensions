@@ -29,7 +29,7 @@ Feature: Log competency views from the learner pages
     # Collapse, expand again, then reopen the same competency from the grid: still one view logged.
     When I click on "Alpha competency" "button"
     And I click on "Alpha competency" "button"
-    And I click on "Grid view" "button"
+    And I click on "Cards" "button" in the "[data-region='local-dimensions-line-view']" "css_element"
     And I click on "Alpha competency" "button"
     # The Progress tab exists only once the detail has rendered, which is when the view is logged.
     Then I should see "Progress" in the "Alpha competency" "dialogue"
