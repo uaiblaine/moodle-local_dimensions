@@ -40,7 +40,7 @@ namespace local_dimensions\local;
  */
 class csv_formula {
     /** @var string[] The characters a spreadsheet reads as the start of a formula. */
-    private const TRIGGERS = ['=', '+', '-', '@'];
+    private const array TRIGGERS = ['=', '+', '-', '@'];
 
     /**
      * Neutralise a cell that a spreadsheet would otherwise evaluate as a formula.

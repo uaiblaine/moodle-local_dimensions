@@ -92,6 +92,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
      *
      * @return \context
      */
+    #[\Override]
     protected function get_context_for_dynamic_submission(): \context {
         $framework = $this->get_framework();
         if ($framework) {
@@ -113,6 +114,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
      *
      * @return void
      */
+    #[\Override]
     protected function check_access_for_dynamic_submission(): void {
         require_capability('moodle/competency:competencymanage', $this->get_context_for_dynamic_submission());
     }
@@ -122,6 +124,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
      *
      * @return \moodle_url
      */
+    #[\Override]
     protected function get_page_url_for_dynamic_submission(): \moodle_url {
         return \local_dimensions\helper::hub_page_url($this->get_context_for_dynamic_submission());
     }
@@ -131,6 +134,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
      *
      * @return void
      */
+    #[\Override]
     public function definition() {
         $mform = $this->_form;
         $framework = $this->get_framework();
@@ -206,6 +210,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
      *
      * @return void
      */
+    #[\Override]
     public function set_data_for_dynamic_submission(): void {
         $framework = $this->get_framework();
         if (!$framework) {
@@ -239,6 +244,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
      *
      * @return array{frameworkid: int}
      */
+    #[\Override]
     public function process_dynamic_submission() {
         $data = $this->get_data();
         $id = (int) $data->id;
@@ -275,6 +281,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
      * @param array $files Submitted files.
      * @return array
      */
+    #[\Override]
     public function validation($data, $files) {
         global $DB;
 

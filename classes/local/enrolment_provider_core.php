@@ -52,6 +52,7 @@ class enrolment_provider_core extends enrolment_provider {
      *
      * @return string
      */
+    #[\Override]
     public function name(): string {
         return 'core';
     }
@@ -63,6 +64,7 @@ class enrolment_provider_core extends enrolment_provider {
      * @param int $viewerid The viewer, who must be the current user: the route is asked of $USER.
      * @return array The state facts.
      */
+    #[\Override]
     public function locked_state(\stdClass $course, int $viewerid): array {
         $courseid = (int) $course->id;
         $courseurl = self::course_url($courseid);
@@ -89,6 +91,7 @@ class enrolment_provider_core extends enrolment_provider {
      * @param int $viewerid The viewer, who must be the current user.
      * @return array Course id => state facts.
      */
+    #[\Override]
     public function locked_states(array $courses, int $viewerid): array {
         $states = [];
         foreach ($courses as $courseid => $course) {

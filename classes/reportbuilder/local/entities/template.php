@@ -43,6 +43,7 @@ class template extends base {
      *
      * @return string[]
      */
+    #[\Override]
     protected function get_default_tables(): array {
         return ['competency_template'];
     }
@@ -50,6 +51,7 @@ class template extends base {
     /**
      * The default title for this entity.
      */
+    #[\Override]
     protected function get_default_entity_title(): lang_string {
         return new lang_string('entityname_template', 'local_dimensions');
     }
@@ -58,6 +60,7 @@ class template extends base {
      * Initialise the entity: register native columns + filters, then merge
      * customfield-derived columns/filters for the `lp` area.
      */
+    #[\Override]
     public function initialise(): base {
         $tablealias = $this->get_table_alias('competency_template');
 

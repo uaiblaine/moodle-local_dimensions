@@ -41,6 +41,7 @@ class template_imported extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['objecttable'] = \core_competency\template::TABLE;
         $this->data['crud'] = 'u';
@@ -52,6 +53,7 @@ class template_imported extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventtemplateimported', 'local_dimensions');
     }
@@ -61,6 +63,7 @@ class template_imported extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         return "The user with id '$this->userid' applied CSV import row '{$this->other['itemkey']}' to the "
             . "learning plan template with id '$this->objectid' ('{$this->other['shortname']}'), outcome "
@@ -72,6 +75,7 @@ class template_imported extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_objectid_mapping() {
         return base::NOT_MAPPED;
     }

@@ -55,46 +55,46 @@ namespace local_dimensions\local;
  */
 abstract class enrolment_provider {
     /** @var string The viewer is actively enrolled: the only state of a card they can open. */
-    public const STATE_ENROLLED = 'enrolled';
+    public const string STATE_ENROLLED = 'enrolled';
 
     /** @var string An enrolment that starts on a later date. */
-    public const STATE_SCHEDULED = 'scheduled';
+    public const string STATE_SCHEDULED = 'scheduled';
 
     /** @var string An enrol_apply application awaiting a decision. */
-    public const STATE_PENDING = 'pending';
+    public const string STATE_PENDING = 'pending';
 
     /** @var string An enrol_apply application on the waiting list (provider only). */
-    public const STATE_WAITLISTED = 'waitlisted';
+    public const string STATE_WAITLISTED = 'waitlisted';
 
     /** @var string A suspended enrolment that has not ended (provider only). */
-    public const STATE_SUSPENDED = 'suspended';
+    public const string STATE_SUSPENDED = 'suspended';
 
     /** @var string An enrolment whose end date has passed (provider only). */
-    public const STATE_EXPIRED = 'expired';
+    public const string STATE_EXPIRED = 'expired';
 
     /** @var string No enrolment, and a route that would take the viewer now. */
-    public const STATE_OPEN = 'open';
+    public const string STATE_OPEN = 'open';
 
     /** @var string No enrolment, and guest access with no key (provider only). */
-    public const STATE_FREE = 'free';
+    public const string STATE_FREE = 'free';
 
     /** @var string No enrolment, and guest access behind a key (provider only). */
-    public const STATE_KEY = 'key';
+    public const string STATE_KEY = 'key';
 
     /** @var string No enrolment until the viewer completes another course (provider only). */
-    public const STATE_CONDITIONAL = 'conditional';
+    public const string STATE_CONDITIONAL = 'conditional';
 
     /** @var string Nothing ties the viewer to the course and nothing is on offer. */
-    public const STATE_NONE = 'none';
+    public const string STATE_NONE = 'none';
 
     /** @var string The setting that selects local_unlistedcourses; only a stored '1' switches it on. */
-    public const SETTING = 'useunlistedcourses';
+    public const string SETTING = 'useunlistedcourses';
 
     /** @var string The class of local_unlistedcourses' public enrolment API, as class_exists() is asked. */
-    public const UNLISTED_API = 'local_unlistedcourses\access';
+    public const string UNLISTED_API = 'local_unlistedcourses\access';
 
     /** @var array The methods of that API the unlisted implementation calls; a build without any of them is not used. */
-    public const UNLISTED_METHODS = ['get_enrolment_state', 'get_next_action', 'get_next_actions'];
+    public const array UNLISTED_METHODS = ['get_enrolment_state', 'get_next_action', 'get_next_actions'];
 
     /**
      * @var string The API class unlisted_available() probes; UNLISTED_API in production.

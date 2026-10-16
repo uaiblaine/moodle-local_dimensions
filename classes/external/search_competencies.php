@@ -42,10 +42,10 @@ use local_dimensions\helper;
  */
 class search_competencies extends external_api {
     /** @var int Minimum query length before a search runs. */
-    const MIN_QUERY_LENGTH = 2;
+    const int MIN_QUERY_LENGTH = 2;
 
     /** @var int Hard cap on the page size. */
-    const MAX_LIMIT = 100;
+    const int MAX_LIMIT = 100;
 
     /**
      * Define the parameters for the search_competencies external function.

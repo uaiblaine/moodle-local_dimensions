@@ -41,6 +41,7 @@ class template_cohort_added extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['objecttable'] = \core_competency\template_cohort::TABLE;
         $this->data['crud'] = 'c';
@@ -52,6 +53,7 @@ class template_cohort_added extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventtemplatecohortadded', 'local_dimensions');
     }
@@ -61,6 +63,7 @@ class template_cohort_added extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         return "The user with id '$this->userid' attached the cohort with id '{$this->other['cohortid']}' to the "
             . "learning plan template with id '{$this->other['templateid']}'.";
@@ -71,6 +74,7 @@ class template_cohort_added extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_objectid_mapping() {
         return base::NOT_MAPPED;
     }

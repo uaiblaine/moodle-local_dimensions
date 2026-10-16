@@ -43,7 +43,7 @@ use moodle_url;
  */
 class get_competency_links extends external_api {
     /** @var int Hard cap on the page size. */
-    const MAX_LIMIT = 100;
+    const int MAX_LIMIT = 100;
 
     /**
      * Define the input parameters.

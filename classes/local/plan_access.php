@@ -51,13 +51,13 @@ use local_dimensions\helper;
  */
 final class plan_access {
     /** @var string The competency is one of the plan's own. */
-    public const SCOPE_PLAN = 'plan';
+    public const string SCOPE_PLAN = 'plan';
 
     /** @var string A competency related to one of the plan's own, linked from the accordion's related section. */
-    public const SCOPE_RELATED = 'related';
+    public const string SCOPE_RELATED = 'related';
 
     /** @var string A child counted by the rule of one of the plan's own, linked from the accordion's Rules tab. */
-    public const SCOPE_RULECHILD = 'rulechild';
+    public const string SCOPE_RULECHILD = 'rulechild';
 
     /**
      * Read a plan the current user may view.

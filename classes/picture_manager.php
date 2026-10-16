@@ -41,31 +41,31 @@ use stdClass;
  */
 class picture_manager {
     /** @var string Component name for file storage. */
-    const COMPONENT = 'local_dimensions';
+    const string COMPONENT = 'local_dimensions';
 
     /** @var string File area for competency background images. */
-    const FILEAREA_COMPETENCY = 'competency_bgimage';
+    const string FILEAREA_COMPETENCY = 'competency_bgimage';
 
     /** @var string File area for template background images. */
-    const FILEAREA_TEMPLATE = 'template_bgimage';
+    const string FILEAREA_TEMPLATE = 'template_bgimage';
 
     /** @var string File area for competency card images. */
-    const FILEAREA_COMPETENCY_CARD = 'competency_cardimage';
+    const string FILEAREA_COMPETENCY_CARD = 'competency_cardimage';
 
     /** @var string File area for template card images. */
-    const FILEAREA_TEMPLATE_CARD = 'template_cardimage';
+    const string FILEAREA_TEMPLATE_CARD = 'template_cardimage';
 
     /** @var string Form element name for competency background images. */
-    const FORM_ELEMENT_COMPETENCY = 'local_dimensions_bgimage_competency';
+    const string FORM_ELEMENT_COMPETENCY = 'local_dimensions_bgimage_competency';
 
     /** @var string Form element name for template background images. */
-    const FORM_ELEMENT_TEMPLATE = 'local_dimensions_bgimage_template';
+    const string FORM_ELEMENT_TEMPLATE = 'local_dimensions_bgimage_template';
 
     /** @var string Form element name for competency card images. */
-    const FORM_ELEMENT_COMPETENCY_CARD = 'local_dimensions_cardimage_competency';
+    const string FORM_ELEMENT_COMPETENCY_CARD = 'local_dimensions_cardimage_competency';
 
     /** @var string Form element name for template card images. */
-    const FORM_ELEMENT_TEMPLATE_CARD = 'local_dimensions_cardimage_template';
+    const string FORM_ELEMENT_TEMPLATE_CARD = 'local_dimensions_cardimage_template';
 
     /**
      * Check if the built-in image handler is active.

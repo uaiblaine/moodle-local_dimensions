@@ -60,7 +60,7 @@ class enrolment_provider_unlisted extends enrolment_provider {
      *            state. enrolled and none have no entry: an enrolled viewer is never asked about (the
      *            lock is core's), and none hands the card over to the next action.
      */
-    public const RELATIONSHIPS = [
+    public const array RELATIONSHIPS = [
         'scheduled' => self::STATE_SCHEDULED,
         'pending' => self::STATE_PENDING,
         'waitlisted' => self::STATE_WAITLISTED,
@@ -72,14 +72,14 @@ class enrolment_provider_unlisted extends enrolment_provider {
      * @var array The relationship values the plugin answers that carry no state here
      *            (access::RELATIONSHIP_ENROLLED and access::RELATIONSHIP_NONE).
      */
-    public const NO_RELATIONSHIP = ['enrolled', 'none'];
+    public const array NO_RELATIONSHIP = ['enrolled', 'none'];
 
     /**
      * @var array local_unlistedcourses' next-action values (access::NEXT_*) => this plugin's state.
      *            guest is resolved by the kind of guest access; blocked reads as none, as it does on
      *            the theme's card.
      */
-    public const NEXT_ACTIONS = [
+    public const array NEXT_ACTIONS = [
         'open' => self::STATE_OPEN,
         'guest' => self::STATE_FREE,
         'conditional' => self::STATE_CONDITIONAL,
@@ -88,16 +88,17 @@ class enrolment_provider_unlisted extends enrolment_provider {
     ];
 
     /** @var string The next action's guest value for access behind a key (access::GUEST_KEY). */
-    public const GUEST_KEY = 'key';
+    public const string GUEST_KEY = 'key';
 
     /** @var string The next action of a viewer every method refuses now (access::NEXT_BLOCKED). */
-    public const BLOCKED = 'blocked';
+    public const string BLOCKED = 'blocked';
 
     /**
      * Which implementation this is.
      *
      * @return string
      */
+    #[\Override]
     public function name(): string {
         return 'unlisted';
     }
@@ -120,6 +121,7 @@ class enrolment_provider_unlisted extends enrolment_provider {
      * @param int $viewerid The viewer, who must be the current user: the plugin answers for $USER.
      * @return array The state facts.
      */
+    #[\Override]
     public function locked_state(\stdClass $course, int $viewerid): array {
         $api = $this->api();
         $courseid = (int) $course->id;
@@ -138,6 +140,7 @@ class enrolment_provider_unlisted extends enrolment_provider {
      * @param int $viewerid The viewer, who must be the current user.
      * @return array Course id => state facts.
      */
+    #[\Override]
     public function locked_states(array $courses, int $viewerid): array {
         if (!$courses) {
             return [];

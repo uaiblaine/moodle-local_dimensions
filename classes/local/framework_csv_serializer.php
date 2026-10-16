@@ -44,7 +44,7 @@ use local_dimensions\helper;
  */
 class framework_csv_serializer {
     /** @var string[] The 14 core columns, in the fixed order the core tool uses. */
-    const CORE_HEADERS = [
+    const array CORE_HEADERS = [
         'parentidnumber', 'idnumber', 'shortname', 'description', 'descriptionformat',
         'scalevalues', 'scaleconfiguration', 'ruletype', 'ruleoutcome', 'ruleconfig',
         'relatedidnumbers', 'exportid', 'isframework', 'taxonomies',
@@ -57,7 +57,7 @@ class framework_csv_serializer {
      *
      * @var string[]
      */
-    const CF_HEADERS = [
+    const array CF_HEADERS = [
         'cf_bgcolor', 'cf_textcolor', 'cf_tag1', 'cf_tag2', 'cf_type',
         'cf_enrollmentfilter', 'cf_singlecourseredirect', 'cf_lockedcardmode', 'cf_showlockeddate',
         'cf_customscss',

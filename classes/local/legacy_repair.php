@@ -43,7 +43,7 @@ class legacy_repair {
      *
      * @var array
      */
-    const RENAMED_SHORTNAMES = [
+    const array RENAMED_SHORTNAMES = [
         'customcard' => constants::CFIELD_CUSTOMCARD,
         'custombgimage' => constants::CFIELD_CUSTOMBGIMAGE,
         'custombgcolor' => constants::CFIELD_CUSTOMBGCOLOR,
@@ -58,14 +58,14 @@ class legacy_repair {
      *
      * @var string
      */
-    const APPLIED_SETTING = 'legacyrepairsapplied';
+    const string APPLIED_SETTING = 'legacyrepairsapplied';
 
     /**
      * Once-only repairs, in the order they run: id => method of this class.
      *
      * @var array
      */
-    const ONCE = [
+    const array ONCE = [
         'shortnames' => 'rename_legacy_shortnames',
         'enrollmentfilter' => 'sync_enrollmentfilter_options',
     ];
@@ -75,7 +75,7 @@ class legacy_repair {
      *
      * @var array
      */
-    const RETIRED_SETTINGS = [
+    const array RETIRED_SETTINGS = [
         'summaryenrollmentfilter',
         'viewcompetency_filter_fields_competency',
     ];
