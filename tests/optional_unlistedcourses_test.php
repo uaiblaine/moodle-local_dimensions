@@ -17,6 +17,14 @@
 namespace local_dimensions;
 
 use local_dimensions\local\enrolment_provider;
+use local_dimensions\local\testable_enrolment_provider;
+use local_dimensions\local\unlisted_access_stub;
+
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+require_once($CFG->dirroot . '/local/dimensions/tests/fixtures/testable_enrolment_provider.php');
+require_once($CFG->dirroot . '/local/dimensions/tests/fixtures/unlisted_access_stub.php');
 
 /**
  * local_unlistedcourses stays optional: no dependency, one guarded way in, a setting only where it applies.
@@ -90,28 +98,53 @@ final class optional_unlistedcourses_test extends \advanced_testcase {
     }
 
     /**
-     * The setting is offered only where the plugin is available.
+     * The setting is offered only where the plugin is.
      *
      * @return void
      */
     public function test_the_setting_is_offered_only_where_the_plugin_is(): void {
+        $this->resetAfterTest();
+
+        // Control: the real API class, whatever the site has.
+        $names = $this->settings_page_names();
+        $this->assertContains('local_dimensions/lockedcardmode', $names);
+        $this->assertSame(
+            enrolment_provider::unlisted_available(),
+            in_array('local_dimensions/' . enrolment_provider::SETTING, $names, true)
+        );
+
+        try {
+            // A site without the plugin, modelled on any site.
+            testable_enrolment_provider::probe_api('local_dimensions\\local\\no_such_unlisted_api');
+            $names = $this->settings_page_names();
+            $this->assertContains('local_dimensions/lockedcardmode', $names);
+            $this->assertNotContains('local_dimensions/' . enrolment_provider::SETTING, $names);
+
+            // A site with the API: the setting is there.
+            testable_enrolment_provider::probe_api(unlisted_access_stub::class);
+            $this->assertContains('local_dimensions/' . enrolment_provider::SETTING, $this->settings_page_names());
+        } finally {
+            testable_enrolment_provider::probe_api(enrolment_provider::UNLISTED_API);
+        }
+    }
+
+    /**
+     * The settings of the plugin's page, built afresh from settings.php.
+     *
+     * @return array Setting ids as plugin/name.
+     */
+    private function settings_page_names(): array {
         global $CFG;
 
-        $this->resetAfterTest();
         set_config('enabled', 1, 'core_competency');
         $this->setAdminUser();
         require_once($CFG->libdir . '/adminlib.php');
 
         $page = admin_get_root(true, true)->locate('local_dimensions_settings', true);
         $this->assertNotNull($page, 'The settings page was not found, so nothing would be checked.');
-        $names = array_map(static function ($setting) {
+        return array_map(static function ($setting) {
             return $setting->plugin . '/' . $setting->name;
         }, $page->settings ? array_values((array) $page->settings) : []);
-
-        // Control: a neighbouring setting of the same page is there.
-        $this->assertContains('local_dimensions/lockedcardmode', $names);
-        $expected = enrolment_provider::unlisted_available();
-        $this->assertSame($expected, in_array('local_dimensions/' . enrolment_provider::SETTING, $names, true));
     }
 
     /**
