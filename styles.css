@@ -32,10 +32,10 @@
       only shipped CSS must avoid them.
       ============================================ */
 :root {
-    --local-dimensions-motion-fast: 150ms;
-    --local-dimensions-motion-base: 250ms;
+    --local-dimensions-motion-fast: var(--dimensions-motion-fast, 150ms);
+    --local-dimensions-motion-base: var(--dimensions-motion-base, 250ms);
     --local-dimensions-motion-flash: 1500ms;
-    --local-dimensions-motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --local-dimensions-motion-ease: var(--dimensions-motion-ease, cubic-bezier(0.4, 0, 0.2, 1));
     --local-dimensions-loading-min-height: 12rem;
 }
 
@@ -95,45 +95,45 @@
    ============================================ */
 body {
     /* Tier 1 - surfaces, line, ink, accent. */
-    --local-dimensions-surface: var(--bs-body-bg, var(--white, #fff));
-    --local-dimensions-surface-alt: var(--bs-tertiary-bg, var(--light, #f8f9fa));
-    --local-dimensions-surface-inset: var(--bs-secondary-bg, #e9ecef);
-    --local-dimensions-line: var(--bs-border-color, #dee2e6);
-    --local-dimensions-ink: var(--bs-body-color, #1d2125);
-    --local-dimensions-ink-muted: var(--bs-secondary-color, #495057);
-    --local-dimensions-ink-faint: var(--bs-tertiary-color, #6a737b);
-    --local-dimensions-ink-strong: var(--bs-emphasis-color, var(--gray-dark, #343a40));
-    --local-dimensions-accent: var(--bs-link-color, var(--primary, #0f6cbf));
-    --local-dimensions-accent-hover: var(--bs-link-hover-color, #0c5699);
+    --local-dimensions-surface: var(--dimensions-surface, var(--bs-body-bg, var(--white, #fff)));
+    --local-dimensions-surface-alt: var(--dimensions-surface-alt, var(--bs-tertiary-bg, var(--light, #f8f9fa)));
+    --local-dimensions-surface-inset: var(--dimensions-surface-inset, var(--bs-secondary-bg, #e9ecef));
+    --local-dimensions-line: var(--dimensions-line, var(--bs-border-color, #dee2e6));
+    --local-dimensions-ink: var(--dimensions-ink, var(--bs-body-color, #1d2125));
+    --local-dimensions-ink-muted: var(--dimensions-ink-muted, var(--bs-secondary-color, #495057));
+    --local-dimensions-ink-faint: var(--dimensions-ink-faint, var(--bs-tertiary-color, #6a737b));
+    --local-dimensions-ink-strong: var(--dimensions-ink-strong, var(--bs-emphasis-color, var(--gray-dark, #343a40)));
+    --local-dimensions-accent: var(--dimensions-accent, var(--bs-link-color, var(--primary, #0f6cbf)));
+    --local-dimensions-accent-hover: var(--dimensions-accent-hover, var(--bs-link-hover-color, #0c5699));
 
     /* Tier 1b - the six tone families, each core's own emphasis/subtle triple. */
-    --local-dimensions-brand-ink: var(--bs-primary-text-emphasis, #062b4c);
-    --local-dimensions-brand-tint: var(--bs-primary-bg-subtle, #cfe2f2);
-    --local-dimensions-brand-edge: var(--bs-primary-border-subtle, #9fc4e5);
-    --local-dimensions-success-ink: var(--bs-success-text-emphasis, #153114);
-    --local-dimensions-success-tint: var(--bs-success-bg-subtle, #d7e4d6);
-    --local-dimensions-success-edge: var(--bs-success-border-subtle, #aecaad);
-    --local-dimensions-warning-ink: var(--bs-warning-text-emphasis, #60451f);
-    --local-dimensions-warning-tint: var(--bs-warning-bg-subtle, #fcefdc);
-    --local-dimensions-warning-edge: var(--bs-warning-border-subtle, #f9deb8);
-    --local-dimensions-danger-ink: var(--bs-danger-text-emphasis, #51140d);
-    --local-dimensions-danger-tint: var(--bs-danger-bg-subtle, #f4d6d2);
-    --local-dimensions-danger-edge: var(--bs-danger-border-subtle, #eaada6);
-    --local-dimensions-info-ink: var(--bs-info-text-emphasis, #00343c);
-    --local-dimensions-info-tint: var(--bs-info-bg-subtle, #cce6ea);
-    --local-dimensions-info-edge: var(--bs-info-border-subtle, #99cdd5);
-    --local-dimensions-neutral-ink: var(--bs-secondary-text-emphasis, #525557);
-    --local-dimensions-neutral-tint: var(--bs-secondary-bg-subtle, #f5f6f8);
-    --local-dimensions-neutral-edge: var(--bs-secondary-border-subtle, #ebeef0);
+    --local-dimensions-brand-ink: var(--dimensions-brand-ink, var(--bs-primary-text-emphasis, #062b4c));
+    --local-dimensions-brand-tint: var(--dimensions-brand-tint, var(--bs-primary-bg-subtle, #cfe2f2));
+    --local-dimensions-brand-edge: var(--dimensions-brand-edge, var(--bs-primary-border-subtle, #9fc4e5));
+    --local-dimensions-success-ink: var(--dimensions-success-ink, var(--bs-success-text-emphasis, #153114));
+    --local-dimensions-success-tint: var(--dimensions-success-tint, var(--bs-success-bg-subtle, #d7e4d6));
+    --local-dimensions-success-edge: var(--dimensions-success-edge, var(--bs-success-border-subtle, #aecaad));
+    --local-dimensions-warning-ink: var(--dimensions-warning-ink, var(--bs-warning-text-emphasis, #60451f));
+    --local-dimensions-warning-tint: var(--dimensions-warning-tint, var(--bs-warning-bg-subtle, #fcefdc));
+    --local-dimensions-warning-edge: var(--dimensions-warning-edge, var(--bs-warning-border-subtle, #f9deb8));
+    --local-dimensions-danger-ink: var(--dimensions-danger-ink, var(--bs-danger-text-emphasis, #51140d));
+    --local-dimensions-danger-tint: var(--dimensions-danger-tint, var(--bs-danger-bg-subtle, #f4d6d2));
+    --local-dimensions-danger-edge: var(--dimensions-danger-edge, var(--bs-danger-border-subtle, #eaada6));
+    --local-dimensions-info-ink: var(--dimensions-info-ink, var(--bs-info-text-emphasis, #00343c));
+    --local-dimensions-info-tint: var(--dimensions-info-tint, var(--bs-info-bg-subtle, #cce6ea));
+    --local-dimensions-info-edge: var(--dimensions-info-edge, var(--bs-info-border-subtle, #99cdd5));
+    --local-dimensions-neutral-ink: var(--dimensions-neutral-ink, var(--bs-secondary-text-emphasis, #525557));
+    --local-dimensions-neutral-tint: var(--dimensions-neutral-tint, var(--bs-secondary-bg-subtle, #f5f6f8));
+    --local-dimensions-neutral-edge: var(--dimensions-neutral-edge, var(--bs-secondary-border-subtle, #ebeef0));
 
     /* Tier 1c - the solid brand fill and the only text that may sit on it. */
-    --local-dimensions-brand-fill: var(--bs-primary, var(--primary, #0f6cbf));
-    --local-dimensions-on-brand-fill: #fff;
+    --local-dimensions-brand-fill: var(--dimensions-brand-fill, var(--bs-primary, var(--primary, #0f6cbf)));
+    --local-dimensions-on-brand-fill: var(--dimensions-on-brand-fill, #fff);
 
     /* Tier 2 - the four core cannot supply. Only the last three get a dark value. */
-    --local-dimensions-focus-ring: var(--bs-emphasis-color, var(--gray-dark, #343a40));
-    --local-dimensions-shadow: rgb(0 0 0 / 10%);
-    --local-dimensions-scrim: rgb(255 255 255 / 72%);
+    --local-dimensions-focus-ring: var(--dimensions-focus-ring, var(--bs-emphasis-color, var(--gray-dark, #343a40)));
+    --local-dimensions-shadow: var(--dimensions-shadow, rgb(0 0 0 / 10%));
+    --local-dimensions-scrim: var(--dimensions-scrim, rgb(255 255 255 / 72%));
     --local-dimensions-favourite: #e8590c;
 }
 
@@ -162,8 +162,8 @@ body {
    ============================================ */
 body[data-bs-theme="dark"],
 [data-bs-theme="dark"] body {
-    --local-dimensions-shadow: rgb(0 0 0 / 55%);
-    --local-dimensions-scrim: rgb(29 33 37 / 72%);
+    --local-dimensions-shadow: var(--dimensions-shadow, rgb(0 0 0 / 55%));
+    --local-dimensions-scrim: var(--dimensions-scrim, rgb(29 33 37 / 72%));
     --local-dimensions-favourite: #fd7e14;
 }
 
@@ -192,8 +192,8 @@ body[data-bs-theme="dark"],
     /* Switch-on line: remove [data-dimensions-media-optin] and nothing else. */
     :root:not([data-bs-theme="light"])
     body[data-dimensions-media-optin]:not([data-bs-theme="light"]) {
-        --local-dimensions-shadow: rgb(0 0 0 / 55%);
-        --local-dimensions-scrim: rgb(29 33 37 / 72%);
+        --local-dimensions-shadow: var(--dimensions-shadow, rgb(0 0 0 / 55%));
+        --local-dimensions-scrim: var(--dimensions-scrim, rgb(29 33 37 / 72%));
         --local-dimensions-favourite: #fd7e14;
     }
 }
@@ -220,24 +220,24 @@ body[data-bs-theme="dark"],
    colour_tokens_test::test_state_tokens_alias_the_families_and_clear_their_floor.
    ============================================ */
 body {
-    --local-dimensions-state-enrolled-bg: var(--local-dimensions-brand-fill);
-    --local-dimensions-state-enrolled-ink: var(--local-dimensions-on-brand-fill);
-    --local-dimensions-state-enrolled-edge: var(--local-dimensions-brand-fill);
-    --local-dimensions-state-scheduled-bg: var(--local-dimensions-brand-tint);
-    --local-dimensions-state-scheduled-ink: var(--local-dimensions-brand-ink);
-    --local-dimensions-state-scheduled-edge: var(--local-dimensions-brand-edge);
-    --local-dimensions-state-pending-bg: var(--local-dimensions-warning-tint);
-    --local-dimensions-state-pending-ink: var(--local-dimensions-warning-ink);
-    --local-dimensions-state-pending-edge: var(--local-dimensions-warning-edge);
-    --local-dimensions-state-open-bg: var(--local-dimensions-success-tint);
-    --local-dimensions-state-open-ink: var(--local-dimensions-success-ink);
-    --local-dimensions-state-open-edge: var(--local-dimensions-success-edge);
-    --local-dimensions-state-guest-bg: var(--local-dimensions-info-tint);
-    --local-dimensions-state-guest-ink: var(--local-dimensions-info-ink);
-    --local-dimensions-state-guest-edge: var(--local-dimensions-info-edge);
-    --local-dimensions-state-neutral-bg: var(--local-dimensions-surface-inset);
-    --local-dimensions-state-neutral-ink: var(--local-dimensions-neutral-ink);
-    --local-dimensions-state-neutral-edge: var(--local-dimensions-line);
+    --local-dimensions-state-enrolled-bg: var(--dimensions-state-enrolled-bg, var(--local-dimensions-brand-fill));
+    --local-dimensions-state-enrolled-ink: var(--dimensions-state-enrolled-ink, var(--local-dimensions-on-brand-fill));
+    --local-dimensions-state-enrolled-edge: var(--dimensions-state-enrolled-edge, var(--local-dimensions-brand-fill));
+    --local-dimensions-state-scheduled-bg: var(--dimensions-state-scheduled-bg, var(--local-dimensions-brand-tint));
+    --local-dimensions-state-scheduled-ink: var(--dimensions-state-scheduled-ink, var(--local-dimensions-brand-ink));
+    --local-dimensions-state-scheduled-edge: var(--dimensions-state-scheduled-edge, var(--local-dimensions-brand-edge));
+    --local-dimensions-state-pending-bg: var(--dimensions-state-pending-bg, var(--local-dimensions-warning-tint));
+    --local-dimensions-state-pending-ink: var(--dimensions-state-pending-ink, var(--local-dimensions-warning-ink));
+    --local-dimensions-state-pending-edge: var(--dimensions-state-pending-edge, var(--local-dimensions-warning-edge));
+    --local-dimensions-state-open-bg: var(--dimensions-state-open-bg, var(--local-dimensions-success-tint));
+    --local-dimensions-state-open-ink: var(--dimensions-state-open-ink, var(--local-dimensions-success-ink));
+    --local-dimensions-state-open-edge: var(--dimensions-state-open-edge, var(--local-dimensions-success-edge));
+    --local-dimensions-state-guest-bg: var(--dimensions-state-guest-bg, var(--local-dimensions-info-tint));
+    --local-dimensions-state-guest-ink: var(--dimensions-state-guest-ink, var(--local-dimensions-info-ink));
+    --local-dimensions-state-guest-edge: var(--dimensions-state-guest-edge, var(--local-dimensions-info-edge));
+    --local-dimensions-state-neutral-bg: var(--dimensions-state-neutral-bg, var(--local-dimensions-surface-inset));
+    --local-dimensions-state-neutral-ink: var(--dimensions-state-neutral-ink, var(--local-dimensions-neutral-ink));
+    --local-dimensions-state-neutral-edge: var(--dimensions-state-neutral-edge, var(--local-dimensions-line));
 }
 
 /* ============================================
