@@ -43,16 +43,16 @@ namespace local_dimensions\local;
  */
 class template_import_plan {
     /** @var array Items keyed by item key, in file order. */
-    protected $items;
+    protected readonly array $items;
 
     /** @var array File-level notices, each an array of key and message. */
-    protected $notices;
+    protected readonly array $notices;
 
     /** @var array Structures the file references but this site does not have. */
-    protected $missingstructures;
+    protected readonly array $missingstructures;
 
     /** @var \context The context the import would write to. */
-    protected $target;
+    protected readonly \context $target;
 
     /** @var array|null Memoised counts. */
     protected $counts = null;

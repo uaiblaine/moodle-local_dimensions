@@ -221,15 +221,20 @@ class get_competency_rule_data extends external_api {
     /**
      * Decode the stored rule configuration.
      *
+     * Only a JSON object or array is a configuration: malformed JSON and a JSON scalar ('5', 'true',
+     * '"x"') read as none, which the points builder already handles, instead of a TypeError on the
+     * return type.
+     *
      * @param string|null $ruleconfig Raw JSON config
-     * @return array|null
+     * @return array|null The decoded configuration, or null when there is none.
      */
     private static function decode_rule_config(?string $ruleconfig): ?array {
-        if (empty($ruleconfig)) {
+        if (empty($ruleconfig) || !json_validate($ruleconfig)) {
             return null;
         }
 
-        return json_decode($ruleconfig, true);
+        $config = json_decode($ruleconfig, true);
+        return is_array($config) ? $config : null;
     }
 
     /**

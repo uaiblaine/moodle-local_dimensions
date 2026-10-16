@@ -50,6 +50,7 @@ class sync_cohort_roles extends \core\task\adhoc_task {
      *
      * @return string
      */
+    #[\Override]
     public function get_name(): string {
         return get_string('task_sync_cohort_roles', 'local_dimensions');
     }
@@ -59,6 +60,7 @@ class sync_cohort_roles extends \core\task\adhoc_task {
      *
      * @return void
      */
+    #[\Override]
     public function execute(): void {
         \tool_cohortroles\api::sync_all_cohort_roles();
     }

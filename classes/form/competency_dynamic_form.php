@@ -101,6 +101,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
      *
      * @return \context
      */
+    #[\Override]
     protected function get_context_for_dynamic_submission(): \context {
         $framework = competency_framework::get_record(['id' => $this->get_frameworkid()]);
         return $framework ? $framework->get_context() : context_system::instance();
@@ -109,6 +110,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
     /**
      * Only competency managers may submit.
      */
+    #[\Override]
     protected function check_access_for_dynamic_submission(): void {
         require_capability('moodle/competency:competencymanage', $this->get_context_for_dynamic_submission());
     }
@@ -118,6 +120,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
      *
      * @return \moodle_url
      */
+    #[\Override]
     protected function get_page_url_for_dynamic_submission(): \moodle_url {
         return \local_dimensions\helper::hub_page_url(
             $this->get_context_for_dynamic_submission(),
@@ -128,6 +131,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
     /**
      * Form fields: basic info, evaluation scale, and the plugin custom fields.
      */
+    #[\Override]
     public function definition() {
         $mform = $this->_form;
 
@@ -211,6 +215,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
      * reaches the modal. definition_after_data() runs inside render(), within that window.
      * The scaleconfig selectors are the fixed ids set in definition().
      */
+    #[\Override]
     public function definition_after_data() {
         global $PAGE;
 
@@ -241,6 +246,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
     /**
      * Load existing values (and custom field data) when editing.
      */
+    #[\Override]
     public function set_data_for_dynamic_submission(): void {
         $id = $this->get_competencyid();
 
@@ -271,6 +277,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
      *
      * @return array{competencyid: int}
      */
+    #[\Override]
     public function process_dynamic_submission() {
         $data = $this->get_data();
         $id = (int) ($data->id ?? 0);
@@ -322,6 +329,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
      * @param array $files
      * @return array
      */
+    #[\Override]
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 

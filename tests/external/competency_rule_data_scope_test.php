@@ -275,6 +275,24 @@ final class competency_rule_data_scope_test extends \advanced_testcase {
     }
 
     /**
+     * A stored rule configuration that is a JSON scalar or malformed decodes to no configuration.
+     *
+     * The control decodes a real points configuration, so the guard does not read every value as none.
+     *
+     * @return void
+     */
+    public function test_scalar_or_malformed_rule_config_decodes_to_null(): void {
+        $decode = new \ReflectionMethod(get_competency_rule_data::class, 'decode_rule_config');
+
+        foreach (['5', '1.5', 'true', '"points"', 'null', '{"base":', 'not json'] as $raw) {
+            $this->assertNull($decode->invoke(null, $raw), 'Rule config ' . $raw);
+        }
+
+        $config = $decode->invoke(null, '{"base":{"points":2},"competencies":[]}');
+        $this->assertSame(['base' => ['points' => 2], 'competencies' => []], $config);
+    }
+
+    /**
      * A learner's plan over one competency whose rule counts two children, one of them rated.
      *
      * The scale's first item is TAGGEDNAME, the rated child is named PLAINNAME and the other child

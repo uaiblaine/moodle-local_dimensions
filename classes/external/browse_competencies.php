@@ -41,13 +41,13 @@ use local_dimensions\helper;
  */
 class browse_competencies extends external_api {
     /** @var int Minimum query length before search mode runs. */
-    const MIN_QUERY_LENGTH = 2;
+    const int MIN_QUERY_LENGTH = 2;
 
     /** @var int Hard cap on the page size. */
-    const MAX_LIMIT = 100;
+    const int MAX_LIMIT = 100;
 
     /** @var int Page size when the caller sends none, or one below 1. */
-    const DEFAULT_LIMIT = 25;
+    const int DEFAULT_LIMIT = 25;
 
     /**
      * Define the parameters for the browse_competencies external function.

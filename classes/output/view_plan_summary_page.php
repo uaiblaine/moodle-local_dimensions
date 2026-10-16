@@ -49,7 +49,7 @@ class view_plan_summary_page implements renderable, templatable {
     use customfield_reader;
 
     /** @var plan The plan object */
-    private $plan;
+    private readonly plan $plan;
 
     /**
      * Constructor.
@@ -164,6 +164,7 @@ class view_plan_summary_page implements renderable, templatable {
      * @param renderer_base $output The renderer
      * @return array Template context data
      */
+    #[\Override]
     public function export_for_template(renderer_base $output): array {
         global $DB, $USER;
 

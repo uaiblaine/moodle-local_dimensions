@@ -46,7 +46,7 @@ use local_dimensions\helper;
  */
 class search_assignable_users extends external_api {
     /** @var int Hard cap on the page size. */
-    const MAX_LIMIT = 100;
+    const int MAX_LIMIT = 100;
 
     /**
      * The user table columns core offers as identity fields (showuseridentity in admin/settings/users.php).
@@ -56,7 +56,9 @@ class search_assignable_users extends external_api {
      *
      * @var array
      */
-    const IDENTITY_COLUMNS = ['username', 'idnumber', 'email', 'phone1', 'phone2', 'department', 'institution', 'city', 'country'];
+    const array IDENTITY_COLUMNS = [
+        'username', 'idnumber', 'email', 'phone1', 'phone2', 'department', 'institution', 'city', 'country',
+    ];
 
     /**
      * Define the input parameters.

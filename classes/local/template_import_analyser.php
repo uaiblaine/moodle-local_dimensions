@@ -52,7 +52,7 @@ use local_dimensions\scss_manager;
  */
 class template_import_analyser {
     /** @var int The length competency_template.shortname accepts. */
-    const SHORTNAME_MAXLENGTH = 100;
+    const int SHORTNAME_MAXLENGTH = 100;
 
     /**
      * CSV column token => the custom-field shortname that backs it.
@@ -62,7 +62,7 @@ class template_import_analyser {
      *
      * @var array
      */
-    const CF_FIELDS = [
+    const array CF_FIELDS = [
         'template_idnumber' => constants::CFIELD_TEMPLATE_IDNUMBER,
         'cf_displaymode' => constants::CFIELD_DISPLAYMODE,
         'cf_subline_source' => constants::CFIELD_SUBLINE_SOURCE,

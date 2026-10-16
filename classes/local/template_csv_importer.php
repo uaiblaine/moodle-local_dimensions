@@ -55,7 +55,7 @@ class template_csv_importer {
      *
      * @var array
      */
-    const REMAPPABLE = ['cf_tag1' => true, 'cf_tag2' => true, 'cf_type' => true];
+    const array REMAPPABLE = ['cf_tag1' => true, 'cf_tag2' => true, 'cf_type' => true];
 
     /** @var array The parse() output being applied. */
     protected $parsed;

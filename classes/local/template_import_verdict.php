@@ -39,157 +39,157 @@ namespace local_dimensions\local;
  */
 class template_import_verdict {
     /** @var string No template on the target matches this row: a new one would be created. */
-    const VERDICT_CREATE = 'create';
+    const string VERDICT_CREATE = 'create';
 
     /** @var string A template matches and the row would change it. */
-    const VERDICT_UPDATE = 'update';
+    const string VERDICT_UPDATE = 'update';
 
     /** @var string A template matches and nothing would change. */
-    const VERDICT_INSYNC = 'insync';
+    const string VERDICT_INSYNC = 'insync';
 
     /** @var string A template matches, but updating existing templates is switched off. */
-    const VERDICT_SKIP = 'skip';
+    const string VERDICT_SKIP = 'skip';
 
     /** @var string The row matches ambiguously, or matches something that needs a decision. */
-    const VERDICT_CONFLICT = 'conflict';
+    const string VERDICT_CONFLICT = 'conflict';
 
     /** @var string The row cannot be applied as it stands. */
-    const VERDICT_BLOCKED = 'blocked';
+    const string VERDICT_BLOCKED = 'blocked';
 
     /** @var string A competency row whose parent key matches no template row in the file. */
-    const VERDICT_ORPHANLINK = 'orphanlink';
+    const string VERDICT_ORPHANLINK = 'orphanlink';
 
     /** @var string The verdict needs no reason (create, insync). */
-    const REASON_NONE = '';
+    const string REASON_NONE = '';
 
     /** @var string More than one template in the target context matches. */
-    const REASON_AMBIGUOUS = 'ambiguous';
+    const string REASON_AMBIGUOUS = 'ambiguous';
 
     /** @var string Another template in the context already uses this name. */
-    const REASON_SHORTNAMETAKEN = 'shortnametaken';
+    const string REASON_SHORTNAMETAKEN = 'shortnametaken';
 
     /** @var string A template with this ID number exists, but in another context. */
-    const REASON_CONTEXTMISMATCH = 'contextmismatch';
+    const string REASON_CONTEXTMISMATCH = 'contextmismatch';
 
     /** @var string The due date is in the past, which core refuses on a new or changed value. */
-    const REASON_DUEDATEPAST = 'duedatepast';
+    const string REASON_DUEDATEPAST = 'duedatepast';
 
     /** @var string The due date cell could not be read. */
-    const REASON_DUEDATEUNPARSEABLE = 'duedateunparseable';
+    const string REASON_DUEDATEUNPARSEABLE = 'duedateunparseable';
 
     /** @var string The name exceeds the 100 characters core allows. */
-    const REASON_SHORTNAMETOOLONG = 'shortnametoolong';
+    const string REASON_SHORTNAMETOOLONG = 'shortnametoolong';
 
     /** @var string The row carries no name. */
-    const REASON_SHORTNAMEMISSING = 'shortnamemissing';
+    const string REASON_SHORTNAMEMISSING = 'shortnamemissing';
 
     /** @var string The description format is not one core accepts. */
-    const REASON_INVALIDFORMAT = 'invalidformat';
+    const string REASON_INVALIDFORMAT = 'invalidformat';
 
     /** @var string None of the row's competencies resolve on this site. */
-    const REASON_STRUCTUREMISSING = 'structuremissing';
+    const string REASON_STRUCTUREMISSING = 'structuremissing';
 
     /** @var string The user cannot manage templates in the target context. */
-    const REASON_NOCAPABILITY = 'nocapability';
+    const string REASON_NOCAPABILITY = 'nocapability';
 
     /** @var string A custom field the file carries is not provisioned on this site. */
-    const REASON_FIELDNOTPROVISIONED = 'fieldnotprovisioned';
+    const string REASON_FIELDNOTPROVISIONED = 'fieldnotprovisioned';
 
     /** @var string A custom field the file carries is not writable by this user. */
-    const REASON_FIELDNOTWRITABLE = 'fieldnotwritable';
+    const string REASON_FIELDNOTWRITABLE = 'fieldnotwritable';
 
     /** @var string A custom field value is longer than the field allows. */
-    const REASON_CFVALUETOOLONG = 'cfvaluetoolong';
+    const string REASON_CFVALUETOOLONG = 'cfvaluetoolong';
 
     /** @var string core_competency's own validation rejected the row. */
-    const REASON_VALIDATIONFAILED = 'validationfailed';
+    const string REASON_VALIDATIONFAILED = 'validationfailed';
 
     /** @var string A template matched but "update existing" is off. */
-    const REASON_UPDATEEXISTINGOFF = 'updateexistingoff';
+    const string REASON_UPDATEEXISTINGOFF = 'updateexistingoff';
 
     /** @var string No template row in the file carries this link row's parent key. */
-    const REASON_NOPARENT = 'noparent';
+    const string REASON_NOPARENT = 'noparent';
 
     /** @var string The competency resolved by ID number. */
-    const LINK_MATCHED = 'matched';
+    const string LINK_MATCHED = 'matched';
 
     /** @var string The competency resolved by name rather than by ID number. */
-    const LINK_MATCHEDFALLBACK = 'matchedfallback';
+    const string LINK_MATCHEDFALLBACK = 'matchedfallback';
 
     /** @var string The competency is already on the target template. */
-    const LINK_ALREADYLINKED = 'alreadylinked';
+    const string LINK_ALREADYLINKED = 'alreadylinked';
 
     /** @var string The structure the row names does not exist here. */
-    const LINK_MISSINGFRAMEWORK = 'missingframework';
+    const string LINK_MISSINGFRAMEWORK = 'missingframework';
 
     /** @var string The structure exists but the competency does not. */
-    const LINK_MISSINGCOMPETENCY = 'missingcompetency';
+    const string LINK_MISSINGCOMPETENCY = 'missingcompetency';
 
     /** @var string The structure is hidden, and core refuses to link a competency from one. */
-    const LINK_HIDDENFRAMEWORK = 'hiddenframework';
+    const string LINK_HIDDENFRAMEWORK = 'hiddenframework';
 
     /** @var string More than one competency matches the row. */
-    const LINK_AMBIGUOUS = 'ambiguous';
+    const string LINK_AMBIGUOUS = 'ambiguous';
 
     /** @var string The row names no competency at all. */
-    const LINK_EMPTYREFERENCE = 'emptyreference';
+    const string LINK_EMPTYREFERENCE = 'emptyreference';
 
     /** @var string Resolved by ID number (for a template, this plugin's ID number custom field). */
-    const CONFIDENCE_EXACT = 'exact';
+    const string CONFIDENCE_EXACT = 'exact';
 
     /** @var string Resolved by the template's name. */
-    const CONFIDENCE_TEMPLATESHORTNAME = 'templateshortname';
+    const string CONFIDENCE_TEMPLATESHORTNAME = 'templateshortname';
 
     /** @var string Resolved by the structure's name. */
-    const CONFIDENCE_FRAMEWORKSHORTNAME = 'frameworkshortname';
+    const string CONFIDENCE_FRAMEWORKSHORTNAME = 'frameworkshortname';
 
     /** @var string Resolved by the competency's name, within the resolved structure. */
-    const CONFIDENCE_COMPETENCYSHORTNAME = 'competencyshortname';
+    const string CONFIDENCE_COMPETENCYSHORTNAME = 'competencyshortname';
 
     /** @var string Not resolved. */
-    const CONFIDENCE_NONE = 'none';
+    const string CONFIDENCE_NONE = 'none';
 
     /** @var string Apply the row as it stands. */
-    const REMEDY_NONE = 'none';
+    const string REMEDY_NONE = 'none';
 
     /** @var string Drop the past due date instead of blocking on it. */
-    const REMEDY_CLEARDUEDATE = 'clearduedate';
+    const string REMEDY_CLEARDUEDATE = 'clearduedate';
 
     /** @var string Move the past due date forward in whole years until it is in the future. */
-    const REMEDY_SHIFTDUEDATE = 'shiftduedate';
+    const string REMEDY_SHIFTDUEDATE = 'shiftduedate';
 
     /** @var string Leave the stored due date untouched; offered only against a matched template. */
-    const REMEDY_KEEPDUEDATE = 'keepduedate';
+    const string REMEDY_KEEPDUEDATE = 'keepduedate';
 
     /** @var string Shorten an over-long name to the 100 characters core allows. */
-    const REMEDY_TRUNCATE = 'truncate';
+    const string REMEDY_TRUNCATE = 'truncate';
 
     /** @var string Import only the competencies that resolve here. */
-    const REMEDY_PARTIAL = 'partial';
+    const string REMEDY_PARTIAL = 'partial';
 
     /** @var string Treat the same-named template in the context as the match. */
-    const REMEDY_ADOPT = 'adopt';
+    const string REMEDY_ADOPT = 'adopt';
 
     /** @var string Create a new template in the target context instead of using the match. */
-    const REMEDY_CREATEHERE = 'createhere';
+    const string REMEDY_CREATEHERE = 'createhere';
 
     /** @var string The template was created. */
-    const OUTCOME_CREATED = 'created';
+    const string OUTCOME_CREATED = 'created';
 
     /** @var string The template was updated. */
-    const OUTCOME_UPDATED = 'updated';
+    const string OUTCOME_UPDATED = 'updated';
 
     /** @var string The selection was not applied. */
-    const OUTCOME_SKIPPED = 'skipped';
+    const string OUTCOME_SKIPPED = 'skipped';
 
     /** @var string The row moved between the preview and the apply, so nothing was written. */
-    const OUTCOME_CHANGED = 'changed';
+    const string OUTCOME_CHANGED = 'changed';
 
     /** @var string The row is no longer in the file. */
-    const OUTCOME_GONE = 'gone';
+    const string OUTCOME_GONE = 'gone';
 
     /** @var string The write failed; the rest of the run continued. */
-    const OUTCOME_FAILED = 'failed';
+    const string OUTCOME_FAILED = 'failed';
 
     /**
      * Every template verdict.

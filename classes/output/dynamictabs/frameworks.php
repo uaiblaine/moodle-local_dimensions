@@ -42,6 +42,7 @@ class frameworks extends \core\output\dynamic_tabs\base {
      *
      * @return string
      */
+    #[\Override]
     public function get_tab_label(): string {
         return get_string('central_frameworks_tab', 'local_dimensions');
     }
@@ -54,6 +55,7 @@ class frameworks extends \core\output\dynamic_tabs\base {
      *
      * @return bool
      */
+    #[\Override]
     public function is_available(): bool {
         $data = $this->get_data();
         $resolved = helper::resolve_central_context(
@@ -68,6 +70,7 @@ class frameworks extends \core\output\dynamic_tabs\base {
      *
      * @return string
      */
+    #[\Override]
     public function get_template(): string {
         return 'local_dimensions/central/frameworks';
     }
@@ -78,6 +81,7 @@ class frameworks extends \core\output\dynamic_tabs\base {
      * @param \renderer_base $output
      * @return array
      */
+    #[\Override]
     public function export_for_template(\renderer_base $output): array {
         global $PAGE;
 

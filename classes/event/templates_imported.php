@@ -41,6 +41,7 @@ class templates_imported extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['crud'] = 'u';
         $this->data['edulevel'] = self::LEVEL_OTHER;
@@ -51,6 +52,7 @@ class templates_imported extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventtemplatesimported', 'local_dimensions');
     }
@@ -60,6 +62,7 @@ class templates_imported extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         return "The user with id '$this->userid' applied a learning plan template CSV import: "
             . "{$this->other['created']} created, {$this->other['updated']} updated, "

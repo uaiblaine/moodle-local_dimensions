@@ -38,6 +38,7 @@ class dimensions_competencies extends competencies {
     /**
      * Human-readable name shown in the report-builder UI.
      */
+    #[\Override]
     public static function get_name(): string {
         return get_string('datasource_dimensions_competencies', 'local_dimensions');
     }
@@ -50,6 +51,7 @@ class dimensions_competencies extends competencies {
      * registered (so the customfield helper's JOIN against `customfield_data`
      * keys correctly to the competency rows the report already exposes).
      */
+    #[\Override]
     protected function initialise(): void {
         parent::initialise();
 

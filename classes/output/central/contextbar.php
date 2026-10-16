@@ -46,19 +46,19 @@ use local_dimensions\helper;
  */
 class contextbar implements renderable, templatable {
     /** @var string Resolved context type ('system' or 'coursecat'). */
-    private $contexttype;
+    private readonly string $contexttype;
 
     /** @var int Resolved (readable) course category id, or 0. */
-    private $categoryid;
+    private readonly int $categoryid;
 
     /** @var bool Whether course-category mode is active without a chosen category. */
-    private $needscategory;
+    private readonly bool $needscategory;
 
     /** @var bool Whether the "show hidden categories" toggle starts on (persisted preference). */
-    private $showhiddencats;
+    private readonly bool $showhiddencats;
 
     /** @var bool Whether the page is locked to the category it was entered from (no switching). */
-    private $locked;
+    private readonly bool $locked;
 
     /**
      * Constructor.
@@ -83,6 +83,7 @@ class contextbar implements renderable, templatable {
      * @param renderer_base $output
      * @return array
      */
+    #[\Override]
     public function export_for_template(renderer_base $output): array {
         // The System button and its counts exist only for a viewer who may read something there;
         // a manager scoped to one category gets neither the button nor the site-wide totals.

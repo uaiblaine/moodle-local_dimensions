@@ -43,7 +43,7 @@ use core\context\system as context_system;
  */
 class get_fontawesome_icons extends external_api {
     /** @var int Maximum number of results to return. */
-    private const MAX_RESULTS = 3000;
+    private const int MAX_RESULTS = 3000;
 
     /**
      * Define input parameters.

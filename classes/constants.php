@@ -33,151 +33,151 @@ namespace local_dimensions;
  */
 class constants {
     /** @var string Custom field shortname for display mode */
-    const CFIELD_DISPLAYMODE = 'local_dimensions_displaymode';
+    const string CFIELD_DISPLAYMODE = 'local_dimensions_displaymode';
 
     /** @var string Custom field shortname for card image */
-    const CFIELD_CUSTOMCARD = 'local_dimensions_customcard';
+    const string CFIELD_CUSTOMCARD = 'local_dimensions_customcard';
 
     /** @var string Custom field shortname for background image */
-    const CFIELD_CUSTOMBGIMAGE = 'local_dimensions_custombgimage';
+    const string CFIELD_CUSTOMBGIMAGE = 'local_dimensions_custombgimage';
 
     /** @var string Custom field shortname for background color */
-    const CFIELD_CUSTOMBGCOLOR = 'local_dimensions_custombgcolor';
+    const string CFIELD_CUSTOMBGCOLOR = 'local_dimensions_custombgcolor';
 
     /** @var string Custom field shortname for text color */
-    const CFIELD_CUSTOMTEXTCOLOR = 'local_dimensions_customtextcolor';
+    const string CFIELD_CUSTOMTEXTCOLOR = 'local_dimensions_customtextcolor';
 
     /** @var string Custom field shortname for tag1 (e.g. a year) */
-    const CFIELD_TAG1 = 'local_dimensions_tag1';
+    const string CFIELD_TAG1 = 'local_dimensions_tag1';
 
     /** @var string Custom field shortname for tag2 (e.g. a category) */
-    const CFIELD_TAG2 = 'local_dimensions_tag2';
+    const string CFIELD_TAG2 = 'local_dimensions_tag2';
 
     /** @var string Custom field shortname for type (e.g. unit, module, stage) */
-    const CFIELD_TYPE = 'local_dimensions_type';
+    const string CFIELD_TYPE = 'local_dimensions_type';
 
     /** @var string Custom field shortname for custom SCSS code */
-    const CFIELD_CUSTOMSCSS = 'local_dimensions_customscss';
+    const string CFIELD_CUSTOMSCSS = 'local_dimensions_customscss';
 
     /** @var string Custom field shortname for the dynamic accordion subline source (lp area) */
-    const CFIELD_SUBLINE_SOURCE = 'local_dimensions_subline_source';
+    const string CFIELD_SUBLINE_SOURCE = 'local_dimensions_subline_source';
 
     /** @var string Custom field shortname for the template identifier (lp area only — analogue of competency framework idnumber) */
-    const CFIELD_TEMPLATE_IDNUMBER = 'local_dimensions_template_idnumber';
+    const string CFIELD_TEMPLATE_IDNUMBER = 'local_dimensions_template_idnumber';
 
     /** @var string Custom field shortname for per-template enrollment filter (cascade select — provisioned for both areas) */
-    const CFIELD_ENROLLMENTFILTER = 'local_dimensions_enrollmentfilter';
+    const string CFIELD_ENROLLMENTFILTER = 'local_dimensions_enrollmentfilter';
 
     /** @var string Custom field shortname for per-template single-course redirect (cascade select — provisioned for both areas) */
-    const CFIELD_SINGLECOURSEREDIRECT = 'local_dimensions_singlecourseredirect';
+    const string CFIELD_SINGLECOURSEREDIRECT = 'local_dimensions_singlecourseredirect';
 
     /** @var string Custom field shortname for locked-card display mode (cascade select — both areas) */
-    const CFIELD_LOCKEDCARDMODE = 'local_dimensions_lockedcardmode';
+    const string CFIELD_LOCKEDCARDMODE = 'local_dimensions_lockedcardmode';
 
     /** @var string Custom field shortname for the "show availability date" toggle (cascade select — both areas) */
-    const CFIELD_SHOWLOCKEDDATE = 'local_dimensions_showlockeddate';
+    const string CFIELD_SHOWLOCKEDDATE = 'local_dimensions_showlockeddate';
 
     /** @var string Custom field shortname for per-template "show related competencies" (lp area only) */
-    const CFIELD_SHOWRELATED = 'local_dimensions_showrelated';
+    const string CFIELD_SHOWRELATED = 'local_dimensions_showrelated';
 
     /** @var string Custom field shortname for per-template "link related competencies" (lp area only) */
-    const CFIELD_SHOWRELATEDLINK = 'local_dimensions_showrelatedlink';
+    const string CFIELD_SHOWRELATEDLINK = 'local_dimensions_showrelatedlink';
 
     /** @var string User preference: Competency hub last-visited view (tab/context/category/selection) as JSON */
-    const PREF_CENTRAL_NAV = 'local_dimensions_central_nav';
+    const string PREF_CENTRAL_NAV = 'local_dimensions_central_nav';
 
     /** @var string User preference: Competency hub display-toggle visibility state as JSON */
-    const PREF_CENTRAL_DISPLAY = 'local_dimensions_central_display';
+    const string PREF_CENTRAL_DISPLAY = 'local_dimensions_central_display';
 
     /** @var string User preference: learner view chrome (sort, filter, layout, hero) as JSON */
-    const PREF_LEARNER_VIEW = 'local_dimensions_learner_view';
+    const string PREF_LEARNER_VIEW = 'local_dimensions_learner_view';
 
     /** @var string User preference: learner favourite competencies, keyed by plan id, as JSON */
-    const PREF_LEARNER_FAV = 'local_dimensions_learner_fav';
+    const string PREF_LEARNER_FAV = 'local_dimensions_learner_fav';
 
     /** @var string User preference: the plan and competency heroes folded to slim, as a JSON key list */
-    const PREF_LEARNER_HERO = 'local_dimensions_learner_hero';
+    const string PREF_LEARNER_HERO = 'local_dimensions_learner_hero';
 
     /** @var string Card shape: the course's single activity, with no sequence to draw. */
-    const CARDMODE_ACTIVITY = 'activity';
+    const string CARDMODE_ACTIVITY = 'activity';
 
     /** @var string Card shape: one visible section holding several activities. */
-    const CARDMODE_SECTION = 'section';
+    const string CARDMODE_SECTION = 'section';
 
     /** @var string Card shape: the full section timeline. */
-    const CARDMODE_TIMELINE = 'timeline';
+    const string CARDMODE_TIMELINE = 'timeline';
 
     /** @var string Enrollment filter: inherit the global setting */
-    const ENROLLMENTFILTER_INHERIT = 'inherit';
+    const string ENROLLMENTFILTER_INHERIT = 'inherit';
 
     /** @var string Enrollment filter: show all linked courses */
-    const ENROLLMENTFILTER_ALL = 'all';
+    const string ENROLLMENTFILTER_ALL = 'all';
 
     /** @var string Enrollment filter: show courses where the user has any enrolment, suspended or future included */
-    const ENROLLMENTFILTER_ENROLLED = 'enrolled';
+    const string ENROLLMENTFILTER_ENROLLED = 'enrolled';
 
     /** @var string Enrollment filter: show only courses with active enrollments */
-    const ENROLLMENTFILTER_ACTIVE = 'active';
+    const string ENROLLMENTFILTER_ACTIVE = 'active';
 
     /** @var string Enrollment filter: show enrolled courses plus courses the user may join themselves */
-    const ENROLLMENTFILTER_ENROLLEDORSELF = 'enrolledorself';
+    const string ENROLLMENTFILTER_ENROLLEDORSELF = 'enrolledorself';
 
     /** @var string Single-course redirect: inherit the global setting */
-    const SINGLECOURSEREDIRECT_INHERIT = 'inherit';
+    const string SINGLECOURSEREDIRECT_INHERIT = 'inherit';
 
     /** @var string Single-course redirect: enable for this template */
-    const SINGLECOURSEREDIRECT_YES = 'yes';
+    const string SINGLECOURSEREDIRECT_YES = 'yes';
 
     /** @var string Single-course redirect: disable for this template */
-    const SINGLECOURSEREDIRECT_NO = 'no';
+    const string SINGLECOURSEREDIRECT_NO = 'no';
 
     /** @var string Locked-card mode: inherit the next cascade layer (plan, then global) */
-    const LOCKEDCARDMODE_INHERIT = 'inherit';
+    const string LOCKEDCARDMODE_INHERIT = 'inherit';
 
     /** @var string Locked-card mode: show a static "locked content" message */
-    const LOCKEDCARDMODE_BLOCKED = 'blocked';
+    const string LOCKEDCARDMODE_BLOCKED = 'blocked';
 
     /** @var string Locked-card mode: show a "Learn more" button linking to the course */
-    const LOCKEDCARDMODE_LEARNMORE = 'learnmore';
+    const string LOCKEDCARDMODE_LEARNMORE = 'learnmore';
 
     /** @var string Show availability date: inherit the next cascade layer (plan, then global) */
-    const SHOWLOCKEDDATE_INHERIT = 'inherit';
+    const string SHOWLOCKEDDATE_INHERIT = 'inherit';
 
     /** @var string Show availability date: show the date on locked cards */
-    const SHOWLOCKEDDATE_YES = 'yes';
+    const string SHOWLOCKEDDATE_YES = 'yes';
 
     /** @var string Show availability date: hide the date on locked cards */
-    const SHOWLOCKEDDATE_NO = 'no';
+    const string SHOWLOCKEDDATE_NO = 'no';
 
     /** @var string Show-related toggle: inherit the global setting */
-    const SHOWRELATED_INHERIT = 'inherit';
+    const string SHOWRELATED_INHERIT = 'inherit';
 
     /** @var string Show-related toggle: enable for this template */
-    const SHOWRELATED_YES = 'yes';
+    const string SHOWRELATED_YES = 'yes';
 
     /** @var string Show-related toggle: disable for this template */
-    const SHOWRELATED_NO = 'no';
+    const string SHOWRELATED_NO = 'no';
 
     /** @var string Subline source: hide the subline */
-    const SUBLINE_NONE = 'none';
+    const string SUBLINE_NONE = 'none';
 
     /** @var string Subline source: completion status (the default) */
-    const SUBLINE_STATUS = 'status';
+    const string SUBLINE_STATUS = 'status';
 
     /** @var string Subline source: competency assessment rating */
-    const SUBLINE_RATING = 'rating';
+    const string SUBLINE_RATING = 'rating';
 
     /** @var string Subline source: tag1 competency custom field */
-    const SUBLINE_TAG1 = 'tag1';
+    const string SUBLINE_TAG1 = 'tag1';
 
     /** @var string Subline source: tag2 competency custom field */
-    const SUBLINE_TAG2 = 'tag2';
+    const string SUBLINE_TAG2 = 'tag2';
 
     /** @var int Display competencies as cards (default) */
-    const DISPLAYMODE_COMPETENCIES = 1;
+    const int DISPLAYMODE_COMPETENCIES = 1;
 
     /** @var int Display entire plan as a single card */
-    const DISPLAYMODE_PLAN = 2;
+    const int DISPLAYMODE_PLAN = 2;
 
     /**
      * Get localized display mode options for select field.

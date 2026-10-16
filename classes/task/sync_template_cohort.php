@@ -65,6 +65,7 @@ class sync_template_cohort extends \core\task\adhoc_task {
      *
      * @return string
      */
+    #[\Override]
     public function get_name(): string {
         return get_string('task_sync_template_cohort', 'local_dimensions');
     }
@@ -77,6 +78,7 @@ class sync_template_cohort extends \core\task\adhoc_task {
      *
      * @return void
      */
+    #[\Override]
     public function execute(): void {
         $data = $this->get_custom_data();
         if (empty($data) || empty($data->templateid) || empty($data->cohortid)) {

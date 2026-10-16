@@ -40,6 +40,7 @@ class cohort_role_removed extends base {
     /**
      * Initialise the event static data.
      */
+    #[\Override]
     protected function init() {
         $this->data['objecttable'] = \tool_cohortroles\cohort_role_assignment::TABLE;
         $this->data['crud'] = 'd';
@@ -51,6 +52,7 @@ class cohort_role_removed extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_name() {
         return get_string('eventcohortroleremoved', 'local_dimensions');
     }
@@ -60,6 +62,7 @@ class cohort_role_removed extends base {
      *
      * @return string
      */
+    #[\Override]
     public function get_description() {
         return "The user with id '$this->userid' removed the role with id '{$this->other['roleid']}' of the user "
             . "with id '$this->relateduserid' over the members of the cohort with id '{$this->other['cohortid']}' "
@@ -71,6 +74,7 @@ class cohort_role_removed extends base {
      *
      * @return string
      */
+    #[\Override]
     public static function get_objectid_mapping() {
         return base::NOT_MAPPED;
     }

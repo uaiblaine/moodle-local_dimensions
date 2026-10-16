@@ -65,6 +65,7 @@ class lp_handler extends handler {
      * @param int $itemid
      * @return lp_handler
      */
+    #[\Override]
     public static function create(int $itemid = 0): lp_handler {
         if (static::$singleton === null) {
             static::$singleton = new static(0);
@@ -77,6 +78,7 @@ class lp_handler extends handler {
      *
      * @return context
      */
+    #[\Override]
     public function get_configuration_context(): context {
         return context_system::instance();
     }
@@ -87,6 +89,7 @@ class lp_handler extends handler {
      * @param \core_customfield\field_controller|null $field
      * @return \moodle_url
      */
+    #[\Override]
     public function get_configuration_url(?\core_customfield\field_controller $field = null): \moodle_url {
         return new \moodle_url('/local/dimensions/customfield_template.php');
     }
@@ -102,6 +105,7 @@ class lp_handler extends handler {
      * @param int $instanceid
      * @return context
      */
+    #[\Override]
     public function get_instance_context(int $instanceid = 0): context {
         return context_system::instance();
     }
@@ -111,6 +115,7 @@ class lp_handler extends handler {
      *
      * @return bool
      */
+    #[\Override]
     public function can_configure(): bool {
         return has_capability('moodle/site:config', context_system::instance());
     }
@@ -122,6 +127,7 @@ class lp_handler extends handler {
      * @param int $instanceid
      * @return bool
      */
+    #[\Override]
     public function can_view(\core_customfield\field_controller $field, int $instanceid = 0): bool {
         return true;
     }
@@ -140,6 +146,7 @@ class lp_handler extends handler {
      * @param int $instanceid
      * @return bool
      */
+    #[\Override]
     public function can_edit(\core_customfield\field_controller $field, int $instanceid = 0): bool {
         if ($field->get('shortname') === \local_dimensions\constants::CFIELD_CUSTOMSCSS) {
             return has_capability('local/dimensions:editcustomscss', context_system::instance());
@@ -189,6 +196,7 @@ class lp_handler extends handler {
      *
      * @return string
      */
+    #[\Override]
     public function get_component(): string {
         return 'local_dimensions';
     }
@@ -198,6 +206,7 @@ class lp_handler extends handler {
      *
      * @return string
      */
+    #[\Override]
     public function get_area(): string {
         return 'lp';
     }
@@ -208,6 +217,7 @@ class lp_handler extends handler {
      * @param int $instanceid
      * @return int
      */
+    #[\Override]
     public function get_itemid(int $instanceid = 0): int {
         return $instanceid;
     }
@@ -220,6 +230,7 @@ class lp_handler extends handler {
      * @param string|null $headerlangidentifier
      * @param string|null $headerlangcomponent
      */
+    #[\Override]
     public function instance_form_definition(
         \MoodleQuickForm $mform,
         int $instanceid = 0,
@@ -290,6 +301,7 @@ class lp_handler extends handler {
      * @param \stdClass $instance Form data carrying the instance id.
      * @param bool $isnewinstance Whether the call is made during instance creation.
      */
+    #[\Override]
     public function instance_form_save(\stdClass $instance, bool $isnewinstance = false) {
         $instanceid = (int) ($instance->id ?? 0);
         $before = $this->snapshot_instance_values($instanceid);

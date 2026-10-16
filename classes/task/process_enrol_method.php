@@ -39,19 +39,19 @@ namespace local_dimensions\task;
  */
 class process_enrol_method extends \core\task\adhoc_task {
     /** @var string Action: create the enrolment method where missing. */
-    const ACTION_APPLY = 'apply';
+    const string ACTION_APPLY = 'apply';
 
     /** @var string Action: delete the enrolment method where present. */
-    const ACTION_REMOVE = 'remove';
+    const string ACTION_REMOVE = 'remove';
 
     /** @var string Method: cohort sync (enrol_cohort, cohort id in customint1). */
-    const METHOD_COHORT = 'cohort';
+    const string METHOD_COHORT = 'cohort';
 
     /** @var string Method: self enrolment restricted to the cohort (enrol_self, cohort id in customint5). */
-    const METHOD_SELF = 'self';
+    const string METHOD_SELF = 'self';
 
     /** @var string[] Course-level capabilities the requester needs (parity with the tab's course filter). */
-    const REQUIRED_CAPS = ['moodle/course:enrolconfig', 'enrol/cohort:config', 'enrol/self:config'];
+    const array REQUIRED_CAPS = ['moodle/course:enrolconfig', 'enrol/cohort:config', 'enrol/self:config'];
 
     /**
      * Queue one apply/remove action for a (course, method, cohort) combination.
@@ -147,6 +147,7 @@ class process_enrol_method extends \core\task\adhoc_task {
      *
      * @return string
      */
+    #[\Override]
     public function get_name(): string {
         return get_string('task_process_enrol_method', 'local_dimensions');
     }
@@ -160,6 +161,7 @@ class process_enrol_method extends \core\task\adhoc_task {
      *
      * @return void
      */
+    #[\Override]
     public function execute(): void {
         global $DB;
 
