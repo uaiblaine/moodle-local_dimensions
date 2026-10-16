@@ -226,6 +226,12 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   toasts from a modal go to a region in the modal body; `flashRow()` for in-place changes;
   `pane.dataset` seeded from the server-rendered value; `array_flip([5])` makes
   `!empty($map[5])` false, test membership with `isset`.
+- **Filter line** (both learner views; `moodle-dev/docs/filter-line/CONTRACT.md`):
+  `amd/src/filter_line.js` presents and folds, the page module (`accordion`, `competency_view`)
+  filters and answers `countFor`/`items`; every hook is a data attribute of
+  `templates/filter_line.mustache`, pinned by `filter_line_markup_test` and
+  `filter_line_source_test`; gates in `mutations/gates.conf`. Its code is written to travel to the
+  405/501/502 branches: no 8.3-only syntax, plugin-owned class names, no Bootstrap data-API.
 - The 4.5 compatibility code exists only on `MOODLE_405_STABLE` (and, dead, on 501 and 502): the
   Bootstrap 4 utility polyfill at the tail of `styles.css`, gated on `body.local-dimensions-bs4`;
   `local\bootstrap`, which adds that body class; both `data-toggle` spellings; the

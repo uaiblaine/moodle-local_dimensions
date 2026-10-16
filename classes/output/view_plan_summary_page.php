@@ -61,30 +61,6 @@ class view_plan_summary_page implements renderable, templatable {
     }
 
     /**
-     * The learner's stored view chrome, validated against what this view actually offers.
-     *
-     * Anything unrecognised falls back to the default rather than being trusted: the
-     * preference is user-writable through core's own repository, and a stale value survives
-     * a redesign that drops an option.
-     *
-     * @return array Keys: sort, filter, favonly, view, expanded.
-     */
-    private static function resolve_view_preference(): array {
-        $stored = json_decode((string) get_user_preferences(constants::PREF_LEARNER_VIEW, ''), true);
-        $stored = is_array($stored) ? $stored : [];
-        $sort = $stored['sort'] ?? '';
-        $filter = $stored['filter'] ?? '';
-
-        return [
-            'sort' => in_array($sort, ['planorder', 'name', 'completed', 'favourites'], true) ? $sort : 'planorder',
-            'filter' => ($filter === 'all') ? 'all' : 'incomplete',
-            'favonly' => !empty($stored['favonly']),
-            'view' => (($stored['view'] ?? '') === 'grid') ? 'grid' : 'list',
-            'expanded' => !empty($stored['expanded']),
-        ];
-    }
-
-    /**
      * The learner's favourites, as the whole stored map plus this plan's own list.
      *
      * The map is handed to the client intact because a write has to preserve the other
@@ -156,6 +132,85 @@ class view_plan_summary_page implements renderable, templatable {
         }
 
         return $competencies;
+    }
+
+    /**
+     * The filter line's context (local_dimensions/filter_line), from the page's own export.
+     *
+     * The scope is "To do" then "All"; the star is drawn for the plan's owner and hidden until a
+     * favourite exists; the organise menu is the sort menu, "Favourites first" only beside the
+     * star; the view toggle is List then Cards. Every starting state is the one the export already
+     * resolved from the stored preference, so the line and the list below it agree at first paint.
+     *
+     * @param array $data The page's export, with its counts, flags and chip filters set.
+     * @return array The partial's context.
+     */
+    private static function line(array $data): array {
+        $sorts = [
+            'planorder' => get_string('sort_planorder', 'local_dimensions'),
+            'name' => get_string('sort_name', 'local_dimensions'),
+            'completed' => get_string('sort_completedfirst', 'local_dimensions'),
+        ];
+        if ($data['showstar']) {
+            $sorts['favourites'] = get_string('sort_favourites', 'local_dimensions');
+        }
+        $sortoptions = [];
+        foreach ($sorts as $value => $label) {
+            $sortoptions[] = ['value' => $value, 'label' => $label, 'checked' => ($data['sortmode'] === $value)];
+        }
+
+        return [
+            'id' => 'local-dimensions-viewplan',
+            'scopelabel' => get_string('filter_competencies', 'local_dimensions'),
+            'scopehidden' => false,
+            'scope' => [
+                [
+                    'value' => 'incomplete',
+                    'label' => get_string('todo', 'local_dimensions'),
+                    'count' => $data['incompletecount'],
+                    'hascount' => true,
+                    'checked' => $data['filter_is_incomplete'],
+                    'absent' => $data['todoabsent'],
+                ],
+                [
+                    'value' => 'all',
+                    'label' => get_string('filter_all', 'local_dimensions'),
+                    'count' => $data['competencycount'],
+                    'hascount' => true,
+                    'checked' => $data['filter_is_all'],
+                    'absent' => false,
+                ],
+            ],
+            'searchlabel' => get_string('line_search_competencies_label', 'local_dimensions'),
+            'searchplaceholder' => get_string('line_search_competencies', 'local_dimensions'),
+            'itemslabel' => get_string('line_suggest_competencies', 'local_dimensions'),
+            'hasstar' => $data['showstar'],
+            'star' => [
+                'pressed' => $data['favonly'],
+                'count' => $data['favouritecount'],
+                'hidden' => !$data['hasfavourites'],
+            ],
+            'haschipfilters' => $data['haschipfilters'],
+            'chipfilters' => $data['chipfilters'],
+            'showcount' => $data['filter_is_incomplete'] ? $data['incompletecount'] : $data['competencycount'],
+            'hasorganise' => true,
+            'sortoptions' => $sortoptions,
+            'hasviews' => true,
+            'views' => [
+                [
+                    'value' => 'list',
+                    'label' => get_string('line_view_list', 'local_dimensions'),
+                    'icon' => 'fa-list',
+                    'current' => $data['view_is_list'],
+                ],
+                [
+                    'value' => 'grid',
+                    'label' => get_string('line_view_cards', 'local_dimensions'),
+                    'icon' => 'fa-th-large',
+                    'current' => $data['view_is_grid'],
+                ],
+            ],
+        ];
     }
 
     /**
@@ -360,7 +415,7 @@ class view_plan_summary_page implements renderable, templatable {
         /* Resolve the learner's stored chrome and apply it here rather than after paint:
            re-ordering client-side would show the plan order first and then rearrange it
            under the reader. */
-        $view = self::resolve_view_preference();
+        $view = \local_dimensions\local\learner_view::resolve();
         $sort = ($view['sort'] === 'favourites' && !$showfavourites) ? 'planorder' : $view['sort'];
         $data['competencies'] = self::sort_competencies($data['competencies'], $sort);
         $data['sortmode'] = $sort;
@@ -388,6 +443,8 @@ class view_plan_summary_page implements renderable, templatable {
             'favonly' => $showfavourites && $view['favonly'] && $data['hasfavourites'],
             'view' => $view['view'],
             'expanded' => $view['expanded'],
+            // The tracker's own scope, carried untouched: this page never changes it.
+            'trackerfilter' => $view['trackerfilter'],
         ]);
         $data['favonly'] = $showfavourites && $view['favonly'] && $data['hasfavourites'];
         $data['favouritesjson'] = json_encode((object) $favourites['map']);
@@ -400,6 +457,10 @@ class view_plan_summary_page implements renderable, templatable {
         $data['incompletecount'] = count(array_filter($data['competencies'], function ($c) {
             return !$c['isproficient'];
         }));
+        /* The filter line draws no zero cell of its scope unless it is the chosen one: "To do" with
+           nothing left to do is an empty list on offer. "All" is never zero here, since a plan with no
+           competency draws no line at all. */
+        $data['todoabsent'] = ($data['incompletecount'] === 0) && ($view['filter'] !== 'incomplete');
 
         // Build chip-filter groups from the per-competency values collected above.
         $instancevalues = [];
@@ -421,6 +482,7 @@ class view_plan_summary_page implements renderable, templatable {
             'clearlabel' => get_string('filter_chip_clear', 'local_dimensions'),
         ];
         $data['haschipfilters'] = !empty($chipgroups);
+        $data['line'] = self::line($data);
 
         // Get compiled custom CSS from template SCSS if feature is enabled.
         if (get_config('local_dimensions', 'enablecustomscss') && $template) {

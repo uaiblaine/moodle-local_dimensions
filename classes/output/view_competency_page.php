@@ -184,6 +184,14 @@ class view_competency_page implements renderable, templatable {
             $chipgroups = array_merge($chipgroups, $coursegroups);
         }
 
+        /* The filter line's scope opens on the learner's open work ("To do") unless they chose "All"
+           on an earlier visit, and the whole stored state goes to the client, which writes the
+           preference back entire: a key this page left out would be reset by its next save. */
+        $view = \local_dimensions\local\learner_view::resolve();
+        $data['scope_is_incomplete'] = ($view['trackerfilter'] === 'incomplete');
+        $data['scope_is_all'] = ($view['trackerfilter'] === 'all');
+        $data['viewstatejson'] = json_encode($view);
+
         $data['chipfilters'] = [
             'id' => 'local-dimensions-viewcompetency-chip-filters',
             'controlsid' => 'local-dimensions-viewcompetency-grid',
@@ -192,6 +200,39 @@ class view_competency_page implements renderable, templatable {
             'clearlabel' => get_string('filter_chip_clear', 'local_dimensions'),
         ];
         $data['haschipfilters'] = !empty($chipgroups);
+        $data['line'] = [
+            'id' => 'local-dimensions-viewcompetency',
+            'scopelabel' => get_string('filter_courses', 'local_dimensions'),
+            // The counts arrive with the completion batch; competency_view reveals the scope then.
+            'scopehidden' => true,
+            'scope' => [
+                [
+                    'value' => 'incomplete',
+                    'label' => get_string('todo', 'local_dimensions'),
+                    'count' => 0,
+                    'hascount' => false,
+                    'checked' => $data['scope_is_incomplete'],
+                    'absent' => false,
+                ],
+                [
+                    'value' => 'all',
+                    'label' => get_string('filter_all', 'local_dimensions'),
+                    'count' => 0,
+                    'hascount' => false,
+                    'checked' => $data['scope_is_all'],
+                    'absent' => false,
+                ],
+            ],
+            'searchlabel' => get_string('line_search_courses_label', 'local_dimensions'),
+            'searchplaceholder' => get_string('line_search_courses', 'local_dimensions'),
+            'itemslabel' => get_string('line_suggest_courses', 'local_dimensions'),
+            'hasstar' => false,
+            'haschipfilters' => $data['haschipfilters'],
+            'chipfilters' => $data['chipfilters'],
+            'showcount' => count($data['courses']),
+            'hasorganise' => false,
+            'hasviews' => false,
+        ];
 
         // Get compiled custom CSS from competency SCSS if feature is enabled.
         if (get_config('local_dimensions', 'enablecustomscss') && $this->competency) {
