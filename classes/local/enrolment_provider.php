@@ -97,6 +97,14 @@ abstract class enrolment_provider {
     public const UNLISTED_METHODS = ['get_enrolment_state', 'get_next_action', 'get_next_actions'];
 
     /**
+     * @var string The API class unlisted_available() probes; UNLISTED_API in production.
+     *
+     * Exists so tests can model a site without local_unlistedcourses, or with a build older than this
+     * API, on a site where the plugin is installed. Nothing else assigns it.
+     */
+    protected static string $unlistedapi = self::UNLISTED_API;
+
+    /**
      * The implementation the site has chosen, falling back to the frozen core rule.
      *
      * The setting alone is not enough: a site that ticked it and later removed local_unlistedcourses
@@ -122,7 +130,7 @@ abstract class enrolment_provider {
         /* method_exists() autoloads the class and answers false when there is none, so this also
            refuses a site without the plugin, and a build of it older than this API. */
         foreach (self::UNLISTED_METHODS as $method) {
-            if (!method_exists(self::UNLISTED_API, $method)) {
+            if (!method_exists(static::$unlistedapi, $method)) {
                 return false;
             }
         }

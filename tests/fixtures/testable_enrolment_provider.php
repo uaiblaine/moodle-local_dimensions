@@ -45,4 +45,17 @@ abstract class testable_enrolment_provider extends enrolment_provider {
     public static function unlisted_available(): bool {
         return self::$available;
     }
+
+    /**
+     * Point the real availability check at another class, to model a site without the plugin.
+     *
+     * The property is shared with the parent, so this reaches enrolment_provider::unlisted_available().
+     * Callers restore enrolment_provider::UNLISTED_API when they are done.
+     *
+     * @param string $class The class unlisted_available() probes.
+     * @return void
+     */
+    public static function probe_api(string $class): void {
+        static::$unlistedapi = $class;
+    }
 }
