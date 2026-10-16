@@ -28,12 +28,12 @@ use advanced_testcase;
 use context_coursecat;
 use context_system;
 use local_dimensions\helper;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The context bar locked to an entry category, and the System switch offered only to those who may use it.
- *
- * @covers \local_dimensions\output\central\contextbar
  */
+#[CoversClass(\local_dimensions\output\central\contextbar::class)]
 final class contextbar_test extends advanced_testcase {
     /**
      * Export the bar as the current user.

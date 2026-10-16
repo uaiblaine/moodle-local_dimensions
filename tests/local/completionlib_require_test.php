@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Guards that every method naming completion_info loads lib/completionlib.php itself.
  *
@@ -28,9 +30,9 @@ namespace local_dimensions\local;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_courses_completion_status
- * @covers     \local_dimensions\calculator
  */
+#[CoversClass(\local_dimensions\external\get_courses_completion_status::class)]
+#[CoversClass(\local_dimensions\calculator::class)]
 final class completionlib_require_test extends \basic_testcase {
     /**
      * Split a PHP file into its function bodies, comments left out.

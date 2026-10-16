@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * Contracts between the templates and the stylesheet that no linter reads.
  *
@@ -27,8 +29,8 @@ namespace local_dimensions\local;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class stylesheet_markup_contract_test extends \basic_testcase {
     /**
      * Absolute path to the plugin root.

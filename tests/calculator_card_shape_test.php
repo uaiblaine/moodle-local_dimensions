@@ -16,14 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * Tests the resolver that decides which shape a course card takes.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\calculator::resolve_card_shape
  */
+#[CoversMethod(\local_dimensions\calculator::class, 'resolve_card_shape')]
 final class calculator_card_shape_test extends \advanced_testcase {
     /**
      * Writes the singleactivity format's 'activitytype' option straight into

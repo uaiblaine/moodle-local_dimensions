@@ -27,15 +27,12 @@ namespace local_dimensions\external;
 use core_competency\api as competencyapi;
 use core_external\external_api;
 use local_dimensions\task\process_enrol_method;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The poll answers only for courses the Enrolment methods tab lists, and only for linked cohorts.
- *
- * The covers tag stays in this docblock because the plugin still supports Moodle 4.5, whose
- * moodle-cs cannot see the CoversClass attribute and reports every method as uncovered.
- *
- * @covers \local_dimensions\external\get_enrol_queue_status
  */
+#[CoversClass(\local_dimensions\external\get_enrol_queue_status::class)]
 final class enrol_queue_status_scope_test extends \advanced_testcase {
     /** @var string Web service under test. */
     private const WSNAME = 'local_dimensions_get_enrol_queue_status';

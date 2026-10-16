@@ -16,17 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for the course card's lock: who it opens for, and how its date reads.
- *
- * The class-level covers tag stays in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes, and the plugin still supports 4.5.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\calculator
  */
+#[CoversClass(\local_dimensions\calculator::class)]
 final class calculator_locked_card_test extends \advanced_testcase {
     /**
      * Enrol a user on the course's manual instance with no role, as an instance that assigns none does.

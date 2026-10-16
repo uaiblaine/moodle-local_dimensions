@@ -28,12 +28,12 @@ use advanced_testcase;
 use core_competency\api;
 use core_competency\competency;
 use core_competency\competency_framework;
+use PHPUnit\Framework\Attributes\CoversMethod;
 
 /**
  * Tests for helper::structure_nodes() activity-count and rule-label enrichment.
- *
- * @covers \local_dimensions\helper::structure_nodes
  */
+#[CoversMethod(\local_dimensions\helper::class, 'structure_nodes')]
 final class helper_structure_nodes_test extends advanced_testcase {
     /**
      * Drop the handlers' cached field lists, which would outlive the rollback of the rows they hold.

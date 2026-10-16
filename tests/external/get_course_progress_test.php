@@ -19,6 +19,7 @@ namespace local_dimensions\external;
 use core_external\external_api;
 use local_dimensions\local\enrolment_provider;
 use local_dimensions\local\enrolment_state;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the tracker's course progress web service.
@@ -26,8 +27,8 @@ use local_dimensions\local\enrolment_state;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\get_course_progress
  */
+#[CoversClass(\local_dimensions\external\get_course_progress::class)]
 final class get_course_progress_test extends \advanced_testcase {
     /**
      * Run the service for one course and clean the payload through the returns structure.

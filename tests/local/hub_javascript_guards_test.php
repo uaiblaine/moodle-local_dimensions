@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * Pins the Competency hub's JavaScript guards that no PHP code path can exercise.
  *
@@ -28,8 +30,8 @@ namespace local_dimensions\local;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class hub_javascript_guards_test extends \basic_testcase {
     /**
      * Closing the Courses and activities modal reports the server's linked-course count.

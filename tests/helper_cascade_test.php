@@ -18,6 +18,7 @@ namespace local_dimensions;
 
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\customfield\lp_handler;
+use PHPUnit\Framework\Attributes\CoversMethod;
 
 /**
  * Tests for the enrolment/display settings cascade resolvers.
@@ -25,13 +26,13 @@ use local_dimensions\customfield\lp_handler;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper::resolve_enrollmentfilter_for_view
- * @covers     \local_dimensions\helper::resolve_singlecourseredirect_for_view
- * @covers     \local_dimensions\helper::resolve_lockedcardmode_for_view
- * @covers     \local_dimensions\helper::resolve_showlockeddate_for_view
- * @covers     \local_dimensions\helper::resolve_showrelated_for_template
- * @covers     \local_dimensions\helper::resolve_showrelatedlink_for_template
  */
+#[CoversMethod(\local_dimensions\helper::class, 'resolve_enrollmentfilter_for_view')]
+#[CoversMethod(\local_dimensions\helper::class, 'resolve_singlecourseredirect_for_view')]
+#[CoversMethod(\local_dimensions\helper::class, 'resolve_lockedcardmode_for_view')]
+#[CoversMethod(\local_dimensions\helper::class, 'resolve_showlockeddate_for_view')]
+#[CoversMethod(\local_dimensions\helper::class, 'resolve_showrelated_for_template')]
+#[CoversMethod(\local_dimensions\helper::class, 'resolve_showrelatedlink_for_template')]
 final class helper_cascade_test extends \advanced_testcase {
     /**
      * Set an lp select field to an option key by its 1-based index.

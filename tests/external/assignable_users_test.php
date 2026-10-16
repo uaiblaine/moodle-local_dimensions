@@ -17,6 +17,7 @@
 namespace local_dimensions\external;
 
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the search_assignable_users external function.
@@ -24,8 +25,8 @@ use core_external\external_api;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\search_assignable_users
  */
+#[CoversClass(\local_dimensions\external\search_assignable_users::class)]
 final class assignable_users_test extends \advanced_testcase {
     /**
      * Users who already have a plan from the template, and inactive users, never appear.

@@ -27,14 +27,14 @@ namespace local_dimensions;
 use admin_externalpage;
 use advanced_testcase;
 use context_system;
+use PHPUnit\Framework\Attributes\CoversNothing;
 
 /**
  * Who finds what in the admin tree: the hub is gated by its capability, the rest by site config.
  *
  * settings.php runs inside admin_get_root(), so the assertions rebuild the tree as each user.
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class settings_registration_test extends advanced_testcase {
     /**
      * Rebuild the admin tree for the current user and locate a section by name.

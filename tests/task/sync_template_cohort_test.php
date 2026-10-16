@@ -18,6 +18,7 @@ namespace local_dimensions\task;
 
 use core_competency\api;
 use core_competency\template;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the template cohort sync task when core would refuse to create the plans.
@@ -25,8 +26,8 @@ use core_competency\template;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\task\sync_template_cohort
  */
+#[CoversClass(\local_dimensions\task\sync_template_cohort::class)]
 final class sync_template_cohort_test extends \advanced_testcase {
     /** @var int Template id. */
     protected $templateid;

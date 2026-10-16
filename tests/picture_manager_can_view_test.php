@@ -28,12 +28,12 @@ use advanced_testcase;
 use context_coursecat;
 use context_system;
 use core_competency\api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The picture read check that local_dimensions_pluginfile() applies before serving a file.
- *
- * @covers \local_dimensions\picture_manager
  */
+#[CoversClass(\local_dimensions\picture_manager::class)]
 final class picture_manager_can_view_test extends advanced_testcase {
     /**
      * A category holding a visible and a hidden template and one competency, plus a plain user.

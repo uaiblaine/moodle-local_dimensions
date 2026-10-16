@@ -17,6 +17,7 @@
 namespace local_dimensions;
 
 use core_competency\competency;
+use PHPUnit\Framework\Attributes\CoversMethod;
 
 /**
  * Tests for the rule outcome sentence shown in a competency's Rules tab.
@@ -24,8 +25,8 @@ use core_competency\competency;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper::get_rule_outcome_text
  */
+#[CoversMethod(\local_dimensions\helper::class, 'get_rule_outcome_text')]
 final class helper_rule_outcome_text_test extends \advanced_testcase {
     /**
      * Each rule type and outcome reads its own string; any other outcome reads nothing.

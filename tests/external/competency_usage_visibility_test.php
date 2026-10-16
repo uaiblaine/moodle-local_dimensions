@@ -27,15 +27,12 @@ namespace local_dimensions\external;
 use context_coursecat;
 use core_competency\api;
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Hidden templates stay with those who manage them, and names go out plain for double stashes.
- *
- * The covers tag stays in this docblock because the plugin still supports Moodle 4.5, whose
- * moodle-cs cannot see the CoversClass attribute and reports every method as uncovered.
- *
- * @covers \local_dimensions\external\competency_usage
  */
+#[CoversClass(\local_dimensions\external\competency_usage::class)]
 final class competency_usage_visibility_test extends \advanced_testcase {
     /** @var string Web service under test. */
     private const WSNAME = 'local_dimensions_competency_usage';

@@ -22,6 +22,7 @@ use local_dimensions\helper;
 use local_dimensions\local\template_csv_serializer;
 use local_dimensions\local\template_import_analyser;
 use local_dimensions\local\template_import_verdict;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the learning plan CSV apply web service.
@@ -29,8 +30,8 @@ use local_dimensions\local\template_import_verdict;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\apply_import_templates
  */
+#[CoversClass(\local_dimensions\external\apply_import_templates::class)]
 final class apply_import_templates_test extends \advanced_testcase {
     /**
      * A ticked row is written, and the response comes back through clean_returnvalue() with a

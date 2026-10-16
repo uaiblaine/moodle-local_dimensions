@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * The preference media queries of styles.css match, and their overrides take effect.
  *
@@ -36,8 +38,8 @@ namespace local_dimensions\local;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\local\colour_mode
  */
+#[CoversClass(\local_dimensions\local\colour_mode::class)]
 final class preference_queries_test extends \basic_testcase {
     /**
      * @var array Media feature => the values Media Queries Level 5 defines for it.

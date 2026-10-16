@@ -16,6 +16,8 @@
 
 namespace local_dimensions\local;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+
 /**
  * The Competency hub's export modals keep their loader's label from one download to the next.
  *
@@ -29,8 +31,8 @@ namespace local_dimensions\local;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversNothing
  */
+#[CoversNothing]
 final class export_loader_script_test extends \basic_testcase {
     /** @var array Module => the function that shows and hides its export loader, and the template it fills. */
     private const DOWNLOADS = [

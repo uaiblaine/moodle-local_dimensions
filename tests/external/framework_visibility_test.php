@@ -17,6 +17,7 @@
 namespace local_dimensions\external;
 
 use core_competency\competency_framework;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the set_framework_visibility external function.
@@ -24,8 +25,8 @@ use core_competency\competency_framework;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\set_framework_visibility
  */
+#[CoversClass(\local_dimensions\external\set_framework_visibility::class)]
 final class framework_visibility_test extends \advanced_testcase {
     /**
      * Toggling visibility flips the persisted flag and preserves the scale.

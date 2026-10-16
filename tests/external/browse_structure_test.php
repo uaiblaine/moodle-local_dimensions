@@ -17,6 +17,7 @@
 namespace local_dimensions\external;
 
 use core_competency\api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the browse_structure external function.
@@ -24,8 +25,8 @@ use core_competency\api;
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\external\browse_structure
  */
+#[CoversClass(\local_dimensions\external\browse_structure::class)]
 final class browse_structure_test extends \advanced_testcase {
     /**
      * Roots carry depth/indent/parentid/haschildren and a non-empty taxonomy; children carry depth 1.

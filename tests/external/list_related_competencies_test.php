@@ -27,12 +27,12 @@ namespace local_dimensions\external;
 use advanced_testcase;
 use core_competency\api;
 use core_external\external_api;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the list_related_competencies external function.
- *
- * @covers \local_dimensions\external\list_related_competencies
  */
+#[CoversClass(\local_dimensions\external\list_related_competencies::class)]
 final class list_related_competencies_test extends advanced_testcase {
     /**
      * The WS returns a competency's related competencies with fields and ancestor path, symmetrically.

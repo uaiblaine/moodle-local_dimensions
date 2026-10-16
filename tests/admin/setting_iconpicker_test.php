@@ -24,17 +24,16 @@
 
 namespace local_dimensions\admin;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * The stored value reaches the widget's inputs escaped exactly once.
- *
- * The covers tag stays in this docblock while the plugin supports Moodle 4.5, whose moodle-cs
- * cannot read PHPUnit attributes.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\admin\setting_iconpicker
  */
+#[CoversClass(\local_dimensions\admin\setting_iconpicker::class)]
 final class setting_iconpicker_test extends \advanced_testcase {
     /**
      * Both inputs carry the value escaped once, never twice.

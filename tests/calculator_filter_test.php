@@ -16,14 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * Tests for calculator::filter_courses_by_enrollment in 'enrolledorself' mode.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\calculator::filter_courses_by_enrollment
  */
+#[CoversMethod(\local_dimensions\calculator::class, 'filter_courses_by_enrollment')]
 final class calculator_filter_test extends \advanced_testcase {
     /**
      * enrolledorself keeps active, future-dated and self-enrolable courses; drops the rest.

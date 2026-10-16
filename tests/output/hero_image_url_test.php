@@ -18,6 +18,7 @@ namespace local_dimensions\output;
 
 use core_competency\plan;
 use local_dimensions\picture_manager;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * The hero image URL can never close the CSS url('...') it is written into.
@@ -28,15 +29,12 @@ use local_dimensions\picture_manager;
  * moodle_url, which percent-encodes every path segment and query value, so a stored filename
  * holding a parenthesis, a space or an accent reaches the page encoded. These tests pin that.
  *
- * The class-level covers tags stay in docblock form on purpose: moodle-cs on the 4.05 leg cannot
- * see PHP attributes, and the plugin still supports 4.5.
- *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\picture_manager
- * @covers     \local_dimensions\output\customfield_reader
  */
+#[CoversClass(\local_dimensions\picture_manager::class)]
+#[CoversClass(\local_dimensions\output\customfield_reader::class)]
 final class hero_image_url_test extends \advanced_testcase {
     /** @var string A filename PARAM_FILE accepts, holding every character CSS or a URL cares about. */
     private const FILENAME = 'hero (1) café.png';

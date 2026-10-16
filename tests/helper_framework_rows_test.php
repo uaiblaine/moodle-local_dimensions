@@ -16,14 +16,16 @@
 
 namespace local_dimensions;
 
+use PHPUnit\Framework\Attributes\CoversMethod;
+
 /**
  * Tests for helper::framework_rows.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_dimensions\helper::framework_rows
  */
+#[CoversMethod(\local_dimensions\helper::class, 'framework_rows')]
 final class helper_framework_rows_test extends \advanced_testcase {
     /**
      * framework_rows reports competency count, visibility and deletability.
