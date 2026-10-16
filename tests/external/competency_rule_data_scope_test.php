@@ -293,6 +293,30 @@ final class competency_rule_data_scope_test extends \advanced_testcase {
     }
 
     /**
+     * A competency whose stored rule configuration is a JSON scalar is still answered.
+     *
+     * The control is the same call over the generator's configuration, before the scalar is stored.
+     *
+     * @return void
+     */
+    public function test_scalar_rule_config_is_answered(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $fixture = $this->build_fixture(plan::STATUS_ACTIVE);
+        $this->setUser($fixture['ownerid']);
+        $this->assertFalse($this->call($fixture['inplan'], $fixture['planid'])['error']);
+        $DB->set_field('competency', 'ruleconfig', '5', ['id' => $fixture['inplan']]);
+
+        $response = $this->call($fixture['inplan'], $fixture['planid']);
+
+        $this->assertFalse($response['error'], json_encode($response));
+        $data = json_decode($response['data'], true);
+        $this->assertTrue($data['hasrule']);
+        $this->assertSame(2, $data['childcount']);
+    }
+
+    /**
      * A learner's plan over one competency whose rule counts two children, one of them rated.
      *
      * The scale's first item is TAGGEDNAME, the rated child is named PLAINNAME and the other child
