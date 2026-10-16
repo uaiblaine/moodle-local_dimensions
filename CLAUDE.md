@@ -187,6 +187,7 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   (`body` as subject keeps a navbar-scoped attribute out; `.theme-dark` is never accepted).
   The host writes `data-bs-theme`; the plugin never does (`colour_mode.php` is constants only).
   The `prefers-color-scheme` block is written and inert behind `[data-dimensions-media-optin]`.
+- **Family tokens.** Every contract token is wrapped `--local-dimensions-x: var(--dimensions-x, <own chain>)`, the dark redeclarations of `shadow` and `scrim` too (a bare dark literal would beat the theme's dark value); `favourite` stays a literal. The contract lives in `theme_dimensions/docs/tokens.md`; the plugin never declares a `--dimensions-*` name. `colour_tokens_test::test_contract_tokens_read_the_family_token_first` holds it.
 - `--dimension-custombgcolor` / `--dimension-customtextcolor` are admin instance data written
   by a template onto the painted element, never tokens; a branded island reads no mode token.
 - `surface-inset` is a platter, not a ground for coloured ink; `ink-faint` only for inactive
