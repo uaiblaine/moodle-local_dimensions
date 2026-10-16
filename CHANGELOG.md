@@ -60,6 +60,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Family colour tokens.** Under `theme_dimensions` the plugin reads the theme's family tokens
+  (`--dimensions-*`, contract in `theme_dimensions/docs/tokens.md`) first, in the light and the dark
+  rules (including the local-only motion and state tokens), with its own chain as the fallback.
+  Without the theme nothing changes.
 - Course cards (competency tracker and plan overview), with "Use the enrolment rules of Unlisted
   courses" on: a locked card whose only refusal is an enrolment window that has not opened yet says
   "Enrolment opens on <date>", whatever "Show availability date" says; on a card with no

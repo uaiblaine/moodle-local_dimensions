@@ -112,6 +112,19 @@ final class colour_tokens_test extends \basic_testcase {
         'favourite' => '#e8590c',
     ];
 
+    /** @var string The theme_dimensions family namespace: read first by every contract token, never declared here. */
+    private const FAMILY = '--dimensions-';
+
+    /** @var array Token-block suffixes that are NOT in the family contract: they stay plain literals. */
+    private const NOT_IN_CONTRACT = ['favourite'];
+
+    /** @var array The local-only motion tokens in the :root rule, suffix => the fallback they carry. */
+    private const MOTION = [
+        'motion-fast' => '150ms',
+        'motion-base' => '250ms',
+        'motion-ease' => 'cubic-bezier(0.4, 0, 0.2, 1)',
+    ];
+
     /** @var array The only three tokens the mode layer may assign, and nothing else may join them. */
     private const DARK_OWNED = ['shadow', 'scrim', 'favourite'];
 
@@ -841,6 +854,68 @@ final class colour_tokens_test extends \basic_testcase {
         return [];
     }
 
+    /**
+     * The declaration a contract token must carry: the family token wrapped around the plugin's own chain.
+     *
+     * @param string $suffix Token suffix.
+     * @param string $chain The plugin's own value, which is the fallback.
+     * @return string The expected declaration text; the chain itself for a token outside the contract.
+     */
+    private function family_wrapped(string $suffix, string $chain): string {
+        if (in_array($suffix, self::NOT_IN_CONTRACT, true)) {
+            return $chain;
+        }
+
+        return 'var(' . self::FAMILY . $suffix . ', ' . $chain . ')';
+    }
+
+    /**
+     * Strip the outermost var(--dimensions-x, ...) wrapper from a declaration, leaving the plugin's chain.
+     *
+     * Resolution measures the plugin's own chain, which is what renders without theme_dimensions.
+     *
+     * @param string $declaration A declared value.
+     * @return string The inner fallback when the value is a family wrapper, the value otherwise.
+     */
+    private function family_unwrap(string $declaration): string {
+        if (!preg_match('/^var\(\s*--dimensions-[a-z0-9-]+\s*,\s*(.*)\)$/s', $declaration, $m)) {
+            return $declaration;
+        }
+
+        return trim($m[1]);
+    }
+
+    /**
+     * Whether a value is var(--dimensions-<suffix>, ...) with that var() as its OUTERMOST function.
+     *
+     * The first var() must close on the last character: a family token read somewhere inside the
+     * fallback is not the contract.
+     *
+     * @param string $value A declared value.
+     * @param string $suffix The family suffix the value must read first.
+     * @return bool True when the whole value is that one wrapper.
+     */
+    private function reads_family_first(string $value, string $suffix): bool {
+        $opening = 'var(' . self::FAMILY . $suffix . ',';
+        if (!str_starts_with($value, $opening) || !str_ends_with($value, ')')) {
+            return false;
+        }
+        $depth = 0;
+        $last = strlen($value) - 1;
+        for ($i = 0; $i <= $last; $i++) {
+            if ($value[$i] === '(') {
+                $depth++;
+            } else if ($value[$i] === ')') {
+                $depth--;
+                if ($depth === 0 && $i !== $last) {
+                    return false;
+                }
+            }
+        }
+
+        return $depth === 0;
+    }
+
     /* --------------------------------------------------------------------------------------- */
     /* Colour arithmetic. WCAG 2.x relative luminance, alpha compositing included.               */
     /* --------------------------------------------------------------------------------------- */
@@ -992,13 +1067,14 @@ final class colour_tokens_test extends \basic_testcase {
         if ($mode === 'dark') {
             $dark = $this->activation_block();
             if (isset($dark[$name])) {
-                return $dark[$name];
+                return $this->family_unwrap($dark[$name]);
             }
         }
         $declaration = $this->token_block()[$name] ?? null;
         if ($declaration === null) {
             return null;
         }
+        $declaration = $this->family_unwrap($declaration);
         if ($mode === 'bs4') {
             return $this->resolve_bs4($declaration);
         }
@@ -1120,7 +1196,7 @@ final class colour_tokens_test extends \basic_testcase {
         $declared = $this->token_block();
         $expected = [];
         foreach (self::LIGHT as $suffix => $value) {
-            $expected[self::PREFIX . $suffix] = $value;
+            $expected[self::PREFIX . $suffix] = $this->family_wrapped($suffix, $value);
         }
         ksort($declared);
         ksort($expected);
@@ -1143,6 +1219,118 @@ final class colour_tokens_test extends \basic_testcase {
             'The body token block must declare exactly the ' . count(self::LIGHT) . ' contract tokens, '
                 . 'each with its exact chain: ' . implode('; ', $offenders)
         );
+    }
+
+    /**
+     * Every contract token reads var(--dimensions-<same suffix>, ...) as its outermost var().
+     *
+     * The token block, and the two dark redeclarations of shadow and scrim (the activation rule and
+     * the inert OS-preference block), which would otherwise win over the theme's dark value. The
+     * contract is theme_dimensions/docs/tokens.md. Tokens outside it (favourite, icon-glyph, the
+     * tabs-* family and the rest) must not read a family token, and the plugin never declares a
+     * --dimensions-* name nor reads one outside the contract.
+     *
+     * Changes that must make it fail: unwrap one contract token; unwrap one dark redeclaration;
+     * wrap favourite; declare --dimensions-surface here.
+     *
+     * @return void
+     */
+    public function test_contract_tokens_read_the_family_token_first(): void {
+        $offenders = [];
+        $contract = array_values(array_diff(self::SUFFIXES, self::NOT_IN_CONTRACT));
+        $block = $this->token_block();
+        foreach ($contract as $suffix) {
+            $value = $block[self::PREFIX . $suffix] ?? null;
+            if ($value === null || !$this->reads_family_first($value, $suffix)) {
+                $offenders[] = self::PREFIX . $suffix . ' does not read ' . self::FAMILY . $suffix . ' first: ' . $value;
+            }
+        }
+        $dark = 0;
+        foreach ($this->stylesheets() as $path) {
+            foreach ($this->rules($path) as $rule) {
+                $declarations = $this->declarations($rule['body']);
+                if ($rule['selector'] !== 'body' && isset($declarations[self::PREFIX . 'shadow'])) {
+                    $dark++;
+                    foreach (['shadow', 'scrim'] as $suffix) {
+                        $value = $declarations[self::PREFIX . $suffix] ?? null;
+                        if ($value === null || !$this->reads_family_first($value, $suffix)) {
+                            $offenders[] = $rule['line'] . ': dark ' . self::PREFIX . $suffix . ' does not read '
+                                . self::FAMILY . $suffix . ' first: ' . $value;
+                        }
+                    }
+                }
+                foreach ($declarations as $property => $value) {
+                    if (str_starts_with($property, self::FAMILY)) {
+                        $offenders[] = $rule['line'] . ': declares ' . $property . ', which only the theme may';
+                    }
+                    if (!str_starts_with($property, self::PREFIX)) {
+                        continue;
+                    }
+                    $suffix = substr($property, strlen(self::PREFIX));
+                    $incontract = in_array($suffix, $contract, true)
+                        || array_key_exists($suffix, self::MOTION) || array_key_exists($suffix, self::STATE_ALIASES);
+                    if (!$incontract && preg_match('/(?<![a-z0-9-])' . preg_quote(self::FAMILY, '/') . '/', $value)) {
+                        $offenders[] = $rule['line'] . ': ' . $property . ' is outside the contract but reads ' . $value;
+                    }
+                }
+            }
+            $text = $this->uncommented($path);
+            preg_match_all('/(?<![a-z0-9-])' . preg_quote(self::FAMILY, '/') . '([a-z0-9-]+)/', $text, $names);
+            $allowed = $contract;
+            $allowed = array_merge($allowed, array_keys(self::MOTION), array_keys(self::STATE_ALIASES));
+            foreach (array_unique($names[1]) as $name) {
+                if (!in_array($name, $allowed, true)) {
+                    $offenders[] = basename($path) . ' names ' . self::FAMILY . $name . ', which is not in the contract';
+                }
+            }
+        }
+        $this->assertSame(2, $dark, 'The shadow and scrim dark redeclarations are the mode rule and the inert media rule.');
+        sort($offenders);
+        $this->assertSame(
+            [],
+            $offenders,
+            'Every contract token, dark redeclarations included, reads its family token first, and nothing else does: '
+                . implode('; ', $offenders)
+        );
+    }
+
+    /**
+     * The local-only tokens (3 motion, 18 state) read their family token first.
+     *
+     * They live outside the shared block: motion in the :root rule, the state aliases in a second
+     * bare body rule. The fallback is exactly what they carried before the family layer.
+     *
+     * Changes that must make it fail: unwrap one of them; change a motion fallback.
+     *
+     * @return void
+     */
+    public function test_local_only_tokens_read_the_family_token_first(): void {
+        $found = [];
+        foreach ($this->rules($this->plugin_root() . '/styles.css') as $rule) {
+            foreach ($this->declarations($rule['body']) as $property => $value) {
+                if (str_starts_with($property, self::PREFIX)) {
+                    $found[substr($property, strlen(self::PREFIX))] = $value;
+                }
+            }
+        }
+        $expected = [];
+        foreach (self::MOTION as $suffix => $fallback) {
+            $expected[$suffix] = 'var(' . self::FAMILY . $suffix . ', ' . $fallback . ')';
+        }
+        foreach (self::STATE_ALIASES as $suffix => $target) {
+            $expected[$suffix] = 'var(' . self::FAMILY . $suffix . ', var(' . self::PREFIX . $target . '))';
+        }
+        $this->assertCount(21, $expected);
+        $offenders = [];
+        foreach ($expected as $suffix => $value) {
+            if (($found[$suffix] ?? null) !== $value) {
+                $offenders[] = self::PREFIX . $suffix . ' is "' . ($found[$suffix] ?? 'missing') . '", not "' . $value . '"';
+            }
+            if (!$this->reads_family_first($found[$suffix] ?? '', $suffix)) {
+                $offenders[] = self::PREFIX . $suffix . ' does not read ' . self::FAMILY . $suffix . ' first';
+            }
+        }
+        $this->assertSame([], $offenders, implode('; ', $offenders));
     }
 
     /**
@@ -1682,7 +1870,7 @@ final class colour_tokens_test extends \basic_testcase {
         }
         $expected = [];
         foreach (self::STATE_ALIASES as $suffix => $target) {
-            $expected[self::PREFIX . $suffix] = 'var(' . self::PREFIX . $target . ')';
+            $expected[self::PREFIX . $suffix] = $this->family_wrapped($suffix, 'var(' . self::PREFIX . $target . ')');
         }
         ksort($block);
         ksort($expected);
@@ -1725,6 +1913,7 @@ final class colour_tokens_test extends \basic_testcase {
         $offenders = [];
         $withrung = 0;
         foreach ($this->token_block() as $name => $declaration) {
+            $declaration = $this->family_unwrap($declaration);
             preg_match_all('/--[a-z0-9-]+/i', $declaration, $names);
             $rungs = array_values(array_intersect($names[0], array_keys(self::CORE_BS4)));
             if (!$rungs) {
