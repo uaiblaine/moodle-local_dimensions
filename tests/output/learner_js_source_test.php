@@ -19,7 +19,7 @@ namespace local_dimensions\output;
 /**
  * Pins behaviour of the learner pages' JavaScript that no PHP test can run.
  *
- * The plugin has no JavaScript test runner, so these read amd/src the way bootstrap_compat_test
+ * The plugin has no JavaScript test runner, so these read amd/src the way bootstrap_markup_test
  * reads class names: each assertion names the shape a fix gave the code and fails when the shape
  * it replaced comes back.
  *

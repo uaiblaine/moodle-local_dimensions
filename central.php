@@ -76,7 +76,6 @@ if ($locked) {
 }
 $PAGE->set_title(get_string('central', 'local_dimensions'));
 $PAGE->add_body_class('local-dimensions-central-page');
-\local_dimensions\local\bootstrap::mark_page();
 
 // Restore the last-visited view (tab / context / selection) from the user's saved preference;
 // an explicit URL param always wins so deep-links keep working. A locked entry neither reads nor

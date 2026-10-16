@@ -3461,9 +3461,7 @@ define(
         /**
          * Wire the sort menu.
          *
-         * A plain block toggled by the hidden attribute, like the chip-filter panel: a
-         * Bootstrap dropdown would need both data-toggle and data-bs-toggle to work on 4.5
-         * and 5.x alike.
+         * A plain block toggled by the hidden attribute, like the chip-filter panel.
          */
         function initSort() {
             const toggle = document.querySelector('[data-sort-toggle]');

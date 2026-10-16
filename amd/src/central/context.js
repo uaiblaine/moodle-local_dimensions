@@ -57,9 +57,7 @@ const SELECTORS = {
     hiddenCatsToggle: '[data-action="toggle-hidden-cats"]',
     activePane: '.dynamictabs .tab-pane.active',
     pane: '.dynamictabs [data-tab-content]',
-    // Core's dynamic_tabs template emits data-toggle on Moodle 4.5 (Bootstrap 4) and
-    // data-bs-toggle on 5.x (Bootstrap 5), so match either attribute.
-    tabToggle: '.dynamictabs a[data-toggle="tab"], .dynamictabs a[data-bs-toggle="tab"]',
+    tabToggle: '.dynamictabs a[data-bs-toggle="tab"]',
 };
 
 /**

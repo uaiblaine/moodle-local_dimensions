@@ -38,7 +38,7 @@ use local_dimensions\template_metadata_cache;
  *
  * The hub's JavaScript cannot run here, so the sinks that parse HTML (modal titles and bodies,
  * confirm dialogues, toasts, autocomplete labels) are pinned by reading its source, the way
- * bootstrap_compat_test pins class names.
+ * bootstrap_markup_test pins class names.
  *
  * The class-level covers tags stay in docblock form on purpose: moodle-cs on the 4.05 leg cannot
  * see PHP attributes, and the plugin still supports 4.5.
