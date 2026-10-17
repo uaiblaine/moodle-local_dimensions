@@ -22,14 +22,14 @@ use core_cohort\reportbuilder\local\entities\cohort;
 use core_reportbuilder\datasource;
 use core_reportbuilder\local\entities\user;
 use core_reportbuilder\local\helpers\database;
-use local_dimensions\reportbuilder\local\entities\{plan, template};
+use local_dimensions\reportbuilder\local\entities\{plan, template, template_extras};
 
 /**
  * Learning plans datasource.
  *
- * Plan-focused datasource bundling `competency_plan` with its template (and
- * the template's customfields), the plan owner, and any cohorts linked to the
- * template. Built so report authors can answer "all active plans by user with
+ * Plan-focused datasource bundling `competency_plan` with its template, the
+ * template's customfields ({@see template_extras}), the plan owner, and any
+ * cohorts linked to the template. Built so report authors can answer "all active plans by user with
  * the template's tag1/type" without writing SQL.
  *
  * @package    local_dimensions
@@ -62,6 +62,12 @@ class learning_plans extends datasource {
         $this->add_entity($templateentity
             ->add_join("LEFT JOIN {competency_template} {$templatealias}
                 ON {$templatealias}.id = {$planalias}.templateid"));
+
+        // Template customfields, keyed to the same template rows.
+        $extrasentity = new template_extras();
+        $this->add_entity($extrasentity
+            ->set_table_alias('competency_template', $templatealias)
+            ->add_joins($templateentity->get_joins()));
 
         // Plan owner (core user entity).
         $userentity = new user();

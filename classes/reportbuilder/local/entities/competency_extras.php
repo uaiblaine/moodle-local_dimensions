@@ -20,7 +20,6 @@ namespace local_dimensions\reportbuilder\local\entities;
 
 use core\lang_string;
 use core_reportbuilder\local\entities\base;
-use core_reportbuilder\local\helpers\custom_fields;
 use local_dimensions\helper;
 
 /**
@@ -38,6 +37,8 @@ use local_dimensions\helper;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class competency_extras extends base {
+    use dimensions_customfields;
+
     /**
      * Database tables that this entity uses.
      *
@@ -60,26 +61,12 @@ class competency_extras extends base {
     }
 
     /**
-     * Initialise the entity: auto-generate columns and filters from the
-     * `competency` area customfield handler.
+     * Initialise the entity: the `competency` area's customfield columns and filters,
+     * without the ones {@see \local_dimensions\constants::REPORT_HIDDEN_CFIELDS} lists.
      */
     #[\Override]
     public function initialise(): base {
-        $tablealias = $this->get_table_alias('competency');
-
-        $customfields = (new custom_fields(
-            "{$tablealias}.id",
-            $this->get_entity_name(),
-            'local_dimensions',
-            helper::AREA_COMPETENCY,
-        ))->add_joins($this->get_joins());
-
-        foreach ($customfields->get_columns() as $col) {
-            $this->add_column($col);
-        }
-        foreach ($customfields->get_filters() as $f) {
-            $this->add_filter($f)->add_condition($f);
-        }
+        $this->add_dimensions_customfields($this->get_table_alias('competency'), helper::AREA_COMPETENCY);
 
         return $this;
     }
