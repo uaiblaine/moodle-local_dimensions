@@ -51,7 +51,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   icon (the locked card's disc keeps it). The "cardicon" setting description now says the icon
   replaces the disc icon only on a locked card with no enrolment available.
 
+- Report builder: in the "Learning plans" report source, the template's Dimensions custom fields
+  moved from the "Learning plan template" entity to their own entity, "Learning plan template:
+  Dimensions custom fields" (`template_extras`), as the competency custom fields already were
+  (`competency_extras`). The upgrade moves the columns, filters, conditions, stored condition
+  values and stored user filter values of saved reports to the new entity
+  (`legacy_repair::move_template_customfield_report_elements()`, once per site).
+
+- Report builder: the custom fields that only style or steer the learner pages (display mode,
+  card and background images, colours, custom SCSS, subline source, enrolment filter,
+  single-course redirect, locked-card mode, availability date, related competencies) are no
+  longer offered as columns, filters or conditions, in both Dimensions custom field entities
+  (`constants::REPORT_HIDDEN_CFIELDS`). Tag 1, Tag 2, Type, the template identifier and every
+  field an administrator adds stay offered. A saved report that used a field now hidden drops
+  that column, filter or condition.
+
 ### Fixed
+
+- Report builder: the "Status" column of the "Learning plan" entity no longer fails a report that
+  aggregates it as an average or a sum; it is now a text column, like core's user competency
+  status, so only the aggregations that make sense for a category are offered.
 
 - **The hero meets the navbar under Boost Union with a smart menu** (`2025100602`). Boost Union moves
   `#page` down by the navbar plus the menu bar (40px) whenever a smart menu exists, even when no menu bar
@@ -61,6 +80,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Report builder: a "Course and activity competencies" report source (`course_competencies`,
+  version 2025100604), one row per competency linked to a course, with the course, its category,
+  the competency, its framework, its Dimensions custom fields and the course rule ("Upon course
+  completion", sort order, "Push course ratings to individual learning plans"); the activity
+  entities add the activities of that course linked to the same competency, with their name, type,
+  rule and "Override the existing rating". New entities `course_competency` and
+  `module_competency`; a course module entity of the plugin gives the activity's ID number and
+  visibility, under core's names, because core has one only from Moodle 5.2. The source is offered only while competencies are enabled.
 - **The filter line** (version 2025100601; the fleet's contract in
   `moodle-dev/docs/filter-line/CONTRACT.md`, stage D1). The plan overview's sticky toolbar is one
   line in the contract's order: the scope ("To do" and "All", a radio group with arrow keys), a pill
