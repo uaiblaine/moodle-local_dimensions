@@ -119,12 +119,7 @@ Como ficou o `course_competencies`:
 | D1 | "Planos com campos customizados em nova categoria" | **Entidade de reportbuilder separada** (`template_extras`) para os campos que já existem no **modelo**, sem criar dado novo por plano. Descartado: nova área de customfield em `competency_plan` (dado por aluno, exigiria handler, formulário, privacy provider e backup/restore). |
 | D2 | Quais campos do plugin aparecem nos relatórios | **Só os de negócio**: `tag1`, `tag2`, `type`, `template_idnumber` e os campos criados pelo admin. Os de apresentação ficam em `constants::REPORT_HIDDEN_CFIELDS`. |
 | D3 | Curso e atividade | **Um datasource** (`course_competencies`), tabela principal `competency_coursecomp`. |
-
-### Pendentes
-
-| # | Decisão | Opções |
-|---|---|---|
-| D4 | Ramos | só `main` (5.3) · cherry-pick para 5.2, 5.1 e 4.5 (ver seção 6) |
+| D4 | Ramos | **Cherry-pick para 5.2, 5.1 e 4.5**, com matriz completa local em cada ramo. |
 
 ## 6. Portabilidade para o Moodle 4.5 (e 5.1)
 
@@ -147,11 +142,19 @@ Os ramos `MOODLE_405_STABLE`, `MOODLE_501_STABLE` e `MOODLE_502_STABLE` já têm
 | `course_competencies` com dados da atividade | Sim. Ver abaixo o que o cherry-pick exige em cada ramo |
 | O10 | Não se aplica (só `main`) |
 
-### Cherry-pick do `course_competencies` (não portado; depende de D4)
+### Cherry-pick do `course_competencies` (feito: D4)
 
 | Ramo | O que o cherry-pick exige |
 |---|---|
 | Todos (5.2, 5.1, 4.5) | Tirar o `#[\Override]` das duas entidades e do datasource; no teste, `#[CoversClass]` e `#[DataProvider]` viram `@covers` e `@dataProvider` no docblock; bump do `version.php` de cada ramo; strings, CHANGELOG e spec de mutação iguais. As demais APIs usadas existem nos três (`column::add_field()` com parâmetros, `set_table_join_alias`, `core\lang_string`, `core_reportbuilder\tests\core_reportbuilder_testcase`, `get_ruleoutcome_list()`) |
 | `MOODLE_502_STABLE` | Nada além disso: a entidade core `course_module` existe no 5.2 com as mesmas colunas e filtros do 5.3 |
 | `MOODLE_501_STABLE`, `MOODLE_405_STABLE` | Sem a entidade core `course_module`. Nome e tipo da atividade já estão em `module_competency`, então falta só idnumber, visible e timecreated (`added`) do `course_modules`. Proposta: entidade própria mínima `local_dimensions\reportbuilder\local\entities\course_module`, só nesses ramos, com **o mesmo nome de entidade** (`course_module`) e os mesmos nomes de coluna e filtro do core, para que os relatórios salvos sobrevivam ao upgrade do site para o 5.2+. O datasource troca o `use` de `core_course\…\course_module` pelo do plugin. Alternativa mais simples: omitir a entidade e perder essas três colunas nesses ramos |
+
+Como ficou o port (D1, D2 e D3):
+
+| Ramo | Versões | Diferenças do `main` |
+|---|---|---|
+| `MOODLE_502_STABLE` | `2026042003` (D1/D2), `2026042004` (D3) | Sem `#[\Override]`, constantes sem tipo, metadados de teste em docblock, sem este inventário |
+| `MOODLE_501_STABLE` | `2025100603`, `2025100604` | Como o 5.2, mais a entidade própria `course_module` (mesmo nome de entidade, colunas e filtros do core 5.2) e a string `entityname_course_module` |
+| `MOODLE_405_STABLE` | `2024100703`, `2024100704` | Como o 5.1, e a migração dos relatórios salvos move os valores de filtro do usuário pelas preferências (`user_filter_manager`), porque o 4.5 não tem `reportbuilder_user_filter` |
 
