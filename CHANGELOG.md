@@ -66,6 +66,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   field an administrator adds stay offered. A saved report that used a field now hidden drops
   that column, filter or condition.
 
+- Report builder, "Competencies with Dimensions custom fields": the user competency "Rating"
+  column names the scale item without reading the competency and its scale for every row; it
+  reads each scale once per request (`local\reportbuilder\local\helpers\rating`). The entity is
+  the plugin's `usercompetency`, a subclass of core's with the same names, so saved reports keep
+  their columns; it adds a "Rating (position in the scale)" filter and condition. New reports
+  start with the competency's Dimensions type and Tag 1 columns.
+
+- Report builder, "Learning plans": the cohorts entity is titled "Learning plan template cohort",
+  and a new "Plan owner cohort" entity (`usercohort`) gives the cohorts of the plan's owner. The
+  numeric "User" filter of the "Learning plan" entity is gone (the plan owner's user entity
+  filters by name); a saved report that used it drops that filter. New reports no longer start
+  with the "Visible" template condition, which left out plans without a template.
+
+- Report builder: the "Competencies with Dimensions custom fields" and "Learning plans" report
+  sources are offered only while competencies are enabled, as "Course and activity
+  competencies" already was.
+
 ### Fixed
 
 - Report builder: the "Status" column of the "Learning plan" entity no longer fails a report that
@@ -80,6 +97,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Report builder: two report sources for ratings (version 2024100707), offered while competencies
+  are enabled.
+  - "Competency ratings in courses" (`course_competency_ratings`): one row per rating a user
+    received for a competency in a course, with the rating and proficiency, the user and their
+    cohorts, the course and its category, and the competency with its framework and Dimensions
+    custom fields.
+  - "Learning plan competencies" (`learning_plan_competencies`): one row per plan and competency
+    of that plan (its template's, or its own when it has no template), with "From the template",
+    the proficiency and rating in the plan (from the archive once the plan is complete), the
+    owner's current user competency, the plan, its template and Dimensions custom fields, the
+    owner and their cohorts.
+- Report builder: two report sources for competency evidence (version 2024100706), offered while
+  competencies are enabled.
+  - "Competency evidence" (`competency_evidence`): one row per evidence, with its action, its
+    description, link, rating (named from the competency's scale, read once per scale), note and
+    date; the user competency, competency, framework and Dimensions custom fields; the learner;
+    the "Evidence author" (`evidenceauthor`); the "Evidence context"; and the course of a course or
+    activity context.
+  - "Evidence of prior learning" (`competency_user_evidence`): one row per evidence and linked
+    competency, with its name, description, link, number of files and dates; the user; the
+    competency, framework and Dimensions custom fields; and the user's competency. An evidence
+    linked to nothing keeps one row.
 - Report builder: a "Course and activity competencies" report source (`course_competencies`,
   version 2024100704), one row per competency linked to a course, with the course, its category,
   the competency, its framework, its Dimensions custom fields and the course rule ("Upon course
