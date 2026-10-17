@@ -1,0 +1,41 @@
+/**
+  * This file is part of Moodle - http://moodle.org/
+  *
+  * Moodle is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * Moodle is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+  *
+  * @package    local_dimensions
+  * @copyright  2026 Anderson Blaine
+  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+  */
+
+/*
+ * Overrides for theme_boost_union and every theme that inherits from it (styles_boost.css loads
+ * before this file). Scope every rule to a plugin surface, as in styles_boost.css.
+ */
+
+/*
+ * Hero flush against the navbar while a smart menu exists but no menu bar is drawn.
+ *
+ * With any smart menu configured, Boost Union adds body.theme-boost-union-smartmenu and its rule
+ * ".theme-boost-union-smartmenu .navbar.fixed-top ~ #page.drawers" moves #page down by the navbar
+ * height plus the menu bar's 40px, whether or not a menu bar (.boost-union-menubar) is drawn. The
+ * hero starts at #page's top edge (styles_boost.css), so it showed a 40px strip of page under the
+ * navbar. Without a menu bar #page goes back to Boost's own offset, the navbar height; with one,
+ * Boost Union's offset is right and stays. Plugin CSS loads before the theme's, so the selector
+ * outranks Boost Union's (one id, four classes and one element against one id and four classes).
+ */
+body.local-dimensions-viewplan.theme-boost-union-smartmenu:not(:has(.boost-union-menubar)) #page.drawers,
+body.local-dimensions-viewcompetency.theme-boost-union-smartmenu:not(:has(.boost-union-menubar)) #page.drawers {
+    margin-top: 60px;
+}

@@ -18,7 +18,8 @@
     @template local_dimensions/view_competency
 
     Main template for the view competency page (Competency Tracker Mode).
-    Renders the hero header and course grid based on context.
+    Renders the hero header, the filter line (local_dimensions/filter_line: scope, search and
+    Filters) and the course grid with its "no results" state.
 
     Context variables required:
     * hascompetency (bool) - Whether a competency is selected
@@ -27,6 +28,8 @@
     * courses (array) - Array of course objects
     * hascustomcss (bool) - Whether there is custom CSS to inject
     * customcss (string) - Compiled CSS from competency SCSS custom field
+    * line (object) - The filter line's context (local_dimensions/filter_line)
+    * viewstatejson (string) - The whole stored view state, for the client to seed from
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -57,47 +60,31 @@
 {{/hascompetency}}
 
 {{#hascourses}}
-    <div class="local-dimensions-filter-bar local-dimensions-toolbar">
-        {{! Hidden until the batch completion call answers - the counts are unknowable before
-            that, and a tab strip with blank numbers explains nothing. }}
-        <div class="local-dimensions-filter-tabs" role="tablist" data-course-tabs
-             aria-label="{{#str}}filter_courses, local_dimensions{{/str}}" hidden>
-            <button class="local-dimensions-filter-tab" data-filter="incomplete" role="tab" aria-selected="false" type="button">
-                {{#str}}filter_not_completed, local_dimensions{{/str}}
-                <span class="local-dimensions-filter-count" data-count="incomplete"></span>
-            </button>
-            <button class="local-dimensions-filter-tab active" data-filter="all" role="tab" aria-selected="true" type="button">
-                {{#str}}filter_all, local_dimensions{{/str}}
-                <span class="local-dimensions-filter-count" data-count="all"></span>
+    {{! The filter line: the scope (hidden until the completion batch answers, because the counts
+        are unknowable before it), the search over the cards drawn, and Filters when course
+        fields are configured; then the row of chips. }}
+    {{#line}}
+    {{> local_dimensions/filter_line }}
+    {{/line}}
+    <div data-region="local-dimensions-tracker"
+         data-viewstate="{{viewstatejson}}">
+        {{> local_dimensions/course_grid}}
+        {{! Outside the grid's region, and never a card wrapper: the filters hide those. }}
+        <div id="local-dimensions-viewcompetency-noresults" class="local-dimensions-empty" role="status" hidden>
+            <span class="local-dimensions-empty-icon">
+                <i class="fa fa-search" aria-hidden="true"></i>
+            </span>
+            <span class="local-dimensions-empty-title">
+                {{#str}}line_noresults_courses, local_dimensions{{/str}}
+            </span>
+            <span class="local-dimensions-empty-text">
+                {{#str}}line_noresults_courses_note, local_dimensions{{/str}}
+            </span>
+            <button type="button" class="local-dimensions-empty-action" data-noresults-clear>
+                {{#str}}filter_chip_clear, local_dimensions{{/str}}
             </button>
         </div>
-        {{#haschipfilters}}
-        {{#chipfilters}}
-        <button type="button"
-                class="local-dimensions-filter-toggle"
-                data-filter-toggle
-                aria-expanded="false"
-                aria-controls="{{id}}">
-            <i class="fa fa-filter" aria-hidden="true"></i>
-            <span>{{#str}}filter_toggle, local_dimensions{{/str}}</span>
-            <span class="local-dimensions-filter-toggle-count" data-chip-count hidden></span>
-        </button>
-        {{/chipfilters}}
-        {{/haschipfilters}}
     </div>
-{{/hascourses}}
-
-{{#haschipfilters}}
-    {{! Plain block toggled by the hidden attribute - see chip_filters.js initPanel. }}
-    <div class="local-dimensions-filter-panel" data-filter-panel hidden>
-        {{#chipfilters}}
-            {{> local_dimensions/chip_filters }}
-        {{/chipfilters}}
-    </div>
-{{/haschipfilters}}
-
-{{#hascourses}}
-    {{> local_dimensions/course_grid}}
 {{/hascourses}}
 
 {{^hascourses}}
