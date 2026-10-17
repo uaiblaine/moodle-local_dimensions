@@ -97,6 +97,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Report builder: two report sources for ratings (version 2025100607), offered while competencies
+  are enabled.
+  - "Competency ratings in courses" (`course_competency_ratings`): one row per rating a user
+    received for a competency in a course, with the rating and proficiency, the user and their
+    cohorts, the course and its category, and the competency with its framework and Dimensions
+    custom fields.
+  - "Learning plan competencies" (`learning_plan_competencies`): one row per plan and competency
+    of that plan (its template's, or its own when it has no template), with "From the template",
+    the proficiency and rating in the plan (from the archive once the plan is complete), the
+    owner's current user competency, the plan, its template and Dimensions custom fields, the
+    owner and their cohorts.
 - Report builder: two report sources for competency evidence (version 2025100606), offered while
   competencies are enabled.
   - "Competency evidence" (`competency_evidence`): one row per evidence, with its action, its
