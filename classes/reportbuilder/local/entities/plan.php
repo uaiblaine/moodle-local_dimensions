@@ -107,11 +107,12 @@ class plan extends base {
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
-            ->set_type(column::TYPE_INTEGER)
+            // A status is a category, not a quantity: as text, the report builder offers no numeric aggregation.
+            ->set_type(column::TYPE_TEXT)
             ->add_field("{$tablealias}.status")
             ->set_is_sortable(true)
-            ->add_callback(static function (?int $status): string {
-                return self::format_plan_status($status);
+            ->add_callback(static function (?string $status): string {
+                return self::format_plan_status($status === null ? null : (int) $status);
             });
 
         $columns[] = (new column(
