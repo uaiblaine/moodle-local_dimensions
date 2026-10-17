@@ -21,7 +21,7 @@ namespace local_dimensions\reportbuilder\local\entities;
 use core\lang_string;
 use core_competency\plan as core_plan;
 use core_reportbuilder\local\entities\base;
-use core_reportbuilder\local\filters\{date, number, select, text};
+use core_reportbuilder\local\filters\{date, select, text};
 use core_reportbuilder\local\helpers\format;
 use core_reportbuilder\local\report\{column, filter};
 use stdClass;
@@ -213,14 +213,6 @@ class plan extends base {
             new lang_string('timemodified', 'core_reportbuilder'),
             $this->get_entity_name(),
             "{$tablealias}.timemodified"
-        ))->add_joins($this->get_joins());
-
-        $filters[] = (new filter(
-            number::class,
-            'userid',
-            new lang_string('user'),
-            $this->get_entity_name(),
-            "{$tablealias}.userid"
         ))->add_joins($this->get_joins());
 
         return $filters;

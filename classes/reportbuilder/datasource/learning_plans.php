@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace local_dimensions\reportbuilder\datasource;
 
+use core\lang_string;
 use core_cohort\reportbuilder\local\entities\cohort;
 use core_reportbuilder\datasource;
 use core_reportbuilder\local\entities\user;
@@ -43,6 +44,14 @@ class learning_plans extends datasource {
     #[\Override]
     public static function get_name(): string {
         return get_string('datasource_learning_plans', 'local_dimensions');
+    }
+
+    /**
+     * Offered only while competencies are enabled on the site.
+     */
+    #[\Override]
+    public static function is_available(): bool {
+        return \core_competency\api::is_enabled();
     }
 
     /**
@@ -75,9 +84,11 @@ class learning_plans extends datasource {
         $this->add_entity($userentity
             ->add_join("LEFT JOIN {user} {$useralias} ON {$useralias}.id = {$planalias}.userid"));
 
-        // Cohorts linked to the plan's template via competency_templatecohort.
-        // 1:N expansion only triggers if the report uses a cohort column, filter or condition.
-        $cohortentity = new cohort();
+        // Cohorts linked to the plan's template via competency_templatecohort; titled apart from
+        // the owner's cohorts below. 1:N expansion only triggers if the report uses one of its
+        // columns, filters or conditions.
+        $cohortentity = (new cohort())
+            ->set_entity_title(new lang_string('entityname_templatecohort', 'local_dimensions'));
         $cohortalias = $cohortentity->get_table_alias('cohort');
         $tplcohortalias = database::generate_alias();
         $this->add_entity($cohortentity
@@ -86,6 +97,19 @@ class learning_plans extends datasource {
                 "LEFT JOIN {competency_templatecohort} {$tplcohortalias}
                     ON {$tplcohortalias}.templateid = {$templatealias}.id",
                 "LEFT JOIN {cohort} {$cohortalias} ON {$cohortalias}.id = {$tplcohortalias}.cohortid",
+            ]));
+
+        // Cohorts the plan owner belongs to.
+        $usercohortentity = (new cohort())
+            ->set_entity_name('usercohort')
+            ->set_entity_title(new lang_string('entityname_usercohort', 'local_dimensions'));
+        $usercohortalias = $usercohortentity->get_table_alias('cohort');
+        $memberalias = database::generate_alias();
+        $this->add_entity($usercohortentity
+            ->add_joins($userentity->get_joins())
+            ->add_joins([
+                "LEFT JOIN {cohort_members} {$memberalias} ON {$memberalias}.userid = {$useralias}.id",
+                "LEFT JOIN {cohort} {$usercohortalias} ON {$usercohortalias}.id = {$memberalias}.cohortid",
             ]));
 
         $this->add_all_from_entities();
@@ -139,9 +163,9 @@ class learning_plans extends datasource {
      */
     #[\Override]
     public function get_default_conditions(): array {
+        // No template condition: a plan without a template has none, and would fail it.
         return [
             'plan:status',
-            'template:visible',
         ];
     }
 }
