@@ -1,0 +1,613 @@
+{
+  "about": "Showcase data for the local_dimensions and block_dimensions READMEs. Read by seed_showcase.php (the records) and imagery/render.mjs (the pictures). Every idnumber the seed owns starts with SC- (frameworks, competencies, templates) or showcase (courses, cohorts, users).",
+  "palettes": {
+    "system": {"from": "#1e293b", "to": "#312e81", "accent": "#fbbf24", "motif": "topo", "bg": "#1e293b", "text": "#ffffff", "bglight": "#e0e7ff", "textlight": "#1e1b4b"},
+    "teaching": {"from": "#4338ca", "to": "#7c3aed", "accent": "#c4b5fd", "motif": "waves", "bg": "#3730a3", "text": "#ffffff", "bglight": "#ede9fe", "textlight": "#3b0764"},
+    "assessment": {"from": "#0f766e", "to": "#155e75", "accent": "#99f6e4", "motif": "grid", "bg": "#115e59", "text": "#ffffff", "bglight": "#ccfbf1", "textlight": "#134e4a"},
+    "digital": {"from": "#0369a1", "to": "#4338ca", "accent": "#7dd3fc", "motif": "circuit", "bg": "#075985", "text": "#ffffff", "bglight": "#e0f2fe", "textlight": "#0c4a6e"},
+    "online": {"from": "#0284c7", "to": "#0f766e", "accent": "#a5f3fc", "motif": "rings", "bg": "#0e7490", "text": "#ffffff", "bglight": "#cffafe", "textlight": "#164e63"},
+    "leadership": {"from": "#b45309", "to": "#7c2d12", "accent": "#fde68a", "motif": "chevrons", "bg": "#92400e", "text": "#ffffff", "bglight": "#fef3c7", "textlight": "#78350f"},
+    "coaching": {"from": "#c2410c", "to": "#be123c", "accent": "#fed7aa", "motif": "arcs", "bg": "#9a3412", "text": "#ffffff", "bglight": "#ffedd5", "textlight": "#7c2d12"},
+    "inclusion": {"from": "#15803d", "to": "#0f766e", "accent": "#bbf7d0", "motif": "petals", "bg": "#166534", "text": "#ffffff", "bglight": "#dcfce7", "textlight": "#14532d"},
+    "safeguarding": {"from": "#be123c", "to": "#581c87", "accent": "#fecdd3", "motif": "hex", "bg": "#9f1239", "text": "#ffffff", "bglight": "#ffe4e6", "textlight": "#881337"},
+    "induction": {"from": "#a21caf", "to": "#6d28d9", "accent": "#f5d0fe", "motif": "sparks", "bg": "#86198f", "text": "#ffffff", "bglight": "#fae8ff", "textlight": "#701a75"},
+    "health": {"from": "#0d9488", "to": "#1d4ed8", "accent": "#a7f3d0", "motif": "pulse", "bg": "#115e59", "text": "#ffffff", "bglight": "#d1fae5", "textlight": "#064e3b"},
+    "technology": {"from": "#1d4ed8", "to": "#1e1b4b", "accent": "#93c5fd", "motif": "dots", "bg": "#1e3a8a", "text": "#ffffff", "bglight": "#dbeafe", "textlight": "#1e3a8a"}
+  },
+  "categories": [
+    {"idnumber": "dimdemo_academy", "name": "Educator Academy", "parent": ""},
+    {"idnumber": "dimdemo_teaching", "name": "Teaching and Learning", "parent": "dimdemo_academy"},
+    {"idnumber": "dimdemo_assessment", "name": "Assessment for Learning", "parent": "dimdemo_teaching"},
+    {"idnumber": "dimdemo_digital", "name": "Digital Pedagogy", "parent": "dimdemo_teaching"},
+    {"idnumber": "dimdemo_online", "name": "Online Facilitation", "parent": "dimdemo_digital"},
+    {"idnumber": "dimdemo_leadership", "name": "Leadership and Coaching", "parent": "dimdemo_academy"},
+    {"idnumber": "dimdemo_coaching", "name": "Coaching and Mentoring", "parent": "dimdemo_leadership"},
+    {"idnumber": "dimdemo_inclusion", "name": "Inclusion and Wellbeing", "parent": "dimdemo_academy"},
+    {"idnumber": "dimdemo_safeguarding", "name": "Safeguarding", "parent": "dimdemo_inclusion"},
+    {"idnumber": "dimdemo_induction", "name": "Induction", "parent": "dimdemo_academy"},
+    {"idnumber": "compassdemo_health", "name": "Health Sciences", "parent": ""},
+    {"idnumber": "compassdemo_technology", "name": "Technology", "parent": ""},
+    {"idnumber": "compassdemo_business", "name": "Business and Management", "parent": ""}
+  ],
+  "scales": {
+    "growth": {"name": "Professional growth", "items": ["Emerging", "Developing", "Secure", "Leading"], "default": 3, "proficient": [3, 4], "description": "Four steps from first attempts to leading others."},
+    "practice": {"name": "Practice level", "items": ["Awareness", "Practitioner", "Advanced practitioner", "Expert"], "default": 2, "proficient": [2, 3, 4], "description": "How independently a practice is carried out."},
+    "assured": {"name": "Assurance", "items": ["Not yet assured", "Assured"], "default": 2, "proficient": [2], "description": "Compliance standards: assured or not yet."}
+  },
+  "frameworks": [
+    {"idnumber": "SC-VAL", "shortname": "Professional Values and Conduct", "category": "system", "palette": "system", "scale": "growth", "taxonomies": "value,behaviour", "tag1": "Community", "tag2": "Core", "type": "Units",
+     "description": "The values every member of staff shares: integrity, respect and professional responsibility.",
+     "domains": [
+       {"idnumber": "SC-VAL-1", "name": "Integrity and ethics", "icon": "scale-balanced", "rule": "all", "description": "Acting honestly and ethically in every professional relationship.",
+        "children": [
+          ["SC-VAL-1.1", "Acts with honesty and transparency", "handshake", "Is open about decisions and their reasons, and owns mistakes."],
+          ["SC-VAL-1.2", "Maintains professional boundaries", "user-shield", "Keeps relationships with learners and families appropriate, online and offline."],
+          ["SC-VAL-1.3", "Protects confidentiality", "lock", "Shares personal information only when policy and law allow."]]},
+       {"idnumber": "SC-VAL-2", "name": "Respect and inclusion", "icon": "people-group", "rule": "all", "description": "Treating everyone fairly and making every learner feel they belong.",
+        "children": [
+          ["SC-VAL-2.1", "Treats every learner with dignity", "heart", "Listens, values each voice and keeps high expectations for all."],
+          ["SC-VAL-2.2", "Challenges bias and discrimination", "universal-access", "Notices and addresses unfair treatment, in practice and in materials."]]},
+       {"idnumber": "SC-VAL-3", "name": "Professional responsibility", "icon": "id-badge", "rule": "none", "description": "Owning one's development and working within policy.",
+        "children": [
+          ["SC-VAL-3.1", "Keeps learning current", "book-open", "Engages with research and professional learning every year."],
+          ["SC-VAL-3.2", "Works within policy and law", "gavel", "Knows the policies that apply to the role and follows them."]]}]},
+    {"idnumber": "SC-DIG", "shortname": "Digital Capability Framework", "category": "system", "palette": "system", "scale": "growth", "taxonomies": "domain,skill", "tag1": "Digital", "tag2": "Core", "type": "Levels",
+     "description": "The digital skills staff need to work, teach and stay safe in a connected organisation.",
+     "domains": [
+       {"idnumber": "SC-DIG-1", "name": "Information and data literacy", "icon": "database", "rule": "points", "description": "Finding, judging and managing information and data.",
+        "children": [
+          ["SC-DIG-1.1", "Finds and evaluates digital sources", "magnifying-glass", "Searches effectively and judges the reliability of what is found."],
+          ["SC-DIG-1.2", "Manages data responsibly", "file-shield", "Stores, shares and deletes data in line with data protection rules."]]},
+       {"idnumber": "SC-DIG-2", "name": "Communication and collaboration", "icon": "comments", "rule": "all", "description": "Working together through digital tools.",
+        "children": [
+          ["SC-DIG-2.1", "Collaborates in shared workspaces", "cloud", "Co-authors documents and organises shared files so others can find them."],
+          ["SC-DIG-2.2", "Communicates professionally online", "message", "Writes clear, courteous messages and chooses the right channel."]]},
+       {"idnumber": "SC-DIG-3", "name": "Digital content creation", "icon": "pen-ruler", "rule": "all", "description": "Creating digital resources others can use.",
+        "children": [
+          ["SC-DIG-3.1", "Creates accessible digital resources", "universal-access", "Uses headings, alt text and contrast so every learner can use a resource."],
+          ["SC-DIG-3.2", "Respects copyright and licensing", "scroll", "Uses openly licensed material and credits sources correctly."]]},
+       {"idnumber": "SC-DIG-4", "name": "Safety and wellbeing online", "icon": "shield-halved", "rule": "none", "description": "Keeping people, devices and data safe.",
+        "children": [
+          ["SC-DIG-4.1", "Protects devices and accounts", "fingerprint", "Uses strong authentication and recognises phishing."],
+          ["SC-DIG-4.2", "Balances screen time and wellbeing", "spa", "Sets healthy boundaries for digital work, for self and learners."]]}]},
+    {"idnumber": "SC-LEAD", "shortname": "Leadership Capability Framework", "category": "system", "palette": "system", "scale": "growth", "taxonomies": "domain,behaviour", "tag1": "Leadership", "tag2": "Core", "type": "Levels",
+     "description": "What good leadership looks like at every level, from team leader to senior leader.",
+     "domains": [
+       {"idnumber": "SC-LEAD-1", "name": "Setting direction", "icon": "compass", "rule": "all", "description": "Knowing where the team is going and why.",
+        "children": [
+          ["SC-LEAD-1.1", "Shares a compelling vision", "lightbulb", "Explains the purpose of the work in a way that motivates others."],
+          ["SC-LEAD-1.2", "Plans strategically", "route", "Turns priorities into a realistic plan with milestones."]]},
+       {"idnumber": "SC-LEAD-2", "name": "Developing people", "icon": "seedling", "rule": "all", "description": "Helping every colleague grow.",
+        "children": [
+          ["SC-LEAD-2.1", "Gives developmental feedback", "comments", "Offers specific, timely feedback that helps colleagues improve."],
+          ["SC-LEAD-2.2", "Builds team capability", "users-gear", "Spots talent, delegates well and plans for succession."]]},
+       {"idnumber": "SC-LEAD-3", "name": "Leading the organisation", "icon": "sitemap", "rule": "points", "description": "Using resources and evidence well.",
+        "children": [
+          ["SC-LEAD-3.1", "Manages resources effectively", "calculator", "Plans budgets and time so that priorities are funded."],
+          ["SC-LEAD-3.2", "Makes evidence-informed decisions", "chart-line", "Weighs data and research before deciding."]]}]},
+    {"idnumber": "SC-WELL", "shortname": "Workplace Wellbeing Framework", "category": "system", "palette": "system", "scale": "growth", "taxonomies": "domain,practice", "tag1": "Wellbeing", "tag2": "Elective", "type": "Activities",
+     "description": "Habits that keep individuals and teams healthy, resilient and able to do their best work.",
+     "domains": [
+       {"idnumber": "SC-WELL-1", "name": "Personal resilience", "icon": "mountain-sun", "rule": "all", "description": "Looking after one's own wellbeing.",
+        "children": [
+          ["SC-WELL-1.1", "Manages workload and priorities", "hourglass-half", "Plans the week, protects focus time and says no when needed."],
+          ["SC-WELL-1.2", "Recognises signs of stress", "brain", "Knows personal warning signs and acts on them early."]]},
+       {"idnumber": "SC-WELL-2", "name": "Healthy teams", "icon": "people-roof", "rule": "all", "description": "Building teams where people thrive.",
+        "children": [
+          ["SC-WELL-2.1", "Supports colleagues' wellbeing", "hand-holding-heart", "Checks in on colleagues and knows where to point them for help."],
+          ["SC-WELL-2.2", "Builds psychological safety", "face-smile", "Makes it safe to ask questions, disagree and admit mistakes."]]}]},
+    {"idnumber": "SC-PED", "shortname": "Effective Pedagogy", "category": "dimdemo_teaching", "palette": "teaching", "scale": "practice", "taxonomies": "domain,practice", "tag1": "Pedagogy", "tag2": "Core", "type": "Modules",
+     "description": "The classroom practices with the strongest evidence of impact on learning.",
+     "domains": [
+       {"idnumber": "SC-PED-1", "name": "Planning for learning", "icon": "pen-ruler", "rule": "all", "description": "Designing lessons around what learners need to know next.",
+        "children": [
+          ["SC-PED-1.1", "Sets clear learning intentions", "bullseye", "Shares what will be learned and what success looks like."],
+          ["SC-PED-1.2", "Sequences knowledge coherently", "layer-group", "Orders content so each lesson builds on the last."],
+          ["SC-PED-1.3", "Plans for prior knowledge", "brain", "Checks and activates what learners already know."]]},
+       {"idnumber": "SC-PED-2", "name": "Instruction", "icon": "chalkboard-user", "rule": "points", "description": "Explaining, modelling and guiding practice.",
+        "children": [
+          ["SC-PED-2.1", "Models and explains clearly", "person-chalkboard", "Breaks complex ideas into steps and thinks aloud."],
+          ["SC-PED-2.2", "Uses questioning to deepen thinking", "comments", "Asks questions that make every learner think, not only volunteers."],
+          ["SC-PED-2.3", "Scaffolds independent practice", "puzzle-piece", "Removes support gradually until learners work alone."]]},
+       {"idnumber": "SC-PED-3", "name": "Learning environment", "icon": "school", "rule": "all", "description": "A calm, purposeful room where everyone can learn.",
+        "children": [
+          ["SC-PED-3.1", "Establishes routines and expectations", "calendar-check", "Teaches routines explicitly and keeps them consistent."],
+          ["SC-PED-3.2", "Builds positive relationships", "handshake", "Knows learners well and shows warmth and high expectations."]]}]},
+    {"idnumber": "SC-CUR", "shortname": "Curriculum Design", "category": "dimdemo_teaching", "palette": "teaching", "scale": "practice", "taxonomies": "domain,skill", "tag1": "Pedagogy", "tag2": "Elective", "type": "Units",
+     "description": "Designing a curriculum that is ambitious, coherent and reviewed for impact.",
+     "domains": [
+       {"idnumber": "SC-CUR-1", "name": "Curriculum intent", "icon": "map", "rule": "all", "description": "Deciding what matters most.",
+        "children": [
+          ["SC-CUR-1.1", "Defines essential knowledge", "book", "Identifies the knowledge every learner must secure."],
+          ["SC-CUR-1.2", "Aligns outcomes to standards", "list-check", "Maps outcomes to the standards they serve."]]},
+       {"idnumber": "SC-CUR-2", "name": "Implementation", "icon": "diagram-project", "rule": "all", "description": "Turning intent into units and lessons.",
+        "children": [
+          ["SC-CUR-2.1", "Designs coherent units", "rectangle-list", "Plans units with a clear arc and assessment points."],
+          ["SC-CUR-2.2", "Interleaves and revisits content", "arrows-spin", "Builds retrieval and spaced practice into the sequence."]]},
+       {"idnumber": "SC-CUR-3", "name": "Review", "icon": "magnifying-glass", "rule": "none", "description": "Checking whether the curriculum works.",
+        "children": [
+          ["SC-CUR-3.1", "Evaluates curriculum impact", "chart-pie", "Uses work scrutiny and data to refine the curriculum."]]}]},
+    {"idnumber": "SC-ASM", "shortname": "Assessment Literacy", "category": "dimdemo_assessment", "palette": "assessment", "scale": "growth", "taxonomies": "domain,skill", "tag1": "Pedagogy", "tag2": "Core", "type": "Cycles",
+     "description": "Using assessment to find out what learners know and to decide what to teach next.",
+     "domains": [
+       {"idnumber": "SC-ASM-1", "name": "Formative assessment", "icon": "clipboard-check", "rule": "all", "description": "Checking understanding while learning happens.",
+        "children": [
+          ["SC-ASM-1.1", "Checks for understanding in real time", "eye", "Uses mini whiteboards, cold calling and exit tickets to see every learner's thinking."],
+          ["SC-ASM-1.2", "Uses hinge questions", "signs-post", "Asks a diagnostic question before moving on."],
+          ["SC-ASM-1.3", "Responds to evidence in the moment", "route", "Changes the plan when the evidence says so."]]},
+       {"idnumber": "SC-ASM-2", "name": "Feedback", "icon": "comments", "rule": "all", "description": "Feedback that moves learning forward.",
+        "children": [
+          ["SC-ASM-2.1", "Gives actionable feedback", "message", "Tells learners exactly what to do next and gives time to do it."],
+          ["SC-ASM-2.2", "Develops peer and self assessment", "people-arrows", "Teaches learners to judge work against success criteria."]]},
+       {"idnumber": "SC-ASM-3", "name": "Summative assessment", "icon": "square-poll-vertical", "rule": "points", "description": "Fair, reliable judgements of attainment.",
+        "children": [
+          ["SC-ASM-3.1", "Designs valid assessments", "pen-ruler", "Writes tasks that measure what was taught."],
+          ["SC-ASM-3.2", "Writes rubrics and success criteria", "list-check", "Describes quality clearly at each level."],
+          ["SC-ASM-3.3", "Moderates judgements", "scale-balanced", "Compares marking with colleagues to agree standards."]]}]},
+    {"idnumber": "SC-DPED", "shortname": "Digital Pedagogy", "category": "dimdemo_digital", "palette": "digital", "scale": "practice", "taxonomies": "domain,practice", "tag1": "Digital", "tag2": "Elective", "type": "Levels",
+     "description": "Teaching well with technology, from purposeful tools to generative AI.",
+     "domains": [
+       {"idnumber": "SC-DPED-1", "name": "Technology-enhanced learning", "icon": "laptop", "rule": "all", "description": "Choosing technology that serves learning.",
+        "children": [
+          ["SC-DPED-1.1", "Selects tools with purpose", "shapes", "Chooses a tool only when it improves the learning."],
+          ["SC-DPED-1.2", "Designs interactive activities", "puzzle-piece", "Builds activities in which learners do the thinking."]]},
+       {"idnumber": "SC-DPED-2", "name": "Blended design", "icon": "layer-group", "rule": "all", "description": "Combining face-to-face and online learning.",
+        "children": [
+          ["SC-DPED-2.1", "Plans blended sequences", "diagram-project", "Decides what happens online and what in the room, and why."],
+          ["SC-DPED-2.2", "Creates engaging video", "video", "Records short, focused videos with clear structure."]]},
+       {"idnumber": "SC-DPED-3", "name": "AI in education", "icon": "robot", "rule": "points", "description": "Using generative AI wisely.",
+        "children": [
+          ["SC-DPED-3.1", "Uses generative AI critically", "microchip", "Checks AI output for accuracy and bias before using it."],
+          ["SC-DPED-3.2", "Designs AI-resilient tasks", "shield-halved", "Sets tasks where the learning cannot be outsourced."],
+          ["SC-DPED-3.3", "Teaches AI literacy", "lightbulb", "Helps learners understand how AI works and its limits."]]}]},
+    {"idnumber": "SC-ONL", "shortname": "Online Facilitation", "category": "dimdemo_online", "palette": "online", "scale": "growth", "taxonomies": "domain,skill", "tag1": "Digital", "tag2": "Elective", "type": "Stages",
+     "description": "Facilitating live and asynchronous online learning that keeps people engaged.",
+     "domains": [
+       {"idnumber": "SC-ONL-1", "name": "Online presence", "icon": "headset", "rule": "all", "description": "Being visibly present for online learners.",
+        "children": [
+          ["SC-ONL-1.1", "Establishes teaching presence", "video", "Welcomes, guides and responds so learners know someone is there."],
+          ["SC-ONL-1.2", "Builds an online community", "people-group", "Creates the conditions for learners to learn from each other."]]},
+       {"idnumber": "SC-ONL-2", "name": "Live sessions", "icon": "microphone", "rule": "all", "description": "Running synchronous sessions well.",
+        "children": [
+          ["SC-ONL-2.1", "Runs inclusive live sessions", "wifi", "Plans for bandwidth, captions and every voice."],
+          ["SC-ONL-2.2", "Uses breakout rooms purposefully", "circle-nodes", "Gives groups a clear task, roles and a product."]]},
+       {"idnumber": "SC-ONL-3", "name": "Asynchronous discussion", "icon": "comments", "rule": "none", "description": "Discussion that deepens thinking over time.",
+        "children": [
+          ["SC-ONL-3.1", "Moderates forums constructively", "message", "Keeps discussion respectful and on task."],
+          ["SC-ONL-3.2", "Summarises and weaves discussion", "feather-pointed", "Pulls threads together to show what the group has learned."]]}]},
+    {"idnumber": "SC-ILEAD", "shortname": "Instructional Leadership", "category": "dimdemo_leadership", "palette": "leadership", "scale": "growth", "taxonomies": "domain,behaviour", "tag1": "Leadership", "tag2": "Core", "type": "Modules",
+     "description": "Leading the quality of teaching and learning across a team or department.",
+     "domains": [
+       {"idnumber": "SC-ILEAD-1", "name": "Leading teaching", "icon": "chalkboard", "rule": "all", "description": "Improving practice across the team.",
+        "children": [
+          ["SC-ILEAD-1.1", "Observes and develops practice", "eye", "Runs developmental observations focused on one step at a time."],
+          ["SC-ILEAD-1.2", "Leads professional learning", "book-open", "Plans sessions that change what happens in classrooms."]]},
+       {"idnumber": "SC-ILEAD-2", "name": "Data-informed improvement", "icon": "chart-line", "rule": "all", "description": "Using evidence to set priorities.",
+        "children": [
+          ["SC-ILEAD-2.1", "Analyses attainment data", "chart-pie", "Finds the patterns in results that matter for action."],
+          ["SC-ILEAD-2.2", "Sets improvement priorities", "bullseye", "Chooses a few priorities and sticks with them."]]},
+       {"idnumber": "SC-ILEAD-3", "name": "Culture of learning", "icon": "seedling", "rule": "points", "description": "A team that learns together.",
+        "children": [
+          ["SC-ILEAD-3.1", "Builds collective efficacy", "people-group", "Helps the team believe they can make a difference together."],
+          ["SC-ILEAD-3.2", "Celebrates progress", "trophy", "Notices and shares improvements, large and small."]]}]},
+    {"idnumber": "SC-CHG", "shortname": "Leading Change", "category": "dimdemo_leadership", "palette": "leadership", "scale": "growth", "taxonomies": "domain,behaviour", "tag1": "Leadership", "tag2": "Elective", "type": "Stages",
+     "description": "Planning, implementing and sustaining change so that it lasts.",
+     "domains": [
+       {"idnumber": "SC-CHG-1", "name": "Preparing for change", "icon": "signs-post", "rule": "all", "description": "Building the case and the coalition.",
+        "children": [
+          ["SC-CHG-1.1", "Diagnoses the need for change", "magnifying-glass", "Uses evidence to define the problem before the solution."],
+          ["SC-CHG-1.2", "Engages stakeholders", "handshake", "Involves the people affected early and listens."]]},
+       {"idnumber": "SC-CHG-2", "name": "Implementing change", "icon": "gears", "rule": "all", "description": "Delivering the change in stages.",
+        "children": [
+          ["SC-CHG-2.1", "Plans implementation in stages", "route", "Pilots, learns and scales."],
+          ["SC-CHG-2.2", "Monitors and adapts", "arrows-spin", "Tracks fidelity and impact and adjusts the plan."]]},
+       {"idnumber": "SC-CHG-3", "name": "Sustaining change", "icon": "flag-checkered", "rule": "none", "description": "Making the new way the normal way.",
+        "children": [
+          ["SC-CHG-3.1", "Embeds new practice", "layer-group", "Builds the change into routines, induction and policy."]]}]},
+    {"idnumber": "SC-COACH", "shortname": "Coaching and Mentoring Practice", "category": "dimdemo_coaching", "palette": "coaching", "scale": "practice", "taxonomies": "domain,practice", "tag1": "Leadership", "tag2": "Elective", "type": "Cycles",
+     "description": "The skills of coaches and mentors who help colleagues grow.",
+     "domains": [
+       {"idnumber": "SC-COACH-1", "name": "Coaching conversations", "icon": "comments", "rule": "all", "description": "Conversations that unlock thinking.",
+        "children": [
+          ["SC-COACH-1.1", "Listens actively", "ear-listen", "Listens to understand, reflects back and resists giving answers."],
+          ["SC-COACH-1.2", "Asks powerful questions", "lightbulb", "Asks open questions that help the coachee find their own way."],
+          ["SC-COACH-1.3", "Agrees goals and actions", "bullseye", "Ends each conversation with a clear, owned next step."]]},
+       {"idnumber": "SC-COACH-2", "name": "Mentoring new colleagues", "icon": "hand-holding-hand", "rule": "all", "description": "Supporting colleagues at the start of their career.",
+        "children": [
+          ["SC-COACH-2.1", "Plans an induction programme", "calendar-check", "Maps the first year with the mentee, week by week."],
+          ["SC-COACH-2.2", "Models reflective practice", "feather-pointed", "Shares own reflections and mistakes to normalise learning."]]},
+       {"idnumber": "SC-COACH-3", "name": "Peer observation", "icon": "eye", "rule": "points", "description": "Observing to learn, not to judge.",
+        "children": [
+          ["SC-COACH-3.1", "Observes without judgement", "magnifying-glass", "Records what happened, not opinions."],
+          ["SC-COACH-3.2", "Gives evidence-based feedback", "clipboard-user", "Links feedback to what was observed and agreed foci."]]}]},
+    {"idnumber": "SC-INCL", "shortname": "Inclusive Practice", "category": "dimdemo_inclusion", "palette": "inclusion", "scale": "growth", "taxonomies": "domain,practice", "tag1": "Inclusion", "tag2": "Core", "type": "Modules",
+     "description": "Teaching that removes barriers so that every learner can take part and succeed.",
+     "domains": [
+       {"idnumber": "SC-INCL-1", "name": "Universal design", "icon": "universal-access", "rule": "all", "description": "Planning for variability from the start.",
+        "children": [
+          ["SC-INCL-1.1", "Provides multiple means of engagement", "shapes", "Offers choice and relevance so that learners want to take part."],
+          ["SC-INCL-1.2", "Offers flexible ways to show learning", "palette", "Accepts different products that meet the same goal."]]},
+       {"idnumber": "SC-INCL-2", "name": "Language and culture", "icon": "language", "rule": "all", "description": "Valuing every learner's language and background.",
+        "children": [
+          ["SC-INCL-2.1", "Supports multilingual learners", "earth-americas", "Plans language support alongside content."],
+          ["SC-INCL-2.2", "Draws on learners' cultures", "people-group", "Brings learners' experiences into the curriculum."]]},
+       {"idnumber": "SC-INCL-3", "name": "Additional needs", "icon": "puzzle-piece", "rule": "points", "description": "Meeting individual needs well.",
+        "children": [
+          ["SC-INCL-3.1", "Adapts materials for access", "file-pen", "Adjusts layout, language and format without lowering challenge."],
+          ["SC-INCL-3.2", "Works with specialist staff", "handshake", "Plans with support staff and specialists."]]}]},
+    {"idnumber": "SC-LWB", "shortname": "Learner Wellbeing", "category": "dimdemo_inclusion", "palette": "inclusion", "scale": "growth", "taxonomies": "domain,behaviour", "tag1": "Wellbeing", "tag2": "Core", "type": "Units",
+     "description": "Promoting belonging and good mental health for every learner.",
+     "domains": [
+       {"idnumber": "SC-LWB-1", "name": "Belonging", "icon": "heart", "rule": "all", "description": "Making every learner feel part of the community.",
+        "children": [
+          ["SC-LWB-1.1", "Builds a sense of belonging", "people-roof", "Greets, includes and knows every learner."],
+          ["SC-LWB-1.2", "Promotes positive behaviour", "face-smile", "Recognises good choices and restores relationships after conflict."]]},
+       {"idnumber": "SC-LWB-2", "name": "Mental health", "icon": "brain", "rule": "all", "description": "Noticing and responding to distress.",
+        "children": [
+          ["SC-LWB-2.1", "Recognises early signs of distress", "bell", "Notices changes in mood, attendance or work."],
+          ["SC-LWB-2.2", "Signposts support services", "signs-post", "Knows who to refer to and how."]]}]},
+    {"idnumber": "SC-SAFE", "shortname": "Safeguarding and Child Protection", "category": "dimdemo_safeguarding", "palette": "safeguarding", "scale": "assured", "taxonomies": "domain,indicator", "tag1": "Safety", "tag2": "Core", "type": "Units",
+     "description": "What every adult must know and do to keep children and young people safe.",
+     "domains": [
+       {"idnumber": "SC-SAFE-1", "name": "Recognising concerns", "icon": "eye", "rule": "all", "description": "Spotting the signs that a learner may be at risk.",
+        "children": [
+          ["SC-SAFE-1.1", "Identifies signs of abuse and neglect", "triangle-exclamation", "Knows the indicators of each category of abuse."],
+          ["SC-SAFE-1.2", "Understands online risks", "wifi", "Recognises grooming, exploitation and harmful content online."],
+          ["SC-SAFE-1.3", "Recognises contextual safeguarding", "map", "Considers risks outside the home, in the community and peer groups."]]},
+       {"idnumber": "SC-SAFE-2", "name": "Responding and reporting", "icon": "bell", "rule": "all", "description": "Acting on a concern without delay.",
+        "children": [
+          ["SC-SAFE-2.1", "Responds to a disclosure", "ear-listen", "Listens, reassures and never promises confidentiality."],
+          ["SC-SAFE-2.2", "Records and reports concerns", "file-pen", "Records facts accurately and reports to the safeguarding lead the same day."]]},
+       {"idnumber": "SC-SAFE-3", "name": "Safe working practice", "icon": "user-shield", "rule": "all", "description": "Behaving in ways that protect learners and staff.",
+        "children": [
+          ["SC-SAFE-3.1", "Follows the code of conduct", "id-badge", "Knows and follows the staff code of conduct."],
+          ["SC-SAFE-3.2", "Keeps learners safe on trips and events", "kit-medical", "Plans risk assessments and supervision for off-site activities."]]}]},
+    {"idnumber": "SC-IND", "shortname": "Early-Career Induction Standards", "category": "dimdemo_induction", "palette": "induction", "scale": "growth", "taxonomies": "domain,indicator", "tag1": "Community", "tag2": "Core", "type": "Stages",
+     "description": "The standards new teachers work towards in their first two years, with a mentor's support.",
+     "domains": [
+       {"idnumber": "SC-IND-1", "name": "Settling in", "icon": "school", "rule": "all", "description": "Finding one's feet in a new school.",
+        "children": [
+          ["SC-IND-1.1", "Knows school policies and routines", "book", "Knows the behaviour, assessment and safeguarding policies."],
+          ["SC-IND-1.2", "Builds working relationships", "handshake", "Works well with the mentor, team and support staff."]]},
+       {"idnumber": "SC-IND-2", "name": "Classroom practice", "icon": "chalkboard-user", "rule": "points", "description": "Secure everyday teaching.",
+        "children": [
+          ["SC-IND-2.1", "Manages behaviour consistently", "calendar-check", "Applies the behaviour policy calmly and fairly."],
+          ["SC-IND-2.2", "Plans effective lessons", "pen-ruler", "Plans lessons with clear intentions and checks for understanding."],
+          ["SC-IND-2.3", "Works with families", "people-roof", "Communicates positively and promptly with parents and carers."]]},
+       {"idnumber": "SC-IND-3", "name": "Professional growth", "icon": "seedling", "rule": "all", "description": "Taking charge of one's development.",
+        "children": [
+          ["SC-IND-3.1", "Reflects on practice", "feather-pointed", "Keeps a reflective journal and acts on what it shows."],
+          ["SC-IND-3.2", "Sets professional goals", "flag-checkered", "Agrees termly goals with the mentor and reviews them."]]}]},
+    {"idnumber": "SC-CLIN", "shortname": "Clinical Education", "category": "compassdemo_health", "palette": "health", "scale": "practice", "taxonomies": "domain,skill", "tag1": "Pedagogy", "tag2": "Elective", "type": "Modules",
+     "description": "Teaching, supervising and assessing learners in clinical and simulated settings.",
+     "domains": [
+       {"idnumber": "SC-CLIN-1", "name": "Teaching in clinical settings", "icon": "stethoscope", "rule": "all", "description": "Teaching where care happens.",
+        "children": [
+          ["SC-CLIN-1.1", "Teaches at the bedside", "user-nurse", "Turns patient encounters into structured teaching moments."],
+          ["SC-CLIN-1.2", "Supervises procedural skills", "syringe", "Demonstrates, observes and signs off procedures safely."]]},
+       {"idnumber": "SC-CLIN-2", "name": "Simulation", "icon": "vial", "rule": "all", "description": "Learning through realistic practice.",
+        "children": [
+          ["SC-CLIN-2.1", "Designs simulation scenarios", "notes-medical", "Writes scenarios with clear objectives and realistic cues."],
+          ["SC-CLIN-2.2", "Leads structured debriefs", "comments", "Uses a debrief model to turn experience into learning."]]},
+       {"idnumber": "SC-CLIN-3", "name": "Assessment in practice", "icon": "clipboard-check", "rule": "none", "description": "Judging competence in the workplace.",
+        "children": [
+          ["SC-CLIN-3.1", "Conducts workplace-based assessment", "clipboard-user", "Uses structured tools to assess performance in practice."],
+          ["SC-CLIN-3.2", "Supports struggling learners", "hand-holding-heart", "Identifies difficulties early and agrees a support plan."]]}]},
+    {"idnumber": "SC-DATA", "shortname": "Data Literacy for Educators", "category": "compassdemo_technology", "palette": "technology", "scale": "growth", "taxonomies": "domain,skill", "tag1": "Digital", "tag2": "Elective", "type": "Lessons",
+     "description": "Reading, using and protecting educational data with confidence.",
+     "domains": [
+       {"idnumber": "SC-DATA-1", "name": "Understanding data", "icon": "table-cells", "rule": "all", "description": "Making sense of numbers and charts.",
+        "children": [
+          ["SC-DATA-1.1", "Reads charts and tables", "chart-pie", "Interprets common charts without being misled."],
+          ["SC-DATA-1.2", "Understands reliability and validity", "scale-balanced", "Knows what a measure can and cannot tell."]]},
+       {"idnumber": "SC-DATA-2", "name": "Using data", "icon": "chart-line", "rule": "all", "description": "Turning data into action.",
+        "children": [
+          ["SC-DATA-2.1", "Uses data to plan interventions", "bullseye", "Targets support where the data shows the need."],
+          ["SC-DATA-2.2", "Communicates data to stakeholders", "comments", "Presents data clearly to colleagues and families."]]},
+       {"idnumber": "SC-DATA-3", "name": "Data ethics", "icon": "lock", "rule": "none", "description": "Respecting the people behind the data.",
+        "children": [
+          ["SC-DATA-3.1", "Protects learner privacy", "fingerprint", "Shares only what is needed, with those who need it."]]}]}
+  ],
+  "related": [
+    ["SC-PED-2.2", "SC-PED-1.3"], ["SC-PED-2.3", "SC-PED-2.1"], ["SC-ASM-2.1", "SC-ASM-1.3"], ["SC-ASM-1.1", "SC-ASM-1.2"],
+    ["SC-ASM-3.2", "SC-ASM-2.2"], ["SC-DPED-3.1", "SC-DPED-3.3"], ["SC-DPED-1.1", "SC-DPED-2.1"], ["SC-INCL-1.1", "SC-INCL-3.1"],
+    ["SC-INCL-2.1", "SC-INCL-2.2"], ["SC-SAFE-1.2", "SC-SAFE-2.2"], ["SC-SAFE-2.1", "SC-SAFE-1.1"], ["SC-IND-2.1", "SC-IND-1.1"],
+    ["SC-IND-2.2", "SC-IND-3.1"], ["SC-IND-2.3", "SC-IND-1.2"], ["SC-ILEAD-2.1", "SC-ILEAD-1.1"], ["SC-ILEAD-3.2", "SC-ILEAD-3.1"],
+    ["SC-COACH-1.2", "SC-COACH-3.2"], ["SC-COACH-2.2", "SC-COACH-1.1"], ["SC-ONL-3.1", "SC-ONL-1.2"], ["SC-DIG-1.2", "SC-DIG-4.1"],
+    ["SC-LEAD-2.1", "SC-LEAD-2.2"], ["SC-WELL-1.2", "SC-WELL-2.1"], ["SC-CLIN-2.2", "SC-CLIN-3.2"], ["SC-DATA-1.2", "SC-DATA-2.1"],
+    ["SC-LWB-2.1", "SC-LWB-1.1"], ["SC-CHG-1.1", "SC-CHG-2.2"], ["SC-VAL-1.3", "SC-VAL-1.2"], ["SC-CUR-2.2", "SC-CUR-1.1"]
+  ],
+  "templates": [
+    {"idnumber": "SC-T-INDPATH", "shortname": "Induction pathway 2026", "category": "dimdemo_induction", "palette": "induction", "icon": "route", "light": false,
+     "description": "Your first two years as a teacher: the standards you work towards, the courses that help, and your mentor's review at each stage.",
+     "displaymode": 2, "subline": "rating", "tag1": "Induction", "tag2": "Early career", "type": "Stages", "showrelated": "yes", "dueindays": 240,
+     "competencies": ["SC-IND-1.1", "SC-IND-1.2", "SC-IND-2.1", "SC-IND-2.2", "SC-IND-2.3", "SC-IND-3.1", "SC-IND-3.2", "SC-VAL-1.2", "SC-VAL-2.1"]},
+    {"idnumber": "SC-T-WELCOME", "shortname": "Welcome to the Academy: first 90 days", "category": "dimdemo_induction", "palette": "induction", "icon": "school", "light": true,
+     "description": "Everything a new colleague needs in the first term: policies, people, systems and safe working.",
+     "displaymode": 2, "subline": "status", "tag1": "Induction", "tag2": "Mandatory", "type": "Periods", "dueindays": 30,
+     "competencies": ["SC-IND-1.1", "SC-IND-1.2", "SC-VAL-1.1", "SC-VAL-1.3", "SC-DIG-4.1"]},
+    {"idnumber": "SC-T-PEDEXC", "shortname": "Great teaching pathway 2026", "category": "dimdemo_teaching", "palette": "teaching", "icon": "chalkboard-user", "light": false,
+     "description": "A year-long pathway through the eight practices with the strongest evidence of impact on learning.",
+     "displaymode": 1, "subline": "rating", "tag1": "Pedagogy", "tag2": "Mid career", "type": "Modules", "showrelated": "yes", "dueindays": 200,
+     "competencies": ["SC-PED-1.1", "SC-PED-1.2", "SC-PED-1.3", "SC-PED-2.1", "SC-PED-2.2", "SC-PED-2.3", "SC-PED-3.1", "SC-PED-3.2"]},
+    {"idnumber": "SC-T-CURDES", "shortname": "Curriculum design studio", "category": "dimdemo_teaching", "palette": "teaching", "icon": "diagram-project", "light": true,
+     "description": "Design or redesign a unit of work with colleagues, from intent to impact review.",
+     "displaymode": 2, "subline": "tag1", "tag1": "Pedagogy", "tag2": "All staff", "type": "Units", "dueindays": 150,
+     "competencies": ["SC-CUR-1.1", "SC-CUR-1.2", "SC-CUR-2.1", "SC-CUR-2.2", "SC-CUR-3.1"]},
+    {"idnumber": "SC-T-ASMLIT", "shortname": "Assessment literacy programme", "category": "dimdemo_assessment", "palette": "assessment", "icon": "clipboard-check", "light": false,
+     "description": "Three cycles of inquiry into formative assessment, feedback and fair summative judgements.",
+     "displaymode": 1, "subline": "rating", "tag1": "Pedagogy", "tag2": "All staff", "type": "Cycles", "dueindays": 180,
+     "competencies": ["SC-ASM-1.1", "SC-ASM-1.2", "SC-ASM-1.3", "SC-ASM-2.1", "SC-ASM-2.2", "SC-ASM-3.1", "SC-ASM-3.2", "SC-ASM-3.3"]},
+    {"idnumber": "SC-T-FEEDBACK", "shortname": "Feedback that moves learning", "category": "dimdemo_assessment", "palette": "assessment", "icon": "comments", "light": true,
+     "description": "A short programme on feedback learners act on, peer assessment and responsive teaching.",
+     "displaymode": 2, "subline": "status", "tag1": "Pedagogy", "tag2": "Early career", "type": "Lessons", "dueindays": 60,
+     "competencies": ["SC-ASM-2.1", "SC-ASM-2.2", "SC-ASM-1.3", "SC-PED-2.2"]},
+    {"idnumber": "SC-T-DPEDPATH", "shortname": "Digital pedagogy pathway", "category": "dimdemo_digital", "palette": "digital", "icon": "laptop", "light": false,
+     "description": "From purposeful tools to blended design and generative AI: teaching well with technology.",
+     "displaymode": 2, "subline": "rating", "tag1": "Digital", "tag2": "Mid career", "type": "Levels", "showrelated": "yes", "dueindays": 120,
+     "competencies": ["SC-DPED-1.1", "SC-DPED-1.2", "SC-DPED-2.1", "SC-DPED-2.2", "SC-DPED-3.1", "SC-DPED-3.2", "SC-DPED-3.3", "SC-DIG-3.1"]},
+    {"idnumber": "SC-T-AI", "shortname": "Generative AI for teaching", "category": "dimdemo_digital", "palette": "digital", "icon": "robot", "light": true,
+     "description": "Use generative AI critically, design tasks AI cannot shortcut, and teach learners how AI works.",
+     "displaymode": 2, "subline": "rating", "tag1": "Digital", "tag2": "All staff", "type": "Modules", "dueindays": 90,
+     "competencies": ["SC-DPED-3.1", "SC-DPED-3.2", "SC-DPED-3.3", "SC-DIG-1.1", "SC-DIG-1.2"]},
+    {"idnumber": "SC-T-ONLCERT", "shortname": "Online facilitator certificate", "category": "dimdemo_online", "palette": "online", "icon": "headset", "light": false,
+     "description": "Earn the certificate by facilitating live and asynchronous sessions that keep every learner engaged.",
+     "displaymode": 1, "subline": "status", "tag1": "Digital", "tag2": "Mid career", "type": "Stages", "lockedcardmode": "learnmore", "dueindays": 160,
+     "competencies": ["SC-ONL-1.1", "SC-ONL-1.2", "SC-ONL-2.1", "SC-ONL-2.2", "SC-ONL-3.1", "SC-ONL-3.2", "SC-DIG-2.2"]},
+    {"idnumber": "SC-T-MIDLEAD", "shortname": "Middle leadership programme", "category": "dimdemo_leadership", "palette": "leadership", "icon": "compass", "light": false,
+     "description": "For heads of department and team leaders: lead teaching, use data well and build a culture of learning.",
+     "displaymode": 1, "subline": "rating", "tag1": "Leadership", "tag2": "Mid career", "type": "Modules", "showrelated": "yes", "dueindays": 300,
+     "competencies": ["SC-ILEAD-1.1", "SC-ILEAD-1.2", "SC-ILEAD-2.1", "SC-ILEAD-2.2", "SC-ILEAD-3.1", "SC-ILEAD-3.2", "SC-LEAD-2.1", "SC-LEAD-3.2"]},
+    {"idnumber": "SC-T-CHANGE", "shortname": "Leading change in schools", "category": "dimdemo_leadership", "palette": "leadership", "icon": "gears", "light": true,
+     "description": "Plan and lead one improvement project from diagnosis to lasting change.",
+     "displaymode": 2, "subline": "tag2", "tag1": "Leadership", "tag2": "Mid career", "type": "Stages", "dueindays": 210,
+     "competencies": ["SC-CHG-1.1", "SC-CHG-1.2", "SC-CHG-2.1", "SC-CHG-2.2", "SC-CHG-3.1", "SC-LEAD-1.1", "SC-LEAD-1.2"]},
+    {"idnumber": "SC-T-COACHCERT", "shortname": "Instructional coaching certificate", "category": "dimdemo_coaching", "palette": "coaching", "icon": "comments", "light": false,
+     "description": "Coach a colleague through three cycles and evidence the skills of a certified instructional coach.",
+     "displaymode": 1, "subline": "rating", "tag1": "Leadership", "tag2": "Mid career", "type": "Cycles", "dueindays": 170,
+     "competencies": ["SC-COACH-1.1", "SC-COACH-1.2", "SC-COACH-1.3", "SC-COACH-2.1", "SC-COACH-2.2", "SC-COACH-3.1", "SC-COACH-3.2", "SC-LEAD-2.1"]},
+    {"idnumber": "SC-T-MENTOR", "shortname": "Mentor accreditation", "category": "dimdemo_coaching", "palette": "coaching", "icon": "hand-holding-hand", "light": true,
+     "description": "Become an accredited mentor for early-career teachers.",
+     "displaymode": 2, "subline": "status", "tag1": "Leadership", "tag2": "Mid career", "type": "Levels", "dueindays": 100,
+     "competencies": ["SC-COACH-2.1", "SC-COACH-2.2", "SC-COACH-1.1", "SC-COACH-3.2"]},
+    {"idnumber": "SC-T-INCL", "shortname": "Adaptive teaching for inclusion", "category": "dimdemo_inclusion", "palette": "inclusion", "icon": "universal-access", "light": false,
+     "description": "Universal design, language support and adaptive teaching, so that every learner takes part.",
+     "displaymode": 1, "subline": "rating", "tag1": "Inclusion", "tag2": "All staff", "type": "Modules", "dueindays": 140,
+     "competencies": ["SC-INCL-1.1", "SC-INCL-1.2", "SC-INCL-2.1", "SC-INCL-2.2", "SC-INCL-3.1", "SC-INCL-3.2", "SC-VAL-2.2"]},
+    {"idnumber": "SC-T-WELLLEAD", "shortname": "Wellbeing lead programme", "category": "dimdemo_inclusion", "palette": "inclusion", "icon": "hand-holding-heart", "light": true,
+     "description": "For staff who lead wellbeing: learner belonging, mental health and healthy teams.",
+     "displaymode": 2, "subline": "rating", "tag1": "Wellbeing", "tag2": "Mid career", "type": "Units", "dueindays": 130,
+     "competencies": ["SC-LWB-1.1", "SC-LWB-1.2", "SC-LWB-2.1", "SC-LWB-2.2", "SC-WELL-1.1", "SC-WELL-1.2", "SC-WELL-2.1", "SC-WELL-2.2"]},
+    {"idnumber": "SC-T-SAFEANNUAL", "shortname": "Annual safeguarding update 2026", "category": "dimdemo_safeguarding", "palette": "safeguarding", "icon": "shield-halved", "light": false,
+     "description": "The mandatory yearly update for every member of staff. Complete it before the end of the first half term.",
+     "displaymode": 1, "subline": "status", "tag1": "Safety", "tag2": "Mandatory", "type": "Units", "dueindays": 20,
+     "competencies": ["SC-SAFE-1.1", "SC-SAFE-1.2", "SC-SAFE-1.3", "SC-SAFE-2.1", "SC-SAFE-2.2", "SC-SAFE-3.1", "SC-SAFE-3.2"]},
+    {"idnumber": "SC-T-DSL", "shortname": "Designated safeguarding lead training", "category": "dimdemo_safeguarding", "palette": "safeguarding", "icon": "user-shield", "light": true,
+     "description": "Advanced training for designated safeguarding leads and their deputies.",
+     "displaymode": 2, "subline": "rating", "tag1": "Safety", "tag2": "Mid career", "type": "Stages", "dueindays": 75,
+     "competencies": ["SC-SAFE-1.3", "SC-SAFE-2.1", "SC-SAFE-2.2", "SC-LWB-2.2", "SC-VAL-1.3"]},
+    {"idnumber": "SC-T-CLINEDU", "shortname": "Clinical educator pathway", "category": "compassdemo_health", "palette": "health", "icon": "stethoscope", "light": false,
+     "description": "Teach, simulate and assess with confidence in clinical settings.",
+     "displaymode": 1, "subline": "rating", "tag1": "Pedagogy", "tag2": "Mid career", "type": "Modules", "dueindays": 190,
+     "competencies": ["SC-CLIN-1.1", "SC-CLIN-1.2", "SC-CLIN-2.1", "SC-CLIN-2.2", "SC-CLIN-3.1", "SC-CLIN-3.2", "SC-VAL-1.3"]},
+    {"idnumber": "SC-T-DATALIT", "shortname": "Data literacy for educators", "category": "compassdemo_technology", "palette": "technology", "icon": "chart-line", "light": true,
+     "description": "Read, use and protect educational data with confidence.",
+     "displaymode": 2, "subline": "rating", "tag1": "Digital", "tag2": "All staff", "type": "Lessons", "dueindays": 110,
+     "competencies": ["SC-DATA-1.1", "SC-DATA-1.2", "SC-DATA-2.1", "SC-DATA-2.2", "SC-DATA-3.1", "SC-DIG-1.2"]},
+    {"idnumber": "SC-T-WELLESS", "shortname": "Staff wellbeing essentials", "category": "system", "palette": "system", "icon": "spa", "light": false,
+     "description": "Simple, evidence-based habits that protect your wellbeing and your team's.",
+     "displaymode": 1, "subline": "status", "tag1": "Wellbeing", "tag2": "All staff", "type": "Activities", "dueindays": 90,
+     "competencies": ["SC-WELL-1.1", "SC-WELL-1.2", "SC-WELL-2.1", "SC-WELL-2.2", "SC-DIG-4.2", "SC-VAL-3.1"]},
+    {"idnumber": "SC-T-LEADFOUND", "shortname": "Leadership foundations", "category": "system", "palette": "system", "icon": "seedling", "light": true,
+     "description": "The first step into leadership: direction, people and decisions.",
+     "displaymode": 2, "subline": "rating", "tag1": "Leadership", "tag2": "Early career", "type": "Modules", "dueindays": 160,
+     "competencies": ["SC-LEAD-1.1", "SC-LEAD-1.2", "SC-LEAD-2.1", "SC-LEAD-2.2", "SC-LEAD-3.1", "SC-LEAD-3.2"]}
+  ],
+  "users": {
+    "learners": [
+      ["showcase.amara", "Amara", "Nwosu", "Science"],
+      ["showcase.ben", "Ben", "Fischer", "Mathematics"],
+      ["showcase.diego", "Diego", "Alvarez", "Modern Languages"],
+      ["showcase.elif", "Elif", "Yilmaz", "English"],
+      ["showcase.felix", "Felix", "Wagner", "Computing"],
+      ["showcase.grace", "Grace", "Thompson", "History"],
+      ["showcase.hiro", "Hiro", "Tanaka", "Design and Technology"],
+      ["showcase.isla", "Isla", "MacLeod", "Primary"],
+      ["showcase.jamal", "Jamal", "Ahmed", "Geography"],
+      ["showcase.kavya", "Kavya", "Iyer", "Learning Support"],
+      ["showcase.leo", "Leo", "Brennan", "Health and Social Care"],
+      ["showcase.mei", "Mei", "Lin", "Art"]
+    ],
+    "staff": [
+      ["showcase.nadia", "Nadia", "Rahman", "Professional Learning"]
+    ]
+  },
+  "roles": [
+    {"shortname": "mentor", "name": "Mentor", "description": "Reviews and rates the learning plans of the colleagues they mentor. Assigned over a cohort through cohort roles.",
+     "capabilities": ["moodle/competency:planview", "moodle/competency:planviewdraft", "moodle/competency:planreview", "moodle/competency:planrequestreview", "moodle/competency:usercompetencyview", "moodle/competency:usercompetencyreview", "moodle/competency:competencygrade", "moodle/competency:userevidenceview"]},
+    {"shortname": "headofdepartment", "name": "Head of department", "description": "Oversees and signs off the learning plans of a department. Assigned over a cohort through cohort roles.",
+     "capabilities": ["moodle/competency:planview", "moodle/competency:planviewdraft", "moodle/competency:planmanage", "moodle/competency:planmanagedraft", "moodle/competency:planreview", "moodle/competency:usercompetencyview", "moodle/competency:usercompetencyreview", "moodle/competency:competencygrade", "moodle/competency:userevidenceview"]}
+  ],
+  "cohorts": [
+    {"idnumber": "showcase_ect2026", "name": "Early-career teachers 2026", "category": "dimdemo_induction", "description": "Teachers in their first or second year, each paired with a mentor.",
+     "members": ["demo.student", "showcase.amara", "showcase.ben", "showcase.diego", "showcase.elif", "showcase.hiro", "showcase.isla", "demo.emma", "demo.lucas"],
+     "templates": ["SC-T-INDPATH", "SC-T-WELCOME"], "roles": [["dimdemo.facilitator", "mentor"], ["showcase.nadia", "mentor"]]},
+    {"idnumber": "showcase_tlteam", "name": "Teaching and Learning team", "category": "dimdemo_teaching", "description": "Experienced teachers working through the teaching excellence pathway together.",
+     "members": ["demo.priya", "demo.marcus", "demo.sofia", "showcase.felix", "showcase.grace", "showcase.kavya", "showcase.mei"],
+     "templates": ["SC-T-PEDEXC"], "roles": [["demo.teacher", "headofdepartment"]]},
+    {"idnumber": "showcase_asmgroup", "name": "Assessment working group", "category": "dimdemo_assessment", "description": "A cross-department group improving assessment and feedback this year.",
+     "members": ["demo.student", "demo.daniel", "demo.hannah", "showcase.jamal", "showcase.grace", "showcase.mei"],
+     "templates": ["SC-T-ASMLIT"], "roles": [["demo.teacher", "headofdepartment"]]},
+    {"idnumber": "showcase_digichamps", "name": "Digital champions", "category": "dimdemo_digital", "description": "Staff who pilot new tools and support colleagues with digital teaching.",
+     "members": ["demo.student", "demo.omar", "demo.marcus", "showcase.felix", "showcase.hiro", "showcase.kavya"],
+     "templates": ["SC-T-DPEDPATH", "SC-T-ONLCERT"], "roles": [["showcase.nadia", "mentor"]]},
+    {"idnumber": "showcase_midleaders", "name": "Aspiring middle leaders", "category": "dimdemo_leadership", "description": "Teachers preparing for a head of department or team leader role.",
+     "members": ["demo.priya", "demo.sofia", "demo.daniel", "showcase.grace", "showcase.jamal", "showcase.leo"],
+     "templates": ["SC-T-MIDLEAD"], "roles": [["demo.teacher", "headofdepartment"]]},
+    {"idnumber": "showcase_coaching2026", "name": "Coaching cohort 2026", "category": "dimdemo_coaching", "description": "Colleagues training as instructional coaches this year.",
+     "members": ["demo.hannah", "demo.omar", "demo.priya", "showcase.isla", "showcase.elif"],
+     "templates": ["SC-T-COACHCERT"], "roles": [["dimdemo.facilitator", "mentor"]]},
+    {"idnumber": "showcase_inclchamps", "name": "Inclusion champions", "category": "dimdemo_inclusion", "description": "One champion per department leading inclusive practice.",
+     "members": ["demo.emma", "showcase.amara", "showcase.ben", "showcase.kavya", "showcase.mei"],
+     "templates": ["SC-T-INCL"], "roles": []},
+    {"idnumber": "showcase_wellleads", "name": "Wellbeing leads", "category": "dimdemo_inclusion", "description": "Staff who lead learner and staff wellbeing.",
+     "members": ["demo.lucas", "demo.sofia", "showcase.diego"],
+     "templates": ["SC-T-WELLLEAD"], "roles": []},
+    {"idnumber": "showcase_allstaff2026", "name": "All staff 2026", "category": "system", "description": "Every member of staff this academic year. Mandatory programmes are assigned here.",
+     "members": ["demo.student", "demo.priya", "demo.marcus", "demo.sofia", "demo.daniel", "demo.emma", "demo.lucas", "demo.hannah", "demo.omar", "showcase.amara", "showcase.ben", "showcase.diego", "showcase.elif", "showcase.felix", "showcase.grace", "showcase.hiro", "showcase.isla", "showcase.jamal", "showcase.kavya", "showcase.leo", "showcase.mei"],
+     "templates": ["SC-T-SAFEANNUAL", "SC-T-WELLESS"], "roles": []},
+    {"idnumber": "showcase_clined", "name": "Clinical educators", "category": "compassdemo_health", "description": "Health staff who teach and supervise learners in practice.",
+     "members": ["showcase.leo", "showcase.jamal", "demo.hannah", "demo.daniel"],
+     "templates": ["SC-T-CLINEDU"], "roles": [["showcase.nadia", "mentor"]]}
+  ],
+  "courses": {
+    "new": [
+      {"idnumber": "showcase_firstterm", "shortname": "IND-FIRSTTERM", "fullname": "Your First Term", "category": "dimdemo_induction", "palette": "induction", "icon": "school",
+       "summary": "A guided first term for new teachers, with your mentor at every step.",
+       "sections": [
+         ["Week 1: Getting started", [["page", "Staff handbook essentials", "SC-IND-1.1", "evidence"], ["url", "Meet your mentor", "SC-IND-1.2", "complete"]]],
+         ["Weeks 2 to 6: In the classroom", [["page", "Behaviour routines that work", "SC-IND-2.1", "evidence"], ["assign", "Plan and teach an observed lesson", "SC-IND-2.2", "complete"], ["forum", "Talking with families", "SC-IND-2.3", "complete"]]],
+         ["Weeks 7 to 12: Growing", [["assign", "Reflective journal entry", "SC-IND-3.1", "complete"], ["forum", "Goal-setting conversation", "SC-IND-3.2", "complete"]]]]},
+      {"idnumber": "showcase_questioning", "shortname": "PED-QUESTION", "fullname": "Questioning for Deeper Thinking", "category": "dimdemo_teaching", "palette": "teaching", "icon": "comments",
+       "summary": "Cold calling, wait time and probing questions that make every learner think.",
+       "sections": [
+         ["Why questioning matters", [["page", "The research in ten minutes", "SC-PED-2.2", "evidence"], ["url", "Watch: questioning in action", "SC-PED-2.1", "evidence"]]],
+         ["Techniques", [["assign", "Plan a questioning sequence", "SC-PED-2.2", "complete"], ["forum", "Share a hinge question", "SC-ASM-1.2", "evidence"]]],
+         ["Into practice", [["assign", "Scaffolded practice task", "SC-PED-2.3", "complete"]]]]},
+      {"idnumber": "showcase_culture", "shortname": "PED-CULTURE", "fullname": "Classroom Culture and Routines", "category": "dimdemo_teaching", "palette": "teaching", "icon": "school",
+       "summary": "Build the routines and relationships that make a calm, purposeful classroom.",
+       "sections": [
+         ["Routines", [["page", "Entry and exit routines", "SC-PED-3.1", "evidence"], ["assign", "Script your first lesson routines", "SC-PED-3.1", "complete"]]],
+         ["Relationships", [["page", "Warm-strict in practice", "SC-PED-3.2", "evidence"], ["forum", "What builds trust?", "SC-PED-3.2", "complete"]]]]},
+      {"idnumber": "showcase_feedbacklab", "shortname": "ASM-FEEDBACK", "fullname": "Feedback Literacy Lab", "category": "dimdemo_assessment", "palette": "assessment", "icon": "message",
+       "summary": "Feedback learners act on: whole-class feedback, peer assessment and responsive teaching.",
+       "sections": [
+         ["Feedback that works", [["page", "What makes feedback actionable", "SC-ASM-2.1", "evidence"], ["assign", "Redesign a feedback routine", "SC-ASM-2.1", "complete"]]],
+         ["Learners as assessors", [["forum", "Peer assessment protocols", "SC-ASM-2.2", "complete"]]],
+         ["Responsive teaching", [["assign", "Respond to an exit ticket", "SC-ASM-1.3", "complete"]]]]},
+      {"idnumber": "showcase_ailiteracy", "shortname": "DPED-AILIT", "fullname": "AI Literacy for Teachers", "category": "dimdemo_digital", "palette": "digital", "icon": "robot",
+       "summary": "Use generative AI critically and design tasks where the learning cannot be outsourced.",
+       "sections": [
+         ["How generative AI works", [["page", "Models, prompts and limits", "SC-DPED-3.3", "evidence"], ["url", "Try it: compare three answers", "SC-DIG-1.1", "evidence"]]],
+         ["Using AI critically", [["assign", "Fact-check an AI lesson plan", "SC-DPED-3.1", "complete"], ["page", "Data protection and AI tools", "SC-DIG-1.2", "complete"]]],
+         ["Designing for an AI world", [["assign", "Redesign one assessment task", "SC-DPED-3.2", "complete"]]]]},
+      {"idnumber": "showcase_livesessions", "shortname": "ONL-LIVE", "fullname": "Running Great Live Sessions", "category": "dimdemo_online", "palette": "online", "icon": "microphone",
+       "summary": "Plan and facilitate live online sessions that include every learner.",
+       "sections": [
+         ["Before the session", [["page", "Plan for bandwidth and captions", "SC-ONL-2.1", "evidence"]]],
+         ["During the session", [["assign", "Facilitate a breakout task", "SC-ONL-2.2", "complete"], ["forum", "Community-building openers", "SC-ONL-1.2", "complete"]]]]},
+      {"idnumber": "showcase_coachconv", "shortname": "COACH-CONV", "fullname": "Coaching Conversations", "category": "dimdemo_coaching", "palette": "coaching", "icon": "ear-listen",
+       "summary": "Listening, questioning and goal-setting: the core skills of every coaching conversation.",
+       "sections": [
+         ["Listening", [["page", "Levels of listening", "SC-COACH-1.1", "evidence"], ["assign", "Record a listening practice", "SC-COACH-1.1", "complete"]]],
+         ["Questions", [["forum", "Our best coaching questions", "SC-COACH-1.2", "complete"]]],
+         ["Goals", [["assign", "Write a coaching agreement", "SC-COACH-1.3", "complete"]]]]},
+      {"idnumber": "showcase_safeupdate", "shortname": "SAFE-UPDATE26", "fullname": "Safeguarding Annual Update 2026", "category": "dimdemo_safeguarding", "palette": "safeguarding", "icon": "shield-halved",
+       "summary": "This year's mandatory update: recognising, responding and safe working practice.",
+       "sections": [
+         ["Recognise", [["page", "Signs of abuse and neglect", "SC-SAFE-1.1", "complete"], ["page", "Online risks this year", "SC-SAFE-1.2", "complete"], ["page", "Contextual safeguarding", "SC-SAFE-1.3", "complete"]]],
+         ["Respond", [["assign", "Scenario: a disclosure", "SC-SAFE-2.1", "complete"], ["page", "How to record a concern", "SC-SAFE-2.2", "complete"]]],
+         ["Safe working", [["page", "Code of conduct refresher", "SC-SAFE-3.1", "complete"], ["page", "Trips and events checklist", "SC-SAFE-3.2", "complete"]]]]},
+      {"idnumber": "showcase_wellbeingwork", "shortname": "WELL-WORK", "fullname": "Wellbeing at Work", "category": "dimdemo_inclusion", "palette": "inclusion", "icon": "spa",
+       "summary": "Workload, stress and healthy teams: practical habits for the school year.",
+       "sections": [
+         ["You", [["page", "Planning a sustainable week", "SC-WELL-1.1", "complete"], ["page", "Spotting stress early", "SC-WELL-1.2", "complete"], ["page", "Healthy screen habits", "SC-DIG-4.2", "evidence"]]],
+         ["Your team", [["forum", "Small acts of support", "SC-WELL-2.1", "complete"], ["assign", "A team agreement", "SC-WELL-2.2", "complete"]]]]},
+      {"idnumber": "showcase_leadteams", "shortname": "LEAD-TEAMS", "fullname": "Leading a Team of Teachers", "category": "dimdemo_leadership", "palette": "leadership", "icon": "people-group",
+       "summary": "Build collective efficacy, celebrate progress and develop every colleague.",
+       "sections": [
+         ["Collective efficacy", [["page", "Why belief matters", "SC-ILEAD-3.1", "evidence"], ["assign", "Team improvement charter", "SC-ILEAD-3.1", "complete"]]],
+         ["Developing people", [["forum", "Feedback conversations", "SC-LEAD-2.1", "complete"], ["assign", "A succession plan", "SC-LEAD-2.2", "complete"]]],
+         ["Celebrating progress", [["page", "Making improvement visible", "SC-ILEAD-3.2", "complete"]]]]},
+      {"idnumber": "showcase_simteaching", "shortname": "CLIN-SIM", "fullname": "Simulation-Based Teaching", "category": "compassdemo_health", "palette": "health", "icon": "vial",
+       "summary": "Design realistic scenarios and run debriefs that turn simulation into learning.",
+       "sections": [
+         ["Scenario design", [["page", "Objectives and cues", "SC-CLIN-2.1", "evidence"], ["assign", "Write a scenario", "SC-CLIN-2.1", "complete"]]],
+         ["Debriefing", [["assign", "Lead a recorded debrief", "SC-CLIN-2.2", "complete"], ["forum", "Supporting a learner who struggled", "SC-CLIN-3.2", "complete"]]]]},
+      {"idnumber": "showcase_digicontent", "shortname": "DIG-CONTENT", "fullname": "Creating Digital Content", "category": "dimdemo_digital", "palette": "digital", "icon": "pen-ruler",
+       "summary": "Accessible, well-licensed digital resources and collaborative workspaces.",
+       "sections": [
+         ["Accessible by design", [["page", "Headings, alt text and contrast", "SC-DIG-3.1", "evidence"], ["assign", "Make a resource accessible", "SC-DIG-3.1", "complete"]]],
+         ["Licensing", [["page", "Open licences explained", "SC-DIG-3.2", "complete"]]],
+         ["Working together", [["forum", "Shared workspace etiquette", "SC-DIG-2.1", "complete"], ["page", "Writing professional messages", "SC-DIG-2.2", "complete"]]]]}
+    ],
+    "links": {
+      "dimdemo_lesson": ["SC-PED-1.1", "SC-PED-1.2", "SC-PED-1.3", "SC-CUR-2.1"],
+      "dimdemo_diff": ["SC-PED-2.3", "SC-INCL-1.2"],
+      "dimdemo_feedback": ["SC-ASM-2.1", "SC-PED-2.2"],
+      "dimdemo_formative": ["SC-ASM-1.1", "SC-ASM-1.2", "SC-ASM-1.3"],
+      "dimdemo_rubrics": ["SC-ASM-3.1", "SC-ASM-3.2"],
+      "dimdemo_moderation": ["SC-ASM-3.3"],
+      "dimdemo_tools": ["SC-DPED-1.1", "SC-DPED-1.2", "SC-DIG-2.1"],
+      "dimdemo_blended": ["SC-DPED-2.1", "SC-DPED-2.2"],
+      "dimdemo_ai": ["SC-DPED-3.1", "SC-DPED-3.2", "SC-DPED-3.3", "SC-DIG-1.1"],
+      "dimdemo_facilitate": ["SC-ONL-3.1", "SC-ONL-3.2"],
+      "dimdemo_video": ["SC-ONL-1.1", "SC-DPED-2.2"],
+      "dimdemo_live": ["SC-ONL-2.1", "SC-ONL-2.2"],
+      "dimdemo_instructional": ["SC-ILEAD-1.1", "SC-ILEAD-1.2"],
+      "dimdemo_data": ["SC-ILEAD-2.1", "SC-ILEAD-2.2", "SC-DATA-2.1"],
+      "dimdemo_change": ["SC-CHG-1.1", "SC-CHG-1.2", "SC-CHG-2.1", "SC-CHG-2.2", "SC-CHG-3.1"],
+      "dimdemo_cycles": ["SC-COACH-1.1", "SC-COACH-1.2", "SC-COACH-1.3"],
+      "dimdemo_mentor": ["SC-COACH-2.1", "SC-COACH-2.2"],
+      "dimdemo_peer": ["SC-COACH-3.1", "SC-COACH-3.2"],
+      "dimdemo_udl": ["SC-INCL-1.1", "SC-INCL-1.2"],
+      "dimdemo_language": ["SC-INCL-2.1", "SC-INCL-2.2"],
+      "dimdemo_access": ["SC-INCL-3.1", "SC-INCL-3.2", "SC-DIG-3.1"],
+      "dimdemo_essentials": ["SC-SAFE-1.1", "SC-SAFE-2.1", "SC-SAFE-2.2"],
+      "dimdemo_restorative": ["SC-LWB-1.1", "SC-LWB-1.2"],
+      "dimdemo_wellbeing": ["SC-WELL-1.1", "SC-WELL-1.2", "SC-WELL-2.1", "SC-LWB-2.1", "SC-LWB-2.2"],
+      "dimdemo_welcome": ["SC-IND-1.1", "SC-IND-1.2", "SC-VAL-1.1", "SC-VAL-1.3", "SC-DIG-4.1"],
+      "dimdemo_families": ["SC-IND-2.3"],
+      "compassdemo_cskl300": ["SC-CLIN-1.1", "SC-CLIN-1.2"],
+      "compassdemo_anat101": ["SC-CLIN-3.1"],
+      "compassdemo_phar210": ["SC-CLIN-2.1"],
+      "compassdemo_data200": ["SC-DATA-1.1", "SC-DATA-2.1", "SC-DATA-2.2"],
+      "compassdemo_stat210": ["SC-DATA-1.2"],
+      "compassdemo_cybr150": ["SC-DIG-4.1", "SC-DATA-3.1"],
+      "compassdemo_lead230": ["SC-LEAD-2.1", "SC-LEAD-2.2", "SC-LEAD-1.1"],
+      "compassdemo_pmgt110": ["SC-LEAD-1.2", "SC-LEAD-3.1", "SC-LEAD-3.2"],
+      "compassdemo_writ100": ["SC-VAL-3.1"],
+      "compassdemo_ethc200": ["SC-VAL-1.1", "SC-VAL-1.2", "SC-VAL-1.3", "SC-VAL-2.1", "SC-VAL-2.2"]
+    }
+  },
+  "student": {
+    "username": "demo.student",
+    "plans": {
+      "SC-T-INDPATH": {"progress": 0.6, "status": "active"},
+      "SC-T-WELCOME": {"progress": 1.0, "status": "complete"},
+      "SC-T-ASMLIT": {"progress": 0.3, "status": "active"},
+      "SC-T-DPEDPATH": {"progress": 0.75, "status": "active"},
+      "SC-T-ONLCERT": {"progress": 0.15, "status": "active"},
+      "SC-T-SAFEANNUAL": {"progress": 1.0, "status": "complete"},
+      "SC-T-WELLESS": {"progress": 0.45, "status": "active"}
+    },
+    "personal": [
+      {"name": "Personal inquiry: questioning for deeper thinking", "status": "draft", "description": "My inquiry question for this term: does cold calling with wait time raise the quality of answers in Year 9?", "competencies": ["SC-PED-2.2", "SC-ASM-1.1", "SC-COACH-1.2"]},
+      {"name": "Next step: coaching readiness", "status": "waiting", "description": "I would like to join next year's coaching cohort. These are the skills I will evidence first.", "competencies": ["SC-COACH-1.1", "SC-COACH-1.2", "SC-COACH-1.3"]},
+      {"name": "Online facilitation portfolio", "status": "inreview", "reviewer": "dimdemo.facilitator", "description": "Evidence from the live sessions and forums I ran with the Year 10 online group.", "competencies": ["SC-ONL-1.1", "SC-ONL-3.1", "SC-ONL-3.2"]}
+    ],
+    "enrol": ["showcase_firstterm", "showcase_questioning", "showcase_feedbacklab", "showcase_ailiteracy", "showcase_livesessions", "showcase_safeupdate", "showcase_wellbeingwork", "showcase_digicontent", "dimdemo_formative", "dimdemo_rubrics", "dimdemo_tools", "dimdemo_blended", "dimdemo_ai", "dimdemo_welcome", "dimdemo_families", "dimdemo_wellbeing", "dimdemo_essentials", "dimdemo_video"],
+    "favourites": {"plans": ["SC-T-INDPATH", "SC-T-DPEDPATH"], "competencies": ["SC-IND-2.2", "SC-DPED-3.1", "SC-ASM-2.1"]},
+    "priorlearning": [
+      {"name": "Google Certified Educator, level 1", "description": "Certificate earned in 2025 covering collaborative workspaces and digital communication.", "competencies": ["SC-DIG-2.1", "SC-DIG-2.2"]},
+      {"name": "Lesson study write-up: hinge questions in algebra", "description": "A write-up of the three-lesson study I led with two colleagues in the spring.", "competencies": ["SC-ASM-1.2", "SC-ASM-1.1"]}
+    ],
+    "reviewrequests": ["SC-IND-2.2", "SC-DPED-3.2"]
+  },
+  "individualplans": {
+    "SC-T-CURDES": ["demo.priya", "showcase.grace", "showcase.felix"],
+    "SC-T-FEEDBACK": ["showcase.amara", "showcase.ben", "demo.emma", "showcase.isla"],
+    "SC-T-AI": ["demo.marcus", "showcase.felix", "showcase.mei", "demo.sofia", "showcase.jamal"],
+    "SC-T-CHANGE": ["demo.daniel", "showcase.leo"],
+    "SC-T-MENTOR": ["demo.hannah", "showcase.isla", "demo.priya"],
+    "SC-T-DSL": ["demo.lucas", "showcase.kavya"],
+    "SC-T-DATALIT": ["showcase.jamal", "demo.omar", "showcase.leo", "demo.daniel"],
+    "SC-T-LEADFOUND": ["showcase.grace", "showcase.diego", "demo.marcus"]
+  },
+  "otherplans": [
+    {"username": "showcase.grace", "name": "Aspiring head of department", "status": "waiting", "description": "The leadership skills I want to evidence before applying for the head of history post.", "competencies": ["SC-LEAD-1.1", "SC-LEAD-2.1", "SC-ILEAD-2.1"]},
+    {"username": "demo.priya", "name": "Coaching portfolio", "status": "inreview", "reviewer": "showcase.nadia", "description": "Recordings and reflections from my first two coaching cycles.", "competencies": ["SC-COACH-1.1", "SC-COACH-1.2", "SC-COACH-3.2"]},
+    {"username": "showcase.felix", "name": "Computing curriculum redesign", "status": "draft", "description": "Notes towards next year's Key Stage 3 computing curriculum.", "competencies": ["SC-CUR-1.1", "SC-CUR-2.1", "SC-DPED-3.3"]},
+    {"username": "demo.omar", "name": "Live teaching practice log", "status": "waiting", "description": "Evidence from my live online lessons this term.", "competencies": ["SC-ONL-2.1", "SC-ONL-2.2"]}
+  ]
+}
