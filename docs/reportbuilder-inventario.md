@@ -37,7 +37,7 @@ Nenhum teste PHPUnit cobre `classes/reportbuilder/` (só a referência de string
 | Área | Situação | Tabelas core envolvidas |
 |---|---|---|
 | Competências com campos customizados | **Existe** (`dimensions_competencies` + `competency_extras`) | `competency`, `customfield_data` (área `competency`) |
-| Competências vinculadas a cursos e atividades | **Feito** (`course_competencies`, branch `feat/rb-course-competencies`); faltam as avaliações por curso (`course_competency_ratings`) | `competency_coursecomp`, `competency_coursecompsetting`, `competency_modulecomp`, `competency_usercompcourse`, `course_modules` |
+| Competências vinculadas a cursos e atividades | **Feito** (`course_competencies`, branch `feat/rb-course-competencies`); avaliações por curso em `course_competency_ratings` | `competency_coursecomp`, `competency_coursecompsetting`, `competency_modulecomp`, `competency_usercompcourse`, `course_modules` |
 | Planos com campos customizados em entidade própria | **Feito** (`template_extras`, branch `feat/rb-template-extras`) | `competency_plan`, `competency_template`, `customfield_data` (área `lp`) |
 | Evidências | **Feito** (`competency_evidence`, `competency_user_evidence`, branch `feat/rb-evidence`) | `competency_evidence` (evidência de avaliação) e `competency_userevidence` + `competency_userevidencecomp` (prova de aprendizagem prévia) |
 
@@ -67,8 +67,8 @@ colunas de rating (ver O4).
 | Datasource | Grão (tabela principal) | Entidades | Pergunta que responde |
 |---|---|---|---|
 | `course_competencies` — **Feito** (branch `feat/rb-course-competencies`, versão `2026100507`) | `competency_coursecomp` | course_competency, course (core), course_category (core), module_competency, course_module (core, `LEFT JOIN` por `cm.course = cc.courseid AND mc.competencyid = cc.competencyid`), competency (core), **competency_extras**, framework (core) | "Quais competências cada curso e cada atividade desenvolve, com qual regra e com quais tags/tipo do Dimensions?" |
-| `course_competency_ratings` | `competency_usercompcourse` | usercompetency_course, user, course, competency, **competency_extras**, framework, cohort (do usuário) | "Como os alunos foram avaliados em cada competência dentro de cada curso?" |
-| `learning_plan_competencies` | `competency_plan` × `plan_competency` | plan, template, **template_extras**, user, plan_competency, competency, **competency_extras**, framework | "Quais competências cada plano tem e em qual estágio está cada aluno?" |
+| `course_competency_ratings` — **Feito** (branch `feat/rb-plan-ratings`) | `competency_usercompcourse` | usercompetency_course, user, course, competency, **competency_extras**, framework, cohort (do usuário) | "Como os alunos foram avaliados em cada competência dentro de cada curso?" |
+| `learning_plan_competencies` — **Feito** (branch `feat/rb-plan-ratings`) | `competency_plan` × `plan_competency` | plan, template, **template_extras**, user, plan_competency, competency, **competency_extras**, framework | "Quais competências cada plano tem e em qual estágio está cada aluno?" |
 | `competency_evidence` — **Feito** (branch `feat/rb-evidence`) | `competency_evidence` | evidence, usercompetency (core, por `usercompetencyid`), user (aluno), user `actionuser` (quem gerou), context (core, de onde veio), competency, **competency_extras**, framework | "Quem gerou qual evidência, para qual competência, de qual curso/atividade, com qual nota?" |
 | `competency_user_evidence` — **Feito** (branch `feat/rb-evidence`) | `competency_userevidence` × `userevidencecomp` | user_evidence, user, competency, **competency_extras**, framework | "Quais provas de aprendizagem prévia cada aluno enviou e a quais competências estão ligadas?" |
 
