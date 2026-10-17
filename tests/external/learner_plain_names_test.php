@@ -344,7 +344,9 @@ final class learner_plain_names_test extends \advanced_testcase {
         ]);
         $this->assertSame(1, preg_match('~local-dimensions-chip-group-label"[^>]*>([^<]*)</span>~', $html, $label));
         $this->assertSame(self::COURSE_HTML, $label[1]);
-        $this->assertSame(1, preg_match('~data-chip-value="([^"]*)"[^>]*>\s*([^<]*?)\s*</button>~', $html, $chip));
+        // The chip's words come before the count the filter line paints into it.
+        $pattern = '~data-chip-value="([^"]*)"[^>]*>\s*([^<]*?)\s*<span class="local-dimensions-filter-count"~';
+        $this->assertSame(1, preg_match($pattern, $html, $chip));
         $this->assertSame('Ask &amp; answer &lt; 5', $chip[1]);
         $this->assertSame('Ask &amp; answer &lt; 5', $chip[2]);
         $this->assert_escaped_once(self::COURSE_HTML, $html);

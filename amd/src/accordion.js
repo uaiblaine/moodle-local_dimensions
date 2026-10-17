@@ -24,9 +24,9 @@
 define(
     ['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/modal', 'core/log',
         'local_dimensions/collapsible_description', 'local_dimensions/chip_filters',
-        'local_dimensions/learner_prefs', 'local_dimensions/central/modal_expander'],
+        'local_dimensions/learner_prefs', 'local_dimensions/central/modal_expander', 'local_dimensions/filter_line'],
     function(Ajax, Templates, Notification, Str, Modal, Log, CollapsibleDescription, ChipFilters,
-        LearnerPrefs, ModalExpander) {
+        LearnerPrefs, ModalExpander, Line) {
         'use strict';
 
         /* Which pane holds each competency's detail, rendered or on its way. It describes the DOM,
@@ -51,14 +51,19 @@ define(
            load logs again, as core's pages do. */
         const loggedViews = new Set();
 
-        /* The plan's completion tabs. Other controls reuse the .local-dimensions-filter-tab class
-           for its pill styling: the chip filters (chip_filters.mustache) sit outside the bar, but
-           the two favourites pills (view_plan_summary.mustache) sit inside it, so their group is
-           excluded by its own class. Otherwise a favourites click would run the completion handler,
-           strip .active from the real tabs and leave getActiveFilter() reading undefined. */
-        const FILTER_TAB_SELECTOR =
-            '.local-dimensions-filter-bar .local-dimensions-filter-tabs:not(.local-dimensions-fav-group)'
-            + ' .local-dimensions-filter-tab';
+        /* The filter line's scope: "To do" and "All", a radio group whose chosen cell carries
+           aria-checked (templates/filter_line.mustache). Scoped to the line's region, because the
+           chip filters' buttons share none of its hooks but do share its look. */
+        const SCOPE_CELL_SELECTOR = '[data-region="local-dimensions-line-scope"] [data-filter]';
+
+        /* The filter line's favourites star: one aria-pressed toggle, the favourites-only filter. */
+        const STAR_SELECTOR = '[data-region="local-dimensions-line-star"]';
+
+        /* The chip filters' container on this page, which the panel's counts are painted into. */
+        const CHIP_CONTAINER_ID = 'local-dimensions-viewplan-chip-filters';
+
+        /* Each row's chip values, parsed once: the counts read them for every control on every pass. */
+        const rowValues = new WeakMap();
 
         /* The two ruleoutcome values that conclude or advance a competency, OUTCOME_RECOMMEND and
            OUTCOME_COMPLETE (same values in core_competency\course_competency and
@@ -3060,12 +3065,24 @@ define(
             initViewToggle(planId);
 
             // Wire up custom-field chip filters (no-op when none rendered).
-            ChipFilters.init('local-dimensions-viewplan-chip-filters', function(selection) {
+            ChipFilters.init(CHIP_CONTAINER_ID, function(selection) {
                 activeChipSelection = selection || {};
                 applyFilter();
             });
-            ChipFilters.initPanel('local-dimensions-viewplan-chip-filters');
+            ChipFilters.initPanel(CHIP_CONTAINER_ID);
             initNoResultsClear();
+
+            /* The line's presentation and keyboard: its folding, the search's morph and suggestions,
+               the chips under it. It applies a filter by pressing the control this module listens to,
+               and asks here what each one would leave. */
+            Line.arm(document, {
+                countFor: function(control) {
+                    return countWith(control, false);
+                },
+                items: drawnItems,
+                openItem: openItem,
+                dropTerm: applyFilter,
+            });
 
             // Apply initial filter (show incomplete only by default).
             applyFilter();
@@ -3097,7 +3114,7 @@ define(
          * @return {string}
          */
         function getActiveFilter() {
-            const active = document.querySelector(FILTER_TAB_SELECTOR + '.active');
+            const active = document.querySelector(SCOPE_CELL_SELECTOR + '[aria-checked="true"]');
             return active ? active.dataset.filter : 'incomplete';
         }
 
@@ -3112,42 +3129,33 @@ define(
         }
 
         /**
-         * Initialize filter tabs click handlers.
+         * Wire the scope's cells: the chosen one carries aria-checked, and the choice is remembered.
+         *
+         * The arrow keys and the roving focus are the line's (filter_line), which presses the cell it
+         * reaches, so a key and a click run this one handler.
          */
         function initFilterTabs() {
-            const filterTabs = document.querySelectorAll(FILTER_TAB_SELECTOR);
+            const cells = document.querySelectorAll(SCOPE_CELL_SELECTOR);
 
-            filterTabs.forEach(function(tab) {
-                tab.addEventListener('click', function() {
-                    // Update active state on tabs.
-                    filterTabs.forEach(function(t) {
-                        t.classList.remove('active');
-                        t.setAttribute('aria-selected', 'false');
+            cells.forEach(function(cell) {
+                cell.addEventListener('click', function() {
+                    cells.forEach(function(other) {
+                        other.setAttribute('aria-checked', other === cell ? 'true' : 'false');
                     });
-                    this.classList.add('active');
-                    this.setAttribute('aria-selected', 'true');
-
-                    // Apply the filter (combined with search).
                     applyFilter();
-                    LearnerPrefs.save({filter: this.dataset.filter});
-                });
-
-                // Keyboard support.
-                tab.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        this.click();
-                    }
+                    LearnerPrefs.save({filter: cell.dataset.filter});
                 });
             });
         }
 
         /**
          * Initialize competency search input.
+         *
+         * The eraser, the morph and the suggestions are the line's (filter_line); this only filters,
+         * a moment after the last key.
          */
         function initSearch() {
             const input = document.querySelector('.local-dimensions-search-input');
-            const clearBtn = document.querySelector('.local-dimensions-search-clear');
             if (!input) {
                 return;
             }
@@ -3155,75 +3163,158 @@ define(
             let debounceTimer = null;
 
             input.addEventListener('input', function() {
-                // Show/hide clear button.
-                if (clearBtn) {
-                    clearBtn.style.display = input.value.length > 0 ? 'flex' : 'none';
-                }
                 // Debounce filtering (100ms).
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(function() {
                     applyFilter();
                 }, 100);
             });
+        }
 
-            if (clearBtn) {
-                clearBtn.addEventListener('click', function() {
-                    input.value = '';
-                    clearBtn.style.display = 'none';
-                    input.focus();
-                    applyFilter();
-                });
+        /**
+         * The criteria in force: the scope, the star, the typed text and the chips.
+         *
+         * @return {Object} Keys: filter, favonly, query, chips.
+         */
+        function currentCriteria() {
+            return {
+                filter: getActiveFilter(),
+                favonly: isFavouritesOnly(),
+                query: getSearchQuery(),
+                chips: activeChipSelection,
+            };
+        }
+
+        /**
+         * A row's chip values, parsed once.
+         *
+         * @param {HTMLElement} item The accordion item.
+         * @return {Object} Shortname => value.
+         */
+        function valuesOf(item) {
+            if (!rowValues.has(item)) {
+                let parsed = null;
+                try {
+                    parsed = JSON.parse(item.dataset.filtervalues || '{}');
+                } catch (e) {
+                    parsed = null;
+                }
+                rowValues.set(item, parsed || {});
             }
+            return rowValues.get(item);
+        }
+
+        /**
+         * Whether a row passes a set of criteria: every one of them, together.
+         *
+         * @param {HTMLElement} item The accordion item.
+         * @param {Object} criteria Keys: filter, favonly, query, chips.
+         * @return {boolean}
+         */
+        function passes(item, criteria) {
+            if (criteria.filter === 'incomplete' && item.classList.contains('completed')) {
+                return false;
+            }
+            if (criteria.favonly && !item.classList.contains('local-dimensions-favourite')) {
+                return false;
+            }
+            if (criteria.query.length > 0) {
+                const title = item.querySelector('.local-dimensions-accordion-title');
+                if (title && !normalizeText(title.textContent).includes(criteria.query)) {
+                    return false;
+                }
+            }
+            return ChipFilters.matchesSelection(criteria.chips, valuesOf(item));
+        }
+
+        /**
+         * How many rows a control of the line would leave once pressed: a scope cell, the star or a chip.
+         *
+         * The suggestions ask without the typed text (the contract's "count it would give without the
+         * typed text"), the panel's chips with it, since the panel counts what the list would show.
+         *
+         * @param {HTMLElement} control The control.
+         * @param {boolean} keepQuery Whether the typed text still applies.
+         * @return {number}
+         */
+        function countWith(control, keepQuery) {
+            const criteria = currentCriteria();
+            if (!keepQuery) {
+                criteria.query = '';
+            }
+            if (control.matches(SCOPE_CELL_SELECTOR)) {
+                criteria.filter = control.dataset.filter;
+            } else if (control.matches(STAR_SELECTOR)) {
+                criteria.favonly = true;
+            } else if (control.dataset.chipValue !== undefined) {
+                const group = control.closest('[data-chip-field]');
+                const field = group ? group.dataset.chipField : '';
+                const chips = Object.assign({}, criteria.chips);
+                const values = (chips[field] || []).slice();
+                if (values.indexOf(control.dataset.chipValue) === -1) {
+                    values.push(control.dataset.chipValue);
+                }
+                chips[field] = values;
+                criteria.chips = chips;
+            }
+            return Array.prototype.filter.call(
+                document.querySelectorAll('.local-dimensions-accordion-item'),
+                function(item) {
+                    return passes(item, criteria);
+                }
+            ).length;
+        }
+
+        /**
+         * The rows on screen, by name: what the line's suggestions offer after the filters.
+         *
+         * @return {Array} Entries of {label, element}.
+         */
+        function drawnItems() {
+            return Array.prototype.filter.call(
+                document.querySelectorAll('.local-dimensions-accordion-item'),
+                function(item) {
+                    return !item.classList.contains('local-dimensions-hidden');
+                }
+            ).map(function(item) {
+                const title = item.querySelector('.local-dimensions-accordion-title');
+                return {label: title ? title.textContent.trim() : '', element: item};
+            });
+        }
+
+        /**
+         * Take the reader to a row a suggestion named: into view, the focus on its header.
+         *
+         * A row without detail has no button in its header, so the row itself takes the focus.
+         *
+         * @param {HTMLElement} item The accordion item.
+         */
+        function openItem(item) {
+            const toggle = item.querySelector('button.local-dimensions-accordion-toggle');
+            const target = toggle || item;
+            if (!toggle) {
+                item.tabIndex = -1;
+            }
+            item.scrollIntoView({block: 'center'});
+            target.focus({preventScroll: true});
         }
 
         /**
          * Apply combined tab filter + search query to accordion items.
          */
         function applyFilter() {
-            const filter = getActiveFilter();
-            const query = getSearchQuery();
-            const favonly = isFavouritesOnly();
+            const criteria = currentCriteria();
+            const favonly = criteria.favonly;
             const accordionItems = document.querySelectorAll('.local-dimensions-accordion-item');
             let visiblecount = 0;
             let nonfavcount = 0;
 
             accordionItems.forEach(function(item) {
-                const isCompleted = item.classList.contains('completed');
                 if (!item.classList.contains('local-dimensions-favourite')) {
                     nonfavcount++;
                 }
 
-                // Tab filter.
-                let passesTab = true;
-                if (filter === 'incomplete' && isCompleted) {
-                    passesTab = false;
-                }
-
-                // Favourites-only filter.
-                const passesFav = !favonly || item.classList.contains('local-dimensions-favourite');
-
-                // Search filter.
-                let passesSearch = true;
-                if (query.length > 0) {
-                    const title = item.querySelector('.local-dimensions-accordion-title');
-                    if (title) {
-                        passesSearch = normalizeText(title.textContent).includes(query);
-                    }
-                }
-
-                // Chip filter (custom-field driven).
-                let passesChips = true;
-                if (item.dataset.filtervalues) {
-                    let parsed = null;
-                    try {
-                        parsed = JSON.parse(item.dataset.filtervalues);
-                    } catch (e) {
-                        parsed = null;
-                    }
-                    passesChips = ChipFilters.matchesSelection(activeChipSelection, parsed || {});
-                }
-
-                if (passesTab && passesFav && passesSearch && passesChips) {
+                if (passes(item, criteria)) {
                     item.style.display = '';
                     item.classList.remove('local-dimensions-hidden');
                     visiblecount++;
@@ -3243,6 +3334,12 @@ define(
             if (noresults) {
                 noresults.hidden = visiblecount > 0 || showghost;
             }
+
+            // The panel counts what each chip would leave, and the line follows the list.
+            ChipFilters.paintCounts(CHIP_CONTAINER_ID, function(chip) {
+                return countWith(chip, true);
+            });
+            Line.repaint();
         }
 
         /**
@@ -3278,8 +3375,8 @@ define(
          * learner would face an empty plan with the control gone.
          */
         function syncFavouriteToggle() {
-            const group = document.querySelector('.local-dimensions-fav-group');
-            if (!group) {
+            const star = document.querySelector(STAR_SELECTOR);
+            if (!star) {
                 return;
             }
             const count = document.querySelectorAll(
@@ -3289,42 +3386,41 @@ define(
                 setFavouriteFilter(false);
                 LearnerPrefs.save({favonly: false});
             }
-            const label = group.querySelector('[data-fav-count]');
+            const label = star.querySelector('[data-fav-count]');
             if (label) {
                 label.textContent = count;
             }
-            group.hidden = !count;
-
-            /* The toolbar is two rows only while the favourites pills are on screen; once the
-               last star is cleared it drops back to a single row, matching the layout a plan
-               with the feature off gets. */
-            const toolbar = document.querySelector('.local-dimensions-toolbar');
-            if (toolbar) {
-                toolbar.classList.toggle('local-dimensions-has-fav', !!count);
-            }
+            star.hidden = !count;
         }
 
         /**
-         * Whether the favourites-only pill is the selected one.
+         * Whether the favourites star of the line is pressed.
          *
          * @return {boolean}
          */
         function isFavouritesOnly() {
-            const pill = document.querySelector('[data-fav-filter="fav"]');
-            return !!pill && pill.getAttribute('aria-checked') === 'true';
+            const star = document.querySelector(STAR_SELECTOR);
+            return !!star && star.getAttribute('aria-pressed') === 'true';
         }
 
         /**
-         * Move the selection between the two favourites pills.
+         * Press or release the favourites star of the line.
          *
-         * @param {boolean} favonly Whether to select the favourites-only pill
+         * The glyph carries the state as well as the colour (WCAG 1.4.1): a filled star pressed, an
+         * outline star released, as the template draws it.
+         *
+         * @param {boolean} favonly Whether the star is pressed
          */
         function setFavouriteFilter(favonly) {
-            document.querySelectorAll('[data-fav-filter]').forEach(function(pill) {
-                const on = (pill.dataset.favFilter === 'fav') === favonly;
-                pill.setAttribute('aria-checked', on ? 'true' : 'false');
-                pill.classList.toggle('active', on);
-            });
+            const star = document.querySelector(STAR_SELECTOR);
+            if (!star) {
+                return;
+            }
+            star.setAttribute('aria-pressed', favonly ? 'true' : 'false');
+            const glyph = star.querySelector('i');
+            if (glyph) {
+                glyph.className = favonly ? 'fa fa-star' : 'fa fa-star-o';
+            }
         }
 
         /**
@@ -3366,35 +3462,24 @@ define(
                 });
             });
 
-            document.querySelectorAll('[data-fav-filter]').forEach(function(pill) {
-                pill.addEventListener('click', function() {
-                    const favonly = pill.dataset.favFilter === 'fav';
+            const star = document.querySelector(STAR_SELECTOR);
+            if (star) {
+                star.addEventListener('click', function() {
+                    const favonly = !isFavouritesOnly();
                     setFavouriteFilter(favonly);
                     LearnerPrefs.save({favonly: favonly});
                     applyFilter();
                 });
-            });
+            }
             syncFavouriteToggle();
 
-            /* Narrow screens fold the filters behind an adjustments button. A class rather
-               than the hidden attribute, so the media query alone decides whether the
-               wrappers are folded at all - on a wide screen they are always in the bar. */
-            const adjust = document.querySelector('[data-toolbar-adjust]');
-            const bar = document.querySelector('.local-dimensions-toolbar');
-            if (adjust && bar) {
-                adjust.addEventListener('click', function() {
-                    const open = adjust.getAttribute('aria-expanded') !== 'true';
-                    adjust.setAttribute('aria-expanded', open ? 'true' : 'false');
-                    bar.classList.toggle('local-dimensions-toolbar-open', open);
-                });
-            }
-
             const ghost = document.querySelector('[data-ghost]');
-            const showall = document.querySelector('[data-fav-filter="all"]');
-            if (ghost && showall) {
-                // Activating the ghost clears the filter it is there to explain.
+            if (ghost && star) {
+                // Activating the ghost releases the star it is there to explain.
                 ghost.addEventListener('click', function() {
-                    showall.click();
+                    if (isFavouritesOnly()) {
+                        star.click();
+                    }
                 });
             }
         }
@@ -3467,7 +3552,7 @@ define(
          */
         function initSort() {
             const toggle = document.querySelector('[data-sort-toggle]');
-            const menu = document.getElementById('local-dimensions-viewplan-sort-menu');
+            const menu = toggle ? document.getElementById(toggle.getAttribute('aria-controls')) : null;
             if (!toggle || !menu) {
                 return;
             }
@@ -3523,17 +3608,17 @@ define(
          */
         function widenFilterForSort(mode) {
             if (mode === 'completed') {
-                const allTab = document.querySelector(FILTER_TAB_SELECTOR + '[data-filter="all"]');
-                if (allTab && !allTab.classList.contains('active')) {
-                    allTab.click();
+                const allCell = document.querySelector(SCOPE_CELL_SELECTOR + '[data-filter="all"]');
+                if (allCell && allCell.getAttribute('aria-checked') !== 'true') {
+                    allCell.click();
                 }
                 return;
             }
 
             if (mode === 'favourites') {
-                const showall = document.querySelector('[data-fav-filter="all"]');
-                if (showall && isFavouritesOnly()) {
-                    showall.click();
+                const star = document.querySelector(STAR_SELECTOR);
+                if (star && isFavouritesOnly()) {
+                    star.click();
                 }
             }
         }
@@ -3805,13 +3890,17 @@ define(
                     input.value = '';
                 }
 
-                const allTab = document.querySelector(FILTER_TAB_SELECTOR + '[data-filter="all"]');
-                if (allTab && !allTab.classList.contains('active')) {
-                    allTab.click();
-                    return;
+                const allCell = document.querySelector(SCOPE_CELL_SELECTOR + '[data-filter="all"]');
+                if (allCell && allCell.getAttribute('aria-checked') !== 'true') {
+                    allCell.click();
+                } else {
+                    applyFilter();
                 }
-
-                applyFilter();
+                // The button hides itself with the list back: the focus goes to the search.
+                const target = Line.focusTarget(input);
+                if (target) {
+                    target.focus();
+                }
             });
         }
 
