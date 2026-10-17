@@ -104,6 +104,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Report builder: two report sources for competency evidence (version 2026100509), offered while
+  competencies are enabled.
+  - "Competency evidence" (`competency_evidence`): one row per evidence, with its action, its
+    description, link, rating (named from the competency's scale, read once per scale), note and
+    date; the user competency, competency, framework and Dimensions custom fields; the learner;
+    the "Evidence author" (`evidenceauthor`); the "Evidence context"; and the course of a course or
+    activity context.
+  - "Evidence of prior learning" (`competency_user_evidence`): one row per evidence and linked
+    competency, with its name, description, link, number of files and dates; the user; the
+    competency, framework and Dimensions custom fields; and the user's competency. An evidence
+    linked to nothing keeps one row.
 - Report builder: a "Course and activity competencies" report source (`course_competencies`,
   version 2026100507), one row per competency linked to a course, with the course, its category,
   the competency, its framework, its Dimensions custom fields and the course rule ("Upon course
