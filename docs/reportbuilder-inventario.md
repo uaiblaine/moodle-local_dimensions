@@ -37,7 +37,7 @@ Nenhum teste PHPUnit cobre `classes/reportbuilder/` (só a referência de string
 | Área | Situação | Tabelas core envolvidas |
 |---|---|---|
 | Competências com campos customizados | **Existe** (`dimensions_competencies` + `competency_extras`) | `competency`, `customfield_data` (área `competency`) |
-| Competências vinculadas a cursos e atividades | **Falta** | `competency_coursecomp`, `competency_coursecompsetting`, `competency_modulecomp`, `competency_usercompcourse`, `course_modules` |
+| Competências vinculadas a cursos e atividades | **Feito** (`course_competencies`, branch `feat/rb-course-competencies`); faltam as avaliações por curso (`course_competency_ratings`) | `competency_coursecomp`, `competency_coursecompsetting`, `competency_modulecomp`, `competency_usercompcourse`, `course_modules` |
 | Planos com campos customizados em entidade própria | **Feito** (`template_extras`, branch `feat/rb-template-extras`) | `competency_plan`, `competency_template`, `customfield_data` (área `lp`) |
 | Evidências | **Falta** | `competency_evidence` (evidência de avaliação) e `competency_userevidence` + `competency_userevidencecomp` (prova de aprendizagem prévia) |
 
@@ -66,7 +66,7 @@ colunas de rating (ver O4).
 
 | Datasource | Grão (tabela principal) | Entidades | Pergunta que responde |
 |---|---|---|---|
-| `course_competencies` | `competency_coursecomp` | course_competency, course (core), course_category (core), module_competency, course_module (core, `LEFT JOIN` por `cm.course = cc.courseid AND mc.competencyid = cc.competencyid`), competency (core), **competency_extras**, framework (core) | "Quais competências cada curso e cada atividade desenvolve, com qual regra e com quais tags/tipo do Dimensions?" |
+| `course_competencies` — **Feito** (branch `feat/rb-course-competencies`, versão `2026100507`) | `competency_coursecomp` | course_competency, course (core), course_category (core), module_competency, course_module (core, `LEFT JOIN` por `cm.course = cc.courseid AND mc.competencyid = cc.competencyid`), competency (core), **competency_extras**, framework (core) | "Quais competências cada curso e cada atividade desenvolve, com qual regra e com quais tags/tipo do Dimensions?" |
 | `course_competency_ratings` | `competency_usercompcourse` | usercompetency_course, user, course, competency, **competency_extras**, framework, cohort (do usuário) | "Como os alunos foram avaliados em cada competência dentro de cada curso?" |
 | `learning_plan_competencies` | `competency_plan` × `plan_competency` | plan, template, **template_extras**, user, plan_competency, competency, **competency_extras**, framework | "Quais competências cada plano tem e em qual estágio está cada aluno?" |
 | `competency_evidence` | `competency_evidence` | evidence, usercompetency (core, por `usercompetencyid`), user (aluno), user `actionuser` (quem gerou), context (core, de onde veio), competency, **competency_extras**, framework | "Quem gerou qual evidência, para qual competência, de qual curso/atividade, com qual nota?" |
@@ -74,6 +74,18 @@ colunas de rating (ver O4).
 
 A atividade só pode ter competência que já esteja no curso (regra do `core_competency\api`), por
 isso `competency_coursecomp` funciona como tabela principal de curso + atividade.
+
+Como ficou o `course_competencies`:
+
+| Ponto | Implementação |
+|---|---|
+| Grão | 1 linha por competência × curso; as entidades de atividade acrescentam 1 linha por atividade do mesmo curso com a mesma competência (curso sem atividade vinculada fica com as colunas de atividade vazias) |
+| Join da atividade | `LEFT JOIN competency_modulecomp mc ON mc.competencyid = cc.competencyid AND EXISTS (…)`, em que o `EXISTS` exige um `course_modules` do mesmo curso com `deletioninprogress = 0`; depois `LEFT JOIN course_modules cm ON cm.id = mc.cmid`. Sem a checagem de curso, uma competência presente em dois cursos levaria as atividades de um para o outro |
+| Nome e tipo da atividade | Em `module_competency`, porque a entidade core `course_module` (5.2+) só tem idnumber, visible e timecreated, e o nome fica na tabela de cada módulo |
+| Disponibilidade | `is_available()` = `\core_competency\api::is_enabled()` |
+| Status categórico | ruleoutcome do curso e da atividade como `TYPE_TEXT` (lição do `plan:status`) |
+| Padrões | colunas: curso, competência, regra do curso, atividade, regra da atividade; ordenação: curso, competência; filtros: curso, competência, regra do curso; condições: categoria, framework |
+| Testes | `tests/reportbuilder/datasource/course_competencies_test.php` (conteúdo, relatório padrão, 5 condições, `is_available`, stress de colunas/agregação/condições); spec `mutations/course_competencies.conf` (17 mutações) |
 
 ### 3.3 Colunas que faltam nas entidades existentes
 
@@ -107,12 +119,7 @@ isso `competency_coursecomp` funciona como tabela principal de curso + atividade
 | D1 | "Planos com campos customizados em nova categoria" | **Entidade de reportbuilder separada** (`template_extras`) para os campos que já existem no **modelo**, sem criar dado novo por plano. Descartado: nova área de customfield em `competency_plan` (dado por aluno, exigiria handler, formulário, privacy provider e backup/restore). |
 | D2 | Quais campos do plugin aparecem nos relatórios | **Só os de negócio**: `tag1`, `tag2`, `type`, `template_idnumber` e os campos criados pelo admin. Os de apresentação ficam em `constants::REPORT_HIDDEN_CFIELDS`. |
 | D3 | Curso e atividade | **Um datasource** (`course_competencies`), tabela principal `competency_coursecomp`. |
-
-### Pendentes
-
-| # | Decisão | Opções |
-|---|---|---|
-| D4 | Ramos | só `main` (5.3) · cherry-pick para 5.2, 5.1 e 4.5 (ver seção 6) |
+| D4 | Ramos | **Cherry-pick para 5.2, 5.1 e 4.5**, com matriz completa local em cada ramo. |
 
 ## 6. Portabilidade para o Moodle 4.5 (e 5.1)
 
@@ -132,5 +139,22 @@ Os ramos `MOODLE_405_STABLE`, `MOODLE_501_STABLE` e `MOODLE_502_STABLE` já têm
 |---|---|
 | `template_extras` (D1), O1–O9 | Sim, sem mudança de API. Só sai o `#[\Override]` e os atributos de teste vão para docblock |
 | `course_competency`, `module_competency`, `usercompetency_course`, `plan_competency`, `evidence`, `user_evidence` | Sim (tabelas core existem desde o 3.1) |
-| `course_competencies` com dados da atividade | Sim, com uma entidade própria mínima de atividade (`course_modules` + `modules`, nome via `get_fast_modinfo()` com memo por curso) nos ramos 4.5 e 5.1. No 5.2+ usar a entidade core |
+| `course_competencies` com dados da atividade | Sim. Ver abaixo o que o cherry-pick exige em cada ramo |
 | O10 | Não se aplica (só `main`) |
+
+### Cherry-pick do `course_competencies` (feito: D4)
+
+| Ramo | O que o cherry-pick exige |
+|---|---|
+| Todos (5.2, 5.1, 4.5) | Tirar o `#[\Override]` das duas entidades e do datasource; no teste, `#[CoversClass]` e `#[DataProvider]` viram `@covers` e `@dataProvider` no docblock; bump do `version.php` de cada ramo; strings, CHANGELOG e spec de mutação iguais. As demais APIs usadas existem nos três (`column::add_field()` com parâmetros, `set_table_join_alias`, `core\lang_string`, `core_reportbuilder\tests\core_reportbuilder_testcase`, `get_ruleoutcome_list()`) |
+| `MOODLE_502_STABLE` | Nada além disso: a entidade core `course_module` existe no 5.2 com as mesmas colunas e filtros do 5.3 |
+| `MOODLE_501_STABLE`, `MOODLE_405_STABLE` | Sem a entidade core `course_module`. Nome e tipo da atividade já estão em `module_competency`, então falta só idnumber, visible e timecreated (`added`) do `course_modules`. Proposta: entidade própria mínima `local_dimensions\reportbuilder\local\entities\course_module`, só nesses ramos, com **o mesmo nome de entidade** (`course_module`) e os mesmos nomes de coluna e filtro do core, para que os relatórios salvos sobrevivam ao upgrade do site para o 5.2+. O datasource troca o `use` de `core_course\…\course_module` pelo do plugin. Alternativa mais simples: omitir a entidade e perder essas três colunas nesses ramos |
+
+Como ficou o port (D1, D2 e D3):
+
+| Ramo | Versões | Diferenças do `main` |
+|---|---|---|
+| `MOODLE_502_STABLE` | `2026042003` (D1/D2), `2026042004` (D3) | Sem `#[\Override]`, constantes sem tipo, metadados de teste em docblock, sem este inventário |
+| `MOODLE_501_STABLE` | `2025100603`, `2025100604` | Como o 5.2, mais a entidade própria `course_module` (mesmo nome de entidade, colunas e filtros do core 5.2) e a string `entityname_course_module` |
+| `MOODLE_405_STABLE` | `2024100703`, `2024100704` | Como o 5.1, e a migração dos relatórios salvos move os valores de filtro do usuário pelas preferências (`user_filter_manager`), porque o 4.5 não tem `reportbuilder_user_filter` |
+
