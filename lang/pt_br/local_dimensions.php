@@ -487,6 +487,7 @@ $string['enrolmentopens'] = 'Inscrições abrem em {$a}';
 $string['entityname_competency_extras'] = 'Competência: campos personalizados do Dimensions';
 $string['entityname_plan'] = 'Plano de aprendizagem';
 $string['entityname_template'] = 'Modelo de plano de aprendizagem';
+$string['entityname_template_extras'] = 'Modelo de plano de aprendizagem: campos personalizados do Dimensions';
 $string['error_loading_summary'] = 'Erro ao carregar sumário da competência.';
 $string['errornetwork'] = 'Conexão perdida. Verifique sua internet e tente novamente.';
 $string['eventcohortroleadded'] = 'Regra de papel por coorte adicionada';
