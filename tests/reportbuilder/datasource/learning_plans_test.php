@@ -155,6 +155,75 @@ final class learning_plans_test extends core_reportbuilder_testcase {
     }
 
     /**
+     * The template's cohorts and the owner's cohorts are two entities.
+     *
+     * @return void
+     */
+    public function test_template_and_owner_cohorts(): void {
+        global $CFG;
+        require_once($CFG->dirroot . '/cohort/lib.php');
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        /** @var \core_competency_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $template = $generator->create_template(['shortname' => 'Template']);
+        $templatecohort = $this->getDataGenerator()->create_cohort(['name' => 'Linked to the template']);
+        $generator->create_template_cohort(['templateid' => $template->get('id'), 'cohortid' => $templatecohort->id]);
+        $user = $this->getDataGenerator()->create_user();
+        $ownercohort = $this->getDataGenerator()->create_cohort(['name' => 'Holds the owner']);
+        cohort_add_member($ownercohort->id, $user->id);
+        $generator->create_plan(['name' => 'Plan', 'userid' => $user->id, 'templateid' => $template->get('id')]);
+
+        /** @var \core_reportbuilder_generator $rbgenerator */
+        $rbgenerator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $report = $rbgenerator->create_report(['name' => 'Plans', 'source' => learning_plans::class, 'default' => 0]);
+        foreach (['plan:name', 'cohort:name', 'usercohort:name'] as $column) {
+            $rbgenerator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => $column]);
+        }
+
+        $this->assertEquals(
+            [['Plan', 'Linked to the template', 'Holds the owner']],
+            array_map('array_values', $this->get_custom_report_content($report->get('id')))
+        );
+    }
+
+    /**
+     * A new report starts with the status condition only, and the plan has no numeric user filter.
+     *
+     * @return void
+     */
+    public function test_defaults_and_retired_filter(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        /** @var \core_reportbuilder_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $report = $generator->create_report(['name' => 'Default', 'source' => learning_plans::class, 'default' => 1]);
+
+        $conditions = $DB->get_fieldset('reportbuilder_filter', 'uniqueidentifier', [
+            'reportid' => $report->get('id'),
+            'iscondition' => 1,
+        ]);
+        $this->assertSame(['plan:status'], $conditions);
+        $this->assertNull(manager::get_report_from_persistent($report)->get_filter('plan:userid'));
+    }
+
+    /**
+     * The source is offered only while competencies are enabled.
+     *
+     * @return void
+     */
+    public function test_is_available(): void {
+        $this->resetAfterTest();
+        set_config('enabled', 1, 'core_competency');
+        $this->assertTrue(learning_plans::is_available());
+        set_config('enabled', 0, 'core_competency');
+        $this->assertFalse(learning_plans::is_available());
+    }
+
+    /**
      * Every column, aggregation and condition of the source builds a report that runs.
      *
      * @return void
