@@ -39,7 +39,7 @@ Feature: Withhold competency detail from a viewer who cannot read it
   @javascript
   Scenario: A draft-only reviewer's grid card opens no detail dialogue
     When I am on the "Draft plan" "local_dimensions > View plan" page logged in as "reviewer1"
-    And I click on "Grid view" "button"
+    And I click on "Cards" "button" in the "[data-region='local-dimensions-line-view']" "css_element"
     And I click on "Alpha competency" "text"
     Then "Alpha competency" "dialogue" should not exist
     And I should see "Competency details are not available to you."

@@ -21,6 +21,10 @@
     local_dimensions/chip_filters AMD module wires the click handlers and
     delegates the actual filtering to a host-page callback.
 
+    Each chip carries an empty count (local-dimensions-chip-count) the host
+    paints through chip_filters' paintCounts(): what pressing the chip would
+    leave, which hides a chip that would leave nothing unless it is pressed.
+
     Context variables required:
     * id (string) - DOM id used by host code to scope queries.
     * groups (array) - Array of {shortname, label, values: [{value}]}.
@@ -55,7 +59,7 @@
                     class="local-dimensions-filter-tab"
                     data-chip-value="{{value}}"
                     aria-pressed="false">
-                {{value}}
+                {{value}} <span class="local-dimensions-filter-count" data-region="local-dimensions-chip-count" hidden></span>
             </button>
             {{/values}}
         </div>

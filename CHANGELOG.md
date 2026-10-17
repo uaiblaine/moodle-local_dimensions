@@ -51,8 +51,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   icon (the locked card's disc keeps it). The "cardicon" setting description now says the icon
   replaces the disc icon only on a locked card with no enrolment available.
 
+### Fixed
+
+- **The hero meets the navbar under Boost Union with a smart menu** (`2026042002`). Boost Union moves
+  `#page` down by the navbar plus the menu bar (40px) whenever a smart menu exists, even when no menu bar
+  is drawn, which left a strip of page between the navbar and the hero on the plan overview and the
+  tracker. A new `styles_boost_union.css`, loaded only under Boost Union and its children, puts `#page`
+  back at the navbar height on those two pages while no menu bar is drawn (`boost_union_sheet_test`).
+
 ### Added
 
+- **The filter line** (version 2026042001; the fleet's contract in
+  `moodle-dev/docs/filter-line/CONTRACT.md`, stage D1). The plan overview's sticky toolbar is one
+  line in the contract's order: the scope ("To do" and "All", a radio group with arrow keys), a pill
+  search with an eraser, a favourites star that replaces the two favourites pills and keeps the same
+  stored "favourites only" choice, Filters (the chip panel, with a count badge, a count on every chip
+  and "Show N" at its foot), Organise (the sort menu) and List and Cards. A row of chips under the
+  line names each active filter, with "Clear all" from two chips up. The line folds on its own width
+  in four steps - Filters loses its word, the search becomes an icon, then two lines with the scope on
+  the second and the view inside Organise ("Show as") - so the narrow-screen "Show filters" button is
+  gone. From the third step the search grows over the line, with a close button, Escape, and the focus
+  given back to the control that opened it; the suggestions offer the filters first (each with the
+  number it would leave without the typed text, matched without accents or case) and then the
+  competencies whose names match, and `/` opens the search. At the fourth step the Filters panel is a
+  bottom sheet. The competency tracker gets the same line: the scope (now opening on "To do"; a
+  learner who chose "All" keeps it), a search over the course cards with a "no results" state, and
+  Filters where course fields are configured. Each view remembers its own scope in
+  `local_dimensions_learner_view` (`filter` for the plan, `trackerfilter` for the tracker); the search
+  text is never remembered. New module `local_dimensions/filter_line`, template
+  `local_dimensions/filter_line`, class `local\learner_view`; strings `line_*`; the strings the old
+  toolbar alone used are removed (`fav_only`, `fav_showall`, `filter_toggle`, `search_competencies`,
+  `sort_label`, `toolbar_adjust`, `view_grid`, `view_label`, `view_list`).
 - Course cards (competency tracker and plan overview), with "Use the enrolment rules of Unlisted
   courses" on: a locked card whose only refusal is an enrolment window that has not opened yet says
   "Enrolment opens on <date>", whatever "Show availability date" says; on a card with no
@@ -63,7 +92,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   services return the date and the chip's sentence in the state area (`opens`, `openslabel`).
 - Course cards (competency tracker and plan overview): a shared state area. Each card names the
   viewer's enrolment in one pill, with an icon and the same words and colours as the course cards of
-  the FUNDASEG theme: "Enrolled", "Access from <date>", "Application under review", "Open for
+  theme_dimensions: "Enrolled", "Access from <date>", "Application under review", "Open for
   enrolment" and "No enrolment available". When the viewer may also enrol now beside an enrolment that
   starts later or an application, the card says both, with "You can also enrol now" under the pill.
   On the tracker the locked card keeps its frame (dashed border, disc, raised message box, blurred
@@ -669,8 +698,8 @@ changed since, and fixed where they still held.
   `styles.css` pulled the hero up by a flat `margin-top: -1rem`, commented "pull the hero up to
   overlap any remaining spacing" - one constant standing in for a number that is different in
   every theme, so it was right in none of them. Measured on m502 at 1280px, logged in, on
-  `view-plan.php`, the white band between the navbar and the hero was 32px on boost, boost_union
-  and boost_union_fundaseg, 33px on almondb, 25px on trema and 9px on moove; on Moodle 4.5 it was
+  `view-plan.php`, the white band between the navbar and the hero was 32px on boost and boost_union,
+   33px on almondb, 25px on trema and 9px on moove; on Moodle 4.5 it was
   32px on boost and 121px on theme_academi, whose own navigation bar is static and 71px tall. The spacing does not belong to the hero at all - it is spent by the
   containers above it, and the fix is to zero those, which lands the hero at `#page`'s own top
   edge, a value every Boost child already sets to its navbar's height. The plugin therefore needs
@@ -690,7 +719,7 @@ changed since, and fixed where they still held.
     a fix aimed only at `#topofscroll` looked right on five themes and left 16px on the sixth. The
     rule names the whole chain rather than the container that happened to be guilty first.
   - **The last pixel is core's skip-link anchor.** Boost gives the empty `<span id="maincontent">`
-    a 1px height, and it sits immediately before the hero; on boost and boost_union_fundaseg it
+    a 1px height, and it sits immediately before the hero; on boost and boost_union it
     lands in the 1px their `#page` margin is already short of the navbar and vanishes, while on
     moove and trema it became a visible hairline. It is collapsed with `height: 0` - the same
     thing core does for embedded media previews - and never with `display: none`, which would take

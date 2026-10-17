@@ -609,14 +609,14 @@ dark palette at all, the worst outcome is a deeper shadow, a darker veil and a b
 **The activation rule is `body[data-bs-theme="dark"], [data-bs-theme="dark"] body`, and `body`
 as its subject is load-bearing.** A bare `[data-bs-theme="dark"]` matches through **any** ancestor
 at any depth, and CSS descendant combinators have no nearest-ancestor-wins rule. That is not
-hypothetical: `theme_boost_union_fundaseg` sets `data-bs-theme="dark"` on the **navbar element
+hypothetical: a Boost Union child theme in use sets `data-bs-theme="dark"` on the **navbar element
 itself**, and `theme_boost_union` then re-pins `data-bs-theme="light"` by hand on five nested
 templates (`core/moremenu`, `core/user_menu`, `theme_boost/language_menu` and the two smartmenu
 children) to stop the dark scope leaking into its own submenus. With `body` as the subject the only
 possible ancestor is `html`, so no nested scope can reach the plugin, while the first arm follows a
 theme that writes the attribute on `<body>` (theme_moove). **`.theme-dark` and `body.dark` are not
-accepted** — nothing in Moodle 4.5/5.0/5.1/5.2/5.3-dev, `theme_boost_union` or
-`theme_boost_union_fundaseg` has ever emitted either.
+accepted** — nothing in Moodle 4.5/5.0/5.1/5.2/5.3-dev, `theme_boost_union` has
+ever emitted either.
 
 `data-bs-theme` is written by the **host**, never by this plugin: core writes it from
 `theme_boost`'s `before_html_attributes` listener plus a head script resolving `auto` with
