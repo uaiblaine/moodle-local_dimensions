@@ -362,7 +362,8 @@ final class view_plan_summary_page_test extends advanced_testcase {
      * Every key the client can write is seeded, so a save cannot reset one by omission.
      *
      * The store writes the preference back entire, so a key missing here is reset to its default
-     * on the next save.
+     * on the next save - the tracker's scope (trackerfilter) included, which this page never
+     * changes but must carry.
      *
      * @return void
      */
@@ -374,9 +375,13 @@ final class view_plan_summary_page_test extends advanced_testcase {
         $state = json_decode($this->export($fixture['plan'])['viewstatejson'], true);
 
         $this->assertSame(
-            ['expanded', 'favonly', 'filter', 'sort', 'view'],
+            ['expanded', 'favonly', 'filter', 'sort', 'trackerfilter', 'view'],
             $this->sorted_keys($state)
         );
+        // The list the tracker seeds from too: a key one page left out, its next save would reset.
+        $keys = \local_dimensions\local\learner_view::KEYS;
+        sort($keys);
+        $this->assertSame($keys, $this->sorted_keys($state));
     }
 
     /**

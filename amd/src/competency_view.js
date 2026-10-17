@@ -21,34 +21,216 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define(['jquery', 'core/ajax', 'core/templates', 'core/str', 'core/notification',
-    'local_dimensions/chip_filters', 'local_dimensions/collapsible_description'],
-function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescription) {
+    'local_dimensions/chip_filters', 'local_dimensions/collapsible_description',
+    'local_dimensions/filter_line', 'local_dimensions/learner_prefs'],
+function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescription, Line, LearnerPrefs) {
+
+    /** @type {string} The filter line's scope cells (templates/filter_line.mustache). */
+    var SCOPE_CELL_SELECTOR = '[data-region="local-dimensions-line-scope"] [data-filter]';
+    /** @type {string} The chip filters' container on this page. */
+    var CHIP_CONTAINER_ID = 'local-dimensions-viewcompetency-chip-filters';
+    /** @type {string} Every course card's wrapper, which the filters show and hide. */
+    var CARD_SELECTOR = '.local-dimensions-course-card-wrapper';
 
     /** @type {Object} The active chip selection, shortname => values. */
     var activeChipSelection = {};
-    /** @type {string} The active completion tab: 'all' or 'incomplete'. */
-    var activeCourseTab = 'all';
 
     /**
-     * Show the course cards that pass both the completion tab and the chip selection.
+     * The scope in force, read off the line: the server drew the remembered choice checked, and
+     * "To do" when the learner never chose.
+     *
+     * @return {string} 'incomplete' or 'all'.
+     */
+    function activeCourseTab() {
+        var cell = document.querySelector(SCOPE_CELL_SELECTOR + '[aria-checked="true"]');
+        return cell ? cell.dataset.filter : 'incomplete';
+    }
+
+    /**
+     * The typed text, normalised by the line's own rule.
+     *
+     * @return {string}
+     */
+    function searchQuery() {
+        var input = document.querySelector('.local-dimensions-search-input');
+        return input ? Line.normalise(input.value) : '';
+    }
+
+    /**
+     * The criteria in force: the scope, the typed text and the chips.
+     *
+     * @return {Object} Keys: filter, query, chips.
+     */
+    function currentCriteria() {
+        return {filter: activeCourseTab(), query: searchQuery(), chips: activeChipSelection};
+    }
+
+    /**
+     * A card's name, as drawn in its header.
+     *
+     * @param {HTMLElement} wrapper The card's wrapper.
+     * @return {string}
+     */
+    function nameOf(wrapper) {
+        var header = wrapper.querySelector('.card-header');
+        return header ? header.textContent.trim() : '';
+    }
+
+    /**
+     * Whether a card passes a set of criteria: every one of them, together.
+     *
+     * A card whose completion is not known yet (the batch has not answered) passes "To do": the
+     * scope is not drawn until it can tell the truth, and hiding every card meanwhile would not.
+     *
+     * @param {HTMLElement} wrapper The card's wrapper.
+     * @param {Object} criteria Keys: filter, query, chips.
+     * @return {boolean}
+     */
+    function passes(wrapper, criteria) {
+        if (criteria.filter === 'incomplete' && wrapper.getAttribute('data-completed') === '1') {
+            return false;
+        }
+        if (criteria.query !== '' && Line.normalise(nameOf(wrapper)).indexOf(criteria.query) === -1) {
+            return false;
+        }
+        var values = {};
+        try {
+            values = JSON.parse(wrapper.getAttribute('data-filtervalues') || '{}') || {};
+        } catch (e) {
+            values = {};
+        }
+        return ChipFilters.matchesSelection(criteria.chips, values);
+    }
+
+    /**
+     * How many cards a control of the line would leave once pressed: a scope cell or a chip.
+     *
+     * The suggestions ask without the typed text, the panel's chips with it.
+     *
+     * @param {HTMLElement} control The control.
+     * @param {boolean} keepQuery Whether the typed text still applies.
+     * @return {number}
+     */
+    function countWith(control, keepQuery) {
+        var criteria = currentCriteria();
+        if (!keepQuery) {
+            criteria.query = '';
+        }
+        if (control.matches(SCOPE_CELL_SELECTOR)) {
+            criteria.filter = control.dataset.filter;
+        } else if (control.dataset.chipValue !== undefined) {
+            var group = control.closest('[data-chip-field]');
+            var field = group ? group.dataset.chipField : '';
+            var chips = Object.assign({}, criteria.chips);
+            var values = (chips[field] || []).slice();
+            if (values.indexOf(control.dataset.chipValue) === -1) {
+                values.push(control.dataset.chipValue);
+            }
+            chips[field] = values;
+            criteria.chips = chips;
+        }
+        return Array.prototype.filter.call(document.querySelectorAll(CARD_SELECTOR), function(wrapper) {
+            return passes(wrapper, criteria);
+        }).length;
+    }
+
+    /**
+     * The cards on screen, by name: what the line's suggestions offer after the filters.
+     *
+     * @return {Array} Entries of {label, element}.
+     */
+    function drawnItems() {
+        return Array.prototype.filter.call(document.querySelectorAll(CARD_SELECTOR), function(wrapper) {
+            return wrapper.style.display !== 'none';
+        }).map(function(wrapper) {
+            return {label: nameOf(wrapper), element: wrapper};
+        });
+    }
+
+    /**
+     * Take the reader to a card a suggestion named: into view, the focus on its course link.
+     *
+     * A locked card has no link, so the card itself takes the focus.
+     *
+     * @param {HTMLElement} wrapper The card's wrapper.
+     */
+    function openItem(wrapper) {
+        var link = wrapper.querySelector('.card-header a');
+        var target = link || wrapper;
+        if (!link) {
+            wrapper.tabIndex = -1;
+        }
+        wrapper.scrollIntoView({block: 'center'});
+        target.focus({preventScroll: true});
+    }
+
+    /**
+     * Show the course cards that pass the scope, the typed text and the chip selection.
+     *
+     * A list left empty by the filters says so, with a way back; the panel counts what each chip
+     * would leave; the line follows.
      */
     function applyCardFilters() {
-        $('.local-dimensions-course-card-wrapper').each(function() {
-            var $wrapper = $(this);
-            var raw = $wrapper.attr('data-filtervalues');
-            var values = {};
-            if (raw) {
-                try {
-                    values = JSON.parse(raw);
-                } catch (e) {
-                    values = {};
-                }
+        var criteria = currentCriteria();
+        var visible = 0;
+        document.querySelectorAll(CARD_SELECTOR).forEach(function(wrapper) {
+            var on = passes(wrapper, criteria);
+            wrapper.style.display = on ? '' : 'none';
+            if (on) {
+                visible++;
             }
-            var passestab = activeCourseTab === 'all' || $wrapper.attr('data-completed') !== '1';
-            if (passestab && ChipFilters.matchesSelection(activeChipSelection, values)) {
-                $wrapper.show();
+        });
+        var noresults = document.getElementById('local-dimensions-viewcompetency-noresults');
+        if (noresults) {
+            noresults.hidden = visible > 0;
+        }
+        ChipFilters.paintCounts(CHIP_CONTAINER_ID, function(chip) {
+            return countWith(chip, true);
+        });
+        Line.repaint();
+    }
+
+    /**
+     * Wire the search over the cards drawn, a moment after the last key.
+     */
+    function initSearch() {
+        var input = document.querySelector('.local-dimensions-search-input');
+        if (!input) {
+            return;
+        }
+        var timer = null;
+        input.addEventListener('input', function() {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(applyCardFilters, 100);
+        });
+    }
+
+    /**
+     * Wire the "no results" state's "Clear filters": the chips, the text and the scope, all three.
+     */
+    function initNoResultsClear() {
+        var button = document.querySelector('[data-noresults-clear]');
+        if (!button) {
+            return;
+        }
+        button.addEventListener('click', function() {
+            var chipClear = document.querySelector('[data-chip-clear]');
+            if (chipClear) {
+                chipClear.click();
+            }
+            var input = document.querySelector('.local-dimensions-search-input');
+            if (input) {
+                input.value = '';
+            }
+            var allCell = document.querySelector(SCOPE_CELL_SELECTOR + '[data-filter="all"]');
+            if (allCell && allCell.getAttribute('aria-checked') !== 'true') {
+                allCell.click();
             } else {
-                $wrapper.hide();
+                applyCardFilters();
+            }
+            var target = Line.focusTarget(input);
+            if (target) {
+                target.focus();
             }
         });
     }
@@ -75,24 +257,31 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
      * @param {number} total How many courses there are
      */
     function initCourseTabs(completed, total) {
-        var $tabs = $('[data-course-tabs]');
-        if (!$tabs.length) {
+        var scope = document.querySelector('[data-region="local-dimensions-line-scope"]');
+        if (!scope) {
             return;
         }
-
-        $tabs.find('[data-count="incomplete"]').text(total - completed);
-        $tabs.find('[data-count="all"]').text(total);
-        $tabs.prop('hidden', false);
-
-        $tabs.find('.local-dimensions-filter-tab').on('click', function() {
-            var $tab = $(this);
-            $tabs.find('.local-dimensions-filter-tab')
-                .removeClass('active')
-                .attr('aria-selected', 'false');
-            $tab.addClass('active').attr('aria-selected', 'true');
-            activeCourseTab = $tab.attr('data-filter');
-            applyCardFilters();
+        var counts = {incomplete: total - completed, all: total};
+        var cells = scope.querySelectorAll('[data-filter]');
+        cells.forEach(function(cell) {
+            var count = counts[cell.dataset.filter];
+            var slot = cell.querySelector('[data-count]');
+            if (slot) {
+                slot.textContent = String(count);
+                slot.hidden = false;
+            }
+            // A zero cell is not drawn unless it is the chosen one.
+            cell.hidden = count === 0 && cell.getAttribute('aria-checked') !== 'true';
+            cell.addEventListener('click', function() {
+                cells.forEach(function(other) {
+                    other.setAttribute('aria-checked', other === cell ? 'true' : 'false');
+                });
+                LearnerPrefs.save({trackerfilter: cell.dataset.filter});
+                applyCardFilters();
+            });
         });
+        scope.hidden = false;
+        applyCardFilters();
     }
 
     return {
@@ -100,9 +289,32 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
             settings = settings || {};
             // Activate chip filters and collapsible hero description; both
             // are no-ops when the host page does not render them.
-            ChipFilters.init('local-dimensions-viewcompetency-chip-filters', applyCardChipFilter);
-            ChipFilters.initPanel('local-dimensions-viewcompetency-chip-filters');
+            ChipFilters.init(CHIP_CONTAINER_ID, applyCardChipFilter);
+            ChipFilters.initPanel(CHIP_CONTAINER_ID);
             CollapsibleDescription.init();
+
+            /* Seed the preference store with the whole state the server resolved, before any control
+               can save: a save replaces the entire preference, so a key not seeded would be reset. */
+            var tracker = document.querySelector('[data-region="local-dimensions-tracker"]');
+            var viewstate = {};
+            try {
+                viewstate = JSON.parse((tracker && tracker.dataset.viewstate) || '{}');
+            } catch (e) {
+                viewstate = {};
+            }
+            LearnerPrefs.init(viewstate);
+
+            initSearch();
+            initNoResultsClear();
+            Line.arm(document, {
+                countFor: function(control) {
+                    return countWith(control, false);
+                },
+                items: drawnItems,
+                openItem: openItem,
+                dropTerm: applyCardFilters,
+            });
+            applyCardFilters();
 
             var lockedcardmode = settings.lockedcardmode || 'blocked';
             var showlockeddate = settings.showlockeddate !== undefined ? settings.showlockeddate : true;

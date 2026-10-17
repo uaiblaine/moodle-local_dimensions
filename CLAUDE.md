@@ -226,6 +226,17 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   toasts from a modal go to a region in the modal body; `flashRow()` for in-place changes;
   `pane.dataset` seeded from the server-rendered value; `array_flip([5])` makes
   `!empty($map[5])` false, test membership with `isset`.
+- **Theme sheets.** Core loads `styles_<theme>.css` for every theme in the active chain, base first:
+  `styles_boost.css` holds what is true of Boost's page structure (the hero starts at `#page`'s top),
+  `styles_boost_union.css` Boost Union's deltas (a smart menu without a menu bar adds 40px to `#page`;
+  `boost_union_sheet_test`), each other `styles_<theme>.css` its theme's. `#page` animates its margin
+  (0.2s): measure it with the transition off.
+- **Filter line** (both learner views; `moodle-dev/docs/filter-line/CONTRACT.md`):
+  `amd/src/filter_line.js` presents and folds, the page module (`accordion`, `competency_view`)
+  filters and answers `countFor`/`items`; every hook is a data attribute of
+  `templates/filter_line.mustache`, pinned by `filter_line_markup_test` and
+  `filter_line_source_test`; gates in `mutations/gates.conf`. Its code is written to travel to the
+  405/501/502 branches: no 8.3-only syntax, plugin-owned class names, no Bootstrap data-API.
 - The Bootstrap 4 polyfill serves only `MOODLE_405_STABLE`; it is dead code on the other branches
   and leaves `main` (5.3) with the 4.5 compatibility code (`docs/moodle-53-branch-plan.md`, S5).
 

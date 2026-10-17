@@ -1,0 +1,174 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/filter_line
+
+    The filter line of a learner view (moodle-dev/docs/filter-line/CONTRACT.md): one sticky
+    toolbar holding the line, in the contract's slot order, and the row of chips under it.
+
+    The line (local-dimensions-line) holds, in order: the scope, a radio group of counted cells
+    whose roving focus and arrow keys local_dimensions/filter_line adds, a cell with nothing to
+    offer written hidden (absent) unless it is the chosen one; the pill search with its magnifier
+    and its eraser, which is never a cross; the favourites star (aria-pressed), hidden while the
+    learner has no favourite; Filters, which opens the chip panel (aria-expanded, aria-controls)
+    and carries a count badge; Organise, which opens the sort menu and, at the two-line step, the
+    view toggle's place ("Show as"); the view toggle, icons only, List first. A surface leaves out
+    the slots it does not have and never reorders the rest.
+
+    Every control the search slides out of the way when it grows over the line carries
+    local-dimensions-line-slides. Four parts are the module's alone, and the stylesheet draws none of them until the module has
+    folded the line into a step (local-dimensions-line--s1 to s4): the search's icon
+    (local-dimensions-search-open), which stands for the field once the line is too narrow for
+    it; the close button of the search grown over the line (local-dimensions-search-close), the
+    line's last control; the listbox of suggestions, given its role by the module, which carries
+    its three headings so the module composes no word of them; and the "Show as" group.
+
+    The row under the line (local-dimensions-line-chips) holds a chip per active filter, each a
+    button that drops it, and "Clear all" from two chips up; the module paints it, reading the
+    words of each chip off the control it stands for and the remove label off the row.
+
+    Every floating layer - the panel, the menu, the listbox - names a region: the module places
+    each one under the line's real bottom, and the panel becomes a bottom sheet at the two-line
+    step. The panel's foot is "Show N", which closes it on the list; the module keeps N current.
+
+    Context variables required:
+    * id (string) - Prefix of every id the line writes
+    * scopelabel (string) - Accessible name of the scope group
+    * scopehidden (bool) - Whether the scope waits for its counts (the tracker's do)
+    * scope (array) - Cells: value, label, count, hascount, checked, absent
+    * searchlabel, searchplaceholder (string) - The field's name and placeholder
+    * itemslabel (string) - Heading of the matching items in the suggestions
+    * hasstar (bool), star (object) - pressed, count, hidden
+    * haschipfilters (bool), chipfilters (object) - The chip panel's context
+    * showcount (int) - How many items the list shows at first paint, on the panel's "Show N"
+    * hasorganise (bool), sortoptions (array) - value, label, checked
+    * hasviews (bool), views (array) - value, label, icon, current
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "id": "local-dimensions-viewplan",
+        "scopelabel": "Filter competencies",
+        "scopehidden": false,
+        "scope": [
+            {"value": "incomplete", "label": "To do", "count": 3, "hascount": true, "checked": true, "absent": false},
+            {"value": "all", "label": "All", "count": 5, "hascount": true, "checked": false, "absent": false}
+        ],
+        "searchlabel": "Search competencies",
+        "searchplaceholder": "Search competencies…",
+        "itemslabel": "Competencies",
+        "hasstar": true,
+        "star": {"pressed": false, "count": 2, "hidden": false},
+        "haschipfilters": true,
+        "showcount": 3,
+        "chipfilters": {
+            "id": "local-dimensions-viewplan-chip-filters",
+            "hasgroups": true,
+            "clearlabel": "Clear filters",
+            "groups": [
+                {
+                    "shortname": "local_dimensions_tag1",
+                    "groupid": "tag1",
+                    "label": "Year",
+                    "values": [{"value": "2025"}, {"value": "2026"}]
+                }
+            ]
+        },
+        "hasorganise": true,
+        "sortoptions": [
+            {"value": "planorder", "label": "Plan order", "checked": true},
+            {"value": "name", "label": "Name", "checked": false}
+        ],
+        "hasviews": true,
+        "views": [
+            {"value": "list", "label": "List", "icon": "fa-list", "current": true},
+            {"value": "grid", "label": "Cards", "icon": "fa-th-large", "current": false}
+        ]
+    }
+}}
+<div class="local-dimensions-toolbar" data-region="local-dimensions-line-toolbar">
+    <div class="local-dimensions-line" data-region="local-dimensions-line">
+        <div class="local-dimensions-line-scope" role="radiogroup" aria-label="{{scopelabel}}" data-region="local-dimensions-line-scope"{{#scopehidden}} hidden{{/scopehidden}}>
+            <div class="local-dimensions-line-cells">
+                {{#scope}}
+                <button type="button" class="local-dimensions-line-cell" role="radio" data-filter="{{value}}" aria-checked="{{#checked}}true{{/checked}}{{^checked}}false{{/checked}}" tabindex="{{#checked}}0{{/checked}}{{^checked}}-1{{/checked}}"{{#absent}} hidden{{/absent}}>{{label}} <span class="local-dimensions-line-count" data-count="{{value}}"{{^hascount}} hidden{{/hascount}}>{{count}}</span></button>
+                {{/scope}}
+            </div>
+        </div>
+        <div class="local-dimensions-line-search" data-region="local-dimensions-line-search">
+            <label class="local-dimensions-line-sronly" for="{{id}}-search">{{searchlabel}}</label>
+            <i class="fa fa-search local-dimensions-line-searchicon" aria-hidden="true"></i>
+            <input type="search" id="{{id}}-search" class="local-dimensions-search-input" placeholder="{{searchplaceholder}}" autocomplete="off">
+            <button type="button" class="local-dimensions-line-eraser" data-action="local-dimensions-search-clear" aria-label="{{#str}}line_clear_text, local_dimensions{{/str}}" title="{{#str}}line_clear_text, local_dimensions{{/str}}" hidden><i class="fa fa-eraser" aria-hidden="true"></i></button>
+        </div>
+        <button type="button" class="local-dimensions-line-iconbtn local-dimensions-line-searchopen local-dimensions-line-slides" data-action="local-dimensions-search-open" aria-controls="{{id}}-search" aria-expanded="false" aria-label="{{searchlabel}}" title="{{searchlabel}}"><i class="fa fa-search" aria-hidden="true"></i></button>
+        {{#hasstar}}
+        {{#star}}
+        <button type="button" class="local-dimensions-line-iconbtn local-dimensions-line-star local-dimensions-line-slides" data-region="local-dimensions-line-star" aria-pressed="{{#pressed}}true{{/pressed}}{{^pressed}}false{{/pressed}}" title="{{#str}}line_favourites, local_dimensions{{/str}}"{{#hidden}} hidden{{/hidden}}><i class="fa {{#pressed}}fa-star{{/pressed}}{{^pressed}}fa-star-o{{/pressed}}" aria-hidden="true"></i><span class="local-dimensions-line-sronly">{{#str}}line_favourites, local_dimensions{{/str}} <span data-fav-count>{{count}}</span></span></button>
+        {{/star}}
+        {{/hasstar}}
+        {{#haschipfilters}}
+        <div class="local-dimensions-line-filters local-dimensions-line-slides">
+            <button type="button" class="local-dimensions-line-filterstoggle" data-filter-toggle aria-expanded="false" aria-controls="{{id}}-panel"><i class="fa fa-sliders" aria-hidden="true"></i> <span class="local-dimensions-line-label">{{#str}}line_filters, local_dimensions{{/str}}</span> <span class="local-dimensions-line-badge" data-chip-count hidden></span></button>
+            <div class="local-dimensions-filter-panel" id="{{id}}-panel" data-filter-panel data-region="local-dimensions-line-panel" hidden>
+                {{#chipfilters}}
+                {{> local_dimensions/chip_filters }}
+                {{/chipfilters}}
+                <div class="local-dimensions-line-panelfoot">
+                    <button type="button" class="local-dimensions-line-show" data-action="local-dimensions-panel-show">{{#str}}line_show, local_dimensions{{/str}} <span data-region="local-dimensions-panel-count">{{showcount}}</span></button>
+                </div>
+            </div>
+        </div>
+        {{/haschipfilters}}
+        {{#hasorganise}}
+        <div class="local-dimensions-line-organise local-dimensions-line-slides">
+            <button type="button" class="local-dimensions-line-iconbtn local-dimensions-sort-toggle" data-sort-toggle aria-haspopup="true" aria-expanded="false" aria-controls="{{id}}-organise" aria-label="{{#str}}line_organise, local_dimensions{{/str}}" title="{{#str}}line_organise, local_dimensions{{/str}}"><i class="fa fa-sort-amount-asc" aria-hidden="true"></i></button>
+            <div class="local-dimensions-line-menu" id="{{id}}-organise" data-region="local-dimensions-line-menu" hidden>
+                <div class="local-dimensions-sort-menu" role="menu" aria-labelledby="{{id}}-sortby">
+                    <span class="local-dimensions-sort-heading" id="{{id}}-sortby">{{#str}}sort_by, local_dimensions{{/str}}</span>
+                    {{#sortoptions}}
+                    <button type="button" role="menuitemradio" data-sort="{{value}}" aria-checked="{{#checked}}true{{/checked}}{{^checked}}false{{/checked}}"><i class="fa fa-check" aria-hidden="true"></i>{{label}}</button>
+                    {{/sortoptions}}
+                </div>
+                {{#hasviews}}
+                <div class="local-dimensions-line-showas" role="group" aria-labelledby="{{id}}-showas" data-region="local-dimensions-line-showas">
+                    <span class="local-dimensions-sort-heading" id="{{id}}-showas">{{#str}}line_show_as, local_dimensions{{/str}}</span>
+                    {{#views}}
+                    <button type="button" class="local-dimensions-line-showasbtn" data-view="{{value}}" aria-pressed="{{#current}}true{{/current}}{{^current}}false{{/current}}"><i class="fa {{icon}}" aria-hidden="true"></i> {{label}}</button>
+                    {{/views}}
+                </div>
+                {{/hasviews}}
+            </div>
+        </div>
+        {{/hasorganise}}
+        {{#hasviews}}
+        <div class="local-dimensions-view-toggle local-dimensions-line-view local-dimensions-line-slides" role="group" aria-label="{{#str}}line_view, local_dimensions{{/str}}" data-region="local-dimensions-line-view">
+            {{#views}}
+            <button type="button" data-view="{{value}}" aria-pressed="{{#current}}true{{/current}}{{^current}}false{{/current}}" aria-label="{{label}}" title="{{label}}"><i class="fa {{icon}}" aria-hidden="true"></i></button>
+            {{/views}}
+        </div>
+        {{/hasviews}}
+        <button type="button" class="local-dimensions-line-iconbtn local-dimensions-line-searchclose" data-action="local-dimensions-search-close" aria-label="{{#str}}line_close_search, local_dimensions{{/str}}" title="{{#str}}line_close_search, local_dimensions{{/str}}"><i class="fa fa-times" aria-hidden="true"></i></button>
+        <div class="local-dimensions-line-suggest" id="{{id}}-suggest" data-region="local-dimensions-line-suggest" data-label-filters="{{#str}}line_suggest_filters, local_dimensions{{/str}}" data-label-start="{{#str}}line_suggest_start, local_dimensions{{/str}}" data-label-items="{{itemslabel}}" hidden></div>
+    </div>
+    <div class="local-dimensions-line-chips" data-region="local-dimensions-line-chips" data-label-remove="{{#str}}line_remove_filter, local_dimensions{{/str}}" hidden>
+        <div class="local-dimensions-line-chiplist" data-region="local-dimensions-line-chiplist"></div>
+        <button type="button" class="local-dimensions-line-clearall" data-action="local-dimensions-clear-all" hidden>{{#str}}line_clear_all, local_dimensions{{/str}}</button>
+    </div>
+</div>
