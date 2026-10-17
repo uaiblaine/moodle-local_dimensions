@@ -48,6 +48,20 @@ final class rating {
     }
 
     /**
+     * SQL for the id of the scale that rates a user competency.
+     *
+     * @param string $usercompetencyidfield Qualified field holding the `competency_usercomp` id.
+     * @return string A scalar subquery.
+     */
+    public static function scaleid_sql_for_usercompetency(string $usercompetencyidfield): string {
+        return "(SELECT COALESCE(rc.scaleid, rf.scaleid)
+                   FROM {competency_usercomp} ruc
+                   JOIN {competency} rc ON rc.id = ruc.competencyid
+                   JOIN {competency_framework} rf ON rf.id = rc.competencyframeworkid
+                  WHERE ruc.id = {$usercompetencyidfield})";
+    }
+
+    /**
      * The scale item a rating names.
      *
      * @param int|string|null $grade Position in the scale, from 1.
