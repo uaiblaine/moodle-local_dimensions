@@ -34,7 +34,7 @@ use local_dimensions\local\enrolment_provider as provider;
  * The tracker's card renders it through progress_card_body.mustache and the plan accordion's card
  * through accordion.js; both receive the same payload from their web service, so a state reads the
  * same in both and whichever provider answered ({@see enrolment_provider}). The labels are the
- * theme's (theme_boost_union_fundaseg category_state_*), as the enrolment matrix's shared state area
+ * theme's (theme_dimensions category_state_*), as the enrolment matrix's shared state area
  * asks. Every text travels in the plain spelling: the template's double stash and the script's
  * escapeHtml() each escape it once.
  *

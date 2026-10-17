@@ -203,7 +203,7 @@ body[data-bs-theme="dark"],
    ============================================
 
    The colour families of the course cards' shared state area: one pill per enrolment state, read
-   by the tracker's card and the plan's, the same families theme_boost_union_fundaseg's card uses.
+   by the tracker's card and the plan's, the same families theme_dimensions' course card uses.
    Every one is an alias of a tone family of the token block above, so a state follows the site's
    palette and the page's colour mode exactly as that block does, and adds no colour of its own:
 
