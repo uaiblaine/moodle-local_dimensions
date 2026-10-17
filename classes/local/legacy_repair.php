@@ -16,10 +16,12 @@
 
 namespace local_dimensions\local;
 
+use core_reportbuilder\local\helpers\user_filter_manager;
 use local_dimensions\constants;
 use local_dimensions\customfield\competency_handler;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\helper;
+use local_dimensions\reportbuilder\datasource\learning_plans;
 
 /**
  * Brings a site from any date-numbered release of the plugin to the current data shape.
@@ -68,6 +70,7 @@ class legacy_repair {
     const ONCE = [
         'shortnames' => 'rename_legacy_shortnames',
         'enrollmentfilter' => 'sync_enrollmentfilter_options',
+        'rbtemplateextras' => 'move_template_customfield_report_elements',
     ];
 
     /**
@@ -164,5 +167,101 @@ class legacy_repair {
             competency_handler::create()->reset_configuration_cache();
         }
         return $renamed;
+    }
+
+    /**
+     * Point saved learning-plan reports at the entity that now holds the template customfields.
+     *
+     * The `lp` customfields moved from the `template` report entity to `template_extras`, which
+     * changes every element's unique identifier from `template:customfield_*` to
+     * `template_extras:customfield_*`. Columns, filters and conditions, the stored condition
+     * values and the stored user filter values follow, or the report builder drops them as
+     * unknown elements. Moodle 4.5 keeps each user's filter values in user preferences, which
+     * core's {@see user_filter_manager} reads and writes.
+     *
+     * @return int The number of report rows changed.
+     */
+    public static function move_template_customfield_report_elements(): int {
+        global $DB;
+
+        $from = 'template:customfield_';
+        $to = 'template_extras:customfield_';
+
+        [$insql, $params] = $DB->get_in_or_equal(
+            [learning_plans::class, '\\' . learning_plans::class],
+            SQL_PARAMS_NAMED
+        );
+        $reports = $DB->get_records_select_menu('reportbuilder_report', "source $insql", $params, '', 'id, conditiondata');
+        if (!$reports) {
+            return 0;
+        }
+
+        $changed = 0;
+        [$reportsql, $reportparams] = $DB->get_in_or_equal(array_keys($reports), SQL_PARAMS_NAMED);
+        $likesql = $DB->sql_like('uniqueidentifier', ':prefix');
+        $reportparams['prefix'] = $DB->sql_like_escape($from) . '%';
+        foreach (['reportbuilder_column', 'reportbuilder_filter'] as $table) {
+            $rows = $DB->get_records_select_menu(
+                $table,
+                "reportid $reportsql AND $likesql",
+                $reportparams,
+                '',
+                'id, uniqueidentifier'
+            );
+            foreach ($rows as $id => $identifier) {
+                $DB->set_field($table, 'uniqueidentifier', $to . substr($identifier, strlen($from)), ['id' => $id]);
+                $changed++;
+            }
+        }
+
+        foreach ($reports as $id => $json) {
+            if (($moved = self::rename_value_keys((string) $json, $from, $to)) !== null) {
+                $DB->set_field('reportbuilder_report', 'conditiondata', $moved, ['id' => $id]);
+                $changed++;
+            }
+        }
+
+        foreach (array_keys($reports) as $reportid) {
+            $userids = $DB->get_fieldset_select(
+                'user_preferences',
+                'userid',
+                'name = ?',
+                ["reportbuilder-report-{$reportid}-0"]
+            );
+            foreach ($userids as $userid) {
+                $values = user_filter_manager::get((int) $reportid, (int) $userid);
+                if (($moved = self::rename_value_keys((string) json_encode($values), $from, $to)) !== null) {
+                    user_filter_manager::set((int) $reportid, json_decode($moved, true), (int) $userid);
+                    $changed++;
+                }
+            }
+        }
+
+        return $changed;
+    }
+
+    /**
+     * Rename the keys of a stored filter/condition value set that start with a prefix.
+     *
+     * @param string $json Stored JSON object, keyed `entity:name_suffix`.
+     * @param string $from Old key prefix.
+     * @param string $to New key prefix.
+     * @return string|null The re-encoded JSON, or null when nothing changed.
+     */
+    private static function rename_value_keys(string $json, string $from, string $to): ?string {
+        $values = json_decode($json, true);
+        if (!is_array($values)) {
+            return null;
+        }
+        $moved = [];
+        $touched = false;
+        foreach ($values as $key => $value) {
+            if (str_starts_with((string) $key, $from)) {
+                $key = $to . substr((string) $key, strlen($from));
+                $touched = true;
+            }
+            $moved[$key] = $value;
+        }
+        return $touched ? json_encode($moved) : null;
     }
 }
