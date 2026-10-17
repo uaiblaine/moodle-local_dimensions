@@ -87,6 +87,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Report builder: a "Course and activity competencies" report source (`course_competencies`,
+  version 2026100507), one row per competency linked to a course, with the course, its category,
+  the competency, its framework, its Dimensions custom fields and the course rule ("Upon course
+  completion", sort order, "Push course ratings to individual learning plans"); the activity
+  entities add the activities of that course linked to the same competency, with their name, type,
+  rule and "Override the existing rating". New entities `course_competency` and
+  `module_competency`; the core course module entity gives the activity's ID number and
+  visibility. The source is offered only while competencies are enabled.
 - **The filter line** (version 2026100504; the fleet's contract in
   `moodle-dev/docs/filter-line/CONTRACT.md`, stage D1). The plan overview's sticky toolbar is one
   line in the contract's order: the scope ("To do" and "All", a radio group with arrow keys), a pill
