@@ -226,6 +226,11 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   toasts from a modal go to a region in the modal body; `flashRow()` for in-place changes;
   `pane.dataset` seeded from the server-rendered value; `array_flip([5])` makes
   `!empty($map[5])` false, test membership with `isset`.
+- **Theme sheets.** Core loads `styles_<theme>.css` for every theme in the active chain, base first:
+  `styles_boost.css` holds what is true of Boost's page structure (the hero starts at `#page`'s top),
+  `styles_boost_union.css` Boost Union's deltas (a smart menu without a menu bar adds 40px to `#page`;
+  `boost_union_sheet_test`), each other `styles_<theme>.css` its theme's. `#page` animates its margin
+  (0.2s): measure it with the transition off.
 - **Filter line** (both learner views; `moodle-dev/docs/filter-line/CONTRACT.md`):
   `amd/src/filter_line.js` presents and folds, the page module (`accordion`, `competency_view`)
   filters and answers `countFor`/`items`; every hook is a data attribute of
