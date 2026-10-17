@@ -21,17 +21,15 @@ namespace local_dimensions\reportbuilder\local\entities;
 use core\lang_string;
 use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\{boolean_select, date, text};
-use core_reportbuilder\local\helpers\{custom_fields, format};
+use core_reportbuilder\local\helpers\format;
 use core_reportbuilder\local\report\{column, filter};
-use local_dimensions\helper;
 use stdClass;
 
 /**
  * Learning plan template entity.
  *
- * Wraps the core `competency_template` table and embeds all customfields
- * defined by local_dimensions in the `lp` area (auto-generated columns and
- * filters via the customfield helper).
+ * Wraps the core `competency_template` table. The customfields local_dimensions
+ * defines in the `lp` area live in their own entity, {@see template_extras}.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -57,27 +55,16 @@ class template extends base {
     }
 
     /**
-     * Initialise the entity: register native columns + filters, then merge
-     * customfield-derived columns/filters for the `lp` area.
+     * Initialise the entity.
      */
     #[\Override]
     public function initialise(): base {
-        $tablealias = $this->get_table_alias('competency_template');
-
-        $customfields = (new custom_fields(
-            "{$tablealias}.id",
-            $this->get_entity_name(),
-            'local_dimensions',
-            helper::AREA_LP,
-        ))->add_joins($this->get_joins());
-
-        foreach (array_merge($this->get_all_columns(), $customfields->get_columns()) as $col) {
+        foreach ($this->get_all_columns() as $col) {
             $this->add_column($col);
         }
-        foreach (array_merge($this->get_all_filters(), $customfields->get_filters()) as $f) {
+        foreach ($this->get_all_filters() as $f) {
             $this->add_filter($f)->add_condition($f);
         }
-
         return $this;
     }
 

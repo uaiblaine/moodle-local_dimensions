@@ -16,8 +16,11 @@
 
 namespace local_dimensions\local;
 
+use core_reportbuilder\local\models\{column, filter, user_filter};
+use core_user\reportbuilder\datasource\users;
 use local_dimensions\constants;
 use local_dimensions\helper;
+use local_dimensions\reportbuilder\datasource\learning_plans;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
@@ -252,5 +255,65 @@ final class legacy_repair_test extends \advanced_testcase {
         $DB->set_field('customfield_field', 'configdata', $four, ['id' => $fieldid]);
         legacy_repair::run();
         $this->assertSame($four, $DB->get_field('customfield_field', 'configdata', ['id' => $fieldid]));
+    }
+
+    /**
+     * Saved learning-plan reports follow the template customfields to `template_extras`.
+     *
+     * Columns, filters, conditions, condition values and user filter values move; elements of
+     * other entities and reports of other sources stay as they were; a second run changes nothing.
+     *
+     * @return void
+     */
+    public function test_saved_reports_follow_the_template_customfields(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $old = 'template:customfield_' . constants::CFIELD_TAG1;
+        $new = 'template_extras:customfield_' . constants::CFIELD_TAG1;
+
+        /** @var \core_reportbuilder_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $plans = $generator->create_report(['name' => 'Plans', 'source' => learning_plans::class, 'default' => 0]);
+        $users = $generator->create_report(['name' => 'Users', 'source' => users::class, 'default' => 0]);
+
+        foreach ([$plans, $users] as $report) {
+            $reportid = (int) $report->get('id');
+            foreach ([$old, 'template:shortname'] as $order => $identifier) {
+                $record = ['reportid' => $reportid, 'uniqueidentifier' => $identifier, 'columnorder' => $order + 1];
+                (new column(0, (object) $record))->create();
+            }
+            foreach ([0, 1] as $iscondition) {
+                $record = ['reportid' => $reportid, 'uniqueidentifier' => $old, 'iscondition' => $iscondition, 'filterorder' => 1];
+                (new filter(0, (object) $record))->create();
+            }
+            $conditiondata = json_encode(["{$old}_operator" => 1, 'plan:status_operator' => 2]);
+            $DB->set_field('reportbuilder_report', 'conditiondata', $conditiondata, ['id' => $reportid]);
+            $record = ['reportid' => $reportid, 'filterdata' => json_encode(["{$old}_value" => 'x'])];
+            (new user_filter(0, (object) $record))->create();
+        }
+
+        $this->assertSame(5, legacy_repair::move_template_customfield_report_elements());
+
+        $planid = (int) $plans->get('id');
+        $columns = $DB->get_fieldset('reportbuilder_column', 'uniqueidentifier', ['reportid' => $planid]);
+        $this->assertEqualsCanonicalizing([$new, 'template:shortname'], $columns);
+        $filters = $DB->get_fieldset('reportbuilder_filter', 'uniqueidentifier', ['reportid' => $planid]);
+        $this->assertSame([$new, $new], $filters);
+        $conditiondata = $DB->get_field('reportbuilder_report', 'conditiondata', ['id' => $planid]);
+        $this->assertSame(["{$new}_operator" => 1, 'plan:status_operator' => 2], json_decode($conditiondata, true));
+        $filterdata = $DB->get_field('reportbuilder_user_filter', 'filterdata', ['reportid' => $planid]);
+        $this->assertSame(["{$new}_value" => 'x'], json_decode($filterdata, true));
+
+        // The other source's report is untouched.
+        $usersid = (int) $users->get('id');
+        $moved = 'reportid = ? AND ' . $DB->sql_like('uniqueidentifier', '?');
+        $this->assertSame(0, $DB->count_records_select('reportbuilder_column', $moved, [$usersid, 'template_extras:%']));
+        $this->assertSame(0, $DB->count_records_select('reportbuilder_filter', $moved, [$usersid, 'template_extras:%']));
+        $conditiondata = $DB->get_field('reportbuilder_report', 'conditiondata', ['id' => $usersid]);
+        $this->assertStringContainsString($old, $conditiondata);
+
+        $this->assertSame(0, legacy_repair::move_template_customfield_report_elements());
     }
 }

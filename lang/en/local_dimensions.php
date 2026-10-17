@@ -487,6 +487,7 @@ $string['enrolmentopens'] = 'Enrolment opens on {$a}';
 $string['entityname_competency_extras'] = 'Competency: Dimensions custom fields';
 $string['entityname_plan'] = 'Learning plan';
 $string['entityname_template'] = 'Learning plan template';
+$string['entityname_template_extras'] = 'Learning plan template: Dimensions custom fields';
 $string['error_loading_summary'] = 'Error loading competency summary.';
 $string['errornetwork'] = 'Connection lost. Please check your network and try again.';
 $string['eventcohortroleadded'] = 'Cohort role rule added';

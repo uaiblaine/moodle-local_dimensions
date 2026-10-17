@@ -83,6 +83,28 @@ class constants {
     /** @var string Custom field shortname for per-template "link related competencies" (lp area only) */
     const string CFIELD_SHOWRELATEDLINK = 'local_dimensions_showrelatedlink';
 
+    /**
+     * Custom fields the report builder does not offer: they drive how the learner pages look and
+     * behave, and say nothing a report reader needs. Fields an administrator adds stay offered.
+     *
+     * @var array
+     */
+    const array REPORT_HIDDEN_CFIELDS = [
+        self::CFIELD_DISPLAYMODE,
+        self::CFIELD_CUSTOMCARD,
+        self::CFIELD_CUSTOMBGIMAGE,
+        self::CFIELD_CUSTOMBGCOLOR,
+        self::CFIELD_CUSTOMTEXTCOLOR,
+        self::CFIELD_CUSTOMSCSS,
+        self::CFIELD_SUBLINE_SOURCE,
+        self::CFIELD_ENROLLMENTFILTER,
+        self::CFIELD_SINGLECOURSEREDIRECT,
+        self::CFIELD_LOCKEDCARDMODE,
+        self::CFIELD_SHOWLOCKEDDATE,
+        self::CFIELD_SHOWRELATED,
+        self::CFIELD_SHOWRELATEDLINK,
+    ];
+
     /** @var string User preference: Competency hub last-visited view (tab/context/category/selection) as JSON */
     const string PREF_CENTRAL_NAV = 'local_dimensions_central_nav';
 
