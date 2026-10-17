@@ -218,6 +218,52 @@ define(['local_dimensions/filter_tabs_nav'], function(FilterTabsNav) {
         },
 
         /**
+         * Paint each chip's count and hide a chip that would leave nothing, unless it is pressed.
+         *
+         * The filter line's panel puts a count on every option and draws no zero option unless it
+         * is the chosen one (moodle-dev/docs/filter-line/CONTRACT.md, section 4). The host knows
+         * what each chip would leave; this only writes it. A group left with no chip to draw is
+         * hidden with them, so no label stands over an empty track.
+         *
+         * @param {string} containerId DOM id of the [data-chip-filters] node.
+         * @param {Function} countFor Receives a chip, returns the number of items it would leave, or null.
+         */
+        paintCounts: function(containerId, countFor) {
+            var entry = registry[containerId];
+            if (!entry || typeof countFor !== 'function') {
+                return;
+            }
+            var changed = false;
+            entry.container.querySelectorAll('[data-chip-field]').forEach(function(group) {
+                var drawn = 0;
+                group.querySelectorAll('[data-chip-value]').forEach(function(chip) {
+                    var count = countFor(chip);
+                    var counted = typeof count === 'number';
+                    var slot = chip.querySelector('[data-region="local-dimensions-chip-count"]');
+                    if (slot) {
+                        slot.textContent = counted ? String(count) : '';
+                        slot.hidden = !counted;
+                    }
+                    var hide = count === 0 && chip.getAttribute('aria-pressed') !== 'true';
+                    if (chip.hidden !== hide) {
+                        chip.hidden = hide;
+                        changed = true;
+                    }
+                    if (!hide) {
+                        drawn++;
+                    }
+                });
+                if (group.hidden !== (drawn === 0)) {
+                    group.hidden = drawn === 0;
+                    changed = true;
+                }
+            });
+            if (changed) {
+                FilterTabsNav.updateAll(entry.container);
+            }
+        },
+
+        /**
          * Helper used by host pages to check whether an item passes the
          * current selection. Selection is AND across fields, OR within a
          * field. Empty selection = pass.

@@ -41,7 +41,7 @@ Feature: Reuse fetched competency detail on the plan overview
 
   Scenario: A competency shown again renders from fetched data, and a review request fetches it again
     When I am on the "Behat plan" "local_dimensions > View plan" page logged in as "student1"
-    And I click on "Grid view" "button"
+    And I click on "Cards" "button" in the "[data-region='local-dimensions-line-view']" "css_element"
     And I click on "Alpha competency" "button"
     Then I should see "Course one" in the "Alpha competency" "dialogue"
     When I click on "Rules" "button" in the "Alpha competency" "dialogue"
@@ -77,8 +77,8 @@ Feature: Reuse fetched competency detail on the plan overview
     And I click on "Alpha competency" "button"
     And I click on "Rules" "button"
     Then I should see "Alpha child"
-    When I click on "Grid view" "button"
-    And I click on "List view" "button"
+    When I click on "Cards" "button" in the "[data-region='local-dimensions-line-view']" "css_element"
+    And I click on "List" "button" in the "[data-region='local-dimensions-line-view']" "css_element"
     And I click on "Alpha competency" "button"
     And I click on "Rules" "button"
     Then I should see "Alpha child"
