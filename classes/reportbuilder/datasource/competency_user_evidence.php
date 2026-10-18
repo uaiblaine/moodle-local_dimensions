@@ -22,7 +22,7 @@ use core_competency\reportbuilder\local\entities\{competency, framework};
 use core_reportbuilder\datasource;
 use core_reportbuilder\local\entities\user;
 use core_reportbuilder\local\helpers\database;
-use local_dimensions\reportbuilder\local\entities\{competency_extras, user_evidence, usercompetency};
+use local_dimensions\reportbuilder\local\entities\{competency_details, competency_extras, user_evidence, usercompetency};
 
 /**
  * Evidence of prior learning datasource.
@@ -88,6 +88,12 @@ class competency_user_evidence extends datasource {
 
         $extrasentity = new competency_extras();
         $this->add_entity($extrasentity
+            ->set_table_alias('competency', $competencyalias)
+            ->add_joins($competencyjoins));
+
+        // Hierarchy, scale and links of the competency.
+        $detailsentity = new competency_details();
+        $this->add_entity($detailsentity
             ->set_table_alias('competency', $competencyalias)
             ->add_joins($competencyjoins));
 
