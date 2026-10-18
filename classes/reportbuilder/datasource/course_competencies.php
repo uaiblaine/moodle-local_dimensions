@@ -23,7 +23,8 @@ use core_course\reportbuilder\local\entities\course_category;
 use core_reportbuilder\datasource;
 use core_reportbuilder\local\entities\course;
 use core_reportbuilder\local\helpers\database;
-use local_dimensions\reportbuilder\local\entities\{competency_extras, course_competency, course_module, module_competency};
+use local_dimensions\reportbuilder\local\entities\{competency_details, competency_extras, course_competency,
+    course_module, module_competency};
 
 /**
  * Course and activity competencies datasource.
@@ -97,6 +98,12 @@ class course_competencies extends datasource {
         // Competency customfields, keyed to the same competency rows.
         $extrasentity = new competency_extras();
         $this->add_entity($extrasentity
+            ->set_table_alias('competency', $competencyalias)
+            ->add_joins($competencyjoins));
+
+        // Hierarchy, scale and links of the competency.
+        $detailsentity = new competency_details();
+        $this->add_entity($detailsentity
             ->set_table_alias('competency', $competencyalias)
             ->add_joins($competencyjoins));
 

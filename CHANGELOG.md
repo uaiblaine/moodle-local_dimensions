@@ -97,6 +97,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Report builder: more columns (version 2025100608).
+  - "Learning plan": name with a link to the plan, "Based on a template", "Original template",
+    "Competencies", "Proficient competencies" and "Progress" (the share proficient, from the
+    archive once the plan is complete), with filters on the last four. A "Plan reviewer" entity
+    (`planreviewer`) in "Learning plans" and "Learning plan competencies".
+  - "Learning plan template": short name with a link to the template, its context, and the number
+    of plans and cohorts, with filters on both counts.
+  - A "Competency: hierarchy and links" entity (`competency_details`) in every report source that
+    shows the competency: the parent, the path of ancestors (each framework's names read once per
+    request), the rating scale (the competency's own or its framework's), and the number of
+    linked courses and related competencies.
 - Report builder: two report sources for ratings (version 2025100607), offered while competencies
   are enabled.
   - "Competency ratings in courses" (`course_competency_ratings`): one row per rating a user

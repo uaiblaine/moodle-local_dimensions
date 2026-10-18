@@ -88,6 +88,33 @@ Competencies and templates gain auto-provisioned custom fields: card and hero ba
 Admin settings (**Site administration → Competencies → Competency Dimensions settings**) cover the "Return to plan" button, image handling and SCSS, plus per-view display options: percentage and locked-card behaviour, enrolment filters, the single-course redirect, and which sections each accordion panel shows (description, taxonomy, path, related competencies, evidence, rules).
 
 
+Reports
+-------
+
+Seven report sources for Moodle's report builder put competency data into custom reports,
+schedules and downloads without SQL (*Site administration > Reports > Report builder > Custom
+reports*). Each source is offered only while competencies are enabled.
+
+| Report source | One row per | What it adds |
+|---|---|---|
+| Competencies with Dimensions custom fields | competency and user | framework, competency, the user's competency (status, proficiency, rating), the Dimensions fields, and the competency's hierarchy and links |
+| Course and activity competencies | competency linked to a course | the course rule and the push of ratings to plans; the activities of that course linked to the same competency, with their rule and rating override |
+| Competency ratings in courses | rating a user received in a course | rating, proficiency, the user and their cohorts, the course and its category |
+| Learning plans | plan | status, dates, owner and reviewer, the template with its Dimensions fields and cohorts, and per plan the number of competencies, proficient competencies and progress |
+| Learning plan competencies | competency of a plan | whether it comes from the template; proficiency and rating in the plan, read from the archive once the plan is complete |
+| Competency evidence | evidence | action, description, rating, note, author, and the course or activity it came from |
+| Evidence of prior learning | evidence and linked competency | files, the competency and the learner's competency |
+
+- **Ratings** are named from the competency's scale (its own or its framework's). Each scale is
+  read once per request, so a large report costs no query per row.
+- **Dimensions custom fields** appear as columns, filters and conditions: tags, type, the template
+  identifier and every field an administrator adds. The fields that only style or steer the
+  learner pages (colours, images, custom SCSS, display settings) are left out.
+- **"Competency: hierarchy and links"** gives the parent, the path of ancestors, the rating scale,
+  and the number of linked courses and related competencies, in every source that shows the
+  competency.
+
+
 Under the hood
 --------------
 
