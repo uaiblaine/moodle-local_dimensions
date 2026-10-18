@@ -4,7 +4,7 @@ All notable changes to the **local_dimensions** plugin will be documented in thi
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [v5.3-r1] - Unreleased
+## [v5.3-r1] - 2026-10-18
 
 ### Upgrading
 
