@@ -66,14 +66,14 @@ final class rating {
      *
      * @param int|string|null $grade Position in the scale, from 1.
      * @param int|string|null $scaleid The rating scale.
-     * @return string The item, the raw position when the scale lacks it, or '' with no rating.
+     * @return string The item escaped for HTML, the raw position when the scale lacks it, or '' with no rating.
      */
     public static function format($grade, $scaleid): string {
         if ($grade === null || $grade === '') {
             return '';
         }
         $items = $scaleid ? self::items((int) $scaleid) : [];
-        return (string) ($items[(int) $grade - 1] ?? $grade);
+        return format_string((string) ($items[(int) $grade - 1] ?? $grade));
     }
 
     /**

@@ -86,7 +86,7 @@ class framework_csv_importer {
      * Import the framework and its competency tree.
      *
      * @return array{frameworkid: int, competencycount: int}
-     * @throws \moodle_exception When the CSV carries no framework row.
+     * @throws \moodle_exception When the CSV carries no framework row, or needs a site scale the user may not create.
      */
     public function import(): array {
         global $DB;
@@ -103,8 +103,110 @@ class framework_csv_importer {
         // Build the in-memory tree (framework children matched by parentidnumber).
         $this->add_children($fw, '');
 
-        $transaction = $DB->start_delegated_transaction();
+        // Refuse before the first write: a delegated transaction cannot undo rows inside a caller's own.
+        $this->assert_scales_available($fw);
 
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            $framework = $this->import_tree($fw);
+        } catch (\Throwable $e) {
+            // A refused scale must leave nothing behind.
+            $transaction->rollback($e);
+        }
+        $transaction->allow_commit();
+
+        return ['frameworkid' => (int) $framework->get('id'), 'competencycount' => $this->competencycount];
+    }
+
+    /**
+     * Refuse the import up front when it needs a site scale its user may not create.
+     *
+     * Mirrors which scales upsert_framework() and create_competency() will resolve: the
+     * framework's unless it is frozen, and each new competency's own.
+     *
+     * @param \stdClass $fw The parsed framework record with its children attached.
+     * @throws \moodle_exception When a needed scale is empty (framework) or missing and not creatable.
+     */
+    private function assert_scales_available(\stdClass $fw): void {
+        $existing = null;
+        $existingidnumbers = [];
+        if ($this->updateexisting) {
+            $existing = competency_framework::get_record([
+                'idnumber' => $fw->idnumber,
+                'contextid' => $this->context->id,
+            ]) ?: null;
+            if ($existing) {
+                foreach (competency::get_records(['competencyframeworkid' => $existing->get('id')]) as $comp) {
+                    $existingidnumbers[(string) $comp->get('idnumber')] = true;
+                }
+            }
+        }
+
+        $needed = [];
+        if (!$existing || !$existing->has_user_competencies()) {
+            if ($fw->scalevalues === '') {
+                throw new \moodle_exception('central_frameworks_import_emptyscale', 'local_dimensions');
+            }
+            $needed[] = $fw->scalevalues;
+        }
+        foreach ($this->parsed['competencies'] as $record) {
+            if (
+                self::is_importable($record)
+                && $record->scalevalues !== ''
+                && !isset($existingidnumbers[(string) $record->idnumber])
+            ) {
+                $needed[] = $record->scalevalues;
+            }
+        }
+
+        if (has_capability('moodle/course:managescales', \context_system::instance())) {
+            return;
+        }
+        $this->load_scale_cache();
+        foreach ($needed as $scalevalues) {
+            if (!isset($this->scalecache[$scalevalues])) {
+                throw new \moodle_exception('central_frameworks_import_scalenotallowed', 'local_dimensions', '', $scalevalues);
+            }
+        }
+    }
+
+    /**
+     * Whether create_competency() will write the row (it skips rows without an idnumber or shortname).
+     *
+     * Shared with assert_scales_available() so a row that is never created never asks for a scale.
+     *
+     * @param \stdClass $record Parsed competency record.
+     * @return bool
+     */
+    private static function is_importable(\stdClass $record): bool {
+        return $record->idnumber !== '' && $record->shortname !== '';
+    }
+
+    /**
+     * Index the global scales by their compact-item string, once.
+     *
+     * @return void
+     */
+    private function load_scale_cache(): void {
+        global $CFG;
+        require_once($CFG->libdir . '/gradelib.php');
+
+        if (!empty($this->scalecache)) {
+            return;
+        }
+        foreach (\grade_scale::fetch_all_global() as $scale) {
+            $scale->load_items();
+            $this->scalecache[$scale->compact_items()] = $scale;
+        }
+    }
+
+    /**
+     * Write the framework, its competencies, rules and relations (inside the caller's transaction).
+     *
+     * @param \stdClass $fw The parsed framework record with its children attached.
+     * @return competency_framework
+     */
+    private function import_tree(\stdClass $fw): competency_framework {
         $framework = $this->upsert_framework($fw);
 
         // In update mode, index the framework's existing competencies by idnumber.
@@ -121,10 +223,7 @@ class framework_csv_importer {
             $this->set_rules($root);
             $this->set_related($root);
         }
-
-        $transaction->allow_commit();
-
-        return ['frameworkid' => (int) $framework->get('id'), 'competencycount' => $this->competencycount];
+        return $framework;
     }
 
     /**
@@ -193,7 +292,7 @@ class framework_csv_importer {
      * @return competency|null The persisted competency, or null when the row is unusable.
      */
     private function create_competency(\stdClass $record, ?competency $parent, competency_framework $framework): ?competency {
-        if ($record->idnumber === '' || $record->shortname === '') {
+        if (!self::is_importable($record)) {
             return null;
         }
         $parentid = $parent ? (int) $parent->get('id') : 0;
@@ -312,19 +411,21 @@ class framework_csv_importer {
      * @param string $scalevalues Compact scale-item string (comma-separated labels).
      * @param string $name Name hint for a newly created scale.
      * @return int Scale id.
+     * @throws \moodle_exception When the scale is empty or would need creating by a user who may not.
      */
     private function get_scale_id(string $scalevalues, string $name): int {
-        global $CFG, $USER;
-        require_once($CFG->libdir . '/gradelib.php');
+        global $USER;
 
-        if (empty($this->scalecache)) {
-            foreach (\grade_scale::fetch_all_global() as $scale) {
-                $scale->load_items();
-                $this->scalecache[$scale->compact_items()] = $scale;
-            }
-        }
+        $this->load_scale_cache();
         if (isset($this->scalecache[$scalevalues])) {
             return (int) $this->scalecache[$scalevalues]->id;
+        }
+        if ($scalevalues === '') {
+            throw new \moodle_exception('central_frameworks_import_emptyscale', 'local_dimensions');
+        }
+        // A site scale is shown to every user, and core gates creating one on this capability.
+        if (!has_capability('moodle/course:managescales', \context_system::instance())) {
+            throw new \moodle_exception('central_frameworks_import_scalenotallowed', 'local_dimensions', '', $scalevalues);
         }
         $newscale = new \grade_scale();
         $newscale->name = get_string('central_frameworks_import_scalename', 'local_dimensions', $name);

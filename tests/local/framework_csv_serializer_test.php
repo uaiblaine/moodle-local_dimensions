@@ -146,4 +146,29 @@ final class framework_csv_serializer_test extends \advanced_testcase {
         // The 14 core columns always lead, in order.
         $this->assertSame(framework_csv_serializer::CORE_HEADERS, array_slice(framework_csv_serializer::headers(true), 0, 14));
     }
+
+    /**
+     * Scale items are cleaned to plain text on the way in, a normal scale is unchanged, and empty
+     * items are dropped.
+     *
+     * @return void
+     */
+    public function test_scale_items_are_cleaned_on_parse(): void {
+        $encode = static function (array $row): string {
+            return implode(',', array_map(static function ($cell): string {
+                return '"' . str_replace('"', '""', (string) $cell) . '"';
+            }, $row));
+        };
+        $csv = $encode(framework_csv_serializer::CORE_HEADERS) . "\n"
+            . $encode(['', 'FW', 'FW', '', '1', 'Not yet,Competent', '', '', '', '', '', '', '1', 'competency']) . "\n"
+            . $encode([
+                '', 'C1', 'C1', '', '1', ' Good , <img src=x onerror=alert(1)>Great,, <b>Top</b> ', '', '', '0',
+                '', '', '', '', '',
+            ]) . "\n";
+
+        $parsed = framework_csv_serializer::parse($csv);
+
+        $this->assertSame('Not yet,Competent', $parsed['framework']->scalevalues);
+        $this->assertSame('Good,Great,Top', $parsed['competencies']['C1']->scalevalues);
+    }
 }
