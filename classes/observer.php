@@ -152,6 +152,9 @@ class observer {
      *     double-writes their data.
      *  3. Inject the authoritative instance id from the event before calling
      *     the handler.
+     *  4. Run the same validation the plugin's own forms run (the handler's field
+     *     validation and the custom SCSS check); a submission with any error is not saved.
+     *     This observer exists for tool_lp's own forms, which know nothing of these fields.
      *
      * @param \core\event\base $event       The event triggering the save.
      * @param handler          $handler     The custom field handler to delegate to.
@@ -184,11 +187,44 @@ class observer {
         $formdata->id = $instanceid;
 
         try {
+            $errors = self::validate_customfields($handler, $formdata);
+            if ($errors) {
+                debugging('local_dimensions: custom fields not saved for instance '
+                    . $instanceid . ': ' . implode(' ', $errors), DEBUG_DEVELOPER);
+                return;
+            }
             $handler->instance_form_save($formdata, $isnew);
         } catch (\Throwable $e) {
             debugging('local_dimensions: instance_form_save failed for instance '
                 . $instanceid . ': ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
+    }
+
+    /**
+     * Validate the posted custom field values like the plugin's dynamic forms do.
+     *
+     * Fields absent from the post are skipped, because core's field validators read their
+     * element unguarded and tool_lp's form need not carry every field.
+     *
+     * @param handler $handler The custom field handler of the area.
+     * @param \stdClass $formdata The submitted data, with the instance id set.
+     * @return string[] Error messages, empty when the data may be saved.
+     */
+    private static function validate_customfields(handler $handler, \stdClass $formdata): array {
+        $data = (array) $formdata;
+        $instanceid = (int) $formdata->id;
+        $errors = [];
+        // Moodle 4.5's handler has no get_instance_fields_data(); this is the call its own
+        // instance_form_validation() makes.
+        $fields = \core_customfield\api::get_instance_fields_data($handler->get_editable_fields($instanceid), $instanceid);
+        foreach ($fields as $field) {
+            $name = $field->get_form_element_name();
+            if (!array_key_exists($name, $data) && !array_key_exists($name . '_editor', $data)) {
+                continue;
+            }
+            $errors += $field->instance_form_validation($data, []);
+        }
+        return array_values($errors + helper::validate_customscss($data));
     }
 
     /**
