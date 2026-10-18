@@ -163,6 +163,41 @@ class enrol_methods {
     }
 
     /**
+     * Whether a user may write an instance with this role and cohort into one course.
+     *
+     * Mirrors what core's own enrol forms validate per course: the role must be in
+     * get_assignable_roles() of the course context and the cohort visible from it (the
+     * check of cohort_can_view_cohort(), redone here with an explicit user because the
+     * core function reads the current $USER and the adhoc task must not depend on who the
+     * session happens to be).
+     *
+     * @param int $courseid Course id.
+     * @param int $roleid Role the instance assigns.
+     * @param int $cohortid Cohort the instance is tied to.
+     * @param int $userid User whose rights decide.
+     * @return bool
+     */
+    public static function can_apply_to_course(int $courseid, int $roleid, int $cohortid, int $userid): bool {
+        global $DB;
+
+        $context = \context_course::instance($courseid, IGNORE_MISSING);
+        if (!$context) {
+            return false;
+        }
+        if (!isset(get_assignable_roles($context, ROLENAME_BOTH, false, $userid)[$roleid])) {
+            return false;
+        }
+        $cohort = $DB->get_record('cohort', ['id' => $cohortid], 'id, contextid, visible');
+        if (!$cohort || !in_array((int) $cohort->contextid, $context->get_parent_context_ids(true))) {
+            return false;
+        }
+        if ($cohort->visible) {
+            return true;
+        }
+        return has_capability('moodle/cohort:view', \context::instance_by_id($cohort->contextid), $userid);
+    }
+
+    /**
      * Configured state of both methods for a set of courses against one cohort.
      *
      * The "since", "active" and "roleid" values come from the earliest matching instance

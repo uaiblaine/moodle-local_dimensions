@@ -1,0 +1,1 @@
+s/if \(!has_capability\('moodle\/course:managescales', \\context_system::instance\(\)\)\) \{/if (false) {/g; s/if \(has_capability\('moodle\/course:managescales', \\context_system::instance\(\)\)\) \{/if (true) {/g;

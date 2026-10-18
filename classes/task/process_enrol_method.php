@@ -24,6 +24,8 @@
 
 namespace local_dimensions\task;
 
+use local_dimensions\local\enrol_methods;
+
 /**
  * Apply/remove an enrol_cohort or enrol_self instance for one (course, method, cohort) combination.
  *
@@ -249,6 +251,9 @@ class process_enrol_method extends \core\task\adhoc_task {
         } else {
             // Self enrolment: site defaults, always restricted to cohort members via customint5.
             $fields = array_merge($plugin->get_instance_defaults(), ['customint5' => $cohortid, 'roleid' => $roleid]);
+        }
+        if (!enrol_methods::can_apply_to_course((int) $course->id, $roleid, $cohortid, (int) $this->get_userid())) {
+            return;
         }
         $instanceid = $plugin->add_instance($course, $fields);
         if (!$instanceid) {
