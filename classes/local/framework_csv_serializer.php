@@ -258,7 +258,7 @@ class framework_csv_serializer {
                     'shortname' => shorten_text(clean_param($get(2), PARAM_TEXT), 100),
                     'description' => clean_param($get(3), PARAM_RAW),
                     'descriptionformat' => clean_param($get(4), PARAM_INT),
-                    'scalevalues' => $get(5),
+                    'scalevalues' => self::clean_scale_values($get(5)),
                     'scaleconfiguration' => $get(6),
                     'taxonomies' => clean_param($get(13), PARAM_TEXT),
                     'children' => [],
@@ -274,7 +274,7 @@ class framework_csv_serializer {
                     'shortname' => shorten_text(clean_param($get(2), PARAM_TEXT), 100),
                     'description' => clean_param($get(3), PARAM_RAW),
                     'descriptionformat' => clean_param($get(4), PARAM_INT),
-                    'scalevalues' => $get(5),
+                    'scalevalues' => self::clean_scale_values($get(5)),
                     'scaleconfiguration' => $get(6),
                     'ruletype' => clean_param($get(7), PARAM_RAW),
                     'ruleoutcome' => clean_param($get(8), PARAM_INT),
@@ -290,5 +290,25 @@ class framework_csv_serializer {
         $reader->cleanup();
 
         return ['framework' => $framework, 'competencies' => $competencies, 'error' => ''];
+    }
+
+    /**
+     * Clean a compact scale-item string the way core's scale form cleans its items.
+     *
+     * Core prints site scale items unescaped, so every item is reduced to plain text here,
+     * before the importer looks for an existing scale to reuse.
+     *
+     * @param string $values Comma-separated scale items from the CSV.
+     * @return string The cleaned items, empty ones dropped, re-joined with a comma.
+     */
+    private static function clean_scale_values(string $values): string {
+        $items = [];
+        foreach (explode(',', $values) as $item) {
+            $item = trim(clean_param($item, PARAM_TEXT));
+            if ($item !== '') {
+                $items[] = $item;
+            }
+        }
+        return implode(',', $items);
     }
 }
