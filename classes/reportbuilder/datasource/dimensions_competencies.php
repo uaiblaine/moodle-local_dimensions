@@ -25,7 +25,7 @@ use core_competency\reportbuilder\local\entities\{competency, framework};
 use core_reportbuilder\local\entities\user;
 use core_reportbuilder\local\helpers\database;
 use local_dimensions\constants;
-use local_dimensions\reportbuilder\local\entities\{competency_extras, usercompetency};
+use local_dimensions\reportbuilder\local\entities\{competency_details, competency_extras, usercompetency};
 
 /**
  * Competencies datasource extended with local_dimensions customfields.
@@ -87,6 +87,12 @@ class dimensions_competencies extends competencies {
             ->set_table_alias('competency', $competencyalias)
             ->add_joins($competencyentity->get_joins()));
 
+        // Hierarchy, scale and links of the competency.
+        $detailsentity = new competency_details();
+        $this->add_entity($detailsentity
+            ->set_table_alias('competency', $competencyalias)
+            ->add_joins($competencyentity->get_joins()));
+
         $usercompetencyentity = new usercompetency();
         $usercompetencyalias = $usercompetencyentity->get_table_alias('competency_usercomp');
         $this->add_entity($usercompetencyentity
@@ -115,6 +121,7 @@ class dimensions_competencies extends competencies {
             $frameworkentity->get_entity_name(),
             $competencyentity->get_entity_name(),
             $extrasentity->get_entity_name(),
+            $detailsentity->get_entity_name(),
             $usercompetencyentity->get_entity_name(),
             $userentity->get_entity_name(),
         ]);
