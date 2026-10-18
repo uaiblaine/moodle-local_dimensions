@@ -217,6 +217,70 @@ final class dimensions_competencies_test extends core_reportbuilder_testcase {
     }
 
     /**
+     * Parent, path, scale, linked courses and related competencies of a competency.
+     *
+     * @return void
+     */
+    public function test_competency_details(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        \local_dimensions\reportbuilder\local\entities\competency_details::reset();
+
+        /** @var \core_competency_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $scale = $this->getDataGenerator()->create_scale(['name' => 'Grades', 'scale' => 'Low,High']);
+        $framework = $generator->create_framework([
+            'shortname' => 'Framework',
+            'scaleid' => $scale->id,
+            'scaleconfiguration' => json_encode([['scaleid' => $scale->id], ['id' => 2, 'scaledefault' => 1, 'proficient' => 1]]),
+        ]);
+        $root = $generator->create_competency(['competencyframeworkid' => $framework->get('id'), 'shortname' => 'Root']);
+        $middle = $generator->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'shortname' => 'Middle',
+            'parentid' => $root->get('id'),
+        ]);
+        $leaf = $generator->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'shortname' => 'Leaf',
+            'parentid' => $middle->get('id'),
+        ]);
+        $generator->create_related_competency([
+            'competencyid' => $leaf->get('id'),
+            'relatedcompetencyid' => $root->get('id'),
+        ]);
+        foreach (['Course A', 'Course B'] as $name) {
+            $course = $this->getDataGenerator()->create_course(['fullname' => $name]);
+            $generator->create_course_competency(['courseid' => $course->id, 'competencyid' => $leaf->get('id')]);
+        }
+
+        /** @var \core_reportbuilder_generator $rbgenerator */
+        $rbgenerator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $report = $rbgenerator->create_report(['name' => 'Details', 'source' => dimensions_competencies::class, 'default' => 0]);
+        $columns = [
+            'competency:name',
+            'competency_details:parent',
+            'competency_details:path',
+            'competency_details:scale',
+            'competency_details:courses',
+            'competency_details:related',
+        ];
+        foreach ($columns as $index => $column) {
+            $rbgenerator->create_column([
+                'reportid' => $report->get('id'),
+                'uniqueidentifier' => $column,
+                'sortenabled' => (int) ($index === 0),
+            ]);
+        }
+
+        $this->assertEquals([
+            ['Leaf', 'Middle', 'Root / Middle', 'Grades', 2, 1],
+            ['Middle', 'Root', 'Root', 'Grades', 0, 0],
+            ['Root', '', '', 'Grades', 0, 1],
+        ], array_map('array_values', $this->get_custom_report_content($report->get('id'))));
+    }
+
+    /**
      * A new report starts with the competency's Dimensions type and Tag 1.
      *
      * @return void
