@@ -84,6 +84,14 @@ class learning_plans extends datasource {
         $this->add_entity($userentity
             ->add_join("LEFT JOIN {user} {$useralias} ON {$useralias}.id = {$planalias}.userid"));
 
+        // The plan's reviewer.
+        $reviewerentity = (new user())
+            ->set_entity_name('planreviewer')
+            ->set_entity_title(new lang_string('entityname_planreviewer', 'local_dimensions'));
+        $revieweralias = $reviewerentity->get_table_alias('user');
+        $this->add_entity($reviewerentity
+            ->add_join("LEFT JOIN {user} {$revieweralias} ON {$revieweralias}.id = {$planalias}.reviewerid"));
+
         // Cohorts linked to the plan's template via competency_templatecohort; titled apart from
         // the owner's cohorts below. 1:N expansion only triggers if the report uses one of its
         // columns, filters or conditions.

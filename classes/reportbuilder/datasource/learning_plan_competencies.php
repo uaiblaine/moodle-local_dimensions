@@ -24,8 +24,8 @@ use core_competency\reportbuilder\local\entities\{competency, framework};
 use core_reportbuilder\datasource;
 use core_reportbuilder\local\entities\user;
 use core_reportbuilder\local\helpers\database;
-use local_dimensions\reportbuilder\local\entities\{competency_extras, plan, plan_competency, template, template_extras,
-    usercompetency};
+use local_dimensions\reportbuilder\local\entities\{competency_details, competency_extras, plan, plan_competency, template,
+    template_extras, usercompetency};
 
 /**
  * Learning plan competencies datasource.
@@ -82,6 +82,14 @@ class learning_plan_competencies extends datasource {
         $useralias = $userentity->get_table_alias('user');
         $this->add_entity($userentity
             ->add_join("JOIN {user} {$useralias} ON {$useralias}.id = {$planalias}.userid"));
+
+        // The plan's reviewer.
+        $reviewerentity = (new user())
+            ->set_entity_name('planreviewer')
+            ->set_entity_title(new lang_string('entityname_planreviewer', 'local_dimensions'));
+        $revieweralias = $reviewerentity->get_table_alias('user');
+        $this->add_entity($reviewerentity
+            ->add_join("LEFT JOIN {user} {$revieweralias} ON {$revieweralias}.id = {$planalias}.reviewerid"));
 
         $usercohortentity = (new cohort())
             ->set_entity_name('usercohort')
@@ -147,6 +155,12 @@ class learning_plan_competencies extends datasource {
 
         $competencyextras = new competency_extras();
         $this->add_entity($competencyextras
+            ->set_table_alias('competency', $competencyalias)
+            ->add_joins($competencyjoins));
+
+        // Hierarchy, scale and links of the competency.
+        $detailsentity = new competency_details();
+        $this->add_entity($detailsentity
             ->set_table_alias('competency', $competencyalias)
             ->add_joins($competencyjoins));
 

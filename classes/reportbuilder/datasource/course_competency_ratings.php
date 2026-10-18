@@ -25,7 +25,7 @@ use core_course\reportbuilder\local\entities\course_category;
 use core_reportbuilder\datasource;
 use core_reportbuilder\local\entities\{course, user};
 use core_reportbuilder\local\helpers\database;
-use local_dimensions\reportbuilder\local\entities\{competency_extras, usercompetency_course};
+use local_dimensions\reportbuilder\local\entities\{competency_details, competency_extras, usercompetency_course};
 
 /**
  * Competency ratings in courses datasource.
@@ -114,6 +114,12 @@ class course_competency_ratings extends datasource {
 
         $extrasentity = new competency_extras();
         $this->add_entity($extrasentity
+            ->set_table_alias('competency', $competencyalias)
+            ->add_joins($competencyjoins));
+
+        // Hierarchy, scale and links of the competency.
+        $detailsentity = new competency_details();
+        $this->add_entity($detailsentity
             ->set_table_alias('competency', $competencyalias)
             ->add_joins($competencyjoins));
 

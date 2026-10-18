@@ -20,9 +20,11 @@ namespace local_dimensions\reportbuilder\local\entities;
 
 use core\lang_string;
 use core_reportbuilder\local\entities\base;
-use core_reportbuilder\local\filters\{boolean_select, date, text};
+use core_reportbuilder\local\filters\{boolean_select, date, number, text};
 use core_reportbuilder\local\helpers\format;
 use core_reportbuilder\local\report\{column, filter};
+use html_writer;
+use moodle_url;
 use stdClass;
 
 /**
@@ -148,6 +150,60 @@ class template extends base {
             ->set_is_sortable(true)
             ->set_callback([format::class, 'userdate']);
 
+        $columns[] = (new column(
+            'shortnamewithlink',
+            new lang_string('column_shortnamewithlink', 'local_dimensions'),
+            $this->get_entity_name()
+        ))
+            ->add_joins($this->get_joins())
+            ->add_fields("{$tablealias}.shortname, {$tablealias}.id, {$tablealias}.contextid")
+            ->set_is_sortable(true, ["{$tablealias}.shortname"])
+            ->add_callback(static function (?string $shortname, stdClass $row): string {
+                if ($shortname === null) {
+                    return '';
+                }
+                $url = new moodle_url('/admin/tool/lp/templatecompetencies.php', [
+                    'templateid' => $row->id,
+                    'pagecontextid' => $row->contextid,
+                ]);
+                return html_writer::link($url, format_string($shortname));
+            });
+
+        $columns[] = (new column(
+            'context',
+            new lang_string('column_templatecontext', 'local_dimensions'),
+            $this->get_entity_name()
+        ))
+            ->add_joins($this->get_joins())
+            ->add_field("{$tablealias}.contextid")
+            ->add_callback(static function ($contextid): string {
+                if (!$contextid) {
+                    return '';
+                }
+                $context = \core\context::instance_by_id((int) $contextid, IGNORE_MISSING);
+                return $context ? $context->get_context_name(false) : '';
+            });
+
+        $columns[] = (new column(
+            'plans',
+            new lang_string('column_plancount', 'local_dimensions'),
+            $this->get_entity_name()
+        ))
+            ->add_joins($this->get_joins())
+            ->set_type(column::TYPE_INTEGER)
+            ->add_field($this->plans_sql(), 'plans')
+            ->set_is_sortable(true);
+
+        $columns[] = (new column(
+            'cohorts',
+            new lang_string('column_cohortcount', 'local_dimensions'),
+            $this->get_entity_name()
+        ))
+            ->add_joins($this->get_joins())
+            ->set_type(column::TYPE_INTEGER)
+            ->add_field($this->cohorts_sql(), 'cohorts')
+            ->set_is_sortable(true);
+
         return $columns;
     }
 
@@ -201,6 +257,44 @@ class template extends base {
             "{$tablealias}.timemodified"
         ))->add_joins($this->get_joins());
 
+        $filters[] = (new filter(
+            number::class,
+            'plans',
+            new lang_string('column_plancount', 'local_dimensions'),
+            $this->get_entity_name(),
+            $this->plans_sql()
+        ))->add_joins($this->get_joins());
+
+        $filters[] = (new filter(
+            number::class,
+            'cohorts',
+            new lang_string('column_cohortcount', 'local_dimensions'),
+            $this->get_entity_name(),
+            $this->cohorts_sql()
+        ))->add_joins($this->get_joins());
+
         return $filters;
+    }
+
+    /**
+     * SQL counting the plans made from the template, or null for a row without a template.
+     *
+     * @return string A scalar subquery.
+     */
+    private function plans_sql(): string {
+        $alias = $this->get_table_alias('competency_template');
+        return "(CASE WHEN {$alias}.id IS NULL THEN NULL
+                 ELSE (SELECT COUNT(1) FROM {competency_plan} tpn WHERE tpn.templateid = {$alias}.id) END)";
+    }
+
+    /**
+     * SQL counting the cohorts linked to the template, or null for a row without a template.
+     *
+     * @return string A scalar subquery.
+     */
+    private function cohorts_sql(): string {
+        $alias = $this->get_table_alias('competency_template');
+        return "(CASE WHEN {$alias}.id IS NULL THEN NULL
+                 ELSE (SELECT COUNT(1) FROM {competency_templatecohort} tcn WHERE tcn.templateid = {$alias}.id) END)";
     }
 }

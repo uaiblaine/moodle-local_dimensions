@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace local_dimensions\reportbuilder\datasource;
 
 use core_reportbuilder\local\filters\text;
+use core_reportbuilder\local\helpers\format;
 use core_reportbuilder\manager;
 use core_reportbuilder\tests\core_reportbuilder_testcase;
 use local_dimensions\constants;
@@ -222,6 +223,97 @@ final class learning_plans_test extends core_reportbuilder_testcase {
         $this->assertTrue(learning_plans::is_available());
         set_config('enabled', 0, 'core_competency');
         $this->assertFalse(learning_plans::is_available());
+    }
+
+    /**
+     * Plan progress, origin and reviewer, and the template's counts.
+     *
+     * "Linked plan" follows a template with two competencies, one proficient now. "Unlinked plan"
+     * was made from the same template and unlinked: it holds one competency itself, is complete,
+     * and its archive marks it proficient.
+     *
+     * @return void
+     */
+    public function test_plan_and_template_columns(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        /** @var \core_competency_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $generator->create_framework();
+        $alpha = $generator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $beta = $generator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $template = $generator->create_template(['shortname' => 'Template']);
+        foreach ([$alpha, $beta] as $competency) {
+            $generator->create_template_competency([
+                'templateid' => $template->get('id'),
+                'competencyid' => $competency->get('id'),
+            ]);
+        }
+        $cohort = $this->getDataGenerator()->create_cohort();
+        $generator->create_template_cohort(['templateid' => $template->get('id'), 'cohortid' => $cohort->id]);
+
+        $learner = $this->getDataGenerator()->create_user(['firstname' => 'Lea', 'lastname' => 'Learner']);
+        $reviewer = $this->getDataGenerator()->create_user(['firstname' => 'Rita', 'lastname' => 'Reviewer']);
+        $linked = $generator->create_plan([
+            'name' => 'Linked plan',
+            'userid' => $learner->id,
+            'templateid' => $template->get('id'),
+            'reviewerid' => $reviewer->id,
+        ]);
+        $generator->create_user_competency([
+            'userid' => $learner->id,
+            'competencyid' => $alpha->get('id'),
+            'proficiency' => true,
+            'grade' => 1,
+        ]);
+        $unlinked = $generator->create_plan([
+            'name' => 'Unlinked plan',
+            'userid' => $learner->id,
+            'origtemplateid' => $template->get('id'),
+            'status' => \core_competency\plan::STATUS_COMPLETE,
+        ]);
+        $generator->create_plan_competency(['planid' => $unlinked->get('id'), 'competencyid' => $beta->get('id')]);
+        $generator->create_user_competency_plan([
+            'userid' => $learner->id,
+            'competencyid' => $beta->get('id'),
+            'planid' => $unlinked->get('id'),
+            'proficiency' => true,
+            'grade' => 1,
+        ]);
+
+        /** @var \core_reportbuilder_generator $rbgenerator */
+        $rbgenerator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $report = $rbgenerator->create_report(['name' => 'Plans', 'source' => learning_plans::class, 'default' => 0]);
+        $columns = [
+            'plan:name',
+            'plan:basedontemplate',
+            'plan:origtemplate',
+            'plan:competencies',
+            'plan:proficient',
+            'plan:progress',
+            'planreviewer:fullname',
+            'template:plans',
+            'template:cohorts',
+            'template:context',
+        ];
+        foreach ($columns as $index => $column) {
+            $rbgenerator->create_column([
+                'reportid' => $report->get('id'),
+                'uniqueidentifier' => $column,
+                'sortenabled' => (int) ($index === 0),
+            ]);
+        }
+        $rbgenerator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => 'plan:namewithlink']);
+
+        $system = \core\context\system::instance()->get_context_name(false);
+        $content = array_map('array_values', $this->get_custom_report_content($report->get('id')));
+        $links = array_column($content, 10);
+        $this->assertEquals([
+            ['Linked plan', 'Yes', '', 2, 1, format::percent(50.0), 'Rita Reviewer', 1, 1, $system],
+            ['Unlinked plan', 'No', 'Template', 1, 1, format::percent(100.0), '', '', '', ''],
+        ], array_map(static fn(array $row): array => array_slice($row, 0, 10), $content));
+        $this->assertStringContainsString('/admin/tool/lp/plan.php?id=' . $linked->get('id'), $links[0]);
     }
 
     /**
