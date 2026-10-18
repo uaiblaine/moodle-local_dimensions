@@ -340,4 +340,98 @@ final class process_enrol_method_test extends \advanced_testcase {
         $this->run_task($payload, $admin);
         $this->assertCount(0, process_enrol_method::get_instances($courseid, 'cohort', $fixture['cohortid']));
     }
+
+    /**
+     * The task refuses a role the requester cannot assign in the course; an assignable one applies.
+     *
+     * @return void
+     */
+    public function test_apply_skips_a_role_not_assignable_in_the_course(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $fixture = $this->build_fixture();
+        $courseid = (int) $fixture['course']->id;
+        $context = \context_course::instance($courseid);
+        $teacherid = (int) $DB->get_field('role', 'id', ['shortname' => 'editingteacher'], MUST_EXIST);
+        // The role may be assigned in a course only when its assign matrix allows it from the requester's role.
+        $manager = (int) $this->getDataGenerator()->create_user()->id;
+        $roleid = $this->getDataGenerator()->create_role(['shortname' => 'enrolcfg']);
+        foreach (process_enrol_method::REQUIRED_CAPS as $cap) {
+            assign_capability($cap, CAP_ALLOW, $roleid, \context_system::instance()->id);
+        }
+        assign_capability('moodle/role:assign', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        role_assign($roleid, $manager, $context->id);
+        core_role_set_assign_allowed($roleid, $fixture['roleid']);
+
+        $payload = $this->payload($fixture, process_enrol_method::ACTION_APPLY, process_enrol_method::METHOD_COHORT);
+        $this->run_task(array_merge($payload, ['roleid' => $teacherid]), $manager);
+        $this->assertCount(0, process_enrol_method::get_instances($courseid, 'cohort', $fixture['cohortid']));
+
+        $this->run_task($payload, $manager);
+        $this->assertCount(1, process_enrol_method::get_instances($courseid, 'cohort', $fixture['cohortid']));
+    }
+
+    /**
+     * The task refuses a cohort the course cannot see (another category); a system cohort applies.
+     *
+     * Runs with the session user set to somebody else, to show the check follows the task's user.
+     *
+     * @return void
+     */
+    public function test_apply_skips_a_cohort_not_visible_from_the_course(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $fixture = $this->build_fixture();
+        $courseid = (int) $fixture['course']->id;
+        $dg = $this->getDataGenerator();
+        $othercat = $dg->create_category();
+        $foreign = $dg->create_cohort(['contextid' => \context_coursecat::instance($othercat->id)->id]);
+        $admin = (int) get_admin()->id;
+        $this->setUser($dg->create_user());
+
+        $payload = $this->payload($fixture, process_enrol_method::ACTION_APPLY, process_enrol_method::METHOD_COHORT);
+        $this->run_task(array_merge($payload, ['cohortid' => (int) $foreign->id]), $admin);
+        $this->assertCount(0, process_enrol_method::get_instances($courseid, 'cohort', (int) $foreign->id));
+
+        $this->run_task($payload, $admin);
+        $this->assertCount(1, process_enrol_method::get_instances($courseid, 'cohort', $fixture['cohortid']));
+    }
+
+    /**
+     * A hidden cohort in a parent context applies only for a requester who may view cohorts there.
+     *
+     * @return void
+     */
+    public function test_apply_skips_a_hidden_cohort_the_requester_cannot_view(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $fixture = $this->build_fixture();
+        $courseid = (int) $fixture['course']->id;
+        $dg = $this->getDataGenerator();
+        $categorycontext = \context_coursecat::instance((int) $fixture['course']->category);
+        $hidden = $dg->create_cohort(['contextid' => $categorycontext->id, 'visible' => 0]);
+
+        // A requester who may configure enrolment and assign the role, but holds no cohort:view.
+        $requester = (int) $dg->create_user()->id;
+        $roleid = $dg->create_role(['shortname' => 'enrolcfg']);
+        foreach (process_enrol_method::REQUIRED_CAPS as $cap) {
+            assign_capability($cap, CAP_ALLOW, $roleid, \context_system::instance()->id);
+        }
+        assign_capability('moodle/role:assign', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        role_assign($roleid, $requester, $categorycontext->id);
+        core_role_set_assign_allowed($roleid, $fixture['roleid']);
+
+        $payload = array_merge(
+            $this->payload($fixture, process_enrol_method::ACTION_APPLY, process_enrol_method::METHOD_COHORT),
+            ['cohortid' => (int) $hidden->id]
+        );
+        $this->run_task($payload, $requester);
+        $this->assertCount(0, process_enrol_method::get_instances($courseid, 'cohort', (int) $hidden->id));
+
+        assign_capability('moodle/cohort:view', CAP_ALLOW, $roleid, $categorycontext->id);
+        accesslib_clear_all_caches_for_unit_testing();
+        $this->run_task($payload, $requester);
+        $this->assertCount(1, process_enrol_method::get_instances($courseid, 'cohort', (int) $hidden->id));
+    }
 }

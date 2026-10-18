@@ -102,6 +102,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   tracker. A new `styles_boost_union.css`, loaded only under Boost Union and its children, puts `#page`
   back at the navbar height on those two pages while no menu bar is drawn (`boost_union_sheet_test`).
 
+### Security
+
+Fixes from the MDL Shield review of 2026-10-18 (version `2026100513`):
+
+- **Framework CSV import no longer creates site scales with markup, or for users who may not create
+  them.** Scale items are cleaned with `PARAM_TEXT`, as core's scale form does, before an existing scale
+  is matched. A new site scale is created only for a user holding `moodle/course:managescales` at system
+  level. Anyone else (a category-level competency manager) can still import against an existing scale
+  with the same items and otherwise gets an error naming the items, before anything is written. A
+  framework row with no scale values is refused instead of creating an empty scale.
+- Report builder: the rating columns and the evidence "Description" column escape their text through
+  `format_string()`, as core's evidence exporter does.
+- The competency tracker and the accordion's course list name only the linked courses the viewer may
+  browse (`core_course_category::can_view_course_info()`), as the course cards already did.
+- The hub's Enrolment methods tab checks each course the way core's enrolment forms do: the role
+  must be assignable in that course and the cohort visible from it, both when the action is queued and
+  again in the adhoc task. A course that fails either check is reported as skipped.
+- Custom fields posted alongside core's own competency and template forms are saved only after
+  passing each field's own validation and the custom SCSS check.
+- The template import preview names another context or framework only when the importer may read it;
+  otherwise it says "another context" or "another structure".
+
 ### Added
 
 - Report builder: more columns (version 2026100511).

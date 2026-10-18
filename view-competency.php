@@ -92,6 +92,9 @@ if ($competency) {
 
     $courses = $DB->get_records_sql($sql, ['competencyid' => $competencyid]);
 
+    // Never tell the viewer about a course core would not let them browse (hidden category, ...).
+    $courses = \local_dimensions\helper::filter_readable_linked_courses($courses);
+
     // Apply enrollment filter; cascade competency -> template -> global.
     $enrollmentfilter = \local_dimensions\helper::resolve_enrollmentfilter_for_view(
         $competencyid,

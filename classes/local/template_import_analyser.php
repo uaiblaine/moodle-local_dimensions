@@ -648,7 +648,11 @@ class template_import_analyser {
             if (!$found) {
                 continue;
             }
-            $names[] = $found->get_context()->get_context_name(false);
+            $context = $found->get_context();
+            // A context the viewer cannot read is not named.
+            $names[] = template::can_read_context($context)
+                ? $context->get_context_name(false)
+                : get_string('central_plans_import_hiddencontext', 'local_dimensions');
         }
         $names = array_unique($names);
         return empty($names) ? '' : get_string(
@@ -885,7 +889,10 @@ class template_import_analyser {
             }
             $framework = competency_framework::get_record(['id' => $otherid]);
             if ($framework) {
-                $names[(string) $framework->get('shortname')] = true;
+                // A structure the viewer cannot read is not named.
+                $names[competency_framework::can_read_context($framework->get_context())
+                    ? (string) $framework->get('shortname')
+                    : get_string('central_plans_import_hiddenframework', 'local_dimensions')] = true;
             }
         }
         if (empty($names)) {

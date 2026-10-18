@@ -200,6 +200,55 @@ final class observer_test extends \advanced_testcase {
     }
 
     /**
+     * A value the field's own validation rejects is not saved; a valid one is (the control).
+     */
+    public function test_an_invalid_customfield_value_is_not_saved(): void {
+        $competency = $this->create_competency();
+        $id = (int) $competency->get('id');
+        $record = $competency->to_record();
+
+        $this->post_customfield(str_repeat('x', 300), sesskey());
+        api::update_competency($record);
+        $this->assertDebuggingCalled();
+        $this->assertNull($this->stored_bgcolor('competency', $id));
+
+        $this->post_customfield('#abcdef', sesskey());
+        api::update_competency($record);
+        $this->assertSame('#abcdef', $this->stored_bgcolor('competency', $id));
+    }
+
+    /**
+     * Custom SCSS that does not compile is not saved, as the plugin's dynamic forms refuse it.
+     */
+    public function test_invalid_customscss_is_not_saved(): void {
+        global $DB;
+
+        set_config('enablecustomscss', 1, 'local_dimensions');
+        helper::ensure_custom_fields_exist(helper::AREA_COMPETENCY);
+        $competency = $this->create_competency();
+        $id = (int) $competency->get('id');
+        $record = $competency->to_record();
+        $name = 'customfield_' . constants::CFIELD_CUSTOMSCSS . '_editor';
+
+        $_POST = [$name => ['text' => '.a { color: ; ', 'format' => FORMAT_PLAIN], 'sesskey' => sesskey()];
+        api::update_competency($record);
+        $this->assertDebuggingCalled();
+        $this->assertSame(0, $DB->count_records_select(
+            'customfield_data',
+            'instanceid = :id AND ' . $DB->sql_like('value', ':v'),
+            ['id' => $id, 'v' => '%color: ;%']
+        ));
+
+        $_POST = [$name => ['text' => '.a { color: red; }', 'format' => FORMAT_PLAIN], 'sesskey' => sesskey()];
+        api::update_competency($record);
+        $this->assertSame(1, $DB->count_records_select(
+            'customfield_data',
+            'instanceid = :id AND ' . $DB->sql_like('value', ':v'),
+            ['id' => $id, 'v' => '%color: red%']
+        ));
+    }
+
+    /**
      * Updating a template with no form submitted must not throw.
      */
     public function test_template_updated_without_form_saves_nothing(): void {
