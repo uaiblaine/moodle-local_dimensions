@@ -27,6 +27,8 @@ of competency names. This plugin closes both gaps on top of the same data:
   line that folds down to a phone.
 - **A visual identity per plan and per competency**: colours checked for contrast, card and
   background images, tags, a type label and a display mode, all as Moodle custom fields.
+- **Report builder sources** for custom reports on competencies, course and activity links,
+  ratings, learning plans and evidence, with the Dimensions custom fields as columns and filters.
 
 Less plugin, more Moodle: the plugin uses what Moodle already stores and already knows how to do,
 and avoids depending on non-core plugins wherever a native path exists.
@@ -239,6 +241,33 @@ Under `theme_dimensions`, the family's theme, the plugin reads the theme's famil
 without it nothing changes.
 
 
+Reports
+-------
+
+Seven report sources for Moodle's report builder put competency data into custom reports,
+schedules and downloads without SQL (*Site administration > Reports > Report builder > Custom
+reports*). Each source is offered only while competencies are enabled.
+
+| Report source | One row per | What it adds |
+|---|---|---|
+| Competencies with Dimensions custom fields | competency and user | framework, competency, the user's competency (status, proficiency, rating), the Dimensions fields, and the competency's hierarchy and links |
+| Course and activity competencies | competency linked to a course | the course rule and the push of ratings to plans; the activities of that course linked to the same competency, with their rule and rating override |
+| Competency ratings in courses | rating a user received in a course | rating, proficiency, the user and their cohorts, the course and its category |
+| Learning plans | plan | status, dates, owner and reviewer, the template with its Dimensions fields and cohorts, and per plan the number of competencies, proficient competencies and progress |
+| Learning plan competencies | competency of a plan | whether it comes from the template; proficiency and rating in the plan, read from the archive once the plan is complete |
+| Competency evidence | evidence | action, description, rating, note, author, and the course or activity it came from |
+| Evidence of prior learning | evidence and linked competency | files, the competency and the learner's competency |
+
+- **Ratings** are named from the competency's scale (its own or its framework's). Each scale is
+  read once per request, so a large report costs no query per row.
+- **Dimensions custom fields** appear as columns, filters and conditions: tags, type, the template
+  identifier and every field an administrator adds. The fields that only style or steer the
+  learner pages (colours, images, custom SCSS, display settings) are left out.
+- **"Competency: hierarchy and links"** gives the parent, the path of ancestors, the rating scale,
+  and the number of linked courses and related competencies, in every source that shows the
+  competency.
+
+
 Requirements
 ------------
 
@@ -246,10 +275,10 @@ One branch per Moodle version, each declaring `$plugin->supported` for exactly t
 
 | Branch | Moodle | Version | Release |
 |---|---|---|---|
-| `MOODLE_405_STABLE` | 4.5 LTS | 2024100702 | v4.5-r1 |
-| `MOODLE_501_STABLE` | 5.1 | 2025100602 | v5.1-r1 |
-| `MOODLE_502_STABLE` | 5.2 | 2026042002 | v5.2-r1 |
-| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100505 | v5.3-r1 |
+| `MOODLE_405_STABLE` | 4.5 LTS | 2024100708 | v4.5-r1 |
+| `MOODLE_501_STABLE` | 5.1 | 2025100608 | v5.1-r1 |
+| `MOODLE_502_STABLE` | 5.2 | 2026042008 | v5.2-r1 |
+| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100511 | v5.3-r1 |
 
 The 4.5, 5.1 and 5.2 branches carry the same features; the 5.3 line (`main`) takes new work first
 and uses PHP 8.3 syntax. This README and its pictures describe `main` on Moodle 5.3. Moodle 5.0 has

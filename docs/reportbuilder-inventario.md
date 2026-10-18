@@ -87,7 +87,9 @@ Como ficou o `course_competencies`:
 | Padrões | colunas: curso, competência, regra do curso, atividade, regra da atividade; ordenação: curso, competência; filtros: curso, competência, regra do curso; condições: categoria, framework |
 | Testes | `tests/reportbuilder/datasource/course_competencies_test.php` (conteúdo, relatório padrão, 5 condições, `is_available`, stress de colunas/agregação/condições); spec `mutations/course_competencies.conf` (17 mutações) |
 
-### 3.3 Colunas que faltam nas entidades existentes
+### 3.3 Colunas que faltam nas entidades existentes — **Feito** (branch `feat/rb-more-columns`)
+
+As colunas de competência ficaram numa entidade própria, `competency_details` ("Competência: hierarquia e vínculos"), em todos os datasources que mostram a competência; as contagens do plano vêm de uma única tabela derivada por plano, para não repetir subconsultas correlacionadas num GROUP BY.
 
 | Entidade | Adicionar |
 |---|---|
