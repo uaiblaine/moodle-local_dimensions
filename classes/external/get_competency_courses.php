@@ -125,6 +125,9 @@ class get_competency_courses extends external_api {
               ORDER BY c.fullname ASC";
         $courses = $DB->get_records_sql($sql, ['competencyid' => $competencyid]);
 
+        // Never tell the viewer about a course core would not let them browse (hidden category, ...).
+        $courses = \local_dimensions\helper::filter_readable_linked_courses($courses);
+
         // Resolve the enrolment filter through the cascade (competency -> plan -> global).
         $filtermode = \local_dimensions\helper::resolve_enrollmentfilter_for_view($competencyid, $templateid);
         if ($filtermode !== \local_dimensions\constants::ENROLLMENTFILTER_ALL) {

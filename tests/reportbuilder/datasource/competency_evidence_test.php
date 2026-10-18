@@ -128,6 +128,56 @@ final class competency_evidence_test extends core_reportbuilder_testcase {
     }
 
     /**
+     * Stored text reaches the report as escaped HTML: the description's arguments and the rating's scale item.
+     *
+     * @return void
+     */
+    public function test_stored_text_is_escaped(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        rating::reset();
+
+        /** @var \core_competency_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $scale = $this->getDataGenerator()->create_scale(['scale' => 'Low,Mid <img src=x onerror=alert(1)> & Q,High']);
+        $framework = $generator->create_framework([
+            'shortname' => 'Framework',
+            'scaleid' => $scale->id,
+            'scaleconfiguration' => json_encode([
+                ['scaleid' => $scale->id],
+                ['id' => 1, 'scaledefault' => 1, 'proficient' => 0],
+                ['id' => 3, 'scaledefault' => 0, 'proficient' => 1],
+            ]),
+        ]);
+        $competency = $generator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $learner = $this->getDataGenerator()->create_user();
+        $usercompetency = $generator->create_user_competency([
+            'competencyid' => $competency->get('id'),
+            'userid' => $learner->id,
+        ]);
+        $generator->create_evidence([
+            'usercompetencyid' => $usercompetency->get('id'),
+            'action' => evidence::ACTION_OVERRIDE,
+            'grade' => 2,
+            'contextid' => \context_system::instance()->id,
+            'descidentifier' => 'evidence_coursecompleted',
+            'desca' => json_encode('<b>x</b> & <i>y</i>'),
+        ]);
+
+        /** @var \core_reportbuilder_generator $rbgenerator */
+        $rbgenerator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $report = $rbgenerator->create_report(['name' => 'Evidence', 'source' => competency_evidence::class, 'default' => 0]);
+        foreach (['evidence:description', 'evidence:rating'] as $column) {
+            $rbgenerator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => $column]);
+        }
+
+        $row = array_values($this->get_custom_report_content((int) $report->get('id'))[0]);
+        $this->assertSame("The course 'x &amp; y' was completed.", $row[0]);
+        $this->assertStringNotContainsString('<img', $row[1]);
+        $this->assertSame('Mid  &amp; Q', $row[1]);
+    }
+
+    /**
      * The action condition keeps the evidences of that action.
      *
      * @return void

@@ -529,4 +529,88 @@ final class enrol_methods_test extends \advanced_testcase {
         $this->assertCount(0, $result['pendingcourseids']);
         $this->assertTrue((bool) $result['items'][0]['configured']);
     }
+
+    /**
+     * Queueing skips a course where the role is not assignable to the requester; an assignable role queues.
+     *
+     * @return void
+     */
+    public function test_queue_enrol_action_skips_a_role_not_assignable_in_the_course(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $fixture = $this->build_fixture();
+        $courseaid = (int) $fixture['coursea']->id;
+        $manager = $this->create_restricted_manager([$fixture['coursea']]);
+        $syscontext = \context_system::instance();
+        $courseroleid = (int) $DB->get_field('role', 'id', ['shortname' => 'enroladmin'], MUST_EXIST);
+        assign_capability('moodle/role:assign', CAP_ALLOW, $courseroleid, $syscontext->id);
+        core_role_set_assign_allowed($courseroleid, $fixture['studentroleid']);
+        $teacherid = (int) $DB->get_field('role', 'id', ['shortname' => 'editingteacher'], MUST_EXIST);
+        $this->setUser($manager);
+
+        // Eligible for the tab (gradebook role) but not assignable by this requester in the course.
+        set_config('gradebookroles', $fixture['studentroleid'] . ',' . $teacherid);
+        $result = queue_enrol_action::execute(
+            $fixture['templateid'],
+            $fixture['cohortid'],
+            process_enrol_method::METHOD_COHORT,
+            $teacherid,
+            process_enrol_method::ACTION_APPLY,
+            [$courseaid]
+        );
+        $this->assertSame(0, $result['queued']);
+        $this->assertSame('skipped', $result['results'][0]['status']);
+
+        $result = queue_enrol_action::execute(
+            $fixture['templateid'],
+            $fixture['cohortid'],
+            process_enrol_method::METHOD_COHORT,
+            $fixture['studentroleid'],
+            process_enrol_method::ACTION_APPLY,
+            [$courseaid]
+        );
+        $this->assertSame(1, $result['queued']);
+    }
+
+    /**
+     * Queueing skips a course whose context cannot see the cohort; a system cohort queues.
+     *
+     * The cohort sits in the category of course B, linked to the template; course A is elsewhere.
+     *
+     * @return void
+     */
+    public function test_queue_enrol_action_skips_a_cohort_not_visible_from_the_course(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $fixture = $this->build_fixture();
+        $courseaid = (int) $fixture['coursea']->id;
+        $coursebid = (int) $fixture['courseb']->id;
+        $catcohort = $this->getDataGenerator()->create_cohort([
+            'contextid' => \context_coursecat::instance($fixture['catbid'])->id,
+        ]);
+        competencyapi::create_template_cohort($fixture['templateid'], $catcohort->id);
+
+        $result = queue_enrol_action::execute(
+            $fixture['templateid'],
+            (int) $catcohort->id,
+            process_enrol_method::METHOD_COHORT,
+            $fixture['studentroleid'],
+            process_enrol_method::ACTION_APPLY,
+            [$courseaid, $coursebid]
+        );
+        $statuses = array_column($result['results'], 'status', 'courseid');
+        $this->assertSame('skipped', $statuses[$courseaid]);
+        $this->assertSame('queued', $statuses[$coursebid]);
+
+        $result = queue_enrol_action::execute(
+            $fixture['templateid'],
+            $fixture['cohortid'],
+            process_enrol_method::METHOD_COHORT,
+            $fixture['studentroleid'],
+            process_enrol_method::ACTION_APPLY,
+            [$courseaid]
+        );
+        $this->assertSame(1, $result['queued']);
+    }
 }

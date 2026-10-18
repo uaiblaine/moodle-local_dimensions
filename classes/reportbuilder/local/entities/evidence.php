@@ -108,7 +108,7 @@ class evidence extends base {
                     return s($identifier);
                 }
                 $a = $row->desca === null ? null : json_decode((string) $row->desca);
-                return (string) new lang_string($identifier, (string) $row->desccomponent, $a);
+                return format_string((string) new lang_string($identifier, (string) $row->desccomponent, $a));
             });
 
         $columns[] = (new column(

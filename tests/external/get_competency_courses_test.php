@@ -563,4 +563,68 @@ final class get_competency_courses_test extends \advanced_testcase {
         $this->assertStringContainsString('/course/section.php', $rows[$course->id]['section']['url']);
         $this->assertTrue($rows[$course->id]['section']['tracked']);
     }
+
+    /**
+     * A visible course inside a hidden category is never listed to a viewer who cannot browse it.
+     *
+     * Control: a course in a visible category is listed to the same learner, and the admin still
+     * sees the hidden-category one, so the absence is the viewer's rights and not the data.
+     *
+     * @return void
+     */
+    public function test_execute_omits_a_course_in_a_category_the_viewer_cannot_browse(): void {
+        $this->resetAfterTest();
+        $competencyid = $this->set_up_competency();
+        $dg = $this->getDataGenerator();
+        // Core lists a category's courses by moodle/category:viewcourselist, whatever the category's visibility.
+        $hiddencat = $dg->create_category(['visible' => 0]);
+        assign_capability(
+            'moodle/category:viewcourselist',
+            CAP_PROHIBIT,
+            (int) $this->get_authenticated_roleid(),
+            \context_coursecat::instance($hiddencat->id)->id,
+            true
+        );
+        $hiddencourse = $dg->create_course(['category' => $hiddencat->id, 'visible' => 1]);
+        $opencourse = $dg->create_course();
+        \core_competency\api::add_competency_to_course((int) $hiddencourse->id, $competencyid);
+        \core_competency\api::add_competency_to_course((int) $opencourse->id, $competencyid);
+
+        $ccg = $dg->get_plugin_generator('core_competency');
+        $learner = $dg->create_user();
+        $planid = (int) $ccg->create_plan([
+            'userid' => $learner->id,
+            'status' => \core_competency\plan::STATUS_ACTIVE,
+        ])->get('id');
+        $ccg->create_plan_competency(['planid' => $planid, 'competencyid' => $competencyid]);
+
+        $call = function (\stdClass $user) use ($competencyid, $planid): array {
+            $this->setUser($user);
+            $_POST['sesskey'] = sesskey();
+            $response = external_api::call_external_function('local_dimensions_get_competency_courses', [
+                'competencyid' => $competencyid,
+                'planid' => $planid,
+            ]);
+            $this->assertFalse($response['error']);
+            return array_map('intval', array_column($response['data'], 'id'));
+        };
+
+        $learnerids = $call($learner);
+        $this->assertContains((int) $opencourse->id, $learnerids);
+        $this->assertNotContains((int) $hiddencourse->id, $learnerids);
+
+        $adminids = $call(get_admin());
+        $this->assertContains((int) $opencourse->id, $adminids);
+        $this->assertContains((int) $hiddencourse->id, $adminids);
+    }
+
+    /**
+     * The authenticated user role id.
+     *
+     * @return int
+     */
+    private function get_authenticated_roleid(): int {
+        global $DB;
+        return (int) $DB->get_field('role', 'id', ['archetype' => 'user'], MUST_EXIST);
+    }
 }

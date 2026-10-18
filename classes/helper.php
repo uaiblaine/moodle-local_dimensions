@@ -2055,6 +2055,20 @@ class helper {
     }
 
     /**
+     * Keep the rows of a competency's linked-course list the current viewer may browse.
+     *
+     * The tracker page and the accordion service each run their own query (columns and order
+     * differ) and share only this step, so neither tells the viewer about a course core would not
+     * list to them. Row order and keys (course ids) are preserved.
+     *
+     * @param array $courses Map of course id => row, as selected from the competency's links.
+     * @return array The same map without the courses the viewer cannot browse.
+     */
+    public static function filter_readable_linked_courses(array $courses): array {
+        return array_intersect_key($courses, self::readable_competency_courses(array_keys($courses)));
+    }
+
+    /**
      * Whether the PostgreSQL `unaccent` extension is installed and usable right now.
      *
      * Read-only (one pg_extension lookup), so it is safe on a request path. Returns false on

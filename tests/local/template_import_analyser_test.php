@@ -254,6 +254,111 @@ final class template_import_analyser_test extends \advanced_testcase {
         $this->assertStringContainsString('Nursing school', $item['detail']);
     }
 
+    /** @var string[] Capabilities that let a user read templates and structures in a context. */
+    private const READ_CAPABILITIES = [
+        'moodle/competency:templatemanage',
+        'moodle/competency:templateview',
+        'moodle/competency:competencymanage',
+        'moodle/competency:competencyview',
+    ];
+
+    /**
+     * Act as a template and structure manager of the whole site, barred from one context.
+     *
+     * @param \context $hidden The context the user may not read.
+     * @return int The role id, to lift the bar with {@see self::lift_the_bar()}.
+     */
+    private function become_manager_barred_from(\context $hidden): int {
+        $roleid = $this->getDataGenerator()->create_role();
+        $system = \context_system::instance();
+        assign_capability('moodle/competency:templatemanage', CAP_ALLOW, $roleid, $system->id, true);
+        assign_capability('moodle/competency:competencymanage', CAP_ALLOW, $roleid, $system->id, true);
+        foreach (self::READ_CAPABILITIES as $capability) {
+            assign_capability($capability, CAP_PROHIBIT, $roleid, $hidden->id, true);
+        }
+        $user = $this->getDataGenerator()->create_user();
+        role_assign($roleid, $user->id, $system->id);
+        $this->setUser($user);
+        return $roleid;
+    }
+
+    /**
+     * Remove the prohibitions that bar the manager from a context.
+     *
+     * @param int $roleid The role from {@see self::become_manager_barred_from()}.
+     * @param \context $hidden The context to open.
+     * @return void
+     */
+    private function lift_the_bar(int $roleid, \context $hidden): void {
+        foreach (self::READ_CAPABILITIES as $capability) {
+            unassign_capability($capability, $roleid, $hidden->id);
+        }
+        accesslib_clear_all_caches_for_unit_testing();
+    }
+
+    /**
+     * A template in a context the viewer cannot read is not named in the conflict detail; with
+     * read access (the control) it is.
+     *
+     * @return void
+     */
+    public function test_an_unreadable_context_is_not_named(): void {
+        $site = $this->prepare_site();
+        $a = \context_coursecat::instance((int) $this->getDataGenerator()->create_category(['name' => 'Alpha school'])->id);
+        $b = \context_coursecat::instance((int) $this->getDataGenerator()->create_category(['name' => 'Bravo secret'])->id);
+        $elsewhere = $site['generator']->create_template(['shortname' => 'Elsewhere', 'contextid' => $b->id]);
+        $this->set_template_idnumber((int) $elsewhere->get('id'), 'TPL-ELSE');
+        $csv = $this->csv([['rowtype' => 'template', 'template_idnumber' => 'TPL-ELSE', 'shortname' => 'Elsewhere']]);
+
+        $roleid = $this->become_manager_barred_from($b);
+        $item = $this->first_item($this->analyse($csv, $a, false));
+        $this->assertSame(template_import_verdict::REASON_CONTEXTMISMATCH, $item['reason']);
+        $this->assertStringNotContainsString('Bravo secret', $item['detail']);
+        $this->assertStringContainsString(get_string('central_plans_import_hiddencontext', 'local_dimensions'), $item['detail']);
+
+        $this->lift_the_bar($roleid, $b);
+        $item = $this->first_item($this->analyse($csv, $a, false));
+        $this->assertStringContainsString('Bravo secret', $item['detail']);
+    }
+
+    /**
+     * A structure the viewer cannot read is not named in the missing-competency hint; with read
+     * access (the control) it is.
+     *
+     * @return void
+     */
+    public function test_an_unreadable_framework_is_not_named(): void {
+        $site = $this->prepare_site();
+        $a = \context_coursecat::instance((int) $this->getDataGenerator()->create_category(['name' => 'Alpha school'])->id);
+        $b = \context_coursecat::instance((int) $this->getDataGenerator()->create_category(['name' => 'Bravo secret'])->id);
+        $other = $site['generator']->create_framework([
+            'shortname' => 'Hidden framework',
+            'idnumber' => 'FW-2',
+            'contextid' => $b->id,
+        ]);
+        $site['generator']->create_competency([
+            'competencyframeworkid' => (int) $other->get('id'),
+            'shortname' => 'Moved',
+            'idnumber' => 'C-MOVED',
+        ]);
+        $csv = $this->csv([
+            ['rowtype' => 'template', 'template_idnumber' => 'TPL-NEW', 'shortname' => 'Wants moved'],
+            ['rowtype' => 'link', 'template_idnumber' => 'TPL-NEW', 'framework_idnumber' => 'FW-1',
+             'competency_idnumber' => 'C-MOVED', 'sortorder' => '0'],
+        ]);
+
+        $roleid = $this->become_manager_barred_from($b);
+        $links = $this->first_item($this->analyse($csv, $a, false))['links'];
+        $link = reset($links);
+        $this->assertStringNotContainsString('Hidden framework', $link['detail']);
+        $this->assertStringContainsString(get_string('central_plans_import_hiddenframework', 'local_dimensions'), $link['detail']);
+
+        $this->lift_the_bar($roleid, $b);
+        $links = $this->first_item($this->analyse($csv, $a, false))['links'];
+        $link = reset($links);
+        $this->assertStringContainsString('Hidden framework', $link['detail']);
+    }
+
     /**
      * A due date in the past blocks, with clearing it pre-selected and shifting it available.
      * keepduedate is not offered on a create: there is no stored value to keep.
