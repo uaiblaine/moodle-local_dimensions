@@ -144,7 +144,14 @@ class queue_enrol_action extends external_api {
             $pending = process_enrol_method::pending_map();
             foreach ($requested as $courseid) {
                 $key = process_enrol_method::key($courseid, $params['method'], $params['cohortid']);
-                if (!isset($linked[$courseid]) || !isset($allowed[$courseid])) {
+                $applicable = $params['action'] !== process_enrol_method::ACTION_APPLY
+                    || (isset($allowed[$courseid]) && enrol_methods::can_apply_to_course(
+                        $courseid,
+                        $params['roleid'],
+                        $params['cohortid'],
+                        (int) $USER->id
+                    ));
+                if (!isset($linked[$courseid]) || !isset($allowed[$courseid]) || !$applicable) {
                     $results[] = ['courseid' => $courseid, 'status' => 'skipped'];
                 } else if (isset($pending[$key])) {
                     $results[] = ['courseid' => $courseid, 'status' => 'processing'];
