@@ -73,7 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   field an administrator adds stay offered. A saved report that used a field now hidden drops
   that column, filter or condition.
 
-- Report builder, "Competencies with Dimensions custom fields": the user competency "Rating"
+- Report builder, "Competencies with custom fields": the user competency "Rating"
   column names the scale item without reading the competency and its scale for every row; it
   reads each scale once per request (`local\reportbuilder\local\helpers\rating`). The entity is
   the plugin's `usercompetency`, a subclass of core's with the same names, so saved reports keep
@@ -86,7 +86,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   filters by name); a saved report that used it drops that filter. New reports no longer start
   with the "Visible" template condition, which left out plans without a template.
 
-- Report builder: the "Competencies with Dimensions custom fields" and "Learning plans" report
+- Report builder: the "Competencies with custom fields" and "Learning plans" report
   sources are offered only while competencies are enabled, as "Course and activity
   competencies" already was.
 

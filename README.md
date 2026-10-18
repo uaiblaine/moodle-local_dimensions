@@ -250,7 +250,7 @@ reports*). Each source is offered only while competencies are enabled.
 
 | Report source | One row per | What it adds |
 |---|---|---|
-| Competencies with Dimensions custom fields | competency and user | framework, competency, the user's competency (status, proficiency, rating), the Dimensions fields, and the competency's hierarchy and links |
+| Competencies with custom fields | competency and user | framework, competency, the user's competency (status, proficiency, rating), the Dimensions fields, and the competency's hierarchy and links |
 | Course and activity competencies | competency linked to a course | the course rule and the push of ratings to plans; the activities of that course linked to the same competency, with their rule and rating override |
 | Competency ratings in courses | rating a user received in a course | rating, proficiency, the user and their cohorts, the course and its category |
 | Learning plans | plan | status, dates, owner and reviewer, the template with its Dimensions fields and cohorts, and per plan the number of competencies, proficient competencies and progress |
@@ -275,10 +275,10 @@ One branch per Moodle version, each declaring `$plugin->supported` for exactly t
 
 | Branch | Moodle | Version | Release |
 |---|---|---|---|
-| `MOODLE_405_STABLE` | 4.5 LTS | 2024100708 | v4.5-r1 |
-| `MOODLE_501_STABLE` | 5.1 | 2025100608 | v5.1-r1 |
-| `MOODLE_502_STABLE` | 5.2 | 2026042008 | v5.2-r1 |
-| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100511 | v5.3-r1 |
+| `MOODLE_405_STABLE` | 4.5 LTS | 2024100709 | v4.5-r1 |
+| `MOODLE_501_STABLE` | 5.1 | 2025100609 | v5.1-r1 |
+| `MOODLE_502_STABLE` | 5.2 | 2026042009 | v5.2-r1 |
+| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100512 | v5.3-r1 |
 
 The 4.5, 5.1 and 5.2 branches carry the same features; the 5.3 line (`main`) takes new work first
 and uses PHP 8.3 syntax. This README and its pictures describe `main` on Moodle 5.3. Moodle 5.0 has
