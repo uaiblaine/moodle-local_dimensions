@@ -97,7 +97,7 @@ reports*). Each source is offered only while competencies are enabled.
 
 | Report source | One row per | What it adds |
 |---|---|---|
-| Competencies with Dimensions custom fields | competency and user | framework, competency, the user's competency (status, proficiency, rating), the Dimensions fields, and the competency's hierarchy and links |
+| Competencies with custom fields | competency and user | framework, competency, the user's competency (status, proficiency, rating), the Dimensions fields, and the competency's hierarchy and links |
 | Course and activity competencies | competency linked to a course | the course rule and the push of ratings to plans; the activities of that course linked to the same competency, with their rule and rating override |
 | Competency ratings in courses | rating a user received in a course | rating, proficiency, the user and their cohorts, the course and its category |
 | Learning plans | plan | status, dates, owner and reviewer, the template with its Dimensions fields and cohorts, and per plan the number of competencies, proficient competencies and progress |
