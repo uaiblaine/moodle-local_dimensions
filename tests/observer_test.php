@@ -36,7 +36,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
  *  - saves the custom fields a form posts, under the id the event carries;
  *  - ignores a POST without a valid sesskey, quietly, and still invalidates caches;
  *  - invalidates the relevant MUC caches on create/update/delete events;
- *  - cleans up custom field data when a competency or template is deleted.
+ *  - cleans up custom field data and built-in images when a competency or template is deleted.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -123,6 +123,50 @@ final class observer_test extends \advanced_testcase {
             ]
         );
         return $value === false ? null : (string) $value;
+    }
+
+    /**
+     * Store a built-in background and card image for one competency or template.
+     *
+     * @param string $area 'competency' or 'lp'.
+     * @param int $instanceid The competency or template id.
+     * @return void
+     */
+    private function store_images(string $area, int $instanceid): void {
+        $fs = get_file_storage();
+        foreach (['bgimage', 'cardimage'] as $type) {
+            $fs->create_file_from_string([
+                'contextid' => \context_system::instance()->id,
+                'component' => picture_manager::COMPONENT,
+                'filearea' => picture_manager::get_filearea($area, $type),
+                'itemid' => $instanceid,
+                'filepath' => '/',
+                'filename' => $type . '.png',
+            ], $type);
+        }
+    }
+
+    /**
+     * How many built-in images one competency or template has, across both file areas.
+     *
+     * @param string $area 'competency' or 'lp'.
+     * @param int $instanceid The competency or template id.
+     * @return int
+     */
+    private function count_images(string $area, int $instanceid): int {
+        $fs = get_file_storage();
+        $count = 0;
+        foreach (['bgimage', 'cardimage'] as $type) {
+            $count += count($fs->get_area_files(
+                \context_system::instance()->id,
+                picture_manager::COMPONENT,
+                picture_manager::get_filearea($area, $type),
+                $instanceid,
+                'id',
+                false
+            ));
+        }
+        return $count;
     }
 
     /**
@@ -459,5 +503,40 @@ final class observer_test extends \advanced_testcase {
             $DB->count_records('customfield_data', ['instanceid' => $id, 'fieldid' => $fieldid]),
             'customfield_data for the deleted template must be removed.'
         );
+    }
+
+    /**
+     * Deleting a competency deletes its built-in images, and only its own.
+     *
+     * The images live in the plugin's file areas keyed by the competency id, outside the custom
+     * field data; the second competency's images are the control that the sweep is per instance.
+     */
+    public function test_competency_deleted_removes_its_images_only(): void {
+        $deleted = (int) $this->create_competency()->get('id');
+        $kept = (int) $this->create_competency()->get('id');
+        $this->store_images(helper::AREA_COMPETENCY, $deleted);
+        $this->store_images(helper::AREA_COMPETENCY, $kept);
+        $this->assertSame(2, $this->count_images(helper::AREA_COMPETENCY, $deleted));
+
+        api::delete_competency($deleted);
+
+        $this->assertSame(0, $this->count_images(helper::AREA_COMPETENCY, $deleted));
+        $this->assertSame(2, $this->count_images(helper::AREA_COMPETENCY, $kept));
+    }
+
+    /**
+     * Deleting a template deletes its built-in images, and only its own.
+     */
+    public function test_template_deleted_removes_its_images_only(): void {
+        $deleted = (int) $this->create_template()->get('id');
+        $kept = (int) $this->create_template()->get('id');
+        $this->store_images(helper::AREA_LP, $deleted);
+        $this->store_images(helper::AREA_LP, $kept);
+        $this->assertSame(2, $this->count_images(helper::AREA_LP, $deleted));
+
+        api::delete_template($deleted);
+
+        $this->assertSame(0, $this->count_images(helper::AREA_LP, $deleted));
+        $this->assertSame(2, $this->count_images(helper::AREA_LP, $kept));
     }
 }

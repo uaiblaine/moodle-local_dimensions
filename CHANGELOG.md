@@ -4,6 +4,31 @@ All notable changes to the **local_dimensions** plugin will be documented in thi
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Plugins directory readiness
+
+Version `2026100514`. The Moodle plugins directory's submission guidelines, checked by a new test.
+
+- **`LICENSE`** ships beside `COPYING.txt`, both the GPL v3 text (Moodle's tooling still requires
+  `COPYING.txt`).
+- **Only English ships.** `lang/pt_br` stays in the repository, in step with `lang/en`, but is
+  export-ignored: translations reach sites through AMOS.
+- **`tests/marketplace_readiness_test.php`** reads the plugin's files and pins the licence files, the
+  English-only package, data-only lang files, a README that names every capability and dependency,
+  `local_dimensions/<name>` setting names, plugin-scoped selectors in `styles.css` and every
+  `styles_<theme>.css`, the GPL boilerplate and `@copyright`, and the privacy cover of core rows
+  stamped with the component. A root rule that declares only `--local-dimensions-*` custom properties
+  counts as scoped.
+- **Built-in images are deleted with their competency or template.** The background and card images
+  in the plugin's four file areas outlived a deleted competency or template; the observer now removes
+  them (`picture_manager::delete_instance_files()`).
+- The hub's user search is pinned to core's `hiddenuserfields` rule too: a hidden identity field
+  is shown and searched only for a caller holding `moodle/user:viewhiddendetails`.
+- README: new *Settings* (every setting with its default), *Data stored* (what is kept, for how
+  long, what removes it, what a data request exports and what a deletion does), *Translations* and
+  *License* sections; the version table names the current numbers.
+
 ## [v5.3-r1] - 2026-10-18
 
 ### Upgrading
