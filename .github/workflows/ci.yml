@@ -48,8 +48,9 @@ jobs:
   # test_ci_checks_out_unlistedcourses_where_it_exists fails the build if the line is dropped.
   ci-503:
     name: Moodle 5.03
-    uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
+    uses: uaiblaine/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
     with:
+      runner: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CI_RUNNER || '' }}
       moodle-core-branch: MOODLE_503_STABLE
       plugin-dependencies: |
         uaiblaine/moodle-enrol_apply,master
