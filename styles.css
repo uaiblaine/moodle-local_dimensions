@@ -1927,7 +1927,7 @@ body {
     border-left: 4px solid var(--local-dimensions-warning-ink);
 }
 
-.local-dimensions-accordion-item:not(.completed, .rated) {
+.local-dimensions-accordion-item:not(.completed):not(.rated) {
     border-left: 4px solid var(--local-dimensions-line);
 }
 

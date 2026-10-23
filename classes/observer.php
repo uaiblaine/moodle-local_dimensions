@@ -65,7 +65,7 @@ class observer {
     /**
      * Observer for competency deleted event.
      *
-     * Removes any associated custom field data and invalidates caches.
+     * Removes any associated custom field data and built-in images, and invalidates caches.
      *
      * @param \core\event\base $event
      */
@@ -86,6 +86,7 @@ class observer {
 
         // Fallback sweep for rows delete_instance does not match; see delete_customfield_data().
         self::delete_customfield_data($instanceid, helper::AREA_COMPETENCY);
+        picture_manager::delete_instance_files(helper::AREA_COMPETENCY, $instanceid);
 
         self::invalidate_competency_caches($instanceid);
     }
@@ -113,7 +114,7 @@ class observer {
     /**
      * Observer for learning plan template deleted event.
      *
-     * Removes associated custom field data and invalidates caches (including the
+     * Removes associated custom field data and built-in images, and invalidates caches (including the
      * cached list of valid course IDs for the template).
      *
      * @param \core\event\base $event
@@ -133,6 +134,7 @@ class observer {
 
         // Fallback sweep for rows delete_instance does not match; see delete_customfield_data().
         self::delete_customfield_data($instanceid, helper::AREA_LP);
+        picture_manager::delete_instance_files(helper::AREA_LP, $instanceid);
 
         self::invalidate_template_caches($instanceid, true);
     }
