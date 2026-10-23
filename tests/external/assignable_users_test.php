@@ -180,6 +180,47 @@ final class assignable_users_test extends \advanced_testcase {
     }
 
     /**
+     * An identity field listed in hiddenuserfields is neither shown nor searched for a caller
+     * without moodle/user:viewhiddendetails (the rule core applies outside a course); granting it
+     * (the control) brings the field back.
+     *
+     * @return void
+     */
+    public function test_a_hidden_user_field_needs_viewhiddendetails(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('showuseridentity', 'email,city');
+        set_config('hiddenuserfields', 'city');
+        $templateid = $this->create_template();
+        $user = $this->getDataGenerator()->create_user([
+            'firstname' => 'Iota',
+            'lastname' => 'Hidden',
+            'email' => 'iota.hidden@example.com',
+            'city' => 'Ouro Preto',
+        ]);
+
+        $systemcontext = \context_system::instance();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templatemanage', CAP_ALLOW, $roleid, $systemcontext->id);
+        assign_capability('moodle/competency:planmanage', CAP_ALLOW, $roleid, $systemcontext->id);
+        assign_capability('moodle/site:viewuseridentity', CAP_ALLOW, $roleid, $systemcontext->id);
+        $manager = $this->getDataGenerator()->create_user();
+        role_assign($roleid, (int) $manager->id, $systemcontext->id);
+        $this->setUser($manager);
+
+        $byname = $this->find($this->search($templateid, 'Iota Hidden'), (int) $user->id);
+        $this->assertNotNull($byname);
+        $this->assertSame('iota.hidden@example.com', $byname['identity']);
+        $this->assertNull($this->find($this->search($templateid, 'Ouro Preto'), (int) $user->id));
+
+        assign_capability('moodle/user:viewhiddendetails', CAP_ALLOW, $roleid, $systemcontext->id);
+        accesslib_clear_all_caches_for_unit_testing();
+        $bycity = $this->find($this->search($templateid, 'Ouro Preto'), (int) $user->id);
+        $this->assertNotNull($bycity);
+        $this->assertSame('iota.hidden@example.com, Ouro Preto', $bycity['identity']);
+    }
+
+    /**
      * A showuseridentity entry that is not one of core's user-table identity columns (config.php
      * can set anything) is never selected, searched or shown.
      *

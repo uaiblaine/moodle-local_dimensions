@@ -229,6 +229,26 @@ class picture_manager {
     }
 
     /**
+     * Delete the built-in background and card images of one competency or template.
+     *
+     * The images sit in the plugin's own file areas, keyed by the instance id, apart from the
+     * custom field data handler::delete_instance() removes, so without this they outlive the
+     * competency or template they belong to. Called from {@see observer::competency_deleted()}
+     * and {@see observer::template_deleted()}.
+     *
+     * @param string $area 'competency' or 'lp'.
+     * @param int $instanceid The competency or template ID.
+     * @return void
+     */
+    public static function delete_instance_files(string $area, int $instanceid): void {
+        $fs = get_file_storage();
+        $contextid = context_system::instance()->id;
+        foreach (['bgimage', 'cardimage'] as $type) {
+            $fs->delete_area_files($contextid, self::COMPONENT, self::get_filearea($area, $type), $instanceid);
+        }
+    }
+
+    /**
      * Save all uploaded files (background + card image) from the form.
      *
      * @param stdClass $data The submitted form data.

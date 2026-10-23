@@ -48,7 +48,7 @@ The Competency hub
 
 ![The hub opened from Site administration: the System and Course category switch, a course category picked, and that category's two frameworks, one selected with its actions in the bar at the foot of the page](docs/screenshots/hub-context-switch.png)
 
-**Site administration > Competencies** opens the hub for anyone holding
+**Site administration > Competencies > Competency Dimensions > Competency hub** opens the hub for anyone holding
 `moodle/competency:competencymanage` at the site (site configuration is not required). A
 *System / Course category* switch chooses the context, and the hub remembers where you were: tab,
 context, selected framework or template and display toggles persist per user, across sessions and
@@ -251,7 +251,7 @@ reports*). Each source is offered only while competencies are enabled.
 | Report source | One row per | What it adds |
 |---|---|---|
 | Competencies with custom fields | competency and user | framework, competency, the user's competency (status, proficiency, rating), the Dimensions fields, and the competency's hierarchy and links |
-| Course and activity competencies | competency linked to a course | the course rule and the push of ratings to plans; the activities of that course linked to the same competency, with their rule and rating override |
+| Course and activity competencies | competency linked to a course (one per linked activity when activities are shown) | the course rule and the push of ratings to plans; the activities of that course linked to the same competency, with their rule and rating override |
 | Competency ratings in courses | rating a user received in a course | rating, proficiency, the user and their cohorts, the course and its category |
 | Learning plans | plan | status, dates, owner and reviewer, the template with its Dimensions fields and cohorts, and per plan the number of competencies, proficient competencies and progress |
 | Learning plan competencies | competency of a plan | whether it comes from the template; proficiency and rating in the plan, read from the archive once the plan is complete |
@@ -275,16 +275,17 @@ One branch per Moodle version, each declaring `$plugin->supported` for exactly t
 
 | Branch | Moodle | Version | Release |
 |---|---|---|---|
-| `MOODLE_405_STABLE` | 4.5 LTS | 2024100709 | v4.5-r1 |
-| `MOODLE_501_STABLE` | 5.1 | 2025100609 | v5.1-r1 |
-| `MOODLE_502_STABLE` | 5.2 | 2026042009 | v5.2-r1 |
-| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100512 | v5.3-r1 |
+| `MOODLE_405_STABLE` | 4.5 LTS | 2024100711 | v4.5-r1 |
+| `MOODLE_501_STABLE` | 5.1 | 2025100611 | v5.1-r1 |
+| `MOODLE_502_STABLE` | 5.2 | 2026042011 | v5.2-r1 |
+| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100514 | v5.3-r1 |
 
 The 4.5, 5.1 and 5.2 branches carry the same features; the 5.3 line (`main`) takes new work first
 and uses PHP 8.3 syntax. This README and its pictures describe `main` on Moodle 5.3. Moodle 5.0 has
 no branch.
 
 - Core competencies enabled (`core_competency`).
+- No required plugin: `version.php` declares no dependency.
 - Optional, each reached only through a runtime guard, so the plugin installs and behaves the same
   without them:
   - `enrol_apply`: a locked course card recognises an application as a way in and shows one
@@ -311,18 +312,54 @@ Step 2 comes after step 1; without it Moodle refuses the new files as a downgrad
 upgrade steps are applied as idempotent repairs on every upgrade.
 
 
-Configuration
--------------
+Settings
+--------
 
-**Site administration > Competencies > Competency Dimensions settings** covers the *Return to plan*
-button, image handling and custom SCSS, favourites (`enablefavourites`), and per-view display
-options: the course section progress indicator, locked-card behaviour, the enrolment filter, the
-single-course redirect, which sections each accordion panel shows (description, taxonomy, path,
-related competencies, evidence, rules), and which custom fields the filter lines offer
-(`viewplan_filter_fields` for the plan, `viewcompetency_filter_fields_course` for the tracker).
+**Site administration > Competencies > Competency Dimensions > Competency Dimensions settings**, shown only while
+competencies are enabled. Every setting is stored as `local_dimensions/<name>`.
 
-The same category holds the Competency hub and the two custom-field definition pages
-(*competency* and *learning plan template* areas).
+General:
+
+- `enablereturnbutton` (on): the draggable *Return to plan* button on course pages.
+- `returnbuttoncolor` (`#0f6cbf`): its colour.
+- `imagehandler` (*built-in*): where the card and background images are stored; *customfield_picture*
+  is offered only when that plugin is installed.
+- `enablecustomscss` (off): the *Custom SCSS* fields of templates and competencies.
+
+Competency tracker:
+
+- `percentagedisplaymode` (*on hover*): a course card's progress percentage, always, on hover or
+  never.
+- `lockedcardmode` (*Locked content*): a locked card shows its enrolment state, or a *Learn more*
+  button to the course page.
+- `learnmorebuttoncolor` (`#0f6cbf`): the colour of that button.
+- `showlockeddate` (on): the date a locked course opens.
+- `animatelockedborder` (off): an animated dashed border on locked cards.
+- `cardicon` (none): the icon of a locked card, picked from Font Awesome.
+- `useunlistedcourses` (off): *Use the enrolment rules of Unlisted courses*, offered only where
+  `local_unlistedcourses` is installed.
+- `enrollmentfilter` (*all*): which linked courses the tracker shows: all, enrolled, active
+  enrolments, or enrolled plus those the learner may join.
+- `singlecourseredirect` (off): skip the grid when one accessible course remains.
+
+Full plan overview:
+
+- `enablefavourites` (on): learners star competencies and filter on them.
+- `showdescription` (on), `showtaxonomycard` (off), `showpath` (off), `showrelated` (off),
+  `showrelatedlink` (off), `showscaledescription` (on), `showevidence` (on): what a competency's
+  tabs show.
+- `enableevidencesubmitbutton` (off): a *Submit evidence* button in the evidence tab.
+
+Filter lines:
+
+- `viewplan_filter_fields` (the two tag fields): the competency custom fields the plan's
+  *Filters* panel offers, as a comma-separated list of shortnames.
+- `viewcompetency_filter_fields_course` (empty): the course custom fields the tracker offers.
+
+Templates and competencies can override the enrolment filter, the locked-card mode, the
+single-course redirect and the availability date in their own custom fields. The same admin
+category holds the Competency hub and the two custom-field definition pages (*competency* and
+*learning plan template* areas).
 
 
 Accent-insensitive search
@@ -389,18 +426,41 @@ hero against the navigation bar when a smart menu exists. Under `theme_dimension
 the family tokens first. We can't support any other theme.
 
 
-Privacy
--------
+Data stored
+-----------
 
-The plugin stores no personal data beyond five per-user preferences: two that remember the
-Competency hub's last-visited view and display choices, and three that remember the learner views'
-choices, favourite competencies and folded headers. They are exported by the Privacy API on a
-data-subject request and removed on plugin uninstall. Custom field data belongs to competencies and
-learning plan templates, not to users. Course progress is calculated in real time, and temporary
-session cache entries are used only for navigation and rendering during active sessions.
+The plugin has no database tables of its own (no `db/install.xml`). It keeps:
 
-The plugin implements the Moodle Privacy API as a preference-only provider
-(`core_privacy\local\request\user_preference_provider`).
+- **Five user preferences**: `local_dimensions_central_nav` and `local_dimensions_central_display`
+  (the Competency hub's last tab, context, selection and display toggles),
+  `local_dimensions_learner_view` (each learner view's scope, sort and layout),
+  `local_dimensions_learner_fav` (the favourite competencies, per plan) and
+  `local_dimensions_learner_hero` (which headers are folded). They are kept until the user changes
+  them, the user is deleted, or the plugin is uninstalled.
+- **Custom fields of competencies and plan templates** in core's `customfield_category`,
+  `customfield_field` and `customfield_data` tables, under the component `local_dimensions`
+  (areas `competency` and `lp`), and their images and embedded files in the file areas
+  `competency_bgimage`, `competency_cardimage`, `template_bgimage` and `template_cardimage`. These
+  describe a competency or a template, never a person. They are removed with their competency or
+  template, and every one on uninstall.
+- **Caches** (MUC): metadata of templates and competencies, the courses of each template, compiled
+  custom SCSS, course custom field values and the icon map; `plan_trail`, which holds a
+  plan's competencies with the owner's proficiency for five minutes and is cleared when a rating
+  changes; and `returncontext`, a session cache of the plan a learner came from, which expires
+  after four hours.
+- **Events** in the standard log for the hub's administrative decisions (cohort attach and detach,
+  links, duplication, cohort roles, bulk enrolment methods, custom field changes). The log store
+  keeps and exports them.
+
+What the hub creates through core's APIs belongs to the core component that stores it, whose
+own provider covers it: learning plans (`core_competency`), cohort role assignments
+(`tool_cohortroles`), enrolment instances and their enrolments (each enrolment plugin) and evidence.
+The plugin writes no core row stamped with its own component other than the custom fields above.
+
+**Privacy API.** The provider (`core_privacy\local\request\user_preference_provider`) declares
+the five preferences. A data request exports those the user has set. A deletion of the user, or of
+their user context, removes every preference row of the user through core_user's provider, which
+deletes them all. Uninstalling the plugin deletes its preferences of every user.
 
 
 Scheduled tasks
@@ -460,12 +520,13 @@ Please create pull requests on GitHub:
 https://github.com/uaiblaine/moodle-local_dimensions/pulls
 
 
-Translating this plugin
------------------------
+Translations
+------------
 
-This Moodle plugin is shipped with English and Brazilian Portuguese language packs. All
-translations into other languages must be managed through AMOS (https://lang.moodle.org) by what
-they will become part of Moodle's official language pack.
+The English strings ship in the package. The Brazilian Portuguese translation is maintained in
+this repository (`lang/pt_br`) and reaches sites through [AMOS](https://lang.moodle.org/), as the
+plugins directory requires; it is left out of the release package. Translations into other
+languages are made in AMOS too.
 
 
 Right-to-left support
@@ -481,6 +542,13 @@ Contributors
 
 - Anderson Blaine
 - William Mano
+
+
+License
+-------
+
+This plugin is licensed under the [GNU GPL v3 or later](http://www.gnu.org/copyleft/gpl.html)
+(`LICENSE`, and `COPYING.txt` for Moodle's tooling).
 
 
 Copyright
