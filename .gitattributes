@@ -5,6 +5,10 @@
 #
 # Verify with:  git check-attr export-ignore -- <path>
 # (a path marked "set" is excluded from the archive; "unspecified" ships).
+#
+# lang/pt_br stays in git, in step with lang/en, but not in the zip: the plugins
+# directory accepts only English strings in a package, and translations reach
+# sites through AMOS.
 
 docs                  export-ignore
 .mdlshield           export-ignore
@@ -12,5 +16,6 @@ mutations             export-ignore
 .github               export-ignore
 .moodle-plugin-ci.yml export-ignore
 CLAUDE.md             export-ignore
+/lang/pt_br           export-ignore
 .gitignore            export-ignore
 .gitattributes        export-ignore
