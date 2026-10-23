@@ -1,0 +1,1 @@
+s/^ \* \@copyright .*\n//mg;
