@@ -23,7 +23,7 @@ use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\{date, number, text};
 use core_reportbuilder\local\helpers\format;
 use core_reportbuilder\local\report\{column, filter};
-use html_writer;
+use local_dimensions\reportbuilder\local\helpers\link;
 use stdClass;
 
 /**
@@ -108,12 +108,14 @@ class user_evidence extends base {
         ))
             ->add_joins($this->get_joins())
             ->set_type(column::TYPE_LONGTEXT)
-            ->add_fields("{$alias}.description, {$alias}.descriptionformat")
+            ->add_fields("{$alias}.description, {$alias}.descriptionformat, {$alias}.userid")
             ->add_callback(static function (?string $description, stdClass $row): string {
                 if ($description === null) {
                     return '';
                 }
-                return format_text($description, $row->descriptionformat ?? FORMAT_HTML);
+                return format_text($description, $row->descriptionformat ?? FORMAT_HTML, [
+                    'context' => \core\context\user::instance((int) $row->userid),
+                ]);
             });
 
         $columns[] = (new column(
@@ -125,7 +127,7 @@ class user_evidence extends base {
             ->add_field("{$alias}.url")
             ->set_is_sortable(true)
             ->add_callback(static function (?string $url): string {
-                return ($url === null || $url === '') ? '' : html_writer::link($url, s($url));
+                return link::to_stored_url($url);
             });
 
         $columns[] = (new column(
