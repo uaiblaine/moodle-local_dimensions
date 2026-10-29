@@ -201,6 +201,10 @@ class template_csv_serializer {
             return $frameworks[$frameworkid];
         }
         $framework = $competency->get_framework();
+        // Metadata of a framework the viewer cannot read is withheld, and not collected.
+        if ($framework && !\core_competency\competency_framework::can_read_context($framework->get_context())) {
+            return ['id' => 0, 'idnumber' => '', 'shortname' => ''];
+        }
         $entry = [
             'id' => $frameworkid,
             'idnumber' => $framework ? (string) $framework->get('idnumber') : '',
