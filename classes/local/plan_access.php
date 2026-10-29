@@ -60,6 +60,25 @@ final class plan_access {
     public const string SCOPE_RULECHILD = 'rulechild';
 
     /**
+     * Whether the plan page offers the evidence-submission button to the current user.
+     *
+     * Only the plan's owner viewing their own plan, with the setting on and the right to manage
+     * their own evidence. A teacher or manager reviewing the plan never sees it, whatever they
+     * hold on the owner: the button adds evidence to the viewer's own portfolio.
+     *
+     * @param plan $plan The plan being viewed.
+     * @return bool
+     */
+    public static function can_submit_evidence(plan $plan): bool {
+        global $USER;
+
+        $ownerid = (int) $plan->get('userid');
+        return (bool) get_config('local_dimensions', 'enableevidencesubmitbutton')
+            && $ownerid === (int) $USER->id
+            && \core_competency\user_evidence::can_manage_user($ownerid);
+    }
+
+    /**
      * Read a plan the current user may view.
      *
      * A missing plan comes out of api::read_plan() as a dml_missing_record_exception: from the plan

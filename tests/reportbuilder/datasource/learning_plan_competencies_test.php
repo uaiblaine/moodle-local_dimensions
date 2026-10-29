@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace local_dimensions\reportbuilder\datasource;
 
+use core_competency\api;
 use core_competency\plan;
 use core_reportbuilder\tests\core_reportbuilder_testcase;
 use local_dimensions\reportbuilder\local\helpers\rating;
@@ -133,6 +134,99 @@ final class learning_plan_competencies_test extends core_reportbuilder_testcase 
             ['Active plan', 'Beta', 'Yes', '', '', ''],
             ['Done plan', 'Gamma', 'No', 'Yes', 'D', 'A'],
         ], array_map('array_values', $this->get_custom_report_content($reportid)));
+    }
+
+    /**
+     * Two plans from one template, one completed before the template changed: Alpha and Beta were
+     * its competencies at completion; afterwards Alpha left and Delta joined.
+     *
+     * @return int The report id, with the plan and competency names sorted.
+     */
+    private function create_template_change_fixture(): int {
+        $this->setAdminUser();
+
+        /** @var \core_competency_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $generator->create_framework(['shortname' => 'Framework']);
+        $competencies = [];
+        foreach (['Alpha', 'Beta', 'Delta'] as $name) {
+            $competencies[$name] = $generator->create_competency([
+                'competencyframeworkid' => $framework->get('id'),
+                'shortname' => $name,
+            ]);
+        }
+        $template = $generator->create_template(['shortname' => 'Template']);
+        foreach (['Alpha', 'Beta'] as $name) {
+            $generator->create_template_competency([
+                'templateid' => $template->get('id'),
+                'competencyid' => $competencies[$name]->get('id'),
+            ]);
+        }
+        $completed = $generator->create_plan([
+            'name' => 'Completed plan',
+            'userid' => $this->getDataGenerator()->create_user()->id,
+            'templateid' => $template->get('id'),
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+        $generator->create_plan([
+            'name' => 'Live plan',
+            'userid' => $this->getDataGenerator()->create_user()->id,
+            'templateid' => $template->get('id'),
+            'status' => plan::STATUS_ACTIVE,
+        ]);
+
+        // Completion archives Alpha and Beta; the template then changes.
+        api::complete_plan($completed);
+        api::remove_competency_from_template($template->get('id'), $competencies['Alpha']->get('id'));
+        api::add_competency_to_template($template->get('id'), $competencies['Delta']->get('id'));
+
+        /** @var \core_reportbuilder_generator $rbgenerator */
+        $rbgenerator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $report = $rbgenerator->create_report([
+            'name' => 'Template change',
+            'source' => learning_plan_competencies::class,
+            'default' => 0,
+        ]);
+        foreach (['plan:name', 'competency:name'] as $column) {
+            $rbgenerator->create_column([
+                'reportid' => $report->get('id'),
+                'uniqueidentifier' => $column,
+                'sortenabled' => 1,
+            ]);
+        }
+        return (int) $report->get('id');
+    }
+
+    /**
+     * A completed template-based plan lists the competencies archived at completion, not the template's current ones.
+     *
+     * @return void
+     */
+    public function test_completed_template_plan_lists_the_archived_competencies(): void {
+        $this->resetAfterTest();
+        $reportid = $this->create_template_change_fixture();
+
+        $rows = array_map('array_values', $this->get_custom_report_content($reportid));
+        $this->assertSame(
+            [['Completed plan', 'Alpha'], ['Completed plan', 'Beta']],
+            array_values(array_filter($rows, static fn(array $row): bool => $row[0] === 'Completed plan'))
+        );
+    }
+
+    /**
+     * Control: an active plan from the same template follows the template's current competencies.
+     *
+     * @return void
+     */
+    public function test_active_template_plan_follows_the_current_template(): void {
+        $this->resetAfterTest();
+        $reportid = $this->create_template_change_fixture();
+
+        $rows = array_map('array_values', $this->get_custom_report_content($reportid));
+        $this->assertSame(
+            [['Live plan', 'Beta'], ['Live plan', 'Delta']],
+            array_values(array_filter($rows, static fn(array $row): bool => $row[0] === 'Live plan'))
+        );
     }
 
     /**

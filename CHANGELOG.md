@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security hardening
+
+Version `2026100515`. The surviving points of an external static review, each held by a test and
+a mutation spec (`mutations/sec_audit_g1.conf` to `g4.conf`). None let a user past a core
+capability; most of the review's other findings matched core's own behaviour and are unchanged.
+
+- **The competency form takes its context from the competency.** Editing an existing competency
+  checked the capability in the posted framework's context only, so a manager of one category
+  could open another category's competency (its fields and images). The form now resolves the
+  competency's own context and refuses a framework id that is not the competency's.
+- **The CSV framework import calls only competency rules.** A `ruletype` column naming any other
+  class was passed to `migrate_config()` before the persistent refused it; it is now skipped, as a
+  missing class is. The importer also checks `moodle/competency:competencymanage` itself, before it
+  provisions the custom fields.
+- **"Delete all" of a course category is one unit.** It is offered only when the user may manage
+  every template and framework below the category, and the deletions run in one transaction, so a
+  refusal part-way no longer leaves the templates gone.
+- **The evidence button is the owner's.** The plan page tested the plan owner's capability
+  instead of the viewer's; it now shows the button only to the owner viewing their own plan, with
+  the right to manage their evidence (`plan_access::can_submit_evidence()`).
+- **The hub's enrolment toggle and cohort sync stay inside the template.** Switching an enrolment
+  instance needs a course linked to the template's competencies, and queueing a sync needs a cohort
+  linked to the template.
+- **Template export:** a hidden template is exported only to those who can manage it, and a
+  framework the caller cannot read is left out of the CSV.
+- **Course custom-field chips follow the field's visibility.** A field visible to teachers only, or
+  to nobody, no longer reaches students on the competency page when an administrator lists it in
+  the filter setting.
+- **Report builder.** A completed plan lists the competencies archived at completion instead of
+  its template's current ones; descriptions are formatted in their own context; stored evidence
+  URLs are links only when they are web addresses; the links are rendered from a template instead
+  of `html_writer` (`templates/reportbuilder_link.mustache`).
+
 ### Plugins directory readiness
 
 Version `2026100514`. The Moodle plugins directory's submission guidelines, checked by a new test.

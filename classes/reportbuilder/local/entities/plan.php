@@ -24,7 +24,7 @@ use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\{boolean_select, date, number, select, text};
 use core_reportbuilder\local\helpers\{database, format};
 use core_reportbuilder\local\report\{column, filter};
-use html_writer;
+use local_dimensions\reportbuilder\local\helpers\link;
 use moodle_url;
 use stdClass;
 
@@ -98,12 +98,14 @@ class plan extends base {
         ))
             ->add_joins($this->get_joins())
             ->set_type(column::TYPE_LONGTEXT)
-            ->add_fields("{$tablealias}.description, {$tablealias}.descriptionformat")
+            ->add_fields("{$tablealias}.description, {$tablealias}.descriptionformat, {$tablealias}.userid")
             ->add_callback(static function (?string $description, stdClass $row): string {
                 if ($description === null) {
                     return '';
                 }
-                return format_text($description, $row->descriptionformat ?? FORMAT_HTML);
+                return format_text($description, $row->descriptionformat ?? FORMAT_HTML, [
+                    'context' => \core\context\user::instance((int) $row->userid),
+                ]);
             });
 
         $columns[] = (new column(
@@ -165,7 +167,10 @@ class plan extends base {
                 if ($name === null) {
                     return '';
                 }
-                return html_writer::link(new moodle_url('/admin/tool/lp/plan.php', ['id' => $row->id]), format_string($name));
+                return link::to_page(
+                    new moodle_url('/admin/tool/lp/plan.php', ['id' => $row->id]),
+                    format_string($name, true, ['escape' => false])
+                );
             });
 
         $columns[] = (new column(
