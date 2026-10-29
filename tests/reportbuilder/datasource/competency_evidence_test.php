@@ -127,6 +127,70 @@ final class competency_evidence_test extends core_reportbuilder_testcase {
     }
 
     /**
+     * A stored evidence URL becomes a link only when it is a web address; anything else is plain, escaped text.
+     *
+     * The control: an https address keeps its link, with its query string escaped once.
+     *
+     * @return void
+     */
+    public function test_stored_url_links_only_a_web_address(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        /** @var \core_competency_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $generator->create_framework();
+        $competency = $generator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $learner = $this->getDataGenerator()->create_user();
+        $usercompetency = $generator->create_user_competency([
+            'competencyid' => $competency->get('id'),
+            'userid' => $learner->id,
+        ]);
+        foreach (['javascript:alert(1)', 'https://example.com/a?b=1&c=2'] as $url) {
+            $id = $generator->create_evidence([
+                'usercompetencyid' => $usercompetency->get('id'),
+                'action' => evidence::ACTION_LOG,
+                'contextid' => \core\context\user::instance($learner->id)->id,
+                'descidentifier' => 'evidence_coursecompleted',
+                'desca' => json_encode('Course A'),
+            ])->get('id');
+            $DB->set_field('competency_evidence', 'url', $url, ['id' => $id]);
+        }
+
+        /** @var \core_reportbuilder_generator $rbgenerator */
+        $rbgenerator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $report = $rbgenerator->create_report(['name' => 'Evidence', 'source' => competency_evidence::class, 'default' => 0]);
+        $rbgenerator->create_column([
+            'reportid' => $report->get('id'),
+            'uniqueidentifier' => 'evidence:url',
+            'sortenabled' => 1,
+        ]);
+        // Sorted by address: https before javascript.
+        $cells = array_map(
+            static fn(array $row): string => (string) array_values($row)[0],
+            $this->get_custom_report_content($report->get('id'))
+        );
+
+        $this->assertCount(2, $cells);
+        $this->assertSame('https://example.com/a?b=1&amp;c=2', $this->href_of($cells[0]));
+        $this->assertStringNotContainsString('href', $cells[1]);
+        $this->assertStringNotContainsString('<a ', $cells[1]);
+        $this->assertSame('javascript:alert(1)', $cells[1]);
+    }
+
+    /**
+     * The href of the first link in a cell.
+     *
+     * @param string $cell The cell HTML.
+     * @return string The href attribute as written.
+     */
+    private function href_of(string $cell): string {
+        $this->assertSame(1, preg_match('/<a href="([^"]*)"/', $cell, $matches));
+        return $matches[1];
+    }
+
+    /**
      * Stored text reaches the report as escaped HTML: the description's arguments and the rating's scale item.
      *
      * @return void

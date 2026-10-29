@@ -30,8 +30,9 @@ use local_dimensions\reportbuilder\local\entities\{competency_details, competenc
 /**
  * Learning plan competencies datasource.
  *
- * One row per learning plan and competency of that plan: its template's competencies or, for a
- * plan without a template, its own. Beside the plan, its template with its Dimensions custom
+ * One row per learning plan and competency of that plan: for a completed plan the competencies
+ * archived at completion, else its template's competencies or, for a plan without a template, its
+ * own. Beside the plan, its template with its Dimensions custom
  * fields, the owner and the owner's cohorts, it gives the competency with its framework and
  * custom fields, its proficiency and rating in the plan (archived when the plan is complete),
  * and the owner's current user competency.
@@ -106,18 +107,37 @@ class learning_plan_competencies extends datasource {
         $archivealias = $plancompetencyentity->get_table_alias('competency_usercompplan');
         $usercompetencyentity = new usercompetency();
         $usercompetencyalias = $usercompetencyentity->get_table_alias('competency_usercomp');
+        // A completed plan lists the competencies archived at completion, as core does; any other plan lists its
+        // template's current competencies or its own.
+        $statuscomplete = \core_competency\plan::STATUS_COMPLETE;
+        $paramplancomp = database::generate_param_name();
+        $paramtemplatecomp = database::generate_param_name();
+        $paramarchive = database::generate_param_name();
         $linkjoin = "JOIN (
                 SELECT pc.planid, pc.competencyid, pc.sortorder, 0 AS fromtemplate
                   FROM {competency_plancomp} pc
+                  JOIN {competency_plan} pp ON pp.id = pc.planid
+                 WHERE pp.status <> :{$paramplancomp}
                  UNION ALL
                 SELECT tp.id AS planid, tc.competencyid, tc.sortorder, 1 AS fromtemplate
                   FROM {competency_plan} tp
                   JOIN {competency_templatecomp} tc ON tc.templateid = tp.templateid
+                 WHERE tp.status <> :{$paramtemplatecomp}
+                 UNION ALL
+                SELECT up.planid, up.competencyid, 0 AS sortorder,
+                       CASE WHEN ap.templateid IS NULL THEN 0 ELSE 1 END AS fromtemplate
+                  FROM {competency_usercompplan} up
+                  JOIN {competency_plan} ap ON ap.id = up.planid AND ap.userid = up.userid
+                 WHERE ap.status = :{$paramarchive}
             ) {$linkalias} ON {$linkalias}.planid = {$planalias}.id";
         $usercompetencyjoin = "LEFT JOIN {competency_usercomp} {$usercompetencyalias}
             ON {$usercompetencyalias}.userid = {$planalias}.userid
            AND {$usercompetencyalias}.competencyid = {$linkalias}.competencyid";
-        $this->add_join($linkjoin);
+        $this->add_join($linkjoin, [
+            $paramplancomp => $statuscomplete,
+            $paramtemplatecomp => $statuscomplete,
+            $paramarchive => $statuscomplete,
+        ]);
 
         $this->add_entity($plancompetencyentity
             ->set_table_alias('competency_plan', $planalias)

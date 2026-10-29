@@ -172,9 +172,35 @@ final class template_cohorts_test extends \advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
         [$templateid, $cohortid] = $this->setup_fixture();
+        \core_competency\api::create_template_cohort($templateid, $cohortid);
 
         $result = sync_template_cohort::execute($templateid, $cohortid);
         $this->assertTrue($result['success']);
+        $this->assertCount(1, \core\task\manager::get_adhoc_tasks(sync_task::class));
+    }
+
+    /**
+     * The sync service refuses a cohort not attached to the template and queues nothing.
+     *
+     * @return void
+     */
+    public function test_sync_refuses_a_cohort_not_linked_to_the_template(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$templateid, $cohortid] = $this->setup_fixture();
+        $other = $this->getDataGenerator()->create_cohort();
+        \core_competency\api::create_template_cohort($templateid, $cohortid);
+
+        try {
+            sync_template_cohort::execute($templateid, (int) $other->id);
+            $this->fail('A cohort not linked to the template was synced.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('central_roles_cohortnotlinked', $e->errorcode);
+        }
+        $this->assertCount(0, \core\task\manager::get_adhoc_tasks(sync_task::class));
+
+        // The control: the linked cohort queues its task.
+        $this->assertTrue(sync_template_cohort::execute($templateid, $cohortid)['success']);
         $this->assertCount(1, \core\task\manager::get_adhoc_tasks(sync_task::class));
     }
 }
