@@ -80,12 +80,7 @@ $accordionsettings = [
        the plan on one page, so a per-competency override has no single value to resolve to. */
     'showlockeddate' => \local_dimensions\helper::get_template_showlockeddate($templateid),
     'lockedcardmode' => \local_dimensions\helper::get_template_lockedcardmode($templateid),
-    'enableevidencesubmitbutton' => (bool) get_config('local_dimensions', 'enableevidencesubmitbutton')
-        && has_capability(
-            'moodle/competency:userevidencemanageown',
-            \context_user::instance($plan->get('userid')),
-            $plan->get('userid')
-        ),
+    'enableevidencesubmitbutton' => \local_dimensions\local\plan_access::can_submit_evidence($plan),
 ];
 
 // Log the plan view as admin/tool/lp/plan.php does. Each competency's view is logged by accordion.js.

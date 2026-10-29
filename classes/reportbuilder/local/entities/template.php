@@ -23,7 +23,7 @@ use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\{boolean_select, date, number, text};
 use core_reportbuilder\local\helpers\format;
 use core_reportbuilder\local\report\{column, filter};
-use html_writer;
+use local_dimensions\reportbuilder\local\helpers\link;
 use moodle_url;
 use stdClass;
 
@@ -94,13 +94,15 @@ class template extends base {
         ))
             ->add_joins($this->get_joins())
             ->set_type(column::TYPE_LONGTEXT)
-            ->add_fields("{$tablealias}.description, {$tablealias}.descriptionformat")
+            ->add_fields("{$tablealias}.description, {$tablealias}.descriptionformat, {$tablealias}.contextid")
             ->set_is_sortable(false)
             ->add_callback(static function (?string $description, stdClass $row): string {
                 if ($description === null) {
                     return '';
                 }
-                return format_text($description, $row->descriptionformat ?? FORMAT_HTML);
+                return format_text($description, $row->descriptionformat ?? FORMAT_HTML, [
+                    'context' => \core\context::instance_by_id((int) $row->contextid),
+                ]);
             });
 
         $columns[] = (new column(
@@ -163,7 +165,7 @@ class template extends base {
                     'templateid' => $row->id,
                     'pagecontextid' => $row->contextid,
                 ]);
-                return html_writer::link($url, format_string($shortname));
+                return link::to_page($url, format_string($shortname, true, ['escape' => false]));
             });
 
         $columns[] = (new column(

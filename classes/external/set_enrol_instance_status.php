@@ -91,6 +91,17 @@ class set_enrol_instance_status extends external_api {
         if (!enrol_methods::cohort_linked($template->get('id'), $params['cohortid'])) {
             throw new \moodle_exception('central_roles_cohortnotlinked', 'local_dimensions');
         }
+        // The course must be one the template's competencies are linked to, as on the queue service.
+        $linked = false;
+        foreach (enrol_methods::competency_course_ids($template->get('id')) as $ids) {
+            if (in_array($params['courseid'], $ids, true)) {
+                $linked = true;
+                break;
+            }
+        }
+        if (!$linked) {
+            throw new \invalid_parameter_exception('Course is not linked to the template.');
+        }
         $coursecontext = \context_course::instance($params['courseid']);
         foreach (process_enrol_method::REQUIRED_CAPS as $cap) {
             require_capability($cap, $coursecontext);

@@ -24,7 +24,7 @@ use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\{date, number, select, text};
 use core_reportbuilder\local\helpers\format;
 use core_reportbuilder\local\report\{column, filter};
-use html_writer;
+use local_dimensions\reportbuilder\local\helpers\link;
 use local_dimensions\reportbuilder\local\helpers\rating;
 use stdClass;
 
@@ -117,7 +117,7 @@ class evidence extends base {
             ->add_field("{$alias}.url")
             ->set_is_sortable(true)
             ->add_callback(static function (?string $url): string {
-                return ($url === null || $url === '') ? '' : html_writer::link($url, s($url));
+                return link::to_stored_url($url);
             });
 
         $columns[] = (new column(
