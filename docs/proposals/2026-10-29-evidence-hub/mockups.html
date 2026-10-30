@@ -1,0 +1,684 @@
+<title>Evidence Hub Mockups</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a long specimen sheet. Each mockup sits in a Moodle (Boost 5.3) frame, notes beside it.
+   Palette follows the Competency hub design kit (Boost values), so mockup and live UI share colours. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --surface-subtle: #f8f9fa;
+  --surface-strong: #e9ecef;
+  --text: #1d2125;
+  --muted: #6a737b;
+  --border: #dee2e6;
+  --primary: #0f6cbf;
+  --primary-ink: #ffffff;
+  --primary-soft: #e7f0f9;
+  --ok-bg: #d7e4d6;   --ok-fg: #153114;   --ok-dot: #357a32;
+  --due-bg: #fcefdc;  --due-fg: #60451f;  --due-dot: #f0ad4e;
+  --crit-bg: #fde0c8; --crit-fg: #6b2d05; --crit-dot: #e8730c;
+  --bad-bg: #f4d6d2;  --bad-fg: #51140d;  --bad-dot: #ca3120;
+  --info-bg: #cce6ea; --info-fg: #00343c; --info-dot: #008196;
+  --none-bg: #e9ecef; --none-fg: #343a40; --none-dot: #8f959e;
+  --scrim: rgba(29, 33, 37, .45);
+  --shadow: 0 .5rem 1rem rgba(0, 0, 0, .12);
+  --note: #5b3fa0;
+  --paper: #ffffff;
+  --paper-ink: #1d2125;
+  --font: 'Noto Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'Noto Sans Mono', Menlo, ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101315; --surface: #1d2125; --surface-subtle: #16191c; --surface-strong: #343a40;
+    --text: #f8f9fa; --muted: #ced4da; --border: #495057;
+    --primary: #5a9fdc; --primary-ink: #0b1a28; --primary-soft: #0c2a45;
+    --ok-bg: #153114; --ok-fg: #d7e4d6; --ok-dot: #6bbf66;
+    --due-bg: #60451f; --due-fg: #fcefdc; --due-dot: #f0ad4e;
+    --crit-bg: #5c2a0a; --crit-fg: #fde0c8; --crit-dot: #f39a4a;
+    --bad-bg: #51140d; --bad-fg: #f4d6d2; --bad-dot: #e86a5b;
+    --info-bg: #00343c; --info-fg: #cce6ea; --info-dot: #3fb6c9;
+    --none-bg: #343a40; --none-fg: #dee2e6; --none-dot: #8f959e;
+    --scrim: rgba(0, 0, 0, .6); --shadow: 0 .5rem 1rem rgba(0, 0, 0, .5);
+    --note: #b9a4f0; --paper: #f4f4f1; --paper-ink: #1d2125;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101315; --surface: #1d2125; --surface-subtle: #16191c; --surface-strong: #343a40;
+  --text: #f8f9fa; --muted: #ced4da; --border: #495057;
+  --primary: #5a9fdc; --primary-ink: #0b1a28; --primary-soft: #0c2a45;
+  --ok-bg: #153114; --ok-fg: #d7e4d6; --ok-dot: #6bbf66;
+  --due-bg: #60451f; --due-fg: #fcefdc; --due-dot: #f0ad4e;
+  --crit-bg: #5c2a0a; --crit-fg: #fde0c8; --crit-dot: #f39a4a;
+  --bad-bg: #51140d; --bad-fg: #f4d6d2; --bad-dot: #e86a5b;
+  --info-bg: #00343c; --info-fg: #cce6ea; --info-dot: #3fb6c9;
+  --none-bg: #343a40; --none-fg: #dee2e6; --none-dot: #8f959e;
+  --scrim: rgba(0, 0, 0, .6); --shadow: 0 .5rem 1rem rgba(0, 0, 0, .5);
+  --note: #b9a4f0; --paper: #f4f4f1; --paper-ink: #1d2125;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text); font: 15px/1.5 var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 56px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: 2rem; font-weight: 700; }
+h2 { font-size: 1.35rem; font-weight: 600; }
+h3 { font-size: 1rem; font-weight: 600; }
+p { margin: 0; }
+.mono { font-family: var(--mono); font-size: .85em; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.intro { display: grid; gap: 12px; max-width: 72ch; }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.toc a { color: var(--primary); text-decoration: none; border: 1px solid var(--border); background: var(--surface);
+  padding: 4px 12px; border-radius: 999px; font-size: .85rem; }
+.toc a:hover { background: var(--primary-soft); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* Section = mockup + notes */
+.section { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; align-items: start; }
+.section > header { grid-column: 1 / -1; display: grid; gap: 4px; }
+.eyebrow { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--note); font-weight: 600; }
+.notes { display: grid; gap: 10px; font-size: .85rem; color: var(--muted); counter-reset: n; position: sticky; top: 16px; }
+.notes li { list-style: none; display: grid; grid-template-columns: 22px 1fr; gap: 8px; }
+.notes ol { margin: 0; padding: 0; display: grid; gap: 10px; }
+.notes li::before { counter-increment: n; content: counter(n); width: 20px; height: 20px; border-radius: 50%;
+  background: var(--note); color: var(--surface); font-size: .7rem; font-weight: 700; display: grid; place-items: center; }
+.pin { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--note);
+  color: var(--surface); font-size: .65rem; font-weight: 700; vertical-align: middle; margin-left: 4px; }
+@media (max-width: 900px) { .section { grid-template-columns: minmax(0, 1fr); } .notes { position: static; } }
+
+/* Moodle frame */
+.frame { background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  box-shadow: var(--shadow); min-width: 0; position: relative; }
+.navbar { display: flex; align-items: center; gap: 20px; padding: 10px 20px; background: var(--surface);
+  border-bottom: 1px solid var(--border); font-size: .9rem; }
+.navbar .site { font-weight: 600; font-size: 1.05rem; }
+.navbar .active { background: var(--surface-strong); padding: 4px 10px; border-radius: 6px; }
+.navbar .grow { flex: 1; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-strong); display: grid; place-items: center; font-size: .7rem; font-weight: 600; }
+.page { padding: 20px 24px 24px; display: grid; gap: 16px; min-width: 0; }
+.crumbs { font-size: .85rem; color: var(--primary); }
+.crumbs span { color: var(--text); }
+.pagehead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px; }
+
+/* Context bar + tabs (Competency hub pattern) */
+.ctxbar { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; }
+.ctx { display: grid; gap: 2px; }
+.ctx small { color: var(--muted); font-size: .78rem; }
+.ctx strong { font-size: .95rem; }
+.ctxbar .grow { flex: 1; }
+.btn { font: inherit; font-size: .85rem; border-radius: 6px; padding: 6px 12px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--primary); }
+.btn.sm { padding: 3px 8px; font-size: .78rem; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+.tab { padding: 8px 14px; font-size: .9rem; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.tab.on { color: var(--text); border-color: var(--primary); font-weight: 500; }
+.count { background: var(--surface-strong); border-radius: 999px; padding: 0 7px; font-size: .72rem; font-weight: 600; }
+.count.alert { background: var(--info-bg); color: var(--info-fg); }
+
+/* KPI bar */
+.kpis { display: grid; grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1000px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpi.lead { grid-column: 1 / -1; } }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
+.kpi .label { font-size: .78rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.kpi .value { font-size: 1.6rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.kpi .sub { font-size: .78rem; color: var(--muted); }
+.kpi.lead .value { font-size: 2rem; }
+.meter { height: 8px; border-radius: 999px; background: var(--surface-strong); overflow: hidden; display: flex; }
+.meter i { display: block; height: 100%; }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+.d-ok { background: var(--ok-dot); } .d-due { background: var(--due-dot); } .d-crit { background: var(--crit-dot); }
+.d-bad { background: var(--bad-dot); } .d-info { background: var(--info-dot); } .d-none { background: var(--none-dot); }
+
+/* Filters */
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.field { display: grid; gap: 3px; font-size: .78rem; color: var(--muted); }
+.select, .input { font: inherit; font-size: .85rem; color: var(--text); background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 10px; min-width: 0; }
+.select { padding-right: 28px; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 14px) 52%, calc(100% - 9px) 52%; background-size: 5px 5px; background-repeat: no-repeat; appearance: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: .8rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); display: inline-flex; gap: 6px; align-items: center; }
+.chip.on { background: var(--primary-soft); border-color: var(--primary); color: var(--text); font-weight: 500; }
+
+/* Bulk bar */
+.bulk { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--primary-soft); border: 1px solid var(--primary);
+  border-radius: 8px; padding: 8px 12px; font-size: .85rem; }
+.bulk .grow { flex: 1; }
+
+/* Grid */
+.scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+th { text-align: left; font-weight: 600; font-size: .78rem; color: var(--muted); padding: 9px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--surface-subtle); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+tr.sel td { background: var(--primary-soft); }
+.cb { width: 16px; height: 16px; border: 1.5px solid var(--muted); border-radius: 3px; display: inline-block; vertical-align: middle; }
+.cb.on { background: var(--primary); border-color: var(--primary); position: relative; }
+.cb.on::after { content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid var(--primary-ink); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.who { display: grid; gap: 1px; }
+.who b { font-weight: 500; }
+.who small, .doc small { color: var(--muted); font-size: .76rem; }
+.doc { display: grid; gap: 1px; }
+.hist { font-size: .7rem; font-weight: 600; background: var(--surface-strong); border-radius: 999px; padding: 1px 7px; margin-left: 6px; white-space: nowrap; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: .76rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.p-ok { background: var(--ok-bg); color: var(--ok-fg); } .p-due { background: var(--due-bg); color: var(--due-fg); }
+.p-crit { background: var(--crit-bg); color: var(--crit-fg); } .p-bad { background: var(--bad-bg); color: var(--bad-fg); }
+.p-info { background: var(--info-bg); color: var(--info-fg); } .p-none { background: var(--none-bg); color: var(--none-fg); }
+.days { font-size: .76rem; color: var(--muted); }
+.days.warn { color: var(--due-fg); } .days.bad { color: var(--bad-dot); font-weight: 600; }
+.kind { font-size: .68rem; font-weight: 600; letter-spacing: .04em; border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; color: var(--muted); margin-left: 6px; }
+.pager { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; font-size: .82rem; color: var(--muted); }
+
+/* Matrix */
+.matrix th.c { text-align: center; white-space: normal; min-width: 92px; vertical-align: bottom; }
+.matrix td.c { text-align: center; padding: 6px; }
+.matrix td:first-child, .matrix th:first-child { position: sticky; left: 0; background: var(--surface); z-index: 1; min-width: 200px; }
+.matrix th:first-child { background: var(--surface-subtle); }
+.cell { display: grid; place-items: center; gap: 0; height: 44px; border-radius: 6px; font-size: .72rem; font-weight: 600; line-height: 1.1; }
+.cell small { font-weight: 400; font-size: .66rem; }
+.ready { font-size: .72rem; font-weight: 700; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .78rem; color: var(--muted); align-items: center; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+
+/* Drawer */
+.drawerstage { position: relative; min-height: 760px; }
+.drawerstage .under { opacity: .9; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); }
+.sheet { position: absolute; top: 0; right: 0; bottom: 0; width: min(460px, 100%); background: var(--surface); border-left: 1px solid var(--border);
+  box-shadow: var(--shadow); display: grid; grid-template-rows: auto 1fr auto; }
+.sheet header { padding: 16px 18px; border-bottom: 1px solid var(--border); display: grid; gap: 8px; }
+.sheet .body { padding: 16px 18px; overflow: auto; display: grid; gap: 18px; align-content: start; }
+.sheet footer { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; }
+.sheet .x { position: absolute; top: 12px; right: 12px; }
+dl.meta { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 6px 12px; margin: 0; font-size: .85rem; }
+dl.meta dt { color: var(--muted); }
+dl.meta dd { margin: 0; }
+.box { border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: grid; gap: 10px; background: var(--surface-subtle); }
+.file { display: flex; gap: 10px; align-items: center; font-size: .85rem; }
+.fileicon { width: 28px; height: 34px; border-radius: 3px; background: var(--bad-bg); color: var(--bad-fg); font-size: .55rem; font-weight: 700; display: grid; place-items: end center; padding-bottom: 4px; }
+.timeline { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.timeline li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; padding-bottom: 14px; position: relative; }
+.timeline li::before { content: ""; position: absolute; left: 8px; top: 14px; bottom: 0; width: 2px; background: var(--border); }
+.timeline li:last-child::before { display: none; }
+.timeline .node { width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; margin-left: 3px; z-index: 1; }
+.tl-text { display: grid; gap: 2px; font-size: .84rem; }
+.tl-text small { color: var(--muted); font-size: .76rem; }
+.audit { font-size: .8rem; display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.audit li { display: grid; grid-template-columns: 92px 1fr; gap: 8px; }
+
+/* Modal */
+.modalstage { position: relative; padding: 32px 16px; background: var(--scrim); display: grid; place-items: center; min-height: 560px; }
+.modal { background: var(--surface); border-radius: 10px; width: min(640px, 100%); box-shadow: var(--shadow); display: grid; }
+.modal header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.modal .body { padding: 18px; display: grid; gap: 14px; }
+.modal footer { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.frow { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 12px; align-items: start; font-size: .85rem; }
+.frow > label { padding-top: 6px; font-weight: 500; }
+.frow .req { color: var(--bad-dot); margin-left: 3px; }
+.frow .help { font-size: .76rem; color: var(--muted); margin-top: 3px; }
+.inline { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: .85rem; }
+.drop { border: 1.5px dashed var(--border); border-radius: 8px; padding: 14px; text-align: center; font-size: .82rem; color: var(--muted); }
+.tag { display: inline-flex; gap: 6px; align-items: center; background: var(--primary-soft); border: 1px solid var(--primary); border-radius: 999px; padding: 2px 10px; font-size: .78rem; }
+.callout { border-left: 3px solid var(--info-dot); background: var(--info-bg); color: var(--info-fg); padding: 10px 12px; border-radius: 4px; font-size: .82rem; }
+.callout.warn { border-color: var(--due-dot); background: var(--due-bg); color: var(--due-fg); }
+@media (max-width: 640px) { .frow { grid-template-columns: minmax(0, 1fr); } .frow > label { padding-top: 0; } dl.meta { grid-template-columns: minmax(0, 1fr); } }
+.tree { font-family: var(--mono); font-size: .76rem; background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; white-space: pre; overflow-x: auto; line-height: 1.6; }
+.toggle { width: 34px; height: 18px; border-radius: 999px; background: var(--surface-strong); position: relative; display: inline-block; flex: none; border: 1px solid var(--border); }
+.toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); }
+.toggle.on { background: var(--primary); border-color: var(--primary); }
+.toggle.on::after { left: 18px; background: var(--primary-ink); }
+.toggle.off-dis { opacity: .5; }
+
+/* PDF sheet */
+.pdfstage { background: var(--surface-strong); padding: 28px 16px; display: grid; place-items: center; }
+.a4 { background: var(--paper); color: var(--paper-ink); width: min(620px, 100%); aspect-ratio: 210 / 297; padding: 34px 38px; box-shadow: var(--shadow);
+  display: grid; grid-template-rows: auto auto auto 1fr auto; gap: 16px; font-size: .72rem; max-width: 100%; }
+.a4 .top { display: flex; justify-content: space-between; align-items: start; gap: 12px; border-bottom: 2px solid var(--paper-ink); padding-bottom: 10px; }
+.logo { width: 42px; height: 42px; border-radius: 8px; background: #0f6cbf; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: .8rem; }
+.a4 h4 { margin: 0; font-size: 1.05rem; }
+.a4 table { font-size: .66rem; }
+.a4 th { background: #f1f3f5; color: #343a40; padding: 5px 6px; }
+.a4 td { padding: 5px 6px; border-color: #dee2e6; }
+.verdict { display: inline-block; background: #d7e4d6; color: #153114; font-weight: 700; padding: 3px 10px; border-radius: 4px; font-size: .8rem; letter-spacing: .04em; }
+.a4 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.a4 .k { color: #6a737b; }
+.a4 .foot { display: flex; gap: 14px; align-items: end; border-top: 1px solid #dee2e6; padding-top: 10px; }
+.qr { width: 84px; height: 84px; flex: none; background: #fff; }
+.qr rect { fill: #1d2125; }
+.a4 .st-ok { color: #153114; font-weight: 600; } .a4 .st-due { color: #60451f; font-weight: 600; }
+
+/* Verify page */
+.verify { background: var(--surface); padding: 32px 20px; display: grid; justify-items: center; }
+.vcard { width: min(560px, 100%); display: grid; gap: 16px; }
+.seal { display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: 8px; background: var(--ok-bg); color: var(--ok-fg); }
+.seal .big { width: 40px; height: 40px; border-radius: 50%; background: var(--ok-dot); color: var(--surface); display: grid; place-items: center; font-weight: 700; font-size: 1.2rem; flex: none; }
+</style>
+
+<div class="wrap">
+
+<section class="intro">
+  <span class="eyebrow">local_dimensions · proposal 2026-10-29</span>
+  <h1>Evidence hub mockups</h1>
+  <p>Eight screens of the proposed companion plugin: the readiness list, the matrix, the inspection drawer, the worker's evidence form, the validity policies, the dossier export, the dossier PDF and the public verification page. They draw in Boost's own palette, like the Competency hub design kit, and every number is example data for one fictional contract. The numbered notes tie each screen to a decision or a core API in <span class="mono">README.md</span>.</p>
+  <nav class="toc" aria-label="Screens">
+    <a href="#hub">1 · Readiness list</a><a href="#matrix">2 · Matrix</a><a href="#drawer">3 · Drawer</a><a href="#worker">4 · Worker form</a>
+    <a href="#policy">5 · Policies</a><a href="#dossier">6 · Dossier export</a><a href="#pdf">7 · Dossier PDF</a><a href="#verify">8 · Verification</a>
+  </nav>
+</section>
+
+<!-- ============ 1. HUB ============ -->
+<section class="section" id="hub">
+  <header><span class="eyebrow">Screen 1</span><h2>Readiness list</h2><p class="muted">The hub's default tab: KPIs over the current filter, then one row per worker and required competency.</p></header>
+  <div class="frame">
+    <div class="navbar"><span class="site">m503</span><span>Dashboard</span><span class="active">Site administration</span><span class="grow"></span><span class="avatar">AU</span></div>
+    <div class="page">
+      <div class="crumbs">Courses / Engenharia / Contratos / <span>Evidence hub</span></div>
+      <div class="pagehead"><h1 style="font-size:1.7rem">Evidence hub</h1></div>
+      <div class="ctxbar">
+        <div class="ctx"><small>Course category</small><strong>Engenharia / Contratos</strong></div>
+        <div class="ctx"><small>Contract matrix (plan template)</small><strong>Linha 4 — Contrato 118/2026 <span class="pin">1</span></strong></div>
+        <span class="grow"></span><span class="muted" style="font-size:.8rem">Computed today 01:00</span><button class="btn">⟳ Refresh</button>
+      </div>
+      <div class="tabs" role="tablist">
+        <span class="tab on">◎ Readiness</span><span class="tab">▦ Matrix</span><span class="tab">✓ Verification queue <span class="count alert">7</span></span><span class="tab">⚙ Policies</span>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi lead">
+          <span class="label">Readiness <span class="pin">2</span></span>
+          <span class="value">78%</span>
+          <div class="meter" aria-hidden="true"><i class="d-ok" style="width:78%"></i></div>
+          <span class="sub num">39 of 50 workers hold every required competency</span>
+        </div>
+        <div class="kpi"><span class="label"><i class="dot d-ok"></i>Valid evidence</span><span class="value">412</span><span class="sub">across 14 competencies</span></div>
+        <div class="kpi"><span class="label"><i class="dot d-due"></i>Due soon</span><span class="value">23</span><span class="sub num"><i class="dot d-crit"></i> 9 within 30 days</span></div>
+        <div class="kpi"><span class="label"><i class="dot d-bad"></i>Expired</span><span class="value">6</span><span class="sub">4 regulatory, blocking</span></div>
+        <div class="kpi"><span class="label"><i class="dot d-none"></i>Pending</span><span class="value">14</span><span class="sub num">8 no evidence · 6 awaiting check</span></div>
+      </div>
+
+      <div class="filters">
+        <label class="field">Contract matrix<select class="select" id="f-tpl"><option>Linha 4 — Contrato 118/2026</option></select></label>
+        <label class="field">Cohort / team<select class="select" id="f-coh"><option>Frente Norte — Equipe B</option></select></label>
+        <div class="field">Validity
+          <div class="chips"><span class="chip">All <span class="count">700</span></span><span class="chip">Compliant <span class="count">412</span></span><span class="chip on">Due <span class="count">23</span></span><span class="chip">Expired <span class="count">6</span></span><span class="chip">Pending <span class="count">14</span></span></div>
+        </div>
+        <label class="field" style="flex:1;min-width:180px">Search<input class="input" id="f-q" placeholder="Name, CPF or ID number"></label>
+      </div>
+
+      <div class="bulk"><span class="cb on"></span><strong>3 selected</strong><span class="grow"></span><button class="btn primary">⇩ Export dossier (.zip) <span class="pin">3</span></button><button class="btn ghost">Clear</button></div>
+
+      <div class="scroll">
+        <table>
+          <thead><tr><th><span class="cb"></span></th><th>Worker</th><th>Competency</th><th>Current document</th><th>Valid until</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr class="sel"><td><span class="cb on"></span></td><td><div class="who"><b>Joana Souza</b><small class="mono">ID 40231 · ***.482.117-**</small></div></td>
+              <td>NR-35 Trabalho em altura <span class="kind">REG</span><span class="hist">3 records</span></td>
+              <td><div class="doc">Training certificate (NR)<small>SENAI-SP · 8 h · code 35-2024-88123</small></div></td>
+              <td class="num">2026-11-16<div class="days warn">in 18 days</div></td><td><span class="pill p-crit"><i class="dot d-crit"></i>Due — critical</span></td><td><button class="btn sm">Inspect</button></td></tr>
+            <tr class="sel"><td><span class="cb on"></span></td><td><div class="who"><b>Joana Souza</b><small class="mono">ID 40231 · ***.482.117-**</small></div></td>
+              <td>ASO periódico <span class="kind">REG</span><span class="hist">4 records</span></td>
+              <td><div class="doc">ASO 🔒<small>Sensitive: details hidden <span class="pin">4</span></small></div></td>
+              <td class="num">2026-12-20<div class="days warn">in 52 days</div></td><td><span class="pill p-due"><i class="dot d-due"></i>Due soon</span></td><td><button class="btn sm">Inspect</button></td></tr>
+            <tr class="sel"><td><span class="cb on"></span></td><td><div class="who"><b>Marcos Oliveira</b><small class="mono">ID 40377 · ***.090.554-**</small></div></td>
+              <td>NR-10 Segurança em eletricidade <span class="kind">REG</span><span class="hist">2 records</span></td>
+              <td><div class="doc">Training certificate (NR)<small>Escola Técnica Volt · 40 h</small></div></td>
+              <td class="num">2026-12-02<div class="days warn">in 34 days</div></td><td><span class="pill p-due"><i class="dot d-due"></i>Due soon</span></td><td><button class="btn sm">Inspect</button></td></tr>
+            <tr><td><span class="cb"></span></td><td><div class="who"><b>Paulo Ferreira</b><small class="mono">ID 40412 · ***.311.208-**</small></div></td>
+              <td>Leitura de projetos elétricos <span class="kind">TEC</span><span class="hist">1 record</span></td>
+              <td><div class="doc">Practical assessment<small>Avaliador: Eng. Lúcia Prado</small></div></td>
+              <td class="num">2026-11-28<div class="days warn">in 30 days</div></td><td><span class="pill p-crit"><i class="dot d-crit"></i>Due — critical</span></td><td><button class="btn sm">Inspect</button></td></tr>
+            <tr><td><span class="cb"></span></td><td><div class="who"><b>Rita Almeida</b><small class="mono">ID 40188 · ***.775.640-**</small></div></td>
+              <td>NR-33 Espaço confinado <span class="kind">REG</span><span class="hist">2 records</span></td>
+              <td><div class="doc">Training certificate (NR)<small>SESI-MG · 16 h · <b>awaiting verification</b></small></div></td>
+              <td class="num">2027-10-10<div class="days">new record, previous expires in 41 days</div></td><td><span class="pill p-due"><i class="dot d-due"></i>Due soon <span class="pin">5</span></span></td><td><button class="btn sm">Inspect</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pager"><span class="num">1–5 of 23 (filter: Due)</span><span>⇩ Download table as CSV / XLSX · ‹ 1 2 3 5 ›</span></div>
+    </div>
+  </div>
+  <aside class="notes"><ol>
+    <li>The filter is the plan template, read as the contract's competency matrix. Users are the owners of active plans made from it (D5).</li>
+    <li>Readiness counts a worker as ready when every required competency is Compliant or Due. One grouped query over the same base as the grid; the two never disagree.</li>
+    <li>The grid pages in two steps: sort the narrow key, then load one page's details. The S0 spike measured a report builder system report at 0.5–0.8 s on 10,000 workers × 30 competencies, the two-step query under 300 ms on PostgreSQL and MariaDB. Download goes through core's dataformat API.</li>
+    <li>Evidence types flagged sensitive (ASO) hide their details without <span class="mono">viewsensitive</span>, and their files stay out of dossiers by default (D7).</li>
+    <li>An unverified new certificate does not count for a regulatory policy, so the old one still drives the status until someone verifies the new one (D4).</li>
+  </ol></aside>
+</section>
+
+<!-- ============ 2. MATRIX ============ -->
+<section class="section" id="matrix">
+  <header><span class="eyebrow">Screen 2</span><h2>Readiness matrix</h2><p class="muted">Who can go to the site tomorrow: workers by the contract's competencies, one cell each.</p></header>
+  <div class="frame">
+    <div class="page">
+      <div class="tabs"><span class="tab">◎ Readiness</span><span class="tab on">▦ Matrix</span><span class="tab">✓ Verification queue <span class="count alert">7</span></span><span class="tab">⚙ Policies</span></div>
+      <div class="legend">
+        <span><i class="dot d-ok"></i>Compliant</span><span><i class="dot d-due"></i>Due ≤ 60 d</span><span><i class="dot d-crit"></i>Due ≤ 30 d</span><span><i class="dot d-bad"></i>Expired</span><span><i class="dot d-info"></i>Awaiting check</span><span><i class="dot d-none"></i>No evidence</span>
+        <span class="muted">· REG blocks readiness, TEC and BEH flag it at risk <span class="pin">1</span></span>
+      </div>
+      <div class="scroll">
+        <table class="matrix" id="matrix-table">
+          <thead><tr><th>Worker</th>
+            <th class="c">NR-10<br><span class="kind">REG</span></th><th class="c">NR-12<br><span class="kind">REG</span></th><th class="c">NR-33<br><span class="kind">REG</span></th>
+            <th class="c">NR-35<br><span class="kind">REG</span></th><th class="c">ASO<br><span class="kind">REG</span></th><th class="c">Projetos elétricos<br><span class="kind">TEC</span></th>
+            <th class="c">Segurança comportamental<br><span class="kind">BEH</span></th></tr></thead>
+          <tbody id="matrix-body"></tbody>
+        </table>
+      </div>
+      <p class="muted" style="font-size:.8rem">Click a cell to open the drawer for that pair. Column headers sort by risk. Selecting rows here feeds the same dossier export.</p>
+    </div>
+  </div>
+  <aside class="notes"><ol>
+    <li>The type comes from the validity policy (framework default, competency override), not from any taxonomy of the competency itself.</li>
+    <li>Cells show days left for Due, days since for Expired. Behavioural cells count from the last proficient rating plus the policy's cycle.</li>
+    <li>The first column is sticky, so a 25-column contract still scrolls cleanly on a laptop.</li>
+  </ol></aside>
+</section>
+
+<!-- ============ 3. DRAWER ============ -->
+<section class="section" id="drawer">
+  <header><span class="eyebrow">Screen 3</span><h2>Inspection drawer</h2><p class="muted">One worker and one competency: the evidence in force, its file, the history it replaced and who checked it.</p></header>
+  <div class="frame drawerstage">
+    <div class="page under">
+      <div class="tabs"><span class="tab on">◎ Readiness</span><span class="tab">▦ Matrix</span></div>
+      <div class="kpis"><div class="kpi lead"><span class="label">Readiness</span><span class="value">78%</span></div><div class="kpi"><span class="label">Valid</span><span class="value">412</span></div><div class="kpi"><span class="label">Due</span><span class="value">23</span></div><div class="kpi"><span class="label">Expired</span><span class="value">6</span></div><div class="kpi"><span class="label">Pending</span><span class="value">14</span></div></div>
+    </div>
+    <div class="scrim"></div>
+    <aside class="sheet" aria-label="Evidence details">
+      <header>
+        <button class="btn ghost x" aria-label="Close">✕</button>
+        <span class="muted" style="font-size:.8rem">Joana Souza · ID 40231</span>
+        <h3 style="font-size:1.15rem;padding-right:32px">NR-35 Trabalho em altura</h3>
+        <div class="inline"><span class="pill p-crit"><i class="dot d-crit"></i>Due — critical · 18 days</span><span class="pill p-ok">Proficient (core)</span><span class="pin">1</span></div>
+      </header>
+      <div class="body">
+        <div class="box">
+          <h3>Evidence in force</h3>
+          <dl class="meta">
+            <dt>Type</dt><dd>Training certificate (NR)</dd>
+            <dt>Issued</dt><dd class="num">2024-11-20</dd>
+            <dt>Valid until</dt><dd class="num">2026-11-16</dd>
+            <dt>Issuing body</dt><dd>SENAI-SP</dd>
+            <dt>Authenticity code</dt><dd class="mono">35-2024-88123</dd>
+            <dt>Hours</dt><dd>8 h <span class="muted">(policy minimum 8 h)</span></dd>
+            <dt>Verified</dt><dd>Ana Ribeiro, 2024-11-22 <span class="pin">2</span></dd>
+          </dl>
+          <div class="file"><span class="fileicon">PDF</span><div class="doc">certificado-nr35-joana.pdf<small>412 KB · served by core_competency</small></div><span style="flex:1"></span><button class="btn sm">⇩ Download</button></div>
+        </div>
+        <div class="box" style="background:var(--surface)">
+          <h3>Policy</h3>
+          <p style="font-size:.84rem">Regulatory · verified evidence only · alerts at 60 and 30 days · blocks readiness when expired.</p>
+        </div>
+        <div>
+          <h3 style="margin-bottom:10px">History <span class="muted" style="font-weight:400">3 records, none overwritten</span> <span class="pin">3</span></h3>
+          <ul class="timeline">
+            <li><span class="node d-crit"></span><div class="tl-text"><b>2024-11-20 → 2026-11-16 · in force</b><small>SENAI-SP · 8 h · recycling</small></div></li>
+            <li><span class="node d-bad"></span><div class="tl-text"><b>2022-10-03 → 2024-10-03 · expired</b><small>SENAI-SP · 8 h · recycling · gap of 47 days before the next record</small></div></li>
+            <li><span class="node d-none"></span><div class="tl-text"><b>2020-09-14 → 2022-09-14 · expired</b><small>Treinar Segurança · 8 h · initial training</small></div></li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="margin-bottom:8px">Audit trail</h3>
+          <ul class="audit">
+            <li><span class="muted num">2024-11-22</span><span>Verified by Ana Ribeiro (SESMT)</span></li>
+            <li><span class="muted num">2024-11-21</span><span>Details completed by Joana Souza</span></li>
+            <li><span class="muted num">2024-11-21</span><span>Evidence created by Joana Souza, linked to NR-35</span></li>
+          </ul>
+        </div>
+        <p class="muted" style="font-size:.76rem">Status computed 2026-10-29 01:00 · next change 2026-11-17 (expires)</p>
+      </div>
+      <footer><button class="btn primary">＋ Register recycling <span class="pin">4</span></button><button class="btn">Edit details</button><button class="btn ghost">Open in learning plan</button></footer>
+    </aside>
+  </div>
+  <aside class="notes"><ol>
+    <li>Validity and core proficiency sit side by side and never write each other. Expiry may only log a note and, by policy, request a core review.</li>
+    <li>Verification is the companion's own state with an append-only audit table, since the log store may purge events.</li>
+    <li>The timeline shows every evidence with its own interval; the one in force is the latest expiry among those covering today.</li>
+    <li>Register recycling opens the evidence form pre-linked to the same competency, with the type and issuer copied.</li>
+    <li>The drawer is a core/modal with a side-sheet layout: Boost 5.3 ships no offcanvas module, and core/modal already traps focus.</li>
+  </ol></aside>
+</section>
+
+<!-- ============ 4. WORKER FORM ============ -->
+<section class="section" id="worker">
+  <header><span class="eyebrow">Screen 4</span><h2>Adding evidence (worker or manager)</h2><p class="muted">One form saves the core evidence through its API and the validity details beside it.</p></header>
+  <div class="frame modalstage">
+    <div class="modal" role="dialog" aria-label="Add evidence">
+      <header><h3>Add evidence of prior learning</h3><button class="btn ghost" aria-label="Close">✕</button></header>
+      <div class="body">
+        <div class="frow"><label for="w-name">Name<span class="req">*</span></label><input class="input" id="w-name" value="Reciclagem NR-35 — 2026"></div>
+        <div class="frow"><label for="w-type">Evidence type<span class="req">*</span></label><div><select class="select" id="w-type" style="width:100%"><option>Training certificate (NR)</option><option>ASO (occupational health)</option><option>ART / RRT</option><option>Diploma / certification</option><option>Practical / performance assessment</option></select><div class="help">The type sets the default validity (NR-35: 24 months) <span class="pin">1</span></div></div></div>
+        <div class="frow"><label for="w-issued">Issue date<span class="req">*</span></label><input class="input" id="w-issued" value="2026-11-05" style="max-width:180px"></div>
+        <div class="frow"><label for="w-until">Valid until<span class="req">*</span></label><div class="inline"><input class="input" id="w-until" value="2028-11-05" style="max-width:180px"><label class="check"><span class="cb"></span>Never expires</label></div></div>
+        <div class="frow"><label for="w-issuer">Issuing body<span class="req">*</span></label><input class="input" id="w-issuer" value="SENAI-SP"></div>
+        <div class="frow"><label for="w-code">Authenticity code</label><input class="input" id="w-code" value="35-2026-10442"></div>
+        <div class="frow"><label for="w-hours">Hours</label><div><input class="input" id="w-hours" value="8" style="max-width:100px"><div class="help">NR-35 recycling requires at least 8 h</div></div></div>
+        <div class="frow"><label>Files</label><div class="drop">certificado-nr35-2026.pdf · 380 KB<br>Drop files here or choose</div></div>
+        <div class="frow"><label>Competencies</label><div class="inline"><span class="tag">NR-35 Trabalho em altura ✕</span><button class="btn sm">＋ Add</button></div></div>
+        <div class="callout">A SESMT reviewer checks regulatory evidence before it counts. Until then, your current NR-35 certificate keeps its status. <span class="pin">2</span></div>
+      </div>
+      <footer><button class="btn">Cancel</button><button class="btn primary">Save evidence</button></footer>
+    </div>
+  </div>
+  <aside class="notes"><ol>
+    <li>Core's evidence form has no hook. This dynamic_form calls <span class="mono">api::create_user_evidence()</span> and <span class="mono">create_user_evidence_competency()</span>, so core events, files and the competency log stay core's.</li>
+    <li>Dates are calendar dates (YYYYMMDD) compared against today in the site timezone, so a certificate valid until the 5th is valid all of the 5th everywhere.</li>
+    <li>Evidence created in tool_lp without these details shows as Pending — incomplete data, with a Complete details prompt on that page.</li>
+  </ol></aside>
+</section>
+
+<!-- ============ 5. POLICIES ============ -->
+<section class="section" id="policy">
+  <header><span class="eyebrow">Screen 5</span><h2>Validity policies</h2><p class="muted">Set once per framework, overridden per competency where the rule differs.</p></header>
+  <div class="frame">
+    <div class="page">
+      <div class="tabs"><span class="tab">◎ Readiness</span><span class="tab">▦ Matrix</span><span class="tab">✓ Verification queue</span><span class="tab on">⚙ Policies</span></div>
+      <div class="ctxbar"><div class="ctx"><small>Framework</small><strong>Normas Regulamentadoras (MTE)</strong></div><span class="grow"></span><button class="btn">Edit framework default</button></div>
+      <div class="box" style="background:var(--surface)">
+        <div class="inline"><span class="pill p-bad">Regulatory</span><span style="font-size:.85rem">Framework default · verified evidence only · alerts 60 / 30 days · blocks readiness · on expiry: log + alert worker and mentors</span></div>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Competency</th><th>Type</th><th>Source</th><th>Min. hours</th><th>Alerts</th><th>On expiry</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>NR-10 Segurança em eletricidade</td><td class="muted">Inherited</td><td class="muted">Verified evidence</td><td class="num">40 h · recycling 20 h</td><td class="muted num">60 / 30</td><td class="muted">Log + alert</td><td><button class="btn sm">Override</button></td></tr>
+            <tr><td>NR-35 Trabalho em altura</td><td class="muted">Inherited</td><td class="muted">Verified evidence</td><td class="num">8 h</td><td class="muted num">60 / 30</td><td class="muted">Log + alert</td><td><button class="btn sm">Override</button></td></tr>
+            <tr><td>ASO periódico</td><td class="muted">Inherited</td><td class="muted">Verified evidence</td><td class="muted">—</td><td class="num"><b>45 / 15</b></td><td class="muted">Log + alert</td><td><button class="btn sm">Edit override</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="ctxbar"><div class="ctx"><small>Framework</small><strong>Competências técnicas — Elétrica</strong></div><span class="grow"></span></div>
+      <div class="box" style="background:var(--surface)">
+        <div class="inline"><span class="pill p-due">Technical</span><span style="font-size:.85rem">Evidence or last proficient rating · requires core proficiency · 30 days grace · on expiry: log + request review <span class="pin">1</span></span></div>
+      </div>
+      <div class="ctxbar"><div class="ctx"><small>Framework</small><strong>Competências organizacionais</strong></div><span class="grow"></span></div>
+      <div class="box" style="background:var(--surface)">
+        <div class="inline"><span class="pill p-info">Behavioural</span><span style="font-size:.85rem">Last proficient rating · cycle 12 months · on expiry: log + request review</span></div>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><ol>
+    <li>No policy demotes proficiency on its own (D6). "Request review" puts an idle user competency in core's review queue and a person decides.</li>
+    <li>Changing a policy enqueues an ad hoc recompute for that framework's status rows, in chunks.</li>
+  </ol></aside>
+</section>
+
+<!-- ============ 6. DOSSIER EXPORT ============ -->
+<section class="section" id="dossier">
+  <header><span class="eyebrow">Screen 6</span><h2>Dossier export</h2><p class="muted">From the bulk bar of screens 1 and 2.</p></header>
+  <div class="frame modalstage">
+    <div class="modal" role="dialog" aria-label="Export dossier">
+      <header><h3>Export dossier · 3 workers</h3><button class="btn ghost" aria-label="Close">✕</button></header>
+      <div class="body">
+        <p style="font-size:.85rem">Contract matrix <b>Linha 4 — Contrato 118/2026</b> · 7 required competencies per worker</p>
+        <div class="frow"><label>Identifier in files</label><div class="inline"><span class="chip on">ID number</span><span class="chip">CPF</span><span class="pin">1</span></div></div>
+        <div class="frow"><label>Include</label><div style="display:grid;gap:8px">
+          <label class="check"><span class="toggle on"></span>Files of the evidence in force</label>
+          <label class="check"><span class="toggle"></span>Expired history and its files</label>
+          <label class="check"><span class="toggle off-dis"></span>Files of sensitive types (ASO) <span class="muted">· needs viewsensitive</span></label>
+        </div></div>
+        <div class="frow"><label>Contents</label><div class="tree">dossie-CT118-2026-10-29/
+├── manifest.csv              SHA-256 of every file
+├── 40231-joana-souza/
+│   ├── 40231-dossier.pdf
+│   └── 40231_NR35_2026-11-16_certificado-nr35-joana.pdf
+├── 40377-marcos-oliveira/
+│   └── …
+└── 40412-paulo-ferreira/
+    └── …</div></div>
+        <div class="callout warn">Joana Souza's ASO is summarised in the PDF (fit, valid until 2026-12-20) without its file.</div>
+        <div class="callout">Up to 10 workers download now. Larger exports are prepared in the background and you get a notification with the link, kept for 7 days. <span class="pin">2</span></div>
+      </div>
+      <footer><button class="btn">Cancel</button><button class="btn primary">⇩ Export now</button></footer>
+    </div>
+  </div>
+  <aside class="notes"><ol>
+    <li>ID number by default; CPF only when the site enables it, never on the public verification page (D8).</li>
+    <li>One builder, two drivers: core's streaming ZIP writer for small selections, an ad hoc task running as the requester for large ones (D9).</li>
+    <li>Every export is logged and listed on the worker's own page as a shared dossier (LGPD art. 18).</li>
+  </ol></aside>
+</section>
+
+<!-- ============ 7. PDF ============ -->
+<section class="section" id="pdf">
+  <header><span class="eyebrow">Screen 7</span><h2>Dossier PDF, one page per worker</h2><p class="muted">Generated with core's TCPDF; the QR code is TCPDF's own.</p></header>
+  <div class="frame pdfstage">
+    <div class="a4">
+      <div class="top">
+        <div style="display:flex;gap:10px;align-items:center"><div class="logo">CE</div><div><b>Construtora Exemplo S.A.</b><br><span class="k">Gestão de SST · CNPJ 00.000.000/0001-00</span></div></div>
+        <div style="text-align:right"><h4>Readiness dossier</h4><span class="k">Issued 2026-10-29 14:32 by Carla Menezes</span></div>
+      </div>
+      <div class="grid2">
+        <span><span class="k">Worker</span><br><b>Joana Souza</b></span><span><span class="k">ID number</span><br><b>40231</b></span>
+        <span><span class="k">Contract matrix</span><br><b>Linha 4 — Contrato 118/2026</b></span><span><span class="k">Verdict on issue date</span><br><span class="verdict">READY</span></span>
+      </div>
+      <p class="k">7 competencies required by the contract · 7 covered by evidence in force · 2 due within 60 days</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Evidence</th><th>Issuer</th><th>Issued</th><th>Valid until</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>NR-10</td><td>Training certificate</td><td>Escola Técnica Volt</td><td>2024-12-02</td><td>2026-12-02</td><td class="st-due">Due 34 d</td></tr>
+          <tr><td>NR-12</td><td>Training certificate</td><td>SENAI-SP</td><td>2025-06-10</td><td>2027-06-10</td><td class="st-ok">Compliant</td></tr>
+          <tr><td>NR-33</td><td>Training certificate</td><td>SESI-MG</td><td>2025-10-10</td><td>2026-10-10</td><td class="st-ok">Compliant</td></tr>
+          <tr><td>NR-35</td><td>Training certificate</td><td>SENAI-SP</td><td>2024-11-20</td><td>2026-11-16</td><td class="st-due">Due 18 d</td></tr>
+          <tr><td>ASO periódico</td><td>ASO · fit</td><td>Clínica Ocupacional</td><td>2025-12-20</td><td>2026-12-20</td><td class="st-due">Due 52 d</td></tr>
+          <tr><td>Projetos elétricos</td><td>Practical assessment</td><td>Eng. Lúcia Prado</td><td>2025-11-28</td><td>2026-11-28</td><td class="st-due">Due 30 d</td></tr>
+          <tr><td>Segurança comportamental</td><td>Rating (proficient)</td><td>Gestor da frente</td><td>2026-03-15</td><td>2027-03-15</td><td class="st-ok">Compliant</td></tr>
+        </tbody>
+      </table>
+      <div></div>
+      <div class="foot">
+        <svg class="qr" id="qr" viewBox="0 0 25 25" role="img" aria-label="QR code to the verification page"></svg>
+        <div style="display:grid;gap:3px">
+          <b>Verify this dossier</b>
+          <span class="k">Scan the code or open the address below. It shows this page's content as issued, and whether the dossier was revoked.</span>
+          <span style="font-family:var(--mono)">m503.example/local/evidencehub/verify.php?c=9f3a…e71c</span>
+          <span class="k" style="font-family:var(--mono)">Dossier 9F3A-7C21-04BD-E71C · SHA-256 4be1…09a2 · page 1 of 1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><ol>
+    <li>The snapshot printed here is also stored as JSON on the dossier row, so the verification page shows the issue-date truth even after the evidence changes.</li>
+    <li>The PDF's hash is stored too: a contractor can match the file they hold to the one issued.</li>
+    <li>Fonts: TCPDF's <span class="mono">freesans</span> covers Portuguese diacritics; the logo comes through the file API.</li>
+  </ol></aside>
+</section>
+
+<!-- ============ 8. VERIFY ============ -->
+<section class="section" id="verify">
+  <header><span class="eyebrow">Screen 8</span><h2>Public verification page</h2><p class="muted">What a contractor's safety officer sees after scanning the QR code, without an account.</p></header>
+  <div class="frame">
+    <div class="navbar"><span class="site">Construtora Exemplo</span><span class="grow"></span><span class="muted" style="font-size:.85rem">Log in</span></div>
+    <div class="verify">
+      <div class="vcard">
+        <div class="seal"><span class="big">✓</span><div><b>Authentic dossier</b><br><span style="font-size:.85rem">Issued 2026-10-29 by Construtora Exemplo S.A. · not revoked</span></div></div>
+        <dl class="meta">
+          <dt>Dossier</dt><dd class="mono">9F3A-7C21-04BD-E71C</dd>
+          <dt>Worker</dt><dd>J*** S*** <span class="pin">1</span></dd>
+          <dt>Contract matrix</dt><dd>Linha 4 — Contrato 118/2026</dd>
+          <dt>Verdict on issue</dt><dd><span class="pill p-ok">Ready · 7 of 7</span></dd>
+          <dt>PDF fingerprint</dt><dd class="mono">4be1…09a2</dd>
+        </dl>
+        <div class="scroll">
+          <table><thead><tr><th>Competency</th><th>Valid until</th><th>Status on issue</th></tr></thead>
+          <tbody><tr><td>NR-10</td><td class="num">2026-12-02</td><td><span class="pill p-due">Due</span></td></tr><tr><td>NR-35</td><td class="num">2026-11-16</td><td><span class="pill p-crit">Due — critical</span></td></tr><tr><td colspan="3" class="muted">and 5 more, all compliant</td></tr></tbody></table>
+        </div>
+        <p class="muted" style="font-size:.8rem">This page shows the dossier as issued. It never shows documents, CPF or contact details. <span class="pin">2</span></p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><ol>
+    <li>Masked name only. The code is 128 random bits, so the page needs no rate limit to resist guessing.</li>
+    <li>The page never calls require_login(), so it stays public on a site with forcelogin. Showing today's live status is a setting, off by default (D10).</li>
+  </ol></aside>
+</section>
+
+</div>
+
+<script>
+(function () {
+  // Matrix rows: example data for the mockup only.
+  var S = {
+    ok: ['p-ok', 'OK'], due: ['p-due', ''], crit: ['p-crit', ''], bad: ['p-bad', ''], info: ['p-info', 'Check'], none: ['p-none', '—']
+  };
+  var rows = [
+    ['Joana Souza', '40231', 'ready', [['due', '34 d'], ['ok'], ['ok'], ['crit', '18 d'], ['due', '52 d'], ['crit', '30 d'], ['ok']]],
+    ['Marcos Oliveira', '40377', 'ready', [['due', '34 d'], ['ok'], ['ok'], ['ok'], ['ok'], ['ok'], ['ok']]],
+    ['Paulo Ferreira', '40412', 'at risk', [['ok'], ['ok'], ['ok'], ['ok'], ['ok'], ['bad', '−12 d'], ['ok']]],
+    ['Rita Almeida', '40188', 'ready', [['ok'], ['ok'], ['due', '41 d'], ['ok'], ['ok'], ['ok'], ['due', '45 d']]],
+    ['Diego Martins', '40502', 'not ready', [['ok'], ['bad', '−4 d'], ['ok'], ['ok'], ['ok'], ['ok'], ['ok']]],
+    ['Bruna Lima', '40519', 'not ready', [['info'], ['ok'], ['ok'], ['ok'], ['none'], ['ok'], ['ok']]],
+    ['Tiago Rocha', '40533', 'ready', [['ok'], ['ok'], ['ok'], ['ok'], ['ok'], ['ok'], ['ok']]]
+  ];
+  var body = document.getElementById('matrix-body');
+  rows.forEach(function (r) {
+    var tr = document.createElement('tr');
+    var cls = r[2] === 'ready' ? 'p-ok' : (r[2] === 'at risk' ? 'p-due' : 'p-bad');
+    tr.innerHTML = '<td><div class="who"><b>' + r[0] + '</b><small class="mono">ID ' + r[1] + '</small></div>' +
+      '<span class="pill ' + cls + ' ready" style="margin-top:4px">' + r[2] + '</span></td>';
+    r[3].forEach(function (c) {
+      var td = document.createElement('td');
+      td.className = 'c';
+      var s = S[c[0]];
+      td.innerHTML = '<div class="cell ' + s[0] + '">' + (c[1] || s[1]) + '</div>';
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+
+  // A QR-shaped pattern (finder squares + seeded modules); the real one is TCPDF's write2DBarcode().
+  var svg = document.getElementById('qr');
+  var n = 25, seed = 7, ns = 'http://www.w3.org/2000/svg';
+  function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  function finder(x, y) { return function (i, j) {
+    var a = i - x, b = j - y;
+    if (a < 0 || b < 0 || a > 6 || b > 6) { return null; }
+    if (a === 0 || b === 0 || a === 6 || b === 6) { return true; }
+    if (a >= 2 && a <= 4 && b >= 2 && b <= 4) { return true; }
+    return false;
+  }; }
+  var fs = [finder(0, 0), finder(18, 0), finder(0, 18)];
+  for (var i = 0; i < n; i++) {
+    for (var j = 0; j < n; j++) {
+      var v = null;
+      fs.forEach(function (f) { var r = f(i, j); if (r !== null) { v = r; } });
+      if (v === null) { v = rnd() > 0.52; }
+      if (v) { var rect = document.createElementNS(ns, 'rect'); rect.setAttribute('x', i); rect.setAttribute('y', j);
+        rect.setAttribute('width', 1); rect.setAttribute('height', 1); svg.appendChild(rect); }
+    }
+  }
+})();
+</script>
