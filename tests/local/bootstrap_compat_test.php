@@ -221,20 +221,21 @@ final class bootstrap_compat_test extends \basic_testcase {
         /*
          * Structural helpers the polyfill needs but no markup names on its own: the .form-check
          * parent it keys off, the .form-check-input and .form-check-label it repositions, the
-         * .btn-close and .modal chrome core emits, the hub's page body class, and the body gate
-         * itself.
+         * .btn-close and .modal chrome core emits, the marker class the plugin's modal factories
+         * add from JavaScript, the plugin pages' body classes, and the body gate itself.
          */
         $structural = [
             bootstrap::BODY_CLASS_BS4,
             'local-dimensions-central-page',
+            'local-dimensions-viewplan',
+            'local-dimensions-viewcompetency',
             'form-check',
             'form-check-input',
             'form-check-label',
             'btn-close',
             'modal',
+            'local-dimensions-modal',
             'modal-header',
-            'modal-body',
-            'modal-form-dialogue',
         ];
         $unused = array_values(array_diff($this->polyfilled_tokens(), $used, $structural));
         sort($unused);

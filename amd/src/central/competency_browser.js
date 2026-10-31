@@ -106,6 +106,7 @@ export const show = async(pane, region) => {
         getString('central_browseframeworks_add', 'local_dimensions'),
     ]);
     const modal = await ModalSaveCancel.create({title, body: html});
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.setSaveButtonText(addlabel);
     modal.setRemoveOnClose(true);
     // Nothing is checked yet, and with no frameworks there is nothing to check at all.
