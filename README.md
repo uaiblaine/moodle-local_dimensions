@@ -228,6 +228,35 @@ or ended enrolment, prerequisite course) with its rules; this plugin keeps no co
 <img src="docs/screenshots/phone-tracker.png" alt="The Competency tracker on a phone: the scope, the search folded into an icon and Filters on one line, a course card with its sections and Continue, and the Return to plan button" width="300">
 </p>
 
+### For developers: competency status badges
+
+Another plugin can add small status pills beside a competency on the Full plan overview (in each
+accordion header) and on the Competency tracker (after the competency title) by listening to
+`\local_dimensions\hook\competency_status_badges`. Neither plugin needs the other: the hook is the
+whole contract, and nothing is drawn when no plugin listens.
+
+- The hook is dispatched once per page. `get_userid()` is the **owner**, the learner whose
+  competencies are shown (the plan's owner, the tracker's user), never the viewer; the listener
+  decides what the current user may see. `get_competencyids()` lists the ids on the page.
+- `add_badge(int $competencyid, string $label, string $tone)`: the label is **plain text** in the
+  viewer's language (the template escapes it); the tone is one of the class constants
+  `TONE_SUCCESS`, `TONE_WARNING`, `TONE_DANGER`, `TONE_INFO` or `TONE_NEUTRAL`, the family's five
+  tone tokens. Any other tone throws a `coding_exception`, because it becomes a CSS class.
+- An id that is not on the page, and an empty label, are ignored without an exception, so a listener
+  answering from a cached list cannot break the page.
+- There is no link and no HTML on purpose: the plan overview's header is a button, where a link is
+  invalid, and a plain label keeps a listener from injecting markup into a page it does not own. The
+  component that added a badge is not recorded.
+
+```php
+$callbacks = [
+    [
+        'hook' => \local_dimensions\hook\competency_status_badges::class,
+        'callback' => [\my_plugin\hook_callbacks::class, 'competency_status_badges'],
+    ],
+];
+```
+
 ### Dark mode and the family theme
 
 ![The plan overview in Moodle's dark mode, the plan's own colours kept on the hero and the course cards](docs/screenshots/plan-dark.png)

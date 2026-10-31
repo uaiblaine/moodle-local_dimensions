@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Competency status badges hook
+
+Version `2026100516`. A new hook, `\local_dimensions\hook\competency_status_badges`, lets another
+plugin add plain-text status pills beside a competency on the Full plan overview (in each accordion
+header) and on the Competency tracker (after the title). It is dispatched once per page with the
+learner who owns the competencies (never the viewer) and the ids on the page; a tone outside the five
+tone tokens throws, an id not on the page or an empty label is ignored, and a pill carries no link and
+no HTML. Nothing is drawn when no plugin listens. Contract and example: README, "For developers".
+Mutation spec: `mutations/status_badges.conf`.
+
 ### Security hardening
 
 Version `2026100515`. The surviving points of an external static review, each held by a test and

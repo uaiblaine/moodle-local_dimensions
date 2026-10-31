@@ -128,6 +128,16 @@ class view_competency_page implements renderable, templatable {
                 'herokey' => $herostate['key'],
                 'herostatejson' => $herostate['statejson'],
             ];
+
+            // Other plugins may add status pills beside the title; the owner is the learner, not the viewer.
+            $statushook = new \local_dimensions\hook\competency_status_badges(
+                (int) $this->userid,
+                [(int) $this->competency->id]
+            );
+            \core\di::get(\core\hook\manager::class)->dispatch($statushook);
+            $badges = $statushook->get_badges((int) $this->competency->id);
+            $data['hero']['statusbadges'] = $badges;
+            $data['hero']['hasstatusbadges'] = !empty($badges);
         }
 
         // Prepare course cards data.

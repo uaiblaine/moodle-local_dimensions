@@ -2021,6 +2021,41 @@ body {
     color: var(--local-dimensions-neutral-ink);
 }
 
+/* Status pills other plugins add through the competency_status_badges hook: the grade badge's shape, one tone each. */
+.local-dimensions-grade-badge.local-dimensions-status-badge-success {
+    border: 1px solid var(--local-dimensions-success-edge);
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
+}
+
+.local-dimensions-grade-badge.local-dimensions-status-badge-warning {
+    border: 1px solid var(--local-dimensions-warning-edge);
+    background: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+}
+
+.local-dimensions-grade-badge.local-dimensions-status-badge-danger {
+    border: 1px solid var(--local-dimensions-danger-edge);
+    background: var(--local-dimensions-danger-tint);
+    color: var(--local-dimensions-danger-ink);
+}
+
+.local-dimensions-grade-badge.local-dimensions-status-badge-info {
+    border: 1px solid var(--local-dimensions-info-edge);
+    background: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+}
+
+.local-dimensions-grade-badge.local-dimensions-status-badge-neutral {
+    border: 1px solid var(--local-dimensions-neutral-edge);
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
+}
+
+.local-dimensions-hero-content .local-dimensions-status-badge {
+    margin: 0 0.375rem 0.75rem 0;
+}
+
 /* The badge's status icon is drawn the way the status icons are (see .local-dimensions-icon): the
    SVG is the mask, the badge's ink the paint and its tint the glyph. The proficient check shares
    their check glyph rule. */
