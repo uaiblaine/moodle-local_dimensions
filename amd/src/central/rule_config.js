@@ -148,6 +148,7 @@ export const show = async(competency, children, rulesModules) => {
     const {html} = await Templates.renderForPromise('local_dimensions/central/rule_config', context);
 
     const modal = await ModalSaveCancel.create({title, body: html});
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.setRemoveOnClose(true);
     const root = modal.getRoot()[0];
     const outcomeEl = root.querySelector('[data-region="outcome"]');
