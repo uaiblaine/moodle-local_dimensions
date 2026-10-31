@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Performance
+
+Version `2026042013`.
+
+- **The hub modals' close-button chip no longer taxes every page.** The chip keyed on
+  `.modal:has(.modal-body [class*='local-dimensions-'])`, and `styles.css` is bundled into the
+  theme sheet, so Chrome rechecked that `:has()` on every class change anywhere on any page of the
+  site: 16-20 ms of style recalculation per toggle on a 1,700-node page with the CPU throttled
+  4x, which a theme's filter line paid several times per fold on a phone. Every modal factory
+  now adds `local-dimensions-modal` to the modal root and the chip keys on that class, or on the
+  body class of the plugin's three pages.
+- **Every modal on the plugin's pages wears the close-button chip.** The hub, the Full plan
+  overview and the Competency tracker give it to core's confirm, alert and error dialogues and to
+  every form modal too, as well as to the frameworks export, scale configuration, scale description
+  and taxonomy definition modals, which kept Bootstrap's faint default before.
+- `tests/local/selector_cost_test.php` refuses a `:has()` over the `class` or `style` attribute
+  in any shipped stylesheet and checks that every modal the plugin creates carries its marker.
+
 ### Security hardening
 
 Version `2026042012`. The surviving points of an external static review, each held by a test and
