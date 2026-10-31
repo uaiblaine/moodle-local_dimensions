@@ -241,6 +241,7 @@ export const open = async(opts) => {
         removeOnClose: true,
         buttons: {save: addlabel, cancel: closelabel},
     });
+    modal.getRoot().addClass('local-dimensions-modal');
     // Nothing is checked yet, so the primary action starts disabled.
     modal.setButtonDisabled('save', true);
 

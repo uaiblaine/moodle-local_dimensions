@@ -172,6 +172,7 @@ export const show = async(pane, region) => {
         canmanageenrol: region.dataset.canmanageenrol === '1',
     });
     const modal = await Modal.create({title, body: html});
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.setRemoveOnClose(true);
 
     const root = modal.getRoot()[0];
@@ -179,8 +180,8 @@ export const show = async(pane, region) => {
     // sizing on 4 and 5) directly. local-dimensions-participants-modal only hooks the height rule.
     const dialog = root.querySelector('.modal-dialog');
     if (dialog) {
-        // The close-button chip comes via the :has(.modal-body .local-dimensions-*) rule (the body
-        // carries .local-dimensions-participants), so no header-link class is needed here.
+        // The close-button chip comes from .local-dimensions-modal on the root, so no header-link
+        // class is needed here.
         dialog.classList.add('modal-xl', 'local-dimensions-participants-modal');
     }
     // Before show(), so core reveals the footer (see injectFooterLinks).

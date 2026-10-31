@@ -1494,6 +1494,9 @@ define(
                     body: scaleDescription,
                     show: true,
                     removeOnClose: true
+                }).then(function(modal) {
+                    modal.getRoot().addClass('local-dimensions-modal');
+                    return modal;
                 }).catch(Notification.exception);
             });
         }
@@ -1596,6 +1599,7 @@ define(
                 removeOnClose: true
             }).then(function(modal) {
                 const root = modal.getRoot();
+                root.addClass('local-dimensions-modal');
 
                 // Delegated on the root, so the handler survives each body re-render.
                 root.on('click', '[data-ev-prev], [data-ev-next]', function(e) {
@@ -2672,6 +2676,9 @@ define(
                 body: definition,
                 show: true,
                 removeOnClose: true
+            }).then(function(modal) {
+                modal.getRoot().addClass('local-dimensions-modal');
+                return modal;
             }).catch(Notification.exception);
         }
 
@@ -3701,6 +3708,7 @@ define(
                 removeOnClose: true
             }).then(function(modal) {
                 const root = modal.getRoot()[0];
+                root.classList.add('local-dimensions-modal');
 
                 // The modal is appended to document.body, outside the percentagemode wrapper, so it needs the class too.
                 const summary = document.querySelector('.local-dimensions-plan-summary');
