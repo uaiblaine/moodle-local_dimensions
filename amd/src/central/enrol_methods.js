@@ -904,6 +904,7 @@ const showDetail = async(state, row) => {
     });
     // The body template escapes the names itself; the title is HTML and needs it done here.
     const modal = await Modal.create({title: escapeHtml(data.fullname), body: html, large: true});
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.setRemoveOnClose(true);
     modal.show();
 };
