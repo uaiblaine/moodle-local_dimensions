@@ -206,12 +206,16 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   grep before deleting one.
 - Web services: `execute_returns()` is an allowlist; when `helper::structure_nodes()` gains a
   field, update every WS that channels it.
+- **No `:has()` over the `class` or `style` attribute** in a shipped sheet: plugin CSS is on every
+  page of the site, and such an argument makes Chrome recheck it on every class change anywhere.
+  The close-button chip keys on the plugin pages' body classes and on `local-dimensions-modal`,
+  which every plugin modal gets on its root at creation; `selector_cost_test` holds both halves.
 - Forms: `require_once($CFG->libdir . '/formslib.php')`; a submit label differs from any
   section header label; editors populated through `set_data()`.
 - PHPUnit: five file-scanner suites on `\basic_testcase` under `tests/local/`
   (`colour_tokens_test`, `bootstrap_markup_test`, `stylesheet_markup_contract_test`,
   `status_icons_test`, `preference_queries_test`) plus `customscss_field_styles_test`,
-  `hub_javascript_guards_test` and `export_loader_script_test`; every arm was mutation-checked
+  `hub_javascript_guards_test`, `export_loader_script_test` and `selector_cost_test`; every arm was mutation-checked
   and a new arm must be (delete the production line, confirm the red). Test metadata (`#[CoversClass]`,
   `#[CoversMethod]`, `#[DataProvider]`) is in attributes on main (5.3) and in docblocks on the
   `MOODLE_405/501/502_STABLE` branches.
