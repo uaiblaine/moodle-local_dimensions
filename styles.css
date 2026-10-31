@@ -6138,18 +6138,23 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 }
 
 /*
- * Standardise the close button across the plugin's hub modals — Bootstrap's default .btn-close is
+ * Standardise the close button across the plugin's modals — Bootstrap's default .btn-close is
  * a faint, low-contrast glyph. Give it a brand-tinted chip with a brand-ink "times" icon drawn
  * with the theme's Font Awesome (Moodle stylelint forbids inline SVG image data, and the glyph
- * lets us colour it precisely). Scoped to modals holding this plugin's content; the referenced-competency
- * modal keeps its own close button (its header is hidden), so it is excluded. The second selector
- * keys off .modal-form-dialogue, which core adds to every ModalForm dialog synchronously before
- * show(): the plugin's form modals get the chip from the first frame (the :has() arm alone flashes).
- * Targeted at the modal header so a core toast hosted in the modal body (the addToastRegion pattern)
- * keeps its own core .btn-close — the chip looks wrong on the smaller toast.
+ * lets us colour it precisely). Every modal on the plugin's own pages wears it, core's confirm and
+ * alert dialogues and ModalForm included, keyed off the page's body class, which is there from the
+ * first frame; a modal the plugin opens anywhere else carries .local-dimensions-modal, which every
+ * modal factory of the plugin adds to the modal root. The referenced-competency modal keeps its
+ * own close button (its header is hidden). A :has() over the body's class attribute would find
+ * the plugin's modals without a marker, but this sheet is bundled into every page, and such a
+ * :has() makes the browser recheck it on every class change anywhere (selector_cost_test refuses
+ * one). Targeted at the modal header so a core toast hosted in the modal body (the addToastRegion
+ * pattern) keeps its own core .btn-close — the chip looks wrong on the smaller toast.
  */
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close {
+.modal.local-dimensions-modal .modal-header .btn-close,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -6162,8 +6167,10 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
     opacity: 1;
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close::before,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close::before {
+.modal.local-dimensions-modal .modal-header .btn-close::before,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close::before,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close::before,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close::before {
     content: '\f00d';
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
@@ -6172,23 +6179,33 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
     color: var(--local-dimensions-brand-ink);
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:hover,
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:focus,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:hover,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:focus {
+.modal.local-dimensions-modal .modal-header .btn-close:hover,
+.modal.local-dimensions-modal .modal-header .btn-close:focus,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus {
     background-color: var(--local-dimensions-brand-edge);
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:focus-visible,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:focus-visible {
+.modal.local-dimensions-modal .modal-header .btn-close:focus-visible,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus-visible,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus-visible,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus-visible {
     outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:hover::before,
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:focus::before,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:hover::before,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:focus::before {
+.modal.local-dimensions-modal .modal-header .btn-close:hover::before,
+.modal.local-dimensions-modal .modal-header .btn-close:focus::before,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover::before,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover::before,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover::before,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus::before,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus::before,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus::before {
     color: var(--local-dimensions-ink-strong);
 }
 
@@ -8958,7 +8975,9 @@ body.local-dimensions-bs4 .form-switch .form-check-input:focus ~ .form-check-lab
    times-glyph span child; core 5.2's button is empty. The plugin draws its own Font Awesome
    glyph via ::before on the same button, so 4.5 would show two. Scoped to exactly the modals
    that get the ::before chip, so core modals elsewhere keep their only glyph. */
-body.local-dimensions-bs4 .modal:has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close > span,
-body.local-dimensions-bs4.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close > span {
+body.local-dimensions-bs4 .modal.local-dimensions-modal .modal-header .btn-close > span,
+body.local-dimensions-bs4.local-dimensions-central-page .modal .modal-header .btn-close > span,
+body.local-dimensions-bs4.local-dimensions-viewplan .modal .modal-header .btn-close > span,
+body.local-dimensions-bs4.local-dimensions-viewcompetency .modal .modal-header .btn-close > span {
     display: none;
 }
