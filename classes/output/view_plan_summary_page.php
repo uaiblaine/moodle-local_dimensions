@@ -396,6 +396,19 @@ class view_plan_summary_page implements renderable, templatable {
             ];
         }
 
+        /* Other plugins may add status pills beside the rows. One dispatch for the whole page, before the
+           sort, with the plan owner (the listener decides what the viewer may see) and every id shown. */
+        $statushook = new \local_dimensions\hook\competency_status_badges(
+            (int) $this->plan->get('userid'),
+            array_map(fn($competency) => (int) $competency['id'], $data['competencies'])
+        );
+        \core\di::get(\core\hook\manager::class)->dispatch($statushook);
+        foreach ($data['competencies'] as $index => $competency) {
+            $badges = $statushook->get_badges((int) $competency['id']);
+            $data['competencies'][$index]['statusbadges'] = $badges;
+            $data['competencies'][$index]['hasstatusbadges'] = !empty($badges);
+        }
+
         /* The star is the learner's own shortlist, so it is gated twice: by the admin toggle
            that turns the whole feature off (mirrors block_dimensions/enable_favourites), and
            by the own-plan guard view-plan.php uses for the return context - a manager reviewing
