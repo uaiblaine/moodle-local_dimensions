@@ -21,6 +21,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+# Read-only token for every job. uaiblaine/moodle-workflows declares the same
+# block itself; artifact uploads use the runner's own token, not this one.
+permissions:
+  contents: read
+
 jobs:
   # One branch per Moodle version: this branch serves Moodle 5.1 only ($plugin->supported =
   # [501, 501]), so it has one job, with the full PHP x DB matrix. The other versions live on their
