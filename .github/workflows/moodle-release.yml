@@ -10,8 +10,19 @@ on:
         description: 'Git tag to be released'
         required: true
 
+# The called workflow checks out the tag and reads the GitHub release notes
+# (`gh release view`); it creates nothing on GitHub, so the token stays read-only.
+permissions:
+  contents: read
+
 jobs:
+  # MOODLE_ORG_TOKEN is the moodle.org Marketplace token, so the code it reaches
+  # is pinned to a reviewed commit, never a branch. Called directly rather than
+  # through MAH's moodle-release.yml, which only forwards to this workflow at
+  # @main. Re-pin procedure: moodle-dev/docs/github-actions-pinning.md.
   release:
-    uses: moodle-an-hochschulen/moodle-workflows/.github/workflows/moodle-release.yml@main
+    uses: moodlehq/moodle-plugin-release/.github/workflows/moodle-release.yml@7c56bd9ce7b0a3125459924e7bd08570d41b9aa3 # main 2026-10-17
+    with:
+      tag: ${{ inputs.tag }}
     secrets:
-      MOODLE_ORG_TOKEN: ${{ secrets.MOODLE_ORG_TOKEN }}
+      MOODLE_MARKETPLACE_TOKEN: ${{ secrets.MOODLE_ORG_TOKEN }}
