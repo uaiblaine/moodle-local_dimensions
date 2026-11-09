@@ -866,6 +866,7 @@ export const open = async(opts) => {
         competencyid: Number(opts.competencyid),
     });
     const modal = await Modal.create({title, body: html, large: true});
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.setRemoveOnClose(true);
 
     const root = modal.getRoot()[0];

@@ -139,6 +139,7 @@ export const open = async(scaleid, existingJson) => {
     ]);
     const {html} = await Templates.renderForPromise('local_dimensions/central/framework_scaleconfig', {rows: rows});
     const modal = await ModalSaveCancel.create({title, body: html});
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.setRemoveOnClose(true);
     const root = modal.getRoot()[0];
 

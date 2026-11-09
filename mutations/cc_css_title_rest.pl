@@ -1,0 +1,1 @@
+s/#region-main \.local-dimensions-courses-section \.local-dimensions-courses-scroll\n\.local-dimensions-course-card-lg \.local-dimensions-course-name-lg a\.local-dimensions-course-link\[href\]:not\(\.btn\) \{/#region-main .local-dimensions-courses-scroll\n.local-dimensions-course-card-lg .local-dimensions-course-name-lg a.local-dimensions-course-link[href]:not(.btn) {/;

@@ -470,6 +470,7 @@ $string['contrast_suggest_text'] = 'Trocar cor do texto';
 $string['contrast_wcag_aa'] = 'WCAG AA';
 $string['contrast_wcag_aaa'] = 'WCAG AAA';
 $string['contrast_wcagversion'] = 'WCAG 2.2';
+$string['course_card_progress'] = '{$a}% concluído';
 $string['course_completed'] = 'Concluído';
 $string['course_load_error'] = 'Não foi possível carregar o progresso.';
 $string['course_load_retry'] = 'Tentar novamente';

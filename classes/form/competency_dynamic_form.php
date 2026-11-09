@@ -97,12 +97,28 @@ class competency_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * The submission happens in the framework's context.
+     * The submission happens in the framework's context; on edit, the competency's own framework's.
+     *
+     * The posted framework id alone is not trusted on edit: a manager of one category could name
+     * their own framework beside another category's competency id.
      *
      * @return \context
+     * @throws \dml_missing_record_exception When the competency being edited does not exist.
+     * @throws \invalid_parameter_exception When the posted framework is not the competency's own.
      */
     #[\Override]
     protected function get_context_for_dynamic_submission(): \context {
+        $id = $this->get_competencyid();
+        if ($id > 0) {
+            $competency = competency::get_record(['id' => $id]);
+            if (!$competency) {
+                throw new \dml_missing_record_exception('competency');
+            }
+            if ((int) $competency->get('competencyframeworkid') !== $this->get_frameworkid()) {
+                throw new \invalid_parameter_exception('The competency does not belong to the framework.');
+            }
+            return $competency->get_context();
+        }
         $framework = competency_framework::get_record(['id' => $this->get_frameworkid()]);
         return $framework ? $framework->get_context() : context_system::instance();
     }

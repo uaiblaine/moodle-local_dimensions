@@ -2021,6 +2021,41 @@ body {
     color: var(--local-dimensions-neutral-ink);
 }
 
+/* Status pills other plugins add through the competency_status_badges hook: the grade badge's shape, one tone each. */
+.local-dimensions-grade-badge.local-dimensions-status-badge-success {
+    border: 1px solid var(--local-dimensions-success-edge);
+    background: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
+}
+
+.local-dimensions-grade-badge.local-dimensions-status-badge-warning {
+    border: 1px solid var(--local-dimensions-warning-edge);
+    background: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+}
+
+.local-dimensions-grade-badge.local-dimensions-status-badge-danger {
+    border: 1px solid var(--local-dimensions-danger-edge);
+    background: var(--local-dimensions-danger-tint);
+    color: var(--local-dimensions-danger-ink);
+}
+
+.local-dimensions-grade-badge.local-dimensions-status-badge-info {
+    border: 1px solid var(--local-dimensions-info-edge);
+    background: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+}
+
+.local-dimensions-grade-badge.local-dimensions-status-badge-neutral {
+    border: 1px solid var(--local-dimensions-neutral-edge);
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
+}
+
+.local-dimensions-hero-content .local-dimensions-status-badge {
+    margin: 0 0.375rem 0.75rem 0;
+}
+
 /* The badge's status icon is drawn the way the status icons are (see .local-dimensions-icon): the
    SVG is the mask, the badge's ink the paint and its tint the glyph. The proficient check shares
    their check glyph rule. */
@@ -3455,139 +3490,288 @@ body {
     margin-bottom: 0;
 }
 
+/* ============================================
+   COURSE CARD (moodle-dev/docs/course-card/CONTRACT.md)
+   The plan view's "Related content" card, the fleet's unified course card. Every visual value is a
+   --local-dimensions-card-* token, declared on the card root here and nowhere else: each reads the family's
+   --dimensions-card-* name first (declared by theme_dimensions only, never here), then the plugin's own chain,
+   which goes through the plugin's body tokens where one says the same thing (so their dark values and their
+   contrast pairs carry over), else Bootstrap's property and a literal. chip-* and close-* paint nothing of the
+   plan's card (no kind pill, no popover) and are declared for the contract's sake.
+   tests/local/course_card_contract_test.php reads them.
+   ============================================ */
 .local-dimensions-course-card-lg {
+    --local-dimensions-card-radius: var(--dimensions-card-radius, 12px);
+    --local-dimensions-card-border-width: var(--dimensions-card-border-width, var(--bs-border-width, 1px));
+    --local-dimensions-card-border: var(--dimensions-card-border, var(--local-dimensions-line));
+    --local-dimensions-card-surface: var(--dimensions-card-surface, var(--local-dimensions-surface));
+    --local-dimensions-card-ink: var(--dimensions-card-ink, var(--local-dimensions-ink));
+    --local-dimensions-card-ink-muted: var(--dimensions-card-ink-muted, var(--local-dimensions-ink-muted));
+    --local-dimensions-card-title-hover: var(--dimensions-card-title-hover, var(--local-dimensions-accent-hover));
+    --local-dimensions-card-cover-height: var(--dimensions-card-cover-height, 150px);
+    --local-dimensions-card-cover-fallback: var(--dimensions-card-cover-fallback, var(--local-dimensions-brand-fill));
+    --local-dimensions-card-cover-overlay: var(--dimensions-card-cover-overlay, linear-gradient(135deg, #ffffff29, #00000057));
+    --local-dimensions-card-chip-bg: var(--dimensions-card-chip-bg, rgb(255 255 255 / 92%));
+    --local-dimensions-card-chip-ink: var(--dimensions-card-chip-ink, #1f1f1f);
+    --local-dimensions-card-extra-bg: var(--dimensions-card-extra-bg, var(--local-dimensions-surface-alt));
+    --local-dimensions-card-extra-icon: var(--dimensions-card-extra-icon, var(--local-dimensions-brand-ink));
+    --local-dimensions-card-track: var(--dimensions-card-track, var(--local-dimensions-surface-inset));
+    --local-dimensions-card-fill: var(--dimensions-card-fill, var(--local-dimensions-accent));
+    --local-dimensions-card-track-height: var(--dimensions-card-track-height, 6px);
+    --local-dimensions-card-done: var(--dimensions-card-done, var(--bs-success, #357a32));
+    --local-dimensions-card-done-bg: var(--dimensions-card-done-bg, var(--local-dimensions-success-tint));
+    --local-dimensions-card-done-ink: var(--dimensions-card-done-ink, var(--local-dimensions-success-ink));
+    --local-dimensions-card-done-edge: var(--dimensions-card-done-edge, 4px);
+    --local-dimensions-card-shadow: var(--dimensions-card-shadow, 0 1px 2px var(--local-dimensions-shadow));
+    --local-dimensions-card-shadow-hover: var(--dimensions-card-shadow-hover, 0 6px 16px var(--local-dimensions-shadow));
+    --local-dimensions-card-focus-ring: var(--dimensions-card-focus-ring, var(--local-dimensions-focus-ring));
+    --local-dimensions-card-focus-width: var(--dimensions-card-focus-width, 2px);
+    --local-dimensions-card-locked-opacity: var(--dimensions-card-locked-opacity, 0.62);
+    --local-dimensions-card-close-bg: var(--dimensions-card-close-bg, rgb(0 0 0 / 50%));
+    --local-dimensions-card-close-bg-hover: var(--dimensions-card-close-bg-hover, rgb(0 0 0 / 70%));
+    --local-dimensions-card-close-edge: var(--dimensions-card-close-edge, rgb(255 255 255 / 40%));
+    --local-dimensions-card-transition: var(--dimensions-card-transition, 150ms);
+}
+
+/* The rest is a small shadow, a larger one on hover with the title underlined in its hover colour, and nothing
+   that moves (contract, section 5): a transform would cut the shadow in the carousel and push the neighbours.
+   The card is the stretched link's containing block. */
+.local-dimensions-course-card-lg {
+    position: relative;
     display: flex;
     flex-direction: column;
-    background: var(--local-dimensions-surface);
-    border-radius: 0.75rem;
     overflow: hidden;
-    border: none;
-    box-shadow:
-        0 4px 6px -1px var(--local-dimensions-shadow),
-        0 2px 4px -2px var(--local-dimensions-shadow);
-    transition: box-shadow 0.2s ease;
+    border: var(--local-dimensions-card-border-width) solid var(--local-dimensions-card-border);
+    border-radius: var(--local-dimensions-card-radius);
+    background: var(--local-dimensions-card-surface);
+    color: var(--local-dimensions-card-ink);
+    box-shadow: var(--local-dimensions-card-shadow);
+    transition: box-shadow var(--local-dimensions-card-transition) ease;
 }
 
 .local-dimensions-course-card-lg:hover {
-    box-shadow:
-        0 10px 15px -3px var(--local-dimensions-shadow),
-        0 4px 6px -4px var(--local-dimensions-shadow);
+    box-shadow: var(--local-dimensions-card-shadow-hover);
 }
 
-/* Course image area */
-.local-dimensions-course-img {
-    height: 128px;
+/* A card the viewer cannot open has no link and does not respond to hover; only its button does. Two classes,
+   so it outranks the hover above whatever the source order. */
+.local-dimensions-course-card-lg.local-dimensions-course-card-blocked {
+    cursor: default;
+}
+
+.local-dimensions-course-card-lg.local-dimensions-course-card-blocked:hover {
+    box-shadow: var(--local-dimensions-card-shadow);
+}
+
+/* The cover: the course image, the theme's generated one, else the fallback token under the overlay. */
+.local-dimensions-course-card-lg .local-dimensions-course-img {
+    flex: none;
+    height: var(--local-dimensions-card-cover-height);
     overflow: hidden;
-    background: var(--local-dimensions-surface-inset);
+    background-color: var(--local-dimensions-card-cover-fallback);
 }
 
-.local-dimensions-course-img img {
+.local-dimensions-course-card-lg .local-dimensions-course-img img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.local-dimensions-course-img-placeholder {
+.local-dimensions-course-card-lg .local-dimensions-course-img-placeholder {
+    background-image: var(--local-dimensions-card-cover-overlay);
+}
+
+/* No access: the cover recedes; the name, the plugin slot and the drawer keep their strength. */
+.local-dimensions-course-card-blocked .local-dimensions-course-img {
+    filter: grayscale(55%);
+    opacity: var(--local-dimensions-card-locked-opacity);
+}
+
+/* Completed (D4): a green base under the cover. */
+.local-dimensions-course-card-done .local-dimensions-course-img {
+    border-bottom: var(--local-dimensions-card-done-edge) solid var(--local-dimensions-card-done);
+}
+
+/* Boost Union's "Show course images" without Card (contract, section 8): no cover, and a top edge in the
+   cover's fallback colour, green once complete. The plugin holds no category colour. */
+.local-dimensions-course-card-lg.local-dimensions-course-card-nocover {
+    border-top: var(--local-dimensions-card-done-edge) solid var(--local-dimensions-card-cover-fallback);
+}
+
+.local-dimensions-course-card-lg.local-dimensions-course-card-nocover.local-dimensions-course-card-done {
+    border-top-color: var(--local-dimensions-card-done);
+}
+
+/* The body grows, so the cards of one carousel share a height and their last slot sits at the bottom. */
+.local-dimensions-course-card-lg .local-dimensions-course-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 12px 16px 14px;
+}
+
+.local-dimensions-course-card-lg .local-dimensions-course-name-lg {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: var(--local-dimensions-card-ink);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* One target (contract, section 4): the title's link stretches over the whole card, so the card is one hover
+   and a screen reader hears one link named by the course. The drawer and a compact card's button sit above it. */
+.local-dimensions-course-card-lg .local-dimensions-course-link {
+    color: inherit;
+    text-decoration: none;
+    text-underline-offset: 2px;
+    transition: color var(--local-dimensions-card-transition) ease;
+}
+
+.local-dimensions-course-card-lg .local-dimensions-course-link::after {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    border-radius: var(--local-dimensions-card-radius);
+    content: "";
+}
+
+.local-dimensions-course-card-lg:hover .local-dimensions-course-link,
+.local-dimensions-course-card-lg .local-dimensions-course-link:focus-visible {
+    color: var(--local-dimensions-card-title-hover);
+    text-decoration: underline;
+}
+
+/* The keyboard's ring is the card's, drawn by the stretched link around the whole card with the hover's shadow:
+   an outline, never a box-shadow alone, inset because the card clips its corners. The link's own outline stays,
+   transparent: a forced-colours mode paints it, where the pseudo-element's may not show. */
+.local-dimensions-course-card-lg .local-dimensions-course-link:focus-visible {
+    outline: var(--local-dimensions-card-focus-width) solid transparent;
+}
+
+.local-dimensions-course-card-lg .local-dimensions-course-link:focus-visible::after {
+    outline: var(--local-dimensions-card-focus-width) solid var(--local-dimensions-card-focus-ring);
+    outline-offset: calc(-1 * var(--local-dimensions-card-focus-width));
+    box-shadow: var(--local-dimensions-card-shadow-hover);
+}
+
+/* Core's dark mode underlines every link of #region-main at (1,6,1) (`[data-bs-theme="dark"] #region-main
+   a:not(.btn):not(.nav-link):not(.dropdown-item):not(.list-group-item):not(.page-link)`), and a plugin's sheet is
+   compiled before the theme's, so a tie loses. These rules, at (1,7,1) and (1,8,1), put the title's rest back and
+   keep the hover's and the keyboard's underline. They name no colour mode: the plugin's only mode rules are its
+   token activation pair (colour_tokens_test), and the title rests without an underline in both modes. */
+#region-main .local-dimensions-courses-section .local-dimensions-courses-scroll
+.local-dimensions-course-card-lg .local-dimensions-course-name-lg a.local-dimensions-course-link[href]:not(.btn) {
+    text-decoration: none;
+}
+
+#region-main .local-dimensions-courses-section .local-dimensions-courses-scroll
+.local-dimensions-course-card-lg:hover .local-dimensions-course-name-lg a.local-dimensions-course-link[href]:not(.btn),
+#region-main .local-dimensions-courses-section .local-dimensions-courses-scroll
+.local-dimensions-course-card-lg .local-dimensions-course-name-lg a.local-dimensions-course-link[href]:not(.btn):focus-visible {
+    text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-course-card-lg,
+    .local-dimensions-course-card-lg .local-dimensions-course-link {
+        transition: none;
+    }
+}
+
+/* The plugin slot (contract, section 2): what completing the course does to the competency, one line on a
+   quiet ground. */
+.local-dimensions-course-card-lg .local-dimensions-course-extra {
     display: flex;
     align-items: center;
-    justify-content: center;
-    /* One flat brand fill, not a gradient: the only token that could be a darker second stop
-       turns pale in dark mode, where the white initial on it would drop to 2.07:1. */
-    background: var(--local-dimensions-brand-fill);
-    color: var(--local-dimensions-on-brand-fill);
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-/* Course body */
-.local-dimensions-course-body {
-    padding: 1rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.local-dimensions-course-name-lg {
-    font-size: 0.9375rem;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0.3rem 0.55rem;
+    border-radius: 0.4rem;
+    background: var(--local-dimensions-card-extra-bg);
+    color: var(--local-dimensions-card-ink-muted);
+    font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--local-dimensions-ink);
-    margin: 0 0 0.5rem;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
 }
 
-/* Progress bar */
-.local-dimensions-course-progress-lg {
+.local-dimensions-course-card-lg .local-dimensions-course-extra .fa-solid,
+.local-dimensions-course-card-lg .local-dimensions-course-extra .fa-regular {
+    flex: none;
+    color: var(--local-dimensions-card-extra-icon);
+}
+
+/* The progress row: a 6 px bar and the percentage at the right, in tabular figures, at the card's foot. */
+.local-dimensions-course-card-lg .local-dimensions-course-progress-lg {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     margin-top: auto;
-    margin-bottom: 0.75rem;
 }
 
-/* Out of reach: the state is written on the card, so the artwork only has to stop
-   competing with it. No overlay - on a 255px card in a scroller a veil would bury the
-   image, the name, the outcome badge and the activities drawer. */
-.local-dimensions-course-card-dim .local-dimensions-course-img img {
-    filter: grayscale(55%);
-    opacity: 0.62;
+.local-dimensions-course-card-lg .local-dimensions-course-progress-track {
+    flex-grow: 1;
+    height: var(--local-dimensions-card-track-height);
+    overflow: hidden;
+    border-radius: var(--local-dimensions-card-track-height);
+    background-color: var(--local-dimensions-card-track);
 }
 
-.local-dimensions-course-card-dim .local-dimensions-course-img-placeholder {
-    opacity: 0.5;
+.local-dimensions-course-card-lg .local-dimensions-course-progress-fill-lg {
+    height: 100%;
+    border-radius: var(--local-dimensions-card-track-height);
+    background-color: var(--local-dimensions-card-fill);
+    transition: width 0.3s ease;
 }
 
-/* A card the viewer cannot open drops the card's link, so it must not look clickable. */
-.local-dimensions-course-card-blocked .local-dimensions-course-link {
-    cursor: default;
+/* The bar is drawn at its value straight away instead of growing to it. */
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-course-card-lg .local-dimensions-course-progress-fill-lg {
+        transition: none;
+    }
 }
 
-/* Same specificity as .local-dimensions-course-card-lg:hover above, so source order is what
-   wins here - this rule has to stay after it. Without this an unclickable card still lifts
-   on hover, feeling clickable when it is not. */
-.local-dimensions-course-card-blocked:hover {
-    box-shadow:
-        0 4px 6px -1px var(--local-dimensions-shadow),
-        0 2px 4px -2px var(--local-dimensions-shadow);
+.local-dimensions-course-card-lg .local-dimensions-course-progress-pct-lg {
+    min-width: 2.25rem;
+    color: var(--local-dimensions-card-ink-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    text-align: right;
 }
 
-/* On the plan's card the state area sits under the outcome badge, where the progress row of an
-   open card starts. */
-.local-dimensions-course-body .local-dimensions-state-area {
-    margin-bottom: 0.5rem;
+/* Completed (D4): the green seal in place of the bar, whatever Boost Union's progress setting says (D13). */
+.local-dimensions-course-card-lg .local-dimensions-course-seal {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 0.375rem;
+    margin-top: auto;
+    padding: 0.1875rem 0.625rem;
+    border-radius: 999px;
+    background: var(--local-dimensions-card-done-bg);
+    color: var(--local-dimensions-card-done-ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* A card the viewer cannot open: its state area takes the progress row's place, at the card's foot. */
+.local-dimensions-course-card-lg .local-dimensions-course-body .local-dimensions-state-area {
+    margin-top: auto;
 }
 
 .local-dimensions-course-body .local-dimensions-state-route {
     justify-content: flex-start;
 }
 
-/* A card the viewer cannot open is not a link, so its state's action is the way in. */
-.local-dimensions-course-cta {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.3rem 0.75rem;
-    border-radius: 0.4rem;
-    background: var(--local-dimensions-brand-fill);
-    color: var(--local-dimensions-on-brand-fill);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.local-dimensions-course-cta:hover,
-.local-dimensions-course-cta:focus {
-    color: var(--local-dimensions-on-brand-fill);
-    text-decoration: none;
-    filter: brightness(0.88);
-}
-
-.local-dimensions-course-cta:focus-visible {
-    outline: 2px solid var(--local-dimensions-focus-ring);
-    outline-offset: 2px;
+/* The state's own action is a Bootstrap button, restyled by nothing here (contract, section 6). */
+.local-dimensions-course-card-lg .local-dimensions-course-cta {
+    align-self: flex-start;
 }
 
 .local-dimensions-course-when {
@@ -3604,20 +3788,16 @@ body {
     font-weight: 600;
 }
 
-/* Single trackable activity or single section: the same centred column the tracker's
-   compact bodies use, so a learner moving between the two views reads one shape. The
-   call to action sits on its own line below the card link, because sharing one with the
-   name would clip the name at 255px long before it needed to be.
-   The auto vertical margins centre this block in whatever slack the card's floor leaves
-   below the name - the image cards' progress row uses margin-top: auto for the mirror
-   reason, to sit at the bottom. */
+/* Single trackable activity or single section: the activity's line or the section's ring in place of the
+   progress row (contract, section 3), the same centred column the tracker's compact bodies use, so a learner
+   moving between the two views reads one shape. */
 .local-dimensions-course-single {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
-    margin: auto 0;
+    margin-top: auto;
     text-align: center;
 }
 
@@ -3658,50 +3838,12 @@ body {
     font-weight: 600;
 }
 
-/* The compact modes carry no cover image, so the body starts at the card's top edge. */
-.local-dimensions-course-card-compact .local-dimensions-course-body {
-    padding-top: 0.8rem;
-}
-
-/* Dropping the 128px cover strip leaves a compact card visibly shorter than its
-   image-bearing siblings, and the scroller does not stretch them to match - it sets
-   align-items: flex-start so expanding one card's activities drawer cannot stretch the
-   whole row. So the card carries a floor of its own instead: 128px of artwork plus the
-   body of an image card whose name fits one line. It is a floor, not a height - a longer
-   name or an open drawer still runs taller. */
-.local-dimensions-course-card-compact {
-    min-height: 220px;
-}
-
-/* The card link is what grows into that floor, so the slack lands inside the body - where
-   the centred mark can use it - rather than as dead space under the call to action. */
-.local-dimensions-course-card-compact .local-dimensions-course-link {
+/* A compact card's main action, above the stretched link so it keeps its own target. */
+.local-dimensions-course-card-lg .local-dimensions-course-actions {
+    position: relative;
+    z-index: 2;
     display: flex;
-    flex: 1;
-    flex-direction: column;
-}
-
-/* A direct child of .local-dimensions-course-card-lg, like .local-dimensions-course-acts-toggle
-   below - the body's own 1rem padding does not reach it, so it carries its own inset to
-   match: 0.8rem keeps its left edge level with the toggle's, and the bottom value stops it
-   sitting flush against the activities drawer's top border. No top value - the card body's own
-   bottom padding already leaves room above this link. */
-.local-dimensions-course-go {
-    display: inline-flex;
-    align-items: center;
-    align-self: flex-start;
-    gap: 0.25rem;
-    padding: 0 0.8rem 0.8rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--local-dimensions-accent);
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.local-dimensions-course-go:hover {
-    color: var(--local-dimensions-accent);
-    text-decoration: underline;
+    margin-top: auto;
 }
 
 .local-dimensions-courses-foot {
@@ -3735,82 +3877,29 @@ body {
     outline-offset: 2px;
 }
 
-.local-dimensions-course-progress-track {
-    flex-grow: 1;
-    height: 8px;
-    background-color: var(--local-dimensions-surface-inset);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.local-dimensions-course-progress-fill-lg {
-    height: 100%;
-    background-color: var(--local-dimensions-success-ink);
-    border-radius: 4px;
-    transition: width 0.3s ease;
-}
-
-/* The bar is drawn at its value straight away instead of growing to it. */
-@media (prefers-reduced-motion: reduce) {
-    .local-dimensions-course-progress-fill-lg {
-        transition: none;
-    }
-}
-
-.local-dimensions-course-progress-pct-lg {
-    font-size: 0.75rem;
-    color: var(--local-dimensions-ink-muted);
-    font-weight: 500;
-    min-width: 2rem;
-    text-align: right;
-}
-
-/* The whole card is the link to the course, so it carries no button of its own. */
-.local-dimensions-course-link {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-}
-
-.local-dimensions-course-link:hover,
-.local-dimensions-course-link:focus {
-    color: inherit;
-    text-decoration: none;
-}
-
-/* The rule above drops the underline on focus as well as on hover, so keyboard focus needs
-   a ring of its own or it has no signal left at all. */
-.local-dimensions-course-link:focus-visible {
-    outline: 2px solid var(--local-dimensions-focus-ring);
-    outline-offset: 2px;
-}
-
-/* The 100% marker takes the success ink, not the inherited body colour. */
-.local-dimensions-course-check {
-    color: var(--local-dimensions-success-ink);
-}
-
-/* What completing this course or activity does to the competency. */
+/* What completing an activity does to the competency, in a drawer row. */
 .local-dimensions-outcome-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
     align-self: flex-start;
-    margin-bottom: 0.5rem;
-    padding: 0.2rem 0.55rem;
-    border: 1px solid var(--local-dimensions-brand-edge);
-    border-radius: 0.4rem;
-    background: var(--local-dimensions-brand-tint);
     color: var(--local-dimensions-brand-ink);
-    font-size: 0.71rem;
     font-weight: 700;
 }
 
-.local-dimensions-outcome-badge .fa {
+.local-dimensions-outcome-badge .fa-solid,
+.local-dimensions-outcome-badge .fa-regular {
     font-size: 0.7rem;
 }
 
-/* Activities disclosure - the toggle sits outside the card link. */
+/* Activities disclosure, the card's foot (D6): outside the card's link, and above its stretched area so the
+   toggle and the rows keep their own targets. */
+.local-dimensions-course-card-lg .local-dimensions-course-acts-toggle,
+.local-dimensions-course-card-lg .local-dimensions-course-acts {
+    position: relative;
+    z-index: 2;
+}
+
 .local-dimensions-course-acts-toggle {
     display: flex;
     align-items: center;
@@ -3819,8 +3908,8 @@ body {
     padding: 0.5rem 0.8rem;
     border: none;
     border-top: 1px solid var(--local-dimensions-line);
-    background: var(--local-dimensions-surface-alt);
-    color: var(--local-dimensions-ink-muted);
+    background: var(--local-dimensions-card-extra-bg);
+    color: var(--local-dimensions-card-ink-muted);
     font-size: 0.78rem;
     font-weight: 600;
     text-align: left;
@@ -3858,7 +3947,7 @@ body {
     gap: 0.15rem;
     margin: 0;
     padding: 0.3rem 0.5rem 0.5rem;
-    background: var(--local-dimensions-surface-alt);
+    background: var(--local-dimensions-card-extra-bg);
     list-style: none;
 }
 
@@ -4539,21 +4628,6 @@ a.local-dimensions-course-act-row:focus-visible {
 }
 
 /* ============================================
-      RESPONSIVE - Course cards
-      ============================================ */
-@media (width <= 575.98px) {
-
-    .local-dimensions-course-img {
-        height: 100px;
-    }
-
-    /* The compact card's floor stands in for the artwork above, so it shrinks with it. */
-    .local-dimensions-course-card-compact {
-        min-height: 192px;
-    }
-}
-
-/* ============================================
       TABS - Pill/Capsule on colored bleed
       ============================================ */
 
@@ -4766,9 +4840,8 @@ a.local-dimensions-course-act-row:focus-visible {
 
 .local-dimensions-courses-scroll {
     display: flex;
-    /* Cards keep their natural height, so expanding one card's activities
-       does not stretch every sibling to match. */
-    align-items: flex-start;
+    /* The cards of one carousel share a height and line their feet up (contract, section 3); an open
+       drawer makes the row taller. */
     gap: 1rem;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -6138,18 +6211,23 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 }
 
 /*
- * Standardise the close button across the plugin's hub modals — Bootstrap's default .btn-close is
+ * Standardise the close button across the plugin's modals — Bootstrap's default .btn-close is
  * a faint, low-contrast glyph. Give it a brand-tinted chip with a brand-ink "times" icon drawn
  * with the theme's Font Awesome (Moodle stylelint forbids inline SVG image data, and the glyph
- * lets us colour it precisely). Scoped to modals holding this plugin's content; the referenced-competency
- * modal keeps its own close button (its header is hidden), so it is excluded. The second selector
- * keys off .modal-form-dialogue, which core adds to every ModalForm dialog synchronously before
- * show(): the plugin's form modals get the chip from the first frame (the :has() arm alone flashes).
- * Targeted at the modal header so a core toast hosted in the modal body (the addToastRegion pattern)
- * keeps its own core .btn-close — the chip looks wrong on the smaller toast.
+ * lets us colour it precisely). Every modal on the plugin's own pages wears it, core's confirm and
+ * alert dialogues and ModalForm included, keyed off the page's body class, which is there from the
+ * first frame; a modal the plugin opens anywhere else carries .local-dimensions-modal, which every
+ * modal factory of the plugin adds to the modal root. The referenced-competency modal keeps its
+ * own close button (its header is hidden). A :has() over the body's class attribute would find
+ * the plugin's modals without a marker, but this sheet is bundled into every page, and such a
+ * :has() makes the browser recheck it on every class change anywhere (selector_cost_test refuses
+ * one). Targeted at the modal header so a core toast hosted in the modal body (the addToastRegion
+ * pattern) keeps its own core .btn-close — the chip looks wrong on the smaller toast.
  */
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close {
+.modal.local-dimensions-modal .modal-header .btn-close,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -6162,8 +6240,10 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
     opacity: 1;
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close::before,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close::before {
+.modal.local-dimensions-modal .modal-header .btn-close::before,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close::before,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close::before,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close::before {
     content: '\f00d';
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
@@ -6172,23 +6252,33 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
     color: var(--local-dimensions-brand-ink);
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:hover,
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:focus,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:hover,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:focus {
+.modal.local-dimensions-modal .modal-header .btn-close:hover,
+.modal.local-dimensions-modal .modal-header .btn-close:focus,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus {
     background-color: var(--local-dimensions-brand-edge);
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:focus-visible,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:focus-visible {
+.modal.local-dimensions-modal .modal-header .btn-close:focus-visible,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus-visible,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus-visible,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus-visible {
     outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
 }
 
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:hover::before,
-.modal:not(.local-dimensions-related-modal):has(.modal-body [class*='local-dimensions-']) .modal-header .btn-close:focus::before,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:hover::before,
-.local-dimensions-central-page .modal-form-dialogue .modal-header .btn-close:focus::before {
+.modal.local-dimensions-modal .modal-header .btn-close:hover::before,
+.modal.local-dimensions-modal .modal-header .btn-close:focus::before,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover::before,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover::before,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:hover::before,
+.local-dimensions-central-page .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus::before,
+.local-dimensions-viewplan .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus::before,
+.local-dimensions-viewcompetency .modal:not(.local-dimensions-related-modal) .modal-header .btn-close:focus::before {
     color: var(--local-dimensions-ink-strong);
 }
 

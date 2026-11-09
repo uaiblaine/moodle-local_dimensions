@@ -417,9 +417,10 @@ final class learner_js_source_test extends \basic_testcase {
         $cards = $this->function_body($source, 'renderCourseCardsScrollable');
 
         $this->assertStringContainsString("const isReachable = !!course.state && course.state.key === 'enrolled';", $cards);
+        // The title is the card's one link (the course card contract, section 4); a card that is not open draws its name.
         $this->assertMatchesRegularExpression(
-            "/html \+= isReachable\s*\? '<a href=\"' \+ escapeHtml\(courseUrl\) \+ '\" class=\"local-dimensions-course-link\">'"
-                . "\s*: '<div class=\"local-dimensions-course-link\">';/",
+            "/html \+= isReachable\s*\? '<a href=\"' \+ escapeHtml\(courseUrl\) \+ '\" class=\"local-dimensions-course-link\">' \+"
+                . "\s*escapeHtml\(courseName\) \+ '<\/a>'\s*: escapeHtml\(courseName\);/",
             $cards
         );
         // An enrolled card draws no state area, and a card that is not open keeps its pill in renderLockedState().
@@ -427,7 +428,7 @@ final class learner_js_source_test extends \basic_testcase {
         $this->assertStringNotContainsString('local-dimensions-state-area', $cards);
         $this->assert_in_order($cards, [
             'if (isReachable) {',
-            'renderCourseShape(course, strMap)',
+            'renderCourseShape(course, strMap, showProgress)',
             '} else {',
             'html += renderLockedState(course, strMap);',
         ]);

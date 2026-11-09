@@ -228,6 +228,35 @@ or ended enrolment, prerequisite course) with its rules; this plugin keeps no co
 <img src="docs/screenshots/phone-tracker.png" alt="The Competency tracker on a phone: the scope, the search folded into an icon and Filters on one line, a course card with its sections and Continue, and the Return to plan button" width="300">
 </p>
 
+### For developers: competency status badges
+
+Another plugin can add small status pills beside a competency on the Full plan overview (in each
+accordion header) and on the Competency tracker (after the competency title) by listening to
+`\local_dimensions\hook\competency_status_badges`. Neither plugin needs the other: the hook is the
+whole contract, and nothing is drawn when no plugin listens.
+
+- The hook is dispatched once per page. `get_userid()` is the **owner**, the learner whose
+  competencies are shown (the plan's owner, the tracker's user), never the viewer; the listener
+  decides what the current user may see. `get_competencyids()` lists the ids on the page.
+- `add_badge(int $competencyid, string $label, string $tone)`: the label is **plain text** in the
+  viewer's language (the template escapes it); the tone is one of the class constants
+  `TONE_SUCCESS`, `TONE_WARNING`, `TONE_DANGER`, `TONE_INFO` or `TONE_NEUTRAL`, the family's five
+  tone tokens. Any other tone throws a `coding_exception`, because it becomes a CSS class.
+- An id that is not on the page, and an empty label, are ignored without an exception, so a listener
+  answering from a cached list cannot break the page.
+- There is no link and no HTML on purpose: the plan overview's header is a button, where a link is
+  invalid, and a plain label keeps a listener from injecting markup into a page it does not own. The
+  component that added a badge is not recorded.
+
+```php
+$callbacks = [
+    [
+        'hook' => \local_dimensions\hook\competency_status_badges::class,
+        'callback' => [\my_plugin\hook_callbacks::class, 'competency_status_badges'],
+    ],
+];
+```
+
 ### Dark mode and the family theme
 
 ![The plan overview in Moodle's dark mode, the plan's own colours kept on the hero and the course cards](docs/screenshots/plan-dark.png)
@@ -278,7 +307,7 @@ One branch per Moodle version, each declaring `$plugin->supported` for exactly t
 | `MOODLE_405_STABLE` | 4.5 LTS | 2024100711 | v4.5-r1 |
 | `MOODLE_501_STABLE` | 5.1 | 2025100611 | v5.1-r1 |
 | `MOODLE_502_STABLE` | 5.2 | 2026042011 | v5.2-r1 |
-| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100514 | v5.3-r1 |
+| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100515 | v5.3-r1 |
 
 The 4.5, 5.1 and 5.2 branches carry the same features; the 5.3 line (`main`) takes new work first
 and uses PHP 8.3 syntax. This README and its pictures describe `main` on Moodle 5.3. Moodle 5.0 has
@@ -424,6 +453,29 @@ This plugin is developed and tested on Moodle core's Boost theme and should work
 themes. Boost Union and its children get a stylesheet of their own, which keeps the learner views'
 hero against the navigation bar when a smart menu exists. Under `theme_dimensions` the plugin reads
 the family tokens first. We can't support any other theme.
+
+### Boost Union's course overview settings
+
+When the site's theme is Boost Union, or a child theme of it such as Dimensions, three of Boost
+Union's course overview settings decide the course cards of the Full plan overview's *Related
+content* tab as well as Boost Union's own. They apply only under Boost Union or a child theme, and
+only while Boost Union is installed; the plugin adds no setting of its own for them, and under any
+other theme it keeps its own rule (progress shown, cover shown, the theme's primary colour for a
+course with no image). An administrator finds them under *Site administration › Appearance ›
+Boost Union › Look*, tab *Dashboard / My courses*.
+
+- **Show course progress** (`courseoverviewshowcourseprogress`). *No* removes the progress row and
+  its percentage from every card, and the progress ring of a card whose course has one section. A
+  completed course keeps its green *Completed* seal and the green base of its cover.
+- **Course image source** (`courseoverviewimagesource`). Decides the picture of a course that has
+  no course image of its own, which the plugin asks the theme for in the same request that loads
+  the cards. With *Course image with pattern fallback* (the default) that is the theme's generated
+  pattern (with Dimensions, the course category's cover); with *Course image with fallback image*
+  and a fallback image uploaded, every such course shows that image.
+- **Show course images** (`courseoverviewshowcourseimages`). With *Card* unchecked the cards are
+  drawn without their cover, over a thin top edge in the theme's primary colour, green once the
+  course is completed. *List* and *Summary* change nothing here: the plan has no list or summary
+  view of its courses.
 
 
 Data stored

@@ -257,4 +257,86 @@ final class category_lifecycle_test extends advanced_testcase {
         $empty = $this->getDataGenerator()->create_category();
         $this->assertTrue(category_lifecycle::can_move_contents((int) $empty->id, (int) $destination->id));
     }
+
+    /**
+     * A user who manages one kind of object in the category and is barred from the other.
+     *
+     * @param int $categoryid The category.
+     * @param bool $templates True to manage templates and not frameworks; false for the reverse.
+     * @return void
+     */
+    private function become_one_kind_manager(int $categoryid, bool $templates = true): void {
+        $context = context_coursecat::instance($categoryid);
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templatemanage', $templates ? CAP_ALLOW : CAP_PROHIBIT, $roleid, $context->id, true);
+        assign_capability('moodle/competency:competencymanage', $templates ? CAP_PROHIBIT : CAP_ALLOW, $roleid, $context->id, true);
+        $user = $this->getDataGenerator()->create_user();
+        role_assign($roleid, (int) $user->id, $context->id);
+        $this->setUser($user);
+    }
+
+    /**
+     * "Delete all" is not offered to someone who could delete the templates but not the frameworks.
+     *
+     * @return void
+     */
+    public function test_delete_all_is_not_offered_without_the_right_to_manage_every_object(): void {
+        $this->resetAfterTest();
+        $f = $this->fixture();
+        $categoryid = (int) $f['category']->id;
+
+        // Control: the administrator may delete both.
+        $this->assertTrue(category_lifecycle::can_delete_contents($categoryid));
+
+        // Each half of the rights is needed on its own.
+        $this->become_one_kind_manager($categoryid, true);
+        $this->assertFalse(category_lifecycle::can_delete_contents($categoryid));
+        $this->become_one_kind_manager($categoryid, false);
+        $this->assertFalse(category_lifecycle::can_delete_contents($categoryid));
+        // A category holding nothing of ours is not blocked by the missing right.
+        $this->assertTrue(category_lifecycle::can_delete_contents((int) $this->getDataGenerator()->create_category()->id));
+    }
+
+    /**
+     * A refusal on the framework leaves the templates in place: the deletion is one unit.
+     *
+     * @return void
+     */
+    public function test_a_failed_delete_does_not_leave_the_templates_gone(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $f = $this->fixture();
+        $category = $f['category'];
+
+        $this->become_one_kind_manager((int) $category->id, true);
+        try {
+            category_lifecycle::delete_contents($category->get_db_record());
+            $this->fail('The framework deletion must be refused');
+        } catch (\required_capability_exception $e) {
+            $this->assertInstanceOf(\required_capability_exception::class, $e);
+        }
+        /* Under PostgreSQL the test's own transaction encloses ours, so the rows stay until it ends and
+           the proof is the pending rollback; elsewhere the real rollback restores the template. */
+        $property = new \ReflectionProperty(\moodle_database::class, 'force_rollback');
+        $this->assertTrue(
+            template::record_exists((int) $f['template']->get('id')) || $property->getValue($DB),
+            'The templates deleted before the refusal must be rolled back'
+        );
+        $this->assertTrue(competency_framework::record_exists((int) $f['framework']->get('id')));
+    }
+
+    /**
+     * Control: with the rights, delete_contents() deletes the templates and the frameworks.
+     *
+     * @return void
+     */
+    public function test_delete_contents_deletes_both_for_an_administrator(): void {
+        $this->resetAfterTest();
+        $f = $this->fixture();
+
+        category_lifecycle::delete_contents($f['category']->get_db_record());
+
+        $this->assertFalse(template::record_exists((int) $f['template']->get('id')));
+        $this->assertFalse(competency_framework::record_exists((int) $f['framework']->get('id')));
+    }
 }

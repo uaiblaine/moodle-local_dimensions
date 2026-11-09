@@ -209,6 +209,7 @@ export const openExportModal = async(region) => {
         Templates.render('local_dimensions/central/plans_export', {}),
     ]);
     const modal = await Modal.create({title: title, body: body});
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.setRemoveOnClose(true);
     modal.getRoot().on(ModalEvents.shown, () => {
         // The toast region is hosted in the modal body: the page-level wrapper sits below the
@@ -397,6 +398,7 @@ const openPreviewModal = async(pane, settings) => {
         makeLoadingBody('central_plans_import_loading'),
     ]);
     const modal = await ModalSaveCancel.create({title: title, body: loading.outerHTML, large: true});
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.setSaveButtonText(savelabel);
     modal.setRemoveOnClose(true);
     modal.getRoot().on(ModalEvents.shown, () => {

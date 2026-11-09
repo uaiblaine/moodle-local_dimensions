@@ -91,6 +91,9 @@ class framework_csv_importer {
     public function import(): array {
         global $DB;
 
+        // The importer checks what it can check itself instead of trusting its one caller, and before it provisions anything.
+        require_capability('moodle/competency:competencymanage', $this->context);
+
         $fw = $this->parsed['framework'] ?? null;
         if (!$fw) {
             throw new \moodle_exception('central_frameworks_import_noframeworkrow', 'local_dimensions');
@@ -370,7 +373,10 @@ class framework_csv_importer {
     private function set_rules(\stdClass $record): void {
         if (!empty($record->createdcomp) && $record->ruletype !== '') {
             $class = $record->ruletype;
-            if (class_exists($class)) {
+            /* The CSV names the class and only competency rules may be called through it; anything else
+               is skipped like a missing class. Core's importer checks class_exists() alone
+               ({@see \tool_lpimportcsv\framework_importer}). */
+            if (class_exists($class) && is_subclass_of($class, \core_competency\competency_rule::class)) {
                 $oldconfig = $record->ruleconfig === 'null' ? null : $record->ruleconfig;
                 $newconfig = $class::migrate_config($oldconfig, $this->exportidmap);
                 $comp = $record->createdcomp;
