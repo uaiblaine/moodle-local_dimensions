@@ -193,7 +193,7 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
 - `surface-inset` is a platter, not a ground for coloured ink; `ink-faint` only for inactive
   text; `brand-fill` only under `on-brand-fill`. Focus is one `outline` chained on
   `--bs-emphasis-color`, never brand-coloured, never a `box-shadow` alone.
-- `tests/local/colour_tokens_test.php` (21 mutation-checked arms) holds all of it; the hero's
+- `tests/local/colour_tokens_test.php` (22 mutation-checked arms) holds all of it; the hero's
   inline `background-color` stays inside `{{^hasbgimage}}` and every template-to-stylesheet
   custom-property transport needs its own test (nothing in the pipeline reads that chain).
   `docs/design-kit/tokens.html` names `--mds-*` in documentation only; never in CSS.

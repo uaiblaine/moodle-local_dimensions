@@ -1,1 +1,1 @@
-s/--local-dimensions-state-neutral-ink: var\(--local-dimensions-neutral-ink\);/--local-dimensions-state-neutral-ink: var(--local-dimensions-ink-faint);/;
+s/--local-dimensions-state-neutral-ink: var\(--dimensions-state-neutral-ink, var\(--local-dimensions-neutral-ink\)\);/--local-dimensions-state-neutral-ink: var(--dimensions-state-neutral-ink, var(--local-dimensions-ink-faint));/;

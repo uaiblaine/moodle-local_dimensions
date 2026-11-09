@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### The fleet's course card on the Full plan overview
+
+The *Related content* tab's course cards follow the fleet's course card contract
+(`moodle-dev/docs/course-card/CONTRACT.md`), shared with theme_dimensions and block_compass.
+
+- **One card shape.** A 150 px cover, the course name (two lines at most), then one line saying
+  what completing the course does to the competency (*Completes the competency* with a trophy,
+  *Sends for review* with a paper plane), then the progress row: a 6 px bar and the percentage in
+  tabular figures, with `role="progressbar"` and a label. A course with no completion tracking
+  draws no row instead of "0%". A completed course draws the green *Completed* seal in place of
+  the bar and a green base under its cover. The *N activities* drawer stays as the card's foot.
+- **One target.** The course name is the card's only link and stretches over the whole card, so a
+  screen reader hears one link named by the course; the card's focus ring is that link's, the hover
+  deepens the shadow and underlines the name, and nothing moves. A card whose course has one
+  activity or one section keeps the activity's line or the section's ring in place of the bar and
+  gets *Go to activity* or *Access content* as a button. A card the viewer cannot open is not a
+  link: its cover recedes and the state's own action is its button.
+- **Equal heights.** The cards of one carousel share a height and line their feet up.
+- **Boost Union's settings.** Under Boost Union or a child theme, *Show course progress*, *Course
+  image source* and *Show course images* decide the cards, read on the server
+  (`local\card_settings`): progress off removes the bar and its percentage (the seal stays), the
+  card view's images off removes the cover and draws a 4 px top edge, and a course with no image
+  gets the theme's generated one (`local\course_card`), asked for only when such a course is in
+  the answer. The README explains the three settings.
+- **Tokens.** Every visual value of the card is one of thirty `--local-dimensions-card-*` tokens,
+  each reading the family's `--dimensions-card-*` first, so theme_dimensions restyles the card
+  without a selector. `tests/local/course_card_contract_test.php` is the fleet's parity test.
+- `local_dimensions_get_competency_courses` returns `hascompletion`, `showprogress` and
+  `showcover` per course, and `courseimage` may now be the theme's generated image (a base64 SVG
+  data URI or a pluginfile URL of this site, checked on the server).
+- The course name no longer takes core's dark-mode underline of `#region-main` links at rest.
+
 ### Performance
 
 Version `2026100517`.

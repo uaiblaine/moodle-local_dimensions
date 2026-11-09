@@ -1,0 +1,1 @@
+s/\(\$images\[\$courseid\] \?\? null\) === '' && //;

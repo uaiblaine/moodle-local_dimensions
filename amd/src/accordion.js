@@ -353,7 +353,8 @@ define(
                 {key: 'go_to_activity', component: 'local_dimensions'},
                 {key: 'access_content', component: 'local_dimensions'},
                 {key: 'aria_completion_percentage', component: 'local_dimensions'},
-                {key: 'evidence_hasfiles', component: 'local_dimensions'}
+                {key: 'evidence_hasfiles', component: 'local_dimensions'},
+                {key: 'course_card_progress', component: 'local_dimensions'}
             ]).then(function(strings) {
                 const strMap = {
                     ratingLabel: strings[0],
@@ -444,7 +445,8 @@ define(
                     goToActivity: strings[82],
                     accessContent: strings[83],
                     ariaSectionProgress: strings[84],
-                    evidenceHasFiles: strings[85]
+                    evidenceHasFiles: strings[85],
+                    courseCardProgress: strings[86]
                 };
 
                 /* The strings can be a network round trip of their own, and a layout switch landing
@@ -2066,30 +2068,60 @@ define(
         }
 
         /**
-         * Render the badge saying what completing an item does to the competency.
+         * What completing an item does to the competency, when it decides something.
+         *
+         * Font Awesome 6 names: core 5.3 draws a version 4 name only through its shim.
+         *
+         * @param {number|string} outcome The link's ruleoutcome value
+         * @param {Object} strMap Language strings map
+         * @return {Object|null} The sentence (label) and the icon classes (icon), null unless the outcome is decisive
+         */
+        function outcomeOf(outcome, strMap) {
+            const value = Number.parseInt(outcome, 10);
+            if (value === OUTCOME_COMPLETE) {
+                return {label: strMap.outcomeComplete, icon: 'fa-solid fa-trophy'};
+            }
+            if (value === OUTCOME_RECOMMEND) {
+                return {label: strMap.outcomeRecommend, icon: 'fa-regular fa-paper-plane'};
+            }
+            return null;
+        }
+
+        /**
+         * Render the badge saying what completing an activity does to the competency, in a drawer row.
          *
          * @param {number|string} outcome The link's ruleoutcome value
          * @param {Object} strMap Language strings map
          * @return {string} HTML for the badge, empty unless the outcome is a decisive one
          */
         function renderOutcomeBadge(outcome, strMap) {
-            const value = Number.parseInt(outcome, 10);
-            let label = '';
-            let icon = '';
-
-            if (value === OUTCOME_COMPLETE) {
-                label = strMap.outcomeComplete;
-                icon = 'fa-trophy';
-            } else if (value === OUTCOME_RECOMMEND) {
-                label = strMap.outcomeRecommend;
-                icon = 'fa-paper-plane';
-            } else {
+            const decided = outcomeOf(outcome, strMap);
+            if (decided === null) {
                 return '';
             }
 
             return '<span class="local-dimensions-outcome-badge">' +
-                '<i class="fa ' + icon + '" aria-hidden="true"></i>' +
-                escapeHtml(label) + '</span>';
+                '<i class="' + decided.icon + '" aria-hidden="true"></i>' +
+                escapeHtml(decided.label) + '</span>';
+        }
+
+        /**
+         * Render a course card's plugin slot (the course card contract, section 2): what completing the course
+         * does to the competency, an icon and a sentence on a quiet ground.
+         *
+         * @param {number|string} outcome The link's ruleoutcome value
+         * @param {Object} strMap Language strings map
+         * @return {string} HTML for the slot, empty unless the outcome is a decisive one
+         */
+        function renderCourseExtra(outcome, strMap) {
+            const decided = outcomeOf(outcome, strMap);
+            if (decided === null) {
+                return '';
+            }
+
+            return '<p class="local-dimensions-course-extra">' +
+                '<i class="' + decided.icon + '" aria-hidden="true"></i>' +
+                '<span>' + escapeHtml(decided.label) + '</span></p>';
         }
 
         /**
@@ -2230,8 +2262,9 @@ define(
                 actionlabel = strMap.learnMore;
                 actionurl = M.cfg.wwwroot + '/course/view.php?id=' + course.id;
             }
+            // The card is not a link, so the state's own action is its main button (contract, section 3).
             if (actionurl) {
-                html += '<a class="local-dimensions-course-cta" href="' + escapeHtml(actionurl) + '">' +
+                html += '<a class="btn btn-primary btn-sm local-dimensions-course-cta" href="' + escapeHtml(actionurl) + '">' +
                     escapeHtml(actionlabel) + '</a>';
             }
             if (state.routeurl) {
@@ -2254,13 +2287,15 @@ define(
          *
          * @param {Object} course A course row from the web service
          * @param {Object} strMap Language strings map
+         * @param {boolean} showProgress Whether Boost Union's settings leave the card its percentage
          * @return {string} HTML, or an empty string when the normal progress bar should render
          */
-        function renderCourseShape(course, strMap) {
+        function renderCourseShape(course, strMap, showProgress) {
             if (course.cardmode === 'section' && course.section) {
                 let html = '<span class="local-dimensions-course-single">';
-                // A section with nothing trackable has no percentage to claim.
-                if (course.section.tracked) {
+                /* A section with nothing trackable has no percentage to claim, and the ring is a percentage, so
+                   Boost Union's "Show course progress" set to No takes it away too. */
+                if (course.section.tracked && showProgress) {
                     html += renderSectionRing(Number.parseInt(course.progress, 10) || 0, strMap);
                 }
                 if (course.section.hasownname) {
@@ -2274,7 +2309,7 @@ define(
             if (course.activity) {
                 let html = '<span class="local-dimensions-course-single">';
                 if (course.activity.tracked) {
-                    html += '<i class="fa ' + (course.activity.completed ? 'fa-check-circle' : 'fa-circle-o') +
+                    html += '<i class="' + (course.activity.completed ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle') +
                         ' local-dimensions-course-single-mark' +
                         (course.activity.completed ? ' local-dimensions-course-single-done' : '') +
                         '" aria-hidden="true"></i>';
@@ -2295,10 +2330,10 @@ define(
         }
 
         /**
-         * Render the call-to-action link for a compact card (activity or section mode).
+         * Render the main action of a compact card (activity or section mode).
          *
-         * In the compact modes the card itself links to the course, and this second link goes to
-         * the one activity or section the card summarises.
+         * In the compact modes the card itself links to the course, and this button, above the card's stretched
+         * link, goes to the one activity or section the card summarises (the course card contract, section 3).
          *
          * @param {Object} course A course row from the web service
          * @param {Object} strMap Language strings map
@@ -2312,11 +2347,9 @@ define(
             if (!gourl) {
                 return '';
             }
-            let html = '<a href="' + escapeHtml(gourl) + '" class="local-dimensions-course-go">';
-            html += escapeHtml(golabel);
-            html += '<i class="fa fa-arrow-right" aria-hidden="true"></i>';
-            html += '</a>';
-            return html;
+            return '<div class="local-dimensions-course-actions">' +
+                '<a href="' + escapeHtml(gourl) + '" class="btn btn-primary btn-sm local-dimensions-course-go">' +
+                escapeHtml(golabel) + '</a></div>';
         }
 
         /**
@@ -2360,23 +2393,53 @@ define(
         }
 
         /**
-         * Render the normal progress row of a course card.
+         * Render the state and progress slot of an open timeline card (the course card contract, section 3).
+         *
+         * A completed course draws the green seal in place of the bar (D4), whatever Boost Union's progress setting
+         * says (D13); a course still running draws the bar and its percentage unless that setting is No; a course
+         * with no completion tracking draws nothing, never "0 %".
          *
          * @param {Object} course A course row from the web service
-         * @return {string} HTML
+         * @param {Object} strMap Language strings map
+         * @param {boolean} showProgress Whether Boost Union's settings leave the card its progress row
+         * @param {boolean} isDone Whether the plan owner completed the course
+         * @return {string} HTML, empty when there is nothing to draw
          */
-        function renderCourseProgress(course) {
+        function renderCourseProgress(course, strMap, showProgress, isDone) {
+            if (isDone) {
+                return '<span class="local-dimensions-course-seal">' +
+                    '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>' +
+                    '<span>' + escapeHtml(strMap.courseCompleted) + '</span></span>';
+            }
+            if (!course.hascompletion || !showProgress) {
+                return '';
+            }
             const progress = Number.parseInt(course.progress, 10) || 0;
-            let html = '<div class="local-dimensions-course-progress-lg">';
+            const label = strMap.courseCardProgress.replace('{$a}', progress);
+            let html = '<div class="local-dimensions-course-progress-lg" role="progressbar" aria-valuenow="' + progress +
+                '" aria-valuemin="0" aria-valuemax="100" aria-label="' + escapeHtml(label) + '">';
             html += '<div class="local-dimensions-course-progress-track">';
             html += '<div class="local-dimensions-course-progress-fill-lg" style="width: ' + progress + '%;"></div>';
             html += '</div>';
-            html += '<span class="local-dimensions-course-progress-pct-lg">' + progress + '%</span>';
-            if (progress >= 100) {
-                html += '<i class="fa fa-check-circle local-dimensions-course-check" aria-hidden="true"></i>';
-            }
+            html += '<span class="local-dimensions-course-progress-pct-lg" aria-hidden="true">' + progress + '%</span>';
             html += '</div>';
             return html;
+        }
+
+        /**
+         * Render a course card's cover: the course image, else the theme's generated one (both in courseimage),
+         * else the cover fallback token under the overlay gradient.
+         *
+         * @param {Object} course A course row from the web service
+         * @return {string} HTML for the cover
+         */
+        function renderCourseCover(course) {
+            const image = course.courseimage ? course.courseimage.trim() : '';
+            if (image === '') {
+                return '<div class="local-dimensions-course-img local-dimensions-course-img-placeholder"></div>';
+            }
+            return '<div class="local-dimensions-course-img">' +
+                '<img src="' + escapeHtml(image) + '" alt="" loading="lazy"></div>';
         }
 
         /**
@@ -2418,62 +2481,58 @@ define(
             courses.forEach(function(course) {
                 const courseUrl = M.cfg.wwwroot + '/course/view.php?id=' + course.id;
                 const courseName = course.fullname || course.shortname || '';
-                const hasImage = course.courseimage && course.courseimage.trim() !== '';
                 const activities = course.activities || [];
                 const iscompact = course.cardmode === 'activity' || course.cardmode === 'section';
 
-                /* Only a card the viewer can open is a link and wears the open look. Any other
-                   state dims its image only, keeping the name, the outcome badge and the drawer at
-                   full strength, and drops the whole-card link: its state area carries the way in,
-                   when there is one, as a link of its own. */
+                /* Only a card the viewer can open is a link and wears the open look. Any other state
+                   recedes its cover only, keeping the name, the plugin slot and the drawer at full
+                   strength, and draws no link: its state area carries the way in, when there is one,
+                   as its main button. */
                 const isReachable = !!course.state && course.state.key === 'enrolled';
 
+                /* Boost Union's settings, decided on the server (local\card_settings); a row without them is
+                   drawn whole. */
+                const showCover = course.showcover !== false;
+                const showProgress = course.showprogress !== false;
+                const isDone = isReachable && !!course.hascompletion && (Number.parseInt(course.progress, 10) || 0) >= 100;
+
                 html += '<div class="local-dimensions-course-card-lg' +
-                    (isReachable ? '' : ' local-dimensions-course-card-dim local-dimensions-course-card-blocked') +
-                    (iscompact ? ' local-dimensions-course-card-compact' : '') + '">';
+                    (isReachable ? '' : ' local-dimensions-course-card-blocked') +
+                    (iscompact ? ' local-dimensions-course-card-compact' : '') +
+                    (isDone ? ' local-dimensions-course-card-done' : '') +
+                    (showCover ? '' : ' local-dimensions-course-card-nocover') + '">';
 
-                /* The whole card links to the course; a compact card (single activity or single
-                   section) adds a second target below for its call to action - see
-                   renderCourseGoLink. */
-                html += isReachable
-                    ? '<a href="' + escapeHtml(courseUrl) + '" class="local-dimensions-course-link">'
-                    : '<div class="local-dimensions-course-link">';
-
-                // Course image - the compact modes carry no cover image.
-                if (!iscompact) {
-                    if (hasImage) {
-                        html += '<div class="local-dimensions-course-img">';
-                        html += '<img src="' + escapeHtml(course.courseimage) + '" alt="" loading="lazy">';
-                        html += '</div>';
-                    } else {
-                        // Gradient placeholder with initials.
-                        const initials = getInitials(courseName);
-                        html += '<div class="local-dimensions-course-img local-dimensions-course-img-placeholder">';
-                        html += '<span>' + escapeHtml(initials) + '</span>';
-                        html += '</div>';
-                    }
+                if (showCover) {
+                    html += renderCourseCover(course);
                 }
 
                 // Course body.
                 html += '<div class="local-dimensions-course-body">';
-                html += '<h3 class="local-dimensions-course-name-lg">' + escapeHtml(courseName) + '</h3>';
-                html += renderOutcomeBadge(course.ruleoutcome, strMap);
+
+                /* The title's link stretches over the whole card (contract, section 4): one target, one hover,
+                   one link named by the course. A compact card's button and the drawer sit above it. */
+                html += '<h3 class="local-dimensions-course-name-lg">';
+                html += isReachable
+                    ? '<a href="' + escapeHtml(courseUrl) + '" class="local-dimensions-course-link">' +
+                        escapeHtml(courseName) + '</a>'
+                    : escapeHtml(courseName);
+                html += '</h3>';
+                html += renderCourseExtra(course.ruleoutcome, strMap);
 
                 if (isReachable) {
-                    // An enrolled card shows no state pill: it is the ordinary case.
-                    const shape = renderCourseShape(course, strMap);
-                    html += shape === '' ? renderCourseProgress(course) : shape;
+                    // An enrolled card shows no state pill: it is the ordinary case (D7).
+                    const shape = renderCourseShape(course, strMap, showProgress);
+                    html += shape === '' ? renderCourseProgress(course, strMap, showProgress, isDone) : shape;
+                    if (iscompact) {
+                        html += renderCourseGoLink(course, strMap);
+                    }
                 } else {
                     html += renderLockedState(course, strMap);
                 }
 
                 html += '</div>'; // End local-dimensions-course-body.
-                html += isReachable ? '</a>' : '</div>';
 
-                if (iscompact) {
-                    html += renderCourseGoLink(course, strMap);
-                }
-
+                // The card's foot, outside the link (D6).
                 html += renderCourseActivitiesDrawer(course, activities, strMap);
 
                 html += '</div>'; // End local-dimensions-course-card-lg.
@@ -2877,29 +2936,6 @@ define(
             html += '</div>'; // End local-dimensions-desc-tab-content.
 
             return html;
-        }
-
-        /**
-         * Build initials from a course name for image placeholders.
-         *
-         * @param {string} name Course name
-         * @return {string} Initials
-         */
-        function getInitials(name) {
-            if (!name || typeof name !== 'string') {
-                return '';
-            }
-
-            const parts = name.trim().split(/\s+/).filter(Boolean);
-            if (parts.length === 0) {
-                return '';
-            }
-
-            if (parts.length === 1) {
-                return parts[0].slice(0, 2).toUpperCase();
-            }
-
-            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
         }
 
         /**
