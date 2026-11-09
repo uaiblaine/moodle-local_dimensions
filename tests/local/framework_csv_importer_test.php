@@ -322,4 +322,96 @@ final class framework_csv_importer_test extends \advanced_testcase {
         }
         $this->assertSame($before, $this->write_counts());
     }
+
+    /**
+     * Import a one-competency CSV whose row names the given rule class.
+     *
+     * @param string $ruletype The class name in the ruletype column.
+     * @param string $idnumber The framework idnumber (globally unique).
+     * @return competency The imported competency.
+     */
+    private function import_rule_row(string $ruletype, string $idnumber): competency {
+        $encode = static function (array $row): string {
+            return implode(',', array_map(static function ($cell): string {
+                return '"' . str_replace('"', '""', (string) $cell) . '"';
+            }, $row));
+        };
+        $config = '[{"scaleid":"0"},{"id":2,"scaledefault":1,"proficient":1}]';
+        $csv = $encode(framework_csv_serializer::CORE_HEADERS) . "\n"
+            . $encode(['', $idnumber, 'Rule FW', '', '1', 'Not good,Good', $config, '', '', '', '', '', '1', 'competency']) . "\n"
+            . $encode(['', $idnumber . '-C', 'Rule C', '', '1', '', '', $ruletype, '1', 'null', '', 'E1', '', '']) . "\n";
+        $result = (new framework_csv_importer(
+            framework_csv_serializer::parse($csv),
+            \context_system::instance(),
+            false
+        ))->import();
+        return competency::get_record(['competencyframeworkid' => $result['frameworkid'], 'idnumber' => $idnumber . '-C']);
+    }
+
+    /**
+     * A ruletype that names a class which is not a competency rule is never called.
+     *
+     * @return void
+     */
+    public function test_a_ruletype_that_is_not_a_competency_rule_is_not_called(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        require_once(__DIR__ . '/../fixtures/csv_foreign_rule.php');
+        csv_foreign_rule::$called = false;
+
+        $competency = $this->import_rule_row(csv_foreign_rule::class, 'FOREIGN');
+
+        $this->assertFalse(csv_foreign_rule::$called);
+        $this->assertNull($competency->get('ruletype'));
+    }
+
+    /**
+     * Control: a genuine rule class from the CSV is applied.
+     *
+     * @return void
+     */
+    public function test_a_competency_rule_ruletype_is_applied(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $competency = $this->import_rule_row(\core_competency\competency_rule_all::class, 'GENUINE');
+
+        $this->assertSame(\core_competency\competency_rule_all::class, $competency->get('ruletype'));
+    }
+
+    /**
+     * A caller without the capability is refused before the importer provisions any custom field.
+     *
+     * @return void
+     */
+    public function test_a_caller_without_the_capability_provisions_nothing(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $parsed = $this->parsed_with_scales('Not good,Good', '');
+        $sql = 'SELECT f.id
+                  FROM {customfield_field} f
+                  JOIN {customfield_category} c ON c.id = f.categoryid
+                 WHERE c.component = :component AND c.area = :area';
+        $params = ['component' => 'local_dimensions', 'area' => 'competency'];
+        // Start from nothing provisioned so the arm has force whatever the site did before.
+        foreach ($DB->get_fieldset_sql($sql, $params) as $fieldid) {
+            $DB->delete_records('customfield_field', ['id' => $fieldid]);
+        }
+        $before = count($DB->get_fieldset_sql($sql, $params));
+
+        $this->setUser($this->getDataGenerator()->create_user());
+        try {
+            (new framework_csv_importer($parsed, \context_system::instance(), false))->import();
+            $this->fail('An import without the capability must be refused');
+        } catch (\required_capability_exception $e) {
+            $this->assertInstanceOf(\required_capability_exception::class, $e);
+        }
+        $this->assertCount($before, $DB->get_fieldset_sql($sql, $params));
+
+        // Control: an administrator's import provisions the fields.
+        $this->setAdminUser();
+        (new framework_csv_importer($parsed, \context_system::instance(), false))->import();
+        $this->assertGreaterThan($before, count($DB->get_fieldset_sql($sql, $params)));
+    }
 }

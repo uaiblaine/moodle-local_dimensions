@@ -83,16 +83,13 @@ class chip_filters {
         }
 
         $cache = \cache::make('local_dimensions', 'course_customfields');
+        $viewable = self::course_field_viewers($shortnames);
         $missing = [];
         foreach ($courseids as $cid) {
             $cid = (int) $cid;
             $cached = $cache->get($cid);
             if ($cached !== false && is_array($cached)) {
-                $picked = [];
-                foreach ($shortnames as $sn) {
-                    $picked[$sn] = self::format_value((string) ($cached[$sn] ?? ''));
-                }
-                $result[$cid] = $picked;
+                $result[$cid] = self::pick_visible($cid, $shortnames, $cached, $viewable);
             } else {
                 $missing[] = $cid;
             }
@@ -103,15 +100,66 @@ class chip_filters {
             foreach ($missing as $cid) {
                 $values = $loaded[$cid] ?? [];
                 $cache->set($cid, $values);
-                $picked = [];
-                foreach ($shortnames as $sn) {
-                    $picked[$sn] = self::format_value((string) ($values[$sn] ?? ''));
-                }
-                $result[$cid] = $picked;
+                $result[$cid] = self::pick_visible($cid, $shortnames, $values, $viewable);
             }
         }
 
         return $result;
+    }
+
+    /**
+     * Resolve, once per call, who may see each named course custom field.
+     *
+     * @param string[] $shortnames
+     * @return array Per shortname: true when
+     *         every viewer may see it, the field when it needs core's per-course check
+     *         (visible to teachers), false when nobody may. Unknown shortnames are absent.
+     */
+    protected static function course_field_viewers(array $shortnames): array {
+        $out = [];
+        try {
+            $fields = \core_course\customfield\course_handler::create()->get_fields();
+        } catch (\Throwable $e) {
+            return $out;
+        }
+        foreach ($fields as $field) {
+            $sn = (string) $field->get('shortname');
+            if (!in_array($sn, $shortnames, true)) {
+                continue;
+            }
+            $visibility = $field->get_configdata_property('visibility')
+                ?? \core_course\customfield\course_handler::VISIBLETOALL;
+            if ($visibility == \core_course\customfield\course_handler::NOTVISIBLE) {
+                $out[$sn] = false;
+            } else if ($visibility == \core_course\customfield\course_handler::VISIBLETOTEACHERS) {
+                $out[$sn] = $field;
+            } else {
+                $out[$sn] = true;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Pick the configured fields of one course for the current viewer.
+     *
+     * @param int $courseid
+     * @param string[] $shortnames
+     * @param array $values Every stored value of the course by shortname, from the shared cache.
+     * @param array $viewable See course_field_viewers().
+     * @return array Shortname => viewer-formatted value, empty where the viewer may not see the field.
+     */
+    protected static function pick_visible(int $courseid, array $shortnames, array $values, array $viewable): array {
+        $picked = [];
+        foreach ($shortnames as $sn) {
+            $rule = $viewable[$sn] ?? false;
+            if ($rule !== true && $rule !== false) {
+                // Visible to teachers: core's own per-course capability check.
+                $rule = \core_course\customfield\course_handler::create()->can_view($rule, $courseid);
+            }
+            $picked[$sn] = $rule ? self::format_value((string) ($values[$sn] ?? '')) : '';
+        }
+        return $picked;
     }
 
     /**
@@ -124,7 +172,8 @@ class chip_filters {
         $courseids = array_map('intval', $courseids);
         $out = array_fill_keys($courseids, []);
 
-        // Every field, not only the visible ones: that form runs can_view() per course, reading each course again.
+        // Every field, not only the visible ones: the cache is per course, not per viewer, so it keeps all
+        // values and get_course_values() applies each field's visibility for the viewer on output.
         try {
             $instances = \core_course\customfield\course_handler::create()->get_instances_data($courseids, true);
         } catch (\Throwable $e) {

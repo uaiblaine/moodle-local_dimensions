@@ -245,6 +245,7 @@ const deleteTemplate = async(pane, id, name, plancount) => {
             show: true,
             removeOnClose: true,
         });
+        modal.getRoot().addClass('local-dimensions-modal');
         modal.getRoot().on(ModalEvents.delete, () => {
             const checked = modal.getRoot()[0]
                 .querySelector('input[name="local-dimensions-delete-template-choice"]:checked');
@@ -565,6 +566,7 @@ const moveCompetencyTo = async(pane, region, target) => {
         show: true,
         removeOnClose: true,
     });
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.getRoot().on(ModalEvents.save, () => {
         const select = modal.getRoot()[0].querySelector('#local-dimensions-plans-move-position');
         const targetindex = select ? Number(select.value) : current;

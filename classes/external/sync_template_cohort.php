@@ -29,6 +29,7 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_dimensions\local\enrol_methods;
 use local_dimensions\task\sync_template_cohort as sync_task;
 
 /**
@@ -72,6 +73,9 @@ class sync_template_cohort extends external_api {
         $context = $template->get_context();
         self::validate_context($context);
         require_capability('moodle/competency:templatemanage', $context);
+        if (!enrol_methods::cohort_linked($template->get('id'), $params['cohortid'])) {
+            throw new \moodle_exception('central_roles_cohortnotlinked', 'local_dimensions');
+        }
 
         sync_task::queue($template->get('id'), $params['cohortid'], (int) $USER->id);
 

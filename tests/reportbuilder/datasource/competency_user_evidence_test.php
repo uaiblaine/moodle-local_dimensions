@@ -111,6 +111,52 @@ final class competency_user_evidence_test extends core_reportbuilder_testcase {
     }
 
     /**
+     * A stored URL becomes a link only when it is a web address; anything else is plain, escaped text.
+     *
+     * The control: an https address keeps its link, with its query string escaped once.
+     *
+     * @return void
+     */
+    public function test_stored_url_links_only_a_web_address(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        /** @var \core_competency_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $learner = $this->getDataGenerator()->create_user();
+        foreach (['javascript:alert(1)', 'https://example.com/a?b=1&c=2'] as $url) {
+            $id = $generator->create_user_evidence(['userid' => $learner->id, 'name' => 'Evidence'])->get('id');
+            $DB->set_field('competency_userevidence', 'url', $url, ['id' => $id]);
+        }
+
+        /** @var \core_reportbuilder_generator $rbgenerator */
+        $rbgenerator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $report = $rbgenerator->create_report([
+            'name' => 'Prior learning',
+            'source' => competency_user_evidence::class,
+            'default' => 0,
+        ]);
+        $rbgenerator->create_column([
+            'reportid' => $report->get('id'),
+            'uniqueidentifier' => 'user_evidence:url',
+            'sortenabled' => 1,
+        ]);
+        // Sorted by address: https before javascript.
+        $cells = array_map(
+            static fn(array $row): string => (string) array_values($row)[0],
+            $this->get_custom_report_content($report->get('id'))
+        );
+
+        $this->assertCount(2, $cells);
+        $this->assertSame(1, preg_match('/<a href="([^"]*)"/', $cells[0], $matches));
+        $this->assertSame('https://example.com/a?b=1&amp;c=2', $matches[1]);
+        $this->assertStringNotContainsString('href', $cells[1]);
+        $this->assertStringNotContainsString('<a ', $cells[1]);
+        $this->assertSame('javascript:alert(1)', $cells[1]);
+    }
+
+    /**
      * The source is offered only while competencies are enabled.
      *
      * @return void

@@ -96,24 +96,35 @@ class category_lifecycle {
     }
 
     /**
+     * The ids of the category and of every category below it.
+     *
+     * @param int $categoryid The course category id.
+     * @return int[] Empty when the category has no context.
+     */
+    private static function tree_categoryids(int $categoryid): array {
+        global $DB;
+
+        $context = \context_coursecat::instance($categoryid, IGNORE_MISSING);
+        if (!$context) {
+            return [];
+        }
+        $ids = $DB->get_fieldset_select(
+            'context',
+            'instanceid',
+            'contextlevel = :level AND (id = :contextid OR ' . $DB->sql_like('path', ':descendants') . ')',
+            ['level' => CONTEXT_COURSECAT, 'contextid' => $context->id, 'descendants' => $context->path . '/%']
+        );
+        return array_map('intval', $ids);
+    }
+
+    /**
      * Count the frameworks and templates in use in the category and every category below it.
      *
      * @param int $categoryid The course category id.
      * @return int Objects that block a "Delete all" of the category.
      */
     public static function inuse_in_tree(int $categoryid): int {
-        global $DB;
-
-        $context = \context_coursecat::instance($categoryid, IGNORE_MISSING);
-        if (!$context) {
-            return 0;
-        }
-        $categoryids = $DB->get_fieldset_select(
-            'context',
-            'instanceid',
-            'contextlevel = :level AND (id = :contextid OR ' . $DB->sql_like('path', ':descendants') . ')',
-            ['level' => CONTEXT_COURSECAT, 'contextid' => $context->id, 'descendants' => $context->path . '/%']
-        );
+        $categoryids = self::tree_categoryids($categoryid);
         $inuse = 0;
         foreach ($categoryids as $id) {
             $inuse += self::summary((int) $id)['inuse'];
@@ -125,10 +136,27 @@ class category_lifecycle {
      * Whether "Delete all" may delete the category's competency data.
      *
      * @param int $categoryid The course category id.
-     * @return bool False while anything in the category or below it is in use.
+     * @return bool False while anything in the category or below it is in use, or while the current
+     *     user may not manage every template and framework there (delete_contents() would otherwise
+     *     delete part of it and then fail).
      */
     public static function can_delete_contents(int $categoryid): bool {
-        return self::inuse_in_tree($categoryid) === 0;
+        if (self::inuse_in_tree($categoryid) !== 0) {
+            return false;
+        }
+        foreach (self::tree_categoryids($categoryid) as $id) {
+            $context = \context_coursecat::instance($id, IGNORE_MISSING);
+            if (!$context) {
+                continue;
+            }
+            if (!empty(self::templates($id)) && !template::can_manage_context($context)) {
+                return false;
+            }
+            if (!empty(self::frameworks($id)) && !competency_framework::can_manage_context($context)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -158,6 +186,8 @@ class category_lifecycle {
      * @throws \moodle_exception When a framework or template in the category or below it is still in use.
      */
     public static function delete_contents(\stdClass $category): void {
+        global $DB;
+
         $inuse = self::inuse_in_tree((int) $category->id);
         if ($inuse > 0) {
             $a = (object) [
@@ -166,12 +196,19 @@ class category_lifecycle {
             ];
             throw new \moodle_exception('central_categorydelete_blocked', 'local_dimensions', '', $a);
         }
-        foreach (self::templates((int) $category->id) as $template) {
-            api::delete_template((int) $template->get('id'), false);
+        // One unit: the API checks each capability as it goes, so a refusal part-way must not leave the templates gone.
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            foreach (self::templates((int) $category->id) as $template) {
+                api::delete_template((int) $template->get('id'), false);
+            }
+            foreach (self::frameworks((int) $category->id) as $framework) {
+                api::delete_framework((int) $framework->get('id'));
+            }
+        } catch (\Throwable $e) {
+            $transaction->rollback($e);
         }
-        foreach (self::frameworks((int) $category->id) as $framework) {
-            api::delete_framework((int) $framework->get('id'));
-        }
+        $transaction->allow_commit();
     }
 
     /**

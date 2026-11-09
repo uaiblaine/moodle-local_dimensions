@@ -125,6 +125,23 @@ final class colour_tokens_test extends \basic_testcase {
         'motion-ease' => 'cubic-bezier(0.4, 0, 0.2, 1)',
     ];
 
+    /** @var string The course card's root (moodle-dev/docs/course-card/CONTRACT.md): the one rule that declares its tokens. */
+    private const CARD_ROOT = '.local-dimensions-course-card-lg';
+
+    /** @var string The course card's token namespace, under this plugin's own. */
+    private const CARD_PREFIX = '--local-dimensions-card-';
+
+    /**
+     * @var array The course card contract's token suffixes (its section 7), each read as --dimensions-card-<suffix>
+     *            first. tests/local/course_card_contract_test.php holds the same list and checks the chains.
+     */
+    private const CARD_SUFFIXES = [
+        'radius', 'border-width', 'border', 'surface', 'ink', 'ink-muted', 'title-hover', 'cover-height',
+        'cover-fallback', 'cover-overlay', 'chip-bg', 'chip-ink', 'extra-bg', 'extra-icon', 'track', 'fill',
+        'track-height', 'done', 'done-bg', 'done-ink', 'done-edge', 'shadow', 'shadow-hover', 'focus-ring',
+        'focus-width', 'locked-opacity', 'close-bg', 'close-bg-hover', 'close-edge', 'transition',
+    ];
+
     /** @var array The only three tokens the mode layer may assign, and nothing else may join them. */
     private const DARK_OWNED = ['shadow', 'scrim', 'favourite'];
 
@@ -340,7 +357,7 @@ final class colour_tokens_test extends \basic_testcase {
      * A ratchet asserted for equality, so raising it fails the test and so does adding an
      * unresolvable pairing. Lower it only together with the change that made a pairing resolvable.
      */
-    private const UNRESOLVED_BUDGET = 19;
+    private const UNRESOLVED_BUDGET = 18;
 
     /**
      * @var array Rules painted with an admin-chosen colour, inside which no mode token may appear.
@@ -1107,6 +1124,11 @@ final class colour_tokens_test extends \basic_testcase {
                     continue;
                 }
                 foreach ($this->declarations($rule['body']) as $property => $value) {
+                    /* The course card's tokens are a contract block of their own, on the card root: their literals
+                       are the contract's fallbacks, as the body block's are (test_card_tokens_live_on_the_card_root). */
+                    if ($rule['selector'] === self::CARD_ROOT && str_starts_with($property, self::CARD_PREFIX)) {
+                        continue;
+                    }
                     $iscolour = in_array($property, self::COLOUR_PROPERTIES, true)
                         || str_starts_with($property, 'border')
                         || str_starts_with($property, 'outline')
@@ -1238,6 +1260,7 @@ final class colour_tokens_test extends \basic_testcase {
     public function test_contract_tokens_read_the_family_token_first(): void {
         $offenders = [];
         $contract = array_values(array_diff(self::SUFFIXES, self::NOT_IN_CONTRACT));
+        $card = array_map(static fn(string $suffix): string => 'card-' . $suffix, self::CARD_SUFFIXES);
         $block = $this->token_block();
         foreach ($contract as $suffix) {
             $value = $block[self::PREFIX . $suffix] ?? null;
@@ -1267,7 +1290,7 @@ final class colour_tokens_test extends \basic_testcase {
                         continue;
                     }
                     $suffix = substr($property, strlen(self::PREFIX));
-                    $incontract = in_array($suffix, $contract, true)
+                    $incontract = in_array($suffix, $contract, true) || in_array($suffix, $card, true)
                         || array_key_exists($suffix, self::MOTION) || array_key_exists($suffix, self::STATE_ALIASES);
                     if (!$incontract && preg_match('/(?<![a-z0-9-])' . preg_quote(self::FAMILY, '/') . '/', $value)) {
                         $offenders[] = $rule['line'] . ': ' . $property . ' is outside the contract but reads ' . $value;
@@ -1277,7 +1300,7 @@ final class colour_tokens_test extends \basic_testcase {
             $text = $this->uncommented($path);
             preg_match_all('/(?<![a-z0-9-])' . preg_quote(self::FAMILY, '/') . '([a-z0-9-]+)/', $text, $names);
             $allowed = $contract;
-            $allowed = array_merge($allowed, array_keys(self::MOTION), array_keys(self::STATE_ALIASES));
+            $allowed = array_merge($allowed, $card, array_keys(self::MOTION), array_keys(self::STATE_ALIASES));
             foreach (array_unique($names[1]) as $name) {
                 if (!in_array($name, $allowed, true)) {
                     $offenders[] = basename($path) . ' names ' . self::FAMILY . $name . ', which is not in the contract';
@@ -1330,6 +1353,53 @@ final class colour_tokens_test extends \basic_testcase {
                 $offenders[] = self::PREFIX . $suffix . ' does not read ' . self::FAMILY . $suffix . ' first';
             }
         }
+        $this->assertSame([], $offenders, implode('; ', $offenders));
+    }
+
+    /**
+     * The course card's tokens live in one rule on the card root, which declares nothing else, and nowhere else.
+     *
+     * That rule is exempt from the literal scan for its token declarations only, so it must stay a token block:
+     * a colour written beside the tokens would pass the scan, and a card token declared on another rule would
+     * carry a literal past it.
+     *
+     * Changes that must make it fail: add a background with a literal to the token rule; redeclare a card token
+     * on another rule; drop a card token.
+     *
+     * @return void
+     */
+    public function test_card_tokens_live_on_the_card_root(): void {
+        $offenders = [];
+        $declared = [];
+        $blocks = 0;
+        foreach ($this->stylesheets() as $path) {
+            foreach ($this->rules($path) as $rule) {
+                $declarations = $this->declarations($rule['body']);
+                $tokens = array_filter(
+                    array_keys($declarations),
+                    static fn(string $property): bool => str_starts_with($property, self::CARD_PREFIX)
+                );
+                if (!$tokens) {
+                    continue;
+                }
+                if ($rule['selector'] !== self::CARD_ROOT) {
+                    $offenders[] = $rule['file'] . ':' . $rule['line'] . ' ' . $rule['selector'] . ' declares a card token';
+                    continue;
+                }
+                $blocks++;
+                foreach (array_keys($declarations) as $property) {
+                    if (!str_starts_with($property, self::CARD_PREFIX)) {
+                        $offenders[] = $rule['file'] . ':' . $rule['line'] . ' the card token rule also declares ' . $property;
+                    }
+                }
+                $declared = array_merge($declared, $tokens);
+            }
+        }
+        $this->assertSame(1, $blocks, 'Exactly one rule declares the course card\'s tokens.');
+        $expected = array_map(static fn(string $suffix): string => self::CARD_PREFIX . $suffix, self::CARD_SUFFIXES);
+        sort($expected);
+        sort($declared);
+        $this->assertSame($expected, $declared, 'The card token rule declares exactly the contract\'s thirty tokens.');
         $this->assertSame([], $offenders, implode('; ', $offenders));
     }
 

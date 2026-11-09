@@ -1,0 +1,1 @@
+s/courseoverviewshowcourseprogress/courseoverviewprogress/g;

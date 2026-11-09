@@ -996,6 +996,7 @@ const openNodeMoveModal = async(pane, node) => {
         show: true,
         removeOnClose: true,
     });
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.getRoot().on(ModalEvents.save, () => {
         const select = modal.getRoot()[0].querySelector('#local-dimensions-plans-move-position');
         const targetindex = select ? Number(select.value) : current;
@@ -1227,7 +1228,7 @@ const openUsageModal = async(row, section) => {
         hastemplates: usage.templates.length > 0,
         templates: usage.templates,
     });
-    await Modal.create({
+    const modal = await Modal.create({
         // A modal title is HTML; the row's name is plain.
         title: getString(USAGE_SECTIONS[labelkey], 'local_dimensions')
             .then((label) => label + ' — ' + escapeHtml(row.dataset.name || '')),
@@ -1236,6 +1237,7 @@ const openUsageModal = async(row, section) => {
         show: true,
         removeOnClose: true,
     });
+    modal.getRoot().addClass('local-dimensions-modal');
 };
 
 /**

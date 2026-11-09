@@ -315,6 +315,7 @@ const openExportModal = async(pane, region) => {
         Templates.render('local_dimensions/central/frameworks_export', {}),
     ]);
     const modal = await Modal.create({title: title, body: body});
+    modal.getRoot().addClass('local-dimensions-modal');
     modal.setRemoveOnClose(true);
     modal.getRoot().on(ModalEvents.shown, () => {
         addToastRegion(modal.getBody()[0]).catch(notifyError);

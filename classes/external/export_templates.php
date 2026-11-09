@@ -91,6 +91,10 @@ class export_templates extends external_api {
                 continue;
             }
             require_capability('moodle/competency:templateview', $tpl->get_context());
+            // A hidden template only for those who may manage it, as competency_usage does.
+            if (!$tpl->get('visible') && !$tpl->can_manage()) {
+                continue;
+            }
             $usable[] = $templateid;
         }
         if (empty($usable)) {

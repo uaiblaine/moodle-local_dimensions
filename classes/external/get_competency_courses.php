@@ -25,7 +25,9 @@
  * outcome, the competency's activity links inside it, the viewer's enrolment
  * state (the shared state area of the course cards) and its card shape: its
  * single activity or single section when it resolves to one, otherwise the
- * timeline.
+ * timeline. Every row also carries what Boost Union's course overview settings
+ * leave of the card (the course card contract, section 8), and a course with no
+ * image of its own gets the theme's generated one when those settings apply.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -43,6 +45,8 @@ use core\context\system as context_system;
 use core\context\course as context_course;
 use local_dimensions\calculator;
 use local_dimensions\constants;
+use local_dimensions\local\card_settings;
+use local_dimensions\local\course_card;
 use local_dimensions\local\enrolment_provider;
 use local_dimensions\local\enrolment_state;
 use local_dimensions\local\plan_access;
@@ -112,6 +116,11 @@ class get_competency_courses extends external_api {
            no detail region, but the service is callable directly. */
         $ownerid = plan_access::require_owner_readable($plan);
 
+        /* Boost Union's settings follow the theme this request draws in, which validate_context() has set; the
+           flags reach every row because the response is a list of courses. */
+        $cardsettings = static::card_settings();
+        $cardflags = $cardsettings->flags();
+
         // Outside the plan the plan layer of the cascade does not apply (competency -> global only).
         $templateid = $scope === plan_access::SCOPE_PLAN ? (int) $plan->get('templateid') : 0;
 
@@ -150,6 +159,7 @@ class get_competency_courses extends external_api {
 
         // Build the response with course image and progress.
         $result = [];
+        $images = [];
         foreach ($courses as $course) {
             $coursecontext = context_course::instance($course->id);
 
@@ -196,6 +206,10 @@ class get_competency_courses extends external_api {
                 'shortname' => format_string($course->shortname, true, ['context' => $coursecontext, 'escape' => false]),
                 'courseimage' => $courseimage,
                 'progress' => $progress,
+                // A course with no completion tracking draws no progress row, never "0 %" (contract, section 3).
+                'hascompletion' => $isopen && self::tracks_completion((int) $course->id, $ownerid),
+                'showprogress' => $cardflags['progress'],
+                'showcover' => $cardflags['cover'],
                 'visible' => 1,
                 'ruleoutcome' => (int) $course->ruleoutcome,
                 'state' => enrolment_state::export($state),
@@ -221,10 +235,62 @@ class get_competency_courses extends external_api {
                 }
             }
 
+            $images[(int) $course->id] = $courseimage;
             $result[] = $row;
         }
 
+        /* Only a course without an image of its own asks the theme, and only while a cover is drawn; with_generated()
+           calls the closure, and so creates core's renderer, only when some course of the answer has no image. */
+        if ($cardflags['generated']) {
+            $images = course_card::with_generated($images, static::generated_images($cardsettings));
+            foreach ($result as $index => $row) {
+                $result[$index]['courseimage'] = $images[$row['id']];
+            }
+        }
+
         return $result;
+    }
+
+    /**
+     * Boost Union's card settings for this request.
+     *
+     * A seam: tests answer Boost Union's settings as active without Boost Union installed.
+     *
+     * @return card_settings Read from the request's theme, after validate_context().
+     */
+    protected static function card_settings(): card_settings {
+        return card_settings::of_request();
+    }
+
+    /**
+     * The theme's image for the courses of the answer with none of their own.
+     *
+     * A seam: tests stand in for core's renderer.
+     *
+     * @param card_settings $settings This request's settings.
+     * @return callable Course ids => [course id => the renderer's image]; see course_card::generated_images().
+     */
+    protected static function generated_images(card_settings $settings): callable {
+        return course_card::generated_images($settings);
+    }
+
+    /**
+     * Whether the plan owner's progress in a course is tracked at all.
+     *
+     * The same two questions calculator::course_completion_percentage() asks before it counts: completion enabled
+     * in the course, and the owner a tracked user of it.
+     *
+     * @param int $courseid The course.
+     * @param int $userid The plan owner.
+     * @return bool
+     */
+    private static function tracks_completion(int $courseid, int $userid): bool {
+        global $CFG;
+        require_once($CFG->libdir . '/completionlib.php');
+
+        $completion = new \completion_info(get_course($courseid));
+
+        return $completion->is_enabled() && $completion->is_tracked_user($userid);
     }
 
     /**
@@ -356,8 +422,19 @@ class get_competency_courses extends external_api {
                 'id' => new external_value(PARAM_INT, 'Course ID'),
                 'fullname' => new external_value(PARAM_RAW, 'Course full name, plain text'),
                 'shortname' => new external_value(PARAM_RAW, 'Course short name, plain text'),
-                'courseimage' => new external_value(PARAM_URL, 'Course image URL', VALUE_OPTIONAL),
+                'courseimage' => new external_value(
+                    PARAM_RAW,
+                    'The course image URL, else the theme\'s generated image (a base64 SVG data URI or this site\'s '
+                        . 'pluginfile.php, checked by course_card::is_generated_image()), else empty',
+                    VALUE_OPTIONAL
+                ),
                 'progress' => new external_value(PARAM_INT, 'The plan owner\'s course completion percentage'),
+                'hascompletion' => new external_value(
+                    PARAM_BOOL,
+                    'Whether the plan owner\'s completion is tracked in the course; false on a card the viewer cannot open'
+                ),
+                'showprogress' => new external_value(PARAM_BOOL, 'Whether the card draws its progress row (Boost Union)'),
+                'showcover' => new external_value(PARAM_BOOL, 'Whether the card draws its cover (Boost Union)'),
                 'visible' => new external_value(PARAM_INT, 'Course visibility'),
                 'ruleoutcome' => new external_value(PARAM_INT, 'What completing the course does to the competency'),
                 'state' => enrolment_state::returns(),

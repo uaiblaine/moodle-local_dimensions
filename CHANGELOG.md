@@ -6,6 +6,99 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### The fleet's course card on the Full plan overview
+
+The *Related content* tab's course cards follow the fleet's course card contract
+(`moodle-dev/docs/course-card/CONTRACT.md`), shared with theme_dimensions and block_compass.
+
+- **One card shape.** A 150 px cover, the course name (two lines at most), then one line saying
+  what completing the course does to the competency (*Completes the competency* with a trophy,
+  *Sends for review* with a paper plane), then the progress row: a 6 px bar and the percentage in
+  tabular figures, with `role="progressbar"` and a label. A course with no completion tracking
+  draws no row instead of "0%". A completed course draws the green *Completed* seal in place of
+  the bar and a green base under its cover. The *N activities* drawer stays as the card's foot.
+- **One target.** The course name is the card's only link and stretches over the whole card, so a
+  screen reader hears one link named by the course; the card's focus ring is that link's, the hover
+  deepens the shadow and underlines the name, and nothing moves. A card whose course has one
+  activity or one section keeps the activity's line or the section's ring in place of the bar and
+  gets *Go to activity* or *Access content* as a button. A card the viewer cannot open is not a
+  link: its cover recedes and the state's own action is its button.
+- **Equal heights.** The cards of one carousel share a height and line their feet up.
+- **Boost Union's settings.** Under Boost Union or a child theme, *Show course progress*, *Course
+  image source* and *Show course images* decide the cards, read on the server
+  (`local\card_settings`): progress off removes the bar and its percentage (the seal stays), the
+  card view's images off removes the cover and draws a 4 px top edge, and a course with no image
+  gets the theme's generated one (`local\course_card`), asked for only when such a course is in
+  the answer. The README explains the three settings.
+- **Tokens.** Every visual value of the card is one of thirty `--local-dimensions-card-*` tokens,
+  each reading the family's `--dimensions-card-*` first, so theme_dimensions restyles the card
+  without a selector. `tests/local/course_card_contract_test.php` is the fleet's parity test.
+- `local_dimensions_get_competency_courses` returns `hascompletion`, `showprogress` and
+  `showcover` per course, and `courseimage` may now be the theme's generated image (a base64 SVG
+  data URI or a pluginfile URL of this site, checked on the server).
+- The course name no longer takes core's dark-mode underline of `#region-main` links at rest.
+
+### Performance
+
+Version `2026100517`.
+
+- **The hub modals' close-button chip no longer taxes every page.** The chip keyed on
+  `.modal:has(.modal-body [class*='local-dimensions-'])`, and `styles.css` is bundled into the
+  theme sheet, so Chrome rechecked that `:has()` on every class change anywhere on any page of the
+  site: 16-20 ms of style recalculation per toggle on a 1,700-node page with the CPU throttled
+  4x, which a theme's filter line paid several times per fold on a phone. Every modal factory
+  now adds `local-dimensions-modal` to the modal root and the chip keys on that class, or on the
+  body class of the plugin's three pages.
+- **Every modal on the plugin's pages wears the close-button chip.** The hub, the Full plan
+  overview and the Competency tracker give it to core's confirm, alert and error dialogues and to
+  every form modal too, as well as to the frameworks export, scale configuration, scale description
+  and taxonomy definition modals, which kept Bootstrap's faint default before.
+- `tests/local/selector_cost_test.php` refuses a `:has()` over the `class` or `style` attribute
+  in any shipped stylesheet and checks that every modal the plugin creates carries its marker.
+
+### Competency status badges hook
+
+Version `2026100516`. A new hook, `\local_dimensions\hook\competency_status_badges`, lets another
+plugin add plain-text status pills beside a competency on the Full plan overview (in each accordion
+header) and on the Competency tracker (after the title). It is dispatched once per page with the
+learner who owns the competencies (never the viewer) and the ids on the page; a tone outside the five
+tone tokens throws, an id not on the page or an empty label is ignored, and a pill carries no link and
+no HTML. Nothing is drawn when no plugin listens. Contract and example: README, "For developers".
+Mutation spec: `mutations/status_badges.conf`.
+
+### Security hardening
+
+Version `2026100515`. The surviving points of an external static review, each held by a test and
+a mutation spec (`mutations/sec_audit_g1.conf` to `g4.conf`). None let a user past a core
+capability; most of the review's other findings matched core's own behaviour and are unchanged.
+
+- **The competency form takes its context from the competency.** Editing an existing competency
+  checked the capability in the posted framework's context only, so a manager of one category
+  could open another category's competency (its fields and images). The form now resolves the
+  competency's own context and refuses a framework id that is not the competency's.
+- **The CSV framework import calls only competency rules.** A `ruletype` column naming any other
+  class was passed to `migrate_config()` before the persistent refused it; it is now skipped, as a
+  missing class is. The importer also checks `moodle/competency:competencymanage` itself, before it
+  provisions the custom fields.
+- **"Delete all" of a course category is one unit.** It is offered only when the user may manage
+  every template and framework below the category, and the deletions run in one transaction, so a
+  refusal part-way no longer leaves the templates gone.
+- **The evidence button is the owner's.** The plan page tested the plan owner's capability
+  instead of the viewer's; it now shows the button only to the owner viewing their own plan, with
+  the right to manage their evidence (`plan_access::can_submit_evidence()`).
+- **The hub's enrolment toggle and cohort sync stay inside the template.** Switching an enrolment
+  instance needs a course linked to the template's competencies, and queueing a sync needs a cohort
+  linked to the template.
+- **Template export:** a hidden template is exported only to those who can manage it, and a
+  framework the caller cannot read is left out of the CSV.
+- **Course custom-field chips follow the field's visibility.** A field visible to teachers only, or
+  to nobody, no longer reaches students on the competency page when an administrator lists it in
+  the filter setting.
+- **Report builder.** A completed plan lists the competencies archived at completion instead of
+  its template's current ones; descriptions are formatted in their own context; stored evidence
+  URLs are links only when they are web addresses; the links are rendered from a template instead
+  of `html_writer` (`templates/reportbuilder_link.mustache`).
+
 ### Plugins directory readiness
 
 Version `2026100514`. The Moodle plugins directory's submission guidelines, checked by a new test.

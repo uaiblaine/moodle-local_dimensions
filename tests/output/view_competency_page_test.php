@@ -25,6 +25,7 @@
 namespace local_dimensions\output;
 
 use local_dimensions\constants;
+use local_dimensions\fixtures\status_badges_listener;
 use local_dimensions\local\learner_view;
 use PHPUnit\Framework\Attributes\CoversClass;
 
@@ -151,5 +152,72 @@ final class view_competency_page_test extends \advanced_testcase {
         $this->assertSame('grid', $state['view']);
         $this->assertTrue($state['favonly']);
         $this->assertTrue($state['expanded']);
+    }
+
+    /**
+     * Export the tracker for a learner while another user, the admin, views it.
+     *
+     * @param array $answers The badges the test listener adds: competency id => list of [label, tone].
+     * @param bool $register Whether to register the listener at all.
+     * @return array Keys: data (the export), competencyid, learner (stdClass).
+     */
+    private function export_as_admin(array $answers, bool $register = true): array {
+        global $DB, $PAGE;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework();
+        $competencyid = (int) $ccg->create_competency(['competencyframeworkid' => $framework->get('id')])->get('id');
+        $competency = $DB->get_record('competency', ['id' => $competencyid], '*', MUST_EXIST);
+        $learner = $this->getDataGenerator()->create_user();
+        $course = get_course((int) $this->getDataGenerator()->create_course()->id);
+
+        require_once(__DIR__ . '/../fixtures/hook/status_badges_listener.php');
+        status_badges_listener::reset();
+        if ($register) {
+            \core\di::set(
+                \core\hook\manager::class,
+                \core\hook\manager::phpunit_get_instance([
+                    'local_dimensions' => __DIR__ . '/../fixtures/hook/status_badges_hooks.php',
+                ]),
+            );
+            foreach ($answers as $label => $tone) {
+                status_badges_listener::$answers[$competencyid][] = [$label, $tone];
+            }
+        }
+
+        $page = new view_competency_page($competency, [(int) $course->id => $course], (int) $learner->id);
+        $data = $page->export_for_template($PAGE->get_renderer('core'));
+        return ['data' => $data, 'competencyid' => $competencyid, 'learner' => $learner];
+    }
+
+    /**
+     * The hero carries the listener's badges, and the hook is built for the learner, not the viewer.
+     *
+     * @return void
+     */
+    public function test_the_hero_carries_status_badges_and_the_hook_the_learner(): void {
+        $result = $this->export_as_admin(['Validity: Due soon' => 'warning']);
+
+        $hero = $result['data']['hero'];
+        $this->assertTrue($hero['hasstatusbadges']);
+        $this->assertSame([['label' => 'Validity: Due soon', 'tone' => 'warning']], $hero['statusbadges']);
+
+        $this->assertCount(1, status_badges_listener::$seen);
+        $hook = status_badges_listener::$seen[0];
+        $this->assertSame((int) $result['learner']->id, $hook->get_userid());
+        $this->assertNotSame((int) $result['learner']->id, status_badges_listener::$viewers[0]);
+        $this->assertSame([$result['competencyid']], $hook->get_competencyids());
+    }
+
+    /**
+     * Without a listener the hero has no badges (control).
+     *
+     * @return void
+     */
+    public function test_without_a_listener_the_hero_has_no_status_badges(): void {
+        $hero = $this->export_as_admin([])['data']['hero'];
+        $this->assertFalse($hero['hasstatusbadges']);
+        $this->assertSame([], $hero['statusbadges']);
     }
 }

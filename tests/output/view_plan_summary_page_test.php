@@ -27,6 +27,8 @@ namespace local_dimensions\output;
 use advanced_testcase;
 use core_competency\plan;
 use local_dimensions\constants;
+use local_dimensions\fixtures\status_badges_listener;
+use local_dimensions\hook\competency_status_badges;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
@@ -418,6 +420,76 @@ final class view_plan_summary_page_test extends advanced_testcase {
         $data = $this->export($fixture['plan'])['hero'];
         $this->assertFalse($data['slim']);
         $this->assertSame([], json_decode($data['herostatejson'], true));
+    }
+
+    /**
+     * Register the status badges test listener in place of the site's hook manager.
+     *
+     * @return void
+     */
+    private function register_status_listener(): void {
+        require_once(__DIR__ . '/../fixtures/hook/status_badges_listener.php');
+        status_badges_listener::reset();
+        \core\di::set(
+            \core\hook\manager::class,
+            \core\hook\manager::phpunit_get_instance([
+                'local_dimensions' => __DIR__ . '/../fixtures/hook/status_badges_hooks.php',
+            ]),
+        );
+    }
+
+    /**
+     * A listener's badges reach the row of their own competency, and the hook carries the plan's owner and ids.
+     *
+     * The viewer here is the admin who built the fixture, so a hook carrying the viewer would show.
+     *
+     * @return void
+     */
+    public function test_status_badges_reach_their_own_row_and_the_hook_carries_the_owner(): void {
+        $this->resetAfterTest();
+        $fixture = $this->create_plan_with_competencies();
+        $this->register_status_listener();
+        status_badges_listener::$answers = [
+            $fixture['ids']['Alpha'] => [['Validity: Compliant', 'success'], ['Second', 'info']],
+        ];
+
+        $data = $this->export($fixture['plan']);
+
+        $rows = array_column($data['competencies'], null, 'shortname');
+        $this->assertTrue($rows['Alpha']['hasstatusbadges']);
+        $this->assertSame(
+            [['label' => 'Validity: Compliant', 'tone' => 'success'], ['label' => 'Second', 'tone' => 'info']],
+            $rows['Alpha']['statusbadges']
+        );
+        $this->assertFalse($rows['Bravo']['hasstatusbadges']);
+        $this->assertSame([], $rows['Charlie']['statusbadges']);
+
+        $this->assertCount(1, status_badges_listener::$seen);
+        $hook = status_badges_listener::$seen[0];
+        $this->assertInstanceOf(competency_status_badges::class, $hook);
+        $this->assertSame((int) $fixture['user']->id, $hook->get_userid());
+        $this->assertNotSame((int) $fixture['user']->id, status_badges_listener::$viewers[0]);
+        $ids = $hook->get_competencyids();
+        sort($ids);
+        $expected = array_values($fixture['ids']);
+        sort($expected);
+        $this->assertSame($expected, $ids);
+    }
+
+    /**
+     * Without a listener no row has a badge (control).
+     *
+     * @return void
+     */
+    public function test_without_a_listener_no_row_has_status_badges(): void {
+        $this->resetAfterTest();
+        $fixture = $this->create_plan_with_competencies();
+        $this->register_status_listener();
+
+        foreach ($this->export($fixture['plan'])['competencies'] as $row) {
+            $this->assertFalse($row['hasstatusbadges']);
+            $this->assertSame([], $row['statusbadges']);
+        }
     }
 
     /**
