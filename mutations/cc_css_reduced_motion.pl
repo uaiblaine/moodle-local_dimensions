@@ -1,0 +1,1 @@
+s/(@media \(prefers-reduced-motion: reduce\) \{\n)    \.local-dimensions-course-card-lg,\n    \.local-dimensions-course-card-lg \.local-dimensions-course-link \{\n        transition: none;\n    \}\n/$1    .local-dimensions-course-card-lg-none {\n        transition: none;\n    }\n/;

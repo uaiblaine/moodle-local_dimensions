@@ -1,0 +1,1 @@
+s/'courseoverviewimagesource'/'courseoverviewimagesrc'/;

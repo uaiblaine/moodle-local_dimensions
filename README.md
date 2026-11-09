@@ -454,6 +454,29 @@ themes. Boost Union and its children get a stylesheet of their own, which keeps 
 hero against the navigation bar when a smart menu exists. Under `theme_dimensions` the plugin reads
 the family tokens first. We can't support any other theme.
 
+### Boost Union's course overview settings
+
+When the site's theme is Boost Union, or a child theme of it such as Dimensions, three of Boost
+Union's course overview settings decide the course cards of the Full plan overview's *Related
+content* tab as well as Boost Union's own. They apply only under Boost Union or a child theme, and
+only while Boost Union is installed; the plugin adds no setting of its own for them, and under any
+other theme it keeps its own rule (progress shown, cover shown, the theme's primary colour for a
+course with no image). An administrator finds them under *Site administration › Appearance ›
+Boost Union › Look*, tab *Dashboard / My courses*.
+
+- **Show course progress** (`courseoverviewshowcourseprogress`). *No* removes the progress row and
+  its percentage from every card, and the progress ring of a card whose course has one section. A
+  completed course keeps its green *Completed* seal and the green base of its cover.
+- **Course image source** (`courseoverviewimagesource`). Decides the picture of a course that has
+  no course image of its own, which the plugin asks the theme for in the same request that loads
+  the cards. With *Course image with pattern fallback* (the default) that is the theme's generated
+  pattern (with Dimensions, the course category's cover); with *Course image with fallback image*
+  and a fallback image uploaded, every such course shows that image.
+- **Show course images** (`courseoverviewshowcourseimages`). With *Card* unchecked the cards are
+  drawn without their cover, over a thin top edge in the theme's primary colour, green once the
+  course is completed. *List* and *Summary* change nothing here: the plan has no list or summary
+  view of its courses.
+
 
 Data stored
 -----------
