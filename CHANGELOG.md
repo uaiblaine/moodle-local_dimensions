@@ -21,6 +21,11 @@ category that local_unlistedcourses has unlisted.
 - **Template counts for template readers only.** The picker's per-category counts, the locked
   bar's subtree count and the site total of learning plan templates read 0 for a viewer who may
   not read templates there, since core shows such a viewer no template.
+- **Unlisted subcategories in the category entry.** Entered from a listed category, the hub lists
+  that category and the ones below it. A framework or learning plan template that lives in a
+  subcategory local_unlistedcourses withholds from the viewer is now left out of the Frameworks,
+  Structure and Plans tabs and of the bar's subtree counts. The category each object lives in
+  decides. Without local_unlistedcourses the whole subtree is listed, as before.
 
 ### The fleet's course card on the Full plan overview
 

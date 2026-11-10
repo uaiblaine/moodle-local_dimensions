@@ -138,7 +138,11 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   `local\unlisted_categories` after core, unconditionally (it is the site's rule, not a display
   setting); the entry refuses an undiscoverable category with the `invalidcontext` a missing one
   gets. Template counts go only to `template::can_read_context()`, since competencyview, which
-  every user holds, is what opens the hub. Spec `mutations/hub_unlisted_categories.conf`.
+  every user holds, is what opens the hub. The locked entry lists descendants, so each framework
+  and template (tab lists and subtree counts) is kept by the category it lives in
+  (`unlisted_categories::filter_by_context()`), never by the entry's. Lookup by id in the hub's
+  web services is not filtered: core's own services answer it. Spec
+  `mutations/hub_unlisted_categories.conf`.
 - **Category deletion**: `category_lifecycle` answers all five core callbacks; the in-use check
   reads the whole subtree because the parent's callback deletes before any child can refuse;
   adding a callback needs a `version.php` bump.

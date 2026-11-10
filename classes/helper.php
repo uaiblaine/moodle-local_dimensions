@@ -2393,16 +2393,25 @@ class helper {
      */
     private static function count_in_subtree(string $table, \context $context): int {
         global $DB;
-        $sql = "SELECT COUNT(t.id)
+        // Grouped by category so a subcategory local_unlistedcourses withholds from the viewer
+        // drops out of the sum, as it does from the tabs' lists; every context of the subtree is a
+        // course category context, since the root is one.
+        $sql = "SELECT ctx.instanceid, COUNT(t.id)
                   FROM {" . $table . "} t
                   JOIN {context} ctx ON ctx.id = t.contextid
                  WHERE t.visible = :visible
-                   AND (ctx.id = :ctxid OR " . $DB->sql_like('ctx.path', ':path') . ")";
-        return (int) $DB->count_records_sql($sql, [
+                   AND (ctx.id = :ctxid OR " . $DB->sql_like('ctx.path', ':path') . ")
+              GROUP BY ctx.instanceid";
+        $counts = $DB->get_records_sql_menu($sql, [
             'visible' => 1,
             'ctxid' => $context->id,
             'path' => $DB->sql_like_escape($context->path) . '/%',
         ]);
+        $total = 0;
+        foreach (unlisted_categories::filter_ids(array_keys($counts)) as $categoryid) {
+            $total += (int) $counts[$categoryid];
+        }
+        return $total;
     }
 
     /**
@@ -3322,7 +3331,10 @@ class helper {
      */
     public static function framework_rows(\context $context, bool $includehidden = false, string $includes = 'self'): array {
         $rows = [];
-        foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $context, $includes, !$includehidden) as $framework) {
+        $frameworks = unlisted_categories::filter_by_context(
+            api::list_frameworks('shortname', 'ASC', 0, 0, $context, $includes, !$includehidden)
+        );
+        foreach ($frameworks as $framework) {
             if (!competency_framework::can_read_context($framework->get_context())) {
                 continue;
             }
