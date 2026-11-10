@@ -28,6 +28,7 @@ use core_competency\api;
 use core_competency\competency;
 use core_competency\competency_framework;
 use local_dimensions\helper;
+use local_dimensions\local\unlisted_categories;
 
 /**
  * Structure tab: navigate frameworks and their competencies without reloading.
@@ -114,7 +115,11 @@ class structure extends \core\output\dynamic_tabs\base {
         // page does; the site entry lists the resolved context alone.
         $includes = empty($data['locked']) ? 'self' : 'children';
         if (!$needscategory) {
-            foreach (api::list_frameworks('shortname', 'ASC', 0, 0, $pagecontext, $includes, false) as $framework) {
+            // A framework in a subcategory local_unlistedcourses withholds from the viewer is left out.
+            $listed = unlisted_categories::filter_by_context(
+                api::list_frameworks('shortname', 'ASC', 0, 0, $pagecontext, $includes, false)
+            );
+            foreach ($listed as $framework) {
                 if (competency_framework::can_read_context($framework->get_context())) {
                     $frameworks[(int) $framework->get('id')] = $framework;
                 }
