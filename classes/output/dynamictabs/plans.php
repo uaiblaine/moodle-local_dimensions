@@ -31,6 +31,7 @@ use core_competency\competency_framework;
 use core_competency\template;
 use local_dimensions\constants;
 use local_dimensions\helper;
+use local_dimensions\local\unlisted_categories;
 use local_dimensions\template_metadata_cache;
 
 /**
@@ -126,7 +127,11 @@ class plans extends \core\output\dynamic_tabs\base {
         // page does; the site entry lists the resolved context alone.
         $includes = empty($data['locked']) ? 'self' : 'children';
         if (!$needscategory) {
-            foreach (api::list_templates('shortname', 'ASC', 0, 0, $context, $includes, !$canmanage) as $template) {
+            // A template in a subcategory local_unlistedcourses withholds from the viewer is left out.
+            $listed = unlisted_categories::filter_by_context(
+                api::list_templates('shortname', 'ASC', 0, 0, $context, $includes, !$canmanage)
+            );
+            foreach ($listed as $template) {
                 if (template::can_read_context($template->get_context())) {
                     $templates[(int) $template->get('id')] = $template;
                 }
