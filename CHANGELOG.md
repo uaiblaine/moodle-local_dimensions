@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### The Competency hub honours unlisted course categories
+
+Any logged-in user passes the hub's category readability check (core gives every authenticated
+user `moodle/competency:competencyview`), so the hub's category picker could name a course
+category that local_unlistedcourses has unlisted.
+
+- **Withheld everywhere the hub names a category.** The picker search
+  (`local_dimensions_search_categories`), the selected option, the context the Structure,
+  Frameworks and Plans tabs resolve, and the category entry (`central.php?pagecontextid=`) leave
+  out a category local_unlistedcourses withholds from the viewer, and any category below it. The
+  category entry refuses it with the same error as a missing context. Without
+  local_unlistedcourses nothing changes.
+- **Template counts for template readers only.** The picker's per-category counts, the locked
+  bar's subtree count and the site total of learning plan templates read 0 for a viewer who may
+  not read templates there, since core shows such a viewer no template.
+
 ### The fleet's course card on the Full plan overview
 
 The *Related content* tab's course cards follow the fleet's course card contract
