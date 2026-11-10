@@ -77,6 +77,35 @@ class unlisted_categories {
     }
 
     /**
+     * Keep the competency objects the current user may discover by the category each lives in.
+     *
+     * A framework or template in a course category is kept only when that category, read from the
+     * object's own context, is discoverable; one in the system context is always kept. The category
+     * entry lists descendants too, so it is the owning category that decides, never the entry's.
+     * One filter_ids() call for the whole list.
+     *
+     * @param array $items Persistents with get_context() (competency_framework, template), any keys.
+     * @return array The same array, keys kept, minus the objects in a withheld category.
+     */
+    public static function filter_by_context(array $items): array {
+        $categoryids = [];
+        foreach ($items as $item) {
+            $context = $item->get_context();
+            if ((int) $context->contextlevel === CONTEXT_COURSECAT) {
+                $categoryids[(int) $context->instanceid] = true;
+            }
+        }
+        if (!$categoryids) {
+            return $items;
+        }
+        $kept = array_flip(static::filter_ids(array_keys($categoryids)));
+        return array_filter($items, static function ($item) use ($kept): bool {
+            $context = $item->get_context();
+            return (int) $context->contextlevel !== CONTEXT_COURSECAT || isset($kept[(int) $context->instanceid]);
+        });
+    }
+
+    /**
      * Whether the current user may discover one course category.
      *
      * @param int $categoryid The course category id.
