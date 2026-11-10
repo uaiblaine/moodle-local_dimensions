@@ -46,18 +46,13 @@ use local_dimensions\output\dynamictabs\structure;
  * preference.
  */
 $pagecontextid = optional_param('pagecontextid', 0, PARAM_INT);
-$entrycontext = $pagecontextid > 0 ? context::instance_by_id($pagecontextid) : null;
-if ($entrycontext !== null && !in_array($entrycontext->contextlevel, [CONTEXT_SYSTEM, CONTEXT_COURSECAT], true)) {
-    throw new moodle_exception('invalidcontext');
-}
+$entrycontext = helper::central_entry_context($pagecontextid);
 $locked = $entrycontext !== null && $entrycontext->contextlevel === CONTEXT_COURSECAT;
 
 if ($locked) {
     require_login(null, false);
     api::require_enabled();
-    if (!helper::can_read_competency_context($entrycontext)) {
-        throw new required_capability_exception($entrycontext, 'moodle/competency:competencyview', 'nopermissions', '');
-    }
+    helper::require_central_category($entrycontext);
     $PAGE->set_context($entrycontext);
     $PAGE->set_pagelayout('admin');
     $PAGE->set_url(new moodle_url('/local/dimensions/central.php', ['pagecontextid' => $pagecontextid]));

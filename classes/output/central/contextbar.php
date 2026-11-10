@@ -92,6 +92,10 @@ class contextbar implements renderable, templatable {
         $systemtemplatecount = 0;
         if ($cansystem) {
             $systemframeworkcount = competency_framework::count_records(['contextid' => $systemcontext->id, 'visible' => 1]);
+        }
+        // A template total only for a template reader: competencyview, which every authenticated
+        // user holds, opens the bar, and core shows a learner no template.
+        if (template::can_read_context($systemcontext)) {
             $systemtemplatecount = template::count_records(['contextid' => $systemcontext->id, 'visible' => 1]);
         }
 
@@ -113,7 +117,9 @@ class contextbar implements renderable, templatable {
             // same subtree; the picker's per-category counts are 'self' counts.
             $lockedcontext = \context_coursecat::instance($this->categoryid);
             $categoryoptions[0]['frameworkcount'] = helper::count_frameworks_in_subtree($lockedcontext);
-            $categoryoptions[0]['templatecount'] = helper::count_templates_in_subtree($lockedcontext);
+            $categoryoptions[0]['templatecount'] = template::can_read_context($lockedcontext)
+                ? helper::count_templates_in_subtree($lockedcontext)
+                : 0;
             $categoryoptions[0]['hasframeworks'] = $categoryoptions[0]['frameworkcount'] > 0;
             $categoryoptions[0]['hastemplates'] = $categoryoptions[0]['templatecount'] > 0;
         }
