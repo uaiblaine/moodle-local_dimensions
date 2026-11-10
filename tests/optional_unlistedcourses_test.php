@@ -31,9 +31,10 @@ require_once($CFG->dirroot . '/local/dimensions/tests/fixtures/unlisted_access_s
  * local_unlistedcourses stays optional: no dependency, one guarded way in, a setting only where it applies.
  *
  * local_unlistedcourses is optional, so any reference that has to resolve on every site would make
- * this plugin uninstallable where that one is absent. The enrolment provider reaches it through a
- * class name held as a string, behind enrolment_provider::unlisted_available(), and that is the only
- * way in.
+ * this plugin uninstallable where that one is absent. Two classes reach it, each through a class name
+ * held as a string behind a method_exists() probe: the enrolment provider
+ * (enrolment_provider::unlisted_available()) and the hub's category gate
+ * (local\unlisted_categories::available()). Those are the only ways in.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -64,7 +65,8 @@ final class optional_unlistedcourses_test extends \advanced_testcase {
             '/\\\\local_unlistedcourses\\\\/' => 'names a class in the local_unlistedcourses namespace',
             '/[\'"]local_unlistedcourses\\\\/' => 'spells a class of local_unlistedcourses in a string',
         ];
-        $allowed = 'enrolment_provider.php';
+        // The enrolment provider and the category rule's gate, each with its one guarded class name.
+        $allowed = ['enrolment_provider.php', 'unlisted_categories.php'];
 
         $offences = [];
         $spelled = 0;
@@ -77,7 +79,7 @@ final class optional_unlistedcourses_test extends \advanced_testcase {
                     if (!preg_match($pattern, $line)) {
                         continue;
                     }
-                    if (basename($path) === $allowed && str_contains($label, 'in a string')) {
+                    if (in_array(basename($path), $allowed, true) && str_contains($label, 'in a string')) {
                         $spelled++;
                         continue;
                     }
@@ -89,10 +91,10 @@ final class optional_unlistedcourses_test extends \advanced_testcase {
         $this->assertSame(
             [],
             $offences,
-            "local_unlistedcourses is reached only through the provider:\n" . implode("\n", $offences)
+            "local_unlistedcourses is reached only through the provider and the category gate:\n" . implode("\n", $offences)
         );
-        // Control: the one allowed spelling is there, so the scan reads what it means to.
-        $this->assertSame(1, $spelled);
+        // Control: the two allowed spellings are there, so the scan reads what it means to.
+        $this->assertSame(2, $spelled);
     }
 
     /**
