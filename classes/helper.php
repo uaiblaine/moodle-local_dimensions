@@ -36,6 +36,7 @@ use cache;
 use moodle_url;
 use local_dimensions\customfield\lp_handler;
 use local_dimensions\customfield\competency_handler;
+use local_dimensions\local\unlisted_categories;
 
 /**
  * Custom-field provisioning and cascade resolution, CSV custom-field conversion, the return-button
@@ -2732,7 +2733,9 @@ class helper {
         if ($contexttype === 'coursecat' && $categoryid > 0) {
             try {
                 $candidate = \context_coursecat::instance($categoryid);
-                if (self::can_read_competency_context($candidate)) {
+                // An unlisted category the viewer may not discover falls back like an unreadable one,
+                // so the tabs and the context bar never render it (local_unlistedcourses).
+                if (self::can_read_competency_context($candidate) && unlisted_categories::is_discoverable($categoryid)) {
                     $context = $candidate;
                     $iscoursecat = true;
                 } else {
@@ -2760,7 +2763,9 @@ class helper {
      * further. Visibility is core's: a hidden category is offered only when asked for and only to
      * a viewer who may see it. Competency readability is checked per hit unless the viewer reads
      * at the site, where no category can widen what the site grants; a narrower override on a
-     * category cannot leak either, because the page re-checks the chosen category.
+     * category cannot leak either, because the page re-checks the chosen category. A category
+     * local_unlistedcourses has unlisted, or one below it, is offered only to a viewer that plugin
+     * lets discover it ({@see unlisted_categories}).
      *
      * @param string $query Search text matched against the category name; empty for the first page.
      * @param bool $includehidden Whether hidden categories the viewer may see are included.
@@ -2798,11 +2803,53 @@ class helper {
                 continue;
             }
             $ids[] = (int) $record->id;
-            if (count($ids) >= $limit) {
-                break;
-            }
         }
+        // Core first, then local_unlistedcourses over the whole candidate list in one call: an
+        // unlisted category, or a child that would name it, stays out for an unrelated viewer.
+        $ids = array_slice(unlisted_categories::filter_ids($ids), 0, $limit);
         return self::central_category_options_for($ids);
+    }
+
+    /**
+     * The context a hub entry link names, or null for the site entry.
+     *
+     * A missing context and one of any other level get the same refusal, and
+     * {@see require_central_category()} gives an undiscoverable category that refusal too, so the
+     * entry never tells an unlisted category from a missing one.
+     *
+     * @param int $pagecontextid The pagecontextid parameter; 0 for the site entry.
+     * @return \context|null The system or course category context, or null when none was named.
+     * @throws \moodle_exception invalidcontext for a missing context or another level.
+     */
+    public static function central_entry_context(int $pagecontextid): ?\context {
+        if ($pagecontextid <= 0) {
+            return null;
+        }
+        $context = \context::instance_by_id($pagecontextid, IGNORE_MISSING);
+        if (!$context || !in_array($context->contextlevel, [CONTEXT_SYSTEM, CONTEXT_COURSECAT], true)) {
+            throw new \moodle_exception('invalidcontext');
+        }
+        return $context;
+    }
+
+    /**
+     * Refuse a category entry the current user may not discover or read competencies in.
+     *
+     * Called after require_login(): local_unlistedcourses answers for the logged-in viewer.
+     *
+     * @param \context $context The entry's course category context.
+     * @return void
+     * @throws \moodle_exception invalidcontext when local_unlistedcourses withholds the category,
+     *   the refusal central_entry_context() gives a missing context.
+     * @throws \required_capability_exception When the viewer may read no competency there.
+     */
+    public static function require_central_category(\context $context): void {
+        if (!unlisted_categories::is_discoverable((int) $context->instanceid)) {
+            throw new \moodle_exception('invalidcontext');
+        }
+        if (!self::can_read_competency_context($context)) {
+            throw new \required_capability_exception($context, 'moodle/competency:competencyview', 'nopermissions', '');
+        }
     }
 
     /**
@@ -2823,6 +2870,9 @@ class helper {
                 return null;
             }
         } catch (\moodle_exception $e) {
+            return null;
+        }
+        if (!unlisted_categories::is_discoverable($categoryid)) {
             return null;
         }
         $options = self::central_category_options_for([$categoryid]);
@@ -2855,7 +2905,11 @@ class helper {
                 continue;
             }
             $frameworkcount = (int) ($frameworkcounts[$catid] ?? 0);
-            $templatecount = (int) ($templatecounts[$catid] ?? 0);
+            // Core shows a learner no template, so neither does a count: competencyview, which
+            // every authenticated user holds, admits the viewer here, templateview does not.
+            $templatecount = \core_competency\template::can_read_context(\context_coursecat::instance($catid))
+                ? (int) ($templatecounts[$catid] ?? 0)
+                : 0;
             $options[] = [
                 'id' => $catid,
                 'name' => $category->get_nested_name(false, ' / ', ['escape' => false]),

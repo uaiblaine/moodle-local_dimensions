@@ -133,6 +133,12 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   `block_dimensions`' `resolve_plan_display_context()`; never give a learner view a
   course-content pagelayout with a course in context, and never add `related` to the tracker's
   `set_url`. Long form: "Return-to-Plan FAB".
+- **Unlisted categories in the hub**: every hub surface that names a course category (picker
+  search, selected option, `resolve_central_context()`, the category entry) asks
+  `local\unlisted_categories` after core, unconditionally (it is the site's rule, not a display
+  setting); the entry refuses an undiscoverable category with the `invalidcontext` a missing one
+  gets. Template counts go only to `template::can_read_context()`, since competencyview, which
+  every user holds, is what opens the hub. Spec `mutations/hub_unlisted_categories.conf`.
 - **Category deletion**: `category_lifecycle` answers all five core callbacks; the in-use check
   reads the whole subtree because the parent's callback deletes before any child can refuse;
   adding a callback needs a `version.php` bump.
