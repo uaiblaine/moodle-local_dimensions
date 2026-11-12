@@ -14,19 +14,36 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Tests for the course card contract shared by the Dimensions family of plugins.
+ *
+ * @package    local_dimensions
+ * @category   test
+ * @copyright  2026 Anderson Blaine
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace local_dimensions\local;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
 
 /**
- * Pins the course card contract (moodle-dev/docs/course-card/CONTRACT.md) in this plugin's files.
+ * Pins the shared course card contract in this plugin's files.
  *
- * Copied between plugins: only the constants above the first method change. It reads files only, so it
- * runs wherever the PHPUnit suite runs. A card rule is an innermost CSS block whose selector names
- * CARD_ROOT; in a nested SCSS source, name the root in each card rule's own selector, or the rule is
- * not seen. Every arm is mutation-checked when the copy lands (contract, section 12).
+ * theme_dimensions, block_compass and local_dimensions each draw course cards with their own markup and
+ * stylesheet, and none depends on another to draw one. The contract keeps the cards alike: each plugin
+ * declares the card tokens under its own prefix and reads the family token (--dimensions-card-*) first, so
+ * the theme can restyle every card at once; only the theme declares the family tokens; a card rule paints
+ * through tokens, sets no label in capitals and moves nothing on hover; and the plugin reads Boost Union's
+ * course overview settings and its README names them.
+ *
+ * The class is copied between plugins: only the namespace, the package and copyright tags and the
+ * constants above the first method change. It reads files only, so it runs wherever the PHPUnit suite
+ * runs. A card rule is an innermost CSS block whose selector names CARD_ROOT; in a nested SCSS source,
+ * name the root in each card rule's own selector, or the rule is not seen.
  *
  * @package    local_dimensions
+ * @category   test
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -47,7 +64,7 @@ final class course_card_contract_test extends \basic_testcase {
     /** @var bool True in theme_dimensions only: the one plugin that declares --dimensions-card-* names. */
     private const PROVIDER = false;
 
-    /** @var array Every token suffix of the contract's section 7. */
+    /** @var array Every token suffix of the card contract. */
     private const SUFFIXES = [
         'radius', 'border-width', 'border', 'surface', 'ink', 'ink-muted', 'title-hover', 'cover-height',
         'cover-fallback', 'cover-overlay', 'chip-bg', 'chip-ink', 'extra-bg', 'extra-icon', 'track', 'fill',
@@ -55,7 +72,7 @@ final class course_card_contract_test extends \basic_testcase {
         'focus-width', 'locked-opacity', 'close-bg', 'close-bg-hover', 'close-edge', 'transition',
     ];
 
-    /** @var array Boost Union's settings of the contract's section 8. */
+    /** @var array Boost Union's settings the card contract reads. */
     private const BOOST_UNION_SETTINGS = [
         'courseoverviewshowcourseprogress',
         'courseoverviewimagesource',
@@ -109,6 +126,8 @@ final class course_card_contract_test extends \basic_testcase {
 
     /**
      * Every token of the contract is declared under the plugin's prefix and reads the family token first.
+     *
+     * @return void
      */
     public function test_every_contract_token_reads_the_family_token_first(): void {
         $css = $this->css();
@@ -128,6 +147,8 @@ final class course_card_contract_test extends \basic_testcase {
 
     /**
      * Only the theme declares the family's card tokens.
+     *
+     * @return void
      */
     public function test_only_the_theme_declares_family_card_tokens(): void {
         if (self::PROVIDER) {
@@ -139,6 +160,8 @@ final class course_card_contract_test extends \basic_testcase {
 
     /**
      * No card label is set in capital letters.
+     *
+     * @return void
      */
     public function test_no_card_rule_sets_uppercase(): void {
         foreach ($this->card_rules() as [$selector, $body]) {
@@ -148,6 +171,8 @@ final class course_card_contract_test extends \basic_testcase {
 
     /**
      * A hover changes the shadow and the title's underline, and moves nothing.
+     *
+     * @return void
      */
     public function test_no_card_hover_moves_anything(): void {
         $hovers = 0;
@@ -163,6 +188,8 @@ final class course_card_contract_test extends \basic_testcase {
 
     /**
      * A card rule paints through tokens: a colour literal lives only in a custom property's declaration.
+     *
+     * @return void
      */
     public function test_card_rules_have_no_colour_literal(): void {
         foreach ($this->card_rules() as [$selector, $body]) {
@@ -173,6 +200,8 @@ final class course_card_contract_test extends \basic_testcase {
 
     /**
      * The plugin reads Boost Union's card settings on the server.
+     *
+     * @return void
      */
     public function test_sources_read_boost_union_settings(): void {
         $sources = '';
@@ -186,6 +215,8 @@ final class course_card_contract_test extends \basic_testcase {
 
     /**
      * The README tells an administrator which Boost Union settings change the cards.
+     *
+     * @return void
      */
     public function test_readme_names_boost_union_settings(): void {
         $readme = $this->read('README.md');
