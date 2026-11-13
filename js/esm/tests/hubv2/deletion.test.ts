@@ -55,8 +55,12 @@ const check = (over: Partial<DeleteCheck> = {}): DeleteCheck => ({
 });
 
 describe('confirmBody', () => {
-    it('words a leaf plainly, with no rule sentence', () => {
-        expect(confirmBody(labels, 'Leaf', check({parenthasrule: true}))).toBe('<p>LEAF Leaf.</p>');
+    it('words a leaf plainly', () => {
+        expect(confirmBody(labels, 'Leaf', check())).toBe('<p>LEAF Leaf.</p>');
+    });
+
+    it('tells a leaf too that the parent rule is reset', () => {
+        expect(confirmBody(labels, 'Leaf', check({parenthasrule: true}))).toBe('<p>LEAF Leaf.</p><p>RULE.</p>');
     });
 
     it('counts the children and the whole subtree, in the plural', () => {
