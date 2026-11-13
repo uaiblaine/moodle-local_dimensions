@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fluxo: Leituras, planejar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+<link rel="stylesheet" href="./flow.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.ws select.input{width:285px;font-size:14px}
+.ws .find{width:335px;min-width:0}
+.find input{flex:1 1 auto;min-width:0;min-height:42px;border:0;background:transparent;font:inherit;color:#1c2233}
+.find input::placeholder{color:#596079;opacity:1}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.lane .lh{display:flex;flex-direction:column;gap:2px;padding:4px 4px 2px}
+.lane h2{font-size:15px;display:flex;gap:8px;align-items:center}
+.lane h2 i{width:12px;height:12px;border-radius:4px;display:block;flex:none}
+.lane .lh .small{padding-left:20px;color:#3d445c}
+.lane.free{background:#fafbfe;border:1.5px dashed #c9cedd}
+.act .nm{display:flex;align-items:flex-start;gap:4px}
+.act .nm span{flex:1 1 auto;padding-top:3px;line-height:1.3}
+.act .iconbtn{margin:-8px -10px -10px 0;color:#596079;flex:none}
+.act .iconbtn svg{width:18px;height:18px}
+.act .chip{align-self:flex-start;font-size:12.5px}
+.act .chip svg{width:14px;height:14px}
+.drop{margin-top:auto}
+.endrow{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:center}
+.endrow label{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600}
+.endrow label i{width:10px;height:10px;border-radius:3px;display:block;flex:none}
+.endrow select{width:100%;font-size:14px}
+.cb{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:center;font-size:14px;font-weight:600;min-height:44px}
+.cb input{width:18px;height:18px;margin:0;accent-color:#0a4a85}
+</style>
+</helmet>
+<div class="ln fl" style="width: 1280px; height: 1040px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="DLer.dc.html" aria-current="page">Leituras</a>
+    <span class="grow"></span>
+    <span class="avatar" title="Renato Dias">RD</span>
+  </nav>
+
+  <header class="ws">
+    <div class="wrap">
+      <h1>Leituras</h1>
+      <nav class="tabs" aria-label="Leituras">
+        <a href="DLer.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13h5l2 3h4l2-3h5"></path><path d="M5.5 5h13L21 13v6H3v-6z"></path></svg>Ler<span class="count">5</span></a>
+        <a href="DTurma.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"></path><circle cx="17" cy="9" r="2.5"></circle><path d="M16.5 14.6c2.4.3 4.2 2 4.9 4.9"></path></svg>Turma</a>
+        <a class="on" href="DPlanejar.dc.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1.5"></rect><rect x="10" y="4" width="5" height="11" rx="1.5"></rect><rect x="17" y="4" width="4" height="7" rx="1.5"></rect></svg>Planejar</a>
+      </nav>
+      <span class="grow"></span>
+      <select class="input" aria-label="Curso"><option selected>Avaliação com tecnologias digitais</option><option>Ensinar com recursos digitais</option></select>
+      <label class="find"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input type="search" aria-label="Buscar aluno, competência ou atividade" placeholder="Buscar aluno, competência ou atividade"><span class="kbd">⌘K</span></label>
+    </div>
+  </header>
+
+  <main class="wrap col" style="gap: 16px; padding-top: 20px; padding-bottom: 20px;">
+    <p style="font-size: 16px; color: #3d445c;">Arraste cada atividade para a competência que ela alimenta. O que acontece ao concluir fica na própria atividade.</p>
+
+    <div class="board">
+      <section class="lane" aria-labelledby="dp-41">
+        <div class="lh"><h2 id="dp-41"><i style="background: #2449ad;"></i>4.1 Estratégias de avaliação</h2><span class="small">3 atividades</span></div>
+        <article class="act" draggable="true">
+          <div class="nm"><span>Oficina de rubricas digitais</span><button type="button" class="iconbtn" aria-label="Mover Oficina de rubricas digitais"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg></button></div>
+          <small>Oficina · unidade 1</small>
+          <span class="chip line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 11.5-7.7 7.7a5 5 0 0 1-7.1-7.1l8-8a3.4 3.4 0 0 1 4.8 4.8l-8 8a1.7 1.7 0 0 1-2.4-2.4l7.3-7.3"></path></svg>Anexa uma evidência</span>
+        </article>
+        <article class="act" draggable="true">
+          <div class="nm"><span>Questionário diagnóstico com feedback automático</span><button type="button" class="iconbtn" aria-label="Mover Questionário diagnóstico com feedback automático"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg></button></div>
+          <small>Questionário · unidade 1</small>
+          <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"></path></svg>Só registra</span>
+        </article>
+        <article class="act" draggable="true">
+          <div class="nm"><span>Projeto em grupo: documento compartilhado</span><button type="button" class="iconbtn" aria-label="Mover Projeto em grupo: documento compartilhado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg></button></div>
+          <small>Tarefa em grupo · unidade 3</small>
+          <span class="chip warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"></path><circle cx="12" cy="12" r="2.8"></circle></svg>Recomenda para leitura</span>
+        </article>
+        <div class="drop">Solte uma atividade aqui</div>
+      </section>
+
+      <section class="lane" aria-labelledby="dp-43">
+        <div class="lh"><h2 id="dp-43"><i style="background: #2449ad;"></i>4.3 Feedback e planificação</h2><span class="small">3 atividades</span></div>
+        <article class="act" draggable="true">
+          <div class="nm"><span>Tarefa: devolutivas em áudio ou vídeo</span><button type="button" class="iconbtn" aria-label="Mover Tarefa: devolutivas em áudio ou vídeo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg></button></div>
+          <small>Tarefa · unidade 2</small>
+          <span class="chip warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"></path><circle cx="12" cy="12" r="2.8"></circle></svg>Recomenda para leitura</span>
+        </article>
+        <article class="act" draggable="true">
+          <div class="nm"><span>Fórum: uma devolutiva que funcionou</span><button type="button" class="iconbtn" aria-label="Mover Fórum: uma devolutiva que funcionou"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg></button></div>
+          <small>Fórum · unidade 2</small>
+          <span class="chip line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 11.5-7.7 7.7a5 5 0 0 1-7.1-7.1l8-8a3.4 3.4 0 0 1 4.8 4.8l-8 8a1.7 1.7 0 0 1-2.4-2.4l7.3-7.3"></path></svg>Anexa uma evidência</span>
+        </article>
+        <article class="act" draggable="true">
+          <div class="nm"><span>Questionário diagnóstico com feedback automático</span><button type="button" class="iconbtn" aria-label="Mover Questionário diagnóstico com feedback automático, em 4.3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg></button></div>
+          <small>Questionário · também em 4.1</small>
+          <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"></path></svg>Só registra</span>
+        </article>
+        <div class="drop">Solte uma atividade aqui</div>
+      </section>
+
+      <section class="lane" aria-labelledby="dp-33">
+        <div class="lh"><h2 id="dp-33"><i style="background: #6a2892;"></i>3.3 Aprendizagem colaborativa</h2><span class="small">2 atividades</span></div>
+        <article class="act" draggable="true">
+          <div class="nm"><span>Projeto em grupo: documento compartilhado</span><button type="button" class="iconbtn" aria-label="Mover Projeto em grupo: documento compartilhado, em 3.3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg></button></div>
+          <small>Tarefa em grupo · também em 4.1</small>
+          <span class="chip ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"></circle><path d="m8.5 14-1.5 7 5-2.5 5 2.5-1.5-7"></path></svg>Reconhece a competência</span>
+        </article>
+        <article class="act" draggable="true">
+          <div class="nm"><span>Fórum: uma devolutiva que funcionou</span><button type="button" class="iconbtn" aria-label="Mover Fórum: uma devolutiva que funcionou, em 3.3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg></button></div>
+          <small>Fórum · também em 4.3</small>
+          <span class="chip line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 11.5-7.7 7.7a5 5 0 0 1-7.1-7.1l8-8a3.4 3.4 0 0 1 4.8 4.8l-8 8a1.7 1.7 0 0 1-2.4-2.4l7.3-7.3"></path></svg>Anexa uma evidência</span>
+        </article>
+        <div class="drop">Solte uma atividade aqui</div>
+      </section>
+
+      <section class="lane free" aria-labelledby="dp-00">
+        <div class="lh"><h2 id="dp-00">Ainda sem competência</h2><span class="small" style="padding-left: 0;">2 atividades; concluídas, não chegam à jornada de ninguém</span></div>
+        <article class="act" draggable="true">
+          <div class="nm"><span>Leitura: avaliação por pares</span><button type="button" class="iconbtn" aria-label="Mover Leitura: avaliação por pares"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg></button></div>
+          <small>Página · unidade 2</small>
+        </article>
+        <article class="act" draggable="true">
+          <div class="nm"><span>Diário de bordo da unidade</span><button type="button" class="iconbtn" aria-label="Mover Diário de bordo da unidade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"></path></svg></button></div>
+          <small>Diário · unidades 1 a 3</small>
+        </article>
+        <div class="drop">Solte aqui o que não alimenta nenhuma</div>
+      </section>
+    </div>
+
+    <section class="card pad" aria-labelledby="dp-end" style="display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start;">
+      <div class="col" style="gap: 8px;">
+        <h2 class="h3" id="dp-end">Ao concluir o curso</h2>
+        <p class="small" style="font-size: 14px;">O que acontece com cada competência quando um aluno conclui Avaliação com tecnologias digitais.</p>
+      </div>
+      <div class="col" style="gap: 8px;">
+        <div class="endrow"><label for="dp-e41"><i style="background: #2449ad;"></i>4.1 Estratégias de avaliação</label><select class="input" id="dp-e41"><option selected>Recomenda a competência para leitura</option><option>Reconhece a competência</option><option>Anexa as evidências ao plano</option><option>Só registra a conclusão</option></select></div>
+        <div class="endrow"><label for="dp-e43"><i style="background: #2449ad;"></i>4.3 Feedback e planificação</label><select class="input" id="dp-e43"><option selected>Recomenda a competência para leitura</option><option>Reconhece a competência</option><option>Anexa as evidências ao plano</option><option>Só registra a conclusão</option></select></div>
+        <div class="endrow"><label for="dp-e33"><i style="background: #6a2892;"></i>3.3 Aprendizagem colaborativa</label><select class="input" id="dp-e33"><option>Recomenda a competência para leitura</option><option>Reconhece a competência</option><option selected>Anexa as evidências ao plano</option><option>Só registra a conclusão</option></select></div>
+        <label class="cb" style="padding-top: 4px;"><input type="checkbox" checked><span>As leituras deste curso entram também no plano de cada aluno</span></label>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1040}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

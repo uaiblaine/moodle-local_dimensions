@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Meus planos: o atlas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+.pc{background:#fff;border:1px solid #e1e3ef;border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.pc-cover{height:176px;position:relative;display:flex;align-items:center;justify-content:space-between;padding:0 22px;color:#fff}
+.pc-cover svg{flex:none}
+.pc-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px}
+.wp .pt{stroke:#fff;fill:#fff}
+.mini{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 14px;border:1px solid #e1e3ef;border-radius:14px;background:#fff;text-decoration:none;color:#1d2033}
+.kebab{width:36px;height:36px;border-radius:10px;border:1px solid #e1e3ef;background:#fff;display:inline-grid;place-items:center;color:#5d6180}
+</style>
+</helmet>
+<div class="dim" style="width: 1280px; height: 940px; display: flex; flex-direction: column;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="#" aria-current="page">Minhas competências</a>
+    <span class="grow"></span>
+    <span class="avatar">AM</span>
+  </nav>
+  <main class="wrap" style="width: 100%; padding-top: 30px; display: flex; flex-direction: column; gap: 20px;">
+    <div class="row" style="align-items: flex-end;">
+      <div class="col" style="gap: 6px;">
+        <span class="eyebrow">Alex Morgan</span>
+        <h1 class="h1">Meus planos</h1>
+      </div>
+      <span class="grow"></span>
+      <a class="btn line sm" href="#">Minhas evidências</a>
+    </div>
+    <div class="row" style="gap: 12px;">
+      <div class="seg"><span class="on">Em andamento 3</span><span>Em revisão 1</span><span>Concluídos 2</span><span>Rascunhos 1</span></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;">
+      <article class="pc">
+        <div class="pc-cover" style="background: #4a1c7a;">
+          <div class="col" style="gap: 6px; max-width: 170px;"><span class="eyebrow" style="color: rgba(255,255,255,.72);">9 Etapas</span><b class="disp" style="font-size: 22px; line-height: 1.15;">Trilha de indução 2026</b></div>
+          <svg class="wp" viewBox="0 0 140 140" width="140" height="140" role="img" aria-label="5 de 9 proficientes">
+            <path class="pt pt-ghost" d="{{a.g0}}"></path><path class="pt pt-ghost" d="{{a.g1}}"></path><path class="pt pt-ghost" d="{{a.g2}}"></path><path class="pt pt-ghost" d="{{a.g3}}"></path><path class="pt pt-ghost" d="{{a.g4}}"></path><path class="pt pt-ghost" d="{{a.g5}}"></path><path class="pt pt-ghost" d="{{a.g6}}"></path><path class="pt pt-ghost" d="{{a.g7}}"></path><path class="pt pt-ghost" d="{{a.g8}}"></path>
+            <path class="pt {{a.c0}}" d="{{a.p0}}"></path><path class="pt {{a.c1}}" d="{{a.p1}}"></path><path class="pt {{a.c2}}" d="{{a.p2}}"></path><path class="pt {{a.c3}}" d="{{a.p3}}"></path><path class="pt {{a.c4}}" d="{{a.p4}}"></path><path class="pt {{a.c5}}" d="{{a.p5}}"></path><path class="pt {{a.c6}}" d="{{a.p6}}"></path><path class="pt {{a.c7}}" d="{{a.p7}}"></path><path class="pt {{a.c8}}" d="{{a.p8}}"></path>
+          </svg>
+        </div>
+        <div class="pc-body">
+          <div class="row" style="gap: 8px;"><span class="chip ok">Ativo</span><span class="small">até 14 jun 2027</span></div>
+          <span class="small">Última parada: <b style="color: var(--dim-ink);">Planeja aulas eficazes</b> · 16 out</span>
+          <div class="row" style="margin-top: 6px;"><a class="btn primary sm" href="#">Abrir o plano</a><span class="grow"></span><button class="kebab" type="button" aria-label="Ações do plano"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="19" r="1.8"></circle></svg></button></div>
+        </div>
+      </article>
+
+      <article class="pc">
+        <div class="pc-cover" style="background: #0f5e66;">
+          <div class="col" style="gap: 6px; max-width: 170px;"><span class="eyebrow" style="color: rgba(255,255,255,.72);">6 Módulos</span><b class="disp" style="font-size: 22px; line-height: 1.15;">Liderança intermediária</b></div>
+          <svg class="wp" viewBox="0 0 140 140" width="140" height="140" role="img" aria-label="1 de 6 proficiente">
+            <path class="pt pt-ghost" d="{{b.g0}}"></path><path class="pt pt-ghost" d="{{b.g1}}"></path><path class="pt pt-ghost" d="{{b.g2}}"></path><path class="pt pt-ghost" d="{{b.g3}}"></path><path class="pt pt-ghost" d="{{b.g4}}"></path><path class="pt pt-ghost" d="{{b.g5}}"></path>
+            <path class="pt {{b.c0}}" d="{{b.p0}}"></path><path class="pt {{b.c1}}" d="{{b.p1}}"></path><path class="pt {{b.c2}}" d="{{b.p2}}"></path><path class="pt {{b.c3}}" d="{{b.p3}}"></path><path class="pt {{b.c4}}" d="{{b.p4}}"></path><path class="pt {{b.c5}}" d="{{b.p5}}"></path>
+          </svg>
+        </div>
+        <div class="pc-body">
+          <div class="row" style="gap: 8px;"><span class="chip ok">Ativo</span><span class="small">sem prazo</span></div>
+          <span class="small">Começou há 3 semanas · <b style="color: var(--dim-ink);">4 dimensões a descobrir</b></span>
+          <div class="row" style="margin-top: 6px;"><a class="btn primary sm" href="#">Abrir o plano</a><span class="grow"></span><button class="kebab" type="button" aria-label="Ações do plano"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="19" r="1.8"></circle></svg></button></div>
+        </div>
+      </article>
+
+      <article class="pc">
+        <div class="pc-cover" style="background: #0a4a85;">
+          <div class="col" style="gap: 6px; max-width: 170px;"><span class="eyebrow" style="color: rgba(255,255,255,.72);">5 Unidades</span><b class="disp" style="font-size: 22px; line-height: 1.15;">Portfólio de facilitação online</b></div>
+          <svg class="wp" viewBox="0 0 140 140" width="140" height="140" role="img" aria-label="2 de 5 proficientes">
+            <path class="pt pt-ghost" d="{{c.g0}}"></path><path class="pt pt-ghost" d="{{c.g1}}"></path><path class="pt pt-ghost" d="{{c.g2}}"></path><path class="pt pt-ghost" d="{{c.g3}}"></path><path class="pt pt-ghost" d="{{c.g4}}"></path>
+            <path class="pt {{c.c0}}" d="{{c.p0}}"></path><path class="pt {{c.c1}}" d="{{c.p1}}"></path><path class="pt {{c.c2}}" d="{{c.p2}}"></path><path class="pt {{c.c3}}" d="{{c.p3}}"></path><path class="pt {{c.c4}}" d="{{c.p4}}"></path>
+          </svg>
+        </div>
+        <div class="pc-body">
+          <div class="row" style="gap: 8px;"><span class="chip warm">Em revisão</span><span class="small">enviado em 10 out</span></div>
+          <span class="small">A coordenação está lendo o plano. Você pode continuar as paradas enquanto isso.</span>
+          <div class="row" style="margin-top: 6px;"><a class="btn primary sm" href="#">Abrir o plano</a><span class="grow"></span><button class="kebab" type="button" aria-label="Ações do plano"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="19" r="1.8"></circle></svg></button></div>
+        </div>
+      </article>
+    </div>
+
+    <section class="col" style="gap: 10px; margin-top: 6px;">
+      <div class="row"><h2 class="h3">Já percorridos</h2><span class="small" style="margin-left: 10px;">o que um plano concluído conquistou fica arquivado com ele</span></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+        <a href="#" class="mini">
+          <svg viewBox="0 0 140 140" width="72" height="72" role="img" aria-label="4 de 4 proficientes">
+            <path class="pt pt-ghost" fill="#17694a" d="{{d.g0}}"></path><path class="pt pt-ghost" fill="#17694a" d="{{d.g1}}"></path><path class="pt pt-ghost" fill="#17694a" d="{{d.g2}}"></path><path class="pt pt-ghost" fill="#17694a" d="{{d.g3}}"></path>
+            <path class="pt {{d.c0}}" fill="#17694a" stroke="#17694a" d="{{d.p0}}"></path><path class="pt {{d.c1}}" fill="#17694a" stroke="#17694a" d="{{d.p1}}"></path><path class="pt {{d.c2}}" fill="#17694a" stroke="#17694a" d="{{d.p2}}"></path><path class="pt {{d.c3}}" fill="#17694a" stroke="#17694a" d="{{d.p3}}"></path>
+          </svg>
+          <span class="col" style="gap: 2px;"><b style="font-size: 15.5px;">Bem-vindo à Academia: 90 dias</b><span class="small">4 Etapas · concluído em 30 abr</span></span>
+          <span class="chip ok">Concluído</span>
+        </a>
+        <a href="#" class="mini">
+          <svg viewBox="0 0 140 140" width="72" height="72" role="img" aria-label="3 de 3 proficientes">
+            <path class="pt pt-ghost" fill="#8a5a00" d="{{e.g0}}"></path><path class="pt pt-ghost" fill="#8a5a00" d="{{e.g1}}"></path><path class="pt pt-ghost" fill="#8a5a00" d="{{e.g2}}"></path>
+            <path class="pt {{e.c0}}" fill="#8a5a00" stroke="#8a5a00" d="{{e.p0}}"></path><path class="pt {{e.c1}}" fill="#8a5a00" stroke="#8a5a00" d="{{e.p1}}"></path><path class="pt {{e.c2}}" fill="#8a5a00" stroke="#8a5a00" d="{{e.p2}}"></path>
+          </svg>
+          <span class="col" style="gap: 2px;"><b style="font-size: 15.5px;">Atualização anual de proteção 2026</b><span class="small">3 Módulos · concluído em 12 ago</span></span>
+          <span class="chip ok">Concluído</span>
+        </a>
+      </div>
+    </section>
+  </main>
+  <span class="tagid" style="left: 240px; top: 96px;">3</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":940}}'>
+class Component extends DCLogic {
+  wedge(cx, cy, r, a0, a1) {
+    const rad = (d) => (d - 90) * Math.PI / 180;
+    const x0 = cx + r * Math.cos(rad(a0));
+    const y0 = cy + r * Math.sin(rad(a0));
+    const x1 = cx + r * Math.cos(rad(a1));
+    const y1 = cy + r * Math.sin(rad(a1));
+    return 'M' + cx + ' ' + cy + 'L' + x0.toFixed(1) + ' ' + y0.toFixed(1) + 'A' + r + ' ' + r + ' 0 0 1 ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + 'Z';
+  }
+  rose(levels, cx, cy, R) {
+    const step = 360 / levels.length;
+    const out = {};
+    levels.forEach((l, i) => {
+      const a0 = i * step + 2;
+      const a1 = (i + 1) * step - 2;
+      const r = l > 0 ? R * (0.25 + 0.1875 * l) : R * 0.5;
+      out['p' + i] = this.wedge(cx, cy, r, a0, a1);
+      out['g' + i] = this.wedge(cx, cy, R, a0, a1);
+      out['c' + i] = l >= 3 ? 'pt-on' : (l > 0 ? 'pt-mid' : 'pt-off');
+    });
+    return out;
+  }
+  renderVals() {
+    return {
+      a: this.rose([4, 3, 4, 3, 3, 0, 2, 0, 0], 70, 70, 64),
+      b: this.rose([3, 2, 0, 1, 0, 0], 70, 70, 64),
+      c: this.rose([3, 3, 2, 0, 0], 70, 70, 64),
+      d: this.rose([4, 3, 3, 4], 70, 70, 64),
+      e: this.rose([3, 3, 3], 70, 70, 64)
+    };
+  }
+}
+</script>
+</body>
+</html>

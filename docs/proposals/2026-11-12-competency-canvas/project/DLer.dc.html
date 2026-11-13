@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fluxo: Leituras, ler</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+<link rel="stylesheet" href="./flow.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.fl button.pick{min-height:44px;cursor:pointer}
+.ws select.input{width:285px;font-size:14px}
+.ws .find{width:335px;min-width:0}
+.find input{flex:1 1 auto;min-width:0;min-height:42px;border:0;background:transparent;font:inherit;color:#1c2233}
+.find input::placeholder{color:#596079;opacity:1}
+.fl .lvls{grid-template-columns:repeat(3,minmax(0,1fr))}
+.lvl span{font-size:12px;color:#596079}
+.lvl.on span{color:#073560;font-weight:600}
+.file{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 6px 6px 6px;border:1px solid #dfe2ec;border-radius:12px;background:#f6f7fb;font-size:14px}
+.file .ic{width:36px;height:36px;border-radius:9px;background:#fbeee2;color:#96430a;display:grid;place-items:center}
+.file .ic svg{width:18px;height:18px}
+.file .btn{min-height:44px;padding:0 14px;font-size:14px}
+.reply{width:100%;font:inherit;font-size:14px;color:#1c2233}
+.reply::placeholder{color:#596079;opacity:1}
+.say{min-height:112px;border:1.5px solid #0a4a85;font-size:15px;line-height:1.45}
+.cb{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:center;font-size:14px;font-weight:600;min-height:44px}
+.cb input{width:18px;height:18px;margin:0;accent-color:#0a4a85}
+.keys{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:#596079;align-items:center}
+.keys span{display:inline-flex;gap:4px;align-items:center}
+</style>
+</helmet>
+<div class="ln fl" style="width: 1280px; height: 1100px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="DLer.dc.html" aria-current="page">Leituras</a>
+    <span class="grow"></span>
+    <span class="avatar" title="Renato Dias">RD</span>
+  </nav>
+
+  <header class="ws">
+    <div class="wrap">
+      <h1>Leituras</h1>
+      <nav class="tabs" aria-label="Leituras">
+        <a class="on" href="DLer.dc.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13h5l2 3h4l2-3h5"></path><path d="M5.5 5h13L21 13v6H3v-6z"></path></svg>Ler<span class="count">5</span></a>
+        <a href="DTurma.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"></path><circle cx="17" cy="9" r="2.5"></circle><path d="M16.5 14.6c2.4.3 4.2 2 4.9 4.9"></path></svg>Turma</a>
+        <a href="DPlanejar.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1.5"></rect><rect x="10" y="4" width="5" height="11" rx="1.5"></rect><rect x="17" y="4" width="4" height="7" rx="1.5"></rect></svg>Planejar</a>
+      </nav>
+      <span class="grow"></span>
+      <select class="input" aria-label="Curso"><option selected>Avaliação com tecnologias digitais</option><option>Ensinar com recursos digitais</option></select>
+      <label class="find"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input type="search" aria-label="Buscar aluno, competência ou atividade" placeholder="Buscar aluno, competência ou atividade"><span class="kbd">⌘K</span></label>
+    </div>
+  </header>
+
+  <div style="display: grid; grid-template-columns: 320px minmax(0, 1fr) 360px; flex: 1 1 auto; min-height: 0;">
+
+    <section class="inbox" aria-labelledby="dl-q">
+      <div class="col" style="gap: 10px; padding: 16px 16px 12px; border-bottom: 1px solid #dfe2ec;">
+        <h2 class="h3" id="dl-q">Para ler · <span class="num">5</span></h2>
+        <div class="row" style="gap: 8px;" role="group" aria-label="Ordenar a lista">
+          <button type="button" class="pick on" aria-pressed="true">Por chegada</button>
+          <button type="button" class="pick" aria-pressed="false">Por competência</button>
+        </div>
+      </div>
+      <ul>
+        <li><a class="it on" href="#" aria-current="true">
+          <span class="avatar" style="background: #f3e9f8; color: #6a2892;" aria-hidden="true">MA</span>
+          <span class="col" style="gap: 2px; min-width: 0;">
+            <span class="row" style="gap: 6px;"><b>Marina Alves</b><span class="grow"></span><span class="num" style="font-size: 12.5px; color: #3d445c;">28 out</span></span>
+            <span style="color: #1c2233;">Devolutivas em áudio para a turma B</span>
+            <span style="color: #073560; font-weight: 600;">4.3 · pediu uma leitura</span>
+          </span>
+        </a></li>
+        <li><a class="it" href="#">
+          <span class="avatar" style="background: #e2f3f1; color: #0c5f59;" aria-hidden="true">CR</span>
+          <span class="col" style="gap: 2px; min-width: 0;">
+            <span class="row" style="gap: 6px;"><b>Caio Ribeiro</b><span class="grow"></span><span class="num" style="font-size: 12.5px;">27 out</span></span>
+            <span style="color: #1c2233;">Rubrica do seminário em três níveis</span>
+            <span>4.1 · evidência nova</span>
+          </span>
+        </a></li>
+        <li><a class="it" href="#">
+          <span class="avatar" style="background: #fbeee2; color: #96430a;" aria-hidden="true">PL</span>
+          <span class="col" style="gap: 2px; min-width: 0;">
+            <span class="row" style="gap: 6px;"><b>Pedro Lins</b><span class="grow"></span><span class="num" style="font-size: 12.5px;">25 out</span></span>
+            <span style="color: #1c2233;">Histórico de revisões do documento do grupo</span>
+            <span>3.3 · evidência nova</span>
+          </span>
+        </a></li>
+        <li><a class="it" href="#">
+          <span class="avatar" style="background: #e8eefb; color: #2449ad;" aria-hidden="true">JT</span>
+          <span class="col" style="gap: 2px; min-width: 0;">
+            <span class="row" style="gap: 6px;"><b>Júlia Tanaka</b><span class="grow"></span><span class="num" style="font-size: 12.5px;">22 out</span></span>
+            <span style="color: #1c2233;">Devolutivas em vídeo da unidade 2</span>
+            <span>4.3 · pediu uma leitura</span>
+          </span>
+        </a></li>
+        <li><a class="it" href="#">
+          <span class="avatar" style="background: #dcf3e8; color: #17694a;" aria-hidden="true">SG</span>
+          <span class="col" style="gap: 2px; min-width: 0;">
+            <span class="row" style="gap: 6px;"><b>Sofia Guedes</b><span class="grow"></span><span class="num" style="font-size: 12.5px;">20 out</span></span>
+            <span style="color: #1c2233;">Questionário diagnóstico com feedback automático</span>
+            <span>4.1 · o curso recomendou</span>
+          </span>
+        </a></li>
+      </ul>
+      <p class="small" style="padding: 14px 16px;">Uma leitura registrada sai da lista. As que você deixar para depois continuam aqui, na ordem em que chegaram.</p>
+    </section>
+
+    <main class="col" style="gap: 14px; padding: 24px; min-width: 0;" aria-labelledby="dl-c">
+      <div class="col" style="gap: 8px;">
+        <div class="row" style="gap: 12px;">
+          <span class="avatar" style="background: #f3e9f8; color: #6a2892;" aria-hidden="true">MA</span>
+          <h2 class="h2" id="dl-c">Marina Alves</h2>
+          <span class="chip" style="background: #e8eefb; color: #2449ad;"><i style="background: #2449ad;"></i>4.3 Feedback e planificação</span>
+        </div>
+        <div class="row" style="gap: 10px; padding-left: 46px;">
+          <span class="pips" role="img" aria-label="Nível Recém-chegado (A1), o primeiro de seis"><i class="on"></i><i></i><i class="goal"></i><i></i><i></i><i></i></span>
+          <span class="small">Recém-chegado (A1) hoje</span>
+          <span class="grow"></span>
+          <a href="#" style="font-size: 14px; font-weight: 600;">Abrir a jornada de Marina</a>
+        </div>
+      </div>
+
+      <article class="moment" style="border-color: #7a4a00; box-shadow: 0 0 0 3px #fbedd5;" aria-labelledby="dl-ev">
+        <div class="top"><span class="chip warm">Nova desde a última leitura</span><span>28 out · Marina pediu uma leitura</span></div>
+        <h3 class="h3" id="dl-ev">Devolutivas em áudio para a turma B</h3>
+        <blockquote class="quote" style="font-size: 16px;">“Gravei uma devolutiva em áudio para cada texto da turma B, seguindo um roteiro que escrevi antes.”</blockquote>
+        <ul class="col" style="gap: 6px;" aria-label="Arquivos da evidência">
+          <li class="file"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4"></path><path d="M8 7v10"></path><path d="M12 4v16"></path><path d="M16 8v8"></path><path d="M20 11v2"></path></svg></span><span>devolutivas-turma-b.mp3 <span class="small">· áudio, 4 min</span></span><a class="btn line" href="#" download aria-label="Baixar devolutivas-turma-b.mp3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg>Baixar</a></li>
+          <li class="file"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path></svg></span><span>roteiro.pdf <span class="small">· 2 páginas</span></span><a class="btn line" href="#" download aria-label="Baixar roteiro.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg>Baixar</a></li>
+        </ul>
+        <div class="thread">
+          <div class="msg">
+            <span class="avatar" style="background: #f3e9f8; color: #6a2892;" aria-hidden="true">MA</span>
+            <p><b>Marina</b> <span class="small">· 28 out</span><br>Tentei dizer o próximo passo em cada uma.</p>
+          </div>
+          <input class="reply" type="text" aria-label="Responder a Marina sem registrar a leitura" placeholder="Responder a Marina sem registrar a leitura">
+        </div>
+      </article>
+
+      <h2 class="h3" style="padding-top: 6px;">Antes disso</h2>
+      <article class="moment" style="background: #f1f3f9; padding: 12px 16px; gap: 6px;" aria-label="Leitura de Lúcia Prado, 15 de outubro">
+        <div class="top"><span class="avatar" style="width: 26px; height: 26px; font-size: 11px; background: #ffffff; color: #3d445c;" aria-hidden="true">LP</span><span><b>Leitura de Lúcia Prado</b> · 15 out · Recém-chegado (A1)</span></div>
+        <blockquote class="quote" style="font-size: 15.5px;">“Os comentários apontam o erro, mas ainda não dizem ao aluno o que fazer a seguir.”</blockquote>
+      </article>
+    </main>
+
+    <aside aria-labelledby="dl-r" style="background: #fff; border-left: 1px solid #dfe2ec; padding: 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0;">
+      <h2 class="h2" id="dl-r">Sua leitura</h2>
+      <div role="group" aria-labelledby="dl-lv" class="col" style="gap: 8px;">
+        <p id="dl-lv" style="font-size: 14px; font-weight: 700;">Em que nível Marina está agora em 4.3</p>
+        <div class="lvls">
+          <button type="button" class="lvl" aria-pressed="false"><b>A1</b><span>Recém-chegado</span></button>
+          <button type="button" class="lvl on" aria-pressed="true"><b>A2</b><span>Explorador</span></button>
+          <button type="button" class="lvl goal" aria-pressed="false"><b>B1</b><span>Integrador</span></button>
+          <button type="button" class="lvl" aria-pressed="false"><b>B2</b><span>Especialista</span></button>
+          <button type="button" class="lvl" aria-pressed="false"><b>C1</b><span>Líder</span></button>
+          <button type="button" class="lvl" aria-pressed="false"><b>C2</b><span>Pioneiro</span></button>
+        </div>
+        <p class="small">Integrador (B1) é o nível de proficiência</p>
+      </div>
+      <label for="dl-note" class="row" style="gap: 8px; align-items: flex-start; font-size: 14px; font-weight: 700; line-height: 1.35;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 18px; height: 18px; flex: none; margin-top: 1px; color: #0a4a85;"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"></path><circle cx="12" cy="12" r="2.8"></circle></svg><span>O que você observou <span style="font-weight: 400; color: #3d445c;">(Marina lê isto e guarda como a frase desta leitura)</span></span></label>
+      <textarea class="note say" id="dl-note">Agora cada devolutiva termina com o próximo passo. Falta ligar esse passo ao critério da rubrica que o aluno ainda não alcançou.</textarea>
+      <div class="col" style="gap: 6px;">
+        <p style="font-size: 13px; font-weight: 700; color: #3d445c;">Frases recentes</p>
+        <div class="row" style="gap: 6px; flex-wrap: wrap;">
+          <button type="button" class="pick">O próximo passo ficou claro</button>
+          <button type="button" class="pick">Traga um antes e depois</button>
+          <button type="button" class="pick">Ligue ao critério da rubrica</button>
+        </div>
+      </div>
+      <label class="cb"><input type="checkbox" checked><span>Encerrar o pedido de leitura</span></label>
+      <button type="button" class="btn primary">Registrar e abrir a próxima<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></button>
+      <button type="button" class="btn line">Pedir mais uma evidência</button>
+      <div class="keys" style="margin-top: auto; padding-top: 12px; border-top: 1px solid #dfe2ec;" role="group" aria-label="Atalhos de teclado">
+        <span><span class="kbd">J</span><span class="kbd">K</span> mover</span>
+        <span><span class="kbd">1</span> a <span class="kbd">6</span> nível</span>
+        <span><span class="kbd">⌘</span><span class="kbd">Enter</span> registrar</span>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Como o professor e a equipe chegam</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.maprow{display:grid;grid-template-columns:520px 36px 400px 36px minmax(0,1fr);align-items:stretch}
+.maphead{display:grid;grid-template-columns:520px 36px 400px 36px minmax(0,1fr);font-family:"Outfit",sans-serif;font-weight:700;font-size:16px;color:#3d445c}
+.src,.dst{background:#fff;border:1px solid #dfe2ec;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.src li,.dst li{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:start}
+.dst li{grid-template-columns:minmax(0,1fr)}
+.tag{display:inline-flex;justify-content:center;min-height:22px;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.tag.now{background:#f1f3f9;color:#3d445c;border:1px solid #dfe2ec}
+.tag.new{background:#e8f0f8;color:#0a4a85;border:1px solid #b9cfe5}
+.scr{border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:#0a4a85;color:#fff}
+.scr b{font-family:"Outfit",sans-serif;font-size:18px;line-height:1.2}
+.scr span{font-size:13px;color:#e6edf5}
+.own{display:inline-flex;align-self:flex-start;min-height:24px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff}
+.chev{display:grid;place-items:center;color:#596079}
+.by{color:#596079;font-size:12.5px}
+</style>
+</helmet>
+<div class="ln" style="width: 1600px; height: 1180px; padding: 40px 48px; gap: 16px;">
+  <div class="row" style="align-items: flex-end;">
+    <div class="col" style="gap: 6px; flex: 1 1 auto;">
+      <h1 class="h1">Como o professor e a equipe chegam</h1>
+      <p class="lede" style="max-width: 90ch;">O professor tem hoje sete caminhos até a competência de um aluno, espalhados entre o curso, o relatório, o bloco e os avisos. Todos passam a terminar na mesa de leitura.</p>
+    </div>
+    <div class="row" style="gap: 8px;"><span class="tag now">hoje</span><span class="small">o caminho já existe</span><span class="tag new">proposto</span><span class="small">entrada nova</span></div>
+  </div>
+
+  <div class="maphead"><span>De onde parte</span><span></span><span>Tela e quem a desenha</span><span></span><span>Dali segue para</span></div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Menu do curso, item “Competências” <span class="by">(core)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Formulário da atividade, seção “Competências” <span class="by">(core; mesma regra, por atividade)</span></span></li>
+      <li><span class="tag new">proposto</span><span>“O que este curso desenvolve”, link no cabeçalho do curso <span class="by">(tema)</span></span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>9 · Competências do curso</b><span>Atividades que alimentam, o que acontece ao concluir.</span><span class="own" style="color: #0a4a85;">core coursecompetencies.php pelo tema</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>“Ver detalhes”: a competência de um aluno neste curso (11)</li><li>10 · Turma</li><li>Gerir estruturas, só para quem gere (hub)</li></ul>
+  </div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Curso, Relatórios, “Distribuição de competências” <span class="by">(report_competency)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Menu da atividade, “Distribuição de competências”, já filtrado pela atividade <span class="by">(report_competency)</span></span></li>
+      <li><span class="tag new">proposto</span><span>“Na turma agora”, em 9</span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>10 · Turma</b><span>Quem trouxe algo novo, em vez da tabela por nota.</span><span class="own" style="color: #0a4a85;">core report_competency pelo tema</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>“Ler”: abre a mesa de leitura no aluno e na competência (11); hoje a célula abre só um diálogo</li><li>O caderno de um aluno</li></ul>
+  </div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Bloco Planos de aprendizagem: “Competências para revisar”, “Planos para revisar” <span class="by">(block_lp)</span></span></li>
+      <li><span class="tag now">hoje</span><span>“Ver detalhes” em 9 e os seletores de aluno e competência <span class="by">(core)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Aviso “comentário na competência” <span class="by">(core)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Gaveta do hub de evidências, “Abrir no plano” <span class="by">(local_evidencehub)</span></span></li>
+      <li><span class="tag new">proposto</span><span>Item “Mesa de leitura” na barra, para quem pode avaliar <span class="by">(tema)</span></span></li>
+      <li><span class="tag new">proposto</span><span>Cartão “Jornada de … neste plano” no perfil do aluno <span class="by">(tema)</span></span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>11 · Mesa de leitura</b><span>Fila, caderno do aluno e a leitura no mesmo lugar.</span><span class="own" style="color: #0a4a85;">core user_competency_in_course.php, user_competency.php e páginas do block_lp, pelo tema</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>A próxima leitura da fila</li><li>O plano do aluno (12)</li><li>A evidência nova, com os arquivos</li></ul>
+  </div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Perfil do aluno, “Planos de aprendizagem”; só com permissão no contexto do usuário, por padrão o gestor <span class="by">(core)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Bloco Planos de aprendizagem, “Planos para revisar” <span class="by">(block_lp)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Hub de competências, participantes de um modelo <span class="by">(local_dimensions)</span></span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>12 · Plano de um aluno</b><span>O caderno do aluno com os estados do plano e as ações permitidas.</span><span class="own" style="color: #0a4a85;">core plan.php e plans.php pelo tema</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>A competência do aluno, com “Sua leitura” (3)</li><li>Editar o plano, concluir, voltar a rascunho</li></ul>
+  </div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Categoria, menu Mais, “Central” <span class="by">(local_dimensions)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Administração, Competências, Dimensions <span class="by">(local_dimensions)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Administração e categoria: estruturas e modelos do core, que seguem existindo <span class="by">(core)</span></span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>Hub de competências</b><span>Estruturas, competências, modelos, participantes, identidade visual.</span><span class="own" style="color: #6a2892;">local_dimensions central.php</span><span>Edita os mesmos dados das páginas de gestão do core; não as substitui.</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>Formulários de cor, imagem, tags e tipo, que alimentam todas as telas do aluno</li><li>Planos criados para pessoas e coortes (12)</li><li>Painel de nós, se o React Flow entrar</li></ul>
+  </div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Categoria, menu Mais, “Hub de evidências” <span class="by">(local_evidencehub)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Administração: hub e regras de validade <span class="by">(local_evidencehub)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Avisos e resumo semanal de validade <span class="by">(local_evidencehub)</span></span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>13 · Hub de evidências</b><span>Quem está coberto hoje; a gaveta conta a história de uma evidência.</span><span class="own" style="color: #0c5f59;">local_evidencehub index.php e gaveta</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>As evidências do aluno (5, na visão de quem acompanha)</li><li>A competência no plano do core, se puder ler</li><li>Documento em PDF e a verificação pública (8)</li></ul>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1180}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

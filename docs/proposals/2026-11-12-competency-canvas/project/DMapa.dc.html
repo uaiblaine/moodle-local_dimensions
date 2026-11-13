@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fluxo: mapa</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+<link rel="stylesheet" href="./flow.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.find{width:340px}
+.find input{flex:1 1 auto;min-width:0;border:0;background:transparent;font:inherit;font-size:14px;color:#1c2233;min-height:42px;padding:0}
+.ln input::placeholder{color:#596079;opacity:1}
+.ln button.pick{min-height:44px;font-size:13.5px;cursor:pointer;padding:2px 16px}
+.ln a.pick{min-height:44px;text-decoration:none;padding:2px 14px}
+select.input{font-size:14.5px;font-weight:600;padding-right:36px;min-width:300px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.arearow h3 small{display:block;font-family:"Noto Sans",sans-serif;font-size:12.5px;font-weight:600;color:#596079}
+.legend{display:flex;gap:16px;align-items:center;font-size:13px;color:#596079}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sheet h2{font-size:22px;font-weight:800;line-height:1.2}
+.sheet h3{font-size:15px;font-weight:700}
+.lvnames{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:#596079}
+.lvnames .here{color:#1c2233;font-weight:700}
+.lvnames .prof{color:#17694a;font-weight:600}
+.moment.compact{padding:12px 14px;gap:6px;border-radius:14px}
+.moment.compact h4{margin:0;font-size:14.5px;font-weight:700}
+.thread p{color:#1c2233}
+.next h4{margin:0;font-size:15.5px;line-height:1.3}
+</style>
+</helmet>
+<div class="ln fl" style="width: 1280px; height: 1100px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="DHoje.dc.html" aria-current="page">Minha jornada</a>
+    <span class="grow"></span>
+    <span class="avatar">MA</span>
+  </nav>
+
+  <div class="ws">
+    <div class="wrap">
+      <h1>Minha jornada</h1>
+      <nav class="tabs" aria-label="Minha jornada">
+        <a href="DHoje.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>Hoje</a>
+        <a class="on" href="DMapa.dc.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"></path><path d="M9 4v14M15 6v14"></path></svg>Mapa</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Portfólio</a>
+      </nav>
+      <span class="grow"></span>
+      <label class="find" for="ws-find">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input id="ws-find" type="search" placeholder="Buscar competência, evidência ou curso" aria-keyshortcuts="Meta+K">
+        <span class="kbd">⌘K</span>
+      </label>
+      <a class="btn primary" href="DRegistrar.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Registrar</a>
+    </div>
+  </div>
+
+  <main class="wrap col" style="gap: 18px; padding-top: 20px; flex: 1 1 auto; min-height: 0;">
+    <div class="row" style="gap: 8px; flex-wrap: wrap;">
+      <div class="row" role="group" aria-label="Mostrar" style="gap: 8px;">
+        <button type="button" class="pick on" aria-pressed="true">Todas</button>
+        <button type="button" class="pick" aria-pressed="false">Reconhecidas</button>
+        <button type="button" class="pick" aria-pressed="false">Em construção</button>
+        <button type="button" class="pick" aria-pressed="false">Por explorar</button>
+      </div>
+      <span class="grow"></span>
+      <label class="vh" for="plan">Plano</label>
+      <select class="input" id="plan">
+        <option selected>Docência digital (DigCompEdu)</option>
+        <option>Todas as minhas competências</option>
+      </select>
+    </div>
+
+    <div class="row" style="gap: 16px;">
+      <p class="small">Até 12 dez 2026 · acompanhado por Renato Dias · 4 reconhecidas, 2 em construção, 3 por explorar</p>
+      <span class="grow"></span>
+      <div class="legend" aria-hidden="true">
+        <span><span class="pips"><i class="on"></i></span>Nível atual</span>
+        <span><span class="pips"><i class="goal"></i></span>Integrador (B1), o nível de proficiência</span>
+      </div>
+    </div>
+
+    <section class="arearow" aria-labelledby="a2">
+      <h3 id="a2"><i style="background: #0c5f59;"></i><span>Recursos digitais<small>3 de 3 reconhecidas</small></span></h3>
+      <div class="tiles">
+        <a class="tilec ok" href="#">2.1 Seleção<span class="pips" role="img" aria-label="Nível Especialista (B2)"><i class="on"></i><i class="on"></i><i class="on goal"></i><i class="on"></i><i></i><i></i></span><small>Reconhecida · 2 jun</small></a>
+        <a class="tilec ok" href="#">2.2 Criação e modificação<span class="pips" role="img" aria-label="Nível Integrador (B1)"><i class="on"></i><i class="on"></i><i class="on goal"></i><i></i><i></i><i></i></span><small>Reconhecida · 18 set</small></a>
+        <a class="tilec ok" href="#">2.3 Gestão, proteção e partilha<span class="pips" role="img" aria-label="Nível Integrador (B1)"><i class="on"></i><i class="on"></i><i class="on goal"></i><i></i><i></i><i></i></span><small>Reconhecida · 14 abr</small></a>
+      </div>
+    </section>
+
+    <section class="arearow" aria-labelledby="a3">
+      <h3 id="a3"><i style="background: #6a2892;"></i><span>Ensino e aprendizagem<small>1 de 2 reconhecida</small></span></h3>
+      <div class="tiles">
+        <a class="tilec ok" href="#">3.1 Ensino<span class="pips" role="img" aria-label="Nível Integrador (B1)"><i class="on"></i><i class="on"></i><i class="on goal"></i><i></i><i></i><i></i></span><small>Reconhecida · 16 out</small></a>
+        <a class="tilec far" href="#">3.3 Aprendizagem colaborativa<span class="pips" role="img" aria-label="Ainda sem nível"><i></i><i></i><i class="goal"></i><i></i><i></i><i></i></span><small>Por explorar</small></a>
+      </div>
+    </section>
+
+    <section class="arearow" aria-labelledby="a4">
+      <h3 id="a4"><i style="background: #2449ad;"></i><span>Avaliação<small>2 em construção</small></span></h3>
+      <div class="tiles">
+        <a class="tilec sel" href="DMapa.dc.html" aria-current="true">4.1 Estratégias de avaliação<span class="pips" role="img" aria-label="Nível Explorador (A2)"><i class="on"></i><i class="on"></i><i class="goal"></i><i></i><i></i><i></i></span><small>Em construção · 2 evidências</small></a>
+        <a class="tilec" href="#">4.3 Feedback e planificação<span class="pips" role="img" aria-label="Nível Recém-chegado (A1)"><i class="on"></i><i></i><i class="goal"></i><i></i><i></i><i></i></span><small>Em construção · 1 evidência</small></a>
+      </div>
+    </section>
+
+    <section class="arearow" aria-labelledby="a5">
+      <h3 id="a5"><i style="background: #96430a;"></i><span>Capacitação dos aprendentes<small>2 por explorar</small></span></h3>
+      <div class="tiles">
+        <a class="tilec far" href="#">5.1 Acessibilidade e inclusão<span class="pips" role="img" aria-label="Ainda sem nível"><i></i><i></i><i class="goal"></i><i></i><i></i><i></i></span><small>Por explorar</small></a>
+        <a class="tilec far" href="#">5.3 Envolvimento ativo<span class="pips" role="img" aria-label="Ainda sem nível"><i></i><i></i><i class="goal"></i><i></i><i></i><i></i></span><small>Por explorar</small></a>
+      </div>
+    </section>
+  </main>
+
+  <div class="scrim"></div>
+
+  <aside class="sheet" role="dialog" aria-modal="true" aria-labelledby="s-title">
+    <header>
+      <div class="col" style="gap: 6px; flex: 1 1 auto; min-width: 0;">
+        <span class="chip" style="background: #e8eefb; color: #2449ad; align-self: flex-start;">Avaliação</span>
+        <h2 id="s-title">4.1 Estratégias de avaliação</h2>
+      </div>
+      <a class="iconbtn" href="DMapa.dc.html" aria-label="Fechar" style="align-self: flex-start;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+    </header>
+
+    <div class="bodyx">
+      <p style="font-size: 15px; color: #3d445c;">Usa tecnologias digitais na avaliação formativa e somativa, diversificando formatos e abordagens.</p>
+
+      <section class="col" aria-labelledby="s-where" style="gap: 8px;">
+        <h3 id="s-where">Onde você está</h3>
+        <span class="pips big" role="img" aria-label="Nível Explorador (A2), o segundo de seis"><i class="on"></i><i class="on"></i><i class="goal"></i><i></i><i></i><i></i></span>
+        <ol class="lvnames">
+          <li>Recém-chegado</li>
+          <li class="here">Explorador (A2)</li>
+          <li class="prof">Integrador</li>
+          <li>Especialista</li>
+          <li>Líder</li>
+          <li>Pioneiro</li>
+        </ol>
+        <p class="small">Integrador (B1) é o nível de proficiência.</p>
+      </section>
+
+      <section class="col" aria-labelledby="s-shown" style="gap: 8px;">
+        <h3 id="s-shown">O que você já mostrou</h3>
+        <article class="moment compact">
+          <div class="top"><span><b>Evidência sua</b> · 2 arquivos</span><span class="grow"></span><span class="num">9 out</span></div>
+          <h4>Plano de aula da unidade 3</h4>
+        </article>
+        <article class="moment compact">
+          <div class="top"><span><b>Atividade concluída</b> em Avaliação com tecnologias digitais</span><span class="grow"></span><span class="num">2 out</span></div>
+          <h4>Oficina de rubricas digitais</h4>
+          <div class="thread">
+            <div class="msg">
+              <span class="avatar" style="background: #fbeee2; color: #96430a;">LP</span>
+              <div class="col" style="gap: 0;">
+                <span class="small"><b style="color: #1c2233;">Lúcia Prado</b> · 3 out</span>
+                <p>As rubricas estão claras; falta mostrar como os estudantes usaram o retorno.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="col" aria-labelledby="s-next" style="gap: 8px;">
+        <h3 id="s-next">Próximo passo</h3>
+        <article class="next">
+          <h4>Faça o módulo 3, Rubricas digitais na prática</h4>
+          <p class="why">Aplicar uma rubrica com a turma e mostrar o retorno que ela gerou é o que leva de Explorador a Integrador.</p>
+          <a class="btn line" href="#" style="align-self: flex-start;">Ir para o módulo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+        </article>
+      </section>
+
+      <section class="col" aria-labelledby="s-linked" style="gap: 8px;">
+        <h3 id="s-linked">Ligada a</h3>
+        <div class="row" style="gap: 8px; flex-wrap: wrap;">
+          <a class="pick" href="#"><i style="background: #2449ad;"></i>4.3 Feedback e planificação</a>
+          <a class="pick" href="#"><i style="background: #6a2892;"></i>3.1 Ensino</a>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <a class="btn primary" href="DRegistrar.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Registrar uma evidência</a>
+      <a class="btn line" href="#">Abrir a página inteira</a>
+    </footer>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

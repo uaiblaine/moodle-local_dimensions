@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Caderno de jornada: mesa de leitura</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.month{font-family:"Outfit",sans-serif;font-weight:700;font-size:15px;color:#596079;padding:4px 0 2px 84px}
+.entry{display:grid;grid-template-columns:60px 24px minmax(0,1fr);position:relative}
+.entry .when{font-size:13px;color:#596079;text-align:right;padding-top:18px}
+.entry .rail{position:relative;display:flex;justify-content:center}
+.entry .rail::before{content:"";position:absolute;top:0;bottom:0;width:2px;background:#dfe2ec}
+.entry .dot{position:relative;margin-top:20px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #2449ad}
+.entry.newer .dot{border-color:#7a4a00;background:#fbedd5}
+.entry.start .dot{border-style:dashed;border-color:#596079}
+.entry .body{padding:8px 0 8px 8px}
+.ev{background:#fff;border:1px solid #dfe2ec;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.ev.new{border-color:#7a4a00;box-shadow:0 0 0 3px #fbedd5}
+.said{font-family:"Outfit",sans-serif;font-size:15.5px;line-height:1.35;color:#1c2233}
+.files{display:flex;flex-direction:column;gap:6px}
+.file{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 10px 6px 6px;border:1px solid #dfe2ec;border-radius:10px;background:#f6f7fb;font-size:14px}
+.file .ic{width:34px;height:34px;border-radius:8px;background:#fbeee2;color:#96430a;display:grid;place-items:center}
+.file .ic svg{width:18px;height:18px}
+.reading{background:#f1f3f9;border:1px solid #dfe2ec;border-radius:16px;padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+.queue{display:flex;flex-direction:column;gap:6px}
+.q{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;padding:10px 12px;border:1px solid transparent;border-radius:12px;text-decoration:none;color:#1c2233}
+.q:hover{background:#f6f7fb;color:#1c2233}
+.q.on{background:#e8f0f8;border-color:#b9cfe5}
+.q .avatar{width:36px;height:36px;font-size:13px}
+.q b{font-size:14.5px}
+.q .c{font-size:13.5px;color:#3d445c;line-height:1.3}
+.q .why{font-size:13px;color:#596079}
+.q.on .why{color:#073560;font-weight:600}
+.reader{overflow:hidden}
+.reader .viewing{padding:9px 18px;display:flex;gap:10px;align-items:center}
+.levels{display:flex;flex-direction:column;gap:8px}
+.levels .radio{padding:9px 12px}
+.cb{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:center;font-size:14px;font-weight:600}
+.cb input{width:18px;height:18px;margin:0;accent-color:#0a4a85}
+.notefield{min-height:112px;font-size:14.5px;line-height:1.45;border-color:#8b92ab}
+</style>
+</helmet>
+<div class="ln" style="width: 1280px; height: 1215px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="PMesa.dc.html" aria-current="page">Mesa de leitura</a>
+    <span class="grow"></span>
+    <span class="avatar">RD</span>
+  </nav>
+
+  <header style="background: #fff; border-bottom: 1px solid #dfe2ec; padding: 20px 24px 16px; flex: none;">
+    <div class="row" style="align-items: flex-end; gap: 20px;">
+      <div class="col" style="gap: 6px; flex: 1 1 auto;">
+        <h1 class="h1" style="font-size: 32px;">Mesa de leitura</h1>
+        <p style="color: #3d445c;">Cinco cadernos esperam a sua leitura, de quem trouxe algo mais recente para trás.</p>
+      </div>
+      <a class="btn line" href="#">Leituras que você já registrou</a>
+    </div>
+  </header>
+
+  <div style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 340px; gap: 20px; padding: 20px 24px 0; flex: 1 1 auto; min-height: 0;">
+
+    <section class="card col" aria-labelledby="pm-q" style="padding: 16px 10px; gap: 10px; align-self: start;">
+      <h2 class="h3" id="pm-q" style="padding: 0 12px;">Para ler</h2>
+      <ul class="queue">
+        <li><a class="q on" href="#" aria-current="true">
+          <span class="avatar" style="background: #f3e9f8; color: #6a2892;" aria-hidden="true">MA</span>
+          <span class="col" style="gap: 2px;"><span class="row" style="gap: 6px;"><b>Marina Alves</b><span class="grow"></span><span class="small num">28 out</span></span><span class="c">4.3 Feedback e planificação</span><span class="why">pediu uma leitura</span></span>
+        </a></li>
+        <li><a class="q" href="#">
+          <span class="avatar" style="background: #e2f3f1; color: #0c5f59;" aria-hidden="true">CR</span>
+          <span class="col" style="gap: 2px;"><span class="row" style="gap: 6px;"><b>Caio Ribeiro</b><span class="grow"></span><span class="small num">27 out</span></span><span class="c">4.1 Estratégias de avaliação</span><span class="why">evidência nova</span></span>
+        </a></li>
+        <li><a class="q" href="#">
+          <span class="avatar" style="background: #fbeee2; color: #96430a;" aria-hidden="true">PL</span>
+          <span class="col" style="gap: 2px;"><span class="row" style="gap: 6px;"><b>Pedro Lins</b><span class="grow"></span><span class="small num">25 out</span></span><span class="c">3.3 Aprendizagem colaborativa</span><span class="why">evidência nova</span></span>
+        </a></li>
+        <li><a class="q" href="#">
+          <span class="avatar" style="background: #dcf3e8; color: #17694a;" aria-hidden="true">SG</span>
+          <span class="col" style="gap: 2px;"><span class="row" style="gap: 6px;"><b>Sofia Guedes</b><span class="grow"></span><span class="small num">22 out</span></span><span class="c">3.1 Ensino</span><span class="why">curso concluído recomendou</span></span>
+        </a></li>
+        <li><a class="q" href="#">
+          <span class="avatar" style="background: #e8eefb; color: #2449ad;" aria-hidden="true">JT</span>
+          <span class="col" style="gap: 2px;"><span class="row" style="gap: 6px;"><b>Júlia Tanaka</b><span class="grow"></span><span class="small num">20 out</span></span><span class="c">4.3 Feedback e planificação</span><span class="why">pediu uma leitura</span></span>
+        </a></li>
+      </ul>
+      <div class="sep" style="margin: 4px 12px;"></div>
+      <p class="small" style="padding: 0 12px;">Quatro vêm de <a href="PCurso.dc.html">Avaliação com tecnologias digitais</a>; a de Sofia, de Ensinar com recursos digitais.</p>
+    </section>
+
+    <main class="col" style="gap: 12px; min-width: 0;" aria-labelledby="pm-c">
+      <section class="card reader">
+        <div class="viewing"><span class="avatar" style="width: 26px; height: 26px; font-size: 11px; background: #ffffff; color: #6a2892;" aria-hidden="true">MA</span><span id="pm-c">Marina Alves · 4.3 Feedback e planificação</span></div>
+        <div class="pad col" style="gap: 10px; padding-top: 14px; padding-bottom: 16px;">
+          <div class="row" style="gap: 10px;"><span class="chip" style="background: #e8eefb; color: #2449ad;">Avaliação</span><span class="chip warm">Em construção · aguardando leitura</span><span class="grow"></span><a href="ACompetencia.dc.html" style="font-size: 14px;">Abrir o caderno inteiro</a></div>
+          <ol class="scale" aria-label="Escala desta competência">
+            <li class="past">A1</li>
+            <li class="here">A2</li>
+            <li>B1</li>
+            <li>B2</li>
+            <li>C1</li>
+            <li>C2</li>
+          </ol>
+          <p class="small">Explorador (A2) desde a leitura de Lúcia Prado. Integrador (B1) é o nível de proficiência.</p>
+        </div>
+      </section>
+
+      <div class="col" style="gap: 2px;">
+        <h2 class="month">Outubro de 2026</h2>
+
+        <article class="entry newer">
+          <span class="when num">28 out</span>
+          <span class="rail"><span class="dot"></span></span>
+          <div class="body"><div class="ev new">
+            <div class="row" style="gap: 6px 8px; flex-wrap: wrap;"><span class="chip warm">Nova desde a última leitura</span><span class="small">registrada por Marina · pediu uma leitura</span></div>
+            <h3 class="h3" style="font-size: 18px;">Devolutivas da turma B</h3>
+            <p style="font-size: 14px; color: #3d445c;">Seis devolutivas escritas para textos da turma B e a versão reescrita de dois alunos depois delas.</p>
+            <blockquote class="said">“Mudei o jeito de comentar depois da última leitura: agora termino cada devolutiva com uma pergunta.”</blockquote>
+            <ul class="files" aria-label="Arquivos da evidência">
+              <li class="file"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path></svg></span><span>devolutivas-turma-b.pdf <span class="small">· 1,2 MB</span></span><a href="#" aria-label="Abrir devolutivas-turma-b.pdf">Abrir</a></li>
+              <li class="file"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path></svg></span><span>reescritas-antes-e-depois.pdf <span class="small">· 860 KB</span></span><a href="#" aria-label="Abrir reescritas-antes-e-depois.pdf">Abrir</a></li>
+            </ul>
+            <p class="feeds">Alimenta 4.3 Feedback e planificação e 4.1 Estratégias de avaliação</p>
+          </div></div>
+        </article>
+
+        <article class="entry">
+          <span class="when num">15 out</span>
+          <span class="rail"><span class="dot"></span></span>
+          <div class="body"><div class="reading">
+            <span class="small" style="font-weight: 600; color: #3d445c;">Leitura de Lúcia Prado · nível Explorador (A2)</span>
+            <blockquote class="said">“Os comentários apontam o erro, mas ainda não dizem ao aluno o que fazer a seguir.”</blockquote>
+            <span class="small">Feita a partir da participação no fórum Devolutivas em pares, de Avaliação com tecnologias digitais.</span>
+          </div></div>
+        </article>
+
+        <h2 class="month" style="padding-top: 10px;">Março de 2026</h2>
+
+        <article class="entry start">
+          <span class="when num">12 mar</span>
+          <span class="rail"><span class="dot"></span></span>
+          <div class="body"><p class="small" style="padding: 12px 0 0 4px;">A competência entrou no plano Docência digital (DigCompEdu).</p></div>
+        </article>
+      </div>
+    </main>
+
+    <aside class="col" style="gap: 16px;">
+      <section class="card pad col" aria-labelledby="pm-r" style="gap: 12px;">
+        <h2 class="h2" id="pm-r">Sua leitura</h2>
+        <p class="small">Sobre Devolutivas da turma B e o que veio antes dela.</p>
+        <fieldset class="levels" style="border: 0; margin: 0; padding: 0; min-width: 0;">
+          <legend class="small" style="padding: 0; margin-bottom: 8px; font-weight: 600; color: #1c2233;">Em que nível Marina está agora</legend>
+          <label class="radio"><input type="radio" name="pm-level"><span>Recém-chegado (A1)</span></label>
+          <label class="radio"><input type="radio" name="pm-level"><span>Explorador (A2) · o atual</span></label>
+          <label class="radio on"><input type="radio" name="pm-level" checked><span><b>Integrador (B1)</b> · nível de proficiência</span></label>
+          <label class="radio"><input type="radio" name="pm-level"><span>Especialista (B2)</span></label>
+          <label class="radio"><input type="radio" name="pm-level"><span>Líder (C1)</span></label>
+          <label class="radio"><input type="radio" name="pm-level"><span>Pioneiro (C2)</span></label>
+        </fieldset>
+        <label for="pm-note" style="font-size: 14px; font-weight: 700; color: #1c2233; line-height: 1.35;">O que você observou (aparece para Marina e vira a frase do reconhecimento)</label>
+        <textarea class="note notefield" id="pm-note">As devolutivas terminam com uma pergunta que leva o aluno ao próximo passo, e as reescritas mostram que funcionou.</textarea>
+        <label class="cb"><input type="checkbox" checked><span>Encerrar o pedido de leitura</span></label>
+        <button type="button" class="btn primary">Registrar e abrir a próxima</button>
+        <button type="button" class="btn line">Devolver com um pedido</button>
+        <a href="#" style="font-size: 14px; font-weight: 600; text-align: center;">Só comentar</a>
+      </section>
+
+      <section class="card pad col" aria-labelledby="pm-n">
+        <h2 class="h3" id="pm-n">Vizinhança</h2>
+        <ul class="col" style="gap: 10px; font-size: 14.5px;">
+          <li class="row" style="gap: 10px;"><span class="chip ok">Reconhecida</span><a href="ACompetencia.dc.html">3.1 Ensino</a></li>
+          <li class="row" style="gap: 10px;"><span class="chip warm">Em construção</span><a href="#">4.1 Estratégias de avaliação</a></li>
+        </ul>
+        <p class="small">Devolutivas da turma B também alimenta 4.1 Estratégias de avaliação.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1215}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

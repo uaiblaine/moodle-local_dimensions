@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Modelo de plano para a gestão</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+button:focus-visible{outline:3px solid #4456ff;outline-offset:2px}
+.htabs{display:flex;gap:2px;border-bottom:1px solid #e1e3ef;padding:0 28px;background:#fff}
+.htabs span{padding:12px 14px;font-size:14.5px;color:#5d6180;border-bottom:2.5px solid transparent}
+.htabs span.on{color:#070093;border-bottom-color:#070093;font-weight:700}
+.tl{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;font-size:14px}
+.tl.on{background:#f2f3fa;font-weight:700}
+.tl i{width:8px;height:28px;border-radius:4px;display:block}
+.ttabs{display:flex;gap:4px;border-bottom:1px solid #e1e3ef}
+.ttabs span{padding:10px 12px;font-size:14px;color:#5d6180;border-bottom:2.5px solid transparent;font-weight:600}
+.ttabs span.on{color:#070093;border-bottom-color:#070093}
+.dr{display:grid;grid-template-columns:10px 260px minmax(0,1fr) 120px;gap:12px;align-items:center;min-height:40px;border-top:1px solid #eef0f6;font-size:13.5px}
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:#f2f3fa}
+.bar i{display:block;height:100%}
+.tool{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);font:600 13px "Noto Sans",sans-serif;color:#fff;white-space:nowrap}
+</style>
+</helmet>
+<div class="dim" style="width: 1440px; height: 1000px; display: flex; flex-direction: column;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink on" href="#" aria-current="page">Administração do site</a>
+    <span class="grow"></span>
+    <span class="avatar" style="background: #ffd84d;">CO</span>
+  </nav>
+  <div style="background: #fff; padding: 18px 28px 6px;"><span class="crumb">Competências / Hub</span><h1 class="h1" style="font-size: 28px; margin-top: 4px;">Modelos de plano</h1></div>
+  <div class="htabs"><span>Estruturas</span><span>Árvore</span><span class="on">Modelos de plano</span></div>
+
+  <div style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 320px; flex: 1 1 auto; min-height: 0;">
+    <aside style="background: #fff; border-right: 1px solid var(--dim-line); padding: 16px 12px; display: flex; flex-direction: column; gap: 6px;">
+      <a class="btn primary sm" href="#" style="margin: 0 4px 8px;">Novo modelo</a>
+      <div class="tl on"><i style="background: #4a1c7a;"></i><span>Trilha de indução 2026</span><span class="small">128</span></div>
+      <div class="tl"><i style="background: #0f5e66;"></i><span>Liderança intermediária</span><span class="small">34</span></div>
+      <div class="tl"><i style="background: #0a4a85;"></i><span>Portfólio de facilitação online</span><span class="small">21</span></div>
+      <div class="tl"><i style="background: #17694a;"></i><span>Bem-vindo à Academia: 90 dias</span><span class="small">212</span></div>
+      <div class="tl"><i style="background: #c9cce0;"></i><span style="color: var(--dim-mute);">Atualização anual de proteção 2025 · oculto</span><span class="small">0</span></div>
+      <span class="grow"></span>
+      <div class="row" style="gap: 6px; padding: 0 4px;"><a class="btn line sm" href="#" style="flex: 1;">Importar</a><a class="btn line sm" href="#" style="flex: 1;">Exportar</a></div>
+    </aside>
+
+    <main style="padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; min-width: 0;">
+      <header style="border-radius: 16px; background: #4a1c7a; color: #fff; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;">
+        <div class="row" style="gap: 10px; align-items: flex-start;">
+          <div class="col" style="gap: 6px;"><h2 class="h2">Trilha de indução 2026</h2><div class="row" style="gap: 6px;"><span class="chip glass">9 Etapas</span><span class="chip glass">Visível</span><span class="chip glass">Prazo 14 jun 2027</span><span class="chip glass">Contexto: Sistema</span></div></div>
+          <span class="grow"></span>
+        </div>
+        <div class="row" style="gap: 8px; flex-wrap: wrap;">
+          <span class="tool">Editar</span><span class="tool">Aparência</span><span class="tool">Adicionar competência</span><span class="tool">Participantes</span><span class="tool">Duplicar</span><span class="tool">Excluir</span>
+        </div>
+      </header>
+      <div class="ttabs"><span>Competências 9</span><span>Participantes</span><span class="on">Andamento</span></div>
+
+      <section class="card pad col" style="gap: 10px;">
+        <div class="row"><h3 class="h3">128 planos deste modelo</h3><span class="grow"></span><span class="small">criados por 2 coortes e 6 pessoas avulsas</span></div>
+        <div class="bar" style="height: 18px;" role="img" aria-label="114 ativos, 14 concluídos"><i style="width: 89%; background: #070093;"></i><i style="width: 11%; background: #17694a;"></i></div>
+        <div class="row small" style="gap: 16px;"><span class="row" style="gap: 6px;"><i style="width: 10px; height: 10px; border-radius: 3px; background: #070093; display: block;"></i>Ativos 114</span><span class="row" style="gap: 6px;"><i style="width: 10px; height: 10px; border-radius: 3px; background: #17694a; display: block;"></i>Concluídos 14</span></div>
+      </section>
+
+      <section class="card pad col" style="gap: 0;">
+        <div class="row" style="padding-bottom: 8px;"><h3 class="h3">Onde estão as pessoas, por competência</h3><span class="grow"></span><span class="small">ordem do modelo</span></div>
+        <div class="dr"><i style="width: 10px; height: 10px; border-radius: 50%; background: #0f7d74; display: block;"></i><span>Conhece as rotinas da escola</span><span class="bar"><i style="width: 4%; background: #dfe1ec;"></i><i style="width: 10%; background: #8fd1c9;"></i><i style="width: 86%; background: #0f7d74;"></i></span><span class="small">110 proficientes</span></div>
+        <div class="dr"><i style="width: 10px; height: 10px; border-radius: 50%; background: #1f9488; display: block;"></i><span>Constrói relações de trabalho</span><span class="bar"><i style="width: 12%; background: #dfe1ec;"></i><i style="width: 30%; background: #9bd9d1;"></i><i style="width: 58%; background: #1f9488;"></i></span><span class="small">74 proficientes</span></div>
+        <div class="dr"><i style="width: 10px; height: 10px; border-radius: 50%; background: #7b2fa8; display: block;"></i><span>Planeja aulas eficazes</span><span class="bar"><i style="width: 15%; background: #dfe1ec;"></i><i style="width: 33%; background: #c79ee3;"></i><i style="width: 52%; background: #7b2fa8;"></i></span><span class="small">66 proficientes</span></div>
+        <div class="dr"><i style="width: 10px; height: 10px; border-radius: 50%; background: #5e2183; display: block;"></i><span>Trata cada estudante com dignidade</span><span class="bar"><i style="width: 61%; background: #dfe1ec;"></i><i style="width: 25%; background: #b893d1;"></i><i style="width: 14%; background: #5e2183;"></i></span><span class="small">18 proficientes</span></div>
+        <div class="dr"><i style="width: 10px; height: 10px; border-radius: 50%; background: #c2570c; display: block;"></i><span>Reflete sobre a prática</span><span class="bar"><i style="width: 40%; background: #dfe1ec;"></i><i style="width: 44%; background: #f0b384;"></i><i style="width: 16%; background: #c2570c;"></i></span><span class="small">20 proficientes</span></div>
+        <div class="row small" style="gap: 16px; padding-top: 10px;"><span>Cinza: sem avaliação · claro: a caminho · cheio: proficiente na escala de cada competência</span><span class="grow"></span><a href="#" style="font-weight: 600; color: var(--dim-nav);">Ver as 9</a></div>
+      </section>
+    </main>
+
+    <aside style="background: #fff; border-left: 1px solid var(--dim-line); padding: 18px 18px; display: flex; flex-direction: column; gap: 14px;">
+      <section class="col" style="gap: 8px;">
+        <span class="eyebrow">Coortes sincronizadas</span>
+        <div class="row" style="gap: 10px; font-size: 14px;"><span class="col" style="gap: 0;"><b>Ingressantes 2026 · Norte</b><span class="small">82 pessoas · sincronizada hoje</span></span><span class="grow"></span><span class="small">Parar</span></div>
+        <div class="row" style="gap: 10px; font-size: 14px;"><span class="col" style="gap: 0;"><b>Ingressantes 2026 · Sul</b><span class="small">40 pessoas · sincronizada hoje</span></span><span class="grow"></span><span class="small">Parar</span></div>
+        <div class="row" style="gap: 8px;"><a class="btn line sm" href="#">Adicionar coorte</a><a class="btn line sm" href="#">Sincronizar agora</a></div>
+      </section>
+      <div class="sep"></div>
+      <section class="col" style="gap: 8px;">
+        <span class="eyebrow">Pessoas avulsas</span>
+        <span style="font-size: 14px;">6 planos criados um a um</span>
+        <a class="btn line sm" href="#" style="align-self: flex-start;">Criar planos para pessoas</a>
+      </section>
+      <div class="sep"></div>
+      <section class="col" style="gap: 8px;">
+        <span class="eyebrow">Pedidos de revisão</span>
+        <span style="font-size: 14px;">12 competências deste modelo aguardam revisão</span>
+        <a class="btn primary sm" href="#" style="align-self: flex-start;">Abrir a mesa de revisão</a>
+      </section>
+      <span class="grow"></span>
+      <span class="small">Excluir um modelo com planos pergunta se os planos são excluídos ou desvinculados (comportamento do core).</span>
+    </aside>
+  </div>
+  <span class="tagid" style="left: 540px; top: 104px;">R2 · Modelo (gestão)</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
