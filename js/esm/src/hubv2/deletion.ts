@@ -78,8 +78,10 @@ export const blockedBody = (labels: Labels, name: string, check: DeleteCheck): s
  */
 export const confirmBody = (labels: Labels, name: string, check: DeleteCheck): string => {
     const safe = escapeHtml(name);
+    // Core resets the parent's rule whatever is deleted under it, a leaf included.
+    const rule = check.parenthasrule ? `<p>${labels.hubv2_delete_parentrule}</p>` : '';
     if (check.descendants === 0) {
-        return `<p>${fill(labels.hubv2_delete_confirm_leaf, safe)}</p>`;
+        return `<p>${fill(labels.hubv2_delete_confirm_leaf, safe)}</p>${rule}`;
     }
     const text = check.descendants === 1
         ? fillObject(labels.hubv2_delete_confirm_tree_one, {name: safe})
@@ -88,6 +90,5 @@ export const confirmBody = (labels: Labels, name: string, check: DeleteCheck): s
             count: String(check.descendants),
             total: String(check.descendants + 1),
         });
-    const rule = check.parenthasrule ? `<p>${labels.hubv2_delete_parentrule}</p>` : '';
     return `<p>${text}</p>${rule}`;
 };

@@ -95,17 +95,19 @@ export const blockedBody = async(name, answer) => {
  * @return {Promise<string>} HTML.
  */
 export const confirmBody = async(name, answer) => {
-    if (answer.descendants === 0) {
-        return `<p>${await getString('hubv2_delete_confirm_leaf', COMPONENT, name)}</p>`;
+    let question = getString('hubv2_delete_confirm_leaf', COMPONENT, name);
+    if (answer.descendants === 1) {
+        question = getString('hubv2_delete_confirm_tree_one', COMPONENT, {name});
+    } else if (answer.descendants > 1) {
+        question = getString('hubv2_delete_confirm_tree', COMPONENT, {
+            name,
+            count: answer.descendants,
+            total: answer.descendants + 1,
+        });
     }
+    // Core resets the parent's rule whatever is deleted under it, a leaf included.
     const [text, rule] = await Promise.all([
-        answer.descendants === 1
-            ? getString('hubv2_delete_confirm_tree_one', COMPONENT, {name})
-            : getString('hubv2_delete_confirm_tree', COMPONENT, {
-                name,
-                count: answer.descendants,
-                total: answer.descendants + 1,
-            }),
+        question,
         answer.parenthasrule ? getString('hubv2_delete_parentrule', COMPONENT) : '',
     ]);
     return `<p>${text}</p>${rule ? `<p>${rule}</p>` : ''}`;

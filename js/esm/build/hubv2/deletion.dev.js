@@ -34,15 +34,15 @@ const blockedBody = /* @__PURE__ */ __name((labels, name, check) => {
 }, "blockedBody");
 const confirmBody = /* @__PURE__ */ __name((labels, name, check) => {
   const safe = escapeHtml(name);
+  const rule = check.parenthasrule ? `<p>${labels.hubv2_delete_parentrule}</p>` : "";
   if (check.descendants === 0) {
-    return `<p>${fill(labels.hubv2_delete_confirm_leaf, safe)}</p>`;
+    return `<p>${fill(labels.hubv2_delete_confirm_leaf, safe)}</p>${rule}`;
   }
   const text = check.descendants === 1 ? fillObject(labels.hubv2_delete_confirm_tree_one, { name: safe }) : fillObject(labels.hubv2_delete_confirm_tree, {
     name: safe,
     count: String(check.descendants),
     total: String(check.descendants + 1)
   });
-  const rule = check.parenthasrule ? `<p>${labels.hubv2_delete_parentrule}</p>` : "";
   return `<p>${text}</p>${rule}`;
 }, "confirmBody");
 export {
