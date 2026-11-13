@@ -8843,3 +8843,575 @@ a.local-dimensions-central-links-badge-warn:focus {
     color: var(--local-dimensions-ink-muted);
     font-size: 12.5px;
 }
+
+/* ---------------------------------------------------------------------------------------------
+ * Competency hub v2 (hubv2.php): the canvas of a framework's tree.
+ *
+ * React Flow's own stylesheet is not loaded. The rules it needs to work (positioning, layers,
+ * pointer events) are ported from its base.css, each under the plugin's root class, and painted
+ * with the plugin's tokens instead of the library's palette.
+ * ------------------------------------------------------------------------------------------- */
+
+.local-dimensions-hubv2-layout {
+    display: flex;
+    align-items: stretch;
+    min-height: 560px;
+    --local-dimensions-hubv2-height: calc(100vh - 14rem);
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 12px;
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    overflow: hidden;
+}
+
+.local-dimensions-hubv2-main {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.local-dimensions-hubv2-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2-canvas {
+    position: relative;
+    flex: 1 1 auto;
+    height: var(--local-dimensions-hubv2-height);
+    min-height: 32rem;
+    background-color: var(--local-dimensions-surface-alt);
+}
+
+.local-dimensions-hubv2-bar .local-dimensions-hubv2-hint {
+    flex: none;
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-panel {
+    flex: 0 0 400px;
+    width: 400px;
+    max-height: calc(var(--local-dimensions-hubv2-height) + 57px);
+    overflow-y: auto;
+    border-left: 1px solid var(--local-dimensions-line);
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+}
+
+@media (max-width: 991.98px) {
+    .local-dimensions-hubv2-layout {
+        flex-direction: column;
+    }
+
+    .local-dimensions-hubv2-panel {
+        flex: 0 0 auto;
+        width: auto;
+        max-height: none;
+        border-left: 0;
+        border-top: 1px solid var(--local-dimensions-line);
+    }
+}
+
+.local-dimensions-hubv2-sec {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2-sectitle {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-kicker {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-movesec {
+    background-color: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+}
+
+.local-dimensions-hubv2-kv {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-kv .local-dimensions-hubv2-kv-label {
+    font-weight: 400;
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-kv .local-dimensions-hubv2-kv-value {
+    margin: 0;
+    text-align: right;
+}
+
+.local-dimensions-hubv2-usage {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.local-dimensions-hubv2-usage li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-usage b {
+    font-size: 1.125rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--local-dimensions-ink-strong);
+}
+
+.local-dimensions-hubv2-details summary {
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 4px;
+    vertical-align: -2px;
+}
+
+.local-dimensions-hubv2-description {
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-search {
+    position: relative;
+    flex: 0 1 360px;
+}
+
+.local-dimensions-hubv2-search-results {
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 320px;
+    margin-top: 4px;
+    overflow-y: auto;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 10px;
+    background-color: var(--local-dimensions-surface);
+    box-shadow: 0 6px 18px var(--local-dimensions-shadow);
+}
+
+.local-dimensions-hubv2-search-hit {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 6px 10px;
+    border: 0;
+    background-color: transparent;
+    color: var(--local-dimensions-ink);
+    text-align: left;
+}
+
+.local-dimensions-hubv2-search-hit:hover {
+    background-color: var(--local-dimensions-surface-alt);
+}
+
+.local-dimensions-hubv2-search-hit:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
+.local-dimensions-hubv2-search-name {
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-search-path {
+    font-size: 0.75rem;
+    color: var(--local-dimensions-ink-muted);
+}
+
+/* The cards. React Flow sizes the wrapper from graph.ts's CARD; the card fills it. */
+.local-dimensions-hubv2-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    width: 240px;
+    height: 76px;
+    padding: 8px 10px;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 12px;
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    box-shadow: 0 1px 3px var(--local-dimensions-shadow);
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-selected {
+    border: 2px solid var(--local-dimensions-brand-edge);
+    box-shadow: 0 0 0 4px var(--local-dimensions-brand-tint);
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-moving {
+    border-style: dashed;
+}
+
+.local-dimensions-hubv2-card-more {
+    justify-content: center;
+    border-style: dashed;
+    box-shadow: none;
+}
+
+.local-dimensions-hubv2-tile {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+}
+
+.local-dimensions-hubv2-tile-framework {
+    background-color: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
+}
+
+.local-dimensions-hubv2-tile-depth1 {
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
+}
+
+.local-dimensions-hubv2-tile-depth2 {
+    background-color: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+}
+
+.local-dimensions-hubv2-tile-depth3 {
+    background-color: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
+}
+
+.local-dimensions-hubv2-tile-depth4 {
+    background-color: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
+}
+
+.local-dimensions-hubv2-card-text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.local-dimensions-hubv2-card-title {
+    max-height: 2.5em;
+    overflow: hidden;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.local-dimensions-hubv2-card-sub {
+    overflow: hidden;
+    font-size: 0.75rem;
+    color: var(--local-dimensions-ink-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-hubv2-pill {
+    flex: none;
+    min-width: 24px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background-color: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-strong);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.local-dimensions-hubv2-toggle {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 50%;
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    font-size: 0.6875rem;
+    cursor: pointer;
+}
+
+.local-dimensions-hubv2-toggle:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+/* React Flow's base rules, scoped to the canvas. */
+.local-dimensions-hubv2 .react-flow {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    direction: ltr;
+}
+
+.local-dimensions-hubv2 .react-flow__background {
+    pointer-events: none;
+    z-index: -1;
+}
+
+.local-dimensions-hubv2 .react-flow__background-pattern.dots {
+    fill: var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2 .react-flow__container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.local-dimensions-hubv2 .react-flow__pane {
+    z-index: 1;
+    touch-action: none;
+}
+
+.local-dimensions-hubv2 .react-flow__pane.draggable {
+    cursor: grab;
+}
+
+.local-dimensions-hubv2 .react-flow__pane.dragging {
+    cursor: grabbing;
+}
+
+.local-dimensions-hubv2 .react-flow__viewport {
+    z-index: 2;
+    transform-origin: 0 0;
+    pointer-events: none;
+}
+
+.local-dimensions-hubv2 .react-flow__renderer {
+    z-index: 4;
+}
+
+.local-dimensions-hubv2 .react-flow__edges {
+    position: absolute;
+}
+
+.local-dimensions-hubv2 .react-flow__edges svg {
+    position: absolute;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.local-dimensions-hubv2 .react-flow__edge {
+    pointer-events: visiblestroke;
+}
+
+.local-dimensions-hubv2 .react-flow__edge-path {
+    fill: none;
+    stroke: var(--local-dimensions-ink-muted);
+    stroke-width: 1.5;
+}
+
+.local-dimensions-hubv2 .local-dimensions-hubv2-edge-rule .react-flow__edge-path {
+    stroke: var(--local-dimensions-warning-edge);
+    stroke-width: 2;
+}
+
+.local-dimensions-hubv2 .local-dimensions-hubv2-edge-more .react-flow__edge-path {
+    stroke-dasharray: 2 4;
+}
+
+.local-dimensions-hubv2 .local-dimensions-hubv2-edge-related .react-flow__edge-path {
+    stroke: var(--local-dimensions-info-edge);
+    stroke-width: 2;
+    stroke-dasharray: 4 5;
+}
+
+.local-dimensions-hubv2 .react-flow__edgelabel-renderer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    user-select: none;
+}
+
+.local-dimensions-hubv2 .local-dimensions-hubv2-edge-label {
+    position: absolute;
+    padding: 2px 8px;
+    border: 1px solid var(--local-dimensions-warning-edge);
+    border-radius: 999px;
+    background-color: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.local-dimensions-hubv2 .react-flow__nodes {
+    transform-origin: 0 0;
+    pointer-events: none;
+}
+
+.local-dimensions-hubv2 .react-flow__node {
+    position: absolute;
+    box-sizing: border-box;
+    transform-origin: 0 0;
+    border-radius: 12px;
+    pointer-events: all;
+    user-select: none;
+    cursor: default;
+}
+
+.local-dimensions-hubv2 .react-flow__node.selectable {
+    cursor: pointer;
+}
+
+.local-dimensions-hubv2 .react-flow__node:focus-visible {
+    outline: 3px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+.local-dimensions-hubv2-picking .react-flow__node.selectable {
+    cursor: crosshair;
+}
+
+/* Every edge ends on a handle; none is a control here, so none is shown. */
+.local-dimensions-hubv2 .react-flow__handle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-width: 0;
+    min-height: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.local-dimensions-hubv2 .react-flow__handle-left {
+    top: 50%;
+    left: 0;
+    transform: translate(-50%, -50%);
+}
+
+.local-dimensions-hubv2 .react-flow__handle-right {
+    top: 50%;
+    right: 0;
+    transform: translate(50%, -50%);
+}
+
+.local-dimensions-hubv2 .react-flow__panel {
+    position: absolute;
+    z-index: 5;
+    margin: 15px;
+}
+
+.local-dimensions-hubv2 .react-flow__panel.top {
+    top: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__panel.bottom {
+    bottom: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__panel.left {
+    left: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__panel.right {
+    right: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__controls {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 10px;
+    background-color: var(--local-dimensions-surface);
+}
+
+.local-dimensions-hubv2 .react-flow__controls-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+    border: 0;
+    border-bottom: 1px solid var(--local-dimensions-line);
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    cursor: pointer;
+}
+
+.local-dimensions-hubv2 .react-flow__controls-button:last-child {
+    border-bottom: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__controls-button:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
+.local-dimensions-hubv2 .react-flow__controls-button svg {
+    width: 100%;
+    max-width: 12px;
+    max-height: 12px;
+    fill: currentcolor;
+}
+
+.local-dimensions-hubv2 .react-flow__minimap {
+    overflow: hidden;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 10px;
+    background-color: var(--local-dimensions-surface);
+}
+
+.local-dimensions-hubv2 .react-flow__minimap-svg {
+    display: block;
+}
+
+.local-dimensions-hubv2 .react-flow__minimap-mask {
+    fill: var(--local-dimensions-surface-inset);
+    fill-opacity: 0.6;
+}
+
+.local-dimensions-hubv2 .react-flow__minimap-node {
+    fill: var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2 .react-flow__attribution {
+    display: none;
+}

@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Competency hub v2: the tree as a canvas of nodes (preview)
+
+A second view of a framework's competency tree, beside the Competency hub it does not replace.
+
+- **A new page**, `hubv2.php`, under *Site administration > Competencies > Competency Dimensions >
+  Competency hub v2*, with the hub's capability (`moodle/competency:competencymanage`) and absent
+  while competencies are disabled. It honours the hub's `contexttype`, `categoryid` and
+  `frameworkid` parameters, defaulting to the hub's remembered context, which it never writes.
+  A GET form chooses the context (the category through the hub's category search) and the
+  framework; *List view* opens the same framework in the hub's Competencies tab.
+- **The canvas** (React, `js/esm/src/hubv2`, one bundle) lays the tree out left to right, loads
+  each branch when it is first opened, draws rule edges and the selected competency's related ones,
+  and has search, zoom, fit and an overview map. The panel shows the selected competency and acts
+  through the hub's own dialogues and core's competency services, plus one read web service,
+  `local_dimensions_competency_delete_check`: no database change.
+- **Deleting is checked first, on the canvas and in the hub's Competencies tab.** The delete action asks `local_dimensions_competency_delete_check`
+  (read-only, `moodle/competency:competencymanage` in the framework's context) before attempting
+  anything. When core would refuse (the competency or a descendant is in a template, a plan, a
+  course, a user's record or a badge) a dialogue says why, with counts that are exact only for a
+  site-level manager (a course category's manager sees which reasons apply, not how many); otherwise the confirmation
+  names what goes with it: the descendants, their relations and their prior-learning links, and the
+  parent's rule that core resets.
+- **React Flow** (`@xyflow/react` 12.12.1, MIT) is vendored under `js/esm/vendor/xyflow` and
+  declared in `thirdpartylibs.xml`; its rules are ported into `styles.css` under the page's own
+  class, painted with the plugin's colour tokens.
+- `stylesheet_markup_contract_test` now reads the classes the ES tree writes; `bundle_test`
+  holds the bundle as fresh as its sources and the vendored release.
+
 ### The Competency hub honours unlisted course categories
 
 Any logged-in user passes the hub's category readability check (core gives every authenticated

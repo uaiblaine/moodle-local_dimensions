@@ -1,0 +1,13 @@
+/**
+ * The lazily loaded tree the canvas draws: which competencies are known, which branches are loaded
+ * and which are open.
+ *
+ * Pure and immutable: every function returns a new tree and leaves its argument alone, so React
+ * state holds it as it is and Jest reads it without a DOM. A branch is the loaded part of a
+ * parent's direct children, in the server's sort order, with the parent's total beside it: fewer
+ * ids than the total means more pages to load.
+ *
+ * @module     local_dimensions/hubv2/tree
+ * @copyright  2026 Anderson Blaine
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */const T=0,c=e=>({nodes:{...e.nodes},branches:{...e.branches},expanded:[...e.expanded]}),i=(e,n)=>{const r=e.branches[n];r&&(r.ids.forEach(t=>{i(e,t),delete e.nodes[t],e.expanded=e.expanded.filter(o=>o!==t)}),delete e.branches[n])},f=e=>m({nodes:{},branches:{},expanded:[]},0,e),m=(e,n,r,t=!1)=>{const o=c(e),s=r.items.map(d=>d.id),a=o.branches[n]?.ids??[];t||a.filter(d=>!s.includes(d)).forEach(d=>{i(o,d),delete o.nodes[d],o.expanded=o.expanded.filter(p=>p!==d)});const b=t?a.filter(d=>!s.includes(d)):[];return o.branches[n]={ids:[...b,...s],total:r.total},r.items.forEach(d=>{o.nodes[d.id]=d}),o},u=(e,n)=>n===0||e.expanded.includes(n),l=(e,n)=>e.branches[n]!==void 0,x=(e,n,r)=>{if(n===0||u(e,n)===r)return e;const t=c(e);return t.expanded=r?[...t.expanded,n]:t.expanded.filter(o=>o!==n),t},O=(e,n)=>{const r=c(e);return r.nodes[n.id]=n,n.haschildren||(i(r,n.id),r.expanded=r.expanded.filter(t=>t!==n.id)),r},R=(e,n)=>{const r=c(e);return i(r,n),r.expanded=r.expanded.filter(t=>t!==n),r},y=(e,n)=>{const r=e.nodes[n];if(!r)return e;const t=c(e);i(t,n),delete t.nodes[n],t.expanded=t.expanded.filter(s=>s!==n);const o=t.branches[r.parentid];return o&&(t.branches[r.parentid]={ids:o.ids.filter(s=>s!==n),total:Math.max(0,o.total-1)}),t},h=(e,n)=>{const r=[];let t=e.nodes[n]?.parentid??0;for(;t!==0&&e.nodes[t]&&!r.includes(t);)r.unshift(t),t=e.nodes[t].parentid;return r},N=(e,n,r)=>n===r||h(e,n).includes(r),g=(e,n)=>[0,...n].filter(r=>!l(e,r)),k=(e,n)=>n.reduce((r,t)=>x(r,t,!0),e),B=(e,n,r)=>e.branches[n]?.ids.includes(r)??!1,E=e=>{const n=[],r=(t,o)=>{const s=e.branches[t];!s||!u(e,t)||(s.ids.forEach(a=>{e.nodes[a]&&(n.push({kind:"competency",id:a,parent:t,depth:o}),r(a,o+1))}),s.ids.length<s.total&&n.push({kind:"more",parent:t,depth:o,remaining:s.total-s.ids.length}))};return r(0,1),n};export{T as ROOT,h as ancestors,B as branchHas,f as createTree,k as expandPath,R as forgetBranch,l as hasBranch,m as insertChildren,u as isExpanded,N as isWithin,g as missingBranches,y as removeNode,O as replaceNode,x as setExpanded,E as visibleItems};

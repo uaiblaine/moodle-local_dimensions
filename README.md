@@ -64,6 +64,31 @@ category only. It is locked to the category: no switch, the category and its sub
 The hub has three tabs: **Structures** (frameworks), **Competencies** and **Learning plans**. The
 selected row's actions sit in a bar at the foot of the page.
 
+### Competency hub v2 (preview)
+
+**Site administration > Competencies > Competency Dimensions > Competency hub v2**
+(`local/dimensions/hubv2.php`, same capability as the hub, site entry only) draws one framework's
+tree as a canvas of nodes, beside the hub it does not replace while it is being validated: the
+framework at the left, a column per level, each card with its colour, name, taxonomy or rule and a
+count, parent-child edges in the rule's colour under a competency with a rule, and dotted edges to
+the selected competency's related ones. The tree loads lazily (25 children at a time), pans and
+zooms, and has an overview map. The panel beside it shows the selected competency (path, where it
+is used, scale and rule, appearance, description, related competencies) and its actions, which are
+the hub's own dialogues: edit, add a child, rule, courses and activities, relate, move (pick the
+new parent on the canvas), move up or down, and delete. Delete first asks the page's read-only
+`local_dimensions_competency_delete_check` service: when core would refuse (the competency or one
+of its descendants is in a learning plan template, a learning plan or a course, has a user's record
+or rating, or is a badge criterion) a dialogue lists the reasons, with counts that are exact only for a
+site-level manager (a course category's manager sees which reasons apply); otherwise the confirmation says
+that the competency and every descendant, their relations and their prior-learning links are
+deleted permanently; the hub's Competencies tab deletes through the same check and dialogues. *List view* opens the same framework in the
+hub's Competencies tab, the accessible alternative to the canvas. The page keeps nothing of its own:
+no table, no preference written, the layout recomputed on every visit.
+
+The canvas is a React component built into one file, `js/esm/build/bundle.js`, which inlines
+**React Flow** (`@xyflow/react` 12.12.1, MIT), vendored under `js/esm/vendor/xyflow` and declared in
+`thirdpartylibs.xml`; its README says how it was built. Nothing needs to be installed on the site.
+
 ### Structures
 
 Frameworks are created and edited natively, with scale configuration, duplication, a visibility
@@ -315,6 +340,8 @@ no branch.
 
 - Core competencies enabled (`core_competency`).
 - No required plugin: `version.php` declares no dependency.
+- Bundled, not installed: React Flow (`@xyflow/react` 12.12.1, MIT) for the Competency hub v2's
+  canvas, vendored under `js/esm/vendor/xyflow`.
 - Optional, each reached only through a runtime guard, so the plugin installs and behaves the same
   without them:
   - `enrol_apply`: a locked course card recognises an application as a way in and shows one

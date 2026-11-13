@@ -1,0 +1,20 @@
+{
+    "entry": "src/hubv2/Hub.tsx",
+    "outfile": "build/bundle.js",
+    "sources": {
+        "src/hubv2/Hub.tsx": "aca571bf459673e07c03cee386006d633029a423",
+        "src/hubv2/Nodes.tsx": "1e5abf1d05f8a7e6ae2b2761c9b6f11b5ab40a31",
+        "src/hubv2/Panel.tsx": "b0973673f28fddb16583bbc7c0f3ab3fcb834193",
+        "src/hubv2/Search.tsx": "f967af550124d7720a80b07a1a284300fed32562",
+        "src/hubv2/amd.ts": "cd0fa7868e98bc35562d18e100b351617d18d097",
+        "src/hubv2/deletion.ts": "512812732a84c3069dd88e184a486301869ffd29",
+        "src/hubv2/graph.ts": "c461bff62f0fe2d66d5c4d7c8421123184f39cef",
+        "src/hubv2/html.ts": "943e80d1ebd2d3be51cc4587cb0e0a2c44848254",
+        "src/hubv2/layout.ts": "f8b56ed8288fc0e9d0338d2b1b90ef80f4b3aeff",
+        "src/hubv2/pending.ts": "bc1f201f9d309c010d23cc274fb5de597a0bf243",
+        "src/hubv2/repository.ts": "95bcde8c13d8514582e9a647fd04c542dca87e65",
+        "src/hubv2/strings.ts": "58aba69e675c4583cd274266509895aba279fbba",
+        "src/hubv2/tree.ts": "49ae9880ad5a8c6da029b3073e3010fc37be3630",
+        "src/hubv2/types.ts": "aaaf5e608bd0f24e3fac76db87b0c3f6612d1722"
+    }
+}

@@ -104,6 +104,17 @@ $functions = [
         'readonlysession' => true,
     ],
 
+    // Competency hub v2 — what deleting a competency would destroy, and whether core would refuse it.
+    'local_dimensions_competency_delete_check' => [
+        'classname' => 'local_dimensions\external\competency_delete_check',
+        'methodname' => 'execute',
+        'description' => 'Tell what deleting a competency and its descendants involves and whether core would refuse it.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencymanage',
+        'ajax' => true,
+        'readonlysession' => true,
+    ],
+
     // Competency hub Structure tab — in-tree search with ancestor path.
     'local_dimensions_search_structure' => [
         'classname' => 'local_dimensions\external\search_structure',
