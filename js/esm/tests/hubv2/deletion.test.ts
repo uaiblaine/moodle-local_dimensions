@@ -30,15 +30,19 @@ const labels: Labels = {
     hubv2_delete_blocked_closing_users: 'RECORDS.',
     hubv2_delete_blocked_courses: 'COURSES {$a}.',
     hubv2_delete_blocked_courses_one: 'COURSE 1.',
+    hubv2_delete_blocked_courses_some: 'COURSES SOME.',
     hubv2_delete_blocked_intro: 'INTRO {$a}.',
     hubv2_delete_blocked_intro_tree: 'TREE {$a->name} {$a->count}.',
     hubv2_delete_blocked_intro_tree_one: 'TREE1 {$a->name}.',
     hubv2_delete_blocked_plans: 'PLANS {$a}.',
     hubv2_delete_blocked_plans_one: 'PLAN 1.',
+    hubv2_delete_blocked_plans_some: 'PLANS SOME.',
     hubv2_delete_blocked_templates: 'TEMPLATES {$a}.',
     hubv2_delete_blocked_templates_one: 'TEMPLATE 1.',
+    hubv2_delete_blocked_templates_some: 'TEMPLATES SOME.',
     hubv2_delete_blocked_users: 'USERS {$a}.',
     hubv2_delete_blocked_users_one: 'USER 1.',
+    hubv2_delete_blocked_users_some: 'USERS SOME.',
     hubv2_delete_confirm_leaf: 'LEAF {$a}.',
     hubv2_delete_confirm_tree: 'MANY {$a->name} {$a->count} {$a->total}.',
     hubv2_delete_confirm_tree_one: 'ONE {$a->name}.',
@@ -46,7 +50,7 @@ const labels: Labels = {
 };
 
 const check = (over: Partial<DeleteCheck> = {}): DeleteCheck => ({
-    candelete: true, descendants: 0, parenthasrule: false, templates: 0, plans: 0, courses: 0, users: 0, badges: false,
+    candelete: true, descendants: 0, parenthasrule: false, exact: true, templates: 0, plans: 0, courses: 0, users: 0, badges: false,
     blockedcompetencies: 0, ...over,
 });
 
@@ -94,6 +98,15 @@ describe('blockedBody', () => {
             '<p>INTRO X.</p><ul><li>TEMPLATE 1.</li><li>PLANS 2.</li><li>COURSE 1.</li><li>USERS 5.</li>' +
             '<li>BADGE.</li></ul><p>LINKS.</p><p>RECORDS.</p>'
         );
+    });
+
+    it('uses the count-less reasons when the counts are not exact, and the counted ones when they are', () => {
+        const over = {candelete: false, templates: 1, plans: 1, courses: 1, users: 1};
+        expect(blockedBody(labels, 'X', check({...over, exact: false}))).toBe(
+            '<p>INTRO X.</p><ul><li>TEMPLATES SOME.</li><li>PLANS SOME.</li><li>COURSES SOME.</li><li>USERS SOME.</li></ul>' +
+            '<p>LINKS.</p><p>RECORDS.</p>'
+        );
+        expect(blockedBody(labels, 'X', check({...over, templates: 3, exact: true}))).toContain('<li>TEMPLATES 3.</li>');
     });
 
     it('uses the singular for one user', () => {

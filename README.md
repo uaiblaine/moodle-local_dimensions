@@ -78,7 +78,8 @@ the hub's own dialogues: edit, add a child, rule, courses and activities, relate
 new parent on the canvas), move up or down, and delete. Delete first asks the page's read-only
 `local_dimensions_competency_delete_check` service: when core would refuse (the competency or one
 of its descendants is in a learning plan template, a learning plan or a course, has a user's record
-or rating, or is a badge criterion) a dialogue lists the reasons; otherwise the confirmation says
+or rating, or is a badge criterion) a dialogue lists the reasons, with counts that are exact only for a
+site-level manager (a course category's manager sees which reasons apply); otherwise the confirmation says
 that the competency and every descendant, their relations and their prior-learning links are
 deleted permanently; the hub's Competencies tab deletes through the same check and dialogues. *List view* opens the same framework in the
 hub's Competencies tab, the accessible alternative to the canvas. The page keeps nothing of its own:

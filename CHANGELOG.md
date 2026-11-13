@@ -24,7 +24,8 @@ A second view of a framework's competency tree, beside the Competency hub it doe
 - **Deleting is checked first, on the canvas and in the hub's Competencies tab.** The delete action asks `local_dimensions_competency_delete_check`
   (read-only, `moodle/competency:competencymanage` in the framework's context) before attempting
   anything. When core would refuse (the competency or a descendant is in a template, a plan, a
-  course, a user's record or a badge) a dialogue says why, with counts; otherwise the confirmation
+  course, a user's record or a badge) a dialogue says why, with counts that are exact only for a
+  site-level manager (a course category's manager sees which reasons apply, not how many); otherwise the confirmation
   names what goes with it: the descendants, their relations and their prior-learning links, and the
   parent's rule that core resets.
 - **React Flow** (`@xyflow/react` 12.12.1, MIT) is vendored under `js/esm/vendor/xyflow` and

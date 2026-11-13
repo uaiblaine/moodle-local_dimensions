@@ -62,14 +62,18 @@ export const blockedBody = async(name, answer) => {
     } else if (answer.descendants > 1) {
         intro = getString('hubv2_delete_blocked_intro_tree', COMPONENT, {name, count: answer.descendants});
     }
+    // Counts are exact only for a site-level manager; otherwise say which reasons apply, without a number.
+    const reason = (kind, count) => (answer.exact
+        ? counted(`hubv2_delete_blocked_${kind}`, count)
+        : getString(`hubv2_delete_blocked_${kind}_some`, COMPONENT));
     const links = answer.templates > 0 || answer.plans > 0 || answer.courses > 0 || answer.badges;
     const [first, reasons, advice] = await Promise.all([
         intro,
         Promise.all([
-            answer.templates > 0 ? counted('hubv2_delete_blocked_templates', answer.templates) : '',
-            answer.plans > 0 ? counted('hubv2_delete_blocked_plans', answer.plans) : '',
-            answer.courses > 0 ? counted('hubv2_delete_blocked_courses', answer.courses) : '',
-            answer.users > 0 ? counted('hubv2_delete_blocked_users', answer.users) : '',
+            answer.templates > 0 ? reason('templates', answer.templates) : '',
+            answer.plans > 0 ? reason('plans', answer.plans) : '',
+            answer.courses > 0 ? reason('courses', answer.courses) : '',
+            answer.users > 0 ? reason('users', answer.users) : '',
             answer.badges ? getString('hubv2_delete_blocked_badges', COMPONENT) : '',
         ]),
         // What to do: links can be removed, a user's record cannot.

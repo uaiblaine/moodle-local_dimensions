@@ -73,6 +73,8 @@ export type DeleteCheck = {
     candelete: boolean,
     descendants: number,
     parenthasrule: boolean,
+    /** True only for a site-level manager; otherwise the counts are presence only (0 or 1). */
+    exact: boolean,
     templates: number,
     plans: number,
     courses: number,

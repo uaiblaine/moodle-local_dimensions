@@ -41,11 +41,21 @@ export const blockedBody = (labels: Labels, name: string, check: DeleteCheck): s
         const key = check.descendants === 1 ? 'hubv2_delete_blocked_intro_tree_one' : 'hubv2_delete_blocked_intro_tree';
         intro = fillObject(labels[key], {name: safe, count: String(check.descendants)});
     }
+    /**
+     * One reason: counted for a site-level manager, otherwise which reason applies, without a number.
+     *
+     * @param {string} kind The reason's kind: templates, plans, courses or users.
+     * @param {number} count The count.
+     * @returns {string} The reason.
+     */
+    const reason = (kind: string, count: number): string => (check.exact
+        ? fillCount(labels, `hubv2_delete_blocked_${kind}`, count)
+        : labels[`hubv2_delete_blocked_${kind}_some`]);
     const reasons = [
-        check.templates > 0 ? fillCount(labels, 'hubv2_delete_blocked_templates', check.templates) : '',
-        check.plans > 0 ? fillCount(labels, 'hubv2_delete_blocked_plans', check.plans) : '',
-        check.courses > 0 ? fillCount(labels, 'hubv2_delete_blocked_courses', check.courses) : '',
-        check.users > 0 ? fillCount(labels, 'hubv2_delete_blocked_users', check.users) : '',
+        check.templates > 0 ? reason('templates', check.templates) : '',
+        check.plans > 0 ? reason('plans', check.plans) : '',
+        check.courses > 0 ? reason('courses', check.courses) : '',
+        check.users > 0 ? reason('users', check.users) : '',
         check.badges ? labels.hubv2_delete_blocked_badges : '',
     ].filter((reason) => reason !== '');
     const list = reasons.length > 0 ? `<ul>${reasons.map((reason) => `<li>${reason}</li>`).join('')}</ul>` : '';

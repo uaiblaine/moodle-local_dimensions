@@ -16,14 +16,15 @@ const blockedBody = /* @__PURE__ */ __name((labels, name, check) => {
     const key = check.descendants === 1 ? "hubv2_delete_blocked_intro_tree_one" : "hubv2_delete_blocked_intro_tree";
     intro = fillObject(labels[key], { name: safe, count: String(check.descendants) });
   }
+  const reason = /* @__PURE__ */ __name((kind, count) => check.exact ? fillCount(labels, `hubv2_delete_blocked_${kind}`, count) : labels[`hubv2_delete_blocked_${kind}_some`], "reason");
   const reasons = [
-    check.templates > 0 ? fillCount(labels, "hubv2_delete_blocked_templates", check.templates) : "",
-    check.plans > 0 ? fillCount(labels, "hubv2_delete_blocked_plans", check.plans) : "",
-    check.courses > 0 ? fillCount(labels, "hubv2_delete_blocked_courses", check.courses) : "",
-    check.users > 0 ? fillCount(labels, "hubv2_delete_blocked_users", check.users) : "",
+    check.templates > 0 ? reason("templates", check.templates) : "",
+    check.plans > 0 ? reason("plans", check.plans) : "",
+    check.courses > 0 ? reason("courses", check.courses) : "",
+    check.users > 0 ? reason("users", check.users) : "",
     check.badges ? labels.hubv2_delete_blocked_badges : ""
-  ].filter((reason) => reason !== "");
-  const list = reasons.length > 0 ? `<ul>${reasons.map((reason) => `<li>${reason}</li>`).join("")}</ul>` : "";
+  ].filter((reason2) => reason2 !== "");
+  const list = reasons.length > 0 ? `<ul>${reasons.map((reason2) => `<li>${reason2}</li>`).join("")}</ul>` : "";
   const links = check.templates > 0 || check.plans > 0 || check.courses > 0 || check.badges;
   const advice = [
     links ? labels.hubv2_delete_blocked_closing_links : "",

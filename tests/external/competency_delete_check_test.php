@@ -93,6 +93,7 @@ final class competency_delete_check_test extends \advanced_testcase {
             'candelete' => true,
             'descendants' => 0,
             'parenthasrule' => false,
+            'exact' => true,
             'templates' => 0,
             'plans' => 0,
             'courses' => 0,
@@ -220,6 +221,61 @@ final class competency_delete_check_test extends \advanced_testcase {
         $t = $this->create_tree();
         $this->setUser($this->getDataGenerator()->create_user());
         $this->expectException(\required_capability_exception::class);
+        competency_delete_check::execute($t['parent']);
+    }
+
+    /**
+     * A manager of a category's framework gets presence only; the admin gets exact counts (the control).
+     *
+     * @return void
+     */
+    public function test_category_manager_gets_presence_only(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $category = $this->getDataGenerator()->create_category();
+        $catcontext = \core\context\coursecat::instance($category->id);
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework(['contextid' => $catcontext->id]);
+        $competency = $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $cid = (int) $competency->get('id');
+        foreach ([1, 2] as $unused) {
+            $user = $this->getDataGenerator()->create_user();
+            $ccg->create_user_competency(['userid' => $user->id, 'competencyid' => $cid]);
+            $course = $this->getDataGenerator()->create_course();
+            $ccg->create_course_competency(['courseid' => $course->id, 'competencyid' => $cid]);
+        }
+
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:competencymanage', CAP_ALLOW, $roleid, $catcontext->id, true);
+        assign_capability('moodle/competency:competencyview', CAP_ALLOW, $roleid, $catcontext->id, true);
+        $manager = $this->getDataGenerator()->create_user();
+        role_assign($roleid, $manager->id, $catcontext->id);
+
+        $admin = $this->check($cid);
+        $this->assertTrue($admin['exact']);
+        $this->assertSame(2, $admin['users']);
+        $this->assertSame(2, $admin['courses']);
+
+        $this->setUser($manager);
+        $data = $this->check($cid);
+        $this->assertFalse($data['exact']);
+        $this->assertSame(1, $data['users']);
+        $this->assertSame(1, $data['courses']);
+        $this->assertSame(1, $data['blockedcompetencies']);
+        $this->assertFalse($data['candelete']);
+    }
+
+    /**
+     * The service refuses when competencies are disabled, as api::delete_competency() does.
+     *
+     * @return void
+     */
+    public function test_requires_competencies_enabled(): void {
+        $t = $this->create_tree();
+        set_config('enabled', 0, 'core_competency');
+        $this->expectException(\moodle_exception::class);
+        $this->expectExceptionMessage(get_string('competenciesarenotenabled', 'core_competency'));
         competency_delete_check::execute($t['parent']);
     }
 }
