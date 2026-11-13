@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Plano como anéis de crescimento</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+.mseg{display:inline-flex;background:#f2f3fa;border-radius:999px;padding:3px;gap:2px}
+.mseg button{border:0;background:transparent;padding:8px 16px;border-radius:999px;font-weight:600;font-size:13.5px;color:#5d6180;cursor:pointer;min-height:36px}
+.mseg button.on{background:#fff;color:#1d2033;box-shadow:0 1px 3px rgba(10,12,50,.14)}
+.mseg button:focus-visible{outline:3px solid #4456ff;outline-offset:2px}
+.ly{transition:opacity .25s ease}
+.ly-hide{opacity:0}
+.ly-old{fill:#4456ff;fill-opacity:.05;stroke:#4456ff;stroke-opacity:.25;stroke-width:1.2;stroke-dasharray:3 3}
+.ly-mid{fill:#4456ff;fill-opacity:.09;stroke:#4456ff;stroke-opacity:.45;stroke-width:1.4}
+.ly-cur{fill:#4456ff;fill-opacity:.2;stroke:#2f3fd6;stroke-width:2.2}
+.vx-off{fill:#fff;stroke-width:1.6;stroke-dasharray:2 2}
+.vx-on{stroke:#fff;stroke-width:2}
+</style>
+</helmet>
+<div class="dim" style="width: 1280px; height: 1040px; display: flex; flex-direction: column;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="#" aria-current="page">Minhas competências</a>
+    <span class="grow"></span>
+    <span class="avatar">AM</span>
+  </nav>
+
+  <header class="hero" style="background: #4a1c7a; padding: 30px 0 26px;">
+    <div class="wrap" style="display: flex; align-items: flex-end; gap: 24px;">
+      <div class="col" style="gap: 10px; flex: 1 1 auto;">
+        <nav class="crumb" aria-label="Trilha"><a href="#" style="color: inherit;">Meus planos</a><span>/</span><span>Trilha de indução 2026</span></nav>
+        <h1 class="h1">Trilha de indução 2026</h1>
+        <div class="row" style="gap: 8px;"><span class="chip glass">9 Etapas</span><span class="chip glass">Ativo</span><span class="chip glass">Até 14 jun 2027</span></div>
+      </div>
+      <div class="seg dark" role="group" aria-label="Ver como"><span>Constelação</span><span class="on">Anéis</span><span>Trilhas</span><span>Lista</span></div>
+    </div>
+  </header>
+
+  <main class="wrap" style="width: 100%; padding-top: 26px; display: grid; grid-template-columns: 640px minmax(0, 1fr); gap: 24px;">
+    <section class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 6px;">
+      <div class="row">
+        <h2 class="h3">Anéis de crescimento</h2>
+        <span class="grow"></span>
+        <div class="mseg" role="group" aria-label="Momento">
+          <button type="button" class="{{m.c0}}" aria-pressed="{{m.a0}}" onClick="{{m.pick0}}">Março</button>
+          <button type="button" class="{{m.c1}}" aria-pressed="{{m.a1}}" onClick="{{m.pick1}}">Junho</button>
+          <button type="button" class="{{m.c2}}" aria-pressed="{{m.a2}}" onClick="{{m.pick2}}">Hoje</button>
+        </div>
+      </div>
+      <svg viewBox="0 0 600 600" style="width: 100%; height: 590px;" role="img" aria-label="{{aria}}">
+        <circle cx="300" cy="300" r="92" class="ax"></circle>
+        <circle cx="300" cy="300" r="144" class="ax"></circle>
+        <circle cx="300" cy="300" r="196" class="ax-strong" stroke-dasharray="6 4"></circle>
+        <circle cx="300" cy="300" r="248" class="ax"></circle>
+        <path class="ax" d="{{g.spokes}}"></path>
+        <path d="{{g.arc0}}" fill="none" stroke="#0f7d74" stroke-width="7" stroke-linecap="round"></path>
+        <path d="{{g.arc1}}" fill="none" stroke="#7b2fa8" stroke-width="7" stroke-linecap="round"></path>
+        <path d="{{g.arc2}}" fill="none" stroke="#c2570c" stroke-width="7" stroke-linecap="round"></path>
+        <text x="306" y="211" class="lab" style="font-size: 10.5px;">Consolidado · proficiente</text>
+        <text x="306" y="159" class="lab" style="font-size: 10.5px;">Em desenvolvimento</text>
+        <text x="306" y="107" class="lab" style="font-size: 10.5px;">Emergente</text>
+        <text x="306" y="56" class="lab" style="font-size: 10.5px;">Referência</text>
+
+        <polygon class="ly {{l.k0}}" points="{{l.p0}}"></polygon>
+        <polygon class="ly {{l.k1}}" points="{{l.p1}}"></polygon>
+        <polygon class="ly {{l.k2}}" points="{{l.p2}}"></polygon>
+
+        <circle class="{{v.k0}}" cx="{{v.x0}}" cy="{{v.y0}}" r="7" fill="#0f7d74" stroke="#0f7d74"></circle>
+        <circle class="{{v.k1}}" cx="{{v.x1}}" cy="{{v.y1}}" r="7" fill="#1f9488" stroke="#1f9488"></circle>
+        <circle class="{{v.k2}}" cx="{{v.x2}}" cy="{{v.y2}}" r="7" fill="#0b5f58" stroke="#0b5f58"></circle>
+        <circle class="{{v.k3}}" cx="{{v.x3}}" cy="{{v.y3}}" r="7" fill="#7b2fa8" stroke="#7b2fa8"></circle>
+        <circle class="{{v.k4}}" cx="{{v.x4}}" cy="{{v.y4}}" r="7" fill="#9446bf" stroke="#9446bf"></circle>
+        <circle class="{{v.k5}}" cx="{{v.x5}}" cy="{{v.y5}}" r="7" fill="#5e2183" stroke="#5e2183"></circle>
+        <circle class="{{v.k6}}" cx="{{v.x6}}" cy="{{v.y6}}" r="7" fill="#c2570c" stroke="#c2570c"></circle>
+        <circle class="{{v.k7}}" cx="{{v.x7}}" cy="{{v.y7}}" r="7" fill="#d9701f" stroke="#d9701f"></circle>
+        <circle class="{{v.k8}}" cx="{{v.x8}}" cy="{{v.y8}}" r="7" fill="#9c4307" stroke="#9c4307"></circle>
+
+        <text x="{{t.x0}}" y="{{t.y0}}" text-anchor="{{t.a0}}" class="lab-ink">Rotinas</text>
+        <text x="{{t.x1}}" y="{{t.y1}}" text-anchor="{{t.a1}}" class="lab-ink">Relações</text>
+        <text x="{{t.x2}}" y="{{t.y2}}" text-anchor="{{t.a2}}" class="lab-ink">Comportamento</text>
+        <text x="{{t.x3}}" y="{{t.y3}}" text-anchor="{{t.a3}}" class="lab-ink">Planejamento</text>
+        <text x="{{t.x4}}" y="{{t.y4}}" text-anchor="{{t.a4}}" class="lab-ink">Famílias</text>
+        <text x="{{t.x5}}" y="{{t.y5}}" text-anchor="{{t.a5}}" class="lab-ink" style="fill: #5d6180;">Dignidade</text>
+        <text x="{{t.x6}}" y="{{t.y6}}" text-anchor="{{t.a6}}" class="lab-ink">Reflexão</text>
+        <text x="{{t.x7}}" y="{{t.y7}}" text-anchor="{{t.a7}}" class="lab-ink" style="fill: #5d6180;">Metas</text>
+        <text x="{{t.x8}}" y="{{t.y8}}" text-anchor="{{t.a8}}" class="lab-ink" style="fill: #5d6180;">Limites</text>
+      </svg>
+    </section>
+
+    <section class="col" style="gap: 18px;">
+      <div class="card pad col" style="gap: 10px;">
+        <span class="eyebrow">{{growthTitle}}</span>
+        <h2 class="h2">{{growthHead}}</h2>
+        <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px;">
+          <sc-for list="{{growth}}" as="row" hint-placeholder-count="5">
+            <li style="display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 14px;">
+              <i style="width: 10px; height: 10px; border-radius: 50%; display: block; background: {{row.color}};"></i>
+              <span>{{row.name}}</span>
+              <span class="small" style="white-space: nowrap;">{{row.from}} → <b style="color: var(--dim-ink);">{{row.to}}</b></span>
+            </li>
+          </sc-for>
+        </ul>
+      </div>
+      <div class="card pad col" style="gap: 10px;">
+        <h2 class="h3">Como ler</h2>
+        <p class="small" style="font-size: 13.5px;">Cada raio é uma competência; cada anel, um degrau da escala. O polígono escuro é o momento escolhido e os claros por baixo são os momentos anteriores, como os anéis de uma árvore: o que importa é ver o crescimento, não o que falta.</p>
+        <p class="small" style="font-size: 13.5px;">O anel tracejado é onde a escala diz "proficiente". Um ponto vazado no centro é uma competência ainda sem avaliação: território a descobrir.</p>
+      </div>
+      <div class="card pad col" style="gap: 8px; background: #fbf8ff; border-color: #e8dcf7;">
+        <span class="eyebrow" style="color: #5e2183;">Por onde seguir</span>
+        <b class="h3">Trata cada estudante com dignidade</b>
+        <span class="small">A única dimensão de Prática em sala ainda sem nenhuma parada. Começa por <b style="color: var(--dim-ink);">Escuta ativa na sala</b>.</span>
+        <a class="btn line sm" href="#" style="align-self: flex-start;">Ver a jornada</a>
+      </div>
+    </section>
+  </main>
+  <span class="tagid" style="left: 600px; top: 96px;">1B</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1040}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { k: 2 };
+  }
+  xy(i, l) {
+    const a = (i * 40 - 90) * Math.PI / 180;
+    const r = 40 + l * 52;
+    return [300 + r * Math.cos(a), 300 + r * Math.sin(a)];
+  }
+  arc(i0, i1) {
+    const r = 262;
+    const a0 = (i0 * 40 - 20 + 4 - 90) * Math.PI / 180;
+    const a1 = (i1 * 40 + 20 - 4 - 90) * Math.PI / 180;
+    return 'M' + (300 + r * Math.cos(a0)).toFixed(1) + ' ' + (300 + r * Math.sin(a0)).toFixed(1) +
+      'A' + r + ' ' + r + ' 0 0 1 ' + (300 + r * Math.cos(a1)).toFixed(1) + ' ' + (300 + r * Math.sin(a1)).toFixed(1);
+  }
+  renderVals() {
+    const k = this.state.k;
+    const moments = [[2, 1, 1, 1, 0, 0, 0, 0, 0], [3, 2, 3, 2, 2, 0, 1, 0, 0], [4, 3, 4, 3, 3, 0, 2, 0, 0]];
+    const mnames = ['março', 'junho', 'hoje'];
+    const names = ['Conhece as rotinas da escola', 'Constrói relações de trabalho', 'Gere o comportamento com consistência',
+      'Planeja aulas eficazes', 'Trabalha com as famílias', 'Trata cada estudante com dignidade',
+      'Reflete sobre a prática', 'Define metas profissionais', 'Mantém limites profissionais'];
+    const colors = ['#0f7d74', '#1f9488', '#0b5f58', '#7b2fa8', '#9446bf', '#5e2183', '#c2570c', '#d9701f', '#9c4307'];
+    const scale = ['sem avaliação', 'Emergente', 'Em desenvolvimento', 'Consolidado', 'Referência'];
+    const poly = (lv) => lv.map((l, i) => this.xy(i, l).map((n) => n.toFixed(1)).join(',')).join(' ');
+    let spokes = '';
+    for (let i = 0; i < 9; i++) {
+      const [x, y] = this.xy(i, 4);
+      spokes += 'M300 300L' + x.toFixed(1) + ' ' + y.toFixed(1);
+    }
+    const l = {};
+    for (let j = 0; j < 3; j++) {
+      l['p' + j] = poly(moments[j]);
+      l['k' + j] = j > k ? 'ly-hide' : (j === k ? 'ly-cur' : (j === k - 1 ? 'ly-mid' : 'ly-old'));
+    }
+    const v = {};
+    const t = {};
+    moments[k].forEach((lev, i) => {
+      const [x, y] = this.xy(i, lev);
+      v['x' + i] = x.toFixed(1);
+      v['y' + i] = y.toFixed(1);
+      v['k' + i] = lev > 0 ? 'vx-on' : 'vx-off';
+      const a = (i * 40 - 90) * Math.PI / 180;
+      const tx = 300 + 280 * Math.cos(a);
+      const ty = 300 + 280 * Math.sin(a) + 4;
+      t['x' + i] = tx.toFixed(1);
+      t['y' + i] = ty.toFixed(1);
+      t['a' + i] = Math.abs(Math.cos(a)) < 0.2 ? 'middle' : (Math.cos(a) > 0 ? 'start' : 'end');
+    });
+    const prev = k > 0 ? moments[k - 1] : [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const growth = [];
+    moments[k].forEach((lev, i) => {
+      if (lev > prev[i]) {
+        growth.push({ name: names[i], color: colors[i], from: scale[prev[i]], to: scale[lev] });
+      }
+    });
+    const m = {};
+    [0, 1, 2].forEach((j) => {
+      m['c' + j] = j === k ? 'on' : '';
+      m['a' + j] = j === k ? 'true' : 'false';
+      m['pick' + j] = () => this.setState({ k: j });
+    });
+    return {
+      m, l, v, t, growth,
+      g: { spokes, arc0: this.arc(0, 2), arc1: this.arc(3, 5), arc2: this.arc(6, 8) },
+      growthTitle: k > 0 ? 'Desde ' + mnames[k - 1] : 'O começo',
+      growthHead: k > 0 ? growth.length + ' dimensões cresceram' : 'As primeiras avaliações',
+      aria: 'Anéis de crescimento em ' + mnames[k] + ': ' + moments[k].filter((x) => x >= 3).length + ' de 9 competências proficientes'
+    };
+  }
+}
+</script>
+</body>
+</html>

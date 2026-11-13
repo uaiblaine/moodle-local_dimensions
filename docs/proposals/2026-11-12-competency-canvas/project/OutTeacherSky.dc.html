@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Relatório da turma</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+.mx{display:grid;grid-template-columns:200px repeat(5,minmax(0,1fr));align-items:center}
+.mx-h{padding:10px 6px;display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;font-size:12.5px;font-weight:600}
+.dist{display:flex;gap:3px;align-items:flex-end;height:26px}
+.dist i{width:8px;border-radius:2px;display:block}
+.mx-n{display:flex;align-items:center;gap:10px;padding:0 6px;height:52px;border-top:1px solid #eef0f6;font-size:14px}
+.mx-c{height:52px;border-top:1px solid #eef0f6;display:grid;place-items:center}
+.cell{width:40px;height:40px;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer}
+.cell:hover{background:#f2f3fa}
+.cell:focus-visible{outline:3px solid #4456ff;outline-offset:2px}
+.av{width:30px;height:30px;border-radius:50%;background:#e3e5ff;color:#10124a;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+</style>
+</helmet>
+<div class="dim" style="width: 1280px; height: 900px; display: flex; flex-direction: column;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink on" href="#" aria-current="page">Meus cursos</a>
+    <span class="grow"></span>
+    <span class="avatar" style="background: #ffd84d;">BL</span>
+  </nav>
+  <div style="background: #fff; padding: 22px 32px 18px; border-bottom: 1px solid var(--dim-line);">
+    <span class="crumb">Laboratório de planejamento / Competências</span>
+    <div class="row" style="margin-top: 6px;"><h1 class="h1" style="font-size: 28px;">Relatório da turma</h1><span class="grow"></span><div class="seg"><span class="on">Turma</span><span>Por estudante</span><span>Por atividade</span></div></div>
+  </div>
+  <main class="wrap" style="width: 100%; padding-top: 22px; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px;">
+    <section class="card" style="padding: 8px 14px 10px;">
+      <div class="mx">
+        <div class="mx-h" style="align-items: flex-start; justify-content: flex-end;"><span class="small">8 estudantes · ordem alfabética</span></div>
+        <div class="mx-h">
+          <div class="dist" aria-label="{{h0.distlabel}}">
+            <i style="height: {{h0.d1}}px; background: {{h0.color}}; opacity: 0.35;"></i>
+            <i style="height: {{h0.d2}}px; background: {{h0.color}}; opacity: 0.55;"></i>
+            <i style="height: {{h0.d3}}px; background: {{h0.color}}; opacity: 0.8;"></i>
+            <i style="height: {{h0.d4}}px; background: {{h0.color}};"></i>
+          </div>
+          <span>{{h0.name}}</span>
+        </div>
+        <div class="mx-h">
+          <div class="dist" aria-label="{{h1.distlabel}}">
+            <i style="height: {{h1.d1}}px; background: {{h1.color}}; opacity: 0.35;"></i>
+            <i style="height: {{h1.d2}}px; background: {{h1.color}}; opacity: 0.55;"></i>
+            <i style="height: {{h1.d3}}px; background: {{h1.color}}; opacity: 0.8;"></i>
+            <i style="height: {{h1.d4}}px; background: {{h1.color}};"></i>
+          </div>
+          <span>{{h1.name}}</span>
+        </div>
+        <div class="mx-h">
+          <div class="dist" aria-label="{{h2.distlabel}}">
+            <i style="height: {{h2.d1}}px; background: {{h2.color}}; opacity: 0.35;"></i>
+            <i style="height: {{h2.d2}}px; background: {{h2.color}}; opacity: 0.55;"></i>
+            <i style="height: {{h2.d3}}px; background: {{h2.color}}; opacity: 0.8;"></i>
+            <i style="height: {{h2.d4}}px; background: {{h2.color}};"></i>
+          </div>
+          <span>{{h2.name}}</span>
+        </div>
+        <div class="mx-h">
+          <div class="dist" aria-label="{{h3.distlabel}}">
+            <i style="height: {{h3.d1}}px; background: {{h3.color}}; opacity: 0.35;"></i>
+            <i style="height: {{h3.d2}}px; background: {{h3.color}}; opacity: 0.55;"></i>
+            <i style="height: {{h3.d3}}px; background: {{h3.color}}; opacity: 0.8;"></i>
+            <i style="height: {{h3.d4}}px; background: {{h3.color}};"></i>
+          </div>
+          <span>{{h3.name}}</span>
+        </div>
+        <div class="mx-h">
+          <div class="dist" aria-label="{{h4.distlabel}}">
+            <i style="height: {{h4.d1}}px; background: {{h4.color}}; opacity: 0.35;"></i>
+            <i style="height: {{h4.d2}}px; background: {{h4.color}}; opacity: 0.55;"></i>
+            <i style="height: {{h4.d3}}px; background: {{h4.color}}; opacity: 0.8;"></i>
+            <i style="height: {{h4.d4}}px; background: {{h4.color}};"></i>
+          </div>
+          <span>{{h4.name}}</span>
+        </div>
+      </div>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+        <div class="mx">
+          <div class="mx-n"><span class="av">{{r.ini}}</span><span>{{r.name}}</span></div>
+          <div class="mx-c"><button class="cell" type="button" aria-label="{{r.c0.label}}"><span style="{{r.c0.style}};"></span></button></div>
+          <div class="mx-c"><button class="cell" type="button" aria-label="{{r.c1.label}}"><span style="{{r.c1.style}};"></span></button></div>
+          <div class="mx-c"><button class="cell" type="button" aria-label="{{r.c2.label}}"><span style="{{r.c2.style}};"></span></button></div>
+          <div class="mx-c"><button class="cell" type="button" aria-label="{{r.c3.label}}"><span style="{{r.c3.style}};"></span></button></div>
+          <div class="mx-c"><button class="cell" type="button" aria-label="{{r.c4.label}}"><span style="{{r.c4.style}};"></span></button></div>
+        </div>
+      </sc-for>
+    </section>
+    <aside class="col" style="gap: 16px;">
+      <section class="card pad col" style="gap: 10px;">
+        <span class="eyebrow">Leitura da turma</span>
+        <p style="font-size: 14.5px;">A turma está <b>descobrindo Reflexão</b>: 5 de 8 ainda sem avaliação. Planejamento já é proficiente para 6.</p>
+        <p class="small">Texto montado das mesmas avaliações do quadro. Nenhuma ordenação por desempenho.</p>
+      </section>
+      <section class="card pad col" style="gap: 10px;">
+        <span class="eyebrow">Esperando você</span>
+        <a href="#" class="row" style="gap: 10px; text-decoration: none; color: inherit;"><span class="av">DR</span><span class="col" style="gap: 0;"><b style="font-size: 14px;">Diego Rocha</b><span class="small">pediu revisão · Reflexão</span></span></a>
+        <a href="#" class="row" style="gap: 10px; text-decoration: none; color: inherit;"><span class="av">GR</span><span class="col" style="gap: 0;"><b style="font-size: 14px;">Gabriela Reis</b><span class="small">pediu revisão · Avaliação formativa</span></span></a>
+      </section>
+      <section class="card pad col" style="gap: 8px;">
+        <span class="eyebrow">Legenda</span>
+        <div class="row" style="gap: 14px; font-size: 13px;">
+          <span class="row" style="gap: 6px;"><span style="width: 12px; height: 12px; border-radius: 50%; border: 1.5px dashed #8a8fa8;"></span>a descobrir</span>
+          <span class="row" style="gap: 6px;"><span style="width: 18px; height: 18px; border-radius: 50%; background: #7b2fa8; box-shadow: 0 0 0 3px #fff, 0 0 0 4.5px #7b2fa8;"></span>proficiente</span>
+        </div>
+        <span class="small">Tamanho e opacidade crescem com o nível. Clicar abre a avaliação do core.</span>
+      </section>
+    </aside>
+  </main>
+  <span class="tagid" style="left: 340px; top: 96px;">6</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cols = [
+      { name: 'Planejamento', color: '#7b2fa8' },
+      { name: 'Avaliação formativa', color: '#9446bf' },
+      { name: 'Reflexão', color: '#c2570c' },
+      { name: 'Famílias', color: '#0f7d74' },
+      { name: 'Comportamento', color: '#0b5f58' }
+    ];
+    const scale = ['sem avaliação', 'Emergente', 'Em desenvolvimento', 'Consolidado', 'Referência'];
+    const people = [
+      ['Ana Souza', [3, 2, 0, 3, 4]], ['Bruno Lima', [4, 3, 2, 2, 3]], ['Carla Mendes', [3, 2, 0, 3, 3]],
+      ['Diego Rocha', [2, 1, 2, 0, 2]], ['Elisa Prado', [3, 3, 0, 4, 3]], ['Felipe Nunes', [1, 0, 0, 2, 2]],
+      ['Gabriela Reis', [3, 2, 1, 3, 3]], ['Heitor Campos', [4, 3, 0, 3, 4]]
+    ];
+    const size = [12, 10, 14, 18, 22];
+    const op = [1, 0.35, 0.55, 0.85, 1];
+    const rows = people.map(([name, lv]) => ({
+      name,
+      ini: name.split(' ').map((p) => p[0]).join(''),
+      cells: lv.map((l, j) => ({
+        label: name + ', ' + cols[j].name + ': ' + scale[l],
+        style: l === 0
+          ? 'display:block;width:12px;height:12px;border-radius:50%;border:1.5px dashed #8a8fa8'
+          : 'display:block;width:' + size[l] + 'px;height:' + size[l] + 'px;border-radius:50%;background:' + cols[j].color + ';opacity:' + op[l] +
+            (l >= 3 ? ';box-shadow:0 0 0 3px #fff,0 0 0 4.5px ' + cols[j].color : '')
+      }))
+    }));
+    cols.forEach((c, j) => {
+      const counts = [0, 0, 0, 0, 0];
+      people.forEach(([, lv]) => { counts[lv[j]] += 1; });
+      c.d1 = 2 + counts[1] * 4;
+      c.d2 = 2 + counts[2] * 4;
+      c.d3 = 2 + counts[3] * 4;
+      c.d4 = 2 + counts[4] * 4;
+      c.distlabel = counts.slice(1).map((n, i) => scale[i + 1] + ' ' + n).join(', ') + ', sem avaliação ' + counts[0];
+    });
+    rows.forEach((r) => { r.cells.forEach((c, j) => { r['c' + j] = c; }); });
+    return { rows, h0: cols[0], h1: cols[1], h2: cols[2], h3: cols[3], h4: cols[4] };
+  }
+}
+</script>
+</body>
+</html>

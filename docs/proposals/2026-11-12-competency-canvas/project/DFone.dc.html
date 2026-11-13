@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fluxo: hoje no telefone</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+<link rel="stylesheet" href="./flow.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ln textarea::placeholder{color:#596079;opacity:1}
+.phone .ws .wrap{min-height:56px;gap:8px}
+.phone .ws h1{font-size:22px}
+.composer{padding:12px 16px;gap:8px}
+.composer .ask{font-size:17px}
+.composer textarea.box{display:block;width:100%;resize:none;font:inherit;font-size:14.5px;color:#1c2233;min-height:44px;padding:11px 12px}
+.nextrow{overflow:hidden;margin-right:-16px}
+.nextrow .row{gap:10px;align-items:stretch;flex-wrap:nowrap}
+.nextrow .next{width:272px;flex:none;padding:12px 14px;gap:6px}
+.next h3{font-size:15px;line-height:1.3}
+.next .comp{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#3d445c}
+.dotted{width:9px;height:9px;border-radius:50%;flex:none;display:block}
+.moment{padding:14px 16px;gap:8px}
+.moment .top .avatar{width:28px;height:28px;font-size:11.5px}
+.moment .quote{font-size:15.5px}
+.ln a.fab{text-decoration:none}
+</style>
+</helmet>
+<div class="ln fl phone" style="width: 390px; height: 844px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <span class="grow"></span>
+    <span class="avatar">MA</span>
+  </nav>
+
+  <header class="ws">
+    <div class="wrap">
+      <h1>Hoje</h1>
+      <span class="grow"></span>
+      <button type="button" class="iconbtn" aria-label="Buscar competência, evidência ou curso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></button>
+    </div>
+  </header>
+
+  <main class="wrap col" style="gap: 12px; padding-top: 10px; flex: 1 1 auto; min-height: 0; overflow: hidden;">
+    <section class="composer" aria-labelledby="c-ask">
+      <h2 class="ask" id="c-ask">O que você fez hoje?</h2>
+      <label class="vh" for="c-box">Conte o que você fez</label>
+      <textarea class="box" id="c-box" rows="1" placeholder="Conte em uma frase ou solte um arquivo"></textarea>
+    </section>
+
+    <section class="col" aria-labelledby="n-title" style="gap: 8px;">
+      <h2 class="h3" id="n-title">Próximos passos</h2>
+      <div class="nextrow">
+        <div class="row">
+          <article class="next">
+            <span class="comp"><span class="dotted" style="background: #2449ad;"></span>4.1 Estratégias de avaliação</span>
+            <h3>Faça o módulo 3, Rubricas digitais na prática</h3>
+            <p class="why">Falta a rubrica em uso com a turma.</p>
+            <a href="#" style="font-size: 14px; font-weight: 700; min-height: 44px; display: inline-flex; align-items: center;">Ir para o módulo</a>
+          </article>
+          <article class="next">
+            <span class="comp"><span class="dotted" style="background: #2449ad;"></span>4.3 Feedback e planificação</span>
+            <h3>Renato vai ler a sua evidência</h3>
+            <p class="why">Pedida em 28 out. Nada a fazer até lá.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <article class="moment rec" aria-labelledby="m-rec">
+      <div class="top">
+        <span class="avatar" style="background: #e2f3f1; color: #0c5f59;">RD</span>
+        <span><b>Renato Dias</b> reconheceu</span>
+        <span class="grow"></span>
+        <span class="num">16 out</span>
+      </div>
+      <div class="row" style="gap: 10px;">
+        <h3 id="m-rec">3.1 Ensino</h3>
+        <span class="grow"></span>
+        <span class="pips" role="img" aria-label="Nível Integrador (B1), o de proficiência"><i class="on"></i><i class="on"></i><i class="on goal"></i><i></i><i></i><i></i></span>
+      </div>
+      <blockquote class="quote">“O plano da unidade 3 mostra objetivos claros e um uso das ferramentas digitais que serve à aula.”</blockquote>
+    </article>
+
+    <article class="moment" aria-labelledby="m-audio">
+      <div class="top">
+        <span class="avatar">MA</span>
+        <span><b>Você</b> registrou uma evidência</span>
+        <span class="grow"></span>
+        <span class="num">28 out</span>
+      </div>
+      <h3 id="m-audio">Devolutivas em áudio para a turma B</h3>
+      <p class="feeds">Alimenta 4.3 Feedback e planificação</p>
+      <span class="chip warm" style="align-self: flex-start;">Aguardando leitura de Renato Dias</span>
+    </article>
+  </main>
+
+  <a class="fab" href="DRegistrar.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Registrar</a>
+
+  <nav class="bottomnav" aria-label="Minha jornada">
+    <a class="on" href="DHoje.dc.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>Hoje</a>
+    <a href="DMapa.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"></path><path d="M9 4v14M15 6v14"></path></svg>Mapa</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Portfólio</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

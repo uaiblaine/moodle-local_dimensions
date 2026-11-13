@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Atlas de conhecimento: competência</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.mini{position:relative;height:250px;border-radius:16px;background-color:#eef0f6;background-image:radial-gradient(#c9cedd 1.2px,transparent 1.2px);background-size:22px 22px;overflow:hidden}
+.mnode{position:absolute;width:150px;border-radius:12px;background:#fff;border:1.5px solid #dfe2ec;padding:8px 10px;font-size:12.5px;font-weight:600;line-height:1.25;color:#1c2233;text-decoration:none;display:flex;flex-direction:column;gap:3px}
+.mnode small{font-size:11.5px;font-weight:600}
+.mnode.ok{border-color:#a9dcc3}.mnode.ok small{color:#17694a}
+.mnode.mid{border-color:#e6c98f}.mnode.mid small{color:#7a4a00}
+.mnode.far{border-style:dashed;border-color:#8b92ab}.mnode.far small{color:#596079}
+.mnode.sel{border-color:#6a2892;box-shadow:0 0 0 4px #d9bfe8}
+.edge{fill:none;stroke:#8b92ab;stroke-width:1.6}
+.tile{background:#fff;border:1px solid #dfe2ec;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.tile .pic{border-radius:0;height:104px;width:100%}
+.tile .txt{padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+</style>
+</helmet>
+<div class="ln" style="width: 1280px; height: 1275px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="#" aria-current="page">Minha jornada</a>
+    <span class="grow"></span>
+    <div class="seg" role="group" aria-label="Persona do mockup" style="background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.3);">
+      <button type="button" class="{{alunoClass}}" aria-pressed="{{isAluno}}" onClick="{{asAluno}}" style="color: {{alunoInk}};">Aluno</button>
+      <button type="button" class="{{profClass}}" aria-pressed="{{isProf}}" onClick="{{asProf}}" style="color: {{profInk}};">Professor</button>
+    </div>
+  </nav>
+
+  <sc-if value="{{isProf}}" hint-placeholder-val="{{false}}">
+    <div class="viewing"><div class="wrap">Você está lendo a jornada de Marina Alves nesta competência · <a href="#" style="color: inherit;">voltar à turma</a></div></div>
+  </sc-if>
+
+  <header style="background: #6a2892; color: #fff; padding: 30px 0; flex: none; position: relative; overflow: hidden;">
+    <svg viewBox="0 0 1280 240" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%;" aria-hidden="true">
+      <circle cx="1090" cy="120" r="210" fill="#ffffff" fill-opacity="0.07"></circle>
+      <circle cx="1090" cy="120" r="130" fill="#ffffff" fill-opacity="0.08"></circle>
+    </svg>
+    <div class="wrap" style="position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; align-items: end;">
+      <div class="col" style="gap: 10px;">
+        <nav class="crumb" aria-label="Você está em" style="color: #f0e3f7;"><a href="BPlano.dc.html">Docência digital (DigCompEdu)</a><span>/</span><span>Ensino e aprendizagem</span></nav>
+        <h1 class="h1">3.1 Ensino</h1>
+        <p style="font-size: 16.5px; color: #f7effb; max-width: 58ch;">Planeja e usa dispositivos e recursos digitais no ensino, para tornar as intervenções mais eficazes.</p>
+      </div>
+      <div style="background: #fff; color: #1c2233; border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
+        <span class="chip ok" style="align-self: flex-start;">Reconhecida em 16 de outubro</span>
+        <ol class="scale" aria-label="Escala desta competência">
+          <li class="past">A1</li>
+          <li class="past">A2</li>
+          <li class="here">B1</li>
+          <li>B2</li>
+          <li>C1</li>
+          <li>C2</li>
+        </ol>
+        <span class="small">Por Renato Dias, no plano.</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap" style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; padding-top: 24px; flex: 1 1 auto;">
+    <main class="col" style="gap: 22px;">
+      <section class="col" aria-labelledby="b2-left">
+        <div class="row"><h2 class="h2" id="b2-left">O que ficou registrado aqui</h2><span class="grow"></span><span class="small">4 registros, do mais recente ao primeiro</span></div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+          <article class="tile">
+            <span class="pic" style="background: #dcf3e8; color: #17694a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"></circle><path d="M9 13.5L7.5 21l4.5-2.5 4.5 2.5L15 13.5"></path></svg></span>
+            <div class="txt"><span class="small">16 out · Renato Dias</span><h3 class="h3">Reconhecimento, nível Integrador (B1)</h3><p style="font-size: 14px; color: #3d445c;">“Objetivos claros e uma avaliação que a turma entende.”</p></div>
+          </article>
+          <article class="tile">
+            <span class="pic" style="background: #f3e9f8; color: #7b2fa8;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path><path d="M10 13h6M10 17h6"></path></svg></span>
+            <div class="txt"><span class="small">9 out · evidência da aluna</span><h3 class="h3">Plano de aula da unidade 3</h3><p style="font-size: 14px; color: #3d445c;">Quatro aulas sobre leitura crítica, com a rubrica. 2 arquivos.</p></div>
+          </article>
+          <article class="tile">
+            <span class="pic" style="background: #e2f3f1; color: #0f6f68;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 10h8M8 14h5"></path></svg></span>
+            <div class="txt"><span class="small">24 set · curso concluído</span><h3 class="h3">Ensinar com recursos digitais</h3><p style="font-size: 14px; color: #3d445c;">Passou ao nível Explorador (A2).</p></div>
+          </article>
+          <article class="tile">
+            <span class="pic" style="background: #e8eefb; color: #2a55c9;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19V5M5 15l4-4 3 3 6-7"></path></svg></span>
+            <div class="txt"><span class="small">3 set · atividade</span><h3 class="h3">Objetivos de uma aula de 50 minutos</h3><p style="font-size: 14px; color: #3d445c;">Devolutiva de Lúcia Prado.</p></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="col" aria-labelledby="b2-here">
+        <h2 class="h2" id="b2-here">O que há para fazer aqui</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+          <a class="card pad col" href="#" style="gap: 4px; text-decoration: none; color: inherit;"><span class="chip ok" style="align-self: flex-start;">Concluído</span><b>Ensinar com recursos digitais</b><span class="small">Curso · 5 atividades ligadas a esta competência</span></a>
+          <a class="card pad col" href="#" style="gap: 4px; text-decoration: none; color: inherit;"><span class="chip line" style="align-self: flex-start;">Inscrições abertas</span><b>Recursos educacionais abertos na prática</b><span class="small">Curso · até 30 de novembro</span></a>
+        </div>
+      </section>
+    </main>
+
+    <aside class="col" style="gap: 16px;">
+      <section class="card pad col" aria-labelledby="b2-near">
+        <h2 class="h3" id="b2-near">Daqui se chega a</h2>
+        <div class="mini">
+          <svg viewBox="0 0 336 250" width="336" height="250" style="position: absolute; left: 0; top: 0;" aria-hidden="true">
+            <path class="edge" d="M168 60 C168 100 85 110 85 150"></path>
+            <path class="edge" d="M168 60 C168 100 251 110 251 150"></path>
+            <path class="edge" d="M243 38 C290 38 300 20 336 20"></path>
+          </svg>
+          <span class="mnode sel ok" style="left: 93px; top: 14px;">3.1 Ensino<small>Você está aqui</small></span>
+          <a class="mnode mid" href="#" style="left: 10px; top: 150px;">4.1 Estratégias de avaliação<small>Em construção</small></a>
+          <a class="mnode far" href="#" style="left: 176px; top: 150px;">3.3 Aprendizagem colaborativa<small>Por explorar</small></a>
+        </div>
+        <a href="BPlano.dc.html" style="font-weight: 600; font-size: 14px;">Ver no painel do plano</a>
+      </section>
+
+      <sc-if value="{{isAluno}}" hint-placeholder-val="{{true}}">
+        <section class="card pad col" aria-labelledby="b2-more">
+          <h2 class="h3" id="b2-more">Deixe algo novo aqui</h2>
+          <p class="small">O nível Especialista (B2) pede uma evidência de prática compartilhada com colegas.</p>
+          <a class="btn primary" href="#">Registrar uma evidência</a>
+          <a class="btn line" href="#">Pedir uma nova leitura</a>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{isProf}}" hint-placeholder-val="{{false}}">
+        <section class="card pad col" aria-labelledby="b2-rate">
+          <h2 class="h3" id="b2-rate">Sua leitura</h2>
+          <label class="radio"><input type="radio" name="b2-level"><span>Recém-chegado (A1)</span></label>
+          <label class="radio"><input type="radio" name="b2-level"><span>Explorador (A2)</span></label>
+          <label class="radio on"><input type="radio" name="b2-level" checked><span><b>Integrador (B1)</b> · nível de proficiência, o atual</span></label>
+          <label class="radio"><input type="radio" name="b2-level"><span>Especialista (B2)</span></label>
+          <label class="radio"><input type="radio" name="b2-level"><span>Líder (C1)</span></label>
+          <label class="radio"><input type="radio" name="b2-level"><span>Pioneiro (C2)</span></label>
+          <label class="small" for="b2-note" style="font-weight: 600; color: #1c2233;">O que você observou (aparece para a aluna)</label>
+          <textarea class="note" id="b2-note"></textarea>
+          <button type="button" class="btn primary">Registrar avaliação</button>
+        </section>
+      </sc-if>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"persona":{"editor":"enum","options":["aluno","professor"],"default":"aluno"},"$preview":{"width":1280,"height":1275}}'>
+class Component extends DCLogic {
+renderVals() {
+const p = (this.state && this.state.persona) || this.props.persona || 'aluno';
+const prof = p === 'professor';
+return {
+isAluno: !prof,
+isProf: prof,
+alunoClass: prof ? '' : 'on',
+profClass: prof ? 'on' : '',
+alunoInk: prof ? '#ffffff' : '#1c2233',
+profInk: prof ? '#1c2233' : '#ffffff',
+asAluno: () => this.setState({ persona: 'aluno' }),
+asProf: () => this.setState({ persona: 'professor' })
+};
+}
+}
+</script>
+</body>
+</html>

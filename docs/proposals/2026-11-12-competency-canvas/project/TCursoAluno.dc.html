@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Caderno de jornada: competências do curso</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.ev{background:#fff;border:1px solid #dfe2ec;border-radius:16px;padding:10px 12px;display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:center}
+.comp{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:24px;padding:18px 20px}
+.contrib{font-size:14.5px;color:#3d445c}
+.sub{font-family:"Noto Sans",sans-serif;font-size:13.5px;font-weight:700;color:#1c2233}
+.acts{display:flex;flex-direction:column;gap:6px}
+.act{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px;min-height:26px}
+.act .ai{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none}
+.act .ai.done{background:#dcf3e8;color:#17694a}
+.act .ai.going{background:#fbedd5;color:#7a4a00}
+.act .ai.later{background:#f1f3f9;color:#596079}
+.act .st{font-size:13px;color:#596079;white-space:nowrap}
+.act .st.done{color:#17694a;font-weight:600}
+.then{background:#f6f7fb;border:1px solid #dfe2ec;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px;align-self:start}
+.then p{font-size:14px;color:#3d445c}
+.how{display:flex;flex-direction:column;gap:12px}
+.how li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;font-size:14px;color:#3d445c}
+.how .hi{width:28px;height:28px;border-radius:50%;background:#e8f0f8;color:#0a4a85;display:grid;place-items:center}
+</style>
+</helmet>
+<div class="ln" style="width: 1280px; height: 1100px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink on" href="#" aria-current="page">Meus cursos</a>
+    <a class="navlink" href="Main.dc.html">Minha jornada</a>
+    <span class="grow"></span>
+    <span class="avatar">MA</span>
+  </nav>
+
+  <header style="background: #fff; border-bottom: 1px solid #dfe2ec; padding: 22px 0 20px; flex: none;">
+    <div class="wrap" style="display: flex; gap: 32px; align-items: flex-end;">
+      <div class="col" style="gap: 8px; flex: 1 1 auto;">
+        <nav class="crumb" aria-label="Você está em"><a href="#">Meus cursos</a><span>/</span><a href="#">Avaliação com tecnologias digitais</a><span>/</span><span>Competências</span></nav>
+        <h1 class="h1">O que este curso desenvolve</h1>
+        <p class="lede">Três competências do seu plano passam por este curso.</p>
+      </div>
+      <span class="chip line">Você está no módulo 2 de 4</span>
+    </div>
+  </header>
+
+  <div class="wrap" style="display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; padding-top: 20px; flex: 1 1 auto;">
+    <main class="col" style="gap: 14px;">
+
+      <article class="card comp" aria-labelledby="tc-c1">
+        <div class="col" style="gap: 8px;">
+          <div class="row" style="gap: 8px;"><span class="chip" style="background: #e8eefb; color: #2449ad;">Avaliação</span><span class="chip warm">Em construção</span><span class="small">2 evidências até aqui</span></div>
+          <h2 class="h2" id="tc-c1"><a href="#" style="color: inherit; text-decoration: none;">4.1 Estratégias de avaliação</a></h2>
+          <p class="contrib">Rubricas e devolutivas usadas durante a aula, não só no fim.</p>
+          <h3 class="sub">Neste curso</h3>
+          <ul class="acts">
+            <li class="act"><span class="ai done"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><a href="#">Oficina de rubricas digitais</a><span class="st done">Concluída em 2 out · virou evidência</span></li>
+            <li class="act"><span class="ai going"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7.5V12l3 2"></path></svg></span><a href="#">Questionário: feedback e notas</a><span class="st">Em andamento</span></li>
+            <li class="act"><span class="ai later"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></span><span>Projeto: plano de avaliação da turma</span><span class="st">Abre no módulo 3</span></li>
+          </ul>
+          <div class="ev" style="margin-top: 4px;">
+            <span class="pic" style="width: 56px; height: 56px; background: #e8eefb; color: #2449ad;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 10h8M8 14h5"></path></svg></span>
+            <div class="col" style="gap: 2px;">
+              <span class="small">Sua evidência mais recente daqui · 2 out</span>
+              <div class="row" style="gap: 10px;"><a href="TEvidencias.dc.html" class="h3" style="color: inherit; text-decoration: none; font-family: Outfit, sans-serif;">Oficina de rubricas digitais</a><span class="grow"></span><span class="chip ok">Lida por Lúcia Prado em 6 out</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="then">
+          <h3 class="sub">Ao concluir o curso</h3>
+          <p>O curso anexa uma evidência a esta competência, com o projeto do módulo 3.</p>
+        </div>
+      </article>
+
+      <article class="card comp" aria-labelledby="tc-c2">
+        <div class="col" style="gap: 8px;">
+          <div class="row" style="gap: 8px;"><span class="chip" style="background: #e8eefb; color: #2449ad;">Avaliação</span><span class="chip warm">Em construção</span><span class="chip line">Aguardando leitura</span></div>
+          <h2 class="h2" id="tc-c2"><a href="#" style="color: inherit; text-decoration: none;">4.3 Feedback e planificação</a></h2>
+          <p class="contrib">Devolutivas entre colegas no módulo 2, a trabalhos no 3.</p>
+          <h3 class="sub">Neste curso</h3>
+          <ul class="acts">
+            <li class="act"><span class="ai going"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7.5V12l3 2"></path></svg></span><a href="#">Fórum: devolutivas entre colegas</a><span class="st">Em andamento</span></li>
+            <li class="act"><span class="ai later"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></span><span>Tarefa: devolutiva a três trabalhos</span><span class="st">Abre no módulo 3</span></li>
+          </ul>
+        </div>
+        <div class="then">
+          <h3 class="sub">Ao concluir o curso</h3>
+          <p>A competência é recomendada para leitura de Renato Dias.</p>
+        </div>
+      </article>
+
+      <article class="card comp" aria-labelledby="tc-c3">
+        <div class="col" style="gap: 8px;">
+          <div class="row" style="gap: 8px;"><span class="chip" style="background: #f3e9f8; color: #6a2892;">Ensino e aprendizagem</span><span class="chip line">Por explorar</span></div>
+          <h2 class="h2" id="tc-c3"><a href="#" style="color: inherit; text-decoration: none;">3.3 Aprendizagem colaborativa</a></h2>
+          <p class="contrib">Planejar um trabalho em grupo com um documento compartilhado.</p>
+          <h3 class="sub">Neste curso</h3>
+          <ul class="acts">
+            <li class="act"><span class="ai later"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></span><span>Leitura: dados que mudam a aula</span><span class="st">Abre no módulo 4</span></li>
+            <li class="act"><span class="ai later"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></span><span>Tarefa: replanejar com o questionário</span><span class="st">Abre no módulo 4</span></li>
+          </ul>
+        </div>
+        <div class="then">
+          <h3 class="sub">Ao concluir o curso</h3>
+          <p>O curso anexa uma evidência, e a competência passa a Em construção.</p>
+        </div>
+      </article>
+    </main>
+
+    <aside class="col" style="gap: 16px;">
+      <section class="card pad col" aria-labelledby="tc-plan">
+        <h2 class="h3" id="tc-plan">Este curso faz parte de</h2>
+        <a href="TPlano.dc.html" class="col" style="gap: 6px; text-decoration: none; color: inherit; border: 1px solid #dfe2ec; border-radius: 14px; padding: 14px 16px;">
+          <span class="disp" style="font-size: 18px; font-weight: 700; color: #0a4a85;">Docência digital (DigCompEdu)</span>
+          <span class="small">Plano ativo até 12 dez 2026 · acompanhado por Renato Dias</span>
+          <span class="small">Três das nove competências do plano passam por aqui.</span>
+        </a>
+        <a href="Main.dc.html" style="font-size: 14px; font-weight: 600;">Abrir minha jornada</a>
+      </section>
+
+      <section class="card pad col" aria-labelledby="tc-how">
+        <h2 class="h3" id="tc-how">Como funciona</h2>
+        <ul class="how">
+          <li><span class="hi"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path></svg></span><span>Uma atividade concluída pode virar evidência e entra no seu caderno com a data.</span></li>
+          <li><span class="hi"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"></path></svg></span><span>Com evidências bastantes, você pede uma leitura a quem acompanha o plano.</span></li>
+          <li><span class="hi"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"></circle><path d="M9 13.5L7.5 21l4.5-2.5 4.5 2.5L15 13.5"></path></svg></span><span>Na leitura, a competência pode ser reconhecida, com uma frase sobre o que foi visto.</span></li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

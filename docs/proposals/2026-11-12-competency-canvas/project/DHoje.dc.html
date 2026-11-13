@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fluxo: hoje</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+<link rel="stylesheet" href="./flow.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.find{width:340px}
+.find input{flex:1 1 auto;min-width:0;border:0;background:transparent;font:inherit;font-size:14px;color:#1c2233;min-height:42px;padding:0}
+.ln input::placeholder,.ln textarea::placeholder{color:#596079;opacity:1}
+.ln button.tool{font-size:13.5px}
+.composer textarea.box{display:block;width:100%;resize:none;font:inherit;font-size:14.5px;color:#1c2233}
+.check{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;font-weight:600;color:#3d445c;cursor:pointer}
+.check input{width:18px;height:18px;margin:0;accent-color:#0a4a85}
+.moment .top .avatar{width:28px;height:28px;font-size:11.5px}
+.moment .top .ico{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none}
+.quiet{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:14px;font-weight:600}
+input.reply{width:100%;font:inherit;font-size:14px;color:#1c2233}
+.thread p{color:#1c2233}
+.moment.compact{padding:12px 18px;flex-direction:row;align-items:center;gap:12px;font-size:14px;color:#3d445c}
+.next h3{font-size:15.5px;line-height:1.3}
+.next .comp{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#3d445c}
+.dotted{width:10px;height:10px;border-radius:50%;flex:none;display:block}
+.sd{display:inline-flex;gap:5px;align-items:center}
+.sd i{width:11px;height:11px;border-radius:50%;display:block;flex:none}
+.sd .r{background:#17694a}
+.sd .c{border:2px solid #7a4a00;background:linear-gradient(90deg,#7a4a00 50%,#fff 50%)}
+.sd .f{border:1.5px dashed #596079;background:#fff}
+.arow{display:flex;align-items:center;gap:10px;font-size:14px;min-height:22px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:#596079}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+</style>
+</helmet>
+<div class="ln fl" style="width: 1280px; height: 1180px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="DHoje.dc.html" aria-current="page">Minha jornada</a>
+    <span class="grow"></span>
+    <span class="avatar">MA</span>
+  </nav>
+
+  <div class="ws">
+    <div class="wrap">
+      <h1>Minha jornada</h1>
+      <nav class="tabs" aria-label="Minha jornada">
+        <a class="on" href="DHoje.dc.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>Hoje</a>
+        <a href="DMapa.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"></path><path d="M9 4v14M15 6v14"></path></svg>Mapa</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Portfólio</a>
+      </nav>
+      <span class="grow"></span>
+      <label class="find" for="ws-find">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input id="ws-find" type="search" placeholder="Buscar competência, evidência ou curso" aria-keyshortcuts="Meta+K">
+        <span class="kbd">⌘K</span>
+      </label>
+      <a class="btn primary" href="DRegistrar.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Registrar</a>
+    </div>
+  </div>
+
+  <div class="wrap" style="display: grid; grid-template-columns: 760px 360px; gap: 32px; padding-top: 20px; flex: 1 1 auto; min-height: 0; align-items: start;">
+    <main class="col" style="gap: 12px;">
+      <section class="composer" aria-labelledby="c-ask" style="margin-bottom: 4px;">
+        <h2 class="ask" id="c-ask">O que você fez hoje?</h2>
+        <label class="vh" for="c-box">Conte o que você fez</label>
+        <textarea class="box" id="c-box" rows="1" placeholder="Conte em uma frase, solte um arquivo ou cole um link"></textarea>
+        <div class="tools">
+          <button type="button" class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7L14 4.5a3.5 3.5 0 0 1 5 5L10.5 18a2 2 0 0 1-3-3L15 7.5"></path></svg>Arquivo</button>
+          <button type="button" class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>Foto</button>
+          <button type="button" class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></svg>Link</button>
+          <span class="grow"></span>
+          <label class="check"><input type="checkbox" name="pedir-leitura">Pedir uma leitura</label>
+        </div>
+      </section>
+
+      <h2 class="h2">Aconteceu</h2>
+
+      <article class="moment rec" aria-labelledby="m-rec">
+        <div class="top">
+          <span class="avatar" style="background: #e2f3f1; color: #0c5f59;">RD</span>
+          <span><b>Renato Dias</b> reconheceu uma competência</span>
+          <span class="grow"></span>
+          <span class="num">16 out</span>
+        </div>
+        <div class="row" style="gap: 10px;">
+          <h3 id="m-rec"><a href="#" style="color: inherit; text-decoration: none;">3.1 Ensino</a></h3>
+          <span class="chip" style="background: #f3e9f8; color: #6a2892;">Ensino e aprendizagem</span>
+          <span class="grow"></span>
+          <span class="chip ok"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"></circle><path d="M9 13.5L7.5 21l4.5-2.5 4.5 2.5L15 13.5"></path></svg>Reconhecida</span>
+        </div>
+        <blockquote class="quote">“O plano da unidade 3 mostra objetivos claros e um uso das ferramentas digitais que serve à aula.”</blockquote>
+        <div class="row" style="gap: 10px;">
+          <span class="pips" role="img" aria-label="Nível Integrador (B1), o de proficiência"><i class="on"></i><i class="on"></i><i class="on goal"></i><i></i><i></i><i></i></span>
+          <span class="small">Integrador (B1) · sustentada por 3 evidências</span>
+          <span class="grow"></span>
+          <a class="quiet" href="#">Ver no portfólio</a>
+        </div>
+      </article>
+
+      <article class="moment" aria-labelledby="m-audio">
+        <div class="top">
+          <span class="avatar">MA</span>
+          <span><b>Você</b> registrou uma evidência</span>
+          <span class="grow"></span>
+          <span class="num">28 out</span>
+        </div>
+        <h3 id="m-audio">Devolutivas em áudio para a turma B</h3>
+        <div class="row" style="gap: 14px; align-items: flex-start;">
+          <div class="attach"><span class="pic" style="background: #e8eefb; color: #2449ad;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"></path></svg><span class="vh">Áudio anexado</span></span></div>
+          <div class="col" style="gap: 8px; min-width: 0;">
+            <p style="font-size: 14px; color: #3d445c;">Três áudios de até dois minutos, um para cada grupo.</p>
+            <div class="row" style="gap: 8px; flex-wrap: wrap;">
+              <span class="small">Alimenta</span>
+              <span class="pick"><i style="background: #2449ad;"></i>4.3 Feedback e planificação</span>
+              <span class="chip warm"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Aguardando leitura de Renato Dias</span>
+            </div>
+          </div>
+        </div>
+        <div class="thread">
+          <div class="msg">
+            <span class="avatar" style="background: #e2f3f1; color: #0c5f59;">RD</span>
+            <div class="col" style="gap: 0;">
+              <span class="small"><b style="color: #1c2233;">Renato Dias</b> · 30 out</span>
+              <p>Ouvi as três primeiras. Na próxima, diga o próximo passo antes do elogio.</p>
+            </div>
+          </div>
+          <input class="reply" type="text" placeholder="Responder a Renato Dias" aria-label="Responder a Renato Dias">
+        </div>
+      </article>
+
+      <article class="moment" aria-labelledby="m-oficina">
+        <div class="top">
+          <span class="ico" style="background: #e8eefb; color: #2449ad;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+          <span><b>Você</b> concluiu uma atividade em <a href="#">Avaliação com tecnologias digitais</a></span>
+          <span class="grow"></span>
+          <span class="num">2 out</span>
+        </div>
+        <h3 id="m-oficina">Oficina de rubricas digitais</h3>
+        <p class="feeds">Virou evidência de <a href="DMapa.dc.html">4.1 Estratégias de avaliação</a></p>
+        <div class="thread">
+          <div class="msg">
+            <span class="avatar" style="background: #fbeee2; color: #96430a;">LP</span>
+            <div class="col" style="gap: 0;">
+              <span class="small"><b style="color: #1c2233;">Lúcia Prado</b> · 3 out</span>
+              <p>As rubricas estão claras; falta mostrar como os estudantes usaram o retorno.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="moment compact" aria-label="Evidência de 9 de outubro">
+        <span class="avatar" style="width: 28px; height: 28px; font-size: 11.5px;">MA</span>
+        <span style="min-width: 0;">Você registrou <b style="color: #1c2233;">Plano de aula da unidade 3</b>, que alimenta 3.1 e 4.1</span>
+        <span class="grow"></span>
+        <span class="small num">9 out</span>
+      </article>
+    </main>
+
+    <aside class="col" style="gap: 16px;">
+      <section class="col" aria-labelledby="h-next" style="gap: 12px;">
+        <h2 class="h3" id="h-next">Próximos passos</h2>
+        <article class="next">
+          <span class="comp"><span class="dotted" style="background: #2449ad;"></span>4.1 Estratégias de avaliação · Em construção</span>
+          <h3>Faça o módulo 3, Rubricas digitais na prática</h3>
+          <p class="why">Aplicar uma rubrica com a turma é o que falta. A sua próxima evidência pode sair dali.</p>
+          <a class="btn line" href="#" style="align-self: flex-start;">Ir para o módulo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+        </article>
+        <article class="next">
+          <span class="comp"><span class="dotted" style="background: #2449ad;"></span>4.3 Feedback e planificação · Em construção</span>
+          <h3>Renato vai ler a sua evidência</h3>
+          <p class="why">Você pediu uma leitura em 28 out. Por aqui não há nada a fazer até ele responder.</p>
+        </article>
+        <article class="next">
+          <span class="comp"><span class="dotted" style="background: #6a2892;"></span>3.3 Aprendizagem colaborativa · Por explorar</span>
+          <h3>Ainda por explorar: comece por um trabalho em grupo com documento partilhado</h3>
+          <p class="why">Um texto escrito a várias mãos pela turma já conta como primeira evidência.</p>
+          <a class="quiet" href="#" style="align-self: flex-start;">Ver a competência</a>
+        </article>
+      </section>
+
+      <section class="card pad col" aria-labelledby="h-plan" style="gap: 12px;">
+        <h2 class="h3" id="h-plan">O seu plano</h2>
+        <div class="col" style="gap: 0;">
+          <b style="font-size: 14.5px;">Docência digital (DigCompEdu)</b>
+          <span class="small">Até 12 dez 2026 · acompanhado por Renato Dias</span>
+        </div>
+        <ul class="col" style="gap: 10px;">
+          <li class="arow"><span class="dotted" style="background: #0c5f59;"></span><span>Recursos digitais</span><span class="grow"></span><span class="sd" role="img" aria-label="3 reconhecidas"><i class="r"></i><i class="r"></i><i class="r"></i></span></li>
+          <li class="arow"><span class="dotted" style="background: #6a2892;"></span><span>Ensino e aprendizagem</span><span class="grow"></span><span class="sd" role="img" aria-label="1 reconhecida, 1 por explorar"><i class="r"></i><i class="f"></i></span></li>
+          <li class="arow"><span class="dotted" style="background: #2449ad;"></span><span>Avaliação</span><span class="grow"></span><span class="sd" role="img" aria-label="2 em construção"><i class="c"></i><i class="c"></i></span></li>
+          <li class="arow"><span class="dotted" style="background: #96430a;"></span><span>Capacitação dos aprendentes</span><span class="grow"></span><span class="sd" role="img" aria-label="2 por explorar"><i class="f"></i><i class="f"></i></span></li>
+        </ul>
+        <div class="legend" aria-hidden="true">
+          <span><span class="sd"><i class="r"></i></span>Reconhecida</span>
+          <span><span class="sd"><i class="c"></i></span>Em construção</span>
+          <span><span class="sd"><i class="f"></i></span>Por explorar</span>
+        </div>
+        <a class="quiet" href="DMapa.dc.html" style="align-self: flex-start;">Abrir o mapa<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1180}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

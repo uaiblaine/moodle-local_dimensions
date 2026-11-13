@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Cada plugin no seu papel</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.role{background:#fff;border:1px solid #dfe2ec;border-radius:18px;padding:20px 22px;display:flex;flex-direction:column;gap:12px;border-top:6px solid}
+.role h2{font-size:20px}
+.role h3{font-size:13px;font-weight:700;color:#596079;font-family:"Noto Sans",sans-serif}
+.role ul{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.role li{padding-left:14px;position:relative}
+.role li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:#8b92ab}
+.adj{background:#e8f0f8;border:1px solid #b9cfe5;border-radius:12px;padding:10px 12px;font-size:14px;color:#073560}
+</style>
+</helmet>
+<div class="ln" style="width: 1600px; height: 1300px; padding: 40px 48px; gap: 20px;">
+  <div class="col" style="gap: 6px;">
+    <h1 class="h1">Cada plugin no seu papel</h1>
+    <p class="lede" style="max-width: 100ch;">Nenhum substitui o outro. O core guarda os dados e as regras; cada plugin acrescenta uma camada; o tema dá a todos a mesma linha: o caderno, a peça reconhecida, um só cartão de evidência, a escala em degraus.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px;">
+    <section class="role" style="border-top-color: #0a4a85;">
+      <h2 class="h2">Core (tool_lp, block_lp, report_competency)</h2>
+      <p style="font-size: 14.5px; color: #3d445c;">Os dados, as permissões e as páginas base. Tudo o que os plugins mostram vem daqui.</p>
+      <h3>É dono de</h3>
+      <ul><li>Planos, competências, evidências, avaliações, regras e estados</li><li>Páginas do aluno no plano e no curso, relatório da turma, bloco de planos</li><li>Os dois avisos de comentário</li></ul>
+      <h3>Entrega para</h3>
+      <ul><li>O tema, que redesenha estas páginas no mesmo endereço</li><li>Os plugins, pela API e pelos eventos</li></ul>
+      <div class="adj">Nada muda no core. Onde o core não tem link (a página da competência no plano), o tema cria o link nas páginas que redesenha.</div>
+    </section>
+
+    <section class="role" style="border-top-color: #4456ff;">
+      <h2 class="h2">theme_dimensions</h2>
+      <p style="font-size: 14.5px; color: #3d445c;">A linha visual e as entradas. Faz as páginas do core e as dos plugins parecerem um produto só.</p>
+      <h3>É dono de</h3>
+      <ul><li>O desenho das páginas do core: telas 1, 2, 3, 5, 6, 9, 10, 11, 12</li><li>Os tokens da família e os componentes: caderno, peça, cartão de evidência, escala</li><li>“Minha jornada” e “Mesa de leitura” na barra; cartões do perfil</li></ul>
+      <h3>Entrega para</h3>
+      <ul><li>Os plugins, que leem os tokens e copiam a anatomia dos componentes</li></ul>
+      <div class="adj">Passa a copiar também os modelos de página do core (plano, lista de planos, competências do curso, evidências), hoje só os internos.</div>
+    </section>
+
+    <section class="role" style="border-top-color: #6a2892;">
+      <h2 class="h2">local_dimensions</h2>
+      <p style="font-size: 14.5px; color: #3d445c;">A identidade de cada competência e de cada plano, a navegação rica do aluno e o hub de gestão.</p>
+      <h3>É dono de</h3>
+      <ul><li>Cor, imagem, tags e tipo, lidos por todas as telas</li><li>Visão completa do plano e acompanhamento da competência (cursos, seções, estados de inscrição)</li><li>Hub de competências; o gancho de selos de estado</li></ul>
+      <h3>Entrega para</h3>
+      <ul><li>block_dimensions e tema: metadados e a trilha do plano</li><li>local_evidencehub: o lugar do selo de validade</li></ul>
+      <div class="adj">Ajustes: a aba Progresso vira o caderno (mesmas entradas e marcos); o cabeçalho da competência reconhecida vira a peça; cada evidência usa o cartão comum; “Ver como” ganha Caderno, Portfólio e Painel.</div>
+    </section>
+
+    <section class="role" style="border-top-color: #96430a;">
+      <h2 class="h2">block_dimensions</h2>
+      <p style="font-size: 14.5px; color: #3d445c;">A porta de entrada do aluno: no painel, no curso e como página inicial.</p>
+      <h3>É dono de</h3>
+      <ul><li>Cartões de plano e de competência, com filtros e favoritos</li><li>A página Dimensions, que pode ser a tela 1</li><li>O contexto do botão “Voltar ao plano”</li></ul>
+      <h3>Entrega para</h3>
+      <ul><li>As páginas do local_dimensions, hoje alcançadas só por aqui</li></ul>
+      <div class="adj">Ajustes: o cartão de plano mostra as reconhecidas pelo nome e a mais recente com a frase, no lugar da contagem; no curso, a variação “Este curso na sua jornada”.</div>
+    </section>
+
+    <section class="role" style="border-top-color: #0c5f59;">
+      <h2 class="h2">local_evidencehub</h2>
+      <p style="font-size: 14.5px; color: #3d445c;">Validade e conferência das evidências, e o documento que o aluno pode mostrar fora.</p>
+      <h3>É dono de</h3>
+      <ul><li>Tipo, emissão, vencimento e conferência de cada evidência</li><li>Hub e matriz para quem responde pela cobertura; regras de validade</li><li>Documento em PDF e a verificação pública</li></ul>
+      <h3>Entrega para</h3>
+      <ul><li>local_dimensions: o selo de validade na competência</li><li>As páginas de evidência do core, com uma faixa de aviso</li></ul>
+      <div class="adj">Ajustes: a página de evidências usa o cartão comum e o caderno; a gaveta conta a linha do tempo; hub e matriz seguem como ferramenta de equipe, fora da jornada do aluno.</div>
+    </section>
+
+    <section class="role" style="border-top-color: #2449ad;">
+      <h2 class="h2">block_compass</h2>
+      <p style="font-size: 14.5px; color: #3d445c;">O painel do dia a dia: cursos e calendário. Hoje não mostra nada de competências.</p>
+      <h3>É dono de</h3>
+      <ul><li>Continuar de onde parou, novas inscrições, calendário, a seguir</li><li>O cartão de curso, pelo contrato comum</li></ul>
+      <h3>Entrega para</h3>
+      <ul><li>Os cursos; e, com o ajuste, a jornada</li></ul>
+      <div class="adj">Ajustes: uma linha “Sua jornada” com o reconhecimento mais recente e a entrada para a tela 1; no cartão de curso, o espaço do plugin diz “Desenvolve: …”.</div>
+    </section>
+  </div>
+
+  <section class="card pad col" style="gap: 8px;">
+    <h2 class="h3">Um ponto técnico que decide os links</h2>
+    <p style="font-size: 14.5px; color: #3d445c; max-width: 130ch;">Os avisos e eventos do core montam seus endereços por um resolvedor configurável (<code>core_competency_url_resolver</code>), hoje o do tool_lp e sem nenhum plugin no lugar. É o único ponto em que um plugin poderia mandar os links do core para as suas próprias páginas. A proposta é não usá-lo: as páginas do core ficam, redesenhadas, e cada uma ganha o link para a visão rica do local_dimensions quando ele está instalado.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

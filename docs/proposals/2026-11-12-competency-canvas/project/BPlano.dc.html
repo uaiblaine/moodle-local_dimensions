@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Atlas de conhecimento: plano do aluno</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.board{position:relative;flex:1 1 auto;background-color:#eef0f6;background-image:radial-gradient(#c9cedd 1.2px,transparent 1.2px);background-size:22px 22px;overflow:hidden}
+.area{position:absolute;border-radius:24px;border:1.5px solid;padding:14px 18px;font-family:"Outfit",sans-serif;font-weight:700;font-size:16px}
+.node{position:absolute;width:190px;min-height:78px;border-radius:14px;background:#fff;border:1.5px solid #dfe2ec;padding:10px 12px;display:flex;flex-direction:column;gap:4px;text-decoration:none;color:#1c2233;box-shadow:0 2px 6px rgba(20,24,60,.08);font-size:13.5px;font-weight:600;line-height:1.25}
+.node small{font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px}
+.node.ok{border-color:#a9dcc3}.node.ok small{color:#17694a}
+.node.mid{border-color:#e6c98f}.node.mid small{color:#7a4a00}
+.node.far{border-style:dashed;border-color:#8b92ab;background:#fafbfe}.node.far small{color:#596079}
+.node.sel{border-color:#0a4a85;box-shadow:0 0 0 4px #b9cfe5,0 6px 18px rgba(20,24,60,.16)}
+.edge{fill:none;stroke:#8b92ab;stroke-width:1.6}
+.edge.hot{stroke:#0a4a85;stroke-width:2.4}
+.tool{position:absolute;background:#fff;border:1px solid #dfe2ec;border-radius:12px;box-shadow:0 2px 8px rgba(20,24,60,.1)}
+.tool button{width:44px;height:44px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;color:#1c2233}
+.tool button+button{border-top:1px solid #dfe2ec}
+</style>
+</helmet>
+<div class="ln" style="width: 1280px; height: 1240px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="#" aria-current="page">Minha jornada</a>
+    <span class="grow"></span>
+    <span class="avatar">MA</span>
+  </nav>
+
+  <header style="background: #fff; border-bottom: 1px solid #dfe2ec; padding: 20px 28px 16px; flex: none; display: flex; gap: 24px; align-items: flex-end;">
+    <div class="col" style="gap: 6px; flex: 1 1 auto;">
+      <nav class="crumb" aria-label="Você está em"><a href="#">Meus planos</a><span>/</span><span>Docência digital (DigCompEdu)</span></nav>
+      <h1 class="h1" style="font-size: 30px;">Docência digital (DigCompEdu)</h1>
+      <p class="small" style="font-size: 14px;">Nove competências em quatro áreas. As ligações mostram competências que se alimentam.</p>
+    </div>
+    <div class="row" style="gap: 8px;">
+      <span class="chip ok">4 reconhecidas</span>
+      <span class="chip warm">2 em construção</span>
+      <span class="chip line">3 por explorar</span>
+    </div>
+    <div class="seg" role="group" aria-label="Ver como">
+      <button type="button" class="on" aria-pressed="true">Painel</button>
+      <button type="button" aria-pressed="false">Lista</button>
+    </div>
+  </header>
+
+  <div style="display: flex; flex: 1 1 auto; min-height: 0;">
+    <div class="board" role="group" aria-label="Painel do plano">
+      <div class="area" style="left: 20px; top: 20px; width: 430px; height: 300px; background: #f3e9f8; border-color: #d9bfe8; color: #6a2892;">Ensino e aprendizagem</div>
+      <div class="area" style="left: 480px; top: 20px; width: 440px; height: 420px; background: #e2f3f1; border-color: #a9d6d1; color: #0c5f59;">Recursos digitais</div>
+      <div class="area" style="left: 20px; top: 360px; width: 430px; height: 330px; background: #e8eefb; border-color: #b7c7ef; color: #2449ad;">Avaliação</div>
+      <div class="area" style="left: 480px; top: 480px; width: 440px; height: 280px; background: #fbeee2; border-color: #ecc9a5; color: #96430a;">Capacitação dos aprendentes</div>
+
+      <svg viewBox="0 0 940 1040" width="940" height="1040" style="position: absolute; left: 0; top: 0;" aria-hidden="true">
+        <path class="edge" d="M230 109 C330 109 400 109 500 109"></path>
+        <path class="edge hot" d="M135 148 C135 260 135 320 135 420"></path>
+        <path class="edge hot" d="M335 268 C335 340 200 350 200 420"></path>
+        <path class="edge hot" d="M230 470 C335 470 335 500 335 560"></path>
+        <path class="edge" d="M430 599 C460 599 470 579 500 579"></path>
+        <path class="edge" d="M595 388 C595 470 805 510 805 640"></path>
+      </svg>
+
+      <a class="node ok" href="BCompetencia.dc.html" style="left: 40px; top: 70px;">3.1 Ensino<small>Reconhecida · 16 out</small></a>
+      <a class="node far" href="#" style="left: 240px; top: 190px;">3.3 Aprendizagem colaborativa<small>Por explorar</small></a>
+      <a class="node ok" href="#" style="left: 500px; top: 70px;">2.2 Criação e modificação<small>Reconhecida · 18 set</small></a>
+      <a class="node ok" href="#" style="left: 710px; top: 170px;">2.1 Seleção<small>Reconhecida · 2 jun</small></a>
+      <a class="node ok" href="#" style="left: 500px; top: 310px;">2.3 Gestão, proteção e partilha<small>Reconhecida · 14 abr</small></a>
+      <a class="node mid sel" href="#" aria-current="true" style="left: 40px; top: 420px;">4.1 Estratégias de avaliação<small>Em construção · 2 evidências</small></a>
+      <a class="node mid" href="#" style="left: 240px; top: 560px;">4.3 Feedback e planificação<small>Em construção · 1 evidência</small></a>
+      <a class="node far" href="#" style="left: 500px; top: 540px;">5.1 Acessibilidade e inclusão<small>Por explorar</small></a>
+      <a class="node far" href="#" style="left: 710px; top: 640px;">5.3 Envolvimento ativo<small>Por explorar</small></a>
+
+      <div class="tool" style="left: 20px; bottom: 20px;">
+        <button type="button" aria-label="Aproximar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+        <button type="button" aria-label="Afastar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+        <button type="button" aria-label="Enquadrar o plano inteiro"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+      </div>
+
+      <div class="tool" style="right: 20px; bottom: 20px; width: 188px; height: 126px; padding: 8px;" aria-hidden="true">
+        <div style="position: relative; width: 100%; height: 100%; background: #eef0f6; border-radius: 6px;">
+          <span style="position: absolute; left: 4px; top: 4px; width: 78px; height: 40px; background: #d9bfe8; border-radius: 4px;"></span>
+          <span style="position: absolute; left: 88px; top: 4px; width: 80px; height: 56px; background: #a9d6d1; border-radius: 4px;"></span>
+          <span style="position: absolute; left: 4px; top: 50px; width: 78px; height: 44px; background: #b7c7ef; border-radius: 4px;"></span>
+          <span style="position: absolute; left: 88px; top: 66px; width: 80px; height: 38px; background: #ecc9a5; border-radius: 4px;"></span>
+          <span style="position: absolute; left: 0; top: 0; right: 0; bottom: 4px; border: 2px solid #0a4a85; border-radius: 6px;"></span>
+        </div>
+      </div>
+
+      <p class="small" style="position: absolute; left: 84px; bottom: 30px; background: #fff; border: 1px solid #dfe2ec; border-radius: 10px; padding: 8px 12px;">Arraste para percorrer · Tab passa pelas competências na ordem do plano</p>
+    </div>
+
+    <aside style="width: 340px; flex: none; background: #fff; border-left: 1px solid #dfe2ec; padding: 22px 22px; display: flex; flex-direction: column; gap: 16px;" aria-label="Competência selecionada">
+      <span class="chip" style="align-self: flex-start; background: #e8eefb; color: #2449ad;">Avaliação</span>
+      <h2 class="h2">4.1 Estratégias de avaliação</h2>
+      <p style="font-size: 14.5px; color: #3d445c;">Usa tecnologias digitais na avaliação formativa e somativa, diversificando formatos e abordagens.</p>
+      <ol class="scale" aria-label="Escala desta competência">
+        <li class="past">A1</li>
+        <li class="here">A2</li>
+        <li>B1</li>
+        <li>B2</li>
+        <li>C1</li>
+        <li>C2</li>
+      </ol>
+      <div class="sep"></div>
+      <h3 class="h3">O que você já deixou aqui</h3>
+      <ul class="col" style="gap: 10px; font-size: 14px;">
+        <li><b>Plano de aula da unidade 3</b><br><span class="small">Evidência sua · 9 out</span></li>
+        <li><b>Oficina de rubricas digitais</b><br><span class="small">Atividade em Avaliação com tecnologias digitais · 2 out</span></li>
+      </ul>
+      <div class="sep"></div>
+      <h3 class="h3">Por onde seguir</h3>
+      <p style="font-size: 14px; color: #3d445c;">O módulo 3 de <a href="#">Avaliação com tecnologias digitais</a> traz a próxima prática ligada a esta competência.</p>
+      <h3 class="h3">Ligada a</h3>
+      <div class="row" style="flex-wrap: wrap; gap: 8px;">
+        <a class="chip ok" href="#" style="text-decoration: none;">3.1 Ensino</a>
+        <a class="chip warm" href="#" style="text-decoration: none;">4.3 Feedback e planificação</a>
+        <a class="chip line" href="#" style="text-decoration: none;">3.3 Aprendizagem colaborativa</a>
+      </div>
+      <span class="grow"></span>
+      <a class="btn primary" href="BCompetencia.dc.html">Abrir a competência</a>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1240}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
