@@ -259,10 +259,11 @@ final class stylesheet_markup_contract_test extends \basic_testcase {
         $root = $this->plugin_root();
         $sources = array_values($this->templates());
         $paths = glob($root . '/*.php') ?: [];
-        foreach (['amd/src', 'classes', 'db'] as $relative) {
+        // The canvas of the hub v2 writes its classes from js/esm/src (TypeScript and JSX).
+        foreach (['amd/src', 'classes', 'db', 'js/esm/src'] as $relative) {
             $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root . '/' . $relative));
             foreach ($iterator as $file) {
-                if ($file->isFile() && in_array($file->getExtension(), ['js', 'php'], true)) {
+                if ($file->isFile() && in_array($file->getExtension(), ['js', 'php', 'ts', 'tsx'], true)) {
                     $paths[] = $file->getPathname();
                 }
             }

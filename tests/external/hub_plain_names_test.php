@@ -622,7 +622,9 @@ final class hub_plain_names_test extends \advanced_testcase {
                 '/getString\(\'central_related_title\', \'local_dimensions\', escapeHtml\(opts\.competencyname\)\)/',
             ],
             'structure' => [
-                '/const name = escapeHtml\(row\.dataset\.name \|\| \'\'\);\s*const \[title, question\]/',
+                '/const name = escapeHtml\(row\.dataset\.name \|\| \'\'\);\s*const id = Number/',
+                '/DeleteCheck\.confirmBody\(name, answer\)/',
+                '/showDeleteBlocked\(name, answer\)/',
                 '/getString\(\'competencycannotbedeleted\', \'tool_lp\', name\)/',
                 '/label \+ \' — \' \+ escapeHtml\(row\.dataset\.name \|\| \'\'\)/',
             ],

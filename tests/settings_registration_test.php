@@ -49,7 +49,7 @@ final class settings_registration_test extends advanced_testcase {
     }
 
     /**
-     * A system-level competency manager without site configuration reaches the hub, and only the hub.
+     * A system-level competency manager without site configuration reaches both hubs, and nothing else.
      *
      * @return void
      */
@@ -66,6 +66,10 @@ final class settings_registration_test extends advanced_testcase {
         $hub = $this->locate('local_dimensions_central');
         $this->assertInstanceOf(admin_externalpage::class, $hub);
         $this->assertTrue($hub->check_access());
+        $hubv2 = $this->locate('local_dimensions_centralv2');
+        $this->assertInstanceOf(admin_externalpage::class, $hubv2);
+        $this->assertTrue($hubv2->check_access());
+        $this->assertStringEndsWith('/local/dimensions/hubv2.php', $hubv2->url->out(false));
 
         $this->assertNull($this->locate('local_dimensions_settings'));
         $this->assertNull($this->locate('local_dimensions_customfield'));
@@ -87,6 +91,9 @@ final class settings_registration_test extends advanced_testcase {
         $hub = $this->locate('local_dimensions_central');
         $this->assertInstanceOf(admin_externalpage::class, $hub);
         $this->assertFalse($hub->check_access());
+        $hubv2 = $this->locate('local_dimensions_centralv2');
+        $this->assertInstanceOf(admin_externalpage::class, $hubv2);
+        $this->assertFalse($hubv2->check_access());
     }
 
     /**
@@ -99,7 +106,12 @@ final class settings_registration_test extends advanced_testcase {
         $this->setAdminUser();
 
         set_config('enabled', 1, 'core_competency');
-        $pages = ['local_dimensions_central', 'local_dimensions_customfield', 'local_dimensions_customfield_template'];
+        $pages = [
+            'local_dimensions_central',
+            'local_dimensions_centralv2',
+            'local_dimensions_customfield',
+            'local_dimensions_customfield_template',
+        ];
         foreach ($pages as $section) {
             $this->assertInstanceOf(admin_externalpage::class, $this->locate($section), $section);
         }
@@ -107,6 +119,7 @@ final class settings_registration_test extends advanced_testcase {
 
         set_config('enabled', 0, 'core_competency');
         $this->assertNull($this->locate('local_dimensions_central'));
+        $this->assertNull($this->locate('local_dimensions_centralv2'));
         $this->assertNull($this->locate('local_dimensions_settings'));
     }
 }

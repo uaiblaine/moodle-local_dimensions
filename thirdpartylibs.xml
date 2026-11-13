@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+    React Flow ships as one ES module with its dependencies inlined, built as
+    js/esm/vendor/xyflow/README.md describes, and is bundled into js/esm/build/bundle.js.
+    xyflow.js SHA-384: sha384-2vqnKInMGDLRpn14h3j3MSobFiHjnL1OHNNsOByyv20box/Kr5vWSKYhrGGNTYwr
+-->
+<libraries>
+    <library>
+        <location>js/esm/vendor/xyflow</location>
+        <name>React Flow (@xyflow/react)</name>
+        <description>Node-based canvas for React: the Competency hub v2 draws a framework's tree with it. Bundled with @xyflow/system 0.0.84, zustand 4.5.7, classcat, the d3 zoom, drag and selection modules and use-sync-external-store.</description>
+        <version>12.12.1</version>
+        <license>MIT</license>
+        <repository>https://github.com/xyflow/xyflow</repository>
+        <copyrights>
+            <copyright>2019-2025 webkid GmbH</copyright>
+        </copyrights>
+        <customised/>
+    </library>
+</libraries>
