@@ -84,7 +84,28 @@ final class marketplace_readiness_test extends \basic_testcase {
     }
 
     /**
-     * Every shipped file under the given directories with one of the extensions.
+     * The paths thirdpartylibs.xml declares, relative to the root.
+     *
+     * Declared third-party code ships as its authors wrote it, without this plugin's boilerplate,
+     * which the directory's guidelines accept.
+     *
+     * @return array List of paths, files or directories, without a trailing slash.
+     */
+    private function thirdparty_locations(): array {
+        $file = $this->root() . '/thirdpartylibs.xml';
+        if (!is_readable($file)) {
+            return [];
+        }
+        $locations = [];
+        foreach (simplexml_load_file($file)->library as $library) {
+            $locations[] = trim((string) $library->location, '/');
+        }
+        return $locations;
+    }
+
+    /**
+     * Every shipped file under the given directories with one of the extensions, declared third-party
+     * code excluded.
      *
      * @param array $dirs Directories relative to the root ('' is the root itself).
      * @param array $extensions File extensions without the dot.
@@ -105,6 +126,11 @@ final class marketplace_readiness_test extends \basic_testcase {
                 }
                 if (str_starts_with($path, '.') || str_starts_with($path, 'node_modules/')) {
                     continue;
+                }
+                foreach ($this->thirdparty_locations() as $location) {
+                    if ($path === $location || str_starts_with($path, $location . '/')) {
+                        continue 2;
+                    }
                 }
                 $found[] = $path;
             }
@@ -256,6 +282,47 @@ final class marketplace_readiness_test extends \basic_testcase {
     }
 
     /**
+     * The selectors of a selector list, split at its top-level commas only.
+     *
+     * A comma inside parentheses or brackets belongs to one selector: .x:not(.a, .b) is one selector,
+     * as are :is(), :where(), :has() and an attribute value with a comma in it.
+     *
+     * @param string $prelude The selector list of one rule.
+     * @return array The selectors, trimmed.
+     */
+    private function selector_list(string $prelude): array {
+        $selectors = [];
+        $depth = 0;
+        $start = 0;
+        for ($i = 0, $length = strlen($prelude); $i < $length; $i++) {
+            $char = $prelude[$i];
+            if ($char === '(' || $char === '[') {
+                $depth++;
+            } else if ($char === ')' || $char === ']') {
+                $depth--;
+            } else if ($char === ',' && $depth === 0) {
+                $selectors[] = trim(substr($prelude, $start, $i - $start));
+                $start = $i + 1;
+            }
+        }
+        $selectors[] = trim(substr($prelude, $start));
+        return $selectors;
+    }
+
+    /**
+     * The scoping check reads a selector with a comma inside a functional pseudo-class as one
+     * scoped selector, and still reads each selector of a top-level list on its own.
+     *
+     * @return void
+     */
+    public function test_selector_lists_split_at_top_level_commas_only(): void {
+        $scoped = '.path-' . str_replace('_', '-', self::COMPONENT) . ':not(.a, .b) .c';
+        $this->assertSame([$scoped], $this->selector_list($scoped));
+        $this->assertSame([$scoped, '.d:is(.e, [data-f="g,h"])'], $this->selector_list($scoped . ', .d:is(.e, [data-f="g,h"])'));
+        $this->assertSame(['.a', '.b'], $this->selector_list('.a, .b'));
+    }
+
+    /**
      * Every stylesheet selector is scoped to the plugin (CSS styles), since
      * all plugin sheets are concatenated and served on every page.
      *
@@ -291,7 +358,7 @@ final class marketplace_readiness_test extends \basic_testcase {
                 }
                 $start = $offset + strlen($opening);
                 $declarations = substr($css, $start, strpos($css, '}', $start) - $start);
-                foreach (explode(',', $prelude) as $selector) {
+                foreach ($this->selector_list($prelude) as $selector) {
                     $scoped = (bool) preg_match($tokenonly, $declarations);
                     foreach ($prefixes as $prefix) {
                         $scoped = $scoped || str_contains($selector, $prefix);
@@ -308,6 +375,10 @@ final class marketplace_readiness_test extends \basic_testcase {
      * Every shipped source file carries the GPL boilerplate and a copyright
      * line (Boilerplate, Copyrights).
      *
+     * A Mustache template carries the whole block core's templates open with and no copyright line,
+     * as core's do: a directory reviewer found templates whose comment held only the block's first
+     * line, or no block at all.
+     *
      * @return void
      */
     public function test_source_files_carry_the_boilerplate(): void {
@@ -321,6 +392,22 @@ final class marketplace_readiness_test extends \basic_testcase {
             $this->assertStringContainsString('GNU General Public License', $source, "$path lacks the boilerplate.");
             if (!str_starts_with($path, 'lang/')) {
                 $this->assertStringContainsString('@copyright', $source, "$path lacks @copyright.");
+            }
+        }
+
+        // Whitespace is collapsed first, so a block wrapped or indented differently still matches; the
+        // URLs are left out because core's own templates spell them with http and with https.
+        $block = [
+            'This file is part of Moodle',
+            'Moodle is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License',
+            'either version 3 of the License, or (at your option) any later version.',
+            'WITHOUT ANY WARRANTY',
+            'along with Moodle. If not, see',
+        ];
+        foreach ($this->shipped_files(['templates'], ['mustache']) as $path) {
+            $source = preg_replace('/\s+/', ' ', file_get_contents($this->root() . '/' . $path));
+            foreach ($block as $line) {
+                $this->assertStringContainsString($line, $source, "$path lacks the boilerplate: '$line'.");
             }
         }
     }
