@@ -389,11 +389,12 @@ class calculator {
      *    openable, and a stealth activity ("Make available but don't show on course page") is
      *    openable but not listed. Both are work the learner owes; core's is_visible_on_course_page()
      *    alone would drop the stealth one.
-     * 3. It is theirs to do, now or later. filter_user_list() applies only the conditions that
-     *    are permanent for a person - group, grouping, profile (see
+     * 3. It is theirs to do, now or later. Only the conditions that are permanent for a person
+     *    apply - group, grouping, profile (see
      *    {@see \core_availability\tree_node::is_applied_to_user_lists()}) - so a date-locked
      *    activity still counts while one restricted to another group does not, which would
-     *    otherwise make 100% unreachable.
+     *    otherwise make 100% unreachable. {@see local\learner_restrictions} answers what core's
+     *    filter_user_list() answers for this one learner, without listing the group's members.
      *
      * The explicit $cm->visible test also evens out a core change: for a teacher-hidden activity
      * that also shows a restriction, is_visible_on_course_page() is true on 4.5 and false once
@@ -417,9 +418,7 @@ class calculator {
             return false;
         }
 
-        $users = [$userid => (object) ['id' => $userid]];
-
-        return !empty((new \core_availability\info_module($cm))->filter_user_list($users));
+        return local\learner_restrictions::passes($cm, $userid);
     }
 
     /**
