@@ -358,4 +358,26 @@ final class progress_card_body_test extends \advanced_testcase {
         $locked = $this->render_locked([]);
         $this->assertStringContainsString('local-dimensions-state-pill', $locked);
     }
+
+    /**
+     * An untracked owner's open card says progress is for learners only, not that completion is off.
+     *
+     * Change that must make it fail: drop the tracked branch of the template's disabled message.
+     *
+     * @return void
+     */
+    public function test_an_untracked_card_says_progress_is_for_learners(): void {
+        global $OUTPUT;
+        $this->resetAfterTest();
+        $base = ['courseid' => 42, 'enabled' => false, 'locked' => false, 'sections' => [], 'cardmode' => 'timeline',
+            'activity' => false, 'section' => false, 'state' => $this->state('none')];
+
+        $untracked = $OUTPUT->render_from_template('local_dimensions/progress_card_body', $base + ['tracked' => false]);
+        $this->assertStringContainsString(get_string('progress_learners_only', 'local_dimensions'), $untracked);
+        $this->assertStringNotContainsString(get_string('completion_disabled', 'local_dimensions'), $untracked);
+
+        $disabled = $OUTPUT->render_from_template('local_dimensions/progress_card_body', $base + ['tracked' => true]);
+        $this->assertStringContainsString(get_string('completion_disabled', 'local_dimensions'), $disabled);
+        $this->assertStringNotContainsString(get_string('progress_learners_only', 'local_dimensions'), $disabled);
+    }
 }

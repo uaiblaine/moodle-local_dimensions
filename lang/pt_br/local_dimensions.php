@@ -806,6 +806,7 @@ $string['privacy:metadata:preference:learner_hero'] = 'Em quais páginas de plan
 $string['privacy:metadata:preference:learner_view'] = 'Como você escolheu visualizar seu plano de aprendizagem e o acompanhamento de suas competências: a ordenação, o filtro de conclusão de cada um, se você restringiu a lista aos seus favoritos, o layout em lista ou grade e se você ampliou a janela de detalhe da competência. Guardado para que a tela fique igual quando você voltar.';
 $string['proficiency'] = 'Proficiência';
 $string['proficient'] = 'Proficiente';
+$string['progress_learners_only'] = 'O progresso é acompanhado apenas para estudantes.';
 $string['progress_tab'] = 'Progresso';
 $string['rating'] = 'Avaliação';
 $string['rating_label'] = 'Avaliação';

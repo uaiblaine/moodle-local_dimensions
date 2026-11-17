@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **The tracker counts progress only for learners, as the plan overview does** (version
+  `2026100526`). Core records completion only for its tracked users: those enrolled with
+  `moodle/course:isincompletionreports`, which by default only the student role holds. The plan
+  overview's progress bar already asked `completion_info::is_tracked_user()` and drew nothing for
+  a teacher or manager. The tracker's section rings did not, and drew a card of zeros for a plan
+  owner enrolled in such a role. The tracker now asks the same question. An untracked owner's card
+  says "Progress is tracked for learners only." where a course without completion says
+  "Completion disabled.", and `local_dimensions_get_course_progress` returns a new `tracked`
+  field. An owner who is not enrolled keeps the locked card. A manager enrolled as a student is
+  tracked, and, holding `moodle/course:ignoreavailabilityrestrictions`, has every restricted
+  activity in their workload, as core counts it.
+
 - **The Competency hub's "Connection lost" toast** appears again for a dropped connection, a
   timeout and a 502 or 504 from a load balancer. Moodle 5.3's core/ajax is fetch-based and rejects
   those with error objects (fetch's TypeError, an AbortError, `Error('HTTP n: ...')`), never the

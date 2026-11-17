@@ -806,6 +806,7 @@ $string['privacy:metadata:preference:learner_hero'] = 'Which of your learning pl
 $string['privacy:metadata:preference:learner_view'] = 'How you chose to view your learning plan and its competency trackers: the sort order, the completion filter of each, whether you narrowed the list to your favourites, the list or grid layout, and whether you enlarged the competency detail window. Stored so the view looks the same when you return.';
 $string['proficiency'] = 'Proficiency';
 $string['proficient'] = 'Proficient';
+$string['progress_learners_only'] = 'Progress is tracked for learners only.';
 $string['progress_tab'] = 'Progress';
 $string['rating'] = 'Rating';
 $string['rating_label'] = 'Rating';
