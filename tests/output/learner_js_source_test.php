@@ -358,7 +358,7 @@ final class learner_js_source_test extends \basic_testcase {
             'settings = settings || {};',
             'var planid = settings.planid || 0;',
             'var competencyid = settings.competencyid || 0;',
-            'function loadCourseWithSoftTimeout(courseid) {',
+            'function progressRequest(ids) {',
             'function loadAllCourses() {',
         ]);
         // Declared once, and never reassigned.
@@ -367,8 +367,8 @@ final class learner_js_source_test extends \basic_testcase {
 
         $this->assertMatchesRegularExpression(
             "/methodname: 'local_dimensions_get_course_progress',\s*"
-                . "args: \{courseids: \[courseid\], planid: planid, competencyid: competencyid\}/",
-            $this->function_body($source, 'loadCourseWithSoftTimeout')
+                . "args: \{courseids: ids, planid: planid, competencyid: competencyid\}/",
+            $this->function_body($source, 'progressRequest')
         );
         $this->assertMatchesRegularExpression(
             "/methodname: 'local_dimensions_get_courses_completion_status',\s*"
@@ -378,6 +378,60 @@ final class learner_js_source_test extends \basic_testcase {
         // Each service is called from that one place only, so no call goes out without the plan.
         $this->assertSame(1, substr_count($source, "'local_dimensions_get_course_progress'"));
         $this->assertSame(1, substr_count($source, "'local_dimensions_get_courses_completion_status'"));
+    }
+
+    /**
+     * The tracker asks for its cards in batches, the status call sharing the first batch's request.
+     *
+     * One request per course cost a round trip per card, one after another (40 to 72 ms each on the
+     * 2026-11-17 fixture). The status call goes first in the shared request and every card is drawn
+     * only after it settles, because a card reads the data-completed the status call writes.
+     *
+     * Changes that must make it fail: send a progress call per course (courseids: [courseid]); send the
+     * status call in a request of its own; draw a batch before the status call settles; drop the cap.
+     *
+     * @return void
+     */
+    public function test_tracker_cards_load_in_batches_after_the_status(): void {
+        $source = $this->code($this->js_source('competency_view'));
+
+        $this->assertStringContainsString('var PROGRESS_BATCH = 20;', $source);
+        $load = $this->function_body($source, 'loadAllCourses');
+        $this->assertMatchesRegularExpression(
+            '/batches\.push\(courseIds\.slice\(i, i \+ PROGRESS_BATCH\)\);/',
+            $load
+        );
+        $this->assertMatchesRegularExpression(
+            "/var first = Ajax\.call\(\[\{\s*methodname: 'local_dimensions_get_courses_completion_status',"
+                . "[^\]]*\}, progressRequest\(batches\[0\]\)\]\);/",
+            $load
+        );
+        $this->assert_in_order($load, [
+            'var statusSettled = Promise.resolve(first[0]).then(applyStatuses)',
+            'return statusSettled.then(function() {',
+            'return drawProgress(ids, calls[k]);',
+            "grid.removeAttribute('aria-busy');",
+        ]);
+        // No request names a single course except a card's own retry.
+        $this->assertStringNotContainsString('courseids: [', $source);
+        $this->assertSame(1, substr_count($source, 'loadCourses([row.courseid]);'));
+        $this->assertSame(1, substr_count($source, 'loadCourses([courseid]);'));
+    }
+
+    /**
+     * A progress call that fails, or leaves a course out, gives each of its cards the retry state.
+     *
+     * Changes that must make it fail: drop the catch of drawProgress; drop the check for unanswered courses.
+     *
+     * @return void
+     */
+    public function test_a_failed_batch_leaves_every_card_a_retry(): void {
+        $source = $this->code($this->js_source('competency_view'));
+        $draw = $this->function_body($source, 'drawProgress');
+
+        $this->assertStringContainsString('return answered.indexOf(courseid) === -1;', $draw);
+        $this->assertStringContainsString('}).forEach(failed);', $draw);
+        $this->assertMatchesRegularExpression('/\}\)\.catch\(function\(\) \{\s*ids\.forEach\(failed\);\s*\}\);/', $draw);
     }
 
     /**
@@ -472,6 +526,24 @@ final class learner_js_source_test extends \basic_testcase {
 
         $tracker = $this->code($this->js_source('competency_view'));
         $this->assertDoesNotMatchRegularExpression('/state\.opens\b/', $tracker);
+    }
+
+    /**
+     * The tab strip reads a millisecond duration by its suffix, never by where "ms" first occurs.
+     *
+     * Code scanning alert 6 (js/incorrect-suffix-check): indexOf('ms') === length - 2 holds for any
+     * one-character value, both sides being -1, so a theme setting the duration custom property to "s"
+     * made the scroll duration NaN.
+     *
+     * Change that must make it fail: put the indexOf comparison back.
+     *
+     * @return void
+     */
+    public function test_filter_tabs_read_the_ms_suffix_at_the_end(): void {
+        $body = $this->function_body($this->code($this->js_source('filter_tabs_nav')), 'parseDurationMs');
+
+        $this->assertStringContainsString("if (value.slice(-2) === 'ms') {", $body);
+        $this->assertStringNotContainsString('indexOf', $body);
     }
 
     /**
