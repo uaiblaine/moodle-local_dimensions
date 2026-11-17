@@ -26,7 +26,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import $ from 'jquery';
 import {notifyError} from 'local_dimensions/central/errors';
 import {getString} from 'core/str';
 import {enhance} from 'core/form-autocomplete';
@@ -389,15 +388,17 @@ export const init = () => {
     }
 
     // Tab switches keep the counter and option labels in step with the active mode. Bootstrap 5
-    // fires its tab events both natively and as jQuery events, so this jQuery listener sees them.
-    $(SELECTORS.tabToggle).on('shown.bs.tab', () => {
-        bar.dataset.activemode = activeMode();
-        renderCounter(bar);
-        renderOptionLabels(bar);
-        const active = document.querySelector(SELECTORS.activePane);
-        if (active) {
-            Preferences.saveNav({tab: active.dataset.tabContent});
-        }
+    // dispatches `shown.bs.tab` natively, as core/dynamic_tabs binds it.
+    document.querySelectorAll(SELECTORS.tabToggle).forEach((tabToggle) => {
+        tabToggle.addEventListener('shown.bs.tab', () => {
+            bar.dataset.activemode = activeMode();
+            renderCounter(bar);
+            renderOptionLabels(bar);
+            const active = document.querySelector(SELECTORS.activePane);
+            if (active) {
+                Preferences.saveNav({tab: active.dataset.tabContent});
+            }
+        });
     });
 
     /*

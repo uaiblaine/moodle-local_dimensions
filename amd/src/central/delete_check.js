@@ -28,7 +28,32 @@
 import Ajax from 'core/ajax';
 import {getString} from 'core/str';
 
-const COMPONENT = 'local_dimensions';
+/*
+ * The strings of each blocking reason, spelled out so tests/lang_string_references_test.php can see
+ * every key: `plural` takes the count, `one` is for exactly 1, `some` is the form without a number.
+ */
+const REASONS = {
+    templates: {
+        plural: {key: 'hubv2_delete_blocked_templates', component: 'local_dimensions'},
+        one: {key: 'hubv2_delete_blocked_templates_one', component: 'local_dimensions'},
+        some: {key: 'hubv2_delete_blocked_templates_some', component: 'local_dimensions'},
+    },
+    plans: {
+        plural: {key: 'hubv2_delete_blocked_plans', component: 'local_dimensions'},
+        one: {key: 'hubv2_delete_blocked_plans_one', component: 'local_dimensions'},
+        some: {key: 'hubv2_delete_blocked_plans_some', component: 'local_dimensions'},
+    },
+    courses: {
+        plural: {key: 'hubv2_delete_blocked_courses', component: 'local_dimensions'},
+        one: {key: 'hubv2_delete_blocked_courses_one', component: 'local_dimensions'},
+        some: {key: 'hubv2_delete_blocked_courses_some', component: 'local_dimensions'},
+    },
+    users: {
+        plural: {key: 'hubv2_delete_blocked_users', component: 'local_dimensions'},
+        one: {key: 'hubv2_delete_blocked_users_one', component: 'local_dimensions'},
+        some: {key: 'hubv2_delete_blocked_users_some', component: 'local_dimensions'},
+    },
+};
 
 /**
  * Ask the server what deleting the competency and its descendants involves.
@@ -40,15 +65,6 @@ export const check = (competencyid) =>
     Ajax.call([{methodname: 'local_dimensions_competency_delete_check', args: {competencyid}}])[0];
 
 /**
- * The string that fits a count: `<key>_one` for exactly 1.
- *
- * @param {string} key The plural string's key.
- * @param {number} count The number.
- * @return {Promise<string>} The string.
- */
-const counted = (key, count) => (count === 1 ? getString(`${key}_one`, COMPONENT) : getString(key, COMPONENT, count));
-
-/**
  * The body of the dialogue saying why core will refuse the deletion.
  *
  * @param {string} name The competency's name, already escaped for HTML.
@@ -56,16 +72,21 @@ const counted = (key, count) => (count === 1 ? getString(`${key}_one`, COMPONENT
  * @return {Promise<string>} HTML: an introduction, one list item per reason, and what to do about each kind.
  */
 export const blockedBody = async(name, answer) => {
-    let intro = getString('hubv2_delete_blocked_intro', COMPONENT, name);
+    let intro = getString('hubv2_delete_blocked_intro', 'local_dimensions', name);
     if (answer.descendants === 1) {
-        intro = getString('hubv2_delete_blocked_intro_tree_one', COMPONENT, {name});
+        intro = getString('hubv2_delete_blocked_intro_tree_one', 'local_dimensions', {name});
     } else if (answer.descendants > 1) {
-        intro = getString('hubv2_delete_blocked_intro_tree', COMPONENT, {name, count: answer.descendants});
+        intro = getString('hubv2_delete_blocked_intro_tree', 'local_dimensions', {name, count: answer.descendants});
     }
     // Counts are exact only for a site-level manager; otherwise say which reasons apply, without a number.
-    const reason = (kind, count) => (answer.exact
-        ? counted(`hubv2_delete_blocked_${kind}`, count)
-        : getString(`hubv2_delete_blocked_${kind}_some`, COMPONENT));
+    const reason = (kind, count) => {
+        const strings = REASONS[kind];
+        if (!answer.exact) {
+            return getString(strings.some.key, strings.some.component);
+        }
+        const {key, component} = count === 1 ? strings.one : strings.plural;
+        return getString(key, component, count);
+    };
     const links = answer.templates > 0 || answer.plans > 0 || answer.courses > 0 || answer.badges;
     const [first, reasons, advice] = await Promise.all([
         intro,
@@ -74,12 +95,12 @@ export const blockedBody = async(name, answer) => {
             answer.plans > 0 ? reason('plans', answer.plans) : '',
             answer.courses > 0 ? reason('courses', answer.courses) : '',
             answer.users > 0 ? reason('users', answer.users) : '',
-            answer.badges ? getString('hubv2_delete_blocked_badges', COMPONENT) : '',
+            answer.badges ? getString('hubv2_delete_blocked_badges', 'local_dimensions') : '',
         ]),
         // What to do: links can be removed, a user's record cannot.
         Promise.all([
-            links ? getString('hubv2_delete_blocked_closing_links', COMPONENT) : '',
-            answer.users > 0 ? getString('hubv2_delete_blocked_closing_users', COMPONENT) : '',
+            links ? getString('hubv2_delete_blocked_closing_links', 'local_dimensions') : '',
+            answer.users > 0 ? getString('hubv2_delete_blocked_closing_users', 'local_dimensions') : '',
         ]),
     ]);
     const items = reasons.filter((reason) => reason !== '').map((reason) => `<li>${reason}</li>`).join('');
@@ -95,11 +116,11 @@ export const blockedBody = async(name, answer) => {
  * @return {Promise<string>} HTML.
  */
 export const confirmBody = async(name, answer) => {
-    let question = getString('hubv2_delete_confirm_leaf', COMPONENT, name);
+    let question = getString('hubv2_delete_confirm_leaf', 'local_dimensions', name);
     if (answer.descendants === 1) {
-        question = getString('hubv2_delete_confirm_tree_one', COMPONENT, {name});
+        question = getString('hubv2_delete_confirm_tree_one', 'local_dimensions', {name});
     } else if (answer.descendants > 1) {
-        question = getString('hubv2_delete_confirm_tree', COMPONENT, {
+        question = getString('hubv2_delete_confirm_tree', 'local_dimensions', {
             name,
             count: answer.descendants,
             total: answer.descendants + 1,
@@ -108,7 +129,7 @@ export const confirmBody = async(name, answer) => {
     // Core resets the parent's rule whatever is deleted under it, a leaf included.
     const [text, rule] = await Promise.all([
         question,
-        answer.parenthasrule ? getString('hubv2_delete_parentrule', COMPONENT) : '',
+        answer.parenthasrule ? getString('hubv2_delete_parentrule', 'local_dimensions') : '',
     ]);
     return `<p>${text}</p>${rule ? `<p>${rule}</p>` : ''}`;
 };
