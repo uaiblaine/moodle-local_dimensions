@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed: the workload follows core's progress rule, held to it by an oracle and a fingerprint
+
+Version `2026100528`.
+
+- **The activities the bar and the rings count are core's.** `calculator::counts_towards_progress()`
+  now asks `cm_info::is_visible_on_course_page()`, as `completion_info::get_user_activities_with_completion()`
+  does, where it asked "listed on the course page, or openable now". A stealth activity ("Make
+  available but don't show on course page") no longer counts. A hidden activity counts for a
+  learner who may see it (`moodle/course:viewhiddenactivities`), as core counts it. Moodle's own
+  course progress (the dashboard's *My courses*, block_compass) and the tracker now give the same
+  number for the same learner.
+- **An oracle holds the two equal.** `tests/local/core_parity_test.php` compares, for every learner
+  of a course that carries each case of core's rule, the set of counted activities and the
+  percentage. It covers 18 restriction sets, groups of every visibility, groupings, a module
+  override, separate groups, hidden, stealth and deleted activities, a restricted section and a
+  subsection, in five scenarios. Ported from block_compass's ADR-027.
+- **A fingerprint says when core moves the code the rule mirrors.** `local\core_fingerprint`,
+  `tests/fixtures/core_parity.json` (23 core functions, audited against v5.3.1, among them
+  `cm_info::update_user_visible()`, which MDL-66780 changed), `tests/local/core_fingerprint_test.php`
+  and `cli/core_parity.php`. `docs/core-parity.md` holds the audit procedure and its log. The fleet's
+  weekly look upstream covers this plugin.
+
 ### Improvements from the comment audit
 
 Version `2026100527` (AMD build).

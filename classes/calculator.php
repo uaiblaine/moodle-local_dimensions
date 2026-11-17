@@ -389,15 +389,16 @@ class calculator {
     /**
      * Whether an activity belongs in this learner's required workload.
      *
-     * The single predicate for the course bar and the section rings, which share a card. An
+     * The single predicate for the course bar and the section rings, which share a card. It is core's
+     * rule, {@see \completion_info::get_user_activities_with_completion()}, which Moodle's own course
+     * progress counts by; tests/local/core_parity_test.php holds the two equal for every learner of a
+     * course carrying each of its cases, and docs/core-parity.md says what to do when core moves it. An
      * activity counts when all three hold:
      *
-     * 1. Completion is tracked on it.
-     * 2. The learner can see it: $cm->visible, and either listed on the course page or openable
-     *    now. Both halves are needed: a date-restricted activity shown greyed is listed but not
-     *    openable, and a stealth activity ("Make available but don't show on course page") is
-     *    openable but not listed. Both are work the learner owes; core's is_visible_on_course_page()
-     *    alone would drop the stealth one.
+     * 1. Completion is tracked on it, and it is not being deleted.
+     * 2. It is shown to the learner on the course page ({@see \cm_info::is_visible_on_course_page()}).
+     *    A date-restricted activity shown greyed counts; a hidden one does not, nor a stealth one
+     *    ("Make available but don't show on course page"), which core leaves out too.
      * 3. It is theirs to do, now or later. Only the conditions that are permanent for a person
      *    apply - group, grouping, profile (see
      *    {@see \core_availability\tree_node::is_applied_to_user_lists()}) - so a date-locked
@@ -405,10 +406,8 @@ class calculator {
      *    otherwise make 100% unreachable. {@see local\learner_restrictions} answers what core's
      *    filter_user_list() answers for this one learner, without listing the group's members.
      *
-     * The explicit $cm->visible test also evens out a core change: for a teacher-hidden activity
-     * that also shows a restriction, is_visible_on_course_page() is true on 4.5 and false once
-     * MDL-66780 is in (5.1.5, 5.2.1). deletioninprogress is tested explicitly because
-     * is_visible_on_course_page() returns null, not false, for such a module.
+     * is_visible_on_course_page() is the owner's: the modinfo is built for the learner the card
+     * describes, so a viewer's capabilities never decide it.
      *
      * @param \cm_info $cm The activity to judge.
      * @param int $userid The learner whose visibility and restrictions are read.
@@ -423,7 +422,7 @@ class calculator {
             return false;
         }
 
-        if (!$cm->visible || !($cm->is_visible_on_course_page() || $cm->uservisible)) {
+        if (!$cm->is_visible_on_course_page()) {
             return false;
         }
 
