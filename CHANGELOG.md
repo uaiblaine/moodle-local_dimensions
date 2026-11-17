@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Plugins directory readiness
+
+Version `2026100523`.
+
+- `tests/marketplace_readiness_test.php` is the fleet template again, with this plugin's two
+  documented departures (the `styles_<theme>.css` sheets and token-only root rules). It now splits
+  a selector list at top-level commas only, skips the paths `thirdpartylibs.xml` declares, and
+  checks that every Mustache template carries core's whole GPL block.
+- Sentence case in `lang/en`: *Learn more*, *Submit evidence*, *Full plan overview* and
+  *Competency tracker* in the strings that still capitalised them; `lang/pt_br` in step.
+- The collapsible description's custom properties carry the plugin's prefix:
+  `--local-dimensions-collapsible-max-vh` and `--local-dimensions-collapsible-fade-color`.
+- README: the version table lists each branch's latest release instead of version numbers that
+  had gone stale; "Data stored" names the browser storage (two pane widths in `localStorage`,
+  the *Return to plan* button's position in `sessionStorage`); the documentation heading is in
+  English only.
+
 ### Competency hub v2: the tree as a canvas of nodes (preview)
 
 A second view of a framework's competency tree, beside the Competency hub it does not replace.
