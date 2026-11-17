@@ -18,7 +18,7 @@
  *
  * Measures every [data-collapsible-description] element on the page (or inside
  * a given root) and shows a toggle button when content exceeds the configured
- * max-height (default 30vh, overridable via the --collapsible-max-vh CSS
+ * max-height (default 30vh, overridable via the --local-dimensions-collapsible-max-vh CSS
  * variable). Reacts to viewport resize and to dynamic content changes via
  * ResizeObserver, so embedded media (videos, H5P, iframes) recalculate the
  * overflow state once they finish loading.

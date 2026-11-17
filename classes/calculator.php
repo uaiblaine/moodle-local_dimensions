@@ -116,9 +116,17 @@ class calculator {
 
             $courseurl = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
 
-            if (!$completion->is_enabled()) {
+            /* Core counts completion only for its tracked users (enrolled with
+               moodle/course:isincompletionreports, a student's capability), and the plan overview's
+               bar asks the same through get_competency_courses::tracks_completion(): an owner
+               enrolled as a teacher or a manager has no progress to show on either view. An owner
+               who is not enrolled keeps the locked card's timeline, which names nothing. */
+            $tracked = !$isenrolled || $completion->is_tracked_user($ownerid);
+
+            if (!$completion->is_enabled() || !$tracked) {
                 return [
                     'enabled' => false,
+                    'tracked' => $tracked,
                     'locked' => $locked,
                     'formatted_start_date' => $formattedstartdate,
                     'state' => $state,
@@ -266,6 +274,7 @@ class calculator {
 
             return [
                 'enabled' => true,
+                'tracked' => true,
                 'locked' => $locked,
                 'formatted_start_date' => $formattedstartdate,
                 'state' => $state,
@@ -380,15 +389,17 @@ class calculator {
     /**
      * Whether an activity belongs in this learner's required workload.
      *
-     * The single predicate for the course bar and the section rings, which share a card. An
+     * The single predicate for the course bar and the section rings, which share a card. It is the rule
+     * Moodle 5.1 and later count course progress by ({@see \completion_info::get_user_activities_with_completion()}),
+     * which core 4.5 does not have: 4.5's own progress counts every activity with completion. An
      * activity counts when all three hold:
      *
-     * 1. Completion is tracked on it.
-     * 2. The learner can see it: $cm->visible, and either listed on the course page or openable
-     *    now. Both halves are needed: a date-restricted activity shown greyed is listed but not
-     *    openable, and a stealth activity ("Make available but don't show on course page") is
-     *    openable but not listed. Both are work the learner owes; core's is_visible_on_course_page()
-     *    alone would drop the stealth one.
+     * 1. Completion is tracked on it, and it is not being deleted.
+     * 2. It is visible ($cm->visible) and shown to the learner on the course page
+     *    ({@see \cm_info::is_visible_on_course_page()}). A date-restricted activity shown greyed counts;
+     *    a hidden one does not, nor a stealth one ("Make available but don't show on course page").
+     *    The explicit $cm->visible test stands for MDL-66780, which 4.5 lacks: there a teacher-hidden
+     *    activity that also shows a restriction is "visible on the course page".
      * 3. It is theirs to do, now or later. Only the conditions that are permanent for a person
      *    apply - group, grouping, profile (see
      *    {@see \core_availability\tree_node::is_applied_to_user_lists()}) - so a date-locked
@@ -396,10 +407,9 @@ class calculator {
      *    otherwise make 100% unreachable. {@see local\learner_restrictions} answers what core's
      *    filter_user_list() answers for this one learner, without listing the group's members.
      *
-     * The explicit $cm->visible test also evens out a core change: for a teacher-hidden activity
-     * that also shows a restriction, is_visible_on_course_page() is true on 4.5 and false once
-     * MDL-66780 is in (5.1.5, 5.2.1). deletioninprogress is tested explicitly because
-     * is_visible_on_course_page() returns null, not false, for such a module.
+     * is_visible_on_course_page() is the owner's: the modinfo is built for the learner the card
+     * describes, so a viewer's capabilities never decide it. docs/core-parity.md says what to do when
+     * core moves the code this rule leans on.
      *
      * @param \cm_info $cm The activity to judge.
      * @param int $userid The learner whose visibility and restrictions are read.
@@ -414,7 +424,7 @@ class calculator {
             return false;
         }
 
-        if (!$cm->visible || !($cm->is_visible_on_course_page() || $cm->uservisible)) {
+        if (!$cm->visible || !$cm->is_visible_on_course_page()) {
             return false;
         }
 
