@@ -265,6 +265,7 @@ final class tracker_cards_scope_test extends \advanced_testcase {
         $this->assertSame([
             'courseid' => $progress['courseid'],
             'enabled' => false,
+            'tracked' => true,
             'cardmode' => \local_dimensions\constants::CARDMODE_TIMELINE,
             'locked' => true,
             'formatted_start_date' => '',

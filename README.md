@@ -20,8 +20,8 @@ no dependency on it and reaches it only through a runtime guard, so it installs 
 exactly as before on a site that does not have it.
 
 
-Documentation / Documentação
------------------------------
+Documentation
+-------------
 
 Full user and administrator documentation is available online in English and Portuguese:
 👉 **[Competency Dimensions Documentation (GitHub Pages)](https://uaiblaine.github.io/moodle-local_dimensions-docs/)**
@@ -290,6 +290,10 @@ The plugin has no database tables of its own (no `db/install.xml`). It keeps:
 - **Events** in the standard log for the hub's administrative decisions (cohort attach and detach,
   links, duplication, cohort roles, bulk enrolment methods, custom field changes). The log store
   keeps and exports them.
+- **Browser storage**, in the user's own browser only and never sent to the site: the widths of
+  the Competency hub's two resizable panes in `localStorage` (`local_dimensions_structure_master_width`,
+  `local_dimensions_plans_master_width`), and the position of the *Return to plan* button in
+  `sessionStorage` (`local_dimensions_fab_pos`), which the browser drops when the tab closes.
 
 What the hub creates through core's APIs belongs to the core component that stores it, whose
 own provider covers it: learning plans (`core_competency`), cohort role assignments
