@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Improvements from the comment audit
+
+Version `2026100527` (AMD build).
+
+- **Removed**: the inert `@media (prefers-color-scheme: dark)` block and
+  `colour_mode::MEDIA_OPTIN_ATTRIBUTE`. This branch serves Moodle 5.3 only, where core resolves the
+  *auto* colour mode itself; `MOODLE_405_STABLE` keeps the block. The hub modal's Bootstrap 4 margin
+  fallback goes too.
+- **Removed**: `calculator::current_user_has_pending_application()`, which had no caller left; call
+  `calculator::has_pending_application($courseid, $userid)`.
+- The course completion service answers the other courses when one course fails with any error, as
+  the progress service already did.
+- The user evidence report's file count reads only the owner's user context, as core stores those
+  files, and can use the files index.
+- The template CSV export checks a framework the viewer cannot read once, not once per competency.
+- The Competency hub's context bar no longer needs jQuery, and its deletion dialogue names every
+  string literally. Smaller tidying: one plan read in the competency summary service, one option
+  splitter for the chip filters, `unaccent` ensured from one place, and no e-mail address in
+  `@copyright` lines.
+
 ### Fixed
 
 - **The tracker counts progress only for learners, as the plan overview does** (version
