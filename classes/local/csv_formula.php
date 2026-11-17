@@ -34,9 +34,8 @@ namespace local_dimensions\local;
  *
  * escape() matches {@see \core\dataformat::escape_spreadsheet_formula()}, which core's
  * csv_export_writer applies to every cell (tool_lpimportcsv's framework exports included).
- * Core's function is not called because it only exists from Moodle 4.5.8, and core has no
- * counterpart to unescape(): this plugin's template and framework CSVs round-trip, so an
- * import must read back exactly what an export wrote.
+ * It is kept here beside unescape(), which core has no counterpart to: this plugin's template
+ * and framework CSVs round-trip, so an import must read back exactly what an export wrote.
  */
 class csv_formula {
     /** @var string[] The characters a spreadsheet reads as the start of a formula. */

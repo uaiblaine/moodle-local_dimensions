@@ -111,9 +111,9 @@ class chip_filters {
      * Resolve, once per call, who may see each named course custom field.
      *
      * @param string[] $shortnames
-     * @return array Per shortname: true when
-     *         every viewer may see it, the field when it needs core's per-course check
-     *         (visible to teachers), false when nobody may. Unknown shortnames are absent.
+     * @return array Per shortname: true when every viewer may see it, the field controller when it
+     *         needs core's per-course check (visible to teachers), false when nobody may.
+     *         Unknown shortnames are absent, which pick_visible() reads as not visible.
      */
     protected static function course_field_viewers(array $shortnames): array {
         $out = [];

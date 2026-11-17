@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **The Competency hub's "Connection lost" toast** appears again for a dropped connection, a
+  timeout and a 502 or 504 from a load balancer. Moodle 5.3's core/ajax is fetch-based and rejects
+  those with error objects (fetch's TypeError, an AbortError, `Error('HTTP n: ...')`), never the
+  bare string the hub looked for, so they opened core's technical exception dialogue unless the
+  browser reported itself offline. Web-service exceptions and script faults still get the dialogue.
+  Version 2026100525 (AMD build).
+- **Learning plan reports: a completed plan's competency count, proficient count and progress**
+  come from the competencies archived at completion, as core and the plugin's own *Learning plan
+  competencies* source list them. A completed plan based on a template counted the template's
+  current competencies, so editing the template afterwards changed the numbers of plans already
+  completed.
+
+### Code comments reviewed
+
+- The comments of the production code changed since the previous review (classes, AMD modules,
+  templates, `db/`, the top-level pages and `styles.css`) say the non-obvious why, the contract and
+  the edge case, and no longer carry history or development-environment detail; claims that
+  contradicted the code were corrected. No behaviour changes. The AMD build is regenerated because
+  its source maps carry the comments (version 2026100524).
+
 ### Plugins directory readiness
 
 Version `2026100523`.

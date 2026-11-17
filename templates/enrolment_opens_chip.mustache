@@ -18,8 +18,9 @@
     @template local_dimensions/enrolment_opens_chip
 
     The tracker card's "Enrolment opens on" chip, a partial of progress_card_body: the day the
-    enrolment window refusing a none, suspended or ended card opens. Printed whatever showlockeddate
-    says; nothing when the state names no such day.
+    enrolment window opens for a card in the none, suspended or ended state, which has no way in
+    now (enrolment_state::opening_date()). Printed whatever showlockeddate says; nothing when the
+    state names no such day.
 
     Context variables required:
     * state (object) - The state area, from the course progress service; only openslabel is read,

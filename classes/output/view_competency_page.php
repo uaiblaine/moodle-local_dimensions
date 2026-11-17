@@ -197,9 +197,8 @@ class view_competency_page implements renderable, templatable {
             $chipgroups = array_merge($chipgroups, $coursegroups);
         }
 
-        /* The filter line's scope opens on the learner's open work ("To do") unless they chose "All"
-           on an earlier visit, and the whole stored state goes to the client, which writes the
-           preference back entire: a key this page left out would be reset by its next save. */
+        /* The filter line's scope opens on "To do" unless the learner stored "All". The whole stored
+           state goes to the client, which writes it back entire; see learner_view. */
         $view = \local_dimensions\local\learner_view::resolve();
         $data['scope_is_incomplete'] = ($view['trackerfilter'] === 'incomplete');
         $data['scope_is_all'] = ($view['trackerfilter'] === 'all');

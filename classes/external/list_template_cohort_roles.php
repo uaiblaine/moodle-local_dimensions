@@ -156,7 +156,8 @@ class list_template_cohort_roles extends external_api {
     /**
      * How many of each cohort's members already hold each role tool_cohortroles assigned, in one query.
      *
-     * A member in two of the cohorts counts towards both, as tool_cohortroles assigns per cohort.
+     * A member in two of the cohorts counts towards both: a tool_cohortroles assignment names one cohort,
+     * while the role it grants lives in the member's user context, which both cohorts' rows then see.
      *
      * @param array $cohortids The cohort ids.
      * @return array Map of "userid_roleid_cohortid" to the number of member user contexts holding the role.

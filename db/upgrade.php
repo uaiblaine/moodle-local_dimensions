@@ -29,17 +29,13 @@
  * @return bool
  */
 function xmldb_local_dimensions_upgrade($oldversion) {
-    // No numbered steps: releases before the branch-per-version split were numbered by date, above
-    // every branch's own numbers, so a site switching branches resets its version row and a
-    // numbered step would run again or never. Every former step's lasting effect is a repair that
-    // runs on each upgrade instead (local\legacy_repair); the plugin owns no tables.
+    // No numbered steps: every former step's lasting effect is an idempotent repair that runs on
+    // each upgrade instead. See local\legacy_repair for why numbered steps cannot work here.
     \local_dimensions\local\legacy_repair::run();
 
-    // Catch-all: re-ensure every customfield exists after any upgrade. Adding a
-    // new customfield in the future only needs a version bump plus a new getter
-    // wired into helper::ensure_custom_fields_exist(); no per-version savepoint
-    // block is required for field provisioning. Each getter short-circuits via
-    // find_field_by_shortname(), so this is idempotent.
+    // Re-ensure every custom field after any upgrade, so a new field needs only a getter wired
+    // into helper::ensure_custom_fields_exist() and a version bump. Each getter short-circuits
+    // via find_field_by_shortname(), so this is idempotent.
     \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_LP);
     \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_COMPETENCY);
 

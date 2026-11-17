@@ -193,7 +193,7 @@ class template_csv_serializer {
      *
      * @param competency $competency The competency being exported.
      * @param array $frameworks Collector keyed by framework id (appended by reference).
-     * @return array{id: int, idnumber: string, shortname: string} Empty strings when unreadable.
+     * @return array{id: int, idnumber: string, shortname: string} Id 0 and empty strings when unreadable.
      */
     private static function framework_of(competency $competency, array &$frameworks): array {
         $frameworkid = (int) $competency->get('competencyframeworkid');

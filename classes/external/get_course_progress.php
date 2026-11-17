@@ -96,8 +96,7 @@ class get_course_progress extends external_api {
 
         /* local/dimensions:view is granted to every authenticated user by default, so it only
            admits the caller to the tracker. The course ids come from the client, so each one is
-           gated below (helper::readable_competency_courses()) before any of its structure is read.
-           A plan adds the accordion's gates and the link to its competency (plan_access::tracker_courses()). */
+           gated by plan_access::tracker_courses() before any of its structure is read. */
         $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
         require_capability('local/dimensions:view', $systemcontext);

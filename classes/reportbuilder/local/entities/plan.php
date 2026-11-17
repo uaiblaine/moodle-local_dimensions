@@ -343,10 +343,16 @@ class plan extends base {
      * Join the competency counts of every plan, as one derived table.
      *
      * A plan's competencies are its own (`competency_plancomp`) or its template's
-     * (`competency_templatecomp`); a competency counts as proficient from the archive
-     * (`competency_usercompplan`) once the plan is complete, from the owner's current user
-     * competency otherwise. One grouped join keeps the columns plain fields, which a report can
+     * (`competency_templatecomp`) while it is open, and the rows archived at completion
+     * (`competency_usercompplan`) once it is complete, as core does; a competency counts as
+     * proficient from that archive row for a complete plan, from the owner's current user
+     * competency otherwise. The list mirrors the derived table of
+     * {@see \local_dimensions\reportbuilder\datasource\learning_plan_competencies}: keep them in
+     * step, or a plan's count differs from the rows its competencies report shows.
+     * One grouped join keeps the columns plain fields, which a report can
      * aggregate and group by cheaply; correlated subqueries repeated in a GROUP BY are not.
+     * The alias is generated once per entity, so every column and filter adds the same join
+     * string and the report builder joins it once.
      *
      * @return string The LEFT JOIN, with the alias {@see self::$statsalias}.
      */
@@ -361,11 +367,20 @@ class plan extends base {
                                     ELSE COALESCE(su.proficiency, 0) END) AS proficient
                       FROM {competency_plan} sp
                       JOIN (
-                            SELECT pc.planid, pc.competencyid FROM {competency_plancomp} pc
+                            SELECT pc.planid, pc.competencyid
+                              FROM {competency_plancomp} pc
+                              JOIN {competency_plan} pp ON pp.id = pc.planid
+                             WHERE pp.status <> {$complete}
                              UNION ALL
                             SELECT tp.id AS planid, tc.competencyid
                               FROM {competency_plan} tp
                               JOIN {competency_templatecomp} tc ON tc.templateid = tp.templateid
+                             WHERE tp.status <> {$complete}
+                             UNION ALL
+                            SELECT up.planid, up.competencyid
+                              FROM {competency_usercompplan} up
+                              JOIN {competency_plan} ap ON ap.id = up.planid AND ap.userid = up.userid
+                             WHERE ap.status = {$complete}
                            ) sl ON sl.planid = sp.id
                  LEFT JOIN {competency_usercompplan} sa ON sa.planid = sp.id AND sa.competencyid = sl.competencyid
                  LEFT JOIN {competency_usercomp} su ON su.userid = sp.userid AND su.competencyid = sl.competencyid

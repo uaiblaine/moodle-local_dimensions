@@ -412,13 +412,14 @@ class template_metadata_cache {
     /**
      * Decode a cascade select customfield to its option key.
      *
-     * The field lists its options in the order of $allowed ({@see helper::get_enrollmentfilter_field()})
-     * and stores a 1-based intvalue pointing at the chosen option, so the key is the one at that
-     * position in $allowed. The option text is not parsed: it is a localised label, and fields
-     * provisioned by older releases spell each line "key|label" instead, with the same positions.
-     * It is only counted, the way core's select counts it ({@see helper::split_select_options()}),
-     * so an index past the last option reads as $default, as core's select shows it unset.
-     * Keep the positions in step with {@see helper::get_template_enrollmentfilter()}.
+     * The field lists its options in the order of $allowed ({@see helper::get_enrollmentfilter_field()},
+     * {@see helper::get_singlecourseredirect_field()}) and stores a 1-based intvalue pointing at the
+     * chosen option, so the key is the one at that position in $allowed. The option text is not
+     * parsed: it is a localised label, and fields provisioned by older releases spell each line
+     * "key|label" instead, with the same positions. It is only counted, the way core's select counts
+     * it ({@see helper::split_select_options()}), so an index past the last option reads as $default,
+     * as core's select shows it unset. Keep the positions in step with
+     * {@see helper::get_template_enrollmentfilter()} and its single-course redirect sibling.
      *
      * @param array $records Records keyed by shortname.
      * @param string $shortname Field shortname to decode.

@@ -246,12 +246,11 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
     }
 
     /**
-     * Reveal and wire the completion tabs once the batch status call has answered.
+     * Reveal and wire the line's scope cells once the batch status call has answered.
      *
      * The counts cannot be server-rendered: whether a course is complete is only known after
-     * get_courses_completion_status resolves. Rather than render a tab strip with unknown
-     * numbers and a disabled state to explain them, the strip stays hidden until it can tell
-     * the truth. Selector scoped to the toolbar - the chip buttons carry the same class.
+     * get_courses_completion_status resolves. Rather than show unknown numbers, the scope stays
+     * hidden until it can tell the truth.
      *
      * @param {number} completed How many courses are complete
      * @param {number} total How many courses there are
@@ -378,8 +377,8 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                         }
                     });
                 }
-                /* The course-level completion stamp, from the batch call that ran before this
-                   card was ever requested. It is the course's own completion rule, which is a
+                /* The course-level completion stamp, from the status call, which settles before
+                   any card is drawn. It is the course's own completion rule, which is a
                    different fact from every section happening to be done. */
                 data.iscompleted = container
                     .closest('.local-dimensions-course-card-wrapper')
@@ -542,7 +541,7 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
             }
 
             /**
-             * Tag each card with its completion and reveal the completion tabs.
+             * Tag each card with its completion and reveal the scope cells.
              *
              * @param {Object[]} statuses get_courses_completion_status results.
              */
@@ -556,7 +555,7 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                         completedcount++;
                     }
                 });
-                // The completion tabs only become truthful here, so this is where they appear.
+                // The scope's counts only become truthful here, so this is where it appears.
                 initCourseTabs(completedcount, courseIds.length);
             }
 
@@ -567,7 +566,7 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
              * order on the server); each further batch is a request of its own, sent at once. A card is
              * drawn only after the status call has settled, because the card reads data-completed. When
              * the status call fails, core runs nothing after it in that request: the first batch's cards
-             * show their retry, and the completion tabs stay hidden.
+             * show their retry, and the scope stays hidden.
              *
              * @return {Promise}
              */
