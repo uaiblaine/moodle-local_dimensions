@@ -52,8 +52,8 @@ define(
         const loggedViews = new Set();
 
         /* The filter line's scope: "To do" and "All", a radio group whose chosen cell carries
-           aria-checked (templates/filter_line.mustache). Scoped to the line's region, because the
-           chip filters' buttons share none of its hooks but do share its look. */
+           aria-checked (templates/filter_line.mustache). Scoped to the line's region, so no other
+           data-filter node on the page is taken for a cell. */
         const SCOPE_CELL_SELECTOR = '[data-region="local-dimensions-line-scope"] [data-filter]';
 
         /* The filter line's favourites star: one aria-pressed toggle, the favourites-only filter. */
@@ -2106,8 +2106,8 @@ define(
         }
 
         /**
-         * Render a course card's plugin slot (the course card contract, section 2): what completing the course
-         * does to the competency, an icon and a sentence on a quiet ground.
+         * Render a course card's plugin slot: what completing the course does to the competency, an icon and a
+         * sentence on a quiet ground.
          *
          * @param {number|string} outcome The link's ruleoutcome value
          * @param {Object} strMap Language strings map
@@ -2221,10 +2221,8 @@ define(
          *
          * The pill, then the day its enrolment opens when the server names one, else for a card that
          * offers nothing the course start date, then the state's own action and the route line beside
-         * a relationship.
-         * Such a card is not a link, so the action is the way in; in learn-more mode a card that
-         * offers nothing gets the course page as its action, which is where its whole-card link used
-         * to lead.
+         * a relationship. Such a card is not a link, so the action is the way in; in learn-more mode a
+         * card that offers nothing gets the course page as its action.
          *
          * @param {Object} course A course row from the web service
          * @param {Object} strMap Language strings map
@@ -2262,7 +2260,7 @@ define(
                 actionlabel = strMap.learnMore;
                 actionurl = M.cfg.wwwroot + '/course/view.php?id=' + course.id;
             }
-            // The card is not a link, so the state's own action is its main button (contract, section 3).
+            // The card is not a link, so the state's own action is its main button.
             if (actionurl) {
                 html += '<a class="btn btn-primary btn-sm local-dimensions-course-cta" href="' + escapeHtml(actionurl) + '">' +
                     escapeHtml(actionlabel) + '</a>';
@@ -2332,8 +2330,8 @@ define(
         /**
          * Render the main action of a compact card (activity or section mode).
          *
-         * In the compact modes the card itself links to the course, and this button, above the card's stretched
-         * link, goes to the one activity or section the card summarises (the course card contract, section 3).
+         * In the compact modes the card's stretched title link goes to the course, and this button, stacked above
+         * that link, goes to the one activity or section the card summarises.
          *
          * @param {Object} course A course row from the web service
          * @param {Object} strMap Language strings map
@@ -2393,10 +2391,10 @@ define(
         }
 
         /**
-         * Render the state and progress slot of an open timeline card (the course card contract, section 3).
+         * Render the state and progress slot of an open timeline card.
          *
-         * A completed course draws the green seal in place of the bar (D4), whatever Boost Union's progress setting
-         * says (D13); a course still running draws the bar and its percentage unless that setting is No; a course
+         * A completed course draws the green seal in place of the bar, whatever Boost Union's progress setting
+         * says; a course still running draws the bar and its percentage unless that setting is No; a course
          * with no completion tracking draws nothing, never "0 %".
          *
          * @param {Object} course A course row from the web service
@@ -2509,8 +2507,8 @@ define(
                 // Course body.
                 html += '<div class="local-dimensions-course-body">';
 
-                /* The title's link stretches over the whole card (contract, section 4): one target, one hover,
-                   one link named by the course. A compact card's button and the drawer sit above it. */
+                /* The title's link stretches over the whole card: one target, one hover, one link named by
+                   the course. A compact card's button and the drawer are stacked above it. */
                 html += '<h3 class="local-dimensions-course-name-lg">';
                 html += isReachable
                     ? '<a href="' + escapeHtml(courseUrl) + '" class="local-dimensions-course-link">' +
@@ -2520,7 +2518,7 @@ define(
                 html += renderCourseExtra(course.ruleoutcome, strMap);
 
                 if (isReachable) {
-                    // An enrolled card shows no state pill: it is the ordinary case (D7).
+                    // An enrolled card shows no state pill: it is the ordinary case.
                     const shape = renderCourseShape(course, strMap, showProgress);
                     html += shape === '' ? renderCourseProgress(course, strMap, showProgress, isDone) : shape;
                     if (iscompact) {
@@ -2532,7 +2530,7 @@ define(
 
                 html += '</div>'; // End local-dimensions-course-body.
 
-                // The card's foot, outside the link (D6).
+                // The card's foot, outside the body, stacked above the stretched link like a compact card's button.
                 html += renderCourseActivitiesDrawer(course, activities, strMap);
 
                 html += '</div>'; // End local-dimensions-course-card-lg.
@@ -2567,8 +2565,8 @@ define(
         /**
          * Wire the per-card activity disclosures.
          *
-         * A plain hidden toggle rather than a Bootstrap collapse: the data-API attribute
-         * differs between Bootstrap 4 (4.5) and 5 (5.x) and is not bridged.
+         * A plain hidden toggle rather than a Bootstrap collapse, so no Bootstrap data-API is
+         * involved.
          *
          * @param {HTMLElement} contentEl The content container element
          */
@@ -3100,7 +3098,7 @@ define(
             }
             LearnerPrefs.init(viewstate);
 
-            // Initialize filter tabs functionality.
+            // The scope cells of the filter line.
             initFilterTabs();
             initSearch();
             initSort();
@@ -3273,8 +3271,8 @@ define(
         /**
          * How many rows a control of the line would leave once pressed: a scope cell, the star or a chip.
          *
-         * The suggestions ask without the typed text (the contract's "count it would give without the
-         * typed text"), the panel's chips with it, since the panel counts what the list would show.
+         * The line's suggestions ask without the typed text, since choosing one empties the field; the panel's
+         * chips ask with it, since the panel counts what the list would show.
          *
          * @param {HTMLElement} control The control.
          * @param {boolean} keepQuery Whether the typed text still applies.
@@ -3467,7 +3465,7 @@ define(
         }
 
         /**
-         * Wire the favourites controls: the per-row stars, the toolbar toggle and the ghost.
+         * Wire the favourites controls: the per-row stars, the line's star and the ghost.
          *
          * A star toggle does not re-sort, even under "Favourites first": rows jumping away from
          * the pointer are worse than an order that settles on the next visit.
@@ -3913,7 +3911,7 @@ define(
          * Wire the no-results "Clear filters" button.
          *
          * Any of the three inputs can produce the empty list, so the reset has to cover all
-         * of them: the chip selection, the search box, and the completion tab.
+         * of them: the chip selection, the search box, and the scope.
          */
         function initNoResultsClear() {
             const button = document.querySelector('[data-noresults-clear]');

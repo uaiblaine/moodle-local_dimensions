@@ -100,7 +100,7 @@ class competency_user_evidence extends datasource {
             ->set_table_alias('competency', $competencyalias)
             ->add_joins($competencyjoins));
 
-        // The submitter's competency: where the evidence stands in their review.
+        // The submitter's user competency for the linked competency (its review status, proficiency, rating).
         $usercompetencyentity = new usercompetency();
         $usercompetencyalias = $usercompetencyentity->get_table_alias('competency_usercomp');
         $this->add_entity($usercompetencyentity

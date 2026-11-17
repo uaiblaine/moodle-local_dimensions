@@ -176,8 +176,8 @@ export const show = async(pane, region) => {
     modal.setRemoveOnClose(true);
 
     const root = modal.getRoot()[0];
-    // The core/modal API offers setLarge() but no extra-large size, so add Bootstrap's modal-xl (same
-    // sizing on 4 and 5) directly. local-dimensions-participants-modal only hooks the height rule.
+    // The core/modal API offers setLarge() but no extra-large size, so add Bootstrap's modal-xl
+    // directly. local-dimensions-participants-modal only hooks the height rule.
     const dialog = root.querySelector('.modal-dialog');
     if (dialog) {
         // The close-button chip comes from .local-dimensions-modal on the root, so no header-link

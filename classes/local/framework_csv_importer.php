@@ -106,14 +106,15 @@ class framework_csv_importer {
         // Build the in-memory tree (framework children matched by parentidnumber).
         $this->add_children($fw, '');
 
-        // Refuse before the first write: a delegated transaction cannot undo rows inside a caller's own.
+        /* Refuse before the import's first write: inside a caller's own transaction a rollback here
+           would not undo these rows alone, it would force the caller's whole transaction to roll back. */
         $this->assert_scales_available($fw);
 
         $transaction = $DB->start_delegated_transaction();
         try {
             $framework = $this->import_tree($fw);
         } catch (\Throwable $e) {
-            // A refused scale must leave nothing behind.
+            // Any failure, a scale refused by get_scale_id() included, leaves nothing behind.
             $transaction->rollback($e);
         }
         $transaction->allow_commit();

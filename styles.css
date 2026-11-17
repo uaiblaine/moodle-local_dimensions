@@ -59,7 +59,7 @@
    Bootstrap 4 rung or, where there is none, the literal. The literals come from core's own light
    palette. The other four (on-brand-fill, shadow, scrim, favourite) are plugin literals.
 
-   WHY THERE IS ALMOST NO DARK RULE. Moodle 5.1/5.2 compile a complete [data-bs-theme="dark"]
+   WHY THERE IS ALMOST NO DARK RULE. Moodle 5.x compiles a complete [data-bs-theme="dark"]
    block for the --bs-* set, so a token chained to --bs-* is already dark-correct wherever the
    host sets the attribute. Do not add a dark rule for any of the 30 chained tokens. Only shadow,
    scrim and favourite get a plugin dark value, because core has no equivalent: --bs-box-shadow is
@@ -143,8 +143,8 @@ body {
 
    The host signals dark mode with Bootstrap 5.3's data-bs-theme attribute. No core theme writes
    it on 4.5, 5.1 or 5.2; from 5.3 theme_boost writes it on <html>, behind
-   theme_boost/enablecolourmodes (off by default). On the supported branches it comes from
-   themes, and not always on <html>: theme_moove writes it on document.body and redefines the
+   theme_boost/enablecolourmodes (off by default). Themes write it too, and not always on
+   <html>: theme_moove writes it on document.body and redefines the
    whole --bs-* set there. Hence the two arms, and hence the token block lives on body too, so
    all 34 tokens follow a body-level attribute.
 
@@ -893,7 +893,7 @@ body {
  * The hero is a branded island: its ground is the admin's colour or photograph in both colour
  * modes, so ink or surface would be wrong here in both modes. A text colour the admin set was
  * chosen against that ground and stays; only the translucent fallback becomes solid
- * on-brand-fill, the one token that does not flip. Forcing on-brand-fill over an admin's text
+ * on-brand-fill, which does not flip. Forcing on-brand-fill over an admin's text
  * colour would put white on whatever light ground they paired a dark ink with.
  */
 @media (prefers-contrast: more) {
@@ -1037,10 +1037,9 @@ body {
 }
 
 /*
- * Card skeleton (fleet Design System, components/skeleton.md): grey blocks in the shape of the
- * timeline rows, one slow pulse, static under reduced motion. Its geometry follows
- * .local-dimensions-timeline and its items below, so the body that replaces it starts where the
- * blocks were.
+ * Card skeleton: grey blocks in the shape of the timeline rows, one slow pulse, static under
+ * reduced motion. Its geometry follows .local-dimensions-timeline and its items below, so the
+ * body that replaces it starts where the blocks were.
  */
 .local-dimensions-sk {
     display: block;
@@ -1690,8 +1689,7 @@ body {
     mask-image: url('[[pix:local_dimensions|status/lock]]');
 }
 
-/* A section with activities and no progress yet: an empty ring in the line colour, which is the
-   colour the SVG was drawn in. */
+/* A section with activities and no progress yet: an empty ring in the line colour. */
 .local-dimensions-icon-circle {
     background-color: var(--local-dimensions-line);
     -webkit-mask-image: url('[[pix:local_dimensions|status/circle-outline]]');
@@ -2221,11 +2219,11 @@ body {
       THE FILTER LINE
       ============================================ */
 
-/* The learner views' filter line (templates/filter_line.mustache, amd/src/filter_line.js;
-   moodle-dev/docs/filter-line/CONTRACT.md). The toolbar is sticky at every width, since the plan
-   runs to dozens of rows on a desktop too, anchored to the theme's navbar height so it stops below
-   a fixed header, and capped and centred so the end controls do not fling apart on a wide card. It
-   holds the line and, under it, the row of chips. */
+/* The learner views' filter line (templates/filter_line.mustache, amd/src/filter_line.js).
+   The toolbar is sticky at every width, since the plan runs to dozens of rows on a desktop too,
+   anchored to the theme's navbar height so it stops below a fixed header, and capped and centred
+   so the end controls do not fling apart on a wide card. It holds the line and, under it, the row
+   of chips. */
 .local-dimensions-toolbar {
     position: sticky;
     top: var(--navbar-height, 60px);
@@ -2249,10 +2247,10 @@ body {
     backdrop-filter: none;
 }
 
-/* ONE row in the contract's slot order: scope, search, star, Filters, Organise, view. It wraps where
-   it does not fit, which is the whole of its narrow behaviour without the module; the search is the
-   item that grows and shrinks. It is the positioned ancestor of every floating layer, which opens
-   under the LINE rather than under its own control. */
+/* One row, in slot order: scope, search, star, Filters, Organise, view. It wraps where it does not
+   fit, which is the whole of its narrow behaviour without the module; the search is the item that
+   grows and shrinks. It is the positioned ancestor of every floating layer, which opens under the
+   line rather than under its own control. */
 .local-dimensions-line {
     position: relative;
     display: flex;
@@ -2376,8 +2374,8 @@ body {
     background: var(--local-dimensions-surface);
 }
 
-/* The eraser is the field's one way to empty itself: the browser's own cross goes, because the
-   contract's eraser is never a cross. */
+/* The eraser button (an eraser glyph, never a cross) is the field's one way to empty itself, so the
+   browser's own cancel cross is hidden. */
 .local-dimensions-line-search .local-dimensions-search-input::-webkit-search-cancel-button {
     display: none;
 }
@@ -2619,7 +2617,7 @@ body {
 }
 
 /* ---- Folded by the module ---------------------------------------------------------------------
-   The module measures the line's OWN width and writes one step on it (local-dimensions-line--s1 to
+   The module measures the line's own width and writes one step on it (local-dimensions-line--s1 to
    s4): full; Filters without its word; the search as an icon (local-dimensions-line--folded); two
    lines, the scope on the second and the view toggle in the Organise menu. Without the module no
    step is ever written, so nothing below applies and the line wraps. */
@@ -2627,7 +2625,8 @@ body {
 /* While measuring the line is one row that never wraps and no control shrinks but the search, so a
    line that does not fit pushes a control past its edge, which is what the module reads. On the
    two-line step the scope, which has a line of its own, is out of the measure. Nothing is in
-   transition: the morph's rules are gated on the class's absence. */
+   transition meanwhile: the last rule of the slide's media block turns transitions off under this
+   class. */
 .local-dimensions-line.local-dimensions-line--measuring {
     flex-wrap: nowrap;
 }
@@ -2994,7 +2993,7 @@ body {
 
 /* ---- The rows that scroll sideways: a fade on the side that hides something ---------------------
    The scope on the two-line step and the row under the line; the module writes the class of each
-   side as the row scrolls. A mask reads the ALPHA of its image and nothing else, so its opaque stop
+   side as the row scrolls. A mask reads the alpha of its image and nothing else, so its opaque stop
    is the page's ink, which is opaque in both colour modes, and no colour of its own. */
 .local-dimensions-scroll--fade-left {
     mask-image: linear-gradient(90deg, transparent, var(--local-dimensions-ink) 28px);
@@ -3489,8 +3488,9 @@ body {
 }
 
 /* Evidence type colours. One definition per category: activity is success, grade is
-   brand, manual is warning, prior is danger, rule is info and other is neutral. Each
-   carries its tone's own border, the way core's alerts do. */
+   brand, manual is warning, prior is danger and other is neutral; rule is info, defined
+   with the journey row's icon below. Each carries its tone's own border, the way core's
+   alerts do. */
 .local-dimensions-evidence-activity {
     border: 1px solid var(--local-dimensions-success-edge);
     background: var(--local-dimensions-success-tint);
@@ -3538,14 +3538,14 @@ body {
 }
 
 /* ============================================
-   COURSE CARD (moodle-dev/docs/course-card/CONTRACT.md)
-   The plan view's "Related content" card, the fleet's unified course card. Every visual value is a
-   --local-dimensions-card-* token, declared on the card root here and nowhere else: each reads the family's
-   --dimensions-card-* name first (declared by theme_dimensions only, never here), then the plugin's own chain,
-   which goes through the plugin's body tokens where one says the same thing (so their dark values and their
-   contrast pairs carry over), else Bootstrap's property and a literal. chip-* and close-* paint nothing of the
-   plan's card (no kind pill, no popover) and are declared for the contract's sake.
-   tests/local/course_card_contract_test.php reads them.
+   COURSE CARD
+   The plan view's "Related content" card, the course card shared with theme_dimensions and block_compass.
+   Every visual value is a --local-dimensions-card-* token, declared on the card root here and nowhere else:
+   each reads the family's --dimensions-card-* name first (declared by theme_dimensions only, never here), then
+   the plugin's own chain, which goes through the plugin's body tokens where one says the same thing (so their
+   dark values and their contrast pairs carry over), else Bootstrap's property and a literal. chip-* and close-*
+   paint nothing of the plan's card (no kind pill, no popover) and are declared because the contract requires
+   every suffix: tests/local/course_card_contract_test.php reads them.
    ============================================ */
 .local-dimensions-course-card-lg {
     --local-dimensions-card-radius: var(--dimensions-card-radius, 12px);
@@ -3581,7 +3581,7 @@ body {
 }
 
 /* The rest is a small shadow, a larger one on hover with the title underlined in its hover colour, and nothing
-   that moves (contract, section 5): a transform would cut the shadow in the carousel and push the neighbours.
+   that moves: a transform would cut the shadow in the carousel and push the neighbours.
    The card is the stretched link's containing block. */
 .local-dimensions-course-card-lg {
     position: relative;
@@ -3635,12 +3635,12 @@ body {
     opacity: var(--local-dimensions-card-locked-opacity);
 }
 
-/* Completed (D4): a green base under the cover. */
+/* Completed: a green base under the cover. */
 .local-dimensions-course-card-done .local-dimensions-course-img {
     border-bottom: var(--local-dimensions-card-done-edge) solid var(--local-dimensions-card-done);
 }
 
-/* Boost Union's "Show course images" without Card (contract, section 8): no cover, and a top edge in the
+/* Boost Union's "Show course images" without Card: no cover, and a top edge in the
    cover's fallback colour, green once complete. The plugin holds no category colour. */
 .local-dimensions-course-card-lg.local-dimensions-course-card-nocover {
     border-top: var(--local-dimensions-card-done-edge) solid var(--local-dimensions-card-cover-fallback);
@@ -3672,7 +3672,7 @@ body {
     -webkit-box-orient: vertical;
 }
 
-/* One target (contract, section 4): the title's link stretches over the whole card, so the card is one hover
+/* One target: the title's link stretches over the whole card, so the card is one hover
    and a screen reader hears one link named by the course. The drawer and a compact card's button sit above it. */
 .local-dimensions-course-card-lg .local-dimensions-course-link {
     color: inherit;
@@ -3732,8 +3732,7 @@ body {
     }
 }
 
-/* The plugin slot (contract, section 2): what completing the course does to the competency, one line on a
-   quiet ground. */
+/* The plugin slot: what completing the course does to the competency, one line on a quiet ground. */
 .local-dimensions-course-card-lg .local-dimensions-course-extra {
     display: flex;
     align-items: center;
@@ -3792,7 +3791,7 @@ body {
     text-align: right;
 }
 
-/* Completed (D4): the green seal in place of the bar, whatever Boost Union's progress setting says (D13). */
+/* Completed: the green seal in place of the bar, whatever Boost Union's progress setting says. */
 .local-dimensions-course-card-lg .local-dimensions-course-seal {
     display: inline-flex;
     align-items: center;
@@ -3816,7 +3815,7 @@ body {
     justify-content: flex-start;
 }
 
-/* The state's own action is a Bootstrap button, restyled by nothing here (contract, section 6). */
+/* The state's own action is a Bootstrap button, restyled by nothing here. */
 .local-dimensions-course-card-lg .local-dimensions-course-cta {
     align-self: flex-start;
 }
@@ -3836,7 +3835,7 @@ body {
 }
 
 /* Single trackable activity or single section: the activity's line or the section's ring in place of the
-   progress row (contract, section 3), the same centred column the tracker's compact bodies use, so a learner
+   progress row, the same centred column the tracker's compact bodies use, so a learner
    moving between the two views reads one shape. */
 .local-dimensions-course-single {
     display: flex;
@@ -3939,7 +3938,7 @@ body {
     font-size: 0.7rem;
 }
 
-/* Activities disclosure, the card's foot (D6): outside the card's link, and above its stretched area so the
+/* Activities disclosure, the card's foot: outside the card's link, and above its stretched area so the
    toggle and the rows keep their own targets. */
 .local-dimensions-course-card-lg .local-dimensions-course-acts-toggle,
 .local-dimensions-course-card-lg .local-dimensions-course-acts {
@@ -4887,8 +4886,8 @@ a.local-dimensions-course-act-row:focus-visible {
 
 .local-dimensions-courses-scroll {
     display: flex;
-    /* The cards of one carousel share a height and line their feet up (contract, section 3); an open
-       drawer makes the row taller. */
+    /* The cards of one carousel share a height and line their feet up; an open drawer makes the
+       row taller. */
     gap: 1rem;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -8471,7 +8470,7 @@ a.local-dimensions-central-links-badge-warn:focus {
  * Bootstrap --bs-form-select-bg-img is scoped to .form-select (not reachable
  * here) and Moodle's stylelint forbids inline SVG image data, so mirror the
  * chevron with the FontAwesome angle-down the theme already ships (Moodle
- * 4.5-5.2 all use Font Awesome 6). font-size:0 hides the core glyph; the
+ * 4.5 to 5.3 all ship Font Awesome 6). font-size:0 hides the core glyph; the
  * loading spinner keeps its own size.
  */
 .local-dimensions-central-page .form-autocomplete-downarrow {

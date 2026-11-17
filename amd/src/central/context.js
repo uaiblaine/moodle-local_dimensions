@@ -388,9 +388,8 @@ export const init = () => {
         hiddencb.addEventListener('change', () => applyHiddenCats(bar));
     }
 
-    // Tab switches keep the counter and option labels in step with the active mode. Bound via
-    // jQuery because Bootstrap 4 (Moodle 4.5) only fires its tab events as jQuery events, which
-    // never reach a native listener; Bootstrap 5 fires both, so one jQuery listener covers both.
+    // Tab switches keep the counter and option labels in step with the active mode. Bootstrap 5
+    // fires its tab events both natively and as jQuery events, so this jQuery listener sees them.
     $(SELECTORS.tabToggle).on('shown.bs.tab', () => {
         bar.dataset.activemode = activeMode();
         renderCounter(bar);

@@ -160,7 +160,7 @@ final class plan_access {
      * Whose course cards the tracker's card services describe, and which of the requested courses they answer for.
      *
      * get_course_progress and get_courses_completion_status take their course ids from the client. Without
-     * a plan (plan id 0) they describe the caller, as they always have, and the competency id is not read.
+     * a plan (plan id 0) they describe the caller, and the competency id is not read.
      * With one they describe the plan's owner, as the plan accordion does (get_competency_courses), and
      * only past these gates, in order:
      * - the caller may read the plan (read_plan(): a refusal is core's own error, never invalidplan);

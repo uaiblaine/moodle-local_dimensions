@@ -29,9 +29,10 @@ use local_dimensions\reportbuilder\local\entities\{plan, template, template_extr
  * Learning plans datasource.
  *
  * Plan-focused datasource bundling `competency_plan` with its template, the
- * template's customfields ({@see template_extras}), the plan owner, and any
- * cohorts linked to the template. Built so report authors can answer "all active plans by user with
- * the template's tag1/type" without writing SQL.
+ * template's customfields ({@see template_extras}), the plan owner and the
+ * owner's cohorts, the plan's reviewer, and any cohorts linked to the template.
+ * Built so report authors can answer "all active plans by user with the
+ * template's tag1/type" without writing SQL.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

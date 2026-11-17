@@ -17,14 +17,14 @@
  * The filter line of a learner view: its folding, the search that grows over it and its
  * suggestions, its floating layers, the row of chips under it and the scope's keys.
  *
- * The rules are the fleet's filter line contract (moodle-dev/docs/filter-line/CONTRACT.md,
- * sections 1 to 4 and 8), written for this plugin after theme_dimensions' categoryline: the same
- * behaviour and the same names, no import across plugins. The server draws the whole line
+ * It follows theme_dimensions' filter line (js/esm/src/filterline/) for the matching rule and the
+ * suggestions' ranking; keep those in step. The folding steps and the markup hooks are this
+ * plugin's own, and nothing is imported across plugins. The server draws the whole line
  * (templates/filter_line.mustache) and the page's own module filters the list; this module adds
  * presentation and keyboard, and every filter it applies it applies by pressing the very control
  * the page's module already listens to.
  *
- * Folding ({@see fit}): the line measures its OWN width, never the viewport's, and takes the first
+ * Folding ({@see fit}): the line measures its own width, never the viewport's, and takes the first
  * step at which its controls fit on one line - full; Filters without its word; the search as an
  * icon; two lines, the scope on the second, scrolling sideways, and the view toggle moved into the
  * Organise menu. It measures with every cell of the scope drawn and with no transition running, so
@@ -40,7 +40,7 @@
  * active option named by aria-activedescendant, so the focus never leaves the field. Filters come
  * first - every scope cell, the favourites star and every chip of the Filters panel - whose label or
  * group matches the typed text, accent- and case-insensitively, word starts first and then by count,
- * each with the count the page's module gives for it WITHOUT the typed text; then the items drawn
+ * each with the count the page's module gives for it without the typed text; then the items drawn
  * whose names match. Choosing a filter empties the field and presses the control it names, and the
  * search stays open; choosing an item hands it to the page's module.
  *
@@ -60,7 +60,7 @@
 
 import Pending from 'core/pending';
 
-/** @type {Object} Every hook this module reads, all of them written by templates/filter_line.mustache. */
+/** @type {Object} Every hook this module reads, written by templates/filter_line.mustache and its chip_filters partial. */
 const SELECTORS = {
     toolbar: '[data-region="local-dimensions-line-toolbar"]',
     line: '[data-region="local-dimensions-line"]',
@@ -196,7 +196,7 @@ const state = {
 const fold = (text) => String(text).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 /**
- * The fleet's normalise rule for matching: accents off, lower case, trimmed.
+ * The normalise rule for matching, the same as theme_dimensions' filter line: accents off, lower case, trimmed.
  *
  * @param {String} text Any text.
  * @return {String}
@@ -484,8 +484,8 @@ const groupOf = (key, words, options) => {
 /**
  * The bottom of the line's first line of controls, as drawn: the floating layers hang under it.
  *
- * The scope of the two-line step is a line of its own, which the layers cover, as the prototype
- * draws it; and a control slid out of the way has no box to count.
+ * The scope of the two-line step is a line of its own, which the layers cover; and a control slid
+ * out of the way has no box to count.
  *
  * @return {Number} A viewport coordinate.
  */

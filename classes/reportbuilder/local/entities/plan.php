@@ -347,6 +347,8 @@ class plan extends base {
      * (`competency_usercompplan`) once the plan is complete, from the owner's current user
      * competency otherwise. One grouped join keeps the columns plain fields, which a report can
      * aggregate and group by cheaply; correlated subqueries repeated in a GROUP BY are not.
+     * The alias is generated once per entity, so every column and filter adds the same join
+     * string and the report builder joins it once.
      *
      * @return string The LEFT JOIN, with the alias {@see self::$statsalias}.
      */

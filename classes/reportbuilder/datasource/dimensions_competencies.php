@@ -31,10 +31,11 @@ use local_dimensions\reportbuilder\local\entities\{competency_details, competenc
  * Competencies datasource extended with local_dimensions customfields.
  *
  * The core competencies datasource (framework, context, competency, user
- * competency, user and cohort entities, joined as core joins them), with two
+ * competency, user and cohort entities, joined as core joins them), with three
  * changes: the user competency entity is the plugin's {@see usercompetency},
- * whose rating needs no query per row, and a {@see competency_extras} entity
- * adds the customfields local_dimensions defines in the `competency` area.
+ * whose rating needs no query per row; a {@see competency_extras} entity
+ * adds the customfields local_dimensions defines in the `competency` area; and
+ * a {@see competency_details} entity adds the competency's hierarchy, scale and links.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -58,7 +59,7 @@ class dimensions_competencies extends competencies {
     }
 
     /**
-     * Wire entities and joins, as core's datasource does, with the plugin's two entities.
+     * Wire entities and joins as core's datasource does, with the three changes the class describes.
      */
     #[\Override]
     protected function initialise(): void {

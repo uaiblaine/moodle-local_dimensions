@@ -38,14 +38,12 @@ use core_external\external_single_structure;
 use core_external\external_value;
 
 /**
- * Web service: a read-only pre-flight for deleting a competency, behind the hub v2 delete dialogues.
+ * Web service: a read-only pre-flight for deleting a competency, behind the Competency hub's delete dialogues.
  *
  * Core's api::delete_competency() answers false, with no reason, when the competency or any of its
  * descendants is in use. This service runs the same decision before anything is attempted and
  * counts the reasons, so the page can name them. It returns counts and flags only: no names and
- * no user ids. The counts span every context (plans, templates, courses and users are not
- * confined to the framework's context), so they are exact only for a caller holding the capability
- * in the system context; a manager of a course category's framework gets presence only (0 or 1).
+ * no user ids; see execute() for when the counts are exact.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

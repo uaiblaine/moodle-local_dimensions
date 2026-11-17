@@ -279,7 +279,9 @@ class template extends base {
     }
 
     /**
-     * SQL counting the plans made from the template, or null for a row without a template.
+     * SQL counting the plans based on the template, or null for a row without a template.
+     *
+     * A plan unlinked from its template keeps it only in `origtemplateid` and is not counted.
      *
      * @return string A scalar subquery.
      */

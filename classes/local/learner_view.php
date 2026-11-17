@@ -50,9 +50,8 @@ class learner_view {
      *
      * Anything unrecognised falls back to the default rather than being trusted: the preference
      * is user-writable through core's own repository, and a stale value survives a redesign that
-     * drops an option. Both scopes default to the learner's open work ("To do"): the plan's has
-     * always, and the tracker's does since the filter line, where it was "All" before; a stored
-     * "all" still wins on either.
+     * drops an option. Both scopes default to the learner's open work ("To do", 'incomplete');
+     * a stored 'all' wins on either.
      *
      * @return array Keys: sort, filter, favonly, view, expanded, trackerfilter.
      */

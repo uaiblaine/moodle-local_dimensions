@@ -96,8 +96,8 @@ class helper {
      * the current user's language. Callers pass an empty $description so that no text in a single
      * language is stored.
      *
-     * Only the handler's own categories qualify: on Moodle 5.1+ get_categories_with_fields() also
-     * lists the core shared categories enabled for the area, and a field created in one of those
+     * Only the handler's own categories qualify: get_categories_with_fields() also lists the core
+     * shared categories enabled for the area, and a field created in one of those
      * makes {@see self::organize_customfield_categories()} fail, because core's move_field()
      * refuses a move across components.
      *
@@ -442,9 +442,9 @@ class helper {
      *
      * Waits up to 10 s for the provisioning lock and does nothing when it is not granted.
      *
-     * The get-or-create getters belong to this method and to upgrade steps. Read paths look a
-     * field up with {@see self::find_field_by_shortname()} and fall back when it is missing, so
-     * no request creates a field outside the lock.
+     * In production code only this method calls the get-or-create getters. Read paths look a field up with
+     * {@see self::find_field_by_shortname()} and fall back when it is missing, so no request
+     * creates a field outside the lock.
      *
      * @param string $area The area (lp or competency)
      */
@@ -815,8 +815,8 @@ class helper {
         }
 
         // Decided by the number of lines, not by the label: the label is spelled in the language of
-        // whoever runs the upgrade, and db/upgrade.php calls this on every upgrade, so a field
-        // provisioned in Portuguese would gain a second fifth option on an upgrade run in English.
+        // whoever runs the upgrade, so a field provisioned in Portuguese would gain a second fifth
+        // option on an upgrade run in English.
         $lines = explode("\n", (string) $config['options']);
         if (count($lines) !== count(constants::enrollmentfilter_options()) - 1) {
             return;
@@ -2394,8 +2394,8 @@ class helper {
     private static function count_in_subtree(string $table, \context $context): int {
         global $DB;
         // Grouped by category so a subcategory local_unlistedcourses withholds from the viewer
-        // drops out of the sum, as it does from the tabs' lists; every context of the subtree is a
-        // course category context, since the root is one.
+        // drops out of the sum, as it does from the tabs' lists. Core keeps frameworks and templates
+        // in system or category contexts only, so below a category root every instanceid is a category id.
         $sql = "SELECT ctx.instanceid, COUNT(t.id)
                   FROM {" . $table . "} t
                   JOIN {context} ctx ON ctx.id = t.contextid

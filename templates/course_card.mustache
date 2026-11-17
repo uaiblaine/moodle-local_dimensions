@@ -53,8 +53,9 @@
             {{/locked}}
         </h3>
         {{! The skeleton stands for the card body competency_view.js draws: one timeline row per
-            section the server counted (skeletonrows), a ring and a name each. The grid carries aria-busy and the one status line; the
-            container's own aria-busy goes when its body arrives. }}
+            section the server counted (skeletonrows), a ring and a name each. The grid carries
+            aria-busy and the one status line; the container's own aria-busy goes when its body
+            arrives. }}
         <div class="local-dimensions-progress-container" data-courseid="{{courseid}}" aria-busy="true">
             <div class="local-dimensions-sk" aria-hidden="true">
                 {{#skeletonrows}}

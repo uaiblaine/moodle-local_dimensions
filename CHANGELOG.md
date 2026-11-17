@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Code comments reviewed
+
+- The comments of the production code changed since the previous review (classes, AMD modules,
+  templates, `db/`, the top-level pages and `styles.css`) say the non-obvious why, the contract and
+  the edge case, and no longer carry history or development-environment detail; claims that
+  contradicted the code were corrected. No behaviour changes. The AMD build is regenerated because
+  its source maps carry the comments (version 2026100524).
+
 ### Plugins directory readiness
 
 Version `2026100523`.

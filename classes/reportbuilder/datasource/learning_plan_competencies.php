@@ -32,10 +32,10 @@ use local_dimensions\reportbuilder\local\entities\{competency_details, competenc
  *
  * One row per learning plan and competency of that plan: for a completed plan the competencies
  * archived at completion, else its template's competencies or, for a plan without a template, its
- * own. Beside the plan, its template with its Dimensions custom
- * fields, the owner and the owner's cohorts, it gives the competency with its framework and
- * custom fields, its proficiency and rating in the plan (archived when the plan is complete),
- * and the owner's current user competency.
+ * own. Beside the plan, its template with its Dimensions custom fields, the owner and the owner's
+ * cohorts, and the plan's reviewer, it gives the competency with its framework and custom fields,
+ * its proficiency and rating in the plan (archived when the plan is complete), and the owner's
+ * current user competency.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -104,7 +104,7 @@ class learning_plan_competencies extends datasource {
                 "LEFT JOIN {cohort} {$usercohortalias} ON {$usercohortalias}.id = {$memberalias}.cohortid",
             ]));
 
-        // The plan's competencies: its own, or its template's, as one derived table.
+        // The plan's competencies, as one derived table.
         $plancompetencyentity = new plan_competency();
         $linkalias = $plancompetencyentity->get_table_alias('competency_plancomp');
         $archivealias = $plancompetencyentity->get_table_alias('competency_usercompplan');
