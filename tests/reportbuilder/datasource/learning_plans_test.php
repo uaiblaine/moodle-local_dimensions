@@ -316,6 +316,116 @@ final class learning_plans_test extends core_reportbuilder_testcase {
     }
 
     /**
+     * The competency counts of each plan, as the report shows them, by plan name.
+     *
+     * @return array Rows of [competencies, proficient, progress], keyed by plan name.
+     */
+    private function read_plan_stats(): array {
+        /** @var \core_reportbuilder_generator $rbgenerator */
+        $rbgenerator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $report = $rbgenerator->create_report(['name' => 'Stats', 'source' => learning_plans::class, 'default' => 0]);
+        foreach (['plan:name', 'plan:competencies', 'plan:proficient', 'plan:progress'] as $index => $column) {
+            $rbgenerator->create_column([
+                'reportid' => $report->get('id'),
+                'uniqueidentifier' => $column,
+                'sortenabled' => (int) ($index === 0),
+            ]);
+        }
+        $stats = [];
+        foreach ($this->get_custom_report_content($report->get('id')) as $row) {
+            $row = array_values($row);
+            $stats[$row[0]] = [(int) $row[1], (int) $row[2], $row[3]];
+        }
+        return $stats;
+    }
+
+    /**
+     * A template with two competencies, one learner proficient in the first, and a plan of that template.
+     *
+     * @param \core_competency_generator $generator The competency generator.
+     * @param string $name The plan name.
+     * @return array The template, the plan and the competencies, in that order.
+     */
+    private function create_template_plan(\core_competency_generator $generator, string $name): array {
+        $framework = $generator->create_framework();
+        $competencies = [
+            $generator->create_competency(['competencyframeworkid' => $framework->get('id')]),
+            $generator->create_competency(['competencyframeworkid' => $framework->get('id')]),
+        ];
+        $template = $generator->create_template(['shortname' => "Template {$name}"]);
+        foreach ($competencies as $competency) {
+            $generator->create_template_competency([
+                'templateid' => $template->get('id'),
+                'competencyid' => $competency->get('id'),
+            ]);
+        }
+        $learner = $this->getDataGenerator()->create_user();
+        $plan = $generator->create_plan([
+            'name' => $name,
+            'userid' => $learner->id,
+            'templateid' => $template->get('id'),
+        ]);
+        $generator->create_user_competency([
+            'userid' => $learner->id,
+            'competencyid' => $competencies[0]->get('id'),
+            'proficiency' => true,
+            'grade' => 1,
+        ]);
+        return [$template, $plan, $competencies];
+    }
+
+    /**
+     * A completed template plan keeps the competencies archived at completion, whatever the template becomes.
+     *
+     * @return void
+     */
+    public function test_completed_template_plan_keeps_its_archived_competencies(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        /** @var \core_competency_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        [$template, $plan, $competencies] = $this->create_template_plan($generator, 'Completed');
+        \core_competency\api::complete_plan($plan);
+
+        // A competency added to the template after completion is not the plan's.
+        $generator->create_template_competency([
+            'templateid' => $template->get('id'),
+            'competencyid' => $generator->create_competency([
+                'competencyframeworkid' => $competencies[0]->get('competencyframeworkid'),
+            ])->get('id'),
+        ]);
+        $this->assertEquals(['Completed' => [2, 1, format::percent(50.0)]], $this->read_plan_stats());
+
+        // An archived proficient competency removed from the template is still the plan's.
+        \core_competency\api::remove_competency_from_template($template->get('id'), $competencies[0]->get('id'));
+        $this->assertEquals(['Completed' => [2, 1, format::percent(50.0)]], $this->read_plan_stats());
+    }
+
+    /**
+     * An active template plan follows its template, so the archive rule cannot freeze every plan.
+     *
+     * @return void
+     */
+    public function test_active_template_plan_follows_the_template(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        /** @var \core_competency_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        [$template, , $competencies] = $this->create_template_plan($generator, 'Active');
+        $this->assertEquals(['Active' => [2, 1, format::percent(50.0)]], $this->read_plan_stats());
+
+        $generator->create_template_competency([
+            'templateid' => $template->get('id'),
+            'competencyid' => $generator->create_competency([
+                'competencyframeworkid' => $competencies[0]->get('competencyframeworkid'),
+            ])->get('id'),
+        ]);
+        $this->assertEquals(['Active' => [3, 1, format::percent(100.0 / 3)]], $this->read_plan_stats());
+    }
+
+    /**
      * Every column, aggregation and condition of the source builds a report that runs.
      *
      * @return void

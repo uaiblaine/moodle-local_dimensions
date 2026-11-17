@@ -152,6 +152,7 @@ class get_course_progress extends external_api {
                 $row = [
                     'courseid' => $courseid,
                     'enabled' => $data['enabled'],
+                    'tracked' => $data['tracked'] ?? true,
                     'locked' => $data['locked'] ?? false,
                     'formatted_start_date' => $startyields ? '' : ($data['formatted_start_date'] ?? ''),
                     'state' => enrolment_state::export($facts),
@@ -178,6 +179,7 @@ class get_course_progress extends external_api {
                 $results[] = [
                     'courseid' => $courseid,
                     'enabled' => false,
+                    'tracked' => true,
                     'locked' => false,
                     'formatted_start_date' => '',
                     'state' => enrolment_state::export(enrolment_provider::none_state((int) $courseid)),
@@ -236,6 +238,7 @@ class get_course_progress extends external_api {
         return [
             'courseid' => $courseid,
             'enabled' => false,
+            'tracked' => true,
             'locked' => true,
             'formatted_start_date' => '',
             'state' => enrolment_state::export(enrolment_provider::none_state($courseid)),
@@ -262,6 +265,10 @@ class get_course_progress extends external_api {
                 'enabled' => new external_value(
                     PARAM_BOOL,
                     get_string('api_completion_enabled', 'local_dimensions'),
+                ),
+                'tracked' => new external_value(
+                    PARAM_BOOL,
+                    'Whether core tracks the completion of the learner the card describes in this course',
                 ),
                 'cardmode' => new external_value(
                     PARAM_ALPHA,

@@ -58,6 +58,9 @@ use core_availability\tree;
  * Stores: the learner's and the viewer's groups are read once per modinfo object, the lifetime
  * core gives its own copy ({@see \course_modinfo::get_groups()}); the group records come from the
  * shared groupdata cache. Nothing is written, so a cold node or a fresh cron gives the same answer.
+ *
+ * block_compass carries a twin of this class (local\progress\learner_restrictions), copied whole: a change to
+ * one is made to the other, and docs/core-parity.md's audit reads both against core.
  */
 final class learner_restrictions {
     /** @var \WeakMap|null Raw group membership by modinfo, then by user id. */
