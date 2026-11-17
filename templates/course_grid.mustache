@@ -33,7 +33,8 @@
                 "fullname": "Course 1",
                 "courseurl": "/course/view.php?id=42",
                 "viewcoursestr": "View course: Course 1",
-                "locked": false
+                "locked": false,
+                "skeletonrows": [{"row": true}, {"row": true}, {"row": true}]
             }
         ]
     }
@@ -43,7 +44,11 @@
      role="region"
      aria-label="{{#str}}view_courses, local_dimensions{{/str}}"
      aria-live="polite"
-     aria-relevant="additions text">
+     aria-relevant="additions text"
+     aria-busy="true">
+    {{! Busy until competency_view.js has drawn or failed every card, so the live region speaks
+        once, over the finished grid. The status line is the one spoken sign of the wait. }}
+    <span class="visually-hidden" role="status" data-region="local-dimensions-grid-loading">{{#str}}loading_progress, local_dimensions{{/str}}</span>
     {{#courses}}
         {{> local_dimensions/course_card}}
     {{/courses}}
