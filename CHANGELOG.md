@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Performance: progress in very large courses
+
+Version `2024100714`.
+
+- **A course card no longer reads the whole course's group membership.** Whether a group,
+  grouping or profile restriction keeps an activity out of a learner's workload was asked through
+  core's `filter_user_list()`, which is built for long lists: for one learner it read every member
+  of the group, every member of the grouping, or, for "any group", every group member of the
+  course, and listed everyone holding `moodle/course:ignoreavailabilityrestrictions`, on every
+  activity, three times per card (bar, card shape, section rings). `local\learner_restrictions`
+  now gives the same answer for that one learner: group and grouping conditions through their own
+  per-user test, which reads the learner's groups from core's shared groups cache; any other
+  condition through its own filter with a one-person list; the capability through
+  `has_capability()`. The rule is unchanged: only the restrictions that are permanent for a person
+  count, so a date-locked activity still counts.
+- Measured on a 5.3 twin stack with one course of 100,001 students, 2,000 groups (about 50 members
+  each, 5% of students in two groups, 1% in three, 1% in none, 100 groups with hidden visibility),
+  20 groupings of 100 groups, 45 teachers in 30 groups each, and 66 restricted activities: the
+  tracker's `get_course_progress` for that course fell from 470 ms and 402 queries to 8.6 ms and 8
+  queries, and its card on `view-competency.php` now appears at 753 ms instead of 1,116 ms (median
+  of five loads at 4x CPU). The three card calls fell from 1,111 ms to 36 ms per learner (mean of
+  240 users, 4.5: 1,258 ms to 28 ms). All 16,080 learner-activity answers (4.5: 15,840) and all
+  240 cards were identical to the previous code's.
+- `tests/local/learner_restrictions_test.php` holds core's `filter_user_list()` as the oracle on
+  nineteen restriction sets (groups visible to all, to members, to each member and to nobody, a
+  group of another course, grouping 0) for seven kinds of user, read by the learner, a teacher and
+  two classmates, and pins that a warm group or grouping check runs no query. `tests/calculator_group_workload_test.php` checks the bar
+  and every ring against hand-counted workloads: a learner in two groups (an activity open to
+  either counted once), in one group and in none, under forced separate groups, with subsections
+  and a section restricted to another group. Mutation spec: `mutations/learner_restrictions.conf`
+  (22 gates).
+
 ### Performance
 
 Version `2024100713`.
