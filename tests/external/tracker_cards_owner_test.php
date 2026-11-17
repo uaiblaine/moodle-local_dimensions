@@ -125,9 +125,9 @@ final class tracker_cards_owner_test extends \advanced_testcase {
     /**
      * Without a plan the progress service still describes its caller, on the same fixture.
      *
-     * The teacher opens Alpha and Delta either way. Without the plan the numbers behind the cards are
-     * the teacher's own, who has completed nothing and ignores both restrictions, where the call with
-     * the plan above shows the learner's.
+     * The teacher opens Alpha and Delta either way. Without the plan the cards describe the teacher, whom
+     * core does not track (no moodle/course:isincompletionreports), so they carry no rings, where the call
+     * with the plan above shows the learner's.
      *
      * @return void
      */
@@ -137,10 +137,11 @@ final class tracker_cards_owner_test extends \advanced_testcase {
         $this->setUser($f['teacher']);
         $rows = $this->rows(self::PROGRESS, $f['courseids']);
 
+        // The teacher is enrolled as a teacher, whom core does not track: an open card, and no rings.
         $this->assertFalse($rows[$f['alpha']]['locked']);
-        $this->assertSame(0, $rows[$f['alpha']]['sections'][1]['percentage']);
-        $this->assertTrue($rows[$f['alpha']]['sections'][1]['has_activities']);
-        $this->assertFalse($rows[$f['alpha']]['sections'][2]['locked'] ?? false);
+        $this->assertFalse($rows[$f['alpha']]['tracked']);
+        $this->assertFalse($rows[$f['alpha']]['enabled']);
+        $this->assertSame([], $rows[$f['alpha']]['sections']);
         $this->assertFalse($rows[$f['delta']]['locked']);
         $this->assertSame(constants::CARDMODE_ACTIVITY, $rows[$f['delta']]['cardmode']);
         $this->assertFalse($rows[$f['delta']]['activity']['completed']);

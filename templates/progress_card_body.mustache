@@ -31,6 +31,7 @@
     Context variables required:
     * courseid (int) - Course ID, used to pair the collapse toggle with its timeline
     * enabled (bool) - Whether completion tracking is enabled
+    * tracked (bool) - Whether core tracks the learner's completion here (false for a teacher or manager)
     * iscompleted (bool) - Whether the course itself is complete, from the batch status call
     * locked (bool) - Whether the course is locked for the user
     * state (object) - The state area, from the course progress service: key, label, icon, family,
@@ -70,6 +71,7 @@
     {
         "courseid": 42,
         "enabled": true,
+        "tracked": true,
         "iscompleted": false,
         "locked": true,
         "state": {
@@ -209,7 +211,8 @@
     {{^enabled}}
         {{^locked}}
         <div class="p-3 text-muted text-center small">
-            {{#str}}completion_disabled, local_dimensions{{/str}}
+            {{#tracked}}{{#str}}completion_disabled, local_dimensions{{/str}}{{/tracked}}
+            {{^tracked}}{{#str}}progress_learners_only, local_dimensions{{/str}}{{/tracked}}
         </div>
         {{/locked}}
     {{/enabled}}

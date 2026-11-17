@@ -116,9 +116,17 @@ class calculator {
 
             $courseurl = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
 
-            if (!$completion->is_enabled()) {
+            /* Core counts completion only for its tracked users (enrolled with
+               moodle/course:isincompletionreports, a student's capability), and the plan overview's
+               bar asks the same through get_competency_courses::tracks_completion(): an owner
+               enrolled as a teacher or a manager has no progress to show on either view. An owner
+               who is not enrolled keeps the locked card's timeline, which names nothing. */
+            $tracked = !$isenrolled || $completion->is_tracked_user($ownerid);
+
+            if (!$completion->is_enabled() || !$tracked) {
                 return [
                     'enabled' => false,
+                    'tracked' => $tracked,
                     'locked' => $locked,
                     'formatted_start_date' => $formattedstartdate,
                     'state' => $state,
@@ -266,6 +274,7 @@ class calculator {
 
             return [
                 'enabled' => true,
+                'tracked' => true,
                 'locked' => $locked,
                 'formatted_start_date' => $formattedstartdate,
                 'state' => $state,
