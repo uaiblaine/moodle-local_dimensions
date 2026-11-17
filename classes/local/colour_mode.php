@@ -44,7 +44,4 @@ class colour_mode {
 
     /** @var string The value of HOST_ATTRIBUTE that pins light. */
     public const string LIGHT = 'light';
-
-    /** @var string Gate on the inert prefers-color-scheme block in styles.css; nothing writes it (tested). */
-    public const string MEDIA_OPTIN_ATTRIBUTE = 'data-dimensions-media-optin';
 }
