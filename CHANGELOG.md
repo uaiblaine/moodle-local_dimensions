@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Ported from main: progress rule, tracked users, plan statistics, directory readiness
+
+Version `2024100716`. From main's #143, #147 (the plan statistics fix), #148 and #150.
+
+- **The tracker counts progress only for learners, as the plan overview does.** Core records
+  completion only for users enrolled with `moodle/course:isincompletionreports`, which by default
+  only the student role holds. An owner enrolled as a teacher or a manager now gets a card that
+  says "Progress is tracked for learners only." instead of rings at zero, and
+  `local_dimensions_get_course_progress` returns a new `tracked` field.
+- **The workload follows Moodle 5.1's progress rule.** That rule is
+  `completion_info::get_user_activities_with_completion()`; core 4.5's own progress counts every
+  activity with completion. A stealth activity ("Make available but don't show on course page")
+  no longer counts. A hidden activity still stays out, even for a learner who may see it, because
+  4.5 lacks MDL-66780.
+- **A fingerprint of the core code the rule leans on.** `local\core_fingerprint`,
+  `tests/fixtures/core_parity.json` (22 functions, audited against v4.5.15), `cli/core_parity.php`
+  and `docs/core-parity.md`, which also holds the audit procedure. Main's oracle against core's
+  rule has no counterpart here, because core 4.5 has no rule to compare with.
+- **Plan statistics of a completed plan** (the report builder's competencies, proficient and
+  progress columns) count the plan's archived competencies, not the template's current ones.
+- **Plugins directory readiness**: `tests/marketplace_readiness_test.php` is the fleet template
+  again; sentence case in `lang/en` (*Learn more*, *Submit evidence*, *Full plan overview*,
+  *Competency tracker*); the collapsible description's custom properties are prefixed
+  (`--local-dimensions-collapsible-*`); the README names the browser storage and its documentation
+  heading is English only.
+
 ### Performance: the competency tracker loads its cards in one request, behind a skeleton
 
 Version `2024100715`.
