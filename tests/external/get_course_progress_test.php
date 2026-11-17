@@ -518,6 +518,7 @@ final class get_course_progress_test extends \advanced_testcase {
         $cleaned = external_api::clean_returnvalue(get_course_progress::execute_returns(), [[
             'courseid' => 2,
             'enabled' => false,
+            'tracked' => true,
             'locked' => false,
             'formatted_start_date' => '',
             'state' => enrolment_state::export(enrolment_provider::none_state(2)),
@@ -578,5 +579,29 @@ final class get_course_progress_test extends \advanced_testcase {
         $this->assertSame((int) $healthy->id, $rows[1]['courseid']);
         $this->assertSame('', $rows[1]['error']);
         $this->assertFalse($rows[1]['locked']);
+    }
+
+    /**
+     * The service carries the tracked flag, so the card can say progress is for learners only.
+     *
+     * Change that must make it fail: drop tracked from execute_returns() (clean_returnvalue would strip it)
+     * or from the row.
+     *
+     * @return void
+     */
+    public function test_execute_reports_an_untracked_teacher(): void {
+        $this->resetAfterTest();
+        $teacher = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $this->getDataGenerator()->enrol_user((int) $teacher->id, (int) $course->id, 'editingteacher');
+        $this->link_competency((int) $course->id);
+        $this->setUser($teacher);
+
+        $row = $this->cleaned_row_for((int) $course->id);
+
+        $this->assertFalse($row['enabled']);
+        $this->assertFalse($row['tracked']);
+        $this->assertFalse($row['locked']);
+        $this->assertSame([], $row['sections']);
     }
 }

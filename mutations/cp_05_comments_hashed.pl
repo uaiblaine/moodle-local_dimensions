@@ -1,0 +1,1 @@
+s/in_array\(\$token\[0\], \[T_WHITESPACE, T_COMMENT, T_DOC_COMMENT\], true\)\) \{\s*continue;\s*\}\s*\$text = is_array/false) {\n                continue;\n            }\n            \$text = is_array/;

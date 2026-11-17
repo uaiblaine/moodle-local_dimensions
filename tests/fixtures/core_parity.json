@@ -1,0 +1,149 @@
+{
+    "audited": "v5.2.5",
+    "about": "The core code the progress rule of local_dimensions mirrors (calculator::counts_towards_progress, local\\learner_restrictions), each function's hash as last audited; docs/core-parity.md says how to audit and update it.",
+    "symbols": [
+        {
+            "file": "completion/classes/progress.php",
+            "class": "progress",
+            "function": "get_course_progress_percentage",
+            "hash": "2cab86c4cffcc0e581a44a1588924a9e0ff050fb"
+        },
+        {
+            "file": "lib/completionlib.php",
+            "class": "completion_info",
+            "function": "get_user_activities_with_completion",
+            "hash": "372c4e1dee5051c1878b7705104cdbe4ce0cbb92"
+        },
+        {
+            "file": "lib/completionlib.php",
+            "class": "completion_info",
+            "function": "get_activities",
+            "hash": "a50e4f858f7b621580e6f9a728a67f3a63d78318"
+        },
+        {
+            "file": "lib/completionlib.php",
+            "class": "completion_info",
+            "function": "is_enabled",
+            "hash": "f4e622a823947f33e2ffc3d7111a0c9ede662cfd"
+        },
+        {
+            "file": "lib/completionlib.php",
+            "class": "completion_info",
+            "function": "is_tracked_user",
+            "hash": "16fe9d3d963eb63368af358a682885b8c08eec30"
+        },
+        {
+            "file": "lib/completionlib.php",
+            "class": "completion_info",
+            "function": "is_course_complete",
+            "hash": "153183816c7886756830b0bc8bafb1bc663669be"
+        },
+        {
+            "file": "lib/completionlib.php",
+            "class": "completion_info",
+            "function": "count_modules_completed",
+            "hash": "458d069300f9f332ad0acf1050dbc6e557bbae65"
+        },
+        {
+            "file": "course/classes/cm_info.php",
+            "class": "cm_info",
+            "function": "is_visible_on_course_page",
+            "hash": "3fb5df9051b1389d44965e68ba4a22acf72cf578"
+        },
+        {
+            "file": "course/classes/cm_info.php",
+            "class": "cm_info",
+            "function": "update_user_visible",
+            "hash": "a36308bcc22b4c3ba26220d375c3329454e0d4fe"
+        },
+        {
+            "file": "availability/classes/info.php",
+            "class": "info",
+            "function": "filter_user_list",
+            "hash": "5b2f558db44e91e12732bf3ed972125c514ce8e5"
+        },
+        {
+            "file": "availability/classes/info_module.php",
+            "class": "info_module",
+            "function": "filter_user_list",
+            "hash": "084307447a2a5808dd4aa29acf71c3a2d23098c7"
+        },
+        {
+            "file": "availability/classes/info_module.php",
+            "class": "info_module",
+            "function": "get_view_hidden_capability",
+            "hash": "0f0f5e3f27c1c11de984eb3db214690f3dd2307e"
+        },
+        {
+            "file": "availability/classes/info_section.php",
+            "class": "info_section",
+            "function": "get_view_hidden_capability",
+            "hash": "0f0f5e3f27c1c11de984eb3db214690f3dd2307e"
+        },
+        {
+            "file": "availability/classes/tree.php",
+            "class": "tree",
+            "function": "filter_user_list",
+            "hash": "18fa15420bce87c3b58921a83238ba9bb3ce845a"
+        },
+        {
+            "file": "availability/classes/tree.php",
+            "class": "tree",
+            "function": "get_logic_flags",
+            "hash": "f4be8c7ab75a73bc896401423a3855db80faaa90"
+        },
+        {
+            "file": "availability/classes/tree.php",
+            "class": "tree",
+            "function": "is_applied_to_user_lists",
+            "hash": "d5415f48c6993a5e9243240210e32283054b8f35"
+        },
+        {
+            "file": "availability/classes/capability_checker.php",
+            "class": "capability_checker",
+            "function": "get_users_by_capability",
+            "hash": "afb49892ee9ab7ebbad33f41739d53ccdcb4da04"
+        },
+        {
+            "file": "availability/condition/group/classes/condition.php",
+            "class": "condition",
+            "function": "filter_user_list",
+            "hash": "e9d28f29f4e3eaa0d2e0119027563df3b43fb446"
+        },
+        {
+            "file": "availability/condition/grouping/classes/condition.php",
+            "class": "condition",
+            "function": "filter_user_list",
+            "hash": "12192693800e44574b4bb64a13831dbd0e31b929"
+        },
+        {
+            "file": "availability/condition/profile/classes/condition.php",
+            "class": "condition",
+            "function": "filter_user_list",
+            "hash": "455870953286e3f5bda9674848332eea6098f104"
+        },
+        {
+            "file": "lib/grouplib.php",
+            "class": null,
+            "function": "groups_get_members",
+            "hash": "8fcd3dd4eb409bc0e9d6b892169cdaf8ad943b84"
+        },
+        {
+            "file": "lib/grouplib.php",
+            "class": null,
+            "function": "groups_get_user_groups",
+            "hash": "5fcca1996ed7ad84d241abe21c14a364549fa4bf"
+        },
+        {
+            "file": "group/classes/visibility.php",
+            "class": "visibility",
+            "function": "can_view_all_groups",
+            "hash": "0d822141170a7a2d486e75a72470f427812918cd"
+        }
+    ],
+    "listconditions": [
+        "group",
+        "grouping",
+        "profile"
+    ]
+}
