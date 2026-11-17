@@ -308,6 +308,23 @@ final class hub_javascript_guards_test extends \basic_testcase {
     }
 
     /**
+     * The context bar binds the tab event natively and imports no jQuery.
+     *
+     * Bootstrap 5 dispatches `shown.bs.tab` as a DOM event (core/dynamic_tabs binds it the same
+     * way), so a jQuery listener adds a dependency for nothing.
+     *
+     * Change that must make it fail: re-add `import $ from 'jquery';` to amd/src/central/context.js.
+     *
+     * @return void
+     */
+    public function test_context_bar_imports_no_jquery(): void {
+        $source = $this->source('context');
+        $this->assertStringNotContainsString("'jquery'", $source);
+        // Control: the native listener this replaces the jQuery one with is there.
+        $this->assertStringContainsString("addEventListener('shown.bs.tab'", $source);
+    }
+
+    /**
      * The code of a module under amd/src/central, without its comments.
      *
      * @param string $module The module name, without the extension.

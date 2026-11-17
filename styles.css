@@ -168,37 +168,6 @@ body[data-bs-theme="dark"],
 }
 
 /* ============================================
-   OS-PREFERENCE FALLBACK - DELIBERATELY INERT
-   ============================================
-
-   The selector requires [data-dimensions-media-optin] on body, which nothing writes, so this
-   block never fires. The OS preference alone is the wrong signal: core (theme_boost from 5.3)
-   uses it only to resolve the "auto" mode into data-bs-theme on <html>, never as a trigger of its
-   own. Firing on the media query directly would override a user's explicit choice and could make
-   the plugin dark inside a light page. The :root:not([data-bs-theme="light"]) guard keeps an
-   explicit light choice on <html> winning even once the gate is removed.
-
-   Like the activation block, it assigns only the three plugin-owned tokens; the chained ones
-   follow the host's --bs-* values, and a host that paints dark without them should set data-bs-theme
-   rather than widen this block. colour_tokens_test::test_media_fallback_is_written_and_unreachable
-   checks that the block exists, that every selector carries the gate and that no plugin file
-   writes the attribute.
-
-   To switch on: delete "[data-dimensions-media-optin]" from the selector below, nothing else.
-   To retire: delete the block once $plugin->supported's minimum reaches 503, since core resolves
-   "auto" itself from 5.3 on.
-   ============================================ */
-@media (prefers-color-scheme: dark) {
-    /* Switch-on line: remove [data-dimensions-media-optin] and nothing else. */
-    :root:not([data-bs-theme="light"])
-    body[data-dimensions-media-optin]:not([data-bs-theme="light"]) {
-        --local-dimensions-shadow: var(--dimensions-shadow, rgb(0 0 0 / 55%));
-        --local-dimensions-scrim: var(--dimensions-scrim, rgb(29 33 37 / 72%));
-        --local-dimensions-favourite: #fd7e14;
-    }
-}
-
-/* ============================================
    ENROLMENT STATE TOKENS (--local-dimensions-state-*)
    ============================================
 
@@ -342,8 +311,8 @@ body {
 
 /* Real-time WCAG contrast panel beside the bg/text colour inputs
    (amd/src/central/contrast). The card reads only the plugin colour tokens, so it follows the
-   host page's colour mode; it must not carry a prefers-color-scheme rule of its own (see the
-   OS-preference fallback at the top of this file). */
+   host page's colour mode; it must not carry a prefers-color-scheme rule of its own: core resolves the
+   "auto" mode into data-bs-theme itself (colour_tokens_test::test_no_prefers_color_scheme_block). */
 .local-dimensions-contrast-layout {
     display: flex;
     flex-wrap: wrap;
@@ -6094,11 +6063,10 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
  * Give the Manage participants modal the full available viewport height so its long grids and
  * the autocomplete suggestion dropdowns have room; the body scrolls inside it. Scoped to our
  * dialog (which core creates scrollable) so other site modals keep their content-fit height.
- * The modal-margin variable is Bootstrap 5 only, so fall back to Bootstrap 4's own
- * $modal-dialog-margin-y-sm-up for Moodle 4.5, where the variable is undefined.
+ * The margin is Bootstrap's own --bs-modal-margin, so the dialog tracks its responsive steps.
  */
 .local-dimensions-participants-modal.modal-dialog-scrollable:has(.form-autocomplete-suggestions) .modal-content {
-    height: calc(100% - var(--bs-modal-margin, 1.75rem) * 2);
+    height: calc(100% - var(--bs-modal-margin) * 2);
 }
 
 /*
@@ -6173,9 +6141,10 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 }
 
 /*
- * Expanded = true fullscreen: edge to edge, full height, square corners. Like Bootstrap 5's
- * .modal-fullscreen without the class (4.5 lacks it) and without !important — specificity 0,2,0
- * beats modal-xl / modal-lg and .modal-content. Header and footer drop their radius too.
+ * Expanded = true fullscreen: edge to edge, full height, square corners. Like Bootstrap's
+ * .modal-fullscreen, but toggled by the persisted display preference rather than by the modal's
+ * creation options, and without !important — specificity 0,2,0 beats modal-xl / modal-lg and
+ * .modal-content. Header and footer drop their radius too.
  * Width is 100% (not 100vw): the dialog then matches its position:fixed .modal parent, whose
  * width already excludes any viewport scrollbar column, so the dialog stays beside the scrollbar
  * instead of extending under it (100vw includes the scrollbar, painting it over the dialog edge).
@@ -6217,7 +6186,7 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
  * Admin escape links in the footer of the data-dense hub modals (participants: the matching core
  * admin page per allowed tab; framework form: the scales page), in the footer so the header
  * carries only expand + close. margin-right:auto keeps the group left while any primary
- * action (the framework form's Save/Cancel) stays right, on Bootstrap 4 and 5; scoped under
+ * action (the framework form's Save/Cancel) stays right; scoped under
  * .modal-footer so the longhand beats core's `.modal-footer > * { margin }` shorthand whatever the
  * stylesheet order.
  */
@@ -6230,9 +6199,8 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 }
 
 /*
- * btn-link draws a focus ring on Bootstrap 5 (it defines --bs-btn-focus-shadow-rgb) but none on
- * Bootstrap 4 (Moodle 4.5: .btn-link:focus forces box-shadow:none). Draw one outline ring for both
- * so 4.5 keyboard focus stays visible and 5.x does not stack two rings.
+ * Draw the footer links' keyboard focus as the plugin's one outline ring (the focus-ring token)
+ * instead of Bootstrap's brand-coloured box-shadow, and drop the shadow so the two do not stack.
  */
 .modal-footer .local-dimensions-modal-footer-links .btn-link:focus-visible {
     outline: 2px solid var(--local-dimensions-focus-ring);
