@@ -416,6 +416,7 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                 return Templates.render('local_dimensions/progress_card_body', data)
                     .then(function(html, js) {
                         Templates.replaceNodeContents(container, html, js);
+                        container.removeAttr('aria-busy');
                         container.find('[data-timeline-toggle]').on('click', function() {
                             var $toggle = $(this);
                             var expanded = $toggle.attr('aria-expanded') === 'true';
@@ -453,7 +454,7 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                     .text(retryMsg)
                     .attr('aria-label', retryMsg);
                 $btn.appendTo($wrap);
-                container.empty().append($wrap);
+                container.removeAttr('aria-busy').empty().append($wrap);
                 $btn.one('click', function() {
                     container.html(
                         '<div class="text-center p-3" role="status" aria-live="polite">' +
@@ -465,128 +466,141 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                 });
             }
 
+            /* At most this many courses go to one get_course_progress call. A competency links a
+               handful of courses, so the whole tracker is usually one HTTP request; a longer list is
+               cut into calls that go out together, each drawing its cards when it answers. The
+               server's work is the same either way: the shape only removes the round trips. */
+            var PROGRESS_BATCH = 20;
+
             /**
-             * Fetch a single course's progress with a 2s soft-timeout race.
+             * The progress call for some courses, with the page's plan and competency.
              *
-             * The returned promise resolves either when the AJAX call settles
-             * or after 2 seconds, whichever comes first. The next
-             * card therefore begins loading even if the previous request is
-             * still pending, but the late response is still rendered when it
-             * arrives. Hard rejections fall through to the error state.
-             *
-             * @param {number} courseid
-             * @return {Promise}
+             * @param {number[]} ids
+             * @return {Object} A core/ajax request.
              */
-            function loadCourseWithSoftTimeout(courseid) {
-                var call = Ajax.call([{
+            function progressRequest(ids) {
+                return {
                     methodname: 'local_dimensions_get_course_progress',
-                    args: {courseids: [courseid], planid: planid, competencyid: competencyid}
-                }])[0];
-
-                var ajaxPromise = $.Deferred();
-                call.done(function(results) {
-                    if (results && results[0]) {
-                        renderCourse(results[0]).fail(function() {
-                            renderErrorState(courseid, function() {
-                                loadCourseWithSoftTimeout(courseid);
-                            });
-                        });
-                    } else {
-                        renderErrorState(courseid, function() {
-                            loadCourseWithSoftTimeout(courseid);
-                        });
-                    }
-                    ajaxPromise.resolve();
-                }).fail(function() {
-                    renderErrorState(courseid, function() {
-                        loadCourseWithSoftTimeout(courseid);
-                    });
-                    ajaxPromise.resolve();
-                });
-
-                // Soft timeout: return whichever fires first.
-                var timeoutPromise = $.Deferred();
-                window.setTimeout(function() {
- timeoutPromise.resolve();
-}, 2000);
-                return $.when(
-                    $.Deferred(function(d) {
-                        var done = false;
-                        /* The jQuery Deferred race resolves d on whichever of
-                         * ajax / timeout settles first; neither .then() can be
-                         * returned or caught without disabling the other branch. */
-                        /* eslint-disable promise/always-return, promise/catch-or-return */
-                        ajaxPromise.then(function() {
-                            if (!done) {
- done = true; d.resolve();
-}
-                        });
-                        timeoutPromise.then(function() {
-                            if (!done) {
- done = true; d.resolve();
-}
-                        });
-                        /* eslint-enable promise/always-return, promise/catch-or-return */
-                    })
-                );
+                    args: {courseids: ids, planid: planid, competencyid: competencyid}
+                };
             }
 
             /**
-             * Load a list of course IDs sequentially (with soft 2s overlap).
+             * Draw one course's row, or its error state when the template fails.
+             *
+             * @param {Object} row One get_course_progress result.
+             * @return {Promise}
+             */
+            function drawRow(row) {
+                return renderCourse(row).catch(function() {
+                    renderErrorState(row.courseid, function() {
+                        loadCourses([row.courseid]);
+                    });
+                });
+            }
+
+            /**
+             * Draw the cards of one progress call when it answers.
+             *
+             * Never rejects: a course the answer leaves out, and every course of a call that failed,
+             * gets the error state with its own retry, so one failure never holds the other cards.
+             *
+             * @param {number[]} ids The courses the call was sent.
+             * @param {Promise} call The call's promise from core/ajax.
+             * @return {Promise}
+             */
+            function drawProgress(ids, call) {
+                var failed = function(courseid) {
+                    renderErrorState(courseid, function() {
+                        loadCourses([courseid]);
+                    });
+                };
+                return Promise.resolve(call).then(function(results) {
+                    var rows = (results || []).filter(function(row) {
+                        return ids.indexOf(row.courseid) !== -1;
+                    });
+                    var answered = rows.map(function(row) {
+                        return row.courseid;
+                    });
+                    ids.filter(function(courseid) {
+                        return answered.indexOf(courseid) === -1;
+                    }).forEach(failed);
+                    return Promise.all(rows.map(drawRow));
+                }).catch(function() {
+                    ids.forEach(failed);
+                });
+            }
+
+            /**
+             * Load some courses' cards in one call: what a card's retry button does.
              *
              * @param {number[]} ids
              * @return {Promise}
              */
-            function loadSequentially(ids) {
-                var chain = $.Deferred().resolve();
-                $.each(ids, function(i, cid) {
-                    chain = chain.then(function() {
-                        return loadCourseWithSoftTimeout(cid);
-                    });
-                });
-                return chain;
+            function loadCourses(ids) {
+                return drawProgress(ids, Ajax.call([progressRequest(ids)])[0]);
             }
 
             /**
-             * Load every card: the completion batch first, then each course's progress.
+             * Tag each card with its completion and reveal the completion tabs.
+             *
+             * @param {Object[]} statuses get_courses_completion_status results.
+             */
+            function applyStatuses(statuses) {
+                var completedcount = 0;
+                $.each(statuses, function(i, s) {
+                    var $wrapper = $('.local-dimensions-course-card-wrapper[data-courseid="' + s.courseid + '"]');
+                    var done = !!s.iscompleted;
+                    $wrapper.attr('data-completed', done ? '1' : '0');
+                    if (done) {
+                        completedcount++;
+                    }
+                });
+                // The completion tabs only become truthful here, so this is where they appear.
+                initCourseTabs(completedcount, courseIds.length);
+            }
+
+            /**
+             * Load every card: the completion status and the progress in as few requests as the cap allows.
+             *
+             * The status call and the first progress call share one HTTP request (core/ajax runs them in
+             * order on the server); each further batch is a request of its own, sent at once. A card is
+             * drawn only after the status call has settled, because the card reads data-completed. When
+             * the status call fails, core runs nothing after it in that request: the first batch's cards
+             * show their retry, and the completion tabs stay hidden.
+             *
+             * @return {Promise}
              */
             function loadAllCourses() {
-                // 2. PHASE A — lightweight batch lookup of completion + lock state.
-                // Used to (a) tag wrappers with data-completed for filtering and
-                // (b) prioritise not-completed/not-locked courses in the loader.
-                Ajax.call([{
+                var batches = [];
+                for (var i = 0; i < courseIds.length; i += PROGRESS_BATCH) {
+                    batches.push(courseIds.slice(i, i + PROGRESS_BATCH));
+                }
+                var first = Ajax.call([{
                     methodname: 'local_dimensions_get_courses_completion_status',
                     args: {courseids: courseIds, planid: planid, competencyid: competencyid}
-                }])[0].done(function(statuses) {
-                    var notCompletedIds = [];
-                    var completedOrLockedIds = [];
-                    var completedcount = 0;
-                    $.each(statuses, function(i, s) {
-                        var $wrapper = $('.local-dimensions-course-card-wrapper[data-courseid="' + s.courseid + '"]');
-                        var done = !!s.iscompleted;
-                        $wrapper.attr('data-completed', done ? '1' : '0');
-                        if (done) {
-                            completedcount++;
+                }, progressRequest(batches[0])]);
+                var calls = [first[1]].concat(batches.slice(1).map(function(ids) {
+                    return Ajax.call([progressRequest(ids)])[0];
+                }));
+                var statusSettled = Promise.resolve(first[0]).then(applyStatuses).catch(function() {
+                    return null;
+                });
+                return statusSettled.then(function() {
+                    return Promise.all(batches.map(function(ids, k) {
+                        return drawProgress(ids, calls[k]);
+                    }));
+                }).then(function() {
+                    // Every card is drawn or shows its retry: the live region may now speak.
+                    var grid = document.getElementById('local-dimensions-viewcompetency-grid');
+                    if (grid) {
+                        grid.removeAttribute('aria-busy');
+                        var status = grid.querySelector('[data-region="local-dimensions-grid-loading"]');
+                        if (status) {
+                            status.remove();
                         }
-                        if (s.islocked || done) {
-                            completedOrLockedIds.push(s.courseid);
-                        } else {
-                            notCompletedIds.push(s.courseid);
-                        }
-                    });
-
-                    // The completion tabs only become truthful here, so this is where they appear.
-                    initCourseTabs(completedcount, courseIds.length);
-
-                    // PHASE B — sequential FIFO with 2s soft timeout. Not-completed
-                    // courses go first so the user sees actionable cards earliest.
-                    return loadSequentially(notCompletedIds).then(function() {
-                        return loadSequentially(completedOrLockedIds);
-                    });
-                }).fail(function() {
-                    // The status call failed: load every course in page order, without
-                    // prioritisation; the completion tabs stay hidden.
-                    loadSequentially(courseIds);
+                    }
+                    return null;
                 });
             }
 
@@ -600,8 +614,7 @@ function($, Ajax, Templates, Str, Notification, ChipFilters, CollapsibleDescript
                 loaderStrings.error = s[0];
                 loaderStrings.retry = s[1];
                 loaderStrings.loading = s[2];
-                loadAllCourses();
-                return null;
+                return loadAllCourses();
             }).catch(Notification.exception);
         }
     };
