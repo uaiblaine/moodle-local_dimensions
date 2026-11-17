@@ -387,6 +387,18 @@ const send = (method, params = {}) => new Promise((res, rej) => {
   sock.send(JSON.stringify({ id: i, method, params }));
 });
 const evaluate = async (expression) => (await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })).result.value;
+// Draws one SVG with a fixed function that takes the markup as an argument, so no code is built from data.
+const draw = async (svg) => {
+  const page = (await send('Runtime.evaluate', { expression: 'globalThis' })).result.objectId;
+  await send('Runtime.callFunctionOn', {
+    objectId: page,
+    functionDeclaration: `async function (svg) { document.body.innerHTML = svg; await document.fonts.ready;
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); return 1; }`,
+    arguments: [{ value: svg }],
+    awaitPromise: true,
+    returnByValue: true,
+  });
+};
 
 await send('Page.enable');
 await send('Page.navigate', { url: pathToFileURL(canvas).href });
@@ -400,8 +412,7 @@ if (!fontok) {
 let n = 0;
 for (const j of todo) {
   await send('Emulation.setDeviceMetricsOverride', { width: j.w, height: j.h, deviceScaleFactor: 1, mobile: false });
-  await evaluate(`(async () => { document.body.innerHTML = ${JSON.stringify(j.svg)}; await document.fonts.ready;
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); return 1; })()`);
+  await draw(j.svg);
   const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 84, clip: { x: 0, y: 0, width: j.w, height: j.h, scale: 1 } });
   writeFileSync(join(outdir, j.file), Buffer.from(shot.data, 'base64'));
   if (++n % 50 === 0) {

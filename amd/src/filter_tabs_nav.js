@@ -42,7 +42,7 @@ define([], function() {
         if (!value) {
             return fallbackMs;
         }
-        if (value.indexOf('ms') === value.length - 2) {
+        if (value.slice(-2) === 'ms') {
             return parseFloat(value);
         }
         if (value.charAt(value.length - 1) === 's') {
