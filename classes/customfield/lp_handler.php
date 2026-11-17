@@ -18,7 +18,7 @@
  * Learning Plan Template custom field handler.
  *
  * @package   local_dimensions
- * @copyright 2026 Anderson Blaine (anderson@blaine.com.br)
+ * @copyright 2026 Anderson Blaine
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -34,7 +34,7 @@ use core\context\system as context_system;
  * Learning Plan Template custom field handler.
  *
  * @package   local_dimensions
- * @copyright 2026 Anderson Blaine (anderson@blaine.com.br)
+ * @copyright 2026 Anderson Blaine
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class lp_handler extends handler {
