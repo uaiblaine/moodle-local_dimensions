@@ -5630,18 +5630,18 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 /* ============================================
    COLLAPSIBLE DESCRIPTION (view-plan / view-competency)
    Caps long descriptions/embedded media to 30vh (configurable via
-   --collapsible-max-vh). The local_dimensions/collapsible_description AMD
+   --local-dimensions-collapsible-max-vh). The local_dimensions/collapsible_description AMD
    module adds .has-overflow when content exceeds the limit and toggles
    .is-expanded on click.
    ============================================ */
 .local-dimensions-collapsible {
-    --collapsible-max-vh: 30vh;
-    --collapsible-fade-color: var(--local-dimensions-surface);
+    --local-dimensions-collapsible-max-vh: 30vh;
+    --local-dimensions-collapsible-fade-color: var(--local-dimensions-surface);
     position: relative;
 }
 
 .local-dimensions-collapsible-content {
-    max-height: var(--collapsible-max-vh);
+    max-height: var(--local-dimensions-collapsible-max-vh);
     overflow: hidden;
 }
 
@@ -5660,7 +5660,7 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
         linear-gradient(
             to bottom,
             transparent 0%,
-            var(--collapsible-fade-color) 100%
+            var(--local-dimensions-collapsible-fade-color) 100%
         );
     opacity: 0;
     transition: opacity 200ms ease;
@@ -6653,7 +6653,7 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
    collapsed height lower; the toggle still reveals the full body on demand. */
 .local-dimensions-central-structure-detail-pane [data-region='detail-description'] .local-dimensions-collapsible,
 .local-dimensions-central-plans-description .local-dimensions-collapsible {
-    --collapsible-max-vh: 7rem;
+    --local-dimensions-collapsible-max-vh: 7rem;
 }
 
 /* Bound the expanded description and scroll it internally, so a long body never pushes the

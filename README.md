@@ -34,8 +34,8 @@ Less plugin, more Moodle: the plugin uses what Moodle already stores and already
 and avoids depending on non-core plugins wherever a native path exists.
 
 
-Documentation / Documentação
------------------------------
+Documentation
+-------------
 
 Full user and administrator documentation is available online in English and Portuguese:
 **[Competency Dimensions Documentation (GitHub Pages)](https://uaiblaine.github.io/moodle-local_dimensions-docs/)**
@@ -327,12 +327,12 @@ Requirements
 
 One branch per Moodle version, each declaring `$plugin->supported` for exactly that version:
 
-| Branch | Moodle | Version | Release |
-|---|---|---|---|
-| `MOODLE_405_STABLE` | 4.5 LTS | 2024100711 | v4.5-r1 |
-| `MOODLE_501_STABLE` | 5.1 | 2025100611 | v5.1-r1 |
-| `MOODLE_502_STABLE` | 5.2 | 2026042011 | v5.2-r1 |
-| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100515 | v5.3-r1 |
+| Branch | Moodle | Latest release |
+|---|---|---|
+| `MOODLE_405_STABLE` | 4.5 LTS | v4.5-r1 |
+| `MOODLE_501_STABLE` | 5.1 | v5.1-r1 |
+| `MOODLE_502_STABLE` | 5.2 | v5.2-r1 |
+| `main` (= `MOODLE_503_STABLE`) | 5.3 | v5.3-r1 |
 
 The 4.5, 5.1 and 5.2 branches carry the same features; the 5.3 line (`main`) takes new work first
 and uses PHP 8.3 syntax. This README and its pictures describe `main` on Moodle 5.3. Moodle 5.0 has
@@ -527,6 +527,10 @@ The plugin has no database tables of its own (no `db/install.xml`). It keeps:
   plan's competencies with the owner's proficiency for five minutes and is cleared when a rating
   changes; and `returncontext`, a session cache of the plan a learner came from, which expires
   after four hours.
+- **Browser storage**, in the user's own browser only and never sent to the site: the widths of
+  the Competency hub's two resizable panes in `localStorage` (`local_dimensions_structure_master_width`,
+  `local_dimensions_plans_master_width`), and the position of the *Return to plan* button in
+  `sessionStorage` (`local_dimensions_fab_pos`), which the browser drops when the tab closes.
 - **Events** in the standard log for the hub's administrative decisions (cohort attach and detach,
   links, duplication, cohort roles, bulk enrolment methods, custom field changes). The log store
   keeps and exports them.
