@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Learning plan reports: a completed plan's competency count, proficient count and progress**
+  come from the competencies archived at completion, as core and the plugin's own *Learning plan
+  competencies* source list them. A completed plan based on a template counted the template's
+  current competencies, so editing the template afterwards changed the numbers of plans already
+  completed.
+
 ### Code comments reviewed
 
 - The comments of the production code changed since the previous review (classes, AMD modules,
