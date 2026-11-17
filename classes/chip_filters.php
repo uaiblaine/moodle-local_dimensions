@@ -282,8 +282,7 @@ class chip_filters {
         if ($index <= 0) {
             return '';
         }
-        $optstr = (string) ($config['options'] ?? '');
-        $options = preg_split("/\s*\n\s*/", trim($optstr), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $options = helper::split_select_options((string) ($config['options'] ?? ''));
         return $options[$index - 1] ?? '';
     }
 
