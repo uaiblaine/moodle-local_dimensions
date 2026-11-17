@@ -25,6 +25,7 @@
     * courseurl (string) - URL to the course view page
     * viewcoursestr (string) - Accessible label for the course link, plain text
     * locked (bool) - Whether the course is locked for the user
+    * skeletonrows (array) - One entry per skeleton row drawn while the card body loads
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -35,7 +36,8 @@
         "fullname": "Introduction to Programming",
         "courseurl": "/course/view.php?id=42",
         "viewcoursestr": "View course: Introduction to Programming",
-        "locked": false
+        "locked": false,
+        "skeletonrows": [{"row": true}, {"row": true}, {"row": true}]
     }
 }}
 <div class="col-md-6 col-lg-4 mb-4 local-dimensions-course-card-wrapper"
@@ -50,10 +52,17 @@
                 <a href="{{courseurl}}" aria-label="{{viewcoursestr}}">{{{fullname}}}</a>
             {{/locked}}
         </h3>
-        <div class="local-dimensions-progress-container" data-courseid="{{courseid}}">
-            <div class="text-center p-3">
-                <i class="fa fa-spinner fa-spin fa-2x text-primary" aria-hidden="true"></i>
-                <p class="text-muted small mt-2">{{#str}}loading_progress, local_dimensions{{/str}}</p>
+        {{! The skeleton stands for the card body competency_view.js draws: one timeline row per
+            section the server counted (skeletonrows), a ring and a name each. The grid carries aria-busy and the one status line; the
+            container's own aria-busy goes when its body arrives. }}
+        <div class="local-dimensions-progress-container" data-courseid="{{courseid}}" aria-busy="true">
+            <div class="local-dimensions-sk" aria-hidden="true">
+                {{#skeletonrows}}
+                <span class="local-dimensions-sk-row">
+                    <span class="local-dimensions-sk-block local-dimensions-sk-block--ring"></span>
+                    <span class="local-dimensions-sk-block local-dimensions-sk-block--line"></span>
+                </span>
+                {{/skeletonrows}}
             </div>
         </div>
     </div>

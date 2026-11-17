@@ -1036,6 +1036,53 @@ body {
     padding: 30px 30px 30px 10px;
 }
 
+/*
+ * Card skeleton (fleet Design System, components/skeleton.md): grey blocks in the shape of the
+ * timeline rows, one slow pulse, static under reduced motion. Its geometry follows
+ * .local-dimensions-timeline and its items below, so the body that replaces it starts where the
+ * blocks were.
+ */
+.local-dimensions-sk {
+    display: block;
+    padding-left: 10px;
+}
+
+.local-dimensions-sk-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 20px;
+}
+
+.local-dimensions-sk-block {
+    display: block;
+    background: var(--local-dimensions-surface-inset);
+}
+
+.local-dimensions-sk-block--ring {
+    flex: 0 0 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.local-dimensions-sk-block--line {
+    width: 60%;
+    height: 12px;
+    border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .local-dimensions-sk {
+        animation: local-dimensions-sk-pulse 1300ms ease-in-out infinite;
+    }
+}
+
+@keyframes local-dimensions-sk-pulse {
+    50% {
+        opacity: .55;
+    }
+}
+
 /* Locked card: the dashed border is an SVG that competency_view.js draws (see below). */
 .card.local-dimensions-card-locked {
     border: none;
