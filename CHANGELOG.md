@@ -6,6 +6,68 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Performance: the competency tracker loads its cards in one request, behind a skeleton
+
+Version `2026042015`.
+
+- **One request instead of one per course.** The tracker asked for the completion status of every
+  course and then for each course's progress, one request after another (with a 2 s overlap), so
+  a page of six courses made seven round trips. The status call and the progress of up to 20
+  courses now share one HTTP request (core/ajax runs them in order on the server); a longer list
+  is cut into batches of 20 sent together. The server's work is the same: on the 2026-11-17
+  fixture, a warm batch of six heavy courses took 95 ms and 17 reads, the same work the six
+  single calls did between them. Every card is drawn once the status has answered, because a card reads it.
+- **A failed call costs only its own cards.** A batch that fails, or answers without a course,
+  leaves each of its cards the error state and its Retry button, which asks for that course
+  alone. When the status call fails, core skips the rest of that request: the first batch's cards
+  show Retry and the completion tabs stay hidden, as before.
+- **A skeleton instead of a spinner** (fleet Design System, `components/skeleton.md`): grey
+  timeline rows, one per top-level visible section of the course (between three and twelve; a
+  locked card three), counted for every card in one query on `{course_sections}`, so the body
+  that replaces it lands at nearly its height. The rows pulse every 1.3 s and stand still under
+  reduced motion; the grid is `aria-busy` with one spoken status line until every card is drawn
+  or failed. Layout shift of the fixture's six-course tracker of nine-section courses: 0.060 with
+  the spinner, 0.011 with the skeleton.
+- **Code scanning alert 6**: the tab strip read a millisecond duration with
+  `indexOf('ms') === length - 2`, true for any one-character value, so a theme writing `s` in
+  `--local-dimensions-tabs-scroll-duration` made the scroll duration NaN; it now reads the suffix.
+- Tests: `learner_js_source_test` (batches after the status, a failed batch leaves every card a
+  retry, the suffix), `view_competency_page_test` (a skeleton row per timeline section),
+  `stylesheet_markup_contract_test` (busy, silent and still under reduced motion); gates in
+  `mutations/tracker_batch.conf`.
+
+### Performance: progress in very large courses
+
+Version `2026042014`.
+
+- **A course card no longer reads the whole course's group membership.** Whether a group,
+  grouping or profile restriction keeps an activity out of a learner's workload was asked through
+  core's `filter_user_list()`, which is built for long lists: for one learner it read every member
+  of the group, every member of the grouping, or, for "any group", every group member of the
+  course, and listed everyone holding `moodle/course:ignoreavailabilityrestrictions`, on every
+  activity, three times per card (bar, card shape, section rings). `local\learner_restrictions`
+  now gives the same answer for that one learner: group and grouping conditions through their own
+  per-user test, which reads the learner's groups from core's shared groups cache; any other
+  condition through its own filter with a one-person list; the capability through
+  `has_capability()`. The rule is unchanged: only the restrictions that are permanent for a person
+  count, so a date-locked activity still counts.
+- Measured on a 5.3 twin stack with one course of 100,001 students, 2,000 groups (about 50 members
+  each, 5% of students in two groups, 1% in three, 1% in none, 100 groups with hidden visibility),
+  20 groupings of 100 groups, 45 teachers in 30 groups each, and 66 restricted activities: the
+  tracker's `get_course_progress` for that course fell from 470 ms and 402 queries to 8.6 ms and 8
+  queries, and its card on `view-competency.php` now appears at 753 ms instead of 1,116 ms (median
+  of five loads at 4x CPU). The three card calls fell from 1,111 ms to 36 ms per learner (mean of
+  240 users, 4.5: 1,258 ms to 28 ms). All 16,080 learner-activity answers (4.5: 15,840) and all
+  240 cards were identical to the previous code's.
+- `tests/local/learner_restrictions_test.php` holds core's `filter_user_list()` as the oracle on
+  nineteen restriction sets (groups visible to all, to members, to each member and to nobody, a
+  group of another course, grouping 0) for seven kinds of user, read by the learner, a teacher and
+  two classmates, and pins that a warm group or grouping check runs no query. `tests/calculator_group_workload_test.php` checks the bar
+  and every ring against hand-counted workloads: a learner in two groups (an activity open to
+  either counted once), in one group and in none, under forced separate groups, with subsections
+  and a section restricted to another group. Mutation spec: `mutations/learner_restrictions.conf`
+  (22 gates).
+
 ### The Competency hub honours unlisted course categories
 
 Any logged-in user passes the hub's category readability check (core gives every authenticated
