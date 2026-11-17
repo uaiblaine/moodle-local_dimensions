@@ -108,6 +108,7 @@ class template_csv_serializer {
 
         $rows = [$headers];
         $frameworks = [];
+        $unreadable = [];
         $exported = 0;
         $lastshortname = '';
 
@@ -143,7 +144,7 @@ class template_csv_serializer {
             $parentkey = (string) ($cf['template_idnumber'] ?? '');
             $sortorder = 0;
             foreach (api::list_competencies_in_template($templateid) as $competency) {
-                $framework = self::framework_of($competency, $frameworks);
+                $framework = self::framework_of($competency, $frameworks, $unreadable);
                 $rows[] = array_merge([
                     self::ROWTYPE_LINK,
                     $parentkey,
@@ -189,21 +190,31 @@ class template_csv_serializer {
     }
 
     /**
-     * The framework a competency belongs to, memoised into the caller's collector.
+     * The framework a competency belongs to, memoised into the caller's collectors.
+     *
+     * A refusal is memoised too, in a set of its own: it must never reach `$frameworks`, which
+     * lists the frameworks offered as companion downloads, but it need not be re-derived (a
+     * framework read and a capability check) for every competency of the same framework.
      *
      * @param competency $competency The competency being exported.
      * @param array $frameworks Collector keyed by framework id (appended by reference).
+     * @param array $unreadable Framework ids the viewer cannot read, as keys (appended by reference).
      * @return array{id: int, idnumber: string, shortname: string} Id 0 and empty strings when unreadable.
      */
-    private static function framework_of(competency $competency, array &$frameworks): array {
+    private static function framework_of(competency $competency, array &$frameworks, array &$unreadable): array {
         $frameworkid = (int) $competency->get('competencyframeworkid');
         if (isset($frameworks[$frameworkid])) {
             return $frameworks[$frameworkid];
         }
+        $withheld = ['id' => 0, 'idnumber' => '', 'shortname' => ''];
+        if (isset($unreadable[$frameworkid])) {
+            return $withheld;
+        }
         $framework = $competency->get_framework();
         // Metadata of a framework the viewer cannot read is withheld, and not collected.
         if ($framework && !\core_competency\competency_framework::can_read_context($framework->get_context())) {
-            return ['id' => 0, 'idnumber' => '', 'shortname' => ''];
+            $unreadable[$frameworkid] = true;
+            return $withheld;
         }
         $entry = [
             'id' => $frameworkid,

@@ -34,12 +34,8 @@ function xmldb_local_dimensions_install() {
     \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_LP);
     \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_COMPETENCY);
 
-    /* Accent-insensitive search needs the PostgreSQL unaccent extension, and creating it is
-       DDL - so it happens on install and on upgrade (legacy_repair::run()), never from a search
-       web service. A database account without the privilege simply keeps accent-sensitive search. */
-    \local_dimensions\helper::ensure_unaccent();
-
-    // Records the once-only upgrade repairs as applied; on a new site they find nothing to change.
+    // Records the once-only upgrade repairs as applied (on a new site they find nothing to change)
+    // and creates the unaccent extension, as on every upgrade.
     \local_dimensions\local\legacy_repair::run();
 
     return true;
