@@ -87,6 +87,38 @@ The *Related content* tab's course cards follow the fleet's course card contract
   data URI or a pluginfile URL of this site, checked on the server).
 - The course name no longer takes core's dark-mode underline of `#region-main` links at rest.
 
+### Performance: the competency tracker loads its cards in one request, behind a skeleton
+
+Version `2026100522`.
+
+- **One request instead of one per course.** The tracker asked for the completion status of every
+  course and then for each course's progress, one request after another (with a 2 s overlap), so
+  a page of six courses made seven round trips. The status call and the progress of up to 20
+  courses now share one HTTP request (core/ajax runs them in order on the server); a longer list
+  is cut into batches of 20 sent together. The server's work is the same: on the 2026-11-17
+  fixture, a warm batch of six heavy courses took 95 ms and 17 reads, the same work the six
+  single calls did between them. Every card is drawn once the status has answered, because a card reads it.
+- **A failed call costs only its own cards.** A batch that fails, or answers without a course,
+  leaves each of its cards the error state and its Retry button, which asks for that course
+  alone. When the status call fails, core skips the rest of that request: the first batch's cards
+  show Retry and the completion tabs stay hidden, as before.
+- **A skeleton instead of a spinner** (fleet Design System, `components/skeleton.md`): grey
+  timeline rows, one per top-level visible section of the course (between three and twelve; a
+  locked card three), counted for every card in one query on `{course_sections}`, so the body
+  that replaces it lands at nearly its height. The rows pulse every 1.3 s and stand still under
+  reduced motion; the grid is `aria-busy` with one spoken status line until every card is drawn
+  or failed. Layout shift of the fixture's six-course tracker of nine-section courses: 0.060 with
+  the spinner, 0.011 with the skeleton.
+- **Code scanning alert 6**: the tab strip read a millisecond duration with
+  `indexOf('ms') === length - 2`, true for any one-character value, so a theme writing `s` in
+  `--local-dimensions-tabs-scroll-duration` made the scroll duration NaN; it now reads the suffix.
+  **Alert 9**: the README imagery tool (`docs/`, not shipped) built the script it evaluates in
+  Chrome from the SVG markup; it now passes the markup as an argument to a fixed function.
+- Tests: `learner_js_source_test` (batches after the status, a failed batch leaves every card a
+  retry, the suffix), `view_competency_page_test` (a skeleton row per timeline section),
+  `stylesheet_markup_contract_test` (busy, silent and still under reduced motion); gates in
+  `mutations/tracker_batch.conf`.
+
 ### Performance: progress in very large courses
 
 Version `2026100521`.
