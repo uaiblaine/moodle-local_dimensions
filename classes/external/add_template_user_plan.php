@@ -71,6 +71,7 @@ class add_template_user_plan extends external_api {
         }
         $context = $template->get_context();
         self::validate_context($context);
+        api::require_enabled();
         require_capability('moodle/competency:templatemanage', $context);
 
         if ($DB->record_exists('competency_plan', ['templateid' => $template->get('id'), 'userid' => $params['userid']])) {

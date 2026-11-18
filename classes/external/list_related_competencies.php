@@ -64,6 +64,7 @@ class list_related_competencies extends external_api {
         $competency = new competency($params['competencyid']);
         $context = $competency->get_context();
         self::validate_context($context);
+        api::require_enabled();
 
         // The api enforces competencyview/competencymanage on this context.
         $related = api::list_related_competencies($params['competencyid']);

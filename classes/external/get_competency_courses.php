@@ -99,6 +99,7 @@ class get_competency_courses extends external_api {
         // Context validation.
         $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
+        \core_competency\api::require_enabled();
         require_capability('local/dimensions:view', $systemcontext);
 
         /* The same gate as view-competency.php, before anything about the competency is read: a plan

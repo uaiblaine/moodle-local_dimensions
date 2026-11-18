@@ -99,6 +99,7 @@ class get_course_progress extends external_api {
            gated by plan_access::tracker_courses() before any of its structure is read. */
         $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
+        \core_competency\api::require_enabled();
         require_capability('local/dimensions:view', $systemcontext);
 
         $cards = plan_access::tracker_courses($params['planid'], $params['competencyid'], $courseids);

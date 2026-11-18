@@ -76,6 +76,7 @@ class add_cohort_role extends external_api {
 
         $system = context_system::instance();
         self::validate_context($system);
+        \core_competency\api::require_enabled();
         require_capability('moodle/role:manage', $system);
 
         $template = template::get_record(['id' => $params['templateid']]);

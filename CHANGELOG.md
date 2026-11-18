@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security: four findings of the 2026-11 external audit
+
+Version `2026100529`. The audit's other findings were checked against the code and core 5.3 and
+either mirror core, are hardening left for a later change, or do not hold.
+
+- **Custom-field files follow the instance's read rule.** `competency_handler::can_view()` and
+  `lp_handler::can_view()` returned true for everyone, and core's textarea and customfield_picture
+  file callbacks ask only that, behind no login. A known instance now requires a logged-in user and
+  `picture_manager::can_view()`: a visible template to anyone logged in, a hidden one to its
+  readers and plan holders, a competency to its framework's readers. Instance 0 (the report
+  builder's question) still answers true.
+- **Every web service refuses while competencies are disabled.** 45 services read the competency
+  tables directly and answered on a site with competencies off; each now calls
+  `api::require_enabled()` after its context check, as the hub pages do.
+  `tests/local/external_requires_competencies_test.php` scans for it.
+- **The competency search and the import's structure hint leave out unlisted categories.**
+  `search_competencies` and `template_import_analyser::hint_other_frameworks()` now filter by
+  `unlisted_categories`, as the hub's Structure and Frameworks tabs do.
+- **A category manager can import template custom fields.** The import analyser resolved the
+  fields' editing rights at the site, so a manager holding `templatemanage` in one category had
+  every `template_idnumber` and `cf_*` row refused as not writable. It now names the target, and
+  both handlers drop a create form's context hint when the save ends.
+
 ### Changed: the workload follows core's progress rule, held to it by an oracle and a fingerprint
 
 Version `2026100528`.

@@ -125,6 +125,7 @@ class apply_import_templates extends external_api {
             throw new \moodle_exception('invalidcontext', 'error');
         }
         self::validate_context($context);
+        \core_competency\api::require_enabled();
         require_capability('moodle/competency:templatemanage', $context);
 
         \core_php_time_limit::raise();

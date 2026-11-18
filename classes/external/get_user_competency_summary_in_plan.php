@@ -85,6 +85,7 @@ class get_user_competency_summary_in_plan extends external_api {
         // Sets $PAGE's context before anything below can load theme strings.
         $context = context_system::instance();
         self::validate_context($context);
+        api::require_enabled();
         require_capability('local/dimensions:view', $context);
 
         // A plain method call, so its return structure is never resolved. It checks access to

@@ -105,6 +105,7 @@ class search_assignable_users extends external_api {
         }
         $context = $template->get_context();
         self::validate_context($context);
+        api::require_enabled();
         require_capability('moodle/competency:templatemanage', $context);
 
         /* Core's identity rule: nothing without moodle/site:viewuseridentity, then only the fields

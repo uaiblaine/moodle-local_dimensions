@@ -77,6 +77,7 @@ class set_course_link_outcome extends external_api {
 
         $coursecontext = context_course::instance($courseid);
         self::validate_context($coursecontext);
+        api::require_enabled();
 
         $link = course_competency::get_record(['competencyid' => $competencyid, 'courseid' => $courseid], MUST_EXIST);
         $oldoutcome = (int) $link->get('ruleoutcome');
