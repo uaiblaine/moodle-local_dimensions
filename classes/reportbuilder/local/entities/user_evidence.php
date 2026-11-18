@@ -69,13 +69,19 @@ class user_evidence extends base {
     /**
      * SQL counting the files attached to an evidence of prior learning.
      *
+     * Core stores them in the owner's user context; joining it lets the count use the files
+     * table's component, filearea, contextid and itemid index.
+     *
      * @return string A scalar subquery.
      */
     private function files_sql(): string {
         $alias = $this->get_table_alias('competency_userevidence');
         return "(SELECT COUNT(1)
-                   FROM {files} uef
-                  WHERE uef.component = 'core_competency'
+                   FROM {context} uectx
+                   JOIN {files} uef ON uef.contextid = uectx.id
+                  WHERE uectx.contextlevel = " . CONTEXT_USER . "
+                    AND uectx.instanceid = {$alias}.userid
+                    AND uef.component = 'core_competency'
                     AND uef.filearea = 'userevidence'
                     AND uef.itemid = {$alias}.id
                     AND uef.filename <> '.')";
